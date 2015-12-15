@@ -70,7 +70,9 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         (semantically ``[:, :, shape[2:] // 2]``).
 
     fig : ``matplotlib`` figure
-        The figure to show in.
+        The figure to show in. Expected to be of same "style", as the figure
+        given by this function. The most common usecase is that fig is the
+        return value from an earlier call to this function.
 
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method

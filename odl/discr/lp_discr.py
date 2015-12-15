@@ -365,7 +365,7 @@ class DiscreteLpVector(DiscretizationVector):
         return DiscreteLpVectorUFuncs(self)
 
     def show(self, method='', title='', indices=None, fig=None, **kwargs):
-        """Create a figure displaying the function in 1d or 2d.
+        """Display the function graphically.
 
         Parameters
         ----------
@@ -392,7 +392,9 @@ class DiscreteLpVector(DiscretizationVector):
             Set the title of the figure
 
         fig : ``matplotlib`` figure
-            The figure to show in
+            The figure to show in. Expected to be of same "style", as the
+            figure given by this function. The most common usecase is that
+            fig is the return value from an earlier call to this function.
 
         kwargs : {'figsize', 'saveto', ...}
             Extra keyword arguments passed on to display method
