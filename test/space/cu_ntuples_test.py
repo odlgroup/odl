@@ -245,13 +245,16 @@ def test_getitem_index_error():
         x[3]
 
 
+def impl_test_setitem(x, index):
+    x[index] = index
+    assert x[index] == index
+
 def test_setitem():
     r3 = odl.CudaRn(3)
     x = r3.element([42, 42, 42])
 
     for index in [0, 1, 2, -1, -2, -3]:
-        x[index] = index
-        assert x[index] == index
+        yield impl_test_setitem, x, index
 
 
 def test_setitem_index_error():
