@@ -331,7 +331,6 @@ class ConeFlatGeometry(ConeBeamGeometry):
         # to the line from the source to the detector reference point
         det_pt_angle = np.arctan2(dpar, self.src_radius + self.det_radius)
 
-
         # vector for spiral along z-direction
         vec = -np.array(
             [cos(det_pt_angle[1]) * cos(angle + det_pt_angle),
@@ -564,6 +563,5 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             self.src_radius * sin(angle + self.angle_offset),
             -self.src_radius * cos(angle + self.angle_offset),
             self.table_feed_per_rotation * angle / (2 * np.pi)])
-
 
         # TODO: backprojection weighting function?

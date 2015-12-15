@@ -32,7 +32,6 @@ from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 
 
-
 __all__ = ('Detector', 'LineDetector', 'Flat2dDetector',
            'CircleSectionDetector')
 

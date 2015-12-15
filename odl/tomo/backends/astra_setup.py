@@ -37,7 +37,6 @@ standard_library.install_aliases()
 import astra
 import numpy as np
 
-
 # Internal
 from odl.space.ntuples import FnVector
 from odl.discr.grid import RegularGrid

@@ -16,15 +16,16 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 # Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from __future__ import unicode_literals
+from __future__ import (print_function, division, absolute_import,
+                        unicode_literals)
+from math import sin, cos, atan2, acos, pi
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import int
 
 # External
 import numpy as np
-from math import sin, cos, atan2, acos, pi
 
 
 def euler_matrix(*angles):
@@ -78,13 +79,15 @@ def euler_matrix(*angles):
 
     if dim == 2:
         mat = np.matrix(
-            [[cph, -sph],
-             [sph, cph]])
+                [[cph, -sph],
+                 [sph, cph]])
     else:
-        mat = np.matrix(
-            [[cph*cps - sph*cth*sps, -cph*sps - sph*cth*cps,  sph*sth],
-             [sph*cps + cph*cth*sps, -sph*sps + cph*cth*cps, -cph*sth],
-             [sth*sps, sth*cps, cth]])
+        mat = np.matrix([
+            [cph * cps - sph * cth * sps, -cph * sps - sph * cth * cps,
+             sph * sth],
+            [sph * cps + cph * cth * sps, -sph * sps + cph * cth * cps,
+             -cph * sth],
+            [sth * sps, sth * cps, cth]])
 
     return mat
 
@@ -115,7 +118,7 @@ def axis_rotation(axis, angle, vectors):
         vectors = np.asarray(vectors)
 
     if not (vectors.shape == (3,) or
-            (vectors.ndim == 2 and vectors.shape[1] == 3)):
+                (vectors.ndim == 2 and vectors.shape[1] == 3)):
         raise ValueError('`vector` shape {} not (3,) or (N, 3).'
                          ''.format(vectors.shape))
 
@@ -127,7 +130,7 @@ def axis_rotation(axis, angle, vectors):
 
     angle = float(angle)
 
-    if np.isclose(angle / (2*pi), int(angle / (2*pi)), atol=1e-15):
+    if np.isclose(angle / (2 * pi), int(angle / (2 * pi)), atol=1e-15):
         return vectors.copy()
     else:
         cos_ang = cos(angle)
@@ -181,7 +184,6 @@ def axis_rotation_matrix(axis, angle):
 
 
 def is_rotation_matrix(mat, show_diff=False):
-
     from scipy.linalg import det, norm
 
     dim = mat.shape[0]
@@ -204,7 +206,6 @@ def is_rotation_matrix(mat, show_diff=False):
 
 
 def angles_from_matrix(rot_matrix):
-
     if rot_matrix.shape == (2, 2):
         theta = atan2(rot_matrix[1, 0], rot_matrix[0, 0])
         return theta,
@@ -235,14 +236,12 @@ def angles_from_matrix(rot_matrix):
 
 
 def to_lab_sys(vec_in_local_coords, local_sys):
-
     vec_in_local_coords = np.array(vec_in_local_coords)
     trafo_matrix = np.matrix(local_sys).T
     return np.dot(trafo_matrix, vec_in_local_coords)
 
 
 def to_local_sys(vec_in_lab_coords, local_sys):
-
     vec_in_lab_coords = np.array(vec_in_lab_coords)
     trafo_matrix = np.matrix(local_sys)
     return np.dot(trafo_matrix, vec_in_lab_coords)

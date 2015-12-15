@@ -56,8 +56,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
             Offset to the rotation angle in the azimuthal plane. Does not
             imply an offset in z-direction.
         """
-        if not (isinstance(angle_intvl, IntervalProd)
-                and angle_intvl.ndim == 1):
+        if angle_intvl.ndim != 1 and not isinstance(angle_intvl, IntervalProd):
             raise TypeError('angle parameters {!r} are not an interval.'
                             ''.format(angle_intvl))
         angle_offset = float(angle_offset)

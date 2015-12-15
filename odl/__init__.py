@@ -60,5 +60,3 @@ __all__ += tomo.__all__
 from . import trafos
 from .trafos import *
 __all__ += trafos.__all__
-
-

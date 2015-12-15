@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Backend for ASTRA using CPU"""
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -23,6 +25,7 @@ standard_library.install_aliases()
 
 # External
 import astra
+
 # Internal
 from odl.discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.backends.astra_setup import (astra_projection_geometry,
@@ -36,7 +39,6 @@ __all__ = ('astra_cpu_forward_projector_call',
            'astra_cpu_forward_projector_apply',
            'astra_cpu_backward_projector_call',
            'astra_cpu_backward_projector_apply')
-
 
 # TODO: Fix inconsistent scaling of ASTRA projector with pixel size
 # TODO: Implement apply methods
