@@ -10,4 +10,4 @@ References
 ----------
 See Wikipedia's mathematical overview articles
 `Discretization
-<https://en.wikipedia.org/wiki/Discretization`_.
+<https://en.wikipedia.org/wiki/Discretization>`_.

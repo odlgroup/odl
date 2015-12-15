@@ -37,7 +37,6 @@ from numbers import Integral
 from functools import partial
 from math import sqrt
 import numpy as np
-import platform
 import scipy as sp
 from scipy.sparse.base import isspmatrix
 
@@ -48,28 +47,13 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
-from odl.util.ufuncs import NtuplesVectorUFuncs
+from odl.util.ufuncs import NtuplesUFuncs
 
 
-__all__ = ('Ntuples', 'NtuplesVector', 'Fn', 'FnVector',
-           'Cn', 'CnVector', 'Rn', 'RnVector',
+__all__ = ('Ntuples', 'NtuplesVector', 'Fn', 'FnVector', 'Cn', 'Rn',
            'MatVecOperator',
            'FnMatrixWeighting', 'FnVectorWeighting', 'FnConstWeighting',
            'weighted_dist', 'weighted_norm', 'weighted_inner')
-
-
-_TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
-                 np.dtype('float64'): np.dtype('float64'),
-                 np.dtype('complex64'): np.dtype('float32'),
-                 np.dtype('complex128'): np.dtype('float64')}
-
-_TYPE_MAP_R2C = {np.dtype('float32'): np.dtype('complex64'),
-                 np.dtype('float64'): np.dtype('complex128')}
-
-if platform.system() == 'Linux':
-    _TYPE_MAP_C2R.update({np.dtype('float128'): np.dtype('float128'),
-                          np.dtype('complex256'): np.dtype('float128')})
-    _TYPE_MAP_R2C.update({np.dtype('float128'): np.dtype('complex256')})
 
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
@@ -415,11 +399,45 @@ class NtuplesVector(NtuplesBaseVector):
 
     @property
     def ufunc(self):
-        """`NtuplesVectorUFuncs`, access to numpy style ufuncs.
+        """`NtuplesUFuncs`, access to numpy style ufuncs.
 
+        Examples
+        --------
+        >>> r2 = Rn(2)
+        >>> x = r2.element([1, -2])
+        >>> x.ufunc.absolute()
+        Rn(2).element([1.0, 2.0])
+
+        These functions can also be used with broadcasting
+
+        >>> x.ufunc.add(3)
+        Rn(2).element([4.0, 1.0])
+
+        and non-space elements
+
+        >>> x.ufunc.subtract([3, 3])
+        Rn(2).element([-2.0, -5.0])
+
+        There is also support for various reductions (sum, prod, min, max)
+
+        >>> x.ufunc.sum()
+        -1.0
+
+        They also support an out parameter
+
+        >>> y = r2.element([3, 4])
+        >>> out = r2.element()
+        >>> result = x.ufunc.add(y, out=out)
+        >>> result
+        Rn(2).element([4.0, 2.0])
+        >>> result is out
+        True
+
+        Notes
+        -----
         These are optimized for use with ntuples and incur no overhead.
         """
-        return NtuplesVectorUFuncs(self)
+        return NtuplesUFuncs(self)
 
 
 def _blas_is_applicable(*args):
@@ -724,20 +742,10 @@ class Fn(FnBase, Ntuples):
             self._space_funcs = FnNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
 
-        if is_real_dtype(self.dtype):
-            self._real_dtype = self.dtype
-        else:
-            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
-
     @property
     def exponent(self):
         """Exponent of the norm and distance."""
         return self._space_funcs.exponent
-
-    @property
-    def real_dtype(self):
-        """The corresponding real data type of this space."""
-        return self._real_dtype
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``.
@@ -1003,9 +1011,24 @@ class Fn(FnBase, Ntuples):
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
-        inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+        if self.is_rn:
+            class_name = 'Rn'
+            if self.dtype == np.float64:
+                inner_str = '{}'.format(self.size)
+            else:
+                inner_str = '{}, {}'.format(self.size, self.dtype)
+        elif self.is_cn:
+            class_name = 'Cn'
+            if self.dtype == np.complex128:
+                inner_str = '{}'.format(self.size)
+            else:
+                inner_str = '{}, {}'.format(self.size, self.dtype)
+        else:
+            class_name = 'Fn'
+            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+
         inner_str += _repr_space_funcs(self)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return '{}({})'.format(class_name, inner_str)
 
     @property
     def element_type(self):
@@ -1031,7 +1054,7 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Returns
         -------
-        real : `RnVector` view
+        real : `FnVector` view with dtype
             The real part this vector as a vector in `Rn`
 
         Examples
@@ -1088,7 +1111,7 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Returns
         -------
-        imag : `RnVector`
+        imag : `FnVector`
             The imaginary part this vector as a vector in
             `Rn`
 
@@ -1179,137 +1202,70 @@ class FnVector(FnBaseVector, NtuplesVector):
             return out
 
 
-class Cn(Fn):
+def Cn(size, dtype='complex128', **kwargs):
 
     """The complex vector space :math:`C^n` with vector multiplication.
 
+    Parameters
+    ----------
+    size : positive `int`
+        The number of dimensions of the space
+    dtype : `object`
+        The data type of the storage array. Can be provided in any
+        way the `numpy.dtype` function understands, most notably
+        as built-in type, as one of NumPy's internal datatype
+        objects or as string.
+
+        Only complex floating-point data types are allowed.
+    kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
+        See `Fn`
+
     See also
     --------
     Fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
         data type
     """
 
-    def __init__(self, size, dtype='complex128', **kwargs):
-        """Initialize a new instance.
+    cn = Fn(size, dtype, **kwargs)
 
-        Parameters
-        ----------
-        size : positive `int`
-            The number of dimensions of the space
-        dtype : `object`
-            The data type of the storage array. Can be provided in any
-            way the `numpy.dtype` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
+    if not cn.is_cn:
+        raise TypeError('data type {!r} not a complex floating-point type.'
+                        ''.format(dtype))
 
-            Only complex floating-point data types are allowed.
-        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See `Fn`
-        """
-        Fn.__init__(self, size, dtype, **kwargs)
-
-        if not is_complex_floating_dtype(self._dtype):
-            raise TypeError('data type {!r} not a complex floating-point type.'
-                            ''.format(dtype))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{}'
-        if self.dtype != np.complex128:
-            inner_fstr += ', {dtype}'
-
-        inner_str = inner_fstr.format(self.size, dtype=dtype_repr(self.dtype))
-        inner_str += _repr_space_funcs(self)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        if self.dtype == np.complex128:
-            return 'Cn({})'.format(self.size)
-        else:
-            return 'Cn({}, {})'.format(self.size, self.dtype)
-
-    @property
-    def element_type(self):
-        """ `CnVector` """
-        return CnVector
+    return cn
 
 
-class CnVector(FnVector):
-
-    """A vector in a real `Cn` space
-
-    See also
-    --------
-    FnVector
-    """
-
-
-class Rn(Fn):
+def Rn(size, dtype='float64', **kwargs):
 
     """The real vector space :math:`R^n` with vector multiplication.
 
+     Parameters
+    ----------
+    size : positive `int`
+        The number of dimensions of the space
+    dtype : `object`
+        The data type of the storage array. Can be provided in any
+        way the `numpy.dtype` function understands, most notably
+        as built-in type, as one of NumPy's internal datatype
+        objects or as string.
+
+        Only real floating-point data types are allowed.
+    kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
+        See `Fn`
+
     See also
     --------
     Fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
         data type
     """
 
-    def __init__(self, size, dtype='float64', **kwargs):
-        """Initialize a new instance.
+    rn = Fn(size, dtype, **kwargs)
 
-        Parameters
-        ----------
-        size : positive `int`
-            The number of dimensions of the space
-        dtype : `object`
-            The data type of the storage array. Can be provided in any
-            way the `numpy.dtype` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
+    if not rn.is_rn:
+        raise TypeError('data type {!r} not a real floating-point type.'
+                        ''.format(dtype))
 
-            Only real floating-point data types are allowed.
-        kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-            See `Fn`
-        """
-        Fn.__init__(self, size, dtype, **kwargs)
-
-        if not is_real_floating_dtype(self.dtype):
-            raise TypeError('data type {!r} not a real floating-point type.'
-                            ''.format(dtype))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{}'
-        if self.dtype != 'float64':
-            inner_fstr += ', {dtype}'
-
-        inner_str = inner_fstr.format(self.size, dtype=dtype_repr(self.dtype))
-        inner_str += _repr_space_funcs(self)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        if self.dtype == np.float64:
-            return 'Rn({})'.format(self.size)
-        else:
-            return 'Rn({}, {})'.format(self.size, self.dtype)
-
-    @property
-    def element_type(self):
-        """ `RnVector` """
-        return RnVector
-
-
-class RnVector(FnVector):
-
-    """A vector in a complex `Fn` space
-
-    See also
-    --------
-    FnVector
-    """
-    pass
+    return rn
 
 
 class MatVecOperator(Operator):

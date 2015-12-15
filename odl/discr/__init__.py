@@ -38,3 +38,7 @@ __all__ += grid.__all__
 from . import discr_mappings
 from .discr_mappings import *
 __all__ += discr_mappings.__all__
+
+from . import discr_ops
+from .discr_ops import *
+__all__ += discr_ops.__all__
