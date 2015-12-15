@@ -21,24 +21,27 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 import numpy as np
-# import pytest
+import pytest
 
 # Internal
 from odl.set.domain import Interval, Rectangle, Cuboid
 from odl.space.fspace import FunctionSpace
-from odl.discr.lp_discr import uniform_discr
+from odl.discr.lp_discr import uniform_discr, uniform_discr_fromspace
 from odl.discr.grid import uniform_sampling, RegularGrid
 # from odl.util.testutils import all_equal, is_subdict
 from odl.tomo.backends import ASTRA_AVAILABLE
+from odl.tomo.backends.astra_cuda import (astra_gpu_forward_projector_call,
+                                          astra_gpu_backward_projector_call)
 from odl.tomo.geometry.parallel import Parallel2dGeometry, Parallel3dGeometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
-from odl.tomo.backends.astra_cuda import (astra_gpu_forward_projector_call,
-                                          astra_gpu_backward_projector_call)
 from odl.tomo.util.testutils import skip_if_no_astra
-
+from odl.util.testutils import all_equal, all_almost_equal, almost_equal
 
 # TODO: test other interpolations once implemented
 
@@ -59,13 +62,15 @@ def test_astra_gpu_projector_call_2d():
         data.show('imshow', saveto='{}{}.png'.format(
             folder, name.replace(' ', '_')),
                   title='{} [:,:]'.format(name))
+        plt.close('all')
 
     # 2D phantom
-    vol_space = FunctionSpace(Rectangle([-0.8, -0.7], [0.8, 0.7]))
-    nvoxels = (80, 70)
-    discr_vol_space = uniform_discr(vol_space, nvoxels, dtype='float32')
+    vol_space = FunctionSpace(Rectangle([-1.0, -1.1], [1.0, 1.1]))
+    nvoxels = (100, 110)
+    discr_vol_space = uniform_discr_fromspace(vol_space, nvoxels,
+                                              dtype='float32')
     phan = np.zeros(nvoxels)
-    phan[15:25, 15:25] = 1
+    phan[20:30, 20:30] = 1
     discr_data = discr_vol_space.element(phan)
     save_slice(discr_data, back_dir, 'phantom 2d gpu')
 
@@ -90,7 +95,8 @@ def test_astra_gpu_projector_call_2d():
     proj_rect = angle_intvl.insert(dparams, ind)
     proj_space = FunctionSpace(proj_rect)
     npixels = angle_grid.insert(det_grid, ind).shape
-    discr_proj_space = uniform_discr(proj_space, npixels, dtype='float32')
+    discr_proj_space = uniform_discr_fromspace(proj_space, npixels,
+                                               dtype='float32')
 
     # PARALLEL 2D: forward
     proj_data_p2d = astra_gpu_forward_projector_call(discr_data, geom_p2d,
@@ -112,85 +118,6 @@ def test_astra_gpu_projector_call_2d():
     reco_data_ff = astra_gpu_backward_projector_call(proj_data_ff, geom_ff,
                                                      discr_vol_space)
     save_slice(reco_data_ff, back_dir, 'fanflat_gpu')
-
-    print('\n 2D sino:', proj_data_p2d.shape)
-
-
-def test_astra_gpu_projector_2d_3d_correspondence():
-    """The 3D projector for a single-slice volume should match the 2D
-    projector. Currently, for a grid with a single point the grid stride
-    returns 1 independent of the discretized interval. Thus
-    """
-    folder = '/home/jmoosmann/Documents/astra_odl/2d3d/'
-
-    # 2D phantom
-    x0 = y0 = -50
-    x1 = y1 = 50
-    z0 = 0
-    z1 = 1
-    vol_space2 = FunctionSpace(Rectangle([x0, y0], [x1, y1]))
-    nvoxels2 = (100, 100)
-    discr_vol_space2 = uniform_discr(vol_space2, nvoxels2, dtype='float32')
-    phan = np.zeros(nvoxels2)
-    phan[20:30, 20:30] = 1
-    discr_data2 = discr_vol_space2.element(phan)
-    save_slice(discr_data2, folder, 'phantom 2d gpu')
-
-    # 3D phantom
-    vol_space3 = FunctionSpace(Cuboid([x0, y0, z0], [x1, y1, z1]))
-    nvoxels3 = (100, 100, 1)
-    discr_vol_space3 = uniform_discr(vol_space3, nvoxels3, dtype='float32')
-    phan = np.zeros(nvoxels3)
-    phan[20:30, 20:30, 0] = 1
-    discr_data3 = discr_vol_space3.element(phan)
-    save_slice(discr_data3, folder, 'phantom 3D gpu')
-
-    # Angles
-    angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
-
-    # 2D detector
-    dparams2 = Interval(x0, x1)
-    det_grid2 = uniform_sampling(dparams2, 100)
-
-    # 3d detector
-    dparams3 = Rectangle([x0, z0], [x1, z1])
-    det_grid3 = uniform_sampling(dparams3, (100, 1))
-
-    # 2d geometry
-    geom2 = Parallel2dGeometry(angle_intvl, dparams2, angle_grid, det_grid2)
-    print('\n geom 2d: det stride:', geom2.det_grid.stride)
-
-    # 3d geometry
-    geom3 = Parallel3dGeometry(angle_intvl, dparams3, angle_grid, det_grid3)
-    print('\n geom 3d: det stride:', geom3.det_grid.stride)
-
-    # 2D projection space
-    ind = 1
-    proj_rect2 = angle_intvl.insert(dparams2, ind)
-    proj_space2 = FunctionSpace(proj_rect2)
-    npixels2 = angle_grid.insert(det_grid2, ind).shape
-    discr_proj_space2 = uniform_discr(proj_space2, npixels2, dtype='float32')
-
-    # 3D projection space
-    ind = 0
-    proj_rect3 = dparams3.insert(angle_intvl, ind)
-    proj_space3 = FunctionSpace(proj_rect3)
-    proj_grid3 = det_grid3.insert(angle_grid, ind)
-    npixels3 = proj_grid3.shape
-    discr_proj_space3 = uniform_discr(proj_space3, npixels3, dtype='float32')
-
-    # 2D forward
-    proj_data2 = astra_gpu_forward_projector_call(discr_data2, geom2,
-                                                     discr_proj_space2)
-    save_slice(proj_data2, folder, 'parallel forward 2d gpu')
-
-    # 3D forward
-    proj_data3 = astra_gpu_forward_projector_call(discr_data3, geom3,
-                                                     discr_proj_space3)
-    save_slice(proj_data3, folder, 'parallel forward 3d gpu')
-
-    print('\n', proj_data2.shape, proj_data3.shape)
 
 
 @skip_if_no_astra
@@ -214,23 +141,29 @@ def test_astra_gpu_projector_call_3d():
             name.replace(' ', '_'), x),
                   title='{} [{},:,:]'.format(name, x),
                   indices=[x, slice(None), slice(None)])
+        plt.close('all')
 
-    # Volumetric phantom
-    vol_space = FunctionSpace(Cuboid([-0.8, -0.7, -0.6], [0.8, 0.7, 0.6]))
-    nvoxels = (80, 70, 60)
-    discr_vol_space = uniform_discr(vol_space, nvoxels, dtype='float32')
-    phan = np.zeros(nvoxels)
-    sli0 = np.round(0.1 * np.array(nvoxels))
-    sli1 = np.round(0.4 * np.array(nvoxels))
-    phan[sli0[0]:sli1[0], sli0[1]:sli1[1], sli0[2]:sli1[2]] = 1
+    # Volume space
+    vol_shape = (80, 70, 60)
+    discr_vol_space = uniform_discr([-0.8, -0.7, -0.6], [0.8, 0.7, 0.6],
+                                    vol_shape, dtype='float32')
+
+    # Phantom
+    phan = np.zeros(vol_shape)
+    sli0 = np.round(0.1 * np.array(vol_shape))
+    sli1 = np.round(0.4 * np.array(vol_shape))
+    sliz0 = np.round(0.1 * np.array(vol_shape))
+    sliz1= np.round(0.9 * np.array(vol_shape))
+    phan[sliz0[0]:sliz1[0], sli0[1]:sli1[1], sli0[2]:sli1[2]] = 1
+
     discr_data = discr_vol_space.element(phan)
-    sli = np.round(0.25 * np.array(nvoxels))
-    save_ortho_slices(discr_data, back_dir, 'phantom 3d gpu', sli)
+    vol_sli = np.round(0.25 * np.array(vol_shape))
+    save_ortho_slices(discr_data, back_dir, 'phantom 3d gpu', vol_sli)
 
     # Angles
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 110, as_midp=False)
 
     # Detector
     dparams = Rectangle([-1, -0.9], [1, 0.9])
@@ -246,7 +179,7 @@ def test_astra_gpu_projector_call_3d():
                                         angle_grid, det_grid, angle_offset)
 
     # Geometry: Helical cone beam
-    spiral_pitch_factor = 0.01
+    spiral_pitch_factor = 0.5
     geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                        det_rad, spiral_pitch_factor,
                                        angle_grid, det_grid, angle_offset)
@@ -257,29 +190,40 @@ def test_astra_gpu_projector_call_3d():
     proj_space = FunctionSpace(proj_rect)
     proj_grid = det_grid.insert(angle_grid, ind)
     npixels = proj_grid.shape
-    sli = (0, np.round(0.25*npixels[1]), np.round(0.25*npixels[2]))
-    discr_proj_space = uniform_discr(proj_space, npixels, dtype='float32')
+    proj_sli = (0, np.round(0.25*npixels[1]), np.round(0.25*npixels[2]))
+    discr_proj_space = uniform_discr_fromspace(proj_space, npixels,
+                                               dtype='float32')
 
-    # Forward: PARALLEL 3D
+    # Forward: Parallel 3D
     proj_data = astra_gpu_forward_projector_call(discr_data, geom_p3d,
                                                  discr_proj_space)
-    save_ortho_slices(proj_data, for_dir, 'parallel 3d gpu', sli)
-    print('sino 3d pp :', proj_data.shape)
-    # proj = proj_data.asarray()
-    # print('\n proj_data:', type(proj), proj.shape, proj.min(), proj.max())
-    # import matplotlib.pyplot as plt
-    # im = plt.imshow(proj[:,:,1], interpolation='none', cmap=plt.cm.Greys)
-    # plt.imsave('/home/jmoosmann/Documents/astra_odl/p2d_xy.png', im)
+    save_ortho_slices(proj_data, for_dir, 'parallel 3d gpu', proj_sli)
 
-    # Forward: CIRCULAR CONE FLAT
+    # Backward: Parallel 3D
+    rec_data = astra_gpu_backward_projector_call(proj_data, geom_p3d,
+                                                 discr_vol_space)
+    save_ortho_slices(rec_data, back_dir, 'parallel 3d gpu', vol_sli)
+
+    # Forward: Circular Cone Flat
     proj_data = astra_gpu_forward_projector_call(discr_data, geom_ccf,
                                                  discr_proj_space)
-    save_ortho_slices(proj_data, for_dir, 'conebeam circular gpu', sli)
-    print('sino 3d ccb:', proj_data.shape)
+    save_ortho_slices(proj_data, for_dir, 'conebeam circular gpu', proj_sli)
 
-    # HELICAL CONE BEAM
+    # Backward: Circular Cone Flat
+    rec_data = astra_gpu_backward_projector_call(proj_data, geom_ccf,
+                                                 discr_vol_space)
+    save_ortho_slices(rec_data, back_dir, 'conebeam circular gpu', vol_sli)
+
+    # Forward: Helical Cone Flat
     proj_data = astra_gpu_forward_projector_call(discr_data, geom_hcf,
                                                  discr_proj_space)
-    save_ortho_slices(proj_data, for_dir, 'conebeam helical gpu', sli)
+    save_ortho_slices(proj_data, for_dir, 'conebeam helical gpu', proj_sli)
 
-    print('sino 3d hcb:', proj_data.shape)
+    # Backward: Helical Cone Flat
+    rec_data = astra_gpu_backward_projector_call(proj_data, geom_hcf,
+                                                 discr_vol_space)
+    save_ortho_slices(rec_data, back_dir, 'conebeam helical gpu', vol_sli)
+
+
+if __name__ == '__main__':
+    pytest.main(str(__file__.replace('\\', '/')) + ' -v')

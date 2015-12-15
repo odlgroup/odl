@@ -324,7 +324,6 @@ class ConeFlatGeometry(ConeBeamGeometry):
             raise ValueError('detector parameter {} is not in the valid '
                              'range {}.'.format(dpar, self.det_params))
 
-
         axis = self.axis
         angle += self.angle_offset
 
@@ -343,9 +342,6 @@ class ConeFlatGeometry(ConeBeamGeometry):
         if not (axis[0] == 0 and axis[1] == 0):
             vec = -np.array(
                 self.det_rotation(angle + self.angle_offset)[0]).squeeze()
-
-
-
 
         if not normalized:
             vec *= self.src_radius + self.det_radius
@@ -414,7 +410,12 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
                              ''.format(angle, self.motion_params))
 
         angle += self.angle_offset
-        return self.det_radius * np.array([cos(angle), sin(angle), 0])
+        # return self.det_radius * np.array([cos(angle), sin(angle), 0])
+        # use ASTRA cone_vec convention
+        return self.det_radius * np.array([
+            -sin(angle),
+            cos(angle),
+            0])
 
     def src_position(self, angle):
         """The source position function.
@@ -437,7 +438,12 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
                              ''.format(angle, self.motion_params))
 
         angle += self.angle_offset
-        return -self.src_radius * np.array([cos(angle), sin(angle), 0])
+        # return -self.src_radius * np.array([cos(angle), sin(angle), 0])
+        # use ASTRA cone_vec convention
+        return self.src_radius * np.array([
+            sin(angle),
+            -cos(angle),
+            0])
 
     # TODO: backprojection weighting function?
 
@@ -490,7 +496,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         super().__init__(angle_intvl, dparams, src_rad, det_rad, agrid,
                          dgrid, angle_offset, axis)
         det_height = (dparams.max() - dparams.min())[1]
-        # TODO: correct for magnification ie det_height projected to isocente
+        # TODO: correct for magnification ie use det_height at isocenter
         self._table_feed_per_rotation = spiral_pitch_factor * det_height
 
     @property
@@ -518,9 +524,14 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
+        # return np.array([
+        #     self.det_radius * cos(angle + self.angle_offset),
+        #     self.det_radius * sin(angle + self.angle_offset),
+        #     self.table_feed_per_rotation * angle / (2 * np.pi)])
+        # swap dimension 0 and 1 for ASTRA cone_vec geometries
         return np.array([
-            self.det_radius * cos(angle + self.angle_offset),
             self.det_radius * sin(angle + self.angle_offset),
+            -self.det_radius * cos(angle + self.angle_offset),
             self.table_feed_per_rotation * angle / (2 * np.pi)])
 
     def src_position(self, angle):
@@ -544,9 +555,15 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
+        # return np.array([
+        #     -self.src_radius * cos(angle + self.angle_offset),
+        #     -self.src_radius * sin(angle + self.angle_offset),
+        #     self.table_feed_per_rotation * angle / (2 * np.pi)])
+        # swap dimension 0 and 1 for ASTRA cone_vec geometries
         return np.array([
+            self.src_radius * sin(angle + self.angle_offset),
             -self.src_radius * cos(angle + self.angle_offset),
-            -self.src_radius * sin(angle + self.angle_offset),
             self.table_feed_per_rotation * angle / (2 * np.pi)])
 
-    # TODO: backprojection weighting function?
+
+        # TODO: backprojection weighting function?
