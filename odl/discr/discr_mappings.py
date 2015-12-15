@@ -331,13 +331,15 @@ class NearestInterpolation(FunctionSetMapping):
         Parameters
         ----------
         x : `NtuplesVector`
-            The array of numbers to be interpolated
+            The array of values to be interpolated
+        out : `FunctionSetVector`, optional
+            Vector in which to store the interpolator
 
         Returns
         -------
-        out : `function`
+        out : `FunctionSetVector`
             Nearest-neighbor interpolator for the grid of this
-            operator.
+            operator. Identical to input ``out`` if provided.
 
         See also
         --------
@@ -406,6 +408,8 @@ class NearestInterpolation(FunctionSetMapping):
                     self.grid.coord_vectors,
                     x.data.reshape(self.grid.shape, order=self.order))
             else:
+                # TODO: check if points are ordered. If not, use
+                # NearestNDInterpolator
                 interp = _NearestPointwiseInterpolator(
                     self.grid.coord_vectors,
                     x.data.reshape(self.grid.shape, order=self.order))
@@ -457,12 +461,15 @@ class LinearInterpolation(FunctionSetMapping):
         Parameters
         ----------
         x : `FnBaseVector`
-            The array of numbers to be interpolated
+            The array of values to be interpolated
+        out : `FunctionSpaceVector`, optional
+            Vector in which to store the interpolator
 
         Returns
         -------
-        out : `function`
-            Linear interpolator for the grid of this operator
+        out : `FunctionSpaceVector`
+            Linear interpolator for the grid of this
+            operator. Identical to input ``out`` if provided.
         """
         def linear(arg, out=None):
             """Interpolating function with vectorization."""
@@ -472,6 +479,8 @@ class LinearInterpolation(FunctionSetMapping):
                     self.grid.coord_vectors,
                     x.data.reshape(self.grid.shape, order=self.order))
             else:
+                # TODO: check if points are ordered. If not, use
+                # LinearNDInterpolator
                 interp = _LinearPointwiseInterpolator(
                     self.grid.coord_vectors,
                     x.data.reshape(self.grid.shape, order=self.order))
