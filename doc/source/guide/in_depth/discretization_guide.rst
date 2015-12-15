@@ -4,7 +4,8 @@
 Discretizations
 ###############
 
-TODO.
+.. image:: images/discr.png
+
 
 References
 ----------
