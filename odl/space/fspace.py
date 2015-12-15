@@ -489,8 +489,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
         element : `FunctionSpaceVector`
             The new element, always supports vectorization
 
-        Note
-        ----
+        Notes
+        -----
         If you specify ``vectorized=False``, the function is decorated
         with a vectorizer, which makes two elements created this way
         from the same function being regarded as *not equal*.
@@ -575,8 +575,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination of `x1` and `x2`.
 
-        Note
-        ----
+        Notes
+        -----
         The additions and multiplications are implemented via simple
         Python functions, so non-vectorized versions are slow.
         """

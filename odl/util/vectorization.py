@@ -37,7 +37,7 @@ __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
 
 
 def is_valid_input_array(x, d):
-    """Test whether `x` is a correctly shaped array of points in R^d."""
+    """Test whether ``x`` is a correctly shaped array of points in R^d."""
     if not isinstance(x, np.ndarray):
         return False
     if d == 1:
@@ -47,7 +47,7 @@ def is_valid_input_array(x, d):
 
 
 def is_valid_input_meshgrid(x, d):
-    """Test whether `x` is a meshgrid sequence for points in R^d."""
+    """Test whether ``x`` is a meshgrid sequence for points in R^d."""
     try:
         iter(x)
     except TypeError:
@@ -146,8 +146,8 @@ def vectorize(dtype=None):
         is performed, meaning that the results are collected in a
         list instead of an array.
 
-    Note
-    ----
+    Notes
+    -----
     The decorated function returns the array given as ``out`` argument
     if it is not `None`.
 

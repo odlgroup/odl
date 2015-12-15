@@ -416,7 +416,7 @@ class NearestInterpolation(FunctionSetMapping):
 
 class LinearInterpolation(FunctionSetMapping):
 
-    """Linear interpolation interpolation as a `LinearOperator`."""
+    """Linear interpolation interpolation as an `Operator`."""
 
     def __init__(self, ip_fspace, grid, dspace, order='C'):
         """Initialize a new instance.
