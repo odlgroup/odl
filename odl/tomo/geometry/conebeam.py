@@ -530,8 +530,8 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         #     self.table_feed_per_rotation * angle / (2 * np.pi)])
         # swap dimension 0 and 1 for ASTRA cone_vec geometries
         return np.array([
-            self.det_radius * sin(angle + self.angle_offset),
-            -self.det_radius * cos(angle + self.angle_offset),
+            -self.det_radius * sin(angle + self.angle_offset),
+            self.det_radius * cos(angle + self.angle_offset),
             self.table_feed_per_rotation * angle / (2 * np.pi)])
 
     def src_position(self, angle):

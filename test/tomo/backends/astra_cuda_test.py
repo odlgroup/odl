@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Test CUDA backend for ASTRA."""
+
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-
 standard_library.install_aliases()
 
 # External
@@ -28,12 +29,11 @@ import numpy as np
 import pytest
 
 # Internal
-from odl.set.domain import Interval, Rectangle, Cuboid
+from odl.tomo.backends import ASTRA_AVAILABLE
+from odl.set.domain import Interval, Rectangle
 from odl.space.fspace import FunctionSpace
 from odl.discr.lp_discr import uniform_discr, uniform_discr_fromspace
-from odl.discr.grid import uniform_sampling, RegularGrid
-# from odl.util.testutils import all_equal, is_subdict
-from odl.tomo.backends import ASTRA_AVAILABLE
+from odl.discr.grid import uniform_sampling
 from odl.tomo.backends.astra_cuda import (astra_gpu_forward_projector_call,
                                           astra_gpu_backward_projector_call)
 from odl.tomo.geometry.parallel import Parallel2dGeometry, Parallel3dGeometry
@@ -41,15 +41,11 @@ from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
 from odl.tomo.util.testutils import skip_if_no_astra
-from odl.util.testutils import all_equal, all_almost_equal, almost_equal
+# from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
+#                                 is_subdict)
+
 
 # TODO: test other interpolations once implemented
-
-def save_slice(data, folder, name):
-    data.show('imshow', saveto='{}{}.png'.format(
-        folder, name.replace(' ', '_')),
-              title='{} [:,:]'.format(name))
-
 
 @skip_if_no_astra
 def test_astra_gpu_projector_call_2d():
@@ -59,6 +55,14 @@ def test_astra_gpu_projector_call_2d():
     back_dir = '/home/jmoosmann/Documents/astra_odl/backward/'
 
     def save_slice(data, folder, name):
+        """Save image.
+
+        Parameters
+        ----------
+        data : `DiscreteLp`
+        folder : `str`
+        name : `str`
+        """
         data.show('imshow', saveto='{}{}.png'.format(
             folder, name.replace(' ', '_')),
                   title='{} [:,:]'.format(name))
@@ -128,6 +132,15 @@ def test_astra_gpu_projector_call_3d():
     back_dir = '/home/jmoosmann/Documents/astra_odl/backward/'
 
     def save_ortho_slices(data, folder, name, sli):
+        """Save three orthogonal slices.
+
+        Parameters
+        ----------
+        data : `DiscreteLp`
+        folder : `str`
+        name : `str`
+        sli : three-element array-like
+        """
         x, y, z = np.asarray(sli, int)
         data.show('imshow', saveto='{}{}_z{:03d}.png'.format(
             folder, name.replace(' ', '_'), z),
@@ -153,7 +166,7 @@ def test_astra_gpu_projector_call_3d():
     sli0 = np.round(0.1 * np.array(vol_shape))
     sli1 = np.round(0.4 * np.array(vol_shape))
     sliz0 = np.round(0.1 * np.array(vol_shape))
-    sliz1= np.round(0.9 * np.array(vol_shape))
+    sliz1 = np.round(0.9 * np.array(vol_shape))
     phan[sliz0[0]:sliz1[0], sli0[1]:sli1[1], sli0[2]:sli1[2]] = 1
 
     discr_data = discr_vol_space.element(phan)

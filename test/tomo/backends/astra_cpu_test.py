@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Test ASTRA CPU backend. """
+
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
@@ -23,31 +25,39 @@ standard_library.install_aliases()
 import numpy as np
 import pytest
 import matplotlib
-# matplotlib.use('qt4agg')
 matplotlib.use('agg')
 
 # Internal
-from odl.set.domain import Interval, Rectangle, Cuboid
+from odl.tomo.backends import ASTRA_AVAILABLE
+from odl.set.domain import Interval
 from odl.space.fspace import FunctionSpace
 from odl.discr.lp_discr import uniform_discr, uniform_discr_fromspace
 from odl.discr.grid import uniform_sampling
-# from odl.util.testutils import all_equal, is_subdict
-from odl.tomo.backends import ASTRA_AVAILABLE
-
 from odl.tomo import (Parallel2dGeometry, FanFlatGeometry)
 from odl.tomo.backends.astra_cpu import (astra_cpu_forward_projector_call,
-                                        astra_cpu_backward_projector_call)
+                                         astra_cpu_backward_projector_call)
 from odl.tomo.util.testutils import skip_if_no_astra
+# from odl.util.testutils import all_equal, is_subdict
 
 
 # TODO: test other interpolations once implemented
+
 @skip_if_no_astra
 def test_astra_cpu_projector_call_2d():
+    """ASTRA CPU forward and back- projection."""
 
     for_dir = '/home/jmoosmann/Documents/astra_odl/forward/'
     back_dir = '/home/jmoosmann/Documents/astra_odl/backward/'
 
     def save_slice(data, folder, name):
+        """Save image.
+
+        Parameters
+        ----------
+        data : `DiscreteLp`
+        folder : `str`
+        name : `str`
+        """
         data.show('imshow', saveto='{}{}.png'.format(
             folder, name.replace(' ', '_')),
                   title='{} [:,:]'.format(name))

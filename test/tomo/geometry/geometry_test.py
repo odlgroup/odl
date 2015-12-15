@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Test ODL geometry objects for tomography."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -37,9 +38,11 @@ from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 
 
-# TODO: test for axis orientation and scaling factors
+# TODO: test for rotations about arbitray axis once implemented
 
 def test_parallel_2d_geometry():
+    """General parallel 2D geometries."""
+
     # initialize
     full_angle = np.pi
     angle_intvl = Interval(0, full_angle)
@@ -80,14 +83,10 @@ def test_parallel_2d_geometry():
     assert almost_equal(np.sum(e1r - e2), 0, places=16)
     assert almost_equal(np.sum(e2r + e1), 0, places=16)
 
-    sp = geom.src_position(0)
-    # print('\n source position:', sp)
-
-    dts = geom.det_to_src(0, 1)
-    # print('\n detector to source:', dts)
-
 
 def test_parallel_3d_geometry():
+    """General parallel 3D geometries."""
+
     # initialize
     full_angle = np.pi
     angle_intvl = Interval(0, full_angle)
@@ -142,10 +141,6 @@ def test_parallel_3d_geometry():
     assert all_almost_equal(np.array(rot_mat * e2), np.array(-e1),
                             places=places)
 
-    # np.set_printoptions(precision=4, suppress=True)
-    # print('\n\n', rot_mat * e1, '\n\n', rot_mat * e2, '\n\n', rot_mat * e3,
-    #       '\n\n', rot_mat)
-
     # rotation axis
     geom = Parallel3dGeometry(angle_intvl, dparams, axis=None)
     assert all_equal(geom.axis, np.array([0, 0, 1]))
@@ -172,7 +167,7 @@ def test_parallel_3d_geometry():
 
 
 def test_fanflat():
-    """2D fan beam geometry with 1D line detector."""
+    """2D fanbeam geometry with 1D line detector."""
 
     # initialize
     full_angle = np.pi
@@ -224,7 +219,7 @@ def test_fanflat():
 
 
 def test_circular_cone_flat():
-    """Circular cone beam acquisition with flat 2d detector."""
+    """Conebeam geometry with circular acquisition and a flat 2D detector."""
 
     # initialize
     full_angle = np.pi
@@ -256,22 +251,23 @@ def test_circular_cone_flat():
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
 
-    assert geom.det_refpoint(0)[0] == det_rad
-    assert geom.det_refpoint(np.pi)[0] == -det_rad
-
     assert geom.ndim == 3
+    assert np.linalg.norm(geom.det_refpoint(0)) == det_rad
+    assert np.linalg.norm(geom.src_position(np.pi)) == src_rad
     assert isinstance(geom.detector, Flat2dDetector)
 
 
 def test_helical_cone_flat():
+    """Conebeam geometry with helical acquisition and a flat 2D detector."""
+
     # initialize
     full_angle = 2 * np.pi
     angle_intvl = Interval(0, full_angle)
     angle_grid = uniform_sampling(angle_intvl, 5, as_midp=False)
     dparams = IntervalProd([-40, -3], [40, 3])
     det_grid = uniform_sampling(dparams, (10, 5))
-    src_rad = 10
-    det_rad = 5
+    src_rad = 10.0
+    det_rad = 5.0
     spiral_pitch_factor = 1
 
     geom = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
@@ -303,99 +299,56 @@ def test_helical_cone_flat():
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
 
-    assert geom.det_refpoint(0)[0] == det_rad
-    assert geom.det_refpoint(np.pi)[0] == -det_rad
+
+    assert np.linalg.norm(geom.det_refpoint(0)) == det_rad
+    assert almost_equal(np.linalg.norm(geom.det_refpoint(np.pi/4)[0:2]),
+                        det_rad)
 
     assert geom.ndim == 3
     assert isinstance(geom.detector, Flat2dDetector)
 
     det_height = dparams.size[1]
     assert all_equal(dparams.size, dparams.max() - dparams.min())
-    assert geom.table_feed_per_rotation == spiral_pitch_factor * det_height
+    assert almost_equal(geom.table_feed_per_rotation,
+                        spiral_pitch_factor * det_height)
 
     det_refpoint = geom.det_refpoint(angle_intvl.max())
-    assert det_refpoint[0] == det_rad
-    assert almost_equal(det_refpoint[1], 0, places=14)
+    assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
     assert almost_equal(det_refpoint[2], det_height, places=14)
 
     det_refpoint = geom.det_refpoint(2 * np.pi)
-    assert det_refpoint[0] == det_rad
-    assert almost_equal(det_refpoint[1], 0, places=14)
+    assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
     assert almost_equal(det_refpoint[2], det_height * spiral_pitch_factor,
                         places=14)
 
-    # Each row of vectors corresponds to a single projection, and consists of:
-    #  ( srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ )
-    #  src : the ray source
-    #  d   : the center of the detector
-    #  u   : the vector from detector pixel (0,0) to (0,1)
-    #  v   : the vector from detector pixel (0,0) to (1,0)
-
-    angle_offset = np.pi / 2
+    angle_offset = 0.0
     geom = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                                    spiral_pitch_factor, angle_grid,
                                    det_grid, angle_offset)
 
     angles = geom.angle_grid
     num_angles = geom.angle_grid.ntotal
-    vec = np.zeros((num_angles, 12))
-    vectors = np.zeros((num_angles, 12))
 
-    src_radius = geom.src_radius
-    det_radius = geom.det_radius
-    det_pix_width = geom.det_grid.stride[0]
-    det_pix_height = geom.det_grid.stride[1]
+    src_rad = geom.src_radius
+    det_rad = geom.det_radius
     tfpr = geom.table_feed_per_rotation
 
+    print(src_rad, det_rad)
     for nn in range(num_angles):
         angle = angles[nn][0]
         z = tfpr * angle / (2 * np.pi)
 
         # source
-        vec[nn, 0:3] = geom.src_position(angle)
+        assert all_almost_equal((np.sin(angle) * src_rad, -np.cos(angle)
+                                 * src_rad, z), geom.src_position(angle))
 
         # center of detector
-        vec[nn, 3:6] = geom.det_refpoint(angle)
-
-        # vector from detector pixel (0,0) to (0,1)
-        vec[nn, 6] = np.cos(angle) * det_pix_width
-        vec[nn, 7] = np.sin(angle) * det_pix_width
-
-        # vector from detector pixel (0,0) to (1,0)
-        vec[nn, 11] = det_pix_height
-
-        # source
-        vectors[nn, 0] = np.sin(angle) * src_radius
-        vectors[nn, 1] = -np.cos(angle) * src_radius
-        vectors[nn, 2] = z
-
-        # center of detector
-        vectors[nn, 3] = -np.sin(angle) * det_radius
-        vectors[nn, 4] = np.cos(angle) * det_radius
-        vectors[nn, 5] = z
-
-        # vector from detector pixel (0,0) to (0,1)
-        vectors[nn, 6] = np.cos(angle) * det_pix_width
-        vectors[nn, 7] = np.sin(angle) * det_pix_width
-        vectors[nn, 8] = 0
-
-        # vector from detector pixel (0,0) to (1,0)
-        vectors[nn, 9] = 0
-        vectors[nn, 10] = 0
-        vectors[nn, 11] = det_pix_height
-
-        forstr = '{:5.1f}, ' * 3
-        print('\nastra :', nn, ' angle: {:03.2f}'.format(angle / np.pi),
-              ' src: ' + forstr.format(*vectors[nn, 0:3]),
-              ' det: ' + forstr.format(*vectors[nn, 3:6]),
-              ' vpd: ' + forstr.format(*vectors[nn, 6:9]),
-              ' hpd: ' + forstr.format(*vectors[nn, 9:12]))
-
-        print('odl   :', nn, ' angle: {:03.2f}'.format(angle / np.pi),
-              ' src: ' + forstr.format(*vec[nn, 0:3]),
-              ' det: ' + forstr.format(*vec[nn, 3:6]),
-              ' vpd: ' + forstr.format(*vec[nn, 6:9]),
-              ' hpd: ' + forstr.format(*vec[nn, 9:12]))
+        det = geom.det_refpoint(angle)
+        src = geom.src_position(angle)
+        val0 = np.linalg.norm(src[0:2]) / src_rad
+        val1 = np.linalg.norm(det[0:2]) / det_rad
+        assert almost_equal(val0, val1)
+        assert almost_equal(src[2], det[2])
 
 
 if __name__ == '__main__':
