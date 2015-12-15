@@ -79,7 +79,7 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
     ndim = vol_data.space.grid.ndim
     # Create astra geometries
     vol_geom = astra_volume_geometry(vol_data.space)
-    proj_geom = astra_projection_geometry(geometry, vol_data.space)
+    proj_geom = astra_projection_geometry(geometry)
 
     # Create ASTRA data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
@@ -87,7 +87,8 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
                          ndim=proj_space.grid.ndim)
 
     # Create projector
-    proj_id = astra_projector('cuda', vol_geom, proj_geom, ndim, impl='cuda')
+    proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
+                              impl='cuda')
 
     # Create algorithm
     algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
@@ -159,7 +160,7 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space):
 
     # Create geometries
     vol_geom = astra_volume_geometry(reco_space)
-    proj_geom = astra_projection_geometry(geometry, reco_space)
+    proj_geom = astra_projection_geometry(geometry)
 
     # Create data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=None,
@@ -167,7 +168,8 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space):
     sino_id = astra_data(proj_geom, datatype='projection', data=proj_data)
 
     # Create projector
-    proj_id = astra_projector('cuda', vol_geom, proj_geom, ndim, impl='cuda')
+    proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
+                              impl='cuda')
 
     # Create algorithm
     algo_id = astra_algorithm('backward', ndim, vol_id, sino_id,

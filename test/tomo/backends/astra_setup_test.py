@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Test astra setup functions."""
+
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 
@@ -24,13 +26,16 @@ standard_library.install_aliases()
 import numpy as np
 import pytest
 
-# Internal
-from odl.set.domain import RealNumbers, Interval, IntervalProd
-from odl.discr.grid import TensorGrid, uniform_sampling
-from odl.discr.lp_discr import uniform_discr, uniform_discr_fromspace
-from odl.space.fspace import FunctionSpace
-from odl.util.testutils import all_equal, is_subdict
+
 from odl.tomo import ASTRA_AVAILABLE
+if ASTRA_AVAILABLE:
+    import astra
+
+# Internal
+from odl.set.domain import Interval, IntervalProd
+from odl.discr.grid import TensorGrid, uniform_sampling
+from odl.discr.lp_discr import uniform_discr
+from odl.util.testutils import all_equal, is_subdict
 from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                            astra_volume_geometry,
                                            astra_data, astra_projector,
@@ -43,11 +48,8 @@ from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
 from odl.tomo.util.testutils import skip_if_no_astra
 
-if ASTRA_AVAILABLE:
-    import astra
-else:
-    astra = None
 
+# TODO: add test to check scaling of ASTRA projectors
 
 def _discrete_domain(ndim, interp):
     """Create `DiscreteLp` space with isotropic grid stride.
@@ -177,7 +179,6 @@ def test_proj_geom_parallel_2d():
     assert all_equal(proj_geom['ProjectionAngles'], np.linspace(0, 2, 5))
 
 
-# TODO: check scaling
 @skip_if_no_astra
 def test_astra_projection_geometry():
     """Create ASTRA projection geometry from `odl.tomo.geometry` objects."""
@@ -320,7 +321,7 @@ def test_parallel_2d_projector():
 def test_parallel_3d_projector():
     """Create ASTRA 2D projectors."""
 
-    astra_projector('nearest', vol_geom_3d, proj_geom_3d, ndim=3, impl='cpu')
+    astra_projector('nearest', vol_geom_3d, proj_geom_3d, ndim=3, impl='cuda')
 
     # Run as a real test once ASTRA supports this construction
     with pytest.raises(ValueError):
@@ -368,7 +369,7 @@ def test_astra_algorithm():
         astra.algorithm.delete(alg_id)
 
     # CUDA
-    proj_id = astra_projector('cuda', vol_geom_2d, proj_geom_2d, ndim=ndim,
+    proj_id = astra_projector('nearest', vol_geom_2d, proj_geom_2d, ndim=ndim,
                               impl='cuda')
 
     # FP
@@ -397,8 +398,7 @@ def test_astra_algorithm():
 
 @skip_if_no_astra
 def test_geom_to_vec():
-    """Create ASTRA projection geometries vectors from `odl.tomo.geometry`
-    objects."""
+    """Create ASTRA projection geometries vectors using ODL geometries."""
 
     angle_intvl = Interval(0, 2 * np.pi)
     angle_grid = uniform_sampling(angle_intvl, 5, as_midp=False)
@@ -442,11 +442,10 @@ def test_geom_to_vec():
     ageom = astra_projection_geometry(geom)
 
 
-    print(ageom)
-
 
 @skip_if_no_astra
 def test_astra_cleanup():
+    """Clean up ASTRA memory."""
     astra_cleanup()
 
 
