@@ -249,6 +249,7 @@ def impl_test_setitem(x, index):
     x[index] = index
     assert x[index] == index
 
+
 def test_setitem():
     r3 = odl.CudaRn(3)
     x = r3.element([42, 42, 42])
@@ -320,15 +321,6 @@ def test_slice_is_view():
 
     assert all_equal(xh, xd)
     assert all_equal(yh, yd)
-
-
-def test_getslice_index_error():
-    r3 = odl.CudaRn(3)
-    xd = r3.element([1, 2, 3])
-
-    # Bad slice
-    with pytest.raises(IndexError):
-        xd[10:13]
 
 
 def _test_setslice(slice):
