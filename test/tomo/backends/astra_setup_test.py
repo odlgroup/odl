@@ -320,6 +320,8 @@ def test_parallel_2d_projector():
 def test_parallel_3d_projector():
     """Create ASTRA 2D projectors."""
 
+    astra_projector('nearest', vol_geom_3d, proj_geom_3d, ndim=3, impl='cpu')
+
     # Run as a real test once ASTRA supports this construction
     with pytest.raises(ValueError):
         astra_projector('nearest', vol_geom_3d, proj_geom_3d,
@@ -432,6 +434,15 @@ def test_geom_to_vec():
                                    dgrid=det_grid)
     vec = astra_geom_to_vec(geom)
     assert vec.shape == (angle_grid.ntotal, 12)
+
+
+    # CIRCULAR CONEFLAT
+    geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                    agrid=angle_grid, dgrid=det_grid)
+    ageom = astra_projection_geometry(geom)
+
+
+    print(ageom)
 
 
 @skip_if_no_astra

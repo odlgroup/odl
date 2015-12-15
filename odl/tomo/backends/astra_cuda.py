@@ -21,6 +21,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
+import numpy as np
 import astra
 if not astra.astra.use_cuda():
     raise ImportError
@@ -28,8 +29,12 @@ if not astra.astra.use_cuda():
 # Internal
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.backends.astra_setup import (astra_projection_geometry,
-    astra_volume_geometry, astra_data, astra_algorithm, astra_cleanup)
+                                           astra_volume_geometry,
+                                           astra_projector, astra_data,
+                                           astra_algorithm, astra_cleanup)
 from odl.tomo.geometry.geometry import Geometry
+from odl.tomo.geometry.parallel import Parallel3dGeometry
+from odl.tomo.geometry.conebeam import ConeBeamGeometry
 
 
 __all__ = ('astra_gpu_forward_projector_call',
@@ -72,35 +77,31 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
                          ''.format(vol_data.space.grid.ndim, geometry.ndim))
 
     ndim = vol_data.space.grid.ndim
-
     # Create astra geometries
     vol_geom = astra_volume_geometry(vol_data.space)
     proj_geom = astra_projection_geometry(geometry, vol_data.space)
-    # print(proj_geom)
 
     # Create ASTRA data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
     sino_id = astra_data(proj_geom, datatype='projection', data=None,
                          ndim=proj_space.grid.ndim)
 
+    # Create projector
+    proj_id = astra_projector('cuda', vol_geom, proj_geom, ndim, impl='cuda')
+
     # Create algorithm
-    algo_id = astra_algorithm('forward', ndim, vol_id, sino_id, proj_id=None,
-                              impl='cuda')
+    algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
+                              proj_id=proj_id, impl='cuda')
 
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
 
-    # TODO: check if axes have to be swapped
     # Wrap data
     if ndim == 2:
-        elem = proj_space.element(astra.data2d.get_shared(sino_id))
+        elem = proj_space.element(astra.data2d.get(sino_id))
     else:  # ndim = 3
-        pshape = proj_space.grid.shape
-        # pshape = pshape[1], pshape[2], pshape[0]
-        elem = proj_space.element(astra.data3d.get_shared(sino_id).reshape(
-            pshape
-        )
-        )
+            elem = proj_space.element(
+                    np.rollaxis(astra.data3d.get(sino_id), 0, 3))
 
     # Delete ASTRA objects
     astra_cleanup()
@@ -156,32 +157,31 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space):
 
     ndim = proj_data.space.grid.ndim
 
-    # Create astra geometries
+    # Create geometries
     vol_geom = astra_volume_geometry(reco_space)
     proj_geom = astra_projection_geometry(geometry, reco_space)
 
-    # Create ASTRA data structures
+    # Create data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=None,
                         ndim=reco_space.grid.ndim)
     sino_id = astra_data(proj_geom, datatype='projection', data=proj_data)
 
     # Create projector
-    vol_interp = proj_data.space.interp
+    proj_id = astra_projector('cuda', vol_geom, proj_geom, ndim, impl='cuda')
 
     # Create algorithm
-    algo_id = astra_algorithm('backward', ndim, vol_id, sino_id, proj_id=None,
-                              impl='cuda')
+    algo_id = astra_algorithm('backward', ndim, vol_id, sino_id,
+                              proj_id=proj_id, impl='cuda')
 
-    # Run algorithm and delete it
+    # Run algorithm
     astra.algorithm.run(algo_id)
 
     # Wrap data
     if ndim == 2:
-        get_data = astra.data2d.get_shared
+        get_data = astra.data2d.get
     else:  # ndim = 3
-        get_data = astra.data3d.get_shared
+        get_data = astra.data3d.get
 
-    # TODO: check if axes have to be swapped
     elem = reco_space.element(get_data(vol_id))
 
     # Delete ASTRA objects

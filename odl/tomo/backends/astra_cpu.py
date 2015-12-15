@@ -98,10 +98,13 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
     astra.algorithm.run(algo_id)
 
     # Wrap data
+    # Do not use get_shared followed by an astra clean up.
     if ndim == 2:
-        get_data = astra.data2d.get_shared
+        # get_data = astra.data2d.get_shared
+        get_data = astra.data2d.get
     else:  # ndim = 3
-        get_data = astra.data3d.get_shared
+        # get_data = astra.data3d.get_shared
+        get_data = astra.data3d.get
 
     # Flip detector pixels for fanflat
     if isinstance(geometry, FanFlatGeometry):
@@ -188,9 +191,11 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
 
     # Wrap data
     if ndim == 2:
-        get_data = astra.data2d.get_shared
+        # get_data = astra.data2d.get_shared
+        get_data = astra.data2d.get
     else:  # ndim = 3
-        get_data = astra.data3d.get_shared
+        # get_data = astra.data3d.get_shared
+        get_data = astra.data3d.get
 
     # flip both dimensions = rotate 180 degrees
     if isinstance(geometry, FanFlatGeometry):
