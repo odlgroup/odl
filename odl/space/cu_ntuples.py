@@ -363,18 +363,14 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
         >>> y
         CudaNtuples(3, 'uint8').element([1, 4, 5])
         """
-        try:
-            if isinstance(indices, slice):
-                data = self.data.getslice(indices)
-                return type(self.space)(data.size, data.dtype).element(data)
-            else:
-                if indices < 0:
-                    indices += self.size
+        if isinstance(indices, slice):
+            data = self.data.getslice(indices)
+            return type(self.space)(data.size, data.dtype).element(data)
+        else:
+            if indices < 0:
+                indices += self.size
 
-                return self.data.__getitem__(indices)
-        except RuntimeError:
-            # TODO change to IndexError once PyBind11 supports it
-            raise IndexError('Index {} out of range'.format(indices))
+            return self.data.__getitem__(indices)
 
     def __setitem__(self, indices, values):
         """Set values of this vector.
@@ -419,29 +415,22 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
         >>> y
         CudaNtuples(3, 'uint8').element([5, 5, 5])
         """
-        
-        try:
-            if isinstance(values, CudaNtuplesVector):
-                self.assign(values)  # use lincomb magic
-            elif isinstance(indices, slice):
-                # Convert value to the correct type if needed
-                value_array = np.asarray(values, dtype=self.space.dtype)
+        if isinstance(values, CudaNtuplesVector):
+            self.assign(values)  # use lincomb magic
+        elif isinstance(indices, slice):
+            # Convert value to the correct type if needed
+            value_array = np.asarray(values, dtype=self.space.dtype)
 
-                if (value_array.ndim == 0):
-                    self.data.fill(values)
-                else:
-                    # Size checking is performed in c++
-                    self.data.setslice(indices, value_array)
+            if (value_array.ndim == 0):
+                self.data.fill(values)
             else:
-                if indices < 0:
-                    indices += self.size
+                # Size checking is performed in c++
+                self.data.setslice(indices, value_array)
+        else:
+            if indices < 0:
+                indices += self.size
 
-                self.data.__setitem__(int(indices), values)
-        except RuntimeError as e:
-            # TODO change to IndexError once PyBind11 
-            # supports it
-            raise IndexError('Index {} out of range'
-                                ''.format(indices))
+            self.data.__setitem__(int(indices), values)
 
     @property
     def ufunc(self):
