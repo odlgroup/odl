@@ -364,7 +364,7 @@ class DiscreteLpVector(DiscretizationVector):
         """
         return DiscreteLpVectorUFuncs(self)
 
-    def show(self, method='', title='', indices=None, **kwargs):
+    def show(self, method='', title='', indices=None, fig=None, **kwargs):
         """Create a figure displaying the function in 1d or 2d.
 
         Parameters
@@ -390,17 +390,19 @@ class DiscreteLpVector(DiscretizationVector):
 
         title : `str`, optional
             Set the title of the figure
+
+        fig : ``matplotlib`` figure
+            The figure to show in
+
         kwargs : {'figsize', 'saveto', ...}
             Extra keyword arguments passed on to display method
             See the Matplotlib functions for documentation of extra
             options.
 
-        title : `str`, optional
-            Set the title of the figure
-        kwargs : {'figsize', 'saveto', ...}
-            Extra keyword arguments passed on to display method
-            See the Matplotlib functions for documentation of extra
-            options.
+        Returns
+        -------
+        fig : ``matplotlib`` figure
+            The resulting figure. It is also shown to the user.
 
         See Also
         --------
@@ -412,8 +414,8 @@ class DiscreteLpVector(DiscretizationVector):
         """
 
         from odl.util.graphics import show_discrete_function
-        show_discrete_function(self, method=method, title=title,
-                               indices=indices, **kwargs)
+        return show_discrete_function(self, method=method, title=title,
+                                      indices=indices, fig=fig, **kwargs)
 
 
 def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',

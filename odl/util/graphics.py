@@ -36,7 +36,7 @@ __all__ = ('show_discrete_function',)
 
 
 def show_discrete_function(dfunc, method='', title=None, indices=None,
-                           **kwargs):
+                           fig=None, **kwargs):
     """Display a discrete 1d or 2d function.
 
     Parameters
@@ -68,6 +68,9 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         For data with 3 or more dimensions, the 2d slice in the first
         two axes at the "middle" along the remaining axes is shown
         (semantically ``[:, :, shape[2:] // 2]``).
+
+    figure : ``matplotlib`` figure
+        The figure to show in
 
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method
@@ -197,7 +200,11 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     # Additional keyword args are passed on to the display method
     dsp_kwargs.update(**kwargs)
 
-    fig = plt.figure(figsize=figsize)
+    if fig is None:
+        fig = plt.figure(figsize=figsize)
+    else:
+        plt.figure(fig.number)
+
     if title is not None:
         plt.title(title)
 
@@ -265,5 +272,8 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             plt.colorbar(csub, ticks=ticks, format=format)
 
     plt.show()
+    plt.draw()
     if saveto is not None:
         fig.savefig(saveto)
+
+    return fig
