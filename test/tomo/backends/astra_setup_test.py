@@ -384,7 +384,7 @@ def test_astra_algorithm():
     ndim = 3
     vol_id = astra_data(vol_geom_3d, 'volume', ndim=ndim)
     sino_id = astra_data(proj_geom_3d, 'projection', ndim=ndim)
-    proj_id = astra_projector('nearest', vol_geom_2d, proj_geom_2d, ndim=ndim,
+    proj_id = astra_projector('nearest', vol_geom_3d, proj_geom_3d, ndim=ndim,
                               impl='cuda')
 
     with pytest.raises(NotImplementedError):

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test ASTRA CPU backend. """
+"""Test ASTRA backend using CPU."""
 
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -41,6 +41,7 @@ from odl.tomo.util.testutils import skip_if_no_astra
 
 
 # TODO: test other interpolations once implemented
+# TODO: move larger tests to examples
 
 @skip_if_no_astra
 def test_astra_cpu_projector_call_2d():

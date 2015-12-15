@@ -82,12 +82,15 @@ def euler_matrix(*angles):
                 [[cph, -sph],
                  [sph, cph]])
     else:
-        mat = np.matrix([
-            [cph * cps - sph * cth * sps, -cph * sps - sph * cth * cps,
-             sph * sth],
-            [sph * cps + cph * cth * sps, -sph * sps + cph * cth * cps,
-             -cph * sth],
-            [sth * sps, sth * cps, cth]])
+        mat = np.matrix([[cph * cps - sph * cth * sps,
+                          -cph * sps - sph * cth * cps,
+                          sph * sth],
+                         [sph * cps + cph * cth * sps,
+                          -sph * sps + cph * cth * cps,
+                          -cph * sth],
+                         [sth * sps,
+                          sth * cps,
+                          cth]])
 
     return mat
 
@@ -117,8 +120,8 @@ def axis_rotation(axis, angle, vectors):
     if not (hasattr(vectors, 'shape') and hasattr(vectors, 'ndim')):
         vectors = np.asarray(vectors)
 
-    if not (vectors.shape == (3,) or
-                (vectors.ndim == 2 and vectors.shape[1] == 3)):
+    if not (vectors.shape == (3,) or (
+        vectors.ndim == 2 and vectors.shape[1] == 3)):
         raise ValueError('`vector` shape {} not (3,) or (N, 3).'
                          ''.format(vectors.shape))
 

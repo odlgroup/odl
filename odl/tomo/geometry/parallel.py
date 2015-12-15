@@ -17,21 +17,22 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
+from abc import ABCMeta
+from math import cos, sin  # , acos, atan2, sqrt
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 from future.utils import with_metaclass
 
 # External
-from abc import ABCMeta
 import numpy as np
 
 # Internal
-from odl import IntervalProd, TensorGrid
+from odl.set.domain import IntervalProd
+from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import LineDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.util.trafos import euler_matrix
-from math import cos, sin  # , acos, atan2, sqrt
 
 __all__ = ('Parallel2dGeometry', 'Parallel3dGeometry')
 
@@ -56,7 +57,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
             Offset to the rotation angle in the azimuthal plane. Does not
             imply an offset in z-direction.
         """
-        if angle_intvl.ndim != 1 and not isinstance(angle_intvl, IntervalProd):
+        if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
             raise TypeError('angle parameters {!r} are not an interval.'
                             ''.format(angle_intvl))
         angle_offset = float(angle_offset)
@@ -392,13 +393,13 @@ class Parallel3dGeometry(ParallelGeometry):
         if axis is None:
             axis = np.array([0, 0, 1])
         elif isinstance(axis, (int, float)):
-            n = axis
+            tmp = axis
             axis = np.zeros(3)
-            axis[n] = 1
+            axis[tmp] = 1
         elif len(axis) == 3:
             axis = np.array(axis)
         else:
-            raise ValueError('`axis` intializer {} has wrong format'.format(
+            raise ValueError('wrong format of `axis` intializer {}'.format(
                 axis))
 
         return axis
