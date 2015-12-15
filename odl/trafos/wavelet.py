@@ -140,13 +140,14 @@ def pywt_coeff_to_array(coeff, size_list):
     """Convert a `pywt
     <http://www.pybytes.com/pywavelets/>`_ coefficient into a flat array.
 
-    Related to 2D and 3D multilevel discrete wavelet transform.
+    Related to 1D, 2D and 3D multilevel discrete wavelet transforms.
 
     Parameters
     ----------
-    1D:
     coeff : ordered `list`
         Coefficient are organized in the list in the following way:
+
+        In 1D:
 
         ``[aN, (dN), ... (d1)]``
 
@@ -155,9 +156,8 @@ def pywt_coeff_to_array(coeff, size_list):
         ``a`` = approximation,
 
         ``d`` = detail
-    In 2D:
-    coeff : ordered `list`
-        Coefficient are organized in the list in the following way:
+
+        In 2D:
 
         ``[aaN, (adN, daN, ddN), ... (ad1, da1, dd1)]``
 
@@ -171,9 +171,7 @@ def pywt_coeff_to_array(coeff, size_list):
 
         ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
 
-    In 3D:
-    coeff : ordered `list`
-        Coefficient are organized in the list in the following way:
+        In 3D:
 
         ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
@@ -196,7 +194,7 @@ def pywt_coeff_to_array(coeff, size_list):
 
         ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
-        ``N`` =  the number of scaling levels
+        ``N`` refers to  the number of scaling levels
 
     size_list : `list`
         A list containing the sizes of the wavelet (approximation
@@ -209,7 +207,7 @@ def pywt_coeff_to_array(coeff, size_list):
         ``size_list[N]`` = size of the detailed coefficients at
             the finest level,
         ``size_list[N+1]`` = size of original image,
-        ``N`` = number of scales
+        ``N`` =  the number of scaling levels
 
     Returns
     -------
@@ -219,14 +217,10 @@ def pywt_coeff_to_array(coeff, size_list):
         be transformed and on the chosen wavelet basis.
       """
     flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-    if np.size(size_list[0]) == 1:
-        const = 1
-    if np.size(size_list[0]) == 2:
-        const = 3
-    elif np.size(size_list[0]) == 3:
-        const = 7
+    ndim = len(size_list[0])
+    dcoeffs_per_scale = 2**ndim - 1
 
-    flat_total_size = flat_sizes[0] + const * sum(flat_sizes[1:])
+    flat_total_size = flat_sizes[0] + dcoeffs_per_scale * sum(flat_sizes[1:])
     flat_coeff = np.empty(flat_total_size)
 
     start = 0
@@ -234,7 +228,7 @@ def pywt_coeff_to_array(coeff, size_list):
     flat_coeff[start:stop] = coeff[0].ravel()
 
     for fsize, detail_coeffs in zip(flat_sizes[1:], coeff[1:]):
-        if const == 1:
+        if dcoeffs_per_scale == 1:
             start, stop = stop, stop + fsize
             flat_coeff[start:stop] = detail_coeffs.ravel()
         else:
@@ -249,7 +243,7 @@ def array_to_pywt_coeff(coeff, size_list):
     """Convert a flat array into a `pywt
     <http://www.pybytes.com/pywavelets/>`_ coefficient list.
 
-    For multilevel 1D, 2D and 3D discrete wavelet transform
+    For multilevel 1D, 2D and 3D discrete wavelet transforms.
 
     Parameters
     ----------
@@ -272,13 +266,14 @@ def array_to_pywt_coeff(coeff, size_list):
 
        ``size_list[N+1]`` = size of original image,
 
-       ``N`` = nscales
+       ``N`` =  the number of scaling levels
 
     Returns
     -------
-    In 1D:
     coeff : ordered `list`
         Coefficient are organized in the list in the following way:
+
+        In 1D:
 
         ``[aN, (dN), ... (d1)]``
 
@@ -287,9 +282,8 @@ def array_to_pywt_coeff(coeff, size_list):
         ``a`` = approximation,
 
         ``d`` = detail,
-    In 2D:
-    coeff : ordered `list`
-        Coefficient are organized in the list in the following way:
+
+        In 2D:
 
         ``[aaN, (adN, daN, ddN), ... (ad1, da1, dd1)]``
 
@@ -303,9 +297,7 @@ def array_to_pywt_coeff(coeff, size_list):
 
         ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
 
-    In 3D:
-    coeff_list : ordered `list`
-        A list of coefficient organized in the following way:
+        In 3D:
 
         ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
@@ -328,29 +320,24 @@ def array_to_pywt_coeff(coeff, size_list):
 
         ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
-        ``N`` = the number of scaling levels
+        ``N`` refers to the number of scaling levels
 
     """
     flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
     start = 0
     stop = flat_sizes[0]
     coeff_list = [np.asarray(coeff)[start:stop].reshape(size_list[0])]
-
-    if np.size(size_list[0]) == 1:
-        const = 1
-    elif np.size(size_list[0]) == 2:
-        const = 3
-    elif np.size(size_list[0]) == 3:
-        const = 7
+    ndim = len(size_list[0])
+    dcoeffs_per_scale = 2**ndim - 1
 
     for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
-        start, stop = stop, stop + const * fsize
-        if const == 1:
+        start, stop = stop, stop + dcoeffs_per_scale * fsize
+        if dcoeffs_per_scale == 1:
             detail_coeffs = np.asarray(coeff)[start:stop]
         else:
             detail_coeffs = tuple(c.reshape(shape) for c in
                                   np.split(np.asarray(coeff)[start:stop],
-                                           const))
+                                           dcoeffs_per_scale))
         coeff_list.append(detail_coeffs)
 
     return coeff_list
@@ -383,8 +370,9 @@ signal-extension-modes.html>`_
     -------
     coeff_list : `list`
         A list of coefficient organized in the following way
-         [aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)] .
+         ```[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
+         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``` .
+
          The appreviations refer to,
 
          ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
@@ -451,43 +439,43 @@ def wavelet_reconstruction3d(coeff_list, wbasis, mode, nscales):
     Parameters
     ----------
     coeff_list : `list`
-            A list of wavelet approximation and detail coefficients
-            organized in the following way
-            [caaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-            (aad1, ada1, add1, daa1, dad1, dda1, ddd1)].
-            The appreviations refer to,
+        A list of wavelet approximation and detail coefficients
+        organized in the following way
+        ```[caaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
+        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]```.
 
-            ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx.
-                      on 3rd dim,
+        The appreviations refer to
 
-            ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on
-                      3rd dim,
+        ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
-            ``ada`` = approx. on 1st dim, detail on 3nd dim, approx.
-                      on 3rd dim,
+        ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on3rd dim,
 
-            ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
+        ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
 
-            ``daa`` = detail on 1st dim, approx. on 2nd dim, approx.
-                      on 3rd dim,
+        ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
 
-            ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
+        ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
-            ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
+        ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
 
-            ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
+        ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
 
-            ``N`` = the number of scaling levels
+        ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
+
+        ``N`` = the number of scaling levels
+
     wbasis :  ``_pywt.Wavelet``
-            Describes properties of a selected wavelet basisodl.discr.lp_discr.
+        Describes properties of a selected wavelet basisodl.discr.lp_discr.
+
     mode : `str`
-            Signal extention mode. For possible extensions see the
-            `signal extenstion modes
-            <http://www.pybytes.com/pywavelets/ref/\
+        Signal extention mode. For possible extensions see the
+        `signal extenstion modes
+        <http://www.pybytes.com/pywavelets/ref/\
 signal-extension-modes.html>`_
-            of PyWavelets.
+        of PyWavelets.
+
     nscales : `int`
-            Number of scales in the coefficient list
+        Number of scales in the coefficient list
 
     Returns
     -------
@@ -522,18 +510,17 @@ class DiscreteWaveletTransform(Operator):
             Domain of the wavelet transform (the "image domain").
             The exponent :math:`p` of the discrete :math:`L^p`
             space must be equal to 2.0.
+
         nscales : `int`
             Number of scales in the coefficient list
+
         wbasis :  ``_pywt.Wavelet``
             Describes properties of a selected wavelet basis
+
         mode : `str`
             Signal extension mode. For possible extensions see
             ``pywt.MODES.modes``
             http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
-
-        See also
-        --------
-        pywt : http://www.pybytes.com/pywavelets/
         """
         self.nscales = int(nscales)
         self.wbasis = wbasis
@@ -560,18 +547,18 @@ class DiscreteWaveletTransform(Operator):
 
         ran_size = np.prod(self.size_list[0])
 
-        if len(dom.grid.shape) == 1:
+        if dom.ndim == 1:
             ran_size += sum(np.prod(shape) for shape in
                             self.size_list[1:-1])
-        elif len(dom.grid.shape) == 2:
+        elif dom.ndim == 2:
             ran_size += sum(3 * np.prod(shape) for shape in
                             self.size_list[1:-1])
-        elif len(dom.grid.shape) == 3:
+        elif dom.ndim == 3:
             ran_size += sum(7 * np.prod(shape) for shape in
                             self.size_list[1:-1])
         else:
             raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                      ''.format(len(dom.grid.shape)))
+                                      ''.format(len(dom.ndim)))
 
         # TODO: Maybe allow other ranges like Besov spaces (yet to be crated)
         ran = dom.dspace_type(ran_size, dtype=dom.dtype)
@@ -600,17 +587,17 @@ class DiscreteWaveletTransform(Operator):
             The length of the array depends on the size of input image to
             be transformed and on the chosen wavelet basis.
         """
-        if len(x.shape) == 1:
+        if x.space.ndim == 1:
             coeff_list = pywt.wavedec(x, self.wbasis, self.mode, self.nscales)
             coeff_arr = pywt_coeff_to_array(coeff_list, self.size_list)
             return self.range.element(coeff_arr)
 
-        if len(x.shape) == 2:
+        if x.space.ndim == 2:
             coeff_list = pywt.wavedec2(x, self.wbasis, self.mode, self.nscales)
             coeff_arr = pywt_coeff_to_array(coeff_list, self.size_list)
             return self.range.element(coeff_arr)
 
-        if len(x.shape) == 3:
+        if x.space.ndim == 3:
             coeff_dict = wavelet_decomposition3d(x, self.wbasis, self.mode,
                                                  self.nscales)
             coeff_arr = pywt_coeff_to_array(coeff_dict, self.size_list)
@@ -648,16 +635,17 @@ class DiscreteWaveletTransformInverse(Operator):
             Domain of the wavelet transform (the "image domain").
             The exponent `p` of the discrete :math:`L^p`
             space must be equal to 2.0.
+
         nscales : `int`
             Number of scales in the coefficient list
+
         wbasis :  ``_pywt.Wavelet``
             Describes properties of a selected wavelet basis
+
         mode : `str`
-            Signal extension mode. For possible extensions see
+            Signal extension mode.  For possible extensions see
             ``pywt.MODES.modes``
-        See also
-        --------
-        pywt : http://www.pybytes.com/pywavelets/
+            http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
         """
         self.nscales = int(nscales)
         self.wbasis = wbasis
@@ -683,18 +671,18 @@ class DiscreteWaveletTransformInverse(Operator):
                                          self.wbasis, self.mode)
 
         dom_size = np.prod(self.size_list[0])
-        if len(ran.grid.shape) == 1:
+        if ran.ndim == 1:
             dom_size += sum(np.prod(shape) for shape in
                             self.size_list[1:-1])
-        elif len(ran.grid.shape) == 2:
+        elif ran.ndim == 2:
             dom_size += sum(3 * np.prod(shape) for shape in
                             self.size_list[1:-1])
-        elif len(ran.grid.shape) == 3:
+        elif ran.ndim == 3:
             dom_size += sum(7 * np.prod(shape) for shape in
                             self.size_list[1:-1])
         else:
             raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                      ''.format(len(ran.grid.shape)))
+                                      ''.format(ran.ndim))
 
         # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
         dom = ran.dspace_type(dom_size, dtype=ran.dtype)
