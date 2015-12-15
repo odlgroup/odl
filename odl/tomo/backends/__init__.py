@@ -45,5 +45,3 @@ if ASTRA_AVAILABLE:
     from . import astra_setup
     from .astra_setup import *
     __all__ += astra_setup.__all__
-
-

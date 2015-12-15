@@ -29,7 +29,7 @@ import numpy as np
 import pytest
 
 # Internal
-from odl.tomo.backends import ASTRA_AVAILABLE
+from odl.tomo.backends import ASTRA_CUDA_AVAILABLE
 from odl.set.domain import Interval, Rectangle
 from odl.space.fspace import FunctionSpace
 from odl.discr.lp_discr import uniform_discr, uniform_discr_fromspace
@@ -40,14 +40,14 @@ from odl.tomo.geometry.parallel import Parallel2dGeometry, Parallel3dGeometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
-from odl.tomo.util.testutils import skip_if_no_astra
+from odl.tomo.util.testutils import skip_if_no_astra_cuda
 # from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
 #                                 is_subdict)
 
 
 # TODO: test other interpolations once implemented
 
-@skip_if_no_astra
+@skip_if_no_astra_cuda
 def test_astra_gpu_projector_call_2d():
     """Test 2D forward and backward projection functions on the GPU."""
 
@@ -63,8 +63,8 @@ def test_astra_gpu_projector_call_2d():
         folder : `str`
         name : `str`
         """
-        data.show('imshow', saveto='{}{}.png'.format(
-            folder, name.replace(' ', '_')),
+        data.show('imshow',
+                  saveto='{}{}.png'.format(folder, name.replace(' ', '_')),
                   title='{} [:,:]'.format(name))
         plt.close('all')
 
@@ -124,7 +124,7 @@ def test_astra_gpu_projector_call_2d():
     save_slice(reco_data_ff, back_dir, 'fanflat_gpu')
 
 
-@skip_if_no_astra
+@skip_if_no_astra_cuda
 def test_astra_gpu_projector_call_3d():
     """Test 3D forward and backward projection functions on the GPU."""
 
@@ -142,16 +142,19 @@ def test_astra_gpu_projector_call_3d():
         sli : three-element array-like
         """
         x, y, z = np.asarray(sli, int)
-        data.show('imshow', saveto='{}{}_z{:03d}.png'.format(
-            folder, name.replace(' ', '_'), z),
+        data.show('imshow',
+                  saveto='{}{}_z{:03d}.png'.format(folder,
+                                                   name.replace(' ', '_'), z),
                   title='{} [:,:,{}]'.format(name, z),
                   indices=[slice(None), slice(None), z])
-        data.show('imshow', saveto='{}{}_y{:03d}.png'.format(
-            folder, name.replace(' ', '_'), y),
+        data.show('imshow',
+                  saveto='{}{}_y{:03d}.png'.format(folder,
+                                                   name.replace(' ', '_'), y),
                   title='{} [:,{},:]'.format(name, y),
                   indices=[slice(None), y, slice(None)])
-        data.show('imshow', saveto=folder + '{0}_x{1:03d}.png'.format(
-            name.replace(' ', '_'), x),
+        data.show('imshow',
+                  saveto=folder + '{0}_x{1:03d}.png'.format(
+                          name.replace(' ', '_'), x),
                   title='{} [{},:,:]'.format(name, x),
                   indices=[x, slice(None), slice(None)])
         plt.close('all')
@@ -203,7 +206,7 @@ def test_astra_gpu_projector_call_3d():
     proj_space = FunctionSpace(proj_rect)
     proj_grid = det_grid.insert(angle_grid, ind)
     npixels = proj_grid.shape
-    proj_sli = (0, np.round(0.25*npixels[1]), np.round(0.25*npixels[2]))
+    proj_sli = (0, np.round(0.25 * npixels[1]), np.round(0.25 * npixels[2]))
     discr_proj_space = uniform_discr_fromspace(proj_space, npixels,
                                                dtype='float32')
 

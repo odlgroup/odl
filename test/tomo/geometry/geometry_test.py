@@ -299,9 +299,8 @@ def test_helical_cone_flat():
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
 
-
     assert np.linalg.norm(geom.det_refpoint(0)) == det_rad
-    assert almost_equal(np.linalg.norm(geom.det_refpoint(np.pi/4)[0:2]),
+    assert almost_equal(np.linalg.norm(geom.det_refpoint(np.pi / 4)[0:2]),
                         det_rad)
 
     assert geom.ndim == 3
@@ -339,8 +338,8 @@ def test_helical_cone_flat():
         z = tfpr * angle / (2 * np.pi)
 
         # source
-        assert all_almost_equal((np.sin(angle) * src_rad, -np.cos(angle)
-                                 * src_rad, z), geom.src_position(angle))
+        pnt = (np.sin(angle) * src_rad, -np.cos(angle) * src_rad, z)
+        assert all_almost_equal(geom.src_position(angle), pnt)
 
         # center of detector
         det = geom.det_refpoint(angle)

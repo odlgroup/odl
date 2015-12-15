@@ -26,3 +26,6 @@ import pytest
 
 skip_if_no_astra = pytest.mark.skipif("not ASTRA_AVAILABLE",
                                       reason='ASTRA not available')
+
+skip_if_no_astra_cuda = pytest.mark.skipif("not ASTRA_CUDA_AVAILABLE",
+                                           reason='ASTRA CUDA not available')

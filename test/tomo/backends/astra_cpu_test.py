@@ -58,8 +58,8 @@ def test_astra_cpu_projector_call_2d():
         folder : `str`
         name : `str`
         """
-        data.show('imshow', saveto='{}{}.png'.format(
-            folder, name.replace(' ', '_')),
+        data.show('imshow',
+                  saveto='{}{}.png'.format(folder, name.replace(' ', '_')),
                   title='{} [:,:]'.format(name))
 
     # DiscreteLp element

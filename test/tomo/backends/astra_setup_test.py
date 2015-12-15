@@ -360,32 +360,32 @@ def test_astra_algorithm():
     astra.algorithm.delete(alg_id)
 
     ndim = 2
-
-    # CPU
+    # 2D CPU
     impl = 'cpu'
     for direction in {'forward', 'backward'}:
         alg_id = astra_algorithm(direction, ndim, vol_id, sino_id, proj_id,
                                  impl)
         astra.algorithm.delete(alg_id)
 
-    # CUDA
+    # 2D CUDA
     proj_id = astra_projector('nearest', vol_geom_2d, proj_geom_2d, ndim=ndim,
                               impl='cuda')
 
-    # FP
+    # 2D CUDA FP
     alg_id = astra_algorithm('forward', ndim, vol_id, sino_id,
                              proj_id=proj_id, impl='cuda')
     astra.algorithm.delete(alg_id)
 
-    # BP
+    # 2D CUDA BP
     alg_id = astra_algorithm('backward', ndim, rec_id, sino_id,
                              proj_id=proj_id, impl='cuda')
     astra.algorithm.delete(alg_id)
 
-
     ndim = 3
     vol_id = astra_data(vol_geom_3d, 'volume', ndim=ndim)
     sino_id = astra_data(proj_geom_3d, 'projection', ndim=ndim)
+    proj_id = astra_projector('nearest', vol_geom_2d, proj_geom_2d, ndim=ndim,
+                              impl='cuda')
 
     with pytest.raises(NotImplementedError):
         astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=proj_id,
@@ -435,12 +435,10 @@ def test_geom_to_vec():
     vec = astra_geom_to_vec(geom)
     assert vec.shape == (angle_grid.ntotal, 12)
 
-
     # CIRCULAR CONEFLAT
     geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                                     agrid=angle_grid, dgrid=det_grid)
     ageom = astra_projection_geometry(geom)
-
 
 
 @skip_if_no_astra

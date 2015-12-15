@@ -33,8 +33,6 @@ from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                            astra_projector, astra_data,
                                            astra_algorithm, astra_cleanup)
 from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.geometry.parallel import Parallel3dGeometry
-from odl.tomo.geometry.conebeam import ConeBeamGeometry
 
 
 __all__ = ('astra_gpu_forward_projector_call',
@@ -102,7 +100,7 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
         elem = proj_space.element(astra.data2d.get(sino_id))
     else:  # ndim = 3
             elem = proj_space.element(
-                    np.rollaxis(astra.data3d.get(sino_id), 0, 3))
+                np.rollaxis(astra.data3d.get(sino_id), 0, 3))
 
     # Delete ASTRA objects
     astra_cleanup()
@@ -122,6 +120,7 @@ def astra_gpu_forward_projector_apply(vol_data, geometry, proj_data):
     proj_data : `DiscreteLpVector`
         Projection space element to which the projection data is written
     """
+
 
 def astra_gpu_backward_projector_call(proj_data, geometry, reco_space):
     """Run an ASTRA backward projection on the given data using the GPU.
