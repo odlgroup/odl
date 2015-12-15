@@ -67,7 +67,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         angle_offset : float
             Offset to the rotation angle.
         """
-        if angle_intvl.ndim != 1 and not isinstance(angle_intvl, IntervalProd):
+        if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
             raise TypeError('angle parameters {!r} are not an interval.'
                             ''.format(angle_intvl))
 
