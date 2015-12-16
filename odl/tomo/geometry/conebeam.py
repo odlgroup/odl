@@ -409,12 +409,9 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
                              ''.format(angle, self.motion_params))
 
         angle += self.angle_offset
-        # return self.det_radius * np.array([cos(angle), sin(angle), 0])
-        # use ASTRA cone_vec convention
-        return self.det_radius * np.array([
-            -sin(angle),
-            cos(angle),
-            0])
+
+        # ASTRA cone_vec convention
+        return self.det_radius * np.array([-sin(angle), cos(angle), 0])
 
     def src_position(self, angle):
         """The source position function.
@@ -437,14 +434,11 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
                              ''.format(angle, self.motion_params))
 
         angle += self.angle_offset
-        # return -self.src_radius * np.array([cos(angle), sin(angle), 0])
-        # use ASTRA cone_vec convention
-        return self.src_radius * np.array([
-            sin(angle),
-            -cos(angle),
-            0])
 
-    # TODO: backprojection weighting function?
+        # ASTRA cone_vec convention
+        return self.src_radius * np.array([sin(angle), -cos(angle), 0])
+
+        # TODO: backprojection weighting function?
 
 
 class HelicalConeFlatGeometry(ConeFlatGeometry):
@@ -469,25 +463,25 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             The motion parameters
         dparams : `Rectangle` or 2-dim. `IntervalProd`
             The detector parameters
-        src_rad : float
+        src_rad : `float`
             Radius of the source circle, must be positive
-        det_rad : float
+        det_rad : `float`
             Radius of the detector circle, must be positive
-        spiral_pitch_factor : float
-            Dimensionless factor given by the ration of (Table feed per
-            rotation (mm)) to (Total collimation width (mm)). The total
-            collimation width is given by the slice thickness for a
-            single-slice spiral acquisition and by the number of detector
-            rows * slice thickness for multiple slice spiral acquisition.
-            The collimation width is taken at isocenter.
+        spiral_pitch_factor : `float`
+            Dimensionless factor given by the table feed per rotation
+            divided by the total collimation width. The total collimation
+            width is given by the slice thickness for a single-slice spiral
+            acquisition and by the number of detector rows times the slice
+            thickness for multiple slice spiral acquisition. The collimation
+            width is considered at isocenter
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`
         dgrid : 2-dim. `TensorGrid`, optional
             A sampling grid for `dparams`
-        angle_offset : float
+        angle_offset : `float`
             Offset to the rotation angle in the azimuthal plane. Does not
             affect the offset in z-direction
-        axis : int or 3-element array
+        axis : `int` or 3-element array
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis
         """
@@ -495,12 +489,12 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         super().__init__(angle_intvl, dparams, src_rad, det_rad, agrid,
                          dgrid, angle_offset, axis)
         det_height = (dparams.max() - dparams.min())[1]
-        # TODO: correct for magnification ie use det_height at isocenter
-        self._table_feed_per_rotation = spiral_pitch_factor * det_height
+        self._table_feed_per_rotation = spiral_pitch_factor * src_rad/(
+            src_rad + det_rad) * det_height
 
     @property
     def table_feed_per_rotation(self):
-        """Table feed per 360 degree rotation. """
+        """Table feed per 360 degree rotation."""
         return self._table_feed_per_rotation
 
     def det_refpoint(self, angle):
@@ -523,11 +517,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
-        # return np.array([
-        #     self.det_radius * cos(angle + self.angle_offset),
-        #     self.det_radius * sin(angle + self.angle_offset),
-        #     self.table_feed_per_rotation * angle / (2 * np.pi)])
-        # swap dimension 0 and 1 for ASTRA cone_vec geometries
+        # ASTRA cone_vec geometries
         return np.array([
             -self.det_radius * sin(angle + self.angle_offset),
             self.det_radius * cos(angle + self.angle_offset),
@@ -554,11 +544,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
-        # return np.array([
-        #     -self.src_radius * cos(angle + self.angle_offset),
-        #     -self.src_radius * sin(angle + self.angle_offset),
-        #     self.table_feed_per_rotation * angle / (2 * np.pi)])
-        # swap dimension 0 and 1 for ASTRA cone_vec geometries
+        # ASTRA cone_vec geometries
         return np.array([
             self.src_radius * sin(angle + self.angle_offset),
             -self.src_radius * cos(angle + self.angle_offset),

@@ -78,9 +78,7 @@ def euler_matrix(*angles):
     sps = sin(psi)
 
     if dim == 2:
-        mat = np.matrix(
-                [[cph, -sph],
-                 [sph, cph]])
+        mat = np.matrix([[cph, -sph], [sph, cph]])
     else:
         mat = np.matrix([[cph * cps - sph * cth * sps,
                           -cph * sps - sph * cth * cps,
@@ -120,8 +118,8 @@ def axis_rotation(axis, angle, vectors):
     if not (hasattr(vectors, 'shape') and hasattr(vectors, 'ndim')):
         vectors = np.asarray(vectors)
 
-    if not (vectors.shape == (3,) or (
-        vectors.ndim == 2 and vectors.shape[1] == 3)):
+    if not (vectors.shape == (3,) or (vectors.ndim == 2 and
+                                      vectors.shape[1] == 3)):
         raise ValueError('`vector` shape {} not (3,) or (N, 3).'
                          ''.format(vectors.shape))
 

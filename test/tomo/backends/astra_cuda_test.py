@@ -139,7 +139,7 @@ def test_astra_gpu_projector_call_3d():
         data : `DiscreteLp`
         folder : `str`
         name : `str`
-        sli : three-element array-like
+        sli : 3-element array-like
         """
         x, y, z = np.asarray(sli, int)
         data.show('imshow',
@@ -169,7 +169,7 @@ def test_astra_gpu_projector_call_3d():
     sli0 = np.round(0.1 * np.array(vol_shape))
     sli1 = np.round(0.4 * np.array(vol_shape))
     sliz0 = np.round(0.1 * np.array(vol_shape))
-    sliz1 = np.round(0.9 * np.array(vol_shape))
+    sliz1 = np.round(1.9 * np.array(vol_shape))
     phan[sliz0[0]:sliz1[0], sli0[1]:sli1[1], sli0[2]:sli1[2]] = 1
 
     discr_data = discr_vol_space.element(phan)
