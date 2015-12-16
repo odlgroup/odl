@@ -79,11 +79,10 @@ class DiscreteLp(Discretization):
             'nearest' : use nearest-neighbor interpolation (default)
 
             'linear' : use linear interpolation (not implemented)
-        kwargs : {'order'}
-            'order' : {'C', 'F'}, optional  (Default: 'C')
-                Ordering of the values in the flat data arrays. 'C'
-                means the first grid axis varies fastest, the last most
-                slowly, 'F' vice versa.
+        order : {'C', 'F'}, optional  (Default: 'C')
+            Ordering of the values in the flat data arrays. 'C'
+            means the first grid axis varies fastest, the last most
+            slowly, 'F' vice versa.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{!r} is not a `FunctionSpace` instance.'
@@ -396,13 +395,6 @@ class DiscreteLpVector(DiscretizationVector):
             See the Matplotlib functions for documentation of extra
             options.
 
-        title : `str`, optional
-            Set the title of the figure
-        kwargs : {'figsize', 'saveto', ...}
-            Extra keyword arguments passed on to display method
-            See the Matplotlib functions for documentation of extra
-            options.
-
         See Also
         --------
         matplotlib.pyplot.plot : Show graph plot
@@ -440,21 +432,20 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
             'linear' : use linear interpolation (not implemented)
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
-    kwargs : {'order', 'dtype', 'weighting'}
-            'order' : {'C', 'F'}  (Default: 'C')
-                Axis ordering in the data storage
-            'dtype' : dtype
-                Data type for the discretized space
+    order : {'C', 'F'}  (Default: 'C')
+        Axis ordering in the data storage
+    dtype : dtype
+        Data type for the discretized space
 
-                Default for 'numpy': 'float64' / 'complex128'
-                Default for 'cuda': 'float32' / TODO
-            'weighting' : {'simple', 'consistent'}
-                Weighting of the discretized space functions.
+        Default for 'numpy': 'float64' / 'complex128'
+        Default for 'cuda': 'float32' / TODO
+    weighting : {'simple', 'consistent'}
+        Weighting of the discretized space functions.
 
-                'simple': weight is a constant (cell volume)
+        'simple': weight is a constant (cell volume)
 
-                'consistent': weight is a matrix depending on the
-                interpolation type
+        'consistent': weight is a matrix depending on the
+        interpolation type
 
     Returns
     -------
@@ -541,21 +532,20 @@ def uniform_discr(min_corner, max_corner, nsamples,
             'linear' : use linear interpolation (not implemented)
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
-    kwargs : {'order', 'dtype', 'weighting'}
-            'order' : {'C', 'F'}  (Default: 'C')
-                Axis ordering in the data storage
-            'dtype' : dtype
-                Data type for the discretized space
+    order : {'C', 'F'}  (Default: 'C')
+        Axis ordering in the data storage
+    dtype : dtype
+        Data type for the discretized space
 
-                Default for 'numpy': 'float64' / 'complex128'
-                Default for 'cuda': 'float32' / TODO
-            'weighting' : {'simple', 'consistent'}
-                Weighting of the discretized space functions.
+        Default for 'numpy': 'float64' / 'complex128'
+        Default for 'cuda': 'float32' / TODO
+    weighting : {'simple', 'consistent'}
+        Weighting of the discretized space functions.
 
-                'simple': weight is a constant (cell volume)
+        'simple': weight is a constant (cell volume)
 
-                'consistent': weight is a matrix depending on the
-                interpolation type
+        'consistent': weight is a matrix depending on the
+        interpolation type
 
     Returns
     -------

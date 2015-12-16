@@ -76,9 +76,9 @@ def almost_equal(a, b, places=None):
 def all_equal(iter1, iter2):
     # Direct comparison for scalars, tuples or lists
     try:
-        if iter1 == iter2:  # Raised by NumPy when comparing arrays
+        if iter1 == iter2:
             return True
-    except ValueError:
+    except ValueError:  # Raised by NumPy when comparing arrays
         pass
 
     # Special case for None

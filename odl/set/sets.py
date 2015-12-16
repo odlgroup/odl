@@ -148,16 +148,6 @@ class EmptySet(Set):
         """Return `True` for the empty set, otherwise `False`."""
         return isinstance(other, EmptySet)
 
-    def contains_all(self, other):
-        """Return `True` for an empty sequence, `False` else."""
-        try:
-            other = list(other)
-            return len(other) == 0
-        except TypeError:
-            pass
-
-        return False
-
     def __eq__(self, other):
         """Return ``self == other``."""
         return isinstance(other, EmptySet)

@@ -166,11 +166,11 @@ class GridCollocation(FunctionSetMapping):
         ----------
         ip_fset : `FunctionSet`
             The undiscretized (abstract) set of functions to be
-            discretized. The function domain must be an
-            `IntervalProd`.
+            discretized. The function domain must provide a
+            ``contains_set`` method as `IntervalProd` does.
         grid :  `TensorGrid`
             Grid on which to evaluate. It must be contained in
-            the common domain of the function set.
+            the domain of the function set.
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its size must be equal to the
@@ -180,29 +180,26 @@ class GridCollocation(FunctionSetMapping):
             means the first grid axis varies fastest, the last most
             slowly, 'F' vice versa.
         """
-        linear = True if isinstance(ip_fset, FunctionSpace) else False
+        linear = isinstance(ip_fset, FunctionSpace)
         FunctionSetMapping.__init__(self, 'restriction', ip_fset, grid,
                                     dspace, order, linear=linear)
 
-        # TODO: relax? One needs contains_set() and contains_all()
-        if not isinstance(ip_fset.domain, IntervalProd):
-            raise TypeError('domain {!r} of the function set is not an '
-                            '`IntervalProd` instance.'
-                            ''.format(ip_fset.domain))
-
     def _call(self, func, out=None):
-        """Evaluate ``func`` at the grid of this operator..
+        """Evaluate ``func`` at the grid of this operator.
 
         Parameters
         ----------
         func : `FunctionSetVector`
             The function to be evaluated
-        out : `numpy.ndarray`, optional
-            Array to which the values are written
+        out : `NtuplesBaseVector`, optional
+            Array to which the values are written. Its shape must be
+            ``(N,)``, where N is the total number of grid points. The
+            data type must be the same as in the ``dspace`` of this
+            mapping.
 
         Returns
         -------
-        out : `numpy.ndarray`
+        out : `NtuplesBaseVector`, optional
             The function values at the grid points. If ``out`` was
             given as argument, it is returned.
 
@@ -239,16 +236,14 @@ class GridCollocation(FunctionSetMapping):
 
         >>> coll_op = GridCollocation(funcset, grid, rn)
         ...
-        >>> def func(x):
-        ...     return x[0] - x[1]  # properly vectorized
-        ...
-        >>> func_elem = funcset.element(func)
+        ... # Properly vectorized function
+        >>> func_elem = funcset.element(lambda x: x[0] - x[1])
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
-        >>> coll_op(func)  # Works directly
+        >>> coll_op(lambda x: x[0] - x[1])  # Works directly
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
         >>> out = Rn(6).element()
-        >>> coll_op(func, out=out)  # In-place
+        >>> coll_op(func_elem, out=out)  # In-place
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
 
         Fortran ordering:
@@ -380,8 +375,7 @@ class NearestInterpolation(FunctionSetMapping):
 
         Now initialize the operator:
 
-        >>> interp_op = NearestInterpolation(space, grid, dspace,
-        ...                                  order='C')
+        >>> interp_op = NearestInterpolation(space, grid, dspace)
 
         We test some simple values:
 
@@ -517,6 +511,8 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
         # Cast to floating point was removed here
 
+        # TODO: check if the following code is needed
+
 #        self.fill_value = fill_value
 #        if fill_value is not None:
 #            fill_value_dtype = np.asarray(fill_value).dtype
@@ -535,6 +531,9 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
                                  'dimension {}'.format(len(p),
                                                        values.shape[i], i))
 
+        # TODO: use the following code to determine upstream if a different
+        # interpolator needs to be used
+
 #        for i, p in enumerate(points):
 #            if not np.all(np.diff(p) > 0.):
 #                raise ValueError("The points in dimension {} must be strictly"
@@ -542,7 +541,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         self.grid = tuple([np.asarray(p) for p in coord_vecs])
         self.values = values
 
-    def __call__(self, xi, out=None):
+    def __call__(self, x, out=None):
         """Do the interpolation.
 
         Modified for in-place evaluation support and without method
@@ -550,27 +549,29 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         shape (n, dim), where n is the number of points.
         """
         ndim = len(self.grid)
-        if xi.ndim != 2:
-            raise ValueError('`xi` has {} axes instead of 2.'.format(xi.ndim))
+        if x.ndim != 2:
+            raise ValueError('x has {} axes instead of 2.'.format(x.ndim))
 
-        if xi.shape[0] != ndim:
-            raise ValueError('`xi` has axis 1 with length {} instead '
-                             'of the grid dimension {}.'.format(xi.shape[0],
-                                                                ndim))
+        if x.shape[0] != ndim:
+            raise ValueError('x has axis 1 with length {} instead '
+                             'of the grid dimension {}.'
+                             ''.format(x.shape[0], ndim))
         if out is not None:
             if not isinstance(out, np.ndarray):
                 raise TypeError('`out` {!r} not a `numpy.ndarray` '
                                 'instance.'.format(out))
-            if out.shape != (xi.shape[0],):
+            if out.shape != (x.shape[0],):
                 raise ValueError('Output shape {} not equal to (n,), where '
                                  'n={} is the total number of evaluation '
-                                 'points.'.format(out.shape, xi.shape[0]))
+                                 'points.'.format(out.shape, x.shape[0]))
 
-        xi = _ndim_coords_from_arrays(xi, ndim=ndim)
-        if xi.shape[0] != ndim:
-            raise ValueError('The requested sample points xi have dimension '
+        x = _ndim_coords_from_arrays(x, ndim=ndim)
+        if x.shape[0] != ndim:
+            raise ValueError('The requested sample points x have dimension '
                              '{}, but this _NearestInterpolator has '
-                             'dimension {}.'.format(xi.shape[0], ndim))
+                             'dimension {}.'.format(x.shape[0], ndim))
+
+        # TODO: check if we need to use out_of_bounds in certain cases
 
 #        indices, norm_distances, out_of_bounds = self._find_indices(xi.T)
 #        if method == "linear":
@@ -582,8 +583,10 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 #        if not self.bounds_error and self.fill_value is not None:
 #            result[out_of_bounds] = self.fill_value
 
-        indices, norm_distances = self._find_indices(xi)
+        indices, norm_distances = self._find_indices(x)
         return self._evaluate(indices, norm_distances, out)
+
+        # TODO: check if _find_indices function needst to be adapted
 
 #    def _find_indices(self, xi):
 #        # find relevant edges between which xi are situated
@@ -605,19 +608,19 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 #                out_of_bounds += x > grid[-1]
 #        return indices, norm_distances, out_of_bounds
 
-    def _find_indices(self, xi):
+    def _find_indices(self, x):
         """Modified version without out-of-bounds check."""
         # find relevant edges between which xi are situated
         indices = []
         # compute distance to lower edge in unity units
         norm_distances = []
         # iterate through dimensions
-        for x, grid in zip(xi, self.grid):
-            i = np.searchsorted(grid, x) - 1
+        for xi, grid in zip(x, self.grid):
+            i = np.searchsorted(grid, xi) - 1
             i[i < 0] = 0
             i[i > grid.size - 2] = grid.size - 2
             indices.append(i)
-            norm_distances.append((x - grid[i]) /
+            norm_distances.append((xi - grid[i]) /
                                   (grid[i + 1] - grid[i]))
         return indices, norm_distances
 
@@ -631,22 +634,22 @@ class _MeshgridInterpolator(_PointwiseInterpolator):
 scipy.interpolate.RegularGridInterpolator.html>`_ class.
     """
 
-    def __call__(self, xi, out=None):
+    def __call__(self, x, out=None):
         """Do the interpolation.
 
         Modified for in-place evaluation support and without method
         choice. Evaluation points are to be given as a list of arrays
         which can be broadcast against each other.
         """
-        if len(xi) != len(self.grid):
-            raise ValueError('number of vectors in `xi` is {} instead of {}, '
-                             'the grid dimension.'.format(xi.shape[1],
-                                                          len(self.grid)))
+        if len(x) != len(self.grid):
+            raise ValueError('number of vectors in x is {} instead of {}, '
+                             'the grid dimension.'
+                             ''.format(len(x), len(self.grid)))
 
-        if len(xi) == 1:
-            ntotal = xi[0].size
+        if len(x) == 1:
+            ntotal = x[0].size
         else:
-            ntotal = np.prod(np.broadcast(*xi).shape)
+            ntotal = np.broadcast(*x).size
         if out is not None:
             if not isinstance(out, np.ndarray):
                 raise TypeError('`out` {!r} not a `numpy.ndarray` '
@@ -656,7 +659,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
                                  'n={} is the total number of evaluation '
                                  'points.'.format(out.shape, ntotal))
 
-        indices, norm_distances = self._find_indices(xi)
+        indices, norm_distances = self._find_indices(x)
         return self._evaluate(indices, norm_distances, out)
 
 
@@ -685,12 +688,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 class _NearestMeshgridInterpolator(_MeshgridInterpolator,
                                    _NearestPointwiseInterpolator):
 
-    """Nearest neighbor interpolator for point meshgrids.
-
-    The code is adapted from SciPy's `RegularGridInterpolator
-    <http://docs.scipy.org/doc/scipy/reference/generated/\
-scipy.interpolate.RegularGridInterpolator.html>`_ class.
-    """
+    """Nearest neighbor interpolator for point meshgrids."""
 
 
 class _LinearPointwiseInterpolator(_PointwiseInterpolator):
@@ -722,12 +720,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 class _LinearMeshgridInterpolator(_MeshgridInterpolator,
                                   _LinearPointwiseInterpolator):
 
-    """Nearest neighbor interpolator for point meshgrids.
-
-    The code is adapted from SciPy's `RegularGridInterpolator
-    <http://docs.scipy.org/doc/scipy/reference/generated/\
-scipy.interpolate.RegularGridInterpolator.html>`_ class.
-    """
+    """Linear interpolator for point meshgrids."""
 
 
 if __name__ == '__main__':

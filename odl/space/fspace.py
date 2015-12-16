@@ -227,7 +227,7 @@ class FunctionSetVector(Operator):
 
         if not call_has_out:
             # Out-of-place only
-            self._call_in_place = preload_call_with(self, 'ip')(
+            self._call_in_place = preload_call_with(self, 'in-place')(
                 _default_in_place)
             self._call_out_of_place = fcall
         elif call_out_optional:
@@ -250,13 +250,12 @@ class FunctionSetVector(Operator):
     def _call(self, x, out=None, **kwargs):
         """Raw evaluation method."""
         if out is None:
-            out = self._call_out_of_place(x, **kwargs)
+            return self._call_out_of_place(x, **kwargs)
         else:
             self._call_in_place(x, out=out, **kwargs)
-        return out
 
     def __call__(self, x, out=None, **kwargs):
-        """Out-of-place evaluation.
+        """Evaluate the function at one or multiple values ``x``.
 
         Parameters
         ----------
@@ -270,45 +269,44 @@ class FunctionSetVector(Operator):
             ``(d, N)``, where ``d`` is the number of dimensions of
             the function domain
             OR
-            `x` is a sequence of `numpy.ndarray` with length
-            `space.ndim`, and the arrays can be broadcast
+            ``x`` is a sequence of `numpy.ndarray` with length
+            ``space.ndim``, and the arrays can be broadcast
             against each other.
 
         out : `numpy.ndarray`, optional
             Output argument holding the result of the function
             evaluation, can only be used for vectorized
             functions. Its shape must be equal to
-            `np.broadcast(*x).shape`.
-            If `out` is given, it is returned.
+            ``np.broadcast(*x).shape``.
 
-        kwargs : {'vec_bounds_check'}
-            'bounds_check' : bool
-                Whether or not to check if all input points lie in
-                the function domain. For vectorized evaluation,
-                this requires the domain to implement
-                `contains_all`.
+        bounds_check : bool
+            Whether or not to check if all input points lie in
+            the function domain. For vectorized evaluation,
+            this requires the domain to implement
+            `Set.contains_all`.
 
-                Default: `True`
+            Default: `True`
 
         Returns
         -------
         out : range element or array of elements
-            Result of the function evaluation
+            Result of the function evaluation, identical to the input
+            ``out`` if provided.
 
         Raises
         ------
         TypeError
-            If `x` is not a valid vectorized evaluation argument
+            If ``x`` is not a valid vectorized evaluation argument
 
-            If `out` is not a range element or a `numpy.ndarray`
+            If ``out`` is not a range element or a `numpy.ndarray`
             of range elements
 
         ValueError
             If evaluation points fall outside the valid domain
         """
-        vec_bounds_check = kwargs.pop('vec_bounds_check', True)
-        if vec_bounds_check and not hasattr(self.domain, 'contains_all'):
-            raise AttributeError('vectorized bounds check not possible for '
+        bounds_check = kwargs.pop('bounds_check', True)
+        if bounds_check and not hasattr(self.domain, 'contains_all'):
+            raise AttributeError('bounds check not possible for '
                                  'domain {}, missing `contains_all()` '
                                  'method.'.format(self.domain))
 
@@ -338,7 +336,7 @@ class FunctionSetVector(Operator):
                             ''.format(x, dom=self.domain))
 
         # Check bounds if specified
-        if vec_bounds_check:
+        if bounds_check:
             if not self.domain.contains_all(x):
                 raise ValueError('input contains points outside '
                                  'the domain {}.'.format(self.domain))
@@ -361,7 +359,7 @@ class FunctionSetVector(Operator):
             self._call(x, out=out, **kwargs)
 
         # Check output values
-        if vec_bounds_check:
+        if bounds_check:
             if not self.range.contains_all(out):
                 raise ValueError('output contains points outside '
                                  'the range {}.'

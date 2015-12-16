@@ -70,7 +70,8 @@ class ScalingOperator(Operator):
 
         Returns
         -------
-        `None`
+        out : ``range`` element
+            Result of the scaling, identical to input ``out`` if given.
 
         Examples
         --------
@@ -87,8 +88,7 @@ class ScalingOperator(Operator):
         Rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:
-            out = x.copy()
-            out *= self._scal
+            out = self._scal * x
         else:
             out.lincomb(self._scal, x)
         return out
@@ -193,10 +193,8 @@ class LinCombOperator(Operator):
         ----------
         space : `LinearSpace`
             The space of elements which the operator is acting on
-        a : scalar
-            Scalar to multiply x[0] with
-        b : scalar
-            Scalar to multiply x[1] with
+        a, b : scalar
+            Scalars to multiply ``x[0]`` and ``x[1]`` with, respectively
         """
         domain = ProductSpace(space, space)
         super().__init__(domain, space, linear=True)
@@ -213,6 +211,12 @@ class LinCombOperator(Operator):
             elements) whose linear combination is calculated
         out : ```range`` element
             Vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` element
+            Result of the linear combination, identical to input
+            ``out`` if given.
 
         Examples
         --------
@@ -246,11 +250,9 @@ class MultiplyOperator(Operator):
 
     """Operator multiplying two elements.
 
-    The multiply operator calculates:
+    The multiply operator calculates::
 
-    out = x[0] * x[1]
-
-    This is only applicable in Algebras.
+        out = x[0] * x[1]
     """
 
     # pylint: disable=abstract-method
@@ -265,7 +267,7 @@ class MultiplyOperator(Operator):
         domain = ProductSpace(space, space)
         super().__init__(domain, space)
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """Multiply the input and write to output.
 
         Parameters
@@ -273,8 +275,14 @@ class MultiplyOperator(Operator):
         x : ``domain`` element
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        out : ``range`` element
+        out : ``range`` element, optional
             Vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` element
+            Result of the multiplication, identical to input ``out``
+            if given.
 
         Examples
         --------
@@ -284,12 +292,17 @@ class MultiplyOperator(Operator):
         >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
         >>> z = r3.element()
         >>> op = MultiplyOperator(r3)
-        >>> op(xy, z)
+        >>> op(xy, out=z)
         Rn(3).element([1.0, 4.0, 9.0])
         >>> z
         Rn(3).element([1.0, 4.0, 9.0])
         """
-        out.space.multiply(x[0], x[1], out)
+        if out is None:
+            out = self.range.multiply(x[0], x[1])
+        else:
+            out.space.multiply(x[0], x[1], out=out)
+
+        return out
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -329,6 +342,11 @@ class InnerProductOperator(Operator):
         ----------
         x : ``vector.space`` element
             An element in the space of the vector
+
+        Returns
+        -------
+        out : ``field`` element
+            Result of the inner product calculation
 
         Examples
         --------
@@ -386,8 +404,13 @@ class InnerProductAdjointOperator(Operator):
         x : ``domain`` element
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        out : ``range`` element
+        out : ``range`` element, optional
             Vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` element
+            Result of the scaling, identical to input ``out`` if given.
 
         Examples
         --------
@@ -405,8 +428,7 @@ class InnerProductAdjointOperator(Operator):
         Rn(3).element([3.0, 6.0, 9.0])
         """
         if out is None:
-            out = self.vector.copy()
-            out *= x
+            out = self.vector * x
         else:
             out.lincomb(x, self.vector)
         return out
@@ -426,7 +448,7 @@ class InnerProductAdjointOperator(Operator):
 
 class ConstantOperator(Operator):
 
-    """ Operator that always returns the same value
+    """Operator that always returns the same value
 
     ``ConstantOperator(vector)(x) <==> vector``
     """
@@ -443,7 +465,7 @@ class ConstantOperator(Operator):
             The domain of the operator.
         """
         if not isinstance(vector, LinearSpaceVector):
-            raise TypeError('space {!r} not a LinearSpaceVector instance.'
+            raise TypeError('vector {!r} not a LinearSpaceVector instance.'
                             ''.format(vector))
 
         if dom is None:
@@ -472,7 +494,7 @@ class ConstantOperator(Operator):
         Rn(3).element([1.0, 2.0, 3.0])
         """
         if out is None:
-            return self.vector.copy()
+            return self.range.element(self.vector.copy())
         else:
             out.assign(self.vector)
 
@@ -543,14 +565,16 @@ class ResidualOperator(Operator):
         """
         if out is None:
             out = self.op(x)
-            out -= self.vector
         else:
-            self.op(x, out)
-            out -= self.vector
+            self.op(x, out=out)
+
+        out -= self.vector
         return out
 
     def derivative(self, point):
-        """ The derivative of a residual is the derivative of the operator
+        """The derivative the residual operator.
+
+        It is equal to the derivative of the "inner" operator:
 
         ``ResidualOperator(op, vec).derivative(x) <==> op.derivative(x)``
 

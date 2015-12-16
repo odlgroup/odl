@@ -163,11 +163,11 @@ def preload_call_with(instance, mode):
     ----------
     instance :
         Class instance to preload the call with
-    mode : {'oop', 'ip'}
+    mode : {'out-of-place', 'in-place'}
 
-        'oop': call is out-of-place -- ``f(x, **kwargs)``
+        'out-of-place': call is out-of-place -- ``f(x, **kwargs)``
 
-        'ip': call is in-place -- ``f(x, out, **kwargs)``
+        'in-place': call is in-place -- ``f(x, out, **kwargs)``
 
     Notes
     -----
@@ -188,8 +188,8 @@ def preload_call_with(instance, mode):
     >>> def f_ip(inst, out, x):
     ...     print(inst.__doc__)
     ...
-    >>> f_oop_new = preload_call_with(a, 'oop')(f_oop)
-    >>> f_ip_new = preload_call_with(a, 'ip')(f_ip)
+    >>> f_oop_new = preload_call_with(a, 'out-of-place')(f_oop)
+    >>> f_ip_new = preload_call_with(a, 'in-place')(f_ip)
     ...
     >>> f_oop_new(0)
     My name is A.
@@ -198,7 +198,7 @@ def preload_call_with(instance, mode):
 
     Decorate upon definition:
 
-    >>> @preload_call_with(a, 'oop')
+    >>> @preload_call_with(a, 'out-of-place')
     ... def set_x(obj, x):
     ...     '''Function to set x in ``obj`` to a given value.'''
     ...     obj.x = x
@@ -224,9 +224,9 @@ def preload_call_with(instance, mode):
         def ip_wrapper(x, out, **kwargs):
             return call(instance, x, out, **kwargs)
 
-        if mode == 'oop':
+        if mode == 'out-of-place':
             return oop_wrapper
-        elif mode == 'ip':
+        elif mode == 'in-place':
             return ip_wrapper
         else:
             raise ValueError('bad mode {!r}.'.format(mode))

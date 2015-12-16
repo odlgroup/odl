@@ -573,108 +573,106 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner',\
-                  'dist_using_inner'}
-            'weight' : array-like, float or `None`
-                Use weighted inner product, norm, and dist.
+        weight : array-like, float or `None`
+            Use weighted inner product, norm, and dist.
 
-                `None` (default):
-                    No weighting, use standard functions
+            `None` (default):
+                No weighting, use standard functions
 
-                `float`:
-                    Weighting by a constant
+            `float`:
+                Weighting by a constant
 
-                array-like:
-                    Weighting by a matrix (2-dim. array) or a vector
-                    (1-dim. array, corresponds to a diagonal matrix).
-                    A matrix can also be given as a sparse matrix
-                    ( ``scipy.sparse.spmatrix``).
+            array-like:
+                Weighting by a matrix (2-dim. array) or a vector
+                (1-dim. array, corresponds to a diagonal matrix).
+                A matrix can also be given as a sparse matrix
+                ( ``scipy.sparse.spmatrix``).
 
-                This option cannot be combined with ``dist``,
-                ``norm`` or ``inner``.
+            This option cannot be combined with ``dist``,
+            ``norm`` or ``inner``.
 
-            'exponent' : positive `float`
-                Exponent of the norm. For values other than 2.0, no
-                inner product is defined.
-                If ``weight`` is a sparse matrix, only 1.0, 2.0 and
-                ``inf`` are allowed.
+        exponent : positive `float`
+            Exponent of the norm. For values other than 2.0, no
+            inner product is defined.
+            If ``weight`` is a sparse matrix, only 1.0, 2.0 and
+            ``inf`` are allowed.
 
-                This option is ignored if ``dist``, ``norm`` or
-                ``inner`` is given.
+            This option is ignored if ``dist``, ``norm`` or
+            ``inner`` is given.
 
-                Default: 2.0
+            Default: 2.0
 
-            'dist' : `callable`, optional
-                The distance function defining a metric on
-                :math:`\mathbb{F}^n`.
-                It must accept two `FnVector` arguments and
-                fulfill the following mathematical conditions for any
-                three vectors :math:`x, y, z`:
+        dist : `callable`, optional
+            The distance function defining a metric on
+            :math:`\mathbb{F}^n`.
+            It must accept two `FnVector` arguments and
+            fulfill the following mathematical conditions for any
+            three vectors :math:`x, y, z`:
 
-                - :math:`d(x, y) = d(y, x)`
-                - :math:`d(x, y) \geq 0`
-                - :math:`d(x, y) = 0 \Leftrightarrow x = y`
-                - :math:`d(x, y) \geq d(x, z) + d(z, y)`
+            - :math:`d(x, y) = d(y, x)`
+            - :math:`d(x, y) \geq 0`
+            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
+            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
 
-                By default, ``dist(x, y)`` is calculated as
-                ``norm(x - y)``. This creates an intermediate array
-                ``x-y``, which can be
-                avoided by choosing ``dist_using_inner=True``.
+            By default, ``dist(x, y)`` is calculated as
+            ``norm(x - y)``. This creates an intermediate array
+            ``x-y``, which can be
+            avoided by choosing ``dist_using_inner=True``.
 
-                This option cannot be combined with ``weight``,
-                ``norm`` or ``inner``.
+            This option cannot be combined with ``weight``,
+            ``norm`` or ``inner``.
 
-            'norm' : `callable`, optional
-                The norm implementation. It must accept an
-                `FnVector` argument, return a
-                `float` and satisfy the following
-                conditions for all vectors :math:`x, y` and scalars
-                :math:`s`:
+        norm : `callable`, optional
+            The norm implementation. It must accept an
+            `FnVector` argument, return a
+            `float` and satisfy the following
+            conditions for all vectors :math:`x, y` and scalars
+            :math:`s`:
 
-                - :math:`\lVert x\\rVert \geq 0`
-                - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
-                - :math:`\lVert s x\\rVert = \lvert s \\rvert
-                  \lVert x\\rVert`
-                - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
-                  \lVert y\\rVert`.
+            - :math:`\lVert x\\rVert \geq 0`
+            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
+            - :math:`\lVert s x\\rVert = \lvert s \\rvert
+              \lVert x\\rVert`
+            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
+              \lVert y\\rVert`.
 
-                By default, ``norm(x)`` is calculated as
-                ``inner(x, x)``.
+            By default, ``norm(x)`` is calculated as
+            ``inner(x, x)``.
 
-                This option cannot be combined with ``weight``,
-                ``dist`` or ``inner``.
+            This option cannot be combined with ``weight``,
+            ``dist`` or ``inner``.
 
-            'inner' : `callable`, optional
-                The inner product implementation. It must accept two
-                `FnVector` arguments, return a element from
-                the field of the space (real or complex number) and
-                satisfy the following conditions for all vectors
-                :math:`x, y, z` and scalars :math:`s`:
+        inner : `callable`, optional
+            The inner product implementation. It must accept two
+            `FnVector` arguments, return a element from
+            the field of the space (real or complex number) and
+            satisfy the following conditions for all vectors
+            :math:`x, y, z` and scalars :math:`s`:
 
-                - :math:`\langle x,y\\rangle =
-                  \overline{\langle y,x\\rangle}`
-                - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
-                - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
-                  \langle z,y\\rangle`
-                - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
+            - :math:`\langle x,y\\rangle =
+              \overline{\langle y,x\\rangle}`
+            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
+            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
+              \langle z,y\\rangle`
+            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
 
-                This option cannot be combined with ``weight``,
-                ``dist`` or ``norm``.
+            This option cannot be combined with ``weight``,
+            ``dist`` or ``norm``.
 
-            dist_using_inner : `bool`, optional
-                Calculate ``dist`` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-                :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-                \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
-                This avoids the creation of new arrays and is thus faster
-                for large arrays. On the downside, it will not evaluate to
-                exactly zero for equal (but not identical) :math:`x` and
-                :math:`y`.
+            This avoids the creation of new arrays and is thus faster
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
 
-                This option can only be used if ``exponent`` is 2.0.
+            This option can only be used if ``exponent`` is 2.0.
 
-                Default: `False`.
+            Default: `False`.
         """
         FnBase.__init__(self, size, dtype)
 
@@ -1631,21 +1629,19 @@ class FnMatrixWeighting(FnWeightingBase):
             :math:`y`.
 
             Can only be used if ``exponent`` is 2.0.
-        kwargs : {'precomp_mat_pow', 'cache_mat_pow'}
+        precomp_mat_pow : `bool`
+            If `True`, precompute the matrix power :math:`W^{1/p}`
+            during initialization. This has no effect if
+            ``exponent`` is 1.0, 2.0 or ``inf``.
 
-            'precomp_mat_pow' : `bool`
-                If `True`, precompute the matrix power :math:`W^{1/p}`
-                during initialization. This has no effect if
-                ``exponent`` is 1.0, 2.0 or ``inf``.
+            Default: `False`
 
-                Default: `False`
+        cache_mat_pow : `bool`
+            If `True`, cache the matrix power :math:`W^{1/p}` during
+            the first call to ``norm`` or ``dist``. This has no
+            effect if ``exponent`` is 1.0, 2.0 or ``inf``.
 
-            'cache_mat_pow' : `bool`
-                If `True`, cache the matrix power :math:`W^{1/p}` during
-                the first call to ``norm`` or ``dist``. This has no
-                effect if ``exponent`` is 1.0, 2.0 or ``inf``.
-
-                Default: `False`
+            Default: `False`
         """
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         cache_mat_pow = kwargs.pop('cache_mat_pow', True)

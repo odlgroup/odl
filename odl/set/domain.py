@@ -261,10 +261,10 @@ class IntervalProd(Set):
         try:
             return (self.approx_contains(other.min(), tol) and
                     self.approx_contains(other.max(), tol))
-        except AttributeError as exc:
+        except AttributeError as err:
             raise_from(
                 AttributeError('cannot test {!r} without `min()` and `max()`'
-                               'methods.'.format(other)), exc)
+                               'methods.'.format(other)), err)
 
     def contains_all(self, other):
         """Test if all points defined by `other` are contained.
@@ -273,11 +273,11 @@ class IntervalProd(Set):
         ----------
         other : object
             Can be a single point, a ``(d, N)`` array where ``d`` is the
-            number of dimensions or a length-`d` meshgrid sequence
+            number of dimensions or a length-``d`` meshgrid sequence
 
         Returns
         -------
-        contains : bool
+        contains : `bool`
             `True` if all points are contained, `False` otherwise
 
         Examples
@@ -287,17 +287,15 @@ class IntervalProd(Set):
         ...
         ... # Arrays are expected in (ndim, npoints) shape
         >>> arr = np.array([[-1, 0, 2],   # defining one point at a time
-        ...                 [-0.5, 0, 2],
-        ...                 [-0.5, 0, 2.8],
-        ...                 [-0.75, 0, 3]])
+        ...                 [-0.5, 0, 2]])
         >>> rbox.contains_all(arr.T)
         True
         >>> # Implicit meshgrids defined by coordinate vectors
+        >>> from odl.discr.grid import sparse_meshgrid
         >>> vec1 = (-1, -0.9, -0.7)
         >>> vec2 = (0, 0, 0)
         >>> vec3 = (2.5, 2.75, 3)
-        >>> mg = np.meshgrid(vec1, vec2, vec3,
-        ...                  sparse=True, indexing='ij')
+        >>> mg = sparse_meshgrid(vec1, vec2, vec3)
         >>> rbox.contains_all(mg)
         True
         """

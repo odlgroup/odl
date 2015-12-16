@@ -25,7 +25,9 @@ standard_library.install_aliases()
 from builtins import object, super
 
 # External module imports
+import inspect
 from numbers import Number, Integral
+import sys
 
 # ODL imports
 from odl.set.space import (LinearSpace, LinearSpaceVector,
@@ -96,9 +98,6 @@ def _signature_from_spec(func):
     sig : `str`
         Signature of the function
     """
-    import sys
-    import inspect
-
     # pylint: disable=deprecated-method,redefined-variable-type,no-member
     py3 = (sys.version_info.major > 2)
     if py3:
@@ -107,42 +106,28 @@ def _signature_from_spec(func):
         spec = inspect.getargspec(func)
 
     posargs = spec.args
-    defaults = spec.defaults
+    defaults = spec.defaults if spec.defaults is not None else []
     varargs = spec.varargs
     kwargs = spec.varkw if py3 else spec.keywords
     deflen = 0 if defaults is None else len(defaults)
     nodeflen = 0 if posargs is None else len(posargs) - deflen
-    if nodeflen > 0:
-        argstr = ', '.join(posargs[:nodeflen])
-    else:
-        argstr = ''
 
-    if defaults:
-        if argstr:
-            argstr += ', '
-        argstr += ', '.join(['{}={}'.format(arg, dval)
-                             for arg, dval in zip(posargs[nodeflen:],
-                                                  defaults)])
+    args = ['{}'.format(arg) for arg in posargs[:nodeflen]]
+    args += ['{}={}'.format(arg, dval)
+             for arg, dval in zip(posargs[nodeflen:], defaults)]
     if varargs:
-        if argstr:
-            argstr += ', '
-        argstr += '*{}'.format(varargs)
-
+        args += ['*{}'.format(varargs)]
     if py3:
         kw_only = spec.kwonlyargs
         kw_only_defaults = spec.kwonlydefaults
-        if kw_only:
-            if argstr:
-                argstr += ', '
-            if not varargs:
-                argstr += '*, '
-            argstr += ', '.join('{}={}'.format(arg, kw_only_defaults[arg])
-                                for arg in kw_only)
-
+        if kw_only and not varargs:
+            args += ['*']
+        args += ['{}={}'.format(arg, kw_only_defaults[arg])
+                 for arg in kw_only]
     if kwargs:
-        if argstr:
-            argstr += ', '
-        argstr += '**{}'.format(kwargs)
+        args += ['**{}'.format(kwargs)]
+
+    argstr = ', '.join(args)
 
     return '{}({})'.format(func.__name__, argstr)
 
@@ -210,21 +195,17 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     ValueError
         if the signature of the function is malformed
     """
-    import inspect
-    import sys
-
     py3 = (sys.version_info.major > 2)
 
-    py2_specs = ('_call(self, x[, **kwargs])',
-                 '_call(self, x, out[, **kwargs])',
-                 '_call(self, x, out=None[, **kwargs])')
+    specs = ['_call(self, x[, **kwargs])',
+             '_call(self, x, out[, **kwargs])',
+             '_call(self, x, out=None[, **kwargs])']
 
-    py3only_specs = ('_call(self, x, *, out=None[, **kwargs])',)
+    if py3:
+        specs += ['_call(self, x, *, out=None[, **kwargs])']
 
     spec_msg = "\nPossible signatures are ('[, **kwargs]' means optional):\n\n"
-    spec_msg += '\n'.join(py2_specs)
-    if py3:
-        spec_msg += '\n' + '\n'.join(py3only_specs)
+    spec_msg += '\n'.join(specs)
     spec_msg += '\n\nStatic or class methods are not allowed.'
 
     if sum(arg is not None for arg in (cls, bound_call, unbound_call)) != 1:
@@ -370,7 +351,7 @@ class Operator(object):
     provided by the parent class `Operator`.
 
     In addition, any subclass **must** implement the private method
-    ``_call()``. It signature determines how it is interpreted:
+    `Operator._call()`. It signature determines how it is interpreted:
 
 
     **In-place-only evaluation:** ``_call(self, x, out[, **kwargs])``
@@ -383,7 +364,7 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element-like
+    x : `Operator.domain` element
         An object in the operator domain to which the operator is
         applied
 
@@ -406,7 +387,7 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element-like
+    x : `Operator.domain` element
         An object in the operator domain to which the operator is
         applied
 
@@ -423,7 +404,7 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element-like
+    x : `Operator.domain` element
         An object in the operator domain to which the operator is
         applied
 
@@ -445,8 +426,8 @@ class Operator(object):
     - `Operator._call` is allowed to have keyword-only arguments (Python
       3 only).
 
-    - The term "element-like" means that an object must be castable to
-      an element by the ``domain.element()`` method.
+    - The term "element-like" means that an object must be convertible
+      to an element by the ``domain.element()`` method.
     """
 
     def __new__(cls, *args, **kwargs):
@@ -459,8 +440,8 @@ class Operator(object):
         instance._call_out_optional = call_out_optional
         if not call_has_out:
             # Out-of-place _call
-            instance._call_in_place = preload_call_with(instance, 'ip')(
-                _default_call_in_place)
+            instance._call_in_place = preload_call_with(
+                instance, 'in-place')(_default_call_in_place)
             instance._call_out_of_place = instance._call
         elif call_out_optional:
             # Dual-use _call
@@ -469,8 +450,8 @@ class Operator(object):
         else:
             # In-place only _call
             instance._call_in_place = instance._call
-            instance._call_out_of_place = preload_call_with(instance, 'oop')(
-                _default_call_out_of_place)
+            instance._call_out_of_place = preload_call_with(
+                instance, 'out-of-place')(_default_call_out_of_place)
 
         return instance
 
@@ -485,9 +466,9 @@ class Operator(object):
         range : `Set`
             The range of this operator, i.e., the set this operator
             maps to
-        linear : bool
+        linear : `bool`
             If `True`, the operator is considered as linear. In this
-            case, `domain` and `range` have to be instances of
+            case, ``domain`` and ``range`` have to be instances of
             `LinearSpace`, or `Field`.
         """
         if not isinstance(domain, Set):
@@ -545,37 +526,40 @@ class Operator(object):
         Additional variable ``**kwargs`` and keyword-only arguments
         (Python 3 only) are also allowed.
 
-        **General advice:**
-        - We recommend to implement the *in-place*
-          pattern if your code supports it since it avoids the
-          allocation of a new element and a copy compared to the
-          out-of-place one.
+        Notes
+        -----
+        Some general advice on how to implement operator evaluation:
+
+        - If you just write a quick implementation or are not too
+          worried about efficiency, it may be easiest to write the
+          evaluation *out of place*.
+        - We recommend advanced and performance-aware users to implement
+          the *in-place* pattern if the wrapped code supports it.
+          In-place evaluation is usually significantly faster since it
+          avoids the allocation of new memory and a copy compared to
+          out-of-place evaluation.
         - If there is a significant performance gain from implementing
           an out-of-place method separately, use the pattern for both
           (``out`` optional) and decide according to the given ``out``
           parameter which one to use.
-        - Use the out-of-place pattern only if your evaluation
-          code does not support in-place calculations.
+        - If your evaluation code does not support in-place evaluation,
+          use the out-of-place pattern.
 
-        See the documentation for more info on in-place vs. out-of-place
-        evaluation.
-
-        TODO: add link
+        See the `documentation
+        <https://odl.readthedocs.org/guide/in_depth/operator_guide.html>`_
+        for more info on in-place vs. out-of-place evaluation.
 
         Parameters
         ----------
-        x : `Operator.domain`-like element
+        x : `Operator.domain` element-like
             Element to which the operator is applied
         out : `Operator.range` element, optional
             Element to which the result is written
-        kwargs :
-            Extra arguments
 
         Returns
         -------
-        out : `Operator.range`-like element
-            Result of the evaluation. Identical to input ``out`` if
-            provided.
+        out : `Operator.range` element-like
+            Result of the evaluation
 
         Notes
         -----
@@ -694,10 +678,10 @@ class Operator(object):
         if x not in self.domain:
             try:
                 x = self.domain.element(x)
-            except (TypeError, ValueError) as exc:
+            except (TypeError, ValueError) as err:
                 raise_from(OpDomainError(
                     'unable to cast {!r} to an element of '
-                    'the domain {}.'.format(x, self.domain)), exc)
+                    'the domain {}.'.format(x, self.domain)), err)
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
@@ -717,11 +701,11 @@ class Operator(object):
             if out not in self.range:
                 try:
                     out = self.range.element(out)
-                except (TypeError, ValueError) as exc:
+                except (TypeError, ValueError) as err:
                     new_exc = OpRangeError(
                         'unable to cast {!r} to an element of '
                         'the range {}.'.format(out, self.range))
-                    raise_from(new_exc, exc)
+                    raise_from(new_exc, err)
         return out
 
     def __add__(self, other):
@@ -1553,7 +1537,7 @@ class FunctionalLeftVectorMult(Operator):
     def _call(self, x, out=None):
         """Implement ``self(x[, out])``."""
         if out is None:
-            return self._op(x) * self._vector
+            return self._vector * self._op(x)
         else:
             scalar = self._op(x)
             out.lincomb(scalar, self._vector)

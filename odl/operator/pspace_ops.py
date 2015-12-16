@@ -542,10 +542,10 @@ class ComponentProjectionAdjoint(Operator):
         """
         if out is None:
             out = self.range.zero()
-            out[self.index] = x
         else:
             out.set_zero()
-            out[self.index] = x
+
+        out[self.index] = x
         return out
 
     @property

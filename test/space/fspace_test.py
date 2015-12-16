@@ -540,20 +540,18 @@ def test_fspace_power(power):
 
 op_params = ['+', '+=', '-', '-=', '*', '*=', '/', '/=']
 op_ids = [' op = {} '.format(op) for op in op_params]
-op_fixture = pytest.fixture(scope="module", ids=op_ids, params=op_params)
 
 
-@op_fixture
+@pytest.fixture(scope="module", ids=op_ids, params=op_params)
 def op(request):
     return request.param
 
 
 var_params = ['vv', 'vs', 'sv']
 var_ids = [' vec <op> vec ', ' vec <op> scal ', ' scal <op> vec ']
-var_fixture = pytest.fixture(scope="module", ids=var_ids, params=var_params)
 
 
-@var_fixture
+@pytest.fixture(scope="module", ids=var_ids, params=var_params)
 def variant(request):
     return request.param
 
@@ -579,12 +577,11 @@ def _op(a, op, b):
     elif op == '/=':
         a /= b
         return a
+    else:
+        raise ValueError("bad operator '{}'.".format(op))
 
 
 def test_fspace_vector_arithmetic(variant, op):
-    assert op in ('+', '-', '*', '/', '+=', '-=', '*=', '/=')
-    assert variant in ('sv', 'vv', 'vs')
-
     if variant == 'sv' and '=' in op:  # makes no sense, quit
         return
 

@@ -82,15 +82,14 @@ class TensorGrid(Set):
             The coordinate vectors defining the grid points. They must
             be sorted in ascending order and may not contain
             duplicates. Empty vectors are not allowed.
-        kwargs : {'as_midp', 'order'}
-            'as_midp' : `bool`, optional  (Default: `False`)
-                Treat grid points as midpoints of rectangular cells.
-                This influences the behavior of `min`, `max` and
-                `cell_sizes`.
-            'order' : {'C', 'F'}, optional
-                Ordering of the grid axes. 'C' means the first axis
-                varies slowest, the last axis fastest; vice versa for
-                'F'.
+        as_midp : `bool`, optional  (Default: `False`)
+            Treat grid points as midpoints of rectangular cells.
+            This influences the behavior of `min`, `max` and
+            `cell_sizes`.
+        order : {'C', 'F'}, optional
+            Ordering of the grid axes. 'C' means the first axis
+            varies slowest, the last axis fastest; vice versa for
+            'F'.
 
         Examples
         --------
@@ -772,13 +771,12 @@ class RegularGrid(TensorGrid):
         shape : array-like or `int`
             The number of grid points per axis, can be an integer for
             1D grids
-        kwargs : {'as_midp'}
-            'as_midp' : `bool`, optional
-                Treat grid points as midpoints of rectangular cells.
-                This influences the behavior of `TensorGrid.min`,
-                `TensorGrid.max` and `TensorGrid.cell_sizes`.
+        as_midp : `bool`, optional
+            Treat grid points as midpoints of rectangular cells.
+            This influences the behavior of `TensorGrid.min`,
+            `TensorGrid.max` and `TensorGrid.cell_sizes`.
 
-                Default: `False`
+            Default: `False`
 
         Examples
         --------

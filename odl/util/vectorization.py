@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utilities for internal use."""
+"""Utilities for internal functionality connected to vectorization."""
 
 
 # Imports for common Python 2/3 codebase
@@ -92,13 +92,17 @@ def meshgrid_input_order(x):
 def vecs_from_meshgrid(mg, order):
     """Get the coordinate vectors from a meshgrid (as a tuple)."""
     vecs = []
+    order_ = str(order).upper()
+    if order_ not in ('C', 'F'):
+        raise ValueError("unknown ordering '{}'.".format(order))
+
     for ax in range(len(mg)):
         select = [0] * len(mg)
         select[ax] = np.s_[:]
-        if str(order).upper() == 'F':
-            vecs.append(mg[-ax - 1][select])
-        else:
+        if order_ == 'C':
             vecs.append(mg[ax][select])
+        elif order_ == 'F':
+            vecs.append(mg[-ax - 1][select])
     return tuple(vecs)
 
 
@@ -206,7 +210,7 @@ def vectorize(dtype=None):
             if out is None:
                 out_shape = out_shape_from_array(x)
                 if dtype is None:
-                    out = [0] * out_shape[0]  # lazy vectorization
+                    out = [None] * out_shape[0]  # lazy vectorization
                 else:
                     out = np.empty(out_shape, dtype=dtype)
 
@@ -221,18 +225,13 @@ def vectorize(dtype=None):
                 if dtype is None:
 
                     # Small helper to initialize a nested list
-                    def _fill_nested(lst, shape):
-                        if len(shape) == 1:
-                            for _ in range(shape[0]):
-                                lst.append(float('nan'))
+                    def _nested(shape):
+                        if len(shape) == 0:
+                            return None
                         else:
-                            for _ in range(shape[0]):
-                                lst.append([])
-                            for sublst in lst:
-                                _fill_nested(sublst, shape[1:])
-
-                    out = []
-                    _fill_nested(out, out_shape)
+                            return [_nested(shape[1:])
+                                    for _ in range(shape[0])]
+                    out = _nested(out_shape)
 
                 else:
                     out = np.empty(out_shape, dtype=dtype)
@@ -280,9 +279,9 @@ def vectorize(dtype=None):
             else:
                 try:
                     return func(x)
-                except Exception as exc:
-                    raise_from(TypeError('invalid vectorized input type.'),
-                               exc)
+                except Exception as err:
+                    raise_from(
+                        TypeError('invalid vectorized input type.'), err)
 
         return vect_wrapper
     return vect_decorator

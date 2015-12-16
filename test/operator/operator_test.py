@@ -55,7 +55,7 @@ class MultiplyAndSquareOp(Operator):
             return np.dot(self.matrix, rhs.data) ** 2
         else:
             np.dot(self.matrix, rhs.data, out=out.data)
-            out.data[:] **= 2
+            out **= 2
 
     def __str__(self):
         return "MaS: " + str(self.matrix) + " ** 2"
@@ -790,7 +790,7 @@ def test_dispatch_call_args(func):
 
     # Unbound functions
     true_has, true_opt = eval(func.__doc__.splitlines()[1].strip())
-    good = True if func.__doc__.splitlines()[2].strip() == 'good' else False
+    good = func.__doc__.splitlines()[2].strip() == 'good'
 
     if good:
         truespec = getspec(func)
