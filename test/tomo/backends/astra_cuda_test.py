@@ -22,9 +22,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-import matplotlib
-matplotlib.use('agg')
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -121,117 +118,80 @@ def test_astra_gpu_projector_call_2d():
 def test_astra_gpu_projector_call_3d():
     """Test 3D forward and backward projection functions on the GPU."""
 
-    for_dir = '/home/jmoosmann/Documents/astra_odl/forward/'
-    back_dir = '/home/jmoosmann/Documents/astra_odl/backward/'
-
-    def save_ortho_slices(data, folder, name, sli):
-        """Save three orthogonal slices.
-
-        Parameters
-        ----------
-        data : `DiscreteLp`
-        folder : `str`
-        name : `str`
-        sli : 3-element array-like
-        """
-        x, y, z = np.asarray(sli, int)
-        data.show('imshow',
-                  saveto='{}{}_z{:03d}.png'.format(folder,
-                                                   name.replace(' ', '_'), z),
-                  title='{} [:,:,{}]'.format(name, z),
-                  indices=[slice(None), slice(None), z])
-        data.show('imshow',
-                  saveto='{}{}_y{:03d}.png'.format(folder,
-                                                   name.replace(' ', '_'), y),
-                  title='{} [:,{},:]'.format(name, y),
-                  indices=[slice(None), y, slice(None)])
-        data.show('imshow',
-                  saveto='{}{}_x{:03d}.png'.format(folder,
-                                                   name.replace(' ', '_'), x),
-                  title='{} [{},:,:]'.format(name, x),
-                  indices=[x, slice(None), slice(None)])
-        plt.close('all')
-
-    # Volume space
-    vol_shape = (80, 70, 60)
-    discr_vol_space = uniform_discr([-0.8, -0.7, -0.6], [0.8, 0.7, 0.6],
+    # `DiscreteLp` volume space
+    vol_shape = (4, 5, 6)
+    discr_vol_space = uniform_discr([-4, -5, -6], [4, 5, 6],
                                     vol_shape, dtype='float32')
 
     # Phantom
     phan = np.zeros(vol_shape)
-    sli0 = np.round(0.1 * np.array(vol_shape))
-    sli1 = np.round(0.4 * np.array(vol_shape))
-    sliz0 = np.round(0.1 * np.array(vol_shape))
-    sliz1 = np.round(1.9 * np.array(vol_shape))
-    phan[sliz0[0]:sliz1[0], sli0[1]:sli1[1], sli0[2]:sli1[2]] = 1
+    phan[1, 1:3, 1:4] = 1
 
+    # Create an element in the volume space
     discr_data = discr_vol_space.element(phan)
-    vol_sli = np.round(0.25 * np.array(vol_shape))
-    save_ortho_slices(discr_data, back_dir, 'phantom 3d gpu', vol_sli)
 
     # Angles
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 110, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 9, as_midp=False)
 
     # Detector
-    dparams = Rectangle([-1, -0.9], [1, 0.9])
-    det_grid = uniform_sampling(dparams, (100, 90))
+    dparams = Rectangle([-7, -8], [7, 8])
+    det_grid = uniform_sampling(dparams, (7, 8))
 
-    # Geometry: Parallel 3D
-    geom_p3d = Parallel3dGeometry(angle_intvl, dparams, angle_grid, det_grid)
-
-    # Geomtery: Circular cone beam
+    # Parameter for cone beam geometries
     src_rad = 1000
     det_rad = 100
+    spiral_pitch_factor = 0.5
+
+    # Create geometries
+    geom_p3d = Parallel3dGeometry(angle_intvl, dparams, angle_grid, det_grid)
     geom_ccf = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                                         angle_grid, det_grid, angle_offset)
-
-    # Geometry: Helical cone beam
-    spiral_pitch_factor = 0.5
     geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                        det_rad, spiral_pitch_factor,
                                        angle_grid, det_grid, angle_offset)
 
-    # Projection space (3D) (DiscreteLp)
-    ind = 0
-    proj_rect = dparams.insert(angle_intvl, ind)
+    # Projection space
+    proj_rect = angle_intvl.insert(dparams, 1)
     proj_space = FunctionSpace(proj_rect)
-    proj_grid = det_grid.insert(angle_grid, ind)
-    npixels = proj_grid.shape
-    proj_sli = (0, np.round(0.25 * npixels[1]), np.round(0.25 * npixels[2]))
-    discr_proj_space = uniform_discr_fromspace(proj_space, npixels,
+
+    # `DiscreteLp` projection space
+    proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
+
+
+    discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
                                                dtype='float32')
 
     # Forward: Parallel 3D
     proj_data = astra_gpu_forward_projector_call(discr_data, geom_p3d,
                                                  discr_proj_space)
-    save_ortho_slices(proj_data, for_dir, 'parallel 3d gpu', proj_sli)
+    assert proj_data.norm() > 0
 
     # Backward: Parallel 3D
     rec_data = astra_gpu_backward_projector_call(proj_data, geom_p3d,
                                                  discr_vol_space)
-    save_ortho_slices(rec_data, back_dir, 'parallel 3d gpu', vol_sli)
+    assert rec_data.norm() > 0
 
     # Forward: Circular Cone Flat
     proj_data = astra_gpu_forward_projector_call(discr_data, geom_ccf,
                                                  discr_proj_space)
-    save_ortho_slices(proj_data, for_dir, 'conebeam circular gpu', proj_sli)
+    assert proj_data.norm() > 0
 
     # Backward: Circular Cone Flat
     rec_data = astra_gpu_backward_projector_call(proj_data, geom_ccf,
                                                  discr_vol_space)
-    save_ortho_slices(rec_data, back_dir, 'conebeam circular gpu', vol_sli)
+    assert rec_data.norm() > 0
 
     # Forward: Helical Cone Flat
     proj_data = astra_gpu_forward_projector_call(discr_data, geom_hcf,
                                                  discr_proj_space)
-    save_ortho_slices(proj_data, for_dir, 'conebeam helical gpu', proj_sli)
+    assert proj_data.norm() > 0
 
     # Backward: Helical Cone Flat
     rec_data = astra_gpu_backward_projector_call(proj_data, geom_hcf,
                                                  discr_vol_space)
-    save_ortho_slices(rec_data, back_dir, 'conebeam helical gpu', vol_sli)
+    assert rec_data.norm() > 0
 
 
 if __name__ == '__main__':

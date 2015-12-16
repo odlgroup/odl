@@ -19,13 +19,13 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
+from abc import ABCMeta, abstractmethod, abstractproperty
 from future import standard_library
 standard_library.install_aliases()
 from future.utils import with_metaclass
 from builtins import object, super
 
 # External
-from abc import ABCMeta, abstractmethod, abstractproperty
 import numpy as np
 
 # Internal
@@ -266,8 +266,8 @@ class LineDetector(FlatDetector):
 
         Returns
         -------
-        deriv : ndarray, shape `(2,)`
-            The constant derivative `(0, 1)`
+        deriv : `numpy.ndarray`, shape ``(2,)``
+            The constant derivative ``(0, 1)``
         """
         if param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
@@ -316,7 +316,7 @@ class Flat2dDetector(FlatDetector):
 
         Returns
         -------
-        point : ndarray, shape `(3,)`
+        point : ndarray, shape ``(3,)``
             The point on the detector surface corresponding to the
             given parameters
         """
@@ -334,7 +334,7 @@ class Flat2dDetector(FlatDetector):
 
         Returns
         -------
-        deriv : 2-tuple of ndarray with shape `(3,)`
+        deriv : 2-tuple of ndarray with shape ``(3,)``
             The constant partial derivatives `(0, 1, 0), (0, 0, 1)`
         """
         if param not in self.params:
@@ -347,10 +347,10 @@ class CircleSectionDetector(Detector):
 
     """A 1d detector lying on a section of a circle.
 
-    The reference cirular section is part of a circle with radius `r`,
-    which is shifted by the vector :math:`(-r, 0)`, such that the
-    parameter value 0 results in the detector reference point
-    :math:`(0, 0)`.
+    The reference cirular section is part of a circle with radius ``r``,
+    which is shifted by the vector :math:`(-r, 0)`, such that the parameter
+    value 0 results in the detector reference point :math:`(0, 0)`.
+
     """
 
     def __init__(self, params, circ_rad, grid=None):
@@ -360,7 +360,7 @@ class CircleSectionDetector(Detector):
         ----------
         params : `Interval` or 1-dim. `IntervalProd`
             The range of the parameters defining the detector area.
-        circ_rad : positive float
+        circ_rad : positive `float`
             Radius of the circle on which the detector is situated
         grid : 1-dim. `TensorGrid`, optional
             A sampling grid for the parameter interval, in which it must
@@ -425,8 +425,8 @@ class CircleSectionDetector(Detector):
 
         Returns
         -------
-        meas : float
-            The constant density `r`, equal to the length of the
+        meas : `float`
+            The constant density ``r``, equal to the length of the
             tangent to the detector circle at any point
         """
         if param in self.params:
