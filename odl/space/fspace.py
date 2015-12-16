@@ -290,8 +290,8 @@ class FunctionSetVector(Operator):
         Returns
         -------
         out : range element or array of elements
-            Result of the function evaluation, identical to the input
-            ``out`` if provided.
+            Result of the function evaluation. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Raises
         ------
@@ -316,7 +316,7 @@ class FunctionSetVector(Operator):
             scalar_out = False
             # For 1d, squeeze the array
             if self.domain.ndim == 1 and x.ndim == 2:
-                x = x[0]
+                x = x.squeeze()
         elif is_valid_input_meshgrid(x, self.domain.ndim):
             out_shape = out_shape_from_meshgrid(x)
             scalar_out = False
@@ -516,7 +516,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         Since `lincomb` may be slow, we implement this function
         directly.
         """
-        dtype = complex if self.field == ComplexNumbers() else float
+        dtype = 'complex128' if self.field == ComplexNumbers() else 'float64'
 
         def zero_vec(x, out=None):
             """The zero function, vectorized."""
@@ -538,7 +538,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         This function is the multiplicative unit in the function space.
         """
-        dtype = complex if self.field == ComplexNumbers() else float
+        dtype = 'complex128' if self.field == ComplexNumbers() else 'float64'
 
         def one_vec(x, out=None):
             """The one function, vectorized."""

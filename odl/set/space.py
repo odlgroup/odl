@@ -224,6 +224,8 @@ class LinearSpace(Set):
         Returns
         -------
         out : `LinearSpaceVector`
+            Result of the linear combination. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Notes
         -----
@@ -325,7 +327,8 @@ class LinearSpace(Set):
         Returns
         -------
         out : `LinearSpace.field` element
-            Product of the vectors, same as ``out`` if given.
+            Product of the vectors. If ``out`` was provided, the
+            returned object is a reference to it.
         """
         if x1 not in self:
             raise LinearSpaceTypeError('first vector {!r} not in space {!r}'
@@ -345,13 +348,13 @@ class LinearSpace(Set):
             Multiplicands in the product
 
         out : `LinearSpaceVector`, optional
-            Vector to write the product to.
-            default: `LinearSpace.element`
+            Vector to write the product to
 
         Returns
         -------
         out : `LinearSpaceVector`
-            Product of the vectors, same as ``out`` if given.
+            Product of the vectors. If ``out`` was provided, the
+            returned object is a reference to it.
         """
         if out is None:
             out = self.element()
@@ -381,13 +384,13 @@ class LinearSpace(Set):
             The divisor
 
         out : `LinearSpaceVector`, optional
-            Vector to write the ratio to.
-            default: `LinearSpace.element`
+            Vector to write the ratio to
 
         Returns
         -------
         out : `LinearSpaceVector`
-            Ratio of the vectors, same as ``out`` if given.
+            Ratio of the vectors. If ``out`` was provided, the
+            returned object is a reference to it.
         """
         if out is None:
             out = self.element()

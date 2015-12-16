@@ -81,8 +81,8 @@ class DiscreteLp(Discretization):
             'linear' : use linear interpolation (not implemented)
         order : {'C', 'F'}, optional  (Default: 'C')
             Ordering of the values in the flat data arrays. 'C'
-            means the first grid axis varies fastest, the last most
-            slowly, 'F' vice versa.
+            means the first grid axis varies slowest, the last fastest,
+            'F' vice versa.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{!r} is not a `FunctionSpace` instance.'

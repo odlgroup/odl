@@ -262,9 +262,9 @@ def preload_default_oop_call_with(vector):
         if field is None:
             dtype = None
         elif field == RealNumbers():
-            dtype = float
+            dtype = 'float64'
         elif field == ComplexNumbers():
-            dtype = complex
+            dtype = 'complex128'
         else:
             raise TypeError('cannot handle field {!r}.'.format(field))
 

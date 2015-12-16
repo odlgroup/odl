@@ -76,6 +76,8 @@ def meshgrid_input_order(x):
             return 'C'
         elif all(xi.flags.f_contiguous for xi in x):
             return 'F'
+        else:
+            raise ValueError('unable to determine ordering.')
     # Case 2: sparse meshgrid, each member's shape has at most one non-one
     # entry (corner case of all ones is included)
     elif all(xi.shape.count(1) >= len(x) - 1 for xi in x):
@@ -85,8 +87,8 @@ def meshgrid_input_order(x):
             return 'C'
         elif all(xi.shape[-1 - i] != 1 for i, xi in enumerate(x)):
             return 'F'
-
-    raise ValueError('unable to determine ordering.')
+        else:
+            raise ValueError('unable to determine ordering.')
 
 
 def vecs_from_meshgrid(mg, order):
@@ -101,7 +103,7 @@ def vecs_from_meshgrid(mg, order):
         select[ax] = np.s_[:]
         if order_ == 'C':
             vecs.append(mg[ax][select])
-        elif order_ == 'F':
+        else:  # order == 'F'
             vecs.append(mg[-ax - 1][select])
     return tuple(vecs)
 

@@ -217,7 +217,7 @@ class ProductSpaceOperator(Operator):
         -------
         out : range element
             Result of the evaluation. If ``out`` was provided, the
-            returned object is identical with it.
+            returned object is a reference to it.
 
         Examples
         --------
@@ -398,7 +398,7 @@ class ComponentProjection(Operator):
         -------
         out : range element
             Projection of x onto subspace. If ``out`` was provided, the
-            returned object is identical with it.
+            returned object is a reference to it.
 
         Examples
         --------
@@ -509,7 +509,7 @@ class ComponentProjectionAdjoint(Operator):
         -------
         out : range element
             Extension of x to superspace. If ``out`` was provided, the
-            returned object is identical with it.
+            returned object is a reference to it.
 
         Examples
         --------

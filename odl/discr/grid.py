@@ -518,7 +518,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        out : `numpy.ndarray`
+        corners : `numpy.ndarray`
             The size of the array is 2^m x ndim, where m is the number
             of non-degenerate axes, i.e. the corners are stored as rows.
 

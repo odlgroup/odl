@@ -564,9 +564,10 @@ class IntervalProd(Set):
 
         Returns
         -------
-        out : `numpy.ndarray`
-            The size of the array is ``2^m * ndim``, where ``m`` is the number
-            of non-degenerate axes, i.e. the corners are stored as rows.
+        corners : `numpy.ndarray`
+            The size of the array is ``2^m * ndim``, where ``m``
+            is the number of non-degenerate axes, i.e. the corners are
+            stored as rows.
 
         Examples
         --------

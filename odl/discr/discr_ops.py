@@ -70,8 +70,8 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     Returns
     -------
     out : `numpy.ndarray`
-        N-dimensional array of the same shape as ``f``, identical with
-        input ``out`` if provided.
+        N-dimensional array of the same shape as ``f``. If ``out`` was
+            provided, the returned object is a reference to it.
 
     Examples
     --------
@@ -253,8 +253,8 @@ class DiscretePartDeriv(Operator):
         Returns
         -------
         out : ``range`` element, optional
-            Result of the evaluation, identical with input ``out`` if
-            provided.
+            Result of the evaluation. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
@@ -332,8 +332,8 @@ class DiscreteGradient(Operator):
         Returns
         -------
         out : ``range`` element, optional
-            Result of the evaluation, identical with input ``out`` if
-            provided.
+            Result of the evaluation. If ``out`` was
+            provided, the returned object is a reference to it.
 
         Examples
         --------
@@ -423,15 +423,16 @@ class DiscreteDivergence(Operator):
         Parameters
         ----------
         x : ``domain`` element
-            `ProductSpaceVector` to which the divergence operator is applied to
+            `ProductSpaceVector` to which the divergence operator
+            is applied
         out : ``range`` element, optional
             Output vector to which the result is written
 
         Returns
         -------
         out : ``range`` element, optional
-            Result of the evaluation, identical with input ``out`` if
-            provided.
+            Result of the evaluationIf ``out`` was
+            provided, the returned object is a reference to it.
 
         Examples
         --------

@@ -217,7 +217,6 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
             call = parent.__dict__.get(attr, None)
             if call is not None:
                 break
-
         # Static and class methods are not allowed
         if isinstance(call, staticmethod):
             raise TypeError("'{}.{}' is a static method. "
@@ -254,8 +253,6 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     pos_defaults = spec.defaults
     varargs = spec.varargs
 
-    out_optional = False
-
     # Variable args are not allowed
     if varargs is not None:
         raise ValueError("Bad signature '{}': variable arguments not allowed."
@@ -272,7 +269,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
                              " ".format(signature) + spec_msg)
         else:
             if 'out' not in kw_only:
-                has_out = False
+                has_out = out_optional = False
             elif kw_only_defaults['out'] is not None:
                 raise ValueError(
                     "Bad signature '{}': `out` can only default to "
@@ -559,7 +556,8 @@ class Operator(object):
         Returns
         -------
         out : `Operator.range` element-like
-            Result of the evaluation
+            Result of the evaluation. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Notes
         -----
@@ -651,9 +649,9 @@ class Operator(object):
 
         Returns
         -------
-        elem : `Operator.range` element
-            An object in the operator range, the result of the operator
-            evaluation. It is identical to ``out`` if provided.
+        out : `Operator.range` element
+            Result of the operator evaluation. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Examples
         --------

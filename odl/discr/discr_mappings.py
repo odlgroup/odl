@@ -65,8 +65,8 @@ class FunctionSetMapping(Operator):
             total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
-            means the first grid axis varies fastest, the last most
-            slowly, 'F' vice versa.
+            means the first grid axis varies slowest, the last fastest,
+            'F' vice versa.
         linear : bool
             Create a linear operator if `True`, otherwise a non-linear
             operator.
@@ -177,8 +177,8 @@ class GridCollocation(FunctionSetMapping):
             total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
-            means the first grid axis varies fastest, the last most
-            slowly, 'F' vice versa.
+            means the first grid axis varies slowest, the last fastest,
+            'F' vice versa.
         """
         linear = isinstance(ip_fset, FunctionSpace)
         FunctionSetMapping.__init__(self, 'restriction', ip_fset, grid,
@@ -201,7 +201,7 @@ class GridCollocation(FunctionSetMapping):
         -------
         out : `NtuplesBaseVector`, optional
             The function values at the grid points. If ``out`` was
-            given as argument, it is returned.
+            provided, the returned object is a reference to it.
 
         Notes
         -----
@@ -307,8 +307,8 @@ class NearestInterpolation(FunctionSetMapping):
             total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
-            means the first grid axis varies fastest, the last most
-            slowly, 'F' vice versa.
+            means the first grid axis varies slowest, the last fastest,
+            'F' vice versa.
         """
         linear = True if isinstance(ip_fset, FunctionSpace) else False
         FunctionSetMapping.__init__(self, 'extension', ip_fset, grid, dspace,
@@ -334,7 +334,8 @@ class NearestInterpolation(FunctionSetMapping):
         -------
         out : `FunctionSetVector`
             Nearest-neighbor interpolator for the grid of this
-            operator. Identical to input ``out`` if provided.
+            operator. If ``out`` was provided, the returned object
+            is a reference to it.
 
         See also
         --------
@@ -436,8 +437,8 @@ class LinearInterpolation(FunctionSetMapping):
             as that of the function space.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
-            means the first grid axis varies fastest, the last most
-            slowly, 'F' vice versa.
+            means the first grid axis varies slowest, the last fastest,
+            'F' vice versa.
         """
         if not isinstance(ip_fspace, FunctionSpace):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
@@ -462,8 +463,9 @@ class LinearInterpolation(FunctionSetMapping):
         Returns
         -------
         out : `FunctionSpaceVector`
-            Linear interpolator for the grid of this
-            operator. Identical to input ``out`` if provided.
+            Linear interpolator for the grid of this operator. If
+            ``out`` was provided, the returned object is a reference
+            to it.
         """
         def linear(arg, out=None):
             """Interpolating function with vectorization."""

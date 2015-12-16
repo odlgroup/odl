@@ -657,7 +657,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -755,11 +755,11 @@ class CudaFn(FnBase, CudaNtuples):
         x1, x2 : `CudaFnVector`
             Factors in product
         out : `CudaFnVector`
-            Result
+            Element to which the result is written
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -786,9 +786,9 @@ class CudaFn(FnBase, CudaNtuples):
         ----------
 
         x1, x2 : `CudaFnVector`
-            Read from
+            Factors in the product
         out : `CudaFnVector`
-            Write to
+            Element to which the result is written
 
         Returns
         -------

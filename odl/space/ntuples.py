@@ -745,11 +745,11 @@ class Fn(FnBase, Ntuples):
         Parameters
         ----------
         a, b : `FnBase.field`
-            Scalar to multiply x and y with.
+            Scalars to multiply ``x1`` and ``x2`` with
         x1, x2 : `FnVector`
-            The summands
+            Summands in the linear combination
         out : `FnVector`
-            The vector to which the result is written
+            Vector to which the result is written
 
         Returns
         -------
@@ -871,7 +871,7 @@ class Fn(FnBase, Ntuples):
         x1, x2 : `FnVector`
             Factors in the product
         out : `FnVector`
-            The result vector
+            Vector to which the result is written
 
         Returns
         -------
@@ -895,12 +895,10 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1 : `FnVector`
-            Dividend
-        x1 : `FnVector`
-            Divisior
+        x1, x2 : `FnVector`
+            Dividend and divisor in the quotient
         out : `FnVector`
-            The result vector, quotient
+            Vector to which the result is written
 
         Returns
         -------
@@ -1145,9 +1143,8 @@ class FnVector(FnBaseVector, NtuplesVector):
         Returns
         -------
         out : `FnVector`
-            The complex conjugate vector. If ``out`` was
-            provided, it is returned. Otherwise, the complex
-            conjugate is returned as a new vector.
+            The complex conjugate vector. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Examples
         --------

@@ -71,7 +71,8 @@ class ScalingOperator(Operator):
         Returns
         -------
         out : ``range`` element
-            Result of the scaling, identical to input ``out`` if given.
+            Result of the scaling. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
@@ -215,8 +216,8 @@ class LinCombOperator(Operator):
         Returns
         -------
         out : ``range`` element
-            Result of the linear combination, identical to input
-            ``out`` if given.
+            Result of the linear combination. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Examples
         --------
@@ -281,8 +282,8 @@ class MultiplyOperator(Operator):
         Returns
         -------
         out : ``range`` element
-            Result of the multiplication, identical to input ``out``
-            if given.
+            Result of the multiplication. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
@@ -410,7 +411,8 @@ class InnerProductAdjointOperator(Operator):
         Returns
         -------
         out : ``range`` element
-            Result of the scaling, identical to input ``out`` if given.
+            Result of the scaling. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
@@ -475,7 +477,7 @@ class ConstantOperator(Operator):
         super().__init__(dom, vector.space)
 
     def _call(self, x, out=None):
-        """ Assign out to the constant vector
+        """Return the constant vector or assign it to ``out``.
 
         Parameters
         ----------
@@ -483,6 +485,12 @@ class ConstantOperator(Operator):
             Any element in the domain
         out : ``range`` element
             Vector that gets assigned to the constant vector
+
+        Returns
+        -------
+        out : ``range`` element
+            Result of the assignment. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
@@ -543,7 +551,7 @@ class ResidualOperator(Operator):
         super().__init__(op.domain, vector.space)
 
     def _call(self, x, out=None):
-        """ Assign out to the constant vector
+        """Evaluate the residual at ``x``.
 
         Parameters
         ----------
@@ -551,6 +559,12 @@ class ResidualOperator(Operator):
             Any element in the domain
         out : ``range`` element
             Vector that gets assigned to the constant vector
+
+        Returns
+        -------
+        out : ``range`` element
+            Result of the evaluation. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
