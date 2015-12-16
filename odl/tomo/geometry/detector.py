@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Detectors."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -139,7 +140,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        meas : float
+        meas : `float`
             The density value at the given parameter
 
         .. _Arc length:
@@ -172,7 +173,7 @@ class FlatDetector(with_metaclass(ABCMeta, Detector)):
 
         Returns
         -------
-        meas : float
+        meas : `float`
             The constant density 1.0
         """
         if param not in self.params:
@@ -247,7 +248,7 @@ class LineDetector(FlatDetector):
 
         Returns
         -------
-        point : ndarray, shape `(2,)`
+        point : `numpy.ndarray`, shape `(2,)`
             The point on the detector surface corresponding to the
             given parameters
         """

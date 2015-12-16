@@ -15,15 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Geometry base class."""
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
+from abc import ABCMeta, abstractmethod, abstractproperty
 from future import standard_library
+from future.utils import with_metaclass
 standard_library.install_aliases()
 from builtins import object
-from future.utils import with_metaclass
 
 # External
-from abc import ABCMeta, abstractmethod, abstractproperty
 import numpy as np
 
 # Internal
@@ -76,7 +78,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        point : numpy.ndarray, shape `(ndim,)`
+        point : `numpy.ndarray`, shape ``(ndim,)``
             The reference point, an `ndim`-dimensional vector
         """
 
@@ -94,7 +96,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        rot : `numpy.matrix`, shape `(ndim, ndim)`
+        rot : `numpy.matrix`, shape ``(ndim, ndim)``
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -132,7 +134,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape `(ndim,)`
+        pos : `numpy.ndarray`, shape ``(ndim,)``
             The source position, a `ndim`-dimensional vector
         """
         raise NotImplementedError
@@ -149,7 +151,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape `(ndim,)`
+        pos : `numpy.ndarray`, shape ``(ndim,)``
             The source position, a `ndim`-dimensional vector
         """
 
