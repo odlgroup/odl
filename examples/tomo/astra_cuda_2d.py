@@ -60,11 +60,11 @@ def test_astra_gpu_projector_call_2d():
     """2D forward and backward projectors on the GPU."""
 
     # Create `DiscreteLp` space for volume data
-    nvoxels = (100, 110)
-    discr_vol_space = uniform_discr([-1, -1.1], [1, 1.1], nvoxels,
+    vol_shape = (100, 110)
+    discr_vol_space = uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
                                     dtype='float32')
     # Phantom data
-    phantom = np.zeros(nvoxels)
+    phantom = np.zeros(vol_shape)
     phantom[20:30, 20:30] = 1
 
     # Create an element in the volume space
@@ -95,8 +95,8 @@ def test_astra_gpu_projector_call_2d():
     proj_space = FunctionSpace(proj_rect)
 
     # `DiscreteLp` projection space
-    npixels = (angle_grid.ntotal, det_grid.ntotal)
-    discr_proj_space = uniform_discr_fromspace(proj_space, npixels,
+    proj_shape = (angle_grid.ntotal, det_grid.ntotal)
+    discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
                                                dtype='float32')
 
     # Forward and back projections
