@@ -24,8 +24,6 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
-import matplotlib
-matplotlib.use('agg')
 
 # Internal
 from odl.tomo.backends import ASTRA_AVAILABLE
@@ -43,78 +41,78 @@ from odl.tomo.util.testutils import skip_if_no_astra
 
 
 # TODO: test other interpolations once implemented
-# TODO: move larger tests to examples
+import matplotlib.pyplot as plt
 
 @skip_if_no_astra
 def test_astra_cpu_projector_call_2d():
-    """ASTRA CPU forward and back- projection."""
+    """ASTRA CPU forward and back projection."""
 
-    for_dir = '/home/jmoosmann/Documents/astra_odl/forward/'
-    back_dir = '/home/jmoosmann/Documents/astra_odl/backward/'
-
-    def save_slice(data, folder, name):
-        """Save image.
-
-        Parameters
-        ----------
-        data : `DiscreteLp`
-        folder : `str`
-        name : `str`
-        """
-        data.show('imshow',
-                  saveto='{}{}.png'.format(folder, name.replace(' ', '_')),
-                  title='{} [:,:]'.format(name))
-
-    # DiscreteLp element
-    nvoxels = (100, 110)
-    discr_vol_space = uniform_discr([-1, -1.1], [1, 1.1], nvoxels,
+    # `DiscreteLp` space for volume data
+    nvoxels = (4, 5)
+    discr_vol_space = uniform_discr([-4, -5], [4, 5], nvoxels,
                                     dtype='float32')
-    phantom = np.zeros(nvoxels)
-    phantom[20:30, 20:30] = 1
-    discr_data = discr_vol_space.element(phantom)
-    save_slice(discr_data, back_dir, 'phantom 2d cpu')
 
-    # motion and detector parameters, and geometry
+    # Phantom data
+    phantom = np.zeros(nvoxels)
+    phantom[1, 1] = 1
+
+    # Create an element in the `DiscreteLp` space
+    discr_data = discr_vol_space.element(phantom)
+
+    # Angles
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
-    dparams = Interval(-2, 2)
-    det_grid = uniform_sampling(dparams, 100)
-    geom_p2d = Parallel2dGeometry(angle_intvl, dparams, angle_grid, det_grid)
+    angle_grid = uniform_sampling(angle_intvl, 8, as_midp=False)
 
-    src_rad = 1000
-    det_rad = 100
+    # Detector
+    dparams = Interval(-6, 6)
+    det_grid = uniform_sampling(dparams, 6)
+
+    # Distances for fanflat geometries
+    src_rad = 100
+    det_rad = 10
+
+    # 2D geometry instances for parallel and fan beam with flat line detector
+    geom_p2d = Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+                                  det_grid, angle_offset)
     geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                               angle_grid, det_grid, angle_offset)
 
-    # DiscreteLp
-    ind = 1
-    proj_rect = angle_intvl.insert(dparams, ind)
+    # Projection space
+    proj_rect = angle_intvl.insert(dparams, 1)
     proj_space = FunctionSpace(proj_rect)
-    npixels = angle_grid.insert(det_grid, ind).shape
+
+    # `DiscreteLp` projection space
+    npixels = (angle_grid.ntotal, det_grid.ntotal)
     discr_proj_space = uniform_discr_fromspace(proj_space, npixels,
                                                dtype='float32')
 
+    # Forward and back projections
+
     # Parallel 2D: forward
-    p2_proj_data = astra_cpu_forward_projector_call(discr_data, geom_p2d,
+    proj_data_p2 = astra_cpu_forward_projector_call(discr_data, geom_p2d,
                                                     discr_proj_space)
-    save_slice(p2_proj_data, for_dir, 'parallel 2d cpu')
+    assert proj_data_p2.shape == npixels
+    assert proj_data_p2.norm() > 0
+
+    # Parallel 2D: backward
+    reco_data_p2 = astra_cpu_backward_projector_call(proj_data_p2, geom_p2d,
+                                                     discr_vol_space)
+    assert reco_data_p2.shape == nvoxels
+    assert reco_data_p2.norm() > 0
 
     # Fanflat: forward
     discr_data = discr_vol_space.element(phantom)
-    ff_proj_data = astra_cpu_forward_projector_call(discr_data, geom_ff,
+    proj_data_ff = astra_cpu_forward_projector_call(discr_data, geom_ff,
                                                     discr_proj_space)
-    save_slice(ff_proj_data, for_dir, 'fanflat cpu')
-
-    # Parallel 2D: backward
-    reco_data = astra_cpu_backward_projector_call(p2_proj_data, geom_p2d,
-                                                  discr_vol_space)
-    save_slice(reco_data, back_dir, 'parallel 2d cpu')
+    assert proj_data_ff.shape == npixels
+    assert proj_data_ff > 0
 
     # Fanflat: backward
-    reco_data = astra_cpu_backward_projector_call(ff_proj_data, geom_ff,
-                                                  discr_vol_space)
-    save_slice(reco_data, back_dir, 'fanflat cpu')
+    reco_data_ff = astra_cpu_backward_projector_call(proj_data_ff, geom_ff,
+                                                     discr_vol_space)
+    assert reco_data_ff.shape == nvoxels
+    assert reco_data_ff.norm() > 0
 
 
 if __name__ == '__main__':
