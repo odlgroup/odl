@@ -49,7 +49,7 @@ __all__ = ('astra_cpu_forward_projector_call',
 # TODO: Fix inconsistent scaling of ASTRA projector with pixel size
 # TODO: Implement apply methods
 
-def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
+def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the CPU.
 
     Parameters
@@ -88,9 +88,12 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
     # proj_geom = astra_projection_geometry(geometry, vol_data.space)
     proj_geom = astra_projection_geometry(geometry)
 
+    if out is None:
+        out = proj_space.element()
+
     # Create ASTRA data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
-    sino_id = astra_data(proj_geom, datatype='projection', data=None,
+    sino_id = astra_data(proj_geom, datatype='projection', data=out,
                          ndim=proj_space.grid.ndim)
 
     # Create projector
@@ -105,42 +108,17 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space):
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
 
-    # Wrap data
-    # Do not use get_shared followed by an astra clean up.
-    if ndim == 2:
-        # get_data = astra.data2d.get_shared
-        get_data = astra.data2d.get
-    else:  # ndim = 3
-        # get_data = astra.data3d.get_shared
-        get_data = astra.data3d.get
-
     # Flip detector pixels for fanflat
     if isinstance(geometry, FanFlatGeometry):
-        elem = proj_space.element(get_data(sino_id)[:, ::-1])
-    else:
-        elem = proj_space.element(get_data(sino_id))
+        out.assign(proj_space.element(out.asarray()[:, ::-1])
 
     # Delete ASTRA objects
     astra_cleanup()
 
-    return elem
+    return out
 
 
-def astra_cpu_forward_projector_apply(vol_data, geometry, proj_data):
-    """Run an ASTRA forward projection on the given data.
-
-    Parameters
-    ----------
-    vol_data : `DiscreteLpVector`
-        Volume data to which the forward projector is applied
-    geometry : `Geometry`
-        Geometry defining the tomographic setup
-    proj_data : `DiscreteLpVector`
-        Projection space element to which the projection data is written
-    """
-
-
-def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
+def astra_cpu_backward_projector_call(proj_data, geometry, reco_space, out=None):
     """Run an ASTRA backward projection on the given data using the CPU.
 
     Parameters
@@ -180,8 +158,11 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
     # proj_geom = astra_projection_geometry(geometry, reco_space)
     proj_geom = astra_projection_geometry(geometry)
 
+    if out is None:
+        out = reco_space.element()
+
     # Create ASTRA data structures
-    vol_id = astra_data(vol_geom, datatype='volume', data=None,
+    vol_id = astra_data(vol_geom, datatype='volume', data=out,
                         ndim=reco_space.grid.ndim)
     sino_id = astra_data(proj_geom, datatype='projection', data=proj_data)
 
@@ -197,35 +178,13 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space):
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
 
-    # Wrap data
-    if ndim == 2:
-        # get_data = astra.data2d.get_shared
-        get_data = astra.data2d.get
-    else:  # ndim = 3
-        # get_data = astra.data3d.get_shared
-        get_data = astra.data3d.get
-
     # flip both dimensions = rotate 180 degrees
+    # TODO: Maybe flipping angles in the geometry would be better
     if isinstance(geometry, FanFlatGeometry):
-        elem = reco_space.element(get_data(vol_id)[::-1, ::-1])
-    else:
-        elem = reco_space.element(get_data(vol_id))
+        out.assign(reco_space.element(out.asarray()[::-1, ::-1]))
 
     # Delete ASTRA objects
     astra_cleanup()
 
-    return elem
+    return out
 
-
-def astra_cpu_backward_projector_apply(proj_data, geometry, reco_data):
-    """Run an ASTRA backward projection on the given data using the CPU.
-
-        Parameters
-        ----------
-        proj_data : `DiscreteLpVector`
-            Projection data to which the backward projector is applied
-        geometry : `Geometry`
-            Geometry defining the tomographic setup
-        reco_data : `DiscreteLpVector`
-            Space to which the calling operator maps
-        """
