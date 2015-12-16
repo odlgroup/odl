@@ -19,31 +19,18 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
-
-__all__ += ('stir_bindings',)
+__all__ = ('stir_bindings',)
 
 from . import stir_bindings
 
-__all__ += ('ASTRA_AVAILABLE', 'ASTRA_CUDA_AVAILABLE')
+from . import astra_cpu
+from .astra_cpu import *
+__all__ += astra_cpu.__all__
 
-try:
-    from . import astra_cpu
-    from .astra_cpu import *
-    __all__ += astra_cpu.__all__
-    ASTRA_AVAILABLE = True
-except ImportError:
-    ASTRA_AVAILABLE = False
+from . import astra_cuda
+from .astra_cuda import *
+__all__ += astra_cuda.__all__
 
-try:
-    from . import astra_cuda
-    from .astra_cuda import *
-    __all__ += astra_cuda.__all__
-    ASTRA_CUDA_AVAILABLE = True
-except ImportError:
-    ASTRA_CUDA_AVAILABLE = False
-
-if ASTRA_AVAILABLE:
-    from . import astra_setup
-    from .astra_setup import *
-    __all__ += astra_setup.__all__
+from . import astra_setup
+from .astra_setup import *
+__all__ += astra_setup.__all__
