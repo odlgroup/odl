@@ -41,7 +41,6 @@ from odl.tomo.util.testutils import skip_if_no_astra
 
 
 # TODO: test other interpolations once implemented
-import matplotlib.pyplot as plt
 
 @skip_if_no_astra
 def test_astra_cpu_projector_call_2d():

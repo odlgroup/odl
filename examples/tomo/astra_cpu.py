@@ -17,7 +17,7 @@
 
 """Examples using the ASTRA cpu backend."""
 
-# pylint: disable=invalid-name, no-name-in-module
+# pylint: disable=invalid-name,no-name-in-module
 
 from __future__ import print_function, division, absolute_import
 import os.path as pth
@@ -37,12 +37,6 @@ from odl import (Interval, FunctionSpace, uniform_discr,
 from odl.tomo import Parallel2dGeometry, FanFlatGeometry
 from odl.tomo import (astra_cpu_forward_projector_call,
                       astra_cpu_backward_projector_call)
-
-
-# Output path
-base = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'astra')
-for_dir = pth.join(base, 'forward')
-back_dir = pth.join(base, 'backward')
 
 
 def save_slice(data, name):
