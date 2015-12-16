@@ -6,6 +6,10 @@ Glossary
 
 .. glossary::
 
+array-like
+    Any data structure which can be converted into a `numpy.ndarray` by the
+    `numpy.array` constructor. Includes all `NtuplesBaseVector` based classes.
+
 discretization
     Structure to handle the mapping from abstract objects (e.g. functions) to
     concrete realizations. It is a tuple with four elements:
@@ -26,6 +30,15 @@ discretization
     discretization of :math:`\mathcal{X}`.
 
     See :term:`restriction` and :term:`extension` for examples.
+
+domain
+    Set of elements to which an operator can be applied.
+
+element-like
+    Usually mentioned together with a concrete set, e.g.
+    ``DiscreteLp element-like``.
+    Any data structure which can be converted into a `<set>Vector` by
+    the `<set>` method.
 
 extension
     Operator in a :term:`discretization` mapping a concrete
@@ -59,6 +72,20 @@ extension
     The abstract object in this case is the interpolatintg function
     :math:`I(\bar f; \cdot)`, created by the interpolation operator from
     the vector :math:`\bar f \in \mathbb{R}^n`.
+
+in-place evaluation
+    Operator evaluation method which uses an existing data container to store
+    the result. Usually more efficient than :term:`out-of-place evaluation`
+    since no new memory is allocated and no data is copied.
+
+out-of-place evaluation
+    Operator evaluation method which creates a new data container to store
+    the result. Usually less efficient than :term:`in-place evaluation`
+    since new memory is allocated and data needs to be copied.
+
+range
+    Set of elements to which an operator maps, i.e. in which the result of
+    an operator evaluation lies.
 
 restriction
     Operator in a :term:`discretization` mapping an abstract
