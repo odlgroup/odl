@@ -417,18 +417,14 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
 
     # ASTRA checks if data is c-contiguous and aligned
     if data is not None:
-        if not isinstance(data.ntuple, FnVector):
+        if isinstance(data, np.ndarray):
+            return link(astra_dtype_str, astra_geom, data)
+        elif isinstance(data.ntuple, FnVector):
+            return link(astra_dtype_str, astra_geom, data.asarray())
+        else:
             # Something else than NumPy data representation
             raise NotImplementedError('ASTRA supports data wrapping only for '
                                       '`numpy.ndarray` instances.')
-
-        if ndim == 3 and datatype == 'projection':
-            return link(astra_dtype_str, astra_geom,
-                        np.ascontiguousarray(
-                            np.rollaxis(data.asarray(), 2, 0)))
-        else:
-            return link(astra_dtype_str, astra_geom, data.asarray())
-
     else:
         return create(astra_dtype_str, astra_geom)
 

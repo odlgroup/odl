@@ -40,14 +40,12 @@ from odl.tomo.geometry.geometry import Geometry
 
 
 __all__ = ('astra_gpu_forward_projector_call',
-           'astra_gpu_forward_projector_apply',
            'astra_gpu_backward_projector_call',
-           'astra_gpu_backward_projector_apply',
            'ASTRA_CUDA_AVAILABLE')
 
 
 # TODO: rename gpu to cuda?
-def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
+def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the GPU.
 
     Parameters
@@ -85,8 +83,14 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
     proj_geom = astra_projection_geometry(geometry)
 
     # Create ASTRA data structures
+
+    # In the case dim == 3, we need to swap axes, so can't perform the FP
+    # in-place
+    if out is None and dim == 2:
+        out = proj_space.element()
+
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
-    sino_id = astra_data(proj_geom, datatype='projection', data=None,
+    sino_id = astra_data(proj_geom, datatype='projection', data=out,
                          ndim=proj_space.grid.ndim)
 
     # Create projector
@@ -101,33 +105,20 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space):
     astra.algorithm.run(algo_id)
 
     # Wrap data
-    if ndim == 2:
-        elem = proj_space.element(astra.data2d.get(sino_id))
-    else:  # ndim = 3
-            elem = proj_space.element(
-                np.rollaxis(astra.data3d.get(sino_id), 0, 3))
+    if ndim == 3:
+        A = proj_space.element(np.rollaxis(astra.data3d.get(sino_id), 0, 3)))
+        if out is None:
+            out = A
+        else:
+            out.assign(A)
 
     # Delete ASTRA objects
     astra_cleanup()
 
-    return elem
+    return out
 
 
-def astra_gpu_forward_projector_apply(vol_data, geometry, proj_data):
-    """Run an ASTRA forward projection on the given data using the GPU.
-
-    Parameters
-    ----------
-    vol_data : `DiscreteLpVector`
-        Volume data to which the projector is applied
-    geometry : `Geometry`
-        Geometry defining the tomographic setup
-    proj_data : `DiscreteLpVector`
-        Projection space element to which the projection data is written
-    """
-
-
-def astra_gpu_backward_projector_call(proj_data, geometry, reco_space):
+def astra_gpu_backward_projector_call(proj_data, geometry, reco_space, out=None):
     """Run an ASTRA backward projection on the given data using the GPU.
 
         Parameters
@@ -167,9 +158,15 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space):
     proj_geom = astra_projection_geometry(geometry)
 
     # Create data structures
-    vol_id = astra_data(vol_geom, datatype='volume', data=None,
+    if out is None:
+        out = proj_space.element()
+    vol_id = astra_data(vol_geom, datatype='volume', data=out,
                         ndim=reco_space.grid.ndim)
-    sino_id = astra_data(proj_geom, datatype='projection', data=proj_data)
+	if ndim == 2:
+        swapped_proj_data = proj_data
+    else:
+        swapped_proj_data = np.ascontiguousarray(np.rollaxis(proj_data.asarray(), 2, 0)))
+    sino_id = astra_data(proj_geom, datatype='projection', data=swapped_proj_data)
 
     # Create projector
     proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
@@ -182,29 +179,8 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space):
     # Run algorithm
     astra.algorithm.run(algo_id)
 
-    # Wrap data
-    if ndim == 2:
-        get_data = astra.data2d.get
-    else:  # ndim = 3
-        get_data = astra.data3d.get
-
-    elem = reco_space.element(get_data(vol_id))
-
     # Delete ASTRA objects
     astra_cleanup()
 
-    return elem
+    return out
 
-
-def astra_gpu_backward_projector_apply(proj_data, geometry, reco_data):
-    """Run an ASTRA backward projection on the given data using the GPU.
-
-        Parameters
-        ----------
-        proj_data : `DiscreteLpVector`
-            Projection data to which the backward projector is applied
-        geometry : `Geometry`
-            Geometry defining the tomographic setup
-        reco_data : `DiscreteLpVector`
-            Space to which the calling operator maps
-        """
