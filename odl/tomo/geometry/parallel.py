@@ -15,14 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Parallel beam geometries."""
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from abc import ABCMeta
 from math import cos, sin  # , acos, atan2, sqrt
 from future import standard_library
+from future.utils import with_metaclass
 standard_library.install_aliases()
 from builtins import super
-from future.utils import with_metaclass
+
 
 # External
 import numpy as np
@@ -36,6 +39,8 @@ from odl.tomo.util.trafos import euler_matrix
 
 __all__ = ('Parallel2dGeometry', 'Parallel3dGeometry')
 
+
+# TODO: rotation and position functions (probably not working properly)
 
 class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
 
@@ -53,9 +58,9 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
             The motion parameters
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the `angle_intvl`
-        angle_offset : float
+        angle_offset : `float`
             Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in z-direction.
+            imply an offset in the longitudinal direction
         """
         if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
             raise TypeError('angle parameters {!r} are not an interval.'
@@ -102,9 +107,10 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
 
     @property
     def angle_offset(self):
-        """Offset to the rotation angle in the azimuthal plane. Does not
-        imply an offset in z-direction. The actual angles then reside within
-        `angle_offset` + `angle_intvl`. """
+        """Offset to the rotation angle in the azimuthal plane.
+
+        Does not imply an offset in the longitudinal direction. The actual
+        angles then reside within `angle_offset` + `angle_intvl`."""
         return self._motion_params_offset
 
     def det_refpoint(self, angle):
@@ -134,24 +140,24 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Since the (virtual) source is infinitely far away, the
         non-normalized version will return a vector with signed
-        `inf` according to the quadrant.
+        ``inf`` according to the quadrant.
 
         Parameters
         ----------
-        angle : float
+        angle : `float`
             The motion parameter. Must be contained in this
             geometry's `motion_params`.
-        dpar : float
+        dpar : `float`
             The detector parameter. Must be contained in this
             geometry's `det_params`.
-        normalized : bool
+        normalized : `bool`
             If `False` return the vector from the detector point
             parametrized by `par` to the source at `mpar`. If
             `True`, return the normalized version of that vector.
 
         Returns
         -------
-        vec : ndarray, shape `(ndim,)`
+        vec : `numpy.ndarray`, shape `(ndim,)`
             (Unit) vector pointing from the detector to the source
         """
         if angle not in self.motion_params:
@@ -175,13 +181,13 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Parameters
         ----------
-        angle : float
-            The motion parameter. Must be contained in this
-            geometry's `motion_params`.
+        angle : `float`
+            The motion parameter. Must be contained in this geometry's
+            `motion_params`
 
         Returns
         -------
-        pos : ndarray, shape `(2,)`
+        pos : `numpy.ndarray`, shape `(2,)`
             The source position, an `ndim`-dimensional vector
         """
         return self.det_to_src(angle, 0, normalized=False)
@@ -226,9 +232,9 @@ class Parallel2dGeometry(ParallelGeometry):
             A sampling grid for the `angle_intvl`
         dgrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the detector parameters
-        angle_offset : float
+        angle_offset : `float`
             Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in z-direction.
+            imply an offset in the longitudinal direction
         """
         super().__init__(angle_intvl, agrid, angle_offset)
 
@@ -262,13 +268,13 @@ class Parallel2dGeometry(ParallelGeometry):
 
         Parameters
         ----------
-        angle : float
+        angle : `float`
             The motion parameter. It must be contained in this
-            geometry's `motion_params`.
+            geometry's `motion_params`
 
         Returns
         -------
-        rot : matrix, shape `(2, 2)`
+        rot : `numpy.matrix`, shape `(2, 2)`
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -303,10 +309,10 @@ class Parallel3dGeometry(ParallelGeometry):
             A sampling grid for `angle_intvl`
         dgrid : 2-dim. `TensorGrid`, optional
             A sampling grid for `dparams`
-        angle_offset : float
+        angle_offset : `float`
             Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in z-direction
-        axis : int or 3-element array
+            imply an offset in the longitudinal direction
+        axis : `int` or 3-element array
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis
         """
@@ -339,10 +345,11 @@ class Parallel3dGeometry(ParallelGeometry):
         return self._detector
 
     def det_rotation(self, angle):
-        """The detector rotation function. Returns the matrix for rotating a
-        vector in 3d counter-clockwise through an angle `angle` about the
-        rotation axis given by the property `axis` according to the right
-        hand rule.
+        """The detector rotation function.
+
+        Returns the matrix for rotating a vector in 3d counter-clockwise
+        through an angle `angle` about the rotation axis given by the
+        property `axis` according to the right hand rule.
 
         The matrix is computed according to `Rodriguez' rotation formula`_.
             .. _Rodriguez' rotation formula:
@@ -350,9 +357,9 @@ class Parallel3dGeometry(ParallelGeometry):
 
         Parameters
         ----------
-        angle : float
+        angle : `float`
             The motion parameter. It must be contained in this
-            geometry's `motion_params`.
+            geometry's `motion_params`
 
         Returns
         -------
@@ -382,7 +389,7 @@ class Parallel3dGeometry(ParallelGeometry):
 
     @property
     def axis(self):
-        """The axis of rotation.
+        """The rotation axis.
 
         Returns
         -------
