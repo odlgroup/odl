@@ -806,5 +806,24 @@ def test_dispatch_call_args(func):
             _dispatch_call_args(unbound_call=func)
 
 
+def test_dispatch_call_args_class():
+
+    # Two sneaky classes whose _call method would pass the signature check
+    class WithStaticMethod(object):
+        @staticmethod
+        def _call(x, y, out):
+            pass
+
+    class WithClassMethod(object):
+        @classmethod
+        def _call(cls, x, out=None):
+            pass
+
+    with pytest.raises(TypeError):
+        _dispatch_call_args(cls=WithStaticMethod)
+
+    with pytest.raises(TypeError):
+        _dispatch_call_args(cls=WithClassMethod)
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
