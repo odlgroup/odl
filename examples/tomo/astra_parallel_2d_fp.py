@@ -25,7 +25,7 @@ import numpy as np
 
 # Internal
 from odl import (Interval, Rectangle, FunctionSpace, uniform_sampling,
-                 uniform_discr)
+                 uniform_discr_fromspace)
 from odl.tomo import (Parallel2dGeometry, DiscreteXrayTransform)
 
 
@@ -36,7 +36,8 @@ def phantom(x, y):
 # Reconstruction domain, continuous and dcontains_set
 reco_space = FunctionSpace(Rectangle([-1, -1], [1, 1]))
 nvoxels = (50, 50)
-discr_reco_space = uniform_discr(reco_space, nvoxels, dtype='float32')
+discr_reco_space = uniform_discr_fromspace(reco_space, nvoxels,
+                                           dtype='float32')
 
 # The following is still very inconvenient since you have to use the class
 # constructor of Parallel2dGeometry - convenience functions to come
@@ -51,9 +52,7 @@ det_pixels = uniform_sampling(det_range, 50)
 geom = Parallel2dGeometry(angle_range, det_range, angles, det_pixels)
 
 # Initialize the operator
-# xray_trafo = odltomo.DiscreteL2XrayTransform(discr_reco_space, geom, impl='astra')
-xray_trafo = DiscreteXrayTransform(discr_reco_space, geom,
-                                           backend='astra')
+xray_trafo = DiscreteXrayTransform(discr_reco_space, geom, backend='astra')
 
 # Make a discrete phantom
 cont_phantom = reco_space.element(phantom)
@@ -61,3 +60,5 @@ discr_phantom = discr_reco_space.element(cont_phantom)
 
 # Create data
 proj_data = xray_trafo(discr_phantom)
+
+# proj_data.show()

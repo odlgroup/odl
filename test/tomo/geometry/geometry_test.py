@@ -307,18 +307,14 @@ def test_helical_cone_flat():
     assert isinstance(geom.detector, Flat2dDetector)
 
     det_height = dparams.size[1]
-    assert all_equal(dparams.size, dparams.max() - dparams.min())
-    assert almost_equal(geom.table_feed_per_rotation,
-                        spiral_pitch_factor * det_height)
+    tfpr = spiral_pitch_factor * det_height * src_rad / (src_rad + det_rad)
 
-    det_refpoint = geom.det_refpoint(angle_intvl.max())
-    assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
-    assert almost_equal(det_refpoint[2], det_height, places=14)
+    assert all_equal(dparams.size, dparams.max() - dparams.min())
+    assert almost_equal(geom.table_feed_per_rotation, tfpr)
 
     det_refpoint = geom.det_refpoint(2 * np.pi)
     assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
-    assert almost_equal(det_refpoint[2], det_height * spiral_pitch_factor,
-                        places=14)
+    assert almost_equal(det_refpoint[2], tfpr, places=14)
 
     angle_offset = 0.0
     geom = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
@@ -333,8 +329,8 @@ def test_helical_cone_flat():
     tfpr = geom.table_feed_per_rotation
 
     print(src_rad, det_rad)
-    for nn in range(num_angles):
-        angle = angles[nn][0]
+    for ang_ind in range(num_angles):
+        angle = angles[ang_ind][0]
         z = tfpr * angle / (2 * np.pi)
 
         # source
