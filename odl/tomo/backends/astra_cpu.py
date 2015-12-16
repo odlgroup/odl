@@ -24,7 +24,11 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-import astra
+try:
+    import astra
+    ASTRA_AVAILABLE = True
+except ImportError:
+    ASTRA_AVAILABLE = False
 
 # Internal
 from odl.discr import DiscreteLp, DiscreteLpVector
@@ -38,7 +42,9 @@ from odl.tomo.geometry.fanbeam import FanFlatGeometry
 __all__ = ('astra_cpu_forward_projector_call',
            'astra_cpu_forward_projector_apply',
            'astra_cpu_backward_projector_call',
-           'astra_cpu_backward_projector_apply')
+           'astra_cpu_backward_projector_apply',
+           'ASTRA_AVAILABLE')
+
 
 # TODO: Fix inconsistent scaling of ASTRA projector with pixel size
 # TODO: Implement apply methods

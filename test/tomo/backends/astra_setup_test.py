@@ -36,17 +36,18 @@ from odl.set.domain import Interval, IntervalProd
 from odl.discr.grid import TensorGrid, uniform_sampling
 from odl.discr.lp_discr import uniform_discr
 from odl.util.testutils import all_equal, is_subdict
-from odl.tomo.backends.astra_setup import (astra_projection_geometry,
-                                           astra_volume_geometry,
-                                           astra_data, astra_projector,
-                                           astra_algorithm, astra_cleanup,
-                                           astra_geom_to_vec)
 from odl.tomo.geometry.parallel import (Parallel2dGeometry,
                                         Parallel3dGeometry)
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
 from odl.tomo.util.testutils import skip_if_no_astra
+if ASTRA_AVAILABLE:
+    from odl.tomo.backends.astra_setup import (astra_projection_geometry,
+                                               astra_volume_geometry,
+                                               astra_data, astra_projector,
+                                               astra_algorithm, astra_cleanup,
+                                               astra_geom_to_vec)
 
 
 # TODO: add test to check scaling of ASTRA projectors
@@ -261,6 +262,8 @@ vol_geom_2d = {
 
 @skip_if_no_astra
 def test_volume_data_2d():
+    """Create ASTRA data structure in 2D."""
+
     # From scratch
     data_id = astra_data(vol_geom_2d, 'volume', ndim=2)
     data_out = astra.data2d.get_shared(data_id)
@@ -281,6 +284,8 @@ vol_geom_3d = {
 
 @skip_if_no_astra
 def test_volume_data_3d():
+    """Create ASTRA data structure in 2D."""
+
     # From scratch
     data_id = astra_data(vol_geom_3d, 'volume', ndim=3)
     data_out = astra.data3d.get_shared(data_id)
@@ -434,11 +439,6 @@ def test_geom_to_vec():
                                    dgrid=det_grid)
     vec = astra_geom_to_vec(geom)
     assert vec.shape == (angle_grid.ntotal, 12)
-
-    # CIRCULAR CONEFLAT
-    geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                    agrid=angle_grid, dgrid=det_grid)
-    ageom = astra_projection_geometry(geom)
 
 
 @skip_if_no_astra

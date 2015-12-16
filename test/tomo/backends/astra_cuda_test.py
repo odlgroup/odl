@@ -34,15 +34,14 @@ from odl.set.domain import Interval, Rectangle
 from odl.space.fspace import FunctionSpace
 from odl.discr.lp_discr import uniform_discr, uniform_discr_fromspace
 from odl.discr.grid import uniform_sampling
-from odl.tomo.backends.astra_cuda import (astra_gpu_forward_projector_call,
-                                          astra_gpu_backward_projector_call)
 from odl.tomo.geometry.parallel import Parallel2dGeometry, Parallel3dGeometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
+if ASTRA_CUDA_AVAILABLE:
+    from odl.tomo.backends.astra_cuda import (
+        astra_gpu_forward_projector_call, astra_gpu_backward_projector_call)
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
-# from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
-#                                 is_subdict)
 
 
 # TODO: test other interpolations once implemented

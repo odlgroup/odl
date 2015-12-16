@@ -22,9 +22,13 @@ standard_library.install_aliases()
 
 # External
 import numpy as np
-import astra
-if not astra.astra.use_cuda():
-    raise ImportError
+
+try:
+    import astra
+    if astra.astra.use_cuda():
+        ASTRA_CUDA_AVAILABLE = True
+except ImportError:
+    ASTRA_CUDA_AVAILABLE = False
 
 # Internal
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
@@ -38,7 +42,8 @@ from odl.tomo.geometry.geometry import Geometry
 __all__ = ('astra_gpu_forward_projector_call',
            'astra_gpu_forward_projector_apply',
            'astra_gpu_backward_projector_call',
-           'astra_gpu_backward_projector_apply',)
+           'astra_gpu_backward_projector_apply',
+           'ASTRA_CUDA_AVAILABLE')
 
 
 # TODO: rename gpu to cuda?

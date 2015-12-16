@@ -34,7 +34,10 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-import astra
+try:
+    import astra
+except ImportError:
+    pass
 import numpy as np
 
 # Internal
@@ -46,6 +49,7 @@ from odl.tomo.geometry.parallel import (Parallel2dGeometry, Parallel3dGeometry)
 from odl.tomo.geometry.fanbeam import (FanBeamGeometry, FanFlatGeometry)
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
+
 
 __all__ = ('astra_volume_geometry', 'astra_projection_geometry',
            'astra_data', 'astra_projector', 'astra_algorithm',
