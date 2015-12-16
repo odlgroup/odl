@@ -406,8 +406,8 @@ class DiscreteLpVector(DiscretizationVector):
         """
         return DiscreteLpUFuncs(self)
 
-    def show(self, method='', title='', indices=None, **kwargs):
-        """Create a figure displaying the function in 1d or 2d.
+    def show(self, method='', title='', indices=None, fig=None, **kwargs):
+        """Display the function graphically.
 
         Parameters
         ----------
@@ -432,17 +432,21 @@ class DiscreteLpVector(DiscretizationVector):
 
         title : `str`, optional
             Set the title of the figure
+
+        fig : ``matplotlib`` figure
+            The figure to show in. Expected to be of same "style", as the
+            figure given by this function. The most common usecase is that
+            fig is the return value from an earlier call to this function.
+
         kwargs : {'figsize', 'saveto', ...}
             Extra keyword arguments passed on to display method
             See the Matplotlib functions for documentation of extra
             options.
 
-        title : `str`, optional
-            Set the title of the figure
-        kwargs : {'figsize', 'saveto', ...}
-            Extra keyword arguments passed on to display method
-            See the Matplotlib functions for documentation of extra
-            options.
+        Returns
+        -------
+        fig : ``matplotlib`` figure
+            The resulting figure. It is also shown to the user.
 
         See Also
         --------
@@ -454,8 +458,8 @@ class DiscreteLpVector(DiscretizationVector):
         """
 
         from odl.util.graphics import show_discrete_function
-        show_discrete_function(self, method=method, title=title,
-                               indices=indices, **kwargs)
+        return show_discrete_function(self, method=method, title=title,
+                                      indices=indices, fig=fig, **kwargs)
 
 
 def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
