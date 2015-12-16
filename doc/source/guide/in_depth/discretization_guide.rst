@@ -5,10 +5,12 @@ Discretizations
 ###############
 
 .. image:: images/discr.png
+   :scale: 50 %
 
 
-References
-----------
-See Wikipedia's mathematical overview articles
-`Discretization
-<https://en.wikipedia.org/wiki/Discretization`_.
+Useful Wikipedia articles
+-------------------------
+- Discretization_
+
+
+.. _Discretization: https://en.wikipedia.org/wiki/Discretization
