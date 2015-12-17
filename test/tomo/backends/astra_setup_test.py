@@ -223,32 +223,32 @@ def test_astra_projection_geometry():
     # FANFLAT
     src_rad = 10
     det_rad = 5
-    geom = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                           agrid=angle_grid, dgrid=det_grid)
-    ageom = astra_projection_geometry(geom)
+    geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                              agrid=angle_grid, dgrid=det_grid)
+    ageom = astra_projection_geometry(geom_ff)
     assert ageom['type'] == 'fanflat'
 
     dparams = IntervalProd([-40, -3], [40, 3])
     det_grid = uniform_sampling(dparams, (10, 5))
 
     # PARALLEL 3D GEOMETRY
-    geom = Parallel3dGeometry(angle_intvl, dparams, angle_grid, det_grid)
-    astra_projection_geometry(geom)
-    ageom = astra_projection_geometry(geom)
+    geom_p3d = Parallel3dGeometry(angle_intvl, dparams, angle_grid, det_grid)
+    astra_projection_geometry(geom_p3d)
+    ageom = astra_projection_geometry(geom_p3d)
     assert ageom['type'] == 'parallel3d'
 
     # CIRCULAR CONEFLAT
-    geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                    agrid=angle_grid, dgrid=det_grid)
-    ageom = astra_projection_geometry(geom)
+    geom_ccf = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                        agrid=angle_grid, dgrid=det_grid)
+    ageom = astra_projection_geometry(geom_ccf)
     assert ageom['type'] == 'cone'
 
     # HELICAL CONEFLAT
     spiral_pitch_factor = 1
-    geom = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                   spiral_pitch_factor, agrid=angle_grid,
-                                   dgrid=det_grid)
-    ageom = astra_projection_geometry(geom)
+    geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                       spiral_pitch_factor, agrid=angle_grid,
+                                       dgrid=det_grid)
+    ageom = astra_projection_geometry(geom_hcf)
     assert ageom['type'] == 'cone_vec'
 
 
@@ -416,26 +416,26 @@ def test_geom_to_vec():
     # FAN FLAT
     src_rad = 10
     det_rad = 5
-    geom = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                           agrid=angle_grid, dgrid=det_grid)
-    vec = astra_geom_to_vec(geom)
+    geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                              agrid=angle_grid, dgrid=det_grid)
+    vec = astra_geom_to_vec(geom_ff)
 
     assert vec.shape == (angle_grid.ntotal, 6)
 
     # CIRCULAR CONE FLAT
     dparams = IntervalProd([-40, -3], [40, 3])
     det_grid = uniform_sampling(dparams, (10, 5))
-    geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                    agrid=angle_grid, dgrid=det_grid)
-    vec = astra_geom_to_vec(geom)
+    geom_ccf = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                        agrid=angle_grid, dgrid=det_grid)
+    vec = astra_geom_to_vec(geom_ccf)
     assert vec.shape == (angle_grid.ntotal, 12)
 
     # HELICAL CONE FLAT
     spiral_pitch_factor = 1
-    geom = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                   spiral_pitch_factor, agrid=angle_grid,
-                                   dgrid=det_grid)
-    vec = astra_geom_to_vec(geom)
+    geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                       spiral_pitch_factor, agrid=angle_grid,
+                                       dgrid=det_grid)
+    vec = astra_geom_to_vec(geom_hcf)
     assert vec.shape == (angle_grid.ntotal, 12)
 
 

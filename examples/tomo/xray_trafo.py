@@ -29,7 +29,7 @@ import numpy as np
 # Internal
 from odl import (Interval, Rectangle, uniform_discr, uniform_sampling,
                  CircularConeFlatGeometry, DiscreteXrayTransform)
-from odl.util.phantom import shepp_logan
+# from odl.util.phantom import shepp_logan
 
 # Discrete reconstruction space
 discr_reco_space = uniform_discr([-20, -20, -20],

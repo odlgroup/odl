@@ -78,7 +78,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape ``(ndim,)``
+        point : `numpy.ndarray`, shape (`ndim`,)
             The reference point, an `ndim`-dimensional vector
         """
 
@@ -90,13 +90,13 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters
+        mpar : element of motion parameters `motion_params`
             Motion parameter for which to calculate the detector
             reference rotation
 
         Returns
         -------
-        rot : `numpy.matrix`, shape ``(ndim, ndim)``
+        rot : `numpy.matrix`, shape (`ndim`, `ndim`)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -111,16 +111,16 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters
+        mpar : element of motion parameters `motion_params`
             Motion parameter at which to evaluate
-        dpar : element of detector parameters
+        dpar : element of detector parameters `det_params`
             Detector parameter at which to evaluate
-        normalized : `bool`
-            If `True`, return a normalized (unit) vector
+        normalized : `bool`, optional
+            If `True`, return a normalized (unit) vector. Default: `True`
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape `(ndim,)`
+        vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
 
@@ -129,12 +129,12 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters
+        mpar : element of motion parameters `motion_params`
             Motion parameter for which to calculate the source position
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape ``(ndim,)``
+        pos : `numpy.ndarray`, shape (`ndim`,)
             The source position, a `ndim`-dimensional vector
         """
         raise NotImplementedError
@@ -144,14 +144,14 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters
+        mpar : element of motion parameters `motion_params`
             Motion parameter at which to evaluate
-        dpar : element of detector parameters
+        dpar : element of detector parameters `det_params`
             Detector parameter at which to evaluate
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape ``(ndim,)``
+        pos : `numpy.ndarray`, shape (`ndim`,)
             The source position, a `ndim`-dimensional vector
         """
 

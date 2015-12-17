@@ -127,11 +127,11 @@ class Detector(with_metaclass(ABCMeta, object)):
     def surface_measure(self, param):
         """The density function of the surface measure.
 
-        This is the default implementation relying on the
-        `surface_deriv` method. For `ndim == 1`, the density is given
-        by the `Arc length`_, for `ndim == 2`, it is the length of the
-        cross product of the partial derivatives of the
-        parametrization, see Wikipedia's `Surface area`_ article.
+        This is the default implementation relying on the `surface_deriv`
+        method. For ``ndim == 1``, the density is given by the `Arc
+        length`_, for ``ndim == 2``, it is the length of the cross product
+        of the partial derivatives of the parametrization, see Wikipedia's
+        `Surface area`_ article.
 
         Parameters
         ----------
@@ -140,7 +140,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        meas : `float`
+        measure : `float`
             The density value at the given parameter
 
         .. _Arc length:
@@ -248,7 +248,7 @@ class LineDetector(FlatDetector):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape `(2,)`
+        point : `numpy.ndarray`, shape (2,)
             The point on the detector surface corresponding to the
             given parameters
         """
@@ -266,8 +266,8 @@ class LineDetector(FlatDetector):
 
         Returns
         -------
-        deriv : `numpy.ndarray`, shape ``(2,)``
-            The constant derivative ``(0, 1)``
+        deriv : `numpy.ndarray`, shape (2,)
+            The constant derivative (0, 1)
         """
         if param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
@@ -316,7 +316,7 @@ class Flat2dDetector(FlatDetector):
 
         Returns
         -------
-        point : ndarray, shape ``(3,)``
+        point : `numpy.ndarray`, shape (3,)
             The point on the detector surface corresponding to the
             given parameters
         """
@@ -327,6 +327,7 @@ class Flat2dDetector(FlatDetector):
 
     def surface_deriv(self, param):
         """The derivative of the surface parametrization.
+
         Parameters
         ----------
         param : element of `params`
@@ -334,8 +335,8 @@ class Flat2dDetector(FlatDetector):
 
         Returns
         -------
-        deriv : 2-tuple of ndarray with shape ``(3,)``
-            The constant partial derivatives `(0, 1, 0), (0, 0, 1)`
+        deriv : 2-tuple of ndarray with shape (3,)
+            The constant partial derivatives (0, 1, 0), (0, 0, 1)
         """
         if param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
@@ -347,7 +348,7 @@ class CircleSectionDetector(Detector):
 
     """A 1d detector lying on a section of a circle.
 
-    The reference cirular section is part of a circle with radius ``r``,
+    The reference cirular section is part of a circle with radius :math:`r`,
     which is shifted by the vector :math:`(-r, 0)`, such that the parameter
     value 0 results in the detector reference point :math:`(0, 0)`.
 
@@ -364,7 +365,7 @@ class CircleSectionDetector(Detector):
             Radius of the circle on which the detector is situated
         grid : 1-dim. `TensorGrid`, optional
             A sampling grid for the parameter interval, in which it must
-            be contained
+            be contained. Default: `None`
         """
         super().__init__(params, grid)
 
@@ -426,7 +427,7 @@ class CircleSectionDetector(Detector):
         Returns
         -------
         meas : `float`
-            The constant density ``r``, equal to the length of the
+            The constant density :math:`r`, equal to the length of the
             tangent to the detector circle at any point
         """
         if param in self.params:

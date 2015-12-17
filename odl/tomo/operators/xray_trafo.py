@@ -72,12 +72,13 @@ class DiscreteXrayTransform(Operator):
             The geometry of the transform, contains information about
             the operator range. It needs to have a sampling grid for
             motion and detector parameters.
-        backend : {'astra', 'astra_cuda', 'astra_cpu'}
+        backend : {'astra', 'astra_cuda', 'astra_cpu'}, optional
             Implementation backend for the transform. Supported backends:
             'astra': ASTRA toolbox, uses CPU or CUDA depending on the
-            underlying data space
+            underlying data space of ``discr_dom``
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
+            Default: 'astra'
         kwargs : {'range_interpolation'}
             'range_interpolation' : {'nearest', 'linear', 'cubic'}
                 Interpolation type for the discretization of the
@@ -154,7 +155,18 @@ class DiscreteXrayTransform(Operator):
         return self._geometry
 
     def _call(self, inp):
-        """Call the transform on an input, producing a new vector."""
+        """Call the transform on an input, producing a new vector.
+
+        Parameters
+        ----------
+        inp : `DiscreteLpVector`
+           Element in the domain of the operator to be forward projected
+
+        Returns
+        -------
+        out : `DiscreteLpVector`
+            Returns an element in the projection space
+        """
         back, impl = self.backend.split('_')
         if back == 'astra':
             if impl == 'cpu':
@@ -170,6 +182,7 @@ class DiscreteXrayTransform(Operator):
 
     @property
     def adjoint(self):
+        """Return the adjoint operator."""
         return self._adjoint
 
 
@@ -186,12 +199,22 @@ class DiscreteXrayTransformAdjoint(Operator):
             An instance of the discrete X-ray transform
         """
         self.forward = forward
-        # Why forward._range instead of forward.range?
-        super().__init__(forward._range, forward._domain, forward.is_linear)
+        super().__init__(forward.range, forward.domain, forward.is_linear)
         self._backend = forward.backend
 
     def _call(self, inp):
-        """Call the adjoint transform on an input, producing a new vector."""
+        """Call the adjoint transform on an input, producing a new vector.
+
+        Parameters
+        ----------
+        inp : `DiscreteLpVector`
+            Element in the domain of the operator to be back-projected
+
+        Returns
+        -------
+        out : `DiscreteLpVector`
+            Returns an element in the reconstruction space
+        """
         back, impl = self.backend.split('_')
         if back == 'astra':
             if impl == 'cpu':

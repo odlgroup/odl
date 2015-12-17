@@ -57,10 +57,10 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
             The motion parameters
         agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the `angle_intvl`
-        angle_offset : `float`
+            A sampling grid for the ``angle_intvl``. Default: `None`
+        angle_offset : `float`, optional
             Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in the longitudinal direction
+            imply an offset in the longitudinal direction. Default: 0
         """
         if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
             raise TypeError('angle parameters {!r} are not an interval.'
@@ -118,13 +118,13 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Parameters
         ----------
-        angle : float
-            The motion parameter. It must be contained in this
-            geometry's motion parameter set.
+        angle : `float`
+            The motion parameter. It must be contained in this geometry's
+            motion parameter set.
 
         Returns
         -------
-        point : ndarray, shape `(ndim,)`
+        point : `numpy.ndarray`, shape (`ndim`,)
             The reference point, equal to the origin
         """
         if angle not in self.motion_params:
@@ -152,12 +152,12 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
             geometry's `det_params`.
         normalized : `bool`
             If `False` return the vector from the detector point
-            parametrized by `par` to the source at `mpar`. If
+            parametrized by ``dpar`` to the source at ``angle``. If
             `True`, return the normalized version of that vector.
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape `(ndim,)`
+        vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
         if angle not in self.motion_params:
@@ -187,7 +187,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape `(2,)`
+        pos : `numpy.ndarray`, shape (2,)
             The source position, an `ndim`-dimensional vector
         """
         return self.det_to_src(angle, 0, normalized=False)
@@ -213,9 +213,10 @@ class Parallel2dGeometry(ParallelGeometry):
 
     """Parallel beam geometry in 2d.
 
-    The motion parameter is the counter-clockwise rotation angle around
-    the origin, and the detector is a line detector perpendicular to
-    the ray direction.
+    The motion parameter is the counter-clockwise rotation angle around the
+    origin, and the detector is a line detector perpendicular to the ray
+    direction.
+
     """
 
     def __init__(self, angle_intvl, dparams, agrid=None, dgrid=None,
@@ -229,12 +230,12 @@ class Parallel2dGeometry(ParallelGeometry):
         dparams : `Interval` or 1-dim. `IntervalProd`
             The detector parameters
         agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the `angle_intvl`
+            A sampling grid for the `angle_intvl`. Default: `None`
         dgrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the detector parameters
-        angle_offset : `float`
+            A sampling grid for the detector parameters. Default: `None`
+        angle_offset : `float`, optional
             Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in the longitudinal direction
+            imply an offset in the longitudinal direction. Default: `None`
         """
         super().__init__(angle_intvl, agrid, angle_offset)
 
@@ -274,7 +275,7 @@ class Parallel2dGeometry(ParallelGeometry):
 
         Returns
         -------
-        rot : `numpy.matrix`, shape `(2, 2)`
+        rot : `numpy.matrix`, shape (2, 2)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -291,8 +292,8 @@ class Parallel3dGeometry(ParallelGeometry):
     """Parallel beam geometry in 3d.
 
     The motion parameter is the rotation angle around the 3rd unit axis,
-    and the detector is a flat 2d detector perpendicular to the ray
-    direction.
+    and the detector is a flat 2d detector perpendicular to the ray direction.
+
     """
 
     def __init__(self, angle_intvl, dparams, agrid=None, dgrid=None,
@@ -306,15 +307,15 @@ class Parallel3dGeometry(ParallelGeometry):
         dparams : `Rectangle` or 2-dim. `IntervalProd`
             The detector parameters
         agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`
-        dgrid : 2-dim. `TensorGrid`, optional
+            A sampling grid for `angle_intvl`. Default: `None`
+        dgrid : 2-dim. `TensorGrid`, optional. Default: `None`
             A sampling grid for `dparams`
-        angle_offset : `float`
+        angle_offset : `float`, optional
             Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in the longitudinal direction
-        axis : `int` or 3-element array
+            imply an offset in the longitudinal direction. Default: 0
+        axis : `int` or 3-element array, optional
             Defines the rotation axis via a 3-element vector or a single
-            integer referring to a standard axis
+            integer referring to a standard axis. Default: `None`
         """
         super().__init__(angle_intvl, agrid)
 
@@ -348,12 +349,11 @@ class Parallel3dGeometry(ParallelGeometry):
         """The detector rotation function.
 
         Returns the matrix for rotating a vector in 3d counter-clockwise
-        through an angle `angle` about the rotation axis given by the
+        through an angle ``angle`` about the rotation axis given by the
         property `axis` according to the right hand rule.
 
-        The matrix is computed according to `Rodriguez' rotation formula`_.
-            .. _Rodriguez' rotation formula:
-                https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
+        The matrix is computed according to `Rodrigues' rotation formula
+        <https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula>`_.
 
         Parameters
         ----------
@@ -363,7 +363,7 @@ class Parallel3dGeometry(ParallelGeometry):
 
         Returns
         -------
-        rot_mat : `numpy.matrix`, shape `(3, 3)`
+        rot_mat : `numpy.matrix`, shape (3, 3)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -393,7 +393,7 @@ class Parallel3dGeometry(ParallelGeometry):
 
         Returns
         -------
-        axis : `numpy.ndarray`, shape `(3,)`
+        axis : `numpy.ndarray`, shape (3,)
             The rotation axis
         """
         axis = self._axis

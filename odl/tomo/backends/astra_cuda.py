@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Backen for ASTRA using CUDA"""
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -56,10 +58,13 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
         Geometry defining the tomographic setup
     proj_space : `DiscreteLp`
         Space to which the calling operator maps
+    out : `DiscreteLpVector` or `None`, optional
+        Vector in the projection space to which the result is written
+        Default: `None`
 
     Returns
     -------
-    projection : proj_space element
+    out : ``proj_space`` element
         Projection data resulting from the application of the projector
     """
     if not isinstance(vol_data, DiscreteLpVector):
@@ -106,11 +111,11 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
 
     # Wrap data
     if ndim == 3:
-        A = proj_space.element(np.rollaxis(astra.data3d.get(sino_id), 0, 3))
+        tmp = proj_space.element(np.rollaxis(astra.data3d.get(sino_id), 0, 3))
         if out is None:
-            out = A
+            out = tmp
         else:
-            out.assign(A)
+            out.assign(tmp)
 
     # Delete ASTRA objects
     astra_cleanup()
@@ -130,10 +135,13 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space,
             Geometry defining the tomographic setup
         reco_space : `DiscreteLp`
             Space to which the calling operator maps
+        out : `DiscreteLpVector` or `None`, optional
+            Vector in the reconstruction space to which the result is written.
+            Default: `None`
 
         Returns
         -------
-        reconstruction : reco_space element
+        out : ``reco_space`` element
             Reconstruction data resulting from the application of the backward
             projector
         """

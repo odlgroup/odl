@@ -45,7 +45,6 @@ __all__ = ('astra_cpu_forward_projector_call',
 
 
 # TODO: Fix inconsistent scaling of ASTRA projector with pixel size
-# TODO: Implement apply methods
 
 def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the CPU.
@@ -58,10 +57,13 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
         Geometry defining the tomographic setup
     proj_space : `DiscreteLp`
         Space to which the calling operator maps
+    out : `DiscreteLpVector` or `None`, optional
+        Vector in the projection space to which the result is written.
+        Default: `None`
 
     Returns
     -------
-    projection : proj_space element
+    out : ``proj_space`` element
         Projection data resulting from the application of the projector
     """
     if not isinstance(vol_data, DiscreteLpVector):
@@ -128,10 +130,13 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
         Geometry defining the tomographic setup
     reco_space : `DiscreteLp`
         Space to which the calling operator maps
+    out : `DiscreteLpVector` or `None`, optional
+        Vector in the reconstruction space to which the result is written.
+        Default: `None`
 
     Returns
     -------
-    reconstruction : reco_space element
+    out : ``reco_space`` element
         Reconstruction data resulting from the application of the backward
         projector
     """
@@ -154,7 +159,6 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
 
     # Create astra geometries
     vol_geom = astra_volume_geometry(reco_space)
-    # proj_geom = astra_projection_geometry(geometry, reco_space)
     proj_geom = astra_projection_geometry(geometry)
 
     if out is None:
