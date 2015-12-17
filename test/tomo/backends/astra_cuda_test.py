@@ -26,7 +26,6 @@ import numpy as np
 import pytest
 
 # Internal
-from odl.tomo.backends import ASTRA_CUDA_AVAILABLE
 from odl.set.domain import Interval, Rectangle
 from odl.space.fspace import FunctionSpace
 from odl.discr.lp_discr import uniform_discr, uniform_discr_fromspace
@@ -35,6 +34,7 @@ from odl.tomo.geometry.parallel import Parallel2dGeometry, Parallel3dGeometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
+from odl.tomo.backends.astra_cuda import ASTRA_CUDA_AVAILABLE
 if ASTRA_CUDA_AVAILABLE:
     from odl.tomo.backends.astra_cuda import (
         astra_gpu_forward_projector_call, astra_gpu_backward_projector_call)

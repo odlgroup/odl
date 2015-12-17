@@ -17,8 +17,8 @@
 
 """Helper functions to prepare ASTRA algorithms.
 
-This module contains utility functions to convert data structures from
-the TomODL representation to ASTRA's data structures, including:
+This module contains utility functions to convert data structures from the
+`odl.tomo.geometry` representation to ASTRA's data structures, including:
 
 * volume geometries
 * projection geometries
@@ -390,10 +390,14 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         ASTRA internal id for the new data structure
     """
     if data is not None:
-        if not isinstance(data, DiscreteLpVector):
-            raise TypeError('data {!r} is not a `DiscreteLp.Vector` instance.'
+        if isinstance(data, DiscreteLpVector):
+            ndim = data.space.grid.ndim
+        elif isinstance(data, np.ndarray):
+            ndim = data.ndim
+        else:
+            raise TypeError('data {!r} is neither`DiscreteLp.Vector` '
+                            'instance or a `numpy.ndarray`.'
                             ''.format(data))
-        ndim = data.space.grid.ndim
     else:
         ndim = int(ndim)
 
