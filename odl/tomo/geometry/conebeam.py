@@ -493,7 +493,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         super().__init__(angle_intvl, dparams, src_rad, det_rad, agrid,
                          dgrid, angle_offset, axis)
         det_height = (dparams.max() - dparams.min())[1]
-        self._table_feed_per_rotation = spiral_pitch_factor * src_rad/(
+        self._table_feed_per_rotation = spiral_pitch_factor * src_rad / (
             src_rad + det_rad) * det_height
 
     @property

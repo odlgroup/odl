@@ -116,7 +116,8 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     return out
 
 
-def astra_cpu_backward_projector_call(proj_data, geometry, reco_space, out=None):
+def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
+                                      out=None):
     """Run an ASTRA backward projection on the given data using the CPU.
 
     Parameters
@@ -185,4 +186,3 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space, out=None)
     astra_cleanup()
 
     return out
-

@@ -159,7 +159,6 @@ def test_astra_gpu_projector_call_3d():
     # `DiscreteLp` projection space
     proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
 
-
     discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
                                                dtype='float32')
 
