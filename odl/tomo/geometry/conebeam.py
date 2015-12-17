@@ -158,7 +158,7 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Returns
         -------
-        axis : `numpy.ndarray`, shape `(3,)`
+        axis : `numpy.ndarray`, shape ``(3,)``
             The rotation axis
         """
         axis = self._axis
@@ -179,13 +179,13 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     def det_rotation(self, angle):
         """The detector rotation function.
 
-        Returns the matrix for rotating a vector in 3d by an angle `angle`
+        Returns the matrix for rotating a vector in 3d by an angle ``angle``
         about the rotation axis given by the property `axis` according to
         the right hand rule.
 
-        The matrix is computed according to `Rodriguez' rotation formula`_.
-        .. _Rodriguez' rotation formula:
-        https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
+        The matrix is computed according to
+        `Rodrigues' rotation formula
+        <https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula>`_.
 
         Parameters
         ----------
@@ -195,7 +195,7 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Returns
         -------
-        rot_mat : `numpy.matrix`, shape `(3, 3)`
+        rot_mat : `numpy.matrix`, shape ``(3, 3)``
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -306,18 +306,17 @@ class ConeFlatGeometry(ConeBeamGeometry):
         angle : `float`
             The motion parameter. It must be contained in this
             geometry's motion parameter set
-        dpar : 2-tuple of `floats`
+        dpar : 2-tuple of `float`
             The detector parameter. It must be contained in this
             geometry's detector parameter set
-        normalized : `bool`
-            If `False` return the vector from the detector point
-            parametrized by `dpar` and `angle` to the source at
-            `angle`. If `True`, return the normalized version of
-            that vector.
+        normalized : `bool`, optional
+            If `False` return the vector from the detector point to the source
+            parametrized by ``dpar`` and ``angle``. If `True`, return the
+            normalized version of that vector. Default: `True`
 
         Returns
         -------
-        vec : ndarray, shape `(ndim,)`
+        vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
         if angle not in self.motion_params:
@@ -377,15 +376,15 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         det_rad : `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`
+            A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 2-dim. `TensorGrid`, optional
-            A sampling grid for `dparams`
-        angle_offset : `float`
+            A sampling grid for ``dparams``. Default: `None`
+        angle_offset : `float`, optional
             Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in z-direction.
-        axis : `int` or 3-element array
+            imply an offset in z-direction. Default: 0
+        axis : `int` or 3-element array, optional
             Defines the rotation axis via a 3-element vector or a single
-            integer referring to a standard axis
+            integer referring to a standard axis. Default: `None`
         """
 
         super().__init__(angle_intvl, dparams, src_rad, det_rad, agrid,
@@ -402,10 +401,10 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape `(ndim,)`
+        point : `numpy.ndarray`, shape (`ndim`,)
             The reference point on the circle with radius ``R`` at a given
             rotation angle :math:`\\phi`, defined as :math:`R(-\\sin\\phi,
-            \\cos\\phi)`
+            \\cos\\phi, 0)`
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
@@ -427,11 +426,11 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape `(ndim,)`
+        point : `numpy.ndarray`, shape (`ndim`,)
 
             The source position at ``z`` on the circle with radius ``r`` at
             a given rotation angle :math:`\\phi`, defined as :math:`(r
-            \\sin\\phi, -r\\cos\\phi, z)`
+            \\sin\\phi, -r\\cos\\phi, 0)`
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
@@ -474,20 +473,20 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         spiral_pitch_factor : `float`
             Dimensionless factor given by the table feed per rotation
             divided by the total collimation width. The total collimation
-            width is given by the slice thickness for a single-slice spiral
-            acquisition and by the number of detector rows times the slice
-            thickness for multiple slice spiral acquisition. The collimation
-            width is considered at isocenter
+            width is considered at isocenter and  given by the slice thickness
+            for a single-slice spiral acquisition and by the number of
+            detector rows times the slice thickness for multiple slice
+            spiral acquisition.
         agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`
+            A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 2-dim. `TensorGrid`, optional
-            A sampling grid for `dparams`
-        angle_offset : `float`
+            A sampling grid for `dparams`. Default: `None`
+        angle_offset : `float`, optional
             Offset to the rotation angle in the azimuthal plane. Does not
-            affect the offset in z-direction
-        axis : `int` or 3-element array
+            affect the offset in the longitudinal direction. Default: 0
+        axis : `int` or 3-element array, optional
             Defines the rotation axis via a 3-element vector or a single
-            integer referring to a standard axis
+            integer referring to a standard axis. Default: `None`
         """
 
         super().__init__(angle_intvl, dparams, src_rad, det_rad, agrid,
@@ -512,11 +511,11 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape `(ndim,)`
-            The reference point on a circle in the azimuthal plane with
-            radius ``R`` and at a longitudinal position ``z`` at a given
-            rotation angle :math:`\\phi`, defined as :math:`(-R\\sin\\phi,
-            R\\cos\\phi, z_)` where ``z`` is given by the table feed
+        point : `numpy.ndarray`, shape (`ndim`,)
+            The reference point on a circle in the azimuthal plane with radius
+            :math:`R` and at a longitudinal position :math:`z` at a given
+            rotation angle :math:`\\phi`, defined as :math:`( -R\\sin\\phi,
+            R\\cos\\phi, z_)` where :math:`z` is given by the table feed
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
@@ -539,7 +538,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape `(ndim,)`
+        point : `numpy.ndarray`, shape (`ndim`,)
             The source position on the spiral with radius ``r`` and pitch
             factor ``P`` at a given rotation angle :math:`\\phi`, defined as
             :math:`(r\\sin\\phi, -r\\cos\\phi, z)` where ``z`` is given by the

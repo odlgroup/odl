@@ -59,7 +59,7 @@ __all__ = ('astra_volume_geometry', 'astra_projection_geometry',
 def astra_volume_geometry(discr_reco):
     """Create an ASTRA volume geometry from the discretized domain.
 
-    From ASTRA documentation:
+    From the ASTRA documentation:
 
     In all 3D geometries, the coordinate system is defined around the
     reconstruction volume. The center of the reconstruction volume is the
@@ -77,12 +77,12 @@ def astra_volume_geometry(discr_reco):
 
     Returns
     -------
-    astra_geo : dict
+    astra_geom : `dict`
         The ASTRA volume geometry
 
     Raises
     ------
-    NotImplementedError
+    `NotImplementedError`
         if in 3d, the grid strides (voxel sizes) are not the same in
         each dimension. This is currently only supported in 2d by
         ASTRA.
@@ -152,49 +152,48 @@ def astra_volume_geometry(discr_reco):
 
 
 def astra_geom_to_vec(geometry):
-    """Create vectors for ASTRA projection geometries using ODL geometries.
+    """Create vectors for ASTRA projection geometries from `odl.tomo.geometry`.
 
      The 3D vectors are used to create an ASTRA projection geometry for
      cone beam geometries ('conve_vec') with helical acquisition curves.
 
-     Additionally, supports creation of 2D and 3D vectors for `flat_vec` or
-     `parallel3d_vec`, respectively.
+     Additionally, supports creation of 2D and 3D vectors for 'flat_vec' or
+     'parallel3d_vec', respectively.
 
     Output vectors:
 
-    2d geometry: `fanflat_vec`
+    2d geometry 'fanflat_vec':
     Each row of vectors corresponds to a single projection, and consists of:
-     ( srcX, srcY, dX, dY, uX, uY )
-    src : the ray source
-    d : the center of the detector
-    u : the vector between the centers of detector pixels 0 and 1
+        ( srcX, srcY, dX, dY, uX, uY )
+        src : the ray source
+        d : the center of the detector
+        u : the vector between the centers of detector pixels 0 and 1
 
-    3d geometry: `parallel3d_vec`
+    3d geometry 'parallel3d_vec':
     Each row of vectors corresponds to a single projection, and consists of:
-     ( rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ )
-    ray : the ray direction
-    d   : the center of the detector
-    u   : the vector from detector pixel (0,0) to (0,1)
-    v   : the vector from detector pixel (0,0) to (1,0)
+        ( rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ )
+        ray : the ray direction
+        d   : the center of the detector
+        u   : the vector from detector pixel (0,0) to (0,1)
+        v   : the vector from detector pixel (0,0) to (1,0)
 
-    3d geometry: `cone_vec`
+    3d geometry 'cone_vec':
     Each row of vectors corresponds to a single projection, and consists of:
-     ( srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ ):
-     src : the ray source
-     d   : the center of the detector
-     u   : the vector from detector pixel (0,0) to (0,1)
-     v   : the vector from detector pixel (0,0) to (1,0)
+        ( srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ ):
+        src : the ray source
+        d   : the center of the detector
+        u   : the vector from detector pixel (0,0) to (0,1)
+        v   : the vector from detector pixel (0,0) to (1,0)
 
     Parameters
     ----------
     geometry : `Geometry`
-        The `odl.tomo.geometry` instance from which the ASTRA geometry is
-        created
+        The `odl.tomo.geometry` instance used to create the ASTRA geometry
 
     Returns
     -------
     vectors : `numpy.ndarray`
-        Numpy array of shape (number of angles, 12)
+        Numpy array of shape ``(number of angles, 12)``
     """
 
     angles = geometry.angle_grid
@@ -381,13 +380,13 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
     data : `DiscreteLpVector` or `None`, optional
         Data for the initialization of the data structure
     ndim : {2, 3}, optional
-        Dimension of the data. If `data` is not `None`, this parameter
+        Dimension of the data. If ``data`` is not `None`, this parameter
         has no effect.
 
     Returns
     -------
     id : `int`
-        ASTRA internal id for the new data structure
+        ASTRA internal ID for the new data structure
     """
     if data is not None:
         if isinstance(data, DiscreteLpVector):
@@ -523,8 +522,7 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
     Parameters
     ----------
     direction : {'forward', 'backward'}
-        Apply the forward projection if 'forward', otherwise the
-        backprojection
+        Apply the forward projection if 'forward', otherwise the backprojection
     ndim : {2, 3}
         Number of dimensions of the projector
     vol_id : `int`

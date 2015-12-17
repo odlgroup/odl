@@ -65,9 +65,9 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         det_rad : positive `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`
-        angle_offset : `float`
-            Offset to the rotation angle
+            A sampling grid for `angle_intvl`. Default: `None`
+        angle_offset : `float`, optional
+            Offset to the rotation angle. Default: `None`
         """
         if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
             raise TypeError('angle parameters {!r} are not an interval.'
@@ -156,9 +156,9 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape `(ndim,)`
+        point : `numpy.ndarray`, shape (`ndim`,)
 
-            The reference point on the circle with radius ``R`` at a given
+            The reference point on the circle with radius :math:`R` at a given
             rotation angle :math:`\\phi`, defined as :math:`R(\\cos\\phi,
             \\sin\\phi)`
         """
@@ -178,7 +178,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Returns
         -------
-        rot : `numpy.matrix`, shape ``(2, 2)``
+        rot : `numpy.matrix`, shape (2, 2)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -194,16 +194,16 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Parameters
         ----------
-        angle : float
+        angle : `float`
             The motion parameter. It must be contained in this
             geometry's motion parameter set.
 
         Returns
         -------
-        point : ndarray, shape ``(ndim,)``
-            The source position on the circle with radius ``r`` at
-            the given rotation angle :math:`\\phi`, defined as
-            :math:`-r(\\cos\\phi, \\sin\\phi)`
+        point : `numpy.ndarray`, shape (`ndim`,)
+            The source position on the circle with radius :math:`r` at the
+            given rotation angle :math:`\\phi`, defined as :math:`-r(
+            \\cos\\phi, \\sin\\phi)`
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
@@ -259,11 +259,11 @@ class FanFlatGeometry(FanBeamGeometry):
         det_rad : `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`
+            A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the detector parameters
-        angle_offset : `float`
-            Offset to the rotation angle
+            A sampling grid for the detector parameters. Default: `None`
+        angle_offset : `float`, optional
+            Offset to the rotation angle. Default: 0
         """
         super().__init__(angle_intvl, src_rad, det_rad, agrid, angle_offset)
 
@@ -306,7 +306,7 @@ class FanFlatGeometry(FanBeamGeometry):
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape ``(ndim,)``
+        vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
         if angle not in self.motion_params:
