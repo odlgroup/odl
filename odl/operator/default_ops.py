@@ -27,12 +27,12 @@ from builtins import super
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.set.sets import Field
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator',
-           'InnerProductOperator', 'InnerProductAdjointOperator',
-           'ConstantOperator')
+           'InnerProductOperator', 'ConstantOperator')
 
 
 class ScalingOperator(Operator):
@@ -262,22 +262,52 @@ class MultiplyOperator(Operator):
 
     The multiply operator calculates:
 
-    out = x[0] * x[1]
+    out = x * y
 
-    This is only applicable in Algebras.
+    Where ``x`` is a `LinearSpaceVector`'s or `Field` element and
+    ``y`` is a `LinearSpaceVector`.
     """
 
     # pylint: disable=abstract-method
-    def __init__(self, space):
+    def __init__(self, y, domain=None):
         """Initialize a MultiplyOperator instance.
 
         Parameters
         ----------
-        space : LinearSpace
-            The space of elements which the operator is acting on
+        y : `LinearSpaceVector`
+            The value to multiply by
+        domain : `LinearSpace` or `Field`, optional
+            The set to take values in. Default: ``x.space``
         """
-        domain = ProductSpace(space, space)
-        super().__init__(domain, space)
+        if not isinstance(y, LinearSpaceVector):
+            raise TypeError('y {!r} needs to be a LinearSpaceVector'
+                            ''.format(y))
+
+        if domain is None:
+            domain = y.space
+
+        self.y = y
+        self._domain_is_field = isinstance(domain, Field)
+        super().__init__(domain, y.space, linear=True)
+
+    def _call(self, x):
+        """Multiply by the input.
+
+        Parameters
+        ----------
+        x : ``domain`` element
+            An element in the field of the vector
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = MultiplyOperator(x, r3.field)
+        >>> op(3.0)
+        Rn(3).element([3.0, 6.0, 9.0])
+        """
+        return x * self.y
 
     def _apply(self, x, out):
         """Multiply the input and write to output.
@@ -294,20 +324,66 @@ class MultiplyOperator(Operator):
         --------
         >>> from odl import Rn
         >>> r3 = Rn(3)
-        >>> r3xr3 = ProductSpace(r3, r3)
-        >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
-        >>> z = r3.element()
-        >>> op = MultiplyOperator(r3)
-        >>> op(xy, z)
+        >>> x = r3.element([1, 2, 3])
+
+        Multiply by vector
+
+        >>> op = MultiplyOperator(x)
+        >>> out = r3.element()
+        >>> op(x, out)
         Rn(3).element([1.0, 4.0, 9.0])
-        >>> z
-        Rn(3).element([1.0, 4.0, 9.0])
+
+        Multiply by scalar
+
+        >>> op2 = MultiplyOperator(x, domain=r3.field)
+        >>> out = r3.element()
+        >>> op2(3, out)
+        Rn(3).element([3.0, 6.0, 9.0])
         """
-        out.space.multiply(x[0], x[1], out)
+        if self._domain_is_field:
+            out.lincomb(x, self.y)
+        else:
+            out.multiply(x, self.y)
+
+    @property
+    def adjoint(self):
+        """ The adjoint operator.
+
+        Returns
+        -------
+        adjoint : `InnerProductOperator` or `MultiplyOperator`
+            If the domain of this operator is the scalar field of a
+            `LinearSpace` the adjoint is the inner product with ``y``
+            else it is the multiplication with ``y``
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+
+        Multiply by vector
+
+        >>> op = MultiplyOperator(x)
+        >>> out = r3.element()
+        >>> op.adjoint(x)
+        Rn(3).element([1.0, 4.0, 9.0])
+
+        Multiply by scalar
+
+        >>> op2 = MultiplyOperator(x, domain=r3.field)
+        >>> op2.adjoint(x)
+        14.0
+        """
+        if self._domain_is_field:
+            return InnerProductOperator(self.y)
+        else:
+            # TODO: complex case
+            return MultiplyOperator(self.y)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'MultiplyOperator({!r})'.format(self.range)
+        return 'MultiplyOperator({!r})'.format(self.y)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -357,10 +433,43 @@ class InnerProductOperator(Operator):
 
     @property
     def adjoint(self):
-        return InnerProductAdjointOperator(self.vector)
+        """ The adjoint operator.
+
+        Returns
+        -------
+        adjoint : `MultiplyOperator`
+            It is the multiplication with ``vector``.
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = InnerProductOperator(x)
+        >>> op.adjoint(2.0)
+        Rn(3).element([2.0, 4.0, 6.0])
+        """
+        return MultiplyOperator(self.vector, self.vector.space.field)
 
     @property
     def T(self):
+        """ The vector of this operator.
+
+        Returns
+        -------
+        vector : `LinearSpaceVector`
+            Vector used in this operator
+
+        Example
+        -------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> x.T
+        InnerProductOperator(Rn(3).element([1.0, 2.0, 3.0]))
+        >>> x.T.T
+        Rn(3).element([1.0, 2.0, 3.0])
+        """
         return self.vector
 
     def __repr__(self):
@@ -370,84 +479,6 @@ class InnerProductOperator(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return "{}.T".format(self.vector)
-
-
-class InnerProductAdjointOperator(Operator):
-    """Operator taking the scalar product with a fixed vector.
-
-    The multiply operator calculates:
-
-    ``InnerProductAdjointOperator(vec)(x) == x * vec``
-    """
-
-    # pylint: disable=abstract-method
-    def __init__(self, vector):
-        """Initialize a InnerProductOperator instance.
-
-        Parameters
-        ----------
-        vector : `LinearSpaceVector`
-            The vector to take the inner product with
-        """
-        self.vector = vector
-        super().__init__(vector.space.field, vector.space, linear=True)
-
-    def _call(self, x):
-        """Multiply by the input.
-
-        Parameters
-        ----------
-        x : ``vector.space.field`` element
-            An element in the field of the vector
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> op = InnerProductAdjointOperator(x)
-        >>> op(3.0)
-        Rn(3).element([3.0, 6.0, 9.0])
-        """
-        return x * self.vector
-
-    def _apply(self, x, out):
-        """Multiply the input and write to output.
-
-        Parameters
-        ----------
-        x : ``domain`` element
-            An element in the operator domain (2-tuple of space
-            elements) whose elementwise product is calculated
-        out : ``range`` element
-            Vector to which the result is written
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> op = InnerProductAdjointOperator(x)
-        >>> out = r3.element()
-        >>> result = op(3.0, out=out)
-        >>> result
-        Rn(3).element([3.0,  6.0,  9.0])
-        >>> result is out
-        True
-        """
-        out.lincomb(x, self.vector)
-
-    @property
-    def adjoint(self):
-        return InnerProductOperator(self.vector)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return 'InnerProductAdjointOperator({!r})'.format(self.vector)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return "{}".format(self.vector)
 
 
 class ConstantOperator(Operator):
