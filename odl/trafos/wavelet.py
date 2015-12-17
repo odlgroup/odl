@@ -531,7 +531,8 @@ class DiscreteWaveletTransform(Operator):
 dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 -dwt-max-level>`_ .
 
-        wbasis :  ``pywt.Wavelet``
+        wbasis :  {`str`, ``pywt.Wavelet``}
+            If a string is given, converts to a ``pywt.Wavelet``.
             Describes properties of a selected wavelet basis.
             See PyWavelet `documentation
             <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
@@ -583,8 +584,12 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         True
         """
         self.nscales = int(nscales)
-        self.wbasis = wbasis
         self.mode = str(mode).lower()
+
+        if isinstance(wbasis, pywt.Wavelet):
+            self.wbasis = wbasis
+        else:
+            self.wbasis = pywt.Wavelet(wbasis)
 
         if not isinstance(dom, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
@@ -600,7 +605,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         # max number of levels
         if self.nscales >= max_level:
             raise ValueError('Cannot use more than {} scaling levels, '
-                             'got {}.'.format(max_level, self.nscales))
+                             'got {}.'.format(max_level - 1, self.nscales))
 
         self.size_list = coeff_size_list(dom.grid.shape, self.nscales,
                                          self.wbasis, self.mode)
