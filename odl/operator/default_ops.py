@@ -330,28 +330,56 @@ class MultiplyOperator(Operator):
 
         >>> op = MultiplyOperator(x)
         >>> out = r3.element()
-        >>> op(x)
+        >>> op(x, out)
         Rn(3).element([1.0, 4.0, 9.0])
 
         Multiply by scalar
 
         >>> op2 = MultiplyOperator(x, domain=r3.field)
-        >>> op2(3)
+        >>> out = r3.element()
+        >>> op2(3, out)
         Rn(3).element([3.0, 6.0, 9.0])
         """
         if self._domain_is_field:
             out.lincomb(x, self.y)
-        else:            
+        else:
             out.multiply(x, self.y)
 
     @property
     def adjoint(self):
-        """ The adjoint operator """
+        """ The adjoint operator.
+
+        Returns
+        -------
+        adjoint : `InnerProductOperator` or `MultiplyOperator`
+            If the domain of this operator is the scalar field of a
+            `LinearSpace` the adjoint is the inner product with ``y``
+            else it is the multiplication with ``y``
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+
+        Multiply by vector
+
+        >>> op = MultiplyOperator(x)
+        >>> out = r3.element()
+        >>> op.adjoint(x)
+        Rn(3).element([1.0, 4.0, 9.0])
+
+        Multiply by scalar
+
+        >>> op2 = MultiplyOperator(x, domain=r3.field)
+        >>> op2.adjoint(x)
+        14.0
+        """
         if self._domain_is_field:
-            return InnerProductOperator(self.vector)
+            return InnerProductOperator(self.y)
         else:
             # TODO: complex case
-            return MultiplyOperator(self.vector)
+            return MultiplyOperator(self.y)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -405,10 +433,43 @@ class InnerProductOperator(Operator):
 
     @property
     def adjoint(self):
+        """ The adjoint operator.
+
+        Returns
+        -------
+        adjoint : `MultiplyOperator`
+            It is the multiplication with ``vector``.
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = InnerProductOperator(x)
+        >>> op.adjoint(2.0)
+        Rn(3).element([2.0, 4.0, 6.0])
+        """
         return MultiplyOperator(self.vector, self.vector.space.field)
 
     @property
     def T(self):
+        """ The vector of this operator.
+
+        Returns
+        -------
+        vector : `LinearSpaceVector`
+            Vector used in this operator
+
+        Example
+        -------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> x.T
+        InnerProductOperator(Rn(3).element([1.0, 2.0, 3.0]))
+        >>> x.T.T
+        Rn(3).element([1.0, 2.0, 3.0])
+        """
         return self.vector
 
     def __repr__(self):
