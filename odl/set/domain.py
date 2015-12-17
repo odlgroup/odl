@@ -267,7 +267,7 @@ class IntervalProd(Set):
                                'methods.'.format(other)), err)
 
     def contains_all(self, other):
-        """Test if all points defined by `other` are contained.
+        """Test if all points defined by ``other`` are contained.
 
         Parameters
         ----------

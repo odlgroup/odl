@@ -109,7 +109,7 @@ class Set(with_metaclass(ABCMeta, object)):
         return self == other
 
     def contains_all(self, other, **kwargs):
-        """Test if all points in `other` are contained in this set.
+        """Test if all points in ``other`` are contained in this set.
 
         This is a default implementation and should be overridden by
         subclasses.

@@ -261,7 +261,7 @@ class FunctionSetVector(Operator):
         ----------
         x : object
             Input argument for the function evaluation. Conditions
-            on `x` depend on vectorization:
+            on ``x`` depend on vectorization:
 
             `False` : ``x`` must be a domain element
 
@@ -368,11 +368,11 @@ class FunctionSetVector(Operator):
         return out[0] if scalar_out else out
 
     def assign(self, other):
-        """Assign `other` to this vector.
+        """Assign ``other`` to this vector.
 
-        This is implemented without `lincomb` to ensure that
-        `vec == other` evaluates to `True` after
-        `vec.assign(other)`.
+        This is implemented without `FunctionSpace.lincomb` to ensure that
+        ``vec == other`` evaluates to `True` after
+        ``vec.assign(other)``.
         """
         if other not in self.space:
             raise TypeError('vector {!r} is not an element of the space '
@@ -391,7 +391,7 @@ class FunctionSetVector(Operator):
         return result
 
     def __eq__(self, other):
-        """`vec.__eq__(other) <==> vec == other`.
+        """Returns ``vec == other``.
 
         Returns
         -------
@@ -513,7 +513,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         This function is the additive unit in the function space.
 
-        Since `lincomb` may be slow, we implement this function
+        Since `FunctionSpace.lincomb` may be slow, we implement this function
         directly.
         """
         dtype = 'complex128' if self.field == ComplexNumbers() else 'float64'
@@ -556,12 +556,12 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return self.element_type(self, one_vec)
 
     def __eq__(self, other):
-        """`s.__eq__(other) <==> s == other`.
+        """Returns ``s == other``.
 
         Returns
         -------
         equals : `bool`
-            `True` if `other` is a `FunctionSpace` with same `domain`
+            `True` if ``other`` is a `FunctionSpace` with same `domain`
             and `range`, `False` otherwise.
         """
         if other is self:
@@ -571,7 +571,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 FunctionSet.__eq__(self, other))
 
     def _lincomb(self, a, x1, b, x2, out):
-        """Raw linear combination of `x1` and `x2`.
+        """Raw linear combination of ``x1`` and ``x2``.
 
         Notes
         -----
