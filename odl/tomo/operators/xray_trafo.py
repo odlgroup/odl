@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""X-ray transforms."""
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -23,15 +25,19 @@ from future.builtins import str, super
 
 # External
 import numpy as np
-from odl import (CUDA_AVAILABLE, DiscreteLp, FunctionSpace, Operator)
-if CUDA_AVAILABLE:
-    from odl import CudaNtuples
-else:
-    CudaNtuples = type(None)
 
 # Internal
+from odl.discr.lp_discr import DiscreteLp
+from odl.space.fspace import FunctionSpace
+from odl.operator.operator import Operator
+from odl.space.cu_ntuples import CUDA_AVAILABLE
+if CUDA_AVAILABLE:
+    from odl.space.cu_ntuples import CudaNtuples
+else:
+    CudaNtuples = type(None)
 from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.backends import ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE
+from odl.tomo.backends.astra_cpu import ASTRA_AVAILABLE
+from odl.tomo.backends.astra_cuda import ASTRA_CUDA_AVAILABLE
 if ASTRA_AVAILABLE:
     from odl.tomo.backends.astra_cpu import (
         astra_cpu_forward_projector_call, astra_cpu_backward_projector_call)
@@ -47,7 +53,7 @@ else:
 
 _SUPPORTED_BACKENDS = ('astra',)
 
-__all__ = ('DiscreteXrayTransform',)
+__all__ = ('DiscreteXrayTransform', 'DiscreteXrayTransformAdjoint')
 
 
 class DiscreteXrayTransform(Operator):
@@ -114,7 +120,9 @@ class DiscreteXrayTransform(Operator):
         # type as the domain.
         # TODO: maybe use a ProductSpace structure
         ran_uspace = FunctionSpace(geometry.params)
-        ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,weight=geometry.grid.cell_volume, # CHECKME: Is this the right weight?
+        # CHECKME: Is this the right weight?
+        ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,
+                                           weight=geometry.grid.cell_volume,
                                            dtype=discr_dom.dspace.dtype)
 
         ran_interp = kwargs.pop('range_interpolation', 'nearest')
@@ -127,7 +135,7 @@ class DiscreteXrayTransform(Operator):
         else:
             self._backend = 'astra_cpu'
 
-        self._adjoint = DiscreteXrayTransform.Adjoint(self)
+        self._adjoint = DiscreteXrayTransformAdjoint(self)
 
     @property
     def backend(self):
@@ -154,16 +162,39 @@ class DiscreteXrayTransform(Operator):
         else:  # Should never happen
             raise RuntimeError('backend support information is inconsistent.')
 
-    def _call_adjoint(self, inp):
+
+    @property
+    def adjoint(self):
+        return self._adjoint
+
+
+class DiscreteXrayTransformAdjoint(Operator):
+
+    """The adjoint of the discrete X-ray transform."""
+
+    def __init__(self, forward):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        forward : `DiscreteXrayTransform`
+            An instance of the discrete X-ray transform
+        """
+        self.forward = forward
+        super().__init__(forward._range, forward._domain, forward.is_linear)
+
+    def _call(self, inp):
         """Call the adjoint transform on an input, producing a new vector."""
         back, impl = self.backend.split('_')
         if back == 'astra':
             if impl == 'cpu':
-                return astra_cpu_backward_projector_call(inp, self.geometry,
-                                                        self.domain)
+                return astra_cpu_backward_projector_call(inp,
+                                                         self.forward.geometry,
+                                                         self.range)
             elif impl == 'cuda':
-                return astra_gpu_backward_projector_call(inp, self.geometry,
-                                                        self.domain)
+                return astra_gpu_backward_projector_call(inp,
+                                                         self.forward.geometry,
+                                                         self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
@@ -171,14 +202,5 @@ class DiscreteXrayTransform(Operator):
 
     @property
     def adjoint(self):
-        return self._adjoint
-
-    class Adjoint(Operator):
-        def __init__(self, forward):
-            self.forward = forward
-            super().__init__(forward._range, forward._domain, forward._is_linear)
-        def _call(self, inp):
-            return self.forward._call_adjoint(inp)
-        @property
-        def adjoint(self):
-            return self.forward
+        """Return the adjoint operator. """
+        return self.forward

@@ -86,7 +86,7 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
 
     # In the case dim == 3, we need to swap axes, so can't perform the FP
     # in-place
-    if out is None and dim == 2:
+    if out is None and ndim == 2:
         out = proj_space.element()
 
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
@@ -106,7 +106,7 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
 
     # Wrap data
     if ndim == 3:
-        A = proj_space.element(np.rollaxis(astra.data3d.get(sino_id), 0, 3)))
+        A = proj_space.element(np.rollaxis(astra.data3d.get(sino_id), 0, 3))
         if out is None:
             out = A
         else:
@@ -118,7 +118,8 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     return out
 
 
-def astra_gpu_backward_projector_call(proj_data, geometry, reco_space, out=None):
+def astra_gpu_backward_projector_call(proj_data, geometry, reco_space,
+                                      out=None):
     """Run an ASTRA backward projection on the given data using the GPU.
 
         Parameters
@@ -159,14 +160,19 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space, out=None)
 
     # Create data structures
     if out is None:
-        out = proj_space.element()
+        out = reco_space.element()
+
     vol_id = astra_data(vol_geom, datatype='volume', data=out,
                         ndim=reco_space.grid.ndim)
-	if ndim == 2:
+
+    if ndim == 2:
         swapped_proj_data = proj_data
     else:
-        swapped_proj_data = np.ascontiguousarray(np.rollaxis(proj_data.asarray(), 2, 0)))
-    sino_id = astra_data(proj_geom, datatype='projection', data=swapped_proj_data)
+        swapped_proj_data = np.ascontiguousarray(np.rollaxis(
+                proj_data.asarray(), 2, 0))
+
+    sino_id = astra_data(proj_geom, datatype='projection',
+                         data=swapped_proj_data)
 
     # Create projector
     proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,

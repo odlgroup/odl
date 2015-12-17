@@ -40,9 +40,7 @@ from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 
 __all__ = ('astra_cpu_forward_projector_call',
-           'astra_cpu_forward_projector_apply',
            'astra_cpu_backward_projector_call',
-           'astra_cpu_backward_projector_apply',
            'ASTRA_AVAILABLE')
 
 
@@ -110,7 +108,7 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
 
     # Flip detector pixels for fanflat
     if isinstance(geometry, FanFlatGeometry):
-        out.assign(proj_space.element(out.asarray()[:, ::-1])
+        out[:] = out.asarray()[::-1, ::-1]
 
     # Delete ASTRA objects
     astra_cleanup()
@@ -181,7 +179,7 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space, out=None)
     # flip both dimensions = rotate 180 degrees
     # TODO: Maybe flipping angles in the geometry would be better
     if isinstance(geometry, FanFlatGeometry):
-        out.assign(reco_space.element(out.asarray()[::-1, ::-1]))
+        out[:] = out.asarray()[::-1, ::-1]
 
     # Delete ASTRA objects
     astra_cleanup()

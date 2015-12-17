@@ -37,7 +37,6 @@ if ASTRA_AVAILABLE:
     from odl.tomo.backends.astra_cpu import (astra_cpu_forward_projector_call,
                                              astra_cpu_backward_projector_call)
 from odl.tomo.util.testutils import skip_if_no_astra
-# from odl.util.testutils import all_equal, is_subdict
 
 
 # TODO: test other interpolations once implemented

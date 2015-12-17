@@ -26,11 +26,6 @@ standard_library.install_aliases()
 import numpy as np
 import pytest
 
-
-from odl.tomo import ASTRA_AVAILABLE
-if ASTRA_AVAILABLE:
-    import astra
-
 # Internal
 from odl.set.domain import Interval, IntervalProd
 from odl.discr.grid import TensorGrid, uniform_sampling
@@ -42,6 +37,9 @@ from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
 from odl.tomo.util.testutils import skip_if_no_astra
+from odl.tomo.backends.astra_cpu import ASTRA_AVAILABLE
+if ASTRA_AVAILABLE:
+    import astra
 if ASTRA_AVAILABLE:
     from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                                astra_volume_geometry,
