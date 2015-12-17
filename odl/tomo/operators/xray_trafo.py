@@ -51,7 +51,7 @@ else:
     astra_gpu_forward_projector_call = None
     astra_gpu_backward_projector_call = None
 
-_SUPPORTED_BACKENDS = ('astra',)
+_SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 
 __all__ = ('DiscreteXrayTransform', 'DiscreteXrayTransformAdjoint')
 
@@ -72,9 +72,12 @@ class DiscreteXrayTransform(Operator):
             The geometry of the transform, contains information about
             the operator range. It needs to have a sampling grid for
             motion and detector parameters.
-        backend : {'astra'}
+        backend : {'astra', 'astra_cuda', 'astra_cpu'}
             Implementation backend for the transform. Supported backends:
-            'astra': ASTRA toolbox, CPU or CUDA
+            'astra': ASTRA toolbox, uses CPU or CUDA depending on the
+            underlying data space
+            'astra_cpu': ASTRA toolbox using CPU, only 2D
+            'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
         kwargs : {'range_interpolation'}
             'range_interpolation' : {'nearest', 'linear', 'cubic'}
                 Interpolation type for the discretization of the
@@ -130,10 +133,13 @@ class DiscreteXrayTransform(Operator):
                                interp=ran_interp, order=geometry.grid.order)
         super().__init__(discr_dom, discr_ran, linear=True)
 
-        if backend == 'astra' and isinstance(discr_dom.dspace, CudaNtuples):
-            self._backend = 'astra_cuda'
+        if backend == 'astra':
+            if isinstance(discr_dom.dspace, CudaNtuples):
+                self._backend = 'astra_cuda'
+            else:
+                self._backend = 'astra_cpu'
         else:
-            self._backend = 'astra_cpu'
+            self._backend = backend
 
         self._adjoint = DiscreteXrayTransformAdjoint(self)
 
@@ -181,7 +187,9 @@ class DiscreteXrayTransformAdjoint(Operator):
             An instance of the discrete X-ray transform
         """
         self.forward = forward
+        # Why forward._range instead of forward.range?
         super().__init__(forward._range, forward._domain, forward.is_linear)
+        self._backend = forward.backend
 
     def _call(self, inp):
         """Call the adjoint transform on an input, producing a new vector."""
@@ -199,6 +207,12 @@ class DiscreteXrayTransformAdjoint(Operator):
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
             raise RuntimeError('backend support information is inconsistent.')
+
+    @property
+    def backend(self):
+        """Computational backend for this operator."""
+        return self._backend
+
 
     @property
     def adjoint(self):
