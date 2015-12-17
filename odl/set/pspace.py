@@ -364,6 +364,11 @@ class ProductSpace(LinearSpace):
                                      out.parts):
             spc._multiply(xp, yp, outp)
 
+    def _divide(self, x1, x2, out):
+        for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
+                                     out.parts):
+            spc._divide(xp, yp, outp)
+
     def __eq__(self, other):
         """Return ``self == other``.
 
