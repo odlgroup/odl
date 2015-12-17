@@ -168,7 +168,6 @@ class DiscreteXrayTransform(Operator):
         else:  # Should never happen
             raise RuntimeError('backend support information is inconsistent.')
 
-
     @property
     def adjoint(self):
         return self._adjoint
@@ -212,7 +211,6 @@ class DiscreteXrayTransformAdjoint(Operator):
     def backend(self):
         """Computational backend for this operator."""
         return self._backend
-
 
     @property
     def adjoint(self):

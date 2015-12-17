@@ -168,8 +168,8 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space,
     if ndim == 2:
         swapped_proj_data = proj_data
     else:
-        swapped_proj_data = np.ascontiguousarray(np.rollaxis(
-                proj_data.asarray(), 2, 0))
+        swapped_proj_data = np.ascontiguousarray(
+            np.rollaxis(proj_data.asarray(), 2, 0))
 
     sino_id = astra_data(proj_geom, datatype='projection',
                          data=swapped_proj_data)
@@ -189,4 +189,3 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space,
     astra_cleanup()
 
     return out
-

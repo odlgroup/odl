@@ -40,8 +40,8 @@
 # dparams = Rectangle([-50, -50], [50, 50])
 # agrid = uniform_sampling(angle_intvl, 360, as_midp=False)
 # dgrid = uniform_sampling(dparams, [558, 558])
-# geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad, agrid,
-#                                 dgrid)
+# geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+#                                 agrid, dgrid)
 #
 # xray_trafo = DiscreteXrayTransform(discr_reco_space, geom,
 #                                    backend='astra_cuda')
