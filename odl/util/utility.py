@@ -141,6 +141,11 @@ def is_int_dtype(dtype):
     return np.issubsctype(dtype, np.integer)
 
 
+def is_floating_dtype(dtype):
+    """`True` if ``dtype`` is floating-point, else `False`."""
+    return is_real_floating_dtype(dtype) or is_complex_floating_dtype(dtype)
+
+
 def is_real_dtype(dtype):
     """`True` if ``dtype`` is real (including integer), else `False`."""
     return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
