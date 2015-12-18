@@ -790,42 +790,6 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
     assign = FunctionSetVector.assign
     copy = FunctionSetVector.copy
 
-    # Some "r" magic methods not defined for arbitrary linear spaces
-    def __radd__(self, other):
-        """Return ``other + self``."""
-        if other in self.space.field:
-            # other --> other * space.one()
-            tmp = self.space.one()
-            self.space.lincomb(other, tmp, out=tmp)
-            return self.space.lincomb(1, tmp, 1, self, out=tmp)
-        else:
-            # Case `other in self.space` handled by `other`
-            return NotImplemented
-
-    def __rsub__(self, other):
-        """Return ``other - self``."""
-        if other in self.space.field:
-            # other --> other * space.one()
-            tmp = self.space.one()
-            self.space.lincomb(other, tmp, out=tmp)
-            return self.space.lincomb(1, tmp, -1, self, out=tmp)
-        else:
-            # Case `other in self.space` handled by `other`
-            return NotImplemented
-
-    def __rtruediv__(self, other):
-        """Return ``other / self``."""
-        if other in self.space.field:
-            # other --> other * space.one()
-            tmp = self.space.one()
-            self.space.lincomb(other, tmp, out=tmp)
-            return self.space.divide(tmp, self, out=tmp)
-        else:
-            # Case `other in self.space` handled by `other`
-            return NotImplemented
-
-    __rdiv__ = __rtruediv__
-
     # Power functions are more general than the ones in LinearSpace
     def __pow__(self, p):
         """`f.__pow__(p) <==> f ** p`."""

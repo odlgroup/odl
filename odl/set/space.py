@@ -492,6 +492,21 @@ class LinearSpaceVector(object):
         else:
             return NotImplemented
 
+    def __radd__(self, other):
+        """Return ``other + self``."""
+        if other in self.space.field:
+            one = getattr(self.space, 'one', None)
+            if one is None:
+                return NotImplemented
+            else:
+                # other --> other * space.one()
+                tmp = one()
+                self.space.lincomb(other, tmp, out=tmp)
+                return self.space.lincomb(1, tmp, 1, self, out=tmp)
+        else:
+            # Case `other in self.space` handled by `other`
+            return NotImplemented
+
     def __isub__(self, other):
         """Implement ``self -= other``."""
         if other in self.space:
@@ -515,6 +530,21 @@ class LinearSpaceVector(object):
                 self.space.lincomb(other, tmp, out=tmp)
                 return self.space.lincomb(1, self, -1, tmp, out=tmp)
         else:
+            return NotImplemented
+
+    def __rsub__(self, other):
+        """Return ``other - self``."""
+        if other in self.space.field:
+            one = getattr(self.space, 'one', None)
+            if one is None:
+                return NotImplemented
+            else:
+                # other --> other * space.one()
+                tmp = one()
+                self.space.lincomb(other, tmp, out=tmp)
+                return self.space.lincomb(1, tmp, -1, self, out=tmp)
+        else:
+            # Case `other in self.space` handled by `other`
             return NotImplemented
 
     def __imul__(self, other):
@@ -565,6 +595,23 @@ class LinearSpaceVector(object):
             return NotImplemented
 
     __div__ = __truediv__
+
+    def __rtruediv__(self, other):
+        """Return ``other / self``."""
+        if other in self.space.field:
+            one = getattr(self.space, 'one', None)
+            if one is None:
+                return NotImplemented
+            else:
+                # other --> other * space.one()
+                tmp = one()
+                self.space.lincomb(other, tmp, out=tmp)
+                return self.space.divide(tmp, self, out=tmp)
+        else:
+            # Case `other in self.space` handled by `other`
+            return NotImplemented
+
+    __rdiv__ = __rtruediv__
 
     def __ipow__(self, n):
         """``n``-th power in-place.
