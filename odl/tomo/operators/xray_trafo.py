@@ -36,7 +36,7 @@ if CUDA_AVAILABLE:
 else:
     CudaNtuples = type(None)
 from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.backends.astra_cpu import ASTRA_AVAILABLE
+from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
 from odl.tomo.backends.astra_cuda import ASTRA_CUDA_AVAILABLE
 if ASTRA_AVAILABLE:
     from odl.tomo.backends.astra_cpu import (

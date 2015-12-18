@@ -29,8 +29,10 @@ try:
     import astra
     if astra.astra.use_cuda():
         ASTRA_CUDA_AVAILABLE = True
+    else:
+        ASTRA_CUDA_AVAILABLE = False
 except ImportError:
-    ASTRA_CUDA_AVAILABLE = False
+    pass
 
 # Internal
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
@@ -77,12 +79,17 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
         raise TypeError('projection space {!r} is not a `DiscreteLp` '
                         'instance.'.format(proj_space))
 
-    if vol_data.space.grid.ndim != geometry.ndim:
+    if vol_data.ndim != geometry.ndim:
         raise ValueError('dimensions {} of volume data and {} of geometry '
                          'do not match.'
-                         ''.format(vol_data.space.grid.ndim, geometry.ndim))
+                         ''.format(vol_data.ndim, geometry.ndim))
 
-    ndim = vol_data.space.grid.ndim
+    if out is not None:
+        if not isinstance(out, DiscreteLpVector):
+            raise TypeError('out {} is neither `None` nor a '
+                            '`DiscreteLpVector` instance'.format(out))
+
+    ndim = vol_data.ndim
     # Create astra geometries
     vol_geom = astra_volume_geometry(vol_data.space)
     proj_geom = astra_projection_geometry(geometry)
@@ -96,7 +103,7 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
 
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
     sino_id = astra_data(proj_geom, datatype='projection', data=out,
-                         ndim=proj_space.grid.ndim)
+                         ndim=proj_space.ndim)
 
     # Create projector
     proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
@@ -155,12 +162,16 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space,
         raise TypeError('reconstruction space {!r} is not a `DiscreteLp` '
                         'instance.'.format(reco_space))
 
-    if reco_space.grid.ndim != geometry.ndim:
+    if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
-                         'geometry do not match.'.format(reco_space.grid.ndim,
+                         'geometry do not match.'.format(reco_space.ndim,
                                                          geometry.ndim))
+    if out is not None:
+        if not isinstance(out, DiscreteLpVector):
+            raise TypeError('out {} is neither `None` nor a '
+                            '`DiscreteLpVector` instance'.format(out))
 
-    ndim = proj_data.space.grid.ndim
+    ndim = proj_data.ndim
 
     # Create geometries
     vol_geom = astra_volume_geometry(reco_space)
@@ -171,7 +182,7 @@ def astra_gpu_backward_projector_call(proj_data, geometry, reco_space,
         out = reco_space.element()
 
     vol_id = astra_data(vol_geom, datatype='volume', data=out,
-                        ndim=reco_space.grid.ndim)
+                        ndim=reco_space.ndim)
 
     if ndim == 2:
         swapped_proj_data = proj_data

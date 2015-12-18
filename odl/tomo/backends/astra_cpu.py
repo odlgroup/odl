@@ -26,12 +26,12 @@ standard_library.install_aliases()
 # External
 try:
     import astra
-    ASTRA_AVAILABLE = True
 except ImportError:
-    ASTRA_AVAILABLE = False
+    pass
 
 # Internal
 from odl.discr import DiscreteLp, DiscreteLpVector
+from odl.space.ntuples import Ntuples
 from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                            astra_volume_geometry, astra_data,
                                            astra_projector, astra_algorithm,
@@ -40,8 +40,7 @@ from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 
 __all__ = ('astra_cpu_forward_projector_call',
-           'astra_cpu_backward_projector_call',
-           'ASTRA_AVAILABLE')
+           'astra_cpu_backward_projector_call')
 
 
 # TODO: Fix inconsistent scaling of ASTRA projector with pixel size
@@ -75,26 +74,33 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     if not isinstance(proj_space, DiscreteLp):
         raise TypeError('projection space {!r} is not a `DiscreteLp` '
                         'instance.'.format(proj_space))
-
-    if vol_data.space.grid.ndim != geometry.ndim:
-        raise ValueError('dimensions {} of volume data and {} of geometry '
-                         'do not match.'
-                         ''.format(vol_data.space.grid.ndim, geometry.ndim))
-
-    ndim = vol_data.space.grid.ndim
-
-    # Create astra geometries
-    vol_geom = astra_volume_geometry(vol_data.space)
-    # proj_geom = astra_projection_geometry(geometry, vol_data.space)
-    proj_geom = astra_projection_geometry(geometry)
+    if not isinstance(proj_space.dspace, Ntuples):
+        raise TypeError('data type {!r} of the reconstruction space is not an '
+                        'instance of `Ntuples`'.format(proj_space.dspace))
+    if not isinstance(vol_data.space.dspace, Ntuples):
+        raise TypeError('')
 
     if out is None:
         out = proj_space.element()
+    else:
+        if not isinstance(out, DiscreteLpVector):
+            raise TypeError('out {} is neither `None` nor a '
+                            '`DiscreteLpVector` instance'.format(out))
+    if vol_data.ndim != geometry.ndim:
+        raise ValueError('dimensions {} of volume data and {} of geometry '
+                         'do not match.'
+                         ''.format(vol_data.ndim, geometry.ndim))
+
+    ndim = vol_data.ndim
+
+    # Create astra geometries
+    vol_geom = astra_volume_geometry(vol_data.space)
+    proj_geom = astra_projection_geometry(geometry)
 
     # Create ASTRA data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
     sino_id = astra_data(proj_geom, datatype='projection', data=out,
-                         ndim=proj_space.grid.ndim)
+                         ndim=proj_space.ndim)
 
     # Create projector
     vol_interp = vol_data.space.interp
@@ -149,24 +155,29 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
     if not isinstance(reco_space, DiscreteLp):
         raise TypeError('reconstruction space {!r} is not a `DiscreteLp` '
                         'instance.'.format(reco_space))
-
-    if reco_space.grid.ndim != geometry.ndim:
+    if not isinstance(reco_space.dspace, Ntuples):
+        raise TypeError('data type {!r} of the reconstruction space is not an '
+                        'instance of `Ntuples`'.format(reco_space.dspace))
+    if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
-                         'geometry do not match.'.format(reco_space.grid.ndim,
-                                                         geometry.ndim))
+                         'geometry do not match.'.format(
+                             reco_space.ndim, geometry.ndim))
+    if out is None:
+        out = reco_space.element()
+    else:
+        if not isinstance(out, DiscreteLpVector):
+            raise TypeError('out {} is neither `None` nor a '
+                            '`DiscreteLpVector` instance'.format(out))
 
-    ndim = proj_data.space.grid.ndim
+    ndim = proj_data.ndim
 
     # Create astra geometries
     vol_geom = astra_volume_geometry(reco_space)
     proj_geom = astra_projection_geometry(geometry)
 
-    if out is None:
-        out = reco_space.element()
-
     # Create ASTRA data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=out,
-                        ndim=reco_space.grid.ndim)
+                        ndim=reco_space.ndim)
     sino_id = astra_data(proj_geom, datatype='projection', data=proj_data)
 
     # Create projector

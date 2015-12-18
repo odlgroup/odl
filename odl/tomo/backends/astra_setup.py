@@ -36,8 +36,9 @@ standard_library.install_aliases()
 # External
 try:
     import astra
+    ASTRA_AVAILABLE = True
 except ImportError:
-    pass
+    ASTRA_AVAILABLE = False
 import numpy as np
 
 # Internal
@@ -51,9 +52,9 @@ from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
 
 
-__all__ = ('astra_volume_geometry', 'astra_projection_geometry',
-           'astra_data', 'astra_projector', 'astra_algorithm',
-           'astra_geom_to_vec', 'astra_cleanup')
+__all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
+           'astra_projection_geometry', 'astra_data', 'astra_projector',
+           'astra_algorithm', 'astra_geom_to_vec', 'astra_cleanup')
 
 
 def astra_volume_geometry(discr_reco):
@@ -100,7 +101,7 @@ def astra_volume_geometry(discr_reco):
     vol_min = discr_reco.grid.min()
     vol_max = discr_reco.grid.max()
 
-    if discr_reco.grid.ndim == 2:
+    if discr_reco.ndim == 2:
         # ASTRA does in principle support custom minimum and maximum
         # values for the volume extent, but projector creation fails
         # if voxels are non-isotropic. We raise an exception here in
@@ -122,7 +123,7 @@ def astra_volume_geometry(discr_reco):
         vol_geom = astra.create_vol_geom(vol_shp[0], vol_shp[1],
                                          vol_min[1], vol_max[1],
                                          vol_min[0], vol_max[0])
-    elif discr_reco.grid.ndim == 3:
+    elif discr_reco.ndim == 3:
         # Non-isotropic voxels are not yet supported in 3d ASTRA
         if not np.allclose(discr_reco.grid.stride[1:],
                            discr_reco.grid.stride[:-1]):
@@ -390,7 +391,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
     """
     if data is not None:
         if isinstance(data, DiscreteLpVector):
-            ndim = data.space.grid.ndim
+            ndim = data.space.ndim
         elif isinstance(data, np.ndarray):
             ndim = data.ndim
         else:

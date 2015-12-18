@@ -26,13 +26,13 @@ import numpy as np
 import pytest
 
 # Internal
-from odl.tomo.backends import ASTRA_AVAILABLE
 from odl.set.domain import Interval
 from odl.space.fspace import FunctionSpace
 from odl.discr.lp_discr import uniform_discr, uniform_discr_fromspace
 from odl.discr.grid import uniform_sampling
 from odl.tomo.geometry.parallel import Parallel2dGeometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
+from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
 if ASTRA_AVAILABLE:
     from odl.tomo.backends.astra_cpu import (astra_cpu_forward_projector_call,
                                              astra_cpu_backward_projector_call)
