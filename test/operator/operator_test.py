@@ -25,6 +25,7 @@ from builtins import super
 # External module imports
 import pytest
 import numpy as np
+import sys
 
 # ODL imports
 import odl
@@ -33,6 +34,7 @@ from odl import (Operator, OperatorSum, OperatorComp,
                  FunctionalLeftVectorMult, OperatorRightVectorMult,
                  MatVecOperator,
                  OpDomainError, OpRangeError)
+from odl.operator.operator import _signature_from_spec, _dispatch_call_args
 from odl.util.testutils import almost_equal, all_almost_equal
 
 
@@ -48,9 +50,12 @@ class MultiplyAndSquareOp(Operator):
         super().__init__(dom, ran)
         self.matrix = matrix
 
-    def _apply(self, rhs, out):
-        np.dot(self.matrix, rhs.data, out=out.data)
-        out.data[:] **= 2
+    def _call(self, rhs, out=None):
+        if out is None:
+            return np.dot(self.matrix, rhs.data) ** 2
+        else:
+            np.dot(self.matrix, rhs.data, out=out.data)
+            out **= 2
 
     def __str__(self):
         return "MaS: " + str(self.matrix) + " ** 2"
@@ -391,8 +396,7 @@ def test_type_errors():
 # FUNCTIONAL TEST
 class SumFunctional(Operator):
 
-    """ Sum of elements
-    """
+    """Sum of elements."""
 
     def __init__(self, domain):
         super().__init__(domain, domain.field, linear=True)
@@ -407,8 +411,7 @@ class SumFunctional(Operator):
 
 class ConstantVector(Operator):
 
-    """ Vector times a scalar
-    """
+    """Vector times a scalar."""
 
     def __init__(self, domain):
         super().__init__(domain.field, domain, linear=True)
@@ -587,8 +590,7 @@ def test_functional_composition():
 
 class SumSquaredFunctional(Operator):
 
-    """Sum of the squared elements
-    """
+    """Sum of the squared elements."""
 
     def __init__(self, domain):
         super().__init__(domain, domain.field, linear=False)
@@ -653,6 +655,175 @@ def test_nonlinear_functional_operators():
 
     assert not C.is_linear
     assert almost_equal(C(x), A(x / 2.0))
+
+
+# test functions to dispatch
+def f1(x):
+    """f1(x)
+    False, False
+    good
+    """
+
+
+def f2(x, y):
+    """f2(x, y)
+    False, False
+    bad
+    """
+
+
+def f3(x, y, out):
+    """f3(x, y, out)
+    False, True
+    bad
+    """
+
+
+def f4(*args):
+    """f4(*args)
+    False, False
+    bad
+    """
+
+
+def f5(out):
+    """f5(out)
+    True, False
+    bad
+    """
+
+
+def f6(**kwargs):
+    """f6(**kwargs)
+    False, False
+    bad
+    """
+
+
+def f7(*args, **kwargs):
+    """f7(*args, **kwargs)
+    False, False
+    bad
+    """
+
+
+def f8(out=None, param=2):
+    """f8(out=None, param=2)
+    True, True
+    bad
+    """
+
+
+def f9(x, out=None):
+    """f9(x, out=None)
+    True, True
+    good
+    """
+
+
+def f10(x, out=None, param=2):
+    """f10(x, out=None, param=2)
+    True, True
+    bad
+    """
+
+
+def f11(x, out, **kwargs):
+    """f11(x, out, **kwargs)
+    True, False
+    good
+    """
+
+
+def f12(x, y, out=None, param=2, *args, **kwargs):
+    """f12(x, y, out=None, param=2, *args, **kwargs)
+    True, True
+    bad
+    """
+
+
+py3 = sys.version_info.major > 2
+if py3:
+    exec('''
+def f13(x, *, out=None, param=2, **kwargs):
+    """f13(x, *, out=None, param=2, **kwargs)
+    True, True
+    good
+    """
+''')
+
+    exec('''
+def f14(x, *y, out=None, param=2, **kwargs):
+    """f14(x, *y, out=None, param=2, **kwargs)
+    True, True
+    bad
+    """
+''')
+
+
+func_params = [eval('f{}'.format(i)) for i in range(1, 13)]
+if py3:
+    func_params += [eval('f{}'.format(i)) for i in range(13, 15)]
+func_ids = [' f{} '.format(i) for i in range(1, 13)]
+if py3:
+    func_ids += [' f{} '.format(i) for i in range(13, 15)]
+func_fixture = pytest.fixture(scope="module", ids=func_ids, params=func_params)
+
+
+@func_fixture
+def func(request):
+    return request.param
+
+
+def test_signature_from_spec(func):
+
+    true_sig = func.__doc__.splitlines()[0].strip()
+    sig = _signature_from_spec(func)
+    assert true_sig == sig
+
+
+def test_dispatch_call_args(func):
+    import inspect
+
+    py3 = sys.version_info.major > 2
+    getspec = inspect.getfullargspec if py3 else inspect.getargspec
+
+    # Unbound functions
+    true_has, true_opt = eval(func.__doc__.splitlines()[1].strip())
+    good = func.__doc__.splitlines()[2].strip() == 'good'
+
+    if good:
+        truespec = getspec(func)
+        truespec.args.insert(0, 'self')
+
+        has, opt, spec = _dispatch_call_args(unbound_call=func)
+
+        assert has == true_has
+        assert opt == true_opt
+        assert spec == truespec
+    else:
+        with pytest.raises(ValueError):
+            _dispatch_call_args(unbound_call=func)
+
+
+def test_dispatch_call_args_class():
+
+    # Two sneaky classes whose _call method would pass the signature check
+    class WithStaticMethod(object):
+        @staticmethod
+        def _call(x, y, out):
+            pass
+
+    class WithClassMethod(object):
+        @classmethod
+        def _call(cls, x, out=None):
+            pass
+
+    with pytest.raises(TypeError):
+        _dispatch_call_args(cls=WithStaticMethod)
+
+    with pytest.raises(TypeError):
+        _dispatch_call_args(cls=WithClassMethod)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

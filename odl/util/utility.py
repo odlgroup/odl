@@ -25,7 +25,9 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External module imports
+from functools import wraps
 import numpy as np
+
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr')
@@ -93,33 +95,6 @@ if __name__ == '__main__':
     doctest.testmod()
 
 
-def is_scalar_dtype(dtype):
-    """Whether a datatype is scalar or not."""
-    return np.issubsctype(dtype, np.number)
-
-
-def is_floating_dtype(dtype):
-    """Whether a NumPy datatype is floating or not."""
-    return (np.issubsctype(dtype, np.floating) or
-            np.issubsctype(dtype, np.complexfloating))
-
-
-def is_real_dtype(dtype):
-    """Whether a datatype is real (including integer) or not."""
-    # Numpy does not have complex integers, so no need to test it.
-    return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
-
-
-def is_real_floating_dtype(dtype):
-    """Whether a NumPy datatype is real floating-point or not."""
-    return np.issubsctype(dtype, np.floating)
-
-
-def is_complex_floating_dtype(dtype):
-    """Whether a NumPy datatype is complex floating-point or not."""
-    return np.issubsctype(dtype, np.complexfloating)
-
-
 def with_metaclass(meta, *bases):
     """
     Function from jinja2/_compat.py. License: BSD.
@@ -154,3 +129,159 @@ def with_metaclass(meta, *bases):
                 return type.__new__(cls, name, (), d)
             return meta(name, bases, d)
     return metaclass('temporary_class', None, {})
+
+
+def is_scalar_dtype(dtype):
+    """`True` if ``dtype`` is scalar, else `False`."""
+    return np.issubsctype(dtype, np.number)
+
+
+def is_int_dtype(dtype):
+    """`True` if ``dtype`` is integer, else `False`."""
+    return np.issubsctype(dtype, np.integer)
+
+
+def is_floating_dtype(dtype):
+    """`True` if ``dtype`` is floating-point, else `False`."""
+    return is_real_floating_dtype(dtype) or is_complex_floating_dtype(dtype)
+
+
+def is_real_dtype(dtype):
+    """`True` if ``dtype`` is real (including integer), else `False`."""
+    return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
+
+
+def is_real_floating_dtype(dtype):
+    """`True` if ``dtype`` is real floating-point, else `False`."""
+    return np.issubsctype(dtype, np.floating)
+
+
+def is_complex_floating_dtype(dtype):
+    """`True` if ``dtype`` is complex floating-point, else `False`."""
+    return np.issubsctype(dtype, np.complexfloating)
+
+
+def preload_call_with(instance, mode):
+    """Decorator to preload the first argument of a call method.
+
+    Parameters
+    ----------
+    instance :
+        Class instance to preload the call with
+    mode : {'out-of-place', 'in-place'}
+
+        'out-of-place': call is out-of-place -- ``f(x, **kwargs)``
+
+        'in-place': call is in-place -- ``f(x, out, **kwargs)``
+
+    Notes
+    -----
+    The decorated function has the signature according to ``mode``.
+
+    Examples
+    --------
+    Define two functions which need some instance to act on and decorate
+    them manually:
+
+    >>> class A(object):
+    ...     '''My name is A.'''
+    >>> a = A()
+    ...
+    >>> def f_oop(inst, x):
+    ...     print(inst.__doc__)
+    ...
+    >>> def f_ip(inst, out, x):
+    ...     print(inst.__doc__)
+    ...
+    >>> f_oop_new = preload_call_with(a, 'out-of-place')(f_oop)
+    >>> f_ip_new = preload_call_with(a, 'in-place')(f_ip)
+    ...
+    >>> f_oop_new(0)
+    My name is A.
+    >>> f_ip_new(0, out=1)
+    My name is A.
+
+    Decorate upon definition:
+
+    >>> @preload_call_with(a, 'out-of-place')
+    ... def set_x(obj, x):
+    ...     '''Function to set x in ``obj`` to a given value.'''
+    ...     obj.x = x
+    >>> set_x(0)
+    >>> a.x
+    0
+
+    The function's name and docstring are preserved:
+
+    >>> set_x.__name__
+    'set_x'
+    >>> set_x.__doc__
+    'Function to set x in ``obj`` to a given value.'
+    """
+
+    def decorator(call):
+
+        @wraps(call)
+        def oop_wrapper(x, **kwargs):
+            return call(instance, x, **kwargs)
+
+        @wraps(call)
+        def ip_wrapper(x, out, **kwargs):
+            return call(instance, x, out, **kwargs)
+
+        if mode == 'out-of-place':
+            return oop_wrapper
+        elif mode == 'in-place':
+            return ip_wrapper
+        else:
+            raise ValueError('bad mode {!r}.'.format(mode))
+
+    return decorator
+
+
+def preload_default_oop_call_with(vector):
+    """Decorator to bind the default out-of-place call to an instance.
+
+    Parameters
+    ----------
+    vector : `FunctionSetVector`
+        Vector with which the default call is preloaded. Its
+        `FunctionSetVector.space` determines the type of
+        implementation chosen for the vectorized evaluation. If
+        ``vector.space`` has a `LinearSpace.field` attribute, the
+        required output data type is inferred from it. Otherwise,
+        a "lazy" vectorization is performed (not implemented).
+
+    Notes
+    -----
+    Usually this decorator is used as as a function factory::
+
+        preload_default_oop_call_with(<vec>)(<call>)
+    """
+
+    def decorator(call):
+
+        from odl.set.sets import RealNumbers, ComplexNumbers
+
+        field = getattr(vector.space, 'field', None)
+        if field is None:
+            dtype = None
+        elif field == RealNumbers():
+            dtype = 'float64'
+        elif field == ComplexNumbers():
+            dtype = 'complex128'
+        else:
+            raise TypeError('cannot handle field {!r}.'.format(field))
+
+        @wraps(call)
+        def oop_wrapper(x, **kwargs):
+            return call(vector, dtype, x, **kwargs)
+
+        return oop_wrapper
+
+    return decorator
+
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

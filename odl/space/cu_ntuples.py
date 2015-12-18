@@ -170,12 +170,24 @@ class CudaNtuples(NtuplesBase):
             if data_ptr is None:
                 if isinstance(inp, self._vector_impl):
                     return self.element_type(self, inp)
-                elif (isinstance(inp, self.element_type) and
-                      inp.dtype == self.dtype):
-                    return self.element_type(self, inp.data)
+                elif isinstance(inp, self.element_type):
+                    if inp.dtype == self.dtype:
+                        # Simply rewrap for matching dtypes
+                        return self.element_type(self, inp.data)
+                    else:
+                        # Bulk-copy for non-matching dtypes
+                        elem = self.element()
+                        elem[:] = inp
+                        return elem
                 else:
+                    # Array-like input. Need to go through a NumPy array
+                    arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
+                    if arr.shape != (self.size,):
+                        raise ValueError('input shape {} not broadcastable to '
+                                         'shape ({},).'.format(arr.shape,
+                                                               self.size))
                     elem = self.element()
-                    elem[:] = inp
+                    elem[:] = arr
                     return elem
             else:
                 raise ValueError('cannot provide both inp and data_ptr.')
@@ -522,96 +534,95 @@ class CudaFn(FnBase, CudaNtuples):
 
             Only scalar data types are allowed.
 
-        kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
-            'weight' : {array-like, `CudaFnVector`, `float`, `None`}
-                Use weighted inner product, norm, and dist.
+        weight : {array-like, `CudaFnVector`, `float`, `None`}
+            Use weighted inner product, norm, and dist.
 
-                `None`:
-                    No weighting, use standard functions (default)
+            `None`:
+                No weighting, use standard functions (default)
 
-                `float`:
-                    Weighting by a constant
+            `float`:
+                Weighting by a constant
 
-                array-like:
-                    Weighting by a vector (1-dim. array, corresponds to
-                    a diagonal matrix). Note that the array is stored in
-                    main memory, which results in slower space functions
-                    due to a copy during evaluation.
+            array-like:
+                Weighting by a vector (1-dim. array, corresponds to
+                a diagonal matrix). Note that the array is stored in
+                main memory, which results in slower space functions
+                due to a copy during evaluation.
 
-                `CudaFnVector`:
-                    same as 1-dim. array-like, except that copying is
-                    avoided if the ``dtype`` of the vector is the
-                    same as this space's ``dtype``.
+            `CudaFnVector`:
+                same as 1-dim. array-like, except that copying is
+                avoided if the ``dtype`` of the vector is the
+                same as this space's ``dtype``.
 
-                This option cannot be combined with ``dist``, ``norm``
-                or ``inner``.
+            This option cannot be combined with ``dist``, ``norm``
+            or ``inner``.
 
-            'exponent' : positive `float`
-                Exponent of the norm. For values other than 2.0, no
-                inner product is defined.
+        exponent : positive `float`
+            Exponent of the norm. For values other than 2.0, no
+            inner product is defined.
 
-                This option is ignored if ``dist``, ``norm`` or
-                ``inner`` is given.
+            This option is ignored if ``dist``, ``norm`` or
+            ``inner`` is given.
 
-                Default: 2.0
+            Default: 2.0
 
-            'dist' : `callable`, optional
-                The distance function defining a metric on
-                :math:`\mathbb{F}^n`.
-                It must accept two `CudaFnVector` arguments,
-                return a `float` and
-                fulfill the following mathematical conditions for any
-                three vectors :math:`x, y, z`:
+        dist : `callable`, optional
+            The distance function defining a metric on
+            :math:`\mathbb{F}^n`.
+            It must accept two `CudaFnVector` arguments,
+            return a `float` and
+            fulfill the following mathematical conditions for any
+            three vectors :math:`x, y, z`:
 
-                - :math:`d(x, y) = d(y, x)`
-                - :math:`d(x, y) \geq 0`
-                - :math:`d(x, y) = 0 \Leftrightarrow x = y`
-                - :math:`d(x, y) \geq d(x, z) + d(z, y)`
+            - :math:`d(x, y) = d(y, x)`
+            - :math:`d(x, y) \geq 0`
+            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
+            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
 
-                By default, ``dist(x, y)`` is calculated as
-                ``norm(x - y)``. This creates an intermediate array
-                ``x-y``, which can be
-                avoided by choosing ``dist_using_inner=True``.
+            By default, ``dist(x, y)`` is calculated as
+            ``norm(x - y)``. This creates an intermediate array
+            ``x-y``, which can be
+            avoided by choosing ``dist_using_inner=True``.
 
-                This option cannot be combined with ``weight``,
-                ``norm`` or ``inner``.
+            This option cannot be combined with ``weight``,
+            ``norm`` or ``inner``.
 
-            'norm' : `callable`, optional
-                The norm implementation. It must accept an
-                `CudaFnVector` argument, return a
-                `float` and satisfy the following
-                conditions for all vectors :math:`x, y` and scalars
-                :math:`s`:
+        norm : `callable`, optional
+            The norm implementation. It must accept an
+            `CudaFnVector` argument, return a
+            `float` and satisfy the following
+            conditions for all vectors :math:`x, y` and scalars
+            :math:`s`:
 
-                - :math:`\lVert x\\rVert \geq 0`
-                - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
-                - :math:`\lVert s x\\rVert = \lvert s \\rvert
-                  \lVert x\\rVert`
-                - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
-                  \lVert y\\rVert`.
+            - :math:`\lVert x\\rVert \geq 0`
+            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
+            - :math:`\lVert s x\\rVert = \lvert s \\rvert
+              \lVert x\\rVert`
+            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
+              \lVert y\\rVert`.
 
-                By default, ``norm(x)`` is calculated as
-                ``inner(x, x)``.
+            By default, ``norm(x)`` is calculated as
+            ``inner(x, x)``.
 
-                This option cannot be combined with ``weight``,
-                ``dist`` or ``inner``.
+            This option cannot be combined with ``weight``,
+            ``dist`` or ``inner``.
 
-            'inner' : `callable`, optional
-                The inner product implementation. It must accept two
-                `CudaFnVector` arguments, return a element from
-                the field of the space (real or complex number) and
-                satisfy the following conditions for all vectors
-                :math:`x, y, z` and scalars :math:`s`:
+        inner : `callable`, optional
+            The inner product implementation. It must accept two
+            `CudaFnVector` arguments, return a element from
+            the field of the space (real or complex number) and
+            satisfy the following conditions for all vectors
+            :math:`x, y, z` and scalars :math:`s`:
 
-                - :math:`\langle x,y\\rangle =
-                  \overline{\langle y,x\\rangle}`
-                - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
-                - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
-                  \langle z,y\\rangle`
-                - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
+            - :math:`\langle x,y\\rangle =
+              \overline{\langle y,x\\rangle}`
+            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
+            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
+              \langle z,y\\rangle`
+            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
 
-                This option cannot be combined with ``weight``,
-                ``dist`` or ``norm``.
+            This option cannot be combined with ``weight``,
+            ``dist`` or ``norm``.
         """
         super().__init__(size, dtype)
         CudaNtuples.__init__(self, size, dtype)
@@ -674,7 +685,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -772,11 +783,11 @@ class CudaFn(FnBase, CudaNtuples):
         x1, x2 : `CudaFnVector`
             Factors in product
         out : `CudaFnVector`
-            Result
+            Element to which the result is written
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -803,9 +814,9 @@ class CudaFn(FnBase, CudaNtuples):
         ----------
 
         x1, x2 : `CudaFnVector`
-            Read from
+            Factors in the product
         out : `CudaFnVector`
-            Write to
+            Element to which the result is written
 
         Returns
         -------

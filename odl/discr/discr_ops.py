@@ -53,8 +53,8 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     ----------
     f : array-like
          An N-dimensional array
-    out : array-like or `None`, optional
-         An N-dimensional array
+    out : `numpy.ndarray`, optional
+         An N-dimensional array to which the output is written.
     axis : `int`, optional
         The axis along which the partial derivative is evaluated. Default: 0
     dx : `float`, optional
@@ -72,7 +72,8 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     Returns
     -------
     out : `numpy.ndarray`
-        Returns an N-dimensional array of the same shape as ``f``
+        N-dimensional array of the same shape as ``f``. If ``out`` was
+            provided, the returned object is a reference to it.
 
     Examples
     --------
@@ -283,15 +284,21 @@ class DiscretePartDeriv(Operator):
         self.zero_padding = zero_padding
         self.method = method
 
-    def _apply(self, x, out):
+    def _call(self, x, out=None):
         """Apply gradient operator to ``x`` and store result in ``out``.
 
         Parameters
         ----------
         x : ``domain`` element
             Input vector to which the operator is applied to
-        out : ``range`` element
+        out : ``range`` element, optional
             Output vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` element, optional
+            Result of the evaluation. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
@@ -306,16 +313,20 @@ class DiscretePartDeriv(Operator):
         [[0.0, 1.0, 2.0, 3.0, 4.0],
          [0.0, 1.0, 2.0, 3.0, 4.0]]
         """
+        if out is None:
+            out = self.range.element()
 
+        # TODO: this pipes CUDA arrays through NumPy. Write native operator.
         out_arr = out.asarray()
 
-        finite_diff(x.asarray(), out_arr, axis=self.axis, dx=self.dx,
+        finite_diff(x.asarray(), out=out_arr, axis=self.axis, dx=self.dx,
                     edge_order=self.edge_order,
                     zero_padding=self.zero_padding,
                     method=self.method)
 
         # self assignment: no overhead in the case asarray is a view
         out[:] = out_arr
+        return out
 
     @property
     def adjoint(self):
@@ -356,15 +367,22 @@ class DiscreteGradient(Operator):
                          range=ProductSpace(space, space.grid.ndim),
                          linear=True)
 
-    def _apply(self, x, out):
-        """Apply the gradient operator to ``x`` and store result in ``out``.
+    def _call(self, x, out=None):
+        """Calculate the spatial gradient of ``x``.
 
         Parameters
         ----------
         x : ``domain`` element
-            Input vector to which the `DiscreteGradient` operator is applied to
-        out : ``range`` element
+            Input vector to which the `DiscreteGradient` operator is
+            applied
+        out : ``range`` element, optional
             Output vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` element, optional
+            Result of the evaluation. If ``out`` was
+            provided, the returned object is a reference to it.
 
         Examples
         --------
@@ -389,6 +407,9 @@ class DiscreteGradient(Operator):
         >>> g.inner(grad_f) - f.inner(adj_g)
         0.0
         """
+        if out is None:
+            out = self.range.element()
+
         x_data = x.asarray()
         ndim = self.domain.grid.ndim
         dx = self.domain.grid.stride
@@ -401,6 +422,8 @@ class DiscreteGradient(Operator):
                         method=self.method)
 
             out[axis][:] = out_arr
+
+        return out
 
     @property
     def adjoint(self):
@@ -455,15 +478,22 @@ class DiscreteDivergence(Operator):
         super().__init__(domain=ProductSpace(space, space.grid.ndim),
                          range=space, linear=True)
 
-    def _apply(self, x, out):
-        """Apply the divergence operator to ``x`` and store result in ``out``.
+    def _call(self, x, out=None):
+        """Calculate the divergence of ``x``.
 
         Parameters
         ----------
         x : ``domain`` element
-            `ProductSpaceVector` to which the divergence operator is applied to
-        out : ``range`` element
+            `ProductSpaceVector` to which the divergence operator
+            is applied
+        out : ``range`` element, optional
             Output vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` element, optional
+            Result of the evaluationIf ``out`` was
+            provided, the returned object is a reference to it.
 
         Examples
         --------
@@ -486,6 +516,8 @@ class DiscreteDivergence(Operator):
         >>> f.inner(adj_g)
         -119.0
         """
+        if out is None:
+            out = self.range.element()
 
         ndim = self.range.grid.ndim
         dx = self.range.grid.stride
@@ -502,6 +534,7 @@ class DiscreteDivergence(Operator):
 
         # self assignment: no overhead in the case asarray is a view
         out[:] = arr
+        return out
 
     @property
     def adjoint(self):
