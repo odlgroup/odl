@@ -113,7 +113,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                          ''.format(len(shape)))
 
     max_level = pywt.dwt_max_level(shape[0], filter_len=wbasis.dec_len)
-    if nscales >= max_level:
+    if nscales > max_level:
         raise ValueError('Too many scaling levels, got {}, maximum useful'
                          ' level is {}'
                          ''.format(nscales, max_level))
@@ -603,9 +603,9 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                                        filter_len=self.wbasis.dec_len)
         # TODO: maybe the error message could tell how to calculate the
         # max number of levels
-        if self.nscales >= max_level:
+        if self.nscales > max_level:
             raise ValueError('Cannot use more than {} scaling levels, '
-                             'got {}.'.format(max_level - 1, self.nscales))
+                             'got {}.'.format(max_level, self.nscales))
 
         self.size_list = coeff_size_list(dom.grid.shape, self.nscales,
                                          self.wbasis, self.mode)
@@ -767,7 +767,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                                        filter_len=self.wbasis.dec_len)
         # TODO: maybe the error message could tell how to calculate the
         # max number of levels
-        if self.nscales >= max_level:
+        if self.nscales > max_level:
             raise ValueError('Cannot use more than {} scaling levels, '
                              'got {}.'.format(max_level, self.nscales))
 
