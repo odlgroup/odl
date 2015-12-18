@@ -23,6 +23,10 @@ __all__ = ('stir_bindings',)
 
 from . import stir_bindings
 
+from . import astra_setup
+from .astra_setup import *
+__all__ += astra_setup.__all__
+
 from . import astra_cpu
 from .astra_cpu import *
 __all__ += astra_cpu.__all__
@@ -31,6 +35,3 @@ from . import astra_cuda
 from .astra_cuda import *
 __all__ += astra_cuda.__all__
 
-from . import astra_setup
-from .astra_setup import *
-__all__ += astra_setup.__all__

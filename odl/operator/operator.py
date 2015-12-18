@@ -668,9 +668,6 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     # vector properly
     __array_priority__ = 2000000.0
 
-    def __neg__(self):
-        return -1 * self
-
 
 class OperatorSum(Operator):
 

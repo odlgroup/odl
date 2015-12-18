@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""ASTRA example."""
+
+# pylint: disable=invalid-name,no-name-in-module
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -25,8 +29,8 @@ import numpy as np
 
 # Internal
 from odl import (Interval, Rectangle, FunctionSpace, uniform_sampling,
-                 uniform_discr_fromspace)
-from odl.tomo import (Parallel2dGeometry, DiscreteXrayTransform)
+                 uniform_discr_fromspace, Parallel2dGeometry,
+                 DiscreteXrayTransform)
 
 
 def phantom(x, y):

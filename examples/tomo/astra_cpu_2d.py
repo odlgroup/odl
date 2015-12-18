@@ -34,8 +34,8 @@ import matplotlib.pyplot as plt
 # Internal
 from odl import (Interval, FunctionSpace, uniform_discr,
                  uniform_discr_fromspace, uniform_sampling)
-from odl.tomo import Parallel2dGeometry, FanFlatGeometry
-from odl.tomo import (astra_cpu_forward_projector_call,
+from odl.tomo import (Parallel2dGeometry, FanFlatGeometry,
+                      astra_cpu_forward_projector_call,
                       astra_cpu_backward_projector_call)
 
 
@@ -71,7 +71,6 @@ discr_vol_data = discr_vol_space.element(phantom)
 save_slice(discr_vol_data, 'forward phantom 2d cpu')
 
 # Angles
-angle_offset = 0
 angle_intvl = Interval(0, 2 * np.pi)
 angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
 
@@ -86,7 +85,7 @@ det_rad = 100
 # Create geometry instances
 geom_p2d = Parallel2dGeometry(angle_intvl, dparams, angle_grid, det_grid)
 geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                          angle_grid, det_grid, angle_offset)
+                          angle_grid, det_grid)
 
 # Projection space
 proj_space = FunctionSpace(geom_p2d.params)
@@ -94,7 +93,7 @@ proj_space = FunctionSpace(geom_p2d.params)
 # `DiscreteLp` projection space
 npixels = (angle_grid.ntotal, det_grid.ntotal)
 discr_proj_space = uniform_discr_fromspace(proj_space, npixels,
-                                           dtype='float32')
+                                           dtype='float32', impl='numpy')
 
 # Forward and back projections
 

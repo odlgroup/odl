@@ -32,10 +32,10 @@ import numpy as np
 
 # Internal
 from odl import (Interval, FunctionSpace, uniform_discr,
-                 uniform_discr_fromspace, uniform_sampling)
-from odl.tomo import Parallel2dGeometry, FanFlatGeometry
-from odl.tomo import (astra_gpu_forward_projector_call,
-                      astra_gpu_backward_projector_call)
+                 uniform_discr_fromspace, uniform_sampling,
+                 Parallel2dGeometry, FanFlatGeometry,
+                 astra_gpu_forward_projector_call,
+                 astra_gpu_backward_projector_call)
 
 
 def save_slice(data, name):
@@ -55,69 +55,64 @@ def save_slice(data, name):
 
     plt.close()
 
+# Create `DiscreteLp` space for volume data
+vol_shape = (100, 110)
+discr_vol_space = uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
+                                dtype='float32')
+# Phantom data
+phantom = np.zeros(vol_shape)
+phantom[20:30, 20:30] = 1
 
-def test_astra_gpu_projector_call_2d():
-    """2D forward and backward projectors on the GPU."""
+# Create an element in the volume space
+discr_vol_data = discr_vol_space.element(phantom)
 
-    # Create `DiscreteLp` space for volume data
-    vol_shape = (100, 110)
-    discr_vol_space = uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
-                                    dtype='float32')
-    # Phantom data
-    phantom = np.zeros(vol_shape)
-    phantom[20:30, 20:30] = 1
+save_slice(discr_vol_data, 'phantom 2d gpu')
 
-    # Create an element in the volume space
-    discr_vol_data = discr_vol_space.element(phantom)
+# Angles
+angle_intvl = Interval(0, 2 * np.pi)
+angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
 
-    save_slice(discr_vol_data, 'phantom 2d gpu')
+# Detector
+dparams = Interval(-2, 2)
+det_grid = uniform_sampling(dparams, 100)
 
-    # Angles
-    angle_offset = 0
-    angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
+# Distances for fanflat geometry
+src_rad = 1000
+det_rad = 100
 
-    # Detector
-    dparams = Interval(-2, 2)
-    det_grid = uniform_sampling(dparams, 100)
+# Create geometry instances
+geom_p2d = Parallel2dGeometry(angle_intvl, dparams, angle_grid, det_grid)
+geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                          angle_grid, det_grid)
 
-    # Distances for fanflat geometry
-    src_rad = 1000
-    det_rad = 100
+# Projection space
+proj_space = FunctionSpace(geom_p2d.params)
 
-    # Create geometry instances
-    geom_p2d = Parallel2dGeometry(angle_intvl, dparams, angle_grid, det_grid)
-    geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                              angle_grid, det_grid, angle_offset)
+# `DiscreteLp` projection space
+proj_shape = (angle_grid.ntotal, det_grid.ntotal)
+discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
+                                           dtype='float32')
 
-    # Projection space
-    proj_space = FunctionSpace(geom_p2d.params)
+# Forward and back projections
 
-    # `DiscreteLp` projection space
-    proj_shape = (angle_grid.ntotal, det_grid.ntotal)
-    discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
-                                               dtype='float32')
+# PARALLEL 2D: forward
+proj_data_p2d = astra_gpu_forward_projector_call(discr_vol_data, geom_p2d,
+                                                 discr_proj_space)
+save_slice(proj_data_p2d, 'forward parallel 2d gpu')
 
-    # Forward and back projections
+# PARALLEL 2D: backward
+reco_data_p2d = astra_gpu_backward_projector_call(proj_data_p2d, geom_p2d,
+                                                  discr_vol_space)
+save_slice(reco_data_p2d, 'backward parallel 2d gpu')
 
-    # PARALLEL 2D: forward
-    proj_data_p2d = astra_gpu_forward_projector_call(discr_vol_data, geom_p2d,
-                                                     discr_proj_space)
-    save_slice(proj_data_p2d, 'forward parallel 2d gpu')
+# Fanflat: forward
+discr_vol_data = discr_vol_space.element(phantom)
+proj_data_ff = astra_gpu_forward_projector_call(discr_vol_data, geom_ff,
+                                                discr_proj_space)
+save_slice(proj_data_ff, 'forward fanflat gpu')
 
-    # PARALLEL 2D: backward
-    reco_data_p2d = astra_gpu_backward_projector_call(proj_data_p2d, geom_p2d,
-                                                      discr_vol_space)
-    save_slice(reco_data_p2d, 'backward parallel 2d gpu')
-
-    # Fanflat: forward
-    discr_vol_data = discr_vol_space.element(phantom)
-    proj_data_ff = astra_gpu_forward_projector_call(discr_vol_data, geom_ff,
-                                                    discr_proj_space)
-    save_slice(proj_data_ff, 'forward fanflat gpu')
-
-    # Fanflat: backward
-    reco_data_ff = astra_gpu_backward_projector_call(proj_data_ff, geom_ff,
-                                                     discr_vol_space)
-    save_slice(reco_data_ff, 'backward fanflat_gpu')
+# Fanflat: backward
+reco_data_ff = astra_gpu_backward_projector_call(proj_data_ff, geom_ff,
+                                                 discr_vol_space)
+save_slice(reco_data_ff, 'backward fanflat_gpu')
 

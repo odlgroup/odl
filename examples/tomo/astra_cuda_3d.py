@@ -25,18 +25,15 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-import matplotlib
-matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
 # Internal
 from odl import (Interval, Rectangle, FunctionSpace, uniform_discr,
-                 uniform_discr_fromspace, uniform_sampling)
-from odl.tomo import (Parallel3dGeometry, CircularConeFlatGeometry,
-                      HelicalConeFlatGeometry)
-from odl.tomo import (astra_gpu_forward_projector_call,
-                      astra_gpu_backward_projector_call)
+                 uniform_discr_fromspace, uniform_sampling,
+                 Parallel3dGeometry, CircularConeFlatGeometry,
+                 HelicalConeFlatGeometry, astra_gpu_forward_projector_call,
+                 astra_gpu_backward_projector_call)
 
 
 def save_ortho_slices(data, name, sli):
@@ -92,7 +89,6 @@ vol_sli = np.round(0.25 * np.array(vol_shape))
 save_ortho_slices(discr_data, 'phantom 3d gpu', vol_sli)
 
 # Angles
-angle_offset = 0
 angle_intvl = Interval(0, 2 * np.pi)
 angle_grid = uniform_sampling(angle_intvl, 110, as_midp=False)
 
@@ -108,10 +104,10 @@ spiral_pitch_factor = 0.5
 # Create geometries
 geom_p3d = Parallel3dGeometry(angle_intvl, dparams, angle_grid, det_grid)
 geom_ccf = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                    angle_grid, det_grid, angle_offset)
+                                    angle_grid, det_grid)
 geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                    det_rad, spiral_pitch_factor,
-                                   angle_grid, det_grid, angle_offset)
+                                   angle_grid, det_grid)
 
 # Projection space
 proj_space = FunctionSpace(geom_p3d.params)
