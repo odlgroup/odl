@@ -55,12 +55,13 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters
+            The motion parameters given in radians
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the ``angle_intvl``. Default: `None`
         angle_offset : `float`, optional
-            Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in the longitudinal direction. Default: 0
+            Offset to the rotation angle in the azimuthal plane given in
+            radians. Does not imply an offset in the longitudinal direction.
+            Default: 0
         """
         if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
             raise TypeError('angle parameters {!r} are not an interval.'
@@ -97,7 +98,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
 
     @property
     def angle_intvl(self):
-        """Angles (= motion parameters) of this geometry."""
+        """Angles (= motion parameters) of this geometry given in radians."""
         return self._motion_params
 
     @property
@@ -107,7 +108,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
 
     @property
     def angle_offset(self):
-        """Offset to the rotation angle in the azimuthal plane.
+        """Offset to the rotation angle in the azimuthal plane given in rad.
 
         Does not imply an offset in the longitudinal direction. The actual
         angles then reside within `angle_offset` + `angle_intvl`."""
@@ -119,8 +120,8 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this geometry's
-            motion parameter set.
+            The motion parameters given in radians. It must be
+            contained in this geometry's motion parameter set
 
         Returns
         -------
@@ -145,8 +146,8 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. Must be contained in this
-            geometry's `motion_params`.
+            The motion parameters given in radians. Must be contained
+            in this geometry's `motion_params`
         dpar : `float`
             The detector parameter. Must be contained in this
             geometry's `det_params`.
@@ -182,8 +183,8 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. Must be contained in this geometry's
-            `motion_params`
+            The motion parameters given in radians. Must be contained
+            in this geometry's `motion_params`
 
         Returns
         -------
@@ -226,7 +227,7 @@ class Parallel2dGeometry(ParallelGeometry):
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters
+            The motion parameters given in radians
         dparams : `Interval` or 1-dim. `IntervalProd`
             The detector parameters
         agrid : 1-dim. `TensorGrid`, optional
@@ -270,8 +271,8 @@ class Parallel2dGeometry(ParallelGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
-            geometry's `motion_params`
+            The motion parameters given in radians. It must be contained in
+            this geometry's `motion_params`
 
         Returns
         -------
@@ -303,7 +304,7 @@ class Parallel3dGeometry(ParallelGeometry):
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters
+            The motion parameters given in radians
         dparams : `Rectangle` or 2-dim. `IntervalProd`
             The detector parameters
         agrid : 1-dim. `TensorGrid`, optional
@@ -311,8 +312,9 @@ class Parallel3dGeometry(ParallelGeometry):
         dgrid : 2-dim. `TensorGrid`, optional. Default: `None`
             A sampling grid for `dparams`
         angle_offset : `float`, optional
-            Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in the longitudinal direction. Default: 0
+            Offset to the rotation angle in the azimuthal plane given in
+            radians. Does not imply an offset in the longitudinal direction.
+            Default: 0
         axis : `int` or 3-element array, optional
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis. Default: `None`
@@ -358,7 +360,7 @@ class Parallel3dGeometry(ParallelGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
+            The motion parameter given in radians. It must be contained in this
             geometry's `motion_params`
 
         Returns
