@@ -18,13 +18,19 @@
 """Helper functions to prepare ASTRA algorithms.
 
 This module contains utility functions to convert data structures from the
-`odl.tomo.geometry` representation to ASTRA's data structures, including:
+ODL geometry representation to ASTRA's data structures, including:
 
 * volume geometries
 * projection geometries
 * data arrays
 * algorithm configuration dictionaries
 * projectors and backprojectors
+
+`ASTRA documentation on sourceforge
+<https://sourceforge.net/p/astra-toolbox/wiki>`_.
+
+`ASTRA on github
+<https://github.com/astra-toolbox/>`_.
 """
 
 # Imports for common Python 2/3 codebase
@@ -153,7 +159,7 @@ def astra_volume_geometry(discr_reco):
 
 
 def astra_geom_to_vec(geometry):
-    """Create vectors for ASTRA projection geometries from `odl.tomo.geometry`.
+    """Create vectors for ASTRA projection geometries from ODL geometry.
 
      The 3D vectors are used to create an ASTRA projection geometry for
      cone beam geometries ('conve_vec') with helical acquisition curves.
@@ -189,7 +195,7 @@ def astra_geom_to_vec(geometry):
     Parameters
     ----------
     geometry : `Geometry`
-        The `odl.tomo.geometry` instance used to create the ASTRA geometry
+        The ODL geometry instance used to create the ASTRA geometry
 
     Returns
     -------
@@ -282,7 +288,7 @@ def astra_geom_to_vec(geometry):
 
 
 def astra_projection_geometry(geometry):
-    """Create an ASTRA projection geometry from an `odl.tomo.geometry` object.
+    """Create an ASTRA projection geometry from an ODL geometry object.
 
     As of ASTRA version 1.7, the length values are not required any more to be
     rescaled for 3D geometries and non-unit (but isotropic) voxel sizes.
@@ -290,7 +296,7 @@ def astra_projection_geometry(geometry):
     Parameters
     ----------
     geometry : `Geometry`
-        The `odl.tomo.geometry` instance used to create the projection geometry
+        The ODL geometry instance used to create the projection geometry
 
     Returns
     -------
@@ -377,11 +383,12 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         given data type
     datatype : {'volume', 'projection'}
         Type of the data container
-    data : `DiscreteLpVector` or `None`, optional
-        Data for the initialization of the data structure
+    data : `DiscreteLpVector`, optional
+        Data for the initialization of the data structure. If `None` creates
+        an ASTRA data object filled with zeros
     ndim : {2, 3}, optional
         Dimension of the data. If ``data`` is not `None`, this parameter
-        has no effect.
+        has no effect. Default: 2
 
     Returns
     -------
@@ -427,7 +434,8 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         else:
             # Something else than NumPy data representation
             raise NotImplementedError('ASTRA supports data wrapping only for '
-                                      '`numpy.ndarray` instances.')
+                                      '`numpy.ndarray` instances. got {!r}'
+                                      ''.format(data))
     else:
         return create(astra_dtype_str, astra_geom)
 

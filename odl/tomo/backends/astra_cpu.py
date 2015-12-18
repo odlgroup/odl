@@ -56,9 +56,9 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
         Geometry defining the tomographic setup
     proj_space : `DiscreteLp`
         Space to which the calling operator maps
-    out : `DiscreteLpVector` or `None`, optional
-        Vector in the projection space to which the result is written.
-        Default: `None`
+    out : `DiscreteLpVector`, optional
+        Vector in the projection space to which the result is written. If
+        `None` creates an element in the projection space ``proj_space`
 
     Returns
     -------
@@ -119,7 +119,9 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
         out[:] = out.asarray()[::-1, ::-1]
 
     # Delete ASTRA objects
-    astra_cleanup()
+    astra.algorithm.delete(algo_id)
+    astra.data2d.delete((vol_id, sino_id))
+    astra.projector.delete(proj_id)
 
     return out
 
@@ -137,8 +139,8 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
     reco_space : `DiscreteLp`
         Space to which the calling operator maps
     out : `DiscreteLpVector` or `None`, optional
-        Vector in the reconstruction space to which the result is written.
-        Default: `None`
+        Vector in the reconstruction space to which the result is written. If
+        `None` creates an element in the reconstruction space ``reco_space``
 
     Returns
     -------
@@ -198,6 +200,8 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
         out[:] = out.asarray()[::-1, ::-1]
 
     # Delete ASTRA objects
-    astra_cleanup()
+    astra.algorithm.delete(algo_id)
+    astra.data2d.delete((vol_id, sino_id))
+    astra.projector.delete(proj_id)
 
     return out

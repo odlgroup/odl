@@ -60,9 +60,9 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space, out=None):
         Geometry defining the tomographic setup
     proj_space : `DiscreteLp`
         Space to which the calling operator maps
-    out : `DiscreteLpVector` or `None`, optional
-        Vector in the projection space to which the result is written
-        Default: `None`
+    out : `DiscreteLpVector`, optional
+        Vector in the projection space to which the result is written. If
+        `None` creates an element in the projection space ``proj_space``
 
     Returns
     -------
@@ -125,7 +125,13 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space, out=None):
             out.assign(tmp)
 
     # Delete ASTRA objects
-    astra_cleanup()
+    astra.algorithm.delete(algo_id)
+    if ndim == 2:
+        astra.data2d.delete((vol_id, sino_id))
+        astra.projector.delete(proj_id)
+    else:
+        astra.data3d.delete((vol_id, sino_id))
+        astra.projector3d.delete(proj_id)
 
     return out
 
@@ -142,9 +148,10 @@ def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
             Geometry defining the tomographic setup
         reco_space : `DiscreteLp`
             Space to which the calling operator maps
-        out : `DiscreteLpVector` or `None`, optional
+        out : `DiscreteLpVector`, optional
             Vector in the reconstruction space to which the result is written.
-            Default: `None`
+            If `None` creates an element in the reconstruction space
+            ``reco_space``
 
         Returns
         -------
@@ -205,6 +212,12 @@ def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
     astra.algorithm.run(algo_id)
 
     # Delete ASTRA objects
-    astra_cleanup()
+    astra.algorithm.delete(algo_id)
+    if ndim == 2:
+        astra.data2d.delete((vol_id, sino_id))
+        astra.projector.delete(proj_id)
+    else:
+        astra.data3d.delete((vol_id, sino_id))
+        astra.projector3d.delete(proj_id)
 
     return out
