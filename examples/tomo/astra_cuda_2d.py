@@ -91,8 +91,7 @@ def test_astra_gpu_projector_call_2d():
                               angle_grid, det_grid, angle_offset)
 
     # Projection space
-    proj_rect = angle_intvl.insert(dparams, 1)
-    proj_space = FunctionSpace(proj_rect)
+    proj_space = FunctionSpace(geom_p2d.params)
 
     # `DiscreteLp` projection space
     proj_shape = (angle_grid.ntotal, det_grid.ntotal)

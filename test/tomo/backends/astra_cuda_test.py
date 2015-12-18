@@ -44,8 +44,8 @@ from odl.tomo.util.testutils import skip_if_no_astra_cuda
 # TODO: better tests
 
 @skip_if_no_astra_cuda
-def test_astra_gpu_projector_call_2d():
-    """2D forward and backward projectors on the GPU."""
+def test_astra_gpu_projector_parallel2d():
+    """Parallel 2D forward and backward projectors on the GPU."""
 
     # Create `DiscreteLp` space for volume data
     nvoxels = (4, 5)
@@ -74,48 +74,133 @@ def test_astra_gpu_projector_call_2d():
 
     # Create geometry instances
     geom_p2d = Parallel2dGeometry(angle_intvl, dparams, angle_grid, det_grid)
-    geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                              angle_grid, det_grid, angle_offset)
 
     # Projection space
-    proj_rect = angle_intvl.insert(dparams, 1)
-    proj_space = FunctionSpace(proj_rect)
+    proj_space = FunctionSpace(geom_p2d.params)
 
     # `DiscreteLp` projection space
     npixels = (angle_grid.ntotal, det_grid.ntotal)
     discr_proj_space = uniform_discr_fromspace(proj_space, npixels,
                                                dtype='float32')
 
-    # Forward and back projections
-
-    # PARALLEL 2D: forward
+    # forward
     proj_data_p2d = astra_gpu_forward_projector_call(discr_vol_data, geom_p2d,
                                                      discr_proj_space)
     assert proj_data_p2d.shape == npixels
     assert proj_data_p2d.norm() > 0
 
-    # PARALLEL 2D: backward
+    # backward
     reco_data_p2d = astra_gpu_backward_projector_call(proj_data_p2d, geom_p2d,
                                                       discr_vol_space)
     assert reco_data_p2d.shape == nvoxels
     assert reco_data_p2d.norm() > 0
 
-    # Fanflat: forward
+
+@skip_if_no_astra_cuda
+def test_astra_gpu_projector_fanflat():
+    """Fanflat 2D forward and backward projectors on the GPU."""
+
+    # Create `DiscreteLp` space for volume data
+    nvoxels = (4, 5)
+    discr_vol_space = uniform_discr([-4, -5], [4, 5], nvoxels,
+                                    dtype='float32')
+
+    # Phantom data
+    phantom = np.zeros(nvoxels)
+    phantom[1, 1] = 1
+
+    # Create an element in the volume space
     discr_vol_data = discr_vol_space.element(phantom)
-    proj_data_ff = astra_gpu_forward_projector_call(discr_vol_data, geom_ff,
+
+    # Angles
+    angle_offset = 0
+    angle_intvl = Interval(0, 2 * np.pi)
+    angle_grid = uniform_sampling(angle_intvl, 8, as_midp=False)
+
+    # Detector
+    dparams = Interval(-6, 6)
+    det_grid = uniform_sampling(dparams, 6)
+
+    # Distances for fanflat geometry
+    src_rad = 100
+    det_rad = 10
+
+    # Create geometry instances
+    geom = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                              angle_grid, det_grid, angle_offset)
+
+    # Projection space
+    proj_space = FunctionSpace(geom.params)
+
+    # `DiscreteLp` projection space
+    npixels = (angle_grid.ntotal, det_grid.ntotal)
+    discr_proj_space = uniform_discr_fromspace(proj_space, npixels,
+                                               dtype='float32')
+
+    # forward
+    discr_vol_data = discr_vol_space.element(phantom)
+    proj_data_ff = astra_gpu_forward_projector_call(discr_vol_data, geom,
                                                     discr_proj_space)
     assert proj_data_ff.shape == npixels
     assert proj_data_ff.norm() > 0
 
-    # Fanflat: backward
-    reco_data_ff = astra_gpu_backward_projector_call(proj_data_ff, geom_ff,
+    # backward
+    reco_data_ff = astra_gpu_backward_projector_call(proj_data_ff, geom,
                                                      discr_vol_space)
     assert reco_data_ff.shape == nvoxels
     assert reco_data_ff.norm() > 0
 
 
 @skip_if_no_astra_cuda
-def test_astra_gpu_projector_call_3d():
+def test_astra_gpu_projector_parallel3d():
+    """Test 3D forward and backward projection functions on the GPU."""
+
+    # `DiscreteLp` volume space
+    vol_shape = (4, 5, 6)
+    discr_vol_space = uniform_discr([-4, -5, -6], [4, 5, 6],
+                                    vol_shape, dtype='float32')
+
+    # Phantom
+    phan = np.zeros(vol_shape)
+    phan[1, 1:3, 1:4] = 1
+
+    # Create an element in the volume space
+    discr_data = discr_vol_space.element(phan)
+
+    # Angles
+    angle_offset = 0
+    angle_intvl = Interval(0, 2 * np.pi)
+    angle_grid = uniform_sampling(angle_intvl, 9, as_midp=False)
+
+    # Detector
+    dparams = Rectangle([-7, -8], [7, 8])
+    det_grid = uniform_sampling(dparams, (7, 8))
+
+    # Create geometries
+    geom = Parallel3dGeometry(angle_intvl, dparams, angle_grid, det_grid)
+
+    # Projection space
+    proj_space = FunctionSpace(geom.params)
+
+    # `DiscreteLp` projection space
+    proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
+
+    discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
+                                               dtype='float32')
+
+    # Forward
+    proj_data = astra_gpu_forward_projector_call(discr_data, geom,
+                                                 discr_proj_space)
+    assert proj_data.norm() > 0
+
+    # Backward
+    rec_data = astra_gpu_backward_projector_call(proj_data, geom,
+                                                 discr_vol_space)
+    assert rec_data.norm() > 0
+
+
+@skip_if_no_astra_cuda
+def test_astra_gpu_projector_circular_conebeam():
     """Test 3D forward and backward projection functions on the GPU."""
 
     # `DiscreteLp` volume space
@@ -142,19 +227,13 @@ def test_astra_gpu_projector_call_3d():
     # Parameter for cone beam geometries
     src_rad = 1000
     det_rad = 100
-    spiral_pitch_factor = 0.5
 
     # Create geometries
-    geom_p3d = Parallel3dGeometry(angle_intvl, dparams, angle_grid, det_grid)
-    geom_ccf = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+    geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                                         angle_grid, det_grid, angle_offset)
-    geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                       det_rad, spiral_pitch_factor,
-                                       angle_grid, det_grid, angle_offset)
 
     # Projection space
-    proj_rect = angle_intvl.insert(dparams, 1)
-    proj_space = FunctionSpace(proj_rect)
+    proj_space = FunctionSpace(geom.params)
 
     # `DiscreteLp` projection space
     proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
@@ -162,33 +241,69 @@ def test_astra_gpu_projector_call_3d():
     discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
                                                dtype='float32')
 
-    # Forward: Parallel 3D
-    proj_data = astra_gpu_forward_projector_call(discr_data, geom_p3d,
+    # Forward
+    proj_data = astra_gpu_forward_projector_call(discr_data, geom,
                                                  discr_proj_space)
     assert proj_data.norm() > 0
 
-    # Backward: Parallel 3D
-    rec_data = astra_gpu_backward_projector_call(proj_data, geom_p3d,
+    # Backward
+    rec_data = astra_gpu_backward_projector_call(proj_data, geom,
                                                  discr_vol_space)
     assert rec_data.norm() > 0
 
-    # Forward: Circular Cone Flat
-    proj_data = astra_gpu_forward_projector_call(discr_data, geom_ccf,
+
+@skip_if_no_astra_cuda
+def test_astra_gpu_projector_helical_conebeam():
+    """Test 3D forward and backward projection functions on the GPU."""
+
+    # `DiscreteLp` volume space
+    vol_shape = (4, 5, 6)
+    discr_vol_space = uniform_discr([-4, -5, -6], [4, 5, 6],
+                                    vol_shape, dtype='float32')
+
+    # Phantom
+    phan = np.zeros(vol_shape)
+    phan[1, 1:3, 1:4] = 1
+
+    # Create an element in the volume space
+    discr_data = discr_vol_space.element(phan)
+
+    # Angles
+    angle_offset = 0
+    angle_intvl = Interval(0, 2 * np.pi)
+    angle_grid = uniform_sampling(angle_intvl, 9, as_midp=False)
+
+    # Detector
+    dparams = Rectangle([-7, -8], [7, 8])
+    det_grid = uniform_sampling(dparams, (7, 8))
+
+    # Parameter for cone beam geometries
+    src_rad = 1000
+    det_rad = 100
+    sprial_pitch_factor = 0.5
+
+    # Create geometries
+    geom = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                   spiral_pitch_factor=sprial_pitch_factor,
+                                   agrid=angle_grid, dgrid=det_grid,
+                                   angle_offset=angle_offset)
+
+    # Projection space
+    proj_space = FunctionSpace(geom.params)
+
+    # `DiscreteLp` projection space
+    proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
+
+    discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
+                                               dtype='float32')
+
+    # Forward
+    proj_data = astra_gpu_forward_projector_call(discr_data, geom,
                                                  discr_proj_space)
     assert proj_data.norm() > 0
 
-    # Backward: Circular Cone Flat
-    rec_data = astra_gpu_backward_projector_call(proj_data, geom_ccf,
-                                                 discr_vol_space)
-    assert rec_data.norm() > 0
-
-    # Forward: Helical Cone Flat
-    proj_data = astra_gpu_forward_projector_call(discr_data, geom_hcf,
-                                                 discr_proj_space)
-    assert proj_data.norm() > 0
-
-    # Backward: Helical Cone Flat
-    rec_data = astra_gpu_backward_projector_call(proj_data, geom_hcf,
+    # Backward
+    rec_data = astra_gpu_backward_projector_call(proj_data, geom,
                                                  discr_vol_space)
     assert rec_data.norm() > 0
 

@@ -114,8 +114,7 @@ geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                    angle_grid, det_grid, angle_offset)
 
 # Projection space
-proj_rect = angle_intvl.insert(dparams, 1)
-proj_space = FunctionSpace(proj_rect)
+proj_space = FunctionSpace(geom_p3d.params)
 
 # `DiscreteLp` projection space
 proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
