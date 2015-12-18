@@ -37,7 +37,7 @@ from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
 from odl.tomo.backends.astra_cuda import ASTRA_CUDA_AVAILABLE
 if ASTRA_CUDA_AVAILABLE:
     from odl.tomo.backends.astra_cuda import (
-        astra_gpu_forward_projector_call, astra_gpu_backward_projector_call)
+        astra_cuda_forward_projector_call, astra_cuda_backward_projector_call)
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
 
@@ -84,14 +84,14 @@ def test_astra_gpu_projector_parallel2d():
                                                dtype='float32')
 
     # forward
-    proj_data_p2d = astra_gpu_forward_projector_call(discr_vol_data, geom_p2d,
-                                                     discr_proj_space)
+    proj_data_p2d = astra_cuda_forward_projector_call(discr_vol_data, geom_p2d,
+                                                      discr_proj_space)
     assert proj_data_p2d.shape == npixels
     assert proj_data_p2d.norm() > 0
 
     # backward
-    reco_data_p2d = astra_gpu_backward_projector_call(proj_data_p2d, geom_p2d,
-                                                      discr_vol_space)
+    reco_data_p2d = astra_cuda_backward_projector_call(proj_data_p2d, geom_p2d,
+                                                       discr_vol_space)
     assert reco_data_p2d.shape == nvoxels
     assert reco_data_p2d.norm() > 0
 
@@ -139,14 +139,14 @@ def test_astra_gpu_projector_fanflat():
 
     # forward
     discr_vol_data = discr_vol_space.element(phantom)
-    proj_data_ff = astra_gpu_forward_projector_call(discr_vol_data, geom,
-                                                    discr_proj_space)
+    proj_data_ff = astra_cuda_forward_projector_call(discr_vol_data, geom,
+                                                     discr_proj_space)
     assert proj_data_ff.shape == npixels
     assert proj_data_ff.norm() > 0
 
     # backward
-    reco_data_ff = astra_gpu_backward_projector_call(proj_data_ff, geom,
-                                                     discr_vol_space)
+    reco_data_ff = astra_cuda_backward_projector_call(proj_data_ff, geom,
+                                                      discr_vol_space)
     assert reco_data_ff.shape == nvoxels
     assert reco_data_ff.norm() > 0
 
@@ -189,13 +189,13 @@ def test_astra_gpu_projector_parallel3d():
                                                dtype='float32')
 
     # Forward
-    proj_data = astra_gpu_forward_projector_call(discr_data, geom,
-                                                 discr_proj_space)
+    proj_data = astra_cuda_forward_projector_call(discr_data, geom,
+                                                  discr_proj_space)
     assert proj_data.norm() > 0
 
     # Backward
-    rec_data = astra_gpu_backward_projector_call(proj_data, geom,
-                                                 discr_vol_space)
+    rec_data = astra_cuda_backward_projector_call(proj_data, geom,
+                                                  discr_vol_space)
     assert rec_data.norm() > 0
 
 
@@ -242,13 +242,13 @@ def test_astra_gpu_projector_circular_conebeam():
                                                dtype='float32')
 
     # Forward
-    proj_data = astra_gpu_forward_projector_call(discr_data, geom,
-                                                 discr_proj_space)
+    proj_data = astra_cuda_forward_projector_call(discr_data, geom,
+                                                  discr_proj_space)
     assert proj_data.norm() > 0
 
     # Backward
-    rec_data = astra_gpu_backward_projector_call(proj_data, geom,
-                                                 discr_vol_space)
+    rec_data = astra_cuda_backward_projector_call(proj_data, geom,
+                                                  discr_vol_space)
     assert rec_data.norm() > 0
 
 
@@ -298,13 +298,13 @@ def test_astra_gpu_projector_helical_conebeam():
                                                dtype='float32')
 
     # Forward
-    proj_data = astra_gpu_forward_projector_call(discr_data, geom,
-                                                 discr_proj_space)
+    proj_data = astra_cuda_forward_projector_call(discr_data, geom,
+                                                  discr_proj_space)
     assert proj_data.norm() > 0
 
     # Backward
-    rec_data = astra_gpu_backward_projector_call(proj_data, geom,
-                                                 discr_vol_space)
+    rec_data = astra_cuda_backward_projector_call(proj_data, geom,
+                                                  discr_vol_space)
     assert rec_data.norm() > 0
 
 

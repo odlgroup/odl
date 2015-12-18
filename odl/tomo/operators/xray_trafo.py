@@ -46,7 +46,7 @@ else:
     astra_cpu_backward_projector_call = None
 if ASTRA_CUDA_AVAILABLE:
     from odl.tomo.backends.astra_cuda import (
-        astra_gpu_forward_projector_call, astra_gpu_backward_projector_call)
+        astra_cuda_forward_projector_call, astra_cuda_backward_projector_call)
 else:
     astra_gpu_forward_projector_call = None
     astra_gpu_backward_projector_call = None
@@ -173,8 +173,8 @@ class DiscreteXrayTransform(Operator):
                 return astra_cpu_forward_projector_call(inp, self.geometry,
                                                         self.range)
             elif impl == 'cuda':
-                return astra_gpu_forward_projector_call(inp, self.geometry,
-                                                        self.range)
+                return astra_cuda_forward_projector_call(inp, self.geometry,
+                                                         self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
@@ -222,9 +222,9 @@ class DiscreteXrayTransformAdjoint(Operator):
                                                          self.forward.geometry,
                                                          self.range)
             elif impl == 'cuda':
-                return astra_gpu_backward_projector_call(inp,
-                                                         self.forward.geometry,
-                                                         self.range)
+                return astra_cuda_backward_projector_call(inp,
+                                                          self.forward.geometry,
+                                                          self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen

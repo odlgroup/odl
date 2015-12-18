@@ -43,13 +43,13 @@ from odl.tomo.backends.astra_setup import (astra_projection_geometry,
 from odl.tomo.geometry.geometry import Geometry
 
 
-__all__ = ('astra_gpu_forward_projector_call',
-           'astra_gpu_backward_projector_call',
+__all__ = ('astra_cuda_forward_projector_call',
+           'astra_cuda_backward_projector_call',
            'ASTRA_CUDA_AVAILABLE')
 
 
 # TODO: rename gpu to cuda?
-def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
+def astra_cuda_forward_projector_call(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the GPU.
 
     Parameters
@@ -130,8 +130,8 @@ def astra_gpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     return out
 
 
-def astra_gpu_backward_projector_call(proj_data, geometry, reco_space,
-                                      out=None):
+def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
+                                       out=None):
     """Run an ASTRA backward projection on the given data using the GPU.
 
         Parameters

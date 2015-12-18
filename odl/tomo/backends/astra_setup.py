@@ -46,8 +46,8 @@ from odl.space.ntuples import FnVector
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.geometry.parallel import (Parallel2dGeometry, Parallel3dGeometry)
-from odl.tomo.geometry.fanbeam import (FanBeamGeometry, FanFlatGeometry)
+from odl.tomo.geometry.parallel import Parallel2dGeometry, Parallel3dGeometry
+from odl.tomo.geometry.fanbeam import FanBeamGeometry, FanFlatGeometry
 from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
                                         HelicalConeFlatGeometry)
 
@@ -276,8 +276,7 @@ def astra_geom_to_vec(geometry):
             vectors[and_ind, 5] = sin(angle) * det_pix_width
 
     else:
-        raise ValueError('invalid geometry type {!r}.'.format(
-            geometry.__class__.__name__))
+        raise ValueError('invalid geometry type {!r}.'.format(geometry))
 
     return vectors
 
