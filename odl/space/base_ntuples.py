@@ -175,11 +175,6 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
     independent of data representation.
     """
 
-    # Give a `Vector` a higher priority than any NumPy array type. This
-    # forces the usage of `__op__` of `Vector` if the other operand
-    # is a NumPy object (applies also to scalars!).
-    __array_priority__ = 1000000.0
-
     def __init__(self, space, *args, **kwargs):
         """Initialize a new instance."""
         self._space = space

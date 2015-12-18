@@ -723,6 +723,11 @@ class LinearSpaceVector(object):
         from odl.operator.default_ops import InnerProductOperator
         return InnerProductOperator(self.copy())
 
+    # Give a `Vector` a higher priority than any NumPy array type. This
+    # forces the usage of `__op__` of `Vector` if the other operand
+    # is a NumPy object (applies also to scalars!).
+    __array_priority__ = 1000000.0
+
 
 class UniversalSpace(LinearSpace):
     """A dummy linear space class.
