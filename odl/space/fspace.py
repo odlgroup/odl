@@ -757,7 +757,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return FunctionSpaceVector
 
 
-class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
+class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
 
     """Representation of a `FunctionSpace` element."""
 
@@ -780,19 +780,17 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
         FunctionSetVector.__init__(self, fspace, fcall)
         LinearSpaceVector.__init__(self, fspace)
 
-    # Some additional magic methods not defined for arbitrary linear spaces
-    def __add__(self, other):
-        """Return ``self + other``."""
-        if other in self.space.field:
-            # other --> other * space.one()
-            tmp = self.space.one()
-            self.space.lincomb(other, tmp, out=tmp)
-            return self.space.lincomb(1, self, 1, tmp, out=tmp)
-        elif other in self.space:
-            return self.space.lincomb(1, self, 1, other)
-        else:
-            return NotImplemented
+    # Tradeoff: either we subclass LinearSpaceVector first and override the
+    # 3 methods in FunctionSetVector (as below) which LinearSpaceVector
+    # also has, or we switch inheritance order and need to override all magic
+    # methods from LinearSpaceVector which are not in-place. This is due to
+    # the fact that FunctionSetVector inherits from Operator which defines
+    # some of those magic methods, and those do not work in this case.
+    __eq__ = FunctionSetVector.__eq__
+    assign = FunctionSetVector.assign
+    copy = FunctionSetVector.copy
 
+    # Some "r" magic methods not defined for arbitrary linear spaces
     def __radd__(self, other):
         """Return ``other + self``."""
         if other in self.space.field:
@@ -804,18 +802,6 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
             # Case `other in self.space` handled by `other`
             return NotImplemented
 
-    def __sub__(self, other):
-        """Return ``self - other``."""
-        if other in self.space.field:
-            # other --> other * space.one()
-            tmp = self.space.one()
-            self.space.lincomb(other, tmp, out=tmp)
-            return self.space.lincomb(1, self, -1, tmp, out=tmp)
-        elif other in self.space:
-            return self.space.lincomb(1, self, -1, other)
-        else:
-            return NotImplemented
-
     def __rsub__(self, other):
         """Return ``other - self``."""
         if other in self.space.field:
@@ -825,41 +811,6 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
             return self.space.lincomb(1, tmp, -1, self, out=tmp)
         else:
             # Case `other in self.space` handled by `other`
-            return NotImplemented
-
-    def __mul__(self, other):
-        """Return ``self * other``."""
-        if other in self.space.field:
-            # other --> other * space.one()
-            tmp = self.space.one()
-            self.space.lincomb(other, tmp, out=tmp)
-            return self.space.multiply(self, tmp, out=tmp)
-        elif other in self.space:
-            return self.space.multiply(self, other)
-        else:
-            return NotImplemented
-
-    def __rmul__(self, other):
-        """Return ``other * self``."""
-        if other in self.space.field:
-            # other --> other * space.one()
-            tmp = self.space.one()
-            self.space.lincomb(other, tmp, out=tmp)
-            return self.space.multiply(tmp, self, out=tmp)
-        else:
-            # Case `other in self.space` handled by `other`
-            return NotImplemented
-
-    def __truediv__(self, other):
-        """Return ``self / other``."""
-        if other in self.space.field:
-            # other --> other * space.one()
-            tmp = self.space.one()
-            self.space.lincomb(other, tmp, out=tmp)
-            return self.space.divide(self, tmp, out=tmp)
-        elif other in self.space:
-            return self.space.divide(self, other)
-        else:
             return NotImplemented
 
     def __rtruediv__(self, other):
@@ -875,6 +826,7 @@ class FunctionSpaceVector(FunctionSetVector, LinearSpaceVector):
 
     __rdiv__ = __rtruediv__
 
+    # Power functions are more general than the ones in LinearSpace
     def __pow__(self, p):
         """`f.__pow__(p) <==> f ** p`."""
         # pylint: disable=protected-access

@@ -466,7 +466,7 @@ class LinearSpaceVector(object):
         """
         return self.space.lincomb(0, self, 0, self, out=self)
 
-    # Convenience operators
+    # Convenience methods
     def __iadd__(self, other):
         """Implement ``self += other``."""
         if other in self.space:
@@ -480,6 +480,15 @@ class LinearSpaceVector(object):
         if other in self.space:
             tmp = self.space.element()
             return self.space.lincomb(1, self, 1, other, out=tmp)
+        elif other in self.space.field:
+            one = getattr(self.space, 'one', None)
+            if one is None:
+                return NotImplemented
+            else:
+                # other --> other * space.one()
+                tmp = one()
+                self.space.lincomb(other, tmp, out=tmp)
+                return self.space.lincomb(1, self, 1, tmp, out=tmp)
         else:
             return NotImplemented
 
@@ -496,6 +505,15 @@ class LinearSpaceVector(object):
         if other in self.space:
             tmp = self.space.element()
             return self.space.lincomb(1, self, -1, other, out=tmp)
+        elif other in self.space.field:
+            one = getattr(self.space, 'one', None)
+            if one is None:
+                return NotImplemented
+            else:
+                # other --> other * space.one()
+                tmp = one()
+                self.space.lincomb(other, tmp, out=tmp)
+                return self.space.lincomb(1, self, -1, tmp, out=tmp)
         else:
             return NotImplemented
 
