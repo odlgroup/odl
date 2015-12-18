@@ -308,6 +308,9 @@ class TensorGrid(Set):
         if other is self:
             return True
 
+        if self.as_midp != getattr(other, 'as_midp', self.as_midp):
+            return False
+
         # pylint: disable=arguments-differ
         return (type(self) == type(other) and
                 self.ndim == other.ndim and
@@ -723,7 +726,7 @@ class TensorGrid(Set):
         for i in reversed(list(range(1, num_after_ellipsis + 1))):
             new_vecs.append(self.coord_vectors[-i][slc_list[-i]])
 
-        return TensorGrid(*new_vecs)
+        return TensorGrid(*new_vecs, as_midp=self.as_midp)
 
     def __repr__(self):
         """g.__repr__() <==> repr(g)."""
@@ -1084,7 +1087,8 @@ class RegularGrid(TensorGrid):
                 new_maxpt.append(cvec[last])
                 new_shape.append(num)
 
-        return RegularGrid(new_minpt, new_maxpt, new_shape)
+        return RegularGrid(new_minpt, new_maxpt, new_shape,
+                           as_midp=self.as_midp)
 
     def __repr__(self):
         """g.__repr__() <==> repr(g)."""

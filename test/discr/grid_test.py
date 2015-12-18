@@ -32,18 +32,25 @@ from odl.discr.grid import TensorGrid, RegularGrid, sparse_meshgrid
 from odl.util.testutils import all_equal
 
 
-def test_init():
+@pytest.fixture(scope="module",
+                ids=['as_midp=True', 'as_midp=False'],
+                params=[True, False])
+def as_midp(request):
+    return request.param
+
+
+def test_init(as_midp):
     sorted1 = np.arange(2, 6)
     sorted2 = np.arange(-4, 5, 2)
     sorted3 = np.linspace(-1, 2, 50)
     scalar = 0.5
 
     # Just test if the code runs
-    TensorGrid(sorted1)
-    TensorGrid(sorted1, sorted2)
-    TensorGrid(sorted1, sorted1)
-    TensorGrid(sorted1, sorted2, sorted3)
-    TensorGrid(sorted2, scalar, sorted1)
+    TensorGrid(sorted1, as_midp=as_midp)
+    TensorGrid(sorted1, sorted2, as_midp=as_midp)
+    TensorGrid(sorted1, sorted1, as_midp=as_midp)
+    TensorGrid(sorted1, sorted2, sorted3, as_midp=as_midp)
+    TensorGrid(sorted2, scalar, sorted1, as_midp=as_midp)
 
     # Check different error scenarios
     unsorted = np.arange(4)
@@ -59,87 +66,87 @@ def test_init():
     empty = np.arange(0)
 
     with pytest.raises(ValueError):
-        TensorGrid()
+        TensorGrid(as_midp=as_midp)
 
     with pytest.raises(ValueError):
-        TensorGrid(sorted1, unsorted, sorted2)
+        TensorGrid(sorted1, unsorted, sorted2, as_midp=as_midp)
 
     with pytest.raises(ValueError):
-        TensorGrid(sorted1, with_dups, sorted2)
+        TensorGrid(sorted1, with_dups, sorted2, as_midp=as_midp)
 
     with pytest.raises(ValueError):
-        TensorGrid(sorted1, unsorted_with_dups, sorted2)
+        TensorGrid(sorted1, unsorted_with_dups, sorted2, as_midp=as_midp)
 
     with pytest.raises(ValueError):
-        TensorGrid(sorted1, with_nan, sorted2)
+        TensorGrid(sorted1, with_nan, sorted2, as_midp=as_midp)
 
     with pytest.raises(ValueError):
-        TensorGrid(sorted1, with_inf, sorted2)
+        TensorGrid(sorted1, with_inf, sorted2, as_midp=as_midp)
 
     with pytest.raises(ValueError):
-        TensorGrid(sorted1, empty, sorted2)
+        TensorGrid(sorted1, empty, sorted2, as_midp=as_midp)
 
 
-def test_ndim():
+def test_ndim(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.arange(-4, 5, 2)
     vec3 = np.linspace(-2, 2, 50)
 
-    grid1 = TensorGrid(vec1)
-    grid2 = TensorGrid(vec1, vec2, vec3)
+    grid1 = TensorGrid(vec1, as_midp=as_midp)
+    grid2 = TensorGrid(vec1, vec2, vec3, as_midp=as_midp)
 
     assert grid1.ndim == 1
     assert grid2.ndim == 3
 
 
-def test_shape():
+def test_shape(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.linspace(-2, 2, 50)
     scalar = 0.5
 
-    grid1 = TensorGrid(vec1)
-    grid2 = TensorGrid(vec1, vec2)
-    grid3 = TensorGrid(scalar, vec2)
+    grid1 = TensorGrid(vec1, as_midp=as_midp)
+    grid2 = TensorGrid(vec1, vec2, as_midp=as_midp)
+    grid3 = TensorGrid(scalar, vec2, as_midp=as_midp)
 
     assert grid1.shape == (4,)
     assert grid2.shape == (4, 50)
     assert grid3.shape == (1, 50)
 
 
-def test_ntotal():
+def test_ntotal(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.linspace(-2, 2, 50)
     scalar = 0.5
 
-    grid1 = TensorGrid(vec1)
-    grid2 = TensorGrid(vec1, vec2)
-    grid3 = TensorGrid(scalar, vec2)
+    grid1 = TensorGrid(vec1, as_midp=as_midp)
+    grid2 = TensorGrid(vec1, vec2, as_midp=as_midp)
+    grid3 = TensorGrid(scalar, vec2, as_midp=as_midp)
 
     assert grid1.ntotal == 4
     assert grid2.ntotal == 200
     assert grid3.ntotal == 50
 
 
-def test_minpt_maxpt():
+def test_minpt_maxpt(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.arange(-4, 5, 2)
     vec3 = np.arange(-1, 1)
     scalar = 0.5
 
-    grid = TensorGrid(vec1, vec2, vec3)
+    grid = TensorGrid(vec1, vec2, vec3, as_midp=as_midp)
     assert all_equal(grid.min_pt, (2, -4, -1))
     assert all_equal(grid.max_pt, (5, 4, 0))
 
-    grid = TensorGrid(vec1, scalar, vec2, scalar)
+    grid = TensorGrid(vec1, scalar, vec2, scalar, as_midp=as_midp)
     assert all_equal(grid.min_pt, (2, 0.5, -4, 0.5))
     assert all_equal(grid.max_pt, (5, 0.5, 4, 0.5))
 
 
-def test_element():
+def test_element(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.arange(-4, 5, 2)
 
-    grid = TensorGrid(vec1, vec2)
+    grid = TensorGrid(vec1, vec2, as_midp=as_midp)
     some_pt = grid.element()
     assert some_pt in grid
 
@@ -167,17 +174,19 @@ def test_min_max():
     assert all_equal(grid.max(), (5.5, 0.5, 5, 0.5))
 
 
-def test_equals():
+def test_equals(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.arange(-4, 5, 2)
 
-    grid1 = TensorGrid(vec1)
-    grid2 = TensorGrid(vec1, vec2)
-    grid2_again = TensorGrid(vec1, vec2)
-    grid2_rev = TensorGrid(vec2, vec1)
+    grid1 = TensorGrid(vec1, as_midp=as_midp)
+    grid1_diff_midp = TensorGrid(vec1, as_midp=not as_midp)
+    grid2 = TensorGrid(vec1, vec2, as_midp=as_midp)
+    grid2_again = TensorGrid(vec1, vec2, as_midp=as_midp)
+    grid2_rev = TensorGrid(vec2, vec1, as_midp=as_midp)
 
     assert grid1 == grid1
     assert not grid1 != grid1
+    assert grid1 != grid1_diff_midp
     assert grid2 == grid2
     assert not grid2 != grid2
     assert grid2 == grid2_again
@@ -200,11 +209,11 @@ def test_equals():
     assert not grid1.approx_equals(grid2, tol=0.1)
 
 
-def test_contains():
+def test_contains(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.arange(-4, 5, 2)
 
-    grid = TensorGrid(vec1, vec2)
+    grid = TensorGrid(vec1, vec2, as_midp=as_midp)
 
     point_list = []
     for x in vec1:
@@ -222,12 +231,12 @@ def test_contains():
     assert not grid.approx_contains((2.2, -2.1), tol=0.15)
 
     # 1d points
-    grid = TensorGrid(vec1)
+    grid = TensorGrid(vec1, as_midp=as_midp)
     assert 3 in grid
     assert 7 not in grid
 
 
-def test_tensor_is_subgrid():
+def test_tensor_is_subgrid(as_midp):
     vec1 = np.arange(2, 6)
     vec1_sup = np.arange(2, 8)
     vec2 = np.arange(-4, 5, 2)
@@ -235,42 +244,45 @@ def test_tensor_is_subgrid():
     vec2_sub = np.arange(-4, 3, 2)
     scalar = 0.5
 
-    grid = TensorGrid(vec1, vec2)
+    grid = TensorGrid(vec1, vec2, as_midp=as_midp)
     assert grid.is_subgrid(grid)
 
-    sup_grid = TensorGrid(vec1_sup, vec2_sup)
+    sup_grid = TensorGrid(vec1_sup, vec2_sup, as_midp=as_midp)
     assert grid.is_subgrid(sup_grid)
     assert not sup_grid.is_subgrid(grid)
 
-    not_sup_grid = TensorGrid(vec1_sup, vec2_sub)
+    not_sup_grid = TensorGrid(vec1_sup, vec2_sub, as_midp=as_midp)
     assert not grid.is_subgrid(not_sup_grid)
     assert not not_sup_grid.is_subgrid(grid)
 
     # Fuzzy check
     fuzzy_vec1_sup = vec1_sup + (0.1, 0.05, 0, -0.1, 0, 0.1)
     fuzzy_vec2_sup = vec2_sup + (0.1, 0.05, 0, -0.1, 0, 0.1, 0.05)
-    fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup)
+    fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup,
+                                as_midp=as_midp)
     assert grid.is_subgrid(fuzzy_sup_grid, tol=0.15)
 
     fuzzy_vec2_sup = vec2_sup + (0.1, 0.05, 0, -0.1, 0, 0.11, 0.05)
-    fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup)
+    fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup,
+                                as_midp=as_midp)
     assert not grid.is_subgrid(fuzzy_sup_grid, tol=0.1)
 
     # Changes in the non-overlapping part don't matter
     fuzzy_vec2_sup = vec2_sup + (0.1, 0.05, 0, -0.1, 0, 0.05, 0.11)
-    fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup)
+    fuzzy_sup_grid = TensorGrid(fuzzy_vec1_sup, fuzzy_vec2_sup,
+                                as_midp=as_midp)
     assert grid.is_subgrid(fuzzy_sup_grid, tol=0.15)
 
     # With degenerate axis
-    grid = TensorGrid(vec1, scalar, vec2)
-    sup_grid = TensorGrid(vec1_sup, scalar, vec2_sup)
+    grid = TensorGrid(vec1, scalar, vec2, as_midp=as_midp)
+    sup_grid = TensorGrid(vec1_sup, scalar, vec2_sup, as_midp=as_midp)
     assert grid.is_subgrid(sup_grid)
 
-    fuzzy_sup_grid = TensorGrid(vec1, scalar + 0.1, vec2)
+    fuzzy_sup_grid = TensorGrid(vec1, scalar + 0.1, vec2, as_midp=as_midp)
     assert grid.is_subgrid(fuzzy_sup_grid, tol=0.15)
 
 
-def test_points():
+def test_points(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.arange(-4, 5, 2)
     scalar = 0.5
@@ -281,7 +293,7 @@ def test_points():
         for x2 in vec2:
             points.append(np.array((x1, x2), dtype=float))
 
-    grid = TensorGrid(vec1, vec2)
+    grid = TensorGrid(vec1, vec2, as_midp=as_midp)
     assert all_equal(points, grid.points())
     assert all_equal(points, grid.points(order='C'))
     assert all_equal(grid.min_pt, grid.points()[0])
@@ -293,7 +305,7 @@ def test_points():
         for x1 in vec1:
             points.append(np.array((x1, x2), dtype=float))
 
-    grid = TensorGrid(vec1, vec2)
+    grid = TensorGrid(vec1, vec2, as_midp=as_midp)
     assert all_equal(points, grid.points(order='F'))
 
     # Degenerate axis 1
@@ -302,7 +314,7 @@ def test_points():
         for x2 in vec2:
             points.append(np.array((scalar, x1, x2), dtype=float))
 
-    grid = TensorGrid(scalar, vec1, vec2)
+    grid = TensorGrid(scalar, vec1, vec2, as_midp=as_midp)
     assert all_equal(points, grid.points())
 
     # Degenerate axis 2
@@ -311,7 +323,7 @@ def test_points():
         for x2 in vec2:
             points.append(np.array((x1, scalar, x2), dtype=float))
 
-    grid = TensorGrid(vec1, scalar, vec2)
+    grid = TensorGrid(vec1, scalar, vec2, as_midp=as_midp)
     assert all_equal(points, grid.points())
 
     # Degenerate axis 3
@@ -320,11 +332,11 @@ def test_points():
         for x2 in vec2:
             points.append(np.array((x1, x2, scalar), dtype=float))
 
-    grid = TensorGrid(vec1, vec2, scalar)
+    grid = TensorGrid(vec1, vec2, scalar, as_midp=as_midp)
     assert all_equal(points, grid.points())
 
 
-def test_corners():
+def test_corners(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.arange(-4, 5, 2)
     vec3 = np.arange(-1, 1)
@@ -341,7 +353,7 @@ def test_corners():
             for x3 in minmax3:
                 corners.append(np.array((x1, x2, x3), dtype=float))
 
-    grid = TensorGrid(vec1, vec2, vec3)
+    grid = TensorGrid(vec1, vec2, vec3, as_midp=as_midp)
     assert all_equal(corners, grid.corners())
     assert all_equal(corners, grid.corners(order='C'))
 
@@ -373,7 +385,7 @@ def test_corners():
         for x3 in minmax3:
             corners.append(np.array((x1, scalar, x3), dtype=float))
 
-    grid = TensorGrid(vec1, scalar, vec3)
+    grid = TensorGrid(vec1, scalar, vec3, as_midp=as_midp)
     assert all_equal(corners, grid.corners())
 
     # Degenerate axis 3
@@ -382,7 +394,7 @@ def test_corners():
         for x2 in minmax2:
             corners.append(np.array((x1, x2, scalar), dtype=float))
 
-    grid = TensorGrid(vec1, vec2, scalar)
+    grid = TensorGrid(vec1, vec2, scalar, as_midp=as_midp)
     assert all_equal(corners, grid.corners())
 
     # All degenerate
@@ -391,7 +403,7 @@ def test_corners():
     assert all_equal(corners, grid.corners())
 
 
-def test_meshgrid():
+def test_meshgrid(as_midp):
     vec1 = (0, 1)
     vec2 = (-1, 0, 1)
     vec3 = (2, 3, 4, 5)
@@ -401,7 +413,7 @@ def test_meshgrid():
     mgy = np.array(vec2)[np.newaxis, :, np.newaxis]
     mgz = np.array(vec3)[np.newaxis, np.newaxis, :]
 
-    grid = TensorGrid(vec1, vec2, vec3)
+    grid = TensorGrid(vec1, vec2, vec3, as_midp=as_midp)
     xx, yy, zz = grid.meshgrid()
     assert all_equal(mgx, xx)
     assert all_equal(mgy, yy)
@@ -413,12 +425,12 @@ def test_meshgrid():
     assert all_equal(mgz, zz)
 
     # Fortran ordering
-    grid = TensorGrid(vec1, vec2, vec3, order='F')
+    grid = TensorGrid(vec1, vec2, vec3, order='F', as_midp=as_midp)
     xx, yy, zz = grid.meshgrid()
     assert all(arr.flags.f_contiguous for arr in (xx, yy, zz))
 
 
-def test_tensor_getitem():
+def test_tensor_getitem(as_midp):
     vec1 = (0, 1)
     vec2 = (-1, 0, 1)
     vec3 = (2, 3, 4, 5)
@@ -428,7 +440,7 @@ def test_tensor_getitem():
     vec3_sub = (3, 4)
     vec4_sub = (1,)
 
-    grid = TensorGrid(vec1, vec2, vec3, vec4)
+    grid = TensorGrid(vec1, vec2, vec3, vec4, as_midp=as_midp)
 
     # Single indices yield points as an array
     assert all_equal(grid[1, 0, 1, 0], (1.0, -1.0, 3.0, 1.0))
@@ -442,20 +454,24 @@ def test_tensor_getitem():
     # Slices return new TensorGrid's
     assert grid == grid[...]
 
-    sub_grid = TensorGrid(vec1_sub, vec2_sub, vec3_sub, vec4_sub)
+    sub_grid = TensorGrid(vec1_sub, vec2_sub, vec3_sub, vec4_sub,
+                          as_midp=as_midp)
     assert grid[1, 0, 1:3, 0] == sub_grid
     assert grid[-1, :1, 1:3, :1] == sub_grid
     assert grid[1, 0, ..., 1:3, 0] == sub_grid
 
-    sub_grid = TensorGrid(vec1_sub, vec2, vec3, vec4)
+    sub_grid = TensorGrid(vec1_sub, vec2, vec3, vec4,
+                          as_midp=as_midp)
     assert grid[1, :, :, :] == sub_grid
     assert grid[1, ...] == sub_grid
 
-    sub_grid = TensorGrid(vec1, vec2, vec3, vec4_sub)
+    sub_grid = TensorGrid(vec1, vec2, vec3, vec4_sub,
+                          as_midp=as_midp)
     assert grid[:, :, :, 0] == sub_grid
     assert grid[..., 0] == sub_grid
 
-    sub_grid = TensorGrid(vec1_sub, vec2, vec3, vec4_sub)
+    sub_grid = TensorGrid(vec1_sub, vec2, vec3, vec4_sub,
+                          as_midp=as_midp)
     assert grid[1, :, :, 0] == sub_grid
     assert grid[1, ..., 0] == sub_grid
     assert grid[1, :, :, ..., 0] == sub_grid
@@ -476,10 +492,10 @@ def test_tensor_getitem():
         grid[1, 0, None, 1, 0]
 
     # One-dimensional grid
-    grid = TensorGrid(vec3)
+    grid = TensorGrid(vec3, as_midp=as_midp)
     assert grid == grid[...]
 
-    sub_grid = TensorGrid(vec3_sub)
+    sub_grid = TensorGrid(vec3_sub, as_midp=as_midp)
     assert grid[1:3] == sub_grid
 
 
@@ -655,76 +671,79 @@ def test_regular_grid_init():
     assert all_equal(grid.max(), exact_max)
 
 
-def test_center():
+def test_center(as_midp):
     minpt = (0.75, 0, -5)
     maxpt = (1.25, 0, 1)
     shape = (2, 1, 3)
 
     center = (1, 0, -2)
 
-    grid = RegularGrid(minpt, maxpt, shape)
+    grid = RegularGrid(minpt, maxpt, shape, as_midp=as_midp)
     assert all_equal(grid.center, center)
 
 
-def test_stride():
+def test_stride(as_midp):
     minpt = (0.75, 0, -5)
     maxpt = (1.25, 0, 1)
     shape = (2, 1, 3)
 
     stride = (0.5, 0, 3)
 
-    grid = RegularGrid(minpt, maxpt, shape)
+    grid = RegularGrid(minpt, maxpt, shape, as_midp=as_midp)
     assert all_equal(grid.stride, stride)
 
 
-def test_regular_is_subgrid():
+def test_regular_is_subgrid(as_midp):
     minpt = (0.75, 0, -5)
     maxpt = (1.25, 0, 1)
     shape = (2, 1, 5)
 
     # Optimized cases
-    grid = RegularGrid(minpt, maxpt, shape)
+    grid = RegularGrid(minpt, maxpt, shape, as_midp=as_midp)
     assert grid.is_subgrid(grid)
 
     smaller_shape = (1, 1, 5)
-    not_sup_grid = RegularGrid(minpt, maxpt, smaller_shape)
+    not_sup_grid = RegularGrid(minpt, maxpt, smaller_shape, as_midp=as_midp)
     assert not grid.is_subgrid(not_sup_grid)
 
     larger_minpt = (0.85, 0, -4)
-    not_sup_grid = RegularGrid(larger_minpt, maxpt, shape)
+    not_sup_grid = RegularGrid(larger_minpt, maxpt, shape, as_midp=as_midp)
     assert not grid.is_subgrid(not_sup_grid)
 
     smaller_maxpt = (1.15, 0, 0)
-    not_sup_grid = RegularGrid(minpt, smaller_maxpt, shape)
+    not_sup_grid = RegularGrid(minpt, smaller_maxpt, shape, as_midp=as_midp)
     assert not grid.is_subgrid(not_sup_grid)
 
     # Real checks
     minpt_sup1 = (-0.25, -2, -5)
     maxpt_sup1 = (1.25, 2, 1)
     shape_sup1 = (4, 3, 9)
-    sup_grid = RegularGrid(minpt_sup1, maxpt_sup1, shape_sup1)
+    sup_grid = RegularGrid(minpt_sup1, maxpt_sup1, shape_sup1, as_midp=as_midp)
     assert grid.is_subgrid(sup_grid)
     assert not sup_grid.is_subgrid(grid)
 
     minpt_sup2 = (0.5, 0, -5)
     maxpt_sup2 = (1.5, 0, 1)
     shape_sup2 = (5, 1, 9)
-    sup_grid = RegularGrid(minpt_sup2, maxpt_sup2, shape_sup2)
+    sup_grid = RegularGrid(minpt_sup2, maxpt_sup2, shape_sup2, as_midp=as_midp)
     assert grid.is_subgrid(sup_grid)
     assert not sup_grid.is_subgrid(grid)
 
     shape_not_sup1 = (4, 3, 10)
-    not_sup_grid = RegularGrid(minpt_sup1, maxpt_sup1, shape_not_sup1)
+    not_sup_grid = RegularGrid(minpt_sup1, maxpt_sup1, shape_not_sup1,
+                               as_midp=as_midp)
     assert not grid.is_subgrid(not_sup_grid)
     assert not not_sup_grid.is_subgrid(grid)
 
     minpt_not_sup1 = (-0.25, -2.5, -5)
-    not_sup_grid = RegularGrid(minpt_not_sup1, maxpt_sup1, shape_sup1)
+    not_sup_grid = RegularGrid(minpt_not_sup1, maxpt_sup1, shape_sup1,
+                               as_midp=as_midp)
     assert not grid.is_subgrid(not_sup_grid)
     assert not not_sup_grid.is_subgrid(grid)
 
     maxpt_not_sup1 = (1.35, 2.0001, 1)
-    not_sup_grid = RegularGrid(minpt_sup1, maxpt_not_sup1, shape_sup1)
+    not_sup_grid = RegularGrid(minpt_sup1, maxpt_not_sup1, shape_sup1,
+                               as_midp=as_midp)
     assert not grid.is_subgrid(not_sup_grid)
     assert not not_sup_grid.is_subgrid(grid)
 
@@ -733,7 +752,8 @@ def test_regular_is_subgrid():
     vec2_sup = (0,)
     vec3_sup = (-5, -3.5, -3, -2, -0.5, 0, 1, 9.5)
 
-    tensor_sup_grid = TensorGrid(vec1_sup, vec2_sup, vec3_sup)
+    tensor_sup_grid = TensorGrid(vec1_sup, vec2_sup, vec3_sup,
+                                 as_midp=as_midp)
     assert grid.is_subgrid(tensor_sup_grid)
 
     vec1_not_sup = (1, 1.25, 7)
@@ -741,7 +761,7 @@ def test_regular_is_subgrid():
     vec3_not_sup = (-4, -2, 1)
 
     tensor_not_sup_grid = TensorGrid(vec1_not_sup, vec2_not_sup,
-                                     vec3_not_sup)
+                                     vec3_not_sup, as_midp=as_midp)
     assert not grid.is_subgrid(tensor_not_sup_grid)
 
     # Fuzzy check
@@ -753,12 +773,12 @@ def test_regular_is_subgrid():
     maxpt_fuzzy_sup2 = (1.25, 2, 1.01)
 
     fuzzy_sup_grid = RegularGrid(minpt_fuzzy_sup1, maxpt_fuzzy_sup1,
-                                 shape_sup)
+                                 shape_sup, as_midp=as_midp)
     assert grid.is_subgrid(fuzzy_sup_grid, tol=0.015)
     assert not grid.is_subgrid(fuzzy_sup_grid, tol=0.005)
 
     fuzzy_sup_grid = RegularGrid(minpt_fuzzy_sup2, maxpt_fuzzy_sup2,
-                                 shape_sup)
+                                 shape_sup, as_midp=as_midp)
     assert grid.is_subgrid(fuzzy_sup_grid, tol=0.015)
     assert not grid.is_subgrid(fuzzy_sup_grid, tol=0.005)
 
@@ -795,7 +815,7 @@ def test_regular_getitem():
     assert grid == grid[...]
 
     # Use TensorGrid implementation as reference here
-    tensor_grid = TensorGrid(*grid.coord_vectors)
+    tensor_grid = TensorGrid(*grid.coord_vectors, as_midp=as_midp)
 
     test_slice = np.s_[1, :, ::2, ::3]
     assert all_equal(grid[test_slice].coord_vectors,
@@ -851,10 +871,10 @@ def test_regular_getitem():
         grid[1, 0, None, 1, 0]
 
     # One-dimensional grid
-    grid = RegularGrid(1, 5, 5)
+    grid = RegularGrid(1, 5, 5, as_midp=as_midp)
     assert grid == grid[...]
 
-    sub_grid = RegularGrid(1, 5, 3)
+    sub_grid = RegularGrid(1, 5, 3, as_midp=as_midp)
     assert grid[::2], sub_grid
 
 

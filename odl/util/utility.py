@@ -132,27 +132,27 @@ def with_metaclass(meta, *bases):
 
 
 def is_scalar_dtype(dtype):
-    """Whether a datatype is scalar or not."""
+    """`True` if ``dtype`` is scalar, else `False`."""
     return np.issubsctype(dtype, np.number)
 
 
 def is_int_dtype(dtype):
-    """Whether a datatype is integer or not."""
+    """`True` if ``dtype`` is integer, else `False`."""
     return np.issubsctype(dtype, np.integer)
 
 
 def is_real_dtype(dtype):
-    """Whether a datatype is real (including integer) or not."""
+    """`True` if ``dtype`` is real (including integer), else `False`."""
     return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
 def is_real_floating_dtype(dtype):
-    """Whether a NumPy datatype is real complex-floating or not."""
+    """`True` if ``dtype`` is real floating-point, else `False`."""
     return np.issubsctype(dtype, np.floating)
 
 
 def is_complex_floating_dtype(dtype):
-    """Whether a NumPy datatype is complex floating-point or not."""
+    """`True` if ``dtype`` is complex floating-point, else `False`."""
     return np.issubsctype(dtype, np.complexfloating)
 
 
