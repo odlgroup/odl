@@ -51,7 +51,18 @@ xray_trafo = DiscreteXrayTransform(discr_reco_space, geom,
                                    backend='astra_cuda')
 
 # Domain element
+import timeit
+start_time = timeit.default_timer()
 discr_vol_data = discr_reco_space.one()
+elapsed = timeit.default_timer() - start_time
+print(elapsed)
+
+from odl.util.phantom import shepp_logan
+start_time = timeit.default_timer()
+discr_vol_data = shepp_logan(discr_reco_space)
+elapsed = timeit.default_timer() - start_time
+print(elapsed)
+print(discr_vol_data.shape)
 
 # Forward projection
 discr_proj_data = xray_trafo(discr_vol_data)
@@ -62,6 +73,6 @@ discr_reco_data = xray_trafo.adjoint(discr_proj_data)
 # Shows a slice of the phantom, projections, and reconstruction
 import matplotlib
 matplotlib.use('qt4agg')
-discr_vol_data.show(indices=np.s_[:, :, 150])
-discr_proj_data.show(indices=np.s_[0, :, :])
-discr_reco_data.show(indices=np.s_[:, :, 150])
+# discr_vol_data.show(indices=np.s_[:, :, 150])
+# discr_proj_data.show(indices=np.s_[0, :, :])
+# discr_reco_data.show(indices=np.s_[:, :, 150])

@@ -89,8 +89,7 @@ geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                           angle_grid, det_grid, angle_offset)
 
 # Projection space
-proj_rect = angle_intvl.insert(dparams, 1)
-proj_space = FunctionSpace(proj_rect)
+proj_space = FunctionSpace(geom_p2d.params)
 
 # `DiscreteLp` projection space
 npixels = (angle_grid.ntotal, det_grid.ntotal)
