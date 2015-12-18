@@ -20,9 +20,6 @@ from __future__ import absolute_import
 __all__ = ()
 
 
-# Propagate names defined in __all__ of all submodules into the top-level
-# module
-
 from . import detector
 from .detector import *
 __all__ += detector.__all__

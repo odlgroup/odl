@@ -20,9 +20,6 @@ from __future__ import absolute_import
 __all__ = ()
 
 
-# Propagate names defined in __all__ of all submodules into the top-level
-# module
-
 from . import xray_trafo
 from .xray_trafo import *
 __all__ += xray_trafo.__all__
