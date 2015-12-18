@@ -52,35 +52,35 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
     """
 
-    def __init__(self, angle_intvl, src_rad, det_rad, agrid=None,
+    def __init__(self, angle_intvl, src_radius, det_radius, agrid=None,
                  angle_offset=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters
-        src_rad : positive `float`
+            The motion parameters given in radians
+        src_radius : positive `float`
             Radius of the source circle, must be positive
-        det_rad : positive `float`
+        det_radius : positive `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`. Default: `None`
         angle_offset : `float`, optional
-            Offset to the rotation angle. Default: `None`
+            Offset to the rotation angle given in radians. Default: `None`
         """
         if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
             raise TypeError('angle parameters {!r} are not an interval.'
                             ''.format(angle_intvl))
 
-        src_rad = float(src_rad)
-        if src_rad <= 0:
+        src_radius = float(src_radius)
+        if src_radius <= 0:
             raise ValueError('source circle radius {} is not positive.'
-                             ''.format(src_rad))
-        det_rad = float(det_rad)
-        if det_rad <= 0:
+                             ''.format(src_radius))
+        det_radius = float(det_radius)
+        if det_radius <= 0:
             raise ValueError('detector circle radius {} is not positive.'
-                             ''.format(det_rad))
+                             ''.format(det_radius))
 
         if agrid is not None:
             if not isinstance(agrid, TensorGrid):
@@ -92,8 +92,8 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         super().__init__()
         self._motion_params = angle_intvl
-        self._src_radius = src_rad
-        self._det_radius = det_rad
+        self._src_radius = src_radius
+        self._det_radius = det_radius
         self._motion_grid = agrid
         self._motion_params_offset = angle_offset
 
@@ -114,7 +114,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
     @property
     def angle_intvl(self):
-        """Angles (= motion parameters) of this geometry."""
+        """Angles (= motion parameters) of this geometry given in radians."""
         return self._motion_params
 
     @property
@@ -124,7 +124,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
     @property
     def angle_offset(self):
-        """Offset to the rotation angle in the azimuthal plane.
+        """Offset to the rotation angle in the azimuthal plane given in rad.
 
         The actual angles then reside within `angle_offset` + `angle_intvl`.
         """
@@ -151,8 +151,8 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
-            geometry's motion parameter set
+            The motion parameter given in radians. It must be
+            contained in this geometry's motion parameter set
 
         Returns
         -------
@@ -173,8 +173,8 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
-            geometry's `motion_params`
+            The motion parameter given in radians. It must be
+            contained in this geometry's `motion_params`
 
         Returns
         -------
@@ -195,8 +195,8 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
-            geometry's motion parameter set.
+            The motion parameters given in radians. It must be
+            contained in this geometry's motion parameter set
 
         Returns
         -------
@@ -242,7 +242,7 @@ class FanFlatGeometry(FanBeamGeometry):
     source and detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_rad, det_rad, agrid=None,
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
                  dgrid=None, angle_offset=0):
         """Initialize a new instance.
 
@@ -251,21 +251,21 @@ class FanFlatGeometry(FanBeamGeometry):
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters
+            The motion parameters given in radians
         dparams : `Interval` or 1-dim. `IntervalProd`
             The detector parameters
-        src_rad : `float`
+        src_radius : `float`
             Radius of the source circle, must be positive
-        det_rad : `float`
+        det_radius : `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the detector parameters. Default: `None`
         angle_offset : `float`, optional
-            Offset to the rotation angle. Default: 0
+            Offset to the rotation angle given in radians. Default: 0
         """
-        super().__init__(angle_intvl, src_rad, det_rad, agrid, angle_offset)
+        super().__init__(angle_intvl, src_radius, det_radius, agrid, angle_offset)
 
         if not (isinstance(dparams, IntervalProd) and dparams.ndim == 1):
             raise TypeError('detector parameters {!r} are not an interval.'
@@ -293,8 +293,8 @@ class FanFlatGeometry(FanBeamGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
-            geometry's motion parameter set
+            The motion parameters given in radians. It must be
+            contained in this geometry's motion parameter set
         dpar : `float`
             The detector parameter. It must be contained in this
             geometry's detector parameter set

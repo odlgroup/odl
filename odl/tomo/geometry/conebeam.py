@@ -52,17 +52,17 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, src_rad, det_rad, agrid=None,
+    def __init__(self, angle_intvl, src_radius, det_radius, agrid=None,
                  angle_offset=0, axis=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters
-        src_rad : positive `float`
+            The motion parameters given in radians
+        src_radius : positive `float`
             Radius of the source circle, must be positive
-        det_rad : positive `float`
+        det_radius : positive `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the `angle_intvl`
@@ -78,14 +78,14 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
             raise TypeError('angle parameters {!r} are not an interval.'
                             ''.format(angle_intvl))
 
-        src_rad = float(src_rad)
-        if src_rad <= 0:
+        src_radius = float(src_radius)
+        if src_radius <= 0:
             raise ValueError('source circle radius {} is not positive.'
-                             ''.format(src_rad))
-        det_rad = float(det_rad)
-        if det_rad <= 0:
+                             ''.format(src_radius))
+        det_radius = float(det_radius)
+        if det_radius <= 0:
             raise ValueError('detector circle radius {} is not positive.'
-                             ''.format(det_rad))
+                             ''.format(det_radius))
 
         if agrid is not None:
             if not isinstance(agrid, TensorGrid):
@@ -99,8 +99,8 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         super().__init__()
         self._motion_params = angle_intvl
-        self._src_radius = src_rad
-        self._det_radius = det_rad
+        self._src_radius = src_radius
+        self._det_radius = det_radius
         self._motion_grid = agrid
         self._motion_params_offset = angle_offset
         self._axis = axis
@@ -158,7 +158,7 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Returns
         -------
-        axis : `numpy.ndarray`, shape ``(3,)``
+        axis : `numpy.ndarray`, shape (3,)
             The rotation axis
         """
         axis = self._axis
@@ -190,8 +190,8 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
-            geometry's `motion_params`.
+            The motion parameter given in radians. It must be
+            contained in this geometry's `motion_params`.
 
         Returns
         -------
@@ -250,19 +250,19 @@ class ConeFlatGeometry(ConeBeamGeometry):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_rad, det_rad, agrid=None,
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
                  dgrid=None, angle_offset=0, axis=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters
+            The motion parameters given in radians
         dparams : `Rectangle` or 2-dim. `IntervalProd`
             The detector parameters
-        src_rad : `float`
+        src_radius : `float`
             Radius of the source circle, must be positive
-        det_rad : `float`
+        det_radius : `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`
@@ -275,7 +275,7 @@ class ConeFlatGeometry(ConeBeamGeometry):
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis
         """
-        super().__init__(angle_intvl, src_rad, det_rad, agrid, angle_offset,
+        super().__init__(angle_intvl, src_radius, det_radius, agrid, angle_offset,
                          axis)
 
         if not (isinstance(dparams, IntervalProd) and dparams.ndim == 2):
@@ -304,7 +304,7 @@ class ConeFlatGeometry(ConeBeamGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
+            The motion parameter given in radians. It must be contained in this
             geometry's motion parameter set
         dpar : 2-tuple of `float`
             The detector parameter. It must be contained in this
@@ -361,19 +361,19 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_rad, det_rad, agrid=None,
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
                  dgrid=None, angle_offset=0, axis=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters
+            The motion parameters given in radians
         dparams : `Rectangle` or 2-dim. `IntervalProd`
             The detector parameters
-        src_rad : `float`
+        src_radius : `float`
             Radius of the source circle, must be positive
-        det_rad : `float`
+        det_radius : `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`. Default: `None`
@@ -387,7 +387,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
             integer referring to a standard axis. Default: `None`
         """
 
-        super().__init__(angle_intvl, dparams, src_rad, det_rad, agrid,
+        super().__init__(angle_intvl, dparams, src_radius, det_radius, agrid,
                          dgrid, angle_offset, axis)
 
     def det_refpoint(self, angle):
@@ -396,8 +396,8 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
-            geometry's motion parameter set
+            The motion parameter given in radians. It must be contained
+            in this geometry's motion parameter set
 
         Returns
         -------
@@ -421,8 +421,8 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
-            geometry's motion parameter set
+            The motion parameter given in radians. It must be contained
+            in this geometry's motion parameter set
 
         Returns
         -------
@@ -455,7 +455,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
     source and detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_rad, det_rad,
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
                  spiral_pitch_factor, agrid=None, dgrid=None,
                  angle_offset=0, axis=None):
         """Initialize a new instance.
@@ -463,12 +463,12 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters
+            The motion parameters given in radians
         dparams : `Rectangle` or 2-dim. `IntervalProd`
             The detector parameters
-        src_rad : `float`
+        src_radius : `float`
             Radius of the source circle, must be positive
-        det_rad : `float`
+        det_radius : `float`
             Radius of the detector circle, must be positive
         spiral_pitch_factor : `float`
             Dimensionless factor given by the table feed per rotation
@@ -489,11 +489,11 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             integer referring to a standard axis. Default: `None`
         """
 
-        super().__init__(angle_intvl, dparams, src_rad, det_rad, agrid,
+        super().__init__(angle_intvl, dparams, src_radius, det_radius, agrid,
                          dgrid, angle_offset, axis)
         det_height = (dparams.max() - dparams.min())[1]
-        self._table_feed_per_rotation = spiral_pitch_factor * src_rad / (
-            src_rad + det_rad) * det_height
+        self._table_feed_per_rotation = spiral_pitch_factor * src_radius / (
+            src_radius + det_radius) * det_height
 
     @property
     def table_feed_per_rotation(self):
@@ -506,8 +506,8 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this
-            geometry's motion parameter set
+            The motion parameter given in radians. It must be
+            contained in this geometry's motion parameter set
 
         Returns
         -------
@@ -533,8 +533,8 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter. It must be contained in this geometry's
-            motion parameter set
+            The motion parameter given in radians. It must be contained
+            in this geometry's motion parameter set
 
         Returns
         -------
