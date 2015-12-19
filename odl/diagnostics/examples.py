@@ -108,7 +108,9 @@ def vector_examples(space):
 
         # Indicator function in first dimension
         def _step_fun(x):
-            z = np.zeros(_arg_shape(*x))
+            print(x)
+            z = np.zeros(_arg_shape(x))
+            print(_arg_shape(x))
             z[:space.grid.shape[0] // 2, ...] = 1
             return z
 
@@ -116,7 +118,7 @@ def vector_examples(space):
 
         # Indicator function on hypercube
         def _cube_fun(x):
-            inside = np.ones(_arg_shape(*x), dtype=bool)
+            inside = np.ones(_arg_shape(x), dtype=bool)
             for points, mean, std in zip(x, means, stds):
                 inside = np.logical_and(inside, points < mean + std)
                 inside = np.logical_and(inside, mean - std < points)
@@ -128,7 +130,7 @@ def vector_examples(space):
         # Indicator function on hypersphere
         if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate cube
             def _sphere_fun(x):
-                r = np.zeros(_arg_shape(*x))
+                r = np.zeros(_arg_shape(x))
 
                 for points, mean, std in zip(x, means, stds):
                     r += (points - mean) ** 2 / std ** 2
@@ -138,7 +140,7 @@ def vector_examples(space):
 
         # Gaussian function
         def _gaussian_fun(x):
-            r2 = np.zeros(_arg_shape(*x))
+            r2 = np.zeros(_arg_shape(x))
 
             for points, mean, std in zip(x, means, stds):
                 r2 += (points - mean) ** 2 / ((std / 2) ** 2)
@@ -150,7 +152,7 @@ def vector_examples(space):
         # Gradient in each dimensions
         for dim in range(space.grid.ndim):
             def _gradient_fun(x):
-                s = np.zeros(_arg_shape(*x))
+                s = np.zeros(_arg_shape(x))
                 s += (x[dim] - mins[dim]) / (maxs[dim] - mins[dim])
 
                 return s
@@ -161,7 +163,7 @@ def vector_examples(space):
         # Gradient in all dimensions
         if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
             def _all_gradient_fun(x):
-                s = np.zeros(_arg_shape(*x))
+                s = np.zeros(_arg_shape(x))
 
                 for points, minv, maxv in zip(x, mins, maxs):
                     s += (points - minv) / (maxv - minv)
