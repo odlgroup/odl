@@ -37,13 +37,6 @@ from odl.discr.lp_discr import DiscreteLp
 __all__ = ('scalar_examples', 'vector_examples', 'samples')
 
 
-def _arg_shape(*args):
-    if len(args) == 1:
-        return args[0].shape
-    else:
-        return np.broadcast(*args).shape
-
-
 def scalar_examples(field):
     """Generate example scalars in ``field``.
 
@@ -108,9 +101,7 @@ def vector_examples(space):
 
         # Indicator function in first dimension
         def _step_fun(x):
-            print(x)
-            z = np.zeros(_arg_shape(x))
-            print(_arg_shape(x))
+            z = np.zeros(space.shape, dtype=space.dtype)
             z[:space.grid.shape[0] // 2, ...] = 1
             return z
 
@@ -118,7 +109,7 @@ def vector_examples(space):
 
         # Indicator function on hypercube
         def _cube_fun(x):
-            inside = np.ones(_arg_shape(x), dtype=bool)
+            inside = np.ones(space.shape, dtype=bool)
             for points, mean, std in zip(x, means, stds):
                 inside = np.logical_and(inside, points < mean + std)
                 inside = np.logical_and(inside, mean - std < points)
@@ -130,7 +121,7 @@ def vector_examples(space):
         # Indicator function on hypersphere
         if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate cube
             def _sphere_fun(x):
-                r = np.zeros(_arg_shape(x))
+                r = np.zeros(space.shape)
 
                 for points, mean, std in zip(x, means, stds):
                     r += (points - mean) ** 2 / std ** 2
@@ -140,7 +131,7 @@ def vector_examples(space):
 
         # Gaussian function
         def _gaussian_fun(x):
-            r2 = np.zeros(_arg_shape(x))
+            r2 = np.zeros(space.shape)
 
             for points, mean, std in zip(x, means, stds):
                 r2 += (points - mean) ** 2 / ((std / 2) ** 2)
@@ -152,7 +143,7 @@ def vector_examples(space):
         # Gradient in each dimensions
         for dim in range(space.grid.ndim):
             def _gradient_fun(x):
-                s = np.zeros(_arg_shape(x))
+                s = np.zeros(space.shape)
                 s += (x[dim] - mins[dim]) / (maxs[dim] - mins[dim])
 
                 return s
@@ -163,7 +154,7 @@ def vector_examples(space):
         # Gradient in all dimensions
         if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
             def _all_gradient_fun(x):
-                s = np.zeros(_arg_shape(x))
+                s = np.zeros(space.shape)
 
                 for points, minv, maxv in zip(x, mins, maxs):
                     s += (points - minv) / (maxv - minv)
@@ -211,8 +202,8 @@ def samples(*sets):
             for scal in scalar_examples(sets[0]):
                 yield scal
     else:
-        generators = [vector_examples(set) if isinstance(set, LinearSpace)
-                      else scalar_examples(set) for set in sets]
+        generators = [vector_examples(set_) if isinstance(set_, LinearSpace)
+                      else scalar_examples(set_) for set_ in sets]
         for examples in product(*generators):
             yield examples
 
