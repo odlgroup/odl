@@ -316,7 +316,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     plt.show(block=False)
     plt.draw()
-    plt.pause(0.0001)
+    plt.pause(0.01)
     if saveto is not None:
         fig.savefig(saveto)
 

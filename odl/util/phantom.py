@@ -258,8 +258,8 @@ def _phantom_3d(space, ellipses):
     maxp = space.grid.max()
 
     # move points to [-1, 1]
-    np.subtract(points, (minp + maxp)/2.0, out=points)
-    np.divide(points, (maxp - minp)/2.0, out=points)
+    np.subtract(points, (minp + maxp) / 2.0, out=points)
+    np.divide(points, (maxp - minp) / 2.0, out=points)
 
     # reusable temporary
     offset_points = np.empty_like(points)
