@@ -116,3 +116,4 @@ reco_data_ff = astra_gpu_backward_projector_call(proj_data_ff, geom_ff,
                                                  discr_vol_space)
 save_slice(reco_data_ff, 'backward fanflat_gpu')
 
+test_astra_gpu_projector_call_2d()
