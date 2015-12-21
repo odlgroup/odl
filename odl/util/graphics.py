@@ -304,9 +304,13 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         csub = display(*args_re, **dsp_kwargs)
 
         if method == 'imshow' and len(fig.axes) < 2:
-            # Create colorbar if none seems to exist
-            minval = np.min(values)
-            maxval = np.max(values)
+            if 'clim' not in kwargs:
+                # Create colorbar if none seems to exist
+                minval = np.min(values)
+                maxval = np.max(values)
+            else:
+                minval, maxval = kwargs['clim']
+
             ticks = [minval, (maxval + minval) / 2., maxval]
             if minval == maxval:
                 decimals = 5

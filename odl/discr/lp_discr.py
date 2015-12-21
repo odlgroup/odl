@@ -148,8 +148,10 @@ class DiscreteLp(Discretization):
         # Sequence-type input
         arr = np.asarray(inp, dtype=self.dtype, order=self.order)
         if arr.ndim > 1 and arr.shape != self.shape:
-            raise ValueError('input shape {} does not match grid shape {}'
-                             ''.format(arr.shape, self.shape))
+            arr = np.squeeze(arr)  # Squeeze could solve the problem
+            if arr.shape != self.shape:
+                raise ValueError('input shape {} does not match grid shape {}'
+                                 ''.format(arr.shape, self.shape))
         arr = arr.ravel(order=self.order)
         return self.element_type(self, self.dspace.element(arr))
 

@@ -21,22 +21,28 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-
-# Internal
 import odl
+import numpy as np
 
 n = 100
-m = 10
+m = 5
 spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
 pspace = odl.ProductSpace(spc, m)
 
-vec = pspace.element([odl.util.shepp_logan(spc)] * m)
+vec = pspace.element([odl.util.shepp_logan(spc) * i for i in range(1, m+1)])
 
 # By default 4 uniformly spaced elements are shown
 vec.show(show=True)
 
 # User can also define a slice or by indexing
+
+# Show first 2 elements
 vec.show(indices=[0, 1], show=True)
 
+# Show every third element
+vec.show(indices=np.s_[::3], show=True)
+
 # Slices propagate (as in numpy)
-vec.show(indices=([0], slice(None), n//2), show=True)
+
+# Show second element, then slice by [:, n//2]
+vec.show(indices=np.s_[2, :, n//2], show=True)

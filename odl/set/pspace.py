@@ -623,10 +623,16 @@ class ProductSpaceVector(LinearSpaceVector):
             if len(self) < 5:
                 indices = slice(None)
             else:
-                indices = np.linspace(0, self.size-1, 4, dtype=int)
+                indices = np.linspace(0, self.size - 1, 4, dtype=int)
         else:
             if isinstance(indices, tuple):
                 indices, kwargs['indices'] = indices[0], indices[1:]
+
+            if isinstance(indices, slice):
+                indices = range(*indices.indices(self.size))
+
+            if isinstance(indices, Integral):
+                indices = [indices]
 
         for i, part in zip(indices, self[indices]):
             part.show(*args, title='{}. Part {}'.format(title, i), **kwargs)
