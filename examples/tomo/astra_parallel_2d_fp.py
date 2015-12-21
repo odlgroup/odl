@@ -22,6 +22,7 @@ standard_library.install_aliases()
 
 # External
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Internal
 from odl import (Interval, Rectangle, FunctionSpace, uniform_sampling,
@@ -29,8 +30,8 @@ from odl import (Interval, Rectangle, FunctionSpace, uniform_sampling,
 from odl.tomo import (Parallel2dGeometry, DiscreteXrayTransform)
 
 
-def phantom(x, y):
-    return float((x**2/0.2**2) + (y**2/0.5**2) <= 1)
+def phantom(x):
+    return np.float64((x[0]**2/0.2**2) + (x[1]**2/0.5**2) <= 1)
 
 
 # Reconstruction domain, continuous and dcontains_set
@@ -60,5 +61,5 @@ discr_phantom = discr_reco_space.element(cont_phantom)
 
 # Create data
 proj_data = xray_trafo(discr_phantom)
-
-# proj_data.show()
+proj_data.show()
+plt.show()

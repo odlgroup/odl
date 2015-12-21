@@ -27,28 +27,27 @@ standard_library.install_aliases()
 import numpy as np
 
 # Internal
-from odl import (Interval, Rectangle, uniform_discr, uniform_sampling,
-                 CircularConeFlatGeometry, DiscreteXrayTransform)
-# from odl.util.phantom import shepp_logan
+import odl
 
 # Discrete reconstruction space
-discr_reco_space = uniform_discr([-20, -20, -20],
-                                 [20, 20, 20],
-                                 [300, 300, 300], dtype='float32')
+discr_reco_space = odl.uniform_discr([-20, -20, -20],
+                                     [20, 20, 20],
+                                     [300, 300, 300], dtype='float32')
 
 # Geometry
 src_rad = 1000
 det_rad = 100
-angle_intvl = Interval(0, 2 * np.pi)
-dparams = Rectangle([-50, -50], [50, 50])
-agrid = uniform_sampling(angle_intvl, 360, as_midp=False)
-dgrid = uniform_sampling(dparams, [558, 558])
-geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad, agrid,
-                                dgrid)
+angle_intvl = odl.Interval(0, 2 * np.pi)
+dparams = odl.Rectangle([-50, -50], [50, 50])
+agrid = odl.uniform_sampling(angle_intvl, 360, as_midp=False)
+dgrid = odl.uniform_sampling(dparams, [558, 558])
+geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams,
+                                         src_rad, det_rad,
+                                         agrid, dgrid)
 
 # X-ray transform
-xray_trafo = DiscreteXrayTransform(discr_reco_space, geom,
-                                   backend='astra_cuda')
+xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                            backend='astra_cuda')
 
 # Domain element
 discr_vol_data = discr_reco_space.one()
@@ -60,8 +59,6 @@ discr_proj_data = xray_trafo(discr_vol_data)
 discr_reco_data = xray_trafo.adjoint(discr_proj_data)
 
 # Shows a slice of the phantom, projections, and reconstruction
-import matplotlib
-matplotlib.use('qt4agg')
 discr_vol_data.show(indices=np.s_[:, :, 150])
 discr_proj_data.show(indices=np.s_[0, :, :])
 discr_reco_data.show(indices=np.s_[:, :, 150])

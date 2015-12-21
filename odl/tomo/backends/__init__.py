@@ -19,7 +19,7 @@
 
 from __future__ import absolute_import
 
-__all__ = ('stir_bindings',)
+__all__ = ()
 
 from . import stir_bindings
 

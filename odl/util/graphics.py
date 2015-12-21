@@ -36,11 +36,13 @@ __all__ = ('show_discrete_function',)
 
 
 def show_discrete_function(dfunc, method='', title=None, indices=None,
-                           **kwargs):
+                           fig=None, **kwargs):
     """Display a discrete 1d or 2d function.
 
     Parameters
     ----------
+    dfunc : `DiscreteLpVector`
+        The discretized funciton to visualize.
     method : `str`, optional
         1d methods:
 
@@ -69,10 +71,22 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         two axes at the "middle" along the remaining axes is shown
         (semantically ``[:, :, shape[2:] // 2]``).
 
+    fig : ``matplotlib`` figure
+        The figure to show in. Expected to be of same "style", as the figure
+        given by this function. The most common usecase is that fig is the
+        return value from an earlier call to this function.
+
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method
         See the Matplotlib functions for documentation of extra
         options.
+
+    Returns
+    -------
+    fig : ``matplotlib`` figure
+        The resulting figure. It is also shown to the user.
+    colorbar : ``matplotlib`` colorbar
+        The colorbar
 
     See Also
     --------
@@ -197,73 +211,113 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     # Additional keyword args are passed on to the display method
     dsp_kwargs.update(**kwargs)
 
-    fig = plt.figure(figsize=figsize)
+    if fig is None:
+        fig = plt.figure(figsize=figsize)
+    else:
+        if not isinstance(fig, plt.Figure):
+            raise TypeError('fig {} not a matplotlib figure'
+                            ''.format(fig))
+
+        if not plt.fignum_exists(fig.number):
+            raise TypeError('fig {} not an open matplotlib figure'
+                            ''.format(fig))
+
+        plt.figure(fig.number)
+
     if title is not None:
         plt.title(title)
 
     if dfunc_is_complex:
-        sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
-        sub_re.set_title('Real part')
-        sub_re.set_xlabel(axis_labels[0])
-        if values.ndim == 2:
-            sub_re.set_ylabel(axis_labels[1])
+        # Real
+        if len(fig.axes) == 0:
+            # Create new axis if needed
+            sub_re = plt.subplot(arrange_subplots[0], **sub_kwargs)
+            sub_re.set_title('Real part')
+            sub_re.set_xlabel(axis_labels[0])
+            if values.ndim == 2:
+                sub_re.set_ylabel(axis_labels[1])
+            else:
+                sub_re.set_ylabel('value')
         else:
-            sub_re.set_ylabel('value')
+            sub_re = fig.axes[0]
+
         display_re = getattr(sub_re, method)
         csub_re = display_re(*args_re, **dsp_kwargs)
 
-        if method == 'imshow':
+        if method == 'imshow' and len(fig.axes < 2):
+            # Create colorbar if none seems to exist
             minval_re = np.min(values.real)
             maxval_re = np.max(values.real)
-            ticks_re = [minval_re, (maxval_re + minval_re) / 2.,
-                        maxval_re]
+            ticks_re = [minval_re, (maxval_re + minval_re) / 2., maxval_re]
+
             plt.colorbar(csub_re, orientation='horizontal',
                          ticks=ticks_re, format='%.4g')
 
-        sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
-        sub_im.set_title('Imaginary part')
-        sub_im.set_xlabel(axis_labels[0])
-        if values.ndim == 2:
-            sub_im.set_ylabel(axis_labels[1])
+        # Imaginary
+        if len(fig.axes) < 3:
+            sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
+            sub_im.set_title('Imaginary part')
+            sub_im.set_xlabel(axis_labels[0])
+            if values.ndim == 2:
+                sub_im.set_ylabel(axis_labels[1])
+            else:
+                sub_re.set_ylabel('value')
         else:
-            sub_re.set_ylabel('value')
+            sub_re = fig.axes[1]
+
         display_im = getattr(sub_im, method)
         csub_im = display_im(*args_im, **dsp_kwargs)
 
-        if method == 'imshow':
+        if method == 'imshow' and len(fig.axes < 4):
+            # Create colorbar if none seems to exist
             minval_im = np.min(values.imag)
             maxval_im = np.max(values.imag)
-            ticks_im = [minval_im, (maxval_im + minval_im) / 2.,
-                        maxval_im]
+            ticks_im = [minval_im, (maxval_im + minval_im) / 2., maxval_im]
+
             plt.colorbar(csub_im, orientation='horizontal',
                          ticks=ticks_im, format='%.4g')
 
     else:
-        sub = plt.subplot(111, **sub_kwargs)
-        sub.set_xlabel(axis_labels[0])
-        if values.ndim == 2:
-            sub.set_ylabel(axis_labels[1])
+        if len(fig.axes) == 0:
+            # Create new axis object if needed
+            sub = plt.subplot(111, **sub_kwargs)
+            sub.set_xlabel(axis_labels[0])
+            if values.ndim == 2:
+                sub.set_ylabel(axis_labels[1])
+            else:
+                sub.set_ylabel('value')
+            try:
+                # For 3d plots
+                sub.set_zlabel('z')
+            except AttributeError:
+                pass
         else:
-            sub.set_ylabel('value')
-        try:
-            # For 3d plots
-            sub.set_zlabel('z')
-        except AttributeError:
-            pass
+            sub = fig.axes[0]
+
         display = getattr(sub, method)
         csub = display(*args_re, **dsp_kwargs)
 
-        if method == 'imshow':
-            minval = np.min(values)
-            maxval = np.max(values)
+        if method == 'imshow' and len(fig.axes) < 2:
+            # Create colorbar if none seems to exist
+            if 'clim' in kwargs:
+                minval, maxval = kwargs['clim']
+            else:
+                minval = np.min(values)
+                maxval = np.max(values)
+
             ticks = [minval, (maxval + minval) / 2., maxval]
             if minval == maxval:
                 decimals = 5
             else:
                 decimals = max(4, int(1 + abs(np.log10(maxval - minval))))
             format = '%.{}f'.format(decimals)
+
             plt.colorbar(csub, ticks=ticks, format=format)
 
-    plt.show()
+    plt.show(block=False)
+    plt.draw()
+    plt.pause(0.01)
     if saveto is not None:
         fig.savefig(saveto)
+
+    return fig

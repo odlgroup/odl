@@ -36,19 +36,20 @@ where `<repo>` is the clone link from the right navigation bar on the [ODL GitHu
 For installation in a local user folder, go to the ODL folder and run
 
 ```sh
-user$ pip install --user .
+user$ pip install --user --editable .
 ```
 
 in the root folder of the package. For system-wide installation, run (as root)
 
 ```sh
-root# pip install .
+root# pip install --editable .
 ```
 
-If you intend to make changes to the code, you should add the `--editable` option to the `pip` command.
-This way, a link to your working directory is installed in your Python installation site rather than a copy of the code, which makes local changes take immediate effect.
+We recommend to use the `--editable` option since it installs a link instead of copying the files to
+your Python packages location. This way local changes to the code (e.g. after a `git pull`) take
+immediate effect without reinstall.
 
-After installing, you should check that everything was installed properly by running
+After installing, you can check that everything was installed properly by running
 
 ```sh
 user$ py.test

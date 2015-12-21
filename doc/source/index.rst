@@ -27,6 +27,7 @@ Contents
    guide/guide
    dev/dev
    guide/faq
+   guide/glossary
    odl
 
 

@@ -31,8 +31,9 @@ from numpy import ravel_multi_index, prod
 import sys
 from time import time
 
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal',
-           'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
+           'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
+           'skip_if_no_pywavelets')
 
 
 def _places(a, b, default=5):
@@ -74,24 +75,35 @@ def almost_equal(a, b, places=None):
 
 
 def all_equal(iter1, iter2):
-    # Sentinel object used to check that both iterators are the same length
-    diff_length_sentinel = object()
-
+    # Direct comparison for scalars, tuples or lists
     try:
         if iter1 == iter2:
             return True
-    except ValueError:
+    except ValueError:  # Raised by NumPy when comparing arrays
         pass
 
+    # Special case for None
     if iter1 is None and iter2 is None:
         return True
 
+    # If one nested iterator is exhausted, go to direct comparison
     try:
         i1 = iter(iter1)
         i2 = iter(iter2)
     except TypeError:
-        return iter1 == iter2
+        try:
+            if iter1 == iter2:
+                return True
+            else:
+                return False
+        except ValueError:  # Raised by NumPy when comparing arrays
+            return False
 
+    # Sentinel object used to check that both iterators are the same length
+    diff_length_sentinel = object()
+
+    # Compare element by element and return False if the sequences have
+    # different lengths
     for [ip1, ip2] in zip_longest(i1, i2,
                                   fillvalue=diff_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
@@ -144,13 +156,18 @@ def is_subdict(subdict, dictionary):
     return all(item in dictionary.items() for item in subdict.items())
 
 
+def _pass(function):
+    return function
+
 try:
     import pytest
     skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE",
                                          reason='CUDA not available')
+    skip_if_no_pywavelets = pytest.mark.skipif(
+        "not odl.trafos.wavelet.PYWAVELETS_AVAILABLE",
+        reason='Wavelet not available')
 except ImportError:
-    def skip_if_no_cuda(function):
-        return function
+    skip_if_no_cuda = skip_if_no_pywavelets = _pass
 
 
 class FailCounter(object):
@@ -258,7 +275,7 @@ class ProgressBar(object):
     >>> progress.update(4) #halfway, zero indexing
     \rReading data: [###############               ] 50.0%
 
-    Also supports multiple index, from slowest varying to fastest
+    Multi-indices, from slowest to fastest:
 
     >>> progress = ProgressBar('Reading data', 10, 10)
     \rReading data: [                              ] Starting
@@ -335,3 +352,8 @@ class ProgressRange(object):
             return val
         else:
             raise StopIteration()
+
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE
+    testmod(optionflags=NORMALIZE_WHITESPACE)

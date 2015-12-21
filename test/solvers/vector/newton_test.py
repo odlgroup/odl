@@ -40,7 +40,7 @@ class ResidualOp(odl.Operator):
         self.op = op
         self.rhs = rhs.copy()
 
-    def _apply(self, x, out):
+    def _call(self, x, out):
         self.op(x, out)
         out -= self.rhs
 
@@ -64,7 +64,7 @@ class RosenbrockDerivOp(odl.Operator):
         dom = ran = odl.Rn(2)
         super().__init__(domain=dom, range=ran)
 
-    def _apply(self, x, out):
+    def _call(self, x, out):
         out[:] = [-400 * (x[1] - x[0] ** 2) * x[0] - 2 * (1 - x[0]),
                   200 * (x[1] - x[0] ** 2)]
 

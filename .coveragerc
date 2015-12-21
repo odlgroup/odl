@@ -1,15 +1,20 @@
 # .coveragerc to control coverage.py
 [run]
 branch = False
+
 include =
     odl/*
+
 omit =
     */__init__.py
     odl/diagnostics/*
     odl/util/*
     
-    # Omit untill coveralls supports cuda.
+    # Omit until coveralls supports cuda.
     odl/space/cu_ntuples.py
+    
+    # Omit until coveralls supports pywt.
+    odl/trafos/wavelet.py
 
 [report]
 # Regexes for lines to exclude from consideration

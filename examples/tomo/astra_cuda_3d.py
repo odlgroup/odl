@@ -25,8 +25,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-import matplotlib
-matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
