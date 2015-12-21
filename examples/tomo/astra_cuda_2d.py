@@ -122,3 +122,4 @@ def test_astra_gpu_projector_call_2d():
                                                      discr_vol_space)
     save_slice(reco_data_ff, 'backward fanflat_gpu')
 
+test_astra_gpu_projector_call_2d()
