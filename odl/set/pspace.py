@@ -617,13 +617,18 @@ class ProductSpaceVector(LinearSpaceVector):
         """ Display the parts of this vector.
         """
         title = kwargs.pop('title', 'ProductSpaceVector')
-        if len(self) < 5:
-            show_parts = self.parts
-            indices = range(len(self))
+        indices = kwargs.pop('indices', None)
+
+        if indices is None:
+            if len(self) < 5:
+                indices = slice(None)
+            else:
+                indices = np.linspace(0, self.size-1, 4, dtype=int)
         else:
-            show_parts = self.parts[:2] + self.parts[-2:]
-            indices = [0, 1, len(self) - 2, len(self) - 1]
-        for i, part in zip(indices, show_parts):
+            if isinstance(indices, tuple):
+                indices, kwargs['indices'] = indices[0], indices[1:]
+
+        for i, part in zip(indices, self[indices]):
             part.show(*args, title='{}. Part {}'.format(title, i), **kwargs)
 
 

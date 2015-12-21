@@ -406,7 +406,8 @@ class DiscreteLpVector(DiscretizationVector):
         """
         return DiscreteLpUFuncs(self)
 
-    def show(self, method='', title='', indices=None, fig=None, **kwargs):
+    def show(self, method='', title='', indices=None,
+             show=False, fig=None, **kwargs):
         """Display the function graphically.
 
         Parameters
@@ -432,6 +433,10 @@ class DiscreteLpVector(DiscretizationVector):
 
         title : `str`, optional
             Set the title of the figure
+
+        show : `bool`, optional
+            If the plot should be showed now or defered untill later.
+            Default: False
 
         fig : ``matplotlib`` figure
             The figure to show in. Expected to be of same "style", as
@@ -460,7 +465,8 @@ class DiscreteLpVector(DiscretizationVector):
 
         from odl.util.graphics import show_discrete_function
         return show_discrete_function(self, method=method, title=title,
-                                      indices=indices, fig=fig, **kwargs)
+                                      indices=indices, show=show, fig=fig,
+                                      **kwargs)
 
 
 def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
