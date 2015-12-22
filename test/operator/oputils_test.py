@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.operator.oputils import matrix_representation
+from odl.operator.oputils import matrix_representation, power_method_opnorm
 from odl.set.pspace import ProductSpace
 from odl.operator.pspace_ops import ProductSpaceOperator
 
@@ -195,6 +195,45 @@ def test_matrix_representation_wrong_range():
     nonlin_op = small_op()
     with pytest.raises(TypeError):
         matrix_representation(nonlin_op)
+
+
+def test_power_method_opnorm_symm():
+    # Test the power method on a matrix operator
+
+    # Test matrix with eigenvalues 1 and -2
+    # Rather nasty case since the eigenvectors are almost parallel
+    mat = np.array([[10, -18],
+                    [6, -11]], dtype=float)
+
+    op = odl.MatVecOperator(mat)
+    true_opnorm = 2
+    opnorm_est = power_method_opnorm(op, niter=10)
+    assert almost_equal(opnorm_est, true_opnorm, places=2)
+
+    # Start at a different point
+    xstart = odl.Rn(2).element([0.8, 0.5])
+    opnorm_est = power_method_opnorm(op, niter=10, xstart=xstart)
+    assert almost_equal(opnorm_est, true_opnorm, places=2)
+
+
+def test_power_method_opnorm_nonsymm():
+    # Test the power method on a matrix operator
+
+    # Singular values 5.5 and 6
+    mat = np.array([[-1.52441557, 5.04276365],
+                    [1.90246927, 2.54424763],
+                    [5.32935411, 0.04573162]])
+
+    op = odl.MatVecOperator(mat)
+    true_opnorm = 6
+    # Start vector (1, 1) is close to the wrong eigenvector
+    opnorm_est = power_method_opnorm(op, niter=50)
+    assert almost_equal(opnorm_est, true_opnorm, places=2)
+
+    # Start close to the correct eigenvector, converges very fast
+    xstart = odl.Rn(2).element([-0.8, 0.5])
+    opnorm_est = power_method_opnorm(op, niter=5, xstart=xstart)
+    assert almost_equal(opnorm_est, true_opnorm, places=2)
 
 
 if __name__ == '__main__':

@@ -1,11 +1,13 @@
-import pkgutil
 import odl
 import inspect
 import importlib
 
+
 __all__ = ('make_interface',)
 
 module_string = """
+.. rubric:: Modules
+
 .. toctree::
    :maxdepth: 2
 
@@ -13,8 +15,7 @@ module_string = """
 """
 
 fun_string = """
-Functions
----------
+.. rubric:: Functions
 
 .. autosummary::
    :toctree: generated/
@@ -23,8 +24,7 @@ Functions
 """
 
 class_string = """
-Classes
--------
+.. rubric:: Classes
 
 .. autosummary::
    :toctree: generated/
@@ -44,26 +44,32 @@ string = """{shortname}
 {fun_string}
 """
 
-def import_submodules(package, recursive=True):
-    """ Import all submodules of a module, recursively, including subpackages
 
-    :param package: package (name or actual module)
-    :type package: str | module
-    :rtype: dict[str, types.ModuleType]
+def import_submodules(package, name=None, recursive=True):
+    """ Import all submodules of a module, recursively, including subpackages
     """
     if isinstance(package, str):
         package = importlib.import_module(package)
-    results = {}
-    for loader, name, is_pkg in pkgutil.walk_packages(package.__path__,
-                                                      onerror=lambda x: None):
-        full_name = package.__name__ + '.' + name
-        results[full_name] = importlib.import_module(full_name)
-        if recursive and is_pkg:
-            results.update(import_submodules(full_name))
-    return results
-    
 
-def make_interface():        
+    if name is None:
+        name = package.__name__
+
+    submodules = [m[0] for m in inspect.getmembers(
+        package, inspect.ismodule) if m[1].__name__.startswith('odl')]
+
+    results = {}
+    for pkgname in submodules:
+        full_name = name + '.' + pkgname
+        try:
+            results[full_name] = importlib.import_module(full_name)
+            if recursive:
+                results.update(import_submodules(full_name, full_name))
+        except ImportError:
+            pass
+    return results
+
+
+def make_interface():
     modnames = [modname for modname in import_submodules(odl)]
 
     modnames += ['odl']
@@ -71,7 +77,7 @@ def make_interface():
     for modname in modnames:
         if not modname.startswith('odl'):
             modname = 'odl.' + modname
-    
+
         shortmodname = modname.split('.')[-1]
         print('{: <16} : generated {}.rst'.format(shortmodname, modname))
 

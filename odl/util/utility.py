@@ -98,13 +98,20 @@ def is_scalar_dtype(dtype):
     return np.issubsctype(dtype, np.number)
 
 
+def is_floating_dtype(dtype):
+    """Whether a NumPy datatype is floating or not."""
+    return (np.issubsctype(dtype, np.floating) or
+            np.issubsctype(dtype, np.complexfloating))
+
+
 def is_real_dtype(dtype):
     """Whether a datatype is real (including integer) or not."""
+    # Numpy does not have complex integers, so no need to test it.
     return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
 def is_real_floating_dtype(dtype):
-    """Whether a NumPy datatype is real complex-floating or not."""
+    """Whether a NumPy datatype is real floating-point or not."""
     return np.issubsctype(dtype, np.floating)
 
 

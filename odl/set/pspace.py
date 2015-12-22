@@ -31,6 +31,7 @@ import numpy as np
 
 # ODL imports
 from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.util.ufuncs import ProductSpaceUFuncs
 
 
 __all__ = ('ProductSpace', 'ProductSpaceVector')
@@ -488,6 +489,67 @@ class ProductSpaceVector(LinearSpaceVector):
         except TypeError:
             for i, index in enumerate(indices):
                 self.parts[index] = values[i]
+
+    @property
+    def ufunc(self):
+        """`ProductSpaceUFuncs`, access to numpy style ufuncs.
+
+        These are always available if the underlying spaces are `NtuplesBase`.
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r22 = ProductSpace(Rn(2), 2)
+        >>> x = r22.element([[1, -2], [-3, 4]])
+        >>> x.ufunc.absolute()
+        ProductSpace(Rn(2), 2).element([
+            [1.0, 2.0],
+            [3.0, 4.0]
+        ])
+
+        These functions can also be used with non-vector arguments and support
+        broadcasting, both by element
+
+        >>> x.ufunc.add([1, 1])
+        ProductSpace(Rn(2), 2).element([
+            [2.0, -1.0],
+            [-2.0, 5.0]
+        ])
+
+        and also recursively
+
+        >>> x.ufunc.subtract(1)
+        ProductSpace(Rn(2), 2).element([
+            [0.0, -3.0],
+            [-4.0, 3.0]
+        ])
+
+        There is also support for various reductions (sum, prod, min, max)
+
+        >>> x.ufunc.sum()
+        0.0
+
+        Also supports out parameter
+
+        >>> y = r22.element()
+        >>> result = x.ufunc.absolute(out=y)
+        >>> result
+        ProductSpace(Rn(2), 2).element([
+            [1.0, 2.0],
+            [3.0, 4.0]
+        ])
+        >>> result is y
+        True
+
+        See also
+        --------
+        NtuplesBaseUFuncs
+            Base class for ufuncs in `NtuplesBase` spaces, sub spaces may
+            override this for greater efficiency.
+        ProductSpaceUFuncs
+            For a list of available ufuncs.
+        """
+        return ProductSpaceUFuncs(self)
 
     def __str__(self):
         """Return ``str(self)``."""

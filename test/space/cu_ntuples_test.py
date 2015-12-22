@@ -1082,5 +1082,20 @@ def test_ufuncs():
             yield _impl_test_ufuncs, fn, name, n_args, n_out
 
 
+def _impl_test_reduction(fn, name):
+    ufunc = getattr(np, name)
+
+    # Create some data
+    x_arr, x = _vectors(fn, 1)
+
+    assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
+
+
+def test_reductions():
+    for fn in spc_params:
+        for name, _ in odl.util.ufuncs.REDUCTIONS:
+            yield _impl_test_reduction, fn, name
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
