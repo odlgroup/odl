@@ -383,5 +383,5 @@ if __name__ == '__main__':
     # Shepp-logan 3d
     disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
     shepp_logan_3d = shepp_logan(disc)
-    for i in [n//2]:
+    for i in [n // 2]:
         shepp_logan_3d.show(indices=np.s_[:, :, i])
