@@ -304,13 +304,6 @@ def _phantom_3d(space, ellipses):
 
         # Create the offset x,y and z values for the grid
         if any([phi, theta, psi]):
-            # Calculate the points that could possibly be inside the volume
-            # Since the points are rotated, we cannot do anything directional
-            # without more logic
-            center = (np.array([x0, y0, z0]) + 1.0) / 2.0
-            max_radius = np.sqrt(np.max([a2, b2, c2]))
-            idx, shapes = _getshapes(center, max_radius, space.shape)
-
             # Rotate the points to the expected coordinate system.
             cphi = np.cos(phi)
             sphi = np.sin(phi)
@@ -328,6 +321,13 @@ def _phantom_3d(space, ellipses):
                             [stheta * sphi,
                              -stheta * cphi,
                              ctheta]])
+
+            # Calculate the points that could possibly be inside the volume
+            # Since the points are rotated, we cannot do anything directional
+            # without more logic
+            center = (np.array([x0, y0, z0]) + 1.0) / 2.0
+            max_radius = np.sqrt(np.abs(mat).dot([a2, b2, c2]))
+            idx, shapes = _getshapes(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
             offset_points = [vec * (xi - x0i)[..., np.newaxis]
@@ -349,7 +349,8 @@ def _phantom_3d(space, ellipses):
                                                    scales,
                                                    [x0, y0, z0])]
 
-            radius = squared_dist[0] + squared_dist[1] + squared_dist[2]
+            # Parentisis to get best order for  broadcasting
+            radius = squared_dist[0] + (squared_dist[1] + squared_dist[2])
 
         # Find the pixels within the ellipse
         inside = radius <= 1
@@ -408,5 +409,6 @@ if __name__ == '__main__':
 
     # Shepp-logan 3d
     disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
-    shepp_logan_3d = shepp_logan(disc)
+    with odl.util.Timer():
+        shepp_logan_3d = shepp_logan(disc)
     shepp_logan_3d.show()
