@@ -499,15 +499,13 @@ class TensorGrid(Set):
             raise ValueError('order {!r} not recognized.'.format(order))
 
         axes = range(self.ndim) if order == 'C' else reversed(range(self.ndim))
+        shape = self.shape if order == 'C' else tuple(reversed(self.shape))
         point_arr = np.empty((self.ntotal, self.ndim))
 
-        nrepeats = self.ntotal
-        ntiles = 1
-        for axis in axes:
-            nrepeats //= self.shape[axis]
-            point_arr[:, axis] = np.repeat(
-                np.tile(self.coord_vectors[axis], ntiles), nrepeats)
-            ntiles *= self.shape[axis]
+        for i, axis in enumerate(axes):
+            view = point_arr[:, axis].reshape(shape)
+            coord_shape = (1,) * i + (-1,) + (1,) * (self.ndim - i - 1)
+            view[:] = self.coord_vectors[axis].reshape(coord_shape)
 
         return point_arr
 
