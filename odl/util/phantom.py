@@ -228,6 +228,20 @@ def _phantom_2d(space, ellipses):
     return space.element(p)
 
 
+def _getshapes(center, max_radius, shape):
+    index_mean = (shape * center).astype(int)
+    index_radius = (max_radius / 2.0 *
+                    np.array(shape)).astype(int)
+
+    min_idx = index_mean - index_radius
+    max_idx = index_mean + index_radius
+    idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
+    shapes = [(idx[0], slice(None), slice(None)),
+              (slice(None), idx[1], slice(None)),
+              (slice(None), slice(None), idx[2])]
+    return idx, shapes
+
+
 def _phantom_3d(space, ellipses):
     """Create a phantom in 3d space.
 
@@ -263,14 +277,16 @@ def _phantom_3d(space, ellipses):
     p = np.zeros(space.shape)
 
     # Create the pixel grid
-    points = space.points()
-    points = points.reshape(disc.shape + (disc.ndim,))
+    grid_in = space.grid.meshgrid()
     minp = space.grid.min()
     maxp = space.grid.max()
 
     # move points to [-1, 1]
-    np.subtract(points, (minp + maxp) / 2.0, out=points)
-    np.divide(points, (maxp - minp) / 2.0, out=points)
+    grid = []
+    for i in range(3):
+        meani = (minp[i] + maxp[i]) / 2.0
+        diffi = (maxp[i] - minp[i]) / 2.0
+        grid += [(grid_in[i] - meani) / diffi]
 
     for ellip in ellipses:
         I = ellip[0]
@@ -284,22 +300,18 @@ def _phantom_3d(space, ellipses):
         theta = ellip[8] * np.pi / 180
         psi = ellip[9] * np.pi / 180
 
-        # Calculate the points that could possibly be inside the volume
-        center = (np.array([x0, y0, z0]) + 1.0) / 2.0
-        index_mean = (space.shape * center).astype(int)
-        max_radius = np.sqrt(np.max([a2, b2, c2]))
-        index_radius = (max_radius / 2.0 * np.array(space.shape)).astype(int)
-
-        min_idx = index_mean - index_radius
-        max_idx = index_mean + index_radius
-        idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
-
-        # Create the offset x,y and z values for the grid
-        offset_points = points[idx] - [x0, y0, z0]
         scales = [1 / a2, 1 / b2, 1 / c2]
 
+        # Create the offset x,y and z values for the grid
         if any([phi, theta, psi]):
-            # Optimization, only rotate if needed.
+            # Calculate the points that could possibly be inside the volume
+            # Since the points are rotated, we cannot do anything directional
+            # without more logic
+            center = (np.array([x0, y0, z0]) + 1.0) / 2.0
+            max_radius = np.sqrt(np.max([a2, b2, c2]))
+            idx, shapes = _getshapes(center, max_radius, space.shape)
+
+            # Rotate the points to the expected coordinate system.
             cphi = np.cos(phi)
             sphi = np.sin(phi)
             ctheta = np.cos(theta)
@@ -307,23 +319,37 @@ def _phantom_3d(space, ellipses):
             cpsi = np.cos(psi)
             spsi = np.sin(psi)
 
-            mat = [[cpsi * cphi - ctheta * sphi * spsi,
-                    cpsi * sphi + ctheta * cphi * spsi,
-                    spsi * stheta],
-                   [-spsi * cphi - ctheta * sphi * cpsi,
-                    -spsi * sphi + ctheta * cphi * cpsi,
-                    cpsi * stheta],
-                   [stheta * sphi,
-                    -stheta * cphi,
-                    ctheta]]
+            mat = np.array([[cpsi * cphi - ctheta * sphi * spsi,
+                             cpsi * sphi + ctheta * cphi * spsi,
+                             spsi * stheta],
+                            [-spsi * cphi - ctheta * sphi * cpsi,
+                             -spsi * sphi + ctheta * cphi * cpsi,
+                             cpsi * stheta],
+                            [stheta * sphi,
+                             -stheta * cphi,
+                             ctheta]])
 
-            # Apply matrix to points properly
-            rotated = np.tensordot(offset_points, mat, axes=([3], [1]))
+            subgrid = [g[idi] for g, idi in zip(grid, shapes)]
+            offset_points = [vec * (xi - x0i)[..., np.newaxis]
+                             for xi, vec, x0i in zip(subgrid,
+                                                     mat.T,
+                                                     [x0, y0, z0])]
+            rotated = offset_points[0] + offset_points[1] + offset_points[2]
             np.square(rotated, out=rotated)
             radius = np.dot(rotated, scales)
         else:
-            np.square(offset_points, out=offset_points)
-            radius = np.dot(offset_points, scales)
+            # Calculate the points that could possibly be inside the volume
+            center = (np.array([x0, y0, z0]) + 1.0) / 2.0
+            max_radius = np.sqrt([a2, b2, c2])
+            idx, shapes = _getshapes(center, max_radius, space.shape)
+
+            subgrid = [g[idi] for g, idi in zip(grid, shapes)]
+            squared_dist = [ai * (xi - x0i)**2
+                            for xi, ai, x0i in zip(subgrid,
+                                                   scales,
+                                                   [x0, y0, z0])]
+
+            radius = squared_dist[0] + squared_dist[1] + squared_dist[2]
 
         # Find the pixels within the ellipse
         inside = radius <= 1
@@ -383,5 +409,4 @@ if __name__ == '__main__':
     # Shepp-logan 3d
     disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
     shepp_logan_3d = shepp_logan(disc)
-    for i in [n // 2]:
-        shepp_logan_3d.show(indices=np.s_[:, :, i])
+    shepp_logan_3d.show()
