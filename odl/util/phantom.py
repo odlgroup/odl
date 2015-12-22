@@ -229,12 +229,11 @@ def _phantom_2d(space, ellipses):
 
 
 def _getshapes(center, max_radius, shape):
-    index_mean = (shape * center).astype(int)
-    index_radius = (max_radius / 2.0 *
-                    np.array(shape)).astype(int)
+    index_mean = shape * center
+    index_radius = max_radius / 2.0 * np.array(shape)
 
-    min_idx = index_mean - index_radius
-    max_idx = index_mean + index_radius
+    min_idx = np.floor(index_mean - index_radius).astype(int)
+    max_idx = np.ceil(index_mean + index_radius).astype(int)
     idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
     shapes = [(idx[0], slice(None), slice(None)),
               (slice(None), idx[1], slice(None)),
