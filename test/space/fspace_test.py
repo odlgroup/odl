@@ -24,13 +24,12 @@ standard_library.install_aliases()
 
 # External module imports
 import pytest
-from math import pi
 import numpy as np
 
 # ODL imports
 import odl
 from odl import FunctionSpace
-from odl.util.testutils import almost_equal
+from odl.util.testutils import all_almost_equal, all_equal, almost_equal
 
 
 # Pytest fixture
@@ -47,49 +46,695 @@ def exponent(request):
     return request.param
 
 
-def test_interval(exponent):
-    fspace = FunctionSpace(odl.Interval(0, pi))
-    lpdiscr = odl.uniform_discr(fspace, 10, exponent=exponent)
+def test_fspace_init():
+    intv = odl.Interval(0, 1)
+    FunctionSpace(intv)
+    FunctionSpace(intv, field=odl.RealNumbers())
+    FunctionSpace(intv, field=odl.ComplexNumbers())
 
-    if exponent == float('inf'):
-        sine = fspace.element(np.sin)
-        discr_sine = lpdiscr.element(sine)
-        assert discr_sine.norm() <= 1
+    rect = odl.Rectangle([0, 0], [1, 2])
+    FunctionSpace(rect)
+    FunctionSpace(rect, field=odl.RealNumbers())
+    FunctionSpace(rect, field=odl.ComplexNumbers())
+
+    cube = odl.Cuboid([0, 0, 0], [1, 2, 3])
+    FunctionSpace(cube)
+    FunctionSpace(cube, field=odl.RealNumbers())
+    FunctionSpace(cube, field=odl.ComplexNumbers())
+
+    ndbox = odl.IntervalProd([0] * 10, np.arange(1, 11))
+    FunctionSpace(ndbox)
+    FunctionSpace(ndbox, field=odl.RealNumbers())
+    FunctionSpace(ndbox, field=odl.ComplexNumbers())
+
+
+def test_fspace_simple_attributes():
+    intv = odl.Interval(0, 1)
+    fspace = FunctionSpace(intv)
+    fspace_r = FunctionSpace(intv, field=odl.RealNumbers())
+    fspace_c = FunctionSpace(intv, field=odl.ComplexNumbers())
+
+    assert fspace.domain == intv
+    assert fspace.range == odl.RealNumbers()
+    assert fspace_r.range == odl.RealNumbers()
+    assert fspace_c.range == odl.ComplexNumbers()
+
+
+def test_fspace_equality():
+    intv = odl.Interval(0, 1)
+    intv2 = odl.Interval(-1, 1)
+    fspace = FunctionSpace(intv)
+    fspace_r = FunctionSpace(intv, field=odl.RealNumbers())
+    fspace_c = FunctionSpace(intv, field=odl.ComplexNumbers())
+    fspace_intv2 = FunctionSpace(intv2)
+
+    assert fspace == fspace_r
+    assert fspace != fspace_c
+    assert fspace != fspace_intv2
+
+
+def _points(domain, num):
+    beg = domain.begin
+    end = domain.end
+    ndim = domain.ndim
+    points = np.random.uniform(low=0, high=1, size=(ndim, num))
+    for i in range(ndim):
+        points[i, :] = beg[i] + (end[i] - beg[i]) * points[i]
+    return points
+
+
+def _meshgrid(domain, shape):
+    beg = domain.begin
+    end = domain.end
+    ndim = domain.ndim
+    coord_vecs = []
+    for i in range(ndim):
+        vec = np.random.uniform(low=beg[i], high=end[i], size=shape[i])
+        vec.sort()
+        coord_vecs.append(vec)
+    return np.meshgrid(*coord_vecs, indexing='ij', sparse=True,
+                       copy=True)
+
+
+def test_fspace_vector_init():
+    # 1d, real
+    intv = odl.Interval(0, 1)
+    fspace = FunctionSpace(intv)
+    fspace.element(func_1d_oop)
+    fspace.element(func_1d_oop, vectorized=False)
+    fspace.element(func_1d_oop, vectorized=True)
+    fspace.element(func_1d_ip, vectorized=True)
+    fspace.element(func_1d_dual, vectorized=True)
+
+    # 2d, real
+    rect = odl.Rectangle([0, 0], [1, 2])
+    fspace = FunctionSpace(rect)
+    fspace.element(func_2d_novec, vectorized=False)
+    fspace.element(func_2d_vec_oop)
+    fspace.element(func_2d_vec_oop, vectorized=True)
+    fspace.element(func_2d_vec_ip, vectorized=True)
+    fspace.element(func_2d_vec_dual, vectorized=True)
+
+    # 2d, complex
+    fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    fspace.element(cfunc_2d_novec, vectorized=False)
+    fspace.element(cfunc_2d_vec_oop)
+    fspace.element(cfunc_2d_vec_oop, vectorized=True)
+    fspace.element(cfunc_2d_vec_ip, vectorized=True)
+    fspace.element(cfunc_2d_vec_dual, vectorized=True)
+
+
+def _standard_setup_2d():
+    rect = odl.Rectangle([0, 0], [1, 2])
+    points = _points(rect, num=5)
+    mg = _meshgrid(rect, shape=(2, 3))
+    return rect, points, mg
+
+
+def test_fspace_vector_eval_real():
+    rect, points, mg = _standard_setup_2d()
+
+    fspace = FunctionSpace(rect)
+    f_novec = fspace.element(func_2d_novec, vectorized=False)
+    f_vec_oop = fspace.element(func_2d_vec_oop, vectorized=True)
+    f_vec_ip = fspace.element(func_2d_vec_ip, vectorized=True)
+    f_vec_dual = fspace.element(func_2d_vec_dual, vectorized=True)
+
+    true_arr = func_2d_vec_oop(points)
+    true_mg = func_2d_vec_oop(mg)
+
+    # Out-of-place
+    assert f_novec([0.5, 1.5]) == func_2d_novec([0.5, 1.5])
+    assert f_vec_oop([0.5, 1.5]) == func_2d_novec([0.5, 1.5])
+    assert all_equal(f_vec_oop(points), true_arr)
+    assert all_equal(f_vec_oop(mg), true_mg)
+
+    # In-place standard implementation
+    out_arr = np.empty((5,), dtype='float64')
+    out_mg = np.empty((2, 3), dtype='float64')
+
+    f_vec_oop(points, out=out_arr)
+    f_vec_oop(mg, out=out_mg)
+    assert all_equal(out_arr, true_arr)
+    assert all_equal(out_mg, true_mg)
+
+    with pytest.raises(TypeError):  # ValueError: invalid vectorized input
+        f_vec_oop(points[0])
+
+    # In-place only
+    out_arr = np.empty((5,), dtype='float64')
+    out_mg = np.empty((2, 3), dtype='float64')
+
+    f_vec_ip(points, out=out_arr)
+    f_vec_ip(mg, out=out_mg)
+    assert all_equal(out_arr, true_arr)
+    assert all_equal(out_mg, true_mg)
+
+    # Standard out-of-place evaluation
+    assert f_vec_ip([0.5, 1.5]) == func_2d_novec([0.5, 1.5])
+    assert all_equal(f_vec_ip(points), true_arr)
+    assert all_equal(f_vec_ip(mg), true_mg)
+
+    # Dual use
+    assert f_vec_dual([0.5, 1.5]) == func_2d_novec([0.5, 1.5])
+    assert all_equal(f_vec_dual(points), true_arr)
+    assert all_equal(f_vec_dual(mg), true_mg)
+
+    out_arr = np.empty((5,), dtype='float64')
+    out_mg = np.empty((2, 3), dtype='float64')
+
+    f_vec_dual(points, out=out_arr)
+    f_vec_dual(mg, out=out_mg)
+    assert all_equal(out_arr, true_arr)
+    assert all_equal(out_mg, true_mg)
+
+
+def test_fspace_vector_eval_complex():
+    rect, points, mg = _standard_setup_2d()
+
+    fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    f_novec = fspace.element(cfunc_2d_novec, vectorized=False)
+    f_vec_oop = fspace.element(cfunc_2d_vec_oop, vectorized=True)
+    f_vec_ip = fspace.element(cfunc_2d_vec_ip, vectorized=True)
+    f_vec_dual = fspace.element(cfunc_2d_vec_dual, vectorized=True)
+
+    true_arr = cfunc_2d_vec_oop(points)
+    true_mg = cfunc_2d_vec_oop(mg)
+
+    # Out-of-place
+    assert f_novec([0.5, 1.5]) == cfunc_2d_novec([0.5, 1.5])
+    assert f_vec_oop([0.5, 1.5]) == cfunc_2d_novec([0.5, 1.5])
+    assert all_equal(f_vec_oop(points), true_arr)
+    assert all_equal(f_vec_oop(mg), true_mg)
+
+    # In-place standard implementation
+    out_arr = np.empty((5,), dtype='complex128')
+    out_mg = np.empty((2, 3), dtype='complex128')
+
+    f_vec_oop(points, out=out_arr)
+    f_vec_oop(mg, out=out_mg)
+    assert all_equal(out_arr, true_arr)
+    assert all_equal(out_mg, true_mg)
+
+    with pytest.raises(TypeError):  # ValueError: invalid vectorized input
+        f_vec_oop(points[0])
+
+    # In-place only
+    out_arr = np.empty((5,), dtype='complex128')
+    out_mg = np.empty((2, 3), dtype='complex128')
+
+    f_vec_ip(points, out=out_arr)
+    f_vec_ip(mg, out=out_mg)
+    assert all_equal(out_arr, true_arr)
+    assert all_equal(out_mg, true_mg)
+
+    # Standard out-of-place evaluation
+    assert f_vec_ip([0.5, 1.5]) == cfunc_2d_novec([0.5, 1.5])
+    assert all_equal(f_vec_ip(points), true_arr)
+    assert all_equal(f_vec_ip(mg), true_mg)
+
+    # Dual use
+    assert f_vec_dual([0.5, 1.5]) == cfunc_2d_novec([0.5, 1.5])
+    assert all_equal(f_vec_dual(points), true_arr)
+    assert all_equal(f_vec_dual(mg), true_mg)
+
+    out_arr = np.empty((5,), dtype='complex128')
+    out_mg = np.empty((2, 3), dtype='complex128')
+
+    f_vec_dual(points, out=out_arr)
+    f_vec_dual(mg, out=out_mg)
+    assert all_equal(out_arr, true_arr)
+    assert all_equal(out_mg, true_mg)
+
+
+def test_fspace_vector_ufunc():
+    intv = odl.Interval(0, 1)
+    points = _points(intv, num=5)
+    mg = _meshgrid(intv, shape=(5,))
+
+    fspace = FunctionSpace(intv)
+    f_vec = fspace.element(np.sin)
+
+    assert f_vec(0.5) == np.sin(0.5)
+    assert all_equal(f_vec(points), np.sin(points.squeeze()))
+    assert all_equal(f_vec(mg), np.sin(mg[0]))
+
+
+def test_fspace_vector_equality():
+    rect = odl.Rectangle([0, 0], [1, 2])
+    fspace = FunctionSpace(rect)
+
+    f_novec = fspace.element(func_2d_novec, vectorized=False)
+
+    f_vec_oop = fspace.element(func_2d_vec_oop, vectorized=True)
+    f_vec_oop_2 = fspace.element(func_2d_vec_oop, vectorized=True)
+
+    f_vec_ip = fspace.element(func_2d_vec_ip, vectorized=True)
+    f_vec_ip_2 = fspace.element(func_2d_vec_ip, vectorized=True)
+
+    f_vec_dual = fspace.element(func_2d_vec_dual, vectorized=True)
+    f_vec_dual_2 = fspace.element(func_2d_vec_dual, vectorized=True)
+
+    assert f_novec == f_novec
+    assert f_novec != f_vec_oop
+    assert f_novec != f_vec_ip
+    assert f_novec != f_vec_dual
+
+    assert f_vec_oop == f_vec_oop
+    assert f_vec_oop == f_vec_oop_2
+    assert f_vec_oop != f_vec_ip
+    assert f_vec_oop != f_vec_dual
+
+    assert f_vec_ip == f_vec_ip
+    assert f_vec_ip == f_vec_ip_2
+    assert f_vec_ip != f_vec_dual
+
+    assert f_vec_dual == f_vec_dual
+    assert f_vec_dual == f_vec_dual_2
+
+
+def test_fspace_vector_assign():
+    fspace = FunctionSpace(odl.Interval(0, 1))
+
+    f_novec = fspace.element(func_1d_oop, vectorized=False)
+    f_vec_ip = fspace.element(func_1d_ip, vectorized=True)
+    f_vec_dual = fspace.element(func_1d_dual, vectorized=True)
+
+    f_out = fspace.element()
+    f_out.assign(f_novec)
+    assert f_out == f_novec
+
+    f_out = fspace.element()
+    f_out.assign(f_vec_ip)
+    assert f_out == f_vec_ip
+
+    f_out = fspace.element()
+    f_out.assign(f_vec_dual)
+    assert f_out == f_vec_dual
+
+
+def test_fspace_vector_copy():
+    fspace = FunctionSpace(odl.Interval(0, 1))
+
+    f_novec = fspace.element(func_1d_oop, vectorized=False)
+    f_vec_ip = fspace.element(func_1d_ip, vectorized=True)
+    f_vec_dual = fspace.element(func_1d_dual, vectorized=True)
+
+    f_out = f_novec.copy()
+    assert f_out == f_novec
+
+    f_out = f_vec_ip.copy()
+    assert f_out == f_vec_ip
+
+    f_out = f_vec_dual.copy()
+    assert f_out == f_vec_dual
+
+
+def test_fspace_zero():
+    rect, points, mg = _standard_setup_2d()
+
+    # real
+    fspace = FunctionSpace(rect)
+    zero_vec = fspace.zero()
+
+    assert zero_vec([0.5, 1.5]) == 0.0
+    assert all_equal(zero_vec(points), np.zeros(5, dtype=float))
+    assert all_equal(zero_vec(mg), np.zeros((2, 3), dtype=float))
+
+    # complex
+    fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    zero_vec = fspace.zero()
+
+    assert zero_vec([0.5, 1.5]) == 0.0 + 1j * 0.0
+    assert all_equal(zero_vec(points), np.zeros(5, dtype=complex))
+    assert all_equal(zero_vec(mg), np.zeros((2, 3), dtype=complex))
+
+
+def test_fspace_one():
+    rect, points, mg = _standard_setup_2d()
+
+    # real
+    fspace = FunctionSpace(rect)
+    one_vec = fspace.one()
+
+    assert one_vec([0.5, 1.5]) == 1.0
+    assert all_equal(one_vec(points), np.ones(5, dtype=float))
+    assert all_equal(one_vec(mg), np.ones((2, 3), dtype=float))
+
+    # complex
+    fspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    one_vec = fspace.one()
+
+    assert one_vec([0.5, 1.5]) == 1.0 + 1j * 0.0
+    assert all_equal(one_vec(points), np.ones(5, dtype=complex))
+    assert all_equal(one_vec(mg), np.ones((2, 3), dtype=complex))
+
+
+scal_params = [2.0, 0.0, -1.0]
+a_ids = [' a = {} '.format(s) for s in scal_params]
+a_fixture = pytest.fixture(scope="module", ids=a_ids, params=scal_params)
+b_ids = [' b = {} '.format(s) for s in scal_params]
+b_fixture = pytest.fixture(scope="module", ids=b_ids, params=scal_params)
+
+
+@a_fixture
+def a(request):
+    return request.param
+
+
+@b_fixture
+def b(request):
+    return request.param
+
+
+def test_fspace_lincomb(a, b):
+    rect, points, mg = _standard_setup_2d()
+    point = points.T[0]
+
+    fspace = FunctionSpace(rect)
+
+    # Note: Special cases and alignment are tested later in the magic methods
+
+    # Not vectorized
+    true_novec = a * func_2d_novec(point) + b * other_func_2d_novec(point)
+    f_novec = fspace.element(func_2d_novec, vectorized=False)
+    g_novec = fspace.element(other_func_2d_novec, vectorized=False)
+    out_novec = fspace.element(vectorized=False)
+    fspace.lincomb(a, f_novec, b, g_novec, out_novec)
+    assert out_novec(point) == true_novec
+
+    # Vectorized
+    true_arr = (a * func_2d_vec_oop(points) +
+                b * other_func_2d_vec_oop(points))
+    true_mg = (a * func_2d_vec_oop(mg) + b * other_func_2d_vec_oop(mg))
+
+    # Out-of-place
+    f_vec_oop = fspace.element(func_2d_vec_oop, vectorized=True)
+    g_vec_oop = fspace.element(other_func_2d_vec_oop, vectorized=True)
+    out_vec = fspace.element()
+    fspace.lincomb(a, f_vec_oop, b, g_vec_oop, out_vec)
+
+    assert all_equal(out_vec(points), true_arr)
+    assert all_equal(out_vec(mg), true_mg)
+    assert out_vec(point) == true_novec
+    out_arr = np.empty((5,), dtype=float)
+    out_mg = np.empty((2, 3), dtype=float)
+    out_vec(points, out=out_arr)
+    out_vec(mg, out=out_mg)
+    assert all_equal(out_arr, true_arr)
+    assert all_equal(out_mg, true_mg)
+
+    # In-place
+    f_vec_ip = fspace.element(func_2d_vec_ip, vectorized=True)
+    g_vec_ip = fspace.element(other_func_2d_vec_ip, vectorized=True)
+    out_vec = fspace.element()
+    fspace.lincomb(a, f_vec_ip, b, g_vec_ip, out_vec)
+
+    assert all_equal(out_vec(points), true_arr)
+    assert all_equal(out_vec(mg), true_mg)
+    assert out_vec(point) == true_novec
+    out_arr = np.empty((5,), dtype=float)
+    out_mg = np.empty((2, 3), dtype=float)
+    out_vec(points, out=out_arr)
+    out_vec(mg, out=out_mg)
+    assert all_equal(out_arr, true_arr)
+    assert all_equal(out_mg, true_mg)
+
+    # Dual use
+    f_vec_dual = fspace.element(func_2d_vec_dual, vectorized=True)
+    g_vec_dual = fspace.element(other_func_2d_vec_dual, vectorized=True)
+    out_vec = fspace.element()
+    fspace.lincomb(a, f_vec_dual, b, g_vec_dual, out_vec)
+
+    assert all_equal(out_vec(points), true_arr)
+    assert all_equal(out_vec(mg), true_mg)
+    assert out_vec(point) == true_novec
+    out_arr = np.empty((5,), dtype=float)
+    out_mg = np.empty((2, 3), dtype=float)
+    out_vec(points, out=out_arr)
+    out_vec(mg, out=out_mg)
+    assert all_equal(out_arr, true_arr)
+    assert all_equal(out_mg, true_mg)
+
+    # Mix of vectorized and non-vectorized -> manual vectorization
+    fspace.lincomb(a, f_vec_dual, b, g_novec, out_vec)
+    assert all_equal(out_vec(points), true_arr)
+    assert all_equal(out_vec(mg), true_mg)
+
+
+# NOTE: multiply and divide are tested via magic methods
+
+
+pow_params = [3, 1.0, 0.5, 6.0]
+pow_ids = [' pow = {} '.format(p) for p in pow_params]
+pow_fixture = pytest.fixture(scope="module", ids=pow_ids, params=pow_params)
+
+
+@pow_fixture
+def power(request):
+    return request.param
+
+
+def test_fspace_power(power):
+    rect, points, mg = _standard_setup_2d()
+    point = points.T[0]
+    out_arr = np.empty(5)
+    out_mg = np.empty((2, 3))
+
+    fspace = FunctionSpace(rect)
+
+    # Not vectorized
+    true_novec = func_2d_novec(point) ** power
+
+    f_novec = fspace.element(func_2d_novec, vectorized=False)
+    pow_novec = f_novec ** power
+    assert almost_equal(pow_novec(point), true_novec)
+
+    pow_novec = f_novec.copy()
+    pow_novec **= power
+
+    assert almost_equal(pow_novec(point), true_novec)
+
+    # Vectorized
+    true_arr = func_2d_vec_oop(points) ** power
+    true_mg = func_2d_vec_oop(mg) ** power
+
+    f_vec = fspace.element(func_2d_vec_dual, vectorized=True)
+    pow_vec = f_vec ** power
+
+    assert all_almost_equal(pow_vec(points), true_arr)
+    assert all_almost_equal(pow_vec(mg), true_mg)
+
+    pow_vec = f_vec.copy()
+    pow_vec **= power
+
+    assert all_almost_equal(pow_vec(points), true_arr)
+    assert all_almost_equal(pow_vec(mg), true_mg)
+
+    pow_vec(points, out=out_arr)
+    pow_vec(mg, out=out_mg)
+
+    assert all_almost_equal(out_arr, true_arr)
+    assert all_almost_equal(out_mg, true_mg)
+
+
+op_params = ['+', '+=', '-', '-=', '*', '*=', '/', '/=']
+op_ids = [' op = {} '.format(op) for op in op_params]
+
+
+@pytest.fixture(scope="module", ids=op_ids, params=op_params)
+def op(request):
+    return request.param
+
+
+var_params = ['vv', 'vs', 'sv']
+var_ids = [' vec <op> vec ', ' vec <op> scal ', ' scal <op> vec ']
+
+
+@pytest.fixture(scope="module", ids=var_ids, params=var_params)
+def variant(request):
+    return request.param
+
+
+def _op(a, op, b):
+    if op == '+':
+        return a + b
+    elif op == '-':
+        return a - b
+    elif op == '*':
+        return a * b
+    elif op == '/':
+        return a / b
+    if op == '+=':
+        a += b
+        return a
+    elif op == '-=':
+        a -= b
+        return a
+    elif op == '*=':
+        a *= b
+        return a
+    elif op == '/=':
+        a /= b
+        return a
     else:
-        sine_p = fspace.element(lambda x: np.sin(x) ** (1 / exponent))
-        discr_sine_p = lpdiscr.element(sine_p)
-        assert almost_equal(discr_sine_p.norm(), 2 ** (1 / exponent), places=2)
+        raise ValueError("bad operator '{}'.".format(op))
 
 
-# TODO: sort out the vectorization issue first
+def test_fspace_vector_arithmetic(variant, op):
+    if variant == 'sv' and '=' in op:  # makes no sense, quit
+        return
+
+    # Setup
+    rect, points, mg = _standard_setup_2d()
+    point = points.T[0]
+
+    fspace = FunctionSpace(rect)
+    a = -1.5
+    b = 2.0
+    array_out = np.empty((5,), dtype=float)
+    mg_out = np.empty((2, 3), dtype=float)
+
+    # Initialize a bunch of elements
+    f_novec = fspace.element(func_2d_novec, vectorized=False)
+    f_vec = fspace.element(func_2d_vec_dual, vectorized=True)
+    g_novec = fspace.element(other_func_2d_novec, vectorized=False)
+    g_vec = fspace.element(other_func_2d_vec_dual, vectorized=True)
+
+    out_novec = fspace.element(vectorized=False)
+    out_vec = fspace.element(vectorized=True)
+
+    if variant[0] == 'v':
+        true_l_novec = func_2d_novec(point)
+        true_l_arr = func_2d_vec_oop(points)
+        true_l_mg = func_2d_vec_oop(mg)
+
+        test_l_novec = f_novec
+        test_l_vec = f_vec
+    else:  # 's'
+        true_l_novec = true_l_arr = true_l_mg = a
+        test_l_novec = test_l_vec = a
+
+    if variant[1] == 'v':
+        true_r_novec = other_func_2d_novec(point)
+        true_r_arr = other_func_2d_vec_oop(points)
+        true_r_mg = other_func_2d_vec_oop(mg)
+
+        test_r_novec = g_novec
+        test_r_vec = g_vec
+    else:  # 's'
+        true_r_novec = true_r_arr = true_r_mg = b
+        test_r_novec = test_r_vec = b
+
+    true_novec = _op(true_l_novec, op, true_r_novec)
+    true_arr = _op(true_l_arr, op, true_r_arr)
+    true_mg = _op(true_l_mg, op, true_r_mg)
+
+    out_novec = _op(test_l_novec, op, test_r_novec)
+    out_vec = _op(test_l_vec, op, test_r_vec)
+
+    assert out_novec(point) == true_novec
+    assert all_equal(out_vec(points), true_arr)
+    out_vec(points, out=array_out)
+    assert all_equal(array_out, true_arr)
+    assert all_equal(out_vec(mg), true_mg)
+    out_vec(mg, out=mg_out)
+    assert all_equal(mg_out, true_mg)
 
 
-@pytest.skip('vectorized evaluation broken')
-def test_rectangle(exponent):
-    fspace = FunctionSpace(odl.Rectangle((0, 0), (pi, 2 * pi)))
-    n, m = 10, 10
-    lpdiscr = odl.uniform_discr(fspace, (n, m), exponent=exponent)
+# ---- Test function definitions ----
 
-    if exponent == float('inf'):
-        sine2 = fspace.element(lambda x, y: np.sin(x) * np.sin(y))
-        discr_sine = lpdiscr.element(sine2)
-        assert discr_sine.norm() <= 1
+# 'ip' = in-place, 'oop' = out-of-place, 'dual' = dual-use
+
+def func_1d_oop(x):
+    return x ** 2
+
+
+def func_1d_ip(x, out):
+    out[:] = x ** 2
+
+
+def func_1d_dual(x, out=None):
+    if out is None:
+        return x ** 2
     else:
-        sine_p = fspace.element(
-            lambda x, y: (np.sin(x) * np.sin(y)) ** (1 / exponent))
-        discr_sine_p = lpdiscr.element(sine_p)
-        assert almost_equal(discr_sine_p.norm(), 4 ** (1 / exponent), places=2)
+        out[:] = x ** 2
 
 
-def test_addition():
-    fspace = FunctionSpace(odl.Interval(0, pi))
-    sine = fspace.element(np.sin)
-    cosine = fspace.element(np.cos)
+def func_2d_novec(x):
+    return x[0] ** 2 + x[1]
 
-    sum_func = sine + cosine
 
-    for x in [0.0, 0.2, 1.0]:
-        assert almost_equal(sum_func(x), np.sin(x) + np.cos(x))
+def func_2d_vec_oop(x):
+    return x[0] ** 2 + x[1]
+
+
+def func_2d_vec_ip(x, out):
+    out[:] = x[0] ** 2 + x[1]
+
+
+def func_2d_vec_dual(x, out=None):
+    if out is None:
+        return x[0] ** 2 + x[1]
+    else:
+        out[:] = x[0] ** 2 + x[1]
+
+
+def cfunc_2d_novec(x):
+    return x[0] ** 2 + 1j * x[1]
+
+
+def cfunc_2d_vec_oop(x):
+    return x[0] ** 2 + 1j * x[1]
+
+
+def cfunc_2d_vec_ip(x, out):
+    out[:] = x[0] ** 2 + 1j * x[1]
+
+
+def cfunc_2d_vec_dual(x, out=None):
+    if out is None:
+        return x[0] ** 2 + 1j * x[1]
+    else:
+        out[:] = x[0] ** 2 + 1j * x[1]
+
+
+def other_func_2d_novec(x):
+    return x[0] + abs(x[1])
+
+
+def other_func_2d_vec_oop(x):
+    return x[0] + abs(x[1])
+
+
+def other_func_2d_vec_ip(x, out):
+    out[:] = x[0] + abs(x[1])
+
+
+def other_func_2d_vec_dual(x, out=None):
+    if out is None:
+        return x[0] + abs(x[1])
+    else:
+        out[:] = x[0] + abs(x[1])
+
+
+def other_cfunc_2d_novec(x):
+    return 1j * x[0] + abs(x[1])
+
+
+def other_cfunc_2d_vec_oop(x):
+    return 1j * x[0] + abs(x[1])
+
+
+def other_cfunc_2d_vec_ip(x, out):
+    out[:] = 1j * x[0] + abs(x[1])
+
+
+def other_cfunc_2d_vec_dual(x, out=None):
+    if out is None:
+        return 1j * x[0] + abs(x[1])
+    else:
+        out[:] = 1j * x[0] + abs(x[1])
 
 
 if __name__ == '__main__':

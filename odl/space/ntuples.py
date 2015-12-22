@@ -27,7 +27,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import int, super
+from builtins import super
 from future.utils import native
 
 # External module imports
@@ -123,11 +123,10 @@ class Ntuples(NtuplesBase):
                 return self.element_type(self, arr)
         else:
             if data_ptr is None:
-                arr = np.atleast_1d(inp).astype(self.dtype, copy=False)
-
+                arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
                 if arr.shape != (self.size,):
                     raise ValueError('input shape {} not broadcastable to '
-                                     'shape ({},).'.format(inp.shape,
+                                     'shape ({},).'.format(arr.shape,
                                                            self.size))
 
                 return self.element_type(self, arr)
@@ -592,108 +591,106 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner',\
-                  'dist_using_inner'}
-            'weight' : array-like, float or `None`
-                Use weighted inner product, norm, and dist.
+        weight : array-like, float or `None`
+            Use weighted inner product, norm, and dist.
 
-                `None` (default):
-                    No weighting, use standard functions
+            `None` (default):
+                No weighting, use standard functions
 
-                `float`:
-                    Weighting by a constant
+            `float`:
+                Weighting by a constant
 
-                array-like:
-                    Weighting by a matrix (2-dim. array) or a vector
-                    (1-dim. array, corresponds to a diagonal matrix).
-                    A matrix can also be given as a sparse matrix
-                    ( ``scipy.sparse.spmatrix``).
+            array-like:
+                Weighting by a matrix (2-dim. array) or a vector
+                (1-dim. array, corresponds to a diagonal matrix).
+                A matrix can also be given as a sparse matrix
+                ( ``scipy.sparse.spmatrix``).
 
-                This option cannot be combined with ``dist``,
-                ``norm`` or ``inner``.
+            This option cannot be combined with ``dist``,
+            ``norm`` or ``inner``.
 
-            'exponent' : positive `float`
-                Exponent of the norm. For values other than 2.0, no
-                inner product is defined.
-                If ``weight`` is a sparse matrix, only 1.0, 2.0 and
-                ``inf`` are allowed.
+        exponent : positive `float`
+            Exponent of the norm. For values other than 2.0, no
+            inner product is defined.
+            If ``weight`` is a sparse matrix, only 1.0, 2.0 and
+            ``inf`` are allowed.
 
-                This option is ignored if ``dist``, ``norm`` or
-                ``inner`` is given.
+            This option is ignored if ``dist``, ``norm`` or
+            ``inner`` is given.
 
-                Default: 2.0
+            Default: 2.0
 
-            'dist' : `callable`, optional
-                The distance function defining a metric on
-                :math:`\mathbb{F}^n`.
-                It must accept two `FnVector` arguments and
-                fulfill the following mathematical conditions for any
-                three vectors :math:`x, y, z`:
+        dist : `callable`, optional
+            The distance function defining a metric on
+            :math:`\mathbb{F}^n`.
+            It must accept two `FnVector` arguments and
+            fulfill the following mathematical conditions for any
+            three vectors :math:`x, y, z`:
 
-                - :math:`d(x, y) = d(y, x)`
-                - :math:`d(x, y) \geq 0`
-                - :math:`d(x, y) = 0 \Leftrightarrow x = y`
-                - :math:`d(x, y) \geq d(x, z) + d(z, y)`
+            - :math:`d(x, y) = d(y, x)`
+            - :math:`d(x, y) \geq 0`
+            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
+            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
 
-                By default, ``dist(x, y)`` is calculated as
-                ``norm(x - y)``. This creates an intermediate array
-                ``x-y``, which can be
-                avoided by choosing ``dist_using_inner=True``.
+            By default, ``dist(x, y)`` is calculated as
+            ``norm(x - y)``. This creates an intermediate array
+            ``x-y``, which can be
+            avoided by choosing ``dist_using_inner=True``.
 
-                This option cannot be combined with ``weight``,
-                ``norm`` or ``inner``.
+            This option cannot be combined with ``weight``,
+            ``norm`` or ``inner``.
 
-            'norm' : `callable`, optional
-                The norm implementation. It must accept an
-                `FnVector` argument, return a
-                `float` and satisfy the following
-                conditions for all vectors :math:`x, y` and scalars
-                :math:`s`:
+        norm : `callable`, optional
+            The norm implementation. It must accept an
+            `FnVector` argument, return a
+            `float` and satisfy the following
+            conditions for all vectors :math:`x, y` and scalars
+            :math:`s`:
 
-                - :math:`\lVert x\\rVert \geq 0`
-                - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
-                - :math:`\lVert s x\\rVert = \lvert s \\rvert
-                  \lVert x\\rVert`
-                - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
-                  \lVert y\\rVert`.
+            - :math:`\lVert x\\rVert \geq 0`
+            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
+            - :math:`\lVert s x\\rVert = \lvert s \\rvert
+              \lVert x\\rVert`
+            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
+              \lVert y\\rVert`.
 
-                By default, ``norm(x)`` is calculated as
-                ``inner(x, x)``.
+            By default, ``norm(x)`` is calculated as
+            ``inner(x, x)``.
 
-                This option cannot be combined with ``weight``,
-                ``dist`` or ``inner``.
+            This option cannot be combined with ``weight``,
+            ``dist`` or ``inner``.
 
-            'inner' : `callable`, optional
-                The inner product implementation. It must accept two
-                `FnVector` arguments, return a element from
-                the field of the space (real or complex number) and
-                satisfy the following conditions for all vectors
-                :math:`x, y, z` and scalars :math:`s`:
+        inner : `callable`, optional
+            The inner product implementation. It must accept two
+            `FnVector` arguments, return a element from
+            the field of the space (real or complex number) and
+            satisfy the following conditions for all vectors
+            :math:`x, y, z` and scalars :math:`s`:
 
-                - :math:`\langle x,y\\rangle =
-                  \overline{\langle y,x\\rangle}`
-                - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
-                - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
-                  \langle z,y\\rangle`
-                - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
+            - :math:`\langle x,y\\rangle =
+              \overline{\langle y,x\\rangle}`
+            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
+            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
+              \langle z,y\\rangle`
+            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
 
-                This option cannot be combined with ``weight``,
-                ``dist`` or ``norm``.
+            This option cannot be combined with ``weight``,
+            ``dist`` or ``norm``.
 
-            dist_using_inner : `bool`, optional
-                Calculate ``dist`` using the formula
+        dist_using_inner : `bool`, optional
+            Calculate ``dist`` using the formula
 
-                :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-                \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
+            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
 
-                This avoids the creation of new arrays and is thus faster
-                for large arrays. On the downside, it will not evaluate to
-                exactly zero for equal (but not identical) :math:`x` and
-                :math:`y`.
+            This avoids the creation of new arrays and is thus faster
+            for large arrays. On the downside, it will not evaluate to
+            exactly zero for equal (but not identical) :math:`x` and
+            :math:`y`.
 
-                This option can only be used if ``exponent`` is 2.0.
+            This option can only be used if ``exponent`` is 2.0.
 
-                Default: `False`.
+            Default: `False`.
         """
         FnBase.__init__(self, size, dtype)
 
@@ -756,11 +753,11 @@ class Fn(FnBase, Ntuples):
         Parameters
         ----------
         a, b : `FnBase.field`
-            Scalar to multiply x and y with.
+            Scalars to multiply ``x1`` and ``x2`` with
         x1, x2 : `FnVector`
-            The summands
+            Summands in the linear combination
         out : `FnVector`
-            The vector to which the result is written
+            Vector to which the result is written
 
         Returns
         -------
@@ -882,7 +879,7 @@ class Fn(FnBase, Ntuples):
         x1, x2 : `FnVector`
             Factors in the product
         out : `FnVector`
-            The result vector
+            Vector to which the result is written
 
         Returns
         -------
@@ -906,12 +903,10 @@ class Fn(FnBase, Ntuples):
 
         Parameters
         ----------
-        x1 : `FnVector`
-            Dividend
-        x1 : `FnVector`
-            Divisior
+        x1, x2 : `FnVector`
+            Dividend and divisor in the quotient
         out : `FnVector`
-            The result vector, quotient
+            Vector to which the result is written
 
         Returns
         -------
@@ -1171,9 +1166,8 @@ class FnVector(FnBaseVector, NtuplesVector):
         Returns
         -------
         out : `FnVector`
-            The complex conjugate vector. If ``out`` was
-            provided, it is returned. Otherwise, the complex
-            conjugate is returned as a new vector.
+            The complex conjugate vector. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Examples
         --------
@@ -1231,7 +1225,6 @@ def Cn(size, dtype='complex128', **kwargs):
     if not cn.is_cn:
         raise TypeError('data type {!r} not a complex floating-point type.'
                         ''.format(dtype))
-
     return cn
 
 
@@ -1264,7 +1257,6 @@ def Rn(size, dtype='float64', **kwargs):
     if not rn.is_rn:
         raise TypeError('data type {!r} not a real floating-point type.'
                         ''.format(dtype))
-
     return rn
 
 
@@ -1297,26 +1289,26 @@ class MatVecOperator(Operator):
         else:
             self._matrix = np.asarray(matrix)
 
-        if self._matrix.ndim != 2:
+        if self.matrix.ndim != 2:
             raise ValueError('matrix {} has {} axes instead of 2.'
-                             ''.format(matrix, self._matrix.ndim))
+                             ''.format(matrix, self.matrix.ndim))
 
         # Infer domain and range from matrix if necessary
-        if is_real_floating_dtype(self._matrix):
+        if is_real_floating_dtype(self.matrix):
             spc_type = Rn
-        elif is_complex_floating_dtype(self._matrix):
+        elif is_complex_floating_dtype(self.matrix):
             spc_type = Cn
         else:
             spc_type = Fn
 
         if dom is None:
-            dom = spc_type(self._matrix.shape[1], dtype=self._matrix.dtype)
+            dom = spc_type(self.matrix.shape[1], dtype=self.matrix.dtype)
         elif not isinstance(dom, Fn):
             raise TypeError('domain {!r} is not an `Fn` instance.'
                             ''.format(dom))
 
         if ran is None:
-            ran = spc_type(self._matrix.shape[0], dtype=self._matrix.dtype)
+            ran = spc_type(self.matrix.shape[0], dtype=self.matrix.dtype)
         elif not isinstance(ran, Fn):
             raise TypeError('range {!r} is not an `Fn` instance.'
                             ''.format(ran))
@@ -1327,13 +1319,13 @@ class MatVecOperator(Operator):
                             'range data type {!r}.'
                             ''.format(dom.dtype, ran.dtype))
 
-        if self._matrix.shape != (ran.size, dom.size):
+        if self.matrix.shape != (ran.size, dom.size):
             raise ValueError('matrix shape {} does not match the required '
                              'shape {} of a matrix {} --> {}.'
-                             ''.format(self._matrix.shape,
+                             ''.format(self.matrix.shape,
                                        (ran.size, dom.size),
                                        dom, ran))
-        if not np.can_cast(self._matrix.dtype, ran.dtype):
+        if not np.can_cast(self.matrix.dtype, ran.dtype):
             raise TypeError('matrix data type {!r} cannot be safely cast to '
                             'range data type {!r}.'
                             ''.format(matrix.dtype, ran.dtype))
@@ -1361,18 +1353,17 @@ class MatVecOperator(Operator):
         return MatVecOperator(self.matrix.conj().T,
                               dom=self.range, ran=self.domain)
 
-    def _call(self, x):
-        """Raw call method on input, producing a new output."""
-        return self.range.element(self.matrix.dot(x.data))
-
-    def _apply(self, x, out):
+    def _call(self, x, out=None):
         """Raw apply method on input, writing to given output."""
-        if self.matrix_issparse:
-            # Unfortunately, there is no native in-place dot product for
-            # sparse matrices
-            out.data[:] = self.matrix.dot(x.data)
+        if out is None:
+            return self.range.element(self.matrix.dot(x.data))
         else:
-            self.matrix.dot(x.data, out=out.data)
+            if self.matrix_issparse:
+                # Unfortunately, there is no native in-place dot product for
+                # sparse matrices
+                out.data[:] = self.matrix.dot(x.data)
+            else:
+                self.matrix.dot(x.data, out=out.data)
 
     # TODO: repr and str
 
@@ -1589,21 +1580,19 @@ class FnMatrixWeighting(FnWeightingBase):
             :math:`y`.
 
             Can only be used if ``exponent`` is 2.0.
-        kwargs : {'precomp_mat_pow', 'cache_mat_pow'}
+        precomp_mat_pow : `bool`
+            If `True`, precompute the matrix power :math:`W^{1/p}`
+            during initialization. This has no effect if
+            ``exponent`` is 1.0, 2.0 or ``inf``.
 
-            'precomp_mat_pow' : `bool`
-                If `True`, precompute the matrix power :math:`W^{1/p}`
-                during initialization. This has no effect if
-                ``exponent`` is 1.0, 2.0 or ``inf``.
+            Default: `False`
 
-                Default: `False`
+        cache_mat_pow : `bool`
+            If `True`, cache the matrix power :math:`W^{1/p}` during
+            the first call to ``norm`` or ``dist``. This has no
+            effect if ``exponent`` is 1.0, 2.0 or ``inf``.
 
-            'cache_mat_pow' : `bool`
-                If `True`, cache the matrix power :math:`W^{1/p}` during
-                the first call to ``norm`` or ``dist``. This has no
-                effect if ``exponent`` is 1.0, 2.0 or ``inf``.
-
-                Default: `False`
+            Default: `False`
         """
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         cache_mat_pow = kwargs.pop('cache_mat_pow', True)
@@ -1626,15 +1615,15 @@ class FnMatrixWeighting(FnWeightingBase):
                              ''.format(self._matrix.shape))
 
         if (self.matrix_issparse and
-                self._exponent not in (1.0, 2.0, float('inf'))):
+                self.exponent not in (1.0, 2.0, float('inf'))):
             raise NotImplementedError('sparse matrices only supported for '
                                       'exponent 1.0, 2.0 or `inf`.')
 
-        if self._exponent in (1.0, float('inf')):
-            self._mat_pow = self._matrix
-        elif precomp_mat_pow and self._exponent != 2.0:
-            eigval, eigvec = sp.linalg.eigh(self._matrix)
-            eigval **= 1.0 / self._exponent
+        if self.exponent in (1.0, float('inf')):
+            self._mat_pow = self.matrix
+        elif precomp_mat_pow and self.exponent != 2.0:
+            eigval, eigvec = sp.linalg.eigh(self.matrix)
+            eigval **= 1.0 / self.exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
         else:
             self._mat_pow = None

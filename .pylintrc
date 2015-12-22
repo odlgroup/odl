@@ -7,8 +7,8 @@
 # pygtk.require().
 #init-hook=
 
-# Profiled execution.
-profile=no
+# Profiled execution. DEPRECATED
+#profile=no
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
@@ -42,20 +42,10 @@ load-plugins=
 # Disable all messages caused solely by 'future' imports and functions
 # and also backslash to enable :math: and not callable since it fails with inherited __call__.
 disable=redefined-builtin,
-  super-on-old-class,
-  missing-super-argument,
-  no-value-for-parameter,
-  no-member,
-  too-many-function-args,
-  anomalous-backslash-in-string,
-  not-callable,
+  anomalous-backslash-in-string
 
-# redefined-builtin: 'object', 'range', 'str', 'super' are redefined, that's okay
-# super-on-old-class: classes are erroneously interpreted as old-style
-# missing-super-argument: used 'newsuper' has one argument less than old 'super'
-# no-value-for-parameter: constructor calls are interpreted wrong, probably an old-style class problem
-# no-member: pylint does not understand complex class structures properly
-# too-many-function-args: see no-member
+# redefined-builtin: 'object', 'range', 'str', 'super' are redefined, 
+#                    that's okay
 
 
 [REPORTS]
@@ -81,8 +71,8 @@ reports=yes
 evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
 
 # Add a comment according to your evaluation note. This is used by the global
-# evaluation report (RP0004).
-comment=no
+# evaluation report (RP0004). DEPRECATED
+# comment=no
 
 # Template used to display messages. This is a python new-style format string
 # used to format the message information. See doc for all details
@@ -99,7 +89,7 @@ logging-modules=logging
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=80
+max-line-length=79
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
@@ -124,8 +114,8 @@ indent-after-paren=4
 
 [BASIC]
 
-# Required attributes for module, separated by a comma
-required-attributes=
+# Required attributes for module, separated by a comma. DEPRECATED
+# required-attributes=
 
 # List of builtins function names that should not be used, separated by a comma
 bad-functions=map,filter,apply,input
@@ -249,8 +239,8 @@ ignored-modules=
 ignored-classes=SQLObject
 
 # When zope mode is activated, add a predefined set of Zope acquired attributes
-# to generated-members.
-zope=no
+# to generated-members. DEPRECATED
+#zope=no
 
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E0201 when accessed. Python regular
@@ -328,7 +318,8 @@ max-public-methods=20
 
 # List of interface methods to ignore, separated by a comma. This is used for
 # instance to not check methods defines in Zope's Interface base class.
-ignore-iface-methods=isImplementedBy,deferred,extends,names,namesAndDescriptions,queryDescriptionFor,getBases,getDescriptionFor,getDoc,getName,getTaggedValue,getTaggedValueTags,isEqualOrExtendedBy,setTaggedValue,isImplementedByInstancesOf,adaptWith,is_implemented_by
+# DEPRECATED
+#ignore-iface-methods=isImplementedBy,deferred,extends,names,namesAndDescriptions,queryDescriptionFor,getBases,getDescriptionFor,getDoc,getName,getTaggedValue,getTaggedValueTags,isEqualOrExtendedBy,setTaggedValue,isImplementedByInstancesOf,adaptWith,is_implemented_by
 
 # List of method names used to declare (i.e. assign) instance attributes.
 defining-attr-methods=__init__,__new__,setUp

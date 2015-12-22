@@ -47,7 +47,7 @@ class CudaConvolution(odl.Operator):
         self.norm = float(cu_ntuples.sum(cu_ntuples.abs(self.kernel.ntuple)))
         super().__init__(self.space, self.space, linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         odlpp_cuda.conv(rhs.ntuple.data,
                         self.kernel.ntuple.data,
                         out.ntuple.data)

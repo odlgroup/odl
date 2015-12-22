@@ -27,12 +27,12 @@ from builtins import super
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.set.sets import Field
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator',
-           'InnerProductOperator', 'InnerProductAdjointOperator',
-           'ConstantOperator')
+           'InnerProductOperator', 'ConstantOperator')
 
 
 class ScalingOperator(Operator):
@@ -58,19 +58,21 @@ class ScalingOperator(Operator):
         self._space = space
         self._scal = space.field.element(scalar)
 
-    def _apply(self, x, out):
+    def _call(self, x, out=None):
         """Scale input and write to output.
 
         Parameters
         ----------
         x : ``domain`` element
             input vector to be scaled
-        out : ``range`` element
+        out : ``range`` element, optional
             Output vector to which the result is written
 
         Returns
         -------
-        `None`
+        out : ``range`` element
+            Result of the scaling. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
@@ -79,36 +81,18 @@ class ScalingOperator(Operator):
         >>> vec = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
-        >>> op(vec, out)  # Returns out
+        >>> op(vec, out)  # In place, Returns out
         Rn(3).element([2.0, 4.0, 6.0])
         >>> out
         Rn(3).element([2.0, 4.0, 6.0])
-        """
-        out.lincomb(self._scal, x)
-
-    def _call(self, x):
-        """Return the scaled element.
-
-        Parameters
-        ----------
-        x : domain element
-            input vector to be scaled
-
-        Returns
-        -------
-        scaled : ``range`` element
-            The scaled vector
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> vec = r3.element([1, 2, 3])
-        >>> op = ScalingOperator(r3, 2.0)
-        >>> op(vec)
+        >>> op(vec)  # Out of place
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        return self._scal * x
+        if out is None:
+            out = self._scal * x
+        else:
+            out.lincomb(self._scal, x)
+        return out
 
     @property
     def inverse(self):
@@ -210,17 +194,15 @@ class LinCombOperator(Operator):
         ----------
         space : `LinearSpace`
             The space of elements which the operator is acting on
-        a : scalar
-            Scalar to multiply x[0] with
-        b : scalar
-            Scalar to multiply x[1] with
+        a, b : scalar
+            Scalars to multiply ``x[0]`` and ``x[1]`` with, respectively
         """
         domain = ProductSpace(space, space)
         super().__init__(domain, space, linear=True)
         self.a = a
         self.b = b
 
-    def _apply(self, x, out):
+    def _call(self, x, out=None):
         """Linearly combine the input and write to output.
 
         Parameters
@@ -230,6 +212,12 @@ class LinCombOperator(Operator):
             elements) whose linear combination is calculated
         out : ```range`` element
             Vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` element
+            Result of the linear combination. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Examples
         --------
@@ -244,7 +232,10 @@ class LinCombOperator(Operator):
         >>> z
         Rn(3).element([2.0, 4.0, 6.0])
         """
+        if out is None:
+            out = self.range.element()
         out.lincomb(self.a, x[0], self.b, x[1])
+        return out
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -260,26 +251,38 @@ class MultiplyOperator(Operator):
 
     """Operator multiplying two elements.
 
-    The multiply operator calculates:
+    ``MultiplyOperator(y)(x) <==> x * y``
 
-    out = x[0] * x[1]
-
-    This is only applicable in Algebras.
+    Here, ``x`` is a `LinearSpaceVector` or `Field` element and
+    ``y`` is a `LinearSpaceVector`.
+    Hence, this operator can be defined either on a `LinearSpace` or on
+    a `Field`. In the first case it is the pointwise multiplication,
+    in the second the scalar multiplication.
     """
 
     # pylint: disable=abstract-method
-    def __init__(self, space):
+    def __init__(self, y, domain=None):
         """Initialize a MultiplyOperator instance.
 
         Parameters
         ----------
-        space : LinearSpace
-            The space of elements which the operator is acting on
+        y : `LinearSpaceVector`
+            The value to multiply by
+        domain : `LinearSpace` or `Field`, optional
+            The set to take values in. Default: ``x.space``
         """
-        domain = ProductSpace(space, space)
-        super().__init__(domain, space)
+        if not isinstance(y, LinearSpaceVector):
+            raise TypeError('y {!r} needs to be a LinearSpaceVector'
+                            ''.format(y))
 
-    def _apply(self, x, out):
+        if domain is None:
+            domain = y.space
+
+        self.y = y
+        self._domain_is_field = isinstance(domain, Field)
+        super().__init__(domain, y.space, linear=True)
+
+    def _call(self, x, out=None):
         """Multiply the input and write to output.
 
         Parameters
@@ -287,27 +290,81 @@ class MultiplyOperator(Operator):
         x : ``domain`` element
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        out : ``range`` element
+        out : ``range`` element, optional
             Vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` element
+            Result of the multiplication. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
         >>> from odl import Rn
         >>> r3 = Rn(3)
-        >>> r3xr3 = ProductSpace(r3, r3)
-        >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
-        >>> z = r3.element()
-        >>> op = MultiplyOperator(r3)
-        >>> op(xy, z)
+        >>> x = r3.element([1, 2, 3])
+
+        Multiply by vector
+
+        >>> op = MultiplyOperator(x)
+        >>> out = r3.element()
+        >>> op(x, out)
         Rn(3).element([1.0, 4.0, 9.0])
-        >>> z
-        Rn(3).element([1.0, 4.0, 9.0])
+
+        Multiply by scalar
+
+        >>> op2 = MultiplyOperator(x, domain=r3.field)
+        >>> out = r3.element()
+        >>> op2(3, out)
+        Rn(3).element([3.0, 6.0, 9.0])
         """
-        out.space.multiply(x[0], x[1], out)
+        if out is None:
+            return x * self.y
+        elif self._domain_is_field:
+            out.lincomb(x, self.y)
+        else:
+            out.multiply(x, self.y)
+
+    @property
+    def adjoint(self):
+        """ The adjoint operator.
+
+        Returns
+        -------
+        adjoint : {`InnerProductOperator`, `MultiplyOperator`}
+            If the domain of this operator is the scalar field of a
+            `LinearSpace` the adjoint is the inner product with ``y``,
+            else it is the multiplication with ``y``
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+
+        Multiply by vector
+
+        >>> op = MultiplyOperator(x)
+        >>> out = r3.element()
+        >>> op.adjoint(x)
+        Rn(3).element([1.0, 4.0, 9.0])
+
+        Multiply by scalar
+
+        >>> op2 = MultiplyOperator(x, domain=r3.field)
+        >>> op2.adjoint(x)
+        14.0
+        """
+        if self._domain_is_field:
+            return InnerProductOperator(self.y)
+        else:
+            # TODO: complex case
+            return MultiplyOperator(self.y)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'MultiplyOperator({!r})'.format(self.range)
+        return 'MultiplyOperator({!r})'.format(self.y)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -317,9 +374,7 @@ class MultiplyOperator(Operator):
 class InnerProductOperator(Operator):
     """Operator taking the inner product with a fixed vector.
 
-    The multiply operator calculates:
-
-    ``InnerProductOperator(vec)(x) == x.inner(vec)``
+    ``InnerProductOperator(vec)(x) <==> x.inner(vec)``
 
     This is only applicable in inner product spaces.
     """
@@ -344,6 +399,11 @@ class InnerProductOperator(Operator):
         x : ``vector.space`` element
             An element in the space of the vector
 
+        Returns
+        -------
+        out : ``field`` element
+            Result of the inner product calculation
+
         Examples
         --------
         >>> from odl import Rn
@@ -357,10 +417,43 @@ class InnerProductOperator(Operator):
 
     @property
     def adjoint(self):
-        return InnerProductAdjointOperator(self.vector)
+        """ The adjoint operator.
+
+        Returns
+        -------
+        adjoint : `MultiplyOperator`
+            The operator of multiplication with ``vector``.
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = InnerProductOperator(x)
+        >>> op.adjoint(2.0)
+        Rn(3).element([2.0, 4.0, 6.0])
+        """
+        return MultiplyOperator(self.vector, self.vector.space.field)
 
     @property
     def T(self):
+        """The vector of this operator.
+
+        Returns
+        -------
+        vector : `LinearSpaceVector`
+            Vector used in this operator
+
+        Example
+        -------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> x.T
+        InnerProductOperator(Rn(3).element([1.0, 2.0, 3.0]))
+        >>> x.T.T
+        Rn(3).element([1.0, 2.0, 3.0])
+        """
         return self.vector
 
     def __repr__(self):
@@ -372,87 +465,9 @@ class InnerProductOperator(Operator):
         return "{}.T".format(self.vector)
 
 
-class InnerProductAdjointOperator(Operator):
-    """Operator taking the scalar product with a fixed vector.
-
-    The multiply operator calculates:
-
-    ``InnerProductAdjointOperator(vec)(x) == x * vec``
-    """
-
-    # pylint: disable=abstract-method
-    def __init__(self, vector):
-        """Initialize a InnerProductOperator instance.
-
-        Parameters
-        ----------
-        vector : `LinearSpaceVector`
-            The vector to take the inner product with
-        """
-        self.vector = vector
-        super().__init__(vector.space.field, vector.space, linear=True)
-
-    def _call(self, x):
-        """Multiply by the input.
-
-        Parameters
-        ----------
-        x : ``vector.space.field`` element
-            An element in the field of the vector
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> op = InnerProductAdjointOperator(x)
-        >>> op(3.0)
-        Rn(3).element([3.0, 6.0, 9.0])
-        """
-        return x * self.vector
-
-    def _apply(self, x, out):
-        """Multiply the input and write to output.
-
-        Parameters
-        ----------
-        x : ``domain`` element
-            An element in the operator domain (2-tuple of space
-            elements) whose elementwise product is calculated
-        out : ``range`` element
-            Vector to which the result is written
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> op = InnerProductAdjointOperator(x)
-        >>> out = r3.element()
-        >>> result = op(3.0, out=out)
-        >>> result
-        Rn(3).element([3.0,  6.0,  9.0])
-        >>> result is out
-        True
-        """
-        out.lincomb(x, self.vector)
-
-    @property
-    def adjoint(self):
-        return InnerProductOperator(self.vector)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return 'InnerProductAdjointOperator({!r})'.format(self.vector)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return "{}".format(self.vector)
-
-
 class ConstantOperator(Operator):
 
-    """ Operator that always returns the same value
+    """Operator that always returns the same value
 
     ``ConstantOperator(vector)(x) <==> vector``
     """
@@ -469,7 +484,7 @@ class ConstantOperator(Operator):
             The domain of the operator.
         """
         if not isinstance(vector, LinearSpaceVector):
-            raise TypeError('space {!r} not a LinearSpaceVector instance.'
+            raise TypeError('vector {!r} not a LinearSpaceVector instance.'
                             ''.format(vector))
 
         if dom is None:
@@ -478,36 +493,8 @@ class ConstantOperator(Operator):
         self.vector = vector
         super().__init__(dom, vector.space)
 
-    def _call(self, x):
-        """ Returns the constant vector
-
-        Parameters
-        ----------
-        x : ``domain`` element
-            Any element in the domain
-
-        Returns
-        -------
-        vector : `LinearSpaceVector`
-            The constant vector
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> op = ConstantOperator(x)
-        >>> op(x)
-        Rn(3).element([1.0, 2.0, 3.0])
-        >>> op(r3.zero())
-        Rn(3).element([1.0, 2.0, 3.0])
-        >>> op(r3.element())
-        Rn(3).element([1.0, 2.0, 3.0])
-        """
-        return self.vector.copy()
-
-    def _apply(self, x, out):
-        """ Assign out to the constant vector
+    def _call(self, x, out=None):
+        """Return the constant vector or assign it to ``out``.
 
         Parameters
         ----------
@@ -515,6 +502,12 @@ class ConstantOperator(Operator):
             Any element in the domain
         out : ``range`` element
             Vector that gets assigned to the constant vector
+
+        Returns
+        -------
+        out : ``range`` element
+            Result of the assignment. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
@@ -525,7 +518,10 @@ class ConstantOperator(Operator):
         >>> op(x, out=r3.element())
         Rn(3).element([1.0, 2.0, 3.0])
         """
-        out.assign(self.vector)
+        if out is None:
+            return self.range.element(self.vector.copy())
+        else:
+            out.assign(self.vector)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -571,34 +567,8 @@ class ResidualOperator(Operator):
         self.vector = vector
         super().__init__(op.domain, vector.space)
 
-    def _call(self, x):
-        """ Returns the constant vector
-
-        Parameters
-        ----------
-        x : ``domain`` element
-            Any element in the domain
-
-        Returns
-        -------
-        vector : `LinearSpaceVector`
-            The constant vector
-
-        Examples
-        --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
-        >>> vec = r3.element([1, 2, 3])
-        >>> op = IdentityOperator(r3)
-        >>> res = ResidualOperator(op, vec)
-        >>> x = r3.element([4, 5, 6])
-        >>> res(x)
-        Rn(3).element([3.0, 3.0, 3.0])
-        """
-        return self.op(x) - self.vector
-
-    def _apply(self, x, out):
-        """ Assign out to the constant vector
+    def _call(self, x, out=None):
+        """Evaluate the residual at ``x``.
 
         Parameters
         ----------
@@ -606,6 +576,12 @@ class ResidualOperator(Operator):
             Any element in the domain
         out : ``range`` element
             Vector that gets assigned to the constant vector
+
+        Returns
+        -------
+        out : ``range`` element
+            Result of the evaluation. If ``out`` was provided, the
+            returned object is a reference to it.
 
         Examples
         --------
@@ -618,11 +594,18 @@ class ResidualOperator(Operator):
         >>> res(x, out=r3.element())
         Rn(3).element([3.0, 3.0, 3.0])
         """
-        self.op(x, out)
+        if out is None:
+            out = self.op(x)
+        else:
+            self.op(x, out=out)
+
         out -= self.vector
+        return out
 
     def derivative(self, point):
-        """ The derivative of a residual is the derivative of the operator
+        """The derivative the residual operator.
+
+        It is equal to the derivative of the "inner" operator:
 
         ``ResidualOperator(op, vec).derivative(x) <==> op.derivative(x)``
 

@@ -257,11 +257,12 @@ def _phantom_3d(space, ellipses):
     minp = space.grid.min()
     maxp = space.grid.max()
 
-    # move points to [0, 1]
-    points = (points - minp) / (maxp - minp)
+    # move points to [-1, 1]
+    np.subtract(points, (minp + maxp) / 2.0, out=points)
+    np.divide(points, (maxp - minp) / 2.0, out=points)
 
-    # move to [-1, 1]
-    points = points * 2 - 1
+    # reusable temporary
+    offset_points = np.empty_like(points)
 
     for ellip in ellipses:
         I = ellip[0]
@@ -276,28 +277,37 @@ def _phantom_3d(space, ellipses):
         psi = ellip[9] * np.pi / 180
 
         # Create the offset x,y and z values for the grid
-        offset_points = points - [x0, y0, z0]
+        np.subtract(points, [x0, y0, z0], out=offset_points)
+        scales = [1 / a2, 1 / b2, 1 / c2]
 
-        cphi = np.cos(phi)
-        sphi = np.sin(phi)
-        ctheta = np.cos(theta)
-        stheta = np.sin(theta)
-        cpsi = np.cos(psi)
-        spsi = np.sin(psi)
+        if any([phi, theta, psi]):
+            # Optimization, only rotate if needed.
+            cphi = np.cos(phi)
+            sphi = np.sin(phi)
+            ctheta = np.cos(theta)
+            stheta = np.sin(theta)
+            cpsi = np.cos(psi)
+            spsi = np.sin(psi)
+
+            scales = [1 / a2, 1 / b2, 1 / c2]
+            mat = [[cpsi * cphi - ctheta * sphi * spsi,
+                    cpsi * sphi + ctheta * cphi * spsi,
+                    spsi * stheta],
+                   [-spsi * cphi - ctheta * sphi * cpsi,
+                    -spsi * sphi + ctheta * cphi * cpsi,
+                    cpsi * stheta],
+                   [stheta * sphi,
+                    -stheta * cphi,
+                    ctheta]]
+
+            rotated = np.dot(mat, offset_points.T)
+            np.square(rotated, out=rotated)
+            radius = np.dot(scales, rotated)
+        else:
+            np.square(offset_points.T, out=offset_points.T)
+            radius = np.dot(scales, offset_points.T)
 
         # Find the pixels within the ellipse
-        scales = [1 / a2, 1 / b2, 1 / c2]
-        mat = [[cpsi * cphi - ctheta * sphi * spsi,
-                cpsi * sphi + ctheta * cphi * spsi,
-                spsi * stheta],
-               [-spsi * cphi - ctheta * sphi * cpsi,
-                -spsi * sphi + ctheta * cphi * cpsi,
-                cpsi * stheta],
-               [stheta * sphi,
-                -stheta * cphi,
-                ctheta]]
-
-        radius = np.dot(scales, np.dot(mat, offset_points.T) ** 2)
         inside = radius <= 1
 
         # Add the ellipse intensity to those pixels
