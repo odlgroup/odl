@@ -649,17 +649,16 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
                              ''.format(len(x), len(self.grid)))
 
         if len(x) == 1:
-            ntotal = x[0].size
+            out_shape = x[0].shape
         else:
-            ntotal = np.broadcast(*x).size
+            out_shape = np.broadcast(*x).shape
         if out is not None:
             if not isinstance(out, np.ndarray):
                 raise TypeError('`out` {!r} not a `numpy.ndarray` '
                                 'instance.'.format(out))
-            if out.shape != (ntotal,):
-                raise ValueError('Output shape {} not equal to (n,), where '
-                                 'n={} is the total number of evaluation '
-                                 'points.'.format(out.shape, ntotal))
+            if out.shape != out_shape:
+                raise ValueError('Output shape {} not equal to expected '
+                                 'shape {}.'.format(out.shape, out_shape))
 
         indices, norm_distances = self._find_indices(x)
         return self._evaluate(indices, norm_distances, out)
