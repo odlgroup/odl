@@ -472,19 +472,18 @@ class LinearInterpolation(FunctionSetMapping):
             ``out`` was provided, the returned object is a reference
             to it.
         """
+        # TODO: pass reasonable options on to the interpolator
         def linear(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
-                # TODO: check if this works for 'F' ordering
                 interp = _LinearMeshgridInterpolator(
                     self.grid.coord_vectors,
                     x.data.reshape(self.grid.shape, order=self.order))
             else:
-                # TODO: check if points are ordered. If not, use
-                # LinearNDInterpolator
                 interp = _LinearPointwiseInterpolator(
                     self.grid.coord_vectors,
                     x.data.reshape(self.grid.shape, order=self.order))
+
             return interp(arg, out=out)
 
         return self.range.element(linear, vectorized=True)
@@ -668,16 +667,57 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         # slice for broadcasting over trailing dimensions in self.values
         vslice = (slice(None),) + (None,) * (self.values.ndim - len(indices))
 
-        # find relevant values
-        # each i and i+1 represents a edge
-        edges = product(*[[i, i + 1] for i in indices])
-        values = 0.
-        for edge_indices in edges:
-            weight = 1.
-            for ei, i, yi in zip(edge_indices, indices, norm_distances):
-                weight *= np.where(ei == i, 1 - yi, yi)
-            values += np.asarray(self.values[edge_indices]) * weight[vslice]
-        return values
+        print('indices: ', indices)
+        print('norm_distances: ', norm_distances)
+
+        if out is None:
+            out = 0.0
+        else:
+            out[:] = 0.0
+
+        # Precalculate indices and weights (per axis)
+        low_weights = []
+        high_weights = []
+        edge_indices = []
+        for idcs, yi in zip(indices, norm_distances):
+            # Get out-of-bounds indices from the norm_distances. Negative
+            # means "too low", larger than or equal to 1 means "too high"
+            lo = np.where(yi < 0)
+            hi = np.where(yi > 1)
+
+            # For "too low" nodes, the lower neighbor gets weight zero;
+            # "too high" gets 2 - yi (since yi >= 1)
+            w_lo = 1 - yi
+            w_lo[lo] = 0
+            w_lo[hi] += 1
+            low_weights.append(w_lo)
+
+            # For "too high" nodes, the upper neighbor gets weight zero;
+            # "too low" gets 1 + yi (since yi < 0)
+            w_hi = np.array(yi, copy=True)
+            w_hi[lo] += 1
+            w_hi[hi] = 0
+            high_weights.append(w_hi)
+
+            # For upper/lower out-of-bounds nodes, we need to set the
+            # lower/upper neighbors to the last/first grid point
+            edge = [idcs, idcs + 1]
+            edge[0][hi] = -1
+            edge[1][lo] = 0
+            edge_indices.append(edge)
+
+        # Iterate over all possible combinations of [i, i+1] for each
+        # axis, resulting in a loop of length 2**ndim
+        for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
+                               product(*edge_indices)):
+            weight = 1.0
+            for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
+                if lh == 'l':
+                    weight *= w_lo
+                else:
+                    weight *= w_hi
+            out += np.asarray(self.values[edge]) * weight[vslice]
+        return np.array(out, copy=False, ndmin=1)
 
 
 class _LinearMeshgridInterpolator(_MeshgridInterpolator,
