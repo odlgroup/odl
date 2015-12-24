@@ -42,7 +42,26 @@ __all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling')
 
 
 def sparse_meshgrid(*x, **kwargs):
-    """Make a sparse meshgrid with C- or F-contiguous arrays."""
+    """Make a sparse meshgrid with C- or F-contiguous arrays.
+
+    Parameters
+    ----------
+    x1,...,xN : array-like
+        Input arrays to turn into sparse meshgrid vectors
+    order : {'C', 'F'}, optional
+        Ordering of the output meshgrid. The vectors in the produced
+        meshgrid tuple are guaranteed to be contiguous in this
+        ordering,
+
+    Returns
+    -------
+    meshgrid : `tuple` of `numpy.ndarray`
+        Sparse coordinate vectors representing an N-dimensional grid
+
+    See also
+    --------
+    numpy.meshgrid : dense or sparse meshgrids
+    """
     n = len(x)
     order = kwargs.pop('order', 'C')
     mg = []
