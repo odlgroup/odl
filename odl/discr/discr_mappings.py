@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str, zip
+from builtins import str, super, zip
 
 # External imports
 from itertools import product
@@ -289,7 +289,7 @@ class NearestInterpolation(FunctionSetMapping):
     per component by the above definition.
     """
 
-    def __init__(self, ip_fset, grid, dspace, order='C'):
+    def __init__(self, ip_fset, grid, dspace, order='C', **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -309,6 +309,12 @@ class NearestInterpolation(FunctionSetMapping):
             Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies slowest, the last fastest,
             'F' vice versa.
+        variant : {'left', 'right'}, optional
+            Behavior variant at midpoint between neighbors
+
+            'left' : favor left neighbor (default)
+
+            'right' : favor right neighbor
         """
         linear = True if isinstance(ip_fset, FunctionSpace) else False
         FunctionSetMapping.__init__(self, 'extension', ip_fset, grid, dspace,
@@ -319,6 +325,11 @@ class NearestInterpolation(FunctionSetMapping):
             raise TypeError('domain {!r} of the function set is not an '
                             '`IntervalProd` instance.'
                             ''.format(ip_fset.domain))
+
+        variant = kwargs.pop('variant', 'left')
+        self._variant = str(variant).lower()
+        if self._variant not in ('left', 'right'):
+            raise ValueError("variant '{}' not understood.".format(variant))
 
     def _call(self, x, out=None):
         """Create an interpolator from grid values ``x``.
@@ -353,14 +364,14 @@ class NearestInterpolation(FunctionSetMapping):
 
         Examples
         --------
-        >>> from __future__ import unicode_literals, print_function
-        >>> from odl import Rectangle, Strings
+        We test nearest neighbor interpolation with a non-scalar
+        data type in 2d:
+
+        >>> from __future__ import print_function
+        >>> import numpy as np
+        >>> from odl import Rectangle, Strings, FunctionSet
         >>> rect = Rectangle([0, 0], [1, 1])
         >>> strings = Strings(1)  # 1-char strings
-
-        Initialize the space
-
-        >>> from odl import FunctionSet
         >>> space = FunctionSet(rect, strings)
 
         The grid is defined by uniform sampling
@@ -374,18 +385,12 @@ class NearestInterpolation(FunctionSetMapping):
 
         >>> dspace = Ntuples(grid.ntotal, dtype='U1')
 
-        Now initialize the operator:
+        Now we initialize the operator and test it with some points:
 
         >>> interp_op = NearestInterpolation(space, grid, dspace)
-
-        We test some simple values:
-
-        >>> import numpy as np
-        >>> val_arr = np.array([c for c in 'mystring'])
-        >>> values = dspace.element(val_arr)
+        >>> values = np.array([c for c in 'mystring'])
         >>> function = interp_op(values)
-        >>> val = function([0.3, 0.6])  # closest to index (1, 1) -> 3
-        >>> print(val)
+        >>> print(function([0.3, 0.6]))  # closest to index (1, 1) -> 3
         t
         >>> out = np.empty(2, dtype='U1')
         >>> pts = np.array([[0.3, 0.6],
@@ -398,16 +403,16 @@ class NearestInterpolation(FunctionSetMapping):
         def nearest(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
-                # TODO: check if this works for 'F' ordering
                 interp = _NearestMeshgridInterpolator(
                     self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order))
+                    x.data.reshape(self.grid.shape, order=self.order),
+                    variant=self._variant)
             else:
-                # TODO: check if points are ordered. If not, use
-                # NearestNDInterpolator
                 interp = _NearestPointwiseInterpolator(
                     self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order))
+                    x.data.reshape(self.grid.shape, order=self.order),
+                    variant=self._variant)
+
             return interp(arg, out=out)
 
         return self.range.element(nearest, vectorized=True)
@@ -497,14 +502,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     def __init__(self, coord_vecs, values):
         """Initialize a new instance."""
 
-        # Provide values for some attributes
-        self.bounds_error = False
-        # TODO: use fill_value depending on discretization
-        self.fill_value = None  # extrapolate
-
-        if not hasattr(values, 'ndim'):
-            # allow reasonable duck-typed values
-            values = np.asarray(values)
+        values = np.asarray(values)
 
         if len(coord_vecs) > values.ndim:
             raise ValueError('There are {} point arrays, but `values` has {} '
@@ -513,33 +511,15 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
         # Cast to floating point was removed here
 
-        # TODO: check if the following code is needed
-
-#        self.fill_value = fill_value
-#        if fill_value is not None:
-#            fill_value_dtype = np.asarray(fill_value).dtype
-#            if (hasattr(values, 'dtype')
-#                    and not np.can_cast(fill_value_dtype, values.dtype,
-#                                        casting='same_kind')):
-#                raise ValueError("fill_value must be either 'None' or "
-#                                 "of a type compatible with values")
-
         for i, p in enumerate(coord_vecs):
             if not np.asarray(p).ndim == 1:
                 raise ValueError('The points in dimension {} must be '
                                  '1-dimensional'.format(i))
-            if not values.shape[i] == len(p):
+            if values.shape[i] != len(p):
                 raise ValueError('There are {} points and {} values in '
                                  'dimension {}'.format(len(p),
                                                        values.shape[i], i))
 
-        # TODO: use the following code to determine upstream if a different
-        # interpolator needs to be used
-
-#        for i, p in enumerate(points):
-#            if not np.all(np.diff(p) > 0.):
-#                raise ValueError("The points in dimension {} must be strictly"
-#                                 " ascending".format(i))
         self.grid = tuple([np.asarray(p) for p in coord_vecs])
         self.values = values
 
@@ -551,6 +531,9 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         shape (n, dim), where n is the number of points.
         """
         ndim = len(self.grid)
+        if ndim == 1 and x.ndim == 1:
+            x = x[None, :]
+
         if x.ndim != 2:
             raise ValueError('x has {} axes instead of 2.'.format(x.ndim))
 
@@ -562,10 +545,10 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
             if not isinstance(out, np.ndarray):
                 raise TypeError('`out` {!r} not a `numpy.ndarray` '
                                 'instance.'.format(out))
-            if out.shape != (x.shape[0],):
-                raise ValueError('Output shape {} not equal to (n,), where '
-                                 'n={} is the total number of evaluation '
-                                 'points.'.format(out.shape, x.shape[0]))
+            if out.shape != (x.shape[1],):
+                raise ValueError('Output shape is {}, expected ({n},) since '
+                                 'there are {n} evaluation points.'
+                                 ''.format(out.shape, n=x.shape[1]))
 
         x = _ndim_coords_from_arrays(x, ndim=ndim)
         if x.shape[0] != ndim:
@@ -573,58 +556,29 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
                              '{}, but this _NearestInterpolator has '
                              'dimension {}.'.format(x.shape[0], ndim))
 
-        # TODO: check if we need to use out_of_bounds in certain cases
-
-#        indices, norm_distances, out_of_bounds = self._find_indices(xi.T)
-#        if method == "linear":
-#            result = self._evaluate_linear(indices, norm_distances,
-#                                           out_of_bounds)
-#        elif method == "nearest":
-#            result = self._evaluate_nearest(indices, norm_distances,
-#                                            out_of_bounds)
-#        if not self.bounds_error and self.fill_value is not None:
-#            result[out_of_bounds] = self.fill_value
-
         indices, norm_distances = self._find_indices(x)
         return self._evaluate(indices, norm_distances, out)
 
-        # TODO: check if _find_indices function needst to be adapted
-
-#    def _find_indices(self, xi):
-#        # find relevant edges between which xi are situated
-#        indices = []
-#        # compute distance to lower edge in unity units
-#        norm_distances = []
-#        # check for out of bounds xi
-#        out_of_bounds = np.zeros((xi.shape[1]), dtype=bool)
-#        # iterate through dimensions
-#        for x, grid in zip(xi, self.grid):
-#            i = np.searchsorted(grid, x) - 1
-#            i[i < 0] = 0
-#            i[i > grid.size - 2] = grid.size - 2
-#            indices.append(i)
-#            norm_distances.append((x - grid[i]) /
-#                                  (grid[i + 1] - grid[i]))
-#            if not self.bounds_error:
-#                out_of_bounds += x < grid[0]
-#                out_of_bounds += x > grid[-1]
-#        return indices, norm_distances, out_of_bounds
-
     def _find_indices(self, x):
-        """Modified version without out-of-bounds check."""
+        """Find indices and distances of the given nodes."""
+
         # find relevant edges between which xi are situated
-        indices = []
+        index_vecs = []
         # compute distance to lower edge in unity units
         norm_distances = []
+
         # iterate through dimensions
-        for xi, grid in zip(x, self.grid):
-            i = np.searchsorted(grid, xi) - 1
-            i[i < 0] = 0
-            i[i > grid.size - 2] = grid.size - 2
-            indices.append(i)
-            norm_distances.append((xi - grid[i]) /
-                                  (grid[i + 1] - grid[i]))
-        return indices, norm_distances
+        for xi, cvec in zip(x, self.grid):
+            idcs = np.searchsorted(cvec, xi) - 1
+
+            idcs[idcs < 0] = 0
+            idcs[idcs > cvec.size - 2] = cvec.size - 2
+            index_vecs.append(idcs)
+
+            norm_distances.append((xi - cvec[idcs]) /
+                                  (cvec[idcs + 1] - cvec[idcs]))
+
+        return index_vecs, norm_distances
 
 
 class _MeshgridInterpolator(_PointwiseInterpolator):
@@ -673,12 +627,20 @@ class _NearestPointwiseInterpolator(_PointwiseInterpolator):
 scipy.interpolate.RegularGridInterpolator.html>`_ class.
     """
 
+    def __init__(self, coord_vecs, values, variant):
+        super().__init__(coord_vecs, values)
+        self.variant = variant
+
     def _evaluate(self, indices, norm_distances, out=None):
-        """Evaluate nearest interpolation. Modified for in-place."""
+        """Evaluate nearest interpolation.
+
+        Modified for in-place and added variants."""
         idx_res = []
         for i, yi in zip(indices, norm_distances):
-            # TODO: adapt here for the different cases [a, b), (a, b] or (a, b)
-            idx_res.append(np.where(yi <= .5, i, i + 1))
+            if self.variant == 'left':
+                idx_res.append(np.where(yi <= .5, i, i + 1))
+            else:
+                idx_res.append(np.where(yi < .5, i, i + 1))
         if out is not None:
             out[:] = self.values[idx_res]
             return out
