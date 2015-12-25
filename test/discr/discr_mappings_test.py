@@ -235,15 +235,16 @@ def test_linear_interpolation_2d():
     interp_op = LinearInterpolation(space, grid, dspace)
     values = np.arange(1, 9, dtype='float64')
     function = interp_op(values)
+    rvals = values.reshape([4, 2])
 
     # Evaluate at single point
     val = function([0.3, 0.6])
     l1 = (0.3 - 0.125) / (0.375 - 0.125)
     l2 = (0.6 - 0.25) / (0.75 - 0.25)
-    true_val = ((1 - l1) * (1 - l2) * 1 +
-                (1 - l1) * l2 * 2 +
-                l1 * (1 - l2) * 3 +
-                l1 * l2 * 4)
+    true_val = ((1 - l1) * (1 - l2) * rvals[0, 0] +
+                (1 - l1) * l2 * rvals[0, 1] +
+                l1 * (1 - l2) * rvals[1, 0] +
+                l1 * l2 * rvals[1, 1])
     assert almost_equal(val, true_val)
 
     # Input array, with and without output array
@@ -252,15 +253,16 @@ def test_linear_interpolation_2d():
                     [1.0, 1.0]])
     l1 = (0.3 - 0.125) / (0.375 - 0.125)
     l2 = (0.6 - 0.25) / (0.75 - 0.25)
-    true_val_1 = ((1 - l1) * (1 - l2) * 1 +
-                  (1 - l1) * l2 * 2 +
-                  l1 * (1 - l2) * 3 +
-                  l1 * l2 * 4)
+    true_val_1 = ((1 - l1) * (1 - l2) * rvals[0, 0] +
+                  (1 - l1) * l2 * rvals[0, 1] +
+                  l1 * (1 - l2) * rvals[1, 0] +
+                  l1 * l2 * rvals[1, 1])
     l1 = (0.125 - 0.1) / (0.375 - 0.125)
-    true_val_2 = (1 - l1) * 1
+    # l2 = 0
+    true_val_2 = (1 - l1) * rvals[0, 0]  # only lower left contributes
     l1 = (1.0 - 0.875) / (0.875 - 0.625)
     l2 = (1.0 - 0.75) / (0.75 - 0.25)
-    true_val_3 = (1 - l1) * (1 - l2) * 8
+    true_val_3 = (1 - l1) * (1 - l2) * rvals[3, 1]  # lower left only
     true_arr = [true_val_1, true_val_2, true_val_3]
     assert all_equal(function(pts.T), true_arr)
 
@@ -268,15 +270,27 @@ def test_linear_interpolation_2d():
     function(pts.T, out=out)
     assert all_equal(out, true_arr)
 
-#    # Input meshgrid, with and without output array
-#    mg = sparse_meshgrid([0.3, 1.0], [0.4, 1.0])
-#    # Indices: (1, 3) x (0, 1)
-#    true_mg = [[2, 3],
-#               [6, 7]]
-#    assert all_equal(function(mg), true_mg)
-#    out = np.empty((2, 2), dtype='float64')
-#    function(mg, out=out)
-#    assert all_equal(out, true_mg)
+    # Input meshgrid, with and without output array
+    mg = sparse_meshgrid([0.3, 1.0], [0.4, 0.75])
+    # Indices: (1, 3) x (0, 1)
+    lx1 = (0.3 - 0.125) / (0.375 - 0.125)
+    lx2 = (1.0 - 0.875) / (0.875 - 0.625)
+    ly1 = (0.4 - 0.25) / (0.75 - 0.25)
+    # ly2 = 0
+    true_val_11 = ((1 - lx1) * (1 - ly1) * rvals[0, 0] +
+                   (1 - lx1) * ly1 * rvals[0, 1] +
+                   lx1 * (1 - ly1) * rvals[1, 0] +
+                   lx1 * ly1 * rvals[1, 1])
+    true_val_12 = ((1 - lx1) * rvals[0, 1] + lx1 * rvals[1, 1])  # ly2 = 0
+    true_val_21 = ((1 - lx2) * (1 - ly1) * rvals[3, 0] +
+                   (1 - lx2) * ly1 * rvals[3, 1])  # high node 1.0, no upper
+    true_val_22 = (1 - lx2) * rvals[3, 1]  # ly2 = 0, no upper for 1.0
+    true_mg = [[true_val_11, true_val_12],
+               [true_val_21, true_val_22]]
+    assert all_equal(function(mg), true_mg)
+    out = np.empty((2, 2), dtype='float64')
+    function(mg, out=out)
+    assert all_equal(out, true_mg)
 
 
 if __name__ == '__main__':
