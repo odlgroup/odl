@@ -31,7 +31,6 @@ from builtins import str, super, zip
 # External imports
 from itertools import product
 import numpy as np
-from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 
 # ODL imports
 from odl.discr.grid import TensorGrid
@@ -45,6 +44,8 @@ from odl.util.vectorization import (is_valid_input_meshgrid,
 
 __all__ = ('FunctionSetMapping',
            'GridCollocation', 'NearestInterpolation', 'LinearInterpolation')
+
+SUPPORTED_INTERP_SCHEMES = ['nearest', 'linear']
 
 
 class FunctionSetMapping(Operator):
@@ -409,15 +410,17 @@ class NearestInterpolation(FunctionSetMapping):
         def nearest(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
-                interp = _NearestMeshgridInterpolator(
+                interp = _NearestInterpolator(
                     self.grid.coord_vectors,
                     x.data.reshape(self.grid.shape, order=self.order),
-                    variant=self._variant)
+                    variant=self._variant,
+                    typ='meshgrid')
             else:
-                interp = _NearestPointwiseInterpolator(
+                interp = _NearestInterpolator(
                     self.grid.coord_vectors,
                     x.data.reshape(self.grid.shape, order=self.order),
-                    variant=self._variant)
+                    variant=self._variant,
+                    typ='array')
 
             return interp(arg, out=out)
 
@@ -482,40 +485,55 @@ class LinearInterpolation(FunctionSetMapping):
         def linear(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
-                interp = _LinearMeshgridInterpolator(
+                interp = _LinearInterpolator(
                     self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order))
+                    x.data.reshape(self.grid.shape, order=self.order),
+                    typ='meshgrid')
             else:
-                interp = _LinearPointwiseInterpolator(
+                interp = _LinearInterpolator(
                     self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order))
+                    x.data.reshape(self.grid.shape, order=self.order),
+                    typ='array')
 
             return interp(arg, out=out)
 
         return self.range.element(linear, vectorized=True)
 
 
-class _PointwiseInterpolator(object):
+class _Interpolator(object):
 
-    """Abstract interpolator class for pointwise interpolation.
+    """Abstract interpolator class.
 
     The code is adapted from SciPy's `RegularGridInterpolator
     <http://docs.scipy.org/doc/scipy/reference/generated/\
 scipy.interpolate.RegularGridInterpolator.html>`_ class.
+
+    The init method does not convert to floating point to
+    support arbitrary data type for nearest neighbor interpolation.
+
+    Subclasses need to override ``_evaluate`` for concrete
+    implementations.
     """
 
-    def __init__(self, coord_vecs, values):
-        """Initialize a new instance."""
+    def __init__(self, coord_vecs, values, typ):
+        """Initialize a new instance.
 
+        coord_vecs : `tuple` of `numpy.ndarray`
+            Coordinate vectors defining the interpolation grid
+        values : array-like
+            Grid values to use for interpolation
+        typ : {'array', 'meshgrid'}
+            Type of expected input values in ``__call__``
+        """
         values = np.asarray(values)
+        typ_ = str(typ).lower()
+        if typ_ not in ('array', 'meshgrid'):
+            raise ValueError("Type '{}' not understood.".format(typ))
 
         if len(coord_vecs) > values.ndim:
             raise ValueError('There are {} point arrays, but `values` has {} '
                              'dimensions.'.format(len(coord_vecs),
                                                   values.ndim))
-
-        # Cast to floating point was removed here
-
         for i, p in enumerate(coord_vecs):
             if not np.asarray(p).ndim == 1:
                 raise ValueError('The points in dimension {} must be '
@@ -527,46 +545,60 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
         self.grid = tuple([np.asarray(p) for p in coord_vecs])
         self.values = values
+        self.type = typ
 
     def __call__(self, x, out=None):
         """Do the interpolation.
 
-        Modified for in-place evaluation support and without method
-        choice. Evaluation points are to be given as an array with
-        shape (n, dim), where n is the number of points.
+        Parameters
+        ----------
+        x : meshgrid or `numpy.ndarray`
+            Evaluation points of the interpolator
+        out : `numpy.ndarray`, optional
+            Array to which the results are written. Needs to have
+            correct shape according to input ``x``.
+
+        Returns
+        -------
+        out : `numpy.ndarray`
+            Interpolated values. If ``out`` was given, the returned
+            object is a reference to it.
         """
-        ndim = len(self.grid)
-        if ndim == 1 and x.ndim == 1:
-            x = x[None, :]
+        if self.type == 'array':
+            # Make a (1, n) array from one with shape (n,)
+            ndim = len(self.grid)
+            if ndim == 1 and x.ndim == 1:
+                x = x[None, :]
+            if x.ndim != 2:
+                raise ValueError('x has {} axes instead of 2.'.format(x.ndim))
+            if x.shape[0] != ndim:
+                raise ValueError('x has axis 1 with length {} instead '
+                                 'of the grid dimension {}.'
+                                 ''.format(x.shape[0], ndim))
+            out_shape = (x.shape[1],)
+        else:
+            if len(x) != len(self.grid):
+                raise ValueError('number of vectors in x is {} instead of '
+                                 'the grid dimension {}.'
+                                 ''.format(len(x), len(self.grid)))
+            if len(x) == 1:
+                out_shape = x[0].shape
+            else:
+                out_shape = np.broadcast(*x).shape
 
-        if x.ndim != 2:
-            raise ValueError('x has {} axes instead of 2.'.format(x.ndim))
-
-        if x.shape[0] != ndim:
-            raise ValueError('x has axis 1 with length {} instead '
-                             'of the grid dimension {}.'
-                             ''.format(x.shape[0], ndim))
         if out is not None:
             if not isinstance(out, np.ndarray):
                 raise TypeError('`out` {!r} not a `numpy.ndarray` '
                                 'instance.'.format(out))
-            if out.shape != (x.shape[1],):
-                raise ValueError('Output shape is {}, expected ({n},) since '
-                                 'there are {n} evaluation points.'
-                                 ''.format(out.shape, n=x.shape[1]))
-
-        x = _ndim_coords_from_arrays(x, ndim=ndim)
-        if x.shape[0] != ndim:
-            raise ValueError('The requested sample points x have dimension '
-                             '{}, but this _NearestInterpolator has '
-                             'dimension {}.'.format(x.shape[0], ndim))
+            if out.shape != out_shape:
+                raise ValueError('Output shape {} not equal to expected '
+                                 'shape {}.'.format(out.shape, out_shape))
 
         indices, norm_distances = self._find_indices(x)
         return self._evaluate(indices, norm_distances, out)
 
     def _find_indices(self, x):
         """Find indices and distances of the given nodes."""
-
         # find relevant edges between which xi are situated
         index_vecs = []
         # compute distance to lower edge in unity units
@@ -590,61 +622,39 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         raise NotImplementedError
 
 
-class _MeshgridInterpolator(_PointwiseInterpolator):
+class _NearestInterpolator(_Interpolator):
 
-    """Abstract interpolator class for pointwise interpolation.
+    """Nearest neighbor interpolator.
 
     The code is adapted from SciPy's `RegularGridInterpolator
     <http://docs.scipy.org/doc/scipy/reference/generated/\
 scipy.interpolate.RegularGridInterpolator.html>`_ class.
+
+    This implementation is faster than the more generic one in the
+    `_PerAxisPointwiseInterpolator`. Compared to the original code,
+    support of ``'left'`` and ``'right'`` variants are added.
     """
 
-    # pylint: disable=abstract-method
-    def __call__(self, x, out=None):
-        """Do the interpolation.
+    def __init__(self, coord_vecs, values, typ, variant):
+        """Initialize a new instance.
 
-        Modified for in-place evaluation support and without method
-        choice. Evaluation points are to be given as a list of arrays
-        which can be broadcast against each other.
+        coord_vecs : `tuple` of `numpy.ndarray`
+            Coordinate vectors defining the interpolation grid
+        values : array-like
+            Grid values to use for interpolation
+        typ : {'array', 'meshgrid'}
+            Type of expected input values in ``__call__``
+        variant : {'left', 'right'}
+            Indicates which neighbor to prefer in the interpolation
         """
-        if len(x) != len(self.grid):
-            raise ValueError('number of vectors in x is {} instead of {}, '
-                             'the grid dimension.'
-                             ''.format(len(x), len(self.grid)))
-
-        if len(x) == 1:
-            out_shape = x[0].shape
-        else:
-            out_shape = np.broadcast(*x).shape
-        if out is not None:
-            if not isinstance(out, np.ndarray):
-                raise TypeError('`out` {!r} not a `numpy.ndarray` '
-                                'instance.'.format(out))
-            if out.shape != out_shape:
-                raise ValueError('Output shape {} not equal to expected '
-                                 'shape {}.'.format(out.shape, out_shape))
-
-        indices, norm_distances = self._find_indices(x)
-        return self._evaluate(indices, norm_distances, out)
-
-
-class _NearestPointwiseInterpolator(_PointwiseInterpolator):
-
-    """Nearest neighbor interpolator for point arrays.
-
-    The code is adapted from SciPy's `RegularGridInterpolator
-    <http://docs.scipy.org/doc/scipy/reference/generated/\
-scipy.interpolate.RegularGridInterpolator.html>`_ class.
-    """
-
-    def __init__(self, coord_vecs, values, variant):
-        super().__init__(coord_vecs, values)
-        self.variant = variant
+        super().__init__(coord_vecs, values, typ)
+        variant_ = str(variant).lower()
+        if variant_ not in ('left', 'right'):
+            raise ValueError("Variant '{}' not understood.".format(variant_))
+        self.variant = variant_
 
     def _evaluate(self, indices, norm_distances, out=None):
-        """Evaluate nearest interpolation.
-
-        Modified for in-place and added variants."""
+        """Evaluate nearest interpolation."""
         idx_res = []
         for i, yi in zip(indices, norm_distances):
             if self.variant == 'left':
@@ -658,23 +668,167 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
             return self.values[idx_res]
 
 
-class _NearestMeshgridInterpolator(_MeshgridInterpolator,
-                                   _NearestPointwiseInterpolator):
+def _compute_nearest_weights_edge(idcs, ndist, variant):
+    """Helper for nearest interpolation mimicing the linear case."""
+    # Get out-of-bounds indices from the norm_distances. Negative
+    # means "too low", larger than or equal to 1 means "too high"
+    lo = np.where(ndist < 0)
+    hi = np.where(ndist > 1)
+    ones = np.ones_like(ndist)
+    zeros = np.zeros_like(ndist)
 
-    """Nearest neighbor interpolator for point meshgrids."""
+    # For "too low" nodes, the lower neighbor gets weight zero;
+    # "too high" gets 1.
+    if variant == 'left':
+        w_lo = np.where(ndist <= 0.5, ones, zeros)
+    else:
+        w_lo = np.where(ndist < 0.5, ones, zeros)
+
+    w_lo[lo] = 0
+    w_lo[hi] = 1
+
+    # For "too high" nodes, the upper neighbor gets weight zero;
+    # "too low" gets 1.
+    if variant == 'left':
+        w_hi = np.where(ndist <= 0.5, zeros, ones)
+    else:
+        w_hi = np.where(ndist < 0.5, zeros, ones)
+
+    w_hi[lo] = 1
+    w_hi[hi] = 0
+
+    # For upper/lower out-of-bounds nodes, we need to set the
+    # lower/upper neighbors to the last/first grid point
+    edge = [idcs, idcs + 1]
+    edge[0][hi] = -1
+    edge[1][lo] = 0
+
+    return w_lo, w_hi, edge
 
 
-class _LinearPointwiseInterpolator(_PointwiseInterpolator):
+def _compute_linear_weights_edge(idcs, ndist):
+    """Helper for linear interpolation."""
+    # Get out-of-bounds indices from the norm_distances. Negative
+    # means "too low", larger than or equal to 1 means "too high"
+    lo = np.where(ndist < 0)
+    hi = np.where(ndist > 1)
 
-    """Linear interpolator for point arrays.
+    # For "too low" nodes, the lower neighbor gets weight zero;
+    # "too high" gets 2 - yi (since yi >= 1)
+    w_lo = (1 - ndist)
+    w_lo[lo] = 0
+    w_lo[hi] += 1
 
-    The code is adapted from SciPy's `RegularGridInterpolator
-    <http://docs.scipy.org/doc/scipy/reference/generated/\
-scipy.interpolate.RegularGridInterpolator.html>`_ class.
+    # For "too high" nodes, the upper neighbor gets weight zero;
+    # "too low" gets 1 + yi (since yi < 0)
+    w_hi = np.array(ndist, copy=True)
+    w_hi[lo] += 1
+    w_hi[hi] = 0
+
+    # For upper/lower out-of-bounds nodes, we need to set the
+    # lower/upper neighbors to the last/first grid point
+    edge = [idcs, idcs + 1]
+    edge[0][hi] = -1
+    edge[1][lo] = 0
+
+    return w_lo, w_hi, edge
+
+
+def _create_lists(indices, norm_distances, schemes, variants):
+    # Precalculate indices and weights (per axis)
+    low_weights = []
+    high_weights = []
+    edge_indices = []
+    for i, (idcs, yi, scm, var) in enumerate(
+            zip(indices, norm_distances, schemes, variants)):
+        if scm == 'nearest':
+            w_lo, w_hi, edge = _compute_nearest_weights_edge(
+                idcs, yi, var)
+        elif scm == 'linear':
+            w_lo, w_hi, edge = _compute_linear_weights_edge(
+                idcs, yi)
+        else:
+            raise ValueError("scheme '{}' at index {} not supported."
+                             "".format(scm, i))
+
+        low_weights.append(w_lo)
+        high_weights.append(w_hi)
+        edge_indices.append(edge)
+
+    return low_weights, high_weights, edge_indices
+
+
+class _PerAxisInterpolator(_Interpolator):
+
+    """Interpolator where the scheme is set per axis.
+
+    This allows to use e.g. nearest neighbor interpolation in the
+    first dimension and linear in dimensions 2 and 3.
     """
 
+    def __init__(self, coord_vecs, values, typ, schemes, nn_variants=None):
+        """Initialize a new instance.
+
+        coord_vecs : `tuple` of `numpy.ndarray`
+            Coordinate vectors defining the interpolation grid
+        values : array-like
+            Grid values to use for interpolation
+        typ : {'array', 'meshgrid'}
+            Type of expected input values in ``__call__``
+        schemes : `str` or `list` of `str`
+            Indicates which interpolation scheme to use for which axis.
+            A single string is interpreted as a global scheme for all
+            axes.
+        nn_variants : `str` or `list` of `str`, optional
+            Which variant ('left' or 'right') to use in nearest neighbor
+            interpolation for which axis. A single string is interpreted
+            as a global variant for all axes.
+            This option has no effect for schemes other than nearest
+            neighbor.
+        """
+        super().__init__(coord_vecs, values, typ)
+        try:
+            schemes_ = str(schemes + '').lower()  # pythonic string check
+            if schemes_ not in SUPPORTED_INTERP_SCHEMES:
+                raise ValueError("Interpolation scheme '{}' not understood."
+                                 "".format(schemes))
+            schemes_ = [schemes_] * self.values.ndim
+        except TypeError:
+            schemes_ = []
+            for i, scheme in enumerate(schemes):
+                scheme_ = str(scheme).lower()
+                if scheme_ not in SUPPORTED_INTERP_SCHEMES:
+                    raise ValueError("Scheme '{}' at index {} not understood."
+                                     "".format(scheme, i))
+                schemes_.append(scheme_)
+
+        self.schemes = schemes_
+
+        if nn_variants is None:
+            variants_ = [None] * self.values.ndim
+        else:
+            try:
+                variants_ = str(nn_variants + '').lower()  # pythonic str check
+                if variants_ not in ('left', 'right'):
+                    raise ValueError("Interpolation scheme '{}' not "
+                                     "understood.".format(nn_variants))
+                variants_ = [variants_] * self.values.ndim
+            except TypeError:
+                variants_ = []
+                for i, var in enumerate(nn_variants):
+                    var_ = str(var).lower()
+                    if var_ not in ('left', 'right'):
+                        raise ValueError("Variant '{}' at index {} not "
+                                         "understood.".format(var, i))
+                    variants_.append(var_)
+
+        self.nn_variants = variants_
+
     def _evaluate(self, indices, norm_distances, out=None):
-        """Evaluate nearest interpolation. Modified for in-place."""
+        """Evaluate linear interpolation.
+
+        Modified for in-place evaluation and treatment of out-of-bounds
+        points by implicitly assuming 0 at the next node."""
         # slice for broadcasting over trailing dimensions in self.values
         vslice = (slice(None),) + (None,) * (self.values.ndim - len(indices))
 
@@ -686,36 +840,9 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         else:
             out[:] = 0.0
 
-        # Precalculate indices and weights (per axis)
-        low_weights = []
-        high_weights = []
-        edge_indices = []
-        for idcs, yi in zip(indices, norm_distances):
-            # Get out-of-bounds indices from the norm_distances. Negative
-            # means "too low", larger than or equal to 1 means "too high"
-            lo = np.where(yi < 0)
-            hi = np.where(yi > 1)
-
-            # For "too low" nodes, the lower neighbor gets weight zero;
-            # "too high" gets 2 - yi (since yi >= 1)
-            w_lo = (1 - yi)
-            w_lo[lo] = 0
-            w_lo[hi] += 1
-            low_weights.append(w_lo)
-
-            # For "too high" nodes, the upper neighbor gets weight zero;
-            # "too low" gets 1 + yi (since yi < 0)
-            w_hi = np.array(yi, copy=True)
-            w_hi[lo] += 1
-            w_hi[hi] = 0
-            high_weights.append(w_hi)
-
-            # For upper/lower out-of-bounds nodes, we need to set the
-            # lower/upper neighbors to the last/first grid point
-            edge = [idcs, idcs + 1]
-            edge[0][hi] = -1
-            edge[1][lo] = 0
-            edge_indices.append(edge)
+        # Weights and indices (per axis)
+        low_weights, high_weights, edge_indices = _create_lists(
+            indices, norm_distances, self.schemes, self.nn_variants)
 
         # Iterate over all possible combinations of [i, i+1] for each
         # axis, resulting in a loop of length 2**ndim
@@ -732,10 +859,24 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         return np.array(out, copy=False, ndmin=1)
 
 
-class _LinearMeshgridInterpolator(_MeshgridInterpolator,
-                                  _LinearPointwiseInterpolator):
+class _LinearInterpolator(_PerAxisInterpolator):
 
-    """Linear interpolator for point meshgrids."""
+    """Linear (i.e. bi-/tri-/multi-linear) interpolator.
+
+    Convenience class.
+    """
+
+    def __init__(self, coord_vecs, values, typ):
+        """Initialize a new instance.
+
+        coord_vecs : `tuple` of `numpy.ndarray`
+            Coordinate vectors defining the interpolation grid
+        values : array-like
+            Grid values to use for interpolation
+        typ : {'array', 'meshgrid'}
+            Type of expected input values in ``__call__``
+        """
+        super().__init__(coord_vecs, values, typ, schemes='linear')
 
 
 if __name__ == '__main__':
