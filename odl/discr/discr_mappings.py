@@ -500,6 +500,138 @@ class LinearInterpolation(FunctionSetMapping):
         return self.range.element(linear, vectorized=True)
 
 
+class PerAxisInterpolation(FunctionSetMapping):
+
+    """Interpolation scheme set for each axis individually."""
+
+    def __init__(self, ip_fspace, grid, dspace, schemes,
+                 nn_variants=None, order='C'):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        fspace : `FunctionSpace`
+            The undiscretized (abstract) space of functions to be
+            discretized. Its field must be the same as that of data
+            space. Its `Operator.domain` must be an
+            `IntervalProd`.
+        grid :  `TensorGrid`
+            The grid on which to evaluate. Must be contained in
+            the domain of the function set.
+        dspace : `FnBase`
+            Data space providing containers for the values of a
+            discretized object. Its size must be equal to the
+            total number of grid points. Its field must be the same
+            as that of the function space.
+        schemes : `str` or `list` of `str`
+            Indicates which interpolation scheme to use for which axis.
+            A single string is interpreted as a global scheme for all
+            axes.
+        nn_variants : `str` or `list` of `str`, optional
+            Which variant ('left' or 'right') to use in nearest neighbor
+            interpolation for which axis. A single string is interpreted
+            as a global variant for all axes.
+            This option has no effect for schemes other than nearest
+            neighbor.
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
+            means the first grid axis varies slowest, the last fastest,
+            'F' vice versa.
+        """
+        if not isinstance(ip_fspace, FunctionSpace):
+            raise TypeError('function space {!r} is not a `FunctionSpace` '
+                            'instance.'.format(ip_fspace))
+        if not isinstance(ip_fspace.domain, IntervalProd):
+            raise TypeError('function space domain {!r} is not an '
+                            '`IntervalProd` instance.'.format(ip_fspace))
+
+        FunctionSetMapping.__init__(self, 'extension', ip_fspace, grid, dspace,
+                                    order, linear=True)
+
+        try:
+            schemes_ = str(schemes + '').lower()  # pythonic string check
+            if schemes_ not in SUPPORTED_INTERP_SCHEMES:
+                raise ValueError("Interpolation scheme '{}' not understood."
+                                 "".format(schemes))
+            schemes_ = [schemes_] * self.values.ndim
+        except TypeError:
+            schemes_ = []
+            for i, scheme in enumerate(schemes):
+                scheme_ = str(scheme).lower()
+                if scheme_ not in SUPPORTED_INTERP_SCHEMES:
+                    raise ValueError("Interpolation scheme '{}' at index {} "
+                                     "not understood.".format(scheme, i))
+                schemes_.append(scheme_)
+
+        self._schemes = schemes_
+
+        if nn_variants is None:
+            variants_ = [None] * self.values.ndim
+        else:
+            try:
+                variants_ = str(nn_variants + '').lower()  # pythonic str check
+                if variants_ not in ('left', 'right'):
+                    raise ValueError("Variant '{}' not understood."
+                                     "".format(nn_variants))
+                variants_ = [variants_] * self.values.ndim
+            except TypeError:
+                variants_ = []
+                for i, var in enumerate(nn_variants):
+                    var_ = str(var).lower()
+                    if var_ not in ('left', 'right'):
+                        raise ValueError("Variant '{}' at index {} not "
+                                         "understood.".format(var, i))
+                    variants_.append(var_)
+
+        self._nn_variants = variants_
+
+    @property
+    def schemes(self):
+        """List of interpolation schemes, one for each axis."""
+        return self._schemes
+
+    @property
+    def nn_variants(self):
+        """List of nearest neighbor variants, one for each axis."""
+        return self._nn_variants
+
+    def _call(self, x, out=None):
+        """Create an interpolator from grid values ``x``.
+
+        Parameters
+        ----------
+        x : `FnBaseVector`
+            The array of values to be interpolated
+        out : `FunctionSpaceVector`, optional
+            Vector in which to store the interpolator
+
+        Returns
+        -------
+        out : `FunctionSpaceVector`
+            Per-axis interpolator for the grid of this operator. If
+            ``out`` was provided, the returned object is a reference
+            to it.
+        """
+        def interpolator(arg, out=None):
+            """Interpolating function with vectorization."""
+            if is_valid_input_meshgrid(arg, self.grid.ndim):
+                interp = _PerAxisInterpolator(
+                    self.grid.coord_vectors,
+                    x.data.reshape(self.grid.shape, order=self.order),
+                    schemes=self.schemes, nn_variants=self.nn_variants,
+                    typ='meshgrid')
+            else:
+                interp = _PerAxisInterpolator(
+                    self.grid.coord_vectors,
+                    x.data.reshape(self.grid.shape, order=self.order),
+                    schemes=self.schemes, nn_variants=self.nn_variants,
+                    typ='array')
+
+            return interp(arg, out=out)
+
+        return self.range.element(interpolator, vectorized=True)
+
+
 class _Interpolator(object):
 
     """Abstract interpolator class.
@@ -766,7 +898,7 @@ class _PerAxisInterpolator(_Interpolator):
     first dimension and linear in dimensions 2 and 3.
     """
 
-    def __init__(self, coord_vecs, values, typ, schemes, nn_variants=None):
+    def __init__(self, coord_vecs, values, typ, schemes, nn_variants):
         """Initialize a new instance.
 
         coord_vecs : `tuple` of `numpy.ndarray`
@@ -775,54 +907,17 @@ class _PerAxisInterpolator(_Interpolator):
             Grid values to use for interpolation
         typ : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
-        schemes : `str` or `list` of `str`
-            Indicates which interpolation scheme to use for which axis.
-            A single string is interpreted as a global scheme for all
-            axes.
-        nn_variants : `str` or `list` of `str`, optional
+        schemes : `list` of strings
+            Indicates which interpolation scheme to use for which axis
+        nn_variants : `list` of strings
             Which variant ('left' or 'right') to use in nearest neighbor
-            interpolation for which axis. A single string is interpreted
-            as a global variant for all axes.
+            interpolation for which axis.
             This option has no effect for schemes other than nearest
             neighbor.
         """
         super().__init__(coord_vecs, values, typ)
-        try:
-            schemes_ = str(schemes + '').lower()  # pythonic string check
-            if schemes_ not in SUPPORTED_INTERP_SCHEMES:
-                raise ValueError("Interpolation scheme '{}' not understood."
-                                 "".format(schemes))
-            schemes_ = [schemes_] * self.values.ndim
-        except TypeError:
-            schemes_ = []
-            for i, scheme in enumerate(schemes):
-                scheme_ = str(scheme).lower()
-                if scheme_ not in SUPPORTED_INTERP_SCHEMES:
-                    raise ValueError("Scheme '{}' at index {} not understood."
-                                     "".format(scheme, i))
-                schemes_.append(scheme_)
-
-        self.schemes = schemes_
-
-        if nn_variants is None:
-            variants_ = [None] * self.values.ndim
-        else:
-            try:
-                variants_ = str(nn_variants + '').lower()  # pythonic str check
-                if variants_ not in ('left', 'right'):
-                    raise ValueError("Interpolation scheme '{}' not "
-                                     "understood.".format(nn_variants))
-                variants_ = [variants_] * self.values.ndim
-            except TypeError:
-                variants_ = []
-                for i, var in enumerate(nn_variants):
-                    var_ = str(var).lower()
-                    if var_ not in ('left', 'right'):
-                        raise ValueError("Variant '{}' at index {} not "
-                                         "understood.".format(var, i))
-                    variants_.append(var_)
-
-        self.nn_variants = variants_
+        self.schemes = schemes
+        self.nn_variants = nn_variants
 
     def _evaluate(self, indices, norm_distances, out=None):
         """Evaluate linear interpolation.
@@ -876,7 +971,9 @@ class _LinearInterpolator(_PerAxisInterpolator):
         typ : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
         """
-        super().__init__(coord_vecs, values, typ, schemes='linear')
+        super().__init__(coord_vecs, values, typ,
+                         schemes=['linear'] * len(coord_vecs),
+                         nn_variants=[None] * len(coord_vecs))
 
 
 if __name__ == '__main__':
