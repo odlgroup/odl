@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=abstract-method
+"""Base classes for discretization."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -33,11 +33,8 @@ from odl.space.ntuples import Ntuples, Fn, Rn, Cn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
-if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaNtuples, CudaFn, CudaRn
-    CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
-else:
-    CudaRn = CudaCn = CudaFn = CudaNtuples = type(None)
+from odl.space.cu_ntuples import CudaNtuples, CudaFn, CudaRn
+CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
@@ -70,7 +67,7 @@ class RawDiscretization(NtuplesBase):
     **extension**.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None, **kwargs):
+    def __init__(self, uspace, dspace, restr=None, ext=None):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -186,6 +183,7 @@ class RawDiscretization(NtuplesBase):
         if inp is None:
             return self.element_type(self, self.dspace.element())
         try:
+            # pylint: disable=not-callable
             return self.element_type(self, self.restriction(inp))
         except TypeError:
             # Sequence-type input
@@ -235,14 +233,8 @@ class RawDiscretizationVector(NtuplesBaseVector):
 
     def __init__(self, space, ntuple):
         """Initialize a new instance."""
-        if not isinstance(space, RawDiscretization):
-            raise TypeError('space {!r} not a `RawDiscretization` '
-                            'instance.'.format(space))
-
-        if not isinstance(ntuple, space.dspace.element_type):
-            raise TypeError('n-tuple {!r} not an `{}` vector.'
-                            ''.format(ntuple,
-                                      space.dspace.__class__.__name__))
+        assert isinstance(space, RawDiscretization)
+        assert isinstance(ntuple, space.dspace.element_type)
         super().__init__(space)
         self._ntuple = ntuple
 
@@ -285,7 +277,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
             `True` if all entries of ``other`` are equal to this
             vector's entries, `False` otherwise.
         """
-        return (type(other) == type(self) and
+        return (isinstance(other, RawDiscretizationVector) and
                 self.ntuple == other.ntuple)
 
     def __getitem__(self, indices):
@@ -416,26 +408,32 @@ class Discretization(RawDiscretization, FnBase):
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
+        # pylint: disable=protected-access
         self.dspace._lincomb(a, x1.ntuple, b, x2.ntuple, out.ntuple)
 
     def _dist(self, x1, x2):
         """Raw distance between two vectors."""
+        # pylint: disable=protected-access
         return self.dspace._dist(x1.ntuple, x2.ntuple)
 
     def _norm(self, x):
         """Raw norm of a vector."""
+        # pylint: disable=protected-access
         return self.dspace._norm(x.ntuple)
 
     def _inner(self, x1, x2):
         """Raw inner product of two vectors."""
+        # pylint: disable=protected-access
         return self.dspace._inner(x1.ntuple, x2.ntuple)
 
     def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two vectors."""
+        # pylint: disable=protected-access
         self.dspace._multiply(x1.ntuple, x2.ntuple, out.ntuple)
 
     def _divide(self, x1, x2, out):
         """Raw pointwise multiplication of two vectors."""
+        # pylint: disable=protected-access
         self.dspace._divide(x1.ntuple, x2.ntuple, out.ntuple)
 
     @property
@@ -450,9 +448,7 @@ class DiscretizationVector(RawDiscretizationVector, FnBaseVector):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        if not isinstance(space, Discretization):
-            raise TypeError('space {!r} not a `Discretization` '
-                            'instance.'.format(space))
+        assert isinstance(space, Discretization)
         super().__init__(space, data)
 
 

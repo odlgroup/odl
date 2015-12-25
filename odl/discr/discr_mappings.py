@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=abstract-method
+"""Mappings between abstract (continuous) and discrete sets.
+
+Includes grid evaluation (collocation) and various interpolation
+operators.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -47,6 +51,7 @@ class FunctionSetMapping(Operator):
 
     """Abstract base class for function set discretization mappings."""
 
+    # pylint: disable=abstract-method
     def __init__(self, map_type, fset, grid, dspace, order='C', linear=False):
         """Initialize a new instance.
 
@@ -253,12 +258,12 @@ class GridCollocation(FunctionSetMapping):
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
-        mg = self.grid.meshgrid()
+        mesh = self.grid.meshgrid()
         if out is None:
-            out = func(mg).ravel(order=self.order)
+            out = func(mesh).ravel(order=self.order)
         else:
-            func(mg, out=out.asarray().reshape(self.grid.shape,
-                                               order=self.order))
+            func(mesh, out=out.asarray().reshape(self.grid.shape,
+                                                 order=self.order))
         return out
 
 
@@ -580,6 +585,10 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
         return index_vecs, norm_distances
 
+    def _evaluate(self, indices, norm_distances, out=None):
+        """Evaluation method, needs to be overridden."""
+        raise NotImplementedError
+
 
 class _MeshgridInterpolator(_PointwiseInterpolator):
 
@@ -590,6 +599,7 @@ class _MeshgridInterpolator(_PointwiseInterpolator):
 scipy.interpolate.RegularGridInterpolator.html>`_ class.
     """
 
+    # pylint: disable=abstract-method
     def __call__(self, x, out=None):
         """Do the interpolation.
 

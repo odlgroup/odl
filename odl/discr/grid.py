@@ -64,19 +64,19 @@ def sparse_meshgrid(*x, **kwargs):
     """
     n = len(x)
     order = kwargs.pop('order', 'C')
-    mg = []
+    mesh = []
     for ax, xi in enumerate(x):
         xi = np.asarray(xi)
         slc = [None] * n
         slc[ax] = np.s_[:]
         if order == 'C':
-            mg.append(np.ascontiguousarray(xi[slc]))
+            mesh.append(np.ascontiguousarray(xi[slc]))
         else:
-            mg.append(np.asfortranarray(xi[slc]))
+            mesh.append(np.asfortranarray(xi[slc]))
     if order == 'C':
-        return tuple(mg)
+        return tuple(mesh)
     else:
-        return tuple(reversed(mg))
+        return tuple(reversed(mesh))
 
 
 class TensorGrid(Set):
@@ -331,7 +331,7 @@ class TensorGrid(Set):
             return False
 
         # pylint: disable=arguments-differ
-        return (type(self) == type(other) and
+        return (isinstance(other, TensorGrid) and
                 self.ndim == other.ndim and
                 self.shape == other.shape and
                 all(np.allclose(vec_s, vec_o, atol=tol, rtol=0.0)
@@ -1080,11 +1080,12 @@ class RegularGrid(TensorGrid):
         new_maxpt = []
         new_shape = []
 
-        for slc, mi, ma, shp, cvec in zip(slc_list, self.min_pt, self.max_pt,
-                                          self.shape, self.coord_vectors):
+        for slc, min_, max_, shp, cvec in zip(
+                slc_list, self.min_pt, self.max_pt, self.shape,
+                self.coord_vectors):
             if slc == np.s_[:]:  # Take all along this axis
-                new_minpt.append(mi)
-                new_maxpt.append(ma)
+                new_minpt.append(min_)
+                new_maxpt.append(max_)
                 new_shape.append(shp)
             elif isinstance(slc, Integral):  # Single index
                 new_minpt.append(cvec[slc])
@@ -1184,6 +1185,7 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
         raise ValueError('number of nodes {} has non-positive entries.'
                          ''.format(num_nodes))
 
+    # pylint: disable=protected-access
     if np.any(num_nodes[intv_prod._ideg] > 1):
         raise ValueError('degenerate axes {} cannot be sampled with more '
                          'than one node.'.format(tuple(intv_prod._ideg)))

@@ -17,10 +17,6 @@
 
 """:math:`L^p` type discretizations of function spaces."""
 
-# TODO: write some introduction doc
-
-# pylint: disable=abstract-method
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -140,6 +136,7 @@ class DiscreteLp(Discretization):
         elif inp in self.dspace:
             return self.element_type(self, inp)
         try:
+            # pylint: disable=not-callable
             inp_elem = self.uspace.element(inp)
             return self.element_type(self, self.restriction(inp_elem))
         except TypeError:
