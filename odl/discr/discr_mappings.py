@@ -35,7 +35,8 @@ from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space.fspace import FunctionSet, FunctionSpace
 from odl.set.domain import IntervalProd
-from odl.util.vectorization import is_valid_input_meshgrid
+from odl.util.vectorization import (is_valid_input_meshgrid,
+                                    out_shape_from_meshgrid)
 
 
 __all__ = ('FunctionSetMapping',
@@ -667,11 +668,11 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         # slice for broadcasting over trailing dimensions in self.values
         vslice = (slice(None),) + (None,) * (self.values.ndim - len(indices))
 
-        print('indices: ', indices)
-        print('norm_distances: ', norm_distances)
+        out_shape = out_shape_from_meshgrid(norm_distances)
+        out_dtype = norm_distances[0].dtype
 
         if out is None:
-            out = 0.0
+            out = np.zeros(out_shape, dtype=out_dtype)
         else:
             out[:] = 0.0
 
@@ -687,7 +688,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
             # For "too low" nodes, the lower neighbor gets weight zero;
             # "too high" gets 2 - yi (since yi >= 1)
-            w_lo = 1 - yi
+            w_lo = (1 - yi)
             w_lo[lo] = 0
             w_lo[hi] += 1
             low_weights.append(w_lo)
@@ -710,8 +711,9 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         # axis, resulting in a loop of length 2**ndim
         for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
                                product(*edge_indices)):
-            weight = 1.0
+            weight = np.ones(out_shape, dtype=out_dtype)
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
+
                 if lh == 'l':
                     weight *= w_lo
                 else:
