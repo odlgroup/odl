@@ -27,9 +27,10 @@ from builtins import super, str
 import numpy as np
 
 # ODL
-from odl.discr.discretization import (Discretization, DiscretizationVector,
-                                      dspace_type)
-from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
+from odl.discr.discretization import (
+    Discretization, DiscretizationVector, dspace_type)
+from odl.discr.discr_mappings import (
+    GridCollocation, NearestInterpolation, LinearInterpolation)
 from odl.discr.grid import uniform_sampling, RegularGrid
 from odl.set.sets import Field, RealNumbers
 from odl.set.domain import IntervalProd
@@ -41,10 +42,8 @@ from odl.util.ufuncs import DiscreteLpUFuncs
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr', 'uniform_discr_fromspace')
 
-_SUPPORTED_INTERP = ('nearest',)
+_SUPPORTED_INTERP = ('nearest', 'linear')
 
-
-# TODO: other types of discrete spaces
 
 class DiscreteLp(Discretization):
 
@@ -74,8 +73,8 @@ class DiscreteLp(Discretization):
 
             'nearest' : use nearest-neighbor interpolation (default)
 
-            'linear' : use linear interpolation (not implemented)
-        order : {'C', 'F'}, optional  (Default: 'C')
+            'linear' : use linear interpolation
+        order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies slowest, the last fastest,
             'F' vice versa.
@@ -97,7 +96,11 @@ class DiscreteLp(Discretization):
         if self.interp == 'nearest':
             extension = NearestInterpolation(fspace, grid, dspace,
                                              order=self.order)
+        elif self.interp == 'linear':
+            extension = LinearInterpolation(fspace, grid, dspace,
+                                            order=self.order)
         else:
+            # Should not happen
             raise NotImplementedError
 
         Discretization.__init__(self, fspace, dspace, restriction, extension)
@@ -110,7 +113,7 @@ class DiscreteLp(Discretization):
 
     @property
     def exponent(self):
-        """The exponent :math:`p` in :math:`L^p`."""
+        """The exponent ``p`` in ``L^p``."""
         return self._exponent
 
     def element(self, inp=None):
@@ -414,15 +417,15 @@ class DiscreteLpVector(DiscretizationVector):
         method : `str`, optional
             1d methods:
 
-        'plot' : graph plot
+            'plot' : graph plot
 
-        2d methods:
+            2d methods:
 
-        'imshow' : image plot with coloring according to value,
-        including a colorbar.
+            'imshow' : image plot with coloring according to value,
+            including a colorbar.
 
-        'scatter' : cloud of scattered 3d points
-        (3rd axis <-> value)
+            'scatter' : cloud of scattered 3d points
+            (3rd axis <-> value)
 
         indices : index expression
             Display a slice of the array instead of the full array.
