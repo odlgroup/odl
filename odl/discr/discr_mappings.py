@@ -550,39 +550,28 @@ class PerAxisInterpolation(FunctionSetMapping):
 
         try:
             schemes_ = str(schemes + '').lower()  # pythonic string check
-            if schemes_ not in SUPPORTED_INTERP_SCHEMES:
-                raise ValueError("Interpolation scheme '{}' not understood."
-                                 "".format(schemes))
             schemes_ = [schemes_] * self.values.ndim
         except TypeError:
-            schemes_ = []
-            for i, scheme in enumerate(schemes):
-                scheme_ = str(scheme).lower()
-                if scheme_ not in SUPPORTED_INTERP_SCHEMES:
-                    raise ValueError("Interpolation scheme '{}' at index {} "
-                                     "not understood.".format(scheme, i))
-                schemes_.append(scheme_)
-
-        self._schemes = schemes_
+            schemes_ = [str(scm).lower() for scm in schemes]
 
         if nn_variants is None:
             variants_ = [None] * self.values.ndim
         else:
             try:
                 variants_ = str(nn_variants + '').lower()  # pythonic str check
-                if variants_ not in ('left', 'right'):
-                    raise ValueError("Variant '{}' not understood."
-                                     "".format(nn_variants))
                 variants_ = [variants_] * self.values.ndim
             except TypeError:
-                variants_ = []
-                for i, var in enumerate(nn_variants):
-                    var_ = str(var).lower()
-                    if var_ not in ('left', 'right'):
-                        raise ValueError("Variant '{}' at index {} not "
-                                         "understood.".format(var, i))
-                    variants_.append(var_)
+                variants_ = [str(var).lower() for var in nn_variants]
 
+        for i, (scm, var) in enumerate(zip(schemes, variants_)):
+            if scm not in SUPPORTED_INTERP_SCHEMES:
+                raise ValueError("Interpolation scheme '{}' at index {} not "
+                                 "understood.".format(scm, i))
+            if scm == 'nearest' and var not in ('left', 'right'):
+                raise ValueError("Nearest neighbor variant '{}' at index {} "
+                                 "not understood.".format(var, i))
+
+        self._schemes = schemes_
         self._nn_variants = variants_
 
     @property
