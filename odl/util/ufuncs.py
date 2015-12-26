@@ -43,97 +43,35 @@ import numpy as np
 
 # Some are ignored since they dont cooperate with dtypes, needs fix
 
-# Information:
-# Name, input args, output args, docstring
-RAW_UFUNCS = [('add', 2, 1, 'Add arguments element-wise with numpy.'),
-              ('subtract', 2, 1, 'Subtract arguments, element-wise with numpy.'),
-              ('multiply', 2, 1, 'Multiply arguments element-wise with numpy.'),
-              ('divide', 2, 1, 'Divide arguments element-wise with numpy.'),
-              ('logaddexp', 2, 1, 'Logarithm of the sum of exponentiations of the inputs.'),
-              ('logaddexp2', 2, 1, 'Logarithm of the sum of exponentiations of the inputs in base-2.'),
-              ('true_divide', 2, 1, 'Returns a true division of the inputs, element-wise.'),
-              ('floor_divide', 2, 1, 'Return the largest integer smaller or equal to the division of the inputs.'),
-              ('negative', 1, 1, 'Numerical negative, element-wise.'),
-              ('power', 2, 1, 'First array elements raised to powers from second array, element-wise.'),
-              ('remainder', 2, 1, 'Return element-wise remainder of division.'),
-              ('mod', 2, 1, 'Return element-wise remainder of division.'),
-              ('fmod', 2, 1, 'Return the element-wise remainder of division.'),
-              ('absolute', 1, 1, 'Calculate the absolute value element-wise.'),
-              ('rint', 1, 1, 'Round elements of the array to the nearest integer.'),
-              ('sign', 1, 1, 'Returns an element-wise indication of the sign of a number.'),
-              ('conj', 1, 1, 'Return the complex conjugate, element-wise.'),
-              ('exp', 1, 1, 'Calculate the exponential of all elements in the input array.'),
-              ('exp2', 1, 1, 'Calculate 2**p for all p in the input array.'),
-              ('log', 1, 1, 'Natural logarithm, element-wise.'),
-              ('log2', 1, 1, 'Base-2 logarithm of x.'),
-              ('log10', 1, 1, 'Return the base 10 logarithm of the input array, element-wise.'),
-              ('expm1', 1, 1, 'Calculate exp(x) - 1 for all elements in the array.'),
-              ('log1p', 1, 1, 'Return the natural logarithm of one plus the input array, element-wise.'),
-              ('sqrt', 1, 1, 'Return the positive square-root of an array, element-wise.'),
-              ('square', 1, 1, 'Return the element-wise square of the input.'),
-              ('reciprocal', 1, 1, 'Return the reciprocal of the argument, element-wise.'),
-              ('sin', 1, 1, 'Trigonometric sine, element-wise.'),
-              ('cos', 1, 1, 'Cosine element-wise.'),
-              ('tan', 1, 1, 'Compute tangent element-wise.'),
-              ('arcsin', 1, 1, 'Inverse sine, element-wise.'),
-              ('arccos', 1, 1, 'Trigonometric inverse cosine, element-wise.'),
-              ('arctan', 1, 1, 'Trigonometric inverse tangent, element-wise.'),
-              ('arctan2', 2, 1, 'Element-wise arc tangent of x1/x2 choosing the quadrant correctly.'),
-              ('hypot', 2, 1, 'Given the "legs" of a right triangle, return its hypotenuse.'),
-              ('sinh', 1, 1, 'Hyperbolic sine, element-wise.'),
-              ('cosh', 1, 1, 'Hyperbolic cosine, element-wise.'),
-              ('tanh', 1, 1, 'Compute hyperbolic tangent element-wise.'),
-              ('arcsinh', 1, 1, 'Inverse hyperbolic sine element-wise.'),
-              ('arccosh', 1, 1, 'Inverse hyperbolic cosine, element-wise.'),
-              ('arctanh', 1, 1, 'Inverse hyperbolic tangent element-wise.'),
-              ('deg2rad', 1, 1, 'Convert angles from degrees to radians.'),
-              ('rad2deg', 1, 1, 'Convert angles from radians to degrees.'),
-              ('bitwise_and', 2, 1, 'Compute the bit-wise AND of two arrays element-wise.'),
-              ('bitwise_or', 2, 1, 'Compute the bit-wise OR of two arrays element-wise.'),
-              ('bitwise_xor', 2, 1, 'Compute the bit-wise XOR of two arrays element-wise.'),
-              ('invert', 1, 1, 'Compute bit-wise inversion, or bit-wise NOT, element-wise.'),
-              ('left_shift', 2, 1, 'Shift the bits of an integer to the left.'),
-              ('right_shift', 2, 1, 'Shift the bits of an integer to the right.'),
-              ('greater', 2, 1, 'Return the truth value of (x1 > x2) element-wise.'),
-              ('greater_equal', 2, 1, 'Return the truth value of (x1 >= x2) element-wise.'),
-              ('less', 2, 1, 'Return the truth value of (x1 < x2) element-wise.'),
-              ('less_equal', 2, 1, 'Return the truth value of (x1 =< x2) element-wise.'),
-              ('not_equal', 2, 1, 'Return (x1 != x2) element-wise.'),
-              ('equal', 2, 1, 'Return (x1 == x2) element-wise.'),
-              ('logical_and', 2, 1, 'Compute the truth value of x1 AND x2 element-wise.'),
-              ('logical_or', 2, 1, 'Compute the truth value of x1 OR x2 element-wise.'),
-              ('logical_xor', 2, 1, 'Compute the truth value of x1 XOR x2, element-wise.'),
-              ('logical_not', 1, 1, 'Compute the truth value of NOT x element-wise.'),
-              ('maximum', 2, 1, 'Element-wise maximum of array elements.'),
-              ('minimum', 2, 1, 'Element-wise minimum of array elements.'),
-              ('fmax', 2, 1, 'Element-wise maximum of array elements.'),
-              ('fmin', 2, 1, 'Element-wise minimum of array elements.'),
-              # ('isreal', 1, 0, 'Returns a bool array, where True if input element is real.'),
-              # ('iscomplex', 1, 0, 'Returns a bool array, where True if input element is complex.'),
-              ('isfinite', 1, 1, 'Test element-wise for finiteness (not infinity or not Not a Number).'),
-              ('isinf', 1, 1, 'Test element-wise for positive or negative infinity.'),
-              ('isnan', 1, 1, 'Test element-wise for NaN and return result as a boolean array.'),
-              ('signbit', 1, 1, 'Returns element-wise True where signbit is set (less than zero).'),
-              ('copysign', 2, 1, 'Change the sign of x1 to that of x2, element-wise.'),
-              ('nextafter', 2, 1, 'Return the next floating-point value after x1 towards x2, element-wise.'),
-              ('modf', 1, 2, 'Return the fractional and integral parts of an array, element-wise.'),
-              # ('ldexp', 2, 1, 'Returns x1 * 2**x2, element-wise.'),
-              # ('frexp', 1, 2, 'Decompose the elements of x into mantissa and twos exponent.'),
-              ('fmod', 2, 1, 'Return the element-wise remainder of division.'),
-              ('floor', 1, 1, 'Return the floor of the input, element-wise.'),
-              ('ceil', 1, 1, 'Return the ceiling of the input, element-wise.'),
-              ('trunc', 1, 1, 'Return the truncated value of the input, element-wise.')]
+UFUNC_LIST = ['absolute', 'add', 'arccos', 'arccosh', 'arcsin', 'arcsinh',
+              'arctan', 'arctan2', 'arctanh', 'bitwise_and', 'bitwise_or',
+              'bitwise_xor', 'ceil', 'conj', 'copysign', 'cos', 'cosh',
+              'deg2rad', 'divide', 'equal', 'exp', 'exp2', 'expm1', 'floor',
+              'floor_divide', 'fmax', 'fmin', 'fmod', 'fmod', 'greater',
+              'greater_equal', 'hypot', 'invert', 'isfinite', 'isinf', 'isnan',
+              'left_shift', 'less', 'less_equal', 'log', 'log10', 'log1p',
+              'log2', 'logaddexp', 'logaddexp2', 'logical_and', 'logical_not',
+              'logical_or', 'logical_xor', 'maximum', 'minimum', 'mod', 'modf',
+              'multiply', 'negative', 'nextafter', 'not_equal', 'power',
+              'rad2deg', 'reciprocal', 'remainder', 'right_shift', 'rint',
+              'sign', 'signbit', 'sin', 'sinh', 'sqrt', 'square', 'subtract',
+              'tan', 'tanh', 'true_divide', 'trunc'
+              # ,'isreal', 'iscomplex', 'ldexp', 'frexp'
+              ]
 
 # Add some standardized information
 UFUNCS = []
-for name, n_args, n_opt, descr in RAW_UFUNCS:
+for name in UFUNC_LIST:
+    ufunc = getattr(np, name)
+    n_in, n_out = ufunc.nin, ufunc.nout
+    descr = ufunc.__doc__.splitlines()[2]
     doc = descr + """
 
 See also
 --------
 numpy.{}
 """.format(name)
-    UFUNCS += [(name, n_args, n_opt, doc)]
+    UFUNCS.append((name, n_in, n_out, doc))
 
 RAW_REDUCTIONS = [('sum', 'Sum of array elements.'),
                   ('prod', 'Product of array elements.'),
