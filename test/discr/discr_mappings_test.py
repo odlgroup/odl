@@ -29,7 +29,8 @@ import numpy as np
 import odl
 from odl.discr.grid import sparse_meshgrid
 from odl.discr.discr_mappings import (
-    GridCollocation, NearestInterpolation, LinearInterpolation)
+    GridCollocation, NearestInterpolation, LinearInterpolation,
+    PerAxisInterpolation)
 from odl.util.testutils import all_almost_equal, all_equal, almost_equal
 
 
@@ -285,6 +286,63 @@ def test_linear_interpolation_2d():
     true_val_21 = ((1 - lx2) * (1 - ly1) * rvals[3, 0] +
                    (1 - lx2) * ly1 * rvals[3, 1])  # high node 1.0, no upper
     true_val_22 = (1 - lx2) * rvals[3, 1]  # ly2 = 0, no upper for 1.0
+    true_mg = [[true_val_11, true_val_12],
+               [true_val_21, true_val_22]]
+    assert all_equal(function(mg), true_mg)
+    out = np.empty((2, 2), dtype='float64')
+    function(mg, out=out)
+    assert all_equal(out, true_mg)
+
+
+def test_per_axis_interpolation():
+    rect = odl.Rectangle([0, 0], [1, 1])
+    grid = odl.uniform_sampling(rect, [4, 2], as_midp=True)
+    # Coordinate vectors are:
+    # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
+
+    space = odl.FunctionSpace(rect)
+    dspace = odl.Rn(grid.ntotal)
+    schemes = ['linear', 'nearest']
+    variants = [None, 'right']
+    interp_op = PerAxisInterpolation(space, grid, dspace, schemes=schemes,
+                                     nn_variants=variants)
+    values = np.arange(1, 9, dtype='float64')
+    function = interp_op(values)
+    rvals = values.reshape([4, 2])
+
+    # Evaluate at single point
+    val = function([0.3, 0.5])
+    l1 = (0.3 - 0.125) / (0.375 - 0.125)
+    # 0.5 equally far from both neighbors -> 'right' chooses 0.75
+    true_val = (1 - l1) * rvals[0, 1] + l1 * rvals[1, 1]
+    assert almost_equal(val, true_val)
+
+    # Input array, with and without output array
+    pts = np.array([[0.3, 0.6],
+                    [0.1, 0.25],
+                    [1.0, 1.0]])
+    l1 = (0.3 - 0.125) / (0.375 - 0.125)
+    true_val_1 = (1 - l1) * rvals[0, 1] + l1 * rvals[1, 1]
+    l1 = (0.125 - 0.1) / (0.375 - 0.125)
+    true_val_2 = (1 - l1) * rvals[0, 0]  # only lower left contributes
+    l1 = (1.0 - 0.875) / (0.875 - 0.625)
+    true_val_3 = (1 - l1) * rvals[3, 1]  # lower left only
+    true_arr = [true_val_1, true_val_2, true_val_3]
+    assert all_equal(function(pts.T), true_arr)
+
+    out = np.empty(3, dtype='float64')
+    function(pts.T, out=out)
+    assert all_equal(out, true_arr)
+
+    # Input meshgrid, with and without output array
+    mg = sparse_meshgrid([0.3, 1.0], [0.4, 0.85])
+    # Indices: (1, 3) x (0, 1)
+    lx1 = (0.3 - 0.125) / (0.375 - 0.125)
+    lx2 = (1.0 - 0.875) / (0.875 - 0.625)
+    true_val_11 = (1 - lx1) * rvals[0, 0] + lx1 * rvals[1, 0]
+    true_val_12 = ((1 - lx1) * rvals[0, 1] + lx1 * rvals[1, 1])
+    true_val_21 = (1 - lx2) * rvals[3, 0]
+    true_val_22 = (1 - lx2) * rvals[3, 1]
     true_mg = [[true_val_11, true_val_12],
                [true_val_21, true_val_22]]
     assert all_equal(function(mg), true_mg)
