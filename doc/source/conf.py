@@ -12,9 +12,10 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
+import glob
 import os
 import sphinx_rtd_theme
+import sys
 
 # -- General configuration ------------------------------------------------
 
@@ -118,7 +119,6 @@ def setup(app):
     app.connect("autodoc-skip-member", skip)
 
 # Autosummary
-import glob
 autosummary_generate = glob.glob("./*.rst")
 
 # Stops WARNING: toctree contains reference to nonexisting document
