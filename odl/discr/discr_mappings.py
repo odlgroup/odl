@@ -933,13 +933,18 @@ class _PerAxisInterpolator(_Interpolator):
         # axis, resulting in a loop of length 2**ndim
         for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
                                product(*edge_indices)):
-            weight = np.ones(out_shape, dtype=out_dtype)
+            weight = 1.0
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
+                # We don't multiply in place to exploit the cheap operations
+                # in the beginning: sizes grow gradually as following:
+                # (n, 1, 1, ...) -> (n, m, 1, ...) -> ...
+                # Hence, it is faster to build up the weight array instead
+                # of doing full-size operations from the beginning.
                 if lh == 'l':
-                    weight *= w_lo
+                    weight = weight * w_lo
                 else:
-                    weight *= w_hi
+                    weight = weight * w_hi
             out += np.asarray(self.values[edge]) * weight[vslice]
         return np.array(out, copy=False, ndmin=1)
 
