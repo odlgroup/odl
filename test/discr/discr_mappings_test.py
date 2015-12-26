@@ -351,5 +351,42 @@ def test_per_axis_interpolation():
     assert all_equal(out, true_mg)
 
 
+def test_collocation_interpolation_identity():
+    # Check if interpolation followed by collocation on the same grid
+    # is the identity
+    rect = odl.Rectangle([0, 0], [1, 1])
+    grid = odl.uniform_sampling(rect, [4, 2], as_midp=True)
+    space = odl.FunctionSpace(rect)
+    dspace = odl.Rn(grid.ntotal)
+
+    # Testing 'C' and 'F' ordering and all interpolation schemes
+    coll_op_c = GridCollocation(space, grid, dspace, order='C')
+    coll_op_f = GridCollocation(space, grid, dspace, order='F')
+    interp_ops_c = [NearestInterpolation(space, grid, dspace, order='C',
+                                         variant='left'),
+                    NearestInterpolation(space, grid, dspace, order='C',
+                                         variant='right'),
+                    LinearInterpolation(space, grid, dspace, order='C'),
+                    PerAxisInterpolation(space, grid, dspace, order='C',
+                                         schemes=['linear', 'nearest'])]
+    interp_ops_f = [NearestInterpolation(space, grid, dspace, order='F',
+                                         variant='left'),
+                    NearestInterpolation(space, grid, dspace, order='F',
+                                         variant='right'),
+                    LinearInterpolation(space, grid, dspace, order='F'),
+                    PerAxisInterpolation(space, grid, dspace, order='F',
+                                         schemes=['linear', 'nearest'])]
+
+    values = np.arange(1, 9, dtype='float64')
+
+    for interp_op_c in interp_ops_c:
+        ident_values = coll_op_c(interp_op_c(values))
+        assert all_almost_equal(ident_values, values)
+
+    for interp_op_f in interp_ops_f:
+        ident_values = coll_op_f(interp_op_f(values))
+        assert all_almost_equal(ident_values, values)
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
