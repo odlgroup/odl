@@ -550,16 +550,16 @@ class PerAxisInterpolation(FunctionSetMapping):
 
         try:
             schemes_ = str(schemes + '').lower()  # pythonic string check
-            schemes_ = [schemes_] * self.values.ndim
+            schemes_ = [schemes_] * self.grid.ndim
         except TypeError:
             schemes_ = [str(scm).lower() for scm in schemes]
 
         if nn_variants is None:
-            variants_ = [None] * self.values.ndim
+            variants_ = ['left'] * self.grid.ndim
         else:
             try:
                 variants_ = str(nn_variants + '').lower()  # pythonic str check
-                variants_ = [variants_] * self.values.ndim
+                variants_ = [variants_] * self.grid.ndim
             except TypeError:
                 variants_ = [str(var).lower() for var in nn_variants]
 
