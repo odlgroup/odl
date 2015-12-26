@@ -43,7 +43,8 @@ from odl.util.vectorization import (is_valid_input_meshgrid,
 
 
 __all__ = ('FunctionSetMapping',
-           'GridCollocation', 'NearestInterpolation', 'LinearInterpolation')
+           'GridCollocation', 'NearestInterpolation', 'LinearInterpolation',
+           'PerAxisInterpolation')
 
 SUPPORTED_INTERP_SCHEMES = ['nearest', 'linear']
 
