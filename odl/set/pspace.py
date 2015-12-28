@@ -621,7 +621,7 @@ class ProductSpaceVector(LinearSpaceVector):
 
         if indices is None:
             if len(self) < 5:
-                indices = slice(None)
+                indices = np.arange(self.size)
             else:
                 indices = np.linspace(0, self.size - 1, 4, dtype=int)
         else:
