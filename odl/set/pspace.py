@@ -630,9 +630,10 @@ class ProductSpaceVector(LinearSpaceVector):
 
             if isinstance(indices, slice):
                 indices = range(*indices.indices(self.size))
-
-            if isinstance(indices, Integral):
+            elif isinstance(indices, Integral):
                 indices = [indices]
+
+            # else try with indices as is
 
         for i, part in zip(indices, self[indices]):
             part.show(*args, title='{}. Part {}'.format(title, i), **kwargs)

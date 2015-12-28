@@ -33,7 +33,7 @@ vec = spc.element(np.sin(spc.points()))
 vec.show()
 (vec * 2).show()
 
-# Plotting is defered untill show() is called
+# Plotting is deferred until show() is called
 plt.show()
 
 # Can also force "instant" plotting

@@ -437,8 +437,7 @@ class DiscreteLpVector(DiscretizationVector):
             Set the title of the figure
 
         show : `bool`, optional
-            If the plot should be showed now or defered untill later.
-            Default: False
+            If the plot should be showed now or deferred until later.
 
         fig : ``matplotlib`` figure
             The figure to show in. Expected to be of same "style", as

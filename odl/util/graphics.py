@@ -72,8 +72,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         (semantically ``[:, :, shape[2:] // 2]``).
 
     show : `bool`, optional
-        If the plot should be showed now or defered untill later.
-        Default: False
+        If the plot should be showed now or deferred until later.
 
     fig : ``matplotlib`` figure
         The figure to show in. Expected to be of same "style", as the figure
@@ -232,6 +231,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     if title is not None:
         plt.title(title)
+        fig.canvas.manager.set_window_title(title)
 
     if dfunc_is_complex:
         # Real
