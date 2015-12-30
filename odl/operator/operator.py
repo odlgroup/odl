@@ -431,7 +431,7 @@ class Operator(object):
         """Create a new instance."""
         instance = super().__new__(cls)
 
-        # pylint: disable=protected-access,redefined-variable-type
+        # pylint: disable=redefined-variable-type
         call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
         instance._call_has_out = call_has_out
         instance._call_out_optional = call_out_optional
@@ -1012,7 +1012,6 @@ class OperatorSum(Operator):
 
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, op1, op2, tmp_ran=None, tmp_dom=None):
         """Initialize a new instance.
 
@@ -1237,7 +1236,6 @@ class OperatorPointwiseProduct(Operator):
     ``OperatorPointwiseProduct(op1, op2) <==> (x --> op1(x) * op2(x))``
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, op1, op2):
         """Initialize a new instance.
 

@@ -408,32 +408,26 @@ class Discretization(RawDiscretization, FnBase):
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
-        # pylint: disable=protected-access
         self.dspace._lincomb(a, x1.ntuple, b, x2.ntuple, out.ntuple)
 
     def _dist(self, x1, x2):
         """Raw distance between two vectors."""
-        # pylint: disable=protected-access
         return self.dspace._dist(x1.ntuple, x2.ntuple)
 
     def _norm(self, x):
         """Raw norm of a vector."""
-        # pylint: disable=protected-access
         return self.dspace._norm(x.ntuple)
 
     def _inner(self, x1, x2):
         """Raw inner product of two vectors."""
-        # pylint: disable=protected-access
         return self.dspace._inner(x1.ntuple, x2.ntuple)
 
     def _multiply(self, x1, x2, out):
         """Raw pointwise multiplication of two vectors."""
-        # pylint: disable=protected-access
         self.dspace._multiply(x1.ntuple, x2.ntuple, out.ntuple)
 
     def _divide(self, x1, x2, out):
         """Raw pointwise multiplication of two vectors."""
-        # pylint: disable=protected-access
         self.dspace._divide(x1.ntuple, x2.ntuple, out.ntuple)
 
     @property

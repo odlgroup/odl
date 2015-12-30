@@ -53,7 +53,6 @@ class FunctionSetMapping(Operator):
 
     """Abstract base class for function set discretization mappings."""
 
-    # pylint: disable=abstract-method
     def __init__(self, map_type, fset, grid, dspace, order='C', linear=False):
         """Initialize a new instance.
 

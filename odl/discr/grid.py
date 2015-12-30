@@ -1185,7 +1185,6 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
         raise ValueError('number of nodes {} has non-positive entries.'
                          ''.format(num_nodes))
 
-    # pylint: disable=protected-access
     if np.any(num_nodes[intv_prod._ideg] > 1):
         raise ValueError('degenerate axes {} cannot be sampled with more '
                          'than one node.'.format(tuple(intv_prod._ideg)))

@@ -332,7 +332,6 @@ class ProductSpace(LinearSpace):
         return self.element([space.one() for space in self.spaces])
 
     def _lincomb(self, a, x, b, y, out):
-        # pylint: disable=protected-access
         for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts,
                                        out.parts):
             space._lincomb(a, xp, b, yp, outp)

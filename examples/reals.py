@@ -17,8 +17,6 @@
 
 """An example of a very simple space, the real numbers."""
 
-# pylint: disable=abstract-method
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library

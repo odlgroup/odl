@@ -186,7 +186,6 @@ class LinCombOperator(Operator):
     ``out = a*x[0] + b*x[1]``
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, space, a, b):
         """Initialize a LinCombOperator instance.
 
@@ -260,7 +259,6 @@ class MultiplyOperator(Operator):
     in the second the scalar multiplication.
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, y, domain=None):
         """Initialize a MultiplyOperator instance.
 
@@ -379,7 +377,6 @@ class InnerProductOperator(Operator):
     This is only applicable in inner product spaces.
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, vector):
         """Initialize a InnerProductOperator instance.
 
