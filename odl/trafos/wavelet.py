@@ -221,7 +221,7 @@ def pywt_coeff_to_array(coeff, size_list):
       """
     flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
     ndim = len(size_list[0])
-    dcoeffs_per_scale = 2**ndim - 1
+    dcoeffs_per_scale = 2 ** ndim - 1
 
     flat_total_size = flat_sizes[0] + dcoeffs_per_scale * sum(flat_sizes[1:])
     flat_coeff = np.empty(flat_total_size)
@@ -331,7 +331,7 @@ def array_to_pywt_coeff(coeff, size_list):
     stop = flat_sizes[0]
     coeff_list = [np.asarray(coeff)[start:stop].reshape(size_list[0])]
     ndim = len(size_list[0])
-    dcoeffs_per_scale = 2**ndim - 1
+    dcoeffs_per_scale = 2 ** ndim - 1
 
     for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
         start, stop = stop, stop + dcoeffs_per_scale * fsize
