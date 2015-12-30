@@ -36,7 +36,7 @@ __all__ = ('show_discrete_function',)
 
 
 def show_discrete_function(dfunc, method='', title=None, indices=None,
-                           fig=None, **kwargs):
+                           show=False, fig=None, **kwargs):
     """Display a discrete 1d or 2d function.
 
     Parameters
@@ -70,6 +70,9 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         For data with 3 or more dimensions, the 2d slice in the first
         two axes at the "middle" along the remaining axes is shown
         (semantically ``[:, :, shape[2:] // 2]``).
+
+    show : `bool`, optional
+        If the plot should be showed now or deferred until later
 
     fig : ``matplotlib`` figure
         The figure to show in. Expected to be of same "style", as the figure
@@ -213,6 +216,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     if fig is None:
         fig = plt.figure(figsize=figsize)
+        updatefig = False
     else:
         if not isinstance(fig, plt.Figure):
             raise TypeError('fig {} not a matplotlib figure'
@@ -223,9 +227,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
                             ''.format(fig))
 
         plt.figure(fig.number)
-
-    if title is not None:
-        plt.title(title)
+        updatefig = True
 
     if dfunc_is_complex:
         # Real
@@ -299,11 +301,13 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
         if method == 'imshow' and len(fig.axes) < 2:
             # Create colorbar if none seems to exist
-            if 'clim' in kwargs:
-                minval, maxval = kwargs['clim']
-            else:
+
+            # Use clim from kwargs if given
+            if 'clim' not in kwargs:
                 minval = np.min(values)
                 maxval = np.max(values)
+            else:
+                minval, maxval = kwargs['clim']
 
             ticks = [minval, (maxval + minval) / 2., maxval]
             if minval == maxval:
@@ -312,11 +316,22 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
                 decimals = max(4, int(1 + abs(np.log10(maxval - minval))))
             format = '%.{}f'.format(decimals)
 
-            plt.colorbar(csub, ticks=ticks, format=format)
+            plt.colorbar(mappable=csub, ticks=ticks, format=format)
 
-    plt.show(block=False)
-    plt.draw()
-    plt.pause(0.01)
+    if title is not None:
+        plt.title(title)
+        fig.canvas.manager.set_window_title(title)
+
+    if show:
+        if updatefig:
+            plt.show(block=False)
+        else:
+            plt.show()
+
+    if updatefig:
+        plt.draw()
+        plt.pause(0.01)
+
     if saveto is not None:
         fig.savefig(saveto)
 
