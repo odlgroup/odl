@@ -838,17 +838,15 @@ def _compute_nearest_weights_edge(idcs, ndist, variant):
     """Helper for nearest interpolation mimicing the linear case."""
     # Get out-of-bounds indices from the norm_distances. Negative
     # means "too low", larger than or equal to 1 means "too high"
-    lo = np.where(ndist < 0)
-    hi = np.where(ndist > 1)
-    ones = np.ones_like(ndist)
-    zeros = np.zeros_like(ndist)
+    lo = (ndist < 0)
+    hi = (ndist > 1)
 
     # For "too low" nodes, the lower neighbor gets weight zero;
     # "too high" gets 1.
     if variant == 'left':
-        w_lo = np.where(ndist <= 0.5, ones, zeros)
+        w_lo = np.where(ndist <= 0.5, 1.0, 0.0)
     else:
-        w_lo = np.where(ndist < 0.5, ones, zeros)
+        w_lo = np.where(ndist < 0.5, 1.0, 0.0)
 
     w_lo[lo] = 0
     w_lo[hi] = 1
@@ -856,9 +854,9 @@ def _compute_nearest_weights_edge(idcs, ndist, variant):
     # For "too high" nodes, the upper neighbor gets weight zero;
     # "too low" gets 1.
     if variant == 'left':
-        w_hi = np.where(ndist <= 0.5, zeros, ones)
+        w_hi = np.where(ndist <= 0.5, 0.0, 1.0)
     else:
-        w_hi = np.where(ndist < 0.5, zeros, ones)
+        w_hi = np.where(ndist < 0.5, 0.0, 1.0)
 
     w_hi[lo] = 1
     w_hi[hi] = 0
