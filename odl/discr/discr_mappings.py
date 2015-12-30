@@ -38,8 +38,8 @@ from odl.operator.operator import Operator
 from odl.space.base_ntuples import NtuplesBase, FnBase
 from odl.space.fspace import FunctionSet, FunctionSpace
 from odl.set.domain import IntervalProd
-from odl.util.vectorization import (is_valid_input_meshgrid,
-                                    out_shape_from_meshgrid)
+from odl.util.vectorization import (
+    is_valid_input_meshgrid, out_shape_from_array, out_shape_from_meshgrid)
 
 
 __all__ = ('FunctionSetMapping',
@@ -409,19 +409,17 @@ class NearestInterpolation(FunctionSetMapping):
         def nearest(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
-                interp = _NearestInterpolator(
-                    self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order),
-                    variant=self._variant,
-                    typ='meshgrid')
+                input_type = 'meshgrid'
             else:
-                interp = _NearestInterpolator(
-                    self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order),
-                    variant=self._variant,
-                    typ='array')
+                input_type = 'array'
 
-            return interp(arg, out=out)
+            interpolator = _NearestInterpolator(
+                self.grid.coord_vectors,
+                x.data.reshape(self.grid.shape, order=self.order),
+                variant=self._variant,
+                input_type=input_type)
+
+            return interpolator(arg, out=out)
 
         return self.range.element(nearest, vectorized=True)
 
@@ -484,17 +482,16 @@ class LinearInterpolation(FunctionSetMapping):
         def linear(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
-                interp = _LinearInterpolator(
-                    self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order),
-                    typ='meshgrid')
+                input_type = 'meshgrid'
             else:
-                interp = _LinearInterpolator(
-                    self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order),
-                    typ='array')
+                input_type = 'array'
 
-            return interp(arg, out=out)
+            interpolator = _LinearInterpolator(
+                self.grid.coord_vectors,
+                x.data.reshape(self.grid.shape, order=self.order),
+                input_type=input_type)
+
+            return interpolator(arg, out=out)
 
         return self.range.element(linear, vectorized=True)
 
@@ -551,16 +548,20 @@ class PerAxisInterpolation(FunctionSetMapping):
             schemes_ = str(schemes + '').lower()  # pythonic string check
             schemes_ = [schemes_] * self.grid.ndim
         except TypeError:
-            schemes_ = [str(scm).lower() for scm in schemes]
+            schemes_ = [str(scm).lower() if scm is not None else None
+                        for scm in schemes]
 
         if nn_variants is None:
-            variants_ = ['left'] * self.grid.ndim
+            variants_ = ['left' if scm == 'nearest' else None
+                         for scm in schemes]
         else:
             try:
                 variants_ = str(nn_variants + '').lower()  # pythonic str check
-                variants_ = [variants_] * self.grid.ndim
+                variants_ = [variants_ if scm == 'nearest' else None
+                             for scm in schemes]
             except TypeError:
-                variants_ = [str(var).lower() for var in nn_variants]
+                variants_ = [str(var).lower() if var is not None else None
+                             for var in nn_variants]
 
         for i, (scm, var) in enumerate(zip(schemes_, variants_)):
             if scm not in _SUPPORTED_INTERP_SCHEMES:
@@ -569,6 +570,9 @@ class PerAxisInterpolation(FunctionSetMapping):
             if scm == 'nearest' and var not in ('left', 'right'):
                 raise ValueError("Nearest neighbor variant '{}' at index {} "
                                  "not understood.".format(var, i))
+            elif scm != 'nearest' and var is not None:
+                raise ValueError('Option nn_variants used in axis {} with '
+                                 'scheme {!r}.'.format(i, scm))
 
         self._schemes = schemes_
         self._nn_variants = variants_
@@ -600,24 +604,22 @@ class PerAxisInterpolation(FunctionSetMapping):
             ``out`` was provided, the returned object is a reference
             to it.
         """
-        def interpolator(arg, out=None):
+        def per_axis_interp(arg, out=None):
             """Interpolating function with vectorization."""
             if is_valid_input_meshgrid(arg, self.grid.ndim):
-                interp = _PerAxisInterpolator(
-                    self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order),
-                    schemes=self.schemes, nn_variants=self.nn_variants,
-                    typ='meshgrid')
+                input_type = 'meshgrid'
             else:
-                interp = _PerAxisInterpolator(
-                    self.grid.coord_vectors,
-                    x.data.reshape(self.grid.shape, order=self.order),
-                    schemes=self.schemes, nn_variants=self.nn_variants,
-                    typ='array')
+                input_type = 'array'
 
-            return interp(arg, out=out)
+            interpolator = _PerAxisInterpolator(
+                self.grid.coord_vectors,
+                x.data.reshape(self.grid.shape, order=self.order),
+                schemes=self.schemes, nn_variants=self.nn_variants,
+                input_type=input_type)
 
-        return self.range.element(interpolator, vectorized=True)
+            return interpolator(arg, out=out)
+
+        return self.range.element(per_axis_interp, vectorized=True)
 
 
 class _Interpolator(object):
@@ -687,25 +689,14 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         ndim = len(self.coord_vecs)
         if self.input_type == 'array':
             # Make a (1, n) array from one with shape (n,)
-            ndim = len(self.grid)
-            if ndim == 1 and x.ndim == 1:
-                x = x[None, :]
-            if x.ndim != 2:
-                raise ValueError('x has {} axes instead of 2.'.format(x.ndim))
-            if x.shape[0] != ndim:
-                raise ValueError('x has axis 1 with length {} instead '
-                                 'of the grid dimension {}.'
-                                 ''.format(x.shape[0], ndim))
-            out_shape = (x.shape[1],)
+            x = x.reshape([ndim, -1])
+            out_shape = out_shape_from_array(x)
         else:
-            if len(x) != len(self.grid):
+            if len(x) != ndim:
                 raise ValueError('number of vectors in x is {} instead of '
                                  'the grid dimension {}.'
-                                 ''.format(len(x), len(self.grid)))
-            if len(x) == 1:
-                out_shape = x[0].shape
-            else:
-                out_shape = np.broadcast(*x).shape
+                                 ''.format(len(x), ndim))
+            out_shape = out_shape_from_meshgrid(x)
 
         if out is not None:
             if not isinstance(out, np.ndarray):
@@ -726,7 +717,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         norm_distances = []
 
         # iterate through dimensions
-        for xi, cvec in zip(x, self.grid):
+        for xi, cvec in zip(x, self.coord_vecs):
             idcs = np.searchsorted(cvec, xi) - 1
 
             idcs[idcs < 0] = 0
