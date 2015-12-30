@@ -267,6 +267,16 @@ class GridCollocation(FunctionSetMapping):
                                                  order=self.order))
         return out
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(self.domain,
+                                                        self.grid,
+                                                        self.range)
+        if self.order == 'F':
+            inner_str += ",\n  order='F'"
+
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
 
 class NearestInterpolation(FunctionSetMapping):
 
@@ -423,6 +433,18 @@ class NearestInterpolation(FunctionSetMapping):
 
         return self.range.element(nearest, vectorized=True)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(self.range,
+                                                        self.grid,
+                                                        self.domain)
+        if self.order == 'F':
+            inner_str += ",\n  order='F'"
+        if self._variant == 'right':
+            inner_str += ",\n  variant='right'"
+
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
 
 class LinearInterpolation(FunctionSetMapping):
 
@@ -495,6 +517,16 @@ class LinearInterpolation(FunctionSetMapping):
 
         return self.range.element(linear, vectorized=True)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(self.range,
+                                                        self.grid,
+                                                        self.domain)
+        if self.order == 'F':
+            inner_str += ",\n  order='F'"
+
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
 
 class PerAxisInterpolation(FunctionSetMapping):
 
@@ -509,7 +541,7 @@ class PerAxisInterpolation(FunctionSetMapping):
         fspace : `FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `Operator.domain` must be an
+            space. Its `FunctionSet.domain` must be an
             `IntervalProd`.
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
@@ -620,6 +652,28 @@ class PerAxisInterpolation(FunctionSetMapping):
             return interpolator(arg, out=out)
 
         return self.range.element(per_axis_interp, vectorized=True)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        if all(scm == self.schemes[0] for scm in self.schemes):
+            schemes = self.schemes[0]
+        else:
+            schemes = self.schemes
+
+        inner_str = '\n  {!r},\n  {!r},\n  {!r},\n  {!r}'.format(
+            self.range, self.grid, self.domain, schemes)
+        if self.order == 'F':
+            inner_str += ",\n  order='F'"
+
+        if all(var == self.nn_variants[0] for var in self.nn_variants):
+            variants = self.nn_variants[0]
+        else:
+            variants = self.nn_variants
+
+        if variants is not None:
+            inner_str += ',\n  nn_variants={}'.format(variants)
+
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class _Interpolator(object):
