@@ -216,6 +216,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     if fig is None:
         fig = plt.figure(figsize=figsize)
+        print('2' , len(fig.axes))
         updatefig = False
     else:
         if not isinstance(fig, plt.Figure):
@@ -229,9 +230,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         plt.figure(fig.number)
         updatefig = True
 
-    if title is not None:
-        plt.title(title)
-        fig.canvas.manager.set_window_title(title)
+    print('1' , len(fig.axes))
 
     if dfunc_is_complex:
         # Real
@@ -284,6 +283,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
                          ticks=ticks_im, format='%.4g')
 
     else:
+        print(len(fig.axes))
         if len(fig.axes) == 0:
             # Create new axis object if needed
             sub = plt.subplot(111, **sub_kwargs)
@@ -304,8 +304,10 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         csub = display(*args_re, **dsp_kwargs)
 
         if method == 'imshow' and len(fig.axes) < 2:
+            # Create colorbar if none seems to exist
+
+            # Use clim from kwargs if given
             if 'clim' not in kwargs:
-                # Create colorbar if none seems to exist
                 minval = np.min(values)
                 maxval = np.max(values)
             else:
@@ -319,6 +321,10 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             format = '%.{}f'.format(decimals)
 
             plt.colorbar(mappable=csub, ticks=ticks, format=format)
+
+    if title is not None:
+        plt.title(title)
+        fig.canvas.manager.set_window_title(title)
 
     if show:
         if updatefig:
