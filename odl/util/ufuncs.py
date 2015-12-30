@@ -21,7 +21,7 @@ These functions are internal and should only be used as methods on
 `NtuplesBaseVector` type spaces.
 
 See `numpy.ufuncs
-<http://docs.scipy.org/doc/numpy-1.10.0/reference/ufuncs.html#universal-functions-ufunc>`_
+<http://docs.scipy.org/doc/numpy-1.10.0/reference/ufuncs.html>`_
 for more information.
 
 Notes
