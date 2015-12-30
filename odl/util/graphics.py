@@ -216,7 +216,6 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     if fig is None:
         fig = plt.figure(figsize=figsize)
-        print('2' , len(fig.axes))
         updatefig = False
     else:
         if not isinstance(fig, plt.Figure):
@@ -229,8 +228,6 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
         plt.figure(fig.number)
         updatefig = True
-
-    print('1' , len(fig.axes))
 
     if dfunc_is_complex:
         # Real
@@ -283,7 +280,6 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
                          ticks=ticks_im, format='%.4g')
 
     else:
-        print(len(fig.axes))
         if len(fig.axes) == 0:
             # Create new axis object if needed
             sub = plt.subplot(111, **sub_kwargs)
