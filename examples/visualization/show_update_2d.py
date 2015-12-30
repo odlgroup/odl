@@ -32,7 +32,7 @@ vec = odl.util.shepp_logan(spc)
 # Create a figure by saving the result of show
 fig = None
 
-# Reuse the figure indefinately, values are overwritten.
+# Reuse the figure indefinitely, values are overwritten.
 for i in range(m):
     fig = (vec * i).show(fig=fig, clim=[0, m])
 

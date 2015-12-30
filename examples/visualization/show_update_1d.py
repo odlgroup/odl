@@ -34,7 +34,7 @@ vec = spc.element(np.sin(spc.points()))
 fig = plt.figure()
 plt.ylim(-m, m)
 
-# Reuse the figure indefinately
+# Reuse the figure indefinitely
 for i in range(m):
     fig = (vec * i).show(fig=fig)
 
