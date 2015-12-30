@@ -36,6 +36,11 @@ in-place evaluation
     the result. Usually more efficient than :term:`out-of-place evaluation`
     since no new memory is allocated and no data is copied.
 
+meshgrid
+    Sequence of arrays defining a tensor grid by all possible combinations of entries, one from each
+    array. In 2 dimensions, for example, the arrays ``[1, 2]`` and ``[-1, 0, 1]`` define the grid
+    points ``(1, -1), (1, 0), (1, 1), (2, -1), (2, 0), (2, 1)``.
+
 out-of-place evaluation
     Operator evaluation method which creates a new data container to store
     the result. Usually less efficient than :term:`in-place evaluation`
