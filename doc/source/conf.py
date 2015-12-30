@@ -18,9 +18,11 @@ import sphinx_rtd_theme
 
 # -- General configuration ------------------------------------------------
 
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'  
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 # Mock modules for Read The Docs to enable autodoc
+
+
 def mock_modules(modules):
     if sys.version_info < (3, 3):
         from mock import Mock as MagicMock
@@ -51,7 +53,7 @@ except Exception as e:
     print('Failed importing odl, exiting')
     print(e)
     sys.exit(1)
-    
+
 
 if on_rtd:
     # Some hacks for RTD since they do not use MakeFiles
@@ -60,12 +62,12 @@ if on_rtd:
     import shutil
     if os.path.exists('generated'):
         shutil.rmtree('generated')
-    
+
     # Generate interface
     sys.path.append(os.path.dirname(__file__))
     from generate_doc import make_interface
     make_interface()
-    
+
 # add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
 
@@ -288,4 +290,3 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
-

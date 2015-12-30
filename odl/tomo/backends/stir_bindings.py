@@ -122,14 +122,17 @@ class ForwardProjectorByBinWrapper(Operator):
         if projector is None:
             proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
             proj_matrix.set_up(self.proj_data_info, self.volume)
-            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(proj_matrix)
+            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(
+                proj_matrix)
             self.projector.set_up(self.proj_data_info, self.volume)
 
             # If no adjoint was given, we initialize a projector here to
             # save time.
             if adjoint is None:
-                back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(proj_matrix)
-                back_projector.set_up(self.proj_data.get_proj_data_info(), self.volume)
+                back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(
+                    proj_matrix)
+                back_projector.set_up(self.proj_data.get_proj_data_info(),
+                                      self.volume)
         else:
             # If user wants to provide both a projector and a back-projector,
             # he should wrap the back projector in an Operator
@@ -138,9 +141,9 @@ class ForwardProjectorByBinWrapper(Operator):
 
         # Pre-create an adjoint to save time
         if adjoint is None:
-            self._adjoint = BackProjectorByBinWrapper(self.range, self.domain,
-                                                      self.volume, self.proj_data,
-                                                      back_projector, self)
+            self._adjoint = BackProjectorByBinWrapper(
+                self.range, self.domain, self.volume, self.proj_data,
+                back_projector, self)
         else:
             self._adjoint = adjoint
 
@@ -219,11 +222,14 @@ class BackProjectorByBinWrapper(Operator):
             proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
             proj_matrix.set_up(self.proj_data_info, self.volume)
 
-            self.back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(proj_matrix)
-            self.back_projector.set_up(self.proj_data.get_proj_data_info(), self.volume)
+            self.back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(
+                proj_matrix)
+            self.back_projector.set_up(self.proj_data.get_proj_data_info(),
+                                       self.volume)
 
             if adjoint is None:
-                projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(proj_matrix)
+                projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(
+                    proj_matrix)
                 projector.set_up(self.proj_data_info, self.volume)
 
         else:
@@ -232,9 +238,9 @@ class BackProjectorByBinWrapper(Operator):
 
         # Pre-create an adjoint to save time
         if adjoint is None:
-            self._adjoint = ForwardProjectorByBinWrapper(self.range, self.domain,
-                                                         self.volume, self.proj_data,
-                                                         projector, self)
+            self._adjoint = ForwardProjectorByBinWrapper(
+                self.range, self.domain, self.volume, self.proj_data,
+                projector, self)
         else:
             self._adjoint = adjoint
 

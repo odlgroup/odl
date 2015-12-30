@@ -228,6 +228,19 @@ def _phantom_2d(space, ellipses):
     return space.element(p)
 
 
+def _getshapes(center, max_radius, shape):
+    index_mean = shape * center
+    index_radius = max_radius / 2.0 * np.array(shape)
+
+    min_idx = np.floor(index_mean - index_radius).astype(int)
+    max_idx = np.ceil(index_mean + index_radius).astype(int)
+    idx = [slice(minx, maxx) for minx, maxx in zip(min_idx, max_idx)]
+    shapes = [(idx[0], slice(None), slice(None)),
+              (slice(None), idx[1], slice(None)),
+              (slice(None), slice(None), idx[2])]
+    return idx, shapes
+
+
 def _phantom_3d(space, ellipses):
     """Create a phantom in 3d space.
 
@@ -249,20 +262,30 @@ def _phantom_3d(space, ellipses):
         The phantom
     """
 
+    # Implementation notes:
+    # This code is optimized compared to the 2d case since it handles larger
+    # data volumes.
+    #
+    # The main optimization is that it only considers a subset of all the
+    # points when updating for each ellipse, it does this by first finding
+    # a subset of points that could possibly be inside the ellipse, this
+    # approximation is accurate for "spherical" ellipsoids, but not so
+    # accurate for elongated ones.
+
     # Blank image
-    p = np.zeros(space.size)
+    p = np.zeros(space.shape)
 
     # Create the pixel grid
-    points = space.points()
+    grid_in = space.grid.meshgrid()
     minp = space.grid.min()
     maxp = space.grid.max()
 
     # move points to [-1, 1]
-    np.subtract(points, (minp + maxp) / 2.0, out=points)
-    np.divide(points, (maxp - minp) / 2.0, out=points)
-
-    # reusable temporary
-    offset_points = np.empty_like(points)
+    grid = []
+    for i in range(3):
+        meani = (minp[i] + maxp[i]) / 2.0
+        diffi = (maxp[i] - minp[i]) / 2.0
+        grid += [(grid_in[i] - meani) / diffi]
 
     for ellip in ellipses:
         I = ellip[0]
@@ -276,12 +299,11 @@ def _phantom_3d(space, ellipses):
         theta = ellip[8] * np.pi / 180
         psi = ellip[9] * np.pi / 180
 
-        # Create the offset x,y and z values for the grid
-        np.subtract(points, [x0, y0, z0], out=offset_points)
         scales = [1 / a2, 1 / b2, 1 / c2]
 
+        # Create the offset x,y and z values for the grid
         if any([phi, theta, psi]):
-            # Optimization, only rotate if needed.
+            # Rotate the points to the expected coordinate system.
             cphi = np.cos(phi)
             sphi = np.sin(phi)
             ctheta = np.cos(theta)
@@ -289,29 +311,51 @@ def _phantom_3d(space, ellipses):
             cpsi = np.cos(psi)
             spsi = np.sin(psi)
 
-            scales = [1 / a2, 1 / b2, 1 / c2]
-            mat = [[cpsi * cphi - ctheta * sphi * spsi,
-                    cpsi * sphi + ctheta * cphi * spsi,
-                    spsi * stheta],
-                   [-spsi * cphi - ctheta * sphi * cpsi,
-                    -spsi * sphi + ctheta * cphi * cpsi,
-                    cpsi * stheta],
-                   [stheta * sphi,
-                    -stheta * cphi,
-                    ctheta]]
+            mat = np.array([[cpsi * cphi - ctheta * sphi * spsi,
+                             cpsi * sphi + ctheta * cphi * spsi,
+                             spsi * stheta],
+                            [-spsi * cphi - ctheta * sphi * cpsi,
+                             -spsi * sphi + ctheta * cphi * cpsi,
+                             cpsi * stheta],
+                            [stheta * sphi,
+                             -stheta * cphi,
+                             ctheta]])
 
-            rotated = np.dot(mat, offset_points.T)
+            # Calculate the points that could possibly be inside the volume
+            # Since the points are rotated, we cannot do anything directional
+            # without more logic
+            center = (np.array([x0, y0, z0]) + 1.0) / 2.0
+            max_radius = np.sqrt(np.abs(mat).dot([a2, b2, c2]))
+            idx, shapes = _getshapes(center, max_radius, space.shape)
+
+            subgrid = [g[idi] for g, idi in zip(grid, shapes)]
+            offset_points = [vec * (xi - x0i)[..., np.newaxis]
+                             for xi, vec, x0i in zip(subgrid,
+                                                     mat.T,
+                                                     [x0, y0, z0])]
+            rotated = offset_points[0] + offset_points[1] + offset_points[2]
             np.square(rotated, out=rotated)
-            radius = np.dot(scales, rotated)
+            radius = np.dot(rotated, scales)
         else:
-            np.square(offset_points.T, out=offset_points.T)
-            radius = np.dot(scales, offset_points.T)
+            # Calculate the points that could possibly be inside the volume
+            center = (np.array([x0, y0, z0]) + 1.0) / 2.0
+            max_radius = np.sqrt([a2, b2, c2])
+            idx, shapes = _getshapes(center, max_radius, space.shape)
+
+            subgrid = [g[idi] for g, idi in zip(grid, shapes)]
+            squared_dist = [ai * (xi - x0i)**2
+                            for xi, ai, x0i in zip(subgrid,
+                                                   scales,
+                                                   [x0, y0, z0])]
+
+            # Parentisis to get best order for  broadcasting
+            radius = squared_dist[0] + (squared_dist[1] + squared_dist[2])
 
         # Find the pixels within the ellipse
         inside = radius <= 1
 
         # Add the ellipse intensity to those pixels
-        p[inside] += I
+        p[idx][inside] += I
 
     return space.element(p)
 
@@ -353,16 +397,17 @@ def shepp_logan(space, modified=True):
 if __name__ == '__main__':
     # Show the phantoms
     import odl
+    n = 300
 
     # 2D
-    disc = odl.uniform_discr([-1, -1], [1, 1], [200, 200])
+    disc = odl.uniform_discr([-1, -1], [1, 1], [n, n])
 
     shepp_logan(disc, modified=True).show()
     shepp_logan(disc, modified=False).show()
     derenzo_sources(disc).show()
 
     # Shepp-logan 3d
-    disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [200, 200, 200])
-    shepp_logan_3d = shepp_logan(disc)
-    for i in [60, 100]:
-        shepp_logan_3d.show(indices=np.s_[:, :, i])
+    disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
+    with odl.util.Timer():
+        shepp_logan_3d = shepp_logan(disc)
+    shepp_logan_3d.show()

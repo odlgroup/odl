@@ -1608,12 +1608,9 @@ def test_ufuncs():
     fn = Rn(3)
 
     for name, n_args, n_out, _ in UFUNCS:
-        if np.issubsctype(fn.dtype, np.floating) and name in ['bitwise_and',
-                                                              'bitwise_or',
-                                                              'bitwise_xor',
-                                                              'invert',
-                                                              'left_shift',
-                                                              'right_shift']:
+        if (np.issubsctype(fn.dtype, np.floating) and
+            name in ['bitwise_and', 'bitwise_or', 'bitwise_xor', 'invert',
+                     'left_shift', 'right_shift']):
             # Skip integer only methods if floating point type
             continue
         yield _impl_test_ufuncs, fn, name, n_args, n_out
@@ -1633,6 +1630,14 @@ def test_reductions():
 
     for name, _ in REDUCTIONS:
         yield _impl_test_reduction, fn, name
+
+
+def test_ufunc_reduction_docs_notempty():
+    for _, __, ___, doc in UFUNCS:
+        assert doc.splitlines()[0] != ''
+
+    for _, doc in REDUCTIONS:
+        assert doc.splitlines()[0] != ''
 
 
 if __name__ == '__main__':
