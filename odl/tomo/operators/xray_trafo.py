@@ -30,26 +30,13 @@ import numpy as np
 from odl.discr.lp_discr import DiscreteLp
 from odl.space.fspace import FunctionSpace
 from odl.operator.operator import Operator
-from odl.space.cu_ntuples import CUDA_AVAILABLE
-if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaNtuples
-else:
-    CudaNtuples = type(None)
+from odl.space.cu_ntuples import CudaNtuples
 from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
-from odl.tomo.backends.astra_cuda import ASTRA_CUDA_AVAILABLE
-if ASTRA_AVAILABLE:
-    from odl.tomo.backends.astra_cpu import (
-        astra_cpu_forward_projector_call, astra_cpu_backward_projector_call)
-else:
-    astra_cpu_forward_projection_call = None
-    astra_cpu_backward_projector_call = None
-if ASTRA_CUDA_AVAILABLE:
-    from odl.tomo.backends.astra_cuda import (
-        astra_cuda_forward_projector_call, astra_cuda_backward_projector_call)
-else:
-    astra_gpu_forward_projector_call = None
-    astra_gpu_backward_projector_call = None
+from odl.tomo.backends import ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE
+from odl.tomo.backends.astra_cpu import (
+    astra_cpu_forward_projector_call, astra_cpu_backward_projector_call)
+from odl.tomo.backends.astra_cuda import (
+    astra_gpu_forward_projector_call, astra_gpu_backward_projector_call)
 
 _SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 
@@ -102,7 +89,7 @@ class DiscreteXrayTransform(Operator):
             raise ValueError('backend {!r} not supported.'
                              ''.format(backend))
 
-        if backend == 'astra':
+        if backend.startswith('astra'):
             if not ASTRA_AVAILABLE:
                 raise ValueError('ASTRA backend not available.')
             if (isinstance(discr_dom.dspace, CudaNtuples) and
@@ -170,11 +157,11 @@ class DiscreteXrayTransform(Operator):
         back, impl = self.backend.split('_')
         if back == 'astra':
             if impl == 'cpu':
-                return astra_cpu_forward_projector_call(inp, self.geometry,
-                                                        self.range)
+                return astra_cpu_forward_projector_call(
+                    inp, self.geometry, self.range)
             elif impl == 'cuda':
-                return astra_cuda_forward_projector_call(inp, self.geometry,
-                                                         self.range)
+                return astra_gpu_forward_projector_call(
+                    inp, self.geometry, self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
@@ -218,13 +205,11 @@ class DiscreteXrayTransformAdjoint(Operator):
         back, impl = self.backend.split('_')
         if back == 'astra':
             if impl == 'cpu':
-                return astra_cpu_backward_projector_call(inp,
-                                                         self.forward.geometry,
-                                                         self.range)
+                return astra_cpu_backward_projector_call(
+                    inp, self.forward.geometry, self.range)
             elif impl == 'cuda':
-                return astra_cuda_backward_projector_call(inp,
-                                                          self.forward.geometry,
-                                                          self.range)
+                return astra_gpu_backward_projector_call(
+                    inp, self.forward.geometry, self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
