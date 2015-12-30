@@ -46,7 +46,7 @@ __all__ = ('FunctionSetMapping',
            'GridCollocation', 'NearestInterpolation', 'LinearInterpolation',
            'PerAxisInterpolation')
 
-SUPPORTED_INTERP_SCHEMES = ['nearest', 'linear']
+_SUPPORTED_INTERP_SCHEMES = ['nearest', 'linear']
 
 
 class FunctionSetMapping(Operator):
@@ -68,8 +68,8 @@ class FunctionSetMapping(Operator):
             the common domain of the function set.
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
-            discretized object. Its dimension must be equal to the
-            total number of grid points.
+            discretized object. Its `NtuplesBase.size` must be equal
+            to the total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies slowest, the last fastest,
@@ -180,8 +180,8 @@ class GridCollocation(FunctionSetMapping):
             the domain of the function set.
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
-            discretized object. Its size must be equal to the
-            total number of grid points.
+            discretized object. Its `NtuplesBase.size` must be equal
+            to the total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies slowest, the last fastest,
@@ -310,8 +310,8 @@ class NearestInterpolation(FunctionSetMapping):
             the domain of the function set.
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
-            discretized object. Its size must be equal to the
-            total number of grid points.
+            discretized object. Its `NtuplesBase.size` must be equal
+            to the total number of grid points.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies slowest, the last fastest,
@@ -374,7 +374,6 @@ class NearestInterpolation(FunctionSetMapping):
         We test nearest neighbor interpolation with a non-scalar
         data type in 2d:
 
-        >>> from __future__ import print_function
         >>> import numpy as np
         >>> from odl import Rectangle, Strings, FunctionSet
         >>> rect = Rectangle([0, 0], [1, 1])
@@ -439,16 +438,16 @@ class LinearInterpolation(FunctionSetMapping):
         fspace : `FunctionSpace`
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
-            space. Its `Operator.domain` must be an
+            space. Its `FunctionSet.domain` must be an
             `IntervalProd`.
         grid :  `TensorGrid`
             The grid on which to evaluate. Must be contained in
             the domain of the function set.
         dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its size must be equal to the
-            total number of grid points. Its field must be the same
-            as that of the function space.
+            discretized object. Its `NtuplesBase.size` must be equal
+            to the total number of grid points, and its `FnBase.field`
+            must be the same as that of the function space.
         order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies slowest, the last fastest,
@@ -504,8 +503,8 @@ class PerAxisInterpolation(FunctionSetMapping):
 
     """Interpolation scheme set for each axis individually."""
 
-    def __init__(self, ip_fspace, grid, dspace, schemes,
-                 nn_variants=None, order='C'):
+    def __init__(self, ip_fspace, grid, dspace, schemes, order='C',
+                 nn_variants=None):
         """Initialize a new instance.
 
         Parameters
@@ -520,23 +519,23 @@ class PerAxisInterpolation(FunctionSetMapping):
             the domain of the function set.
         dspace : `FnBase`
             Data space providing containers for the values of a
-            discretized object. Its size must be equal to the
-            total number of grid points. Its field must be the same
-            as that of the function space.
-        schemes : `str` or `list` of `str`
+            discretized object. Its `NtuplesBase.size` must be equal
+            to the total number of grid points, and its `FnBase.field`
+            must be the same as that of the function space.
+        schemes : `str` or sequence of `str`
             Indicates which interpolation scheme to use for which axis.
             A single string is interpreted as a global scheme for all
             axes.
-        nn_variants : `str` or `list` of `str`, optional
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
+            means the first grid axis varies slowest, the last fastest,
+            'F' vice versa.
+        nn_variants : `str` or sequence of `str`, optional
             Which variant ('left' or 'right') to use in nearest neighbor
             interpolation for which axis. A single string is interpreted
             as a global variant for all axes.
             This option has no effect for schemes other than nearest
             neighbor.
-        order : {'C', 'F'}, optional
-            Ordering of the values in the flat data arrays. 'C'
-            means the first grid axis varies slowest, the last fastest,
-            'F' vice versa.
         """
         if not isinstance(ip_fspace, FunctionSpace):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
@@ -563,8 +562,8 @@ class PerAxisInterpolation(FunctionSetMapping):
             except TypeError:
                 variants_ = [str(var).lower() for var in nn_variants]
 
-        for i, (scm, var) in enumerate(zip(schemes, variants_)):
-            if scm not in SUPPORTED_INTERP_SCHEMES:
+        for i, (scm, var) in enumerate(zip(schemes_, variants_)):
+            if scm not in _SUPPORTED_INTERP_SCHEMES:
                 raise ValueError("Interpolation scheme '{}' at index {} not "
                                  "understood.".format(scm, i))
             if scm == 'nearest' and var not in ('left', 'right'):
@@ -636,20 +635,20 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     implementations.
     """
 
-    def __init__(self, coord_vecs, values, typ):
+    def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
-        coord_vecs : `tuple` of `numpy.ndarray`
+        coord_vecs : sequence of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
         values : array-like
             Grid values to use for interpolation
-        typ : {'array', 'meshgrid'}
+        input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
         """
         values = np.asarray(values)
-        typ_ = str(typ).lower()
+        typ_ = str(input_type).lower()
         if typ_ not in ('array', 'meshgrid'):
-            raise ValueError("Type '{}' not understood.".format(typ))
+            raise ValueError("Type '{}' not understood.".format(input_type))
 
         if len(coord_vecs) > values.ndim:
             raise ValueError('There are {} point arrays, but `values` has {} '
@@ -664,9 +663,9 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
                                  'dimension {}'.format(len(p),
                                                        values.shape[i], i))
 
-        self.grid = tuple([np.asarray(p) for p in coord_vecs])
+        self.coord_vecs = tuple(np.asarray(p) for p in coord_vecs)
         self.values = values
-        self.type = typ
+        self.input_type = input_type
 
     def __call__(self, x, out=None):
         """Do the interpolation.
@@ -685,7 +684,8 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
             Interpolated values. If ``out`` was given, the returned
             object is a reference to it.
         """
-        if self.type == 'array':
+        ndim = len(self.coord_vecs)
+        if self.input_type == 'array':
             # Make a (1, n) array from one with shape (n,)
             ndim = len(self.grid)
             if ndim == 1 and x.ndim == 1:
@@ -756,19 +756,19 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     support of ``'left'`` and ``'right'`` variants are added.
     """
 
-    def __init__(self, coord_vecs, values, typ, variant):
+    def __init__(self, coord_vecs, values, input_type, variant):
         """Initialize a new instance.
 
-        coord_vecs : `tuple` of `numpy.ndarray`
+        coord_vecs : sequence of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
         values : array-like
             Grid values to use for interpolation
-        typ : {'array', 'meshgrid'}
+        input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
         variant : {'left', 'right'}
             Indicates which neighbor to prefer in the interpolation
         """
-        super().__init__(coord_vecs, values, typ)
+        super().__init__(coord_vecs, values, input_type)
         variant_ = str(variant).lower()
         if variant_ not in ('left', 'right'):
             raise ValueError("Variant '{}' not understood.".format(variant_))
@@ -887,24 +887,24 @@ class _PerAxisInterpolator(_Interpolator):
     first dimension and linear in dimensions 2 and 3.
     """
 
-    def __init__(self, coord_vecs, values, typ, schemes, nn_variants):
+    def __init__(self, coord_vecs, values, input_type, schemes, nn_variants):
         """Initialize a new instance.
 
-        coord_vecs : `tuple` of `numpy.ndarray`
+        coord_vecs : sequence of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
         values : array-like
             Grid values to use for interpolation
-        typ : {'array', 'meshgrid'}
+        input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
-        schemes : `list` of strings
+        schemes : sequence of `str`
             Indicates which interpolation scheme to use for which axis
-        nn_variants : `list` of strings
+        nn_variants : sequence of `str`
             Which variant ('left' or 'right') to use in nearest neighbor
             interpolation for which axis.
             This option has no effect for schemes other than nearest
             neighbor.
         """
-        super().__init__(coord_vecs, values, typ)
+        super().__init__(coord_vecs, values, input_type)
         self.schemes = schemes
         self.nn_variants = nn_variants
 
@@ -955,17 +955,17 @@ class _LinearInterpolator(_PerAxisInterpolator):
     Convenience class.
     """
 
-    def __init__(self, coord_vecs, values, typ):
+    def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
-        coord_vecs : `tuple` of `numpy.ndarray`
+        coord_vecs : sequence of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
         values : array-like
             Grid values to use for interpolation
-        typ : {'array', 'meshgrid'}
+        input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
         """
-        super().__init__(coord_vecs, values, typ,
+        super().__init__(coord_vecs, values, input_type,
                          schemes=['linear'] * len(coord_vecs),
                          nn_variants=[None] * len(coord_vecs))
 
