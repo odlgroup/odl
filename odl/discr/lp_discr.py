@@ -101,7 +101,7 @@ class DiscreteLp(Discretization):
                                             order=self.order)
         else:
             # Should not happen
-            raise NotImplementedError
+            raise RuntimeError
 
         Discretization.__init__(self, fspace, dspace, restriction, extension)
 

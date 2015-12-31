@@ -236,7 +236,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
         assert isinstance(space, RawDiscretization)
         assert ntuple in space.dspace
 
-        super().__init__(space)
+        NtuplesBaseVector.__init__(self, space)
         self._ntuple = ntuple
 
     @property
@@ -444,7 +444,7 @@ class DiscretizationVector(RawDiscretizationVector, FnBaseVector):
     def __init__(self, space, data):
         """Initialize a new instance."""
         assert isinstance(space, Discretization)
-        super().__init__(space, data)
+        RawDiscretizationVector.__init__(self, space, data)
 
 
 def dspace_type(space, impl, dtype=None):
