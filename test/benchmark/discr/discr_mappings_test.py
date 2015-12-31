@@ -23,8 +23,10 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-import pytest
 import numpy as np
+import pytest
+from scipy.interpolate import RegularGridInterpolator
+import time
 
 # Internal
 import odl
@@ -106,6 +108,27 @@ def test_per_axis_interpolation(dspace, input_values):
     function = pa_interp_op(values)
     function(input_values)
 
+
+def test_odl_vs_scipy_linear_interpolation():
+    # ODL version
+    lin_interp_op = LinearInterpolation(space, grid, dspace64)
+    function = lin_interp_op(values)
+    tstart = time.time()
+    function(points)
+    tend = time.time()
+    odl_time = tend - tstart
+
+    # Scipy version
+    sp_interp = RegularGridInterpolator(
+        grid.coord_vectors, values.reshape(shape), method='linear',
+        bounds_error=False, fill_value=None)
+    tstart = time.time()
+    sp_interp(points.T)
+    tend = time.time()
+    scipy_time = tend - tstart
+
+    # We know that we're at least as fast as Scipy
+    assert odl_time / scipy_time <= 1.0
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
