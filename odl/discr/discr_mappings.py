@@ -885,7 +885,7 @@ def _compute_linear_weights_edge(idcs, ndist):
 
     # For "too high" nodes, the upper neighbor gets weight zero;
     # "too low" gets 1 + yi (since yi < 0)
-    w_hi = np.array(ndist, copy=True)
+    w_hi = np.copy(ndist)
     w_hi[lo] += 1
     w_hi[hi] = 0
 
@@ -898,7 +898,7 @@ def _compute_linear_weights_edge(idcs, ndist):
     return w_lo, w_hi, edge
 
 
-def _create_lists(indices, norm_distances, schemes, variants):
+def _create_weight_edge_lists(indices, norm_distances, schemes, variants):
     # Precalculate indices and weights (per axis)
     low_weights = []
     high_weights = []
@@ -968,7 +968,7 @@ class _PerAxisInterpolator(_Interpolator):
             out[:] = 0.0
 
         # Weights and indices (per axis)
-        low_weights, high_weights, edge_indices = _create_lists(
+        low_weights, high_weights, edge_indices = _create_weight_edge_lists(
             indices, norm_distances, self.schemes, self.nn_variants)
 
         # Iterate over all possible combinations of [i, i+1] for each
