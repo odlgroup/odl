@@ -441,8 +441,8 @@ class InnerProductOperator(Operator):
         vector : `LinearSpaceVector`
             Vector used in this operator
 
-        Example
-        -------
+        Examples
+        --------
         >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
