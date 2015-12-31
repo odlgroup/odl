@@ -234,7 +234,8 @@ class RawDiscretizationVector(NtuplesBaseVector):
     def __init__(self, space, ntuple):
         """Initialize a new instance."""
         assert isinstance(space, RawDiscretization)
-        assert isinstance(ntuple, space.dspace.element_type)
+        assert ntuple in space.dspace
+
         super().__init__(space)
         self._ntuple = ntuple
 
