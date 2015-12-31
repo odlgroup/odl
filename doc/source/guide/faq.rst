@@ -55,7 +55,7 @@ Errors related to Python 2/3
 Usage
 -----
 
-#. **Q:** I want to write an `Operator` of with two input arguments, for example
+#. **Q:** I want to write an `Operator` with two input arguments, for example
    
    .. math::
       op(x, y) := x + y
