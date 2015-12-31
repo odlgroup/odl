@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Unit tests for `discr_mappings`."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -41,10 +42,9 @@ def test_nearest_interpolation_1d_complex():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     space = odl.FunctionSpace(intv, field=odl.ComplexNumbers())
-    dspace = odl.Fn(grid.ntotal, dtype='complex128')
+    dspace = odl.Cn(grid.ntotal)
     interp_op = NearestInterpolation(space, grid, dspace)
-    values = np.arange(5) + 1j * np.arange(1, 6)
-    function = interp_op(values)
+    function = interp_op([0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j])
 
     # Evaluate at single point
     val = function(0.35)  # closest to index 1 -> 1 + 2j
@@ -75,12 +75,11 @@ def test_nearest_interpolation_1d_variants():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     space = odl.FunctionSpace(intv)
-    dspace = odl.Fn(grid.ntotal, dtype='float64')
+    dspace = odl.Rn(grid.ntotal)
 
     # 'left' variant
     interp_op = NearestInterpolation(space, grid, dspace, variant='left')
-    values = np.arange(5, dtype='float64')
-    function = interp_op(values)
+    function = interp_op([0, 1, 2, 3, 4])
 
     # Testing two midpoints and the extreme values
     pts = np.array([0.4, 0.8, 0.0, 1.0])
@@ -89,8 +88,7 @@ def test_nearest_interpolation_1d_variants():
 
     # 'right' variant
     interp_op = NearestInterpolation(space, grid, dspace, variant='right')
-    values = np.arange(5)
-    function = interp_op(values)
+    function = interp_op([0, 1, 2, 3, 4])
 
     # Testing two midpoints and the extreme values
     pts = np.array([0.4, 0.8, 0.0, 1.0])
@@ -105,10 +103,9 @@ def test_nearest_interpolation_2d_float():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Fn(grid.ntotal, dtype='float64')
+    dspace = odl.Rn(grid.ntotal)
     interp_op = NearestInterpolation(space, grid, dspace)
-    values = np.arange(8, dtype='float64')
-    function = interp_op(values)
+    function = interp_op([0, 1, 2, 3, 4, 5, 6, 7])
 
     # Evaluate at single point
     val = function([0.3, 0.6])  # closest to index (1, 1) -> 3
@@ -173,10 +170,9 @@ def test_nearest_interpolation_2d_fortran_ordering():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Fn(grid.ntotal, dtype='float64')
+    dspace = odl.Rn(grid.ntotal)
     interp_op = NearestInterpolation(space, grid, dspace, order='F')
-    values = np.arange(8, dtype='float64')
-    function = interp_op(values)
+    function = interp_op([0, 1, 2, 3, 4, 5, 6, 7])
 
     # Evaluate at single point
     val = function([0.3, 0.6])  # closest to index (1, 1) -> 5
@@ -208,17 +204,15 @@ def test_linear_interpolation_1d():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     space = odl.FunctionSpace(intv)
-    dspace = odl.Fn(grid.ntotal, dtype='float64')
+    dspace = odl.Rn(grid.ntotal)
     interp_op = LinearInterpolation(space, grid, dspace)
-    values = np.arange(1, 6, dtype='float64')
-    function = interp_op(values)
+    function = interp_op([1, 2, 3, 4, 5])
 
-    print('--- Single point ---')
     # Evaluate at single point
     val = function(0.35)
     true_val = 0.75 * 2 + 0.25 * 3
     assert almost_equal(val, true_val)
-    print('--- Array ---')
+
     # Input array, with and without output array
     pts = np.array([0.4, 0.0, 0.65, 0.95])
     true_arr = [2.5, 0.5, 3.75, 3.75]
@@ -232,7 +226,7 @@ def test_linear_interpolation_2d():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Fn(grid.ntotal, dtype='float64')
+    dspace = odl.Rn(grid.ntotal)
     interp_op = LinearInterpolation(space, grid, dspace)
     values = np.arange(1, 9, dtype='float64')
     function = interp_op(values)
@@ -362,20 +356,18 @@ def test_collocation_interpolation_identity():
     # Testing 'C' and 'F' ordering and all interpolation schemes
     coll_op_c = GridCollocation(space, grid, dspace, order='C')
     coll_op_f = GridCollocation(space, grid, dspace, order='F')
-    interp_ops_c = [NearestInterpolation(space, grid, dspace, order='C',
-                                         variant='left'),
-                    NearestInterpolation(space, grid, dspace, order='C',
-                                         variant='right'),
-                    LinearInterpolation(space, grid, dspace, order='C'),
-                    PerAxisInterpolation(space, grid, dspace, order='C',
-                                         schemes=['linear', 'nearest'])]
-    interp_ops_f = [NearestInterpolation(space, grid, dspace, order='F',
-                                         variant='left'),
-                    NearestInterpolation(space, grid, dspace, order='F',
-                                         variant='right'),
-                    LinearInterpolation(space, grid, dspace, order='F'),
-                    PerAxisInterpolation(space, grid, dspace, order='F',
-                                         schemes=['linear', 'nearest'])]
+    interp_ops_c = [
+        NearestInterpolation(space, grid, dspace, order='C', variant='left'),
+        NearestInterpolation(space, grid, dspace, order='C', variant='right'),
+        LinearInterpolation(space, grid, dspace, order='C'),
+        PerAxisInterpolation(space, grid, dspace, order='C',
+                             schemes=['linear', 'nearest'])]
+    interp_ops_f = [
+        NearestInterpolation(space, grid, dspace, order='F', variant='left'),
+        NearestInterpolation(space, grid, dspace, order='F', variant='right'),
+        LinearInterpolation(space, grid, dspace, order='F'),
+        PerAxisInterpolation(space, grid, dspace, order='F',
+                             schemes=['linear', 'nearest'])]
 
     values = np.arange(1, 9, dtype='float64')
 

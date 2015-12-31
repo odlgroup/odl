@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Benchmarks for `discr_mappings`."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -36,21 +37,28 @@ from odl.discr.discr_mappings import (
 pytestmark = pytest.mark.benchmark
 
 
-def initialize():
-    global shape, values, hcube, grid, space, dspace32, dspace64
-    global points, mesh
-    shape = (100, 100, 100, 100)
-    values = np.zeros(np.prod(shape))
-    hcube = odl.IntervalProd([0] * 4, [1] * 4)
-    grid = odl.uniform_sampling(hcube, shape, as_midp=True)
-    space = odl.FunctionSpace(hcube)
-    dspace32 = odl.Rn(grid.ntotal, dtype='float32')
-    dspace64 = odl.Rn(grid.ntotal, dtype='float64')
-    points = np.random.rand(4, 60 ** 4)
-    mesh = sparse_meshgrid(*([np.random.rand(60)] * 4))
+# Initialize some large data
 
+# First, a 100^4 grid with zeros
+ndim = 4
+ngrid = 100
+shape = (ngrid,) * ndim
+values = np.zeros(np.prod(shape))
 
-initialize()
+# Next, a function space on a 4d cube
+hcube = odl.IntervalProd([0] * ndim, [1] * ndim)
+grid = odl.uniform_sampling(hcube, shape, as_midp=True)
+space = odl.FunctionSpace(hcube)
+dspace32 = odl.Rn(grid.ntotal, dtype='float32')
+dspace64 = odl.Rn(grid.ntotal, dtype='float64')
+
+# Finally, create interpolation points (independent from grid), 60^4 points
+# in total. Once as point array, once as meshgrid.
+npts = 60
+points = np.random.rand(ndim, npts ** ndim)
+coord_vec = np.random.rand(npts)
+coord_vec.sort()
+mesh = sparse_meshgrid(*([coord_vec] * ndim))
 
 
 def func(x):
@@ -58,25 +66,21 @@ def func(x):
 
 
 dspace_params = [dspace32, dspace64]
-dspace_ids = [' Rn, dtype = {} '.format(spc.dtype) for spc in dspace_params]
-dspace_fixture = pytest.fixture(scope="module", ids=dspace_ids,
-                                params=dspace_params)
+dspace_ids = ['{!r}'.format(spc) for spc in dspace_params]
 
 
-@dspace_fixture
+@pytest.fixture(scope="module", ids=dspace_ids, params=dspace_params)
 def dspace(request):
     return request.param
 
 
-input_params = [points, mesh]
-input_ids = [' Array input ', ' Meshgrid input ']
-input_fixture = pytest.fixture(scope="module", ids=input_ids,
-                               params=input_params)
-
-
-@input_fixture
+@pytest.fixture(scope="module", ids=[' Array input ', ' Meshgrid input '],
+                params=[points, mesh])
 def input_values(request):
     return request.param
+
+
+# ----- Benchmarks -----
 
 
 def test_grid_collocation(dspace):
