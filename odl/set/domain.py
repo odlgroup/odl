@@ -17,7 +17,7 @@
 
 # Imports for common Python 2/3 codebase
 
-""" Typical domains for inverse problems. """
+"""Typical domains for inverse problems. """
 
 from __future__ import print_function, division, absolute_import
 
@@ -177,7 +177,6 @@ class IntervalProd(Set):
         >>> rbox1.approx_equals(rbox2, tol=1e-15)
         True
         """
-        # pylint: disable=arguments-differ
         if other is self:
             return True
         elif not isinstance(other, IntervalProd):

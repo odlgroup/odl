@@ -381,7 +381,7 @@ class ComponentProjection(Operator):
 
     @property
     def index(self):
-        """ Index of the subspace. """
+        """Index of the subspace."""
         return self._index
 
     def _call(self, x, out=None):
@@ -492,7 +492,7 @@ class ComponentProjectionAdjoint(Operator):
 
     @property
     def index(self):
-        """ Index of the subspace. """
+        """Index of the subspace."""
         return self._index
 
     def _call(self, x, out=None):

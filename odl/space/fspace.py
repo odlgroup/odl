@@ -58,10 +58,8 @@ def _default_out_of_place(func, dtype, x, **kwargs):
         raise TypeError('cannot use in-place method to implement '
                         'out-of-place non-vectorized evaluation.')
 
-    # TODO: implement this. Needs a helper to infer data type without
-    # creating an array.
     if dtype is None:
-        raise NotImplementedError('lazy out-of-place default not implemented.')
+        dtype = np.result_type(*x)
 
     out = np.empty(out_shape, dtype=dtype)
     func(x, out=out, **kwargs)
@@ -638,9 +636,13 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return out
 
     def _multiply(self, x1, x2, out):
-        """Raw pointwise multiplication of two functions."""
-        # pylint: disable=no-self-use
+        """Raw pointwise multiplication of two functions.
 
+        Notes
+        -----
+        The multiplication is implemented with a simple Python
+        function, so the non-vectorized versions are slow.
+        """
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -666,8 +668,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     def _divide(self, x1, x2, out):
         """Raw pointwise division of two functions."""
-        # pylint: disable=no-self-use
-
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -693,7 +693,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     def _scalar_power(self, x, p, out):
         """Raw p-th power of a function, p integer or general scalar."""
-        # pylint: disable=no-self-use
         x_call_oop = x._call_out_of_place
         x_call_ip = x._call_in_place
 

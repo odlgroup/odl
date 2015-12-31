@@ -78,5 +78,5 @@ run_test(lambda z, x, y: x.space.lincomb(2, z, 2, y, z), "z = a*z + b*y")
 run_test(lambda z, x, y: x.space.lincomb(2, z, 2, z, z), "z = (a+b)*z")
 
 # Non lincomb tests
-run_test(lambda z, x, y: x+y, "z = x + y")
+run_test(lambda z, x, y: x + y, "z = x + y")
 run_test(lambda z, x, y: y.assign(x), "y.assign(x)")

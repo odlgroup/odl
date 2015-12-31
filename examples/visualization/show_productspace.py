@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Example on using show with ProductSpace's """
+"""Example on using show with ProductSpace's."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -42,5 +42,5 @@ vec.show(indices=np.s_[::3], show=True,
          title='Show every third element')
 
 # Slices propagate (as in numpy)
-vec.show(indices=np.s_[2, :, n//2], show=True,
+vec.show(indices=np.s_[2, :, n // 2], show=True,
          title='Show second element, then slice by [:, n//2]')

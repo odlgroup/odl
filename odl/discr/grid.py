@@ -330,7 +330,6 @@ class TensorGrid(Set):
         if self.as_midp != getattr(other, 'as_midp', self.as_midp):
             return False
 
-        # pylint: disable=arguments-differ
         return (isinstance(other, TensorGrid) and
                 self.ndim == other.ndim and
                 self.shape == other.shape and
@@ -412,7 +411,6 @@ class TensorGrid(Set):
         # Array version of the fuzzy subgrid test, about 3 times faster
         # than the loop version.
         for vec_o, vec_s in zip(other.coord_vectors, self.coord_vectors):
-            # pylint: disable=unbalanced-tuple-unpacking
             vec_o_mg, vec_s_mg = sparse_meshgrid(vec_o, vec_s)
             if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= tol, axis=0)):
                 return False
