@@ -27,8 +27,8 @@ standard_library.install_aliases()
 import numpy as np
 
 # Internal
-from odl import (Interval, Rectangle, uniform_discr, uniform_sampling,
-                 CircularConeFlatGeometry, DiscreteXrayTransform)
+from odl import Interval, Rectangle, uniform_discr, uniform_sampling
+from odl.tomo import CircularConeFlatGeometry, DiscreteXrayTransform
 # from odl.util.phantom import shepp_logan
 
 # Discrete reconstruction space

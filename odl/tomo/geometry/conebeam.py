@@ -26,7 +26,6 @@ from future.utils import with_metaclass
 standard_library.install_aliases()
 from builtins import super
 
-
 # External
 import numpy as np
 
@@ -35,7 +34,6 @@ from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry
-# from odltomo.util.trafos import euler_matrix
 
 
 __all__ = ('CircularConeFlatGeometry', 'HelicalConeFlatGeometry')
