@@ -38,7 +38,7 @@
 # det_rad = 100
 # angle_intvl = Interval(0, 2 * np.pi)
 # dparams = Rectangle([-50, -50], [50, 50])
-# agrid = uniform_sampling(angle_intvl, 360, as_midp=False)
+# agrid = uniform_sampling(angle_intvl, 360)
 # dgrid = uniform_sampling(dparams, [558, 558])
 # geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
 #                                 agrid, dgrid)

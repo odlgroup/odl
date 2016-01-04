@@ -162,9 +162,9 @@ def test_proj_geom_parallel_2d():
     """Create ASTRA 2D projection geometry."""
 
     angles = Interval(0, 2)
-    angle_grid = uniform_sampling(angles, 5, as_midp=False)
+    angle_grid = uniform_sampling(angles, 5)
     det_params = Interval(-1, 1)
-    det_grid = uniform_sampling(det_params, 10, as_midp=True)
+    det_grid = uniform_sampling(det_params, 10)
     geom = Parallel2dGeometry(angles, det_params, angle_grid, det_grid)
 
     proj_geom = astra_projection_geometry(geom)
@@ -175,7 +175,8 @@ def test_proj_geom_parallel_2d():
 
     assert is_subdict(correct_subdict, proj_geom)
     assert 'ProjectionAngles' in proj_geom
-    assert all_equal(proj_geom['ProjectionAngles'], np.linspace(0, 2, 5))
+    a0 = 0.5 * 2. / 5
+    assert all_equal(proj_geom['ProjectionAngles'], np.linspace(a0, 2 - a0, 5))
 
 
 @skip_if_no_astra
@@ -186,7 +187,7 @@ def test_astra_projection_geometry():
         astra_projection_geometry(None)
 
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 5, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 5)
     dparams = Interval(-40, 40)
     det_grid = uniform_sampling(dparams, 10)
 
@@ -404,7 +405,7 @@ def test_geom_to_vec():
     """Create ASTRA projection geometries vectors using ODL geometries."""
 
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 5, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 5)
     dparams = Interval(-40, 40)
     det_grid = uniform_sampling(dparams, 10)
 
