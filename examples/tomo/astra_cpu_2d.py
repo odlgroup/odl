@@ -47,7 +47,9 @@ def save_slice(data, name):
     data : `DiscreteLp`
     name : `str`
     """
-    path = pth.join(pth.join(pth.expanduser("~"), 'data'), 'astra')
+    path = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'temp'),
+                    'astra')
+
     filename = '{}.png'.format(name.replace(' ', '_'))
     path = pth.join(path, filename)
 
