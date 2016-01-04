@@ -365,7 +365,7 @@ class FunctionSetVector(Operator):
                                  'the range {}.'
                                  ''.format(self.domain))
 
-        return out[0] if scalar_out else out
+        return self.range.element(out.ravel()[0]) if scalar_out else out
 
     def assign(self, other):
         """Assign ``other`` to this vector.
