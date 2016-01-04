@@ -25,6 +25,8 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -48,8 +50,8 @@ def save_ortho_slices(data, name, sli):
     """
     # indices for the orthogonal slices
     x, y, z = np.asarray(sli, int)
-    path = pth.join(
-        pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'astra')
+    path = pth.join(pth.join(pth.expanduser("~"), 'data'), 'astra')
+
 
     data.show('imshow',
               saveto=pth.join(path, '{}_z{:03d}.png'.format(
@@ -91,7 +93,7 @@ save_ortho_slices(discr_data, 'phantom 3d cuda', vol_sli)
 
 # Angles
 angle_intvl = Interval(0, 2 * np.pi)
-angle_grid = uniform_sampling(angle_intvl, 110, as_midp=False)
+angle_grid = uniform_sampling(angle_intvl, 110)
 
 # Detector
 dparams = Rectangle([-1, -0.9], [1, 0.9])
