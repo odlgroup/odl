@@ -46,8 +46,8 @@ def save_slice(data, name):
     data : `DiscreteLp`
     name : `str`
     """
-    path = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'),
-                    'astra')
+    path = pth.join(pth.join(pth.expanduser("~"), 'data'), 'astra')
+
     filename = '{}.png'.format(name.replace(' ', '_'))
     path = pth.join(path, filename)
 
@@ -70,7 +70,7 @@ save_slice(discr_vol_data, 'phantom 2d cuda')
 
 # Angles
 angle_intvl = Interval(0, 2 * np.pi)
-angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
+angle_grid = uniform_sampling(angle_intvl, 180)
 
 # Detector
 dparams = Interval(-2, 2)
