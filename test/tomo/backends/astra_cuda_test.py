@@ -62,7 +62,7 @@ def test_astra_gpu_projector_parallel2d():
     # Angles
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 8, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 8)
 
     # Detector
     dparams = Interval(-6, 6)
@@ -115,7 +115,7 @@ def test_astra_gpu_projector_fanflat():
     # Angles
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 8, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 8)
 
     # Detector
     dparams = Interval(-6, 6)
@@ -170,7 +170,7 @@ def test_astra_gpu_projector_parallel3d():
     # Angles
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 9, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 9)
 
     # Detector
     dparams = Rectangle([-7, -8], [7, 8])
@@ -218,7 +218,7 @@ def test_astra_gpu_projector_circular_conebeam():
     # Angles
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 9, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 9)
 
     # Detector
     dparams = Rectangle([-7, -8], [7, 8])
@@ -271,7 +271,7 @@ def test_astra_gpu_projector_helical_conebeam():
     # Angles
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 9, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 9)
 
     # Detector
     dparams = Rectangle([-7, -8], [7, 8])

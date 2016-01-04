@@ -72,7 +72,7 @@ save_slice(discr_vol_data, 'forward phantom 2d cpu')
 
 # Angles
 angle_intvl = Interval(0, 2 * np.pi)
-angle_grid = uniform_sampling(angle_intvl, 180, as_midp=False)
+angle_grid = uniform_sampling(angle_intvl, 180)
 
 # Detector
 dparams = Interval(-2, 2)

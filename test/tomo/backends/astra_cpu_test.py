@@ -60,7 +60,7 @@ def test_astra_cpu_projector_call_2d():
     # Angles
     angle_offset = 0
     angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 8, as_midp=False)
+    angle_grid = uniform_sampling(angle_intvl, 8)
 
     # Detector
     dparams = Interval(-6, 6)
