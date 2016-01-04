@@ -48,9 +48,9 @@ def _strip_space(x):
 
 def _indent(x):
     """Indent a string by 4 characters."""
-    lines = x.split('\n')
-    for i in range(len(lines)):
-        lines[i] = '    ' + lines[i]
+    lines = x.splitlines()
+    for i, line in enumerate(lines):
+        lines[i] = '    ' + line
     return '\n'.join(lines)
 
 
@@ -166,7 +166,7 @@ class ProductSpace(LinearSpace):
                 self._weights = np.atleast_1d(weights)
                 if not np.all(self._weights > 0):
                     raise ValueError('weights must all be positive')
-                if not len(self._weights) == len(spaces):
+                if len(self._weights) != len(spaces):
                     raise ValueError('spaces and weights have different '
                                      'lengths ({} != {}).'
                                      ''.format(len(spaces), len(weights)))
@@ -332,11 +332,13 @@ class ProductSpace(LinearSpace):
         return self.element([space.one() for space in self.spaces])
 
     def _lincomb(self, a, x, b, y, out):
+        """Linear combination ``out = a*x + b*y``."""
         for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts,
                                        out.parts):
             space._lincomb(a, xp, b, yp, outp)
 
     def _dist(self, x1, x2):
+        """Distance between two vectors."""
         dists = np.fromiter(
             (spc._dist(x1p, x2p)
              for spc, x1p, x2p in zip(self.spaces, x1.parts, x2.parts)),
@@ -344,6 +346,7 @@ class ProductSpace(LinearSpace):
         return self._prod_norm(dists)
 
     def _norm(self, x):
+        """Norm of a vector."""
         norms = np.fromiter(
             (spc._norm(xp)
              for spc, xp in zip(self.spaces, x.parts)),
@@ -351,6 +354,7 @@ class ProductSpace(LinearSpace):
         return self._prod_norm(norms)
 
     def _inner(self, x1, x2):
+        """Inner product of two vectors."""
         inners = np.fromiter(
             (spc._inner(x1p, x2p)
              for spc, x1p, x2p in zip(self.spaces, x1.parts, x2.parts)),
@@ -358,11 +362,13 @@ class ProductSpace(LinearSpace):
         return self._prod_inner_sum(inners)
 
     def _multiply(self, x1, x2, out):
+        """Product ``out = x1 * x2``."""
         for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
                                      out.parts):
             spc._multiply(xp, yp, outp)
 
     def _divide(self, x1, x2, out):
+        """Quotient ``out = x1 / x2``."""
         for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
                                      out.parts):
             spc._divide(xp, yp, outp)
@@ -439,7 +445,8 @@ class ProductSpace(LinearSpace):
 
 
 class ProductSpaceVector(LinearSpaceVector):
-    """ Elements in a `ProductSpace` """
+
+    """Elements of a `ProductSpace`."""
 
     def __init__(self, space, parts):
         """"Initialize a new instance."""
@@ -613,8 +620,7 @@ class ProductSpaceVector(LinearSpaceVector):
         return '{!r}.element({})'.format(self.space, inner_str)
 
     def show(self, *args, **kwargs):
-        """ Display the parts of this vector.
-        """
+        """Display the parts of this vector."""
         title = kwargs.pop('title', 'ProductSpaceVector')
         indices = kwargs.pop('indices', None)
 

@@ -96,16 +96,16 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         # grad_diff = grad(x) - grad(x_old)
         grad_diff.space.lincomb(-1, grad_diff, 1, grad_x, out=grad_diff)
 
-        ys = grad_diff.inner(x_update)
+        y_inner_s = grad_diff.inner(x_update)
         # TODO: use a small (adjustable) tolerance instead of 0.0
-        if ys == 0.0:
+        if y_inner_s == 0.0:
             return
 
         # Update Hessian
-        hess = ((ident - x_update * grad_diff.T / ys) *
+        hess = ((ident - x_update * grad_diff.T / y_inner_s) *
                 hess *
-                (ident - grad_diff * x_update.T / ys) +
-                x_update * x_update.T / ys)
+                (ident - grad_diff * x_update.T / y_inner_s) +
+                x_update * x_update.T / y_inner_s)
 
         if partial is not None:
             partial.send(x)

@@ -26,7 +26,7 @@ issues with these examples.
 import odl
 
 spc = odl.uniform_discr([0, 0], [1, 1], [100, 100])
-vec = odl.util.shepp_logan(spc)
+vec = odl.util.shepp_logan(spc, modified=True)
 
 # Can also force "instant" plotting
 vec.show(show=True)

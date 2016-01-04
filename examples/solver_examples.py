@@ -27,7 +27,7 @@ from builtins import range
 def landweber_base(operator, x, rhs, iterations=1, omega=1):
     """Straightforward implementation of Landweber's iteration."""
     for _ in range(iterations):
-        x = x - omega * operator.adjoint(operator(x)-rhs)
+        x = x - omega * operator.adjoint(operator(x) - rhs)
 
     return x
 
@@ -42,8 +42,8 @@ def conjugate_gradient_base(op, x, rhs, iterations=1):
         q = op(p)
         norms2 = s.norm()**2
         a = norms2 / q.norm()**2
-        x = x + a*p
-        d = d - a*q
+        x = x + a * p
+        d = d - a * q
         s = op.adjoint(d)
-        b = s.norm()**2/norms2
-        p = s + b*p
+        b = s.norm()**2 / norms2
+        p = s + b * p

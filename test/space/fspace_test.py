@@ -28,22 +28,9 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl import FunctionSpace
+from odl import FunctionSet, FunctionSpace
+from odl.discr.grid import sparse_meshgrid
 from odl.util.testutils import all_almost_equal, all_equal, almost_equal
-
-
-# Pytest fixture
-
-
-# Simply modify exp_params to modify the fixture
-exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
-exp_ids = [' p = {} '.format(p) for p in exp_params]
-exp_fixture = pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
-
-
-@exp_fixture
-def exponent(request):
-    return request.param
 
 
 def test_fspace_init():
@@ -112,8 +99,7 @@ def _meshgrid(domain, shape):
         vec = np.random.uniform(low=beg[i], high=end[i], size=shape[i])
         vec.sort()
         coord_vecs.append(vec)
-    return np.meshgrid(*coord_vecs, indexing='ij', sparse=True,
-                       copy=True)
+    return sparse_meshgrid(*coord_vecs)
 
 
 def test_fspace_vector_init():

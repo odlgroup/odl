@@ -64,8 +64,8 @@ class CudaConvolution(odl.Operator):
 cont_space = odl.FunctionSpace(odl.Interval(0, 10))
 
 # Complicated functions to check performance
-cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
-cont_data = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
+cont_kernel = cont_space.element(lambda x: np.exp(x / 2) * np.cos(x * 1.172))
+cont_data = cont_space.element(lambda x: x ** 2 * np.sin(x) ** 2 * (x > 5))
 
 # Discretization
 discr_space = odl.uniform_discr_fromspace(cont_space, 5000, impl='cuda')
@@ -77,7 +77,7 @@ conv = CudaConvolution(kernel)
 
 # Dampening parameter for landweber
 iterations = 100
-omega = 1.0/conv.opnorm()**2
+omega = 1.0 / conv.opnorm() ** 2
 
 # Display partial
 partial = solvers.util.ForEachPartial(

@@ -278,7 +278,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
             `True` if all entries of ``other`` are equal to this
             vector's entries, `False` otherwise.
         """
-        return (isinstance(other, RawDiscretizationVector) and
+        return (other in self.space and
                 self.ntuple == other.ntuple)
 
     def __getitem__(self, indices):

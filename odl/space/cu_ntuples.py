@@ -27,11 +27,10 @@ from builtins import int, super
 import numpy as np
 
 # ODL imports
-from odl.set.space import LinearSpace, LinearSpaceVector
-from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
-                                    FnBase, FnBaseVector,
-                                    FnWeightingBase)
-from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
+from odl.set.space import LinearSpaceVector
+from odl.space.base_ntuples import (
+    NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
+from odl.util.utility import dtype_repr
 from odl.util.ufuncs import CudaNtuplesUFuncs
 
 try:
@@ -49,6 +48,7 @@ __all__ = ('CudaNtuples', 'CudaNtuplesVector',
 
 
 def _get_int_type():
+    """Return the correct int vector type on the current platform."""
     if np.dtype(np.int).itemsize == 4:
         return 'CudaVectorInt32'
     elif np.dtype(np.int).itemsize == 8:
@@ -58,6 +58,7 @@ def _get_int_type():
 
 
 def _add_if_exists(dtype, name):
+    """Add ``dtype`` to ``CUDA_DTYPES`` if it's available."""
     if hasattr(cuda, name):
         _TYPE_MAP_NPY2CUDA[np.dtype(dtype)] = getattr(cuda, name)
         CUDA_DTYPES.append(np.dtype(dtype))
@@ -431,7 +432,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
                 # Convert value to the correct type if needed
                 value_array = np.asarray(values, dtype=self.space.dtype)
 
-                if (value_array.ndim == 0):
+                if value_array.ndim == 0:
                     self.data.fill(values)
                 else:
                     # Size checking is performed in c++
@@ -489,6 +490,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
 
 def _repr_space_funcs(space):
+    """Return the string in the parentheses of repr for space funcs."""
     inner_str = ''
 
     weight = 1.0
@@ -953,6 +955,7 @@ def CudaRn(size, dtype=np.float32, **kwargs):
 
 
 def _weighting(weight, exponent):
+    """Return a weighting whose type is inferred from the arguments."""
     if np.isscalar(weight):
         weighting = CudaFnConstWeighting(
             weight, exponent)
@@ -1056,36 +1059,43 @@ def cu_weighted_dist(weight, exponent=2.0):
 
 
 def _dist_default(x1, x2):
+    """Default Euclidean distance implementation."""
     return x1.data.dist(x2.data)
 
 
 def _pdist_default(x1, x2, p):
+    """Default p-distance implementation."""
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
     return x1.data.dist_power(x2.data, p)
 
 
 def _pdist_diagweight(x1, x2, p, w):
+    """Diagonally weighted p-distance implementation."""
     return x1.data.dist_weight(x2.data, p, w.data)
 
 
 def _norm_default(x):
+    """Default Euclidean norm implementation."""
     return x.data.norm()
 
 
 def _pnorm_default(x, p):
+    """Default p-norm implementation."""
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
     return x.data.norm_power(p)
 
 
 def _pnorm_diagweight(x, p, w):
+    """Diagonally weighted p-norm implementation."""
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
     return x.data.norm_weight(p, w.data)
 
 
 def _inner_default(x1, x2):
+    """Default Euclidean inner product implementation."""
     return x1.data.inner(x2.data)
 
 

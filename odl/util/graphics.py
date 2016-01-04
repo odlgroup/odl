@@ -20,16 +20,15 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 
-# ODL
-from odl.util.utility import is_real_dtype
-
-# External module imports
+# External
 from numbers import Integral
 import numpy as np
+
+# ODL
+from odl.util.utility import is_real_dtype
 
 
 __all__ = ('show_discrete_function',)
@@ -198,9 +197,9 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             sub_kwargs.update({'projection': '3d'})
         elif method in ('wireframe', 'plot_wireframe'):
             method = 'plot_wireframe'
-            xm, ym = grid.meshgrid()
-            args_re = [xm, ym, np.rot90(values.real)]
-            args_im = ([xm, ym, np.rot90(values.imag)] if dfunc_is_complex
+            x, y = grid.meshgrid()
+            args_re = [x, y, np.rot90(values.real)]
+            args_im = ([x, y, np.rot90(values.imag)] if dfunc_is_complex
                        else [])
             sub_kwargs.update({'projection': '3d'})
         else:

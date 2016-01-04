@@ -24,7 +24,6 @@ standard_library.install_aliases()
 from builtins import int, object
 
 # External
-# pylint: disable=no-name-in-module
 from itertools import zip_longest
 import numpy as np
 from numpy import ravel_multi_index, prod
@@ -37,6 +36,7 @@ __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
 
 
 def _places(a, b, default=5):
+    """Return 3 if one dtype is 'float32' or 'complex64', else 5."""
     dtype1 = getattr(a, 'dtype', object)
     dtype2 = getattr(b, 'dtype', object)
     small_dtypes = [np.float32, np.complex64]
@@ -48,6 +48,7 @@ def _places(a, b, default=5):
 
 
 def almost_equal(a, b, places=None):
+    """`True` if scalars a and b are almost equal."""
     if a is None and b is None:
         return True
 
@@ -75,6 +76,7 @@ def almost_equal(a, b, places=None):
 
 
 def all_equal(iter1, iter2):
+    """`True` if all elements in ``a`` and ``b`` are equal."""
     # Direct comparison for scalars, tuples or lists
     try:
         if iter1 == iter2:
@@ -88,23 +90,19 @@ def all_equal(iter1, iter2):
 
     # If one nested iterator is exhausted, go to direct comparison
     try:
-        i1 = iter(iter1)
-        i2 = iter(iter2)
+        it1 = iter(iter1)
+        it2 = iter(iter2)
     except TypeError:
         try:
-            if iter1 == iter2:
-                return True
-            else:
-                return False
+            return iter1 == iter2
         except ValueError:  # Raised by NumPy when comparing arrays
             return False
 
-    # Sentinel object used to check that both iterators are the same length
     diff_length_sentinel = object()
 
     # Compare element by element and return False if the sequences have
     # different lengths
-    for [ip1, ip2] in zip_longest(i1, i2,
+    for [ip1, ip2] in zip_longest(it1, it2,
                                   fillvalue=diff_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
@@ -118,8 +116,7 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal(iter1, iter2, places=None):
-    # Sentinel object used to check that both iterators are the same length
-
+    """`True` if all elements in ``a`` and ``b`` are almost equal."""
     try:
         if iter1 is iter2 or iter1 == iter2:
             return True
@@ -133,13 +130,13 @@ def all_almost_equal(iter1, iter2, places=None):
         places = _places(iter1, iter2, None)
 
     try:
-        i1 = iter(iter1)
-        i2 = iter(iter2)
+        it1 = iter(iter1)
+        it2 = iter(iter2)
     except TypeError:
         return almost_equal(iter1, iter2, places)
 
     diff_length_sentinel = object()
-    for [ip1, ip2] in zip_longest(i1, i2,
+    for [ip1, ip2] in zip_longest(it1, it2,
                                   fillvalue=diff_length_sentinel):
         # Verify that none of the lists has ended (then they are not the
         # same size)
@@ -153,10 +150,12 @@ def all_almost_equal(iter1, iter2, places=None):
 
 
 def is_subdict(subdict, dictionary):
+    """`True` if all items of ``subdict`` are in ``dictionary``."""
     return all(item in dictionary.items() for item in subdict.items())
 
 
 def _pass(function):
+    """Trivial decorator used if pytest marks are not available."""
     return function
 
 try:
@@ -194,6 +193,7 @@ class FailCounter(object):
         return self
 
     def fail(self, string=None):
+        """Add failure with reason as string."""
         self.num_failed += 1
 
         # Todo: possibly limit number of printed strings
@@ -256,10 +256,10 @@ def timeit(arg):
                 return arg(*args, **kwargs)
         return timed_function
     else:
-        def _timeit_helper(fn):
+        def _timeit_helper(func):
             def timed_function(*args, **kwargs):
                 with Timer(arg):
-                    return fn(*args, **kwargs)
+                    return func(*args, **kwargs)
             return timed_function
         return _timeit_helper
 
@@ -291,6 +291,7 @@ class ProgressBar(object):
     """
 
     def __init__(self, text='progress', *njobs):
+        """Initialize a new instance."""
         self.text = str(text)
         if len(njobs) == 0:
             raise ValueError('Need to provide at least one job len')
@@ -301,12 +302,14 @@ class ProgressBar(object):
         self.start()
 
     def start(self):
+        """Print the initial bar."""
         sys.stdout.write('\r{0}: [{1:30s}] Starting'.format(self.text,
                                                             ' ' * 30))
 
         sys.stdout.flush()
 
     def update(self, *indices):
+        """Update the bar according to ``indices``."""
         if indices:
             if len(indices) != len(self.njobs):
                 raise ValueError('number of indices not correct')
@@ -336,7 +339,10 @@ class ProgressBar(object):
 
 class ProgressRange(object):
 
+    """Simple range sequence with progress bar output."""
+
     def __init__(self, text, n):
+        """Initialize a new instance."""
         self.current = 0
         self.n = n
         self.bar = ProgressBar(text, n)

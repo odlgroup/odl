@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Example on using show with ProductSpace's """
+"""Example on using show with ProductSpace's."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -29,7 +29,8 @@ m = 7
 spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
 pspace = odl.ProductSpace(spc, m)
 
-vec = pspace.element([odl.util.shepp_logan(spc) * i for i in range(1, m+1)])
+vec = pspace.element([odl.util.shepp_logan(spc, modified=True) * i
+                      for i in range(1, m + 1)])
 
 # By default 4 uniformly spaced elements are shown
 vec.show(title='Default')
@@ -42,5 +43,5 @@ vec.show(indices=np.s_[::3], show=True,
          title='Show every third element')
 
 # Slices propagate (as in numpy)
-vec.show(indices=np.s_[2, :, n//2], show=True,
+vec.show(indices=np.s_[2, :, n // 2], show=True,
          title='Show second element, then slice by [:, n//2]')

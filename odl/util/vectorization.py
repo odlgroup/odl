@@ -21,8 +21,8 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-standard_library.install_aliases()
 from future.utils import raise_from
+standard_library.install_aliases()
 
 # External module imports
 from functools import wraps
@@ -36,18 +36,18 @@ __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
            'vectorize')
 
 
-def is_valid_input_array(x, d):
-    """Test whether ``x`` is a correctly shaped array of points in R^d."""
+def is_valid_input_array(x, ndim):
+    """Test if ``x`` is a correctly shaped point array in R^d."""
     if not isinstance(x, np.ndarray):
         return False
-    if d == 1:
+    if ndim == 1:
         return x.ndim == 1 or x.ndim == 2 and x.shape[0] == 1
     else:
-        return x.ndim == 2 and x.shape[0] == d
+        return x.ndim == 2 and x.shape[0] == ndim
 
 
-def is_valid_input_meshgrid(x, d):
-    """Test whether ``x`` is a meshgrid sequence for points in R^d."""
+def is_valid_input_meshgrid(x, ndim):
+    """Test if ``x`` is a meshgrid sequence for points in R^d."""
     try:
         iter(x)
     except TypeError:
@@ -55,15 +55,15 @@ def is_valid_input_meshgrid(x, d):
 
     if isinstance(x, np.ndarray):
         return False
-    if d > 1:
+    if ndim > 1:
         try:
             np.broadcast(*x)
         except (ValueError, TypeError):  # cannot be broadcast
             return False
 
-    return (len(x) == d and
+    return (len(x) == ndim and
             all(isinstance(xi, np.ndarray) for xi in x) and
-            all(xi.ndim == d for xi in x))
+            all(xi.ndim == ndim for xi in x))
 
 
 def meshgrid_input_order(x):
@@ -91,29 +91,32 @@ def meshgrid_input_order(x):
             raise ValueError('unable to determine ordering.')
 
 
-def vecs_from_meshgrid(mg, order):
+def vecs_from_meshgrid(mesh, order):
     """Get the coordinate vectors from a meshgrid (as a tuple)."""
     vecs = []
     order_ = str(order).upper()
     if order_ not in ('C', 'F'):
         raise ValueError("unknown ordering '{}'.".format(order))
 
-    for ax in range(len(mg)):
-        select = [0] * len(mg)
+    if order == 'C':
+        seq = mesh
+    else:
+        seq = reversed(mesh)
+
+    for ax, vec in enumerate(seq):
+        select = [0] * len(mesh)
         select[ax] = np.s_[:]
-        if order_ == 'C':
-            vecs.append(mg[ax][select])
-        else:  # order == 'F'
-            vecs.append(mg[-ax - 1][select])
+        vecs.append(vec[select])
+
     return tuple(vecs)
 
 
-def out_shape_from_meshgrid(mg):
+def out_shape_from_meshgrid(mesh):
     """Get the broadcast output shape from a meshgrid."""
-    if len(mg) == 1:
-        return (len(mg[0]),)
+    if len(mesh) == 1:
+        return (len(mesh[0]),)
     else:
-        return np.broadcast(*mg).shape
+        return np.broadcast(*mesh).shape
 
 
 def out_shape_from_array(arr):
@@ -216,8 +219,8 @@ def vectorize(dtype=None):
                 else:
                     out = np.empty(out_shape, dtype=dtype)
 
-            for i, pt in enumerate(x.T):
-                out[i] = func(pt, **kwargs)
+            for i, xi in enumerate(x.T):
+                out[i] = func(xi, **kwargs)
             return np.asarray(out)
 
         def _vect_wrapper_meshgrid(x, out, ndim, **kwargs):
@@ -241,20 +244,20 @@ def vectorize(dtype=None):
             order = meshgrid_input_order(x)
             vecs = vecs_from_meshgrid(x, order=order)
             if ndim == 1:
-                for i, pt in enumerate(vecs[0]):
-                    out[i] = func(pt, **kwargs)
+                for i, xi in enumerate(vecs[0]):
+                    out[i] = func(xi, **kwargs)
             elif dtype is None:
-                for i, pt in enumerate(product(*vecs)):
+                for i, xi in enumerate(product(*vecs)):
                     # Worst multi-index implementation ever, but still good
                     # enough for slow code
                     index = np.unravel_index(i, out_shape)
                     sub = out
                     for j in index[:-1]:
                         sub = sub[j]
-                    sub[index[-1]] = func(pt, **kwargs)
+                    sub[index[-1]] = func(xi, **kwargs)
             else:
-                for i, pt in enumerate(product(*vecs)):
-                    out.flat[i] = func(pt, **kwargs)
+                for i, xi in enumerate(product(*vecs)):
+                    out.flat[i] = func(xi, **kwargs)
             return np.asarray(out)
 
         @wraps(func)
