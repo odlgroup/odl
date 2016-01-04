@@ -50,7 +50,8 @@ def save_ortho_slices(data, name, sli):
     """
     # indices for the orthogonal slices
     x, y, z = np.asarray(sli, int)
-    path = pth.join(pth.join(pth.expanduser("~"), 'data'), 'astra')
+    path = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'temp'),
+                    'astra')
 
 
     data.show('imshow',
