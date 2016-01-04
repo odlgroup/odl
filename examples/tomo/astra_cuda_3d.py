@@ -30,10 +30,11 @@ import numpy as np
 
 # Internal
 from odl import (Interval, Rectangle, FunctionSpace, uniform_discr,
-                 uniform_discr_fromspace, uniform_sampling,
-                 Parallel3dGeometry, CircularConeFlatGeometry,
-                 HelicalConeFlatGeometry, astra_gpu_forward_projector_call,
-                 astra_gpu_backward_projector_call)
+                 uniform_discr_fromspace, uniform_sampling)
+from odl.tomo import (Parallel3dGeometry, CircularConeFlatGeometry,
+                      HelicalConeFlatGeometry,
+                      astra_cuda_forward_projector_call,
+                      astra_cuda_backward_projector_call)
 
 
 def save_ortho_slices(data, name, sli):
@@ -86,7 +87,7 @@ discr_data = discr_vol_space.element(phan)
 
 # Indices of ortho slices
 vol_sli = np.round(0.25 * np.array(vol_shape))
-save_ortho_slices(discr_data, 'phantom 3d gpu', vol_sli)
+save_ortho_slices(discr_data, 'phantom 3d cuda', vol_sli)
 
 # Angles
 angle_intvl = Interval(0, 2 * np.pi)
@@ -125,31 +126,31 @@ proj_sli = (0, np.round(0.25 * proj_shape[1]), np.round(0.25 * proj_shape[2]))
 # Forward and back projections
 
 # Forward: Parallel 3D
-proj_data = astra_gpu_forward_projector_call(discr_data, geom_p3d,
+proj_data = astra_cuda_forward_projector_call(discr_data, geom_p3d,
                                              discr_proj_space)
-save_ortho_slices(proj_data, 'forward parallel 3d gpu', proj_sli)
+save_ortho_slices(proj_data, 'forward parallel 3d cuda', proj_sli)
 
 # Backward: Parallel 3D
-rec_data = astra_gpu_backward_projector_call(proj_data, geom_p3d,
+rec_data = astra_cuda_backward_projector_call(proj_data, geom_p3d,
                                              discr_vol_space)
-save_ortho_slices(rec_data, 'backward parallel 3d gpu', vol_sli)
+save_ortho_slices(rec_data, 'backward parallel 3d cuda', vol_sli)
 
 # Forward: Circular Cone Flat
-proj_data = astra_gpu_forward_projector_call(discr_data, geom_ccf,
+proj_data = astra_cuda_forward_projector_call(discr_data, geom_ccf,
                                              discr_proj_space)
-save_ortho_slices(proj_data, 'forward conebeam circular gpu', proj_sli)
+save_ortho_slices(proj_data, 'forward conebeam circular cuda', proj_sli)
 
 # Backward: Circular Cone Flat
-rec_data = astra_gpu_backward_projector_call(proj_data, geom_ccf,
+rec_data = astra_cuda_backward_projector_call(proj_data, geom_ccf,
                                              discr_vol_space)
-save_ortho_slices(rec_data, 'backward conebeam circular gpu', vol_sli)
+save_ortho_slices(rec_data, 'backward conebeam circular cuda', vol_sli)
 
 # Forward: Helical Cone Flat
-proj_data = astra_gpu_forward_projector_call(discr_data, geom_hcf,
+proj_data = astra_cuda_forward_projector_call(discr_data, geom_hcf,
                                              discr_proj_space)
-save_ortho_slices(proj_data, 'forward conebeam helical gpu', proj_sli)
+save_ortho_slices(proj_data, 'forward conebeam helical cuda', proj_sli)
 
 # Backward: Helical Cone Flat
-rec_data = astra_gpu_backward_projector_call(proj_data, geom_hcf,
+rec_data = astra_cuda_backward_projector_call(proj_data, geom_hcf,
                                              discr_vol_space)
-save_ortho_slices(rec_data, 'backward conebeam helical gpu', vol_sli)
+save_ortho_slices(rec_data, 'backward conebeam helical cuda', vol_sli)

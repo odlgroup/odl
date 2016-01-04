@@ -29,8 +29,8 @@ import numpy as np
 
 # Internal
 from odl import (Interval, Rectangle, FunctionSpace, uniform_sampling,
-                 uniform_discr_fromspace, Parallel2dGeometry,
-                 DiscreteXrayTransform)
+                 uniform_discr_fromspace)
+from odl.tomo import Parallel2dGeometry, DiscreteXrayTransform
 
 
 def phantom(x, y):

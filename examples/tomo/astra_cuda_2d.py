@@ -32,10 +32,10 @@ import numpy as np
 
 # Internal
 from odl import (Interval, FunctionSpace, uniform_discr,
-                 uniform_discr_fromspace, uniform_sampling,
-                 Parallel2dGeometry, FanFlatGeometry,
-                 astra_gpu_forward_projector_call,
-                 astra_gpu_backward_projector_call)
+                 uniform_discr_fromspace, uniform_sampling)
+from odl.tomo import (Parallel2dGeometry, FanFlatGeometry,
+                      astra_cuda_forward_projector_call,
+                      astra_cuda_backward_projector_call)
 
 
 def save_slice(data, name):
@@ -66,7 +66,7 @@ phantom[20:30, 20:30] = 1
 # Create an element in the volume space
 discr_vol_data = discr_vol_space.element(phantom)
 
-save_slice(discr_vol_data, 'phantom 2d gpu')
+save_slice(discr_vol_data, 'phantom 2d cuda')
 
 # Angles
 angle_intvl = Interval(0, 2 * np.pi)
@@ -96,23 +96,23 @@ discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
 # Forward and back projections
 
 # PARALLEL 2D: forward
-proj_data_p2d = astra_gpu_forward_projector_call(discr_vol_data, geom_p2d,
+proj_data_p2d = astra_cuda_forward_projector_call(discr_vol_data, geom_p2d,
                                                  discr_proj_space)
-save_slice(proj_data_p2d, 'forward parallel 2d gpu')
+save_slice(proj_data_p2d, 'forward parallel 2d cuda')
 
 # PARALLEL 2D: backward
-reco_data_p2d = astra_gpu_backward_projector_call(proj_data_p2d, geom_p2d,
+reco_data_p2d = astra_cuda_backward_projector_call(proj_data_p2d, geom_p2d,
                                                   discr_vol_space)
-save_slice(reco_data_p2d, 'backward parallel 2d gpu')
+save_slice(reco_data_p2d, 'backward parallel 2d cuda')
 
 # Fanflat: forward
 discr_vol_data = discr_vol_space.element(phantom)
-proj_data_ff = astra_gpu_forward_projector_call(discr_vol_data, geom_ff,
+proj_data_ff = astra_cuda_forward_projector_call(discr_vol_data, geom_ff,
                                                 discr_proj_space)
-save_slice(proj_data_ff, 'forward fanflat gpu')
+save_slice(proj_data_ff, 'forward fanflat cuda')
 
 # Fanflat: backward
-reco_data_ff = astra_gpu_backward_projector_call(proj_data_ff, geom_ff,
+reco_data_ff = astra_cuda_backward_projector_call(proj_data_ff, geom_ff,
                                                  discr_vol_space)
-save_slice(reco_data_ff, 'backward fanflat_gpu')
+save_slice(reco_data_ff, 'backward fanflat_cuda')
 
