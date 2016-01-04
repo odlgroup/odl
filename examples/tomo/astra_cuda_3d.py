@@ -31,12 +31,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Internal
-from odl import (Interval, Rectangle, FunctionSpace, uniform_discr,
-                 uniform_discr_fromspace, uniform_sampling)
-from odl.tomo import (Parallel3dGeometry, CircularConeFlatGeometry,
-                      HelicalConeFlatGeometry,
-                      astra_cuda_forward_projector_call,
-                      astra_cuda_backward_projector_call)
+import odl
 
 
 def save_ortho_slices(data, name, sli):
@@ -74,7 +69,7 @@ def save_ortho_slices(data, name, sli):
 
 # `DiscreteLp` volume space
 vol_shape = (80, 70, 60)
-discr_vol_space = uniform_discr([-0.8, -0.7, -0.6], [0.8, 0.7, 0.6],
+discr_vol_space = odl.uniform_discr([-0.8, -0.7, -0.6], [0.8, 0.7, 0.6],
                                 vol_shape, dtype='float32')
 
 # Phantom
@@ -93,12 +88,12 @@ vol_sli = np.round(0.25 * np.array(vol_shape))
 save_ortho_slices(discr_data, 'phantom 3d cuda', vol_sli)
 
 # Angles
-angle_intvl = Interval(0, 2 * np.pi)
-angle_grid = uniform_sampling(angle_intvl, 110)
+angle_intvl = odl.Interval(0, 2 * np.pi)
+angle_grid = odl.uniform_sampling(angle_intvl, 110)
 
 # Detector
-dparams = Rectangle([-1, -0.9], [1, 0.9])
-det_grid = uniform_sampling(dparams, (100, 90))
+dparams = odl.Rectangle([-1, -0.9], [1, 0.9])
+det_grid = odl.uniform_sampling(dparams, (100, 90))
 
 # Parameter for cone beam geometries
 src_rad = 1000
@@ -106,21 +101,23 @@ det_rad = 100
 spiral_pitch_factor = 0.5
 
 # Create geometries
-geom_p3d = Parallel3dGeometry(angle_intvl, dparams, angle_grid, det_grid)
-geom_ccf = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+geom_p3d = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, angle_grid,
+                                     det_grid)
+geom_ccf = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
+                                         det_rad,
                                     angle_grid, det_grid)
-geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
+geom_hcf = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                    det_rad, spiral_pitch_factor,
                                    angle_grid, det_grid)
 
 # Projection space
-proj_space = FunctionSpace(geom_p3d.params)
+proj_space = odl.FunctionSpace(geom_p3d.params)
 
 # `DiscreteLp` projection space
 proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
 
 
-discr_proj_space = uniform_discr_fromspace(proj_space, proj_shape,
+discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
                                            dtype='float32')
 
 # Indices of ortho slices of projections to be saved
@@ -129,31 +126,31 @@ proj_sli = (0, np.round(0.25 * proj_shape[1]), np.round(0.25 * proj_shape[2]))
 # Forward and back projections
 
 # Forward: Parallel 3D
-proj_data = astra_cuda_forward_projector_call(discr_data, geom_p3d,
+proj_data = odl.tomo.astra_cuda_forward_projector_call(discr_data, geom_p3d,
                                              discr_proj_space)
 save_ortho_slices(proj_data, 'forward parallel 3d cuda', proj_sli)
 
 # Backward: Parallel 3D
-rec_data = astra_cuda_backward_projector_call(proj_data, geom_p3d,
+rec_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom_p3d,
                                              discr_vol_space)
 save_ortho_slices(rec_data, 'backward parallel 3d cuda', vol_sli)
 
 # Forward: Circular Cone Flat
-proj_data = astra_cuda_forward_projector_call(discr_data, geom_ccf,
+proj_data = odl.tomo.astra_cuda_forward_projector_call(discr_data, geom_ccf,
                                              discr_proj_space)
 save_ortho_slices(proj_data, 'forward conebeam circular cuda', proj_sli)
 
 # Backward: Circular Cone Flat
-rec_data = astra_cuda_backward_projector_call(proj_data, geom_ccf,
+rec_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom_ccf,
                                              discr_vol_space)
 save_ortho_slices(rec_data, 'backward conebeam circular cuda', vol_sli)
 
 # Forward: Helical Cone Flat
-proj_data = astra_cuda_forward_projector_call(discr_data, geom_hcf,
+proj_data = odl.tomo.astra_cuda_forward_projector_call(discr_data, geom_hcf,
                                              discr_proj_space)
 save_ortho_slices(proj_data, 'forward conebeam helical cuda', proj_sli)
 
 # Backward: Helical Cone Flat
-rec_data = astra_cuda_backward_projector_call(proj_data, geom_hcf,
+rec_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom_hcf,
                                              discr_vol_space)
 save_ortho_slices(rec_data, 'backward conebeam helical cuda', vol_sli)
