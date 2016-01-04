@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 n = 100
 m = 20
 spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
-vec = odl.util.shepp_logan(spc)
+vec = odl.util.shepp_logan(spc, modified=True)
 
 # Create a figure by saving the result of show
 fig = None

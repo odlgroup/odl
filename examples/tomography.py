@@ -63,7 +63,7 @@ ran = odl.uniform_discr([0, 0], [1, np.pi], [142, 100])
 
 proj_op = ForwardProjector(dom, ran)
 
-phantom = odl.util.shepp_logan(dom)
+phantom = odl.util.shepp_logan(dom, modified=True)
 data = proj_op(phantom)
 
 x = dom.zero()

@@ -29,7 +29,8 @@ m = 7
 spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
 pspace = odl.ProductSpace(spc, m)
 
-vec = pspace.element([odl.util.shepp_logan(spc) * i for i in range(1, m+1)])
+vec = pspace.element([odl.util.shepp_logan(spc, modified=True) * i
+                      for i in range(1, m + 1)])
 
 # By default 4 uniformly spaced elements are shown
 vec.show(title='Default')

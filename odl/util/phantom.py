@@ -390,7 +390,7 @@ def derenzo_sources(space):
         raise ValueError("Dimension not 2, no phantom available")
 
 
-def shepp_logan(space, modified=True):
+def shepp_logan(space, modified=False):
     """Create a Shepp-Logan phantom.
 
     The standard Shepp-Logan phantom in 2 or 3 dimensions.
