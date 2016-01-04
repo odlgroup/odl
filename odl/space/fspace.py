@@ -174,7 +174,7 @@ class FunctionSet(Set):
 
     @property
     def element_type(self):
-        """ `FunctionSetVector` """
+        """`FunctionSetVector`"""
         return FunctionSetVector
 
 
@@ -196,8 +196,6 @@ class FunctionSetVector(Operator):
         """
         self._space = fset
         super().__init__(self._space.domain, self._space.range, linear=False)
-
-        # pylint: disable=protected-access
 
         # Determine which type of implementation fcall is
         if isinstance(fcall, FunctionSetVector):
@@ -380,7 +378,6 @@ class FunctionSetVector(Operator):
             raise TypeError('vector {!r} is not an element of the space '
                             '{} of this vector.'
                             ''.format(other, self.space))
-        # pylint: disable=protected-access
         self._call_in_place = other._call_in_place
         self._call_out_of_place = other._call_out_of_place
         self._call_has_out = other._call_has_out
@@ -408,8 +405,6 @@ class FunctionSetVector(Operator):
 
         if not isinstance(other, FunctionSetVector):
             return False
-
-        # pylint: disable=protected-access
 
         # We cannot blindly compare since functions may have been wrapped
         if (self._call_has_out != other._call_has_out or
@@ -580,8 +575,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
         The additions and multiplications are implemented via simple
         Python functions, so non-vectorized versions are slow.
         """
-        # pylint: disable=protected-access
-
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -645,14 +638,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return out
 
     def _multiply(self, x1, x2, out):
-        """Raw pointwise multiplication of two functions.
-
-        Notes
-        -----
-        The multiplication is implemented with a simple Python
-        function, so the non-vectorized versions are slow.
-        """
-        # pylint: disable=protected-access
+        """Raw pointwise multiplication of two functions."""
+        # pylint: disable=no-self-use
 
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
@@ -679,7 +666,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     def _divide(self, x1, x2, out):
         """Raw pointwise division of two functions."""
-        # pylint: disable=protected-access
+        # pylint: disable=no-self-use
 
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
@@ -706,7 +693,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     def _scalar_power(self, x, p, out):
         """Raw p-th power of a function, p integer or general scalar."""
-        # pylint: disable=protected-access
+        # pylint: disable=no-self-use
         x_call_oop = x._call_out_of_place
         x_call_ip = x._call_in_place
 
@@ -795,18 +782,15 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
     # Power functions are more general than the ones in LinearSpace
     def __pow__(self, p):
         """`f.__pow__(p) <==> f ** p`."""
-        # pylint: disable=protected-access
         out = self.space.element()
         self.space._scalar_power(self, p, out=out)
         return out
 
     def __ipow__(self, p):
         """`f.__ipow__(p) <==> f **= p`."""
-        # pylint: disable=protected-access
         return self.space._scalar_power(self, p, out=self)
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-order,wrong-import-position
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)

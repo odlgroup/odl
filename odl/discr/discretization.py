@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-# pylint: disable=abstract-method
+"""Base classes for discretization."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -33,11 +33,8 @@ from odl.space.ntuples import Ntuples, Fn, Rn, Cn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
-if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaNtuples, CudaFn, CudaRn
-    CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
-else:
-    CudaRn = CudaCn = CudaFn = CudaNtuples = type(None)
+from odl.space.cu_ntuples import CudaNtuples, CudaFn, CudaRn
+CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
@@ -70,7 +67,7 @@ class RawDiscretization(NtuplesBase):
     **extension**.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None, **kwargs):
+    def __init__(self, uspace, dspace, restr=None, ext=None):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -186,6 +183,7 @@ class RawDiscretization(NtuplesBase):
         if inp is None:
             return self.element_type(self, self.dspace.element())
         try:
+            # pylint: disable=not-callable
             return self.element_type(self, self.restriction(inp))
         except TypeError:
             # Sequence-type input
@@ -235,15 +233,10 @@ class RawDiscretizationVector(NtuplesBaseVector):
 
     def __init__(self, space, ntuple):
         """Initialize a new instance."""
-        if not isinstance(space, RawDiscretization):
-            raise TypeError('space {!r} not a `RawDiscretization` '
-                            'instance.'.format(space))
+        assert isinstance(space, RawDiscretization)
+        assert ntuple in space.dspace
 
-        if not isinstance(ntuple, space.dspace.element_type):
-            raise TypeError('n-tuple {!r} not an `{}` vector.'
-                            ''.format(ntuple,
-                                      space.dspace.__class__.__name__))
-        super().__init__(space)
+        NtuplesBaseVector.__init__(self, space)
         self._ntuple = ntuple
 
     @property
@@ -285,7 +278,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
             `True` if all entries of ``other`` are equal to this
             vector's entries, `False` otherwise.
         """
-        return (type(other) == type(self) and
+        return (isinstance(other, RawDiscretizationVector) and
                 self.ntuple == other.ntuple)
 
     def __getitem__(self, indices):
@@ -450,10 +443,8 @@ class DiscretizationVector(RawDiscretizationVector, FnBaseVector):
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        if not isinstance(space, Discretization):
-            raise TypeError('space {!r} not a `Discretization` '
-                            'instance.'.format(space))
-        super().__init__(space, data)
+        assert isinstance(space, Discretization)
+        RawDiscretizationVector.__init__(self, space, data)
 
 
 def dspace_type(space, impl, dtype=None):

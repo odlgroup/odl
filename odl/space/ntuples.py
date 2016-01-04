@@ -31,13 +31,12 @@ from builtins import super
 from future.utils import native
 
 # External module imports
-# pylint: disable=no-name-in-module
 import ctypes
 from numbers import Integral
 from functools import partial
 from math import sqrt
 import numpy as np
-import scipy as sp
+import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
 # ODL imports
@@ -490,7 +489,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
 
     if _blas_is_applicable(x1, x2, out):
         # pylint: disable=unbalanced-tuple-unpacking
-        axpy, scal, copy = sp.linalg.blas.get_blas_funcs(
+        axpy, scal, copy = linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data, out.data))
     else:
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
@@ -1485,7 +1484,7 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
 
 def _norm_default(x):
     if _blas_is_applicable(x):
-        nrm2 = sp.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
+        nrm2 = linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
         norm = partial(nrm2, n=native(x.size))
     else:
         norm = np.linalg.norm
@@ -1513,7 +1512,7 @@ def _pnorm_diagweight(x, p, w):
 
 def _inner_default(x1, x2):
     if _blas_is_applicable(x1, x2):
-        dotc = sp.linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
+        dotc = linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
         dot = partial(dotc, n=native(x1.size))
     elif is_real_dtype(x1.dtype):
         dot = np.dot  # still much faster than vdot
@@ -1622,7 +1621,7 @@ class FnMatrixWeighting(FnWeightingBase):
         if self.exponent in (1.0, float('inf')):
             self._mat_pow = self.matrix
         elif precomp_mat_pow and self.exponent != 2.0:
-            eigval, eigvec = sp.linalg.eigh(self.matrix)
+            eigval, eigvec = linalg.eigh(self.matrix)
             eigval **= 1.0 / self.exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
         else:
@@ -1787,7 +1786,7 @@ class FnMatrixWeighting(FnWeightingBase):
                     raise NotImplementedError('sparse matrix powers not '
                                               'suppoerted.')
                 else:
-                    eigval, eigvec = sp.linalg.eigh(self.matrix)
+                    eigval, eigvec = linalg.eigh(self.matrix)
                     eigval **= 1.0 / self.exponent
                     mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
                     if self._cache_mat_pow:

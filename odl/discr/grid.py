@@ -42,22 +42,41 @@ __all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling')
 
 
 def sparse_meshgrid(*x, **kwargs):
-    """Make a sparse meshgrid with C- or F-contiguous arrays."""
+    """Make a sparse meshgrid with C- or F-contiguous arrays.
+
+    Parameters
+    ----------
+    x1,...,xN : array-like
+        Input arrays to turn into sparse meshgrid vectors
+    order : {'C', 'F'}, optional
+        Ordering of the output meshgrid. The vectors in the produced
+        meshgrid tuple are guaranteed to be contiguous in this
+        ordering,
+
+    Returns
+    -------
+    meshgrid : `tuple` of `numpy.ndarray`
+        Sparse coordinate vectors representing an N-dimensional grid
+
+    See also
+    --------
+    numpy.meshgrid : dense or sparse meshgrids
+    """
     n = len(x)
     order = kwargs.pop('order', 'C')
-    mg = []
+    mesh = []
     for ax, xi in enumerate(x):
         xi = np.asarray(xi)
         slc = [None] * n
         slc[ax] = np.s_[:]
         if order == 'C':
-            mg.append(np.ascontiguousarray(xi[slc]))
+            mesh.append(np.ascontiguousarray(xi[slc]))
         else:
-            mg.append(np.asfortranarray(xi[slc]))
+            mesh.append(np.asfortranarray(xi[slc]))
     if order == 'C':
-        return tuple(mg)
+        return tuple(mesh)
     else:
-        return tuple(reversed(mg))
+        return tuple(reversed(mesh))
 
 
 class TensorGrid(Set):
@@ -312,7 +331,7 @@ class TensorGrid(Set):
             return False
 
         # pylint: disable=arguments-differ
-        return (type(self) == type(other) and
+        return (isinstance(other, TensorGrid) and
                 self.ndim == other.ndim and
                 self.shape == other.shape and
                 all(np.allclose(vec_s, vec_o, atol=tol, rtol=0.0)
@@ -1061,11 +1080,12 @@ class RegularGrid(TensorGrid):
         new_maxpt = []
         new_shape = []
 
-        for slc, mi, ma, shp, cvec in zip(slc_list, self.min_pt, self.max_pt,
-                                          self.shape, self.coord_vectors):
+        for slc, min_, max_, shp, cvec in zip(
+                slc_list, self.min_pt, self.max_pt, self.shape,
+                self.coord_vectors):
             if slc == np.s_[:]:  # Take all along this axis
-                new_minpt.append(mi)
-                new_maxpt.append(ma)
+                new_minpt.append(min_)
+                new_maxpt.append(max_)
                 new_shape.append(shp)
             elif isinstance(slc, Integral):  # Single index
                 new_minpt.append(cvec[slc])
