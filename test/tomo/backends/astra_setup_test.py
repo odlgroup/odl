@@ -25,30 +25,16 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
+import astra
 
 # Internal
-from odl.set.domain import Interval, IntervalProd
-from odl.discr.grid import TensorGrid, uniform_sampling
-from odl.discr.lp_discr import uniform_discr
-from odl.util.testutils import all_equal, is_subdict
-from odl.tomo.geometry.parallel import (Parallel2dGeometry,
-                                        Parallel3dGeometry)
-from odl.tomo.geometry.fanbeam import FanFlatGeometry
-from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
-                                        HelicalConeFlatGeometry)
+import odl
 from odl.tomo.util.testutils import skip_if_no_astra
+from odl.util.testutils import is_subdict, all_equal
 from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
-if ASTRA_AVAILABLE:
-    import astra
-if ASTRA_AVAILABLE:
-    from odl.tomo.backends.astra_setup import (astra_projection_geometry,
-                                               astra_volume_geometry,
-                                               astra_data, astra_projector,
-                                               astra_algorithm, astra_cleanup,
-                                               astra_geom_to_vec)
 
 
-# TODO: add test to check scaling of ASTRA projectors
+# TODO: test scaling of ASTRA projectors
 
 def _discrete_domain(ndim, interp):
     """Create `DiscreteLp` space with isotropic grid stride.
@@ -69,8 +55,8 @@ def _discrete_domain(ndim, interp):
     maxpt = np.arange(1, ndim + 1, 1)  # 1, 2 [, 3]
     nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
 
-    return uniform_discr(minpt, maxpt, nsamples=nsamples, interp=interp,
-                         dtype='float32')
+    return odl.uniform_discr(minpt, maxpt, nsamples=nsamples, interp=interp,
+                             dtype='float32')
 
 
 def _discrete_domain_anisotropic(ndim, interp):
@@ -92,8 +78,8 @@ def _discrete_domain_anisotropic(ndim, interp):
     maxpt = [1] * ndim
     nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
 
-    return uniform_discr(minpt, maxpt, nsamples=nsamples, interp=interp,
-                         dtype='float32')
+    return odl.uniform_discr(minpt, maxpt, nsamples=nsamples, interp=interp,
+                             dtype='float32')
 
 
 @skip_if_no_astra
@@ -101,7 +87,7 @@ def test_vol_geom_2d():
     """Create ASTRA 2D volume geometry."""
 
     discr_dom = _discrete_domain(2, 'nearest')
-    vol_geom = astra_volume_geometry(discr_dom)
+    vol_geom = odl.tomo.astra_volume_geometry(discr_dom)
 
     x_pts = 10  # x_pts = Rows
     y_pts = 20  # y_pts = Columns
@@ -121,7 +107,7 @@ def test_vol_geom_2d():
     # non-isotropic case should fail due to lacking ASTRA support
     discr_dom = _discrete_domain_anisotropic(2, 'nearest')
     with pytest.raises(NotImplementedError):
-        astra_volume_geometry(discr_dom)
+        odl.tomo.astra_volume_geometry(discr_dom)
 
 
 @skip_if_no_astra
@@ -129,7 +115,7 @@ def test_vol_geom_3d():
     """Create ASTRA 2D volume geometry."""
 
     discr_dom = _discrete_domain(3, 'nearest')
-    vol_geom = astra_volume_geometry(discr_dom)
+    vol_geom = odl.tomo.astra_volume_geometry(discr_dom)
 
     x_pts = 10  # x_pts =
     y_pts = 20  # y_pts =
@@ -154,20 +140,21 @@ def test_vol_geom_3d():
     # non-isotropic case should fail due to lacking ASTRA support
     discr_dom = _discrete_domain_anisotropic(3, 'nearest')
     with pytest.raises(NotImplementedError):
-        astra_volume_geometry(discr_dom)
+        odl.tomo.astra_volume_geometry(discr_dom)
 
 
 @skip_if_no_astra
 def test_proj_geom_parallel_2d():
     """Create ASTRA 2D projection geometry."""
 
-    angles = Interval(0, 2)
-    angle_grid = uniform_sampling(angles, 5)
-    det_params = Interval(-1, 1)
-    det_grid = uniform_sampling(det_params, 10)
-    geom = Parallel2dGeometry(angles, det_params, angle_grid, det_grid)
+    angles = odl.Interval(0, 2)
+    angle_grid = odl.uniform_sampling(angles, 5)
+    det_params = odl.Interval(-1, 1)
+    det_grid = odl.uniform_sampling(det_params, 10)
+    geom = odl.tomo.Parallel2dGeometry(angles, det_params, angle_grid,
+                                       det_grid)
 
-    proj_geom = astra_projection_geometry(geom)
+    proj_geom = odl.tomo.astra_projection_geometry(geom)
 
     correct_subdict = {
         'type': 'parallel',
@@ -184,72 +171,81 @@ def test_astra_projection_geometry():
     """Create ASTRA projection geometry from `odl.tomo.geometry` objects."""
 
     with pytest.raises(TypeError):
-        astra_projection_geometry(None)
+        odl.tomo.astra_projection_geometry(None)
 
-    angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 5)
-    dparams = Interval(-40, 40)
-    det_grid = uniform_sampling(dparams, 10)
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    angle_grid = odl.uniform_sampling(angle_intvl, 5)
+    dparams = odl.Interval(-40, 40)
+    det_grid = odl.uniform_sampling(dparams, 10)
 
     # no detector sampling grid, no motion sampling grid
-    geom = Parallel2dGeometry(angle_intvl, dparams)
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams)
     with pytest.raises(ValueError):
-        astra_projection_geometry(geom)
+        odl.tomo.astra_projection_geometry(geom)
 
     # motion sampling grid, but no detector sampling grid
-    geom = Parallel2dGeometry(angle_intvl, dparams, angle_grid)
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid)
     with pytest.raises(ValueError):
-        astra_projection_geometry(geom)
+        odl.tomo.astra_projection_geometry(geom)
 
     # detector sampling grid, but no motion sampling grid
-    geom = Parallel2dGeometry(angle_intvl, dparams, dgrid=det_grid)
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, dgrid=det_grid)
     with pytest.raises(ValueError):
-        astra_projection_geometry(geom)
+        odl.tomo.astra_projection_geometry(geom)
 
     # motion sampling grid, detector sampling grid but not RegularGrid
-    geom = Parallel2dGeometry(angle_intvl=angle_intvl, dparams=dparams,
-                              agrid=angle_grid, dgrid=TensorGrid([0]))
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl=angle_intvl,
+                                       dparams=dparams,
+                                       agrid=angle_grid,
+                                       dgrid=odl.TensorGrid([0]))
     with pytest.raises(TypeError):
-        astra_projection_geometry(geom)
+        odl.tomo.astra_projection_geometry(geom)
 
     # detector sampling grid, motion sampling grid
-    geom = Parallel2dGeometry(angle_intvl, dparams, angle_grid, det_grid)
-    astra_projection_geometry(geom)
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+                                       det_grid)
+    odl.tomo.astra_projection_geometry(geom)
 
     # PARALLEL 2D GEOMETRY
-    geom = Parallel2dGeometry(angle_intvl, dparams, angle_grid, det_grid)
-    ageom = astra_projection_geometry(geom)
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+                                       det_grid)
+    ageom = odl.tomo.astra_projection_geometry(geom)
     assert ageom['type'] == 'parallel'
 
     # FANFLAT
     src_rad = 10
     det_rad = 5
-    geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                              agrid=angle_grid, dgrid=det_grid)
-    ageom = astra_projection_geometry(geom_ff)
+    geom_ff = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                       agrid=angle_grid, dgrid=det_grid)
+    ageom = odl.tomo.astra_projection_geometry(geom_ff)
     assert ageom['type'] == 'fanflat'
 
-    dparams = IntervalProd([-40, -3], [40, 3])
-    det_grid = uniform_sampling(dparams, (10, 5))
+    dparams = odl.IntervalProd([-40, -3], [40, 3])
+    det_grid = odl.uniform_sampling(dparams, (10, 5))
 
     # PARALLEL 3D GEOMETRY
-    geom_p3d = Parallel3dGeometry(angle_intvl, dparams, angle_grid, det_grid)
-    astra_projection_geometry(geom_p3d)
-    ageom = astra_projection_geometry(geom_p3d)
+    geom_p3d = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, angle_grid,
+                                           det_grid)
+    odl.tomo.astra_projection_geometry(geom_p3d)
+    ageom = odl.tomo.astra_projection_geometry(geom_p3d)
     assert ageom['type'] == 'parallel3d'
 
     # CIRCULAR CONEFLAT
-    geom_ccf = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                        agrid=angle_grid, dgrid=det_grid)
-    ageom = astra_projection_geometry(geom_ccf)
+    geom_ccf = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
+                                                 det_rad,
+                                                 agrid=angle_grid,
+                                                 dgrid=det_grid)
+    ageom = odl.tomo.astra_projection_geometry(geom_ccf)
     assert ageom['type'] == 'cone'
 
     # HELICAL CONEFLAT
     spiral_pitch_factor = 1
-    geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                       spiral_pitch_factor, agrid=angle_grid,
-                                       dgrid=det_grid)
-    ageom = astra_projection_geometry(geom_hcf)
+    geom_hcf = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
+                                                det_rad,
+                                                spiral_pitch_factor,
+                                                agrid=angle_grid,
+                                                dgrid=det_grid)
+    ageom = odl.tomo.astra_projection_geometry(geom_hcf)
     assert ageom['type'] == 'cone_vec'
 
 
@@ -264,14 +260,14 @@ def test_volume_data_2d():
     """Create ASTRA data structure in 2D."""
 
     # From scratch
-    data_id = astra_data(vol_geom_2d, 'volume', ndim=2)
+    data_id = odl.tomo.astra_data(vol_geom_2d, 'volume', ndim=2)
     data_out = astra.data2d.get_shared(data_id)
     assert data_out.shape == (10, 20)
 
     # From existing
     discr_dom = _discrete_domain(2, 'nearest')
     data_in = discr_dom.element(np.ones(10 * 20, dtype='float32'))
-    data_id = astra_data(vol_geom_2d, 'volume', data=data_in)
+    data_id = odl.tomo.astra_data(vol_geom_2d, 'volume', data=data_in)
     data_out = astra.data2d.get_shared(data_id)
     assert data_out.shape == (10, 20)
 
@@ -286,14 +282,14 @@ def test_volume_data_3d():
     """Create ASTRA data structure in 2D."""
 
     # From scratch
-    data_id = astra_data(vol_geom_3d, 'volume', ndim=3)
+    data_id = odl.tomo.astra_data(vol_geom_3d, 'volume', ndim=3)
     data_out = astra.data3d.get_shared(data_id)
     assert data_out.shape == (10, 20, 30)
 
     # From existing
     discr_dom = _discrete_domain(3, 'nearest')
     data_in = discr_dom.element(np.ones(10 * 20 * 30, dtype='float32'))
-    data_id = astra_data(vol_geom_3d, 'volume', data=data_in)
+    data_id = odl.tomo.astra_data(vol_geom_3d, 'volume', data=data_in)
     data_out = astra.data3d.get_shared(data_id)
     assert data_out.shape == (10, 20, 30)
 
@@ -315,26 +311,27 @@ def test_parallel_2d_projector():
     """Create ASTRA 2D projectors."""
 
     # We can just test if it runs
-    astra_projector('nearest', vol_geom_2d, proj_geom_2d,
-                    ndim=2, impl='cpu')
-    astra_projector('linear', vol_geom_2d, proj_geom_2d,
-                    ndim=2, impl='cpu')
+    odl.tomo.astra_projector('nearest', vol_geom_2d, proj_geom_2d,
+                             ndim=2, impl='cpu')
+    odl.tomo.astra_projector('linear', vol_geom_2d, proj_geom_2d,
+                             ndim=2, impl='cpu')
 
 
 @skip_if_no_astra
 def test_parallel_3d_projector():
     """Create ASTRA 2D projectors."""
 
-    astra_projector('nearest', vol_geom_3d, proj_geom_3d, ndim=3, impl='cuda')
+    odl.tomo.astra_projector('nearest', vol_geom_3d, proj_geom_3d, ndim=3,
+                             impl='cuda')
 
     # Run as a real test once ASTRA supports this construction
     with pytest.raises(ValueError):
-        astra_projector('nearest', vol_geom_3d, proj_geom_3d,
-                        ndim=3, impl='cpu')
+        odl.tomo.astra_projector('nearest', vol_geom_3d, proj_geom_3d,
+                                 ndim=3, impl='cpu')
 
     with pytest.raises(ValueError):
-        astra_projector('linear', vol_geom_3d, proj_geom_3d,
-                        ndim=3, impl='cpu')
+        odl.tomo.astra_projector('linear', vol_geom_3d, proj_geom_3d,
+                                 ndim=3, impl='cpu')
 
 
 @skip_if_no_astra
@@ -344,106 +341,119 @@ def test_astra_algorithm():
     direction = 'forward'
     ndim = 2
     impl = 'cpu'
-    vol_id = astra_data(vol_geom_2d, 'volume', ndim=ndim)
-    rec_id = astra_data(vol_geom_2d, 'volume', ndim=ndim)
-    sino_id = astra_data(proj_geom_2d, 'projection', ndim=ndim)
-    proj_id = astra_projector('nearest', vol_geom_2d, proj_geom_2d,
-                              ndim=ndim, impl=impl)
+    vol_id = odl.tomo.astra_data(vol_geom_2d, 'volume', ndim=ndim)
+    rec_id = odl.tomo.astra_data(vol_geom_2d, 'volume', ndim=ndim)
+    sino_id = odl.tomo.astra_data(proj_geom_2d, 'projection', ndim=ndim)
+    proj_id = odl.tomo.astra_projector('nearest', vol_geom_2d, proj_geom_2d,
+                                       ndim=ndim, impl=impl)
 
     # Checks
     with pytest.raises(ValueError):
-        astra_algorithm('none', ndim, vol_id, sino_id, proj_id, impl)
+        odl.tomo.astra_algorithm('none', ndim, vol_id, sino_id, proj_id, impl)
     with pytest.raises(ValueError):
-        astra_algorithm(direction, 0, vol_id, sino_id, proj_id, impl)
+        odl.tomo.astra_algorithm(direction, 0, vol_id, sino_id, proj_id, impl)
     with pytest.raises(ValueError):
-        astra_algorithm('none', ndim, vol_id, sino_id, proj_id, 'none')
+        odl.tomo.astra_algorithm('none', ndim, vol_id, sino_id, proj_id,
+                                 'none')
     with pytest.raises(ValueError):
-        astra_algorithm('backward', ndim, vol_id, sino_id, proj_id=None,
-                        impl='cpu')
-    alg_id = astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl)
+        odl.tomo.astra_algorithm('backward', ndim, vol_id, sino_id,
+                                 proj_id=None,
+                                 impl='cpu')
+    alg_id = odl.tomo.astra_algorithm(direction, ndim, vol_id, sino_id,
+                                      proj_id, impl)
     astra.algorithm.delete(alg_id)
 
     ndim = 2
     # 2D CPU
     impl = 'cpu'
     for direction in {'forward', 'backward'}:
-        alg_id = astra_algorithm(direction, ndim, vol_id, sino_id, proj_id,
-                                 impl)
+        alg_id = odl.tomo.astra_algorithm(direction, ndim, vol_id, sino_id,
+                                          proj_id,
+                                          impl)
         astra.algorithm.delete(alg_id)
 
     # 2D CUDA
-    proj_id = astra_projector('nearest', vol_geom_2d, proj_geom_2d, ndim=ndim,
-                              impl='cuda')
+    proj_id = odl.tomo.astra_projector('nearest', vol_geom_2d, proj_geom_2d,
+                                       ndim=ndim,
+                                       impl='cuda')
 
     # 2D CUDA FP
-    alg_id = astra_algorithm('forward', ndim, vol_id, sino_id,
-                             proj_id=proj_id, impl='cuda')
+    alg_id = odl.tomo.astra_algorithm('forward', ndim, vol_id, sino_id,
+                                      proj_id=proj_id, impl='cuda')
     astra.algorithm.delete(alg_id)
 
     # 2D CUDA BP
-    alg_id = astra_algorithm('backward', ndim, rec_id, sino_id,
-                             proj_id=proj_id, impl='cuda')
+    alg_id = odl.tomo.astra_algorithm('backward', ndim, rec_id, sino_id,
+                                      proj_id=proj_id, impl='cuda')
     astra.algorithm.delete(alg_id)
 
     ndim = 3
-    vol_id = astra_data(vol_geom_3d, 'volume', ndim=ndim)
-    sino_id = astra_data(proj_geom_3d, 'projection', ndim=ndim)
-    proj_id = astra_projector('nearest', vol_geom_3d, proj_geom_3d, ndim=ndim,
-                              impl='cuda')
+    vol_id = odl.tomo.astra_data(vol_geom_3d, 'volume', ndim=ndim)
+    sino_id = odl.tomo.astra_data(proj_geom_3d, 'projection', ndim=ndim)
+    proj_id = odl.tomo.astra_projector('nearest', vol_geom_3d, proj_geom_3d,
+                                       ndim=ndim,
+                                       impl='cuda')
 
     with pytest.raises(NotImplementedError):
-        astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=proj_id,
-                        impl='cpu')
+        odl.tomo.astra_algorithm(direction, ndim, vol_id, sino_id,
+                                 proj_id=proj_id,
+                                 impl='cpu')
 
     for direction in {'forward', 'backward'}:
-        astra_algorithm(direction, ndim, vol_id, sino_id, proj_id=proj_id,
-                        impl='cuda')
+        odl.tomo.astra_algorithm(direction, ndim, vol_id, sino_id,
+                                 proj_id=proj_id,
+                                 impl='cuda')
 
 
 @skip_if_no_astra
 def test_geom_to_vec():
     """Create ASTRA projection geometries vectors using ODL geometries."""
 
-    angle_intvl = Interval(0, 2 * np.pi)
-    angle_grid = uniform_sampling(angle_intvl, 5)
-    dparams = Interval(-40, 40)
-    det_grid = uniform_sampling(dparams, 10)
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    angle_grid = odl.uniform_sampling(angle_intvl, 5)
+    dparams = odl.Interval(-40, 40)
+    det_grid = odl.uniform_sampling(dparams, 10)
 
-    geom = Parallel2dGeometry(angle_intvl, dparams, angle_grid, det_grid)
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+                                       det_grid)
 
     with pytest.raises(ValueError):
-        astra_geom_to_vec(geom)
+        odl.tomo.astra_geom_to_vec(geom)
 
     # FAN FLAT
     src_rad = 10
     det_rad = 5
-    geom_ff = FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                              agrid=angle_grid, dgrid=det_grid)
-    vec = astra_geom_to_vec(geom_ff)
+    geom_ff = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                       agrid=angle_grid, dgrid=det_grid)
+    vec = odl.tomo.astra_geom_to_vec(geom_ff)
 
     assert vec.shape == (angle_grid.ntotal, 6)
 
     # CIRCULAR CONE FLAT
-    dparams = IntervalProd([-40, -3], [40, 3])
-    det_grid = uniform_sampling(dparams, (10, 5))
-    geom_ccf = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                        agrid=angle_grid, dgrid=det_grid)
-    vec = astra_geom_to_vec(geom_ccf)
+    dparams = odl.IntervalProd([-40, -3], [40, 3])
+    det_grid = odl.uniform_sampling(dparams, (10, 5))
+    geom_ccf = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
+                                                 det_rad,
+                                                 agrid=angle_grid,
+                                                 dgrid=det_grid)
+    vec = odl.tomo.astra_geom_to_vec(geom_ccf)
     assert vec.shape == (angle_grid.ntotal, 12)
 
     # HELICAL CONE FLAT
     spiral_pitch_factor = 1
-    geom_hcf = HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                       spiral_pitch_factor, agrid=angle_grid,
-                                       dgrid=det_grid)
-    vec = astra_geom_to_vec(geom_hcf)
+    geom_hcf = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
+                                                det_rad,
+                                                spiral_pitch_factor,
+                                                agrid=angle_grid,
+                                                dgrid=det_grid)
+    vec = odl.tomo.astra_geom_to_vec(geom_hcf)
     assert vec.shape == (angle_grid.ntotal, 12)
 
 
 @skip_if_no_astra
 def test_astra_cleanup():
     """Clean up ASTRA memory."""
-    astra_cleanup()
+    odl.tomo.astra_cleanup()
 
 
 if __name__ == '__main__':
