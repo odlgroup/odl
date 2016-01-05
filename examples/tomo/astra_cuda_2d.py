@@ -24,11 +24,11 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
+import numpy as np
+import pytest
 import matplotlib
-
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
-import numpy as np
 
 # Internal
 import odl
@@ -53,65 +53,97 @@ def save_slice(data, name):
     plt.close()
 
 
-# Create `DiscreteLp` space for volume data
-vol_shape = (100, 110)
-discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
-                                    dtype='float32')
+def test_astra_cuda_parallel2d():
 
-# Create an element in the volume space
-discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
+    # Create `DiscreteLp` space for volume data
+    vol_shape = (100, 110)
+    discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
+                                        dtype='float32')
 
-save_slice(discr_vol_data, 'phantom 2d cuda')
+    # Create an element in the volume space
+    discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
 
-# Angles
-angle_intvl = odl.Interval(0, 2 * np.pi)
-angle_grid = odl.uniform_sampling(angle_intvl, 180)
+    save_slice(discr_vol_data, 'phantom 2d cuda')
 
-# Detector
-dparams = odl.Interval(-2, 2)
-det_grid = odl.uniform_sampling(dparams, 100)
+    # Angles
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    angle_grid = odl.uniform_sampling(angle_intvl, 180)
 
-# Distances for fanflat geometry
-src_rad = 1000
-det_rad = 100
+    # Detector
+    dparams = odl.Interval(-2, 2)
+    det_grid = odl.uniform_sampling(dparams, 100)
 
-# Create geometry instances
-geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+    # Create geometry instances
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
                                        det_grid)
-geom_ff = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                   angle_grid, det_grid)
 
-# Projection space
-proj_space = odl.FunctionSpace(geom_p2d.params)
+    # Projection space
+    proj_space = odl.FunctionSpace(geom.params)
 
-# `DiscreteLp` projection space
-proj_shape = (angle_grid.ntotal, det_grid.ntotal)
-discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
-                                               dtype='float32')
+    # `DiscreteLp` projection space
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, geom.grid.shape,
+                                                   dtype='float32')
 
-# Forward and back projections
+    # forward
+    proj_data = odl.tomo.astra_cuda_forward_projector_call(
+        discr_vol_data, geom, discr_proj_space)
 
-# PARALLEL 2D: forward
-proj_data_p2d = odl.tomo.astra_cuda_forward_projector_call(discr_vol_data,
-                                                           geom_p2d,
-                                                           discr_proj_space)
-save_slice(proj_data_p2d, 'forward parallel 2d cuda')
+    save_slice(proj_data, 'forward parallel 2d cuda')
 
-# PARALLEL 2D: backward
-reco_data_p2d = odl.tomo.astra_cuda_backward_projector_call(proj_data_p2d,
-                                                            geom_p2d,
-                                                            discr_vol_space)
-save_slice(reco_data_p2d, 'backward parallel 2d cuda')
+    # backward
+    reco_data = odl.tomo.astra_cuda_backward_projector_call(
+        proj_data, geom, discr_vol_space)
 
-# Fanflat: forward
-discr_vol_data = discr_vol_space.element(phantom)
-proj_data_ff = odl.tomo.astra_cuda_forward_projector_call(discr_vol_data,
-                                                          geom_ff,
-                                                          discr_proj_space)
-save_slice(proj_data_ff, 'forward fanflat cuda')
+    save_slice(reco_data, 'backward parallel 2d cuda')
 
-# Fanflat: backward
-reco_data_ff = odl.tomo.astra_cuda_backward_projector_call(proj_data_ff,
-                                                           geom_ff,
-                                                           discr_vol_space)
-save_slice(reco_data_ff, 'backward fanflat_cuda')
+
+def test_astra_cuda_fanflat():
+
+    # Create `DiscreteLp` space for volume data
+    vol_shape = (100, 110)
+    discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
+                                        dtype='float32')
+
+    # Create an element in the volume space
+    discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
+
+    save_slice(discr_vol_data, 'phantom 2d cuda')
+
+    # Angles
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    angle_grid = odl.uniform_sampling(angle_intvl, 180)
+
+    # Detector
+    dparams = odl.Interval(-2, 2)
+    det_grid = odl.uniform_sampling(dparams, 100)
+
+    # Distances for fanflat geometry
+    src_rad = 1000
+    det_rad = 100
+
+    # Create geometry instances
+    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                       angle_grid, det_grid)
+
+    # Projection space
+    proj_space = odl.FunctionSpace(geom.params)
+
+    # `DiscreteLp` projection space
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, geom.grid.shape,
+                                                   dtype='float32')
+
+    # forward
+    proj_data_ff = odl.tomo.astra_cuda_forward_projector_call(
+        discr_vol_data, geom, discr_proj_space)
+
+    save_slice(proj_data_ff, 'forward fanflat cuda')
+
+    # backward
+    reco_data_ff = odl.tomo.astra_cuda_backward_projector_call(
+            proj_data_ff, geom, discr_vol_space)
+
+    save_slice(reco_data_ff, 'backward fanflat_cuda')
+
+
+if __name__ == '__main__':
+    pytest.main(str(__file__.replace('\\', '/')) + ' -v')

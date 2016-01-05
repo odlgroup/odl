@@ -24,6 +24,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
+import numpy as np
 try:
     import astra
 except ImportError:
@@ -34,8 +35,7 @@ from odl.discr import DiscreteLp, DiscreteLpVector
 from odl.space.ntuples import Ntuples
 from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                            astra_volume_geometry, astra_data,
-                                           astra_projector, astra_algorithm,
-                                           astra_cleanup)
+                                           astra_projector, astra_algorithm)
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 
@@ -68,6 +68,9 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     if not isinstance(vol_data, DiscreteLpVector):
         raise TypeError('volume data {!r} is not a `DiscreteLpVector` '
                         'instance.'.format(vol_data))
+    if not isinstance(vol_data.space.dspace, Ntuples):
+        raise TypeError('data type {!r} of the volume space is not an '
+                        'instance of `Ntuples`'.format(vol_data.space.dspace))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a `Geometry` instance.'
                         ''.format(geometry))
@@ -77,25 +80,24 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     if not isinstance(proj_space.dspace, Ntuples):
         raise TypeError('data type {!r} of the reconstruction space is not an '
                         'instance of `Ntuples`'.format(proj_space.dspace))
-    if not isinstance(vol_data.space.dspace, Ntuples):
-        raise TypeError('')
-
+    if vol_data.ndim != geometry.ndim:
+        raise ValueError('dimensions {} of volume data and {} of geometry '
+                         'do not match.'
+                         ''.format(vol_data.ndim, geometry.ndim))
     if out is None:
         out = proj_space.element()
     else:
         if not isinstance(out, DiscreteLpVector):
             raise TypeError('out {} is neither `None` nor a '
                             '`DiscreteLpVector` instance'.format(out))
-    if vol_data.ndim != geometry.ndim:
-        raise ValueError('dimensions {} of volume data and {} of geometry '
-                         'do not match.'
-                         ''.format(vol_data.ndim, geometry.ndim))
 
     ndim = vol_data.ndim
 
     # Create astra geometries
     vol_geom = astra_volume_geometry(vol_data.space)
     proj_geom = astra_projection_geometry(geometry)
+    if isinstance(geometry, FanFlatGeometry):
+        proj_geom['ProjectionAngles'] += np.pi
 
     # Create ASTRA data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
@@ -115,8 +117,9 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     astra.algorithm.run(algo_id)
 
     # Flip detector pixels for fanflat
-    if isinstance(geometry, FanFlatGeometry):
-        out[:] = out.asarray()[::-1, ::-1]
+    # if isinstance(geometry, FanFlatGeometry):
+        # out[:] = out.asarray()[::-1, ::-1]
+
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
@@ -151,6 +154,9 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
     if not isinstance(proj_data, DiscreteLpVector):
         raise TypeError('projection data {!r} is not a `DiscreteLpVector` '
                         'instance.'.format(proj_data))
+    if not isinstance(proj_data.space.dspace, Ntuples):
+        raise TypeError('data type {!r} of the projection space is not an '
+                        'instance of `Ntuples`'.format(proj_data.shape.dspace))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a `Geometry` instance.'
                         ''.format(geometry))
