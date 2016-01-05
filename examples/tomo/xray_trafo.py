@@ -49,7 +49,6 @@ xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
                                             backend='astra_cuda')
 
 # Domain element
-# discr_vol_data = discr_reco_space.one()
 discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space)
 
 # Forward projection

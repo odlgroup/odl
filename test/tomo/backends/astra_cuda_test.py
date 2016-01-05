@@ -35,20 +35,16 @@ from odl.tomo.util.testutils import skip_if_no_astra_cuda
 # TODO: better tests
 
 @skip_if_no_astra_cuda
-def test_astra_gpu_projector_parallel2d():
+def test_astra_cuda_projector_parallel2d():
     """Parallel 2D forward and backward projectors on the GPU."""
 
     # Create `DiscreteLp` space for volume data
-    nvoxels = (4, 5)
-    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], nvoxels,
+    vol_shape = (4, 5)
+    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], vol_shape,
                                         dtype='float32')
 
-    # Phantom data
-    phantom = np.zeros(nvoxels)
-    phantom[1, 1] = 1
-
     # Create an element in the volume space
-    discr_vol_data = discr_vol_space.element(phantom)
+    vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
     angle_intvl = odl.Interval(0, 2 * np.pi)
@@ -58,52 +54,42 @@ def test_astra_gpu_projector_parallel2d():
     dparams = odl.Interval(-6, 6)
     det_grid = odl.uniform_sampling(dparams, 6)
 
-    # Distances for fanflat geometry
-    src_rad = 100
-    det_rad = 10
-
     # Create geometry instances
-    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
-                                           det_grid)
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+                                       det_grid)
 
     # Projection space
-    proj_space = odl.FunctionSpace(geom_p2d.params)
+    proj_space = odl.FunctionSpace(geom.params)
 
     # `DiscreteLp` projection space
-    npixels = (angle_grid.ntotal, det_grid.ntotal)
-    discr_proj_space = odl.uniform_discr_fromspace(proj_space, npixels,
+    proj_shape = geom.grid.shape
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
                                                    dtype='float32')
 
     # forward
-    proj_data_p2d = odl.tomo.astra_cuda_forward_projector_call(discr_vol_data,
-                                                               geom_p2d,
-                                                               discr_proj_space)
-    assert proj_data_p2d.shape == npixels
-    assert proj_data_p2d.norm() > 0
+    proj_data = odl.tomo.astra_cuda_forward_projector_call(vol_data, geom,
+                                                           discr_proj_space)
+    assert proj_data.shape == proj_shape
+    assert proj_data.norm() > 0
 
     # backward
-    reco_data_p2d = odl.tomo.astra_cuda_backward_projector_call(proj_data_p2d,
-                                                                geom_p2d,
-                                                                discr_vol_space)
-    assert reco_data_p2d.shape == nvoxels
-    assert reco_data_p2d.norm() > 0
+    reco_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom,
+                                                            discr_vol_space)
+    assert reco_data.shape == vol_shape
+    assert reco_data.norm() > 0
 
 
 @skip_if_no_astra_cuda
-def test_astra_gpu_projector_fanflat():
+def test_astra_cuda_projector_fanflat():
     """Fanflat 2D forward and backward projectors on the GPU."""
 
     # Create `DiscreteLp` space for volume data
-    nvoxels = (4, 5)
-    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], nvoxels,
+    vol_shape = (4, 5)
+    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], vol_shape,
                                         dtype='float32')
 
-    # Phantom data
-    phantom = np.zeros(nvoxels)
-    phantom[1, 1] = 1
-
     # Create an element in the volume space
-    discr_vol_data = discr_vol_space.element(phantom)
+    vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
     angle_intvl = odl.Interval(0, 2 * np.pi)
@@ -125,28 +111,25 @@ def test_astra_gpu_projector_fanflat():
     proj_space = odl.FunctionSpace(geom.params)
 
     # `DiscreteLp` projection space
-    npixels = (angle_grid.ntotal, det_grid.ntotal)
-    discr_proj_space = odl.uniform_discr_fromspace(proj_space, npixels,
+    proj_shape = geom.grid.shape
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
                                                    dtype='float32')
 
     # forward
-    discr_vol_data = discr_vol_space.element(phantom)
-    proj_data_ff = odl.tomo.astra_cuda_forward_projector_call(discr_vol_data,
-                                                              geom,
-                                                              discr_proj_space)
-    assert proj_data_ff.shape == npixels
-    assert proj_data_ff.norm() > 0
+    proj_data = odl.tomo.astra_cuda_forward_projector_call(vol_data, geom,
+                                                           discr_proj_space)
+    assert proj_data.shape == proj_shape
+    assert proj_data.norm() > 0
 
     # backward
-    reco_data_ff = odl.tomo.astra_cuda_backward_projector_call(proj_data_ff,
-                                                               geom,
-                                                               discr_vol_space)
-    assert reco_data_ff.shape == nvoxels
-    assert reco_data_ff.norm() > 0
+    reco_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom,
+                                                            discr_vol_space)
+    assert reco_data.shape == vol_shape
+    assert reco_data.norm() > 0
 
 
 @skip_if_no_astra_cuda
-def test_astra_gpu_projector_parallel3d():
+def test_astra_cuda_projector_parallel3d():
     """Test 3D forward and backward projection functions on the GPU."""
 
     # `DiscreteLp` volume space
@@ -154,12 +137,8 @@ def test_astra_gpu_projector_parallel3d():
     discr_vol_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6],
                                         vol_shape, dtype='float32')
 
-    # Phantom
-    phan = np.zeros(vol_shape)
-    phan[1, 1:3, 1:4] = 1
-
     # Create an element in the volume space
-    discr_data = discr_vol_space.element(phan)
+    vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
     angle_intvl = odl.Interval(0, 2 * np.pi)
@@ -177,13 +156,11 @@ def test_astra_gpu_projector_parallel3d():
     proj_space = odl.FunctionSpace(geom.params)
 
     # `DiscreteLp` projection space
-    proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
-
-    discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, geom.grid.shape,
                                                    dtype='float32')
 
     # Forward
-    proj_data = odl.tomo.astra_cuda_forward_projector_call(discr_data, geom,
+    proj_data = odl.tomo.astra_cuda_forward_projector_call(vol_data, geom,
                                                            discr_proj_space)
     assert proj_data.norm() > 0
 
@@ -223,16 +200,13 @@ def test_astra_gpu_projector_circular_conebeam():
 
     # Create geometries
     geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                             det_rad,
-                                             angle_grid, det_grid)
+                                             det_rad, angle_grid, det_grid)
 
     # Projection space
     proj_space = odl.FunctionSpace(geom.params)
 
     # `DiscreteLp` projection space
-    proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
-
-    discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, geom.grid.shape,
                                                    dtype='float32')
 
     # Forward
@@ -247,7 +221,7 @@ def test_astra_gpu_projector_circular_conebeam():
 
 
 @skip_if_no_astra_cuda
-def test_astra_gpu_projector_helical_conebeam():
+def test_astra_cuda_projector_helical_conebeam():
     """Test 3D forward and backward projection functions on the GPU."""
 
     # `DiscreteLp` volume space
@@ -255,12 +229,8 @@ def test_astra_gpu_projector_helical_conebeam():
     discr_vol_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6],
                                         vol_shape, dtype='float32')
 
-    # Phantom
-    phan = np.zeros(vol_shape)
-    phan[1, 1:3, 1:4] = 1
-
     # Create an element in the volume space
-    discr_data = discr_vol_space.element(phan)
+    discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
     angle_intvl = odl.Interval(0, 2 * np.pi)
@@ -273,22 +243,19 @@ def test_astra_gpu_projector_helical_conebeam():
     # Parameter for cone beam geometries
     src_rad = 1000
     det_rad = 100
-    sprial_pitch_factor = 0.5
+    pitch_factor = 0.5
 
     # Create geometries
     geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                             det_rad,
-                                            spiral_pitch_factor=sprial_pitch_factor,
-                                            agrid=angle_grid,
-                                            dgrid=det_grid)
+                                            spiral_pitch_factor=pitch_factor,
+                                            agrid=angle_grid, dgrid=det_grid)
 
     # Projection space
     proj_space = odl.FunctionSpace(geom.params)
 
     # `DiscreteLp` projection space
-    proj_shape = (angle_grid.ntotal, det_grid.shape[0], det_grid.shape[1])
-
-    discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, geom.grid.shape,
                                                    dtype='float32')
 
     # Forward
