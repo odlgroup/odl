@@ -19,7 +19,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from math import cos, sin
 from abc import ABCMeta
 from future import standard_library
 from future.utils import with_metaclass
@@ -133,7 +132,7 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         """Number of dimensions of this geometry."""
         return 3
 
-    def det_rotation(self, angle):
+    def rotation_matrix(self, angle):
         """The detector rotation function.
 
         Returns the matrix for rotating a vector in 3d by an angle ``angle``
@@ -171,8 +170,8 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
                                [-axis[1], axis[0], 0]])
         dy_mat = np.outer(axis, axis)
         id_mat = np.eye(3)
-        cos_ang = cos(angle)
-        sin_ang = sin(angle)
+        cos_ang = np.cos(angle)
+        sin_ang = np.sin(angle)
 
         return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
 
@@ -328,7 +327,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
                              ''.format(angle, self.motion_params))
 
         # ASTRA 'cone_vec' convention
-        return self.det_radius * np.array([-sin(angle), cos(angle), 0])
+        return self.det_radius * np.array([-np.sin(angle), np.cos(angle), 0])
 
     def src_position(self, angle):
         """The source position function.
@@ -351,7 +350,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
                              ''.format(angle, self.motion_params))
 
         # ASTRA cone_vec convention
-        return self.src_radius * np.array([sin(angle), -cos(angle), 0])
+        return self.src_radius * np.array([np.sin(angle), -np.cos(angle), 0])
 
         # TODO: backprojection weighting function?
 
@@ -391,14 +390,14 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         # vector for spiral along z-direction
         vec = -np.array(
-                [cos(det_pt_angle[1]) * cos(angle + det_pt_angle),
-                 cos(det_pt_angle[1]) * sin(angle + det_pt_angle),
-                 sin(det_pt_angle[1])])
+                [np.cos(det_pt_angle[1]) * np.cos(angle + det_pt_angle),
+                 np.cos(det_pt_angle[1]) * np.sin(angle + det_pt_angle),
+                 np.sin(det_pt_angle[1])])
 
         # rotate vector
         if not (axis[0] == 0 and axis[1] == 0):
             vec = -np.array(
-                    self.det_rotation(angle)[0]).squeeze()
+                    self.rotation_matrix(angle)[0]).squeeze()
 
         if not normalized:
             vec *= self.src_radius + self.det_radius
@@ -508,8 +507,8 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         # ASTRA cone_vec geometries
         return np.array([
-            -self.det_radius * sin(angle),
-            self.det_radius * cos(angle),
+            -self.det_radius * np.sin(angle),
+            self.det_radius * np.cos(angle),
             self.table_feed_per_rotation * angle / (2 * np.pi)])
 
     def src_position(self, angle):
@@ -535,8 +534,8 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         # ASTRA cone_vec geometries
         return np.array([
-            self.src_radius * sin(angle),
-            -self.src_radius * cos(angle),
+            self.src_radius * np.sin(angle),
+            -self.src_radius * np.cos(angle),
             self.table_feed_per_rotation * angle / (2 * np.pi)])
 
         # TODO: backprojection weighting function?
@@ -577,14 +576,14 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         # vector for spiral along z-direction
         vec = -np.array(
-                [cos(det_pt_angle[1]) * cos(angle + det_pt_angle),
-                 cos(det_pt_angle[1]) * sin(angle + det_pt_angle),
-                 sin(det_pt_angle[1])])
+                [np.cos(det_pt_angle[1]) * np.cos(angle + det_pt_angle),
+                 np.cos(det_pt_angle[1]) * np.sin(angle + det_pt_angle),
+                 np.sin(det_pt_angle[1])])
 
         # rotate vector
         if not (axis[0] == 0 and axis[1] == 0):
             vec = -np.array(
-                    self.det_rotation(angle)[0]).squeeze()
+                    self.rotation_matrix(angle)[0]).squeeze()
 
         if not normalized:
             vec *= self.src_radius + self.det_radius

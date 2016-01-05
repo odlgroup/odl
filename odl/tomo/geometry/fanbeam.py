@@ -148,7 +148,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
                              ''.format(angle, self.motion_params))
         return self.det_radius * np.array([np.cos(angle), np.sin(angle)])
 
-    def det_rotation(self, angle):
+    def rotation_matrix(self, angle):
         """The detector rotation function.
 
         Parameters

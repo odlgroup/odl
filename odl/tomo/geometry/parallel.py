@@ -20,7 +20,6 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from abc import ABCMeta
-from math import cos, sin  # , acos, atan2, sqrt
 from future import standard_library
 from future.utils import with_metaclass
 standard_library.install_aliases()
@@ -153,7 +152,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         # angle its postion at non-zero angle is the 1st column of the
         # rotation. matrix. rot_mat[0] however gives the 1t row.
         vec = -np.array(
-            self.det_rotation(angle)[0]).squeeze()
+            self.rotation_matrix(angle)[0]).squeeze()
         if not normalized:
             vec[vec != 0] *= np.inf
         return vec
@@ -242,7 +241,7 @@ class Parallel2dGeometry(ParallelGeometry):
         """Detector of this geometry."""
         return self._detector
 
-    def det_rotation(self, angle):
+    def rotation_matrix(self, angle):
         """The detector rotation function.
 
         Parameters
@@ -320,7 +319,7 @@ class Parallel3dGeometry(ParallelGeometry):
         """Detector of this geometry."""
         return self._detector
 
-    def det_rotation(self, angle):
+    def rotation_matrix(self, angle):
         """The detector rotation function.
 
         Returns the matrix for rotating a vector in 3d counter-clockwise
@@ -357,8 +356,8 @@ class Parallel3dGeometry(ParallelGeometry):
                                [-axis[1], axis[0], 0]])
         dy_mat = np.outer(axis, axis)
         id_mat = np.eye(3)
-        cos_ang = cos(angle)
-        sin_ang = sin(angle)
+        cos_ang = np.cos(angle)
+        sin_ang = np.sin(angle)
 
         return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
 
