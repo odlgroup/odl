@@ -255,7 +255,7 @@ def test_out_shape_from_meshgrid():
     assert out_shape_from_meshgrid(mg) == (2, 3, 4)
 
 
-def test_vectorize_1d_dtype():
+def test_vectorize_1d_otype():
 
     import sys
 
@@ -265,7 +265,7 @@ def test_vectorize_1d_dtype():
     val_1 = -1
     val_2 = 2
 
-    @vectorize(dtype='int')
+    @vectorize(otypes=['int'])
     def simple_func(x):
         return 0 if x < 0 else 1
 
@@ -313,7 +313,7 @@ def test_vectorize_1d_lazy():
     val_1 = -1
     val_2 = 2
 
-    @vectorize()
+    @vectorize
     def simple_func(x):
         return 0 if x < 0 else 1
 
@@ -347,7 +347,7 @@ def test_vectorize_2d_dtype():
     val_1 = (-1, 1)
     val_2 = (2, 1)
 
-    @vectorize(dtype='int')
+    @vectorize(otypes=['int'])
     def simple_func(x):
         return 0 if x[0] < 0 and x[1] > 0 else 1
 
@@ -370,7 +370,6 @@ def test_vectorize_2d_dtype():
     assert isinstance(out, np.ndarray)
     assert out.dtype == np.dtype('int')
     assert out.shape == (5, 5)
-    print(out)
     assert all_equal(out, true_result_mg)
 
     assert simple_func(val_1) == 0
@@ -396,7 +395,7 @@ def test_vectorize_2d_lazy():
     val_1 = (-1, 1)
     val_2 = (2, 1)
 
-    @vectorize()
+    @vectorize
     def simple_func(x):
         return 0 if x[0] < 0 and x[1] > 0 else 1
 

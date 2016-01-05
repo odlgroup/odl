@@ -23,6 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 import numpy as np
 import odl
+from odl.util.vectorization import vectorize
 import timeit
 
 
@@ -31,10 +32,10 @@ def performace_example():
     X = odl.FunctionSpace(odl.Interval(0, 1))
 
     # Functions default to vectorized
-    f_vec = X.element(lambda x: x**2)
+    f_vec = X.element(lambda x: x ** 2)
 
     # If 'vectorized=False' is used, odl automatically vectorizes
-    f_novec = X.element(lambda x: x**2, vectorized=False)
+    f_novec = X.element(lambda x: x ** 2, vectorized=False)
 
     # Example of runtime, expect vectorized to be much faster
     points = np.linspace(0, 1, 10000)
@@ -56,26 +57,48 @@ def numba_example():
         return
 
     def myfunc(x):
-        "Return a-b if a>b, otherwise return a+b"
+        """Return x - y if x > y, otherwise return x + y."""
         if x[0] > x[1]:
             return x[0] - x[1]
         else:
             return x[0] + x[1]
 
-    my_vectorized_func = numba.vectorize(myfunc)
+    @vectorize(vectorizer=numba.vectorize, nin=2,
+               vec_args=[['float64(float64, float64)']])
+    def myfunc_vec(x):
+        """Return x - y if x > y, otherwise return x + y."""
+        if x[0] > x[1]:
+            return x[0] - x[1]
+        else:
+            return x[0] + x[1]
+
+    def myfunc_native_vec(x):
+        """Return x - y if x > y, otherwise return x + y."""
+        return np.where(x[0] > x[1], x[0] - x[1], x[0] + x[1])
 
     # Create functions
-    X = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
-    f_default = X.element(myfunc, vectorized=False)
-    f_numba = X.element(my_vectorized_func)
+    fspace = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    f_default = fspace.element(myfunc, vectorized=False)
+    f_numba = fspace.element(myfunc_vec)
+    f_native = fspace.element(myfunc_native_vec, vectorized=True)
 
     # Create points
-    points = odl.uniform_sampling(X.domain, [100, 100]).points().T
+    points = odl.uniform_sampling(fspace.domain, [2000, 2000]).points().T
+    mesh = odl.uniform_sampling(fspace.domain, [2000, 2000]).meshgrid()
 
-    print('Vectorized runtime:     {:5f}'
-          ''.format(timeit.timeit(lambda: f_default(points), number=100)))
-    print('Non-vectorized runtime: {:5f}'
-          ''.format(timeit.timeit(lambda: f_numba(points), number=100)))
+    print('Non-Vectorized runtime (points):     {:5f}'
+          ''.format(timeit.timeit(lambda: f_default(points), number=1)))
+    print('Non-Vectorized runtime (meshgrid):     {:5f}'
+          ''.format(timeit.timeit(lambda: f_default(mesh), number=1)))
+    print('Numba vectorized runtime (points): {:5f}'
+          ''.format(timeit.timeit(lambda: f_numba(points), number=1)))
+    print('Numba vectorized runtime (meshgrid): {:5f}'
+          ''.format(timeit.timeit(lambda: f_numba(mesh), number=1)))
+    print('Native vectorized runtime (points): {:5f}'
+          ''.format(timeit.timeit(lambda: f_native(points), number=1)))
+    print('Native vectorized runtime (meshgrid): {:5f}'
+          ''.format(timeit.timeit(lambda: f_native(mesh), number=1)))
+
 
 if __name__ == '__main__':
     print('Running performance example')
