@@ -52,22 +52,19 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
     """
 
-    def __init__(self, angle_intvl, src_radius, det_radius, agrid=None,
-                 angle_offset=None):
+    def __init__(self, angle_intvl, src_radius, det_radius, agrid=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radians
+            The motion parameters given in radian
         src_radius : positive `float`
             Radius of the source circle, must be positive
         det_radius : positive `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`. Default: `None`
-        angle_offset : `float`, optional
-            Offset to the rotation angle given in radians. Default: `None`
         """
         if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
             raise TypeError('angle parameters {!r} are not an interval.'
@@ -95,17 +92,11 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         self._src_radius = src_radius
         self._det_radius = det_radius
         self._motion_grid = agrid
-        self._motion_params_offset = angle_offset
 
     @property
     def motion_params(self):
         """Motion parameters of this geometry."""
         return self._motion_params
-
-    @property
-    def motion_params_offset(self):
-        """Offset to motion parameters. """
-        return self._motion_params_offset
 
     @property
     def motion_grid(self):
@@ -114,21 +105,13 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
     @property
     def angle_intvl(self):
-        """Angles (= motion parameters) of this geometry given in radians."""
+        """Angles (= motion parameters) of this geometry given in radian."""
         return self._motion_params
 
     @property
     def angle_grid(self):
         """Angle (= motion parameter) sampling grid of this geometry."""
         return self._motion_grid
-
-    @property
-    def angle_offset(self):
-        """Offset to the rotation angle in the azimuthal plane given in rad.
-
-        The actual angles then reside within `angle_offset` + `angle_intvl`.
-        """
-        return self._motion_params_offset
 
     @property
     def src_radius(self):
@@ -151,16 +134,14 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radians. It must be
+            The motion parameter given in radian. It must be
             contained in this geometry's motion parameter set
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (`ndim`,)
-
-            The reference point on the circle with radius :math:`R` at a given
-            rotation angle :math:`\\phi`, defined as :math:`R(\\cos\\phi,
-            \\sin\\phi)`
+        point : `numpy.ndarray`, shape (2,)
+            The reference point on the circle with radius ``R`` at a given
+            rotation angle ``phi`` defined as ``R * (cos(phi), sin(phi))``
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
@@ -173,7 +154,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radians. It must be
+            The motion parameter given in radian. It must be
             contained in this geometry's `motion_params`
 
         Returns
@@ -195,15 +176,14 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameters given in radians. It must be
-            contained in this geometry's motion parameter set
+            The motion parameters given in radian. It must be contained in
+            this geometry's motion parameter set
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (`ndim`,)
-            The source position on the circle with radius :math:`r` at the
-            given rotation angle :math:`\\phi`, defined as :math:`-r(
-            \\cos\\phi, \\sin\\phi)`
+        point : `numpy.ndarray`, shape (2,)
+            The source position on the circle with radius `r` at the given
+            rotation angle ``phi``, defined as ``-r * (cos(phi), sin(phi))``
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
@@ -243,7 +223,7 @@ class FanFlatGeometry(FanBeamGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
-                 dgrid=None, angle_offset=0):
+                 dgrid=None):
         """Initialize a new instance.
 
         Parameters
@@ -251,7 +231,7 @@ class FanFlatGeometry(FanBeamGeometry):
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radians
+            The motion parameters given in radian
         dparams : `Interval` or 1-dim. `IntervalProd`
             The detector parameters
         src_radius : `float`
@@ -262,10 +242,8 @@ class FanFlatGeometry(FanBeamGeometry):
             A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the detector parameters. Default: `None`
-        angle_offset : `float`, optional
-            Offset to the rotation angle given in radians. Default: 0
         """
-        super().__init__(angle_intvl, src_radius, det_radius, agrid, angle_offset)
+        super().__init__(angle_intvl, src_radius, det_radius, agrid)
 
         if not (isinstance(dparams, IntervalProd) and dparams.ndim == 1):
             raise TypeError('detector parameters {!r} are not an interval.'
@@ -293,7 +271,7 @@ class FanFlatGeometry(FanBeamGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameters given in radians. It must be
+            The motion parameters given in radian. It must be
             contained in this geometry's motion parameter set
         dpar : `float`
             The detector parameter. It must be contained in this
@@ -319,7 +297,7 @@ class FanFlatGeometry(FanBeamGeometry):
         # Angle of a detector point at `dpar` as seen from the source relative
         # to the line from the source to the detector reference point
         det_pt_angle = np.arctan2(dpar, self.src_radius + self.det_radius)
-        angle += self.angle_offset + det_pt_angle
+        angle += det_pt_angle
         dvec = -np.array([np.cos(angle),
                           np.sin(angle)])
         if not normalized:
