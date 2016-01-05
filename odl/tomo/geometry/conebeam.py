@@ -151,30 +151,6 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         """Number of dimensions of this geometry."""
         return 3
 
-    @property
-    def axis(self):
-        """The axis of rotation.
-
-        Returns
-        -------
-        axis : `numpy.ndarray`, shape (3,)
-            The rotation axis
-        """
-        axis = self._axis
-        if axis is None:
-            axis = np.array([0, 0, 1])
-        elif isinstance(axis, (int, float)):
-            ind = axis
-            axis = np.zeros(3)
-            axis[ind] = 1
-        elif len(axis) == 3:
-            axis = np.array(axis)
-        else:
-            raise ValueError('`axis` intializer {} has wrong format'.format(
-                axis))
-
-        return axis
-
     def det_rotation(self, angle):
         """The detector rotation function.
 
@@ -194,7 +170,7 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Returns
         -------
-        rot_mat : `numpy.matrix`, shape ``(3, 3)``
+        rot_mat : `numpy.ndarray`, shape ``(3, 3)``
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -208,20 +184,19 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         axis = self.axis
 
-        cross_mat = np.matrix([[0, -axis[2], axis[1]],
+        cross_mat = np.array([[0, -axis[2], axis[1]],
                                [axis[2], 0, -axis[0]],
                                [-axis[1], axis[0], 0]])
-        dy_mat = np.asmatrix(np.outer(axis, axis))
-        id_mat = np.asmatrix(np.eye(3))
+        dy_mat = np.outer(axis, axis)
+        id_mat = np.eye(3)
         cos_ang = cos(angle)
         sin_ang = sin(angle)
 
         return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
 
-        # return euler_matrix(angle)
 
     def __repr__(self):
-        """`g.__repr__() <==> repr(g)`."""
+        """Return ``repr(self)``"""
         inner_fstr = '{!r}, {!r}, src_rad={}, det_rad={}'
         if self.has_motion_sampling:
             inner_fstr += ',\n agrid={agrid!r}'
@@ -232,10 +207,6 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
                                       agrid=self.motion_grid,
                                       dgrid=self.det_grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """`g.__str__() <==> str(g)`."""
-        return self.__repr__()  # TODO: prettify
 
 
 class ConeFlatGeometry(ConeBeamGeometry):
@@ -297,57 +268,6 @@ class ConeFlatGeometry(ConeBeamGeometry):
         """Detector of this geometry."""
         return self._detector
 
-    def det_to_src(self, angle, dpar, normalized=True):
-        """Direction from a detector location to the source.
-
-        Parameters
-        ----------
-        angle : `float`
-            The motion parameter given in radians. It must be contained in this
-            geometry's motion parameter set
-        dpar : 2-tuple of `float`
-            The detector parameter. It must be contained in this
-            geometry's detector parameter set
-        normalized : `bool`, optional
-            If `False` return the vector from the detector point to the source
-            parametrized by ``dpar`` and ``angle``. If `True`, return the
-            normalized version of that vector. Default: `True`
-
-        Returns
-        -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
-            (Unit) vector pointing from the detector to the source
-        """
-        if angle not in self.motion_params:
-            raise ValueError('angle {} is not in the valid range {}.'
-                             ''.format(angle, self.motion_params))
-        if dpar not in self.det_params:
-            raise ValueError('detector parameter {} is not in the valid '
-                             'range {}.'.format(dpar, self.det_params))
-
-        axis = self.axis
-        angle += self.angle_offset
-
-        # Angle of a detector point at `dpar` as seen from the source relative
-        # to the line from the source to the detector reference point
-        det_pt_angle = np.arctan2(dpar, self.src_radius + self.det_radius)
-
-        # vector for spiral along z-direction
-        vec = -np.array(
-            [cos(det_pt_angle[1]) * cos(angle + det_pt_angle),
-             cos(det_pt_angle[1]) * sin(angle + det_pt_angle),
-             sin(det_pt_angle[1])])
-
-        # rotate vector
-        if not (axis[0] == 0 and axis[1] == 0):
-            vec = -np.array(
-                self.det_rotation(angle + self.angle_offset)[0]).squeeze()
-
-        if not normalized:
-            vec *= self.src_radius + self.det_radius
-
-        return vec
-
 
 class CircularConeFlatGeometry(ConeFlatGeometry):
     """Circular cone beam geometry in 3d with flat detector.
@@ -388,6 +308,30 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         super().__init__(angle_intvl, dparams, src_radius, det_radius, agrid,
                          dgrid, angle_offset, axis)
+
+    @property
+    def axis(self):
+        """The normalized axis of rotation.
+
+        Returns
+        -------
+        axis : `numpy.ndarray`, shape (3,)
+            The normalized rotation axis
+        """
+        axis = self._axis
+        if axis is None:
+            axis = np.array([0, 0, 1])
+        elif np.isscalar(axis):
+            ind = axis
+            axis = np.zeros(3)
+            axis[ind] = 1
+        elif len(axis) == 3:
+            axis = np.array(axis) / np.linalg.norm(axis)
+        else:
+            raise ValueError('`axis` intializer {} has wrong format'.format(
+                    axis))
+
+        return axis
 
     def det_refpoint(self, angle):
         """The detector reference point function.
@@ -442,6 +386,57 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         # TODO: backprojection weighting function?
 
+    def det_to_src(self, angle, dpar, normalized=True):
+        """Direction from a detector location to the source.
+
+        Parameters
+        ----------
+        angle : `float`
+            The motion parameter given in radians. It must be contained in this
+            geometry's motion parameter set
+        dpar : 2-tuple of `float`
+            The detector parameter. It must be contained in this
+            geometry's detector parameter set
+        normalized : `bool`, optional
+            If `False` return the vector from the detector point to the source
+            parametrized by ``dpar`` and ``angle``. If `True`, return the
+            normalized version of that vector. Default: `True`
+
+        Returns
+        -------
+        vec : `numpy.ndarray`, shape (`ndim`,)
+            (Unit) vector pointing from the detector to the source
+        """
+        if angle not in self.motion_params:
+            raise ValueError('angle {} is not in the valid range {}.'
+                             ''.format(angle, self.motion_params))
+        if dpar not in self.det_params:
+            raise ValueError('detector parameter {} is not in the valid '
+                             'range {}.'.format(dpar, self.det_params))
+
+        axis = self.axis
+        angle += self.angle_offset
+
+        # Angle of a detector point at `dpar` as seen from the source relative
+        # to the line from the source to the detector reference point
+        det_pt_angle = np.arctan2(dpar, self.src_radius + self.det_radius)
+
+        # vector for spiral along z-direction
+        vec = -np.array(
+                [cos(det_pt_angle[1]) * cos(angle + det_pt_angle),
+                 cos(det_pt_angle[1]) * sin(angle + det_pt_angle),
+                 sin(det_pt_angle[1])])
+
+        # rotate vector
+        if not (axis[0] == 0 and axis[1] == 0):
+            vec = -np.array(
+                    self.det_rotation(angle + self.angle_offset)[0]).squeeze()
+
+        if not normalized:
+            vec *= self.src_radius + self.det_radius
+
+        return vec
+
 
 class HelicalConeFlatGeometry(ConeFlatGeometry):
     """Helical cone beam geometry in 3d with flat detector.
@@ -490,9 +485,34 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         super().__init__(angle_intvl, dparams, src_radius, det_radius, agrid,
                          dgrid, angle_offset, axis)
+        self._axis = axis
         det_height = (dparams.max() - dparams.min())[1]
         self._table_feed_per_rotation = spiral_pitch_factor * src_radius / (
             src_radius + det_radius) * det_height
+
+    @property
+    def axis(self):
+        """The axis of rotation.
+
+        Returns
+        -------
+        axis : `numpy.ndarray`, shape (3,)
+            The rotation axis
+        """
+        axis = self._axis
+        if axis is None:
+            axis = np.array([0, 0, 1])
+        elif np.isscalar(axis):
+            ind = axis
+            axis = np.zeros(3)
+            axis[ind] = 1
+        elif len(axis) == 3:
+            axis = np.array(axis) / np.linalg.norm(axis)
+        else:
+            raise ValueError('`axis` intializer {} has wrong format'.format(
+                    axis))
+
+        return axis
 
     @property
     def table_feed_per_rotation(self):
@@ -554,3 +574,54 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             self.table_feed_per_rotation * angle / (2 * np.pi)])
 
         # TODO: backprojection weighting function?
+
+    def det_to_src(self, angle, dpar, normalized=True):
+        """Direction from a detector location to the source.
+
+        Parameters
+        ----------
+        angle : `float`
+            The motion parameter given in radians. It must be contained in this
+            geometry's motion parameter set
+        dpar : 2-tuple of `float`
+            The detector parameter. It must be contained in this
+            geometry's detector parameter set
+        normalized : `bool`, optional
+            If `False` return the vector from the detector point to the source
+            parametrized by ``dpar`` and ``angle``. If `True`, return the
+            normalized version of that vector. Default: `True`
+
+        Returns
+        -------
+        vec : `numpy.ndarray`, shape (`ndim`,)
+            (Unit) vector pointing from the detector to the source
+        """
+        if angle not in self.motion_params:
+            raise ValueError('angle {} is not in the valid range {}.'
+                             ''.format(angle, self.motion_params))
+        if dpar not in self.det_params:
+            raise ValueError('detector parameter {} is not in the valid '
+                             'range {}.'.format(dpar, self.det_params))
+
+        axis = self.axis
+        angle += self.angle_offset
+
+        # Angle of a detector point at `dpar` as seen from the source relative
+        # to the line from the source to the detector reference point
+        det_pt_angle = np.arctan2(dpar, self.src_radius + self.det_radius)
+
+        # vector for spiral along z-direction
+        vec = -np.array(
+                [cos(det_pt_angle[1]) * cos(angle + det_pt_angle),
+                 cos(det_pt_angle[1]) * sin(angle + det_pt_angle),
+                 sin(det_pt_angle[1])])
+
+        # rotate vector
+        if not (axis[0] == 0 and axis[1] == 0):
+            vec = -np.array(
+                    self.det_rotation(angle + self.angle_offset)[0]).squeeze()
+
+        if not normalized:
+            vec *= self.src_radius + self.det_radius
+
+        return vec

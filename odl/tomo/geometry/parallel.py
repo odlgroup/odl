@@ -365,7 +365,7 @@ class Parallel3dGeometry(ParallelGeometry):
 
         Returns
         -------
-        rot_mat : `numpy.matrix`, shape (3, 3)
+        rot_mat : `numpy.ndarray`, shape (3, 3)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -379,11 +379,11 @@ class Parallel3dGeometry(ParallelGeometry):
 
         axis = self.axis
 
-        cross_mat = np.matrix([[0, -axis[2], axis[1]],
+        cross_mat = np.array([[0, -axis[2], axis[1]],
                                [axis[2], 0, -axis[0]],
                                [-axis[1], axis[0], 0]])
-        dy_mat = np.asmatrix(np.outer(axis, axis))
-        id_mat = np.asmatrix(np.eye(3))
+        dy_mat = np.outer(axis, axis)
+        id_mat = np.eye(3)
         cos_ang = cos(angle)
         sin_ang = sin(angle)
 

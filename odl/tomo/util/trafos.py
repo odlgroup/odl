@@ -78,17 +78,13 @@ def euler_matrix(*angles):
     sps = sin(psi)
 
     if dim == 2:
-        mat = np.matrix([[cph, -sph], [sph, cph]])
+        mat = np.array([[cph, -sph], [sph, cph]])
     else:
-        mat = np.matrix([[cph * cps - sph * cth * sps,
-                          -cph * sps - sph * cth * cps,
-                          sph * sth],
-                         [sph * cps + cph * cth * sps,
-                          -sph * sps + cph * cth * cps,
-                          -cph * sth],
-                         [sth * sps,
-                          sth * cps,
-                          cth]])
+        mat = np.array([[cph * cps - sph * cth * sps,
+                         -cph * sps - sph * cth * cps, sph * sth],
+                        [sph * cps + cph * cth * sps,
+                         -sph * sps + cph * cth * cps, -cph * sth],
+                        [sth * sps, sth * cps, cth]])
 
     return mat
 
