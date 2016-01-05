@@ -26,7 +26,7 @@ standard_library.install_aliases()
 # External
 import numpy as np
 
-__all__ = ('ellipse_phantom_2d', 'ellipse_phantom_3d',
+__all__ = ('ellipse_phantom_2d', 'ellipse_phantom_3d', 'cuboid',
            'derenzo_sources', 'shepp_logan', 'submarine_phantom')
 
 
@@ -538,6 +538,61 @@ def _submarine_phantom_2d_nonsmooth(discr):
     out = discr.element(ellipse)
     out += discr.element(rect)
     return out.ufunc.minimum(1, out=out)
+
+
+def cuboid(space, begin, end):
+    """Rectangular cuboid.
+
+    Parameters
+    ----------
+    space : discrete space
+    begin : array-like or `float` in [0, 1]
+        The lower left corner of the cuboid within the space grid relative
+        to the extend of the grid
+    end : array-like or `float` in [0, 1]
+        The upper right corner of the cuboid within the space grid relative
+        to the extend of the grid
+
+    Returns
+    -------
+    out : discrete space element
+       Returns an element in ``space``
+
+    Example
+    -------
+    >>> import odl
+    >>> space = odl.uniform_discr(0, 1, 6, dtype='float32')
+    >>> print(cuboid(space, 0.5, 1))
+    [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+    >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6], dtype='float32')
+    >>> print(cuboid(space, [0.25, 0], [0.75, 0.5]))
+    [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+     [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+     [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+    """
+    ndim = space.ndim
+    shape = space.shape
+
+    if np.isscalar(begin):
+        begin = (begin,) * ndim
+    if np.isscalar(end):
+        end = (end,) * ndim
+
+    # Create phantom
+    phan = np.zeros(shape)
+
+    slice1 = [slice(None)] * ndim
+
+    for nn in range(ndim):
+        start = np.floor(begin[nn] * shape[nn]).astype(int)
+        stop = np.ceil(end[nn] * shape[nn]).astype(int)
+
+        slice1[nn] = slice(start, stop)
+
+    phan[slice1] = 1
+
+    return space.element(phan)
 
 
 if __name__ == '__main__':

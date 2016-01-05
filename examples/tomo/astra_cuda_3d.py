@@ -72,16 +72,9 @@ vol_shape = (80, 70, 60)
 discr_vol_space = odl.uniform_discr([-0.8, -0.7, -0.6], [0.8, 0.7, 0.6],
                                 vol_shape, dtype='float32')
 
-# Phantom
-phan = np.zeros(vol_shape)
-sli0 = np.round(0.1 * np.array(vol_shape)).astype(int)
-sli1 = np.round(0.4 * np.array(vol_shape)).astype(int)
-sliz0 = np.round(0.1 * np.array(vol_shape)).astype(int)
-sliz1 = np.round(1.9 * np.array(vol_shape)).astype(int)
-phan[sliz0[0]:sliz1[0], sli0[1]:sli1[1], sli0[2]:sli1[2]] = 1
-
 # Create an element in the volume space
-discr_data = discr_vol_space.element(phan)
+discr_data = odl.util.phantom.cuboid(discr_vol_space,
+                                     (0.2, 0.4, 0.1,), (0.8, 0.4, 0.4))
 
 # Indices of ortho slices
 vol_sli = np.round(0.25 * np.array(vol_shape))

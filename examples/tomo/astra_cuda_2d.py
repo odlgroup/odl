@@ -57,12 +57,9 @@ def save_slice(data, name):
 vol_shape = (100, 110)
 discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
                                     dtype='float32')
-# Phantom data
-phantom = np.zeros(vol_shape)
-phantom[20:30, 20:30] = 1
 
 # Create an element in the volume space
-discr_vol_data = discr_vol_space.element(phantom)
+discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
 
 save_slice(discr_vol_data, 'phantom 2d cuda')
 
