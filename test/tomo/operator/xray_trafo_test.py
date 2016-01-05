@@ -17,41 +17,57 @@
 
 """Test for X-ray transforms."""
 
-# # Imports for common Python 2/3 codebase
-# from __future__ import print_function, division, absolute_import
-# from future import standard_library
-#
-# standard_library.install_aliases()
-#
-# # External
-# import numpy as np
-#
-# # Internal
-# from odl.discr.lp_discr import uniform_discr, uniform_sampling
-# from odl.set.domain import Interval, Rectangle
-# from odl import CircularConeFlatGeometry, DiscreteXrayTransform
+# Imports for common Python 2/3 codebase
+from __future__ import print_function, division, absolute_import
+from future import standard_library
 
-# discr_reco_space = uniform_discr(
-#         [-20, -20, -20], [20, 20, 20], [300, 300, 300], dtype='float32')
-#
-# src_rad = 1000
-# det_rad = 100
-# angle_intvl = Interval(0, 2 * np.pi)
-# dparams = Rectangle([-50, -50], [50, 50])
-# agrid = uniform_sampling(angle_intvl, 360)
-# dgrid = uniform_sampling(dparams, [558, 558])
-# geom = CircularConeFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-#                                 agrid, dgrid)
-#
-# xray_trafo = DiscreteXrayTransform(discr_reco_space, geom,
-#                                    backend='astra_cuda')
-#
-# discr_vol_data = xray_trafo.domain.one()
-#
-# # X-ray transform
-# proj_data = xray_trafo(discr_vol_data)
-#
-# proj_data = xray_trafo.range.element(np.zeros((360, 558, 558)))
-#
-# # back projection
-# back_proj = xray_trafo.adjoint(proj_data)
+standard_library.install_aliases()
+
+# External
+import numpy as np
+
+# Internal
+import odl
+from odl.util.testutils import almost_equal
+
+
+def test_xray_trafo():
+
+    # Discrete reconstruction space
+    discr_reco_space = odl.uniform_discr([-10, -10, -10],
+                                         [10, 10, 10],
+                                         [10, 10, 10], dtype='float32')
+
+    # Geometry
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    dparams = odl.Rectangle([-20, -20], [20, 20])
+    agrid = odl.uniform_sampling(angle_intvl, 10, as_midp=False)
+    dgrid = odl.uniform_sampling(dparams, [20, 20])
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, agrid,
+                                             dgrid)
+
+    # X-ray transform
+    A = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                                backend='astra_cuda')
+
+    # Domain element
+    f = discr_reco_space.one()
+
+    # Forward projection
+    Af = A(f)
+
+    # Range element
+    g = A.range.one()
+
+    # Back projection
+    Adg = A.adjoint(g)
+
+
+    vol_stride = discr_reco_space.grid.stride[0]
+    ang_stride = agrid.stride[0]
+    left = Af.inner(g) / ang_stride
+    right = f.inner(Adg) / vol_stride
+
+    assert almost_equal(left, right, 3)
+
+
