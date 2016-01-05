@@ -90,6 +90,7 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space, out=None):
                             '`DiscreteLpVector` instance'.format(out))
 
     ndim = vol_data.ndim
+
     # Create astra geometries
     vol_geom = astra_volume_geometry(vol_data.space)
     proj_geom = astra_projection_geometry(geometry)

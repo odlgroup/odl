@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Examples using the ASTRA cpu backend."""
+"""Create image to check for the ASTRA cpu backend."""
 
 
 from __future__ import print_function, division, absolute_import
@@ -26,6 +26,7 @@ standard_library.install_aliases()
 
 # External
 import numpy as np
+import pytest
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -53,63 +54,97 @@ def save_slice(data, name):
     plt.close()
 
 
-# Create `DiscreteLp` space for volume data
-vol_shape = (100, 110)
-discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
-                                    dtype='float32')
+def test_astra_cpu_parallel2d():
 
-# Create an element in the volume space
-discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
+    # Create `DiscreteLp` space for volume data
+    vol_shape = (100, 110)
+    discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
+                                        dtype='float32')
 
-save_slice(discr_vol_data, 'forward phantom 2d cpu')
+    # Create an element in the volume space
+    discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
 
-# Angles
-angle_intvl = odl.Interval(0, 2 * np.pi)
-angle_grid = odl.uniform_sampling(angle_intvl, 180)
+    save_slice(discr_vol_data, 'phantom 2d cpu')
 
-# Detector
-dparams = odl.Interval(-2, 2)
-det_grid = odl.uniform_sampling(dparams, 100)
+    # Angles
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    angle_grid = odl.uniform_sampling(angle_intvl, 180)
 
-# Distance for fanflat geometries
-src_rad = 1000
-det_rad = 100
+    # Detector
+    dparams = odl.Interval(-2, 2)
+    det_grid = odl.uniform_sampling(dparams, 100)
 
-# Create geometry instances
-geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
-                                       det_grid)
-geom_ff = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                   angle_grid, det_grid)
+    # Create geometry instances
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+                                           det_grid)
 
-# Projection space
-proj_space = odl.FunctionSpace(geom_p2d.params)
+    # Projection space
+    proj_space = odl.FunctionSpace(geom.params)
 
-# `DiscreteLp` projection space
-npixels = (angle_grid.ntotal, det_grid.ntotal)
-discr_proj_space = odl.uniform_discr_fromspace(proj_space, npixels,
-                                               dtype='float32', impl='numpy')
+    # `DiscreteLp` projection space
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, geom.grid.shape,
+                                                   dtype='float32',
+                                                   impl='numpy')
 
-# Forward and back projections
+    # forward
+    proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_vol_data, geom,
+                                                          discr_proj_space)
+    save_slice(proj_data, 'forward parallel 2d cpu')
 
-# Parallel 2D: forward
-p2_proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_vol_data,
-                                                         geom_p2d,
-                                                         discr_proj_space)
-save_slice(p2_proj_data, 'forward parallel 2d cpu')
+    # backward
+    reco_data = odl.tomo.astra_cpu_backward_projector_call(proj_data, geom,
+                                                           discr_vol_space)
+    save_slice(reco_data, 'backward parallel 2d cpu')
 
-# Parallel 2D: backward
-reco_data = odl.tomo.astra_cpu_backward_projector_call(p2_proj_data, geom_p2d,
-                                                       discr_vol_space)
-save_slice(reco_data, 'backward parallel 2d cpu')
 
-# Fanflat: forward
-discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
-ff_proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_vol_data,
-                                                         geom_ff,
-                                                         discr_proj_space)
-save_slice(ff_proj_data, 'forward fanflat cpu')
+def test_astra_cpu_fanflat():
 
-# Fanflat: backward
-reco_data = odl.tomo.astra_cpu_backward_projector_call(ff_proj_data, geom_ff,
-                                                       discr_vol_space)
-save_slice(reco_data, 'backward fanflat cpu')
+    # Create `DiscreteLp` space for volume data
+    vol_shape = (100, 110)
+    discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
+                                        dtype='float32')
+
+    # Create an element in the volume space
+    discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
+
+    save_slice(discr_vol_data, 'phantom 2d cpu')
+
+    # Angles
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    angle_grid = odl.uniform_sampling(angle_intvl, 180)
+
+    # Detector
+    dparams = odl.Interval(-2, 2)
+    det_grid = odl.uniform_sampling(dparams, 100)
+
+    # Distance for fanflat geometries
+    src_rad = 1000
+    det_rad = 100
+
+    # Create geometry instances
+    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                       angle_grid, det_grid)
+
+    # Projection space
+    proj_space = odl.FunctionSpace(geom.params)
+
+    # `DiscreteLp` projection space
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, geom.grid.shape,
+                                                   dtype='float32',
+                                                   impl='numpy')
+
+    # Fanflat: forward
+    discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
+    proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_vol_data,
+                                                             geom,
+                                                             discr_proj_space)
+    save_slice(proj_data, 'forward fanflat cpu')
+
+    # Fanflat: backward
+    reco_data = odl.tomo.astra_cpu_backward_projector_call(proj_data, geom,
+                                                           discr_vol_space)
+    save_slice(reco_data, 'backward fanflat cpu')
+
+
+if __name__ == '__main__':
+    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
