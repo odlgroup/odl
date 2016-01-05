@@ -168,7 +168,7 @@ def test_proj_geom_parallel_2d():
 
 @skip_if_no_astra
 def test_astra_projection_geometry():
-    """Create ASTRA projection geometry from `odl.tomo.geometry` objects."""
+    """Create ASTRA projection geometry from geometry objects."""
 
     with pytest.raises(TypeError):
         odl.tomo.astra_projection_geometry(None)

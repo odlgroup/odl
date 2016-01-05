@@ -66,9 +66,9 @@ def test_parallel_2d_geometry():
 
     # detector rotation
     with pytest.raises(ValueError):
-        geom.det_rotation(2 * full_angle)
+        geom.rotation_matrix(2 * full_angle)
 
-    rot_mat = geom.det_rotation(np.pi / 2)
+    rot_mat = geom.rotation_matrix(np.pi / 2)
     e1 = np.matrix([[1, 0]]).transpose()
     e2 = np.matrix([0, 1]).transpose()
 
@@ -106,7 +106,7 @@ def test_parallel_3d_geometry():
     # detector rotation
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=0)
     with pytest.raises(ValueError):
-        geom.det_rotation(2 * full_angle)
+        geom.rotation_matrix(2 * full_angle)
 
     # rotation of cartesian basis vectors about each other
     a = 32.1
@@ -117,19 +117,19 @@ def test_parallel_3d_geometry():
     places = 14
 
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=0)
-    rot_mat = geom.det_rotation(np.pi / 2)
+    rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_equal(rot_mat * e1, e1)
     assert almost_equal(np.sum(rot_mat * e2 - e3), 0, places=places)
     assert almost_equal(np.sum(rot_mat * e3 - (-e2)), 0, places=places)
 
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=1)
-    rot_mat = geom.det_rotation(np.pi / 2)
+    rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_equal(rot_mat * e2, e2)
     assert almost_equal(np.sum(rot_mat * e3 - e1), 0, places=places)
     assert almost_equal(np.sum(rot_mat * e1 - (-e3)), 0, places=places)
 
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=2)
-    rot_mat = geom.det_rotation(np.pi / 2)
+    rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_equal(rot_mat * e3, e3)
     assert almost_equal(np.sum(rot_mat * e1 - e2), 0, places=places)
     assert almost_equal(np.sum(rot_mat * e2 - (-e1)), 0, places=places)
@@ -201,9 +201,9 @@ def test_fanflat():
 
     # detector rotation
     with pytest.raises(ValueError):
-        geom.det_rotation(2 * full_angle)
+        geom.rotation_matrix(2 * full_angle)
 
-    rot_mat = geom.det_rotation(np.pi / 2)
+    rot_mat = geom.rotation_matrix(np.pi / 2)
     e1 = np.matrix([[1, 0]]).transpose()
     e2 = np.matrix([0, 1]).transpose()
 

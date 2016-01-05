@@ -82,9 +82,8 @@ class Geometry(with_metaclass(ABCMeta, object)):
             The reference point, an `ndim`-dimensional vector
         """
 
-    # TODO: rename to rotation_matrix?
     @abstractmethod
-    def det_rotation(self, mpar):
+    def rotation_matrix(self, mpar):
         """The detector rotation function for calculating the detector
         reference position.
 
@@ -158,7 +157,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
         # TODO: check and write test
         return np.asarray(
             (self.det_refpoint(mpar) +
-             self.det_rotation(mpar).dot(self.detector.surface(dpar))))
+             self.rotation_matrix(mpar).dot(self.detector.surface(dpar))))
 
     @property
     def motion_grid(self):
