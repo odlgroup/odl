@@ -523,7 +523,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     See also
     --------
-    uniform_discr
+    uniform_discr : implicit uniform Lp discretization
     """
     if not isinstance(fspace, FunctionSpace):
         raise TypeError('space {!r} is not a `FunctionSpace` instance.'
@@ -615,7 +615,6 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     Examples
     --------
-
     Create real space:
 
     >>> uniform_discr([0, 0], [1, 1], [10, 10])
@@ -627,7 +626,8 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     See also
     --------
-    uniform_discr_fromspace
+    uniform_discr_fromspace : uniform discretization from an existing
+        function space
     """
     if not isinstance(field, Field):
         raise TypeError('field {} not a Field instance'

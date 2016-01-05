@@ -42,8 +42,12 @@ standard_library.install_aliases()
 # External module imports
 import numpy as np
 
-# Some are ignored since they dont cooperate with dtypes, needs fix
 
+__all__ = ('NtuplesBaseUFuncs', 'NtuplesUFuncs', 'CudaNtuplesUFuncs',
+           'DiscreteLpUFuncs', 'ProductSpaceUFuncs')
+
+
+# Some are ignored since they don't cooperate with dtypes, needs fix
 RAW_UFUNCS = ['absolute', 'add', 'arccos', 'arccosh', 'arcsin', 'arcsinh',
               'arctan', 'arctan2', 'arctanh', 'bitwise_and', 'bitwise_or',
               'bitwise_xor', 'ceil', 'conj', 'copysign', 'cos', 'cosh',

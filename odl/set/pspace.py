@@ -553,10 +553,10 @@ class ProductSpaceVector(LinearSpaceVector):
 
         See also
         --------
-        NtuplesBaseUFuncs
+        odl.util.ufuncs.NtuplesBaseUFuncs
             Base class for ufuncs in `NtuplesBase` spaces, sub spaces may
             override this for greater efficiency.
-        ProductSpaceUFuncs
+        odl.util.ufuncs.ProductSpaceUFuncs
             For a list of available ufuncs.
         """
         return ProductSpaceUFuncs(self)

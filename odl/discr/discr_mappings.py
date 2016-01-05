@@ -223,7 +223,7 @@ class GridCollocation(FunctionSetMapping):
 
         See also
         --------
-        TensorGrid.meshgrid
+        odl.discr.grid.TensorGrid.meshgrid
         numpy.meshgrid
 
         Examples

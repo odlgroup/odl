@@ -616,7 +616,8 @@ class TensorGrid(Set):
 
         See also
         --------
-        numpy.meshgrid : coordinate matrices from coordinate vectors
+        numpy.meshgrid
+            Coordinate matrices from coordinate vectors.
             We use ``indexing='ij'`` and ``copy=True``
 
         Examples
