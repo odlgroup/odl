@@ -24,9 +24,6 @@ __version__ = '0.9b1'
 __all__ = ('backends', 'geometry', 'operators')
 
 
-# Propagate names defined in __all__ of all submodules into the top-level
-# module
-
 from . import backends
 from .backends import *
 __all__ += backends.__all__

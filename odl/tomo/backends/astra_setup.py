@@ -51,12 +51,11 @@ import numpy as np
 from odl.space.ntuples import FnVector
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
-from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.geometry.parallel import Parallel2dGeometry, Parallel3dGeometry
-from odl.tomo.geometry.fanbeam import FanBeamGeometry, FanFlatGeometry
-from odl.tomo.geometry.conebeam import (CircularConeFlatGeometry,
-                                        HelicalConeFlatGeometry)
-
+from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
+                               Parallel3dGeometry, FanBeamGeometry,
+                               ConeBeamGeometry, FanFlatGeometry,
+                               CircularConeFlatGeometry,
+                               HelicalConeFlatGeometry)
 
 __all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
            'astra_projection_geometry', 'astra_data', 'astra_projector',
@@ -206,45 +205,44 @@ def astra_geom_to_vec(geometry):
     angles = geometry.angle_grid
     num_angles = geometry.angle_grid.ntotal
 
-    if isinstance(geometry, (CircularConeFlatGeometry,
-                             HelicalConeFlatGeometry)):
+    if isinstance(geometry, ConeBeamGeometry):
         vectors = np.zeros((num_angles, 12))
         det_pix_width = geometry.det_grid.stride[0]
         det_pix_height = geometry.det_grid.stride[1]
 
-        for and_ind in range(num_angles):
-            angle = angles[and_ind][0]
+        for ang_ind in range(num_angles):
+            angle = angles[ang_ind]
 
             # source position
             # TODO: check geometry class for consistency since 'src_position'
             # and 'det_refpoint' were adopted to use ASTRA cone_vec convention
-            vectors[and_ind, 0:3] = geometry.src_position(angle)
+            vectors[ang_ind, 0:3] = geometry.src_position(angle)
 
             # center of detector
-            vectors[and_ind, 3:6] = geometry.det_refpoint(angle)
+            vectors[ang_ind, 3:6] = geometry.det_refpoint(angle)
 
             # vector from detector pixel (0,0) to (0,1)
             # TODO: use geometry class method 'det_rotation' method instead
-            vectors[and_ind, 6] = cos(angle) * det_pix_width
-            vectors[and_ind, 7] = sin(angle) * det_pix_width
+            vectors[ang_ind, 6] = cos(angle) * det_pix_width
+            vectors[ang_ind, 7] = sin(angle) * det_pix_width
             # vectors[nn, 8] = 0
 
             # vector from detector pixel (0,0) to (1,0)
             # vectors[nn, 9] = 0
             # vectors[nn, 10] = 0
-            vectors[and_ind, 11] = det_pix_height
+            vectors[ang_ind, 11] = det_pix_height
 
     elif isinstance(geometry, Parallel3dGeometry):
         vectors = np.zeros((num_angles, 12))
         det_pix_width = geometry.det_grid.stride[0]
         det_pix_height = geometry.det_grid.stride[1]
 
-        for and_ind in range(num_angles):
-            angle = angles[and_ind][0]
+        for ang_ind in range(num_angles):
+            angle = angles[ang_ind][0]
 
             # ray direction
-            vectors[and_ind, 0] = sin(angle)
-            vectors[and_ind, 1] = -cos(angle)
+            vectors[ang_ind, 0] = sin(angle)
+            vectors[ang_ind, 1] = -cos(angle)
             # vectors[nn, 2] = 0
 
             # center of detector
@@ -252,34 +250,34 @@ def astra_geom_to_vec(geometry):
 
             # vector from detector pixel (0,0) to (0,1)
             # TODO: use det_rotation method instead of
-            vectors[and_ind, 6] = cos(angle) * det_pix_width
-            vectors[and_ind, 7] = sin(angle) * det_pix_width
+            vectors[ang_ind, 6] = cos(angle) * det_pix_width
+            vectors[ang_ind, 7] = sin(angle) * det_pix_width
             # vectors[nn, 8] = 0
 
             # vector from detector pixel (0,0) to (1,0)
             # vectors[nn, 9] = 0
             # vectors[nn, 10] = 0
-            vectors[and_ind, 11] = det_pix_height
+            vectors[ang_ind, 11] = det_pix_height
 
     elif isinstance(geometry, FanBeamGeometry):
         vectors = np.zeros((num_angles, 6))
         det_pix_width = geometry.det_grid.stride[0]
 
-        for and_ind in range(num_angles):
-            angle = angles[and_ind][0]
+        for ang_ind in range(num_angles):
+            angle = angles[ang_ind][0]
 
             # source position
             # TODO: check method, probably inconsistent with detector pixel vec
-            vectors[and_ind, 0:2] = geometry.src_position(angle)
+            vectors[ang_ind, 0:2] = geometry.src_position(angle)
 
             # center of detector
             # TODO: check method, probably inconsistent with detector pixel vec
-            vectors[and_ind, 2:4] = geometry.det_refpoint(angle)
+            vectors[ang_ind, 2:4] = geometry.det_refpoint(angle)
 
             # vector from detector pixel (0,0) to (0,1)
             # TODO: use `det_rotation` method instead of
-            vectors[and_ind, 4] = cos(angle) * det_pix_width
-            vectors[and_ind, 5] = sin(angle) * det_pix_width
+            vectors[ang_ind, 4] = cos(angle) * det_pix_width
+            vectors[ang_ind, 5] = sin(angle) * det_pix_width
 
     else:
         raise ValueError('invalid geometry type {!r}.'.format(geometry))
@@ -295,7 +293,7 @@ def astra_projection_geometry(geometry):
 
     Parameters
     ----------
-    geometry : `Geometry`
+    geometry : instance of ``Geometry``
         The ODL geometry instance used to create the projection geometry
 
     Returns
@@ -367,8 +365,8 @@ def astra_projection_geometry(geometry):
         proj_geom = astra.create_proj_geom(
             'cone_vec', det_row_count, det_col_count, vec)
     else:
-        raise NotImplementedError('unkown ASTRA geometry type {}.'.format(type(
-            geometry)))
+        raise NotImplementedError('unkown ASTRA geometry type {}.'.format(
+                geometry))
 
     return proj_geom
 
@@ -434,7 +432,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         else:
             # Something else than NumPy data representation
             raise NotImplementedError('ASTRA supports data wrapping only for '
-                                      '`numpy.ndarray` instances. got {!r}'
+                                      '`numpy.ndarray` instances, got {!r}'
                                       ''.format(data))
     else:
         return create(astra_dtype_str, astra_geom)
