@@ -37,9 +37,9 @@ def phantom(x, y):
 
 # Reconstruction domain, continuous and dcontains_set
 reco_space = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
-nvoxels = (50, 50)
-discr_reco_space = odl.uniform_discr_fromspace(reco_space, nvoxels,
-                                           dtype='float32')
+vol_shape = (50, 50)
+discr_reco_space = odl.uniform_discr_fromspace(reco_space, vol_shape,
+                                               dtype='float32')
 
 # The following is still very inconvenient since you have to use the class
 # constructor of Parallel2dGeometry - convenience functions to come

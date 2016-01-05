@@ -35,23 +35,63 @@ from odl.tomo.util.testutils import skip_if_no_astra
 # TODO: test other interpolations once implemented
 
 @skip_if_no_astra
-def test_astra_cpu_projector_2d():
-    """ASTRA CPU forward and back projection."""
+def test_astra_cpu_projector_parallel2d():
+    """ASTRA CPU forward and back projection for 2d parallel geometry."""
 
     # `DiscreteLp` space for volume data
-    nvoxels = (4, 5)
-    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], nvoxels,
+    vol_shape = (4, 5)
+    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], vol_shape,
                                         dtype='float32')
 
-    # Phantom data
-    phantom = np.zeros(nvoxels)
-    phantom[1, 1] = 1
-
     # Create an element in the `DiscreteLp` space
-    discr_data = discr_vol_space.element(phantom)
+    discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
-    angle_offset = 0
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    angle_grid = odl.uniform_sampling(angle_intvl, 8)
+
+    # Detector
+    dparams = odl.Interval(-6, 6)
+    det_grid = odl.uniform_sampling(dparams, 6)
+
+    # 2D geometry instances for parallel and fan beam with flat line detector
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+                                       det_grid)
+
+    # Projection space
+    proj_space = odl.FunctionSpace(geom.params)
+
+    # `DiscreteLp` projection space
+    proj_shape = geom.grid.shape
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
+                                                   dtype='float32')
+
+    # forward
+    proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_data, geom,
+                                                          discr_proj_space)
+    assert proj_data.shape == proj_shape
+    assert proj_data.norm() > 0
+
+    # backward
+    reco_data = odl.tomo.astra_cpu_backward_projector_call(proj_data, geom,
+                                                           discr_vol_space)
+    assert reco_data.shape == vol_shape
+    assert reco_data.norm() > 0
+
+
+@skip_if_no_astra
+def test_astra_cpu_projector_fanflat():
+    """ASTRA CPU forward and back projection for fanflat geometry."""
+
+    # `DiscreteLp` space for volume data
+    vol_shape = (4, 5)
+    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], vol_shape,
+                                        dtype='float32')
+
+    # Create an element in the `DiscreteLp` space
+    discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
+
+    # Angles
     angle_intvl = odl.Interval(0, 2 * np.pi)
     angle_grid = odl.uniform_sampling(angle_intvl, 8)
 
@@ -64,49 +104,29 @@ def test_astra_cpu_projector_2d():
     det_rad = 10
 
     # 2D geometry instances for parallel and fan beam with flat line detector
-    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
-                                           det_grid, angle_offset)
-    geom_ff = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                       angle_grid, det_grid, angle_offset)
+    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
+                                    angle_grid, det_grid)
 
     # Projection space
-    proj_space = odl.FunctionSpace(geom_p2d.params)
+    proj_space = odl.FunctionSpace(geom.params)
 
     # `DiscreteLp` projection space
-    npixels = (angle_grid.ntotal, det_grid.ntotal)
-    discr_proj_space = odl.uniform_discr_fromspace(proj_space, npixels,
+    proj_shape = geom.grid.shape
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
                                                    dtype='float32')
 
-    # Forward and back projections
+    # forward
+    discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
+    proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_data, geom,
+                                                          discr_proj_space)
+    assert proj_data.shape == proj_shape
+    assert proj_data > 0
 
-    # Parallel 2D: forward
-    proj_data_p2 = odl.tomo.astra_cpu_forward_projector_call(discr_data,
-                                                             geom_p2d,
-                                                             discr_proj_space)
-    assert proj_data_p2.shape == npixels
-    assert proj_data_p2.norm() > 0
-
-    # Parallel 2D: backward
-    reco_data_p2 = odl.tomo.astra_cpu_backward_projector_call(proj_data_p2,
-                                                              geom_p2d,
-                                                              discr_vol_space)
-    assert reco_data_p2.shape == nvoxels
-    assert reco_data_p2.norm() > 0
-
-    # Fanflat: forward
-    discr_data = discr_vol_space.element(phantom)
-    proj_data_ff = odl.tomo.astra_cpu_forward_projector_call(discr_data,
-                                                             geom_ff,
-                                                             discr_proj_space)
-    assert proj_data_ff.shape == npixels
-    assert proj_data_ff > 0
-
-    # Fanflat: backward
-    reco_data_ff = odl.tomo.astra_cpu_backward_projector_call(proj_data_ff,
-                                                              geom_ff,
-                                                              discr_vol_space)
-    assert reco_data_ff.shape == nvoxels
-    assert reco_data_ff.norm() > 0
+    # backward
+    reco_data = odl.tomo.astra_cpu_backward_projector_call(proj_data, geom,
+                                                           discr_vol_space)
+    assert reco_data.shape == vol_shape
+    assert reco_data.norm() > 0
 
 
 if __name__ == '__main__':

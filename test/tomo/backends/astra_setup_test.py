@@ -179,37 +179,37 @@ def test_astra_projection_geometry():
     det_grid = odl.uniform_sampling(dparams, 10)
 
     # no detector sampling grid, no motion sampling grid
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams)
+    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams)
     with pytest.raises(ValueError):
-        odl.tomo.astra_projection_geometry(geom)
+        odl.tomo.astra_projection_geometry(geom_p2d)
 
     # motion sampling grid, but no detector sampling grid
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid)
+    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid)
     with pytest.raises(ValueError):
-        odl.tomo.astra_projection_geometry(geom)
+        odl.tomo.astra_projection_geometry(geom_p2d)
 
     # detector sampling grid, but no motion sampling grid
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, dgrid=det_grid)
+    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, dgrid=det_grid)
     with pytest.raises(ValueError):
-        odl.tomo.astra_projection_geometry(geom)
+        odl.tomo.astra_projection_geometry(geom_p2d)
 
     # motion sampling grid, detector sampling grid but not RegularGrid
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl=angle_intvl,
+    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl=angle_intvl,
                                        dparams=dparams,
                                        agrid=angle_grid,
                                        dgrid=odl.TensorGrid([0]))
     with pytest.raises(TypeError):
-        odl.tomo.astra_projection_geometry(geom)
+        odl.tomo.astra_projection_geometry(geom_p2d)
 
     # detector sampling grid, motion sampling grid
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
                                        det_grid)
-    odl.tomo.astra_projection_geometry(geom)
+    odl.tomo.astra_projection_geometry(geom_p2d)
 
     # PARALLEL 2D GEOMETRY
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
+    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
                                        det_grid)
-    ageom = odl.tomo.astra_projection_geometry(geom)
+    ageom = odl.tomo.astra_projection_geometry(geom_p2d)
     assert ageom['type'] == 'parallel'
 
     # FANFLAT

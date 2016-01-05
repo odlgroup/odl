@@ -54,8 +54,8 @@ def save_slice(data, name):
 
 
 # Create `DiscreteLp` space for volume data
-nvoxels = (100, 110)
-discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], nvoxels,
+vol_shape = (100, 110)
+discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], vol_shape,
                                     dtype='float32')
 
 # Create an element in the volume space
