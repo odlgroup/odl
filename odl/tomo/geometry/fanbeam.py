@@ -178,7 +178,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         Returns
         -------
-        rot : `numpy.matrix`, shape (2, 2)
+        rot : `numpy.ndarray`, shape (2, 2)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
