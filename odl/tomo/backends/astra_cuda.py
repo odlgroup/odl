@@ -39,8 +39,8 @@ from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                            astra_volume_geometry,
                                            astra_projector, astra_data,
-                                           astra_algorithm, astra_cleanup)
-from odl.tomo.geometry.geometry import Geometry
+                                           astra_algorithm)
+from odl.tomo.geometry import Geometry
 
 
 __all__ = ('astra_cuda_forward_projector_call',
@@ -48,7 +48,6 @@ __all__ = ('astra_cuda_forward_projector_call',
            'ASTRA_CUDA_AVAILABLE')
 
 
-# TODO: rename gpu to cuda?
 def astra_cuda_forward_projector_call(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the GPU.
 

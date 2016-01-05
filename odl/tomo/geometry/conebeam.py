@@ -36,7 +36,8 @@ from odl.tomo.geometry.detector import Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry
 
 
-__all__ = ('CircularConeFlatGeometry', 'HelicalConeFlatGeometry')
+__all__ = ('ConeBeamGeometry', 'CircularConeFlatGeometry',
+           'HelicalConeFlatGeometry',)
 
 
 class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):

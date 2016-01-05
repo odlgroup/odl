@@ -36,8 +36,7 @@ from odl.space.ntuples import Ntuples
 from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                            astra_volume_geometry, astra_data,
                                            astra_projector, astra_algorithm)
-from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.geometry.fanbeam import FanFlatGeometry
+from odl.tomo.geometry import Geometry, FanFlatGeometry
 
 __all__ = ('astra_cpu_forward_projector_call',
            'astra_cpu_backward_projector_call')
@@ -96,6 +95,8 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     # Create astra geometries
     vol_geom = astra_volume_geometry(vol_data.space)
     proj_geom = astra_projection_geometry(geometry)
+
+    # for fanflat geometry an angle offset is needed
     if isinstance(geometry, FanFlatGeometry):
         proj_geom['ProjectionAngles'] += np.pi
 
@@ -115,11 +116,6 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
 
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
-
-    # Flip detector pixels for fanflat
-    # if isinstance(geometry, FanFlatGeometry):
-        # out[:] = out.asarray()[::-1, ::-1]
-
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
@@ -199,11 +195,6 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
 
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
-
-    # flip both dimensions = rotate 180 degrees
-    # TODO: Maybe flipping angles in the geometry would be better
-    if isinstance(geometry, FanFlatGeometry):
-        out[:] = out.asarray()[::-1, ::-1]
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)

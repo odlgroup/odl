@@ -36,7 +36,7 @@ from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.util.trafos import euler_matrix
 
 
-__all__ = ('FanFlatGeometry',)
+__all__ = ('FanBeamGeometry', 'FanFlatGeometry',)
 
 
 class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
