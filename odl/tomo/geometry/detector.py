@@ -33,7 +33,7 @@ from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 
 
-__all__ = ('Detector', 'LineDetector', 'Flat2dDetector',
+__all__ = ('Detector', 'Flat1dDetector', 'Flat2dDetector',
            'CircleSectionDetector')
 
 
@@ -173,7 +173,7 @@ class FlatDetector(with_metaclass(ABCMeta, Detector)):
 
         Returns
         -------
-        meas : `float`
+        measure : `float`
             The constant density 1.0
         """
         if param not in self.params:
@@ -182,7 +182,7 @@ class FlatDetector(with_metaclass(ABCMeta, Detector)):
         return 1.0
 
     def __repr__(self):
-        """d.__repr__() <==> repr(d)."""
+        """Returns ``repr(d)``."""
         inner_fstr = '{!r}'
         if self.has_sampling:
             inner_fstr += ',\n grid={grid!r}'
@@ -199,9 +199,7 @@ class FlatDetector(with_metaclass(ABCMeta, Detector)):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-# TODO: rename to Flat1dDetector to be consitent with Flat2dDetector? or
-# Flat2dDetectorto to AreaDetector, or FlatLineDetector and FlatAreaDetctor
-class LineDetector(FlatDetector):
+class Flat1dDetector(FlatDetector):
 
     """A 1d line detector aligned with the y-axis."""
 
@@ -425,7 +423,7 @@ class CircleSectionDetector(Detector):
 
         Returns
         -------
-        meas : `float`
+        measure : `float`
             The constant density ``r``, equal to the length of the
             tangent to the detector circle at any point
         """
@@ -439,7 +437,7 @@ class CircleSectionDetector(Detector):
                              '{}.'.format(param, self.params))
 
     def __repr__(self):
-        """d.__repr__() <==> repr(d)."""
+        """Returns ``repr(d)``."""
         inner_fstr = '{!r}, {}'
         if self.has_sampling:
             inner_fstr += ',\n grid={grid!r}'

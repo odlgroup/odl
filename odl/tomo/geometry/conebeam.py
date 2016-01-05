@@ -248,7 +248,7 @@ class ConeFlatGeometry(ConeBeamGeometry):
 
 
 class CircularConeFlatGeometry(ConeFlatGeometry):
-    """Circular cone beam geometry in 3d with flat detector.
+    """Cone beam geometry with circular acquisition and flat detector.
 
     The source moves on a circle with radius ``r``, and the detector
     reference point is opposite to the source on a circle with radius ``R``
@@ -319,7 +319,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (`ndim`,)
+        point : `numpy.ndarray`, shape (3,)
             The reference point on the circle with radius ``R`` at a given
             rotation angle ``phi`` defined as ``R(-sin(phi), cos(phi), 0)``
         """
@@ -341,7 +341,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (`ndim`,)
+        point : `numpy.ndarray`, shape (3,)
             The source position at ``z`` on the circle with radius ``r`` at
             a given rotation angle ``phi`` defined as `r * (sin(phi),
             -cos(phi), 0)``
@@ -373,7 +373,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
+        vec : `numpy.ndarray`, shape (3,)
             (Unit) vector pointing from the detector to the source
         """
         if angle not in self.motion_params:
@@ -407,14 +407,16 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
 
 class HelicalConeFlatGeometry(ConeFlatGeometry):
-    """Helical cone beam geometry in 3d with flat detector.
+    """Cone beam geometry with helical acquisition and flat detector.
 
-    The source moves on a circle with radius ``r``, and the detector
-    reference point is opposite to the source on a circle with radius ``R``
-    and aligned tangential to the circle.
+    The source moves along a spiral with radius ``r`` in the azimuthal plane
+    and a pitch factor ``P``. The detector reference point is opposite to
+    the source and moves on a spiral with radius ``R`` in the azimuthal
+    plane and pitch factor ``P``. The detector is aligned tangential to the
+    circle.
 
-    The motion parameter is the (1d) rotation angle parametrizing
-    source and detector positions.
+    The motion parameter is the (1d) rotation angle parametrizing source and
+    detector positions.
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
@@ -494,7 +496,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (`ndim`,)
+        point : `numpy.ndarray`, shape (3,)
             The reference point on a circle in the azimuthal plane with
             radius ``R`` and at a longitudinal position ``z`` at a given
             rotation angle ``phi`` defined as ``(-R * sin(phi), R * cos(
@@ -521,7 +523,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (`ndim`,)
+        point : `numpy.ndarray`, shape (3,)
             The source position on a spiral with radius ``r`` and pitch
             factor ``P`` at a given rotation angle ``phi`` defined as
             ``(r * sin(phi), -r * cos(phi), z)`` where ``z`` is given by the
@@ -557,7 +559,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
+        vec : `numpy.ndarray`, shape (3,)
             (Unit) vector pointing from the detector to the source
         """
         if angle not in self.motion_params:

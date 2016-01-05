@@ -62,7 +62,7 @@ def test_parallel_2d_geometry():
     geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
 
     assert geom.ndim == 2
-    assert isinstance(geom.detector, odl.tomo.LineDetector)
+    assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
 
     # detector rotation
     with pytest.raises(ValueError):
@@ -197,7 +197,7 @@ def test_fanflat():
     assert geom.det_refpoint(np.pi)[0] == -det_rad
 
     assert geom.ndim == 2
-    assert isinstance(geom.detector, odl.tomo.LineDetector)
+    assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
 
     # detector rotation
     with pytest.raises(ValueError):

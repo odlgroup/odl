@@ -33,7 +33,7 @@ import numpy as np
 # Internal
 from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
-from odl.tomo.geometry.detector import LineDetector, Flat2dDetector
+from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.util.trafos import euler_matrix
 
@@ -175,7 +175,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         return self.det_to_src(angle, 0, normalized=False)
 
     def __repr__(self):
-        """`g.__repr__() <==> repr(g)`."""
+        """Returns ``repr(d)``."""
         inner_fstr = '{!r}, {!r}'
         if self.has_motion_sampling:
             inner_fstr += ',\n agrid={agrid!r}'
@@ -230,7 +230,7 @@ class Parallel2dGeometry(ParallelGeometry):
                                  'parameter interval {}.'
                                  ''.format(agrid, angle_intvl))
 
-        self._detector = LineDetector(dparams, dgrid)
+        self._detector = Flat1dDetector(dparams, dgrid)
 
     @property
     def ndim(self):

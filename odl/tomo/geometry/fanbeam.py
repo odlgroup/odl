@@ -31,7 +31,7 @@ import numpy as np
 # Internal
 from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
-from odl.tomo.geometry.detector import LineDetector
+from odl.tomo.geometry.detector import Flat1dDetector
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.util.trafos import euler_matrix
 
@@ -193,7 +193,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     # TODO: backprojection weighting function?
 
     def __repr__(self):
-        """`g.__repr__() <==> repr(g)`."""
+        """Returns ``repr(d)``."""
         inner_fstr = '{!r}, {!r}, src_rad={}, det_rad={}'
         if self.has_motion_sampling:
             inner_fstr += ',\n agrid={agrid!r}'
@@ -258,7 +258,7 @@ class FanFlatGeometry(FanBeamGeometry):
                                  'parameter interval {}.'
                                  ''.format(dgrid, dparams))
 
-        self._detector = LineDetector(dparams, dgrid)
+        self._detector = Flat1dDetector(dparams, dgrid)
 
     @property
     def detector(self):
