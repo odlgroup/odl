@@ -239,7 +239,7 @@ class LineDetector(FlatDetector):
 
         The reference line segment is chosen to be aligned with the
         second coordinate axis, such that the parameter value 0 results
-        in the reference point :math:`(0, 0)`.
+        in the reference point (0, 0).
 
         Parameters
         ----------
@@ -306,8 +306,7 @@ class Flat2dDetector(FlatDetector):
 
         The reference plane segment is chosen to be aligned with the
         second and third coordinate axes, in this order, such that
-        the parameter value :math:`(0, 0)` results in the reference
-        point :math:`(0, 0, 0)`.
+        the parameter value (0, 0) results in the reference (0, 0, 0).
 
         Parameters
         ----------
@@ -348,9 +347,9 @@ class CircleSectionDetector(Detector):
 
     """A 1d detector lying on a section of a circle.
 
-    The reference cirular section is part of a circle with radius :math:`r`,
-    which is shifted by the vector :math:`(-r, 0)`, such that the parameter
-    value 0 results in the detector reference point :math:`(0, 0)`.
+    The reference cirular section is part of a circle with radius ``r``,
+    which is shifted by the vector ``(-r, 0)`` such that the parameter
+    value 0 results in the detector reference point ``(0, 0)``.
 
     """
 
@@ -427,7 +426,7 @@ class CircleSectionDetector(Detector):
         Returns
         -------
         meas : `float`
-            The constant density :math:`r`, equal to the length of the
+            The constant density ``r``, equal to the length of the
             tangent to the detector circle at any point
         """
         if param in self.params:

@@ -157,13 +157,8 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         # TODO: check and write test
         return np.asarray(
-            (self.det_refpoint(mpar + self.motion_params_offset) +
+            (self.det_refpoint(mpar) +
              self.det_rotation(mpar).dot(self.detector.surface(dpar))))
-
-    @property
-    def motion_params_offset(self):
-        """Offset to the motion parameters `motion_params`."""
-        return None
 
     @property
     def motion_grid(self):

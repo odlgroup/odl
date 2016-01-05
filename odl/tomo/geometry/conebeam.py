@@ -52,22 +52,19 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     """
 
     def __init__(self, angle_intvl, src_radius, det_radius, agrid=None,
-                 angle_offset=0, axis=None):
+                 axis=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radians
+            The motion parameters given in radian
         src_radius : positive `float`
             Radius of the source circle, must be positive
         det_radius : positive `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the `angle_intvl`
-        angle_offset : `float`
-            Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in z-direction.
         axis : `int` or 3-element array
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis
@@ -94,25 +91,17 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
                 raise ValueError('angular grid {} not contained in angle '
                                  'interval {}.'.format(agrid, angle_intvl))
 
-        angle_offset = float(angle_offset)
-
         super().__init__()
         self._motion_params = angle_intvl
         self._src_radius = src_radius
         self._det_radius = det_radius
         self._motion_grid = agrid
-        self._motion_params_offset = angle_offset
         self._axis = axis
 
     @property
     def motion_params(self):
         """Motion parameters of this geometry."""
         return self._motion_params
-
-    @property
-    def motion_params_offset(self):
-        """Offset to motion parameters. """
-        return self._motion_params_offset
 
     @property
     def motion_grid(self):
@@ -128,13 +117,6 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     def angle_grid(self):
         """Angle (= motion parameter) sampling grid of this geometry."""
         return self._motion_grid
-
-    @property
-    def angle_offset(self):
-        """Offset to the rotation angle in the azimuthal plane. Does not
-        imply an offset in z-direction. The actual angles then reside
-        within `angle_offset` + `angle_intvl`."""
-        return self._motion_params_offset
 
     @property
     def src_radius(self):
@@ -165,7 +147,7 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radians. It must be
+            The motion parameter given in radian. It must be
             contained in this geometry's `motion_params`.
 
         Returns
@@ -221,13 +203,13 @@ class ConeFlatGeometry(ConeBeamGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
-                 dgrid=None, angle_offset=0, axis=None):
+                 dgrid=None, axis=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radians
+            The motion parameters given in radian
         dparams : `Rectangle` or 2-dim. `IntervalProd`
             The detector parameters
         src_radius : `float`
@@ -238,15 +220,11 @@ class ConeFlatGeometry(ConeBeamGeometry):
             A sampling grid for `angle_intvl`
         dgrid : 2-dim. `TensorGrid`, optional
             A sampling grid for `dparams`
-        angle_offset : `float`
-            Offset to the rotation angle in the azimuthal plane. Does not
-            affect the offset in z-direction.
         axis : `int` or 3-element array
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis
         """
-        super().__init__(angle_intvl, src_radius, det_radius, agrid, angle_offset,
-                         axis)
+        super().__init__(angle_intvl, src_radius, det_radius, agrid, axis)
 
         if not (isinstance(dparams, IntervalProd) and dparams.ndim == 2):
             raise TypeError('detector parameters {!r} are not an interval.'
@@ -281,13 +259,13 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
-                 dgrid=None, angle_offset=0, axis=None):
+                 dgrid=None, axis=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radians
+            The motion parameters given in radian
         dparams : `Rectangle` or 2-dim. `IntervalProd`
             The detector parameters
         src_radius : `float`
@@ -298,16 +276,13 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
             A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 2-dim. `TensorGrid`, optional
             A sampling grid for ``dparams``. Default: `None`
-        angle_offset : `float`, optional
-            Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in z-direction. Default: 0
         axis : `int` or 3-element array, optional
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis. Default: `None`
         """
 
         super().__init__(angle_intvl, dparams, src_radius, det_radius, agrid,
-                         dgrid, angle_offset, axis)
+                         dgrid, axis)
 
     @property
     def axis(self):
@@ -339,21 +314,18 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radians. It must be contained
+            The motion parameter given in radian. It must be contained
             in this geometry's motion parameter set
 
         Returns
         -------
         point : `numpy.ndarray`, shape (`ndim`,)
             The reference point on the circle with radius ``R`` at a given
-            rotation angle :math:`\\phi`, defined as :math:`R(-\\sin\\phi,
-            \\cos\\phi, 0)`
+            rotation angle ``phi`` defined as ``R(-sin(phi), cos(phi), 0)``
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
-
-        angle += self.angle_offset
 
         # ASTRA 'cone_vec' convention
         return self.det_radius * np.array([-sin(angle), cos(angle), 0])
@@ -364,22 +336,19 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radians. It must be contained
+            The motion parameter given in radian. It must be contained
             in this geometry's motion parameter set
 
         Returns
         -------
         point : `numpy.ndarray`, shape (`ndim`,)
-
             The source position at ``z`` on the circle with radius ``r`` at
-            a given rotation angle :math:`\\phi`, defined as :math:`(r
-            \\sin\\phi, -r\\cos\\phi, 0)`
+            a given rotation angle ``phi`` defined as `r * (sin(phi),
+            -cos(phi), 0)``
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
-
-        angle += self.angle_offset
 
         # ASTRA cone_vec convention
         return self.src_radius * np.array([sin(angle), -cos(angle), 0])
@@ -392,7 +361,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radians. It must be contained in this
+            The motion parameter given in radian. It must be contained in this
             geometry's motion parameter set
         dpar : 2-tuple of `float`
             The detector parameter. It must be contained in this
@@ -415,7 +384,6 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
                              'range {}.'.format(dpar, self.det_params))
 
         axis = self.axis
-        angle += self.angle_offset
 
         # Angle of a detector point at `dpar` as seen from the source relative
         # to the line from the source to the detector reference point
@@ -430,7 +398,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         # rotate vector
         if not (axis[0] == 0 and axis[1] == 0):
             vec = -np.array(
-                    self.det_rotation(angle + self.angle_offset)[0]).squeeze()
+                    self.det_rotation(angle)[0]).squeeze()
 
         if not normalized:
             vec *= self.src_radius + self.det_radius
@@ -450,14 +418,13 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 spiral_pitch_factor, agrid=None, dgrid=None,
-                 angle_offset=0, axis=None):
+                 spiral_pitch_factor, agrid=None, dgrid=None, axis=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radians
+            The motion parameters given in radian
         dparams : `Rectangle` or 2-dim. `IntervalProd`
             The detector parameters
         src_radius : `float`
@@ -475,16 +442,13 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 2-dim. `TensorGrid`, optional
             A sampling grid for `dparams`. Default: `None`
-        angle_offset : `float`, optional
-            Offset to the rotation angle in the azimuthal plane. Does not
-            affect the offset in the longitudinal direction. Default: 0
         axis : `int` or 3-element array, optional
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis. Default: `None`
         """
 
         super().__init__(angle_intvl, dparams, src_radius, det_radius, agrid,
-                         dgrid, angle_offset, axis)
+                         dgrid, axis)
         self._axis = axis
         det_height = (dparams.max() - dparams.min())[1]
         self._table_feed_per_rotation = spiral_pitch_factor * src_radius / (
@@ -525,16 +489,16 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radians. It must be
+            The motion parameter given in radian. It must be
             contained in this geometry's motion parameter set
 
         Returns
         -------
         point : `numpy.ndarray`, shape (`ndim`,)
-            The reference point on a circle in the azimuthal plane with radius
-            :math:`R` and at a longitudinal position :math:`z` at a given
-            rotation angle :math:`\\phi`, defined as :math:`( -R\\sin\\phi,
-            R\\cos\\phi, z_)` where :math:`z` is given by the table feed
+            The reference point on a circle in the azimuthal plane with
+            radius ``R`` and at a longitudinal position ``z`` at a given
+            rotation angle ``phi`` defined as ``(-R * sin(phi), R * cos(
+            phi), z)`` where ``z`` is given by the table feed
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
@@ -542,8 +506,8 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         # ASTRA cone_vec geometries
         return np.array([
-            -self.det_radius * sin(angle + self.angle_offset),
-            self.det_radius * cos(angle + self.angle_offset),
+            -self.det_radius * sin(angle),
+            self.det_radius * cos(angle),
             self.table_feed_per_rotation * angle / (2 * np.pi)])
 
     def src_position(self, angle):
@@ -552,15 +516,15 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radians. It must be contained
+            The motion parameter given in radian. It must be contained
             in this geometry's motion parameter set
 
         Returns
         -------
         point : `numpy.ndarray`, shape (`ndim`,)
-            The source position on the spiral with radius ``r`` and pitch
-            factor ``P`` at a given rotation angle :math:`\\phi`, defined as
-            :math:`(r\\sin\\phi, -r\\cos\\phi, z)` where ``z`` is given by the
+            The source position on a spiral with radius ``r`` and pitch
+            factor ``P`` at a given rotation angle ``phi`` defined as
+            ``(r * sin(phi), -r * cos(phi), z)`` where ``z`` is given by the
             table feed
         """
         if angle not in self.motion_params:
@@ -569,8 +533,8 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         # ASTRA cone_vec geometries
         return np.array([
-            self.src_radius * sin(angle + self.angle_offset),
-            -self.src_radius * cos(angle + self.angle_offset),
+            self.src_radius * sin(angle),
+            -self.src_radius * cos(angle),
             self.table_feed_per_rotation * angle / (2 * np.pi)])
 
         # TODO: backprojection weighting function?
@@ -581,7 +545,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radians. It must be contained in this
+            The motion parameter given in radian. It must be contained in this
             geometry's motion parameter set
         dpar : 2-tuple of `float`
             The detector parameter. It must be contained in this
@@ -604,7 +568,6 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
                              'range {}.'.format(dpar, self.det_params))
 
         axis = self.axis
-        angle += self.angle_offset
 
         # Angle of a detector point at `dpar` as seen from the source relative
         # to the line from the source to the detector reference point
@@ -619,7 +582,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         # rotate vector
         if not (axis[0] == 0 and axis[1] == 0):
             vec = -np.array(
-                    self.det_rotation(angle + self.angle_offset)[0]).squeeze()
+                    self.det_rotation(angle)[0]).squeeze()
 
         if not normalized:
             vec *= self.src_radius + self.det_radius

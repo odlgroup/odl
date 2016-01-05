@@ -49,7 +49,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
     The motion parameter is a (1d) rotation angle.
     """
 
-    def __init__(self, angle_intvl, agrid=None, angle_offset=0):
+    def __init__(self, angle_intvl, agrid=None):
         """Initialize a new instance.
 
         Parameters
@@ -58,15 +58,10 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
             The motion parameters given in radians
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the ``angle_intvl``. Default: `None`
-        angle_offset : `float`, optional
-            Offset to the rotation angle in the azimuthal plane given in
-            radians. Does not imply an offset in the longitudinal direction.
-            Default: 0
         """
         if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
             raise TypeError('angle parameters {!r} are not an interval.'
                             ''.format(angle_intvl))
-        angle_offset = float(angle_offset)
 
         if agrid is not None:
             if not isinstance(agrid, TensorGrid):
@@ -79,17 +74,11 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         super().__init__()
         self._motion_params = angle_intvl
         self._motion_grid = agrid
-        self._motion_params_offset = angle_offset
 
     @property
     def motion_params(self):
         """Motion parameters of this geometry."""
         return self._motion_params
-
-    @property
-    def motion_params_offset(self):
-        """Offset to motion parameters. """
-        return self._motion_params_offset
 
     @property
     def motion_grid(self):
@@ -105,14 +94,6 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
     def angle_grid(self):
         """Angle (= motion parameter) sampling grid of this geometry."""
         return self._motion_grid
-
-    @property
-    def angle_offset(self):
-        """Offset to the rotation angle in the azimuthal plane given in rad.
-
-        Does not imply an offset in the longitudinal direction. The actual
-        angles then reside within `angle_offset` + `angle_intvl`."""
-        return self._motion_params_offset
 
     def det_refpoint(self, angle):
         """The detector reference point function.
@@ -172,7 +153,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         # angle its postion at non-zero angle is the 1st column of the
         # rotation. matrix. rot_mat[0] however gives the 1t row.
         vec = -np.array(
-            self.det_rotation(angle + self.angle_offset)[0]).squeeze()
+            self.det_rotation(angle)[0]).squeeze()
         if not normalized:
             vec[vec != 0] *= np.inf
         return vec
@@ -220,8 +201,7 @@ class Parallel2dGeometry(ParallelGeometry):
 
     """
 
-    def __init__(self, angle_intvl, dparams, agrid=None, dgrid=None,
-                 angle_offset=0):
+    def __init__(self, angle_intvl, dparams, agrid=None, dgrid=None):
         """Initialize a new instance.
 
         Parameters
@@ -234,11 +214,8 @@ class Parallel2dGeometry(ParallelGeometry):
             A sampling grid for the `angle_intvl`. Default: `None`
         dgrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the detector parameters. Default: `None`
-        angle_offset : `float`, optional
-            Offset to the rotation angle in the azimuthal plane. Does not
-            imply an offset in the longitudinal direction. Default: `None`
         """
-        super().__init__(angle_intvl, agrid, angle_offset)
+        super().__init__(angle_intvl, agrid)
 
         if not (isinstance(dparams, IntervalProd) and dparams.ndim == 1):
             raise TypeError('detector parameters {!r} are not an interval.'
@@ -285,7 +262,7 @@ class Parallel2dGeometry(ParallelGeometry):
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
-        return euler_matrix(angle + self.angle_offset)
+        return euler_matrix(angle)
 
 
 class Parallel3dGeometry(ParallelGeometry):
@@ -298,7 +275,7 @@ class Parallel3dGeometry(ParallelGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, agrid=None, dgrid=None,
-                 angle_offset=0, axis=None):
+                 axis=None):
         """Initialize a new instance.
 
         Parameters
@@ -311,10 +288,6 @@ class Parallel3dGeometry(ParallelGeometry):
             A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 2-dim. `TensorGrid`, optional. Default: `None`
             A sampling grid for `dparams`
-        angle_offset : `float`, optional
-            Offset to the rotation angle in the azimuthal plane given in
-            radians. Does not imply an offset in the longitudinal direction.
-            Default: 0
         axis : `int` or 3-element array, optional
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis. Default: `None`
