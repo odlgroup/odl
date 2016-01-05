@@ -57,12 +57,9 @@ def save_slice(data, name):
 nvoxels = (100, 110)
 discr_vol_space = odl.uniform_discr([-1, -1.1], [1, 1.1], nvoxels,
                                     dtype='float32')
-# Create phantom data
-phantom = np.zeros(nvoxels)
-phantom[20:30, 20:30] = 1
 
-# Create an element in the `DiscreteLp` space
-discr_vol_data = discr_vol_space.element(phantom)
+# Create an element in the volume space
+discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
 
 save_slice(discr_vol_data, 'forward phantom 2d cpu')
 
@@ -106,7 +103,7 @@ reco_data = odl.tomo.astra_cpu_backward_projector_call(p2_proj_data, geom_p2d,
 save_slice(reco_data, 'backward parallel 2d cpu')
 
 # Fanflat: forward
-discr_vol_data = discr_vol_space.element(phantom)
+discr_vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.2, 0.3)
 ff_proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_vol_data,
                                                          geom_ff,
                                                          discr_proj_space)
