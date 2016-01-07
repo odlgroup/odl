@@ -17,7 +17,6 @@
 
 """Create image to check for the ASTRA cpu backend."""
 
-
 from __future__ import print_function, division, absolute_import
 import os.path as pth
 from future import standard_library

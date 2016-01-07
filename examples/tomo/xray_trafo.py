@@ -29,6 +29,9 @@ import numpy as np
 # Internal
 import odl
 
+
+# TODO: use is_periodic instead of as_midp once periodic discr. are available
+
 # Discrete reconstruction space
 discr_reco_space = odl.uniform_discr([-20, -20, -20],
                                      [20, 20, 20],
