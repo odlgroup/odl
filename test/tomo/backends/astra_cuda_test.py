@@ -248,7 +248,7 @@ def test_astra_cuda_projector_helical_conebeam():
     # Create geometries
     geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                             det_rad,
-                                            spiral_pitch_factor=pitch_factor,
+                                            pitch=pitch_factor,
                                             agrid=angle_grid, dgrid=det_grid)
 
     # Projection space

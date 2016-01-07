@@ -108,6 +108,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         point : `numpy.ndarray`, shape (`ndim`,)
             The reference point, equal to the origin
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -141,6 +142,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -171,10 +173,11 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
         pos : `numpy.ndarray`, shape (2,)
             The source position, an `ndim`-dimensional vector
         """
+        angle = float(angle)
         return self.det_to_src(angle, 0, normalized=False)
 
     def __repr__(self):
-        """Returns ``repr(d)``."""
+        """Returns ``repr(self)``."""
         inner_fstr = '{!r}, {!r}'
         if self.has_motion_sampling:
             inner_fstr += ',\n agrid={agrid!r}'
@@ -258,6 +261,7 @@ class Parallel2dGeometry(ParallelGeometry):
             the local coordinate system of the detector reference point,
             expressed in the fixed system.
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
