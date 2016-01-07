@@ -22,16 +22,15 @@ from __future__ import print_function, division, absolute_import
 from abc import ABCMeta, abstractmethod, abstractproperty
 from future import standard_library
 standard_library.install_aliases()
-from future.utils import with_metaclass
 from builtins import object, super
 
 # External
 import numpy as np
 
 # Internal
+from odl.util.utility import with_metaclass
 from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
-
 
 __all__ = ('Detector', 'Flat1dDetector', 'Flat2dDetector',
            'CircleSectionDetector')
@@ -52,7 +51,7 @@ class Detector(with_metaclass(ABCMeta, object)):
     * optionally a sampling grid for the parameters
     """
 
-    def __init__(self, params, grid=None):
+    def __init__(self, params, grid=None, ndim=None):
         """Initialize a new instance.
 
         Parameters
@@ -77,10 +76,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         self._params = params
         self._param_grid = grid
-
-    @abstractproperty
-    def ndim(self):
-        """The number of dimensions of the detector (0, 1 or 2)."""
+        self._ndim = ndim
 
     @abstractmethod
     def surface(self, param):
@@ -91,6 +87,11 @@ class Detector(with_metaclass(ABCMeta, object)):
         param : element of `params`
             The parameter value where to evaluate the function
         """
+
+    @property
+    def ndim(self):
+        """The number of dimensions of the detector (0, 1 or 2)."""
+        return self._ndim
 
     @property
     def params(self):
@@ -182,7 +183,7 @@ class FlatDetector(with_metaclass(ABCMeta, Detector)):
         return 1.0
 
     def __repr__(self):
-        """Returns ``repr(d)``."""
+        """Returns ``repr(self)``."""
         inner_fstr = '{!r}'
         if self.has_sampling:
             inner_fstr += ',\n grid={grid!r}'
@@ -214,16 +215,11 @@ class Flat1dDetector(FlatDetector):
             A sampling grid for the parameter interval, in which it must
             be contained
         """
-        super().__init__(params, grid)
+        super().__init__(params, grid, ndim=1)
 
         if params.ndim != 1:
             raise ValueError('parameters {} are not 1-dimensional.'
                              ''.format(params))
-
-    @property
-    def ndim(self):
-        """The number of dimensions of the detector."""
-        return 1
 
     @property
     def npixels(self):
@@ -277,7 +273,7 @@ class Flat2dDetector(FlatDetector):
 
     """A 2d flat panel detector aligned with the y-z axes."""
 
-    def __init__(self, params, grid=None):
+    def __init__(self, params, grid=None, ndim=1):
         """Initialize a new instance.
 
         Parameters
@@ -294,10 +290,10 @@ class Flat2dDetector(FlatDetector):
             raise ValueError('parameters {} are not 2-dimensional.'
                              ''.format(params))
 
-    @property
-    def ndim(self):
-        """The number of dimensions of the detector."""
-        return 2
+    # @property
+    # def ndim(self):
+    #     """The number of dimensions of the detector."""
+    #     return 2
 
     def surface(self, param):
         """The parametrization of the (2d) detector reference surface.
@@ -364,7 +360,7 @@ class CircleSectionDetector(Detector):
             A sampling grid for the parameter interval, in which it must
             be contained. Default: `None`
         """
-        super().__init__(params, grid)
+        super().__init__(params, grid, ndim=1)
 
         if params.ndim != 1:
             raise ValueError('parameters {} are not 1-dimensional.'
@@ -380,10 +376,10 @@ class CircleSectionDetector(Detector):
         """Circle radius of this detector."""
         return self._circ_rad
 
-    @property
-    def ndim(self):
-        """The number of dimensions of the detector."""
-        return 1
+    # @property
+    # def ndim(self):
+    #     """The number of dimensions of the detector."""
+    #     return 1
 
     @property
     def npixels(self):
@@ -437,7 +433,7 @@ class CircleSectionDetector(Detector):
                              '{}.'.format(param, self.params))
 
     def __repr__(self):
-        """Returns ``repr(d)``."""
+        """Returns ``repr(self)``."""
         inner_fstr = '{!r}, {}'
         if self.has_sampling:
             inner_fstr += ',\n grid={grid!r}'
