@@ -210,39 +210,35 @@ def astra_geom_to_vec(geometry):
         det_pix_width = geometry.det_grid.stride[0]
         det_pix_height = geometry.det_grid.stride[1]
 
-        for ang_ind in range(num_angles):
-            angle = angles[ang_ind]
-
+        for ang_idx, angle in enumerate(angles.points()):
             # source position
             # TODO: check geometry class for consistency since 'src_position'
             # and 'det_refpoint' were adopted to use ASTRA cone_vec convention
-            vectors[ang_ind, 0:3] = geometry.src_position(angle)
+            vectors[ang_idx, 0:3] = geometry.src_position(angle)
 
             # center of detector
-            vectors[ang_ind, 3:6] = geometry.det_refpoint(angle)
+            vectors[ang_idx, 3:6] = geometry.det_refpoint(angle)
 
             # vector from detector pixel (0,0) to (0,1)
             # TODO: use geometry class method 'det_rotation' method instead
-            vectors[ang_ind, 6] = cos(angle) * det_pix_width
-            vectors[ang_ind, 7] = sin(angle) * det_pix_width
+            vectors[ang_idx, 6] = cos(angle) * det_pix_width
+            vectors[ang_idx, 7] = sin(angle) * det_pix_width
             # vectors[nn, 8] = 0
 
             # vector from detector pixel (0,0) to (1,0)
             # vectors[nn, 9] = 0
             # vectors[nn, 10] = 0
-            vectors[ang_ind, 11] = det_pix_height
+            vectors[ang_idx, 11] = det_pix_height
 
     elif isinstance(geometry, Parallel3dGeometry):
         vectors = np.zeros((num_angles, 12))
         det_pix_width = geometry.det_grid.stride[0]
         det_pix_height = geometry.det_grid.stride[1]
 
-        for ang_ind in range(num_angles):
-            angle = angles[ang_ind][0]
-
+        for ang_idx, angle in enumerate(angles.points()):
             # ray direction
-            vectors[ang_ind, 0] = sin(angle)
-            vectors[ang_ind, 1] = -cos(angle)
+            vectors[ang_idx, 0] = sin(angle)
+            vectors[ang_idx, 1] = -cos(angle)
             # vectors[nn, 2] = 0
 
             # center of detector
@@ -250,34 +246,32 @@ def astra_geom_to_vec(geometry):
 
             # vector from detector pixel (0,0) to (0,1)
             # TODO: use det_rotation method instead of
-            vectors[ang_ind, 6] = cos(angle) * det_pix_width
-            vectors[ang_ind, 7] = sin(angle) * det_pix_width
+            vectors[ang_idx, 6] = cos(angle) * det_pix_width
+            vectors[ang_idx, 7] = sin(angle) * det_pix_width
             # vectors[nn, 8] = 0
 
             # vector from detector pixel (0,0) to (1,0)
             # vectors[nn, 9] = 0
             # vectors[nn, 10] = 0
-            vectors[ang_ind, 11] = det_pix_height
+            vectors[ang_idx, 11] = det_pix_height
 
     elif isinstance(geometry, FanBeamGeometry):
         vectors = np.zeros((num_angles, 6))
         det_pix_width = geometry.det_grid.stride[0]
 
-        for ang_ind in range(num_angles):
-            angle = angles[ang_ind][0]
-
+        for ang_idx, angle in enumerate(angles.points()):
             # source position
             # TODO: check method, probably inconsistent with detector pixel vec
-            vectors[ang_ind, 0:2] = geometry.src_position(angle)
+            vectors[ang_idx, 0:2] = geometry.src_position(angle)
 
             # center of detector
             # TODO: check method, probably inconsistent with detector pixel vec
-            vectors[ang_ind, 2:4] = geometry.det_refpoint(angle)
+            vectors[ang_idx, 2:4] = geometry.det_refpoint(angle)
 
             # vector from detector pixel (0,0) to (0,1)
             # TODO: use `det_rotation` method instead of
-            vectors[ang_ind, 4] = cos(angle) * det_pix_width
-            vectors[ang_ind, 5] = sin(angle) * det_pix_width
+            vectors[ang_idx, 4] = cos(angle) * det_pix_width
+            vectors[ang_idx, 5] = sin(angle) * det_pix_width
 
     else:
         raise ValueError('invalid geometry type {!r}.'.format(geometry))
@@ -352,7 +346,7 @@ def astra_projection_geometry(geometry):
         det_col_count = geometry.det_grid.shape[0]
         angles = geometry.motion_grid.coord_vectors[0]
         source_origin = geometry.src_radius
-        # ! In PyASTRA doc falsely labelled `source_det`
+        # ! In PyASTRA doc incorrectly labelled `source_det`
         origin_det = geometry.det_radius
         proj_geom = astra.create_proj_geom(
             'cone', det_width, det_height, det_row_count, det_col_count,
