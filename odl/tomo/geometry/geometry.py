@@ -21,7 +21,6 @@
 from __future__ import print_function, division, absolute_import
 from abc import ABCMeta, abstractmethod, abstractproperty
 from future import standard_library
-from future.utils import with_metaclass
 standard_library.install_aliases()
 from builtins import object
 
@@ -29,9 +28,9 @@ from builtins import object
 import numpy as np
 
 # Internal
+from odl.util.utility import with_metaclass
 from odl.set.domain import IntervalProd
 from odl.discr.grid import RegularGrid, TensorGrid
-
 
 __all__ = ('Geometry',)
 
@@ -95,7 +94,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        rot : `numpy.matrix`, shape (`ndim`, `ndim`)
+        rot : `numpy.ndarray`, shape (`ndim`, `ndim`)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,

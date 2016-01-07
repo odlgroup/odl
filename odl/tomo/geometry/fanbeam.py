@@ -143,6 +143,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
             The reference point on the circle with radius ``R`` at a given
             rotation angle ``phi`` defined as ``R * (cos(phi), sin(phi))``
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -165,6 +166,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
             the local coordinate system of the detector reference point,
             expressed in the fixed system
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -185,6 +187,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
             The source position on the circle with radius `r` at the given
             rotation angle ``phi``, defined as ``-r * (cos(phi), sin(phi))``
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -193,7 +196,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     # TODO: backprojection weighting function?
 
     def __repr__(self):
-        """Returns ``repr(d)``."""
+        """Returns ``repr(self)``."""
         inner_fstr = '{!r}, {!r}, src_rad={}, det_rad={}'
         if self.has_motion_sampling:
             inner_fstr += ',\n agrid={agrid!r}'
@@ -287,6 +290,7 @@ class FanFlatGeometry(FanBeamGeometry):
         vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))

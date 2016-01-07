@@ -236,7 +236,7 @@ def test_circular_cone_flat():
         odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
                                           det_rad,
                                           agrid=odl.TensorGrid(
-                                              [0, 2 * full_angle]))
+                                                  [0, 2 * full_angle]))
     with pytest.raises(ValueError):
         odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
                                           det_rad,
@@ -272,42 +272,38 @@ def test_helical_cone_flat():
     det_grid = odl.uniform_sampling(dparams, (10, 5))
     src_rad = 10.0
     det_rad = 5.0
-    spiral_pitch_factor = 1
+    pitch = 1.5
 
     geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                             det_rad,
-                                             spiral_pitch_factor)
+                                            det_rad, pitch)
 
     with pytest.raises(TypeError):
         odl.tomo.HelicalConeFlatGeometry([0, 1], dparams, src_rad, det_rad,
-                                          spiral_pitch_factor)
+                                         pitch)
     with pytest.raises(TypeError):
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, [0, 1], src_rad,
-                                          det_rad,
-                                          spiral_pitch_factor)
+                                         det_rad, pitch)
     with pytest.raises(ValueError):
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                          det_rad, spiral_pitch_factor,
-                                          agrid=odl.TensorGrid(
-                                              [0, 2 * full_angle]))
+                                         det_rad, pitch,
+                                         agrid=odl.TensorGrid(
+                                                 [0, 2 * full_angle]))
     with pytest.raises(ValueError):
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                          det_rad,
-                                          spiral_pitch_factor,
-                                          dgrid=odl.TensorGrid([0, 2]))
+                                         det_rad, pitch,
+                                         dgrid=odl.TensorGrid([0, 2]))
     with pytest.raises(ValueError):
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                          det_rad,
-                                          spiral_pitch_factor,
-                                          dgrid=odl.TensorGrid(
-                                              [0, 0.1], [0.2, 0.3],
-                                              [0.3, 0.4, 0.5]))
+                                         det_rad, pitch,
+                                         dgrid=odl.TensorGrid(
+                                                 [0, 0.1], [0.2, 0.3],
+                                                 [0.3, 0.4, 0.5]))
     with pytest.raises(ValueError):
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, -1, det_rad,
-                                          spiral_pitch_factor)
+                                         pitch)
     with pytest.raises(ValueError):
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, -1,
-                                          spiral_pitch_factor)
+                                         pitch)
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
 
@@ -319,32 +315,29 @@ def test_helical_cone_flat():
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
 
     det_height = dparams.size[1]
-    tfpr = spiral_pitch_factor * det_height * src_rad / (src_rad + det_rad)
 
     assert all_equal(dparams.size, dparams.max() - dparams.min())
-    assert almost_equal(geom.table_feed_per_rotation, tfpr)
 
     det_refpoint = geom.det_refpoint(2 * np.pi)
     assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
-    assert almost_equal(det_refpoint[2], tfpr, places=14)
 
     angle_offset = 0.0
     geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                             det_rad,
-                                             spiral_pitch_factor, angle_grid,
-                                             det_grid, angle_offset)
+                                            det_rad,
+                                            pitch, angle_grid,
+                                            det_grid, angle_offset)
 
     angles = geom.angle_grid
     num_angles = geom.angle_grid.ntotal
 
     src_rad = geom.src_radius
     det_rad = geom.det_radius
-    tfpr = geom.table_feed_per_rotation
+    pitch = geom.pitch
 
     print(src_rad, det_rad)
     for ang_ind in range(num_angles):
         angle = angles[ang_ind][0]
-        z = tfpr * angle / (2 * np.pi)
+        z = pitch * angle / (2 * np.pi)
 
         # source
         pnt = (np.sin(angle) * src_rad, -np.cos(angle) * src_rad, z)
