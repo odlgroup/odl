@@ -32,7 +32,7 @@ try:
     else:
         ASTRA_CUDA_AVAILABLE = False
 except ImportError:
-    pass
+    ASTRA_CUDA_AVAILABLE = False
 
 # Internal
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
