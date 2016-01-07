@@ -35,7 +35,7 @@ from odl.tomo.geometry.detector import Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry
 
 
-__all__ = ('ConeBeamGeometry', 'CircularConeFlatGeometry',
+__all__ = ('ConeBeamGeometry', 'ConeFlatGeometry', 'CircularConeFlatGeometry',
            'HelicalConeFlatGeometry',)
 
 
@@ -64,9 +64,8 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the `angle_intvl`
-        axis : `int` or 3-element array
-            Defines the rotation axis via a 3-element vector or a single
-            integer referring to a standard axis
+        axis : array-like, shape (3,)
+            3-element vector defining the rotation axis
         """
         if not (isinstance(angle_intvl, IntervalProd) and
                 angle_intvl.ndim == 1):
@@ -89,13 +88,17 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
             if not angle_intvl.contains_set(agrid):
                 raise ValueError('angular grid {} not contained in angle '
                                  'interval {}.'.format(agrid, angle_intvl))
+        if axis is not None:
+            if not np.size(axis) == 3:
+                raise ValueError('length ({}) of axis {} is not 3'.format(len(
+                        axis), axis))
 
         super().__init__()
         self._motion_params = angle_intvl
         self._src_radius = src_radius
         self._det_radius = det_radius
         self._motion_grid = agrid
-        self._axis = axis
+        self._axis = np.array(axis) / np.linalg.norm(axis)
 
     @property
     def motion_params(self):
@@ -131,6 +134,17 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     def ndim(self):
         """Number of dimensions of this geometry."""
         return 3
+
+    @property
+    def axis(self):
+        """The normalized axis of rotation.
+
+        Returns
+        -------
+        axis : `numpy.ndarray`, shape (3,)
+            The normalized rotation axis
+        """
+        return self._axis
 
     def rotation_matrix(self, angle):
         """The detector rotation function.
@@ -258,7 +272,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
-                 dgrid=None, axis=None):
+                 dgrid=None, axis=(1,0,0)):
         """Initialize a new instance.
 
         Parameters
@@ -282,30 +296,6 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         super().__init__(angle_intvl, dparams, src_radius, det_radius, agrid,
                          dgrid, axis)
-
-    @property
-    def axis(self):
-        """The normalized axis of rotation.
-
-        Returns
-        -------
-        axis : `numpy.ndarray`, shape (3,)
-            The normalized rotation axis
-        """
-        axis = self._axis
-        if axis is None:
-            axis = np.array([0, 0, 1])
-        elif np.isscalar(axis):
-            ind = axis
-            axis = np.zeros(3)
-            axis[ind] = 1
-        elif len(axis) == 3:
-            axis = np.array(axis) / np.linalg.norm(axis)
-        else:
-            raise ValueError('`axis` intializer {} has wrong format'.format(
-                    axis))
-
-        return axis
 
     def det_refpoint(self, angle):
         """The detector reference point function.
@@ -422,7 +412,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 pitch, agrid=None, dgrid=None, axis=None):
+                 pitch, agrid=None, dgrid=None, axis=(1,0,0)):
         """Initialize a new instance.
 
         Parameters
@@ -449,32 +439,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         super().__init__(angle_intvl, dparams, src_radius, det_radius,
                          agrid, dgrid, axis)
-        self._axis = axis
         self._pitch = pitch
-
-    @property
-    def axis(self):
-        """The axis of rotation.
-
-        Returns
-        -------
-        axis : `numpy.ndarray`, shape (3,)
-            The rotation axis
-        """
-        axis = self._axis
-        if axis is None:
-            axis = np.array([0, 0, 1])
-        elif np.isscalar(axis):
-            ind = axis
-            axis = np.zeros(3)
-            axis[ind] = 1
-        elif len(axis) == 3:
-            axis = np.array(axis) / np.linalg.norm(axis)
-        else:
-            raise ValueError('`axis` intializer {} has wrong format'.format(
-                    axis))
-
-        return axis
 
     @property
     def pitch(self):

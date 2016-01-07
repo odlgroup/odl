@@ -36,7 +36,7 @@ from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.util.trafos import euler_matrix
 
-__all__ = ('Parallel2dGeometry', 'Parallel3dGeometry')
+__all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dGeometry')
 
 
 # TODO: rotation and position functions (probably not working properly)
@@ -278,7 +278,7 @@ class Parallel3dGeometry(ParallelGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, agrid=None, dgrid=None,
-                 axis=None):
+                 axis=(1,0,0)):
         """Initialize a new instance.
 
         Parameters
@@ -291,9 +291,8 @@ class Parallel3dGeometry(ParallelGeometry):
             A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 2-dim. `TensorGrid`, optional. Default: `None`
             A sampling grid for `dparams`
-        axis : `int` or 3-element array, optional
-            Defines the rotation axis via a 3-element vector or a single
-            integer referring to a standard axis. Default: `None`
+        axis : array-like, shape (3,)
+            3-element vector defining the rotation axis
         """
         super().__init__(angle_intvl, agrid)
 
@@ -309,8 +308,11 @@ class Parallel3dGeometry(ParallelGeometry):
                 raise ValueError('detector grid {} not contained in detector '
                                  'parameter rectangle {}.'
                                  ''.format(agrid, angle_intvl))
-
-        self._axis = axis
+        if axis is not None:
+            if not len(axis) == 3:
+                raise ValueError('length ({}) of axis {} is not 3'.format(len(
+                        axis), axis))
+        self._axis = np.array(axis) / np.linalg.norm(axis)
         self._detector = Flat2dDetector(dparams, dgrid)
 
     @property

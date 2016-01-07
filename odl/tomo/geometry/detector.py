@@ -249,7 +249,8 @@ class Flat1dDetector(FlatDetector):
         if param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        return np.array([0, float(param)])
+        # return np.array([0, float(param)])
+        return self.surface_deriv(param) * float(param)
 
     def surface_deriv(self, param):
         """The derivative of the surface parametrization.
@@ -290,11 +291,6 @@ class Flat2dDetector(FlatDetector):
             raise ValueError('parameters {} are not 2-dimensional.'
                              ''.format(params))
 
-    # @property
-    # def ndim(self):
-    #     """The number of dimensions of the detector."""
-    #     return 2
-
     def surface(self, param):
         """The parametrization of the (2d) detector reference surface.
 
@@ -316,7 +312,9 @@ class Flat2dDetector(FlatDetector):
         if param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        return np.array([0, float(param[0]), float(param[1])])
+        # return np.array([0, float(param[0]), float(param[1])])
+        sur_der = self.surface_deriv(param)
+        return sur_der[0] * float(param[0]) + sur_der[1] * float(param[1])
 
     def surface_deriv(self, param):
         """The derivative of the surface parametrization.
@@ -375,11 +373,6 @@ class CircleSectionDetector(Detector):
     def circ_rad(self):
         """Circle radius of this detector."""
         return self._circ_rad
-
-    # @property
-    # def ndim(self):
-    #     """The number of dimensions of the detector."""
-    #     return 1
 
     @property
     def npixels(self):
