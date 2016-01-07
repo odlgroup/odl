@@ -322,6 +322,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
             The reference point on the circle with radius ``R`` at a given
             rotation angle ``phi`` defined as ``R(-sin(phi), cos(phi), 0)``
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -345,12 +346,13 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
             a given rotation angle ``phi`` defined as `r * (sin(phi),
             -cos(phi), 0)``
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
         # ASTRA cone_vec convention
-        return self.src_radius * np.array([np.sin(angle), -np.cos(angle), 0])
+        return -self.src_radius * np.array([-np.sin(angle), np.cos(angle), 0])
 
         # TODO: backprojection weighting function?
 
@@ -375,6 +377,7 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         vec : `numpy.ndarray`, shape (3,)
             (Unit) vector pointing from the detector to the source
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -409,9 +412,9 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
     """Cone beam geometry with helical acquisition and flat detector.
 
     The source moves along a spiral with radius ``r`` in the azimuthal plane
-    and a pitch factor ``P``. The detector reference point is opposite to
+    and a pitch``P``. The detector reference point is opposite to
     the source and moves on a spiral with radius ``R`` in the azimuthal
-    plane and pitch factor ``P``. The detector is aligned tangential to the
+    plane and pitch ``P``. The detector is aligned tangential to the
     circle.
 
     The motion parameter is the (1d) rotation angle parametrizing source and
@@ -419,7 +422,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 spiral_pitch_factor, agrid=None, dgrid=None, axis=None):
+                 pitch, agrid=None, dgrid=None, axis=None):
         """Initialize a new instance.
 
         Parameters
@@ -432,13 +435,9 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             Radius of the source circle, must be positive
         det_radius : `float`
             Radius of the detector circle, must be positive
-        spiral_pitch_factor : `float`
-            Dimensionless factor given by the table feed per rotation
-            divided by the total collimation width. The total collimation
-            width is considered at isocenter and  given by the slice thickness
-            for a single-slice spiral acquisition and by the number of
-            detector rows times the slice thickness for multiple slice
-            spiral acquisition.
+        pitch : positive `float`
+            Constant vertical distance between two source positions, one at
+            angle ``phi``, the other at angle ``phi + 2 * pi``
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 2-dim. `TensorGrid`, optional
@@ -448,12 +447,10 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             integer referring to a standard axis. Default: `None`
         """
 
-        super().__init__(angle_intvl, dparams, src_radius, det_radius, agrid,
-                         dgrid, axis)
+        super().__init__(angle_intvl, dparams, src_radius, det_radius,
+                         agrid, dgrid, axis)
         self._axis = axis
-        det_height = (dparams.max() - dparams.min())[1]
-        self._table_feed_per_rotation = spiral_pitch_factor * src_radius / (
-            src_radius + det_radius) * det_height
+        self._pitch = pitch
 
     @property
     def axis(self):
@@ -480,9 +477,14 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         return axis
 
     @property
-    def table_feed_per_rotation(self):
-        """Table feed per 360 degree rotation."""
-        return self._table_feed_per_rotation
+    def pitch(self):
+        """Constant vertical distance between a full rotation.
+
+        Returns
+        -------
+        pitch : positive `float`
+        """
+        return self._pitch
 
     def det_refpoint(self, angle):
         """The detector reference point function.
@@ -499,8 +501,9 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             The reference point on a circle in the azimuthal plane with
             radius ``R`` and at a longitudinal position ``z`` at a given
             rotation angle ``phi`` defined as ``(-R * sin(phi), R * cos(
-            phi), z)`` where ``z`` is given by the table feed
+            phi), z)`` where ``z`` is given by the pitch ``P``.
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -509,7 +512,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         return np.array([
             -self.det_radius * np.sin(angle),
             self.det_radius * np.cos(angle),
-            self.table_feed_per_rotation * angle / (2 * np.pi)])
+            self.pitch * angle / (2 * np.pi)])
 
     def src_position(self, angle):
         """The source position function.
@@ -524,10 +527,10 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         -------
         point : `numpy.ndarray`, shape (3,)
             The source position on a spiral with radius ``r`` and pitch
-            factor ``P`` at a given rotation angle ``phi`` defined as
-            ``(r * sin(phi), -r * cos(phi), z)`` where ``z`` is given by the
-            table feed
+            ``P`` at a given rotation angle ``phi`` defined as
+            ``(r * sin(phi), -r * cos(phi), P * phi / (2 * pi))``
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -536,7 +539,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         return np.array([
             self.src_radius * np.sin(angle),
             -self.src_radius * np.cos(angle),
-            self.table_feed_per_rotation * angle / (2 * np.pi)])
+            self.pitch * angle / (2 * np.pi)])
 
         # TODO: backprojection weighting function?
 
@@ -561,6 +564,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         vec : `numpy.ndarray`, shape (3,)
             (Unit) vector pointing from the detector to the source
         """
+        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
