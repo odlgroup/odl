@@ -86,7 +86,7 @@ def test_parallel_3d_geometry():
     full_angle = np.pi
     angle_intvl = odl.Interval(0, full_angle)
     dparams = odl.IntervalProd([0, 0], [1, 1])
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams)
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 0, 0))
 
     with pytest.raises(TypeError):
         odl.tomo.Parallel3dGeometry([0, 1], dparams)
@@ -104,7 +104,7 @@ def test_parallel_3d_geometry():
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
 
     # detector rotation
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=0)
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 0, 0))
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
 
@@ -116,19 +116,19 @@ def test_parallel_3d_geometry():
 
     places = 14
 
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=0)
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 0, 0))
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_equal(rot_mat * e1, e1)
     assert almost_equal(np.sum(rot_mat * e2 - e3), 0, places=places)
     assert almost_equal(np.sum(rot_mat * e3 - (-e2)), 0, places=places)
 
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=1)
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(0, 1, 0))
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_equal(rot_mat * e2, e2)
     assert almost_equal(np.sum(rot_mat * e3 - e1), 0, places=places)
     assert almost_equal(np.sum(rot_mat * e1 - (-e3)), 0, places=places)
 
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=2)
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(0, 0, 1))
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_equal(rot_mat * e3, e3)
     assert almost_equal(np.sum(rot_mat * e1 - e2), 0, places=places)
@@ -137,29 +137,22 @@ def test_parallel_3d_geometry():
                             places=places)
 
     # rotation axis
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=None)
-    assert all_equal(geom.axis, np.array([0, 0, 1]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=0)
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 0, 0))
     assert all_equal(geom.axis, np.array([1, 0, 0]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=1)
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(0, 1, 0))
     assert all_equal(geom.axis, np.array([0, 1, 0]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=2)
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(0, 0, 1))
     assert all_equal(geom.axis, np.array([0, 0, 1]))
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2, 3))
-    assert all_equal(geom.axis, np.array([1, 2, 3]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams,
-                                       axis=np.array((1, 2, 3)))
-    assert all_equal(geom.axis, np.array([1, 2, 3]))
+    assert all_equal(geom.axis,
+                     np.array([1, 2, 3])/np.linalg.norm(np.array([1, 2, 3])))
 
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1,))
     with pytest.raises(ValueError):
-        geom.axis
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2))
+        odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1,))
     with pytest.raises(ValueError):
-        geom.axis
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2, 3, 4))
+        odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2))
     with pytest.raises(ValueError):
-        geom.axis
+        odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2, 3, 4))
 
 
 def test_fanflat():
@@ -321,11 +314,9 @@ def test_helical_cone_flat():
     det_refpoint = geom.det_refpoint(2 * np.pi)
     assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
 
-    angle_offset = 0.0
     geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                            det_rad,
-                                            pitch, angle_grid,
-                                            det_grid, angle_offset)
+                                            det_rad, pitch, angle_grid,
+                                            det_grid)
 
     angles = geom.angle_grid
     num_angles = geom.angle_grid.ntotal

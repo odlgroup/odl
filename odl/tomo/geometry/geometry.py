@@ -185,12 +185,12 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
     @property
     def params(self):
-        """Joined motion and detector parameters."""
-        params = IntervalProd([], [])
-        params = params.insert(self.motion_params, params.ndim)
-        params = params.insert(self.det_params, params.ndim)
-        return params
+        """Joined motion and detector parameters.
 
+        Returns an `IntervalProduct` with the motion parameters inserted
+        before the detector parameters.
+        """
+        return self.motion_params.insert(self.det_params)
     @property
     def grid(self):
         """Joined sampling grid for motion and detector parameters."""
