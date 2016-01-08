@@ -59,7 +59,7 @@ from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
 
 __all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
            'astra_projection_geometry', 'astra_data', 'astra_projector',
-           'astra_algorithm', 'astra_geom_to_vec', 'astra_cleanup')
+           'astra_algorithm', 'astra_geom_to_vec')
 
 
 def astra_volume_geometry(discr_reco):
@@ -568,14 +568,3 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
 
     # Create ASTRA algorithm object
     return astra.algorithm.create(algo_cfg)
-
-
-def astra_cleanup():
-    """Delete all ASTRA objects."""
-
-    modules = [astra.data2d, astra.data3d,
-               astra.projector, astra.projector3d,
-               astra.algorithm]
-
-    for module in modules:
-        module.clear()
