@@ -227,9 +227,8 @@ def test_circular_cone_flat():
                                           det_rad)
     with pytest.raises(ValueError):
         odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                          det_rad,
-                                          agrid=odl.TensorGrid(
-                                                  [0, 2 * full_angle]))
+                                          det_rad, agrid=odl.TensorGrid(
+                                              [0, 2 * full_angle]))
     with pytest.raises(ValueError):
         odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
                                           det_rad,
@@ -280,7 +279,7 @@ def test_helical_cone_flat():
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                          det_rad, pitch,
                                          agrid=odl.TensorGrid(
-                                                 [0, 2 * full_angle]))
+                                             [0, 2 * full_angle]))
     with pytest.raises(ValueError):
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                          det_rad, pitch,
@@ -289,8 +288,8 @@ def test_helical_cone_flat():
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                          det_rad, pitch,
                                          dgrid=odl.TensorGrid(
-                                                 [0, 0.1], [0.2, 0.3],
-                                                 [0.3, 0.4, 0.5]))
+                                             [0, 0.1], [0.2, 0.3],
+                                             [0.3, 0.4, 0.5]))
     with pytest.raises(ValueError):
         odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, -1, det_rad,
                                          pitch)
@@ -306,8 +305,6 @@ def test_helical_cone_flat():
 
     assert geom.ndim == 3
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
-
-    det_height = dparams.size[1]
 
     assert all_equal(dparams.size, dparams.max() - dparams.min())
 

@@ -32,6 +32,7 @@ from odl.util.testutils import almost_equal
 
 
 def test_xray_trafo():
+    """Test discrete X-ray transformt using ASTRA with CUDA."""
 
     # Discrete reconstruction space
     discr_reco_space = odl.uniform_discr([-10, -10, -10],
@@ -43,12 +44,11 @@ def test_xray_trafo():
     dparams = odl.Rectangle([-20, -20], [20, 20])
     agrid = odl.uniform_sampling(angle_intvl, 10, as_midp=False)
     dgrid = odl.uniform_sampling(dparams, [20, 20])
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, agrid,
-                                             dgrid)
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, agrid, dgrid)
 
     # X-ray transform
     A = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                                backend='astra_cuda')
+                                       backend='astra_cuda')
 
     # Domain element
     f = discr_reco_space.one()
