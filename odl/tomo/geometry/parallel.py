@@ -273,7 +273,7 @@ class Parallel3dGeometry(ParallelGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, agrid=None, dgrid=None,
-                 axis=(1,0,0)):
+                 axis=(1, 0, 0)):
         """Initialize a new instance.
 
         Parameters
@@ -304,9 +304,9 @@ class Parallel3dGeometry(ParallelGeometry):
                                  'parameter rectangle {}.'
                                  ''.format(agrid, angle_intvl))
         if axis is not None:
-            if not len(axis) == 3:
-                raise ValueError('length ({}) of axis {} is not 3'.format(len(
-                        axis), axis))
+            if len(axis) != 3:
+                raise ValueError('length ({}) of axis {} is not 3'.format(
+                    len(axis), axis))
         self._axis = np.array(axis) / np.linalg.norm(axis)
         self._detector = Flat2dDetector(dparams, dgrid)
 
@@ -348,8 +348,8 @@ class Parallel3dGeometry(ParallelGeometry):
         axis = self.axis
 
         cross_mat = np.array([[0, -axis[2], axis[1]],
-                               [axis[2], 0, -axis[0]],
-                               [-axis[1], axis[0], 0]])
+                              [axis[2], 0, -axis[0]],
+                              [-axis[1], axis[0], 0]])
         dy_mat = np.outer(axis, axis)
         id_mat = np.eye(3)
         cos_ang = np.cos(angle)

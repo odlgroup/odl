@@ -19,7 +19,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object, super

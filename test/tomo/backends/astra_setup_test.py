@@ -195,20 +195,20 @@ def test_astra_projection_geometry():
 
     # motion sampling grid, detector sampling grid but not RegularGrid
     geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl=angle_intvl,
-                                       dparams=dparams,
-                                       agrid=angle_grid,
-                                       dgrid=odl.TensorGrid([0]))
+                                           dparams=dparams,
+                                           agrid=angle_grid,
+                                           dgrid=odl.TensorGrid([0]))
     with pytest.raises(TypeError):
         odl.tomo.astra_projection_geometry(geom_p2d)
 
     # detector sampling grid, motion sampling grid
     geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
-                                       det_grid)
+                                           det_grid)
     odl.tomo.astra_projection_geometry(geom_p2d)
 
     # PARALLEL 2D GEOMETRY
     geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
-                                       det_grid)
+                                           det_grid)
     ageom = odl.tomo.astra_projection_geometry(geom_p2d)
     assert ageom['type'] == 'parallel'
 
