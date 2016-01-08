@@ -450,11 +450,5 @@ def test_geom_to_vec():
     assert vec.shape == (angle_grid.ntotal, 12)
 
 
-@skip_if_no_astra
-def test_astra_cleanup():
-    """Clean up ASTRA memory."""
-    odl.tomo.astra_cleanup()
-
-
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

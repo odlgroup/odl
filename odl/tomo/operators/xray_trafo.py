@@ -30,26 +30,15 @@ import numpy as np
 from odl.discr.lp_discr import DiscreteLp
 from odl.space.fspace import FunctionSpace
 from odl.operator.operator import Operator
-from odl.space.cu_ntuples import CUDA_AVAILABLE
-if CUDA_AVAILABLE:
-    from odl.space.cu_ntuples import CudaNtuples
-else:
-    CudaNtuples = type(None)
+# from odl.space.cu_ntuples import CUDA_AVAILABLE
+from odl.space.cu_ntuples import CudaNtuples
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
 from odl.tomo.backends.astra_cuda import ASTRA_CUDA_AVAILABLE
-if ASTRA_AVAILABLE:
-    from odl.tomo.backends.astra_cpu import (
-        astra_cpu_forward_projector_call, astra_cpu_backward_projector_call)
-else:
-    astra_cpu_forward_projection_call = None
-    astra_cpu_backward_projector_call = None
-if ASTRA_CUDA_AVAILABLE:
-    from odl.tomo.backends.astra_cuda import (
-        astra_cuda_forward_projector_call, astra_cuda_backward_projector_call)
-else:
-    astra_gpu_forward_projector_call = None
-    astra_gpu_backward_projector_call = None
+from odl.tomo.backends.astra_cpu import (astra_cpu_forward_projector_call,
+                                         astra_cpu_backward_projector_call)
+from odl.tomo.backends.astra_cuda import (astra_cuda_forward_projector_call,
+                                          astra_cuda_backward_projector_call)
 
 _SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 
