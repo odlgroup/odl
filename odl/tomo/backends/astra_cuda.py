@@ -48,7 +48,8 @@ __all__ = ('astra_cuda_forward_projector_call',
            'ASTRA_CUDA_AVAILABLE')
 
 
-def astra_cuda_forward_projector_call(vol_data, geometry, proj_space, out=None):
+def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
+                                      out=None):
     """Run an ASTRA forward projection on the given data using the GPU.
 
     Parameters

@@ -34,4 +34,3 @@ __all__ += astra_cpu.__all__
 from . import astra_cuda
 from .astra_cuda import *
 __all__ += astra_cuda.__all__
-

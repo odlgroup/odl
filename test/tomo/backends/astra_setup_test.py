@@ -189,7 +189,8 @@ def test_astra_projection_geometry():
         odl.tomo.astra_projection_geometry(geom_p2d)
 
     # detector sampling grid, but no motion sampling grid
-    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, dgrid=det_grid)
+    geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams,
+                                           dgrid=det_grid)
     with pytest.raises(ValueError):
         odl.tomo.astra_projection_geometry(geom_p2d)
 

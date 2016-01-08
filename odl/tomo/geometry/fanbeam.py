@@ -220,8 +220,8 @@ class FanFlatGeometry(FanBeamGeometry):
     source and detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
-                 dgrid=None):
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
+                 agrid=None, dgrid=None):
         """Initialize a new instance.
 
         Parameters

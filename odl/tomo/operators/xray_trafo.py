@@ -205,13 +205,11 @@ class DiscreteXrayTransformAdjoint(Operator):
         back, impl = self.backend.split('_')
         if back == 'astra':
             if impl == 'cpu':
-                return astra_cpu_backward_projector_call(inp,
-                                                         self.forward.geometry,
-                                                         self.range)
+                return astra_cpu_backward_projector_call(
+                    inp, self.forward.geometry, self.range)
             elif impl == 'cuda':
-                return astra_cuda_backward_projector_call(inp,
-                                                          self.forward.geometry,
-                                                          self.range)
+                return astra_cuda_backward_projector_call(
+                    inp, self.forward.geometry, self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
