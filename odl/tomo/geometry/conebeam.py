@@ -91,7 +91,7 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         if axis is not None:
             if not np.size(axis) == 3:
                 raise ValueError('length ({}) of axis {} is not 3'.format(len(
-                        axis), axis))
+                    axis), axis))
 
         super().__init__(ndim=3)
         self._motion_params = angle_intvl
@@ -175,8 +175,8 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         axis = self.axis
 
         cross_mat = np.array([[0, -axis[2], axis[1]],
-                               [axis[2], 0, -axis[0]],
-                               [-axis[1], axis[0], 0]])
+                              [axis[2], 0, -axis[0]],
+                              [-axis[1], axis[0], 0]])
         dy_mat = np.outer(axis, axis)
         id_mat = np.eye(3)
         cos_ang = np.cos(angle)
@@ -266,8 +266,8 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
-                 dgrid=None, axis=(1,0,0)):
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
+                 agrid=None, dgrid=None, axis=(1, 0, 0)):
         """Initialize a new instance.
 
         Parameters
@@ -378,14 +378,14 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
 
         # vector for spiral along z-direction
         vec = -np.array(
-                [np.cos(det_pt_angle[1]) * np.cos(angle + det_pt_angle),
-                 np.cos(det_pt_angle[1]) * np.sin(angle + det_pt_angle),
-                 np.sin(det_pt_angle[1])])
+            [np.cos(det_pt_angle[1]) * np.cos(angle + det_pt_angle),
+             np.cos(det_pt_angle[1]) * np.sin(angle + det_pt_angle),
+             np.sin(det_pt_angle[1])])
 
         # rotate vector
         if not (axis[0] == 0 and axis[1] == 0):
             vec = -np.array(
-                    self.rotation_matrix(angle)[0]).squeeze()
+                self.rotation_matrix(angle)[0]).squeeze()
 
         if not normalized:
             vec *= self.src_radius + self.det_radius
@@ -407,7 +407,7 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 pitch, agrid=None, dgrid=None, axis=(1,0,0)):
+                 pitch, agrid=None, dgrid=None, axis=(1, 0, 0)):
         """Initialize a new instance.
 
         Parameters
@@ -540,14 +540,14 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
 
         # vector for spiral along z-direction
         vec = -np.array(
-                [np.cos(det_pt_angle[1]) * np.cos(angle + det_pt_angle),
-                 np.cos(det_pt_angle[1]) * np.sin(angle + det_pt_angle),
-                 np.sin(det_pt_angle[1])])
+            [np.cos(det_pt_angle[1]) * np.cos(angle + det_pt_angle),
+             np.cos(det_pt_angle[1]) * np.sin(angle + det_pt_angle),
+             np.sin(det_pt_angle[1])])
 
         # rotate vector
         if not (axis[0] == 0 and axis[1] == 0):
             vec = -np.array(
-                    self.rotation_matrix(angle)[0]).squeeze()
+                self.rotation_matrix(angle)[0]).squeeze()
 
         if not normalized:
             vec *= self.src_radius + self.det_radius

@@ -62,12 +62,9 @@ def test_xray_trafo():
     # Back projection
     Adg = A.adjoint(g)
 
-
     vol_stride = discr_reco_space.grid.stride[0]
     ang_stride = agrid.stride[0]
     left = Af.inner(g) / ang_stride
     right = f.inner(Adg) / vol_stride
 
     assert almost_equal(left, right, 3)
-
-

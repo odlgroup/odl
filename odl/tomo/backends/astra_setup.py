@@ -360,7 +360,7 @@ def astra_projection_geometry(geometry):
             'cone_vec', det_row_count, det_col_count, vec)
     else:
         raise NotImplementedError('unkown ASTRA geometry type {}.'.format(
-                geometry))
+            geometry))
 
     return proj_geom
 

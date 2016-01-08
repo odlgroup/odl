@@ -145,7 +145,7 @@ def test_parallel_3d_geometry():
     assert all_equal(geom.axis, np.array([0, 0, 1]))
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2, 3))
     assert all_equal(geom.axis,
-                     np.array([1, 2, 3])/np.linalg.norm(np.array([1, 2, 3])))
+                     np.array([1, 2, 3]) / np.linalg.norm(np.array([1, 2, 3])))
 
     with pytest.raises(ValueError):
         odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1,))
