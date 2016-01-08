@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,18 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test configuration file."""
+"""Examples on using the vector.show() syntax
 
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
+NOTES
+-----
+The behaviour of blocking shows etc in matplotlib is experimental and can cause
+issues with these examples.
+"""
 
-from odl.space.cu_ntuples import CUDA_AVAILABLE
-from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
+import matplotlib.pyplot as plt
+import odl
+import numpy as np
 
-collect_ignore = ['setup.py', 'run_tests.py']
+spc = odl.uniform_discr(0, 5, 100)
+vec = spc.element(np.sin(spc.points()))
 
-if not CUDA_AVAILABLE:
-    collect_ignore.append('odl/space/cu_ntuples.py')
-if not PYWAVELETS_AVAILABLE:
-    collect_ignore.append('odl/trafos/wavelet.py')
+vec.show()
+(vec * 2).show()
+
+# Plotting is deferred until show() is called
+plt.show()
+
+# Can also force "instant" plotting
+vec.show(show=True)

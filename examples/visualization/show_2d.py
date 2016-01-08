@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,24 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Visualization of the test functions in the diagnostics module."""
+"""Examples on using the vector.show() syntax
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
+NOTES
+-----
+The behaviour of blocking shows etc in matplotlib is experimental and can cause
+issues with these examples.
+"""
 
-# External
-
-# Internal
 import odl
-import numpy as np
 
+spc = odl.uniform_discr([0, 0], [1, 1], [100, 100])
+vec = odl.util.shepp_logan(spc, modified=True)
 
-disc = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
-odl.util.shepp_logan(disc).show()
-
-disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [100, 100, 100])
-shepp_logan_3d = odl.util.shepp_logan(disc)
-for i in [30, 50]:
-    shepp_logan_3d.show(indices=np.s_[:, :, i])
+# Can also force "instant" plotting
+vec.show(show=True)

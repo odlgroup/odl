@@ -33,6 +33,7 @@ import odl
 
 
 class Convolution(odl.Operator):
+
     def __init__(self, space, kernel, adjkernel):
         self.kernel = kernel
         self.adjkernel = adjkernel
@@ -42,7 +43,7 @@ class Convolution(odl.Operator):
 
         super().__init__(space, space, linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         scipy.ndimage.convolve(rhs,
                                self.kernel,
                                output=out.asarray(),
@@ -55,36 +56,32 @@ class Convolution(odl.Operator):
         return Convolution(self.domain, self.adjkernel, self.kernel)
 
 
-def kernel(x, y):
+def kernel(x):
     mean = [0.0, 0.25]
     std = [0.05, 0.05]
-    return np.exp(-(((x-mean[0])/std[0])**2 + ((y-mean[1])/std[1])**2))
+    return np.exp(-(((x[0] - mean[0]) / std[0])**2 + ((x[1] - mean[1]) / std[1])**2))
 
 
-def adjkernel(x, y):
-    return kernel(-x, -y)
+def adjkernel(x):
+    return kernel((-x[0], -x[1]))
 
 
 # Continuous definition of problem
 cont_space = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
 kernel_space = odl.FunctionSpace(cont_space.domain - cont_space.domain)
 
-# Complicated functions to check performance
-cont_kernel = kernel_space.element(kernel)
-cont_adjkernel = kernel_space.element(adjkernel)
-
 # Discretization parameters
 n = 20
-npoints = np.array([n+1, n+1])
-npoints_kernel = np.array([2*n+1, 2*n+1])
+npoints = np.array([n + 1, n + 1])
+npoints_kernel = np.array([2 * n + 1, 2 * n + 1])
 
-# Discretization spaces
+# Discretized spaces
 disc_space = odl.uniform_discr_fromspace(cont_space, npoints)
 disc_kernel_space = odl.uniform_discr_fromspace(kernel_space, npoints_kernel)
 
 # Discretize the functions
-disc_kernel = disc_kernel_space.element(cont_kernel)
-disc_adjkernel = disc_kernel_space.element(cont_adjkernel)
+disc_kernel = disc_kernel_space.element(kernel)
+disc_adjkernel = disc_kernel_space.element(adjkernel)
 
 # Create operator
 conv = Convolution(disc_space, disc_kernel, disc_adjkernel)

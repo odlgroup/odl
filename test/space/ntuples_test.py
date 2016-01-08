@@ -37,7 +37,7 @@ from odl.space.ntuples import (
     weighted_inner, weighted_norm, weighted_dist,
     MatVecOperator)
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
-from odl.util.ufuncs import UFUNCS
+from odl.util.ufuncs import UFUNCS, REDUCTIONS
 
 # TODO: add tests for:
 # * inner, norm, dist as free functions
@@ -710,20 +710,26 @@ def test_matvec_init(fn):
     op_float = MatVecOperator([[1.0, 2],
                                [-1, 0.5]])
 
-    assert isinstance(op_float.domain, Rn)
-    assert isinstance(op_float.range, Rn)
+    assert isinstance(op_float.domain, Fn)
+    assert op_float.domain.is_rn
+    assert isinstance(op_float.range, Fn)
+    assert op_float.domain.is_rn
 
     op_complex = MatVecOperator([[1.0, 2 + 1j],
                                  [-1 - 1j, 0.5]])
 
-    assert isinstance(op_complex.domain, Cn)
-    assert isinstance(op_complex.range, Cn)
+    assert isinstance(op_complex.domain, Fn)
+    assert op_complex.domain.is_cn
+    assert isinstance(op_complex.range, Fn)
+    assert op_complex.domain.is_cn
 
     op_int = MatVecOperator([[1, 2],
                              [-1, 0]])
 
     assert isinstance(op_int.domain, Fn)
+    assert op_int.domain.dtype == int
     assert isinstance(op_int.range, Fn)
+    assert op_int.domain.dtype == int
 
     # Rectangular
     rect_mat = 2 * np.eye(2, 3)
@@ -1602,15 +1608,36 @@ def test_ufuncs():
     fn = Rn(3)
 
     for name, n_args, n_out, _ in UFUNCS:
-        if np.issubsctype(fn.dtype, np.floating) and name in ['bitwise_and',
-                                                              'bitwise_or',
-                                                              'bitwise_xor',
-                                                              'invert',
-                                                              'left_shift',
-                                                              'right_shift']:
+        if (np.issubsctype(fn.dtype, np.floating) and
+            name in ['bitwise_and', 'bitwise_or', 'bitwise_xor', 'invert',
+                     'left_shift', 'right_shift']):
             # Skip integer only methods if floating point type
             continue
         yield _impl_test_ufuncs, fn, name, n_args, n_out
+
+
+def _impl_test_reduction(fn, name):
+    ufunc = getattr(np, name)
+
+    # Create some data
+    x_arr, x = _vectors(fn, 1)
+
+    assert ufunc(x_arr) == getattr(x.ufunc, name)()
+
+
+def test_reductions():
+    fn = Rn(3)
+
+    for name, _ in REDUCTIONS:
+        yield _impl_test_reduction, fn, name
+
+
+def test_ufunc_reduction_docs_notempty():
+    for _, __, ___, doc in UFUNCS:
+        assert doc.splitlines()[0] != ''
+
+    for _, doc in REDUCTIONS:
+        assert doc.splitlines()[0] != ''
 
 
 if __name__ == '__main__':

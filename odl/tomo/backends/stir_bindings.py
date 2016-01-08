@@ -42,10 +42,10 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from odl.operator.operator import Operator
 from odl.discr.lp_discr import uniform_discr
-from odl.space.fspace import FunctionSpace
+from odl.operator.operator import Operator
 from odl.set.domain import Cuboid
+from odl.space.fspace import FunctionSpace
 
 try:
     import stir
@@ -60,9 +60,12 @@ __all__ = ('ForwardProjectorByBinWrapper',
 
 
 class StirVerbosity(object):
-    """ Set STIR verbosity to a fixed level """
+
+    """Context manager setting STIR verbosity to a fixed level."""
+
     def __init__(self, verbosity):
         self.verbosity = verbosity
+        self.old_verbosity = None
 
     def __enter__(self):
         self.old_verbosity = stir.Verbosity.get()
@@ -74,14 +77,14 @@ class StirVerbosity(object):
 
 class ForwardProjectorByBinWrapper(Operator):
 
-    """ A forward projector using STIR.
+    """A forward projector using STIR.
 
     Uses "ForwardProjectorByBinUsingProjMatrixByBin" as a projector.
     """
 
     def __init__(self, dom, ran, volume, proj_data,
                  projector=None, adjoint=None):
-        """ Initialize a new projector.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -122,14 +125,17 @@ class ForwardProjectorByBinWrapper(Operator):
         if projector is None:
             proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
             proj_matrix.set_up(self.proj_data_info, self.volume)
-            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(proj_matrix)
+            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(
+                proj_matrix)
             self.projector.set_up(self.proj_data_info, self.volume)
 
             # If no adjoint was given, we initialize a projector here to
             # save time.
             if adjoint is None:
-                back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(proj_matrix)
-                back_projector.set_up(self.proj_data.get_proj_data_info(), self.volume)
+                back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(
+                    proj_matrix)
+                back_projector.set_up(self.proj_data.get_proj_data_info(),
+                                      self.volume)
         else:
             # If user wants to provide both a projector and a back-projector,
             # he should wrap the back projector in an Operator
@@ -138,13 +144,13 @@ class ForwardProjectorByBinWrapper(Operator):
 
         # Pre-create an adjoint to save time
         if adjoint is None:
-            self._adjoint = BackProjectorByBinWrapper(self.range, self.domain,
-                                                      self.volume, self.proj_data,
-                                                      back_projector, self)
+            self._adjoint = BackProjectorByBinWrapper(
+                self.range, self.domain, self.volume, self.proj_data,
+                back_projector, self)
         else:
             self._adjoint = adjoint
 
-    def _apply(self, volume, out):
+    def _call(self, volume, out):
         """Forward project a volume."""
         # Set volume data
         self.volume.fill(volume.asarray().flat)
@@ -164,13 +170,11 @@ class ForwardProjectorByBinWrapper(Operator):
 
 class BackProjectorByBinWrapper(Operator):
 
-    """The back projector using STIR.
-    """
+    """A backprojector using STIR."""
 
     def __init__(self, dom, ran, volume, proj_data,
-                 back_projector=None, adjoint=None,
-                 method=None):
-        """Initialize a new back-projector.
+                 back_projector=None, adjoint=None):
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -219,11 +223,14 @@ class BackProjectorByBinWrapper(Operator):
             proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
             proj_matrix.set_up(self.proj_data_info, self.volume)
 
-            self.back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(proj_matrix)
-            self.back_projector.set_up(self.proj_data.get_proj_data_info(), self.volume)
+            self.back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(
+                proj_matrix)
+            self.back_projector.set_up(self.proj_data.get_proj_data_info(),
+                                       self.volume)
 
             if adjoint is None:
-                projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(proj_matrix)
+                projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(
+                    proj_matrix)
                 projector.set_up(self.proj_data_info, self.volume)
 
         else:
@@ -232,13 +239,13 @@ class BackProjectorByBinWrapper(Operator):
 
         # Pre-create an adjoint to save time
         if adjoint is None:
-            self._adjoint = ForwardProjectorByBinWrapper(self.range, self.domain,
-                                                         self.volume, self.proj_data,
-                                                         projector, self)
+            self._adjoint = ForwardProjectorByBinWrapper(
+                self.range, self.domain, self.volume, self.proj_data,
+                projector, self)
         else:
             self._adjoint = adjoint
 
-    def _apply(self, projections, out):
+    def _call(self, projections, out):
         """Back project."""
         # Set projection data
         self.proj_data.fill(projections.asarray().flat)
@@ -252,7 +259,7 @@ class BackProjectorByBinWrapper(Operator):
 
 
 def stir_projector_from_file(volume_file, projection_file):
-    """ Create a STIR projector from given template files.
+    """Create a STIR projector from given template files.
 
     Parameters
     ----------
@@ -288,15 +295,12 @@ def stir_projector_from_file(volume_file, projection_file):
 
     # reverse to handle STIR bug? See:
     # https://github.com/UCL/STIR/issues/7
-    recon_sp = uniform_discr(FunctionSpace(Cuboid(min_corner, max_corner)),
-                             grid_shape,
+    recon_sp = uniform_discr(min_corner, max_corner, grid_shape,
                              dtype='float32')
 
-    # TODO: set correct projection space
+    # TODO: set correct projection space. Currently, a default grid with
+    # stride (1, 1, 1) is used.
     proj_shape = proj_data.to_array().shape()
-
-    data_sp = uniform_discr(FunctionSpace(Cuboid([0, 0, 0], proj_shape)),
-                            proj_shape,
-                            dtype='float32')
+    data_sp = uniform_discr([0, 0, 0], proj_shape, proj_shape, dtype='float32')
 
     return ForwardProjectorByBinWrapper(recon_sp, data_sp, volume, proj_data)

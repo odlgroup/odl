@@ -39,7 +39,7 @@ class ForwardDiff(odl.Operator):
     def __init__(self, space):
         super().__init__(space, space, linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         cuda.forward_diff(rhs.ntuple.data, out.ntuple.data)
 
     @property
@@ -51,7 +51,7 @@ class ForwardDiffAdjoint(odl.Operator):
     def __init__(self, space):
         super().__init__(space, space, linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         cuda.forward_diff_adj(rhs.ntuple.data, out.ntuple.data)
 
     @property
@@ -63,7 +63,7 @@ class ForwardDiff2D(odl.Operator):
     def __init__(self, space):
         super().__init__(space, odl.ProductSpace(space, space), linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         cuda.forward_diff_2d(rhs.ntuple.data,
                              out[0].ntuple.data, out[1].ntuple.data,
                              rhs.shape[0], rhs.shape[1])
@@ -74,13 +74,13 @@ class ForwardDiff2D(odl.Operator):
 
 
 class ForwardDiff2DAdjoint(odl.Operator):
-    """ Calculates the circular convolution of two CUDA vectors
-    """
+
+    """Calculate the circular convolution of two CUDA vectors."""
 
     def __init__(self, space):
         super().__init__(odl.ProductSpace(space, space), space, linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         cuda.forward_diff_2d_adj(rhs[0].ntuple.data, rhs[1].ntuple.data,
                                  out.ntuple.data,
                                  out.shape[0], out.shape[1])

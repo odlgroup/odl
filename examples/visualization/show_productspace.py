@@ -15,36 +15,33 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example reconstruction with stir."""
+"""Example on using show with ProductSpace's."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-
-import os.path as pth
 import odl
+import numpy as np
 
-# Set path to input files
-base = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'stir')
-volume_file = str(pth.join(base, 'initial.hv'))
-projection_file = str(pth.join(base, 'small.hs'))
+n = 100
+m = 7
+spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
+pspace = odl.ProductSpace(spc, m)
 
-# Create a STIR projector from file data.
-proj = odl.tomo.stir_bindings.stir_projector_from_file(volume_file,
-                                                       projection_file)
+vec = pspace.element([odl.util.shepp_logan(spc, modified=True) * i
+                      for i in range(1, m + 1)])
 
-# Create shepp-logan phantom
-vol = odl.util.shepp_logan(proj.domain, modified=True)
+# By default 4 uniformly spaced elements are shown
+vec.show(title='Default')
 
-# Project data
-projections = proj(vol)
+# User can also define a slice or by indexing
+vec.show(indices=[0, 1], show=True,
+         title='Show first 2 elements')
 
-# Calculate operator norm for landweber
-op_norm_est_squared = proj.adjoint(projections).norm() / vol.norm()
-omega = 0.5 / op_norm_est_squared
+vec.show(indices=np.s_[::3], show=True,
+         title='Show every third element')
 
-# Reconstruct using ODL
-recon = proj.domain.zero()
-odl.solvers.landweber(proj, recon, projections, niter=50, omega=omega)
-recon.show()
+# Slices propagate (as in numpy)
+vec.show(indices=np.s_[2, :, n // 2], show=True,
+         title='Show second element, then slice by [:, n//2]')

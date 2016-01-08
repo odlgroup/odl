@@ -31,8 +31,8 @@ import numpy as np
 import odl
 
 
-def phantom(x, y):
-    return float((x**2/0.2**2) + (y**2/0.5**2) <= 1)
+def phantom(x):
+    return np.float64((x[0]**2/0.2**2) + (x[1]**2/0.5**2) <= 1)
 
 
 # Reconstruction domain, continuous and dcontains_set

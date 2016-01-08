@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Standardized tests for `Operator`'s."""
+
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -33,6 +35,7 @@ __all__ = ('OperatorTest',)
 
 
 class OperatorTest(object):
+
     """Automated tests for `Operator` implementations.
 
     This class allows users to automatically test various
@@ -76,7 +79,7 @@ class OperatorTest(object):
         print('\n== Calculating operator norm ==\n')
 
         operator_norm = 0.0
-        for [n_x, x] in samples(self.operator.domain):
+        for _, x in samples(self.operator.domain):
             result = self.operator(x)
             x_norm = x.norm()
             estimate = 0 if x_norm == 0 else result.norm() / x_norm
@@ -91,30 +94,30 @@ class OperatorTest(object):
         """Verify (Ax, y) = (x, Ay)"""
         print('\nVerifying the identity (Ax, y) = (x, Ay)')
 
-        Axy_vals = []
-        xAty_vals = []
+        left_inner_vals = []
+        right_inner_vals = []
 
         with FailCounter('error = ||(Ax, y) - (x, Ay)|| / '
                          '||A|| ||x|| ||y||') as counter:
-            for [n_x, x], [n_y, y] in samples(self.operator.domain,
-                                              self.operator.range):
+            for [name_x, x], [name_y, y] in samples(self.operator.domain,
+                                                    self.operator.range):
                 x_norm = x.norm()
                 y_norm = y.norm()
 
-                Axy = self.operator(x).inner(y)
-                xAy = x.inner(self.operator(y))
+                l_inner = self.operator(x).inner(y)
+                r_inner = x.inner(self.operator(y))
 
                 denom = self.operator_norm * x_norm * y_norm
-                error = 0 if denom == 0 else abs(Axy - xAy) / denom
+                error = 0 if denom == 0 else abs(l_inner - r_inner) / denom
 
                 if error > 0.00001:
                     counter.fail('x={:25s} y={:25s} : error={:6.5f}'
-                                 ''.format(n_x, n_y, error))
+                                 ''.format(name_x, name_y, error))
 
-                Axy_vals.append(Axy)
-                xAty_vals.append(xAy)
+                left_inner_vals.append(l_inner)
+                right_inner_vals.append(r_inner)
 
-        scale = np.polyfit(Axy_vals, xAty_vals, 1)[0]
+        scale = np.polyfit(left_inner_vals, right_inner_vals, 1)[0]
         print('\nThe adjoint seems to be scaled according to:')
         print('(x, Ay) / (Ax, y) = {}. Should be 1.0'.format(scale))
 
@@ -122,30 +125,30 @@ class OperatorTest(object):
         """Verify (Ax, y) = (x, A^T y)"""
         print('\nVerifying the identity (Ax, y) = (x, A^T y)')
 
-        Axy_vals = []
-        xAty_vals = []
+        left_inner_vals = []
+        right_inner_vals = []
 
         with FailCounter('error = ||(Ax, y) - (x, A^T y)|| / '
                          '||A|| ||x|| ||y||') as counter:
-            for [n_x, x], [n_y, y] in samples(self.operator.domain,
-                                              self.operator.range):
+            for [name_x, x], [name_y, y] in samples(self.operator.domain,
+                                                    self.operator.range):
                 x_norm = x.norm()
                 y_norm = y.norm()
 
-                Axy = self.operator(x).inner(y)
-                xAty = x.inner(self.operator.adjoint(y))
+                l_inner = self.operator(x).inner(y)
+                r_inner = x.inner(self.operator.adjoint(y))
 
                 denom = self.operator_norm * x_norm * y_norm
-                error = 0 if denom == 0 else abs(Axy - xAty) / denom
+                error = 0 if denom == 0 else abs(l_inner - r_inner) / denom
 
                 if error > 0.00001:
                     counter.fail('x={:25s} y={:25s} : error={:6.5f}'
-                                 ''.format(n_x, n_y, error))
+                                 ''.format(name_x, name_y, error))
 
-                Axy_vals.append(Axy)
-                xAty_vals.append(xAty)
+                left_inner_vals.append(l_inner)
+                right_inner_vals.append(r_inner)
 
-        scale = np.polyfit(Axy_vals, xAty_vals, 1)[0]
+        scale = np.polyfit(left_inner_vals, right_inner_vals, 1)[0]
         print('\nThe adjoint seems to be scaled according to:')
         print('(x, A^T y) / (Ax, y) = {}. Should be 1.0'.format(scale))
 
@@ -165,18 +168,18 @@ class OperatorTest(object):
 
         with FailCounter('error = ||Ax - (A^T)^T x|| / '
                          '||A|| ||x||') as counter:
-            for [n_x, x] in vector_examples(self.operator.domain):
-                A_result = self.operator(x)
-                ATT_result = self.operator.adjoint.adjoint(x)
+            for [name_x, x] in vector_examples(self.operator.domain):
+                opx = self.operator(x)
+                op_adj_adj_x = self.operator.adjoint.adjoint(x)
 
                 denom = self.operator_norm * x.norm()
                 if denom == 0:
                     error = 0
                 else:
-                    error = (A_result - ATT_result).norm() / denom
+                    error = (opx - op_adj_adj_x).norm() / denom
                 if error > 0.00001:
                     counter.fail('x={:25s} : error={:6.5f}'
-                                 ''.format(n_x, error))
+                                 ''.format(name_x, error))
 
     def adjoint(self):
         """Verify that `Operator.adjoint` works appropriately.
@@ -217,8 +220,8 @@ class OperatorTest(object):
 
         with FailCounter("error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / "
                          "|c| ||dx|| ||A||") as counter:
-            for [n_x, x], [n_dx, dx] in samples(self.operator.domain,
-                                                self.operator.domain):
+            for [name_x, x], [name_dx, dx] in samples(self.operator.domain,
+                                                      self.operator.domain):
                 deriv = self.operator.derivative(x)
                 opx = self.operator(x)
 
@@ -230,7 +233,7 @@ class OperatorTest(object):
 
                 if error > 0.00001:
                     counter.fail('x={:15s} dx={:15s} c={}: error={:6.5f}'
-                                 ''.format(n_x, n_dx, step, error))
+                                 ''.format(name_x, name_dx, step, error))
 
     def derivative(self, step=0.0001):
         """Verify that `Operator.derivative` works appropriately.
@@ -271,8 +274,8 @@ class OperatorTest(object):
         # Test scaling
         with FailCounter('error = ||A(c*x)-c*A(x)|| / '
                          '|c| ||A|| ||x||') as counter:
-            for [n_x, x], scale in samples(self.operator.domain,
-                                           self.operator.domain.field):
+            for [name_x, x], scale in samples(self.operator.domain,
+                                              self.operator.domain.field):
                 opx = self.operator(x)
                 scaled_opx = self.operator(scale * x)
 
@@ -282,7 +285,7 @@ class OperatorTest(object):
 
                 if error > 0.00001:
                     counter.fail('x={:25s} scale={:7.2f} error={:6.5f}'
-                                 ''.format(n_x, scale, error))
+                                 ''.format(name_x, scale, error))
 
     def _addition_invariance(self):
         print("\nCalculating invariance under addition")
@@ -290,8 +293,8 @@ class OperatorTest(object):
         # Test addition
         with FailCounter('error = ||A(x+y) - A(x) - A(y)|| / '
                          '||A||(||x|| + ||y||)') as counter:
-            for [n_x, x], [n_y, y] in samples(self.operator.domain,
-                                              self.operator.domain):
+            for [name_x, x], [name_y, y] in samples(self.operator.domain,
+                                                    self.operator.domain):
                 opx = self.operator(x)
                 opy = self.operator(y)
                 opxy = self.operator(x + y)
@@ -302,7 +305,7 @@ class OperatorTest(object):
 
                 if error > 0.00001:
                     counter.fail('x={:25s} y={:25s} error={:6.5f}'
-                                 ''.format(n_x, n_y, error))
+                                 ''.format(name_x, name_y, error))
 
     def linear(self):
         """Verify that the operator is actually linear."""

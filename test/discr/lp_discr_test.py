@@ -25,9 +25,10 @@ standard_library.install_aliases()
 import pytest
 import numpy as np
 
+# Internal
 import odl
-
-from odl.util.testutils import all_equal, all_almost_equal, skip_if_no_cuda
+from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
+                                skip_if_no_cuda)
 
 
 # TODO: element from function - waiting for vectorization
@@ -112,21 +113,24 @@ def test_init_cuda(exponent):
 def test_factory(exponent):
     discr = odl.uniform_discr(0, 1, 10, impl='numpy', exponent=exponent)
 
-    assert isinstance(discr.dspace, odl.Rn)
+    assert isinstance(discr.dspace, odl.Fn)
+    assert discr.is_rn
     assert discr.dspace.exponent == exponent
 
     # Complex
     discr = odl.uniform_discr(0, 1, 10, field=odl.ComplexNumbers(),
                               impl='numpy', exponent=exponent)
 
-    assert isinstance(discr.dspace, odl.Cn)
+    assert isinstance(discr.dspace, odl.Fn)
+    assert discr.is_cn
     assert discr.dspace.exponent == exponent
 
 
 @skip_if_no_cuda
 def test_factory_cuda(exponent):
     discr = odl.uniform_discr(0, 1, 10, impl='cuda', exponent=exponent)
-    assert isinstance(discr.dspace, odl.CudaRn)
+    assert isinstance(discr.dspace, odl.CudaFn)
+    assert discr.is_rn
     assert discr.dspace.exponent == exponent
 
     # Cuda currently does not support complex numbers, check error
@@ -147,8 +151,8 @@ def test_factory_dtypes():
     for dtype in real_float_dtypes:
         discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
                                   field=odl.RealNumbers())
-        assert isinstance(discr.dspace, odl.Rn)
-        assert discr.dspace.element().space.dtype == dtype
+        assert isinstance(discr.dspace, odl.Fn)
+        assert discr.is_rn
 
     for dtype in nonfloat_dtypes:
         discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
@@ -167,7 +171,8 @@ def test_factory_dtypes():
     for dtype in complex_float_dtypes:
         discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
                                   field=odl.ComplexNumbers())
-        assert isinstance(discr.dspace, odl.Cn)
+        assert isinstance(discr.dspace, odl.Fn)
+        assert discr.is_cn
         assert discr.dspace.element().space.dtype == dtype
 
     for dtype in invalid_dtypes:
@@ -192,7 +197,8 @@ def test_factory_dtypes_cuda():
                 odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
         else:
             discr = odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
-            assert isinstance(discr.dspace, odl.CudaRn)
+            assert isinstance(discr.dspace, odl.CudaFn)
+            assert discr.is_rn
             assert discr.dspace.element().space.dtype == dtype
 
     for dtype in nonfloat_dtypes:
@@ -202,6 +208,7 @@ def test_factory_dtypes_cuda():
         else:
             discr = odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
             assert isinstance(discr.dspace, odl.CudaFn)
+            assert not discr.is_rn
             assert discr.dspace.element().space.dtype == dtype
 
     for dtype in invalid_dtypes:
@@ -255,7 +262,7 @@ def test_element_from_array_1d():
     vec = discr.element([1, 2, 3])
 
     assert isinstance(vec, odl.DiscreteLpVector)
-    assert isinstance(vec.ntuple, odl.RnVector)
+    assert isinstance(vec.ntuple, odl.FnVector)
     assert all_equal(vec.ntuple, [1, 2, 3])
 
 
@@ -266,7 +273,7 @@ def test_element_from_array_2d():
                          [3, 4]])
 
     assert isinstance(vec, odl.DiscreteLpVector)
-    assert isinstance(vec.ntuple, odl.RnVector)
+    assert isinstance(vec.ntuple, odl.FnVector)
 
     # Check ordering
     assert all_equal(vec.ntuple, [1, 2, 3, 4])
@@ -313,7 +320,7 @@ def test_zero():
     vec = discr.zero()
 
     assert isinstance(vec, odl.DiscreteLpVector)
-    assert isinstance(vec.ntuple, odl.RnVector)
+    assert isinstance(vec.ntuple, odl.FnVector)
     assert all_equal(vec, [0, 0, 0])
 
 
@@ -328,13 +335,13 @@ def test_getslice():
     discr = odl.uniform_discr(0, 1, 3)
     vec = discr.element([1, 2, 3])
 
-    assert isinstance(vec[:], odl.RnVector)
+    assert isinstance(vec[:], odl.FnVector)
     assert all_equal(vec[:], [1, 2, 3])
 
     discr = odl.uniform_discr(0, 1, 3, field=odl.ComplexNumbers())
     vec = discr.element([1 + 2j, 2 - 2j, 3])
 
-    assert isinstance(vec[:], odl.CnVector)
+    assert isinstance(vec[:], odl.FnVector)
     assert all_equal(vec[:], [1 + 2j, 2 - 2j, 3])
 
 
@@ -564,7 +571,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
 
     # Verify type
     assert isinstance(data_vector.ufunc,
-                      odl.util.ufuncs.DiscreteLpVectorUFuncs)
+                      odl.util.ufuncs.DiscreteLpUFuncs)
 
     # Out of place:
     np_result = ufunc(*in_arrays)
@@ -608,19 +615,78 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
 
 def test_ufuncs():
     # Cannot use fixture due to bug in pytest
-    fn = odl.uniform_discr([0, 0], [1, 1], [2, 2])
+    spaces = [odl.uniform_discr([0, 0], [1, 1], [2, 2])]
 
-    for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
-        if (np.issubsctype(fn.dtype, np.floating) and
-                name in ['bitwise_and',
-                         'bitwise_or',
-                         'bitwise_xor',
-                         'invert',
-                         'left_shift',
-                         'right_shift']):
-            # Skip integer only methods if floating point type
-            continue
-        yield _impl_test_ufuncs, fn, name, n_args, n_out
+    if odl.CUDA_AVAILABLE:
+        spaces += [odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='cuda')]
+
+    for fn in spaces:
+        for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
+            if (np.issubsctype(fn.dtype, np.floating) and
+                    name in ['bitwise_and',
+                             'bitwise_or',
+                             'bitwise_xor',
+                             'invert',
+                             'left_shift',
+                             'right_shift']):
+                # Skip integer only methods if floating point type
+                continue
+            yield _impl_test_ufuncs, fn, name, n_args, n_out
+
+
+def _impl_test_reduction(fn, name):
+    ufunc = getattr(np, name)
+
+    # Create some data
+    x_arr, x = _vectors(fn, 1)
+
+    assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
+
+
+def test_reductions():
+    spaces = [odl.uniform_discr([0, 0], [1, 1], [2, 2])]
+
+    if odl.CUDA_AVAILABLE:
+        spaces += [odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='cuda')]
+
+    for fn in spaces:
+        for name, _ in odl.util.ufuncs.REDUCTIONS:
+            yield _impl_test_reduction, fn, name
+
+
+def test_norm_interval(exponent):
+    # Test the function f(x) = x^2 on the interval (0, 1). Its
+    # L^p-norm is (1 + 2*p)^(-1/p) for finite p and 1 for p=inf
+    p = exponent
+    fspace = odl.FunctionSpace(odl.Interval(0, 1))
+    lpdiscr = odl.uniform_discr_fromspace(fspace, 10, exponent=p)
+
+    testfunc = fspace.element(lambda x: x ** 2)
+    discr_testfunc = lpdiscr.element(testfunc)
+
+    if p == float('inf'):
+        assert discr_testfunc.norm() <= 1  # Max at boundary not hit
+    else:
+        true_norm = (1 + 2 * p) ** (-1 / p)
+        assert almost_equal(discr_testfunc.norm(), true_norm, places=2)
+
+
+def test_norm_rectangle(exponent):
+    # Test the function f(x) = x_0^2 * x_1^3 on (0, 1) x (-1, 1). Its
+    # L^p-norm is ((1 + 2*p) * (1 + 3 * p) / 2)^(-1/p) for finite p
+    # and 1 for p=inf
+    p = exponent
+    fspace = odl.FunctionSpace(odl.Rectangle([0, -1], [1, 1]))
+    lpdiscr = odl.uniform_discr_fromspace(fspace, (20, 30), exponent=p)
+
+    testfunc = fspace.element(lambda x: x[0] ** 2 * x[1] ** 3)
+    discr_testfunc = lpdiscr.element(testfunc)
+
+    if p == float('inf'):
+        assert discr_testfunc.norm() <= 1  # Max at boundary not hit
+    else:
+        true_norm = ((1 + 2 * p) * (1 + 3 * p) / 2) ** (-1 / p)
+        assert almost_equal(discr_testfunc.norm(), true_norm, places=2)
 
 
 if __name__ == '__main__':

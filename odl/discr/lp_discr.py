@@ -17,10 +17,6 @@
 
 """:math:`L^p` type discretizations of function spaces."""
 
-# TODO: write some introduction doc
-
-# pylint: disable=abstract-method
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -31,24 +27,23 @@ from builtins import super, str
 import numpy as np
 
 # ODL
-from odl.discr.discretization import (Discretization, DiscretizationVector,
-                                      dspace_type)
-from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
+from odl.discr.discretization import (
+    Discretization, DiscretizationVector, dspace_type)
+from odl.discr.discr_mappings import (
+    GridCollocation, NearestInterpolation, LinearInterpolation)
 from odl.discr.grid import uniform_sampling, RegularGrid
 from odl.set.sets import Field, RealNumbers
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
 from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
-from odl.util.ufuncs import DiscreteLpVectorUFuncs
+from odl.util.ufuncs import DiscreteLpUFuncs
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr', 'uniform_discr_fromspace')
 
-_SUPPORTED_INTERP = ('nearest',)
+_SUPPORTED_INTERP = ('nearest', 'linear')
 
-
-# TODO: other types of discrete spaces
 
 class DiscreteLp(Discretization):
 
@@ -78,12 +73,11 @@ class DiscreteLp(Discretization):
 
             'nearest' : use nearest-neighbor interpolation (default)
 
-            'linear' : use linear interpolation (not implemented)
-        kwargs : {'order'}
-            'order' : {'C', 'F'}, optional  (Default: 'C')
-                Ordering of the values in the flat data arrays. 'C'
-                means the first grid axis varies fastest, the last most
-                slowly, 'F' vice versa.
+            'linear' : use linear interpolation
+        order : {'C', 'F'}, optional
+            Ordering of the values in the flat data arrays. 'C'
+            means the first grid axis varies slowest, the last fastest,
+            'F' vice versa.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{!r} is not a `FunctionSpace` instance.'
@@ -102,20 +96,24 @@ class DiscreteLp(Discretization):
         if self.interp == 'nearest':
             extension = NearestInterpolation(fspace, grid, dspace,
                                              order=self.order)
+        elif self.interp == 'linear':
+            extension = LinearInterpolation(fspace, grid, dspace,
+                                            order=self.order)
         else:
-            raise NotImplementedError
+            # Should not happen
+            raise RuntimeError
 
         Discretization.__init__(self, fspace, dspace, restriction, extension)
 
         self._exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
-                self._exponent != dspace.exponent):
+                self.exponent != dspace.exponent):
             raise ValueError('exponent {} not equal to data space exponent '
-                             '{}.'.format(self._exponent, dspace.exponent))
+                             '{}.'.format(self.exponent, dspace.exponent))
 
     @property
     def exponent(self):
-        """The exponent :math:`p` in :math:`L^p`."""
+        """The exponent ``p`` in ``L^p``."""
         return self._exponent
 
     def element(self, inp=None):
@@ -141,15 +139,19 @@ class DiscreteLp(Discretization):
         elif inp in self.dspace:
             return self.element_type(self, inp)
         try:
-            return self.element_type(self, self.restriction(inp))
+            # pylint: disable=not-callable
+            inp_elem = self.uspace.element(inp)
+            return self.element_type(self, self.restriction(inp_elem))
         except TypeError:
             pass
 
         # Sequence-type input
         arr = np.asarray(inp, dtype=self.dtype, order=self.order)
         if arr.ndim > 1 and arr.shape != self.shape:
-            raise ValueError('input shape {} does not match grid shape {}'
-                             ''.format(arr.shape, self.shape))
+            arr = np.squeeze(arr)  # Squeeze could solve the problem
+            if arr.shape != self.shape:
+                raise ValueError('input shape {} does not match grid shape {}'
+                                 ''.format(arr.shape, self.shape))
         arr = arr.ravel(order=self.order)
         return self.element_type(self, self.dspace.element(arr))
 
@@ -210,7 +212,7 @@ class DiscreteLp(Discretization):
                 impl = 'cuda'
             else:  # This should never happen
                 raise RuntimeError('unable to determine data space impl.')
-            arg_fstr = '{!r}, {!r}, {!r}'
+            arg_fstr = '{}, {}, {}'
             if self.exponent != 2.0:
                 arg_fstr += ', exponent={exponent}'
             if not isinstance(self.field, RealNumbers):
@@ -222,9 +224,17 @@ class DiscreteLp(Discretization):
             if self.order != 'C':
                 arg_fstr += ', order={order!r}'
 
+            if self.ndim == 1:
+                min_str = '{!r}'.format(self.uspace.domain.min()[0])
+                max_str = '{!r}'.format(self.uspace.domain.max()[0])
+                shape_str = '{!r}'.format(self.shape[0])
+            else:
+                min_str = '{!r}'.format(list(self.uspace.domain.min()))
+                max_str = '{!r}'.format(list(self.uspace.domain.max()))
+                shape_str = '{!r}'.format(list(self.shape))
+
             arg_str = arg_fstr.format(
-                list(self.uspace.domain.min()), list(self.uspace.domain.max()),
-                list(self.shape),
+                min_str, max_str, shape_str,
                 exponent=self.exponent,
                 field=self.field,
                 interp=self.interp,
@@ -357,30 +367,65 @@ class DiscreteLpVector(DiscretizationVector):
 
     @property
     def ufunc(self):
-        """`DiscreteLpVectorUFuncs`, access to numpy style ufuncs.
+        """`DiscreteLpUFuncs`, access to numpy style ufuncs.
 
+        Examples
+        --------
+        >>> X = uniform_discr(0, 1, 2)
+        >>> x = X.element([1, -2])
+        >>> x.ufunc.absolute()
+        uniform_discr(0.0, 1.0, 2).element([1.0, 2.0])
+
+        These functions can also be used with broadcasting
+
+        >>> x.ufunc.add(3)
+        uniform_discr(0.0, 1.0, 2).element([4.0, 1.0])
+
+        and non-space elements
+
+        >>> x.ufunc.subtract([3, 3])
+        uniform_discr(0.0, 1.0, 2).element([-2.0, -5.0])
+
+        There is also support for various reductions (sum, prod, min, max)
+
+        >>> x.ufunc.sum()
+        -1.0
+
+        Also supports out parameter
+
+        >>> y = X.element([3, 4])
+        >>> out = X.element()
+        >>> result = x.ufunc.add(y, out=out)
+        >>> result
+        uniform_discr(0.0, 1.0, 2).element([4.0, 2.0])
+        >>> result is out
+        True
+
+        Notes
+        -----
         These are optimized to use the underlying ntuple space and incur no
         overhead unless these do.
         """
-        return DiscreteLpVectorUFuncs(self)
+        return DiscreteLpUFuncs(self)
 
-    def show(self, method='', title='', indices=None, **kwargs):
-        """Create a figure displaying the function in 1d or 2d.
+    def show(self, method='', title='', indices=None,
+             show=False, fig=None, **kwargs):
+        """Display the function graphically.
 
         Parameters
         ----------
         method : `str`, optional
             1d methods:
 
-        'plot' : graph plot
+            'plot' : graph plot
 
-        2d methods:
+            2d methods:
 
-        'imshow' : image plot with coloring according to value,
-        including a colorbar.
+            'imshow' : image plot with coloring according to value,
+            including a colorbar.
 
-        'scatter' : cloud of scattered 3d points
-        (3rd axis <-> value)
+            'scatter' : cloud of scattered 3d points
+            (3rd axis <-> value)
 
         indices : index expression
             Display a slice of the array instead of the full array.
@@ -390,17 +435,25 @@ class DiscreteLpVector(DiscretizationVector):
 
         title : `str`, optional
             Set the title of the figure
+
+        show : `bool`, optional
+            If the plot should be showed now or deferred until later.
+
+        fig : ``matplotlib`` figure
+            The figure to show in. Expected to be of same "style", as
+            the figure given by this function. The most common use case
+            is that ``fig`` is the return value from an earlier call to
+            this function.
+
         kwargs : {'figsize', 'saveto', ...}
             Extra keyword arguments passed on to display method
             See the Matplotlib functions for documentation of extra
             options.
 
-        title : `str`, optional
-            Set the title of the figure
-        kwargs : {'figsize', 'saveto', ...}
-            Extra keyword arguments passed on to display method
-            See the Matplotlib functions for documentation of extra
-            options.
+        Returns
+        -------
+        fig : ``matplotlib`` figure
+            The resulting figure. It is also shown to the user.
 
         See Also
         --------
@@ -412,8 +465,9 @@ class DiscreteLpVector(DiscretizationVector):
         """
 
         from odl.util.graphics import show_discrete_function
-        show_discrete_function(self, method=method, title=title,
-                               indices=indices, **kwargs)
+        return show_discrete_function(self, method=method, title=title,
+                                      indices=indices, show=show, fig=fig,
+                                      **kwargs)
 
 
 def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
@@ -439,21 +493,20 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
             'linear' : use linear interpolation (not implemented)
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
-    kwargs : {'order', 'dtype', 'weighting'}
-            'order' : {'C', 'F'}  (Default: 'C')
-                Axis ordering in the data storage
-            'dtype' : dtype
-                Data type for the discretized space
+    order : {'C', 'F'}  (Default: 'C')
+        Axis ordering in the data storage
+    dtype : dtype
+        Data type for the discretized space
 
-                Default for 'numpy': 'float64' / 'complex128'
-                Default for 'cuda': 'float32' / TODO
-            'weighting' : {'simple', 'consistent'}
-                Weighting of the discretized space functions.
+        Default for 'numpy': 'float64' / 'complex128'
+        Default for 'cuda': 'float32' / TODO
+    weighting : {'simple', 'consistent'}
+        Weighting of the discretized space functions.
 
-                'simple': weight is a constant (cell volume)
+        'simple': weight is a constant (cell volume)
 
-                'consistent': weight is a matrix depending on the
-                interpolation type
+        'consistent': weight is a matrix depending on the
+        interpolation type
 
     Returns
     -------
@@ -466,11 +519,11 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     >>> I = Interval(0, 1)
     >>> X = FunctionSpace(I)
     >>> uniform_discr_fromspace(X, 10)
-    uniform_discr([0.0], [1.0], [10])
+    uniform_discr(0.0, 1.0, 10)
 
     See also
     --------
-    uniform_discr
+    uniform_discr : implicit uniform Lp discretization
     """
     if not isinstance(fspace, FunctionSpace):
         raise TypeError('space {!r} is not a `FunctionSpace` instance.'
@@ -540,21 +593,20 @@ def uniform_discr(min_corner, max_corner, nsamples,
             'linear' : use linear interpolation (not implemented)
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
-    kwargs : {'order', 'dtype', 'weighting'}
-            'order' : {'C', 'F'}  (Default: 'C')
-                Axis ordering in the data storage
-            'dtype' : dtype
-                Data type for the discretized space
+    order : {'C', 'F'}  (Default: 'C')
+        Axis ordering in the data storage
+    dtype : dtype
+        Data type for the discretized space
 
-                Default for 'numpy': 'float64' / 'complex128'
-                Default for 'cuda': 'float32' / TODO
-            'weighting' : {'simple', 'consistent'}
-                Weighting of the discretized space functions.
+        Default for 'numpy': 'float64' / 'complex128'
+        Default for 'cuda': 'float32' / TODO
+    weighting : {'simple', 'consistent'}
+        Weighting of the discretized space functions.
 
-                'simple': weight is a constant (cell volume)
+        'simple': weight is a constant (cell volume)
 
-                'consistent': weight is a matrix depending on the
-                interpolation type
+        'consistent': weight is a matrix depending on the
+        interpolation type
 
     Returns
     -------
@@ -563,7 +615,6 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     Examples
     --------
-
     Create real space:
 
     >>> uniform_discr([0, 0], [1, 1], [10, 10])
@@ -575,7 +626,8 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     See also
     --------
-    uniform_discr_fromspace
+    uniform_discr_fromspace : uniform discretization from an existing
+        function space
     """
     if not isinstance(field, Field):
         raise TypeError('field {} not a Field instance'

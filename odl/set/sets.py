@@ -19,9 +19,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from builtins import int, object, str, zip
-from odl.util.utility import with_metaclass
 from future import standard_library
 from past.builtins import basestring
 standard_library.install_aliases()
@@ -29,8 +27,11 @@ standard_library.install_aliases()
 # External
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
+import numpy as np
 
 # ODL
+from odl.util.utility import (is_int_dtype, is_real_dtype, is_scalar_dtype,
+                              with_metaclass)
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
@@ -105,6 +106,14 @@ class Set(with_metaclass(ABCMeta, object)):
         Implementing this method is optional. Default it tests for equality.
         """
         return self == other
+
+    def contains_all(self, other):
+        """Test if all points in ``other`` are contained in this set.
+
+        This is a default implementation and should be overridden by
+        subclasses.
+        """
+        return all(x in self for x in other)
 
     @abstractmethod
     def __eq__(self, other):
@@ -200,10 +209,10 @@ class Strings(Set):
             The fixed length of the strings in this set. Must be
             positive.
         """
-        le = int(length)
-        if le <= 0:
+        length_ = int(length)
+        if length_ <= 0:
             raise ValueError('`length` {} is not positive.'.format(length))
-        self._length = le
+        self._length = length_
 
     @property
     def length(self):
@@ -216,6 +225,15 @@ class Strings(Set):
         `True` if ``other`` is a string of at max `length`
         characters, `False` otherwise."""
         return isinstance(other, basestring) and len(other) == self.length
+
+    def contains_all(self, array):
+        """Test if `array` is an array of strings with correct length."""
+        dtype = getattr(array, 'dtype', None)
+        if dtype is None:
+            dtype = np.result_type(*array)
+        dtype_str = np.dtype('S{}'.format(self.length))
+        dtype_uni = np.dtype('<U{}'.format(self.length))
+        return dtype in (dtype_str, dtype_uni)
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -288,6 +306,13 @@ class ComplexNumbers(Field):
                 isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
 
+    def contains_all(self, array):
+        """Test if `array` is an array of real or complex numbers."""
+        dtype = getattr(array, 'dtype', None)
+        if dtype is None:
+            dtype = np.result_type(*array)
+        return is_scalar_dtype(dtype)
+
     def __eq__(self, other):
         """Return ``self == other``."""
         if other is self:
@@ -339,6 +364,13 @@ class RealNumbers(Field):
 
         return (isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
+
+    def contains_all(self, array):
+        """Test if `array` is an array of real numbers."""
+        dtype = getattr(array, 'dtype', None)
+        if dtype is None:
+            dtype = np.result_type(*array)
+        return is_real_dtype(dtype)
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -396,6 +428,13 @@ class Integers(Set):
             return True
 
         return isinstance(other, Integers)
+
+    def contains_all(self, array):
+        """Test if `array` is an array of integers."""
+        dtype = getattr(array, 'dtype', None)
+        if dtype is None:
+            dtype = np.result_type(*array)
+        return is_int_dtype(dtype)
 
     def element(self, inp=None):
         """Return an integer from ``inp`` or from scratch."""

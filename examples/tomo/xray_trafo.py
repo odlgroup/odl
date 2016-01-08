@@ -60,4 +60,7 @@ discr_proj_data = xray_trafo(discr_vol_data)
 # Back projection
 discr_reco_data = xray_trafo.adjoint(discr_proj_data)
 
-discr_reco_data.show()
+# Shows a slice of the phantom, projections, and reconstruction
+discr_vol_data.show(indices=np.s_[:, :, 150])
+discr_proj_data.show(indices=np.s_[0, :, :])
+discr_reco_data.show(indices=np.s_[:, :, 150])

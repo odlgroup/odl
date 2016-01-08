@@ -31,6 +31,7 @@ import numpy as np
 
 # ODL imports
 from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.util.ufuncs import ProductSpaceUFuncs
 
 
 __all__ = ('ProductSpace', 'ProductSpaceVector')
@@ -47,9 +48,9 @@ def _strip_space(x):
 
 def _indent(x):
     """Indent a string by 4 characters."""
-    lines = x.split('\n')
-    for i in range(len(lines)):
-        lines[i] = '    ' + lines[i]
+    lines = x.splitlines()
+    for i, line in enumerate(lines):
+        lines[i] = '    ' + line
     return '\n'.join(lines)
 
 
@@ -76,51 +77,50 @@ class ProductSpace(LinearSpace):
             Can be specified either as a space and an integer, in which
             case the power space ``space**n`` is created, or
             an arbitrary number of spaces.
-        kwargs : {'ord', 'weights', 'prod_norm'}
-            'ord' : `float`, optional
-                Order of the product distance/norm, i.e.
+        ord : `float`, optional
+            Order of the product distance/norm, i.e.
 
-                ``dist(x, y) = np.linalg.norm(x-y, ord=ord)``
+            ``dist(x, y) = np.linalg.norm(x-y, ord=ord)``
 
-                ``norm(x) = np.linalg.norm(x, ord=ord)``
+            ``norm(x) = np.linalg.norm(x, ord=ord)``
 
-                Default: 2.0
+            Default: 2.0
 
-                The following `float` values for ``ord`` can be specified.
-                Note that any value of ``ord < 1`` only gives a pseudo-norm.
+            The following `float` values for ``ord`` can be specified.
+            Note that any value of ``ord < 1`` only gives a pseudo-norm.
 
-                +-------------+------------------------------+
-                | 'prod_norm' | Distance Definition          |
-                +=============+==============================+
-                | 'inf'       | ``max(w * z)``               |
-                +-------------+------------------------------+
-                | '-inf'      | ``min(w * z)``               |
-                +-------------+------------------------------+
-                | other       | ``sum(w * z**ord)**(1/ord)`` |
-                +-------------+------------------------------+
+            +-------------+------------------------------+
+            | 'prod_norm' | Distance Definition          |
+            +=============+==============================+
+            | 'inf'       | ``max(w * z)``               |
+            +-------------+------------------------------+
+            | '-inf'      | ``min(w * z)``               |
+            +-------------+------------------------------+
+            | other       | ``sum(w * z**ord)**(1/ord)`` |
+            +-------------+------------------------------+
 
-                Here,
+            Here,
 
-                ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))``
+            ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))``
 
-                and ``w = weights``.
+            and ``w = weights``.
 
-                Note that ``0 <= ord < 1`` are not allowed since these
-                pseudo-norms are very unstable numerically.
-            'weights' : array-like, optional, only usable with 'ord'
-                Array of weights, same size as number of space
-                components. All weights must be positive. It is
-                multiplied with the tuple of distances before
-                applying the Rn norm or ``prod_norm``.
+            Note that ``0 <= ord < 1`` are not allowed since these
+            pseudo-norms are very unstable numerically.
+        weights : array-like, optional, only usable with 'ord'
+            Array of weights, same size as number of space
+            components. All weights must be positive. It is
+            multiplied with the tuple of distances before
+            applying the Rn norm or ``prod_norm``.
 
-                Default: ``(1.0,...,1.0)``
+            Default: ``(1.0,...,1.0)``
 
-            'prod_norm' : `callable`, optional
-                Function that should be applied to the array of
-                distances/norms. Specifying a product norm causes
-                the space to NOT be a Hilbert space.
+        prod_norm : `callable`, optional
+            Function that should be applied to the array of
+            distances/norms. Specifying a product norm causes
+            the space to NOT be a Hilbert space.
 
-                Default: ``np.linalg.norm(x, ord=ord)``.
+            Default: ``np.linalg.norm(x, ord=ord)``.
 
         Returns
         -------
@@ -166,7 +166,7 @@ class ProductSpace(LinearSpace):
                 self._weights = np.atleast_1d(weights)
                 if not np.all(self._weights > 0):
                     raise ValueError('weights must all be positive')
-                if not len(self._weights) == len(spaces):
+                if len(self._weights) != len(spaces):
                     raise ValueError('spaces and weights have different '
                                      'lengths ({} != {}).'
                                      ''.format(len(spaces), len(weights)))
@@ -332,12 +332,13 @@ class ProductSpace(LinearSpace):
         return self.element([space.one() for space in self.spaces])
 
     def _lincomb(self, a, x, b, y, out):
-        # pylint: disable=protected-access
+        """Linear combination ``out = a*x + b*y``."""
         for space, xp, yp, outp in zip(self.spaces, x.parts, y.parts,
                                        out.parts):
             space._lincomb(a, xp, b, yp, outp)
 
     def _dist(self, x1, x2):
+        """Distance between two vectors."""
         dists = np.fromiter(
             (spc._dist(x1p, x2p)
              for spc, x1p, x2p in zip(self.spaces, x1.parts, x2.parts)),
@@ -345,6 +346,7 @@ class ProductSpace(LinearSpace):
         return self._prod_norm(dists)
 
     def _norm(self, x):
+        """Norm of a vector."""
         norms = np.fromiter(
             (spc._norm(xp)
              for spc, xp in zip(self.spaces, x.parts)),
@@ -352,6 +354,7 @@ class ProductSpace(LinearSpace):
         return self._prod_norm(norms)
 
     def _inner(self, x1, x2):
+        """Inner product of two vectors."""
         inners = np.fromiter(
             (spc._inner(x1p, x2p)
              for spc, x1p, x2p in zip(self.spaces, x1.parts, x2.parts)),
@@ -359,9 +362,16 @@ class ProductSpace(LinearSpace):
         return self._prod_inner_sum(inners)
 
     def _multiply(self, x1, x2, out):
+        """Product ``out = x1 * x2``."""
         for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
                                      out.parts):
             spc._multiply(xp, yp, outp)
+
+    def _divide(self, x1, x2, out):
+        """Quotient ``out = x1 / x2``."""
+        for spc, xp, yp, outp in zip(self.spaces, x1.parts, x2.parts,
+                                     out.parts):
+            spc._divide(xp, yp, outp)
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -435,7 +445,8 @@ class ProductSpace(LinearSpace):
 
 
 class ProductSpaceVector(LinearSpaceVector):
-    """ Elements in a `ProductSpace` """
+
+    """Elements of a `ProductSpace`."""
 
     def __init__(self, space, parts):
         """"Initialize a new instance."""
@@ -488,6 +499,67 @@ class ProductSpaceVector(LinearSpaceVector):
         except TypeError:
             for i, index in enumerate(indices):
                 self.parts[index] = values[i]
+
+    @property
+    def ufunc(self):
+        """`ProductSpaceUFuncs`, access to numpy style ufuncs.
+
+        These are always available if the underlying spaces are `NtuplesBase`.
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r22 = ProductSpace(Rn(2), 2)
+        >>> x = r22.element([[1, -2], [-3, 4]])
+        >>> x.ufunc.absolute()
+        ProductSpace(Rn(2), 2).element([
+            [1.0, 2.0],
+            [3.0, 4.0]
+        ])
+
+        These functions can also be used with non-vector arguments and support
+        broadcasting, both by element
+
+        >>> x.ufunc.add([1, 1])
+        ProductSpace(Rn(2), 2).element([
+            [2.0, -1.0],
+            [-2.0, 5.0]
+        ])
+
+        and also recursively
+
+        >>> x.ufunc.subtract(1)
+        ProductSpace(Rn(2), 2).element([
+            [0.0, -3.0],
+            [-4.0, 3.0]
+        ])
+
+        There is also support for various reductions (sum, prod, min, max)
+
+        >>> x.ufunc.sum()
+        0.0
+
+        Also supports out parameter
+
+        >>> y = r22.element()
+        >>> result = x.ufunc.absolute(out=y)
+        >>> result
+        ProductSpace(Rn(2), 2).element([
+            [1.0, 2.0],
+            [3.0, 4.0]
+        ])
+        >>> result is y
+        True
+
+        See also
+        --------
+        odl.util.ufuncs.NtuplesBaseUFuncs
+            Base class for ufuncs in `NtuplesBase` spaces, sub spaces may
+            override this for greater efficiency.
+        odl.util.ufuncs.ProductSpaceUFuncs
+            For a list of available ufuncs.
+        """
+        return ProductSpaceUFuncs(self)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -548,16 +620,27 @@ class ProductSpaceVector(LinearSpaceVector):
         return '{!r}.element({})'.format(self.space, inner_str)
 
     def show(self, *args, **kwargs):
-        """ Display the parts of this vector.
-        """
+        """Display the parts of this vector."""
         title = kwargs.pop('title', 'ProductSpaceVector')
-        if len(self) < 5:
-            show_parts = self.parts
-            indices = range(len(self))
+        indices = kwargs.pop('indices', None)
+
+        if indices is None:
+            if len(self) < 5:
+                indices = np.arange(self.size)
+            else:
+                indices = np.linspace(0, self.size - 1, 4, dtype=int)
         else:
-            show_parts = self.parts[:2] + self.parts[-2:]
-            indices = [0, 1, len(self) - 2, len(self) - 1]
-        for i, part in zip(indices, show_parts):
+            if isinstance(indices, tuple):
+                indices, kwargs['indices'] = indices[0], indices[1:]
+
+            if isinstance(indices, slice):
+                indices = range(*indices.indices(self.size))
+            elif isinstance(indices, Integral):
+                indices = [indices]
+
+            # else try with indices as is
+
+        for i, part in zip(indices, self[indices]):
             part.show(*args, title='{}. Part {}'.format(title, i), **kwargs)
 
 

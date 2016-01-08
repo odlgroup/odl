@@ -43,7 +43,7 @@ class Convolution(odl.Operator):
         self.norm = float(np.sum(np.abs(self.kernel.ntuple)))
         super().__init__(self.space, self.space, linear=True)
 
-    def _apply(self, rhs, out):
+    def _call(self, rhs, out):
         ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,
                          output=out.ntuple.data, mode='wrap')
 
@@ -59,8 +59,8 @@ class Convolution(odl.Operator):
 cont_space = odl.FunctionSpace(odl.Interval(0, 10))
 
 # Complicated functions to check performance
-cont_kernel = cont_space.element(lambda x: np.exp(x/2) * np.cos(x*1.172))
-cont_phantom = cont_space.element(lambda x: x**2 * np.sin(x)**2*(x > 5))
+cont_kernel = cont_space.element(lambda x: np.exp(x / 2) * np.cos(x * 1.172))
+cont_phantom = cont_space.element(lambda x: x ** 2 * np.sin(x) ** 2 * (x > 5))
 
 # Discretization
 discr_space = odl.uniform_discr_fromspace(cont_space, 500, impl='numpy')
@@ -72,7 +72,7 @@ conv = Convolution(kernel)
 
 # Dampening parameter for landweber
 iterations = 100
-omega = 1/conv.opnorm()**2
+omega = 1 / conv.opnorm() ** 2
 
 # Display partial
 partial = solvers.util.ForEachPartial(lambda result: plt.plot(conv(result)))

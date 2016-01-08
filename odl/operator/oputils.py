@@ -22,9 +22,11 @@ an operator. """
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+from future.utils import raise_from
 standard_library.install_aliases()
 
 # External
+from math import ceil, sqrt
 import numpy as np
 
 # Internal
@@ -37,7 +39,7 @@ def matrix_representation(op):
 
     Parameters
     ----------
-    op : :class:`~odl.Operator`
+    op : `Operator`
         The linear operator of which one wants a matrix representation.
 
     Returns
@@ -116,3 +118,66 @@ def matrix_representation(op):
             last_i = i
 
     return matrix
+
+
+def power_method_opnorm(op, niter, xstart=None):
+    """Estimate the operator norm with the power method.
+
+    Parameters
+    ----------
+    op : `Operator`
+        Operator whose norm is to be estimated. If its `Operator.range`
+        range does not coincide with its `Operator.domain`, an
+        `Operator.adjoint` must be defined (which implies that the
+        operator must be linear).
+    niter : positive `int`
+        Number of iterations to perform
+    xstart : `Operator.domain` element, optional
+        Starting point of the iteration. By default, the ``one``
+        element of the `Operator.domain` is used.
+
+    Returns
+    -------
+    est_norm : `float`
+        The estimated operator norm
+    """
+    if op.domain == op.range:
+        use_normal = False
+    else:
+        use_normal = True
+
+    if xstart is None:
+        try:
+            x = op.domain.one()  # TODO: random? better choice?
+        except AttributeError as exc:
+            raise_from(
+                ValueError('a starting element must be defined in case the '
+                           'operator domain has no `one()`.'), exc)
+    else:
+        x = xstart.copy()
+
+    tmp = op.range.element()
+
+    if use_normal:
+        # Do the power iteration for A*A; the norm of A*A(x_N) is then
+        # an estimate of the square of the operator norm
+        # We do only half the number of iterations compared to the usual
+        # case to have the same number of operator evaluations.
+        niter = ceil(niter / 2)
+        for _ in range(niter):
+            op(x, out=tmp)
+            op.adjoint(tmp, out=x)
+            x /= x.norm()
+
+        op(x, out=tmp)
+        op.adjoint(tmp, out=x)
+        return sqrt(x.norm())
+
+    else:
+        for _ in range(niter):
+            op(x, out=tmp)
+            x, tmp = tmp, x
+            x /= x.norm()
+
+        op(x, out=tmp)
+        return tmp.norm()

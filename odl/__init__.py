@@ -47,14 +47,10 @@ from . import set
 from .set import *
 __all__ += set.__all__
 
-from . import solvers
-
 from . import space
 from .space import *
 __all__ += space.__all__
 
+from . import solvers
 from . import tomo
-
 from . import trafos
-from .trafos import *
-__all__ += trafos.__all__

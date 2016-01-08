@@ -27,12 +27,11 @@ from builtins import int, super
 import numpy as np
 
 # ODL imports
-from odl.set.space import LinearSpace, LinearSpaceVector
-from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
-                                    FnBase, FnBaseVector,
-                                    FnWeightingBase)
-from odl.util.utility import is_real_dtype, is_real_floating_dtype, dtype_repr
-from odl.util.ufuncs import CudaNtuplesVectorUFuncs
+from odl.set.space import LinearSpaceVector
+from odl.space.base_ntuples import (
+    NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
+from odl.util.utility import dtype_repr
+from odl.util.ufuncs import CudaNtuplesUFuncs
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -42,13 +41,14 @@ except ImportError:
     CUDA_AVAILABLE = False
 
 __all__ = ('CudaNtuples', 'CudaNtuplesVector',
-           'CudaFn', 'CudaFnVector', 'CudaRn', 'CudaRnVector',
+           'CudaFn', 'CudaFnVector', 'CudaRn',
            'CUDA_DTYPES', 'CUDA_AVAILABLE',
            'CudaFnConstWeighting', 'CudaFnVectorWeighting',
            'cu_weighted_inner', 'cu_weighted_norm', 'cu_weighted_dist')
 
 
 def _get_int_type():
+    """Return the correct int vector type on the current platform."""
     if np.dtype(np.int).itemsize == 4:
         return 'CudaVectorInt32'
     elif np.dtype(np.int).itemsize == 8:
@@ -58,6 +58,7 @@ def _get_int_type():
 
 
 def _add_if_exists(dtype, name):
+    """Add ``dtype`` to ``CUDA_DTYPES`` if it's available."""
     if hasattr(cuda, name):
         _TYPE_MAP_NPY2CUDA[np.dtype(dtype)] = getattr(cuda, name)
         CUDA_DTYPES.append(np.dtype(dtype))
@@ -170,12 +171,24 @@ class CudaNtuples(NtuplesBase):
             if data_ptr is None:
                 if isinstance(inp, self._vector_impl):
                     return self.element_type(self, inp)
-                elif (isinstance(inp, self.element_type) and
-                      inp.dtype == self.dtype):
-                    return self.element_type(self, inp.data)
+                elif isinstance(inp, self.element_type):
+                    if inp.dtype == self.dtype:
+                        # Simply rewrap for matching dtypes
+                        return self.element_type(self, inp.data)
+                    else:
+                        # Bulk-copy for non-matching dtypes
+                        elem = self.element()
+                        elem[:] = inp
+                        return elem
                 else:
+                    # Array-like input. Need to go through a NumPy array
+                    arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
+                    if arr.shape != (self.size,):
+                        raise ValueError('input shape {} not broadcastable to '
+                                         'shape ({},).'.format(arr.shape,
+                                                               self.size))
                     elem = self.element()
-                    elem[:] = inp
+                    elem[:] = arr
                     return elem
             else:
                 raise ValueError('cannot provide both inp and data_ptr.')
@@ -419,7 +432,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
                 # Convert value to the correct type if needed
                 value_array = np.asarray(values, dtype=self.space.dtype)
 
-                if (value_array.ndim == 0):
+                if value_array.ndim == 0:
                     self.data.fill(values)
                 else:
                     # Size checking is performed in c++
@@ -429,26 +442,55 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
     @property
     def ufunc(self):
-        """`CudaNtuplesVectorUFuncs`, access to numpy style ufuncs.
+        """`CudaNtuplesUFuncs`, access to numpy style ufuncs.
 
-        The following are optimized using cuda:
+        Examples
+        --------
+        >>> r2 = CudaRn(2)
+        >>> x = r2.element([1, -2])
+        >>> x.ufunc.absolute()
+        CudaRn(2).element([1.0, 2.0])
 
-        sin
-        cos
-        arcsin
-        arccos
-        log
-        exp
-        absolute
-        sign
-        sqrt
+        These functions can also be used with broadcasting
 
-        All other fall back onto the numpy implementation.
+        >>> x.ufunc.add(3)
+        CudaRn(2).element([4.0, 1.0])
+
+        and non-space elements
+
+        >>> x.ufunc.subtract([3, 3])
+        CudaRn(2).element([-2.0, -5.0])
+
+        There is also support for various reductions (sum, prod, min, max)
+
+        >>> x.ufunc.sum()
+        -1.0
+
+        Also supports out parameter
+
+        >>> y = r2.element([3, 4])
+        >>> out = r2.element()
+        >>> result = x.ufunc.add(y, out=out)
+        >>> result
+        CudaRn(2).element([4.0, 2.0])
+        >>> result is out
+        True
+
+        Notes
+        -----
+        Not all ufuncs are currently optimized, some use the default numpy
+        implementation. This can be improved in the future.
+
+        See also
+        --------
+        NtuplesBaseUFuncs
+            Base class for ufuncs in `NtuplesBase` spaces.
         """
-        return CudaNtuplesVectorUFuncs(self)
+        return CudaNtuplesUFuncs(self)
 
 
 def _repr_space_funcs(space):
+    """Return the string in the parentheses of repr for space funcs."""
     inner_str = ''
 
     weight = 1.0
@@ -494,96 +536,95 @@ class CudaFn(FnBase, CudaNtuples):
 
             Only scalar data types are allowed.
 
-        kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
-            'weight' : {array-like, `CudaFnVector`, `float`, `None`}
-                Use weighted inner product, norm, and dist.
+        weight : {array-like, `CudaFnVector`, `float`, `None`}
+            Use weighted inner product, norm, and dist.
 
-                `None`:
-                    No weighting, use standard functions (default)
+            `None`:
+                No weighting, use standard functions (default)
 
-                `float`:
-                    Weighting by a constant
+            `float`:
+                Weighting by a constant
 
-                array-like:
-                    Weighting by a vector (1-dim. array, corresponds to
-                    a diagonal matrix). Note that the array is stored in
-                    main memory, which results in slower space functions
-                    due to a copy during evaluation.
+            array-like:
+                Weighting by a vector (1-dim. array, corresponds to
+                a diagonal matrix). Note that the array is stored in
+                main memory, which results in slower space functions
+                due to a copy during evaluation.
 
-                `CudaFnVector`:
-                    same as 1-dim. array-like, except that copying is
-                    avoided if the ``dtype`` of the vector is the
-                    same as this space's ``dtype``.
+            `CudaFnVector`:
+                same as 1-dim. array-like, except that copying is
+                avoided if the ``dtype`` of the vector is the
+                same as this space's ``dtype``.
 
-                This option cannot be combined with ``dist``, ``norm``
-                or ``inner``.
+            This option cannot be combined with ``dist``, ``norm``
+            or ``inner``.
 
-            'exponent' : positive `float`
-                Exponent of the norm. For values other than 2.0, no
-                inner product is defined.
+        exponent : positive `float`
+            Exponent of the norm. For values other than 2.0, no
+            inner product is defined.
 
-                This option is ignored if ``dist``, ``norm`` or
-                ``inner`` is given.
+            This option is ignored if ``dist``, ``norm`` or
+            ``inner`` is given.
 
-                Default: 2.0
+            Default: 2.0
 
-            'dist' : `callable`, optional
-                The distance function defining a metric on
-                :math:`\mathbb{F}^n`.
-                It must accept two `CudaFnVector` arguments,
-                return a `float` and
-                fulfill the following mathematical conditions for any
-                three vectors :math:`x, y, z`:
+        dist : `callable`, optional
+            The distance function defining a metric on
+            :math:`\mathbb{F}^n`.
+            It must accept two `CudaFnVector` arguments,
+            return a `float` and
+            fulfill the following mathematical conditions for any
+            three vectors :math:`x, y, z`:
 
-                - :math:`d(x, y) = d(y, x)`
-                - :math:`d(x, y) \geq 0`
-                - :math:`d(x, y) = 0 \Leftrightarrow x = y`
-                - :math:`d(x, y) \geq d(x, z) + d(z, y)`
+            - :math:`d(x, y) = d(y, x)`
+            - :math:`d(x, y) \geq 0`
+            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
+            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
 
-                By default, ``dist(x, y)`` is calculated as
-                ``norm(x - y)``. This creates an intermediate array
-                ``x-y``, which can be
-                avoided by choosing ``dist_using_inner=True``.
+            By default, ``dist(x, y)`` is calculated as
+            ``norm(x - y)``. This creates an intermediate array
+            ``x-y``, which can be
+            avoided by choosing ``dist_using_inner=True``.
 
-                This option cannot be combined with ``weight``,
-                ``norm`` or ``inner``.
+            This option cannot be combined with ``weight``,
+            ``norm`` or ``inner``.
 
-            'norm' : `callable`, optional
-                The norm implementation. It must accept an
-                `CudaFnVector` argument, return a
-                `float` and satisfy the following
-                conditions for all vectors :math:`x, y` and scalars
-                :math:`s`:
+        norm : `callable`, optional
+            The norm implementation. It must accept an
+            `CudaFnVector` argument, return a
+            `float` and satisfy the following
+            conditions for all vectors :math:`x, y` and scalars
+            :math:`s`:
 
-                - :math:`\lVert x\\rVert \geq 0`
-                - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
-                - :math:`\lVert s x\\rVert = \lvert s \\rvert
-                  \lVert x\\rVert`
-                - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
-                  \lVert y\\rVert`.
+            - :math:`\lVert x\\rVert \geq 0`
+            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
+            - :math:`\lVert s x\\rVert = \lvert s \\rvert
+              \lVert x\\rVert`
+            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
+              \lVert y\\rVert`.
 
-                By default, ``norm(x)`` is calculated as
-                ``inner(x, x)``.
+            By default, ``norm(x)`` is calculated as
+            ``inner(x, x)``.
 
-                This option cannot be combined with ``weight``,
-                ``dist`` or ``inner``.
+            This option cannot be combined with ``weight``,
+            ``dist`` or ``inner``.
 
-            'inner' : `callable`, optional
-                The inner product implementation. It must accept two
-                `CudaFnVector` arguments, return a element from
-                the field of the space (real or complex number) and
-                satisfy the following conditions for all vectors
-                :math:`x, y, z` and scalars :math:`s`:
+        inner : `callable`, optional
+            The inner product implementation. It must accept two
+            `CudaFnVector` arguments, return a element from
+            the field of the space (real or complex number) and
+            satisfy the following conditions for all vectors
+            :math:`x, y, z` and scalars :math:`s`:
 
-                - :math:`\langle x,y\\rangle =
-                  \overline{\langle y,x\\rangle}`
-                - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
-                - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
-                  \langle z,y\\rangle`
-                - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
+            - :math:`\langle x,y\\rangle =
+              \overline{\langle y,x\\rangle}`
+            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
+            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
+              \langle z,y\\rangle`
+            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
 
-                This option cannot be combined with ``weight``,
-                ``dist`` or ``norm``.
+            This option cannot be combined with ``weight``,
+            ``dist`` or ``norm``.
         """
         super().__init__(size, dtype)
         CudaNtuples.__init__(self, size, dtype)
@@ -646,18 +687,18 @@ class CudaFn(FnBase, CudaNtuples):
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
-        >>> r3 = CudaFn(3, 'float32')
+        >>> r3 = CudaRn(3)
         >>> x = r3.element([1, 2, 3])
         >>> y = r3.element([4, 5, 6])
         >>> out = r3.element()
         >>> r3.lincomb(2, x, 3, y, out)  # out is returned
-        CudaFn(3, 'float32').element([14.0, 19.0, 24.0])
+        CudaRn(3).element([14.0, 19.0, 24.0])
         >>> out
-        CudaFn(3, 'float32').element([14.0, 19.0, 24.0])
+        CudaRn(3).element([14.0, 19.0, 24.0])
         """
         out.data.lincomb(a, x1.data, b, x2.data)
 
@@ -744,11 +785,11 @@ class CudaFn(FnBase, CudaNtuples):
         x1, x2 : `CudaFnVector`
             Factors in product
         out : `CudaFnVector`
-            Result
+            Element to which the result is written
 
         Returns
         -------
-        None
+        `None`
 
         Examples
         --------
@@ -775,9 +816,9 @@ class CudaFn(FnBase, CudaNtuples):
         ----------
 
         x1, x2 : `CudaFnVector`
-            Read from
+            Factors in the product
         out : `CudaFnVector`
-            Write to
+            Element to which the result is written
 
         Returns
         -------
@@ -844,14 +885,6 @@ class CudaFn(FnBase, CudaNtuples):
         >>> r3_lambda2 = CudaRn(3, dist=lambda x, y: norm(x-y, ord=1))
         >>> r3_lambda1 == r3_lambda2
         False
-
-        A `CudaFn` space with the same data type is considered
-        equal:
-
-        >>> r3 = CudaRn(3)
-        >>> f3_single = CudaFn(3, dtype='float32')
-        >>> r3 == f3_single
-        True
         """
         if other is self:
             return True
@@ -861,9 +894,19 @@ class CudaFn(FnBase, CudaNtuples):
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
-        inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
-        inner_str += _repr_space_funcs(self)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        if self.is_rn:
+            class_name = 'CudaRn'
+            if self.dtype == np.float32:
+                inner_str = '{}'.format(self.size)
+            else:
+                inner_str = '{}, {}'.format(self.size, self.dtype)
+        elif self.is_cn:
+            raise NotImplementedError
+        else:
+            class_name = 'CudaFn'
+            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+
+        return '{}({})'.format(class_name, inner_str)
 
     @property
     def element_type(self):
@@ -880,62 +923,39 @@ class CudaFnVector(FnBaseVector, CudaNtuplesVector):
         super().__init__(space, data)
 
 
-class CudaRn(CudaFn, LinearSpace):
+def CudaRn(size, dtype=np.float32, **kwargs):
 
     """The real space :math:`R^n`, implemented in CUDA.
 
     Requires the compiled ODL extension odlpp.
+
+    Parameters
+    ----------
+    size : positive `int`
+        The number of dimensions of the space
+    dtype : `object`
+        The data type of the storage array. Can be provided in any
+        way the `numpy.dtype` function understands, most notably
+        as built-in type, as one of NumPy's internal datatype
+        objects or as string.
+
+        Only real floating-point data types are allowed.
+
+    kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
+        See `CudaFn`
     """
 
-    def __init__(self, size, dtype=np.float32, **kwargs):
-        """Initialize a new instance.
+    rn = CudaFn(size, dtype, **kwargs)
 
-        Parameters
-        ----------
-        size : positive `int`
-            The number of dimensions of the space
-        dtype : `object`
-            The data type of the storage array. Can be provided in any
-            way the `numpy.dtype` function understands, most notably
-            as built-in type, as one of NumPy's internal datatype
-            objects or as string.
+    if not rn.is_rn:
+        raise TypeError('data type {!r} not a real floating-point type.'
+                        ''.format(dtype))
 
-            Only real floating-point data types are allowed.
-
-        kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
-            See `CudaFn`
-        """
-        super().__init__(size, dtype, **kwargs)
-
-        if not is_real_floating_dtype(self._dtype):
-            raise TypeError('data type {!r} not a real floating-point type.'
-                            ''.format(dtype))
-
-    def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
-        if self.dtype == np.dtype('float32'):
-            inner_str = '{}'.format(self.size)
-        else:
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
-            inner_str += _repr_space_funcs(self)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    @property
-    def element_type(self):
-        """ `CudaRnVector` """
-        return CudaRnVector
-
-
-class CudaRnVector(CudaFnVector):
-
-    """Representation of a `CudaRn` element."""
-
-    def __init__(self, space, data):
-        """Initialize a new instance."""
-        super().__init__(space, data)
+    return rn
 
 
 def _weighting(weight, exponent):
+    """Return a weighting whose type is inferred from the arguments."""
     if np.isscalar(weight):
         weighting = CudaFnConstWeighting(
             weight, exponent)
@@ -1038,79 +1058,44 @@ def cu_weighted_dist(weight, exponent=2.0):
     return _weighting(weight, exponent=exponent).dist
 
 
-def add_scalar(x, scal, out=None):
-    """Add scalar to `CudaNtuplesVector`.
-    """
-    if out is None:
-        out = x.space.element()
-    cuda.add_scalar(x.data, scal, out.data)
-    return out
-
-
-def max_vector_scalar(x, scal, out=None):
-    """Calculate the elementwise max of `CudaNtuplesVector` and scalar.
-    """
-    if out is None:
-        out = x.space.element()
-    cuda.max_vector_scalar(x.data, scal, out.data)
-    return out
-
-
-def max_vector_vector(x1, x2, out=None):
-    """Calculate the elementwise max of `CudaNtuplesVector`'s
-    """
-    if out is None:
-        out = x1.space.element()
-    cuda.max_vector_vector(x1.data, x2.data, out.data)
-    return out
-
-
-def divide_vector_vector(x1, x2, out=None):
-    """Calculate the quotient of `CudaNtuplesVector`'s
-    """
-    if out is None:
-        out = x1.space.element()
-    cuda.divide_vector_vector(x1.data, x2.data, out.data)
-    return out
-
-
-def sum(x):
-    """Calculate the sum of a `CudaNtuplesVector`
-    """
-    return cuda.sum(x.data)
-
-
 def _dist_default(x1, x2):
+    """Default Euclidean distance implementation."""
     return x1.data.dist(x2.data)
 
 
 def _pdist_default(x1, x2, p):
+    """Default p-distance implementation."""
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
     return x1.data.dist_power(x2.data, p)
 
 
 def _pdist_diagweight(x1, x2, p, w):
+    """Diagonally weighted p-distance implementation."""
     return x1.data.dist_weight(x2.data, p, w.data)
 
 
 def _norm_default(x):
+    """Default Euclidean norm implementation."""
     return x.data.norm()
 
 
 def _pnorm_default(x, p):
+    """Default p-norm implementation."""
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
     return x.data.norm_power(p)
 
 
 def _pnorm_diagweight(x, p, w):
+    """Diagonally weighted p-norm implementation."""
     if p == float('inf'):
         raise NotImplementedError('inf-norm not implemented.')
     return x.data.norm_weight(p, w.data)
 
 
 def _inner_default(x1, x2):
+    """Default Euclidean inner product implementation."""
     return x1.data.inner(x2.data)
 
 

@@ -28,17 +28,14 @@ import numpy as np
 
 # Internal
 from odl.discr.lp_discr import DiscreteLp
-from odl.space.fspace import FunctionSpace
+from odl.space import FunctionSpace, Ntuples, CudaNtuples
 from odl.operator.operator import Operator
-# from odl.space.cu_ntuples import CUDA_AVAILABLE
-from odl.space.cu_ntuples import CudaNtuples
 from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
-from odl.tomo.backends.astra_cuda import ASTRA_CUDA_AVAILABLE
-from odl.tomo.backends.astra_cpu import (astra_cpu_forward_projector_call,
-                                         astra_cpu_backward_projector_call)
-from odl.tomo.backends.astra_cuda import (astra_cuda_forward_projector_call,
-                                          astra_cuda_backward_projector_call)
+from odl.tomo.backends import (
+    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
+    astra_cpu_forward_projector_call, astra_cpu_backward_projector_call,
+    astra_cuda_forward_projector_call, astra_cuda_backward_projector_call)
+
 
 _SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 
@@ -92,10 +89,20 @@ class DiscreteXrayTransform(Operator):
                              ''.format(backend))
 
         if backend == 'astra':
+            if isinstance(discr_dom.dspace, CudaNtuples):
+                self._backend = 'astra_cuda'
+            elif isinstance(discr_dom.dspace, Ntuples):
+                self._backend = 'astra_cpu'
+            else:
+                raise TypeError('discr_dom.dspace {} must be a CudaNtuples '
+                                'or a Ntuples'.format(discr_dom.dspace))
+        else:
+            self._backend = backend
+
+        if self.backend.startswith('astra'):
             if not ASTRA_AVAILABLE:
                 raise ValueError('ASTRA backend not available.')
-            if (isinstance(discr_dom.dspace, CudaNtuples) and
-                    not ASTRA_CUDA_AVAILABLE):
+            if not ASTRA_CUDA_AVAILABLE and self.backend == 'astra_cuda':
                 raise ValueError('ASTRA CUDA backend not available.')
             if discr_dom.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
@@ -121,14 +128,6 @@ class DiscreteXrayTransform(Operator):
         discr_ran = DiscreteLp(ran_uspace, geometry.grid, ran_dspace,
                                interp=ran_interp, order=geometry.grid.order)
         super().__init__(discr_dom, discr_ran, linear=True)
-
-        if backend == 'astra':
-            if isinstance(discr_dom.dspace, CudaNtuples):
-                self._backend = 'astra_cuda'
-            else:
-                self._backend = 'astra_cpu'
-        else:
-            self._backend = backend
 
         self._adjoint = DiscreteXrayTransformAdjoint(self)
 

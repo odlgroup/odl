@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+# Copyright 2014, 2015 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,18 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test configuration file."""
+"""Example on using show and updating the figure in real time in 2d."""
 
+# Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+import odl
+import matplotlib.pyplot as plt
 
-from odl.space.cu_ntuples import CUDA_AVAILABLE
-from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
+n = 100
+m = 20
+spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
+vec = odl.util.shepp_logan(spc, modified=True)
 
-collect_ignore = ['setup.py', 'run_tests.py']
+# Create a figure by saving the result of show
+fig = None
 
-if not CUDA_AVAILABLE:
-    collect_ignore.append('odl/space/cu_ntuples.py')
-if not PYWAVELETS_AVAILABLE:
-    collect_ignore.append('odl/trafos/wavelet.py')
+# Reuse the figure indefinitely, values are overwritten.
+for i in range(m):
+    fig = (vec * i).show(fig=fig, clim=[0, m])
+
+plt.show()

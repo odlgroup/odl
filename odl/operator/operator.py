@@ -20,17 +20,21 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import object, super
-from odl.util.utility import with_metaclass
 
 # External module imports
+import inspect
 from numbers import Number, Integral
+import sys
 
 # ODL imports
 from odl.set.space import (LinearSpace, LinearSpaceVector,
                            UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
+from odl.util.utility import preload_call_with
+
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
            'OperatorLeftScalarMult', 'OperatorRightScalarMult',
@@ -41,25 +45,8 @@ __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
            'OpNotImplementedError')
 
 
-def _bound_method(function):
-    """Add a ``self`` argument to a function.
-
-    This way, the decorated function may be used as a bound method.
-    """
-    def method(_, *args, **kwargs):
-        return function(*args, **kwargs)
-
-    # Do the minimum and copy function name and docstring
-    if hasattr(function, '__name__'):
-        method.__name__ = function.__name__
-    if hasattr(function, '__doc__'):
-        method.__doc__ = function.__doc__
-
-    return method
-
-
-def _default_call(self, x, *args, **kwargs):
-    """Default out-of-place evaluation using ``Operator._apply()``.
+def _default_call_out_of_place(op, x, **kwargs):
+    """Default out-of-place evaluation.
 
     Parameters
     ----------
@@ -73,12 +60,12 @@ def _default_call(self, x, *args, **kwargs):
         An object in the operator range. The result of an operator
         evaluation.
     """
-    out = self.range.element()
-    self._apply(x, out, *args, **kwargs)
+    out = op.range.element()
+    op._call_in_place(x, out, **kwargs)
     return out
 
 
-def _default_apply(self, x, out, *args, **kwargs):
+def _default_call_in_place(op, x, out, **kwargs):
     """Default in-place evaluation using ``Operator._call()``.
 
     Parameters
@@ -95,57 +82,253 @@ def _default_apply(self, x, out, *args, **kwargs):
     -------
     `None`
     """
-    out.assign(self._call(x, *args, **kwargs))
+    out.assign(op._call_out_of_place(x, **kwargs))
 
 
-class _OperatorMeta(type):
+def _signature_from_spec(func):
+    """Return the signature of a python function as a string.
 
-    """Metaclass used by `Operator` to ensure correct methods.
+    Parameters
+    ----------
+    func : `function`
+        Function whose signature to compile
 
-    If either ``_apply()`` or ``_call()`` does not exist in the class
-    to be created, this metaclass attempts to add a default
-    implmentation.
-    This only works if the `Operator.range` is a
-    `LinearSpace`.
+    Returns
+    -------
+    sig : `str`
+        Signature of the function
     """
+    py3 = (sys.version_info.major > 2)
+    if py3:
+        spec = inspect.getfullargspec(func)
+    else:
+        spec = inspect.getargspec(func)
 
-    def __new__(mcs, name, bases, attrs):
-        """Create a new instance."""
-        if '_call' in attrs and '_apply' in attrs:
-            pass
-        elif '_call' in attrs:
-            attrs['_apply'] = _default_apply
-        elif '_apply' in attrs:
-            attrs['_call'] = _default_call
+    posargs = spec.args
+    defaults = spec.defaults if spec.defaults is not None else []
+    varargs = spec.varargs
+    kwargs = spec.varkw if py3 else spec.keywords
+    deflen = 0 if defaults is None else len(defaults)
+    nodeflen = 0 if posargs is None else len(posargs) - deflen
 
-        return super().__new__(mcs, name, bases, attrs)
+    args = ['{}'.format(arg) for arg in posargs[:nodeflen]]
+    args += ['{}={}'.format(arg, dval)
+             for arg, dval in zip(posargs[nodeflen:], defaults)]
+    if varargs:
+        args += ['*{}'.format(varargs)]
+    if py3:
+        kw_only = spec.kwonlyargs
+        kw_only_defaults = spec.kwonlydefaults
+        if kw_only and not varargs:
+            args += ['*']
+        args += ['{}={}'.format(arg, kw_only_defaults[arg])
+                 for arg in kw_only]
+    if kwargs:
+        args += ['**{}'.format(kwargs)]
 
-    def __call__(cls, *args, **kwargs):
-        """Create a new class ``cls`` from given arguments.
+    argstr = ', '.join(args)
 
-        Raises
-        ------
-        NotImplementedError
-            If neither ``_call`` or ``_apply`` is implemented.
-        """
-        obj = type.__call__(cls, *args, **kwargs)
-        if not hasattr(obj, '_call') and not hasattr(obj, '_apply'):
-            raise NotImplementedError('`Operator` instances must'
-                                      'either have `_call` or `_apply`'
-                                      ' as attribute.')
-        return obj
+    return '{}({})'.format(func.__name__, argstr)
 
 
-class Operator(with_metaclass(_OperatorMeta, object)):
+def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
+                        attr='_call'):
+    """Check the arguments of ``_call()`` or similar for conformity.
 
-    """Abstract operator.
+    The ``_call()`` method of `Operator` is allowed to have the
+    following signatures:
+
+    Python 2 and 3:
+        - ``_call(self, x)``
+        - ``_call(self, vec, out)``
+        - ``_call(self, x, out=None)``
+
+    Python 3 only:
+        - ``_call(self, x, *, out=None)`` (``out`` as keyword-only
+          argument)
+
+    For disambiguation, the instance name (the first argument) **must**
+    be 'self'.
+
+    The name of the ``out`` argument **must** be 'out', the second
+    argument may have any name.
+
+    Additional variable ``**kwargs`` and keyword-only arguments
+    (Python 3 only) are also allowed.
+
+    Not allowed:
+        - ``_call(self)`` -- No arguments except instance:
+        - ``_call(x)`` -- 'self' missing, i.e. ``@staticmethod``
+        - ``_call(cls, x)``  -- 'self' missing, i.e. ``@classmethod``
+        - ``_call(self, out, x)`` -- ``out`` as second argument
+        - ``_call(self, *x)`` -- Variable arguments
+        - ``_call(self, x, y, out=None)`` -- more positional arguments
+        - ``_call(self, x, out=False)`` -- default other than `None` for
+          ``out``
+
+    In particular, static or class methods are not allowed.
+
+    Parameters
+    ----------
+    cls : `class`, optional
+        The ``_call()`` method of this class is checked. If omitted,
+        provide ``unbound_call`` instead to check directly.
+    bound_call: `callable`, optional
+        Check this bound method instead of ``cls``
+    unbound_call: `callable`, optional
+        Check this unbound function instead of ``cls``
+    attr : `string`, optional
+        Check this attribute instead of ``_call``, e.g. ``__call__``
+
+    Returns
+    -------
+    has_out : `bool`
+        Whether the call has an ``out`` argument
+    out_is_optional : `bool`
+        Whether the ``out`` argument is optional
+    spec : `inspect.ArgSpec` or `inspect.FullArgSpec`
+        Argument specification of the checked call function
+
+    Raises
+    ------
+    ValueError
+        if the signature of the function is malformed
+    """
+    py3 = (sys.version_info.major > 2)
+
+    specs = ['_call(self, x[, **kwargs])',
+             '_call(self, x, out[, **kwargs])',
+             '_call(self, x, out=None[, **kwargs])']
+
+    if py3:
+        specs += ['_call(self, x, *, out=None[, **kwargs])']
+
+    spec_msg = "\nPossible signatures are ('[, **kwargs]' means optional):\n\n"
+    spec_msg += '\n'.join(specs)
+    spec_msg += '\n\nStatic or class methods are not allowed.'
+
+    if sum(arg is not None for arg in (cls, bound_call, unbound_call)) != 1:
+        raise ValueError('Exactly one object to check must be given.')
+
+    if cls is not None:
+        # Get the actual implementation, including ancestors
+        for parent in cls.mro():
+            call = parent.__dict__.get(attr, None)
+            if call is not None:
+                break
+        # Static and class methods are not allowed
+        if isinstance(call, staticmethod):
+            raise TypeError("'{}.{}' is a static method. "
+                            "".format(cls.__name__, attr) + spec_msg)
+        elif isinstance(call, classmethod):
+            raise TypeError("'{}.{}' is a class method. "
+                            "".format(cls.__name__, attr) + spec_msg)
+
+    elif bound_call is not None:
+        call = bound_call
+        if not inspect.ismethod(call):
+            raise TypeError('{} is not a bound method.'.format(call))
+    else:
+        call = unbound_call
+
+    if py3:
+        # support kw-only args and annotations
+        spec = inspect.getfullargspec(call)
+        kw_only = spec.kwonlyargs
+        kw_only_defaults = spec.kwonlydefaults
+    else:
+        spec = inspect.getargspec(call)
+        kw_only = ()
+        kw_only_defaults = {}
+
+    signature = _signature_from_spec(call)
+
+    pos_args = spec.args
+    if unbound_call is not None:
+        # Add 'self' to positional arg list to satisfy the checker
+        pos_args.insert(0, 'self')
+
+    pos_defaults = spec.defaults
+    varargs = spec.varargs
+
+    # Variable args are not allowed
+    if varargs is not None:
+        raise ValueError("Bad signature '{}': variable arguments not allowed."
+                         " ".format(signature) + spec_msg)
+
+    if len(pos_args) not in (2, 3):
+        raise ValueError("Bad signature '{}'. ".format(signature) + spec_msg)
+
+    true_pos_args = pos_args[1:]
+    if len(true_pos_args) == 1:  # 'out' kw-only
+        if 'out' in true_pos_args:  # 'out' positional and 'x' kw-only -> no
+            raise ValueError("Bad signature '{}': `out` cannot be the only "
+                             "positional argument."
+                             " ".format(signature) + spec_msg)
+        else:
+            if 'out' not in kw_only:
+                has_out = out_optional = False
+            elif kw_only_defaults['out'] is not None:
+                raise ValueError(
+                    "Bad signature '{}': `out` can only default to "
+                    "`None`, got '{}'."
+                    " ".format(signature, kw_only_defaults['out']) +
+                    spec_msg)
+            else:
+                has_out = True
+                out_optional = True
+
+    elif len(true_pos_args) == 2:  # Both args positional
+        if true_pos_args[0] == 'out':  # out must come second
+            py3_txt = ' or keyword-only. ' if py3 else '. '
+            raise ValueError("Bad signature '{}': `out` can only be the "
+                             "second positional argument".format(signature) +
+                             py3_txt + spec_msg)
+        elif true_pos_args[1] != 'out':  # 'out' must be 'out'
+            raise ValueError("Bad signature '{}': output parameter must "
+                             "be called 'out', got '{}'."
+                             " ".format(signature, true_pos_args[1]) +
+                             spec_msg)
+        else:
+            has_out = True
+            out_optional = bool(pos_defaults)
+            if pos_defaults and pos_defaults[-1] is not None:
+                raise ValueError("Bad signature '{}': `out` can only "
+                                 "default to `None`, got '{}'."
+                                 " ".format(signature, pos_defaults[-1]) +
+                                 spec_msg)
+
+    else:  # Too many positional args
+        raise ValueError("Bad signature '{}': too many positional arguments."
+                         " ".format(signature) + spec_msg)
+
+    return has_out, out_optional, spec
+
+
+class Operator(object):
+
+    """Abstract mathematical operator.
+
+    An operator is a mapping
+
+        :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}`
+
+    between sets :math:`\mathcal{X}` (domain) and :math:`\mathcal{Y}`
+    (range). The evaluation of :math:`\mathcal{A}` at an element
+    :math:`x \\in \mathcal{X}` is denoted by :math:`\mathcal{A}(x)`
+    and produces an element in :math:`\mathcal{Y}`:
+
+        :math:`y = \mathcal{A}(x) \\in \mathcal{Y}`.
+
+    Programmatically, these properties are reflected in the `Operator`
+    class described in the following.
 
     **Abstract attributes and methods**
 
     `Operator` is an **abstract** class, i.e. it can only be
     subclassed, not used directly.
 
-    Any subclass of `Operator` **must** have the following
+    Any subclass of `Operator` must have the following
     attributes:
 
     ``domain`` : `Set`
@@ -158,28 +341,27 @@ class Operator(with_metaclass(_OperatorMeta, object)):
     ``super().__init__(dom, ran)`` (Note: add
     ``from builtins import super`` in Python 2) in the ``__init__()``
     method of any subclass, where ``dom`` and ``ran`` are the arguments
-    specifying domain and range of the new
-    operator. In that case, the attributes `Operator.domain` and
-    `Operator.range` are automatically provided by
-    `Operator`.
+    specifying domain and range of the new operator. In that case, the
+    attributes `Operator.domain` and `Operator.range` are automatically
+    provided by the parent class `Operator`.
 
-    In addition, any subclass **must** implement **at least one** of the
-    methods ``_apply()`` and ``_call()``, which are explained in the
-    following.
+    In addition, any subclass **must** implement the private method
+    `Operator._call()`. It signature determines how it is interpreted:
 
-    **In-place evaluation:** ``_apply()``
+
+    **In-place-only evaluation:** ``_call(self, x, out[, **kwargs])``
 
     In-place evaluation means that the operator is applied, and the
-    result is written to an existing element provided as an additional
-    argument. In this case, a subclass has to implement the method
+    result is written to an existing element ``out`` provided,
+    i.e.
 
-        ``_apply(self, x, out)  <==>  out <-- operator(x)``
+        ``_call(self, x, out)  <==>  out <-- operator(x)``
 
     **Parameters:**
 
     x : `Operator.domain` element
         An object in the operator domain to which the operator is
-        applied.
+        applied
 
     out : `Operator.range` element
         An object in the operator range to which the result of the
@@ -187,9 +369,10 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     **Returns:**
 
-    `None`
+    `None` (return value is ignored)
 
-    **Out-of-place evaluation:** ``_call()``
+
+    **Out-of-place-only evaluation:** ``_call(self, x[, **kwargs])``
 
     Out-of-place evaluation means that the operator is applied,
     and the result is written to a **new** element which is returned.
@@ -201,41 +384,106 @@ class Operator(with_metaclass(_OperatorMeta, object)):
 
     x : `Operator.domain` element
         An object in the operator domain to which the operator is
-        applied.
+        applied
 
-    out : `Operator.range` element
+    **Returns:**
+
+    out : `Operator.range` element-like
+        An object in the operator range holding the result of the
+        operator evaluation
+
+
+    **Dual-use evaluation:** ``_call(self, x, out=None[, **kwargs])``
+
+    Evaluate in place if ``out`` is given, otherwise out of place.
+
+    **Parameters:**
+
+    x : `Operator.domain` element
+        An object in the operator domain to which the operator is
+        applied
+
+    out : `Operator.range` element, optional
         An object in the operator range to which the result of the
-        operator evaluation is written.
+        operator evaluation is written
+
+    **Returns:**
+
+    `None` (return value is ignored)
+
 
     Notes
     -----
-    If not both ``_apply()`` and ``_call()`` are implemented and the
-    `Operator.range` is a `LinearSpace`, a default
-    implementation of the respective other is provided.
+    - If `Operator._call` is implemented in-place-only or
+      out-of-place-only and the `Operator.range` is a `LinearSpace`,
+      a default implementation of the respective other is provided.
+
+    - `Operator._call` is allowed to have keyword-only arguments (Python
+      3 only).
+
+    - The term "element-like" means that an object must be convertible
+      to an element by the ``domain.element()`` method.
     """
+
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance."""
+        instance = super().__new__(cls)
+
+        call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
+        instance._call_has_out = call_has_out
+        instance._call_out_optional = call_out_optional
+        if not call_has_out:
+            # Out-of-place _call
+            instance._call_in_place = preload_call_with(
+                instance, 'in-place')(_default_call_in_place)
+            instance._call_out_of_place = instance._call
+        elif call_out_optional:
+            # Dual-use _call
+            instance._call_in_place = instance._call
+            instance._call_out_of_place = instance._call
+        else:
+            # In-place only _call
+            instance._call_in_place = instance._call
+            instance._call_out_of_place = preload_call_with(
+                instance, 'out-of-place')(_default_call_out_of_place)
+
+        return instance
 
     def __init__(self, domain, range, linear=False):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `Set`
+        domain : `Set`
             The domain of this operator, i.e., the set of elements to
             which this operator can be applied
-
-        ran : `Set`
+        range : `Set`
             The range of this operator, i.e., the set this operator
             maps to
+        linear : `bool`
+            If `True`, the operator is considered as linear. In this
+            case, ``domain`` and ``range`` have to be instances of
+            `LinearSpace`, or `Field`.
         """
         if not isinstance(domain, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(domain))
+            raise TypeError('domain {!r} is not a `Set` instance.'
+                            ''.format(domain))
         if not isinstance(range, Set):
-            raise TypeError('range {!r} not a `Set` instance.'.format(range))
+            raise TypeError('range {!r} is not a `Set` instance.'
+                            ''.format(range))
 
         self._domain = domain
         self._range = range
         self._is_linear = bool(linear)
         self._is_functional = isinstance(range, Field)
+
+        # Mandatory out makes no sense for functionals.
+        # However, we need to allow optional out to support vectorized
+        # functions (which are functionals in the duck-typing sense).
+        if (self.is_functional and self._call_has_out and
+                not self._call_out_optional):
+            raise ValueError('mandatory `out` parameter not allowed for '
+                             'functionals.')
 
         if self.is_linear:
             if not isinstance(domain, (LinearSpace, Field)):
@@ -244,6 +492,80 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             if not isinstance(range, (LinearSpace, Field)):
                 raise TypeError('range {!r} not a `LinearSpace` or `Field` '
                                 'instance.'.format(range))
+
+    def _call(self, x, out=None, **kwargs):
+        """Implementation of the operator evaluation.
+
+        This method is private backend for the evaluation of this
+        operator. It needs to match certain signature conventions,
+        and its implementation type is inferred from its signature.
+
+        The following signatures are allowed:
+
+        Python 2 and 3:
+            - ``_call(self, x)``  -->  out-of-place evaluation
+            - ``_call(self, vec, out)``  -->  in-place evaluation
+            - ``_call(self, x, out=None)``   --> both
+
+        Python 3 only:
+            - ``_call(self, x, *, out=None)`` (``out`` as keyword-only
+              argument)  --> both
+
+        For disambiguation, the instance name (the first argument) **must**
+        be 'self'.
+
+        The name of the ``out`` argument **must** be 'out', the second
+        argument may have any name.
+
+        Additional variable ``**kwargs`` and keyword-only arguments
+        (Python 3 only) are also allowed.
+
+        Notes
+        -----
+        Some general advice on how to implement operator evaluation:
+
+        - If you just write a quick implementation or are not too
+          worried about efficiency, it may be easiest to write the
+          evaluation *out of place*.
+        - We recommend advanced and performance-aware users to implement
+          the *in-place* pattern if the wrapped code supports it.
+          In-place evaluation is usually significantly faster since it
+          avoids the allocation of new memory and a copy compared to
+          out-of-place evaluation.
+        - If there is a significant performance gain from implementing
+          an out-of-place method separately, use the pattern for both
+          (``out`` optional) and decide according to the given ``out``
+          parameter which one to use.
+        - If your evaluation code does not support in-place evaluation,
+          use the out-of-place pattern.
+
+        See the `documentation
+        <https://odl.readthedocs.org/guide/in_depth/operator_guide.html>`_
+        for more info on in-place vs. out-of-place evaluation.
+
+        Parameters
+        ----------
+        x : `Operator.domain` element-like
+            Element to which the operator is applied
+        out : `Operator.range` element, optional
+            Element to which the result is written
+
+        Returns
+        -------
+        out : `Operator.range` element-like
+            Result of the evaluation. If ``out`` was provided, the
+            returned object is a reference to it.
+
+        Notes
+        -----
+        The public call pattern ``op()`` using ``op.__call__`` provides
+        a default implementation of the underlying in-place or
+        out-of-place call even if you choose the respective other
+        pattern.
+        """
+        raise NotImplementedError('This operator does not implement `_call`. '
+                                  'See `Operator._call` for instructions on '
+                                  'how to do this.')
 
     @property
     def domain(self):
@@ -306,9 +628,8 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         raise OpNotImplementedError('inverse not implemented for operator {!r}'
                                     ''.format(self))
 
-    # Implicitly defined operators
-    def __call__(self, x, out=None, *args, **kwargs):
-        """Return ``op(x)``.
+    def __call__(self, x, out=None, **kwargs):
+        """Return ``self(x)``.
 
         Implementation of the call pattern ``op(x)`` with the private
         ``_call()`` method and added error checking.
@@ -323,13 +644,13 @@ class Operator(with_metaclass(_OperatorMeta, object)):
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
-        *args, **kwargs : Further arguments to the function, optional
+        **kwargs : Further arguments to the function, optional
 
         Returns
         -------
-        elem : `Operator.range` element
-            An object in the operator range, the result of the operator
-            evaluation. It is identical to ``out`` if provided.
+        out : `Operator.range` element
+            Result of the operator evaluation. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Examples
         --------
@@ -352,8 +673,12 @@ class Operator(with_metaclass(_OperatorMeta, object)):
         Rn(3).element([2.0, 4.0, 6.0])
         """
         if x not in self.domain:
-            raise OpDomainError('input {!r} not an element of the domain {!r} '
-                                'of {!r}.'.format(x, self.domain, self))
+            try:
+                x = self.domain.element(x)
+            except (TypeError, ValueError) as err:
+                raise_from(OpDomainError(
+                    'unable to cast {!r} to an element of '
+                    'the domain {}.'.format(x, self.domain)), err)
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
@@ -362,20 +687,23 @@ class Operator(with_metaclass(_OperatorMeta, object)):
                                    ''.format(out, self.range, self))
 
             if self.is_functional:
-                raise TypeError('`out` parameter cannot be used'
+                raise TypeError('`out` parameter cannot be used '
                                 'when range is a field')
 
-            self._apply(x, out, *args, **kwargs)
-            return out
+            self._call_in_place(x, out=out, **kwargs)
 
         else:  # Out-of-place evaluation
-            result = self._call(x, *args, **kwargs)
+            out = self._call_out_of_place(x, **kwargs)
 
-            if result not in self.range:
-                raise TypeError('result {!r} not an element of the range {!r} '
-                                'of {!r}.'
-                                ''.format(result, self.range, self))
-            return result
+            if out not in self.range:
+                try:
+                    out = self.range.element(out)
+                except (TypeError, ValueError) as err:
+                    new_exc = OpRangeError(
+                        'unable to cast {!r} to an element of '
+                        'the range {}.'.format(out, self.range))
+                    raise_from(new_exc, err)
+        return out
 
     def __add__(self, other):
         """Return ``self + other``."""
@@ -680,7 +1008,6 @@ class OperatorSum(Operator):
 
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, op1, op2, tmp_ran=None, tmp_dom=None):
         """Initialize a new instance.
 
@@ -703,11 +1030,9 @@ class OperatorSum(Operator):
         if op1.range != op2.range:
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
-
         if not isinstance(op1.range, (LinearSpace, Field)):
-            raise TypeError('range {!r} not a `LinearSpace` instance.'
-                            ''.format(op1.range))
-
+            raise TypeError('range {!r} not a `LinearSpace` or `Field` '
+                            'instance.'.format(op1.range))
         if op1.domain != op2.domain:
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
@@ -715,7 +1040,6 @@ class OperatorSum(Operator):
         if tmp_ran is not None and tmp_ran not in op1.range:
             raise TypeError('tmp_ran {!r} not an element of the operator '
                             'range {!r}.'.format(tmp_ran, op1.range))
-
         if tmp_dom is not None and tmp_dom not in op1.domain:
             raise TypeError('tmp_dom {!r} not an element of the operator '
                             'domain {!r}.'.format(tmp_dom, op1.domain))
@@ -727,8 +1051,8 @@ class OperatorSum(Operator):
         self._tmp_ran = tmp_ran
         self._tmp_dom = tmp_dom
 
-    def _apply(self, x, out):
-        """Implement ``op(x, out=out)``.
+    def _call(self, x, out=None):
+        """Implement ``self(x[, out])``.
 
         Examples
         --------
@@ -737,41 +1061,32 @@ class OperatorSum(Operator):
         >>> op = IdentityOperator(r3)
         >>> x = r3.element([1, 2, 3])
         >>> out = r3.element()
-        >>> OperatorSum(op, op)(x, out)
+        >>> OperatorSum(op, op)(x, out)  # In place, returns out
         Rn(3).element([2.0, 4.0, 6.0])
         >>> out
         Rn(3).element([2.0, 4.0, 6.0])
-        """
-        # pylint: disable=protected-access
-        tmp = (self._tmp_ran if self._tmp_ran is not None
-               else self.range.element())
-        self._op1._apply(x, out)
-        self._op2._apply(x, tmp)
-        out += tmp
-
-    def _call(self, x):
-        """Return ``op(x)``.
-
-        Examples
-        --------
-        >>> from odl import Rn, ScalingOperator
-        >>> r3 = Rn(3)
-        >>> A = ScalingOperator(r3, 3.0)
-        >>> B = ScalingOperator(r3, -1.0)
-        >>> C = OperatorSum(A, B)
-        >>> C(r3.element([1, 2, 3]))
+        >>> OperatorSum(op, op)(x)
         Rn(3).element([2.0, 4.0, 6.0])
         """
-        # pylint: disable=protected-access
-        return self._op1._call(x) + self._op2._call(x)
+        if out is None:
+            return self._op1(x) + self._op2(x)
+        else:
+            tmp = (self._tmp_ran if self._tmp_ran is not None
+                   else self.range.element())
+            self._op1(x, out=out)
+            self._op2(x, out=tmp)
+            out += tmp
 
     def derivative(self, x):
         """Return the operator derivative at ``x``.
 
-        # TODO: finish doc
-
         The derivative of a sum of two operators is equal to the sum of
         the derivatives.
+
+        Parameters
+        ----------
+        x : `Operator.domain` element-like
+            Evaluation point of the derivative
         """
         return OperatorSum(self._op1.derivative(x), self._op2.derivative(x))
 
@@ -846,18 +1161,15 @@ class OperatorComp(Operator):
         self._right = right
         self._tmp = tmp
 
-    def _apply(self, x, out):
-        """Implement ``op(x, out=out)``."""
-        # pylint: disable=protected-access
-        tmp = (self._tmp if self._tmp is not None
-               else self._right.range.element())
-        self._right._apply(x, tmp)
-        self._left._apply(tmp, out)
-
-    def _call(self, x):
-        """Return ``op(x)``."""
-        # pylint: disable=protected-access
-        return self._left._call(self._right._call(x))
+    def _call(self, x, out=None):
+        """Implement ``self(x[, out])``."""
+        if out is None:
+            return self._left(self._right(x))
+        else:
+            tmp = (self._tmp if self._tmp is not None
+                   else self._right.range.element())
+            self._right(x, out=tmp)
+            return self._left(tmp, out=out)
 
     @property
     def inverse(self):
@@ -871,17 +1183,23 @@ class OperatorComp(Operator):
         """
         return OperatorComp(self._right.inverse, self._left.inverse, self._tmp)
 
-    def derivative(self, point):
+    def derivative(self, x):
         """Return the operator derivative.
 
         The derivative of the operator composition follows the chain
         rule:
 
-        ``OperatorComp(left, right).derivative(point) ==
-        OperatorComp(left.derivative(right(point)), right.derivative(point))``
+        ``OperatorComp(left, right).derivative(x) ==
+        OperatorComp(left.derivative(right(x)), right.derivative(x))``
+
+        Parameters
+        ----------
+        x : `Operator.domain` element-like
+            Evaluation point of the derivative. Needs to be usable as
+            input for the ``right`` operator.
         """
-        left_deriv = self._left.derivative(self._right(point))
-        right_deriv = self._right.derivative(point)
+        left_deriv = self._left.derivative(self._right(x))
+        right_deriv = self._right.derivative(x)
 
         return OperatorComp(left_deriv, right_deriv)
 
@@ -923,7 +1241,6 @@ class OperatorPointwiseProduct(Operator):
     ``OperatorPointwiseProduct(op1, op2) <==> (x --> op1(x) * op2(x))``
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, op1, op2):
         """Initialize a new instance.
 
@@ -938,11 +1255,9 @@ class OperatorPointwiseProduct(Operator):
         if op1.range != op2.range:
             raise TypeError('operator ranges {!r} and {!r} do not match.'
                             ''.format(op1.range, op2.range))
-
         if not isinstance(op1.range, (LinearSpace, Field)):
             raise TypeError('range {!r} not a `LinearSpace` or `Field` '
                             'instance.'.format(op1.range))
-
         if op1.domain != op2.domain:
             raise TypeError('operator domains {!r} and {!r} do not match.'
                             ''.format(op1.domain, op2.domain))
@@ -951,18 +1266,15 @@ class OperatorPointwiseProduct(Operator):
         self._op1 = op1
         self._op2 = op2
 
-    def _apply(self, x, out):
-        """Implement ``op(x, out=out)``."""
-        # pylint: disable=protected-access
-        tmp = self._op2.range.element()
-        self._op1._apply(x, out)
-        self._op2._apply(x, tmp)
-        out *= tmp
-
-    def _call(self, x):
-        """Return ``op(x)``."""
-        # pylint: disable=protected-access
-        return self._op1._call(x) * self._op2._call(x)
+    def _call(self, x, out=None):
+        """Implement ``self(x[, out])``."""
+        if out is None:
+            return self._op1(x) * self._op2(x)
+        else:
+            tmp = self._op2.range.element()
+            self._op1(x, out=out)
+            self._op2(x, out=tmp)
+            out *= tmp
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1009,16 +1321,13 @@ class OperatorLeftScalarMult(Operator):
         self._op = op
         self._scalar = scalar
 
-    def _call(self, x):
-        """Return Return ``op(x)``."""
-        # pylint: disable=protected-access
-        return self._scalar * self._op._call(x)
-
-    def _apply(self, x, out):
-        """Implement ``op(x, out=out)``."""
-        # pylint: disable=protected-access
-        self._op._apply(x, out)
-        out *= self._scalar
+    def _call(self, x, out=None):
+        """Implement ``self(x[, out])``."""
+        if out is None:
+            return self._scalar * self._op(x)
+        else:
+            self._op(x, out=out)
+            out *= self._scalar
 
     @property
     def inverse(self):
@@ -1031,7 +1340,7 @@ class OperatorLeftScalarMult(Operator):
         ``OperatorLeftScalarMult(op, scalar).inverse <==>``
         ``OperatorRightScalarMult(op.inverse, 1.0/scalar)``
         """
-        if self.scalar == 0.0:
+        if self._scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
         return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
 
@@ -1042,6 +1351,11 @@ class OperatorLeftScalarMult(Operator):
 
         ``OperatorLeftScalarMult(op, scalar).derivative(x) <==>``
         ``OperatorLeftScalarMult(op.derivative(x), scalar)``
+
+        Parameters
+        ----------
+        x : `Operator.domain` element-like
+            Evaluation point of the derivative
 
         See also
         --------
@@ -1124,17 +1438,14 @@ class OperatorRightScalarMult(Operator):
         self._scalar = scalar
         self._tmp = tmp
 
-    def _call(self, x):
-        """Return ``self(x)``."""
-        # pylint: disable=protected-access
-        return self._op._call(self._scalar * x)
-
-    def _apply(self, x, out):
-        """Implement ``self(x, out=out)``."""
-        # pylint: disable=protected-access
-        tmp = self._tmp if self._tmp is not None else self.domain.element()
-        tmp.lincomb(self._scalar, x)
-        self._op._apply(tmp, out)
+    def _call(self, x, out=None):
+        """Implement ``self(x[, out])``."""
+        if out is None:
+            return self._op(self._scalar * x)
+        else:
+            tmp = self._tmp if self._tmp is not None else self.domain.element()
+            tmp.lincomb(self._scalar, x)
+            self._op(tmp, out=out)
 
     @property
     def inverse(self):
@@ -1147,7 +1458,7 @@ class OperatorRightScalarMult(Operator):
         ``OperatorRightScalarMult(op, scalar).inverse <==>``
         ``OperatorLeftScalarMult(op.inverse, 1.0/scalar)``
         """
-        if self.scalar == 0.0:
+        if self._scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
 
         return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
@@ -1160,6 +1471,11 @@ class OperatorRightScalarMult(Operator):
 
         ``OperatorRightScalarMult(op, scalar).derivative(x) <==>``
         ``OperatorLeftScalarMult(op.derivative(scalar * x), scalar)``
+
+        Parameters
+        ----------
+        x : `Operator.domain` element-like
+            Evaluation point of the derivative
         """
         return OperatorLeftScalarMult(self._op.derivative(self._scalar * x),
                                       self._scalar)
@@ -1201,21 +1517,22 @@ class FunctionalLeftVectorMult(Operator):
     """Expression type for the functional left vector multiplication.
 
     A functional is a `Operator` whose `Operator.range` is
-    a `Field`.
+    a `Field`. It is multiplied from left with a vector, resulting in
+    an operator mapping from the `Operator.domain` to the vector's
+    `LinearSpaceVector.space`.
 
     ``FunctionalLeftVectorMult(op, vector)(x) <==> vector * op(x)``
-
     """
 
     def __init__(self, op, vector):
-        """Initialize a new `FunctionalLeftVectorMult` instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
         op : `Operator`
             The range of ``op`` must be a `Field`.
         vector : `LinearSpaceVector`
-            The vector to multiply by. its space's
+            The vector to multiply by. Its space's
             `LinearSpace.field` must be the same as
             ``op.range``
         """
@@ -1231,16 +1548,13 @@ class FunctionalLeftVectorMult(Operator):
         self._op = op
         self._vector = vector
 
-    def _call(self, x):
-        """Return ``op(x)``."""
-        # pylint: disable=protected-access
-        return self._vector * self._op._call(x)
-
-    def _apply(self, x, out):
-        """Implement ``op(x, out=out)``."""
-        # pylint: disable=protected-access
-        scalar = self._op._call(x)
-        out.lincomb(scalar, self._vector)
+    def _call(self, x, out=None):
+        """Implement ``self(x[, out])``."""
+        if out is None:
+            return self._vector * self._op(x)
+        else:
+            scalar = self._op(x)
+            out.lincomb(scalar, self._vector)
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1316,16 +1630,13 @@ class OperatorLeftVectorMult(Operator):
         self._op = op
         self._vector = vector
 
-    def _call(self, x):
-        """Return ``op(x)``."""
-        # pylint: disable=protected-access
-        return self._vector * self._op._call(x)
-
-    def _apply(self, x, out):
-        """Implement ``op(x, out=out)``."""
-        # pylint: disable=protected-access
-        self._op._apply(x, out)
-        out *= self._vector
+    def _call(self, x, out=None):
+        """Implement ``self(x[, out])``."""
+        if out is None:
+            return self._op(x) * self._vector
+        else:
+            self._op(x, out=out)
+            out *= self._vector
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1402,17 +1713,14 @@ class OperatorRightVectorMult(Operator):
         self._op = op
         self._vector = vector
 
-    def _call(self, x):
-        """Return ``op(x)``."""
-        # pylint: disable=protected-access
-        return self._op._call(self._vector * x)
-
-    def _apply(self, x, out):
-        """Implement ``op(x, out=out)``."""
-        # pylint: disable=protected-access
-        tmp = self.domain.element()
-        tmp.multiply(self._vector, x)
-        self._op._apply(tmp, out)
+    def _call(self, x, out=None):
+        """Implement ``self(x[, out])``."""
+        if out is None:
+            return self._op(x * self._vector)
+        else:
+            tmp = self.domain.element()
+            tmp.multiply(self._vector, x)
+            self._op(tmp, out=out)
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1495,8 +1803,8 @@ class OpNotImplementedError(NotImplementedError):
     """
 
 
-def simple_operator(call=None, apply=None, inv=None, deriv=None,
-                    dom=None, ran=None, linear=False):
+def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
+                    linear=False):
     """Create a simple operator.
 
     Mostly intended for simple prototyping rather than final use.
@@ -1504,14 +1812,7 @@ def simple_operator(call=None, apply=None, inv=None, deriv=None,
     Parameters
     ----------
     call : `callable`
-        A function taking one argument and returning the result.
-        It will be used for the operator call pattern
-        ``out = op(x)``.
-    apply : `callable`
-        A function taking two arguments.
-        It will be used for the operator apply pattern
-        Implement ``op(x, out=out)``. Return value
-        is assumed to be `None` and is ignored.
+        Function with valid call signature, see `Operator`
     inv : `Operator`, optional
         The operator inverse
     deriv : `Operator`, optional
@@ -1544,25 +1845,45 @@ def simple_operator(call=None, apply=None, inv=None, deriv=None,
     >>> A(5)
     15
     """
-    if call is None and apply is None:
-        raise ValueError('at least one argument `call` or `apply` must be '
-                         'given.')
+    if dom is None:
+        dom = UniversalSpace() if linear else UniversalSet()
 
-    if linear:
-        dom = ran = UniversalSpace()
+    if ran is None:
+        ran = UniversalSpace() if linear else UniversalSet()
+
+    call_has_out, call_out_optional, _ = _dispatch_call_args(unbound_call=call)
+
+    attrs = {'inverse': inv, 'derivative': deriv}
+
+    if not call_has_out:
+        # Out-of-place _call
+
+        def _call(self, x):
+            return call(x)
+
+        attrs['_call_in_place'] = _default_call_in_place
+        attrs['_call_out_of_place'] = _call
+    elif call_out_optional:
+        # Dual-use _call
+
+        def _call(self, x, out=None):
+            return call(x, out=out)
+
+        attrs['_call_in_place'] = _call
+        attrs['_call_out_of_place'] = _call
     else:
-        dom = ran = UniversalSet()
+        # In-place only _call
 
-    attrs = {'inverse': inv, 'derivative': deriv, 'domain': dom, 'range': ran}
+        def _call(self, x, out):
+            return call(x, out)
 
-    if call is not None:
-        attrs['_call'] = _bound_method(call)
+        attrs['_call_in_place'] = _call
+        attrs['_call_out_of_place'] = _default_call_out_of_place
 
-    if apply is not None:
-        attrs['_apply'] = _bound_method(apply)
+    attrs['_call'] = _call
 
-    simple_op_cls = _OperatorMeta('SimpleOperator', (Operator,), attrs)
-    return simple_op_cls(dom, ran, linear)
+    SimpleOperator = type('SimpleOperator', (Operator,), attrs)
+    return SimpleOperator(dom, ran, linear)
 
 
 if __name__ == '__main__':
