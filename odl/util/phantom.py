@@ -34,34 +34,44 @@ def _shepp_logan_ellipse_2d():
 
     This is the standard phantom in 2d medical imaging.
     """
-    return [[2.00, .6900, .9200, 0, 0, 0],
-            [-.98, .6624, .8740, 0, -.0184, 0],
-            [-.02, .1100, .3100, .22, 0, -18],
-            [-.02, .1600, .4100, -.22, 0, 18],
-            [.01, .2100, .2500, 0, .3500, 0],
-            [.01, .0460, .0460, 0, .1000, 0],
-            [.01, .0460, .0460, 0, -.1000, 0],
-            [.01, .0460, .0230, -.08, -.6050, 0],
-            [.01, .0230, .0230, 0, -.6060, 0],
-            [.01, .0230, .0460, .06, -.6050, 0]]
+    return [[2.00, .6900, .9200, 0.0000, 0.0000, 0],
+            [-.98, .6624, .8740, 0.0000, -.0184, 0],
+            [-.02, .1100, .3100, 0.2200, 0.0000, -18],
+            [-.02, .1600, .4100, -.2200, 0.0000, 18],
+            [0.01, .2100, .2500, 0.0000, 0.3500, 0],
+            [0.01, .0460, .0460, 0.0000, 0.1000, 0],
+            [0.01, .0460, .0460, 0.0000, -.1000, 0],
+            [0.01, .0460, .0230, -.0800, -.6050, 0],
+            [0.01, .0230, .0230, 0.0000, -.6060, 0],
+            [0.01, .0230, .0460, 0.0600, -.6050, 0]]
 
 
-def _modified_shepp_logan_ellipse_2d():
-    """Return ellipse parameters for a 2d modified Shepp-Logan phantom.
+def _shepp_logan_ellipse_3d():
+    """Return ellipse parameters for a 3d Shepp-Logan phantom.
 
-    This is the modified version of the standard 2d medical imaging
-    phantom with higher contrast.
+    This is the standard phantom in 3d medical imaging.
     """
-    return [[1.00, .6900, .9200, 0, 0, 0],
-            [-.80, .6624, .8740, 0, -.0184, 0],
-            [-.20, .1100, .3100, .22, 0, -18],
-            [-.20, .1600, .4100, -.22, 0, 18],
-            [.10, .2100, .2500, 0, .3500, 0],
-            [.10, .0460, .0460, 0, .1000, 0],
-            [.10, .0460, .0460, 0, -.1000, 0],
-            [.10, .0460, .0230, -.08, -.6050, 0],
-            [.10, .0230, .0230, 0, -.6060, 0],
-            [.10, .0230, .0460, .06, -.6050, 0]]
+    return [[2.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
+            [-.98, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
+            [-.02, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 10],
+            [-.02, .1600, .4100, .280, -.2200, 0.0000, 0.00, 18., 0, 10],
+            [0.01, .2100, .2500, .410, 0.0000, 0.3500, -.15, 0.0, 0, 0],
+            [0.01, .0460, .0460, .050, 0.0000, 0.1000, 0.25, 0.0, 0, 0],
+            [0.01, .0460, .0460, .050, 0.0000, -.1000, 0.25, 0.0, 0, 0],
+            [0.01, .0460, .0230, .050, -.0800, -.6050, 0.00, 0.0, 0, 0],
+            [0.01, .0230, .0230, .020, 0.0000, -.6060, 0.00, 0.0, 0, 0],
+            [0.01, .0230, .0460, .020, 0.0600, -.6050, 0.00, 0.0, 0, 0]]
+
+
+def _modified_shepp_logan_ellipses(ellipses):
+    """Modify ellipses to give the modified shepp-logan phantom.
+
+    Works for both 1d and 2d
+    """
+    intensities = [1.0, -0.8, -0.2, -0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+
+    for ellipse, intensity in zip(ellipses, intensities):
+        ellipse[0] = intensity
 
 
 def _derenzo_sources_2d():
@@ -149,41 +159,6 @@ def _derenzo_sources_2d():
             [1.0, 0.02387, 0.02387, 0.78932, -0.11793, 0.0],
             [1.0, 0.023572, 0.023572, 0.83686, -0.20134, 0.0],
             [1.0, 0.023968, 0.023968, 0.88528, -0.11791, 0.0]]
-
-
-def _shepp_logan_ellipse_3d():
-    """Return ellipse parameters for a 3d Shepp-Logan phantom.
-
-    This is the standard phantom in 3d medical imaging.
-    """
-    return [[2.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
-            [-.98, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
-            [-.02, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 10],
-            [-.02, .1600, .4100, .280, -.2200, 0.0000, 0.00, 18., 0, 10],
-            [.010, .2100, .2500, .410, 0.0000, 0.3500, -.15, 0.0, 0, 0],
-            [.010, .0460, .0460, .050, 0.0000, 0.1000, 0.25, 0.0, 0, 0],
-            [.010, .0460, .0460, .050, 0.0000, -.1000, 0.25, 0.0, 0, 0],
-            [.010, .0460, .0230, .050, -.0800, -.6050, 0.00, 0.0, 0, 0],
-            [.010, .0230, .0230, .020, 0.0000, -.6060, 0.00, 0.0, 0, 0],
-            [.010, .0230, .0460, .020, 0.0600, -.6050, 0.00, 0.0, 0, 0]]
-
-
-def _modified_shepp_logan_ellipse_3d():
-    """Return ellipse parameters for a 3d modified Shepp-Logan phantom.
-
-    This is the modified version of the standard 3d medical imaging
-    phantom with higher contrast.
-    """
-    return [[1.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
-            [-.80, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
-            [-.20, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 10],
-            [-.20, .1600, .4100, .280, -.2200, 0.0000, 0.00, 18., 0, 10],
-            [.100, .2100, .2500, .410, 0.0000, 0.3500, -.15, 0.0, 0, 0],
-            [.100, .0460, .0460, .050, 0.0000, 0.1000, 0.25, 0.0, 0, 0],
-            [.100, .0460, .0460, .050, 0.0000, -.1000, 0.25, 0.0, 0, 0],
-            [.100, .0460, .0230, .050, -.0800, -.6050, 0.00, 0.0, 0, 0],
-            [.100, .0230, .0230, .020, 0.0000, -.6060, 0.00, 0.0, 0, 0],
-            [.100, .0230, .0460, .020, 0.0600, -.6050, 0.00, 0.0, 0, 0]]
 
 
 def _phantom_2d(space, ellipses):
@@ -379,6 +354,17 @@ def _phantom_3d(space, ellipses):
     return space.element(p)
 
 
+def phantom(space, ellipses):
+    """ Return a phantom given by ellipses. """
+
+    if space.ndim == 2:
+        return _phantom_2d(space, ellipses)
+    elif space.ndim == 3:
+        return _phantom_3d(space, ellipses)
+    else:
+        raise ValueError("Dimension not 2 or 3, no phantom available")
+
+
 def derenzo_sources(space):
     """Create the PET/SPECT Derenzo sources phantom.
 
@@ -400,17 +386,16 @@ def shepp_logan(space, modified=False):
     Wikipedia : https://en.wikipedia.org/wiki/Shepp%E2%80%93Logan_phantom
     """
     if space.ndim == 2:
-        if modified:
-            return _phantom_2d(space, _modified_shepp_logan_ellipse_2d())
-        else:
-            return _phantom_2d(space, _shepp_logan_ellipse_2d())
+        ellipses = _shepp_logan_ellipse_2d()
     elif space.ndim == 3:
-        if modified:
-            return _phantom_3d(space, _modified_shepp_logan_ellipse_3d())
-        else:
-            return _phantom_3d(space, _shepp_logan_ellipse_3d())
+        ellipses = _shepp_logan_ellipse_3d()
     else:
         raise ValueError("Dimension not 2 or 3, no phantom available")
+
+    if modified:
+        _modified_shepp_logan_ellipses(ellipses)
+
+    return phantom(space, ellipses)
 
 
 if __name__ == '__main__':
