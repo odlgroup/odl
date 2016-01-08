@@ -58,10 +58,8 @@ def _default_out_of_place(func, dtype, x, **kwargs):
         raise TypeError('cannot use in-place method to implement '
                         'out-of-place non-vectorized evaluation.')
 
-    # TODO: implement this. Needs a helper to infer data type without
-    # creating an array.
     if dtype is None:
-        raise NotImplementedError('lazy out-of-place default not implemented.')
+        dtype = np.result_type(*x)
 
     out = np.empty(out_shape, dtype=dtype)
     func(x, out=out, **kwargs)
@@ -121,7 +119,7 @@ class FunctionSet(Set):
 
         See also
         --------
-        TensorGrid.meshgrid : efficient grids for function
+        odl.discr.grid.TensorGrid.meshgrid : efficient grids for function
             evaluation
         """
         if not callable(fcall):
@@ -174,7 +172,7 @@ class FunctionSet(Set):
 
     @property
     def element_type(self):
-        """ `FunctionSetVector` """
+        """`FunctionSetVector`"""
         return FunctionSetVector
 
 
@@ -196,8 +194,6 @@ class FunctionSetVector(Operator):
         """
         self._space = fset
         super().__init__(self._space.domain, self._space.range, linear=False)
-
-        # pylint: disable=protected-access
 
         # Determine which type of implementation fcall is
         if isinstance(fcall, FunctionSetVector):
@@ -365,7 +361,9 @@ class FunctionSetVector(Operator):
                                  'the range {!r}.'
                                  ''.format(out, self.range))
 
-        return out[0] if scalar_out else out
+        # Numpy does not implement __complex__ for arrays (in contrast to
+        # __float__), so we have to fish out the scalar ourselves.
+        return self.range.element(out.ravel()[0]) if scalar_out else out
 
     def assign(self, other):
         """Assign ``other`` to this vector.
@@ -378,7 +376,6 @@ class FunctionSetVector(Operator):
             raise TypeError('vector {!r} is not an element of the space '
                             '{} of this vector.'
                             ''.format(other, self.space))
-        # pylint: disable=protected-access
         self._call_in_place = other._call_in_place
         self._call_out_of_place = other._call_out_of_place
         self._call_has_out = other._call_has_out
@@ -406,8 +403,6 @@ class FunctionSetVector(Operator):
 
         if not isinstance(other, FunctionSetVector):
             return False
-
-        # pylint: disable=protected-access
 
         # We cannot blindly compare since functions may have been wrapped
         if (self._call_has_out != other._call_has_out or
@@ -578,8 +573,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
         The additions and multiplications are implemented via simple
         Python functions, so non-vectorized versions are slow.
         """
-        # pylint: disable=protected-access
-
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -650,8 +643,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
         The multiplication is implemented with a simple Python
         function, so the non-vectorized versions are slow.
         """
-        # pylint: disable=protected-access
-
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -677,8 +668,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     def _divide(self, x1, x2, out):
         """Raw pointwise division of two functions."""
-        # pylint: disable=protected-access
-
         # Store to allow aliasing
         x1_call_oop = x1._call_out_of_place
         x1_call_ip = x1._call_in_place
@@ -704,7 +693,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     def _scalar_power(self, x, p, out):
         """Raw p-th power of a function, p integer or general scalar."""
-        # pylint: disable=protected-access
         x_call_oop = x._call_out_of_place
         x_call_ip = x._call_in_place
 
@@ -793,18 +781,15 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
     # Power functions are more general than the ones in LinearSpace
     def __pow__(self, p):
         """`f.__pow__(p) <==> f ** p`."""
-        # pylint: disable=protected-access
         out = self.space.element()
         self.space._scalar_power(self, p, out=out)
         return out
 
     def __ipow__(self, p):
         """`f.__ipow__(p) <==> f **= p`."""
-        # pylint: disable=protected-access
         return self.space._scalar_power(self, p, out=self)
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-order,wrong-import-position
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)

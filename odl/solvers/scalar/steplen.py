@@ -130,7 +130,7 @@ class BacktrackingLineSearch(LineSearch):
         """
         self.function = function
         self.tau = tau
-        self.c = c
+        self.discount = c
         self.total_num_iter = 0
         # Use a default value that allows the shortest step to be < 0.0001
         # times the original step length
@@ -160,7 +160,7 @@ class BacktrackingLineSearch(LineSearch):
         fx = self.function(x)
         num_iter = 0
         while ((self.function(x + alpha * direction) >=
-                fx + alpha * dir_derivative * self.c) and
+                fx + alpha * dir_derivative * self.discount) and
                num_iter <= self.max_num_iter):
             num_iter += 1
             alpha *= self.tau

@@ -33,6 +33,7 @@ import odl
 
 
 class Convolution(odl.Operator):
+
     def __init__(self, space, kernel, adjkernel):
         self.kernel = kernel
         self.adjkernel = adjkernel
@@ -58,7 +59,7 @@ class Convolution(odl.Operator):
 def kernel(x):
     mean = [0.0, 0.25]
     std = [0.05, 0.05]
-    return np.exp(-(((x[0]-mean[0])/std[0])**2 + ((x[1]-mean[1])/std[1])**2))
+    return np.exp(-(((x[0] - mean[0]) / std[0])**2 + ((x[1] - mean[1]) / std[1])**2))
 
 
 def adjkernel(x):
@@ -71,8 +72,8 @@ kernel_space = odl.FunctionSpace(cont_space.domain - cont_space.domain)
 
 # Discretization parameters
 n = 20
-npoints = np.array([n+1, n+1])
-npoints_kernel = np.array([2*n+1, 2*n+1])
+npoints = np.array([n + 1, n + 1])
+npoints_kernel = np.array([2 * n + 1, 2 * n + 1])
 
 # Discretized spaces
 disc_space = odl.uniform_discr_fromspace(cont_space, npoints)

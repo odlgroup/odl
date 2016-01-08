@@ -158,7 +158,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     r = op(x)
     r.lincomb(1, rhs, -1, r)       # r = rhs - A x
     p = r.copy()
-    Ap = op.domain.element()  # Extra storage for storing A x
+    d = op.domain.element()  # Extra storage for storing A x
 
     sqnorm_r_old = r.norm() ** 2  # Only recalculate norm after update
 
@@ -166,17 +166,17 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         return
 
     for _ in range(niter):
-        op(p, out=Ap)  # Ap = A p
+        op(p, out=d)  # d = A p
 
-        pTAp = p.inner(Ap)
+        inner_p_d = p.inner(d)
 
-        if pTAp == 0.0:  # Return if step is 0
+        if inner_p_d == 0.0:  # Return if step is 0
             return
 
-        alpha = sqnorm_r_old / pTAp
+        alpha = sqnorm_r_old / inner_p_d
 
         x.lincomb(1, x, alpha, p)            # x = x + alpha*p
-        r.lincomb(1, r, -alpha, Ap)           # r = r - alpha*p
+        r.lincomb(1, r, -alpha, d)           # r = r - alpha*d
 
         sqnorm_r_new = r.norm() ** 2
 
@@ -359,13 +359,13 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
         v -= tmp_ran                    # assign  v = rhs-op(x)-deriv(x0-x)
         deriv_adjoint(v, out=u)         # eval/assign  u = deriv.T(v)
 
-        # Solve equation system
+        # Solve equation Tikhonov regularized system
         # (deriv.T o deriv + tm * I)^-1 u = dx
-        A = OperatorSum(OperatorComp(deriv.adjoint, deriv),
-                        tm * I, tmp_dom)
+        tikh_op = OperatorSum(OperatorComp(deriv.adjoint, deriv),
+                              tm * I, tmp_dom)
 
         # TODO: allow user to select other method
-        conjugate_gradient(A, dx, u, 3)
+        conjugate_gradient(tikh_op, dx, u, 3)
 
         # Update x
         x.lincomb(1, x0, 1, dx)  # x = x0 + dx

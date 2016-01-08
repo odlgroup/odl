@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" UFuncs for ODL vectors.
+"""UFuncs for ODL vectors.
 
 These functions are internal and should only be used as methods on
 `NtuplesBaseVector` type spaces.
@@ -41,8 +41,12 @@ standard_library.install_aliases()
 # External module imports
 import numpy as np
 
-# Some are ignored since they dont cooperate with dtypes, needs fix
 
+__all__ = ('NtuplesBaseUFuncs', 'NtuplesUFuncs', 'CudaNtuplesUFuncs',
+           'DiscreteLpUFuncs', 'ProductSpaceUFuncs')
+
+
+# Some are ignored since they don't cooperate with dtypes, needs fix
 RAW_UFUNCS = ['absolute', 'add', 'arccos', 'arccosh', 'arcsin', 'arcsinh',
               'arctan', 'arctan2', 'arctanh', 'bitwise_and', 'bitwise_or',
               'bitwise_xor', 'ceil', 'conj', 'copysign', 'cos', 'cosh',
@@ -55,9 +59,8 @@ RAW_UFUNCS = ['absolute', 'add', 'arccos', 'arccosh', 'arcsin', 'arcsinh',
               'multiply', 'negative', 'nextafter', 'not_equal', 'power',
               'rad2deg', 'reciprocal', 'remainder', 'right_shift', 'rint',
               'sign', 'signbit', 'sin', 'sinh', 'sqrt', 'square', 'subtract',
-              'tan', 'tanh', 'true_divide', 'trunc'
-              # ,'isreal', 'iscomplex', 'ldexp', 'frexp'
-              ]
+              'tan', 'tanh', 'true_divide', 'trunc']
+# ,'isreal', 'iscomplex', 'ldexp', 'frexp'
 
 # Add some standardized information
 UFUNCS = []
@@ -155,10 +158,12 @@ def wrap_reduction_base(name, doc):
 
 
 class NtuplesBaseUFuncs(object):
+
     """UFuncs for `NtuplesBaseVector` objects.
 
     Internal object, should not be created except in `NtuplesBaseVector`.
     """
+
     def __init__(self, vector):
         """Create ufunc wrapper for vector."""
         self.vector = vector
@@ -228,6 +233,7 @@ def wrap_ufunc_ntuples(name, n_in, n_out, doc):
 
 
 class NtuplesUFuncs(NtuplesBaseUFuncs):
+
     """UFuncs for `NtuplesVector` objects.
 
     Internal object, should not be created except in `NtuplesVector`.
@@ -263,6 +269,12 @@ def _make_unary_fun(name):
 
 
 class CudaNtuplesUFuncs(NtuplesBaseUFuncs):
+
+    """UFuncs for `CudaNtuplesVector` objects.
+
+    Internal object, should not be created except in `CudaNtuplesVector`.
+    """
+
     # Ufuncs
     sin = _make_unary_fun('sin')
     cos = _make_unary_fun('cos')
@@ -352,6 +364,7 @@ def wrap_reduction_discretelp(name, doc):
 
 
 class DiscreteLpUFuncs(NtuplesBaseUFuncs):
+
     """UFuncs for `DiscreteLpVector` objects.
 
     Internal object, should not be created except in `DiscreteLpVector`.
@@ -434,6 +447,7 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
 
 
 def wrap_reduction_productspace(name, doc):
+    """Add reduction methods to `ProductSpaceVector`."""
     def wrapper(self):
         results = [getattr(x.ufunc, name)() for x in self.vector]
         return getattr(np, name)(results)
@@ -444,6 +458,7 @@ def wrap_reduction_productspace(name, doc):
 
 
 class ProductSpaceUFuncs(object):
+
     """UFuncs for `ProductSpaceVector` objects.
 
     Internal object, should not be created except in `ProductSpaceVector`.

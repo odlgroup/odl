@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Example on using show and updating the figure in real time in 2d. """
+"""Example on using show and updating the figure in real time in 2d."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 n = 100
 m = 20
 spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
-vec = odl.util.shepp_logan(spc)
+vec = odl.util.shepp_logan(spc, modified=True)
 
 # Create a figure by saving the result of show
 fig = None

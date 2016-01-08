@@ -19,9 +19,7 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from builtins import int, object, str, zip
-from odl.util.utility import with_metaclass
 from future import standard_library
 from past.builtins import basestring
 standard_library.install_aliases()
@@ -32,7 +30,8 @@ from numbers import Integral, Real, Complex
 import numpy as np
 
 # ODL
-from odl.util.utility import is_int_dtype, is_real_dtype, is_scalar_dtype
+from odl.util.utility import (is_int_dtype, is_real_dtype, is_scalar_dtype,
+                              with_metaclass)
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
@@ -108,7 +107,7 @@ class Set(with_metaclass(ABCMeta, object)):
         """
         return self == other
 
-    def contains_all(self, other, **kwargs):
+    def contains_all(self, other):
         """Test if all points in ``other`` are contained in this set.
 
         This is a default implementation and should be overridden by
@@ -210,10 +209,10 @@ class Strings(Set):
             The fixed length of the strings in this set. Must be
             positive.
         """
-        le = int(length)
-        if le <= 0:
+        length_ = int(length)
+        if length_ <= 0:
             raise ValueError('`length` {} is not positive.'.format(length))
-        self._length = le
+        self._length = length_
 
     @property
     def length(self):
@@ -232,9 +231,9 @@ class Strings(Set):
         dtype = getattr(array, 'dtype', None)
         if dtype is None:
             dtype = np.result_type(*array)
-        dtype_byte = np.dtype('S{}'.format(self.length))
+        dtype_str = np.dtype('S{}'.format(self.length))
         dtype_uni = np.dtype('<U{}'.format(self.length))
-        return dtype in (dtype_byte, dtype_uni)
+        return dtype in (dtype_str, dtype_uni)
 
     def __eq__(self, other):
         """Return ``self == other``."""

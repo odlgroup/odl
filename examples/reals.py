@@ -17,8 +17,6 @@
 
 """An example of a very simple space, the real numbers."""
 
-# pylint: disable=abstract-method
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -38,7 +36,7 @@ class Reals(odl.LinearSpace):
         return x1.__val__ * x2.__val__
 
     def _lincomb(self, a, x1, b, x2, out):
-        out.__val__ = a*x1.__val__ + b*x2.__val__
+        out.__val__ = a * x1.__val__ + b * x2.__val__
 
     def _multiply(self, x1, x2, out):
         out.__val__ = x1.__val__ * x2.__val__
@@ -72,7 +70,7 @@ if __name__ == '__main__':
 
     print(x)
     print(y)
-    print(x+y)
-    print(x*y)
-    print(x-y)
+    print(x + y)
+    print(x * y)
+    print(x - y)
     print(3.14 * x)

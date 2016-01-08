@@ -26,24 +26,23 @@ This is a default implementation of :math:`A^n` for an arbitrary set
 from __future__ import print_function, division, absolute_import
 
 from future import standard_library
+from future.utils import native
 standard_library.install_aliases()
 from builtins import super
-from future.utils import native
 
 # External module imports
-# pylint: disable=no-name-in-module
 import ctypes
 from numbers import Integral
 from functools import partial
 from math import sqrt
 import numpy as np
-import scipy as sp
+import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
 # ODL imports
 from odl.operator.operator import Operator
-from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
-                                    FnBase, FnBaseVector, FnWeightingBase)
+from odl.space.base_ntuples import (
+    NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
@@ -452,9 +451,6 @@ def _blas_is_applicable(*args):
     x1,...,xN : `NtuplesBaseVector`
         The vectors to be tested for BLAS conformity
     """
-    if len(args) == 0:
-        return False
-
     return (all(x.dtype == args[0].dtype and
                 x.dtype in _BLAS_DTYPES and
                 x.data.flags.contiguous
@@ -489,8 +485,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
         return x2
 
     if _blas_is_applicable(x1, x2, out):
-        # pylint: disable=unbalanced-tuple-unpacking
-        axpy, scal, copy = sp.linalg.blas.get_blas_funcs(
+        axpy, scal, copy = linalg.blas.get_blas_funcs(
             ['axpy', 'scal', 'copy'], arrays=(x1.data, x2.data, out.data))
     else:
         axpy, scal, copy = (fallback_axpy, fallback_scal, fallback_copy)
@@ -540,6 +535,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
 
 
 def _repr_space_funcs(space):
+    """Return the string in the parentheses of repr for space funcs."""
     inner_str = ''
 
     weight = 1.0
@@ -692,6 +688,7 @@ class Fn(FnBase, Ntuples):
 
             Default: `False`.
         """
+        Ntuples.__init__(self, size, dtype)
         FnBase.__init__(self, size, dtype)
 
         dist = kwargs.pop('dist', None)
@@ -1027,7 +1024,7 @@ class Fn(FnBase, Ntuples):
 
     @property
     def element_type(self):
-        """ `FnVector` """
+        """Return `FnVector`."""
         return FnVector
 
 
@@ -1041,6 +1038,7 @@ class FnVector(FnBaseVector, NtuplesVector):
             raise TypeError('{!r} not an `Fn` instance.'
                             ''.format(space))
 
+        FnBaseVector.__init__(self, space)
         NtuplesVector.__init__(self, space, data)
 
     @property
@@ -1369,6 +1367,7 @@ class MatVecOperator(Operator):
 
 
 def _weighting(weight, exponent, dist_using_inner=False):
+    """Return a weighting whose type is inferred from the arguments."""
     if np.isscalar(weight):
         weighting = FnConstWeighting(
             weight, exponent=exponent, dist_using_inner=dist_using_inner)
@@ -1484,8 +1483,9 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
 
 
 def _norm_default(x):
+    """Default Euclidean norm implementation."""
     if _blas_is_applicable(x):
-        nrm2 = sp.linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
+        nrm2 = linalg.blas.get_blas_funcs('nrm2', dtype=x.dtype)
         norm = partial(nrm2, n=native(x.size))
     else:
         norm = np.linalg.norm
@@ -1493,12 +1493,12 @@ def _norm_default(x):
 
 
 def _pnorm_default(x, p):
-    # TODO: Other approaches based on BLAS dot or nrm2 do not give a speed
-    # advantage. Maybe there is a faster method?
+    """Default p-norm implementation."""
     return np.linalg.norm(x.data, ord=p)
 
 
 def _pnorm_diagweight(x, p, w):
+    """Diagonally weighted p-norm implementation."""
     # This is faster than first applying the weights and then summing with
     # BLAS dot or nrm2
     xp = np.abs(x.data)
@@ -1512,8 +1512,9 @@ def _pnorm_diagweight(x, p, w):
 
 
 def _inner_default(x1, x2):
+    """Default Euclidean inner product implementation."""
     if _blas_is_applicable(x1, x2):
-        dotc = sp.linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
+        dotc = linalg.blas.get_blas_funcs('dotc', dtype=x1.dtype)
         dot = partial(dotc, n=native(x1.size))
     elif is_real_dtype(x1.dtype):
         dot = np.dot  # still much faster than vdot
@@ -1622,7 +1623,7 @@ class FnMatrixWeighting(FnWeightingBase):
         if self.exponent in (1.0, float('inf')):
             self._mat_pow = self.matrix
         elif precomp_mat_pow and self.exponent != 2.0:
-            eigval, eigvec = sp.linalg.eigh(self.matrix)
+            eigval, eigvec = linalg.eigh(self.matrix)
             eigval **= 1.0 / self.exponent
             self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
         else:
@@ -1787,7 +1788,7 @@ class FnMatrixWeighting(FnWeightingBase):
                     raise NotImplementedError('sparse matrix powers not '
                                               'suppoerted.')
                 else:
-                    eigval, eigvec = sp.linalg.eigh(self.matrix)
+                    eigval, eigvec = linalg.eigh(self.matrix)
                     eigval **= 1.0 / self.exponent
                     mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
                     if self._cache_mat_pow:
@@ -2105,7 +2106,6 @@ class FnConstWeighting(FnWeightingBase):
         if other is self:
             return True
 
-        # TODO: make symmetric?
         return (isinstance(other, FnConstWeighting) and
                 self.const == other.const and
                 super().__eq__(other))
@@ -2236,8 +2236,7 @@ class FnNoWeighting(FnConstWeighting):
     _instance = None
 
     def __new__(cls, *args, **kwargs):
-        """ Implement singleton pattern if exp==2.0
-        """
+        """Implement singleton pattern if ``exp==2.0``."""
         if len(args) == 0:
             exponent = kwargs.pop('exponent', 2.0)
             dist_using_inner = kwargs.pop('dist_using_inner', False)
@@ -2358,7 +2357,6 @@ class FnCustomInnerProduct(FnWeightingBase):
             `True` if other is an `FnCustomInnerProduct`
             instance with the same inner product, `False` otherwise.
         """
-        # TODO: make symmetric
         return (isinstance(other, FnCustomInnerProduct) and
                 self.inner == other.inner and
                 super().__eq__(other))
@@ -2424,7 +2422,6 @@ class FnCustomNorm(FnWeightingBase):
             `True` if other is an `FnCustomNorm`
             instance with the same norm, `False` otherwise.
         """
-        # TODO: make symmetric
         return (isinstance(other, FnCustomNorm) and
                 self.norm == other.norm and
                 super().__eq__(other))

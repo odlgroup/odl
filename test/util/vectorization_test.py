@@ -44,11 +44,11 @@ def test_is_valid_input_array():
 
     for shp in valid_shapes:
         arr = np.zeros(shp)
-        assert is_valid_input_array(arr, d=1)
+        assert is_valid_input_array(arr, ndim=1)
 
     for shp in invalid_shapes:
         arr = np.zeros(shp)
-        assert not is_valid_input_array(arr, d=1)
+        assert not is_valid_input_array(arr, ndim=1)
 
     # 3d
     valid_shapes = [(3, 1), (3, 2), (3, 20)]
@@ -56,16 +56,16 @@ def test_is_valid_input_array():
 
     for shp in valid_shapes:
         arr = np.zeros(shp)
-        assert is_valid_input_array(arr, d=3)
+        assert is_valid_input_array(arr, ndim=3)
 
     for shp in invalid_shapes:
         arr = np.zeros(shp)
-        assert not is_valid_input_array(arr, d=3)
+        assert not is_valid_input_array(arr, ndim=3)
 
     # Other input
     invalid_input = [1, [[1, 2], [3, 4]], (5,)]
     for inp in invalid_input:
-        assert not is_valid_input_array(inp, d=2)
+        assert not is_valid_input_array(inp, ndim=2)
 
 
 def test_is_valid_input_meshgrid():
@@ -74,36 +74,36 @@ def test_is_valid_input_meshgrid():
     x = np.zeros(2)
 
     valid_mg = sparse_meshgrid(x)
-    assert is_valid_input_meshgrid(valid_mg, d=1)
+    assert is_valid_input_meshgrid(valid_mg, ndim=1)
 
     invalid_mg = sparse_meshgrid(x, x)
-    assert not is_valid_input_meshgrid(invalid_mg, d=1)
+    assert not is_valid_input_meshgrid(invalid_mg, ndim=1)
 
     x = np.zeros((2, 2))
     invalid_mg = sparse_meshgrid(x)
-    assert not is_valid_input_meshgrid(invalid_mg, d=1)
+    assert not is_valid_input_meshgrid(invalid_mg, ndim=1)
 
     # 3d
     x, y, z = np.zeros(2), np.zeros(3), np.zeros(4)
 
     valid_mg = sparse_meshgrid(x, y, z)
-    assert is_valid_input_meshgrid(valid_mg, d=3)
+    assert is_valid_input_meshgrid(valid_mg, ndim=3)
 
     valid_mg = sparse_meshgrid(x, y, z, order='F')
-    assert is_valid_input_meshgrid(valid_mg, d=3)
+    assert is_valid_input_meshgrid(valid_mg, ndim=3)
 
     invalid_mg = sparse_meshgrid(x, x, y, z)
-    assert not is_valid_input_meshgrid(invalid_mg, d=3)
+    assert not is_valid_input_meshgrid(invalid_mg, ndim=3)
 
     x = np.zeros((3, 3))
     invalid_mg = sparse_meshgrid(x)
-    assert not is_valid_input_meshgrid(invalid_mg, d=3)
+    assert not is_valid_input_meshgrid(invalid_mg, ndim=3)
 
     # Other input
     invalid_input = [1, [1, 2], ([1, 2], [3, 4]), (5,), np.zeros((2, 2))]
     for inp in invalid_input:
-        assert not is_valid_input_meshgrid(inp, d=1)
-        assert not is_valid_input_meshgrid(inp, d=2)
+        assert not is_valid_input_meshgrid(inp, ndim=1)
+        assert not is_valid_input_meshgrid(inp, ndim=2)
 
 
 def test_meshgrid_input_order():

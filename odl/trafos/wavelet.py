@@ -25,16 +25,15 @@ from builtins import range, str, super
 
 # External
 import numpy as np
-
-# Internal
-from odl.discr.lp_discr import DiscreteLp
-from odl.operator.operator import Operator
-
 try:
     import pywt
     PYWAVELETS_AVAILABLE = True
 except ImportError:
     PYWAVELETS_AVAILABLE = False
+
+# Internal
+from odl.discr.lp_discr import DiscreteLp
+from odl.operator.operator import Operator
 
 __all__ = ('DiscreteWaveletTransform', 'DiscreteWaveletTransformInverse',
            'PYWAVELETS_AVAILABLE')
@@ -59,15 +58,14 @@ def coeff_size_list(shape, nscales, wbasis, mode):
         Number of scales in the multidimensional wavelet
         transform.  This parameter is checked against the maximum number of
         scales returned by ``pywt.dwt_max_level``. For more information
-        see the corresponding `documentation of PyWavelets
+        see the `PyWavelets documentation on the maximum level of scales
         <http://www.pybytes.com/pywavelets/ref/\
 dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
--dwt-max-level>`_ .
+-dwt-max-level>`_.
 
     wbasis : ``pywt.Wavelet``
-        Selected wavelet basis.
-        For more information see the corresponding
-        `documentation of PyWavelets
+        Selected wavelet basis. For more information see the
+        `PyWavelets documentation on wavelet bases
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
 
     mode : `str`
@@ -140,8 +138,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
 
 def pywt_coeff_to_array(coeff, size_list):
-    """Convert a `pywt
-    <http://www.pybytes.com/pywavelets/>`_ coefficient into a flat array.
+    """Convert a Pywavelets coefficient list into a flat array.
 
     Related to 1D, 2D and 3D multilevel discrete wavelet transforms.
 
@@ -152,7 +149,7 @@ def pywt_coeff_to_array(coeff, size_list):
 
         In 1D:
 
-        ``[aN, (dN), ... (d1)]``
+        ``[aN, (dN), ..., (d1)]``
 
         The abbreviations refer to
 
@@ -162,7 +159,7 @@ def pywt_coeff_to_array(coeff, size_list):
 
         In 2D:
 
-        ``[aaN, (adN, daN, ddN), ... (ad1, da1, dd1)]``
+        ``[aaN, (adN, daN, ddN), ..., (ad1, da1, dd1)]``
 
         The abbreviations refer to
 
@@ -179,7 +176,7 @@ def pywt_coeff_to_array(coeff, size_list):
         ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
 
-        The appreviations refer to
+        The abbreviations refer to
 
         ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
@@ -201,15 +198,19 @@ def pywt_coeff_to_array(coeff, size_list):
 
     size_list : `list`
         A list containing the sizes of the wavelet (approximation
-        and detail) coefficients at different scaling levels
+        and detail) coefficients at different scaling levels.
 
         ``size_list[0]`` = size of approximation coefficients at
-            the coarsest level,
+        the coarsest level,
+
         ``size_list[1]`` = size of the detailed coefficients at
-            the coarsest level,
+        the coarsest level,
+
         ``size_list[N]`` = size of the detailed coefficients at
-            the finest level,
+        the finest level,
+
         ``size_list[N+1]`` = size of original image,
+
         ``N`` =  the number of scaling levels
 
     Returns
@@ -235,9 +236,9 @@ def pywt_coeff_to_array(coeff, size_list):
             start, stop = stop, stop + fsize
             flat_coeff[start:stop] = detail_coeffs.ravel()
         else:
-            for dc in detail_coeffs:
+            for dcoeff in detail_coeffs:
                 start, stop = stop, stop + fsize
-                flat_coeff[start:stop] = dc.ravel()
+                flat_coeff[start:stop] = dcoeff.ravel()
 
     return flat_coeff
 
@@ -250,7 +251,7 @@ def array_to_pywt_coeff(coeff, size_list):
 
     Parameters
     ----------
-    coeff : `DiscreteLp Vector`
+    coeff : `DiscreteLpVector`
         A flat coefficient vector containing the approximation,
         and detail coefficients in the following order
         [aaaN, aadN, adaN, addN, daaN, dadN, ddaN, dddN, ...
@@ -305,7 +306,7 @@ def array_to_pywt_coeff(coeff, size_list):
         ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
 
-        The appreviations refer to,
+        The abbreviations refer to
 
         ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
@@ -357,21 +358,21 @@ def wavelet_decomposition3d(x, wbasis, mode, nscales):
 
     Parameters
     ----------
-    x : `DiscreteLp.Vector`
+    x : `DiscreteLpVector`
 
-    wbasis:  ``_pywt.Wavelet``
-        Describes properties of a selected wavelet basis.
-        For more information see PyWavelet `documentation
+    wbasis : ``pywt.Wavelet``
+        Selected wavelet basis. For more information see the
+        `PyWavelets documentation on wavelet bases
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
 
     mode : `str`
         Signal extention mode. For possible extensions see the
-        `signal extenstion modes
+        `Pywavelets documentation on signal extenstion modes
         <http://www.pybytes.com/pywavelets/ref/\
-signal-extension-modes.html>`_ of PyWavelets.
+signal-extension-modes.html>`_.
 
 
-    nscales : `int
+    nscales : `int`
        Number of scales in the coefficient list.
 
     Returns
@@ -382,7 +383,7 @@ signal-extension-modes.html>`_ of PyWavelets.
          ```[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
          (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``` .
 
-         The appreviations refer to,
+         The abbreviations refer to
 
          ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
@@ -417,7 +418,7 @@ signal-extension-modes.html>`_ of PyWavelets.
     coeff_list = []
     coeff_list.append(details)
 
-    for kk in range(1, nscales):
+    for _ in range(1, nscales):
         wcoeffs = pywt.dwtn(aaa, wbasis, mode)
         aaa = wcoeffs['aaa']
         aad = wcoeffs['aad']
@@ -453,7 +454,7 @@ def wavelet_reconstruction3d(coeff_list, wbasis, mode, nscales):
         ```[caaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]```.
 
-        The appreviations refer to
+        The abbreviations refer to
 
         ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
 
@@ -494,13 +495,12 @@ signal-extension-modes.html>`_
         A wavalet reconstruction.
     """
     aaa = coeff_list[0]
-    k = 1
-    (aad, ada, add, daa, dad, dda, ddd) = coeff_list[k]
+    (aad, ada, add, daa, dad, dda, ddd) = coeff_list[1]
     coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
                   'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
-    for k in range(2, nscales + 1):
+    for tpl in coeff_list[2:]:
         aaa = pywt.idwtn(coeff_dict, wbasis, mode)
-        (aad, ada, add, daa, dad, dda, ddd) = coeff_list[k]
+        (aad, ada, add, daa, dad, dda, ddd) = tpl
         coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
                       'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
 
@@ -625,7 +625,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             raise NotImplementedError('ndim {} not 1, 2 or 3'
                                       ''.format(len(dom.ndim)))
 
-        # TODO: Maybe allow other ranges like Besov spaces (yet to be crated)
+        # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
         ran = dom.dspace_type(ran_size, dtype=dom.dtype)
         super().__init__(dom, ran, linear=True)
 
@@ -644,7 +644,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
         Parameters
         ----------
-        x : `DiscreteLp.Vector`
+        x : `DiscreteLpVector`
 
         Returns
         -------
@@ -807,11 +807,11 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
         Parameters
         ----------
-        coeff : `DiscreteLp.Vector`
+        coeff : `DiscreteLpVector`
 
         Returns
         -------
-        arr : `DiscreteLp.Vector`
+        arr : `DiscreteLpVector`
 
         """
         if len(self.range.grid.shape) == 1:

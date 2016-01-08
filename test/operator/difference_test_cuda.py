@@ -74,8 +74,8 @@ class ForwardDiff2D(odl.Operator):
 
 
 class ForwardDiff2DAdjoint(odl.Operator):
-    """ Calculates the circular convolution of two CUDA vectors
-    """
+
+    """Calculate the circular convolution of two CUDA vectors."""
 
     def __init__(self, space):
         super().__init__(odl.ProductSpace(space, space), space, linear=True)

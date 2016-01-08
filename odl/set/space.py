@@ -624,7 +624,7 @@ class LinearSpaceVector(object):
             return self.__ipow__(n // 2)
         else:
             tmp = self.copy()
-            for i in range(n - 1):
+            for _ in range(n - 1):
                 self.space.multiply(tmp, self, out=tmp)
             return tmp
 

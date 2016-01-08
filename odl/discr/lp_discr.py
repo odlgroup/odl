@@ -17,10 +17,6 @@
 
 """:math:`L^p` type discretizations of function spaces."""
 
-# TODO: write some introduction doc
-
-# pylint: disable=abstract-method
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -31,9 +27,10 @@ from builtins import super, str
 import numpy as np
 
 # ODL
-from odl.discr.discretization import (Discretization, DiscretizationVector,
-                                      dspace_type)
-from odl.discr.discr_mappings import GridCollocation, NearestInterpolation
+from odl.discr.discretization import (
+    Discretization, DiscretizationVector, dspace_type)
+from odl.discr.discr_mappings import (
+    GridCollocation, NearestInterpolation, LinearInterpolation)
 from odl.discr.grid import uniform_sampling, RegularGrid
 from odl.set.sets import Field, RealNumbers
 from odl.set.domain import IntervalProd
@@ -45,10 +42,8 @@ from odl.util.ufuncs import DiscreteLpUFuncs
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr', 'uniform_discr_fromspace')
 
-_SUPPORTED_INTERP = ('nearest',)
+_SUPPORTED_INTERP = ('nearest', 'linear')
 
-
-# TODO: other types of discrete spaces
 
 class DiscreteLp(Discretization):
 
@@ -78,8 +73,8 @@ class DiscreteLp(Discretization):
 
             'nearest' : use nearest-neighbor interpolation (default)
 
-            'linear' : use linear interpolation (not implemented)
-        order : {'C', 'F'}, optional  (Default: 'C')
+            'linear' : use linear interpolation
+        order : {'C', 'F'}, optional
             Ordering of the values in the flat data arrays. 'C'
             means the first grid axis varies slowest, the last fastest,
             'F' vice versa.
@@ -101,8 +96,12 @@ class DiscreteLp(Discretization):
         if self.interp == 'nearest':
             extension = NearestInterpolation(fspace, grid, dspace,
                                              order=self.order)
+        elif self.interp == 'linear':
+            extension = LinearInterpolation(fspace, grid, dspace,
+                                            order=self.order)
         else:
-            raise NotImplementedError
+            # Should not happen
+            raise RuntimeError
 
         Discretization.__init__(self, fspace, dspace, restriction, extension)
 
@@ -114,7 +113,7 @@ class DiscreteLp(Discretization):
 
     @property
     def exponent(self):
-        """The exponent :math:`p` in :math:`L^p`."""
+        """The exponent ``p`` in ``L^p``."""
         return self._exponent
 
     def element(self, inp=None):
@@ -140,6 +139,7 @@ class DiscreteLp(Discretization):
         elif inp in self.dspace:
             return self.element_type(self, inp)
         try:
+            # pylint: disable=not-callable
             inp_elem = self.uspace.element(inp)
             return self.element_type(self, self.restriction(inp_elem))
         except TypeError:
@@ -417,15 +417,15 @@ class DiscreteLpVector(DiscretizationVector):
         method : `str`, optional
             1d methods:
 
-        'plot' : graph plot
+            'plot' : graph plot
 
-        2d methods:
+            2d methods:
 
-        'imshow' : image plot with coloring according to value,
-        including a colorbar.
+            'imshow' : image plot with coloring according to value,
+            including a colorbar.
 
-        'scatter' : cloud of scattered 3d points
-        (3rd axis <-> value)
+            'scatter' : cloud of scattered 3d points
+            (3rd axis <-> value)
 
         indices : index expression
             Display a slice of the array instead of the full array.
@@ -523,7 +523,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     See also
     --------
-    uniform_discr
+    uniform_discr : implicit uniform Lp discretization
     """
     if not isinstance(fspace, FunctionSpace):
         raise TypeError('space {!r} is not a `FunctionSpace` instance.'
@@ -615,7 +615,6 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     Examples
     --------
-
     Create real space:
 
     >>> uniform_discr([0, 0], [1, 1], [10, 10])
@@ -627,7 +626,8 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     See also
     --------
-    uniform_discr_fromspace
+    uniform_discr_fromspace : uniform discretization from an existing
+        function space
     """
     if not isinstance(field, Field):
         raise TypeError('field {} not a Field instance'

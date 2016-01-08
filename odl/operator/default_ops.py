@@ -117,10 +117,11 @@ class ScalingOperator(Operator):
 
     @property
     def adjoint(self):
-        """ The adjoint is given by taking the conjugate of the scalar
-        """
-        # TODO: optimize to self if `scal` is real
-        return ScalingOperator(self._space, self._scal.conjugate())
+        """Adjoint, given as scaling with the conjugate of the scalar."""
+        if complex(self._scal).imag == 0.0:
+            return self
+        else:
+            return ScalingOperator(self._space, self._scal.conjugate())
 
     def __repr__(self):
         """op.__repr__() <==> repr(op)."""
@@ -186,7 +187,6 @@ class LinCombOperator(Operator):
     ``out = a*x[0] + b*x[1]``
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, space, a, b):
         """Initialize a LinCombOperator instance.
 
@@ -260,7 +260,6 @@ class MultiplyOperator(Operator):
     in the second the scalar multiplication.
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, y, domain=None):
         """Initialize a MultiplyOperator instance.
 
@@ -328,7 +327,7 @@ class MultiplyOperator(Operator):
 
     @property
     def adjoint(self):
-        """ The adjoint operator.
+        """The adjoint operator.
 
         Returns
         -------
@@ -379,7 +378,6 @@ class InnerProductOperator(Operator):
     This is only applicable in inner product spaces.
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, vector):
         """Initialize a InnerProductOperator instance.
 
@@ -417,7 +415,7 @@ class InnerProductOperator(Operator):
 
     @property
     def adjoint(self):
-        """ The adjoint operator.
+        """The adjoint operator.
 
         Returns
         -------
@@ -444,8 +442,8 @@ class InnerProductOperator(Operator):
         vector : `LinearSpaceVector`
             Vector used in this operator
 
-        Example
-        -------
+        Examples
+        --------
         >>> from odl import Rn
         >>> r3 = Rn(3)
         >>> x = r3.element([1, 2, 3])
@@ -534,38 +532,33 @@ class ConstantOperator(Operator):
 
 class ResidualOperator(Operator):
 
-    """ Operator that returns the residual of some operator application
-    with a vector
+    """Operator that calculates the residual ``op(x) - vec``.
 
-    ``ResidualOperator(op, vector)(x) <==> op(x) - vector``
+    ``ResidualOperator(op, vector)(x) <==> op(x) - vec``
     """
 
-    def __init__(self, op, vector):
-        """ Initialize an instance.
+    def __init__(self, op, vec):
+        """Initialize a new instance.
 
         Parameters
         ----------
-        vector : `LinearSpaceVector`
-            The vector constant to be returned
-
-        dom : `LinearSpace`, default : vector.space
-            The domain of the operator.
+        op : `Operator`
+            Operator to be used in the residual expression. Its
+            `Operator.range` must be a `LinearSpace`.
+        vec : `Operator.range` element-like
+            Vector to be subtracted from the operator result
         """
         if not isinstance(op, Operator):
             raise TypeError('op {!r} not a Operator instance.'
                             ''.format(op))
 
-        if not isinstance(vector, LinearSpaceVector):
-            raise TypeError('space {!r} not a LinearSpaceVector instance.'
-                            ''.format(vector))
-
-        if vector not in op.range:
-            raise TypeError('space {!r} not in op.range {!r}.'
-                            ''.format(vector, op.range))
+        if not isinstance(op.range, LinearSpace):
+            raise TypeError('operator range {!r} not a LinearSpace instance.'
+                            ''.format(op.range))
 
         self.op = op
-        self.vector = vector
-        super().__init__(op.domain, vector.space)
+        self.vector = op.range.element(vec)
+        super().__init__(op.domain, op.range)
 
     def _call(self, x, out=None):
         """Evaluate the residual at ``x``.

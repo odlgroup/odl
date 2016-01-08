@@ -69,7 +69,7 @@ class NtuplesBase(Set):
         ----------
         size : non-negative int
             The number of entries per tuple
-        dtype : `object`
+        dtype :
             The data type for each tuple entry. Can be provided in any
             way the `numpy.dtype` function understands, most notably
             as built-in type, as one of NumPy's internal datatype

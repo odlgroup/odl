@@ -98,7 +98,6 @@ def _signature_from_spec(func):
     sig : `str`
         Signature of the function
     """
-    # pylint: disable=deprecated-method,redefined-variable-type,no-member
     py3 = (sys.version_info.major > 2)
     if py3:
         spec = inspect.getfullargspec(func)
@@ -232,7 +231,6 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     else:
         call = unbound_call
 
-    # pylint: disable=deprecated-method,redefined-variable-type
     if py3:
         # support kw-only args and annotations
         spec = inspect.getfullargspec(call)
@@ -431,7 +429,6 @@ class Operator(object):
         """Create a new instance."""
         instance = super().__new__(cls)
 
-        # pylint: disable=protected-access,redefined-variable-type
         call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
         instance._call_has_out = call_has_out
         instance._call_out_optional = call_out_optional
@@ -918,7 +915,6 @@ class Operator(object):
         >>> squared(x)
         Rn(3).element([27.0, 54.0, 81.0])
         """
-        # pylint: disable=redefined-variable-type
         if isinstance(n, Integral) and n > 0:
             op = self
             while n > 1:
@@ -1015,7 +1011,6 @@ class OperatorSum(Operator):
 
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, op1, op2, tmp_ran=None, tmp_dom=None):
         """Initialize a new instance.
 
@@ -1088,10 +1083,13 @@ class OperatorSum(Operator):
     def derivative(self, x):
         """Return the operator derivative at ``x``.
 
-        # TODO: finish doc
-
         The derivative of a sum of two operators is equal to the sum of
         the derivatives.
+
+        Parameters
+        ----------
+        x : `Operator.domain` element-like
+            Evaluation point of the derivative
         """
         return OperatorSum(self._op1.derivative(x), self._op2.derivative(x))
 
@@ -1188,17 +1186,23 @@ class OperatorComp(Operator):
         """
         return OperatorComp(self._right.inverse, self._left.inverse, self._tmp)
 
-    def derivative(self, point):
+    def derivative(self, x):
         """Return the operator derivative.
 
         The derivative of the operator composition follows the chain
         rule:
 
-        ``OperatorComp(left, right).derivative(point) ==
-        OperatorComp(left.derivative(right(point)), right.derivative(point))``
+        ``OperatorComp(left, right).derivative(x) ==
+        OperatorComp(left.derivative(right(x)), right.derivative(x))``
+
+        Parameters
+        ----------
+        x : `Operator.domain` element-like
+            Evaluation point of the derivative. Needs to be usable as
+            input for the ``right`` operator.
         """
-        left_deriv = self._left.derivative(self._right(point))
-        right_deriv = self._right.derivative(point)
+        left_deriv = self._left.derivative(self._right(x))
+        right_deriv = self._right.derivative(x)
 
         return OperatorComp(left_deriv, right_deriv)
 
@@ -1240,7 +1244,6 @@ class OperatorPointwiseProduct(Operator):
     ``OperatorPointwiseProduct(op1, op2) <==> (x --> op1(x) * op2(x))``
     """
 
-    # pylint: disable=abstract-method
     def __init__(self, op1, op2):
         """Initialize a new instance.
 
@@ -1351,6 +1354,11 @@ class OperatorLeftScalarMult(Operator):
 
         ``OperatorLeftScalarMult(op, scalar).derivative(x) <==>``
         ``OperatorLeftScalarMult(op.derivative(x), scalar)``
+
+        Parameters
+        ----------
+        x : `Operator.domain` element-like
+            Evaluation point of the derivative
 
         See also
         --------
@@ -1466,6 +1474,11 @@ class OperatorRightScalarMult(Operator):
 
         ``OperatorRightScalarMult(op, scalar).derivative(x) <==>``
         ``OperatorLeftScalarMult(op.derivative(scalar * x), scalar)``
+
+        Parameters
+        ----------
+        x : `Operator.domain` element-like
+            Evaluation point of the derivative
         """
         return OperatorLeftScalarMult(self._op.derivative(self._scalar * x),
                                       self._scalar)
@@ -1507,11 +1520,12 @@ class FunctionalLeftVectorMult(Operator):
     """Expression type for the functional left vector multiplication.
 
     A functional is a `Operator` whose `Operator.range` is
-    a `Field`.
+    a `Field`. It is multiplied from left with a vector, resulting in
+    an operator mapping from the `Operator.domain` to the vector's
+    `LinearSpaceVector.space`.
 
     ``FunctionalLeftVectorMult(op, vector)(x) <==> vector * op(x)``
     """
-    # TODO: improve doc, not comprehensible
 
     def __init__(self, op, vector):
         """Initialize a new instance.
@@ -1521,7 +1535,7 @@ class FunctionalLeftVectorMult(Operator):
         op : `Operator`
             The range of ``op`` must be a `Field`.
         vector : `LinearSpaceVector`
-            The vector to multiply by. its space's
+            The vector to multiply by. Its space's
             `LinearSpace.field` must be the same as
             ``op.range``
         """
@@ -1876,6 +1890,5 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
 
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-order,wrong-import-position
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)

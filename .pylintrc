@@ -42,11 +42,24 @@ load-plugins=
 # Disable all messages caused solely by 'future' imports and functions
 # and also backslash to enable :math: and not callable since it fails with inherited __call__.
 disable=redefined-builtin,
-  anomalous-backslash-in-string
+  anomalous-backslash-in-string,
+  no-name-in-module,
+  no-member,
+  missing-super-argument,
+  abstract-method,
+  protected-access,
+  not-callable
 
-# redefined-builtin: 'object', 'range', 'str', 'super' are redefined, 
+# redefined-builtin: 'object', 'range', 'str', 'super' are redefined,
 #                    that's okay
-
+# no-name-in-module, no-member: triggered by scipy and numpy, let's ignore them
+# missing-super-argument: importing new super, pylint doesn't get it
+# abstract-method: some classes are intended as intermediate, where it's okay not to override
+#                  abstract methods. This warning does not really prevent bugs, so we're disabling it.
+# protected-access: We use private attributes of "internalized" objects. Since this check is not really
+#                   a bug catcher, we're disabling it.
+# not-callable: pylint tries to determine if a class attribute (e.g. element_type) is
+#               callable or not - and fails to do so
 
 [REPORTS]
 
@@ -121,10 +134,10 @@ indent-after-paren=4
 bad-functions=map,filter,apply,input
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_,a,b,x,y,z,xp,yp,zp,s,q,p,I,T,dx,dy,x1,x2
+good-names=a,b,c,d,f,g,h,i,j,k,m,n,p,q,r,s,t,u,v,w,x,y,z,xp,yp,zp,dx,dy,dz,x0,x1,x2,y0,y1,y2,z0,z1,z2,xi,yi,zi,ax,rn,cn,op,ex,_,I,T,nx,ny,nz,fx
 
 # Bad variable names which should always be refused, separated by a comma
-bad-names=foo,bar,baz,toto,tutu,tata
+bad-names=foo,baz,toto,tutu,tata,l
 
 # Colon-delimited sets of names that determine each other's naming style when
 # the name regexes allow several styles.

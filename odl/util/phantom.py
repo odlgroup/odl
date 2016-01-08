@@ -30,7 +30,10 @@ __all__ = ('derenzo_sources', 'shepp_logan')
 
 
 def _shepp_logan_ellipse_2d():
-    # Modified Shepp Logan
+    """Return ellipse parameters for a 2d Shepp-Logan phantom.
+
+    This is the standard phantom in 2d medical imaging.
+    """
     return [[2.00, .6900, .9200, 0, 0, 0],
             [-.98, .6624, .8740, 0, -.0184, 0],
             [-.02, .1100, .3100, .22, 0, -18],
@@ -44,7 +47,11 @@ def _shepp_logan_ellipse_2d():
 
 
 def _modified_shepp_logan_ellipse_2d():
-    # Modified Shepp Logan
+    """Return ellipse parameters for a 2d modified Shepp-Logan phantom.
+
+    This is the modified version of the standard 2d medical imaging
+    phantom with higher contrast.
+    """
     return [[1.00, .6900, .9200, 0, 0, 0],
             [-.80, .6624, .8740, 0, -.0184, 0],
             [-.20, .1100, .3100, .22, 0, -18],
@@ -58,9 +65,10 @@ def _modified_shepp_logan_ellipse_2d():
 
 
 def _derenzo_sources_2d():
-    """ A popular phantom in spect/pet.
+    """Return ellipse parameters for a 2d Derenzo sources phantom.
 
-    This phantom defines the source terms.
+    This is a popular phantom in SPECT and PET. It defines the source
+    locations and intensities.
     """
     return [[1.0, 0.047788, 0.047788, -0.77758, -0.11811, 0.0],
             [1.0, 0.063525, 0.063525, -0.71353, 0.12182, 0.0],
@@ -144,6 +152,10 @@ def _derenzo_sources_2d():
 
 
 def _shepp_logan_ellipse_3d():
+    """Return ellipse parameters for a 3d Shepp-Logan phantom.
+
+    This is the standard phantom in 3d medical imaging.
+    """
     return [[2.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
             [-.98, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
             [-.02, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 10],
@@ -157,6 +169,11 @@ def _shepp_logan_ellipse_3d():
 
 
 def _modified_shepp_logan_ellipse_3d():
+    """Return ellipse parameters for a 3d modified Shepp-Logan phantom.
+
+    This is the modified version of the standard 3d medical imaging
+    phantom with higher contrast.
+    """
     return [[1.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
             [-.80, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
             [-.20, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 10],
@@ -202,9 +219,9 @@ def _phantom_2d(space, ellipses):
     points = points * 2 - 1
 
     for ellip in ellipses:
-        I = ellip[0]
-        a2 = ellip[1] ** 2
-        b2 = ellip[2] ** 2
+        intensity = ellip[0]
+        a_squared = ellip[1] ** 2
+        b_squared = ellip[2] ** 2
         x0 = ellip[3]
         y0 = ellip[4]
         phi = ellip[5] * np.pi / 180.0
@@ -216,19 +233,20 @@ def _phantom_2d(space, ellipses):
         sin_p = np.sin(phi)
 
         # Find the pixels within the ellipse
-        scales = [1 / a2, 1 / b2]
+        scales = [1 / a_squared, 1 / b_squared]
         mat = [[cos_p, sin_p],
                [-sin_p, cos_p]]
         radius = np.dot(scales, np.dot(mat, offset_points.T) ** 2)
         inside = radius <= 1
 
         # Add the ellipse intensity to those pixels
-        p[inside] += I
+        p[inside] += intensity
 
     return space.element(p)
 
 
 def _getshapes(center, max_radius, shape):
+    """Calculate indices and slices for the bounding box of a ball."""
     index_mean = shape * center
     index_radius = max_radius / 2.0 * np.array(shape)
 
@@ -267,8 +285,8 @@ def _phantom_3d(space, ellipses):
     # data volumes.
     #
     # The main optimization is that it only considers a subset of all the
-    # points when updating for each ellipse, it does this by first finding
-    # a subset of points that could possibly be inside the ellipse, this
+    # points when updating for each ellipse. It does this by first finding
+    # a subset of points that could possibly be inside the ellipse. This
     # approximation is accurate for "spherical" ellipsoids, but not so
     # accurate for elongated ones.
 
@@ -288,10 +306,10 @@ def _phantom_3d(space, ellipses):
         grid += [(grid_in[i] - meani) / diffi]
 
     for ellip in ellipses:
-        I = ellip[0]
-        a2 = ellip[1] ** 2
-        b2 = ellip[2] ** 2
-        c2 = ellip[3] ** 2
+        intensity = ellip[0]
+        a_squared = ellip[1] ** 2
+        b_squared = ellip[2] ** 2
+        c_squared = ellip[3] ** 2
         x0 = ellip[4]
         y0 = ellip[5]
         z0 = ellip[6]
@@ -299,7 +317,7 @@ def _phantom_3d(space, ellipses):
         theta = ellip[8] * np.pi / 180
         psi = ellip[9] * np.pi / 180
 
-        scales = [1 / a2, 1 / b2, 1 / c2]
+        scales = [1 / a_squared, 1 / b_squared, 1 / c_squared]
 
         # Create the offset x,y and z values for the grid
         if any([phi, theta, psi]):
@@ -325,7 +343,8 @@ def _phantom_3d(space, ellipses):
             # Since the points are rotated, we cannot do anything directional
             # without more logic
             center = (np.array([x0, y0, z0]) + 1.0) / 2.0
-            max_radius = np.sqrt(np.abs(mat).dot([a2, b2, c2]))
+            max_radius = np.sqrt(
+                np.abs(mat).dot([a_squared, b_squared, c_squared]))
             idx, shapes = _getshapes(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
@@ -339,7 +358,7 @@ def _phantom_3d(space, ellipses):
         else:
             # Calculate the points that could possibly be inside the volume
             center = (np.array([x0, y0, z0]) + 1.0) / 2.0
-            max_radius = np.sqrt([a2, b2, c2])
+            max_radius = np.sqrt([a_squared, b_squared, c_squared])
             idx, shapes = _getshapes(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
@@ -355,15 +374,15 @@ def _phantom_3d(space, ellipses):
         inside = radius <= 1
 
         # Add the ellipse intensity to those pixels
-        p[idx][inside] += I
+        p[idx][inside] += intensity
 
     return space.element(p)
 
 
 def derenzo_sources(space):
-    """ Creates the PET/SPECT derenzo phantom.
+    """Create the PET/SPECT Derenzo sources phantom.
 
-    The derenzo phantom contains a series of circles of decreasing size.
+    The Derenzo phantom contains a series of circles of decreasing size.
     """
     if space.ndim == 2:
         return _phantom_2d(space, _derenzo_sources_2d())
@@ -371,10 +390,10 @@ def derenzo_sources(space):
         raise ValueError("Dimension not 2, no phantom available")
 
 
-def shepp_logan(space, modified=True):
-    """ Create a Shepp-Logan phantom.
+def shepp_logan(space, modified=False):
+    """Create a Shepp-Logan phantom.
 
-    The shepp-logan phantom
+    The standard Shepp-Logan phantom in 2 or 3 dimensions.
 
     References
     ----------
@@ -400,14 +419,14 @@ if __name__ == '__main__':
     n = 300
 
     # 2D
-    disc = odl.uniform_discr([-1, -1], [1, 1], [n, n])
+    discr = odl.uniform_discr([-1, -1], [1, 1], [n, n])
 
-    shepp_logan(disc, modified=True).show()
-    shepp_logan(disc, modified=False).show()
-    derenzo_sources(disc).show()
+    shepp_logan(discr, modified=True).show()
+    shepp_logan(discr, modified=False).show()
+    derenzo_sources(discr).show()
 
     # Shepp-logan 3d
-    disc = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
+    discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
     with odl.util.Timer():
-        shepp_logan_3d = shepp_logan(disc)
+        shepp_logan_3d = shepp_logan(discr)
     shepp_logan_3d.show()
