@@ -25,13 +25,14 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
-import astra
+from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
+if ASTRA_AVAILABLE:
+    import astra
 
 # Internal
 import odl
 from odl.tomo.util.testutils import skip_if_no_astra
 from odl.util.testutils import is_subdict, all_equal
-from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
 
 
 # TODO: test scaling of ASTRA projectors
