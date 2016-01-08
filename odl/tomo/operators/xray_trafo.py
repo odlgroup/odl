@@ -31,10 +31,12 @@ from odl.discr.lp_discr import DiscreteLp
 from odl.space import FunctionSpace, Ntuples, CudaNtuples
 from odl.operator.operator import Operator
 from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.backends import (
-    ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
-    astra_cpu_forward_projector_call, astra_cpu_backward_projector_call,
-    astra_gpu_forward_projector_call, astra_gpu_backward_projector_call)
+from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
+from odl.tomo.backends.astra_cuda import ASTRA_CUDA_AVAILABLE
+from odl.tomo.backends.astra_cpu import (
+    astra_cpu_forward_projector_call, astra_cpu_backward_projector_call)
+from odl.tomo.backends.astra_cuda import (
+    astra_cuda_forward_projector_call, astra_cuda_backward_projector_call)
 
 _SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 
@@ -160,7 +162,7 @@ class DiscreteXrayTransform(Operator):
                 return astra_cpu_forward_projector_call(
                     inp, self.geometry, self.range)
             elif impl == 'cuda':
-                return astra_gpu_forward_projector_call(
+                return astra_cuda_forward_projector_call(
                     inp, self.geometry, self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
@@ -208,7 +210,7 @@ class DiscreteXrayTransformAdjoint(Operator):
                 return astra_cpu_backward_projector_call(
                     inp, self.forward.geometry, self.range)
             elif impl == 'cuda':
-                return astra_gpu_backward_projector_call(
+                return astra_cuda_backward_projector_call(
                     inp, self.forward.geometry, self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
