@@ -106,9 +106,8 @@ class DiscreteXrayTransform(Operator):
             if not ASTRA_CUDA_AVAILABLE and self.backend == 'astra_cuda':
                 raise ValueError('ASTRA CUDA backend not available.')
             if discr_dom.dspace.dtype not in (np.float32, np.complex64):
-                raise ValueError('ASTRA support is limited to `float32` '
-                                 'for real and `complex64` for complex '
-                                 'data.')
+                raise ValueError('ASTRA support is limited to `float32` for '
+                                 'real and `complex64` for complex data.')
             if not np.allclose(discr_dom.grid.stride[1:],
                                discr_dom.grid.stride[:-1]):
                 raise ValueError('ASTRA does not support different pixel/voxel'
