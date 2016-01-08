@@ -21,7 +21,6 @@
 from __future__ import print_function, division, absolute_import
 from abc import ABCMeta
 from future import standard_library
-from future.utils import with_metaclass
 standard_library.install_aliases()
 from builtins import super
 
@@ -30,6 +29,7 @@ from builtins import super
 import numpy as np
 
 # Internal
+from odl.util.utility import with_metaclass
 from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
@@ -48,7 +48,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
     The motion parameter is a (1d) rotation angle.
     """
 
-    def __init__(self, angle_intvl, agrid=None):
+    def __init__(self, angle_intvl, agrid=None, ndim=None):
         """Initialize a new instance.
 
         Parameters
@@ -70,7 +70,7 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
                 raise ValueError('angular grid {} not contained in angle '
                                  'interval {}.'.format(agrid, angle_intvl))
 
-        super().__init__()
+        super().__init__(ndim)
         self._motion_params = angle_intvl
         self._motion_grid = agrid
 
@@ -217,7 +217,7 @@ class Parallel2dGeometry(ParallelGeometry):
         dgrid : 1-dim. `TensorGrid`, optional
             A sampling grid for the detector parameters. Default: `None`
         """
-        super().__init__(angle_intvl, agrid)
+        super().__init__(angle_intvl, agrid, ndim=2)
 
         if not (isinstance(dparams, IntervalProd) and dparams.ndim == 1):
             raise TypeError('detector parameters {!r} are not an interval.'
@@ -235,11 +235,6 @@ class Parallel2dGeometry(ParallelGeometry):
         self._detector = Flat1dDetector(dparams, dgrid)
 
     @property
-    def ndim(self):
-        """Number of dimensions of this geometry."""
-        return 2
-
-    @property
     def detector(self):
         """Detector of this geometry."""
         return self._detector
@@ -255,7 +250,7 @@ class Parallel2dGeometry(ParallelGeometry):
 
         Returns
         -------
-        rot : `numpy.matrix`, shape (2, 2)
+        rot : `numpy.ndarray`, shape (2, 2)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -294,7 +289,7 @@ class Parallel3dGeometry(ParallelGeometry):
         axis : array-like, shape (3,)
             3-element vector defining the rotation axis
         """
-        super().__init__(angle_intvl, agrid)
+        super().__init__(angle_intvl, agrid, ndim=3)
 
         if not (isinstance(dparams, IntervalProd) and dparams.ndim == 2):
             raise TypeError('detector parameters {!r} are not a rectangle.'
@@ -314,11 +309,6 @@ class Parallel3dGeometry(ParallelGeometry):
                         axis), axis))
         self._axis = np.array(axis) / np.linalg.norm(axis)
         self._detector = Flat2dDetector(dparams, dgrid)
-
-    @property
-    def ndim(self):
-        """Number of dimensions of this geometry."""
-        return 3
 
     @property
     def detector(self):

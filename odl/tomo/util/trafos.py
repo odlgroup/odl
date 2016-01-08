@@ -47,7 +47,7 @@ def euler_matrix(*angles):
 
     Returns
     -------
-    mat : `numpy.matrix`, shape `(2, 2)` or `(3, 3)`
+    mat : `numpy.ndarray`, shape `(2, 2)` or `(3, 3)`
         The rotation matrix
 
     .. _Euler angles:
@@ -155,7 +155,7 @@ def axis_rotation_matrix(axis, angle):
 
     Returns
     -------
-    mat : `numpy.matrix`, shape (3, 3)
+    mat : `numpy.ndarray`, shape (3, 3)
         The axis rotation matrix
 
     .. _Rodriguez' rotation formula:

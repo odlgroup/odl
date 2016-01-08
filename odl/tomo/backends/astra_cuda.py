@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Backen for ASTRA using CUDA"""
+"""Backend for ASTRA using CUDA"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -74,15 +74,13 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space, out=None):
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a `Geometry` instance.'
                         ''.format(geometry))
-    if not isinstance(proj_space, DiscreteLp):
-        raise TypeError('projection space {!r} is not a `DiscreteLp` '
-                        'instance.'.format(proj_space))
-
     if vol_data.ndim != geometry.ndim:
         raise ValueError('dimensions {} of volume data and {} of geometry '
                          'do not match.'
                          ''.format(vol_data.ndim, geometry.ndim))
-
+    if not isinstance(proj_space, DiscreteLp):
+        raise TypeError('projection space {!r} is not a `DiscreteLp` '
+                        'instance.'.format(proj_space))
     if out is not None:
         if not isinstance(out, DiscreteLpVector):
             raise TypeError('out {} is neither `None` nor a '
@@ -168,7 +166,6 @@ def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
     if not isinstance(reco_space, DiscreteLp):
         raise TypeError('reconstruction space {!r} is not a `DiscreteLp` '
                         'instance.'.format(reco_space))
-
     if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
                          'geometry do not match.'.format(reco_space.ndim,
