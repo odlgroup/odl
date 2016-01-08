@@ -61,6 +61,8 @@ class Detector(with_metaclass(ABCMeta, object)):
         grid : `TensorGrid`, optional
             A sampling grid for the parameter set, in which it must be
             contained
+        ndim : `int` in (0, 1 or 2)
+            The number of dimensions of the detector
         """
         if not isinstance(params, IntervalProd):
             raise TypeError('parameter set {} is not a an interval product.'

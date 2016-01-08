@@ -21,7 +21,6 @@
 from __future__ import print_function, division, absolute_import
 from abc import ABCMeta
 from future import standard_library
-from future.utils import with_metaclass
 standard_library.install_aliases()
 from builtins import super
 
@@ -29,6 +28,7 @@ from builtins import super
 import numpy as np
 
 # Internal
+from odl.util.utility import with_metaclass
 from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import Flat1dDetector
@@ -87,7 +87,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
                 raise ValueError('angular grid {} not contained in angle '
                                  'interval {}.'.format(agrid, angle_intvl))
 
-        super().__init__()
+        super().__init__(ndim=2)
         self._motion_params = angle_intvl
         self._src_radius = src_radius
         self._det_radius = det_radius
@@ -122,11 +122,6 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     def det_radius(self):
         """Detector circle radius of this geometry."""
         return self._det_radius
-
-    @property
-    def ndim(self):
-        """Number of dimensions of this geometry."""
-        return 2
 
     def det_refpoint(self, angle):
         """The detector reference point function.
@@ -197,7 +192,7 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
     def __repr__(self):
         """Returns ``repr(self)``."""
-        inner_fstr = '{!r}, {!r}, src_rad={}, det_rad={}'
+        inner_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
         if self.has_motion_sampling:
             inner_fstr += ',\n agrid={agrid!r}'
         if self.has_det_sampling:

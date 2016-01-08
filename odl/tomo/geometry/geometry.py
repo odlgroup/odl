@@ -29,7 +29,6 @@ import numpy as np
 
 # Internal
 from odl.util.utility import with_metaclass
-from odl.set.domain import IntervalProd
 from odl.discr.grid import RegularGrid, TensorGrid
 
 __all__ = ('Geometry',)
@@ -53,9 +52,15 @@ class Geometry(with_metaclass(ABCMeta, object)):
       position
     """
 
-    @abstractproperty
-    def ndim(self):
-        """The number of dimensions of the geometry."""
+    def __init__(self, ndim):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        ndim : `int`
+           The number of dimensions of the geometry
+        """
+        self._ndim = ndim
 
     @abstractproperty
     def motion_params(self):
@@ -101,7 +106,6 @@ class Geometry(with_metaclass(ABCMeta, object)):
             expressed in the fixed system.
         """
 
-    @abstractmethod
     def det_to_src(self, mpar, dpar, normalized=True):
         """Vector pointing from a detector location to the source.
 
@@ -159,6 +163,11 @@ class Geometry(with_metaclass(ABCMeta, object)):
              self.rotation_matrix(mpar).dot(self.detector.surface(dpar))))
 
     @property
+    def ndim(self):
+        """The number of dimensions of the geometry."""
+        return self._ndim
+
+    @property
     def motion_grid(self):
         """A sampling grid for `motion_params`."""
         return None
@@ -191,6 +200,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
         before the detector parameters.
         """
         return self.motion_params.insert(self.det_params)
+
     @property
     def grid(self):
         """Joined sampling grid for motion and detector parameters."""

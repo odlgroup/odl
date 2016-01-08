@@ -15,13 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Cone beam related geometries."""
+"""Cone beam geometries."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from abc import ABCMeta
 from future import standard_library
-from future.utils import with_metaclass
 standard_library.install_aliases()
 from builtins import super
 
@@ -29,6 +28,7 @@ from builtins import super
 import numpy as np
 
 # Internal
+from odl.util.utility import with_metaclass
 from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import Flat2dDetector
@@ -93,7 +93,7 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
                 raise ValueError('length ({}) of axis {} is not 3'.format(len(
                         axis), axis))
 
-        super().__init__()
+        super().__init__(ndim=3)
         self._motion_params = angle_intvl
         self._src_radius = src_radius
         self._det_radius = det_radius
@@ -129,11 +129,6 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     def det_radius(self):
         """Detector circle radius of this geometry."""
         return self._det_radius
-
-    @property
-    def ndim(self):
-        """Number of dimensions of this geometry."""
-        return 3
 
     @property
     def axis(self):
@@ -192,7 +187,7 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
     def __repr__(self):
         """Return ``repr(self)``"""
-        inner_fstr = '{!r}, {!r}, src_rad={}, det_rad={}'
+        inner_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
         if self.has_motion_sampling:
             inner_fstr += ',\n agrid={agrid!r}'
         if self.has_det_sampling:
