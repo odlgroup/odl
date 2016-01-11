@@ -337,7 +337,7 @@ def _phantom_3d(space, ellipses):
             idx, shapes = _getshapes(center, max_radius, space.shape)
 
             subgrid = [g[idi] for g, idi in zip(grid, shapes)]
-            squared_dist = [ai * (xi - x0i)**2
+            squared_dist = [ai * (xi - x0i) ** 2
                             for xi, ai, x0i in zip(subgrid,
                                                    scales,
                                                    [x0, y0, z0])]
