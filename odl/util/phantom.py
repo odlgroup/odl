@@ -401,17 +401,25 @@ def shepp_logan(space, modified=False):
 def submarine_phantom(discr, smooth=False):
     """Return a 'submarine' phantom consisting in an ellipsoid and a box.
 
+    This phantom is used in [1]_ for shape-based reconstruction.
+
     Parameters
     ----------
     discr : `Discretization`
-        Space in which the phantom is supposed to be created
+        Discretized space in which the phantom is supposed to be created
     smooth : `bool`, optional
-        If `True`, the boundaries are smoothed out, otherwise, the
+        If `True`, the boundaries are smoothed out. Otherwise, the
         function steps from 0 to 1 at the boundaries.
 
     Returns
     -------
     phantom : `LinearSpaceVector`
+
+    References
+    ----------
+    .. [1] Oktem, Ozan. Mathematics of electron tomography. In:
+       Handbook of Mathematical Methods in Imaging. Scherzer, Otmar,
+       Ed. Springer, 2015, pp 937--1031.
     """
     if discr.ndim == 2:
         if smooth:
