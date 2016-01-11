@@ -355,7 +355,7 @@ def _phantom_3d(space, ellipses):
 
 
 def phantom(space, ellipses):
-    """ Return a phantom given by ellipses. """
+    """Return a phantom given by ellipses."""
 
     if space.ndim == 2:
         return _phantom_2d(space, ellipses)
@@ -398,6 +398,90 @@ def shepp_logan(space, modified=False):
     return phantom(space, ellipses)
 
 
+def submarine_phantom(discr, smooth=False):
+    """Return a 'submarine' phantom consisting in an ellipsoid and a box.
+
+    Parameters
+    ----------
+    discr : `Discretization`
+        Space in which the phantom is supposed to be created
+    smooth : `bool`, optional
+        If `True`, the boundaries are smoothed out, otherwise, the
+        function steps from 0 to 1 at the boundaries.
+
+    Returns
+    -------
+    phantom : `LinearSpaceVector`
+    """
+    if discr.ndim == 2:
+        if smooth:
+            return _submarine_phantom_2d_smooth(discr)
+        else:
+            return _submarine_phantom_2d_nonsmooth(discr)
+    else:
+        raise ValueError('Phantom only defined in 2 dimensions, got {}.'
+                         ''.format(discr.dim))
+
+
+def _submarine_phantom_2d_smooth(discr):
+    """Return a 2d smooth 'submarine' phantom."""
+
+    # Smaller value = more blurring
+    c = 20
+
+    def logistic(x):
+        return 1. / (1 + np.exp(-x))
+
+    def blurred_ellipse(x):
+        sq_ndist = np.zeros_like(x[0])
+        radii = (2, 0.7)
+        center = (0.5, -1)
+
+        for xi, rad, cen in zip(x, radii, center):
+            sq_ndist = sq_ndist + ((xi - cen) / rad) ** 2
+
+        out = np.sqrt(sq_ndist)
+        out -= 1
+        out *= (-c)
+        return logistic(out)
+
+    def blurred_rect(x):
+        out = np.ones_like(x[0])
+        xlower, xupper = (.3, -.5), (1.3, .5)
+        for xi, low, upp in zip(x, xlower, xupper):
+            out = out * logistic(c * (xi - low)) * logistic(c * (upp - xi))
+        return out
+
+    out = discr.element(blurred_ellipse)
+    out += discr.element(blurred_rect)
+    return out.ufunc.minimum(1)
+
+
+def _submarine_phantom_2d_nonsmooth(discr):
+    """Return a 2d nonsmooth 'submarine' phantom."""
+
+    def ellipse(x):
+        sq_ndist = np.zeros_like(x[0])
+        radii = (2, 0.7)
+        center = (0.5, -1)
+
+        for xi, rad, cen in zip(x, radii, center):
+            sq_ndist = sq_ndist + ((xi - cen) / rad) ** 2
+
+        return np.where(sq_ndist <= 1, 1, 0)
+
+    def rect(x):
+        out = np.ones_like(x[0])
+        xlower, xupper = (.3, -.5), (1.3, .5)
+        for xi, low, upp in zip(x, xlower, xupper):
+            out = out * np.where(np.logical_and(xi >= low, xi <= upp), 1, 0)
+        return out
+
+    out = discr.element(ellipse)
+    out += discr.element(rect)
+    return out.ufunc.minimum(1)
+
+
 if __name__ == '__main__':
     # Show the phantoms
     import odl
@@ -409,6 +493,10 @@ if __name__ == '__main__':
     shepp_logan(discr, modified=True).show()
     shepp_logan(discr, modified=False).show()
     derenzo_sources(discr).show()
+
+    discr = odl.uniform_discr([-2.5, -2.5], [2.5, 2.5], [n, n])
+    submarine_phantom(discr, smooth=False).show()
+    submarine_phantom(discr, smooth=True).show()
 
     # Shepp-logan 3d
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
