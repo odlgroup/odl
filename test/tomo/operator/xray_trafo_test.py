@@ -25,12 +25,15 @@ standard_library.install_aliases()
 
 # External
 import numpy as np
+import pytest
 
 # Internal
 import odl
 from odl.util.testutils import almost_equal
 
 
+@pytest.mark.xfail  # Expected to fail since scaling of adjoint is wrong.
+@pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE")
 def test_xray_trafo():
     """Test discrete X-ray transformt using ASTRA with CUDA."""
 
@@ -42,7 +45,7 @@ def test_xray_trafo():
     # Geometry
     angle_intvl = odl.Interval(0, 2 * np.pi)
     dparams = odl.Rectangle([-20, -20], [20, 20])
-    agrid = odl.uniform_sampling(angle_intvl, 10, as_midp=False)
+    agrid = odl.uniform_sampling(angle_intvl, 10)
     dgrid = odl.uniform_sampling(dparams, [20, 20])
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, agrid, dgrid)
 
@@ -51,7 +54,7 @@ def test_xray_trafo():
                                        backend='astra_cuda')
 
     # Domain element
-    f = discr_reco_space.one()
+    f = A.domain.one()
 
     # Forward projection
     Af = A(f)
@@ -62,9 +65,8 @@ def test_xray_trafo():
     # Back projection
     Adg = A.adjoint(g)
 
-    vol_stride = discr_reco_space.grid.stride[0]
-    ang_stride = agrid.stride[0]
-    left = Af.inner(g) / ang_stride
-    right = f.inner(Adg) / vol_stride
+    assert almost_equal(Af.inner(g), f.inner(Adg), 3)
 
-    assert almost_equal(left, right, 3)
+
+if __name__ == '__main__':
+    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
