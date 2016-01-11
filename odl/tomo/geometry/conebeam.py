@@ -184,7 +184,6 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
 
-
     def __repr__(self):
         """Return ``repr(self)``"""
         inner_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
@@ -210,8 +209,8 @@ class ConeFlatGeometry(ConeBeamGeometry):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius, agrid=None,
-                 dgrid=None, axis=None):
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
+                 agrid=None, dgrid=None, axis=None):
         """Initialize a new instance.
 
         Parameters
