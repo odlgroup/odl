@@ -63,14 +63,14 @@ def numba_example():
         else:
             return x[0] + x[1]
 
-    @vectorize(vectorizer=numba.vectorize, nin=2,
-               vec_args=[['float64(float64, float64)']])
+    # Numba expects functions f(x1, x2, x3, ...), while we have the
+    # convention f(x) with x = (x1, x2, x3, ...). Therefore we need
+    # to wrap the Numba-vectorized function.
+    vectorized = numba.vectorize(lambda x, y: x - y if x > y else x + y)
+
     def myfunc_vec(x):
         """Return x - y if x > y, otherwise return x + y."""
-        if x[0] > x[1]:
-            return x[0] - x[1]
-        else:
-            return x[0] + x[1]
+        return vectorized(*x)
 
     def myfunc_native_vec(x):
         """Return x - y if x > y, otherwise return x + y."""
