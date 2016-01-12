@@ -308,7 +308,7 @@ class Parallel3dGeometry(ParallelGeometry):
                 raise ValueError('length ({}) of axis {} is not 3'.format(
                     len(axis), axis))
         self._axis = np.array(axis) / np.linalg.norm(axis)
-        self._detector = Flat2dDetector(dparams, dgrid)
+        self._detector = Flat2dDetector(dparams, [[0, 1, 0], [0, 0, 1]], dgrid)
 
     @property
     def detector(self):

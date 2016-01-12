@@ -125,21 +125,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
         vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
-
-    def src_position(self, mpar):
-        """The source position function.
-
-        Parameters
-        ----------
-        mpar : element of motion parameters `motion_params`
-            Motion parameter for which to calculate the source position
-
-        Returns
-        -------
-        pos : `numpy.ndarray`, shape (`ndim`,)
-            The source position, a `ndim`-dimensional vector
-        """
-        raise NotImplementedError
+        return NotImplemented
 
     def det_point_position(self, mpar, dpar):
         """The detector point position function.
