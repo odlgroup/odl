@@ -26,7 +26,7 @@ standard_library.install_aliases()
 # External
 import numpy as np
 
-__all__ = ('cuboid', 'derenzo_sources', 'shepp_logan',)
+__all__ = ('cuboid', 'derenzo_sources', 'shepp_logan', 'submarine_phantom')
 
 
 def _shepp_logan_ellipse_2d():

@@ -32,7 +32,7 @@ from odl.util.utility import with_metaclass
 from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 
-__all__ = ('Detector', 'Flat1dDetector', 'Flat2dDetector',
+__all__ = ('Detector', 'FlatDetector', 'Flat1dDetector', 'Flat2dDetector',
            'CircleSectionDetector')
 
 
@@ -51,18 +51,18 @@ class Detector(with_metaclass(ABCMeta, object)):
     * optionally a sampling grid for the parameters
     """
 
-    def __init__(self, params, grid=None, ndim=None):
+    def __init__(self, ndim, params, grid=None):
         """Initialize a new instance.
 
         Parameters
         ----------
+        ndim : `int` in (0, 1 or 2)
+            The number of dimensions of the detector
         params : `IntervalProd`
             The parameter set defining the detector area
         grid : `TensorGrid`, optional
             A sampling grid for the parameter set, in which it must be
             contained
-        ndim : `int` in (0, 1 or 2)
-            The number of dimensions of the detector
         """
         if not isinstance(params, IntervalProd):
             raise TypeError('parameter set {} is not a an interval product.'
@@ -72,13 +72,14 @@ class Detector(with_metaclass(ABCMeta, object)):
             if not isinstance(grid, TensorGrid):
                 raise TypeError('grid {} is not a `TensorGrid` instance.'
                                 ''.format(grid))
+
             if not params.contains_set(grid):
                 raise ValueError('grid {} not contained in parameter set {}.'
                                  ''.format(grid, params))
 
+        self._ndim = ndim
         self._params = params
         self._param_grid = grid
-        self._ndim = ndim
 
     @abstractmethod
     def surface(self, param):
@@ -217,18 +218,20 @@ class Flat1dDetector(FlatDetector):
             A sampling grid for the parameter interval, in which it must
             be contained
         """
-        super().__init__(params, grid, ndim=1)
+
+        super().__init__(1, params, grid)
 
         if params.ndim != 1:
             raise ValueError('parameters {} are not 1-dimensional.'
                              ''.format(params))
+
 
     @property
     def npixels(self):
         """The number of pixels (sampling points)."""
         if not self.has_sampling:
             raise ValueError('no sampling defined.')
-        return self.param_grid.shape[0]
+        return self.param_grid.ntotal
 
     def surface(self, param):
         """The parametrization of the (1d) detector reference surface.
@@ -254,11 +257,11 @@ class Flat1dDetector(FlatDetector):
         # return np.array([0, float(param)])
         return self.surface_deriv(param) * float(param)
 
-    def surface_deriv(self, param):
+    def surface_deriv(self, param=None):
         """The derivative of the surface parametrization.
         Parameters
         ----------
-        param : element of `params`
+        param : element of `params`, optional
             The parameter value where to evaluate the function
 
         Returns
@@ -266,7 +269,7 @@ class Flat1dDetector(FlatDetector):
         deriv : `numpy.ndarray`, shape (2,)
             The constant derivative (0, 1)
         """
-        if param not in self.params:
+        if param is not None and param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
         return np.array([0., 1.])
@@ -276,22 +279,30 @@ class Flat2dDetector(FlatDetector):
 
     """A 2d flat panel detector aligned with the y-z axes."""
 
-    def __init__(self, params, grid=None, ndim=1):
+    def __init__(self, params, detector_axises, grid=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         params : `Rectangle` or 2-dim. `IntervalProd`
             The range of the parameters defining the detector area.
+        detector_axises : List with two tuples of 3 floats
+            The directions of the axises of the detector
+            Example: [(0, 1, 0), (0, 0, 1)]
         grid : 2-dim. `TensorGrid`, optional
             A sampling grid for the parameter rectangle, in which it
             must be contained
         """
-        super().__init__(params, grid)
+
+        super().__init__(2, params, grid)
 
         if params.ndim != 2:
             raise ValueError('parameters {} are not 2-dimensional.'
                              ''.format(params))
+
+        self._detector_axises = (np.asarray(detector_axises[0]),
+                                 np.asarray(detector_axises[1]))
+
 
     def surface(self, param):
         """The parametrization of the (2d) detector reference surface.
@@ -314,11 +325,11 @@ class Flat2dDetector(FlatDetector):
         if param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        # return np.array([0, float(param[0]), float(param[1])])
-        sur_der = self.surface_deriv(param)
-        return sur_der[0] * float(param[0]) + sur_der[1] * float(param[1])
 
-    def surface_deriv(self, param):
+        return (self._detector_axises[0] * float(param[0]) +
+                self._detector_axises[1] * float(param[1]))
+
+    def surface_deriv(self, param=None):
         """The derivative of the surface parametrization.
 
         Parameters
@@ -329,12 +340,13 @@ class Flat2dDetector(FlatDetector):
         Returns
         -------
         deriv : 2-tuple of ndarray with shape (3,)
-            The constant partial derivatives (0, 1, 0), (0, 0, 1)
+            The constant partial derivatives, where each axis "points" in
+            space.
         """
-        if param not in self.params:
+        if param is not None and param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        return np.array([0., 1., 0.]), np.array([0., 0., 1.])
+        return self._detector_axises
 
 
 class CircleSectionDetector(Detector):
@@ -381,7 +393,7 @@ class CircleSectionDetector(Detector):
         """The number of pixels (sampling points)."""
         if not self.has_sampling:
             raise ValueError('no sampling defined for {}.'.format(self))
-        return self.param_grid.shape[0]
+        return self.param_grid.ntotal
 
     def surface(self, param):
         """The parametrization of the detector reference surface."""

@@ -259,7 +259,7 @@ def test_helical_cone_flat():
     # initialize
     full_angle = 2 * np.pi
     angle_intvl = odl.Interval(0, full_angle)
-    angle_grid = odl.uniform_sampling(angle_intvl, 5, as_midp=False)
+    motion_grid = odl.uniform_sampling(angle_intvl, 5, as_midp=False)
     dparams = odl.IntervalProd([-40, -3], [40, 3])
     det_grid = odl.uniform_sampling(dparams, (10, 5))
     src_rad = 10.0
@@ -312,11 +312,11 @@ def test_helical_cone_flat():
     assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
 
     geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                            det_rad, pitch, angle_grid,
+                                            det_rad, pitch, motion_grid,
                                             det_grid)
 
-    angles = geom.angle_grid
-    num_angles = geom.angle_grid.ntotal
+    angles = geom.motion_grid
+    num_angles = geom.motion_grid.ntotal
 
     src_rad = geom.src_radius
     det_rad = geom.det_radius

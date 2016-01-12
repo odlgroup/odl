@@ -55,7 +55,7 @@ from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
                                Parallel3dGeometry, FanBeamGeometry,
                                ConeBeamGeometry, FanFlatGeometry,
                                CircularConeFlatGeometry,
-                               HelicalConeFlatGeometry)
+                               FlatDetector)
 
 __all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
            'astra_projection_geometry', 'astra_data', 'astra_projector',
@@ -202,33 +202,40 @@ def astra_geom_to_vec(geometry):
         Numpy array of shape ``(number of angles, 12)``
     """
 
-    angles = geometry.angle_grid
-    num_angles = geometry.angle_grid.ntotal
+    angles = geometry.motion_grid
+    num_angles = geometry.motion_grid.ntotal
 
-    if isinstance(geometry, ConeBeamGeometry):
+    if isinstance(geometry, ConeBeamGeometry) and isinstance(geometry.detector, FlatDetector):
+
+        # Differentiate 2d vs 3d
+
         vectors = np.zeros((num_angles, 12))
         det_pix_width = geometry.det_grid.stride[0]
         det_pix_height = geometry.det_grid.stride[1]
 
         for ang_idx, angle in enumerate(angles.points()):
+            rot_matrix = geometry.rotation_matrix(angle)
+
             # source position
             # TODO: check geometry class for consistency since 'src_position'
             # and 'det_refpoint' were adopted to use ASTRA cone_vec convention
             vectors[ang_idx, 0:3] = geometry.src_position(angle)
 
             # center of detector
-            vectors[ang_idx, 3:6] = geometry.det_refpoint(angle)
+            midp = geometry.det_params.midpoint
+            vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
 
             # vector from detector pixel (0,0) to (0,1)
-            # TODO: use geometry class method 'det_rotation' method instead
-            vectors[ang_idx, 6] = cos(angle) * det_pix_width
-            vectors[ang_idx, 7] = sin(angle) * det_pix_width
-            # vectors[nn, 8] = 0
+            unit_vecs = geometry.detector.surface_deriv()
+            strides = geometry.det_grid.stride
+            vectors[ang_idx, 6:9] = rot_matrix.dot(unit_vecs[0] * strides[0])
+            vectors[ang_idx, 9:12] = rot_matrix.dot(unit_vecs[1] * strides[1])
 
-            # vector from detector pixel (0,0) to (1,0)
-            # vectors[nn, 9] = 0
-            # vectors[nn, 10] = 0
-            vectors[ang_idx, 11] = det_pix_height
+        # Astra order, needed for data to match what we expect from astra.
+        newind = []
+        for i in range(4):
+            newind += [2 + 3*i, 1 + 3*i, 0 + 3*i]
+        vectors = vectors[:, newind]
 
     elif isinstance(geometry, Parallel3dGeometry):
         vectors = np.zeros((num_angles, 12))
@@ -260,18 +267,19 @@ def astra_geom_to_vec(geometry):
         det_pix_width = geometry.det_grid.stride[0]
 
         for ang_idx, angle in enumerate(angles.points()):
+            rot_matrix = geometry.rotation_matrix(angle)
             # source position
             # TODO: check method, probably inconsistent with detector pixel vec
             vectors[ang_idx, 0:2] = geometry.src_position(angle)
 
             # center of detector
             # TODO: check method, probably inconsistent with detector pixel vec
-            vectors[ang_idx, 2:4] = geometry.det_refpoint(angle)
+            midp = geometry.det_params.midpoint
+            vectors[ang_idx, 2:4] = geometry.det_point_position(angle, midp)
 
-            # vector from detector pixel (0,0) to (0,1)
-            # TODO: use `det_rotation` method instead of
-            vectors[ang_idx, 4] = cos(angle) * det_pix_width
-            vectors[ang_idx, 5] = sin(angle) * det_pix_width
+            # vector from detector pixel (0) to (1)
+            unit_vec = geometry.detector.surface_deriv()
+            vectors[ang_idx, 4:5] = rot_matrix.dot(unit_vec)
 
     else:
         raise ValueError('invalid geometry type {!r}.'.format(geometry))
@@ -339,7 +347,7 @@ def astra_projection_geometry(geometry):
             'parallel3d', det_width, det_height, det_row_count,
             det_col_count, angles)
 
-    elif isinstance(geometry, CircularConeFlatGeometry):
+    elif False and isinstance(geometry, CircularConeFlatGeometry):
         det_width = geometry.det_grid.stride[0]
         det_height = geometry.det_grid.stride[1]
         det_row_count = geometry.det_grid.shape[1]
@@ -352,7 +360,7 @@ def astra_projection_geometry(geometry):
             'cone', det_width, det_height, det_row_count, det_col_count,
             angles, source_origin, origin_det)
 
-    elif isinstance(geometry, HelicalConeFlatGeometry):
+    elif isinstance(geometry, ConeBeamGeometry):
         det_row_count = geometry.det_grid.shape[1]
         det_col_count = geometry.det_grid.shape[0]
         vec = astra_geom_to_vec(geometry)

@@ -138,10 +138,15 @@ class ShowPartial(Partial):
         self.args = args
         self.kwargs = kwargs
         self.fig = None
+        self.plot_every_nth = kwargs.pop('plot_every_nth', 1)
+        self.niter = 0
 
     def send(self, x):
         """Show the current iteration."""
-        self.fig = x.show(fig=self.fig, show=True, *self.args, **self.kwargs)
+        self.niter += 1
+        if self.niter % self.plot_every_nth == 0:
+            self.fig = x.show(fig=self.fig, show=True,
+                              *self.args, **self.kwargs)
 
 
 if __name__ == '__main__':

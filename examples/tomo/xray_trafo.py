@@ -41,18 +41,18 @@ discr_reco_space = odl.uniform_discr([-20, -20, -20],
 src_rad = 1000
 det_rad = 100
 angle_intvl = odl.Interval(0, 2 * np.pi)
-dparams = odl.Rectangle([-50, -50], [50, 50])
-agrid = odl.uniform_sampling(angle_intvl, 360, as_midp=False)
+dparams = odl.Rectangle([-30, -30], [30, 30])
+agrid = odl.uniform_sampling(angle_intvl, 360)
 dgrid = odl.uniform_sampling(dparams, [558, 558])
 geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                         det_rad, agrid, dgrid)
+                                         det_rad, agrid, dgrid, axis=[0, 0, 1])
 
 # X-ray transform
 xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
                                             backend='astra_cuda')
 
 # Domain element
-discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space)
+discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
 
 # Forward projection
 discr_proj_data = xray_trafo(discr_vol_data)
@@ -63,4 +63,6 @@ discr_reco_data = xray_trafo.adjoint(discr_proj_data)
 # Shows a slice of the phantom, projections, and reconstruction
 discr_vol_data.show(indices=np.s_[:, :, 150])
 discr_proj_data.show(indices=np.s_[0, :, :])
+discr_proj_data.show(indices=np.s_[30, :, :])
+discr_proj_data.show(indices=np.s_[180, :, :])
 discr_reco_data.show(indices=np.s_[:, :, 150])

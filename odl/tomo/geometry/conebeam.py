@@ -19,67 +19,54 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from abc import ABCMeta
 from future import standard_library
 standard_library.install_aliases()
+from abc import abstractmethod
 from builtins import super
 
 # External
 import numpy as np
 
 # Internal
-from odl.util.utility import with_metaclass
 from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry
 
 
-__all__ = ('ConeBeamGeometry', 'ConeFlatGeometry', 'CircularConeFlatGeometry',
+__all__ = ('ConeBeamGeometry', 'CircularConeFlatGeometry',
            'HelicalConeFlatGeometry',)
 
 
-class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
+class ConeBeamGeometry(Geometry):
 
-    """Abstract 3d cone beam geometry.
+    """Abstract nd cone beam geometry.
 
-    The source moves on a circle with radius ``r``, and the detector
-    reference point is opposite to the source on a circle with radius ``R``.
-
-    The motion parameter is the (1d) rotation angle parametrizing source and
-    detector positions.
+    A cone beam geometry is characterized by a source and a
+    (n-1)d detector moving in space according to a 1d motion parameter.
     """
 
-    def __init__(self, angle_intvl, src_radius, det_radius, agrid=None,
-                 axis=None):
+    def __init__(self, ndim, angle_intvl, detector, agrid=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radian
-        src_radius : positive `float`
-            Radius of the source circle, must be positive
-        det_radius : positive `float`
-            Radius of the detector circle, must be positive
-        agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the `angle_intvl`
-        axis : array-like, shape (3,)
-            3-element vector defining the rotation axis
+        ndim : {1, 2}
+            number of dimensions of geometry
+        angle_intvl : 1d `IntervalProd`
+            Admissible angles.
+        detector : `Detector`
+            The detector to use.
+        agrid : `TensorGrid`, optional
+            Optional discretization of the angle_intvl
         """
         if not (isinstance(angle_intvl, IntervalProd) and
                 angle_intvl.ndim == 1):
             raise TypeError('angle parameters {!r} are not an interval.'
                             ''.format(angle_intvl))
-
-        src_radius = float(src_radius)
-        if src_radius <= 0:
-            raise ValueError('source circle radius {} is not positive.'
-                             ''.format(src_radius))
-        det_radius = float(det_radius)
-        if det_radius <= 0:
-            raise ValueError('detector circle radius {} is not positive.'
-                             ''.format(det_radius))
+        self._motion_params = angle_intvl
+        self._motion_grid = agrid
+        self._detector = detector
 
         if agrid is not None:
             if not isinstance(agrid, TensorGrid):
@@ -88,17 +75,8 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
             if not angle_intvl.contains_set(agrid):
                 raise ValueError('angular grid {} not contained in angle '
                                  'interval {}.'.format(agrid, angle_intvl))
-        if axis is not None:
-            if not np.size(axis) == 3:
-                raise ValueError('length ({}) of axis {} is not 3'.format(len(
-                    axis), axis))
 
-        super().__init__(ndim=3)
-        self._motion_params = angle_intvl
-        self._src_radius = src_radius
-        self._det_radius = det_radius
-        self._motion_grid = agrid
-        self._axis = np.array(axis) / np.linalg.norm(axis)
+        super().__init__(ndim=ndim)
 
     @property
     def motion_params(self):
@@ -111,24 +89,96 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         return self._motion_grid
 
     @property
-    def angle_intvl(self):
-        """Angles (= motion parameters) of this geometry."""
-        return self._motion_params
+    def detector(self):
+        """Detector of this geometry."""
+        return self._detector
 
-    @property
-    def angle_grid(self):
-        """Angle (= motion parameter) sampling grid of this geometry."""
-        return self._motion_grid
+    @abstractmethod
+    def src_position(self, mpar):
+        """The source position function.
 
-    @property
-    def src_radius(self):
-        """Source circle radius of this geometry."""
-        return self._src_radius
+        Parameters
+        ----------
+        mpar : element of motion parameters `motion_params`
+            Motion parameter for which to calculate the source position
 
-    @property
-    def det_radius(self):
-        """Detector circle radius of this geometry."""
-        return self._det_radius
+        Returns
+        -------
+        pos : `numpy.ndarray`, shape (`ndim`,)
+            The source position, a `ndim`-dimensional vector
+        """
+        raise NotImplementedError
+
+    def det_to_src(self, mpar, dpar, normalized=True):
+        """Vector pointing from a detector location to the source.
+
+        A function of the motion and detector parameters.
+
+        The default implementation uses the `det_point_position` and
+        `src_position` functions. Implementations can override this, for
+        example if no source position is given.
+
+        Parameters
+        ----------
+        mpar : element of motion parameters `motion_params`
+            Motion parameter at which to evaluate
+        dpar : element of detector parameters `det_params`
+            Detector parameter at which to evaluate
+        normalized : `bool`, optional
+            If `True`, return a normalized (unit) vector. Default: `True`
+
+        Returns
+        -------
+        vec : `numpy.ndarray`, shape (`ndim`,)
+            (Unit) vector pointing from the detector to the source
+        """
+
+        if mpar not in self.motion_params:
+            raise ValueError('mpar {} is not in the valid range {}.'
+                             ''.format(mpar, self.motion_params))
+        if dpar not in self.det_params:
+            raise ValueError('detector parameter {} is not in the valid '
+                             'range {}.'.format(dpar, self.det_params))
+
+        vec = self.det_point_position(mpar, dpar) - self.src_position(mpar)
+
+        if normalized:
+            vec /= np.linalg.norm(vec, axis=-1)
+
+        return vec
+
+    def __repr__(self):
+        """Return ``repr(self)``"""
+
+        # TODO
+
+        inner_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
+        if self.has_motion_sampling:
+            inner_fstr += ',\n agrid={agrid!r}'
+        if self.has_det_sampling:
+            inner_fstr += ',\n dgrid={dgrid!r}'
+        inner_str = inner_fstr.format(self.motion_params, self.det_params,
+                                      self.src_radius, self.det_radius,
+                                      agrid=self.motion_grid,
+                                      dgrid=self.det_grid)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+
+class AxisOrientedGeometry(object):
+
+    """ Mixin class for cone beam geometries oriented according to an axis.
+    """
+
+    def __init__(self, axis):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        axis : 3-element array, optional
+            Defines the rotation axis via a 3-element vector.
+        """
+
+        self._axis = np.array(axis) / np.linalg.norm(axis)
 
     @property
     def axis(self):
@@ -184,77 +234,8 @@ class ConeBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
         return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
 
-    def __repr__(self):
-        """Return ``repr(self)``"""
-        inner_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
-        if self.has_motion_sampling:
-            inner_fstr += ',\n agrid={agrid!r}'
-        if self.has_det_sampling:
-            inner_fstr += ',\n dgrid={dgrid!r}'
-        inner_str = inner_fstr.format(self.motion_params, self.det_params,
-                                      self.src_radius, self.det_radius,
-                                      agrid=self.motion_grid,
-                                      dgrid=self.det_grid)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
 
-
-class ConeFlatGeometry(ConeBeamGeometry):
-    """Cone beam geometry in 3d with flat detector.
-
-    The source moves on a circle with radius ``r``, and the detector
-    reference point is opposite to the source on a circle with radius ``R``
-    and aligned tangential to the circle.
-
-    The motion parameter is the (1d) rotation angle parametrizing source and
-    detector positions.
-    """
-
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 agrid=None, dgrid=None, axis=None):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radian
-        dparams : `Rectangle` or 2-dim. `IntervalProd`
-            The detector parameters
-        src_radius : `float`
-            Radius of the source circle, must be positive
-        det_radius : `float`
-            Radius of the detector circle, must be positive
-        agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`
-        dgrid : 2-dim. `TensorGrid`, optional
-            A sampling grid for `dparams`
-        axis : `int` or 3-element array
-            Defines the rotation axis via a 3-element vector or a single
-            integer referring to a standard axis
-        """
-        super().__init__(angle_intvl, src_radius, det_radius, agrid, axis)
-
-        if not (isinstance(dparams, IntervalProd) and dparams.ndim == 2):
-            raise TypeError('detector parameters {!r} are not an interval.'
-                            ''.format(dparams))
-
-        if dgrid is not None:
-            if not isinstance(dgrid, TensorGrid):
-                raise TypeError('detector grid {!r} is not a `TensorGrid` '
-                                'instance.'.format(dgrid))
-            if not dparams.contains_set(dgrid):
-                raise ValueError('detector grid {} not contained in detector '
-                                 'parameter interval {}.'
-                                 ''.format(dgrid, dparams))
-
-        self._detector = Flat2dDetector(dparams, dgrid)
-
-    @property
-    def detector(self):
-        """Detector of this geometry."""
-        return self._detector
-
-
-class CircularConeFlatGeometry(ConeFlatGeometry):
+class CircularConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
     """Cone beam geometry with circular acquisition and flat detector.
 
     The source moves on a circle with radius ``r``, and the detector
@@ -266,7 +247,9 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 agrid=None, dgrid=None, axis=(1, 0, 0)):
+                 agrid=None, dgrid=None,
+                 axis=[0, 0, 1], source_to_detector=[1, 0, 0],
+                 detector_axises=None):
         """Initialize a new instance.
 
         Parameters
@@ -283,13 +266,48 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
             A sampling grid for `angle_intvl`. Default: `None`
         dgrid : 2-dim. `TensorGrid`, optional
             A sampling grid for ``dparams``. Default: `None`
-        axis : `int` or 3-element array, optional
-            Defines the rotation axis via a 3-element vector or a single
-            integer referring to a standard axis. Default: `None`
+        axis : 3-element array, optional
+            Defines the rotation axis via a 3-element vector.
+        source_to_detector : 3-element array, optional
+            Defines the direction from the source to the point (0,0) of the
+            detector.
+        detector_axises : tuple of two 3-element arrays, optional
+            Defines the unit directions along each detector parameter of the
+            detector.
+            Default: (normalized) [np.cross(axis, source_to_detector), axis]
         """
 
-        super().__init__(angle_intvl, dparams, src_radius, det_radius, agrid,
-                         dgrid, axis)
+        AxisOrientedGeometry.__init__(self, axis)
+
+        self._source_to_detector = (np.array(source_to_detector) /
+                                    np.linalg.norm(source_to_detector))
+
+        if detector_axises is None:
+            detector_axises = [np.cross(self.axis, self._source_to_detector),
+                               self.axis]
+
+        detector = Flat2dDetector(dparams, detector_axises, dgrid)
+
+        ConeBeamGeometry.__init__(self, 3, angle_intvl, detector, agrid)
+
+        self._src_radius = float(src_radius)
+        if self.src_radius <= 0:
+            raise ValueError('source circle radius {} is not positive.'
+                             ''.format(src_radius))
+        self._det_radius = float(det_radius)
+        if self.det_radius <= 0:
+            raise ValueError('detector circle radius {} is not positive.'
+                             ''.format(det_radius))
+
+    @property
+    def src_radius(self):
+        """Source circle radius of this geometry."""
+        return self._src_radius
+
+    @property
+    def det_radius(self):
+        """Detector circle radius of this geometry."""
+        return self._det_radius
 
     def det_refpoint(self, angle):
         """The detector reference point function.
@@ -308,11 +326,11 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         """
         angle = float(angle)
         if angle not in self.motion_params:
-            raise ValueError('angle {} not in the valid range {}.'
+            raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
-        # ASTRA 'cone_vec' convention
-        return self.det_radius * np.array([-np.sin(angle), np.cos(angle), 0])
+        offset = self.det_radius * self._source_to_detector
+        return self.rotation_matrix(angle).dot(offset)
 
     def src_position(self, angle):
         """The source position function.
@@ -332,67 +350,17 @@ class CircularConeFlatGeometry(ConeFlatGeometry):
         """
         angle = float(angle)
         if angle not in self.motion_params:
-            raise ValueError('angle {} not in the valid range {}.'
-                             ''.format(angle, self.motion_params))
-
-        # ASTRA cone_vec convention
-        return -self.src_radius * np.array([-np.sin(angle), np.cos(angle), 0])
-
-        # TODO: backprojection weighting function?
-
-    def det_to_src(self, angle, dpar, normalized=True):
-        """Direction from a detector location to the source.
-
-        Parameters
-        ----------
-        angle : `float`
-            The motion parameter given in radian. It must be contained in this
-            geometry's motion parameter set
-        dpar : 2-tuple of `float`
-            The detector parameter. It must be contained in this
-            geometry's detector parameter set
-        normalized : `bool`, optional
-            If `False` return the vector from the detector point to the source
-            parametrized by ``dpar`` and ``angle``. If `True`, return the
-            normalized version of that vector. Default: `True`
-
-        Returns
-        -------
-        vec : `numpy.ndarray`, shape (3,)
-            (Unit) vector pointing from the detector to the source
-        """
-        angle = float(angle)
-        if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
-        if dpar not in self.det_params:
-            raise ValueError('detector parameter {} is not in the valid '
-                             'range {}.'.format(dpar, self.det_params))
 
-        axis = self.axis
+        offset = -self.src_radius * self._source_to_detector
+        return self.rotation_matrix(angle).dot(offset)
 
-        # Angle of a detector point at `dpar` as seen from the source relative
-        # to the line from the source to the detector reference point
-        det_pt_angle = np.arctan2(dpar, self.src_radius + self.det_radius)
-
-        # vector for spiral along z-direction
-        vec = -np.array(
-            [np.cos(det_pt_angle[1]) * np.cos(angle + det_pt_angle),
-             np.cos(det_pt_angle[1]) * np.sin(angle + det_pt_angle),
-             np.sin(det_pt_angle[1])])
-
-        # rotate vector
-        if not (axis[0] == 0 and axis[1] == 0):
-            vec = -np.array(
-                self.rotation_matrix(angle)[0]).squeeze()
-
-        if not normalized:
-            vec *= self.src_radius + self.det_radius
-
-        return vec
+    # Fix for bug in ABC thinking this is abstract
+    rotation_matrix = AxisOrientedGeometry.rotation_matrix
 
 
-class HelicalConeFlatGeometry(ConeFlatGeometry):
+class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
     """Cone beam geometry with helical acquisition and flat detector.
 
     The source moves along a spiral with radius ``r`` in the azimuthal plane
@@ -406,7 +374,9 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 pitch, agrid=None, dgrid=None, axis=(1, 0, 0)):
+                 pitch, agrid=None, dgrid=None,
+                 axis=[0, 0, 1], source_to_detector=[1, 0, 0],
+                 detector_axises=None):
         """Initialize a new instance.
 
         Parameters
@@ -429,11 +399,47 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
         axis : `int` or 3-element array, optional
             Defines the rotation axis via a 3-element vector or a single
             integer referring to a standard axis. Default: `None`
+        source_to_detector : 3-element array, optional
+            Defines the direction from the source to the point (0,0) of the
+            detector.
+        detector_axises : tuple of two 3-element arrays, optional
+            Defines the unit directions along each detector parameter of the
+            detector.
+            Default: (normalized) [np.cross(axis, source_to_detector), axis]
         """
 
-        super().__init__(angle_intvl, dparams, src_radius, det_radius,
-                         agrid, dgrid, axis)
+        AxisOrientedGeometry.__init__(self, axis)
+
+        self._source_to_detector = (np.array(source_to_detector) /
+                                    np.linalg.norm(source_to_detector))
+
+        if detector_axises is None:
+            detector_axises = [np.cross(self.axis, self._source_to_detector),
+                               self.axis]
+
+        detector = Flat2dDetector(dparams, detector_axises, dgrid)
+
+        ConeBeamGeometry.__init__(self, 3, angle_intvl, detector, agrid)
+
         self._pitch = pitch
+        self._src_radius = float(src_radius)
+        if self.src_radius <= 0:
+            raise ValueError('source circle radius {} is not positive.'
+                             ''.format(src_radius))
+        self._det_radius = float(det_radius)
+        if self.det_radius <= 0:
+            raise ValueError('detector circle radius {} is not positive.'
+                             ''.format(det_radius))
+
+    @property
+    def src_radius(self):
+        """Source circle radius of this geometry."""
+        return self._src_radius
+
+    @property
+    def det_radius(self):
+        """Detector circle radius of this geometry."""
+        return self._det_radius
 
     @property
     def pitch(self):
@@ -467,11 +473,14 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
-        # ASTRA cone_vec geometries
-        return np.array([
-            -self.det_radius * np.sin(angle),
-            self.det_radius * np.cos(angle),
-            self.pitch * angle / (2 * np.pi)])
+        # Distance from 0 to detector
+        offset = self.det_radius * self._source_to_detector
+        detector_offset = self.rotation_matrix(angle).dot(offset)
+
+        # Increment by pitch
+        ptich_offset = self.axis * angle / (np.pi * 2)
+
+        return detector_offset + ptich_offset
 
     def src_position(self, angle):
         """The source position function.
@@ -500,55 +509,14 @@ class HelicalConeFlatGeometry(ConeFlatGeometry):
             -self.src_radius * np.cos(angle),
             self.pitch * angle / (2 * np.pi)])
 
-        # TODO: backprojection weighting function?
+        # Distance from 0 to detector
+        offset = -self.src_radius * self._source_to_detector
+        source_offset = self.rotation_matrix(angle).dot(offset)
 
-    def det_to_src(self, angle, dpar, normalized=True):
-        """Direction from a detector location to the source.
+        # Increment by pitch
+        pitch_offset = self.axis * angle / (np.pi * 2)
 
-        Parameters
-        ----------
-        angle : `float`
-            The motion parameter given in radian. It must be contained in this
-            geometry's motion parameter set
-        dpar : 2-tuple of `float`
-            The detector parameter. It must be contained in this
-            geometry's detector parameter set
-        normalized : `bool`, optional
-            If `False` return the vector from the detector point to the source
-            parametrized by ``dpar`` and ``angle``. If `True`, return the
-            normalized version of that vector. Default: `True`
+        return source_offset + pitch_offset
 
-        Returns
-        -------
-        vec : `numpy.ndarray`, shape (3,)
-            (Unit) vector pointing from the detector to the source
-        """
-        angle = float(angle)
-        if angle not in self.motion_params:
-            raise ValueError('angle {} is not in the valid range {}.'
-                             ''.format(angle, self.motion_params))
-        if dpar not in self.det_params:
-            raise ValueError('detector parameter {} is not in the valid '
-                             'range {}.'.format(dpar, self.det_params))
-
-        axis = self.axis
-
-        # Angle of a detector point at `dpar` as seen from the source relative
-        # to the line from the source to the detector reference point
-        det_pt_angle = np.arctan2(dpar, self.src_radius + self.det_radius)
-
-        # vector for spiral along z-direction
-        vec = -np.array(
-            [np.cos(det_pt_angle[1]) * np.cos(angle + det_pt_angle),
-             np.cos(det_pt_angle[1]) * np.sin(angle + det_pt_angle),
-             np.sin(det_pt_angle[1])])
-
-        # rotate vector
-        if not (axis[0] == 0 and axis[1] == 0):
-            vec = -np.array(
-                self.rotation_matrix(angle)[0]).squeeze()
-
-        if not normalized:
-            vec *= self.src_radius + self.det_radius
-
-        return vec
+    # Fix for bug in ABC thinking this is abstract
+    rotation_matrix = AxisOrientedGeometry.rotation_matrix
