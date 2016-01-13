@@ -225,7 +225,6 @@ class Flat1dDetector(FlatDetector):
             raise ValueError('parameters {} are not 1-dimensional.'
                              ''.format(params))
 
-
     @property
     def npixels(self):
         """The number of pixels (sampling points)."""

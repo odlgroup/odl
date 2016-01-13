@@ -209,7 +209,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     # to adapt to this by changing the order
     newind = []
     for i in range(4):
-        newind += [2 + 3*i, 1 + 3*i, 0 + 3*i]
+        newind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
     vectors = vectors[:, newind]
 
     return vectors
