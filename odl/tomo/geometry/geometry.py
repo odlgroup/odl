@@ -312,7 +312,7 @@ class DivergentBeamGeometry(Geometry):
 
 
 class AxisOrientedGeometry(object):
-    """Mixin class for cone beam geometries oriented according to an axis."""
+    """Mixin class for 3d geometries oriented according to an axis."""
 
     def __init__(self, axis):
         """Initialize a new instance.
@@ -323,7 +323,11 @@ class AxisOrientedGeometry(object):
             Fixed rotation axis defined by a 3-element vector
         """
 
-        self._axis = np.asarray(axis) / np.linalg.norm(axis)
+        self._axis = np.asarray(axis, dtype=float) / np.linalg.norm(axis)
+
+        if self.axis.shape != (3,):
+            raise ValueError('axis {!r} not a 3 element arraylike'
+                             ''.format(axis))
 
     @property
     def axis(self):

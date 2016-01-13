@@ -73,11 +73,11 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             A sampling grid for `angle_intvl`
         dgrid : 2-dim. `TensorGrid`, optional
             A sampling grid for `dparams`
-        axis : `int` or 3-element array, optional
+        axis : 3-element array, optional
             Fixed rotation axis defined by a 3-element vector
         src_to_det : 3-element array, optional
-            Defines the direction from the source to the point (0,0) of the
-            detector.
+            The direction from the source to the point (0, 0) of the detector
+            angle=0
         detector_axes : sequence of two 3-element arrays, optional
             Unit directions along each detector parameter of the detector.
             Default: (normalized) [np.cross(axis, source_to_detector), axis]
@@ -202,8 +202,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         if not np.allclose(self._src_to_det, [1, 0, 0]):
             arg_fstr += ',\n    src_to_det={src_to_det!r}'
 
-        default_axes = [np.cross(self.axis, self._src_to_det),
-                        self.axis]
+        default_axes = [np.cross(self.axis, self._src_to_det), self.axis]
         if not np.allclose(self.detector.detector_axes, default_axes):
             arg_fstr += ',\n    detector_axes={detector_axes!r}'
 
@@ -255,8 +254,8 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
         axis : 3-element array, optional
             Fixed rotation axis defined by a 3-element vector
         src_to_det : 3-element array, optional
-            Defines the direction from the source to the point (0,0) of the
-            detector.
+            The direction from the source to the point (0, 0) of the detector
+            angle=0
         detector_axes : sequence of two 3-element arrays, optional
             Defines the unit directions along each detector parameter of the
             detector.

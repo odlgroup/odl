@@ -359,7 +359,7 @@ def astra_projection_geometry(geometry):
     # isotropic) voxel size.
     if isinstance(geometry, Parallel2dGeometry):
         det_width = geometry.det_grid.stride[0]
-        det_count = geometry.det_grid.shape[0]
+        det_count = geometry.detector.npixels
         angles = geometry.motion_grid.coord_vectors[0]
         proj_geom = astra.create_proj_geom(
             'parallel', det_width, det_count, angles)
