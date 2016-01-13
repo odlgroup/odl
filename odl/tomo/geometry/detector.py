@@ -236,7 +236,7 @@ class Flat1dDetector(FlatDetector):
 
     @property
     def detector_axis(self):
-        """The directions of the principial axises of the detector."""
+        """The directions of the principial axes of the detector."""
         return self._detector_axis
 
     def surface(self, param):
@@ -291,8 +291,8 @@ class Flat2dDetector(FlatDetector):
         ----------
         params : `Rectangle` or 2-dim. `IntervalProd`
             The range of the parameters defining the detector area.
-        detector_axes : List with two tuples of 3 floats
-            The directions of the axises of the detector
+        detector_axes : sequence of two 3-element array
+            The directions of the axes of the detector
             Example: [(0, 1, 0), (0, 0, 1)]
         grid : 2-dim. `TensorGrid`, optional
             A sampling grid for the parameter rectangle, in which it
@@ -310,7 +310,7 @@ class Flat2dDetector(FlatDetector):
 
     @property
     def detector_axes(self):
-        """The directions of the principial axises of the detector."""
+        """The directions of the principial axes of the detector."""
         return self._detector_axes
 
     def surface(self, param):
