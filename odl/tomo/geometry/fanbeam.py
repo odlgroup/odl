@@ -27,7 +27,6 @@ from builtins import super
 import numpy as np
 
 # Internal
-from odl.set.domain import IntervalProd
 from odl.tomo.geometry.detector import Flat1dDetector
 from odl.tomo.geometry.geometry import DivergentBeamGeometry
 from odl.tomo.util.trafos import euler_matrix
@@ -65,8 +64,8 @@ class FanFlatGeometry(DivergentBeamGeometry):
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`. Default: `None`
         src_to_det : 2-element array, optional
-            Defines the direction from the source to the point (0) of the
-            detector.
+            The direction from the source to the point (0) of the detector
+            angle=0
         detector_axes : sequence of two 3-element arrays, optional
             Unit directions along each detector parameter of the detector.
             Default: (normalized) [np.cross(axis, source_to_detector), axis]
