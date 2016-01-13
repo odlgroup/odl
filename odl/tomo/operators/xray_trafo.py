@@ -86,7 +86,7 @@ class DiscreteXrayTransform(Operator):
 
         if not geometry.has_det_sampling:
             raise ValueError('geometry {} does not have sampling grids for '
-                             'detector.'.format(geometry))
+                             'the detector.'.format(geometry))
 
         backend = str(backend).lower()
         if backend not in _SUPPORTED_BACKENDS:

@@ -152,7 +152,7 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
         circle_component = self.rotation_matrix(angle).dot(origin_to_det)
 
         # Increment by pitch
-        pitch_component = self.axis * angle / (np.pi * 2)
+        pitch_component = self.axis * self.pitch * angle / (np.pi * 2)
 
         return circle_component + pitch_component
 
@@ -182,7 +182,7 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
         circle_component = self.rotation_matrix(angle).dot(origin_to_src)
 
         # Increment by pitch
-        pitch_component = self.axis * angle / (np.pi * 2)
+        pitch_component = self.axis * self.pitch * angle / (np.pi * 2)
 
         return circle_component + pitch_component
 

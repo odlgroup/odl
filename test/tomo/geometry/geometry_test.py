@@ -322,13 +322,12 @@ def test_helical_cone_flat():
     det_rad = geom.det_radius
     pitch = geom.pitch
 
-    print(src_rad, det_rad)
     for ang_ind in range(num_angles):
         angle = angles[ang_ind][0]
         z = pitch * angle / (2 * np.pi)
 
         # source
-        pnt = (np.sin(angle) * src_rad, -np.cos(angle) * src_rad, z)
+        pnt = (-np.cos(angle) * src_rad, -np.sin(angle) * src_rad, z)
         assert all_almost_equal(geom.src_position(angle), pnt)
 
         # center of detector

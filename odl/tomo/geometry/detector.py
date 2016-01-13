@@ -56,7 +56,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        ndim : `int` in (0, 1 or 2)
+        ndim : non-negative `int`
             The number of dimensions of the detector
         params : `IntervalProd`
             The parameter set defining the detector area
