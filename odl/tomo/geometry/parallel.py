@@ -159,23 +159,6 @@ class ParallelGeometry(with_metaclass(ABCMeta, Geometry)):
             vec[vec != 0] *= np.inf
         return vec
 
-    def src_position(self, angle):
-        """The source position function.
-
-        Parameters
-        ----------
-        angle : `float`
-            The motion parameters given in radians. Must be contained
-            in this geometry's `motion_params`
-
-        Returns
-        -------
-        pos : `numpy.ndarray`, shape (2,)
-            The source position, an `ndim`-dimensional vector
-        """
-        angle = float(angle)
-        return self.det_to_src(angle, 0, normalized=False)
-
     def __repr__(self):
         """Returns ``repr(self)``."""
         inner_fstr = '{!r}, {!r}'
@@ -232,7 +215,7 @@ class Parallel2dGeometry(ParallelGeometry):
                                  'parameter interval {}.'
                                  ''.format(agrid, angle_intvl))
 
-        self._detector = Flat1dDetector(dparams, dgrid)
+        self._detector = Flat1dDetector(dparams, [0, 1], dgrid)
 
     @property
     def detector(self):

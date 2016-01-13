@@ -53,8 +53,7 @@ from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
                                Parallel3dGeometry,
-                               ConeBeamGeometry, FanFlatGeometry,
-                               CircularConeFlatGeometry,
+                               DivergentBeamGeometry, FanFlatGeometry,
                                FlatDetector)
 
 __all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
@@ -262,7 +261,8 @@ def astra_conebeam_2d_geom_to_vec(geometry):
 
         # vector from detector pixel (0) to (1)
         unit_vec = geometry.detector.surface_deriv()
-        vectors[ang_idx, 4:6] = rot_matrix.dot(unit_vec)
+        strides = geometry.det_grid.stride
+        vectors[ang_idx, 4:6] = rot_matrix.dot(unit_vec * strides[0])
 
     return vectors
 
@@ -364,15 +364,13 @@ def astra_projection_geometry(geometry):
         proj_geom = astra.create_proj_geom(
             'parallel', det_width, det_count, angles)
 
-    elif isinstance(geometry, FanFlatGeometry):
-        det_width = geometry.det_grid.stride[0]
-        det_count = geometry.det_grid.shape[0]
-        angles = geometry.motion_grid.coord_vectors[0]
-        source_origin = geometry.src_radius
-        # False label in PyASTRA doc as `source_det`
-        origin_det = geometry.det_radius
+    elif (isinstance(geometry, DivergentBeamGeometry) and
+          isinstance(geometry.detector, FlatDetector) and
+          geometry.ndim == 2):
+        det_count = geometry.detector.npixels
+        vec = astra_conebeam_2d_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom(
-            'fanflat', det_width, det_count, angles, source_origin, origin_det)
+            'fanflat_vec', det_count, vec)
 
     elif isinstance(geometry, Parallel3dGeometry):
         det_width = geometry.det_grid.stride[0]
@@ -384,7 +382,7 @@ def astra_projection_geometry(geometry):
             'parallel3d', det_width, det_height, det_row_count,
             det_col_count, angles)
 
-    elif (isinstance(geometry, ConeBeamGeometry) and
+    elif (isinstance(geometry, DivergentBeamGeometry) and
           isinstance(geometry.detector, FlatDetector) and
           geometry.ndim == 3):
         det_row_count = geometry.det_grid.shape[1]
@@ -504,8 +502,8 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     ndim = int(ndim)
 
     proj_type = astra_proj_geom['type']
-    if proj_type not in ('parallel', 'fanflat', 'parallel3d', 'cone',
-                         'cone_vec'):
+    if proj_type not in ('parallel', 'fanflat', 'fanflat_vec',
+                         'parallel3d', 'cone', 'cone_vec', ):
         raise ValueError('invalid 2d geometry type {!r}.'.format(proj_type))
 
     # Mapping from interpolation type and geometry to ASTRA projector type.

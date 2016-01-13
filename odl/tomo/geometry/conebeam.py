@@ -29,14 +29,15 @@ import numpy as np
 # Internal
 
 from odl.tomo.geometry.detector import Flat2dDetector
-from odl.tomo.geometry.geometry import ConeBeamGeometry, AxisOrientedGeometry
+from odl.tomo.geometry.geometry import (DivergentBeamGeometry,
+                                        AxisOrientedGeometry)
 
 
 __all__ = ('CircularConeFlatGeometry',
            'HelicalConeFlatGeometry',)
 
 
-class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
+class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     """Cone beam geometry with helical acquisition and flat detector.
 
     The source moves along a spiral with radius ``r`` in the azimuthal plane
@@ -74,7 +75,7 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
             A sampling grid for `dparams`
         axis : `int` or 3-element array, optional
             Fixed rotation axis defined by a 3-element vector
-        source_to_detector : 3-element array, optional
+        src_to_det : 3-element array, optional
             Defines the direction from the source to the point (0,0) of the
             detector.
         detector_axes : sequence of two 3-element arrays, optional
@@ -93,7 +94,7 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
 
         detector = Flat2dDetector(dparams, detector_axes, dgrid)
 
-        ConeBeamGeometry.__init__(self, 3, angle_intvl, detector, agrid)
+        DivergentBeamGeometry.__init__(self, 3, angle_intvl, detector, agrid)
 
         self._pitch = pitch
         self._src_radius = float(src_radius)
@@ -198,8 +199,8 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
             arg_fstr += ',\n    dgrid={dgrid!r}'
         if not np.allclose(self.axis, [0, 0, 1]):
             arg_fstr += ',\n    axis={axis!r}'
-        if not np.allclose(self.axis, [1, 0, 0]):
-            arg_fstr += ',\n    axis={src_to_det!r}'
+        if not np.allclose(self._src_to_det, [1, 0, 0]):
+            arg_fstr += ',\n    src_to_det={src_to_det!r}'
 
         default_axes = [np.cross(self.axis, self._src_to_det),
                         self.axis]

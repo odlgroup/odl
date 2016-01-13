@@ -220,7 +220,7 @@ def test_astra_projection_geometry():
     geom_ff = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                                        agrid=angle_grid, dgrid=det_grid)
     ageom = odl.tomo.astra_projection_geometry(geom_ff)
-    assert ageom['type'] == 'fanflat'
+    assert ageom['type'] == 'fanflat_vec'
 
     dparams = odl.IntervalProd([-40, -3], [40, 3])
     det_grid = odl.uniform_sampling(dparams, (10, 5))

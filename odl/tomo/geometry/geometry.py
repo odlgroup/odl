@@ -32,7 +32,7 @@ from odl.util.utility import with_metaclass
 from odl.discr.grid import RegularGrid, TensorGrid
 from odl.set.domain import IntervalProd
 
-__all__ = ('Geometry', 'ConeBeamGeometry', 'AxisOrientedGeometry')
+__all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
 
 
 class Geometry(with_metaclass(ABCMeta, object)):
@@ -199,12 +199,14 @@ class Geometry(with_metaclass(ABCMeta, object)):
         return grid.insert(self.det_grid, grid.ndim)
 
 
-class ConeBeamGeometry(Geometry):
+class DivergentBeamGeometry(Geometry):
 
-    """Abstract nd cone beam geometry.
+    """Abstract nd divergent beam geometry.
 
-    A cone beam geometry is characterized by a source and an
+    A divergent beam geometry is characterized by a source and an
     (n-1)d detector moving in space according to a 1d motion parameter.
+
+    Special cases include fanbeam in 2d and conebeam in 3d.
     """
 
     def __init__(self, ndim, angle_intvl, detector, agrid=None):
