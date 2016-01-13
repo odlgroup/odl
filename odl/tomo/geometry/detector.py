@@ -112,11 +112,18 @@ class Detector(with_metaclass(ABCMeta, object)):
         return self.param_grid is not None
 
     @property
-    def npixels(self):
-        """The number of pixels (sampling points)."""
+    def shape(self):
+        """The shape of the detector grid."""
         if not self.has_sampling:
             raise ValueError('no sampling defined for {}.'.format(self))
         return self.param_grid.shape
+
+    @property
+    def npixels(self):
+        """The number of pixels (sampling points)."""
+        if not self.has_sampling:
+            raise ValueError('no sampling defined.')
+        return self.param_grid.ntotal
 
     def surface_deriv(self, param):
         """The partial derivative(s) of the surface parametrization.
@@ -207,7 +214,7 @@ class Flat1dDetector(FlatDetector):
 
     """A 1d line detector aligned with the y-axis."""
 
-    def __init__(self, params, grid=None):
+    def __init__(self, params, detector_axis, grid=None):
         """Initialize a new instance.
 
         Parameters
@@ -225,12 +232,12 @@ class Flat1dDetector(FlatDetector):
             raise ValueError('parameters {} are not 1-dimensional.'
                              ''.format(params))
 
+        self._detector_axis = np.asarray(detector_axis)
+
     @property
-    def npixels(self):
-        """The number of pixels (sampling points)."""
-        if not self.has_sampling:
-            raise ValueError('no sampling defined.')
-        return self.param_grid.ntotal
+    def detector_axis(self):
+        """The directions of the principial axises of the detector."""
+        return self._detector_axis
 
     def surface(self, param):
         """The parametrization of the (1d) detector reference surface.
@@ -253,8 +260,7 @@ class Flat1dDetector(FlatDetector):
         if param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        # return np.array([0, float(param)])
-        return self.surface_deriv(param) * float(param)
+        return self.detector_axis * float(param)
 
     def surface_deriv(self, param=None):
         """The derivative of the surface parametrization.
@@ -271,7 +277,7 @@ class Flat1dDetector(FlatDetector):
         if param is not None and param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        return np.array([0., 1.])
+        return self.detector_axis
 
 
 class Flat2dDetector(FlatDetector):

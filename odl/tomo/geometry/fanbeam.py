@@ -19,7 +19,6 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from abc import ABCMeta
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
@@ -28,18 +27,16 @@ from builtins import super
 import numpy as np
 
 # Internal
-from odl.util.utility import with_metaclass
 from odl.set.domain import IntervalProd
-from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import Flat1dDetector
-from odl.tomo.geometry.geometry import Geometry
+from odl.tomo.geometry.geometry import DivergentBeamGeometry
 from odl.tomo.util.trafos import euler_matrix
 
 
-__all__ = ('FanBeamGeometry', 'FanFlatGeometry',)
+__all__ = ('FanFlatGeometry',)
 
 
-class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
+class FanFlatGeometry(DivergentBeamGeometry):
 
     """Abstract 2d fan beam geometry.
 
@@ -52,7 +49,9 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
 
     """
 
-    def __init__(self, angle_intvl, src_radius, det_radius, agrid=None):
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
+                 agrid=None, dgrid=None, src_to_det=[1, 0],
+                 detector_axis=None):
         """Initialize a new instance.
 
         Parameters
@@ -65,53 +64,33 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`. Default: `None`
+        src_to_det : 2-element array, optional
+            Defines the direction from the source to the point (0) of the
+            detector.
+        detector_axes : sequence of two 3-element arrays, optional
+            Unit directions along each detector parameter of the detector.
+            Default: (normalized) [np.cross(axis, source_to_detector), axis]
         """
-        if not isinstance(angle_intvl, IntervalProd) or angle_intvl.ndim != 1:
-            raise TypeError('angle parameters {!r} are not an interval.'
-                            ''.format(angle_intvl))
 
-        src_radius = float(src_radius)
+        self._src_to_det = (np.array(src_to_det) /
+                            np.linalg.norm(src_to_det))
+
+        if detector_axis is None:
+            # Rotated by 90 degrees according to right hand rule
+            detector_axis = np.array([-self._src_to_det[1],
+                                      self._src_to_det[0]])
+
+        self._src_radius = float(src_radius)
         if src_radius <= 0:
             raise ValueError('source circle radius {} is not positive.'
                              ''.format(src_radius))
-        det_radius = float(det_radius)
+        self._det_radius = float(det_radius)
         if det_radius <= 0:
             raise ValueError('detector circle radius {} is not positive.'
                              ''.format(det_radius))
 
-        if agrid is not None:
-            if not isinstance(agrid, TensorGrid):
-                raise TypeError('angle grid {!r} is not a `TensorGrid` '
-                                'instance.'.format(agrid))
-            if not angle_intvl.contains_set(agrid):
-                raise ValueError('angular grid {} not contained in angle '
-                                 'interval {}.'.format(agrid, angle_intvl))
-
-        super().__init__(ndim=2)
-        self._motion_params = angle_intvl
-        self._src_radius = src_radius
-        self._det_radius = det_radius
-        self._motion_grid = agrid
-
-    @property
-    def motion_params(self):
-        """Motion parameters of this geometry."""
-        return self._motion_params
-
-    @property
-    def motion_grid(self):
-        """Sampling grid for this geometry's motion parameters."""
-        return self._motion_grid
-
-    @property
-    def angle_intvl(self):
-        """Angles (= motion parameters) of this geometry given in radian."""
-        return self._motion_params
-
-    @property
-    def angle_grid(self):
-        """Angle (= motion parameter) sampling grid of this geometry."""
-        return self._motion_grid
+        detector = Flat1dDetector(dparams, detector_axis, dgrid)
+        super().__init__(2, angle_intvl, detector, agrid)
 
     @property
     def src_radius(self):
@@ -122,6 +101,30 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
     def det_radius(self):
         """Detector circle radius of this geometry."""
         return self._det_radius
+
+    def src_position(self, angle):
+        """The source position function.
+
+        Parameters
+        ----------
+        angle : `float`
+            The motion parameters given in radian. It must be contained in
+            this geometry's motion parameter set
+
+        Returns
+        -------
+        point : `numpy.ndarray`, shape (2,)
+            The source position on the circle with radius `r` at the given
+            rotation angle ``phi``, defined as ``-r * (cos(phi), sin(phi))``
+        """
+        angle = float(angle)
+        if angle not in self.motion_params:
+            raise ValueError('angle {} is not in the valid range {}.'
+                             ''.format(angle, self.motion_params))
+
+        # Distance from 0 to source
+        origin_to_det = -self.src_radius * self._src_to_det
+        return self.rotation_matrix(angle).dot(origin_to_det)
 
     def det_refpoint(self, angle):
         """The detector reference point function.
@@ -140,9 +143,12 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
         """
         angle = float(angle)
         if angle not in self.motion_params:
-            raise ValueError('angle {} not in the valid range {}.'
+            raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
-        return self.det_radius * np.array([np.cos(angle), np.sin(angle)])
+
+        # Distance from 0 to detector
+        origin_to_det = self.det_radius * self._src_to_det
+        return self.rotation_matrix(angle).dot(origin_to_det)
 
     def rotation_matrix(self, angle):
         """The detector rotation function.
@@ -167,138 +173,28 @@ class FanBeamGeometry(with_metaclass(ABCMeta, Geometry)):
                              ''.format(angle, self.motion_params))
         return euler_matrix(angle)
 
-    def src_position(self, angle):
-        """The source position function.
-
-        Parameters
-        ----------
-        angle : `float`
-            The motion parameters given in radian. It must be contained in
-            this geometry's motion parameter set
-
-        Returns
-        -------
-        point : `numpy.ndarray`, shape (2,)
-            The source position on the circle with radius `r` at the given
-            rotation angle ``phi``, defined as ``-r * (cos(phi), sin(phi))``
-        """
-        angle = float(angle)
-        if angle not in self.motion_params:
-            raise ValueError('angle {} not in the valid range {}.'
-                             ''.format(angle, self.motion_params))
-        return -self.src_radius * np.array([np.cos(angle), np.sin(angle)])
-
     # TODO: backprojection weighting function?
 
     def __repr__(self):
         """Returns ``repr(self)``."""
-        inner_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
+        arg_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
         if self.has_motion_sampling:
-            inner_fstr += ',\n agrid={agrid!r}'
+            arg_fstr += ',\n agrid={agrid!r}'
         if self.has_det_sampling:
-            inner_fstr += ',\n dgrid={dgrid!r}'
-        inner_str = inner_fstr.format(self.motion_params, self.det_params,
-                                      self.src_radius, self.det_radius,
-                                      agrid=self.motion_grid,
-                                      dgrid=self.det_grid)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+            arg_fstr += ',\n dgrid={dgrid!r}'
 
-    def __str__(self):
-        """`g.__str__() <==> str(g)`."""
-        return self.__repr__()  # TODO: prettify
+        if not np.allclose(self._src_to_det, [1, 0]):
+            arg_fstr += ',\n    src_to_det={src_to_det!r}'
 
+        default_axis = [-self._src_to_det[1], self._src_to_det[0]]
+        if not np.allclose(self.detector.detector_axis, default_axis):
+            arg_fstr += ',\n    detector_axes={detector_axes!r}'
 
-class FanFlatGeometry(FanBeamGeometry):
+        arg_str = arg_fstr.format(self.motion_params, self.det_params,
+                                  self.src_radius, self.det_radius,
+                                  agrid=self.motion_grid,
+                                  dgrid=self.det_grid,
+                                  src_to_det=self._src_to_det,
+                                  detector_axis=self.detector.detector_axis)
 
-    """Fan beam geometry in 2d with flat detector.
-
-    The source moves on a circle with radius ``r``, and the detector
-    reference point is opposite to the source on a circle with radius
-    ``R`` and aligned tangential to the circle.
-
-    The motion parameter is the (1d) rotation angle parametrizing
-    source and detector positions.
-    """
-
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 agrid=None, dgrid=None):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        Parameters
-        ----------
-        angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radian
-        dparams : `Interval` or 1-dim. `IntervalProd`
-            The detector parameters
-        src_radius : `float`
-            Radius of the source circle, must be positive
-        det_radius : `float`
-            Radius of the detector circle, must be positive
-        agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`. Default: `None`
-        dgrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the detector parameters. Default: `None`
-        """
-        super().__init__(angle_intvl, src_radius, det_radius, agrid)
-
-        if not (isinstance(dparams, IntervalProd) and dparams.ndim == 1):
-            raise TypeError('detector parameters {!r} are not an interval.'
-                            ''.format(dparams))
-
-        if dgrid is not None:
-            if not isinstance(dgrid, TensorGrid):
-                raise TypeError('detector grid {!r} is not a `TensorGrid` '
-                                'instance.'.format(dgrid))
-            if not dparams.contains_set(dgrid):
-                raise ValueError('detector grid {} not contained in detector '
-                                 'parameter interval {}.'
-                                 ''.format(dgrid, dparams))
-
-        self._detector = Flat1dDetector(dparams, dgrid)
-
-    @property
-    def detector(self):
-        """Detector of this geometry."""
-        return self._detector
-
-    def det_to_src(self, angle, dpar, normalized=True):
-        """Direction from a detector location to the source.
-
-        Parameters
-        ----------
-        angle : `float`
-            The motion parameters given in radian. It must be
-            contained in this geometry's motion parameter set
-        dpar : `float`
-            The detector parameter. It must be contained in this
-            geometry's detector parameter set
-        normalized : bool
-            If `False` return the vector from the detector point
-            parametrized by `dpar` and `angle` to the source at
-            `angle`. If `True`, return the normalized version of
-            that vector
-
-        Returns
-        -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
-            (Unit) vector pointing from the detector to the source
-        """
-        angle = float(angle)
-        if angle not in self.motion_params:
-            raise ValueError('angle {} not in the valid range {}.'
-                             ''.format(angle, self.motion_params))
-        if dpar not in self.det_params:
-            raise ValueError('detector parameter {} not in the valid range {}.'
-                             ''.format(dpar, self.det_params))
-
-        # Angle of a detector point at `dpar` as seen from the source relative
-        # to the line from the source to the detector reference point
-        det_pt_angle = np.arctan2(dpar, self.src_radius + self.det_radius)
-        angle += det_pt_angle
-        dvec = -np.array([np.cos(angle),
-                          np.sin(angle)])
-        if not normalized:
-            dvec *= self.src_radius + self.det_radius
-        return dvec
+        return '{}({})'.format(self.__class__.__name__, arg_str)
