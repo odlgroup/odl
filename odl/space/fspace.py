@@ -306,18 +306,19 @@ class FunctionSetVector(Operator):
                                  'domain {}, missing `contains_all()` '
                                  'method.'.format(self.domain))
 
+        ndim = getattr(self.domain, 'ndim', None)
         # Check for input type and determine output shape
-        if is_valid_input_array(x, self.domain.ndim):
+        if is_valid_input_array(x, ndim):
             out_shape = out_shape_from_array(x)
             scalar_out = False
             # For 1d, squeeze the array
-            if self.domain.ndim == 1 and x.ndim == 2:
+            if ndim == 1 and x.ndim == 2:
                 x = x.squeeze()
-        elif is_valid_input_meshgrid(x, self.domain.ndim):
+        elif is_valid_input_meshgrid(x, ndim):
             out_shape = out_shape_from_meshgrid(x)
             scalar_out = False
             # For 1d, fish out the vector from the tuple
-            if self.domain.ndim == 1:
+            if ndim == 1:
                 x = x[0]
         elif x in self.domain:
             x = np.atleast_2d(x).T  # make a (d, 1) array

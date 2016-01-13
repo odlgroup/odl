@@ -36,11 +36,11 @@ __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
            'vectorize')
 
 
-def is_valid_input_array(x, ndim):
+def is_valid_input_array(x, ndim=None):
     """Test if ``x`` is a correctly shaped point array in R^d."""
     if not isinstance(x, np.ndarray):
         return False
-    if ndim == 1:
+    if ndim is None or ndim == 1:
         return x.ndim == 1 or x.ndim == 2 and x.shape[0] == 1
     else:
         return x.ndim == 2 and x.shape[0] == ndim
@@ -48,13 +48,19 @@ def is_valid_input_array(x, ndim):
 
 def is_valid_input_meshgrid(x, ndim):
     """Test if ``x`` is a meshgrid sequence for points in R^d."""
+    # This case is triggered in FunctionSetVector.__call__ if the
+    # domain does not have an 'ndim' attribute. We return False and
+    # continue.
+    if ndim is None:
+        return False
     try:
-        iter(x)
+        len(x)
     except TypeError:
         return False
 
     if isinstance(x, np.ndarray):
         return False
+
     if ndim > 1:
         try:
             np.broadcast(*x)
