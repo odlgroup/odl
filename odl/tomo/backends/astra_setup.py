@@ -384,22 +384,6 @@ def astra_projection_geometry(geometry):
             'parallel3d', det_width, det_height, det_row_count,
             det_col_count, angles)
 
-    elif False and isinstance(geometry, CircularConeFlatGeometry):
-        # TODO: our CircularConeFlatGeometry is more general, perhaps
-        # improve this?
-
-        det_width = geometry.det_grid.stride[0]
-        det_height = geometry.det_grid.stride[1]
-        det_row_count = geometry.det_grid.shape[1]
-        det_col_count = geometry.det_grid.shape[0]
-        angles = geometry.motion_grid.coord_vectors[0]
-        source_origin = geometry.src_radius
-        # ! In PyASTRA doc incorrectly labelled `source_det`
-        origin_det = geometry.det_radius
-        proj_geom = astra.create_proj_geom(
-            'cone', det_width, det_height, det_row_count, det_col_count,
-            angles, source_origin, origin_det)
-
     elif (isinstance(geometry, ConeBeamGeometry) and
           isinstance(geometry.detector, FlatDetector) and
           geometry.ndim == 3):

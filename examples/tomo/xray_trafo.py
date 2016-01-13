@@ -30,37 +30,145 @@ import numpy as np
 import odl
 
 
-# TODO: use is_periodic instead of as_midp once periodic discr. are available
+def parallel_2d():
+    # Discrete reconstruction space
+    discr_reco_space = odl.uniform_discr([-20, -20],
+                                         [20, 20],
+                                         [300, 300], dtype='float32')
 
-# Discrete reconstruction space
-discr_reco_space = odl.uniform_discr([-20, -20, -20],
-                                     [20, 20, 20],
-                                     [300, 300, 300], dtype='float32')
+    # Geometry
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    dparams = odl.Interval(-30, 30)
+    agrid = odl.uniform_sampling(angle_intvl, 360)
+    dgrid = odl.uniform_sampling(dparams, 558)
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams,
+                                       agrid=agrid, dgrid=dgrid)
 
-# Geometry
-src_rad = 1000
-det_rad = 100
-angle_intvl = odl.Interval(0, 2 * np.pi)
-dparams = odl.Rectangle([-30, -30], [30, 30])
-agrid = odl.uniform_sampling(angle_intvl, 360)
-dgrid = odl.uniform_sampling(dparams, [558, 558])
-geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                         det_rad, agrid, dgrid)
+    # X-ray transform
+    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                                backend='astra_cuda')
 
-# X-ray transform
-xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                            backend='astra_cuda')
+    # Domain element
+    discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
 
-# Domain element
-discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
+    # Forward projection
+    discr_proj_data = xray_trafo(discr_vol_data)
 
-# Forward projection
-discr_proj_data = xray_trafo(discr_vol_data)
+    # Back projection
+    discr_reco_data = xray_trafo.adjoint(discr_proj_data)
 
-# Back projection
-discr_reco_data = xray_trafo.adjoint(discr_proj_data)
+    # Shows a slice of the phantom, projections, and reconstruction
+    discr_vol_data.show(title='parallel 2d volume')
+    discr_proj_data.show(title='parallel 2d sinogram')
+    discr_reco_data.show(title='parallel 2d backprojection')
 
-# Shows a slice of the phantom, projections, and reconstruction
-discr_vol_data.show(indices=np.s_[:, :, 150])
-discr_proj_data.show(indices=np.s_[0, :, :])
-discr_reco_data.show(indices=np.s_[:, :, 150])
+
+def parallel_3d():
+    # Discrete reconstruction space
+    discr_reco_space = odl.uniform_discr([-20, -20, -20],
+                                         [20, 20, 20],
+                                         [300, 300, 300], dtype='float32')
+
+    # Geometry
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    dparams = odl.Rectangle([-30, -30], [30, 30])
+    agrid = odl.uniform_sampling(angle_intvl, 360)
+    dgrid = odl.uniform_sampling(dparams, [558, 558])
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams,
+                                       agrid=agrid, dgrid=dgrid)
+
+    # X-ray transform
+    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                                backend='astra_cuda')
+
+    # Domain element
+    discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
+
+    # Forward projection
+    discr_proj_data = xray_trafo(discr_vol_data)
+
+    # Back projection
+    discr_reco_data = xray_trafo.adjoint(discr_proj_data)
+
+    # Shows a slice of the phantom, projections, and reconstruction
+    discr_vol_data.show(indices=np.s_[:, :, 150],
+                        title='parallel 3d volume')
+    discr_proj_data.show(indices=np.s_[0, :, :],
+                         title='parallel 3d projection 0')
+    discr_reco_data.show(indices=np.s_[:, :, 150],
+                         title='parallel 3d backprojection')
+
+
+def fanbeam():
+    # Discrete reconstruction space
+    discr_reco_space = odl.uniform_discr([-20, -20],
+                                         [20, 20],
+                                         [300, 300], dtype='float32')
+
+    # Geometry
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    dparams = odl.Interval(-30, 30)
+    agrid = odl.uniform_sampling(angle_intvl, 360)
+    dgrid = odl.uniform_sampling(dparams, 558)
+    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams,
+                                    src_radius=1000, det_radius=100,
+                                    agrid=agrid, dgrid=dgrid)
+
+    # X-ray transform
+    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                                backend='astra_cuda')
+
+    # Domain element
+    discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
+
+    # Forward projection
+    discr_proj_data = xray_trafo(discr_vol_data)
+
+    # Back projection
+    discr_reco_data = xray_trafo.adjoint(discr_proj_data)
+
+    # Shows a slice of the phantom, projections, and reconstruction
+    discr_vol_data.show(title='fan volume')
+    discr_proj_data.show(title='fan sinogram')
+    discr_reco_data.show(title='fan backprojection')
+
+
+def conebeam():
+    # Discrete reconstruction space
+    discr_reco_space = odl.uniform_discr([-20, -20, -20],
+                                         [20, 20, 20],
+                                         [300, 300, 300], dtype='float32')
+
+    # Geometry
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    dparams = odl.Rectangle([-30, -30], [30, 30])
+    agrid = odl.uniform_sampling(angle_intvl, 360)
+    dgrid = odl.uniform_sampling(dparams, [558, 558])
+    geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams,
+                                             src_radius=1000, det_radius=100,
+                                             agrid=agrid, dgrid=dgrid)
+
+    # X-ray transform
+    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                                backend='astra_cuda')
+
+    # Domain element
+    discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
+
+    # Forward projection
+    discr_proj_data = xray_trafo(discr_vol_data)
+
+    # Back projection
+    discr_reco_data = xray_trafo.adjoint(discr_proj_data)
+
+    # Shows a slice of the phantom, projections, and reconstruction
+    discr_vol_data.show(indices=np.s_[:, :, 150], title='cone volume')
+    discr_proj_data.show(indices=np.s_[0, :, :], title='cone projection 0')
+    discr_reco_data.show(indices=np.s_[:, :, 150], title='cone backprojection')
+
+
+if __name__ == '__main__':
+    parallel_2d()
+    parallel_3d()
+    fanbeam()
+    conebeam()
