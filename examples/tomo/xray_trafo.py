@@ -45,7 +45,7 @@ dparams = odl.Rectangle([-30, -30], [30, 30])
 agrid = odl.uniform_sampling(angle_intvl, 360)
 dgrid = odl.uniform_sampling(dparams, [558, 558])
 geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                         det_rad, agrid, dgrid, axis=[0, 0, 1])
+                                         det_rad, agrid, dgrid)
 
 # X-ray transform
 xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
@@ -63,6 +63,4 @@ discr_reco_data = xray_trafo.adjoint(discr_proj_data)
 # Shows a slice of the phantom, projections, and reconstruction
 discr_vol_data.show(indices=np.s_[:, :, 150])
 discr_proj_data.show(indices=np.s_[0, :, :])
-discr_proj_data.show(indices=np.s_[30, :, :])
-discr_proj_data.show(indices=np.s_[180, :, :])
 discr_reco_data.show(indices=np.s_[:, :, 150])

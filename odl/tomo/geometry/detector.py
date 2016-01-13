@@ -279,14 +279,14 @@ class Flat2dDetector(FlatDetector):
 
     """A 2d flat panel detector aligned with the y-z axes."""
 
-    def __init__(self, params, detector_axises, grid=None):
+    def __init__(self, params, detector_axes, grid=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         params : `Rectangle` or 2-dim. `IntervalProd`
             The range of the parameters defining the detector area.
-        detector_axises : List with two tuples of 3 floats
+        detector_axes : List with two tuples of 3 floats
             The directions of the axises of the detector
             Example: [(0, 1, 0), (0, 0, 1)]
         grid : 2-dim. `TensorGrid`, optional
@@ -300,9 +300,13 @@ class Flat2dDetector(FlatDetector):
             raise ValueError('parameters {} are not 2-dimensional.'
                              ''.format(params))
 
-        self._detector_axises = (np.asarray(detector_axises[0]),
-                                 np.asarray(detector_axises[1]))
+        self._detector_axes = (np.asarray(detector_axes[0]),
+                               np.asarray(detector_axes[1]))
 
+    @property
+    def detector_axes(self):
+        """The directions of the principial axises of the detector."""
+        return self._detector_axes
 
     def surface(self, param):
         """The parametrization of the (2d) detector reference surface.
@@ -326,8 +330,8 @@ class Flat2dDetector(FlatDetector):
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
 
-        return (self._detector_axises[0] * float(param[0]) +
-                self._detector_axises[1] * float(param[1]))
+        return (self.detector_axes[0] * float(param[0]) +
+                self.detector_axes[1] * float(param[1]))
 
     def surface_deriv(self, param=None):
         """The derivative of the surface parametrization.
@@ -346,7 +350,7 @@ class Flat2dDetector(FlatDetector):
         if param is not None and param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        return self._detector_axises
+        return self.detector_axes
 
 
 class CircleSectionDetector(Detector):
