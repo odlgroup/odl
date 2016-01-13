@@ -72,10 +72,16 @@ def parallel_3d():
     # Geometry
     angle_intvl = odl.Interval(0, 2 * np.pi)
     dparams = odl.Rectangle([-30, -30], [30, 30])
-    agrid = odl.uniform_sampling(angle_intvl, 360)
+    agrid = odl.uniform_sampling(angle_intvl, 360, as_midp=False)
     dgrid = odl.uniform_sampling(dparams, [558, 558])
+
+    # Astra cannot handle axis aligned origin_to_det unless it is aligned
+    # with the third coordinate axis. See issue #18 at ASTRA's github.
+    # We handle this by adding a slight offset.
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams,
-                                       agrid=agrid, dgrid=dgrid)
+                                       agrid=agrid, dgrid=dgrid,
+                                       axis=[0, 0, 1],
+                                       origin_to_det=[1, 0.0001, 0.0001])
 
     # X-ray transform
     xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
