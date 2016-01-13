@@ -63,7 +63,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     indices : index expression, optional
         Display a slice of the array instead of the full array. The
         index expression is most easily created with the `numpy.s_`
-        constructur, i.e. supply ``np.s_[:, 1, :]`` to display the
+        constructor, i.e. supply ``np.s_[:, 1, :]`` to display the
         first slice along the second axis.
 
         For data with 3 or more dimensions, the 2d slice in the first
@@ -262,9 +262,9 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             if values.ndim == 2:
                 sub_im.set_ylabel(axis_labels[1])
             else:
-                sub_re.set_ylabel('value')
+                sub_im.set_ylabel('value')
         else:
-            sub_re = fig.axes[1]
+            sub_im = fig.axes[1]
 
         display_im = getattr(sub_im, method)
         csub_im = display_im(*args_im, **dsp_kwargs)
@@ -316,6 +316,10 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             format = '%.{}f'.format(decimals)
 
             plt.colorbar(mappable=csub, ticks=ticks, format=format)
+
+    # Fixes overlapping stuff at the expense of potentially squashed
+    # subplots
+    fig.tight_layout()
 
     if title is not None:
         plt.title(title)
