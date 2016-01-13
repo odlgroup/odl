@@ -367,11 +367,11 @@ def dft_call(array_in, halfcomplex=False, **kwargs):
 
     if array_in.flags.c_contiguous:
         out_order = 'C'
-    elif array_in.flags.c_contiguous:
+    elif array_in.flags.f_contiguous:
         out_order = 'F'
     else:
-        # TODO: make contiguous?
-        raise ValueError('input is not contiguous.')
+        # Make C-contiguous
+        array_in = np.ascontiguousarray(array_in)
 
     array_out = np.empty(shape_out, dtype=out_dtype, order=out_order)
 
