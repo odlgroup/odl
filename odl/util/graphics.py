@@ -245,7 +245,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         display_re = getattr(sub_re, method)
         csub_re = display_re(*args_re, **dsp_kwargs)
 
-        if method == 'imshow' and len(fig.axes < 2):
+        if method == 'imshow' and len(fig.axes) < 2:
             # Create colorbar if none seems to exist
             minval_re = np.min(values.real)
             maxval_re = np.max(values.real)
@@ -269,7 +269,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         display_im = getattr(sub_im, method)
         csub_im = display_im(*args_im, **dsp_kwargs)
 
-        if method == 'imshow' and len(fig.axes < 4):
+        if method == 'imshow' and len(fig.axes) < 4:
             # Create colorbar if none seems to exist
             minval_im = np.min(values.imag)
             maxval_im = np.max(values.imag)
