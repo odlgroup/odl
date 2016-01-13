@@ -20,9 +20,7 @@
 
 from __future__ import absolute_import
 
-__version__ = '0.9b1'
-__all__ = ('backends', 'geometry', 'operators')
-
+__all__ = ()
 
 from . import backends
 from .backends import *
