@@ -59,7 +59,7 @@ from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
 
 __all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
            'astra_projection_geometry', 'astra_data', 'astra_projector',
-           'astra_algorithm', 'astra_geom_to_vec')
+           'astra_algorithm')
 
 
 def astra_volume_geometry(discr_reco):
@@ -157,33 +157,14 @@ def astra_volume_geometry(discr_reco):
     return vol_geom
 
 
-def astra_geom_to_vec(geometry):
+def astra_conebeam_3d_geom_to_vec(geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
      The 3D vectors are used to create an ASTRA projection geometry for
-     cone beam geometries ('conve_vec') with helical acquisition curves.
-
-     Additionally, supports creation of 2D and 3D vectors for 'flat_vec' or
-     'parallel3d_vec', respectively.
+     cone beam geometries ('conv_vec') with helical acquisition curves.
 
     Output vectors:
 
-    2d geometry 'fanflat_vec':
-    Each row of vectors corresponds to a single projection, and consists of:
-        ( srcX, srcY, dX, dY, uX, uY )
-        src : the ray source
-        d : the center of the detector
-        u : the vector between the centers of detector pixels 0 and 1
-
-    3d geometry 'parallel3d_vec':
-    Each row of vectors corresponds to a single projection, and consists of:
-        ( rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ )
-        ray : the ray direction
-        d   : the center of the detector
-        u   : the vector from detector pixel (0,0) to (0,1)
-        v   : the vector from detector pixel (0,0) to (1,0)
-
-    3d geometry 'cone_vec':
     Each row of vectors corresponds to a single projection, and consists of:
         ( srcX, srcY, srcZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ ):
         src : the ray source
@@ -201,88 +182,141 @@ def astra_geom_to_vec(geometry):
     vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 12)``
     """
+    angles = geometry.motion_grid
+
+    vectors = np.zeros((angles.ntotal, 12))
+
+    for ang_idx, angle in enumerate(angles.points()):
+        rot_matrix = geometry.rotation_matrix(angle)
+
+        # source position
+        # TODO: check geometry class for consistency since 'src_position'
+        # and 'det_refpoint' were adopted to use ASTRA cone_vec convention
+        vectors[ang_idx, 0:3] = geometry.src_position(angle)
+
+        # center of detector
+        midp = geometry.det_params.midpoint
+        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
+
+        # vector from detector pixel (0,0) to (0,1)
+        unit_vecs = geometry.detector.surface_deriv()
+        strides = geometry.det_grid.stride
+        vectors[ang_idx, 6:9] = rot_matrix.dot(unit_vecs[0] * strides[0])
+        vectors[ang_idx, 9:12] = rot_matrix.dot(unit_vecs[1] * strides[1])
+
+    # Astra order, needed for data to match what we expect from astra.
+    # Astra has a different axis convention to ODL (z, y, x), so we need
+    # to adapt to this by changing the order
+    newind = []
+    for i in range(4):
+        newind += [2 + 3*i, 1 + 3*i, 0 + 3*i]
+    vectors = vectors[:, newind]
+
+    return vectors
+
+
+def astra_conebeam_2d_geom_to_vec(geometry):
+    """Create vectors for ASTRA projection geometries from ODL geometry.
+
+    The 2D vectors are used to create an ASTRA projection geometry for
+    cone beam geometries ('flat_vec') with helical acquisition curves.
+
+    Output vectors:
+
+    Each row of vectors corresponds to a single projection, and consists of:
+        ( srcX, srcY, dX, dY, uX, uY )
+        src : the ray source
+        d : the center of the detector
+        u : the vector between the centers of detector pixels 0 and 1
+
+    Parameters
+    ----------
+    geometry : `Geometry`
+        The ODL geometry instance used to create the ASTRA geometry
+
+    Returns
+    -------
+    vectors : `numpy.ndarray`
+        Numpy array of shape ``(number of angles, 6)``
+    """
+
+    # TODO: this is never called
 
     angles = geometry.motion_grid
-    num_angles = geometry.motion_grid.ntotal
 
-    if isinstance(geometry, ConeBeamGeometry) and isinstance(geometry.detector, FlatDetector):
+    vectors = np.zeros((angles.ntotal, 6))
 
-        # Differentiate 2d vs 3d
+    for ang_idx, angle in enumerate(angles.points()):
+        rot_matrix = geometry.rotation_matrix(angle)
+        # source position
+        # TODO: check method, probably inconsistent with detector pixel vec
+        vectors[ang_idx, 0:2] = geometry.src_position(angle)
 
-        vectors = np.zeros((num_angles, 12))
-        det_pix_width = geometry.det_grid.stride[0]
-        det_pix_height = geometry.det_grid.stride[1]
+        # center of detector
+        # TODO: check method, probably inconsistent with detector pixel vec
+        midp = geometry.det_params.midpoint
+        vectors[ang_idx, 2:4] = geometry.det_point_position(angle, midp)
 
-        for ang_idx, angle in enumerate(angles.points()):
-            rot_matrix = geometry.rotation_matrix(angle)
+        # vector from detector pixel (0) to (1)
+        unit_vec = geometry.detector.surface_deriv()
+        vectors[ang_idx, 4:5] = rot_matrix.dot(unit_vec)
 
-            # source position
-            # TODO: check geometry class for consistency since 'src_position'
-            # and 'det_refpoint' were adopted to use ASTRA cone_vec convention
-            vectors[ang_idx, 0:3] = geometry.src_position(angle)
+    return vectors
 
-            # center of detector
-            midp = geometry.det_params.midpoint
-            vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
 
-            # vector from detector pixel (0,0) to (0,1)
-            unit_vecs = geometry.detector.surface_deriv()
-            strides = geometry.det_grid.stride
-            vectors[ang_idx, 6:9] = rot_matrix.dot(unit_vecs[0] * strides[0])
-            vectors[ang_idx, 9:12] = rot_matrix.dot(unit_vecs[1] * strides[1])
+def astra_parallel_3d_geom_to_vec(geometry):
+    """Create vectors for ASTRA projection geometries from ODL geometry.
 
-        # Astra order, needed for data to match what we expect from astra.
-        newind = []
-        for i in range(4):
-            newind += [2 + 3*i, 1 + 3*i, 0 + 3*i]
-        vectors = vectors[:, newind]
+    The 3D vectors are used to create an ASTRA projection geometry for
+    parallel beam geometries ('parallel3d_vec').
 
-    elif isinstance(geometry, Parallel3dGeometry):
-        vectors = np.zeros((num_angles, 12))
-        det_pix_width = geometry.det_grid.stride[0]
-        det_pix_height = geometry.det_grid.stride[1]
+    Output vectors:
 
-        for ang_idx, angle in enumerate(angles.points()):
-            # ray direction
-            vectors[ang_idx, 0] = sin(angle)
-            vectors[ang_idx, 1] = -cos(angle)
-            # vectors[nn, 2] = 0
+    Each row of vectors corresponds to a single projection, and consists of:
+        ( rayX, rayY, rayZ, dX, dY, dZ, uX, uY, uZ, vX, vY, vZ )
+        ray : the ray direction
+        d   : the center of the detector
+        u   : the vector from detector pixel (0,0) to (0,1)
+        v   : the vector from detector pixel (0,0) to (1,0)
 
-            # center of detector
-            # vectors[nn, 3:6] = 0
+    Parameters
+    ----------
+    geometry : `Geometry`
+        The ODL geometry instance used to create the ASTRA geometry
 
-            # vector from detector pixel (0,0) to (0,1)
-            # TODO: use det_rotation method instead of
-            vectors[ang_idx, 6] = cos(angle) * det_pix_width
-            vectors[ang_idx, 7] = sin(angle) * det_pix_width
-            # vectors[nn, 8] = 0
+    Returns
+    -------
+    vectors : `numpy.ndarray`
+        Numpy array of shape ``(number of angles, 12)``
+    """
 
-            # vector from detector pixel (0,0) to (1,0)
-            # vectors[nn, 9] = 0
-            # vectors[nn, 10] = 0
-            vectors[ang_idx, 11] = det_pix_height
+    # TODO: this is never called
 
-    elif isinstance(geometry, FanBeamGeometry):
-        vectors = np.zeros((num_angles, 6))
-        det_pix_width = geometry.det_grid.stride[0]
+    angles = geometry.motion_grid
 
-        for ang_idx, angle in enumerate(angles.points()):
-            rot_matrix = geometry.rotation_matrix(angle)
-            # source position
-            # TODO: check method, probably inconsistent with detector pixel vec
-            vectors[ang_idx, 0:2] = geometry.src_position(angle)
+    vectors = np.zeros((angles.ntotal, 12))
+    det_pix_width = geometry.det_grid.stride[0]
+    det_pix_height = geometry.det_grid.stride[1]
 
-            # center of detector
-            # TODO: check method, probably inconsistent with detector pixel vec
-            midp = geometry.det_params.midpoint
-            vectors[ang_idx, 2:4] = geometry.det_point_position(angle, midp)
+    for ang_idx, angle in enumerate(angles.points()):
+        # ray direction
+        vectors[ang_idx, 0] = sin(angle)
+        vectors[ang_idx, 1] = -cos(angle)
+        # vectors[nn, 2] = 0
 
-            # vector from detector pixel (0) to (1)
-            unit_vec = geometry.detector.surface_deriv()
-            vectors[ang_idx, 4:5] = rot_matrix.dot(unit_vec)
+        # center of detector
+        # vectors[nn, 3:6] = 0
 
-    else:
-        raise ValueError('invalid geometry type {!r}.'.format(geometry))
+        # vector from detector pixel (0,0) to (0,1)
+        # TODO: use det_rotation method instead of
+        vectors[ang_idx, 6] = cos(angle) * det_pix_width
+        vectors[ang_idx, 7] = sin(angle) * det_pix_width
+        # vectors[nn, 8] = 0
+
+        # vector from detector pixel (0,0) to (1,0)
+        # vectors[nn, 9] = 0
+        # vectors[nn, 10] = 0
+        vectors[ang_idx, 11] = det_pix_height
 
     return vectors
 
@@ -348,6 +382,9 @@ def astra_projection_geometry(geometry):
             det_col_count, angles)
 
     elif False and isinstance(geometry, CircularConeFlatGeometry):
+        # TODO: our CircularConeFlatGeometry is more general, perhaps
+        # improve this?
+
         det_width = geometry.det_grid.stride[0]
         det_height = geometry.det_grid.stride[1]
         det_row_count = geometry.det_grid.shape[1]
@@ -360,10 +397,12 @@ def astra_projection_geometry(geometry):
             'cone', det_width, det_height, det_row_count, det_col_count,
             angles, source_origin, origin_det)
 
-    elif isinstance(geometry, ConeBeamGeometry):
+    elif (isinstance(geometry, ConeBeamGeometry) and
+          isinstance(geometry.detector, FlatDetector) and
+          geometry.ndim == 3):
         det_row_count = geometry.det_grid.shape[1]
         det_col_count = geometry.det_grid.shape[0]
-        vec = astra_geom_to_vec(geometry)
+        vec = astra_conebeam_3d_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom(
             'cone_vec', det_row_count, det_col_count, vec)
     else:
