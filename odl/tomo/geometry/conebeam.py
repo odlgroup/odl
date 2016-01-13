@@ -51,8 +51,8 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
                  pitch=0, agrid=None, dgrid=None,
-                 axis=[0, 0, 1], source_to_detector=[1, 0, 0],
-                 detector_axises=None):
+                 axis=[0, 0, 1], src_to_det=[1, 0, 0],
+                 detector_axes=None):
         """Initialize a new instance.
 
         Parameters
@@ -77,22 +77,21 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
         source_to_detector : 3-element array, optional
             Defines the direction from the source to the point (0,0) of the
             detector.
-        detector_axises : tuple of two 3-element arrays, optional
-            Defines the unit directions along each detector parameter of the
-            detector.
+        detector_axes : sequence of two 3-element arrays, optional
+            Unit directions along each detector parameter of the detector.
             Default: (normalized) [np.cross(axis, source_to_detector), axis]
         """
 
         AxisOrientedGeometry.__init__(self, axis)
 
-        self._source_to_detector = (np.array(source_to_detector) /
-                                    np.linalg.norm(source_to_detector))
+        self._src_to_det = (np.array(src_to_det) /
+                            np.linalg.norm(src_to_det))
 
-        if detector_axises is None:
-            detector_axises = [np.cross(self.axis, self._source_to_detector),
-                               self.axis]
+        if detector_axes is None:
+            detector_axes = [np.cross(self.axis, self._src_to_det),
+                             self.axis]
 
-        detector = Flat2dDetector(dparams, detector_axises, dgrid)
+        detector = Flat2dDetector(dparams, detector_axes, dgrid)
 
         ConeBeamGeometry.__init__(self, 3, angle_intvl, detector, agrid)
 
@@ -149,13 +148,13 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
                              ''.format(angle, self.motion_params))
 
         # Distance from 0 to detector
-        offset = self.det_radius * self._source_to_detector
-        detector_offset = self.rotation_matrix(angle).dot(offset)
+        origin_to_det = self.det_radius * self._src_to_det
+        circle_component = self.rotation_matrix(angle).dot(origin_to_det)
 
         # Increment by pitch
-        ptich_offset = self.axis * angle / (np.pi * 2)
+        pitch_component = self.axis * angle / (np.pi * 2)
 
-        return detector_offset + ptich_offset
+        return circle_component + pitch_component
 
     def src_position(self, angle):
         """The source position function.
@@ -179,16 +178,13 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
                              ''.format(angle, self.motion_params))
 
         # Distance from 0 to detector
-        offset = -self.src_radius * self._source_to_detector
-        source_offset = self.rotation_matrix(angle).dot(offset)
+        origin_to_src = -self.src_radius * self._src_to_det
+        circle_component = self.rotation_matrix(angle).dot(origin_to_src)
 
         # Increment by pitch
-        pitch_offset = self.axis * angle / (np.pi * 2)
+        pitch_component = self.axis * angle / (np.pi * 2)
 
-        return source_offset + pitch_offset
-
-    # Fix for bug in ABC thinking this is abstract
-    rotation_matrix = AxisOrientedGeometry.rotation_matrix
+        return circle_component + pitch_component
 
     def __repr__(self):
         """Return ``repr(self)``"""
@@ -219,6 +215,9 @@ class HelicalConeFlatGeometry(ConeBeamGeometry, AxisOrientedGeometry):
                                   src_to_det=self._src_to_det,
                                   detector_axes=self.detector.detector_axes)
         return '{}({})'.format(self.__class__.__name__, arg_str)
+
+    # Fix for bug in ABC thinking this is abstract
+    rotation_matrix = AxisOrientedGeometry.rotation_matrix
 
 
 class CircularConeFlatGeometry(HelicalConeFlatGeometry):
@@ -257,7 +256,7 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
         src_to_det : 3-element array, optional
             Defines the direction from the source to the point (0,0) of the
             detector.
-        detector_axes : tuple of two 3-element arrays, optional
+        detector_axes : sequence of two 3-element arrays, optional
             Defines the unit directions along each detector parameter of the
             detector.
             Default: (normalized) [np.cross(axis, source_to_detector), axis]
