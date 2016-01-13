@@ -238,7 +238,7 @@ def test_astra_projection_geometry():
                                                  agrid=angle_grid,
                                                  dgrid=det_grid)
     ageom = odl.tomo.astra_projection_geometry(geom_ccf)
-    assert ageom['type'] == 'cone'
+    assert ageom['type'] == 'cone_vec'
 
     # HELICAL CONEFLAT
     spiral_pitch_factor = 1
@@ -416,18 +416,12 @@ def test_geom_to_vec():
     dparams = odl.Interval(-40, 40)
     det_grid = odl.uniform_sampling(dparams, 10)
 
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
-                                       det_grid)
-
-    with pytest.raises(ValueError):
-        odl.tomo.astra_geom_to_vec(geom)
-
     # FAN FLAT
     src_rad = 10
     det_rad = 5
     geom_ff = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                                        agrid=angle_grid, dgrid=det_grid)
-    vec = odl.tomo.astra_geom_to_vec(geom_ff)
+    vec = odl.tomo.astra_conebeam_2d_geom_to_vec(geom_ff)
 
     assert vec.shape == (angle_grid.ntotal, 6)
 
@@ -438,7 +432,7 @@ def test_geom_to_vec():
                                                  det_rad,
                                                  agrid=angle_grid,
                                                  dgrid=det_grid)
-    vec = odl.tomo.astra_geom_to_vec(geom_ccf)
+    vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_ccf)
     assert vec.shape == (angle_grid.ntotal, 12)
 
     # HELICAL CONE FLAT
@@ -448,7 +442,7 @@ def test_geom_to_vec():
                                                 spiral_pitch_factor,
                                                 agrid=angle_grid,
                                                 dgrid=det_grid)
-    vec = odl.tomo.astra_geom_to_vec(geom_hcf)
+    vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_hcf)
     assert vec.shape == (angle_grid.ntotal, 12)
 
 

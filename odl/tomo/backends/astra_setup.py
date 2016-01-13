@@ -52,14 +52,17 @@ from odl.space.ntuples import FnVector
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
-                               Parallel3dGeometry, FanBeamGeometry,
+                               Parallel3dGeometry,
                                ConeBeamGeometry, FanFlatGeometry,
                                CircularConeFlatGeometry,
                                FlatDetector)
 
 __all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
            'astra_projection_geometry', 'astra_data', 'astra_projector',
-           'astra_algorithm')
+           'astra_algorithm',
+           'astra_conebeam_3d_geom_to_vec',
+           'astra_conebeam_2d_geom_to_vec',
+           'astra_parallel_3d_geom_to_vec')
 
 
 def astra_volume_geometry(discr_reco):
@@ -259,7 +262,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
 
         # vector from detector pixel (0) to (1)
         unit_vec = geometry.detector.surface_deriv()
-        vectors[ang_idx, 4:5] = rot_matrix.dot(unit_vec)
+        vectors[ang_idx, 4:6] = rot_matrix.dot(unit_vec)
 
     return vectors
 
