@@ -259,12 +259,19 @@ class GridCollocation(FunctionSetMapping):
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
-        mesh = self.grid.meshgrid()
-        if out is None:
-            out = func(mesh).ravel(order=self.order)
-        else:
-            func(mesh, out=out.asarray().reshape(self.grid.shape,
-                                                 order=self.order))
+        try:
+            mesh = self.grid.meshgrid()
+            if out is None:
+                out = func(mesh).ravel(order=self.order)
+            else:
+                func(mesh, out=out.asarray().reshape(self.grid.shape,
+                                                     order=self.order))
+        except (ValueError, TypeError):
+            points = self.grid.points()
+            if out is None:
+                out = func(points)
+            else:
+                func(points, out=out.asarray())
         return out
 
     def __repr__(self):

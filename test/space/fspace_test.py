@@ -55,6 +55,12 @@ def test_fspace_init():
     FunctionSpace(ndbox, field=odl.ComplexNumbers())
 
 
+def test_fset_init():
+    str3 = odl.Strings(3)
+    ints = odl.Integers()
+    FunctionSet(str3, ints)
+
+
 def test_fspace_simple_attributes():
     intv = odl.Interval(0, 1)
     fspace = FunctionSpace(intv)
@@ -128,6 +134,23 @@ def test_fspace_vector_init():
     fspace.element(cfunc_2d_vec_oop, vectorized=True)
     fspace.element(cfunc_2d_vec_ip, vectorized=True)
     fspace.element(cfunc_2d_vec_dual, vectorized=True)
+
+
+def test_fset_vector_eval():
+    str3 = odl.Strings(3)
+    ints = odl.Integers()
+    fset = FunctionSet(str3, ints)
+    strings = np.array(['aa', 'b', 'cab', 'aba'])
+    out_vec = np.empty((4,), dtype=int)
+
+    # Vectorized for arrays only
+    f_vec = fset.element(lambda s: np.array([str(si).count('a') for si in s]))
+    true_vec = [2, 0, 1, 2]
+
+    assert f_vec('abc') == 1
+    assert all_equal(f_vec(strings), true_vec)
+    f_vec(strings, out=out_vec)
+    assert all_equal(out_vec, true_vec)
 
 
 def _standard_setup_2d():
