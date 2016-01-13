@@ -35,9 +35,9 @@ ODL geometry representation to ASTRA's data structures, including:
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from math import sin, cos
 from future import standard_library
 standard_library.install_aliases()
+import warnings
 
 # External
 try:
@@ -54,6 +54,7 @@ from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
                                Parallel3dGeometry,
                                DivergentBeamGeometry, FanFlatGeometry,
+                               ParallelGeometry,
                                FlatDetector)
 
 __all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
@@ -184,8 +185,8 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 12)``
     """
-    angles = geometry.motion_grid
 
+    angles = geometry.motion_grid
     vectors = np.zeros((angles.ntotal, 12))
 
     for ang_idx, angle in enumerate(angles.points()):
@@ -242,10 +243,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
         Numpy array of shape ``(number of angles, 6)``
     """
 
-    # TODO: this is never called
-
     angles = geometry.motion_grid
-
     vectors = np.zeros((angles.ntotal, 6))
 
     for ang_idx, angle in enumerate(angles.points()):
@@ -263,6 +261,14 @@ def astra_conebeam_2d_geom_to_vec(geometry):
         unit_vec = geometry.detector.surface_deriv()
         strides = geometry.det_grid.stride
         vectors[ang_idx, 4:6] = rot_matrix.dot(unit_vec * strides[0])
+
+    # Astra order, needed for data to match what we expect from astra.
+    # Astra has a different axis convention to ODL (z, y, x), so we need
+    # to adapt to this by changing the order
+    newind = []
+    for i in range(3):
+        newind += [1 + 2 * i, 0 + 2 * i]
+    vectors = vectors[:, newind]
 
     return vectors
 
@@ -293,33 +299,39 @@ def astra_parallel_3d_geom_to_vec(geometry):
         Numpy array of shape ``(number of angles, 12)``
     """
 
-    # TODO: this is never called
-
     angles = geometry.motion_grid
-
     vectors = np.zeros((angles.ntotal, 12))
-    det_pix_width = geometry.det_grid.stride[0]
-    det_pix_height = geometry.det_grid.stride[1]
 
     for ang_idx, angle in enumerate(angles.points()):
-        # ray direction
-        vectors[ang_idx, 0] = sin(angle)
-        vectors[ang_idx, 1] = -cos(angle)
-        # vectors[nn, 2] = 0
+        rot_matrix = geometry.rotation_matrix(angle)
+
+        midp = geometry.det_params.midpoint
+
+        # source position
+        vectors[ang_idx, 0:3] = geometry.det_to_src(angle, midp)
 
         # center of detector
-        # vectors[nn, 3:6] = 0
+        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
 
         # vector from detector pixel (0,0) to (0,1)
-        # TODO: use det_rotation method instead of
-        vectors[ang_idx, 6] = cos(angle) * det_pix_width
-        vectors[ang_idx, 7] = sin(angle) * det_pix_width
-        # vectors[nn, 8] = 0
+        unit_vecs = geometry.detector.surface_deriv()
+        strides = geometry.det_grid.stride
+        vectors[ang_idx, 6:9] = rot_matrix.dot(unit_vecs[0] * strides[0])
+        vectors[ang_idx, 9:12] = rot_matrix.dot(unit_vecs[1] * strides[1])
 
-        # vector from detector pixel (0,0) to (1,0)
-        # vectors[nn, 9] = 0
-        # vectors[nn, 10] = 0
-        vectors[ang_idx, 11] = det_pix_height
+    # Astra order, needed for data to match what we expect from astra.
+    # Astra has a different axis convention to ODL (z, y, x), so we need
+    # to adapt to this by changing the order
+
+    newind = []
+    for i in range(4):
+        newind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
+    vectors = vectors[:, newind]
+
+    if np.any(vectors[:, 0:3] == 0):
+        warnings.warn('Astra has a bug when any of the directions are zero, '
+                      'add a small offset. '
+                      'See ASTRA issue #18 for more info.')
 
     return vectors
 
@@ -372,7 +384,7 @@ def astra_projection_geometry(geometry):
         proj_geom = astra.create_proj_geom(
             'fanflat_vec', det_count, vec)
 
-    elif isinstance(geometry, Parallel3dGeometry):
+    elif False and isinstance(geometry, Parallel3dGeometry):
         det_width = geometry.det_grid.stride[0]
         det_height = geometry.det_grid.stride[1]
         det_row_count = geometry.det_grid.shape[1]
@@ -381,6 +393,15 @@ def astra_projection_geometry(geometry):
         proj_geom = astra.create_proj_geom(
             'parallel3d', det_width, det_height, det_row_count,
             det_col_count, angles)
+
+    elif (isinstance(geometry, ParallelGeometry) and
+          isinstance(geometry.detector, FlatDetector) and
+          geometry.ndim == 3):
+        det_row_count = geometry.det_grid.shape[1]
+        det_col_count = geometry.det_grid.shape[0]
+        vec = astra_parallel_3d_geom_to_vec(geometry)
+        proj_geom = astra.create_proj_geom(
+            'parallel3d_vec', det_row_count, det_col_count, vec)
 
     elif (isinstance(geometry, DivergentBeamGeometry) and
           isinstance(geometry.detector, FlatDetector) and
@@ -503,8 +524,8 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
 
     proj_type = astra_proj_geom['type']
     if proj_type not in ('parallel', 'fanflat', 'fanflat_vec',
-                         'parallel3d', 'cone', 'cone_vec', ):
-        raise ValueError('invalid 2d geometry type {!r}.'.format(proj_type))
+                         'parallel3d', 'parallel3d_vec', 'cone', 'cone_vec'):
+        raise ValueError('invalid geometry type {!r}.'.format(proj_type))
 
     # Mapping from interpolation type and geometry to ASTRA projector type.
     # "I" means probably mathematically inconsistent.
