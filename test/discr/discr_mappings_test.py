@@ -42,7 +42,7 @@ def test_nearest_interpolation_1d_complex():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     space = odl.FunctionSpace(intv, field=odl.ComplexNumbers())
-    dspace = odl.Cn(grid.ntotal)
+    dspace = odl.Cn(grid.size)
     interp_op = NearestInterpolation(space, grid, dspace)
     function = interp_op([0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j])
 
@@ -75,7 +75,7 @@ def test_nearest_interpolation_1d_variants():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     space = odl.FunctionSpace(intv)
-    dspace = odl.Rn(grid.ntotal)
+    dspace = odl.Rn(grid.size)
 
     # 'left' variant
     interp_op = NearestInterpolation(space, grid, dspace, variant='left')
@@ -103,7 +103,7 @@ def test_nearest_interpolation_2d_float():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(grid.ntotal)
+    dspace = odl.Rn(grid.size)
     interp_op = NearestInterpolation(space, grid, dspace)
     function = interp_op([0, 1, 2, 3, 4, 5, 6, 7])
 
@@ -136,7 +136,7 @@ def test_nearest_interpolation_2d_string():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSet(rect, odl.Strings(1))
-    dspace = odl.Ntuples(grid.ntotal, dtype='U1')
+    dspace = odl.Ntuples(grid.size, dtype='U1')
     interp_op = NearestInterpolation(space, grid, dspace)
     values = np.array([c for c in 'mystring'])
     function = interp_op(values)
@@ -170,7 +170,7 @@ def test_nearest_interpolation_2d_fortran_ordering():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(grid.ntotal)
+    dspace = odl.Rn(grid.size)
     interp_op = NearestInterpolation(space, grid, dspace, order='F')
     function = interp_op([0, 1, 2, 3, 4, 5, 6, 7])
 
@@ -204,7 +204,7 @@ def test_linear_interpolation_1d():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     space = odl.FunctionSpace(intv)
-    dspace = odl.Rn(grid.ntotal)
+    dspace = odl.Rn(grid.size)
     interp_op = LinearInterpolation(space, grid, dspace)
     function = interp_op([1, 2, 3, 4, 5])
 
@@ -226,7 +226,7 @@ def test_linear_interpolation_2d():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(grid.ntotal)
+    dspace = odl.Rn(grid.size)
     interp_op = LinearInterpolation(space, grid, dspace)
     values = np.arange(1, 9, dtype='float64')
     function = interp_op(values)
@@ -295,7 +295,7 @@ def test_per_axis_interpolation():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(grid.ntotal)
+    dspace = odl.Rn(grid.size)
     schemes = ['linear', 'nearest']
     variants = [None, 'right']
     interp_op = PerAxisInterpolation(space, grid, dspace, schemes=schemes,
@@ -351,7 +351,7 @@ def test_collocation_interpolation_identity():
     rect = odl.Rectangle([0, 0], [1, 1])
     grid = odl.uniform_sampling(rect, [4, 2], as_midp=True)
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(grid.ntotal)
+    dspace = odl.Rn(grid.size)
 
     # Testing 'C' and 'F' ordering and all interpolation schemes
     coll_op_c = GridCollocation(space, grid, dspace, order='C')

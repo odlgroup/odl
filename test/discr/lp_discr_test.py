@@ -417,23 +417,23 @@ def test_setitem_nd():
     # nD
     shape = (3,) * 3 + (4,) * 3
     discr = odl.uniform_discr([0] * 6, [1] * 6, shape)
-    ntotal = np.prod(shape)
+    size = np.prod(shape)
     vec = discr.element(np.zeros(shape))
 
-    arr = np.arange(ntotal).reshape(shape)
+    arr = np.arange(size).reshape(shape)
 
     vec[:] = arr
-    assert all_equal(vec, np.arange(ntotal))
+    assert all_equal(vec, np.arange(size))
 
     vec[:] = 0
-    assert all_equal(vec, np.zeros(ntotal))
+    assert all_equal(vec, np.zeros(size))
 
     vec[:] = [1]
-    assert all_equal(vec, np.ones(ntotal))
+    assert all_equal(vec, np.ones(size))
 
     with pytest.raises(ValueError):
         # Reversed shape -> bad
-        vec[:] = np.arange(ntotal).reshape((4,) * 3 + (3,) * 3)
+        vec[:] = np.arange(size).reshape((4,) * 3 + (3,) * 3)
 
 
 def test_setslice():

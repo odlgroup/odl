@@ -449,8 +449,8 @@ def _submarine_phantom_2d_smooth(discr, taper):
         ``(0.8, 0.28)``. For other domains, the values are scaled
         accordingly.
         """
-        halfaxes = np.array([0.8, 0.28]) * discr.domain.size / 2
-        center = np.array([0.2, -0.4]) * discr.domain.size / 2
+        halfaxes = np.array([0.8, 0.28]) * discr.domain.extent / 2
+        center = np.array([0.2, -0.4]) * discr.domain.extent / 2
 
         # Efficiently calculate |z|^2, z = (x - center) / radii
         sq_ndist = np.zeros_like(x[0])
@@ -470,8 +470,8 @@ def _submarine_phantom_2d_smooth(discr, taper):
         ``(0.52, 0.2)``. For other domains, the values are scaled
         accordingly.
         """
-        xlower = np.array([0.12, -0.2]) * discr.domain.size / 2
-        xupper = np.array([0.52, 0.2]) * discr.domain.size / 2
+        xlower = np.array([0.12, -0.2]) * discr.domain.extent / 2
+        xupper = np.array([0.52, 0.2]) * discr.domain.extent / 2
 
         out = np.ones_like(x[0])
         for xi, low, upp in zip(x, xlower, xupper):
@@ -496,8 +496,8 @@ def _submarine_phantom_2d_nonsmooth(discr):
         ``(0.8, 0.28)``. For other domains, the values are scaled
         accordingly.
         """
-        halfaxes = np.array([0.8, 0.28]) * discr.domain.size / 2
-        center = np.array([0.2, -0.4]) * discr.domain.size / 2
+        halfaxes = np.array([0.8, 0.28]) * discr.domain.extent / 2
+        center = np.array([0.2, -0.4]) * discr.domain.extent / 2
 
         sq_ndist = np.zeros_like(x[0])
         for xi, rad, cen in zip(x, halfaxes, center):
@@ -513,8 +513,8 @@ def _submarine_phantom_2d_nonsmooth(discr):
         ``(0.52, 0.2)``. For other domains, the values are scaled
         accordingly.
         """
-        xlower = np.array([0.12, -0.2]) * discr.domain.size / 2
-        xupper = np.array([0.52, 0.2]) * discr.domain.size / 2
+        xlower = np.array([0.12, -0.2]) * discr.domain.extent / 2
+        xupper = np.array([0.52, 0.2]) * discr.domain.extent / 2
 
         out = np.ones_like(x[0])
         for xi, low, upp in zip(x, xlower, xupper):

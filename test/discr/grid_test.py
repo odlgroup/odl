@@ -39,6 +39,9 @@ def as_midp(request):
     return request.param
 
 
+# ----- TensorGrid ----- #
+
+
 def test_init(as_midp):
     sorted1 = np.arange(2, 6)
     sorted2 = np.arange(-4, 5, 2)
@@ -113,7 +116,7 @@ def test_shape(as_midp):
     assert grid3.shape == (1, 50)
 
 
-def test_ntotal(as_midp):
+def test_size(as_midp):
     vec1 = np.arange(2, 6)
     vec2 = np.linspace(-2, 2, 50)
     scalar = 0.5
@@ -122,9 +125,9 @@ def test_ntotal(as_midp):
     grid2 = TensorGrid(vec1, vec2, as_midp=as_midp)
     grid3 = TensorGrid(scalar, vec2, as_midp=as_midp)
 
-    assert grid1.ntotal == 4
-    assert grid2.ntotal == 200
-    assert grid3.ntotal == 50
+    assert grid1.size == 4
+    assert grid2.size == 200
+    assert grid3.size == 50
 
 
 def test_minpt_maxpt(as_midp):
@@ -567,6 +570,9 @@ def test_convex_hull():
     end = (vec1[-1] + cs1[-1] / 2., vec2[-1] + cs2[-1] / 2., scalar)
     chull = odl.IntervalProd(begin, end)
     assert grid.convex_hull() == chull
+
+
+# ----- RegularGrid ----- #
 
 
 def test_regular_grid_init():

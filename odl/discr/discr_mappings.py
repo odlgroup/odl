@@ -100,10 +100,10 @@ class FunctionSetMapping(Operator):
                              'function set {}.'.format(grid, fset.domain,
                                                        fset))
 
-        if dspace.size != grid.ntotal:
+        if dspace.size != grid.size:
             raise ValueError('size {} of the data space {} not equal '
                              'to the total number {} of grid points.'
-                             ''.format(dspace.size, dspace, grid.ntotal))
+                             ''.format(dspace.size, dspace, grid.size))
 
         self._order = str(order).upper()
         if self.order not in ('C', 'F'):
@@ -231,7 +231,7 @@ class GridCollocation(FunctionSetMapping):
         >>> from odl import TensorGrid, Rn
         >>> grid = TensorGrid([1, 2], [3, 4, 5], as_midp=True)
         ...
-        >>> rn = Rn(grid.ntotal)
+        >>> rn = Rn(grid.size)
 
         Define a set of functions from the convex hull of the grid
         to the real numbers:
@@ -399,7 +399,7 @@ class NearestInterpolation(FunctionSetMapping):
         >>> grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
-        >>> dspace = Ntuples(grid.ntotal, dtype='U1')
+        >>> dspace = Ntuples(grid.size, dtype='U1')
 
         Now we initialize the operator and test it with some points:
 

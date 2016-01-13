@@ -113,7 +113,7 @@ class IntervalProd(Set):
         return len(self._inondeg)
 
     @property
-    def size(self):
+    def extent(self):
         """The interval length per axis."""
         return self.end - self.begin
 

@@ -179,7 +179,7 @@ class DiscreteLp(Discretization):
                                       'instead.')
         csize = self.grid.stride
         idcs = np.where(csize == 0)
-        csize[idcs] = self.domain.size[idcs]
+        csize[idcs] = self.domain.extent[idcs]
         return csize
 
     @property
@@ -288,12 +288,12 @@ class DiscreteLpVector(DiscretizationVector):
                                              order=self.space.order)
         else:
             if out.shape not in (self.space.grid.shape,
-                                 (self.space.grid.ntotal,)):
+                                 (self.space.grid.size,)):
                 raise ValueError('output array has shape {}, expected '
                                  '{} or ({},).'
                                  ''.format(out.shape,
                                            self.space.grid.shape,
-                                           self.space.grid.ntotal))
+                                           self.space.grid.size))
             out_r = out.reshape(self.space.grid.shape,
                                 order=self.space.order)
             if out_r.flags.c_contiguous:
@@ -548,17 +548,17 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     if weighting_ == 'simple':
         csize = grid.stride
         idcs = np.where(csize == 0)
-        csize[idcs] = fspace.domain.size[idcs]
+        csize[idcs] = fspace.domain.extent[idcs]
         weight = np.prod(csize)
     else:  # weighting_ == 'consistent'
         # TODO: implement
         raise NotImplementedError
 
     if dtype is not None:
-        dspace = ds_type(grid.ntotal, dtype=dtype, weight=weight,
+        dspace = ds_type(grid.size, dtype=dtype, weight=weight,
                          exponent=exponent)
     else:
-        dspace = ds_type(grid.ntotal, weight=weight, exponent=exponent)
+        dspace = ds_type(grid.size, weight=weight, exponent=exponent)
 
     order = kwargs.pop('order', 'C')
 
