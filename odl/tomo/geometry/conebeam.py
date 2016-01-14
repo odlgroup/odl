@@ -43,8 +43,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     The source moves along a spiral with radius ``r`` in the azimuthal plane
     and a pitch``P``. The detector reference point is opposite to
     the source and moves on a spiral with radius ``R`` in the azimuthal
-    plane and pitch ``P``. The detector is aligned tangential to the
-    circle.
+    plane and pitch ``P``.
 
     The motion parameter is the (1d) rotation angle parametrizing source and
     detector positions.

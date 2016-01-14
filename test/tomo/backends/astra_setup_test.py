@@ -230,7 +230,7 @@ def test_astra_projection_geometry():
                                            det_grid)
     odl.tomo.astra_projection_geometry(geom_p3d)
     ageom = odl.tomo.astra_projection_geometry(geom_p3d)
-    assert ageom['type'] == 'parallel3d'
+    assert ageom['type'] == 'parallel3d_vec'
 
     # CIRCULAR CONEFLAT
     geom_ccf = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,

@@ -37,7 +37,6 @@ ODL geometry representation to ASTRA's data structures, including:
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-import warnings
 
 # External
 try:
@@ -52,8 +51,7 @@ from odl.space.ntuples import FnVector
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
-                               Parallel3dGeometry,
-                               DivergentBeamGeometry, FanFlatGeometry,
+                               DivergentBeamGeometry,
                                ParallelGeometry,
                                FlatDetector)
 
@@ -328,11 +326,6 @@ def astra_parallel_3d_geom_to_vec(geometry):
         newind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
     vectors = vectors[:, newind]
 
-    if np.any(vectors[:, 0:3] == 0):
-        warnings.warn('Astra has a bug when any of the directions are zero, '
-                      'add a small offset. '
-                      'See ASTRA issue #18 for more info.')
-
     return vectors
 
 
@@ -383,16 +376,6 @@ def astra_projection_geometry(geometry):
         vec = astra_conebeam_2d_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom(
             'fanflat_vec', det_count, vec)
-
-    elif False and isinstance(geometry, Parallel3dGeometry):
-        det_width = geometry.det_grid.stride[0]
-        det_height = geometry.det_grid.stride[1]
-        det_row_count = geometry.det_grid.shape[1]
-        det_col_count = geometry.det_grid.shape[0]
-        angles = geometry.motion_grid.coord_vectors[0]
-        proj_geom = astra.create_proj_geom(
-            'parallel3d', det_width, det_height, det_row_count,
-            det_col_count, angles)
 
     elif (isinstance(geometry, ParallelGeometry) and
           isinstance(geometry.detector, FlatDetector) and
