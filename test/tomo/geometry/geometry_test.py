@@ -69,14 +69,8 @@ def test_parallel_2d_geometry():
         geom.rotation_matrix(2 * full_angle)
 
     rot_mat = geom.rotation_matrix(np.pi / 2)
-    e1 = np.matrix([[1, 0]]).transpose()
-    e2 = np.matrix([0, 1]).transpose()
-
-    e1r = rot_mat * e1
-    e2r = rot_mat * e2
-
-    assert almost_equal(np.sum(e1r - e2), 0, places=16)
-    assert almost_equal(np.sum(e2r + e1), 0, places=16)
+    assert all_almost_equal(rot_mat.dot([1, 0]), [0, 1])
+    assert all_almost_equal(rot_mat.dot([0, 1]), [-1, 0])
 
 
 def test_parallel_3d_geometry():
@@ -86,7 +80,7 @@ def test_parallel_3d_geometry():
     full_angle = np.pi
     angle_intvl = odl.Interval(0, full_angle)
     dparams = odl.IntervalProd([0, 0], [1, 1])
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 0, 0))
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 0, 1])
 
     with pytest.raises(TypeError):
         odl.tomo.Parallel3dGeometry([0, 1], dparams)
@@ -104,48 +98,41 @@ def test_parallel_3d_geometry():
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
 
     # detector rotation
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 0, 0))
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 0, 1])
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
 
     # rotation of cartesian basis vectors about each other
-    a = 32.1
-    e1 = np.matrix([a, 0, 0]).transpose()
-    e2 = np.matrix([0, a, 0]).transpose()
-    e3 = np.matrix([0, 0, a]).transpose()
+    coords = np.eye(3)
 
-    places = 14
-
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 0, 0))
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[1, 0, 0])
     rot_mat = geom.rotation_matrix(np.pi / 2)
-    assert all_equal(rot_mat * e1, e1)
-    assert almost_equal(np.sum(rot_mat * e2 - e3), 0, places=places)
-    assert almost_equal(np.sum(rot_mat * e3 - (-e2)), 0, places=places)
+    assert all_almost_equal(rot_mat.dot(coords), [[1, 0, 0],
+                                                  [0, 0, -1],
+                                                  [0, 1, 0]])
 
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(0, 1, 0))
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 1, 0])
     rot_mat = geom.rotation_matrix(np.pi / 2)
-    assert all_equal(rot_mat * e2, e2)
-    assert almost_equal(np.sum(rot_mat * e3 - e1), 0, places=places)
-    assert almost_equal(np.sum(rot_mat * e1 - (-e3)), 0, places=places)
+    assert all_almost_equal(rot_mat.dot(coords), [[0, 0, 1],
+                                                  [0, 1, 0],
+                                                  [-1, 0, 0]])
 
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(0, 0, 1))
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 0, 1])
     rot_mat = geom.rotation_matrix(np.pi / 2)
-    assert all_equal(rot_mat * e3, e3)
-    assert almost_equal(np.sum(rot_mat * e1 - e2), 0, places=places)
-    assert almost_equal(np.sum(rot_mat * e2 - (-e1)), 0, places=places)
-    assert all_almost_equal(np.array(rot_mat * e2), np.array(-e1),
-                            places=places)
+    assert all_almost_equal(rot_mat.dot(coords), [[0, -1, 0],
+                                                  [1, 0, 0],
+                                                  [0, 0, 1]])
 
     # rotation axis
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 0, 0))
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[1, 0, 0])
     assert all_equal(geom.axis, np.array([1, 0, 0]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(0, 1, 0))
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 1, 0])
     assert all_equal(geom.axis, np.array([0, 1, 0]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(0, 0, 1))
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 0, 1])
     assert all_equal(geom.axis, np.array([0, 0, 1]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2, 3))
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[1, 2, 3])
     assert all_equal(geom.axis,
-                     np.array([1, 2, 3]) / np.linalg.norm(np.array([1, 2, 3])))
+                     np.array([1, 2, 3]) / np.linalg.norm([1, 2, 3]))
 
     with pytest.raises(ValueError):
         odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1,))
@@ -197,14 +184,8 @@ def test_fanflat():
         geom.rotation_matrix(2 * full_angle)
 
     rot_mat = geom.rotation_matrix(np.pi / 2)
-    e1 = np.matrix([[1, 0]]).transpose()
-    e2 = np.matrix([0, 1]).transpose()
-
-    e1r = rot_mat * e1
-    e2r = rot_mat * e2
-
-    assert almost_equal(np.sum(e1r - e2), 0, places=16)
-    assert almost_equal(np.sum(e2r + e1), 0, places=16)
+    assert all_almost_equal(rot_mat.dot([1, 0]), [0, 1])
+    assert all_almost_equal(rot_mat.dot([0, 1]), [-1, 0])
 
 
 def test_circular_cone_flat():

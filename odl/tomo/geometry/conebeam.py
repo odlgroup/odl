@@ -31,6 +31,7 @@ import numpy as np
 from odl.tomo.geometry.detector import Flat2dDetector
 from odl.tomo.geometry.geometry import (DivergentBeamGeometry,
                                         AxisOrientedGeometry)
+from odl.tomo.util.trafos import perpendicular_vector
 
 
 __all__ = ('CircularConeFlatGeometry',
@@ -49,9 +50,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 pitch=0, agrid=None, dgrid=None,
-                 axis=[0, 0, 1], src_to_det=[1, 0, 0],
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius, pitch,
+                 agrid=None, dgrid=None, axis=[0, 0, 1], src_to_det=None,
                  detector_axes=None):
         """Initialize a new instance.
 
@@ -65,7 +65,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Radius of the source circle, must be positive
         det_radius : `float`
             Radius of the detector circle, must be positive
-        pitch : positive `float`, optional
+        pitch : positive `float`
             Constant vertical distance between two source positions, one at
             angle ``phi``, the other at angle ``phi + 2 * pi``
         agrid : 1-dim. `TensorGrid`, optional
@@ -76,13 +76,16 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Fixed rotation axis defined by a 3-element vector
         src_to_det : 3-element array, optional
             The direction from the source to the point (0, 0) of the detector
-            angle=0
+            angle=0. Default: Vector in x, y plane orthogonal to axis.
         detector_axes : sequence of two 3-element arrays, optional
             Unit directions along each detector parameter of the detector.
             Default: (normalized) [np.cross(axis, source_to_detector), axis]
         """
 
         AxisOrientedGeometry.__init__(self, axis)
+
+        if src_to_det is None:
+            src_to_det = perpendicular_vector(axis)
 
         self._src_to_det = (np.array(src_to_det) /
                             np.linalg.norm(src_to_det))
@@ -231,8 +234,7 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 agrid=None, dgrid=None,
-                 axis=[0, 0, 1], src_to_det=[1, 0, 0],
+                 agrid=None, dgrid=None, axis=[0, 0, 1], src_to_det=None,
                  detector_axes=None):
         """Initialize a new instance.
 
@@ -254,7 +256,7 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
             Fixed rotation axis defined by a 3-element vector
         src_to_det : 3-element array, optional
             The direction from the source to the point (0, 0) of the detector
-            angle=0
+            angle=0. Default: Vector in x, y plane orthogonal to axis.
         detector_axes : sequence of two 3-element arrays, optional
             Defines the unit directions along each detector parameter of the
             detector.
