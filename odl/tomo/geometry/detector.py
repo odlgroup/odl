@@ -65,17 +65,21 @@ class Detector(with_metaclass(ABCMeta, object)):
             contained
         """
         if not isinstance(params, IntervalProd):
-            raise TypeError('parameter set {} is not a an interval product.'
+            raise TypeError('parameter set {!r} is not a an interval product.'
                             ''.format(params))
+
+        if params.ndim != ndim:
+            raise ValueError('parameters {!r} are not {}-dimensional.'
+                             ''.format(params, ndim))
 
         if grid is not None:
             if not isinstance(grid, TensorGrid):
-                raise TypeError('grid {} is not a `TensorGrid` instance.'
+                raise TypeError('grid {!r} is not a `TensorGrid` instance.'
                                 ''.format(grid))
 
             if not params.contains_set(grid):
-                raise ValueError('grid {} not contained in parameter set {}.'
-                                 ''.format(grid, params))
+                raise ValueError('grid {!r} not contained in parameter set '
+                                 '{1R}.'.format(grid, params))
 
         self._ndim = ndim
         self._params = params
@@ -228,11 +232,11 @@ class Flat1dDetector(FlatDetector):
 
         super().__init__(1, params, grid)
 
-        if params.ndim != 1:
-            raise ValueError('parameters {} are not 1-dimensional.'
-                             ''.format(params))
-
         self._detector_axis = np.asarray(detector_axis)
+
+        if np.linalg.norm(self.detector_axis) <= 1e-10:
+            raise ValueError('detector_axis {} not nonzero.'
+                             ''.format(detector_axis))
 
     @property
     def detector_axis(self):
@@ -301,12 +305,13 @@ class Flat2dDetector(FlatDetector):
 
         super().__init__(2, params, grid)
 
-        if params.ndim != 2:
-            raise ValueError('parameters {} are not 2-dimensional.'
-                             ''.format(params))
-
         self._detector_axes = (np.asarray(detector_axes[0]),
                                np.asarray(detector_axes[1]))
+
+        if (np.linalg.norm(self.detector_axes[0]) <= 0 or
+                np.linalg.norm(self.detector_axes[1]) <= 0):
+            raise ValueError('detector_axes {} not nonzero.'
+                             ''.format(detector_axes))
 
     @property
     def detector_axes(self):
@@ -381,14 +386,10 @@ class CircleSectionDetector(Detector):
             A sampling grid for the parameter interval, in which it must
             be contained. Default: `None`
         """
-        super().__init__(params, grid, ndim=1)
-
-        if params.ndim != 1:
-            raise ValueError('parameters {} are not 1-dimensional.'
-                             ''.format(params))
+        super().__init__(1, params, grid)
 
         self._circ_rad = float(circ_rad)
-        if self._circ_rad <= 0:
+        if self.circ_rad <= 0:
             raise ValueError('circle radius {} is not positive.'
                              ''.format(circ_rad))
 
@@ -396,13 +397,6 @@ class CircleSectionDetector(Detector):
     def circ_rad(self):
         """Circle radius of this detector."""
         return self._circ_rad
-
-    @property
-    def npixels(self):
-        """The number of pixels (sampling points)."""
-        if not self.has_sampling:
-            raise ValueError('no sampling defined for {}.'.format(self))
-        return self.param_grid.ntotal
 
     def surface(self, param):
         """The parametrization of the detector reference surface."""
