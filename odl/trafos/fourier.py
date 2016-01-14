@@ -39,6 +39,7 @@ from odl.discr.grid import RegularGrid, sparse_meshgrid
 from odl.discr.lp_discr import DiscreteLp, dspace_type
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.space.ntuples import Ntuples
 from odl.space.fspace import FunctionSpace
 from odl.util.utility import is_real_dtype
 
@@ -52,9 +53,6 @@ _TYPE_MAP_R2C = {np.dtype('float32'): np.dtype('complex64'),
 
 if platform.system() == 'Linux':
     _TYPE_MAP_R2C[np.dtype('float128')] = np.dtype('complex256')
-
-
-# TODO: exclude CUDA vectors somehow elegantly
 
 
 def _shift_list(shift, length):
@@ -520,6 +518,10 @@ class DiscreteFourierTransform(Operator):
         if not isinstance(dom, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
                             ''.format(dom))
+        if not isinstance(dom.dspace, Ntuples):
+            raise NotImplementedError(
+                'Only Numpy-based data spaces are supported, got {}.'
+                ''.format(dom.dspace))
 
         # Check exponents
         if dom.exponent < 1:
