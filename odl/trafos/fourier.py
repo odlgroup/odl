@@ -55,6 +55,27 @@ if platform.system() == 'Linux':
     _TYPE_MAP_R2C[np.dtype('float128')] = np.dtype('complex256')
 
 
+def _fftw_to_local(flag):
+    return flag.lstrip('FFTW_').lower()
+
+
+def _local_to_fftw(flag):
+    return 'FFTW_' + flag.upper()
+
+
+def _fftw_destroys_input(flags, direction, halfcomplex, ndim):
+    """Return `True` if FFTW destroys an input array, `False` otherwise."""
+    if any(flag in flags or _fftw_to_local(flag) in flags
+           for flag in ('FFTW_MEASURE', 'FFTW_PATIENT', 'FFTW_EXHAUSTIVE',
+                        'FFTW_DESTROY_INPUT')):
+        return True
+    elif (direction in ('backward', 'FFTW_BACKWARD') and halfcomplex and
+          ndim != 1):
+        return True
+    else:
+        return False
+
+
 def _shift_list(shift, length):
     """Turn a single boolean or iterable into a list of given length."""
     try:
@@ -287,8 +308,61 @@ def dft_postproc_data(dfunc, x0):
         np.multiply(dfunc, vec, out=dfunc.asarray())
 
 
-def dft_call(array_in, halfcomplex=False, **kwargs):
-    """Calculate the DFT out of place.
+def _check_in_out(arr_in, arr_out, axes, halfcomplex, direction):
+    """Raise an error if anything is not ok."""
+    if direction == 'forward':
+        out_shape = arr_in[axes].shape[:-1]
+        if halfcomplex:
+            out_shape += (arr_in[axes].shape[-1] // 2 + 1,)
+        else:
+            out_shape += (arr_in[axes].shape[-1],)
+
+        if arr_out[axes].shape != out_shape:
+            raise ValueError('Expected output shape {}, got {}.'
+                             ''.format(out_shape, arr_out[axes].shape))
+
+        if is_real_dtype(arr_in.dtype):
+            out_dtype = _TYPE_MAP_R2C[arr_in.dtype]
+        elif halfcomplex:
+            raise ValueError('Cannot combine halfcomplex forward transform '
+                             'with complex input.')
+        else:
+            out_dtype = arr_in.dtype
+
+        if arr_out.dtype != out_dtype:
+            raise TypeError('Expected output dtype {}, got {}.'
+                            ''.format(out_dtype, arr_out.dtype))
+
+    elif direction == 'backward':
+        in_shape = arr_out[axes].shape[:-1]
+        if halfcomplex:
+            in_shape += (arr_out[axes].shape[-1] // 2 + 1,)
+        else:
+            in_shape += (arr_out[axes].shape[-1],)
+
+        if arr_in[axes].shape != in_shape:
+            raise ValueError('Expected input shape {}, got {}.'
+                             ''.format(in_shape, arr_in[axes].shape))
+
+        if is_real_dtype(arr_out.dtype):
+            in_dtype = _TYPE_MAP_R2C[arr_out.dtype]
+        elif halfcomplex:
+            raise ValueError('Cannot combine halfcomplex backward transform '
+                             'with complex output.')
+        else:
+            in_dtype = arr_out.dtype
+
+        if arr_in.dtype != in_dtype:
+            raise TypeError('Expected input dtype {}, got {}.'
+                            ''.format(in_dtype, arr_in.dtype))
+
+    else:  # Shouldn't happen
+        raise RuntimeError
+
+
+def pyfftw_call(array_in, array_out, direction='forward', axes=None,
+                halfcomplex=False, **kwargs):
+    """Calculate the DFT.
 
     The discrete Fourier transform calcuates the sum
 
@@ -303,79 +377,101 @@ def dft_call(array_in, halfcomplex=False, **kwargs):
     ----------
     array_in : `numpy.ndarray`
         Array to be transformed
+    array_out : `numpy.ndarray`
+        Output array storing the transformed values
+    direction : {'forward', 'backward'}
+        Direction of the transform
+    axes : sequence of `int`, optional
+        Dimensions along which to take the transform. `None` means
+        using all axis and is equivalent to ``np.arange(ndim)``.
     halfcomplex : `bool`, optional
         If `True`, calculate only the negative frequency part along the
         last axis. If `False`, calculate the full complex FFT.
-
         This option can only be used with real input data.
-
-    threads : `int`, optional
-        Number of threads to use. Default: 1
-    planning : {'estimate', 'measure', 'patient', 'exhaustive'}
+    fftw_plan : ``pyfftw.FFTW``, optional
+        Use this plan instead of calculating a new one. If specified,
+        the options ``planning_effort``, ``planning_timelimit`` and
+        ``threads`` have no effect.
+    planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
         Flag for the amount of effort put into finding an optimal
         FFTW plan. See the `FFTW doc on planner flags
         <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
-
     planning_timelimit : `float`, optional
         Limit planning time to roughly this amount of seconds.
         Default: `None` (no limit)
-
+    threads : `int`, optional
+        Number of threads to use. Default: 1
+    normalise_idft : `bool`, optional
+        If `True`, the backward transform is normalized by
+        ``1 / N``, where ``N`` is the total number of points in
+        ``array_in[axes]``. This ensures that the IDFT is the true
+        inverse of the forward DFT.
+        Default: `False`
     import_wisdom : `str`, optional
-        File name to load FFTW wisdom from
-
+        File name to load FFTW wisdom from. If the file does not exist,
+        it is ignored.
     export_wisdom : `str`, optional
         File name to append the accumulated FFTW wisdom to
 
     Returns
     -------
-    array_out : `numpy.ndarray`
-        The transformed array. If ``halfcomplex==True``, it holds
-        ``array_out.shape[-1] == array_in.shape[-1] // 2 + 1``, while
-        the rest of the shapes is equal. Otherwise, the shapes are
-        equal also in the last component.
-
-        If``array_in`` is complex, it may be aligned with ``array_out``,
-        which results in an in-place transform.
+    fftw_plan : ``pyfftw.FFTW``
+        The plan object created from the input arguments. It can be
+        reused for transforms of the same size with the same data types.
+        Note that reuse only gives a speedup if the initial plan
+        used a planner flag other than ``'estimate'``.
+        If ``fftw_plan`` was specified, the returned object is a
+        reference to it.
 
     Notes
     -----
-    All planning schemes except ``'estimate'`` require an internal copy
-    of the input array and may therefore be substantially slower in the
-    first run. Use these flags only if you calculate multiple transforms
-    of the same size.
-
-    TODO: axes
+    * The planning and direction flags can also be specified as
+      capitalized and prepended by ``'FFTW_'``, i.e. in the original
+      FFTW form.
+    * For a ``halfcomplex`` forward transform, the arrays must fulfill
+      ``array_out[axes].shape[-1] == array_in[axes].shape[-1] // 2 + 1``,
+      and vice versa for backward transforms.
+    * All planning schemes except ``'estimate'`` require an internal copy
+      of the input array and may therefore be substantially slower in the
+      first run. Use these flags only if you calculate multiple transforms
+      of the same size.
+    * The input can be destroyed if a planner different from
+      ``'estimate'`` is used or a complex-to-real backward transform is
+      computed.
     """
     import pickle
 
     assert array_in.flags.aligned
 
-    # Create output array, adapt shape according to halfcomplex
-    shape_out = list(array_in.shape)
-    if halfcomplex:  # assuming real dtype
-        shape_out[-1] = array_in.shape[-1] // 2 + 1
-    elif is_real_dtype(array_in.dtype):
-        # real dtype but not halfcomplex -> make input complex
+    # We can use _fftw_to_local here since it strigifies and converts to
+    # lowercase
+    if axes is None:
+        axes = np.arange(array_in.ndim)
+    else:
+        axes = list(axes)
+        if axes != list(set(axes)):
+            raise ValueError('Duplicate indices not allowed in axes.')
+
+    direction = _fftw_to_local(direction)
+    fftw_plan = kwargs.pop('fftw_plan', None)
+    planning_effort = _fftw_to_local(kwargs.pop('planning', 'estimate'))
+    planning_timelimit = kwargs.pop('planning_timelimit', None)
+    threads = kwargs.pop('threads', 1)
+    normalise_idft = kwargs.pop('normalise_idft', False)
+    wimport = kwargs.pop('import_wisdom', '')
+    wexport = kwargs.pop('export_wisdom', '')
+
+    _check_in_out(array_in, array_out, axes, halfcomplex, direction)
+
+    # Cast input to complex if necessary and check for reasonalbe
+    # combination of halfcomplex and data type
+    array_in_copied = False
+    if is_real_dtype(array_in.dtype) and not halfcomplex:
+        # Need to cast array_in to complex dtype
         array_in = array_in.astype(_TYPE_MAP_R2C[array_in.dtype])
-
-    if is_real_dtype(array_in.dtype):
-        out_dtype = _TYPE_MAP_R2C[array_in.dtype]
-    else:
-        out_dtype = array_in.dtype
-
-    if array_in.flags.c_contiguous:
-        out_order = 'C'
-    elif array_in.flags.f_contiguous:
-        out_order = 'F'
-    else:
-        # Make C-contiguous
-        array_in = np.ascontiguousarray(array_in)
-        out_order = 'C'
-
-    array_out = np.empty(shape_out, dtype=out_dtype, order=out_order)
+        array_in_copied = True
 
     # Import wisdom if possible
-    wimport = kwargs.pop('import_wisdom', '')
     if wimport:
         try:
             with open(wimport, 'r') as wfile:
@@ -385,44 +481,151 @@ def dft_call(array_in, halfcomplex=False, **kwargs):
         except IOError:
             pass
 
-    # Handle planning flags
-    planning = kwargs.pop('planning', 'estimate')
-    planning_ = str(planning).lower()
-    if planning_ == 'estimate':
-        flags = ('FFTW_ESTIMATE',)
-    elif planning_ == 'measure':
-        flags = ('FFTW_MEASURE',)
-    elif planning_ == 'patient':
-        flags = ('FFTW_PATIENT',)
-    elif planning_ == 'exhaustive':
-        flags = ('FFTW_EXHAUSTIVE',)
-    else:
-        raise ValueError("planning variant '{}' not understood."
-                         "".format(planning))
+    # Copy input array if it hasn't been done yet and the planner is likely
+    # to destroy it. If we already have a plan, we don't have to worry.
+    planner_destroys = _fftw_destroys_input(
+        [planning_effort], direction, halfcomplex, array_in.ndim)
+    must_copy_array_in = fftw_plan is None and planner_destroys
 
-    planning_timelimit = kwargs.pop('planning_timelimit', None)
-    threads = kwargs.pop('threads', 1)
-
-    # Need to copy input if not using FFTW_ESTIMATE since it's destroyed
-    # during planning
-    if planning != 'estimate':
+    if must_copy_array_in and not array_in_copied:
         plan_arr_in = np.empty_like(array_in)
+        flags = [_local_to_fftw(planning_effort), 'FFTW_DESTROY_INPUT']
     else:
         plan_arr_in = array_in
+        flags = [_local_to_fftw(planning_effort)]
 
-    # TODO: support custom axes
-    fft_plan = pyfftw.FFTW(plan_arr_in, array_out, direction='FFTW_FORWARD',
-                           flags=flags, planning_timelimit=planning_timelimit,
-                           threads=threads, axes=np.arange(array_in.ndim))
+    if fftw_plan is None:
+        fft_plan = pyfftw.FFTW(
+            plan_arr_in, array_out, direction=_local_to_fftw(direction),
+            flags=flags, planning_timelimit=planning_timelimit,
+            threads=threads, axes=axes)
 
-    fft_plan(array_in, array_out)
+    fft_plan(array_in, array_out, normalise_idft=normalise_idft)
 
-    wexport = kwargs.pop('export_wisdom', '')
     if wexport:
         with open(wexport, 'a') as wfile:
             pickle.dump(pyfftw.export_wisdom(), wfile)
 
-    return array_out
+    return fftw_plan
+
+
+class PyfftwTransform(Operator):
+
+    """Plain forward or backward DFT as implemented in ``pyfftw``.
+
+    This operator calculates the DFT without any shifting
+    or scaling compensation. See the `pyfftw API documentation`_
+    and `What FFTW really computes`_ for further information.
+
+    References
+    ----------
+    .. _pyfftw API documentation:
+       http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
+    .. _What FFTW really computes:
+       http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
+    """
+    def __init__(self, dom, ran=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dom : `DiscreteLp`
+            Domain of the operator. Its `DiscreteLp.exponent` must be
+            at least 1.0, and its `DiscreteLp.grid` must be a
+            `RegularGrid`.
+        ran : `DiscreteLp`, optional
+            Range of the operator. By default, the range is inferred
+            from the domain and has a grid with minimum point 0 and
+            stride ``(1, ..., 1)``.
+        halfcomplex : `bool`, optional
+            If `True`, calculate only the negative frequency part
+            along the last axis for real input. If `False`,
+            calculate the full complex FFT.
+            Default: `False`
+        """
+        if not isinstance(dom, DiscreteLp):
+            raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
+                            ''.format(dom))
+
+        if not isinstance(dom.dspace, Ntuples):
+            raise TypeError('Only numpy.ndarray data supported by pyfftw. '
+                            'Got data space {!r}.'.format(dom.dspace))
+        if dom.exponent < 1:
+            raise ValueError('domain exponent {} < 1 not allowed.'
+                             ''.format(dom.exponent))
+        if not isinstance(dom.grid, RegularGrid):
+            raise TypeError('irregular grids not supported.')
+
+        if ran is None:
+            # Calculate range - a complex DiscreteLp with conjugate exponent
+            if dom.exponent == 1.0:
+                conj_exp = float('inf')
+            elif dom.exponent == float('inf'):
+                conj_exp = 1.0
+            else:
+                conj_exp = dom.exponent / (dom.exponent - 1.0)
+
+            # Standard grid with stride 1 and minimum (0, ..., 0)
+            # TODO: check how order is handled
+            ran_grid = RegularGrid([0] * dom.ndim, np.array(dom.shape) - 1,
+                                   dom.shape, as_midp=False)
+
+            ran_fspace = FunctionSpace(ran_grid.convex_hull(),
+                                       ComplexNumbers())
+
+            if is_real_dtype(dom.dtype):
+                ran_dtype = _TYPE_MAP_R2C[dom.dtype]
+            else:
+                ran_dtype = dom.dtype
+
+            ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
+                                          dtype=ran_dtype)
+            ran_dspace = ran_dspace_type(ran_grid.size, dtype=ran_dtype,
+                                         exponent=conj_exp)
+            ran = DiscreteLp(ran_fspace, ran_grid, ran_dspace,
+                             exponent=conj_exp)
+
+        super().__init__(dom, ran, linear=True)
+
+    def _call(self, x, out=None, **kwargs):
+        """Implementation of ``self(x[, out])``.
+
+        Parameters
+        ----------
+        x : `DiscreteLpVector`
+            Input vector to be transformed
+        out : `DiscreteLpVector`, optional
+            Output vector storing the result
+        axes : sequence of `int`, optional
+            Dimensions in which a transform is to be calculated.
+            Default: ``(-1,)``.
+        direction : {'FFTW_FORWARD', 'FFTW_BACKWARD'}, optional
+            Direction of the transform
+        normalise_idft : `bool`, optional
+            If `True`, the IDFT (``'FFTW_BACKWARD'``) is normalized by
+            ``1 / N``, where ``N`` is the total number of points in
+            ``x[axes]``. This ensures that the IDFT is the true inverse
+            of the forward DFT.
+            Default: `True`
+        flags : sequence of `str`, optional
+            Flags for the transform. See the `pyfftw API documentation`_
+            for futher information.
+            Default: ``('FFTW_MEASURE',)``
+        threads : positive `int`, optional
+            Number of threads to use. Default: 1
+        planning_timelimit : `float` or `None`, optional
+            Rough upper limit in seconds for the planning step of the
+            transform. `None` means no limit. See the
+            `pyfftw API documentation`_ for futher information.
+
+        Returns
+        -------
+        out : `DiscreteLpVector`
+            Result of the transform. If ``out`` was given, the returned
+            object is a reference to it.
+        """
+        # TODO: Implement and update doc
+        # TODO: Handle returned plan, maybe an init flag?
 
 
 class DiscreteFourierTransform(Operator):
@@ -543,7 +746,7 @@ class DiscreteFourierTransform(Operator):
 
             self._shift = bool(kwargs.pop('shift', True))
         else:
-            raise NotImplementedError('irregular grids not supported yet.')
+            raise NotImplementedError('irregular grids not yet supported.')
 
         # Calculate range
         recip_grid = reciprocal(dom.grid, shift=self._shift,
@@ -566,15 +769,18 @@ class DiscreteFourierTransform(Operator):
 
         super().__init__(dom, ran, linear=True)
 
-    def _call(self, x, **kwargs):
+    def _call(self, x, out, **kwargs):
         """Raw out-of-place evaluation method.
 
         TODO: write doc
         """
+        # TODO: custom axes
+        # TODO: handle return value of pyfftw_call, maybe an init kwarg?
+        # TODO: Implement version using Numpy FFT
         x_cpy = x.copy()
         dft_preproc_data(x_cpy, shift=self._shift)
-        out = self.range.element(
-            dft_call(x_cpy.asarray(), self._halfcomplex, **kwargs))
+        pyfftw_call(x_cpy.asarray(), out.asarray(), self._halfcomplex,
+                    **kwargs)
         dft_postproc_data(out, self.domain.grid.min_pt)
         return out
 
@@ -591,7 +797,7 @@ class DiscreteFourierTransform(Operator):
     def inverse(self):
         """The inverse wavelet transform."""
         # TODO: add appropriate arguments
-        return DiscreteFourierTransformInverse()
+        raise NotImplementedError
 
 
 class DiscreteFourierTransformInverse(Operator):

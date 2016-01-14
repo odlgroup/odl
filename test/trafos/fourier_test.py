@@ -32,16 +32,15 @@ import pytest
 # ODL imports
 import odl
 from odl.trafos.fourier import (
-    reciprocal, _shift_list, dft_preproc_data, dft_postproc_data, dft_call,
-    DiscreteFourierTransform)
-from odl.util.testutils import all_almost_equal, all_equal, skip_if_no_pyfftw
+    reciprocal, _shift_list, dft_preproc_data, dft_postproc_data, pyfftw_call,
+    DiscreteFourierTransform, _TYPE_MAP_R2C)
+from odl.util.testutils import all_almost_equal, all_equal
 from odl.util.utility import is_real_dtype
 
 
-# Pytest fixture
+pytestmark = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE")
 
 
-# Simply modify exp_params to modify the fixture
 exp_params = [2.0, 1.0, float('inf'), 1.5]
 exp_ids = [' p = {} '.format(p) for p in exp_params]
 exp_fixture = pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
@@ -52,7 +51,6 @@ def exponent(request):
     return request.param
 
 
-# Simply modify exp_params to modify the fixture
 if platform.system() == 'Linux':
     dtype_params = ['float32', 'float64', 'float128',
                     'complex64', 'complex128', 'complex256']
@@ -68,7 +66,6 @@ def dtype(request):
     return request.param
 
 
-# Simply modify exp_params to modify the fixture
 plan_params = ['estimate', 'measure', 'patient', 'exhaustive']
 plan_ids = [" planning = '{}' ".format(p) for p in plan_params]
 plan_fixture = pytest.fixture(scope="module", ids=plan_ids,
@@ -78,6 +75,14 @@ plan_fixture = pytest.fixture(scope="module", ids=plan_ids,
 @plan_fixture
 def planning(request):
     return request.param
+
+
+def _random_vector(shape, dtype):
+    if is_real_dtype(dtype):
+        return np.random.rand(*shape).astype(dtype)
+    else:
+        return (np.random.rand(*shape).astype(dtype) +
+                1j * np.random.rand(*shape).astype(dtype))
 
 
 def test_shift_list():
@@ -417,64 +422,80 @@ def test_dft_range(exponent, dtype):
     assert dft.range.exponent == conj(exponent)
 
 
-@skip_if_no_pyfftw
-def test_dft_call(dtype):
-
+def test_pyfftw_call_forward(dtype):
+    # Test against Numpy's FFT
     if is_real_dtype(dtype):
-        field = odl.RealNumbers()
         halfcomplex = True
+        out_dtype = _TYPE_MAP_R2C[np.dtype(dtype)]
     else:
-        field = odl.ComplexNumbers()
         halfcomplex = False
+        out_dtype = dtype
 
-    # 1D
-    nsamp = 10
-    space_discr = odl.uniform_discr(0, 1, nsamp, exponent=2.0,
-                                    impl='numpy', dtype=dtype, field=field)
+    for nsamp in [(10,), (3, 4, 5)]:
+        arr = _random_vector(nsamp, dtype)
 
-    dfunc = space_discr.one()
-    dft_arr = dft_call(dfunc.asarray(), halfcomplex=halfcomplex)
-    # DFT of an array of ones equals nsamp in the first component and 0 else
-    if halfcomplex:
-        true_dft = [nsamp] + [0] * (nsamp // 2)
+        if halfcomplex:
+            true_dft = np.fft.rfftn(arr)
+        else:
+            true_dft = np.fft.fftn(arr)
+
+        dft_arr = np.empty(np.shape(true_dft), dtype=out_dtype)
+        pyfftw_call(arr, dft_arr, direction='forward',
+                    halfcomplex=halfcomplex, preserve_input=False)
+
+        assert all_almost_equal(dft_arr, true_dft)
+
+
+def test_pyfftw_call_backward(dtype):
+    # Test against Numpy's IFFT, no normalization
+    if is_real_dtype(dtype):
+        halfcomplex = True
+        in_dtype = _TYPE_MAP_R2C[np.dtype(dtype)]
     else:
-        true_dft = [nsamp] + [0] * (nsamp - 1)
+        halfcomplex = False
+        in_dtype = dtype
 
-    assert all_almost_equal(dft_arr, true_dft)
+    for nsamp in [(10,), (3, 4, 5)]:
+        if halfcomplex:
+            nsamp_ = nsamp[:-1] + (nsamp[-1] // 2 + 1,)
+            arr = _random_vector(nsamp_, in_dtype)
+            true_idft = np.fft.irfftn(arr, nsamp) * np.prod(nsamp)
+        else:
+            arr = _random_vector(nsamp, in_dtype)
+            true_idft = np.fft.ifftn(arr) * np.prod(nsamp)
 
-    # 3D
-    nsamp = (3, 4, 5)
-    space_discr = odl.uniform_discr([0] * 3, [1] * 3, nsamp, exponent=2.0,
-                                    impl='numpy', dtype=dtype, field=field)
+        idft_arr = np.empty(np.shape(true_idft), dtype=dtype)
+        pyfftw_call(arr, idft_arr, direction='backward',
+                    halfcomplex=halfcomplex, preserve_input=False)
 
-    dfunc = space_discr.one()
-    dft_arr = dft_call(dfunc.asarray(), halfcomplex=halfcomplex)
-    # DFT of an array of ones is size in the component (0, 0, 0) and 0 else
-    if halfcomplex:
-        shape = list(nsamp)
-        shape[-1] = nsamp[-1] // 2 + 1
-    else:
-        shape = nsamp
-    true_dft = np.zeros(shape)
-    true_dft[0, 0, 0] = dfunc.space.grid.size
-
-    assert all_almost_equal(dft_arr, true_dft)
+        assert all_almost_equal(idft_arr, true_idft)
 
 
-@skip_if_no_pyfftw
-def test_dft_plan(planning):
+def test_pyfftw_plan_preserve_input(planning):
 
-    # 1D, C2C
-    nsamp = 10
-    space_discr = odl.uniform_discr(0, 1, nsamp, exponent=2.0, impl='numpy',
-                                    field=odl.ComplexNumbers())
+    for nsamp in [(10,), (3, 4)]:
+        arr = _random_vector(nsamp, dtype='complex128')
+        arr_cpy = arr.copy()
 
-    dfunc = space_discr.one()
-    dft_arr = dft_call(dfunc.asarray(), planning=planning)
-    twice_dft_arr = dft_call(dft_arr)
-    # Unnormalized DFT, should give the mirrored array x number of samples
-    assert all_almost_equal(twice_dft_arr[::-1],
-                            dfunc.space.grid.size * dfunc.ntuple)
+        true_idft = np.fft.ifftn(arr) * np.prod(nsamp)
+        idft_arr = np.empty(true_idft.shape, dtype='complex128')
+        pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False,
+                    planning=planning, preserve_input=True)
+
+        assert all_almost_equal(arr, arr_cpy)  # Input perserved
+        assert all_almost_equal(idft_arr, true_idft)
+
+        pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False,
+                    planning=planning, preserve_input=False)
+
+        assert all_almost_equal(idft_arr, true_idft)
+
+
+# TODO:
+# - Test axes
+# - Test returned plan
+# - Test bad input
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
