@@ -370,6 +370,7 @@ def dft_call(array_in, halfcomplex=False, **kwargs):
     else:
         # Make C-contiguous
         array_in = np.ascontiguousarray(array_in)
+        out_order = 'C'
 
     array_out = np.empty(shape_out, dtype=out_dtype, order=out_order)
 
