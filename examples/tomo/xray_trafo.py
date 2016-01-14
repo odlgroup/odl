@@ -172,8 +172,46 @@ def conebeam():
     discr_reco_data.show(indices=np.s_[:, :, 150], title='cone backprojection')
 
 
+def helical():
+    # Discrete reconstruction space
+    discr_reco_space = odl.uniform_discr([-20, -20, 0],
+                                         [20, 20, 40],
+                                         [300, 300, 300], dtype='float32')
+
+    # Geometry
+    n_angle = 2000
+    angle_intvl = odl.Interval(0, 8 * 2 * np.pi)
+    dparams = odl.Rectangle([-30, -3], [30, 3])
+    agrid = odl.uniform_sampling(angle_intvl, n_angle)
+    dgrid = odl.uniform_sampling(dparams, [558, 60])
+    geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, pitch=5.0,
+                                            src_radius=1000, det_radius=100,
+                                            agrid=agrid, dgrid=dgrid)
+
+    # X-ray transform
+    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                                backend='astra_cuda')
+
+    # Domain element
+    discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
+
+    # Forward projection
+    discr_proj_data = xray_trafo(discr_vol_data)
+
+    # Back projection
+    discr_reco_data = xray_trafo.adjoint(discr_proj_data)
+
+    # Shows a slice of the phantom, projections, and reconstruction
+    discr_vol_data.show(indices=np.s_[150, :, :], title='cone volume x slice')
+    discr_reco_data.show(indices=np.s_[150, :, :],
+                         title='cone backprojection x')
+    discr_proj_data.show(indices=np.s_[1000, :, :],
+                         title='cone projection 1000')
+
+
 if __name__ == '__main__':
     parallel_2d()
     parallel_3d()
     fanbeam()
     conebeam()
+    helical()
