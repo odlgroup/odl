@@ -245,12 +245,12 @@ def to_local_sys(vec_in_lab_coords, local_sys):
 
 
 def perpendicular_vector(vec):
-    """ Get a vector perpendicular to v.
+    """ Get a vector perpendicular to ``vec``.
 
     Parameters
     ----------
     vec : array-like
-        Array-like of any dimension > 2.
+        Array-like of any dimension >= 2.
 
     Returns
     -------
