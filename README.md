@@ -9,7 +9,15 @@ ODL
 Operator Discretization Library (ODL) is a python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at [KTH, Royal Institute of Technology](https://www.kth.se/en/sci/institutioner/math).
 
 The main intent of ODL is to enable mathematicians and applied scientists to use different numerical methods on real-world problems without having to implement all necessary parts from the bottom up.
-ODL provides some of the most heavily used building blocks for numerical algorithms out of the box, which enables users to focus on real scientific issues.
+This is reached by an `Operator` structure which encapsulates all application-specific parts, and a high-level formulation of solvers which usually expect an operator, data and additional parameters.
+The main advantages of this approach is that
+
+1. Different problems can be solved with the same method (e.g. TV regularization) by simply switching operator and data.
+2. The same problem can be solved with different methods by simply calling into different solvers.
+3. Solvers and application-specific code needs to be written only once, in one place, and can be tested individually.
+4. Adding new applications or solution methods becomes a much easier task.
+
+
 
 Features
 --------
@@ -20,14 +28,16 @@ Features
   properties as expected from mathematics (inner product, norm, operator composition, ...)
 - Standardized tests to validate implementations against expected behavior of the
   corresponding mathematical object, e.g. if a user-defined norm satisfies
-  `norm(x + y) <= norm(x) + norm(y)` for a number of input vectors `x` and `y`.
+  `norm(x + y) <= norm(x) + norm(y)` for a number of input vectors `x` and `y`
+- Convenience functionality for operators like arithmetic, composition, operator matrices etc.,
+  which satisfy the known mathematical rules
 
 Installation
 ------------
 
 To get ODL, clone the repository with the command
 
-```sh
+```
 user$ git clone <repo>
 ```
 
@@ -35,13 +45,13 @@ where `<repo>` is the clone link from the right navigation bar on the [ODL GitHu
 
 For installation in a local user folder, go to the ODL folder and run
 
-```sh
+```
 user$ pip install --user --editable .
 ```
 
 in the root folder of the package. For system-wide installation, run (as root)
 
-```sh
+```
 root# pip install --editable .
 ```
 
@@ -51,7 +61,7 @@ immediate effect without reinstall.
 
 After installing, you can check that everything was installed properly by running
 
-```sh
+```
 user$ py.test
 ```
 
@@ -59,7 +69,7 @@ user$ py.test
 
 If you also wish to use the (optional) CUDA extensions you need to run
 
-```sh
+```
 user$ git submodule update --init --recursive
 user$ cd odlpp
 ```
@@ -105,8 +115,23 @@ GPL Version 3. See LICENSE file.
 If you would like to get the code under a different license, please contact the
 developers.
 
-Main developers
----------------
+ODL development group
+---------------------
 
-- Jonas Adler (jonas<ätt>kth<dot>se)
-- Holger Kohr (kohr<ätt>kth<dot>se)
+##### Main developers
+
+- Jonas Adler (@adler-j)
+- Holger Kohr (@kohr-h)
+
+##### Further core developers
+
+- Julian Moosmann (@moosmann)
+- Kati Niinimäki (@niinimaki)
+- Axel Ringh (@aringh)
+- Ozan Öktem (@ozanoktem)
+
+
+Funding
+-------
+
+Development of ODL is financially supported by the Swedish Foundation for Strategic Research as part of the project "Low complexity image reconstruction in medical imaging".
