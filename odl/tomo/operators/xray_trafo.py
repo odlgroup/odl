@@ -125,8 +125,11 @@ class DiscreteXrayTransform(Operator):
         # TODO: maybe use a ProductSpace structure
         ran_uspace = FunctionSpace(geometry.params)
         # CHECKME: Is this the right weight?
+
+        weight = getattr(geometry.grid, 'cell_volume', 1.0)
+
         ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,
-                                           weight=geometry.grid.cell_volume,
+                                           weight=weight,
                                            dtype=discr_dom.dspace.dtype)
 
         ran_interp = kwargs.pop('range_interpolation', 'nearest')

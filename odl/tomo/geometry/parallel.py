@@ -275,7 +275,7 @@ class Parallel3dGeometry(ParallelGeometry, AxisOrientedGeometry):
             angle=0
         detector_axes : sequence of two 3-element arrays, optional
             Unit directions along each detector parameter of the detector.
-            Default: (normalized) [np.cross(axis, source_to_detector), axis]
+            Default: (normalized) [np.cross(axis, origin_to_detector), axis]
         """
         AxisOrientedGeometry.__init__(self, axis)
 
