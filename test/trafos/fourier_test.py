@@ -449,14 +449,14 @@ def test_dft_call(dtype):
 
     dfunc = space_discr.one()
     dft_arr = dft_call(dfunc.asarray(), halfcomplex=halfcomplex)
-    # DFT of an array of ones is ntotal in the component (0, 0, 0) and 0 else
+    # DFT of an array of ones is size in the component (0, 0, 0) and 0 else
     if halfcomplex:
         shape = list(nsamp)
         shape[-1] = nsamp[-1] // 2 + 1
     else:
         shape = nsamp
     true_dft = np.zeros(shape)
-    true_dft[0, 0, 0] = dfunc.space.grid.ntotal
+    true_dft[0, 0, 0] = dfunc.space.grid.size
 
     print('dft: ', dft_arr)
     print('true: ', true_dft)
@@ -476,7 +476,7 @@ def test_dft_plan(planning):
     twice_dft_arr = dft_call(dft_arr)
     # Unnormalized DFT, should give the mirrored array x number of samples
     assert all_almost_equal(twice_dft_arr[::-1],
-                            dfunc.space.grid.ntotal * dfunc.ntuple)
+                            dfunc.space.grid.size * dfunc.ntuple)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
