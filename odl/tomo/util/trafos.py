@@ -242,3 +242,46 @@ def to_local_sys(vec_in_lab_coords, local_sys):
     vec_in_lab_coords = np.array(vec_in_lab_coords)
     trafo_matrix = np.matrix(local_sys)
     return np.dot(trafo_matrix, vec_in_lab_coords)
+
+
+def perpendicular_vector(vec):
+    """ Get a vector perpendicular to ``vec``.
+
+    Parameters
+    ----------
+    vec : array-like
+        Array-like of any dimension >= 2.
+
+    Returns
+    -------
+    perp_vec : `numpy.ndarray`
+        Array of same size such that ``<vec, perp_vec> == 0``
+
+    Examples
+    --------
+    Works in 2d
+    >>> perpendicular_vector([1, 0])
+    array([ 0.,  1.])
+    >>> perpendicular_vector([0, 1])
+    array([-1.,  0.])
+
+    And in 3d
+    >>> perpendicular_vector([1, 0, 0])
+    array([ 0.,  1.,  0.])
+    >>> perpendicular_vector([0, 1, 0])
+    array([-1.,  0.,  0.])
+    >>> perpendicular_vector([0, 0, 1])
+    array([ 1.,  0.,  0.])
+    """
+    vec = np.asarray(vec)
+
+    if np.all(vec == 0):
+        raise ValueError('zero vector')
+
+    result = np.zeros(vec.shape)
+    if np.any(vec[:2] != 0):
+        result[:2] = [-vec[1], vec[0]]
+    else:
+        result[0] = 1
+
+    return result / np.linalg.norm(result)

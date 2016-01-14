@@ -97,7 +97,7 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     proj_geom = astra_projection_geometry(geometry)
 
     # for fanflat geometry an angle offset is needed
-    if isinstance(geometry, FanFlatGeometry):
+    if proj_geom['type'] == 'fanflat':
         proj_geom['ProjectionAngles'] += np.pi
 
     # Create ASTRA data structures

@@ -79,9 +79,13 @@ class DiscreteXrayTransform(Operator):
             raise TypeError('geometry {!r} is not a `Geometry` instance.'
                             ''.format(geometry))
 
-        if not (geometry.has_motion_sampling and geometry.has_det_sampling):
+        if not geometry.has_motion_sampling:
             raise ValueError('geometry {} does not have sampling grids for '
-                             'both motion and detector.'.format(geometry))
+                             'motion.'.format(geometry))
+
+        if not geometry.has_det_sampling:
+            raise ValueError('geometry {} does not have sampling grids for '
+                             'the detector.'.format(geometry))
 
         backend = str(backend).lower()
         if backend not in _SUPPORTED_BACKENDS:
@@ -120,8 +124,11 @@ class DiscreteXrayTransform(Operator):
         # TODO: maybe use a ProductSpace structure
         ran_uspace = FunctionSpace(geometry.params)
         # CHECKME: Is this the right weight?
+
+        weight = getattr(geometry.grid, 'cell_volume', 1.0)
+
         ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,
-                                           weight=geometry.grid.cell_volume,
+                                           weight=weight,
                                            dtype=discr_dom.dspace.dtype)
 
         ran_interp = kwargs.pop('range_interpolation', 'nearest')

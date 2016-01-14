@@ -22,7 +22,7 @@ from __future__ import print_function, division, absolute_import
 from abc import ABCMeta, abstractmethod, abstractproperty
 from future import standard_library
 standard_library.install_aliases()
-from builtins import object
+from builtins import object, super
 
 # External
 import numpy as np
@@ -30,8 +30,9 @@ import numpy as np
 # Internal
 from odl.util.utility import with_metaclass
 from odl.discr.grid import RegularGrid, TensorGrid
+from odl.set.domain import IntervalProd
 
-__all__ = ('Geometry',)
+__all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
 
 
 class Geometry(with_metaclass(ABCMeta, object)):
@@ -125,20 +126,6 @@ class Geometry(with_metaclass(ABCMeta, object)):
         vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
-
-    def src_position(self, mpar):
-        """The source position function.
-
-        Parameters
-        ----------
-        mpar : element of motion parameters `motion_params`
-            Motion parameter for which to calculate the source position
-
-        Returns
-        -------
-        pos : `numpy.ndarray`, shape (`ndim`,)
-            The source position, a `ndim`-dimensional vector
-        """
         raise NotImplementedError
 
     def det_point_position(self, mpar, dpar):
@@ -210,3 +197,188 @@ class Geometry(with_metaclass(ABCMeta, object)):
         else:
             grid = TensorGrid(*self.motion_grid.coord_vectors)
         return grid.insert(self.det_grid, grid.ndim)
+
+
+class DivergentBeamGeometry(Geometry):
+
+    """Abstract nd divergent beam geometry.
+
+    A divergent beam geometry is characterized by a source and an
+    (n-1)d detector moving in space according to a 1d motion parameter.
+
+    Special cases include fanbeam in 2d and conebeam in 3d.
+    """
+
+    def __init__(self, ndim, angle_intvl, detector, agrid=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        ndim : int
+            number of dimensions of geometry
+        angle_intvl : 1d `IntervalProd`
+            Admissible angles
+        detector : `Detector`
+            The detector to use
+        agrid : `TensorGrid`, optional
+            Optional discretization of the angle_intvl
+        """
+        if not (isinstance(angle_intvl, IntervalProd) and
+                angle_intvl.ndim == 1):
+            raise TypeError('angle parameters {!r} are not an interval.'
+                            ''.format(angle_intvl))
+        self._motion_params = angle_intvl
+        self._motion_grid = agrid
+        self._detector = detector
+
+        if agrid is not None:
+            if not isinstance(agrid, TensorGrid):
+                raise TypeError('angle grid {!r} is not a `TensorGrid` '
+                                'instance.'.format(agrid))
+            if not angle_intvl.contains_set(agrid):
+                raise ValueError('angular grid {} not contained in angle '
+                                 'interval {}.'.format(agrid, angle_intvl))
+
+        super().__init__(ndim=ndim)
+
+    @property
+    def motion_params(self):
+        """Motion parameters of this geometry."""
+        return self._motion_params
+
+    @property
+    def motion_grid(self):
+        """Sampling grid for this geometry's motion parameters."""
+        return self._motion_grid
+
+    @property
+    def detector(self):
+        """Detector of this geometry."""
+        return self._detector
+
+    @abstractmethod
+    def src_position(self, mpar):
+        """The source position function.
+
+        Parameters
+        ----------
+        mpar : element of motion parameters `motion_params`
+            Motion parameter for which to calculate the source position
+
+        Returns
+        -------
+        pos : `numpy.ndarray`, shape (`ndim`,)
+            The source position, a `ndim`-dimensional vector
+        """
+
+    def det_to_src(self, mpar, dpar, normalized=True):
+        """Vector pointing from a detector location to the source.
+
+        A function of the motion and detector parameters.
+
+        The default implementation uses the `det_point_position` and
+        `src_position` functions. Implementations can override this, for
+        example if no source position is given.
+
+        Parameters
+        ----------
+        mpar : element of motion parameters `motion_params`
+            Motion parameter at which to evaluate
+        dpar : element of detector parameters `det_params`
+            Detector parameter at which to evaluate
+        normalized : `bool`, optional
+            If `True`, return a normalized (unit) vector.
+
+        Returns
+        -------
+        vec : `numpy.ndarray`, shape (`ndim`,)
+            (Unit) vector pointing from the detector to the source
+        """
+
+        if mpar not in self.motion_params:
+            raise ValueError('mpar {} is not in the valid range {}.'
+                             ''.format(mpar, self.motion_params))
+        if dpar not in self.det_params:
+            raise ValueError('detector parameter {} is not in the valid '
+                             'range {}.'.format(dpar, self.det_params))
+
+        vec = self.src_position(mpar) - self.det_point_position(mpar, dpar)
+
+        if normalized:
+            # axis = -1 allows this to be vectorized
+            vec /= np.linalg.norm(vec, axis=-1)
+
+        return vec
+
+
+class AxisOrientedGeometry(object):
+    """Mixin class for 3d geometries oriented according to an axis."""
+
+    def __init__(self, axis):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        axis : 3-element array, optional
+            Fixed rotation axis defined by a 3-element vector
+        """
+
+        self._axis = np.asarray(axis, dtype=float) / np.linalg.norm(axis)
+
+        if self.axis.shape != (3,):
+            raise ValueError('axis {!r} not a 3 element arraylike'
+                             ''.format(axis))
+
+    @property
+    def axis(self):
+        """The normalized axis of rotation.
+
+        Returns
+        -------
+        axis : `numpy.ndarray`, shape (3,)
+            The normalized rotation axis
+        """
+        return self._axis
+
+    def rotation_matrix(self, angle):
+        """The detector rotation function.
+
+        Returns the matrix for rotating a vector in 3d by an angle ``angle``
+        about the rotation axis given by the property `axis` according to
+        the right hand rule.
+
+        The matrix is computed according to
+        `Rodrigues' rotation formula
+        <https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula>`_.
+
+        Parameters
+        ----------
+        angle : `float`
+            The motion parameter given in radian. It must be
+            contained in this geometry's `motion_params`.
+
+        Returns
+        -------
+        rot_mat : `numpy.ndarray`, shape ``(3, 3)``
+            The rotation matrix mapping the standard basis vectors in
+            the fixed ("lab") coordinate system to the basis vectors of
+            the local coordinate system of the detector reference point,
+            expressed in the fixed system.
+        """
+
+        angle = float(angle)
+        if angle not in self.motion_params:
+            raise ValueError('angle {} is not in the valid range {}.'
+                             ''.format(angle, self.motion_params))
+
+        axis = self.axis
+
+        cross_mat = np.array([[0, -axis[2], axis[1]],
+                              [axis[2], 0, -axis[0]],
+                              [-axis[1], axis[0], 0]])
+        dy_mat = np.outer(axis, axis)
+        id_mat = np.eye(3)
+        cos_ang = np.cos(angle)
+        sin_ang = np.sin(angle)
+
+        return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
