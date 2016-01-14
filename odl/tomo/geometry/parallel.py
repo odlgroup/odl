@@ -32,7 +32,7 @@ from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
-from odl.tomo.util.trafos import euler_matrix
+from odl.tomo.util.trafos import euler_matrix, perpendicular_vector
 
 __all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dGeometry')
 
@@ -199,7 +199,7 @@ class Parallel2dGeometry(ParallelGeometry):
         direction = np.array(origin_to_det) / np.linalg.norm(origin_to_det)
 
         # Only one option since this is easily modified in data space otherwise
-        detector_axis = np.array([-direction[1], direction[0]])
+        detector_axis = perpendicular_vector(direction)
 
         detector = Flat1dDetector(dparams, detector_axis, dgrid)
         super().__init__(2, angle_intvl, detector, direction, agrid)
@@ -255,7 +255,7 @@ class Parallel3dGeometry(ParallelGeometry, AxisOrientedGeometry):
     """
 
     def __init__(self, angle_intvl, dparams, agrid=None, dgrid=None,
-                 axis=[0, 0, 1], origin_to_det=[1, 0, 0], detector_axes=None):
+                 axis=[0, 0, 1], origin_to_det=None, detector_axes=None):
         """Initialize a new instance.
 
         Parameters
@@ -272,12 +272,15 @@ class Parallel3dGeometry(ParallelGeometry, AxisOrientedGeometry):
             Fixed rotation axis defined by a 3-element vector
         origin_to_det : 3-element array, optional
             The direction from the origin to the point (0, 0) of the detector
-            angle=0
+            angle=0, default: Vector in x, y plane orthogonal to axis.
         detector_axes : sequence of two 3-element arrays, optional
             Unit directions along each detector parameter of the detector.
             Default: (normalized) [np.cross(axis, origin_to_detector), axis]
         """
         AxisOrientedGeometry.__init__(self, axis)
+
+        if origin_to_det is None:
+            origin_to_det = perpendicular_vector(axis)
 
         direction = np.array(origin_to_det) / np.linalg.norm(origin_to_det)
 

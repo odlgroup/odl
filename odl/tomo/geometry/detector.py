@@ -79,7 +79,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
             if not params.contains_set(grid):
                 raise ValueError('grid {!r} not contained in parameter set '
-                                 '{1R}.'.format(grid, params))
+                                 '{!r}.'.format(grid, params))
 
         self._ndim = ndim
         self._params = params
