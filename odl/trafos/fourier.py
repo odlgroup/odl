@@ -310,23 +310,23 @@ def dft_call(array_in, halfcomplex=False, **kwargs):
         last axis. If `False`, calculate the full complex FFT.
 
         This option can only be used with real input data.
-    kwargs :
-        'threads' : `int`, optional
-            Number of threads to use. Default: 1
-        'planning' : {'estimate', 'measure', 'patient', 'exhaustive'}
-            Flag for the amount of effort put into finding an optimal
-            FFTW plan. See the `FFTW doc on planner flags
-            <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
 
-        'planning_timelimit' : `float`, optional
-            Limit planning time to roughly this amount of seconds.
-            Default: `None` (no limit)
+    threads : `int`, optional
+        Number of threads to use. Default: 1
+    planning : {'estimate', 'measure', 'patient', 'exhaustive'}
+        Flag for the amount of effort put into finding an optimal
+        FFTW plan. See the `FFTW doc on planner flags
+        <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
 
-        'import_wisdom' : `str`, optional
-            File name to load FFTW wisdom from
+    planning_timelimit : `float`, optional
+        Limit planning time to roughly this amount of seconds.
+        Default: `None` (no limit)
 
-        'export_wisdom' : `str`, optional
-            File name to append the accumulated FFTW wisdom to
+    import_wisdom : `str`, optional
+        File name to load FFTW wisdom from
+
+    export_wisdom : `str`, optional
+        File name to append the accumulated FFTW wisdom to
 
     Returns
     -------
@@ -428,7 +428,7 @@ def dft_call(array_in, halfcomplex=False, **kwargs):
 
 class DiscreteFourierTransform(Operator):
 
-    """Discrete Fourier transform between discrete Lp spaces.
+    """Discretized Fourier transform between discrete Lp spaces.
 
     The Fourier transform is defined as the linear operator
 
@@ -482,41 +482,38 @@ class DiscreteFourierTransform(Operator):
         """
         Parameters
         ----------
-        dom : `odl.DiscreteLp`
+        dom : `DiscreteLp`
             Domain of the wavelet transform. Its
             :attr:`odl.DiscreteLp.exponent` must be at least 1.0;
             if it is equal to 2.0, this operator has an adjoint which
             is equal to the inverse.
+        halfcomplex : `bool`, optional
+            If `True`, calculate only the negative frequency part
+            along the last axis for real input. If `False`,
+            calculate the full complex FFT.
 
-        kwargs : {'halfcomplex', 'even_shift'}
+            TODO: doc combination with shift
 
-            'halfcomplex' : `bool`, optional
-                If `True`, calculate only the negative frequency part
-                along the last axis for real input. If `False`,
-                calculate the full complex FFT.
+            This option only applies to 'uni-to-uni' transforms.
+            For complex ``dom``, it has no effect.
 
-                TODO: doc combination with shift
+            Default: `True`
 
-                This option only applies to 'uni-to-uni' transforms.
-                For complex ``dom``, it has no effect.
+        shift : `bool` or iterable, optional
+            If `True`, the reciprocal grid is shifted by half a stride in
+            the negative direction.
+            With a boolean array or iterable, this option is applied
+            separately on each axis. At least ``dom.grid.ndim``
+            values must be provided.
 
-                Default: `True`
+            This option only applies to 'uni-to-uni' transforms.
 
-            'shift' : `bool` or iterable, optional
-                If `True`, the reciprocal grid is shifted by half a stride in
-                the negative direction.
-                With a boolean array or iterable, this option is applied
-                separately on each axis. At least ``dom.grid.ndim``
-                values must be provided.
-
-                This option only applies to 'uni-to-uni' transforms.
-
-                Default: `True`
+            Default: `True`
 
         Notes
         -----
         The `Operator.range` of this operator always has the
-        `odl.ComplexNumbers` as its `LinearSpace.field`, i.e. if the
+        `ComplexNumbers` as its `LinearSpace.field`, i.e. if the
         field of ``dom`` is the `RealNumbers`, this operator has no
         `Operator.adjoint`.
         """
