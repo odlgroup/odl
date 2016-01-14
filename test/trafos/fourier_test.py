@@ -458,8 +458,6 @@ def test_dft_call(dtype):
     true_dft = np.zeros(shape)
     true_dft[0, 0, 0] = dfunc.space.grid.size
 
-    print('dft: ', dft_arr)
-    print('true: ', true_dft)
     assert all_almost_equal(dft_arr, true_dft)
 
 
