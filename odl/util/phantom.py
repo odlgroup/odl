@@ -15,18 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utilities for internal use."""
-
+"""Some useful phantoms, mostly for tomography tests."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 import numpy as np
 
-__all__ = ('ellipse_phantom_2d', 'ellipse_phantom_3d', 'cuboid',
+__all__ = ('ellipse_phantom_2d', 'ellipse_phantom_3d',
+           'cuboid', 'indicate_proj_axis',
            'derenzo_sources', 'shepp_logan', 'submarine_phantom')
 
 
@@ -540,12 +539,13 @@ def _submarine_phantom_2d_nonsmooth(discr):
     return out.ufunc.minimum(1, out=out)
 
 
-def cuboid(space, begin, end):
+def cuboid(discr_space, begin, end):
     """Rectangular cuboid.
 
     Parameters
     ----------
-    space : discrete space
+    discr_space : `Discretization`
+        Discretized space in which the phantom is supposed to be created
     begin : array-like or `float` in [0, 1]
         The lower left corner of the cuboid within the space grid relative
         to the extend of the grid
@@ -555,8 +555,8 @@ def cuboid(space, begin, end):
 
     Returns
     -------
-    out : discrete space element
-       Returns an element in ``space``
+    phantom : `LinearSpaceVector`
+        Returns an element in ``discr_space``
 
     Example
     -------
@@ -571,8 +571,8 @@ def cuboid(space, begin, end):
      [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
      [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
     """
-    ndim = space.ndim
-    shape = space.shape
+    ndim = discr_space.ndim
+    shape = discr_space.shape
 
     if np.isscalar(begin):
         begin = (begin,) * ndim
@@ -592,7 +592,92 @@ def cuboid(space, begin, end):
 
     phan[slice1] = 1
 
-    return space.element(phan)
+    return discr_space.element(phan)
+
+
+def indicate_proj_axis(discr_space, scale_structures=0.5):
+    """Phantom which indicates along which axis it is projected.
+
+    The number (n) of rectangles in a parallel-beam projection along a main
+    axis (0, 1, or 2) indicates the projection to be along the (n-1)the
+    dimension.
+
+    Parameters
+    ----------
+    discr_space : `Discretization`
+        Discretized space in which the phantom is supposed to be created
+    scale_structures : positive `float` in (0, 1]
+        Scales objects (cube, cuboids)
+
+    Returns
+    -------
+    phantom : `LinearSpaceVector`
+        Returns an element in ``discr_space``
+
+    Example
+    -------
+    >>> import odl
+    >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
+    >>> phan = indicate_proj_axis(space).asarray()
+    >>> print(np.sum(phan, 0))
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  3.  3.  0.  0.  0.]
+     [ 0.  0.  0.  3.  3.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    >>> print(np.sum(phan, 1))
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  1.  1.  0.  0.  0.]
+     [ 0.  0.  0.  1.  1.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    >>> print(np.sum(phan, 2))
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  2.  0.  0.  0.]
+     [ 0.  0.  0.  2.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    """
+    if not 0 < scale_structures <= 1:
+        raise ValueError('scale structure ({}) is not in (0, 1]'
+                         ''.format(scale_structures))
+    shape = discr_space.shape
+    phan = np.zeros(shape)
+    shape = np.array(shape) - 1
+    cen = np.round(0.5 * shape)
+    dx = np.floor(scale_structures * 0.25 * shape)
+    dx[dx == 0] = 1
+
+    # cube of size 2 * dx
+    x0 = (cen - 3 * dx)[0]
+    x, y, z = cen - 1 * dx
+    phan[x0:x, y:-y, z:-z] = 1
+
+    # 1st cuboid of size (dx[0], dx[1], 2 * dx[2])
+    x0 = (cen + 1 * dx)[1]
+    x1 = (cen + 2 * dx)[1]
+    y0 = cen[1]
+    z = (cen - dx)[2]
+    phan[x0:x1, y0:-y, z:-z] = 1
+
+    # 2nd cuboid of (dx[0], dx[1], 2 * dx[2]) touching the first diagonally
+    # at a long edge
+    x0 = (cen + 2 * dx)[1]
+    x1 = (cen + 3 * dx)[1]
+    y1 = cen[1]
+    z = (cen - dx)[2]
+    phan[x0:x1, y:y1, z:-z] = 1
+
+    return discr_space.element(phan)
 
 
 if __name__ == '__main__':
