@@ -440,7 +440,11 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     """
     import pickle
 
-    assert array_in.flags.aligned
+    if not array_in.flags.aligned:
+        raise ValueError('Input array not aligned.')
+
+    if not array_out.flags.aligned:
+        raise ValueError('Output array not aligned.')
 
     # We can use _fftw_to_local here since it strigifies and converts to
     # lowercase

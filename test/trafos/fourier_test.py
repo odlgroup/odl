@@ -483,6 +483,68 @@ def test_pyfftw_call_backward(dtype):
         assert all_almost_equal(idft_arr, true_idft)
 
 
+def test_pyfftw_call_forward_bad_input():
+
+    # Complex
+
+    # Bad dtype
+    dtype_in = 'complex128'
+    arr_in = np.empty(3, dtype=dtype_in)
+    bad_dtypes_out = ['complex64', 'float64', 'float128']
+    for bad_dtype in bad_dtypes_out:
+        arr_out = np.empty(3, dtype=bad_dtype)
+        with pytest.raises(TypeError):
+            pyfftw_call(arr_in, arr_out, halfcomplex=False)
+
+    # Bad shape
+    shape = (3, 4)
+    arr_in = np.empty(shape, dtype='complex128')
+    bad_shapes_out = [(3, 3), (3,), (4,), (3, 4, 5), ()]
+    for bad_shape in bad_shapes_out:
+        arr_out = np.empty(bad_shape, dtype='complex128')
+        with pytest.raises(ValueError):
+            pyfftw_call(arr_in, arr_out, halfcomplex=False)
+
+    # Duplicate axes
+    arr_in = np.empty((3, 4, 5), dtype='complex128')
+    arr_out = np.empty_like(arr_in)
+    bad_axes_list = [(0, 0, 1), (1, 1, 1), (-1, -1)]
+    for bad_axes in bad_axes_list:
+        with pytest.raises(ValueError):
+            pyfftw_call(arr_in, arr_out, axes=bad_axes)
+
+    # Halfcomplex
+
+    # Bad dtype
+    dtype_in = 'float64'
+    arr_in = np.empty(10, dtype=dtype_in)
+    bad_dtypes_out = ['complex64', 'float64', 'float128', 'complex256']
+    for bad_dtype in bad_dtypes_out:
+        arr_out = np.empty(6, dtype=bad_dtype)
+        with pytest.raises(TypeError):
+            pyfftw_call(arr_in, arr_out, halfcomplex=True)
+
+    # Bad shape
+    shape = (3, 4, 5)
+    arr_in = np.empty(shape, dtype='float64')
+    axes_list = [None, (0, 1), (1,), (1, 2), (2, 1), (-1, -2, -3)]
+    # Correct shapes:
+    # [(3, 4, 3), (3, 3, 5), (3, 3, 5), (3, 4, 3), (3, 3, 5), (2, 4, 5)]
+    bad_shapes_out = [(3, 4, 2), (3, 4, 3), (2, 3, 5), (3, 2, 3), (3, 4, 3),
+                      (3, 4, 3)]
+    always_bad_shapes = [(3, 4), (3, 4, 5)]
+    for bad_shape, axes in zip(bad_shapes_out, axes_list):
+
+        for always_bad_shape in always_bad_shapes:
+            arr_out = np.empty(always_bad_shape, dtype='complex128')
+            with pytest.raises(ValueError):
+                pyfftw_call(arr_in, arr_out, axes=axes, halfcomplex=True)
+
+        arr_out = np.empty(bad_shape, dtype='complex128')
+        with pytest.raises(ValueError):
+            pyfftw_call(arr_in, arr_out, axes=axes, halfcomplex=True)
+
+
 def test_pyfftw_call_forward_real_not_halfcomplex():
     # Test against Numpy's FFT
     for shape in [(10,), (3, 4, 5)]:
@@ -578,9 +640,48 @@ def test_pyfftw_call_backward_with_axes(dtype):
 
         assert all_almost_equal(idft_arr, true_idft)
 
-# TODO: Test
-# - returned plan
-# - bad input
+
+def test_pyfftw_call_forward_with_plan():
+
+    for shape in [(10,), (3, 4, 5)]:
+        arr = _random_array(shape, dtype='complex128')
+        arr_cpy = arr.copy()
+        true_dft = np.fft.fftn(arr)
+
+        # First run, create plan
+        dft_arr = np.empty(shape, dtype='complex128')
+        plan = pyfftw_call(arr, dft_arr, direction='forward',
+                           halfcomplex=False, planning_effort='measure')
+
+        # Second run, reuse with fresh output array
+        dft_arr = np.empty(shape, dtype='complex128')
+        pyfftw_call(arr, dft_arr, direction='forward', fftw_plan=plan,
+                    halfcomplex=False)
+
+        assert all_almost_equal(arr, arr_cpy)  # Input perserved
+        assert all_almost_equal(dft_arr, true_dft)
+
+
+def test_pyfftw_call_backward_with_plan():
+
+    for shape in [(10,), (3, 4, 5)]:
+        arr = _random_array(shape, dtype='complex128')
+        arr_cpy = arr.copy()
+        idft_scaling = np.prod(shape)
+        true_idft = np.fft.ifftn(arr) * idft_scaling
+
+        # First run, create plan
+        idft_arr = np.empty(shape, dtype='complex128')
+        plan = pyfftw_call(arr, idft_arr, direction='backward',
+                           halfcomplex=False, planning_effort='measure')
+
+        # Second run, reuse with fresh output array
+        idft_arr = np.empty(shape, dtype='complex128')
+        pyfftw_call(arr, idft_arr, direction='backward', fftw_plan=plan,
+                    halfcomplex=False)
+
+        assert all_almost_equal(arr, arr_cpy)  # Input perserved
+        assert all_almost_equal(idft_arr, true_idft)
 
 
 if __name__ == '__main__':
