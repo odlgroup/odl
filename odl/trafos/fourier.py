@@ -55,27 +55,6 @@ if platform.system() == 'Linux':
     _TYPE_MAP_R2C[np.dtype('float128')] = np.dtype('complex256')
 
 
-def _fftw_to_local(flag):
-    return flag.lstrip('FFTW_').lower()
-
-
-def _local_to_fftw(flag):
-    return 'FFTW_' + flag.upper()
-
-
-def _fftw_destroys_input(flags, direction, halfcomplex, ndim):
-    """Return `True` if FFTW destroys an input array, `False` otherwise."""
-    if any(flag in flags or _fftw_to_local(flag) in flags
-           for flag in ('FFTW_MEASURE', 'FFTW_PATIENT', 'FFTW_EXHAUSTIVE',
-                        'FFTW_DESTROY_INPUT')):
-        return True
-    elif (direction in ('backward', 'FFTW_BACKWARD') and halfcomplex and
-          ndim != 1):
-        return True
-    else:
-        return False
-
-
 def _shift_list(shift, length):
     """Turn a single boolean or iterable into a list of given length."""
     try:
@@ -308,18 +287,40 @@ def dft_postproc_data(dfunc, x0):
         np.multiply(dfunc, vec, out=dfunc.asarray())
 
 
-def _check_in_out(arr_in, arr_out, axes, halfcomplex, direction):
-    """Raise an error if anything is not ok."""
-    if direction == 'forward':
-        out_shape = arr_in[axes].shape[:-1]
-        if halfcomplex:
-            out_shape += (arr_in[axes].shape[-1] // 2 + 1,)
-        else:
-            out_shape += (arr_in[axes].shape[-1],)
+def _pyfftw_to_local(flag):
+    return flag.lstrip('FFTW_').lower()
 
-        if arr_out[axes].shape != out_shape:
+
+def _local_to_pyfftw(flag):
+    return 'FFTW_' + flag.upper()
+
+
+def _pyfftw_destroys_input(flags, direction, halfcomplex, ndim):
+    """Return `True` if FFTW destroys an input array, `False` otherwise."""
+    if any(flag in flags or _pyfftw_to_local(flag) in flags
+           for flag in ('FFTW_MEASURE', 'FFTW_PATIENT', 'FFTW_EXHAUSTIVE',
+                        'FFTW_DESTROY_INPUT')):
+        return True
+    elif (direction in ('backward', 'FFTW_BACKWARD') and halfcomplex and
+          ndim != 1):
+        return True
+    else:
+        return False
+
+
+def _pyfftw_check_in_out(arr_in, arr_out, axes, halfcomplex, direction):
+    """Raise an error if anything is not ok."""
+    if len(set(axes)) != len(axes):
+        raise ValueError('Duplicate axes are not allowed.')
+
+    if direction == 'forward':
+        out_shape = list(arr_in.shape)
+        if halfcomplex:
+            out_shape[axes[-1]] = arr_in.shape[axes[-1]] // 2 + 1
+
+        if arr_out.shape != tuple(out_shape):
             raise ValueError('Expected output shape {}, got {}.'
-                             ''.format(out_shape, arr_out[axes].shape))
+                             ''.format(tuple(out_shape), arr_out.shape))
 
         if is_real_dtype(arr_in.dtype):
             out_dtype = _TYPE_MAP_R2C[arr_in.dtype]
@@ -334,15 +335,13 @@ def _check_in_out(arr_in, arr_out, axes, halfcomplex, direction):
                             ''.format(out_dtype, arr_out.dtype))
 
     elif direction == 'backward':
-        in_shape = arr_out[axes].shape[:-1]
+        in_shape = list(arr_out.shape)
         if halfcomplex:
-            in_shape += (arr_out[axes].shape[-1] // 2 + 1,)
-        else:
-            in_shape += (arr_out[axes].shape[-1],)
+            in_shape[axes[-1]] = arr_out.shape[axes[-1]] // 2 + 1
 
-        if arr_in[axes].shape != in_shape:
+        if arr_in.shape != tuple(in_shape):
             raise ValueError('Expected input shape {}, got {}.'
-                             ''.format(in_shape, arr_in[axes].shape))
+                             ''.format(tuple(in_shape), arr_in.shape))
 
         if is_real_dtype(arr_out.dtype):
             in_dtype = _TYPE_MAP_R2C[arr_out.dtype]
@@ -446,22 +445,20 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     # We can use _fftw_to_local here since it strigifies and converts to
     # lowercase
     if axes is None:
-        axes = np.arange(array_in.ndim)
+        axes = tuple(range(array_in.ndim))
     else:
-        axes = list(axes)
-        if axes != list(set(axes)):
-            raise ValueError('Duplicate indices not allowed in axes.')
+        axes = tuple(axes)
 
-    direction = _fftw_to_local(direction)
+    direction = _pyfftw_to_local(direction)
     fftw_plan = kwargs.pop('fftw_plan', None)
-    planning_effort = _fftw_to_local(kwargs.pop('planning', 'estimate'))
+    planning_effort = _pyfftw_to_local(kwargs.pop('planning', 'estimate'))
     planning_timelimit = kwargs.pop('planning_timelimit', None)
     threads = kwargs.pop('threads', 1)
     normalise_idft = kwargs.pop('normalise_idft', False)
     wimport = kwargs.pop('import_wisdom', '')
     wexport = kwargs.pop('export_wisdom', '')
 
-    _check_in_out(array_in, array_out, axes, halfcomplex, direction)
+    _pyfftw_check_in_out(array_in, array_out, axes, halfcomplex, direction)
 
     # Cast input to complex if necessary and check for reasonalbe
     # combination of halfcomplex and data type
@@ -483,20 +480,20 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     # Copy input array if it hasn't been done yet and the planner is likely
     # to destroy it. If we already have a plan, we don't have to worry.
-    planner_destroys = _fftw_destroys_input(
+    planner_destroys = _pyfftw_destroys_input(
         [planning_effort], direction, halfcomplex, array_in.ndim)
     must_copy_array_in = fftw_plan is None and planner_destroys
 
     if must_copy_array_in and not array_in_copied:
         plan_arr_in = np.empty_like(array_in)
-        flags = [_local_to_fftw(planning_effort), 'FFTW_DESTROY_INPUT']
+        flags = [_local_to_pyfftw(planning_effort), 'FFTW_DESTROY_INPUT']
     else:
         plan_arr_in = array_in
-        flags = [_local_to_fftw(planning_effort)]
+        flags = [_local_to_pyfftw(planning_effort)]
 
     if fftw_plan is None:
         fft_plan = pyfftw.FFTW(
-            plan_arr_in, array_out, direction=_local_to_fftw(direction),
+            plan_arr_in, array_out, direction=_local_to_pyfftw(direction),
             flags=flags, planning_timelimit=planning_timelimit,
             threads=threads, axes=axes)
 
@@ -535,8 +532,9 @@ class PyfftwTransform(Operator):
             `RegularGrid`.
         ran : `DiscreteLp`, optional
             Range of the operator. By default, the range is inferred
-            from the domain and has a grid with minimum point 0 and
-            stride ``(1, ..., 1)``.
+            from the domain and has a grid with minimum point
+            ``(0, ..., 0)``, stride ``(1, ..., 1)`` and the same shape
+            as ``dom``.
         halfcomplex : `bool`, optional
             If `True`, calculate only the negative frequency part
             along the last axis for real input. If `False`,
@@ -626,6 +624,7 @@ class PyfftwTransform(Operator):
         """
         # TODO: Implement and update doc
         # TODO: Handle returned plan, maybe an init flag?
+        # TODO: Implement zero padding
 
 
 class DiscreteFourierTransform(Operator):
@@ -777,10 +776,17 @@ class DiscreteFourierTransform(Operator):
         # TODO: custom axes
         # TODO: handle return value of pyfftw_call, maybe an init kwarg?
         # TODO: Implement version using Numpy FFT
+        # TODO: Implement zero padding
+
+        # Always use the 'halfcomplex' option given during init, not the
+        # one which may have been specified in kwargs.
+        kwargs.pop('halfcomplex', None)
+
+        # We're always modifying the input, so a copy is unavoidable
         x_cpy = x.copy()
         dft_preproc_data(x_cpy, shift=self._shift)
-        pyfftw_call(x_cpy.asarray(), out.asarray(), self._halfcomplex,
-                    **kwargs)
+        pyfftw_call(x_cpy.asarray(), out.asarray(), direction='forward',
+                    halfcomplex=self._halfcomplex, **kwargs)
         dft_postproc_data(out, self.domain.grid.min_pt)
         return out
 

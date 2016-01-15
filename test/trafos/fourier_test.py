@@ -77,7 +77,7 @@ def planning(request):
     return request.param
 
 
-def _random_vector(shape, dtype):
+def _random_array(shape, dtype):
     if is_real_dtype(dtype):
         return np.random.rand(*shape).astype(dtype)
     else:
@@ -352,8 +352,8 @@ def test_dft_postproc_data():
 
     correct_arr = []
     x0 = space_discr.grid.min_pt
-    xi_0, rstride, nsamp = rgrid.min_pt, rgrid.stride, rgrid.shape
-    for k in product(range(nsamp[0]), range(nsamp[1]), range(nsamp[2])):
+    xi_0, rstride, shape = rgrid.min_pt, rgrid.stride, rgrid.shape
+    for k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append(np.exp(-1j * np.dot(x0, xi_0 + rstride * k)))
 
     dfunc = recip_space_discr.one()
@@ -370,8 +370,8 @@ def test_dft_postproc_data():
 
     correct_arr = []
     x0 = space_discr.grid.min_pt
-    xi_0, rstride, nsamp = rgrid.min_pt, rgrid.stride, rgrid.shape
-    for k in product(range(nsamp[0]), range(nsamp[1]), range(nsamp[2])):
+    xi_0, rstride, shape = rgrid.min_pt, rgrid.stride, rgrid.shape
+    for k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append(np.exp(-1j * np.dot(x0, xi_0 + rstride * k)))
 
     dfunc = recip_space_discr.one()
@@ -395,8 +395,8 @@ def test_dft_range(exponent, dtype):
 
     # 1D
     field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
-    nsamp = 10
-    space_discr = odl.uniform_discr(0, 1, nsamp, exponent=exponent,
+    shape = 10
+    space_discr = odl.uniform_discr(0, 1, shape, exponent=exponent,
                                     impl='numpy', dtype=dtype, field=field)
 
     dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
@@ -409,8 +409,8 @@ def test_dft_range(exponent, dtype):
 
     # 3D
     field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
-    nsamp = (3, 4, 5)
-    space_discr = odl.uniform_discr([0] * 3, [1] * 3, nsamp, exponent=exponent,
+    shape = (3, 4, 5)
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, exponent=exponent,
                                     impl='numpy', dtype=dtype, field=field)
 
     dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
@@ -422,24 +422,39 @@ def test_dft_range(exponent, dtype):
     assert dft.range.exponent == conj(exponent)
 
 
-def test_pyfftw_call_forward(dtype):
-    # Test against Numpy's FFT
-    if is_real_dtype(dtype):
+def _params_from_dtype(dt):
+    if is_real_dtype(dt):
         halfcomplex = True
-        out_dtype = _TYPE_MAP_R2C[np.dtype(dtype)]
+        dtype = _TYPE_MAP_R2C[np.dtype(dt)]
     else:
         halfcomplex = False
-        out_dtype = dtype
+        dtype = dt
+    return halfcomplex, dtype
 
-    for nsamp in [(10,), (3, 4, 5)]:
-        arr = _random_vector(nsamp, dtype)
+
+def _halfcomplex_shape(shape, axes=None):
+    if axes is None:
+        axes = tuple(range(len(shape)))
+
+    shape = list(shape)
+    shape[axes[-1]] = shape[axes[-1]] // 2 + 1
+    return shape
+
+
+def test_pyfftw_call_forward(dtype):
+    # Test against Numpy's FFT
+    halfcomplex, out_dtype = _params_from_dtype(dtype)
+
+    for shape in [(10,), (3, 4, 5)]:
+        arr = _random_array(shape, dtype)
 
         if halfcomplex:
             true_dft = np.fft.rfftn(arr)
+            dft_arr = np.empty(_halfcomplex_shape(shape), dtype=out_dtype)
         else:
             true_dft = np.fft.fftn(arr)
+            dft_arr = np.empty(shape, dtype=out_dtype)
 
-        dft_arr = np.empty(np.shape(true_dft), dtype=out_dtype)
         pyfftw_call(arr, dft_arr, direction='forward',
                     halfcomplex=halfcomplex, preserve_input=False)
 
@@ -448,23 +463,20 @@ def test_pyfftw_call_forward(dtype):
 
 def test_pyfftw_call_backward(dtype):
     # Test against Numpy's IFFT, no normalization
-    if is_real_dtype(dtype):
-        halfcomplex = True
-        in_dtype = _TYPE_MAP_R2C[np.dtype(dtype)]
-    else:
-        halfcomplex = False
-        in_dtype = dtype
+    halfcomplex, in_dtype = _params_from_dtype(dtype)
 
-    for nsamp in [(10,), (3, 4, 5)]:
+    for shape in [(10,), (3, 4, 5)]:
+        # Scaling happens wrt output (large) shape
+        idft_scaling = np.prod(shape)
+
         if halfcomplex:
-            nsamp_ = nsamp[:-1] + (nsamp[-1] // 2 + 1,)
-            arr = _random_vector(nsamp_, in_dtype)
-            true_idft = np.fft.irfftn(arr, nsamp) * np.prod(nsamp)
+            arr = _random_array(_halfcomplex_shape(shape), in_dtype)
+            true_idft = np.fft.irfftn(arr, shape) * idft_scaling
         else:
-            arr = _random_vector(nsamp, in_dtype)
-            true_idft = np.fft.ifftn(arr) * np.prod(nsamp)
+            arr = _random_array(shape, in_dtype)
+            true_idft = np.fft.ifftn(arr) * idft_scaling
 
-        idft_arr = np.empty(np.shape(true_idft), dtype=dtype)
+        idft_arr = np.empty(shape, dtype=dtype)
         pyfftw_call(arr, idft_arr, direction='backward',
                     halfcomplex=halfcomplex, preserve_input=False)
 
@@ -473,12 +485,13 @@ def test_pyfftw_call_backward(dtype):
 
 def test_pyfftw_plan_preserve_input(planning):
 
-    for nsamp in [(10,), (3, 4)]:
-        arr = _random_vector(nsamp, dtype='complex128')
+    for shape in [(10,), (3, 4)]:
+        arr = _random_array(shape, dtype='complex128')
         arr_cpy = arr.copy()
 
-        true_idft = np.fft.ifftn(arr) * np.prod(nsamp)
-        idft_arr = np.empty(true_idft.shape, dtype='complex128')
+        idft_scaling = np.prod(shape)
+        true_idft = np.fft.ifftn(arr) * idft_scaling
+        idft_arr = np.empty(shape, dtype='complex128')
         pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False,
                     planning=planning, preserve_input=True)
 
@@ -491,10 +504,57 @@ def test_pyfftw_plan_preserve_input(planning):
         assert all_almost_equal(idft_arr, true_idft)
 
 
-# TODO:
-# - Test axes
-# - Test returned plan
-# - Test bad input
+def test_pyfftw_call_forward_with_axes(dtype):
+
+    halfcomplex, out_dtype = _params_from_dtype(dtype)
+    shape = (3, 4, 5)
+
+    test_axes = [(0, 1), (1,), (-1,), (1, 0), (-1, -2, -3)]
+    for axes in test_axes:
+        arr = _random_array(shape, dtype)
+        if halfcomplex:
+            true_dft = np.fft.rfftn(arr, axes=axes)
+            dft_arr = np.empty(_halfcomplex_shape(shape, axes),
+                               dtype=out_dtype)
+        else:
+            true_dft = np.fft.fftn(arr, axes=axes)
+            dft_arr = np.empty(shape, dtype=out_dtype)
+
+        pyfftw_call(arr, dft_arr, direction='forward', axes=axes,
+                    halfcomplex=halfcomplex, preserve_input=False)
+
+        assert all_almost_equal(dft_arr, true_dft)
+
+
+def test_pyfftw_call_backward_with_axes(dtype):
+
+    halfcomplex, in_dtype = _params_from_dtype(dtype)
+    shape = (3, 4, 5)
+
+    test_axes = [(0, 1), (1,), (-1,), (1, 0), (-1, -2, -3)]
+    for axes in test_axes:
+        # Only the shape indexed by axes count for the scaling
+        active_shape = np.take(shape, axes)
+        idft_scaling = np.prod(active_shape)
+
+        if halfcomplex:
+            arr = _random_array(_halfcomplex_shape(shape, axes), in_dtype)
+            true_idft = (np.fft.irfftn(arr, s=active_shape, axes=axes) *
+                         idft_scaling)
+        else:
+            arr = _random_array(shape, in_dtype)
+            true_idft = (np.fft.ifftn(arr, s=active_shape, axes=axes) *
+                         idft_scaling)
+
+        idft_arr = np.empty(shape, dtype=dtype)
+        pyfftw_call(arr, idft_arr, direction='backward', axes=axes,
+                    halfcomplex=halfcomplex, preserve_input=False)
+
+        assert all_almost_equal(idft_arr, true_idft)
+
+# TODO: Test
+# - returned plan
+# - bad input
 
 
 if __name__ == '__main__':
