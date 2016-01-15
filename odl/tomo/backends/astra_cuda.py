@@ -112,7 +112,7 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
     algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
                               proj_id=proj_id, impl='cuda')
 
-    # Run algorithm and delete it
+    # Run algorithm
     astra.algorithm.run(algo_id)
 
     # Wrap data
