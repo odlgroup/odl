@@ -458,15 +458,15 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     wimport = kwargs.pop('import_wisdom', '')
     wexport = kwargs.pop('export_wisdom', '')
 
-    _pyfftw_check_in_out(array_in, array_out, axes, halfcomplex, direction)
-
-    # Cast input to complex if necessary and check for reasonalbe
-    # combination of halfcomplex and data type
+    # Cast input to complex if necessary
     array_in_copied = False
     if is_real_dtype(array_in.dtype) and not halfcomplex:
         # Need to cast array_in to complex dtype
         array_in = array_in.astype(_TYPE_MAP_R2C[array_in.dtype])
         array_in_copied = True
+
+    # Do consistency checks on the arrays
+    _pyfftw_check_in_out(array_in, array_out, axes, halfcomplex, direction)
 
     # Import wisdom if possible
     if wimport:

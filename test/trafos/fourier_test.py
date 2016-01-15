@@ -478,7 +478,33 @@ def test_pyfftw_call_backward(dtype):
 
         idft_arr = np.empty(shape, dtype=dtype)
         pyfftw_call(arr, idft_arr, direction='backward',
-                    halfcomplex=halfcomplex, preserve_input=False)
+                    halfcomplex=halfcomplex)
+
+        assert all_almost_equal(idft_arr, true_idft)
+
+
+def test_pyfftw_call_forward_real_not_halfcomplex():
+    # Test against Numpy's FFT
+    for shape in [(10,), (3, 4, 5)]:
+        arr = _random_array(shape, dtype='float64')
+
+        true_dft = np.fft.fftn(arr)
+        dft_arr = np.empty(shape, dtype='complex128')
+        pyfftw_call(arr, dft_arr, direction='forward', halfcomplex=False)
+
+        assert all_almost_equal(dft_arr, true_dft)
+
+
+def test_pyfftw_call_backward_real_not_halfcomplex():
+    # Test against Numpy's IFFT, no normalization
+    for shape in [(10,), (3, 4, 5)]:
+        # Scaling happens wrt output (large) shape
+        idft_scaling = np.prod(shape)
+
+        arr = _random_array(shape, dtype='float64')
+        true_idft = np.fft.ifftn(arr) * idft_scaling
+        idft_arr = np.empty(shape, dtype='complex128')
+        pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False)
 
         assert all_almost_equal(idft_arr, true_idft)
 
@@ -493,13 +519,13 @@ def test_pyfftw_plan_preserve_input(planning):
         true_idft = np.fft.ifftn(arr) * idft_scaling
         idft_arr = np.empty(shape, dtype='complex128')
         pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False,
-                    planning=planning, preserve_input=True)
+                    planning=planning)
 
         assert all_almost_equal(arr, arr_cpy)  # Input perserved
         assert all_almost_equal(idft_arr, true_idft)
 
         pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False,
-                    planning=planning, preserve_input=False)
+                    planning=planning)
 
         assert all_almost_equal(idft_arr, true_idft)
 
@@ -521,7 +547,7 @@ def test_pyfftw_call_forward_with_axes(dtype):
             dft_arr = np.empty(shape, dtype=out_dtype)
 
         pyfftw_call(arr, dft_arr, direction='forward', axes=axes,
-                    halfcomplex=halfcomplex, preserve_input=False)
+                    halfcomplex=halfcomplex)
 
         assert all_almost_equal(dft_arr, true_dft)
 
@@ -548,7 +574,7 @@ def test_pyfftw_call_backward_with_axes(dtype):
 
         idft_arr = np.empty(shape, dtype=dtype)
         pyfftw_call(arr, idft_arr, direction='backward', axes=axes,
-                    halfcomplex=halfcomplex, preserve_input=False)
+                    halfcomplex=halfcomplex)
 
         assert all_almost_equal(idft_arr, true_idft)
 
