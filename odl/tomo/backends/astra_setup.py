@@ -22,9 +22,10 @@ ODL geometry representation to ASTRA's data structures, including:
 
 * volume geometries
 * projection geometries
+* create vectors from geometries
 * data arrays
+* projectors
 * algorithm configuration dictionaries
-* projectors and backprojectors
 
 `ASTRA documentation on sourceforge
 <https://sourceforge.net/p/astra-toolbox/wiki>`_.
@@ -356,7 +357,6 @@ def astra_projection_geometry(geometry):
         raise TypeError('detector sampling grid {!r} is not a `RegularGrid` '
                         'instance.'.format(geometry.det_grid))
 
-    # TODO: fanflat_vec: fan flat for arbitrary detector / source positions
     # As of ASTRA version 1.7beta the volume width can be specified in the
     # volume geometry creator also for 3D geometries. For version < 1.7
     # this was possible only for 2D geometries. Thus, standard ASTRA
@@ -365,7 +365,8 @@ def astra_projection_geometry(geometry):
     if isinstance(geometry, Parallel2dGeometry):
         det_width = geometry.det_grid.stride[0]
         det_count = geometry.detector.npixels
-        angles = geometry.motion_grid.coord_vectors[0]
+        # convention in 'astra_conebeam_2d_geom_to_vec' differs from ASTRA's
+        angles = geometry.motion_grid.coord_vectors[0] - np.pi / 2
         proj_geom = astra.create_proj_geom(
             'parallel', det_width, det_count, angles)
 
@@ -430,8 +431,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
             ndim = data.ndim
         else:
             raise TypeError('data {!r} is neither`DiscreteLp.Vector` '
-                            'instance or a `numpy.ndarray`.'
-                            ''.format(data))
+                            'instance or a `numpy.ndarray`.'.format(data))
     else:
         ndim = int(ndim)
 
@@ -511,10 +511,9 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
         raise ValueError('invalid geometry type {!r}.'.format(proj_type))
 
     # Mapping from interpolation type and geometry to ASTRA projector type.
-    # "I" means probably mathematically inconsistent.
-    # Some projectors are not implemented, e.g. CPU 3d projectors in general
-    # TODO: ASTRA supports area weights (strip) for parallel and fanflat on CPU
-    # line raises Exception depending on parameters (number of pixels, voxels)
+    # "I" means probably mathematically inconsistent. Some projectors are
+    # not implemented, e.g. CPU 3d projectors in general. Using 'line'
+    # raises Exception depending on parameters (number of pixels, voxels)
     type_map_cpu = {'parallel': {'nearest': 'linear',
                                  'linear': 'linear'},  # I
                     'fanflat': {'nearest': 'line_fanflat',

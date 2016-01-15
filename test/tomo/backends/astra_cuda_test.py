@@ -32,7 +32,8 @@ from odl.tomo.backends.astra_cuda import ASTRA_CUDA_AVAILABLE
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
 
-# TODO: better tests
+# TODO: test scaling of ASTRA projectors
+# TODO: smarter tests
 
 @skip_if_no_astra_cuda
 def test_astra_cuda_projector_parallel2d():

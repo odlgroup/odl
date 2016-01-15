@@ -19,7 +19,6 @@
 
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-
 standard_library.install_aliases()
 
 # External
@@ -32,6 +31,8 @@ from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
 from odl.tomo.util.testutils import skip_if_no_astra
 
 
+# TODO: test scaling of ASTRA projectors
+# TODO: smarter tests
 # TODO: test other interpolations once implemented
 
 @skip_if_no_astra
