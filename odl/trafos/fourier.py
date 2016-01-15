@@ -45,6 +45,7 @@ from odl.util.utility import is_real_dtype
 
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
+           'pyfftw_call', 'dft_preprocess_data', 'dft_postprocess_data',
            'PYFFTW_AVAILABLE')
 
 
@@ -182,7 +183,7 @@ def reciprocal(grid, shift=True, halfcomplex=False):
     return RegularGrid(rmin, rmax, rsamples, as_midp=False)
 
 
-def dft_preproc_data(dfunc, shift=True):
+def dft_preprocess_data(dfunc, shift=True):
     """Pre-process the real-space data before DFT.
 
     This function multiplies the given data with the separable
@@ -249,20 +250,69 @@ def dft_preproc_data(dfunc, shift=True):
         np.multiply(dfunc, vec, out=dfunc.asarray())
 
 
-def dft_postproc_data(dfunc, x0):
+def _iterp_kernel_ft(norm_freqs, interp):
+    """Scaled FT of a one-dimensional interpolation kernel.
+
+    For normalized frequencies :math:`\\xi\\in [-1/2, 1/2]`, this
+    function returns
+
+        :math:`\widehat{\phi}(x) =
+        (2\pi)^{-1/2}\, s\, \mathrm{sinc}^k(\pi \\xi)`
+
+    where :math:`k = 1` for 'nearest', :math:`k = 2` for 'linear' and
+    :math:`k = 3` for 'cubic' interpolation, and :math:`s` is the
+    stride of the real space grid.
+
+    Parameters
+    ----------
+    norm_freqs : `numpy.ndarray`
+        Normalized frequencies between -0.5 and 0.5
+    interp : {'nearest', 'linear', 'cubic'}
+        Type of interpolation kernel
+
+    Returns
+    -------
+    ker_ft : `numpy.ndarray`
+        Values of the kernel FT at the given frequencies
+    """
+    # Numpy's sinc(x) is equal to the 'math' sinc(pi * x)
+    if interp == 'nearest':
+        return np.sinc(norm_freqs) / np.sqrt(2 * np.pi)
+    elif interp == 'linear':
+        return np.sinc(norm_freqs) ** 2 / np.sqrt(2 * np.pi)
+    elif interp == 'cubic':
+        return np.sinc(norm_freqs) ** 3 / np.sqrt(2 * np.pi)
+    else:  # Shouldn't happen
+        raise RuntimeError
+
+
+def dft_postprocess_data(dfunc, x0, shift=False):
     """Post-process the Fourier-space data after DFT.
 
     This function multiplies the given data with the separable
     function
 
-        :math:`q(\\xi) = e^{-i x_0^{\mathrm{T}}\\xi},`
+        :math:`q(\\xi) = e^{-i x_0^{\mathrm{T}}\\xi} \cdot
+        \widehat{\Phi}(\\bar\\xi)`,
 
-    where :math:`x_0` :math:`\\xi_0` are the minimum coodinates of
-    the real space and reciprocal grids, respectively. In discretized
-    form, this function becomes for each axis separately an array
+    where :math:`x_0` and :math:`\\xi_0` are the minimum coodinates of
+    the real space and reciprocal grids, respectively, and
+    :math:`\widehat{\Phi}(\\bar\\xi)` is the separable FT of the
+    interpolation kernel. In discretized form, the exponential part
+    of this function becomes for each axis separately an array
 
         :math:`q_k = e^{-i x_0
-        \\big(\\xi_0 + 2\pi k / (s N)\\big)}.`
+        \\big(\\xi_0 + 2\pi k / (s N)\\big)}, \quad k=0,\ldots,N-1`,
+
+    and the arguments :math:`\\bar\\xi` to the interpolation kernel
+    are the normalized frequencies
+
+        :math:`-\pi + \pi\, \\frac{2k}{N}` for ``shift=True`` and
+
+        :math:`-\pi + \pi\, \\frac{2k+1}{N}` for ``shift=False``.
+
+    See [1]_, Section 13.9 "Computing Fourier Integrals Using the FFT"
+    for a similar approach.
 
     Parameters
     ----------
@@ -272,15 +322,29 @@ def dft_postproc_data(dfunc, x0):
     x0 : array-like
         Minimal grid point of the spatial grid before transform
 
-    Returns
-    -------
-    `None`
+    References
+    ----------
+    .. [1] Press, William H, Teukolsky, Saul A, Vetterling, William T,
+       and Flannery, Brian P. *Numerical Recipes in C - The Art of
+       Scientific Computing* (Volume 3). Cambridge University Press,
+       2007.
     """
+    # Reciprocal grid
     rgrid = dfunc.space.grid
+    shift_lst = _shift_list(shift, rgrid.ndim)
 
-    onedim_arrs = [np.exp(-1j * x * xi)
-                   for x, xi in zip(x0, rgrid.coord_vectors)]
-    meshgrid = sparse_meshgrid(*onedim_arrs, order=dfunc.space.order)
+    exp_arrs = []
+    interp_arrs = []
+    for x, xi, n in zip(x0, rgrid.coord_vectors, rgrid.shape):
+        exp_arrs.append(np.exp(-1j * x * xi))
+
+    # TODO: Handle interpolation kernel
+
+#        # Half axis due to halfcomplex transform
+#        if np.all(xi <= 0):
+#            nfreqs = np.linspace(xi[])
+
+    meshgrid = sparse_meshgrid(*exp_arrs, order=dfunc.space.order)
 
     # Multiply with broadcasting
     for vec in meshgrid:
@@ -568,7 +632,6 @@ class PyfftwTransform(Operator):
                 conj_exp = dom.exponent / (dom.exponent - 1.0)
 
             # Standard grid with stride 1 and minimum (0, ..., 0)
-            # TODO: check how order is handled
             ran_grid = RegularGrid([0] * dom.ndim, np.array(dom.shape) - 1,
                                    dom.shape, as_midp=False)
 
@@ -594,9 +657,9 @@ class PyfftwTransform(Operator):
 
         Parameters
         ----------
-        x : `DiscreteLpVector`
+        x : domain element
             Input vector to be transformed
-        out : `DiscreteLpVector`, optional
+        out : range element, optional
             Output vector storing the result
         axes : sequence of `int`, optional
             Dimensions in which a transform is to be calculated.
@@ -626,6 +689,10 @@ class PyfftwTransform(Operator):
             Result of the transform. If ``out`` was given, the returned
             object is a reference to it.
         """
+        if out is None:
+            out = self.range.element()
+
+
         # TODO: Implement and update doc
         # TODO: Handle returned plan, maybe an init flag?
         # TODO: Implement zero padding
@@ -722,6 +789,9 @@ class DiscreteFourierTransform(Operator):
         field of ``dom`` is the `RealNumbers`, this operator has no
         `Operator.adjoint`.
         """
+        # TODO: variants wrt placement of 2*pi
+        # TODO: impl flag for Numpy vs. PyFFTW
+
         if not isinstance(dom, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
                             ''.format(dom))
@@ -762,12 +832,12 @@ class DiscreteFourierTransform(Operator):
             ran_dtype = _TYPE_MAP_R2C[dom.dtype]
         else:
             ran_dtype = dom.dtype
-        # TODO: handle impl
+
         ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
                                       dtype=ran_dtype)
         ran_dspace = ran_dspace_type(recip_grid.size, dtype=ran_dtype,
                                      exponent=conj_exp)
-        # TODO: check how order is handled
+
         ran = DiscreteLp(ran_fspace, recip_grid, ran_dspace, exponent=conj_exp)
 
         super().__init__(dom, ran, linear=True)
@@ -788,10 +858,10 @@ class DiscreteFourierTransform(Operator):
 
         # We're always modifying the input, so a copy is unavoidable
         x_cpy = x.copy()
-        dft_preproc_data(x_cpy, shift=self._shift)
+        dft_preprocess_data(x_cpy, shift=self._shift)
         pyfftw_call(x_cpy.asarray(), out.asarray(), direction='forward',
                     halfcomplex=self._halfcomplex, **kwargs)
-        dft_postproc_data(out, self.domain.grid.min_pt)
+        dft_postprocess_data(out, self.domain.grid.min_pt)
         return out
 
     @property

@@ -32,8 +32,8 @@ import pytest
 # ODL imports
 import odl
 from odl.trafos.fourier import (
-    reciprocal, _shift_list, dft_preproc_data, dft_postproc_data, pyfftw_call,
-    DiscreteFourierTransform, _TYPE_MAP_R2C)
+    reciprocal, _shift_list, dft_preprocess_data, dft_postprocess_data,
+    pyfftw_call, DiscreteFourierTransform, _TYPE_MAP_R2C)
 from odl.util.testutils import all_almost_equal, all_equal
 from odl.util.utility import is_real_dtype
 
@@ -307,7 +307,7 @@ def test_reciprocal_nd_halfcomplex():
     assert rgrid.max_pt[-1] == -stride_last / 2
 
 
-def test_dft_preproc_data():
+def test_dft_preprocess_data():
 
     shape = (2, 3, 4)
     space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape,
@@ -319,7 +319,7 @@ def test_dft_preproc_data():
         correct_arr.append(1 - 2 * ((i + j + k) % 2))
 
     dfunc = space_discr.one()
-    dft_preproc_data(dfunc, shift=True)
+    dft_preprocess_data(dfunc, shift=True)
 
     assert all_almost_equal(dfunc.ntuple, correct_arr)
 
@@ -332,12 +332,12 @@ def test_dft_preproc_data():
         correct_arr.append(np.exp(1j * np.pi * argsum))
 
     dfunc = space_discr.one()
-    dft_preproc_data(dfunc, shift=False)
+    dft_preprocess_data(dfunc, shift=False)
 
     assert all_almost_equal(dfunc.ntuple, correct_arr)
 
 
-def test_dft_postproc_data():
+def test_dft_postprocess_data():
 
     shape = (2, 3, 4)
     space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape,
@@ -357,7 +357,7 @@ def test_dft_postproc_data():
         correct_arr.append(np.exp(-1j * np.dot(x0, xi_0 + rstride * k)))
 
     dfunc = recip_space_discr.one()
-    dft_postproc_data(dfunc, x0)
+    dft_postprocess_data(dfunc, x0)
 
     assert all_almost_equal(dfunc.ntuple, correct_arr)
 
@@ -375,51 +375,9 @@ def test_dft_postproc_data():
         correct_arr.append(np.exp(-1j * np.dot(x0, xi_0 + rstride * k)))
 
     dfunc = recip_space_discr.one()
-    dft_postproc_data(dfunc, x0)
+    dft_postprocess_data(dfunc, x0)
 
     assert all_almost_equal(dfunc.ntuple, correct_arr)
-
-
-def test_dft_range(exponent, dtype):
-    # Check if the range is initialized correctly. Encompasses the init test
-
-    def conj(ex):
-        if ex == 1.0:
-            return float('inf')
-        elif ex == float('inf'):
-            return 1.0
-        else:
-            return ex / (ex - 1.0)
-
-    # Testing R2C for real dtype, else C2C
-
-    # 1D
-    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
-    shape = 10
-    space_discr = odl.uniform_discr(0, 1, shape, exponent=exponent,
-                                    impl='numpy', dtype=dtype, field=field)
-
-    dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
-    assert dft.range.field == odl.ComplexNumbers()
-    halfcomplex = True if is_real_dtype(dtype) else False
-    assert dft.range.grid == reciprocal(dft.domain.grid,
-                                        halfcomplex=halfcomplex,
-                                        shift=True)
-    assert dft.range.exponent == conj(exponent)
-
-    # 3D
-    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
-    shape = (3, 4, 5)
-    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, exponent=exponent,
-                                    impl='numpy', dtype=dtype, field=field)
-
-    dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
-    assert dft.range.field == odl.ComplexNumbers()
-    halfcomplex = True if is_real_dtype(dtype) else False
-    assert dft.range.grid == reciprocal(dft.domain.grid,
-                                        halfcomplex=halfcomplex,
-                                        shift=True)
-    assert dft.range.exponent == conj(exponent)
 
 
 def _params_from_dtype(dt):
@@ -682,6 +640,75 @@ def test_pyfftw_call_backward_with_plan():
 
         assert all_almost_equal(arr, arr_cpy)  # Input perserved
         assert all_almost_equal(idft_arr, true_idft)
+
+
+def test_dft_range(exponent, dtype):
+    # Check if the range is initialized correctly. Encompasses the init test
+
+    def conj(ex):
+        if ex == 1.0:
+            return float('inf')
+        elif ex == float('inf'):
+            return 1.0
+        else:
+            return ex / (ex - 1.0)
+
+    # Testing R2C for real dtype, else C2C
+
+    # 1D
+    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
+    shape = 10
+    space_discr = odl.uniform_discr(0, 1, shape, exponent=exponent,
+                                    impl='numpy', dtype=dtype, field=field)
+
+    dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
+    assert dft.range.field == odl.ComplexNumbers()
+    halfcomplex = True if is_real_dtype(dtype) else False
+    assert dft.range.grid == reciprocal(dft.domain.grid,
+                                        halfcomplex=halfcomplex,
+                                        shift=True)
+    assert dft.range.exponent == conj(exponent)
+
+    # 3D
+    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
+    shape = (3, 4, 5)
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, exponent=exponent,
+                                    impl='numpy', dtype=dtype, field=field)
+
+    dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
+    assert dft.range.field == odl.ComplexNumbers()
+    halfcomplex = True if is_real_dtype(dtype) else False
+    assert dft.range.grid == reciprocal(dft.domain.grid,
+                                        halfcomplex=halfcomplex,
+                                        shift=True)
+    assert dft.range.exponent == conj(exponent)
+
+
+@pytest.mark.xfail(reason='Wrong scaling and shift issue')
+def test_dft_with_known_functions():
+
+    # 1d
+    # Characteristic function of [0, 1], its Fourier transform is
+    # given by 1j * (exp(-1j * y) - 1) / y
+    def char_interval(x):
+        return np.where(np.logical_and(x >= 0, x <= 1), 1.0, 0.0)
+
+    def char_interval_ft(x):
+        def _at_small_args(x):
+            return 1 - 1j * x / 2 + x ** 2 / 6
+
+        def _at_large_args(x):
+            return (1 - np.exp(-1j * x)) / (1j * x)
+
+        return np.where(np.abs(x) > 1e-5, _at_large_args(x),
+                        _at_small_args(x)) / np.sqrt(2 * np.pi)
+
+    discr = odl.uniform_discr(-2, 2, 64, impl='numpy')
+    dft = DiscreteFourierTransform(discr)
+    func = dft.domain.element(char_interval)
+    func_true_ft = dft.range.element(char_interval_ft)
+    func_dft = dft(func)
+    assert all_almost_equal(func_dft, func_true_ft)
 
 
 if __name__ == '__main__':
