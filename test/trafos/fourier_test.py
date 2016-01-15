@@ -85,55 +85,6 @@ def _random_array(shape, dtype):
                 1j * np.random.rand(*shape).astype(dtype))
 
 
-def test_shift_list():
-
-    length = 3
-
-    # Test single value
-    shift = True
-    lst = _shift_list(shift, length)
-
-    assert all_equal(lst, [True] * length)
-
-    # Test existing sequence
-    shift = (False,) * length
-    lst = _shift_list(shift, length)
-
-    assert all_equal(lst, [False] * length)
-
-    # Too long sequence, gets truncated but ok
-    shift = (False,) * (length + 1)
-    lst = _shift_list(shift, length)
-
-    assert all_equal(lst, [False] * length)
-
-    # Test iterable
-    def alternating():
-        i = 0
-        while 1:
-            yield bool(i % 2)
-            i += 1
-
-    lst = _shift_list(alternating(), length)
-
-    assert all_equal(lst, [False, True, False])
-
-    # Too short sequence, should raise
-    shift = (False,) * (length - 1)
-    with pytest.raises(ValueError):
-        _shift_list(shift, length)
-
-    # Iterable returning too few entries, should throw
-    def alternating_short():
-        i = 0
-        while i < length - 1:
-            yield bool(i % 2)
-            i += 1
-
-    with pytest.raises(ValueError):
-        _shift_list(alternating_short(), length)
-
-
 def test_reciprocal_1d_odd():
 
     grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=11, as_midp=True)

@@ -21,7 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import next, range, super
+from builtins import range, super
 
 # External
 from math import pi
@@ -57,24 +57,16 @@ if platform.system() == 'Linux':
 
 
 def _shift_list(shift, length):
-    """Turn a single boolean or iterable into a list of given length."""
+    """Turn a single boolean or sequence into a list of given length."""
     try:
-        shift = iter(shift)
-        shift_list = []
-        try:
-            for i in range(length):
-                shift_list.append(next(shift))
-        except StopIteration:
-            pass
-    except TypeError:  # single boolean
-        shift_list = [bool(shift)] * length
+        shift_lst = [bool(s) for s in shift]
+        if len(shift_lst) != length:
+            raise ValueError('Expected {} entries in shift list, got {}.'
+                             ''.format(length, len(shift_lst)))
+    except TypeError:
+        shift_lst = [bool(shift)] * length
 
-    shift_list = shift_list[:length]
-    if len(shift_list) < length:
-        raise ValueError('boolean shift list or iterable gives too few '
-                         'entries ({} < {}).'.format(len(shift_list), length))
-
-    return shift_list
+    return shift_lst
 
 
 def reciprocal(grid, shift=True, halfcomplex=False):
@@ -120,12 +112,10 @@ def reciprocal(grid, shift=True, halfcomplex=False):
     ----------
     grid : `odl.RegularGrid`
         Original sampling grid
-    shift : `bool` or iterable, optional
+    shift : `bool` or sequence of `bool`, optional
         If `True`, the grid is shifted by half a stride in the negative
-        direction.
-        With a boolean array or iterable, this option is applied
-        separately on each axis. At least ``grid.ndim`` values must be
-        provided.
+        direction. With a sequence, this option is applied separately on
+        each axis.
     halfcomplex : `bool`, optional
         If `True`, return the half of the grid with last coordinate
         less than zero. This is related to the fact that for real-valued
@@ -138,7 +128,6 @@ def reciprocal(grid, shift=True, halfcomplex=False):
         The reciprocal grid
     """
     shift_lst = _shift_list(shift, grid.ndim)
-
     rmin = np.empty_like(grid.min_pt)
     rmax = np.empty_like(grid.max_pt)
     rsamples = list(grid.shape)
@@ -214,12 +203,10 @@ def dft_preprocess_data(dfunc, shift=True):
         in place. For real input data, this is only possible if
         ``shift=True`` since the factors :math:`p_k` are real only
         in this case.
-    shift : `bool` or iterable, optional
-        If `True`, the reciprocal grid is shifted by half a stride in
-        the negative direction.
-        With a boolean array or iterable, this option is applied
-        separately on each axis. At least ``dfunc.space.grid.ndim``
-        values must be provided.
+    shift : `bool` or sequence of `bool`, optional
+        If `True`, the grid is shifted by half a stride in the negative
+        direction. With a sequence, this option is applied separately on
+        each axis.
 
     Returns
     -------
