@@ -211,8 +211,8 @@ def helical():
 
 
 if __name__ == '__main__':
-    #parallel_2d()
-    #parallel_3d()
-    #fanbeam()
+    parallel_2d()
+    parallel_3d()
+    fanbeam()
     conebeam()
-    #helical()
+    helical()
