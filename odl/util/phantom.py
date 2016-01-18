@@ -650,6 +650,7 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
     if not 0 < scale_structures <= 1:
         raise ValueError('scale structure ({}) is not in (0, 1]'
                          ''.format(scale_structures))
+
     shape = discr_space.shape
     phan = np.zeros(shape)
     shape = np.array(shape) - 1
