@@ -26,7 +26,7 @@ import os.path as pth
 import odl
 
 # Set path to input files
-base = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'stir')
+base = pth.join(pth.dirname(pth.abspath(__file__)), 'data', 'stir')
 volume_file = str(pth.join(base, 'initial.hv'))
 projection_file = str(pth.join(base, 'small.hs'))
 

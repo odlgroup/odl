@@ -172,7 +172,7 @@ def _make_3d_cylinders(ellipses2d):
 
 
 def ellipse_phantom_2d(space, ellipses):
-    """Create a phantom in 2d space.
+    """Create an ellipse phantom in 2d space.
 
     Parameters
     ----------
@@ -245,7 +245,7 @@ def _getshapes(center, max_radius, shape):
 
 
 def ellipse_phantom_3d(space, ellipses):
-    """Create a phantom in 3d space.
+    """Create an ellipse phantom in 3d space.
 
     Parameters
     ----------
@@ -383,8 +383,8 @@ def derenzo_sources(space):
     if space.ndim == 2:
         return ellipse_phantom_2d(space, _derenzo_sources_2d())
     if space.ndim == 3:
-        return ellipse_phantom_3d(space,
-                                  _make_3d_cylinders(_derenzo_sources_2d()))
+        return ellipse_phantom_3d(
+            space, _make_3d_cylinders(_derenzo_sources_2d()))
     else:
         raise ValueError("Dimension not 2, no phantom available")
 
