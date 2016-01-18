@@ -41,7 +41,7 @@ from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.ntuples import Ntuples
 from odl.space.fspace import FunctionSpace
-from odl.util.utility import is_real_dtype
+from odl.util.utility import is_real_dtype, fast_1d_tensor_mult
 
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
@@ -127,6 +127,7 @@ def reciprocal(grid, shift=True, halfcomplex=False):
     recip : `odl.RegularGrid`
         The reciprocal grid
     """
+    # TODO: axes
     shift_lst = _shift_list(shift, grid.ndim)
     rmin = np.empty_like(grid.min_pt)
     rmax = np.empty_like(grid.max_pt)
@@ -212,6 +213,7 @@ def dft_preprocess_data(dfunc, shift=True):
     -------
     `None`
     """
+    # TODO: axes
     if dfunc.space.field == RealNumbers() and not shift:
         raise ValueError('cannot pre-process in-place without shift.')
 
@@ -237,7 +239,7 @@ def dft_preprocess_data(dfunc, shift=True):
         np.multiply(dfunc, vec, out=dfunc.asarray())
 
 
-def _iterp_kernel_ft(norm_freqs, interp):
+def _interp_kernel_ft(norm_freqs, interp):
     """Scaled FT of a one-dimensional interpolation kernel.
 
     For normalized frequencies :math:`\\xi\\in [-1/2, 1/2]`, this
@@ -273,7 +275,7 @@ def _iterp_kernel_ft(norm_freqs, interp):
         raise RuntimeError
 
 
-def dft_postprocess_data(dfunc, x0, shift=False):
+def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, interp):
     """Post-process the Fourier-space data after DFT.
 
     This function multiplies the given data with the separable
@@ -308,6 +310,17 @@ def dft_postprocess_data(dfunc, x0, shift=False):
         to be the reciprocal grid. Changes are made in place.
     x0 : array-like
         Minimal grid point of the spatial grid before transform
+    shifts : sequence of `bool`
+        If `True`, the grid is shifted by half a stride in the negative
+        direction in the corresponding axes. The sequence must have the
+        same length as ``axes``.
+    axes : sequence of `int`
+        Dimensions along which to take the transform. The sequence must
+        have the same length as ``shifts``.
+    orig_shape : sequence of positive `int`
+        Shape of the original array
+    interp : `str`
+        Interpolation scheme used in real space
 
     References
     ----------
@@ -318,24 +331,59 @@ def dft_postprocess_data(dfunc, x0, shift=False):
     """
     # Reciprocal grid
     rgrid = dfunc.space.grid
-    shift_lst = _shift_list(shift, rgrid.ndim)
+    shift_lst = list(shifts)
+    axes = list(axes)
 
-    exp_arrs = []
-    interp_arrs = []
-    for x, xi, n in zip(x0, rgrid.coord_vectors, rgrid.shape):
-        exp_arrs.append(np.exp(-1j * x * xi))
+    onedim_arrs = []
+    for ax in axes:
+        x = x0[ax]
+        xi = rgrid.coord_vectors[ax]
 
-    # TODO: Handle interpolation kernel
+        # First part: exponential array
+        onedim_arr = (np.exp(-1j * x * xi))
 
-#        # Half axis due to halfcomplex transform
-#        if np.all(xi <= 0):
-#            nfreqs = np.linspace(xi[])
+        # Second part: interpolation kernel
+        len_dft = rgrid.shape[ax]
+        len_orig = orig_shape[ax]
+        halfcomplex = (len_dft < len_orig)
+        odd = len_orig % 2
+        shift = shift_lst[ax]
 
-    meshgrid = sparse_meshgrid(*exp_arrs, order=dfunc.space.order)
+        if shift:
+            # f_k = -0.5 + k / N
+            fmin = -0.5
+            if halfcomplex:
+                if odd:
+                    fmax = - 1.0 / (2 * len_orig)
+                else:
+                    fmax = 0.0
+            else:
+                # Always -0.5 + (N-1)/N = 0.5 - 1/N
+                fmax = 0.5 - 1.0 / len_orig
 
-    # Multiply with broadcasting
-    for vec in meshgrid:
-        np.multiply(dfunc, vec, out=dfunc.asarray())
+        else:
+            # f_k = -0.5 + 1/(2*N) + k / N
+            fmin = -0.5 + 1.0 / (2 * len_orig)
+            if halfcomplex:
+                if odd:
+                    fmax = 0.0
+                else:
+                    fmax = 1.0 / (2 * len_orig)
+            else:
+                # Always -0.5 + (N-1)/N = 0.5 - 1/N
+                fmax = 0.5 - 1.0 / (2 * len_orig)
+
+        freqs = np.linspace(fmin, fmax, num=len_dft)
+
+        onedim_arr *= _interp_kernel_ft(freqs, interp)
+        onedim_arrs.append(onedim_arr)
+
+    if dfunc.space.order == 'C':
+        mult_axes = axes
+    else:
+        mult_axes = list(reversed(axes))
+
+    fast_1d_tensor_mult(dfunc.asarray(), onedim_arrs, axes=mult_axes)
 
 
 def _pyfftw_to_local(flag):
@@ -482,9 +530,10 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
       ``array_out[axes].shape[-1] == array_in[axes].shape[-1] // 2 + 1``,
       and vice versa for backward transforms.
     * All planning schemes except ``'estimate'`` require an internal copy
-      of the input array and may therefore be substantially slower in the
-      first run. Use these flags only if you calculate multiple transforms
-      of the same size.
+      of the input array but are often several times faster after the
+      first call (measuring results are cached). Typically,
+      'measure' is a good compromise. If you cannot afford the copy,
+      use 'estimate'.
     * The input can be destroyed if a planner different from
       ``'estimate'`` is used or a complex-to-real backward transform is
       computed.
@@ -506,7 +555,8 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     direction = _pyfftw_to_local(direction)
     fftw_plan = kwargs.pop('fftw_plan', None)
-    planning_effort = _pyfftw_to_local(kwargs.pop('planning', 'estimate'))
+    planning_effort = _pyfftw_to_local(kwargs.pop('planning_effort',
+                                                  'estimate'))
     planning_timelimit = kwargs.pop('planning_timelimit', None)
     threads = kwargs.pop('threads', 1)
     normalise_idft = kwargs.pop('normalise_idft', False)
@@ -526,7 +576,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     # Import wisdom if possible
     if wimport:
         try:
-            with open(wimport, 'r') as wfile:
+            with open(wimport, 'rb') as wfile:
                 wisdom = pickle.load(wfile)
             if wisdom:
                 pyfftw.import_wisdom(wisdom)
@@ -555,7 +605,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     fft_plan(array_in, array_out, normalise_idft=normalise_idft)
 
     if wexport:
-        with open(wexport, 'a') as wfile:
+        with open(wexport, 'ab') as wfile:
             pickle.dump(pyfftw.export_wisdom(), wfile)
 
     return fftw_plan
@@ -650,7 +700,7 @@ class PyfftwTransform(Operator):
             Output vector storing the result
         axes : sequence of `int`, optional
             Dimensions in which a transform is to be calculated.
-            Default: ``(-1,)``.
+            Default: ``(-1,)``
         direction : {'FFTW_FORWARD', 'FFTW_BACKWARD'}, optional
             Direction of the transform
         normalise_idft : `bool`, optional
@@ -746,6 +796,9 @@ class DiscreteFourierTransform(Operator):
             :attr:`odl.DiscreteLp.exponent` must be at least 1.0;
             if it is equal to 2.0, this operator has an adjoint which
             is equal to the inverse.
+        axes : sequence of `int`, optional
+            Dimensions in which a transform is to be calculated.
+            Default: all axes
         halfcomplex : `bool`, optional
             If `True`, calculate only the negative frequency part
             along the last axis for real input. If `False`,
@@ -809,6 +862,7 @@ class DiscreteFourierTransform(Operator):
             raise NotImplementedError('irregular grids not yet supported.')
 
         # Calculate range
+        # TODO: axes
         recip_grid = reciprocal(dom.grid, shift=self._shift,
                                 halfcomplex=self._halfcomplex)
 
