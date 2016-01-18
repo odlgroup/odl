@@ -434,35 +434,40 @@ def _test_lincomb(fn, a, b):
 
     z_arr[:] = a * x_arr + b * y_arr
     fn.lincomb(a, x, b, y, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+                            [x_arr, y_arr, z_arr])
 
     # First argument aliased with output
     x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * z_arr + b * y_arr
     fn.lincomb(a, z, b, y, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+                            [x_arr, y_arr, z_arr])
 
     # Second argument aliased with output
     x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * z_arr
     fn.lincomb(a, x, b, z, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+                            [x_arr, y_arr, z_arr])
 
     # Both arguments aliased with each other
     x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * x_arr
     fn.lincomb(a, x, b, x, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+                            [x_arr, y_arr, z_arr])
 
     # All aliased
     x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * z_arr + b * z_arr
     fn.lincomb(a, z, b, z, out=z)
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+                            [x_arr, y_arr, z_arr])
 
 
 def test_lincomb(fn):
@@ -494,42 +499,40 @@ def test_member_lincomb(fn):
         _test_member_lincomb(fn, a)
 
 
-def test_multiply():
+def test_multiply(fn):
     # Validates multiply against the result on host with randomized data
-    rn = odl.CudaRn(100)
-    x_host, y_host, z_host, x_device, y_device, z_device = _vectors(rn, 3)
+    x_host, y_host, z_host, x_device, y_device, z_device = _vectors(fn, 3)
 
     # Host side calculation
     z_host[:] = x_host * y_host
 
     # Device side calculation
-    rn.multiply(x_device, y_device, out=z_device)
+    fn.multiply(x_device, y_device, out=z_device)
 
     assert all_almost_equal([x_device, y_device, z_device],
                             [x_host, y_host, z_host])
 
     # Aliased
     z_host[:] = z_host * x_host
-    rn.multiply(z_device, x_device, out=z_device)
+    fn.multiply(z_device, x_device, out=z_device)
 
     assert all_almost_equal([x_device, z_device],
                             [x_host, z_host])
 
     # Aliased
     z_host[:] = z_host * z_host
-    rn.multiply(z_device, z_device, out=z_device)
+    fn.multiply(z_device, z_device, out=z_device)
 
     assert all_almost_equal(z_device, z_host)
 
 
-def test_member_multiply():
+def test_member_multiply(fn):
     # Validate vector member multiply against the result on host
     # with randomized data
-    rn = odl.CudaRn(100)
-    x_host, y_host, x_device, y_device = _vectors(rn, 2)
+    x_host, y_host, x_device, y_device = _vectors(fn, 2)
 
     # Host side calculation
-    y_host[:] = x_host * y_host
+    y_host *= x_host
 
     # Device side calculation
     y_device *= x_device
@@ -546,7 +549,8 @@ def _test_unary_operator(spc, function):
     y_arr = function(x_arr)
     y = function(x)
 
-    assert all_almost_equal([x, y], [x_arr, y_arr])
+    assert all_almost_equal([x.asarray(), np.asarray(y)],
+                            [x_arr, np.asarray(y_arr)])
 
 
 def _test_binary_operator(spc, function):
@@ -557,7 +561,8 @@ def _test_binary_operator(spc, function):
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
 
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+    assert all_almost_equal([x.asarray(), y.asarray(), np.asarray(z)],
+                            [x_arr, y_arr, np.asarray(z_arr)])
 
 
 def test_operators(fn):
@@ -1052,7 +1057,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     np_result = ufunc(*in_arrays)
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*in_vectors)
-    assert all_almost_equal(np_result, odl_result)
+    assert all_almost_equal(np_result, np.asarray(odl_result))
 
     # Test type of output
     if n_out == 1:
@@ -1065,7 +1070,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     np_result = ufunc(*(in_arrays + out_arrays))
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*(in_vectors + out_vectors))
-    assert all_almost_equal(np_result, odl_result)
+    assert all_almost_equal(np_result, np.asarray(odl_result))
 
     # Test inplace actually holds:
     if n_out == 1:
