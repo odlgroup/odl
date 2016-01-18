@@ -40,6 +40,7 @@ standard_library.install_aliases()
 
 # External module imports
 import numpy as np
+import re
 
 
 __all__ = ('NtuplesBaseUFuncs', 'NtuplesUFuncs', 'CudaNtuplesUFuncs',
@@ -56,7 +57,7 @@ RAW_UFUNCS = ['absolute', 'add', 'arccos', 'arccosh', 'arcsin', 'arcsinh',
               'left_shift', 'less', 'less_equal', 'log', 'log10', 'log1p',
               'log2', 'logaddexp', 'logaddexp2', 'logical_and', 'logical_not',
               'logical_or', 'logical_xor', 'maximum', 'minimum', 'mod', 'modf',
-              'multiply', 'negative', 'nextafter', 'not_equal', 'power',
+              'multiply', 'negative', 'not_equal', 'power',
               'rad2deg', 'reciprocal', 'remainder', 'right_shift', 'rint',
               'sign', 'signbit', 'sin', 'sinh', 'sqrt', 'square', 'subtract',
               'tan', 'tanh', 'true_divide', 'trunc']
@@ -68,6 +69,8 @@ for name in RAW_UFUNCS:
     ufunc = getattr(np, name)
     n_in, n_out = ufunc.nin, ufunc.nout
     descr = ufunc.__doc__.splitlines()[2]
+    # Numpy occasionally uses single tics for doc, we only use them for links
+    descr = re.sub('`+', '``', descr)
     doc = descr + """
 
 See also
@@ -76,19 +79,19 @@ numpy.{}
 """.format(name)
     UFUNCS.append((name, n_in, n_out, doc))
 
-RAW_REDUCTIONS = [('sum', 'Sum of array elements.'),
-                  ('prod', 'Product of array elements.'),
-                  ('min', 'Minimum value in array.'),
-                  ('max', 'Maximum value in array.')]
+RAW_REDUCTIONS = [('sum', 'sum', 'Sum of array elements.'),
+                  ('prod', 'prod', 'Product of array elements.'),
+                  ('min', 'amin', 'Minimum value in array.'),
+                  ('max', 'amax', 'Maximum value in array.')]
 
 REDUCTIONS = []
-for name, descr in RAW_REDUCTIONS:
+for name, numpyname, descr in RAW_REDUCTIONS:
     doc = descr + """
 
 See also
 --------
 numpy.{}
-""".format(name)
+""".format(numpyname)
     REDUCTIONS += [(name, doc)]
 
 
@@ -146,7 +149,7 @@ def wrap_ufunc_base(name, n_in, n_out, doc):
 
 # Wrap reductions
 def wrap_reduction_base(name, doc):
-    """Add ufunc methods to `NtuplesBaseVectorUFuncs`."""
+    """Add ufunc methods to `NtuplesBaseUFuncs`."""
     wrapped = getattr(np, name)
 
     def wrapper(self):
