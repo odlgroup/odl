@@ -151,7 +151,8 @@ def conebeam():
     dgrid = odl.uniform_sampling(dparams, [558, 558])
     geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams,
                                              src_radius=1000, det_radius=100,
-                                             agrid=agrid, dgrid=dgrid)
+                                             agrid=agrid, dgrid=dgrid,
+                                             axis=[1, 0, 0])
 
     # X-ray transform
     xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
@@ -210,8 +211,8 @@ def helical():
 
 
 if __name__ == '__main__':
-    parallel_2d()
-    parallel_3d()
-    fanbeam()
+    #parallel_2d()
+    #parallel_3d()
+    #fanbeam()
     conebeam()
-    helical()
+    #helical()

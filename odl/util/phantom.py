@@ -161,6 +161,16 @@ def _derenzo_sources_2d():
             [1.0, 0.023968, 0.023968, 0.88528, -0.11791, 0.0]]
 
 
+def _make_3d_cylinders(ellipses2d):
+    """ Create 3d cylinders from ellipses """
+    ellipses2d = np.asarray(ellipses2d)
+    ellipses3d = np.zeros((ellipses2d.shape[0], 10))
+    ellipses3d[:, [0, 1, 2, 4, 5, 7]] = ellipses2d
+    ellipses3d[:, 3] = 100000.0
+
+    return ellipses3d
+
+
 def _phantom_2d(space, ellipses):
     """Create a phantom in 2d space.
 
@@ -372,6 +382,8 @@ def derenzo_sources(space):
     """
     if space.ndim == 2:
         return _phantom_2d(space, _derenzo_sources_2d())
+    if space.ndim == 3:
+        return _phantom_3d(space, _make_3d_ellipses(_derenzo_sources_2d()))
     else:
         raise ValueError("Dimension not 2, no phantom available")
 
