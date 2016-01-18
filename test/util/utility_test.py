@@ -27,9 +27,11 @@ import pytest
 import numpy as np
 
 # Internal
+from odl.util.testutils import all_equal
 from odl.util.utility import (
     is_scalar_dtype, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype)
+    is_complex_floating_dtype,
+    fast_1d_tensor_mult)
 
 real_float_dtypes = [np.float32, np.float64]
 complex_float_dtypes = [np.complex64, np.complex128]
@@ -61,6 +63,105 @@ def test_is_complex_floating_dtype():
     for dtype in complex_float_dtypes:
         assert is_complex_floating_dtype(dtype)
 
+
+def test_fast_1d_tensor_mult():
+
+    # Full multiplication
+    def simple_mult_3(x, y, z):
+        return x[:, None, None] * y[None, :, None] * z[None, None, :]
+
+    shape = (2, 3, 4)
+    x, y, z = (np.arange(size, dtype='float64') for size in shape)
+    true_result = simple_mult_3(x, y, z)
+
+    # Standard call
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [x, y, z])
+    assert all_equal(test_arr, true_result)
+
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [x, y, z], axes=(0, 1, 2))
+    assert all_equal(test_arr, true_result)
+
+    # Different orderings
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [y, x, z], axes=(1, 0, 2))
+    assert all_equal(test_arr, true_result)
+
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [x, z, y], axes=(0, 2, 1))
+    assert all_equal(test_arr, true_result)
+
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [z, x, y], axes=(2, 0, 1))
+    assert all_equal(test_arr, true_result)
+
+    # More arrays than dimensions also ok with explicit axes
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [z, x, y, np.ones(3)], axes=(2, 0, 1, 1))
+    assert all_equal(test_arr, true_result)
+
+    # Squeezable or extendable arrays also possible
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [x, y, z[None, :]])
+    assert all_equal(test_arr, true_result)
+
+    shape = (1, 3, 4)
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [2, y, z])
+    assert all_equal(test_arr, simple_mult_3(np.ones(1) * 2, y, z))
+
+    # Reduced multiplication
+    def simple_mult_2(x, z, ny):
+        return x[:, None, None] * np.ones((1, ny, 1)) * z[None, None, :]
+
+    shape = (2, 3, 4)
+    x, y, z = (np.arange(size, dtype='float64') for size in shape)
+    true_result = simple_mult_2(x, z, 3)
+
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [x, z], axes=(0, 2))
+    assert all_equal(test_arr, true_result)
+
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [z, x], axes=(2, 0))
+    assert all_equal(test_arr, true_result)
+
+
+def test_fast_1d_tensor_mult_error():
+
+    shape = (2, 3, 4)
+    test_arr = np.ones(shape)
+    x, y, z = (np.arange(size, dtype='float64') for size in shape)
+
+    # No ndarray to operate on
+    with pytest.raises(TypeError):
+        fast_1d_tensor_mult([[0, 0], [0, 0]], [x, x])
+
+    # No 1d arrays given
+    with pytest.raises(ValueError):
+        fast_1d_tensor_mult(test_arr, [])
+
+    # Length or dimension mismatch
+    with pytest.raises(ValueError):
+        fast_1d_tensor_mult(test_arr, [x, y])
+
+    with pytest.raises(ValueError):
+        fast_1d_tensor_mult(test_arr, [x, y], (1, 2, 0))
+
+    with pytest.raises(ValueError):
+        fast_1d_tensor_mult(test_arr, [x, x, y, z])
+
+    # Axes out of bounds
+    with pytest.raises(ValueError):
+        fast_1d_tensor_mult(test_arr, [x, y, z], (1, 2, 3))
+
+    with pytest.raises(ValueError):
+        fast_1d_tensor_mult(test_arr, [x, y, z], (-2, -3, -4))
+
+    # Other than 1d arrays
+    with pytest.raises(ValueError):
+        fast_1d_tensor_mult(test_arr, [x, y, np.ones((4, 2))], (-2, -3, -4))
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
