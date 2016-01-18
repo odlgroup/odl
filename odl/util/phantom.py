@@ -383,7 +383,7 @@ def derenzo_sources(space):
     if space.ndim == 2:
         return _phantom_2d(space, _derenzo_sources_2d())
     if space.ndim == 3:
-        return _phantom_3d(space, _make_3d_ellipses(_derenzo_sources_2d()))
+        return _phantom_3d(space, _make_3d_cylinders(_derenzo_sources_2d()))
     else:
         raise ValueError("Dimension not 2, no phantom available")
 
@@ -572,6 +572,7 @@ if __name__ == '__main__':
     discr = odl.uniform_discr([-2.5, -2.5], [2.5, 2.5], [n, n])
     submarine_phantom(discr, smooth=False).show()
     submarine_phantom(discr, smooth=True).show()
+    derenzo_sources(discr).show()
 
     # Shepp-logan 3d
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
