@@ -29,7 +29,7 @@ import numpy as np
 # Internal
 from odl.tomo.geometry.detector import Flat1dDetector
 from odl.tomo.geometry.geometry import DivergentBeamGeometry
-from odl.tomo.util.trafos import euler_matrix
+from odl.tomo.util.utility import euler_matrix
 
 
 __all__ = ('FanFlatGeometry',)
@@ -45,7 +45,6 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
     The motion parameter is the (1d) rotation angle parametrizing source and
     detector positions.
-
     """
 
     def __init__(self, angle_intvl, dparams, src_radius, det_radius,
@@ -66,9 +65,9 @@ class FanFlatGeometry(DivergentBeamGeometry):
         src_to_det : 2-element array, optional
             The direction from the source to the point (0) of the detector
             angle=0
-        detector_axes : sequence of two 3-element arrays, optional
-            Unit directions along each detector parameter of the detector.
-            Default: (normalized) [np.cross(axis, source_to_detector), axis]
+        detector_axis : 2-element array, optional
+            Unit direction along the detector parameter of the detector.
+            Default: (normalized) [-self.src_to_det[1], self.src_to_det[0]]
         """
 
         self._src_to_det = (np.array(src_to_det) /

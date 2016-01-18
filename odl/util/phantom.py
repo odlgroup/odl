@@ -548,7 +548,7 @@ def cuboid(discr_space, begin, end):
 
 
 def indicate_proj_axis(discr_space, scale_structures=0.5):
-    """Phantom which indicates along which axis it is projected.
+    """Phantom indicating along which axis it is projected.
 
     The number (n) of rectangles in a parallel-beam projection along a main
     axis (0, 1, or 2) indicates the projection to be along the (n-1)the

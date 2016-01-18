@@ -45,12 +45,11 @@ class Geometry(with_metaclass(ABCMeta, object)):
     * a set of detector motion parameters,
     * a function mapping motion parameters to the location of a
       reference point (e.g. the center of the detector surface),
-    * a rotation applied to the detector surface, depending on the
-      motion parameters,
-    * a mapping from the motion and surface parameters to the detector
-      pixel direction to the source,
-    * optionally a mapping from the motion parameters to the source
-      position
+    * a rotation applied to the detector surface, depending on the motion
+      parameters,
+    * a mapping from the motion and surface parameters to the detector pixel
+      direction to the source,
+    * optionally a mapping from the motion parameters to the source position
     """
 
     def __init__(self, ndim):
@@ -201,10 +200,11 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
 class DivergentBeamGeometry(Geometry):
 
-    """Abstract nd divergent beam geometry.
+    """Abstract n-dimensional divergent beam geometry.
 
     A divergent beam geometry is characterized by a source and an
-    (n-1)d detector moving in space according to a 1d motion parameter.
+    (n-1)-dimensional detector moving in space according to a 1d motion
+    parameter.
 
     Special cases include fanbeam in 2d and conebeam in 3d.
     """

@@ -31,7 +31,7 @@ import numpy as np
 from odl.tomo.geometry.detector import Flat2dDetector
 from odl.tomo.geometry.geometry import (DivergentBeamGeometry,
                                         AxisOrientedGeometry)
-from odl.tomo.util.trafos import perpendicular_vector
+from odl.tomo.util.utility import perpendicular_vector
 
 
 __all__ = ('CircularConeFlatGeometry',

@@ -118,7 +118,7 @@ def astra_volume_geometry(discr_reco):
             # TODO: for parallel geometries, one can work around this issue
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
-        # given a 2D array of shape (x,y), a volume geometry is created as:
+        # given a 2D array of shape (x, y), a volume geometry is created as:
         #    astra.create_vol_geom(x, y, y_min, y_max, x_min, x_max)
         # yielding a dictionary:
         #   'GridColCount': y,
@@ -137,7 +137,7 @@ def astra_volume_geometry(discr_reco):
             # TODO: for parallel geometries, one can work around this issue
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
-        # given a 3D array of shape (x,y,z), a volume geometry is created as:
+        # given a 3D array of shape (x, y, z), a volume geometry is created as:
         #    astra.create_vol_geom(y, z, x, )
         # yielding a dictionary:
         #   'GridColCount': z
@@ -192,8 +192,6 @@ def astra_conebeam_3d_geom_to_vec(geometry):
         rot_matrix = geometry.rotation_matrix(angle)
 
         # source position
-        # TODO: check geometry class for consistency since 'src_position'
-        # and 'det_refpoint' were adopted to use ASTRA cone_vec convention
         vectors[ang_idx, 0:3] = geometry.src_position(angle)
 
         # center of detector
@@ -247,12 +245,11 @@ def astra_conebeam_2d_geom_to_vec(geometry):
 
     for ang_idx, angle in enumerate(angles.points()):
         rot_matrix = geometry.rotation_matrix(angle)
+
         # source position
-        # TODO: check method, probably inconsistent with detector pixel vec
         vectors[ang_idx, 0:2] = geometry.src_position(angle)
 
         # center of detector
-        # TODO: check method, probably inconsistent with detector pixel vec
         midp = geometry.det_params.midpoint
         vectors[ang_idx, 2:4] = geometry.det_point_position(angle, midp)
 
