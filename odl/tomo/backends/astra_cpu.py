@@ -24,7 +24,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-import numpy as np
 try:
     import astra
 except ImportError:

@@ -69,8 +69,7 @@ class DiscreteXrayTransform(Operator):
         kwargs : {'range_interpolation'}
             'range_interpolation' : {'nearest', 'linear', 'cubic'}
                 Interpolation type for the discretization of the
-                operator range.
-                Default: 'nearest'
+                operator range. Default: 'nearest'
         """
         if not isinstance(discr_dom, DiscreteLp):
             raise TypeError('discretized domain {!r} is not a `DiscreteLp`'
