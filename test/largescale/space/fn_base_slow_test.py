@@ -67,14 +67,14 @@ def _vectors(fn, n=1):
 
 
 # Pytest fixtures
-spc_params = [odl.Rn(10**5),
-              odl.uniform_discr(0, 1, 10**5),
+spc_params = [odl.Rn(10 ** 5),
+              odl.uniform_discr(0, 1, 10 ** 5),
               odl.uniform_discr([0, 0, 0], [1, 1, 1], [100, 100, 100])]
 
 if odl.CUDA_AVAILABLE:
     # Simply modify spc_params to modify the fixture
-    spc_params += [odl.CudaRn(10**5),
-                   odl.uniform_discr(0, 1, 10**5, impl='cuda'),
+    spc_params += [odl.CudaRn(10 ** 5),
+                   odl.uniform_discr(0, 1, 10 ** 5, impl='cuda'),
                    odl.uniform_discr([0, 0, 0], [1, 1, 1],
                                      [100, 100, 100], impl='cuda')]
 spc_ids = [' {!r} '.format(spc) for spc in spc_params]
@@ -116,7 +116,7 @@ def test_ndarray_init(fn):
 
 
 def test_getitem(fn):
-    indices = np.random.randint(0, fn.size-1, 5)
+    indices = np.random.randint(0, fn.size - 1, 5)
 
     x0 = np.arange(fn.size)
     x = fn.element(x0)
@@ -126,7 +126,7 @@ def test_getitem(fn):
 
 
 def test_setitem(fn):
-    indices = np.random.randint(0, fn.size-1, 5)
+    indices = np.random.randint(0, fn.size - 1, 5)
 
     x0 = np.arange(fn.size)
     x = fn.element(x0)
