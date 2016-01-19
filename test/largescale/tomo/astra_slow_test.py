@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test reconstruction with stir."""
+"""Test reconstruction with ASTRA."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -28,10 +28,7 @@ import pytest
 import numpy as np
 
 
-pytestmark = pytest.mark.skipif(
-    "not pytest.config.getoption('--largescale')",
-    reason='Need --largescale option to run'
-)
+pytestmark = odl.util.skip_if_no_largescale
 
 
 # Find the valid projectors
