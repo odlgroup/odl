@@ -132,7 +132,8 @@ def test_setitem(fn):
         x[index] = -index
         assert x[index] == -index
 
-"""
+
+@pytest.mark.xfail  # Expected to fail since inner scaling is not public
 def test_inner(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
@@ -142,6 +143,7 @@ def test_inner(fn):
     assert almost_equal(x.inner(y), correct_inner, places=2)
 
 
+@pytest.mark.xfail  # Expected to fail since norm scaling is not public
 def test_norm(fn):
     xarr, x = _vectors(fn)
 
@@ -151,6 +153,7 @@ def test_norm(fn):
     assert almost_equal(x.norm(), correct_norm, places=2)
 
 
+@pytest.mark.xfail  # Expected to fail since dist scaling is not public
 def test_dist(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
@@ -158,7 +161,7 @@ def test_dist(fn):
 
     assert almost_equal(fn.dist(x, y), correct_dist, places=2)
     assert almost_equal(x.dist(y), correct_dist, places=2)
-"""
+
 
 def _test_lincomb(fn, a, b):
     # Validates lincomb against the result on host with randomized
