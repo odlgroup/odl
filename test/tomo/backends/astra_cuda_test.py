@@ -269,6 +269,155 @@ def test_astra_cuda_projector_helical_conebeam():
                                                            discr_vol_space)
     assert rec_data.norm() > 0
 
+from odl.util.testutils import all_equal
+def test_scaling():
+
+    # `DiscreteLp` volume space
+    vs = odl.uniform_discr([-5] * 2, [5] * 2, [10] * 2, dtype='float32')
+    v_stride = vs.grid.stride
+
+    # Create an element in the volume space
+    f = vs.one()
+
+    # Angles
+    angle_intvl = odl.Interval(0, 4 * np.pi)
+    agrid = odl.uniform_sampling(angle_intvl, 2)
+
+    # Detector
+    dparams = odl.Interval(-10, 10)
+    dgrid = odl.uniform_sampling(dparams, 20)
+    dstride = dgrid.stride
+    # Create geometries
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
+
+
+    # Projection space
+    ps = odl.FunctionSpace(geom.params)
+
+    # `DiscreteLp` projection space
+    dps = odl.uniform_discr_fromspace(ps, geom.grid.shape, dtype='float32')
+
+    # Create an element in the projection space
+    g = dps.one()
+
+    # Forward
+    Af = odl.tomo.astra_cuda_forward_projector_call(f, geom, dps)
+
+    print('\n\nvol shape:{}'.format(vs.shape))
+    print('\nvol stride:{}'.format(v_stride))
+    print('det stride:{}'.format(dstride))
+    print('\nproj:{}'.format(Af.asarray()[0]))
+
+def test_astra_scaling_parallel2d():
+
+    # `DiscreteLp` volume space
+    discr_vol_space = odl.uniform_discr([0] * 2, [10] * 2, [5] * 2,
+                                        dtype='float32')
+
+    # Angles
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    agrid = odl.uniform_sampling(angle_intvl, 5)
+
+    # Detector
+    dparams = odl.Interval(0, 10)
+    dgrid = odl.uniform_sampling(dparams, 10)
+
+    # Create geometries
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
+
+    # Projection space
+    proj_space = odl.FunctionSpace(geom.params)
+
+    # `DiscreteLp` projection space
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, geom.grid.shape,
+                                                   dtype='float32')
+    # Create an element in the volume space
+    f = discr_vol_space.one()
+
+    # Forward
+    Af = odl.tomo.astra_cuda_forward_projector_call(f, geom, discr_proj_space)
+
+    # Create an element in the projection space
+    g = discr_proj_space.one()
+
+    # Backward
+    Adg = odl.tomo.astra_cuda_backward_projector_call(g, geom, discr_vol_space)
+
+    # Scaling: line integration weight
+    # Af *= float(discr_vol_space.grid.stride[0])
+    # Scaling: angle interval weight
+    Adg *= float(agrid.stride)
+
+    vol_stride = float(discr_vol_space.grid.stride[0])
+    det_stride = float(discr_proj_space.grid.stride[1])
+
+    inner_vol = f.inner(Adg) #* vol_stride ** 2
+    inner_proj = Af.inner(g) #* det_stride
+    r = inner_vol / inner_proj
+
+    print('\n')
+    print('vol stride:{}'.format(discr_vol_space.grid.stride))
+    print('det stride:{}'.format(geom.grid.stride))
+
+    print('\ninner_vol =', inner_vol)
+    print('inner_proj =', inner_proj)
+    print('ratios: {:.4f}, {:.4f}'.format(r, 1 / r))
+    print('ratios-1: {:.4f}, {:.4f}'.format(abs(r - 1), abs(1 / r - 1)))
+
+    # parallel 2D seems to scale with line integration weight (but parallel
+    # 3D does not)
+
+
+def test_astra_scaling_parallel3d():
+
+    # `DiscreteLp` volume space
+    vol_shape = (4, 5, 6)
+    discr_vol_space = odl.uniform_discr([0, 0, 0], [4, 5, 6],
+                                        vol_shape, dtype='float32')
+
+    # Angles
+    angle_intvl = odl.Interval(0, 2 * np.pi)
+    angle_grid = odl.uniform_sampling(angle_intvl, 9)
+
+    # Detector
+    dparams = odl.Rectangle([0, 0], [7, 8])
+    det_grid = odl.uniform_sampling(dparams, (7, 8))
+
+    # Create geometries
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, angle_grid,
+                                       det_grid)
+
+    # Projection space
+    proj_space = odl.FunctionSpace(geom.params)
+
+    # `DiscreteLp` projection space
+    discr_proj_space = odl.uniform_discr_fromspace(proj_space, geom.grid.shape,
+                                                   dtype='float32')
+    # Create an element in the volume space
+    f = discr_vol_space.one()
+
+    # Forward
+    Af = odl.tomo.astra_cuda_forward_projector_call(f, geom, discr_proj_space)
+
+    # Create an element in the projection space
+    g = discr_proj_space.one()
+
+    # Backward
+    Adg = odl.tomo.astra_cuda_backward_projector_call(g, geom, discr_vol_space)
+
+    ip_proj = Af.inner(g)
+    ip_vol = f.inner(Adg)  # * angle_grid.stride
+
+    print('\n')
+    print('proj_space:{}\nvol space:{}'.format(ip_proj, ip_vol))
+    print('ration:{}'.format(ip_vol/ip_proj))
+
+    print('\vol stride:{}'.format(discr_vol_space.grid.stride))
+    print('det stride:{}'.format(det_grid.stride))
+    print('angle stride:{}'.format(angle_grid.stride))
+    weight = getattr(geom.grid, 'cell_volume', 1.0)
+    print('geom grid cell volume:{}'.format(weight))
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
