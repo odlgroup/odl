@@ -35,7 +35,7 @@ __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
            'skip_if_no_pywavelets')
 
 
-def _places(a, b, default=5):
+def _places(a, b, default=None):
     """Return 3 if one dtype is 'float32' or 'complex64', else 5."""
     dtype1 = getattr(a, 'dtype', object)
     dtype2 = getattr(b, 'dtype', object)
@@ -44,7 +44,7 @@ def _places(a, b, default=5):
     if dtype1 in small_dtypes or dtype2 in small_dtypes:
         return 3
     else:
-        return default
+        return default if default is not None else 5
 
 
 def almost_equal(a, b, places=None):
@@ -115,6 +115,22 @@ def all_equal(iter1, iter2):
     return True
 
 
+def all_almost_equal_array(v1, v2, places):
+    # Ravel if has order, only DiscreteLpVector has an order
+    if hasattr(v1, 'order'):
+        print(v1.order)
+        v1 = v1.__array__().ravel(v1.order)
+    else:
+        v1 = v1.__array__()
+
+    if hasattr(v2, 'order'):
+        v2 = v2.__array__().ravel(v2.order)
+    else:
+        v2 = v2.__array__()
+
+    return np.all(np.isclose(v1, v2, rtol=10**(-places), equal_nan=True))
+
+
 def all_almost_equal(iter1, iter2, places=None):
     """`True` if all elements in ``a`` and ``b`` are almost equal."""
     try:
@@ -128,6 +144,9 @@ def all_almost_equal(iter1, iter2, places=None):
 
     if places is None:
         places = _places(iter1, iter2, None)
+
+    if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
+        return all_almost_equal_array(iter1, iter2, places)
 
     try:
         it1 = iter(iter1)

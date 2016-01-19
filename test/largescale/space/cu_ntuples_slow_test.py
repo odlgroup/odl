@@ -67,7 +67,7 @@ def _vectors(fn, n=1):
 
 if odl.CUDA_AVAILABLE:
     # Simply modify spc_params to modify the fixture
-    spc_params = [odl.CudaRn(10**3)]
+    spc_params = [odl.CudaRn(10**5)]
 else:
     spc_params = []
 spc_ids = [' {!r} '.format(spc) for spc in spc_params]
@@ -172,7 +172,7 @@ def _test_lincomb(fn, a, b):
 
     z_arr[:] = a * x_arr + b * y_arr
     fn.lincomb(a, x, b, y, out=z)
-    assert all_almost_equal(z.asarray(), z_arr, places=2)
+    assert all_almost_equal(z, z_arr, places=2)
 
 
 def test_lincomb(fn):
@@ -195,41 +195,13 @@ def _test_member_lincomb(spc, a):
     y_device.lincomb(a, x_device)
 
     # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(y_device.asarray(), y_host, places=2)
+    assert all_almost_equal(y_device, y_host, places=2)
 
 
 def test_member_lincomb(fn):
     scalar_values = [0, 1, -1, 3.41, 10.0, 1.0001]
     for a in scalar_values:
         _test_member_lincomb(fn, a)
-
-
-def test_multiply(fn):
-    # Validates multiply against the result on host with randomized data
-    x_host, y_host, z_host, x_device, y_device, z_device = _vectors(fn, 3)
-
-    # Host side calculation
-    z_host[:] = x_host * y_host
-
-    # Device side calculation
-    fn.multiply(x_device, y_device, out=z_device)
-
-    assert all_almost_equal(z_device.asarray(), z_host)
-
-
-def test_member_multiply(fn):
-    # Validate vector member multiply against the result on host
-    # with randomized data
-    x_host, y_host, x_device, y_device = _vectors(fn, 2)
-
-    # Host side calculation
-    y_host *= x_host
-
-    # Device side calculation
-    y_device *= x_device
-
-    # Cuda only uses floats, so require 5 places
-    assert all_almost_equal(y_device.asarray(), y_host)
 
 
 def _test_unary_operator(spc, function):
@@ -240,8 +212,8 @@ def _test_unary_operator(spc, function):
     y_arr = function(x_arr)
     y = function(x)
 
-    assert all_almost_equal([np.asarray(x), np.asarray(y)],
-                            [x_arr, np.asarray(y_arr)])
+    assert all_almost_equal([x, y],
+                            [x_arr, y_arr])
 
 
 def _test_binary_operator(spc, function):
@@ -252,7 +224,8 @@ def _test_binary_operator(spc, function):
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
 
-    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+    assert all_almost_equal([x, y, z],
+                            [x_arr, y_arr, z_arr])
 
 
 def test_operators(fn):
