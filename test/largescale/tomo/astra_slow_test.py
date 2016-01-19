@@ -23,14 +23,15 @@ from future import standard_library
 standard_library.install_aliases()
 
 import odl
+import odl.tomo as tomo
 import pytest
 import numpy as np
 
 # Find the valid projectors
 projectors = []
-if odl.tomo.ASTRA_AVAILABLE:
+if tomo.ASTRA_AVAILABLE:
     projectors = ['par2d cpu', 'cone2d cpu']
-if odl.tomo.ASTRA_CUDA_AVAILABLE:
+if tomo.ASTRA_CUDA_AVAILABLE:
     projectors += ['par2d cuda', 'cone2d cuda',
                    'par3d cuda', 'cone3d cuda']
 
@@ -50,9 +51,9 @@ def projector(request):
         dparams = odl.Interval(-30, 30)
         agrid = odl.uniform_sampling(angle_intvl, 200)
         dgrid = odl.uniform_sampling(dparams, 200)
-        geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
-        return odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                              backend='astra_' + version)
+        geom = tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
+        return tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                          backend='astra_' + version)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
@@ -65,12 +66,12 @@ def projector(request):
         dparams = odl.Rectangle([-30, -30], [30, 30])
         agrid = odl.uniform_sampling(angle_intvl, 200)
         dgrid = odl.uniform_sampling(dparams, [200, 200])
-        geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, agrid, dgrid,
-                                           axis=[1, 0, 0])
+        geom = tomo.Parallel3dGeometry(angle_intvl, dparams, agrid, dgrid,
+                                       axis=[1, 0, 0])
 
         # X-ray transform
-        return odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                              backend='astra_' + version)
+        return tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                          backend='astra_' + version)
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
@@ -83,14 +84,13 @@ def projector(request):
         dparams = odl.Interval(-30, 30)
         agrid = odl.uniform_sampling(angle_intvl, 200)
         dgrid = odl.uniform_sampling(dparams, 200)
-        geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams,
-                                        src_radius=200,
-                                        det_radius=100,
-                                        agrid=agrid, dgrid=dgrid)
+        geom = tomo.FanFlatGeometry(angle_intvl, dparams,
+                                    src_radius=200, det_radius=100,
+                                    agrid=agrid, dgrid=dgrid)
 
         # X-ray transform
-        return odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                              backend='astra_' + version)
+        return tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                          backend='astra_' + version)
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
@@ -103,15 +103,14 @@ def projector(request):
         dparams = odl.Rectangle([-30, -30], [30, 30])
         agrid = odl.uniform_sampling(angle_intvl, 200)
         dgrid = odl.uniform_sampling(dparams, [200, 200])
-        geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams,
-                                                 src_radius=200,
-                                                 det_radius=100,
-                                                 agrid=agrid, dgrid=dgrid,
-                                                 axis=[1, 0, 0])
+        geom = tomo.CircularConeFlatGeometry(angle_intvl, dparams,
+                                             src_radius=200, det_radius=100,
+                                             agrid=agrid, dgrid=dgrid,
+                                             axis=[1, 0, 0])
 
         # X-ray transform
-        return odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                              backend='astra_' + version)
+        return tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                          backend='astra_' + version)
 
     else:
         raise ValueError('param not valid')
@@ -135,6 +134,7 @@ def test_reconstruction(projector):
     odl.solvers.landweber(projector, recon, projections, niter=100,
                           omega=omega)
 
+    # Make sure the result is somewhat close to the actual result.
     assert recon.dist(vol) < vol.norm() / 3.0
 
 

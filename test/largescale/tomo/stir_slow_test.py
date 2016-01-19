@@ -25,6 +25,7 @@ standard_library.install_aliases()
 import os.path as pth
 import odl
 import pytest
+from odl.tomo.backends.stir_bindings import stir_projector_from_file
 
 
 def test_from_file():
@@ -34,8 +35,7 @@ def test_from_file():
     projection_file = str(pth.join(base, 'small.hs'))
 
     # Create a STIR projector from file data.
-    proj = odl.tomo.backends.stir_bindings.stir_projector_from_file(volume_file,
-                                                                    projection_file)
+    proj = stir_projector_from_file(volume_file, projection_file)
 
     # Create shepp-logan phantom
     vol = odl.util.shepp_logan(proj.domain, modified=True)
@@ -51,6 +51,7 @@ def test_from_file():
     recon = proj.domain.zero()
     odl.solvers.landweber(proj, recon, projections, niter=100, omega=omega)
 
+    # Make sure the result is somewhat close to the actual result.
     assert recon.dist(vol) < vol.norm() / 2.0
 
 
