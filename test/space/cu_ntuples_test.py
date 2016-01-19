@@ -434,7 +434,7 @@ def _test_lincomb(fn, a, b):
 
     z_arr[:] = a * x_arr + b * y_arr
     fn.lincomb(a, x, b, y, out=z)
-    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+    assert all_almost_equal([x, y, z],
                             [x_arr, y_arr, z_arr])
 
     # First argument aliased with output
@@ -442,7 +442,7 @@ def _test_lincomb(fn, a, b):
 
     z_arr[:] = a * z_arr + b * y_arr
     fn.lincomb(a, z, b, y, out=z)
-    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+    assert all_almost_equal([x, y, z],
                             [x_arr, y_arr, z_arr])
 
     # Second argument aliased with output
@@ -450,7 +450,7 @@ def _test_lincomb(fn, a, b):
 
     z_arr[:] = a * x_arr + b * z_arr
     fn.lincomb(a, x, b, z, out=z)
-    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+    assert all_almost_equal([x, y, z],
                             [x_arr, y_arr, z_arr])
 
     # Both arguments aliased with each other
@@ -458,7 +458,7 @@ def _test_lincomb(fn, a, b):
 
     z_arr[:] = a * x_arr + b * x_arr
     fn.lincomb(a, x, b, x, out=z)
-    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+    assert all_almost_equal([x, y, z],
                             [x_arr, y_arr, z_arr])
 
     # All aliased
@@ -466,7 +466,7 @@ def _test_lincomb(fn, a, b):
 
     z_arr[:] = a * z_arr + b * z_arr
     fn.lincomb(a, z, b, z, out=z)
-    assert all_almost_equal([x.asarray(), y.asarray(), z.asarray()],
+    assert all_almost_equal([x, y, z],
                             [x_arr, y_arr, z_arr])
 
 
@@ -549,8 +549,8 @@ def _test_unary_operator(spc, function):
     y_arr = function(x_arr)
     y = function(x)
 
-    assert all_almost_equal([x.asarray(), np.asarray(y)],
-                            [x_arr, np.asarray(y_arr)])
+    assert all_almost_equal([x, y],
+                            [x_arr, y_arr])
 
 
 def _test_binary_operator(spc, function):
@@ -561,8 +561,8 @@ def _test_binary_operator(spc, function):
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
 
-    assert all_almost_equal([x.asarray(), y.asarray(), np.asarray(z)],
-                            [x_arr, y_arr, np.asarray(z_arr)])
+    assert all_almost_equal([x, y, z],
+                            [x_arr, y_arr, z_arr])
 
 
 def test_operators(fn):
@@ -1057,7 +1057,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     np_result = ufunc(*in_arrays)
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*in_vectors)
-    assert all_almost_equal(np_result, np.asarray(odl_result))
+    assert all_almost_equal(np_result, odl_result)
 
     # Test type of output
     if n_out == 1:
@@ -1070,7 +1070,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     np_result = ufunc(*(in_arrays + out_arrays))
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*(in_vectors + out_vectors))
-    assert all_almost_equal(np_result, np.asarray(odl_result))
+    assert all_almost_equal(np_result, odl_result)
 
     # Test inplace actually holds:
     if n_out == 1:

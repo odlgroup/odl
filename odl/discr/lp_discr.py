@@ -427,6 +427,11 @@ class DiscreteLpVector(DiscretizationVector):
         """Cell volume of an underlying regular grid."""
         return self.space.cell_volume
 
+    @property
+    def order(self):
+        """Axis ordering for array flattening."""
+        return self.space.order
+
     def __setitem__(self, indices, values):
         """Set values of this vector.
 
