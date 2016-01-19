@@ -28,6 +28,12 @@ import pytest
 from odl.tomo.backends.stir_bindings import stir_projector_from_file
 
 
+pytestmark = pytest.mark.skipif(
+    "not pytest.config.getoption('--largescale')",
+    reason='Need --largescale option to run'
+)
+
+
 def test_from_file():
     # Set path to input files
     base = pth.join(pth.dirname(pth.abspath(__file__)), 'data', 'stir')
@@ -37,15 +43,15 @@ def test_from_file():
     # Create a STIR projector from file data.
     proj = stir_projector_from_file(volume_file, projection_file)
 
-    # Create shepp-logan phantom
-    vol = odl.util.shepp_logan(proj.domain, modified=True)
+    # Create SPECT phantom
+    vol = odl.util.derenzo_sources(proj.domain)
 
     # Project data
     projections = proj(vol)
 
     # Calculate operator norm for landweber
     op_norm_est_squared = proj.adjoint(projections).norm() / vol.norm()
-    omega = 0.5 / op_norm_est_squared
+    omega = 1.0 / op_norm_est_squared
 
     # Reconstruct using ODL
     recon = proj.domain.zero()
@@ -56,4 +62,4 @@ def test_from_file():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v --largescale'))

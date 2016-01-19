@@ -27,10 +27,17 @@ import odl.tomo as tomo
 import pytest
 import numpy as np
 
+
+pytestmark = pytest.mark.skipif(
+    "not pytest.config.getoption('--largescale')",
+    reason='Need --largescale option to run'
+)
+
+
 # Find the valid projectors
-projectors = []
+projectors = ['helical cuda']
 if tomo.ASTRA_AVAILABLE:
-    projectors = ['par2d cpu', 'cone2d cpu']
+    projectors += ['par2d cpu', 'cone2d cpu']
 if tomo.ASTRA_CUDA_AVAILABLE:
     projectors += ['par2d cuda', 'cone2d cuda',
                    'par3d cuda', 'cone3d cuda']
@@ -112,6 +119,25 @@ def projector(request):
         return tomo.DiscreteXrayTransform(discr_reco_space, geom,
                                           backend='astra_' + version)
 
+    elif geom == 'helical':
+        # Discrete reconstruction space
+        discr_reco_space = odl.uniform_discr([-20, -20, 0],
+                                             [20, 20, 40],
+                                             [100, 100, 100], dtype='float32')
+
+        # Geometry
+        n_angle = 700
+        angle_intvl = odl.Interval(0, 8 * 2 * np.pi)
+        dparams = odl.Rectangle([-30, -3], [30, 3])
+        agrid = odl.uniform_sampling(angle_intvl, n_angle)
+        dgrid = odl.uniform_sampling(dparams, [200, 20])
+        geom = tomo.HelicalConeFlatGeometry(angle_intvl, dparams, pitch=5.0,
+                                            src_radius=200, det_radius=100,
+                                            agrid=agrid, dgrid=dgrid)
+
+        # X-ray transform
+        return tomo.DiscreteXrayTransform(discr_reco_space, geom,
+                                          backend='astra_' + version)
     else:
         raise ValueError('param not valid')
 
@@ -127,11 +153,11 @@ def test_reconstruction(projector):
 
     # Calculate operator norm for landweber
     op_norm_est_squared = projector.adjoint(projections).norm() / vol.norm()
-    omega = 0.5 / op_norm_est_squared
+    omega = 1.0 / op_norm_est_squared
 
     # Reconstruct using ODL
     recon = projector.domain.zero()
-    odl.solvers.landweber(projector, recon, projections, niter=100,
+    odl.solvers.landweber(projector, recon, projections, niter=50,
                           omega=omega)
 
     # Make sure the result is somewhat close to the actual result.
@@ -139,4 +165,4 @@ def test_reconstruction(projector):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v --largescale'))

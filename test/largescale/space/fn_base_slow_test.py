@@ -31,7 +31,10 @@ import odl
 
 from odl.util.testutils import all_almost_equal, almost_equal
 
-pytestmark = pytest.mark.skipif("not odl.CUDA_AVAILABLE")
+pytestmark = pytest.mark.skipif(
+    "not pytest.config.getoption('--largescale')",
+    reason='Need --largescale option to run'
+)
 
 
 # Helpers to generate data
@@ -300,4 +303,4 @@ def test_operators(fn):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v --largescale'))

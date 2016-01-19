@@ -21,6 +21,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+import py.test
+
 from odl.space.cu_ntuples import CUDA_AVAILABLE
 from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
 
@@ -30,3 +32,10 @@ if not CUDA_AVAILABLE:
     collect_ignore.append('odl/space/cu_ntuples.py')
 if not PYWAVELETS_AVAILABLE:
     collect_ignore.append('odl/trafos/wavelet.py')
+
+def pytest_addoption(parser):
+    parser.addoption('--largescale', action='store_true',
+                     help='Run large and slow tests')
+
+    parser.addoption('--benchmark', action='store_true',
+                     help='Run benchmarks')
