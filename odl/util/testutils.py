@@ -31,6 +31,7 @@ import sys
 from time import time
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
+           'skip_if_no_largescale', 'skip_if_no_benchmark',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
            'skip_if_no_pywavelets')
 
@@ -127,7 +128,9 @@ def all_almost_equal_array(v1, v2, places):
     else:
         v2 = v2.__array__()
 
-    return np.all(np.isclose(v1, v2, rtol=10 ** (-places), equal_nan=True))
+    return np.all(np.isclose(v1, v2,
+                             rtol=10 ** (-places), atol=10 ** (-places),
+                             equal_nan=True))
 
 
 def all_almost_equal(iter1, iter2, places=None):
@@ -171,20 +174,39 @@ def is_subdict(subdict, dictionary):
     """`True` if all items of ``subdict`` are in ``dictionary``."""
     return all(item in dictionary.items() for item in subdict.items())
 
-
-def _pass(function):
-    """Trivial decorator used if pytest marks are not available."""
-    return function
-
 try:
+    # Try catch in case user does not have pytest
     import pytest
-    skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE",
-                                         reason='CUDA not available')
+
+    def _pass(function):
+        """Trivial decorator used if pytest marks are not available."""
+        return function
+
+    skip_if_no_cuda = pytest.mark.skipif(
+        "not odl.CUDA_AVAILABLE",
+        reason='CUDA not available'
+    )
+
     skip_if_no_pywavelets = pytest.mark.skipif(
         "not odl.trafos.wavelet.PYWAVELETS_AVAILABLE",
-        reason='Wavelet not available')
+        reason='Wavelet not available'
+    )
+
+    skip_if_no_largescale = pytest.mark.skipif(
+        "not pytest.config.getoption('--largescale')",
+        reason='Need --largescale option to run'
+    )
+
+    skip_if_no_benchmark = pytest.mark.skipif(
+        "not pytest.config.getoption('--benchmark')",
+        reason='Need --benchmark option to run'
+    )
+
 except ImportError:
-    skip_if_no_cuda = skip_if_no_pywavelets = _pass
+    skip_if_no_cuda = _pass
+    skip_if_no_pywavelets = _pass
+    skip_if_no_largescale = _pass
+    skip_if_no_benchmark = _pass
 
 
 class FailCounter(object):

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Test to make sure the FnBase spaces work with larger sizes."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -28,13 +29,10 @@ import numpy as np
 
 # ODL imports
 import odl
-
 from odl.util.testutils import all_almost_equal, almost_equal
 
-pytestmark = pytest.mark.skipif(
-    "not pytest.config.getoption('--largescale')",
-    reason='Need --largescale option to run'
-)
+
+pytestmark = odl.util.skip_if_no_largescale
 
 
 # Helpers to generate data
@@ -136,7 +134,7 @@ def test_setitem(fn):
         assert x[index] == -index
 
 
-@pytest.mark.xfail  # Expected to fail since inner scaling is not public
+@pytest.mark.xfail(reason='Expected to fail since inner scaling is not public')
 def test_inner(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
@@ -146,7 +144,7 @@ def test_inner(fn):
     assert almost_equal(x.inner(y), correct_inner, places=2)
 
 
-@pytest.mark.xfail  # Expected to fail since norm scaling is not public
+@pytest.mark.xfail(reason='Expected to fail since inner scaling is not public')
 def test_norm(fn):
     xarr, x = _vectors(fn)
 
@@ -156,7 +154,7 @@ def test_norm(fn):
     assert almost_equal(x.norm(), correct_norm, places=2)
 
 
-@pytest.mark.xfail  # Expected to fail since dist scaling is not public
+@pytest.mark.xfail(reason='Expected to fail since inner scaling is not public')
 def test_dist(fn):
     xarr, yarr, x, y = _vectors(fn, 2)
 
@@ -174,8 +172,9 @@ def _test_lincomb(fn, a, b):
     x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * y_arr
-    fn.lincomb(a, x, b, y, out=z)
-    assert all_almost_equal(z, z_arr, places=2)
+    z.lincomb(a, x, b, y)
+
+    assert all_almost_equal(z.asarray().ravel(z.order), z_arr, places=2)
 
 
 def test_lincomb(fn):
