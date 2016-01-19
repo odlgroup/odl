@@ -127,6 +127,9 @@ class DiscreteXrayTransform(Operator):
 
         weight = getattr(geometry.grid, 'cell_volume', 1.0)
 
+        print('\n\nXRAY TRAFO WEIGHT:{}\n'.format(weight))
+        print('domain stride:{}'.format(discr_dom.grid.stride))
+
         ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,
                                            weight=weight,
                                            dtype=discr_dom.dspace.dtype)
@@ -163,11 +166,13 @@ class DiscreteXrayTransform(Operator):
         """
         back, impl = self.backend.split('_')
         if back == 'astra':
+            # line integration weight
+            weight = float(self.domain.grid.stride[0])
             if impl == 'cpu':
-                return astra_cpu_forward_projector_call(
+                return weight * astra_cpu_forward_projector_call(
                     inp, self.geometry, self.range)
             elif impl == 'cuda':
-                return astra_cuda_forward_projector_call(
+                return weight * astra_cuda_forward_projector_call(
                     inp, self.geometry, self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
@@ -211,11 +216,13 @@ class DiscreteXrayTransformAdjoint(Operator):
         """
         back, impl = self.backend.split('_')
         if back == 'astra':
+            # angle interval weight
+            weight = float(self.forward.geometry.motion_grid.stride)
             if impl == 'cpu':
-                return astra_cpu_backward_projector_call(
+                return weight * astra_cpu_backward_projector_call(
                     inp, self.forward.geometry, self.range)
             elif impl == 'cuda':
-                return astra_cuda_backward_projector_call(
+                return weight * astra_cuda_backward_projector_call(
                     inp, self.forward.geometry, self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
