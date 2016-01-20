@@ -511,7 +511,7 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     # "I" means probably mathematically inconsistent. Some projectors are
     # not implemented, e.g. CPU 3d projectors in general. Using 'line'
     # raises Exception depending on parameters (number of pixels, voxels)
-    type_map_cpu = {'parallel': {'nearest': 'linear',
+    type_map_cpu = {'parallel': {'nearest': 'line',
                                  'linear': 'linear'},  # I
                     'fanflat': {'nearest': 'line_fanflat',
                                 'linear': 'line_fanflat'},  # I

@@ -59,17 +59,17 @@ det_radius = 500
 
 @skip_if_no_astra_cuda
 def test_xray_trafo_parallel2d():
-    """Test discrete X-ray transform with ASTRA CUDA and parallel 3D beam."""
+    """2D parallel-beam discrete X-ray transform with ASTRA CUDA."""
 
     # `DiscreteLp` volume space
-    discr_vol_space2 = odl.uniform_discr([0] * 2, [10] * 2, [5] * 2,
+    discr_vol_space2 = odl.uniform_discr([-5] * 2, [5] * 2, [5] * 2,
                                          dtype='float32')
 
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    agrid = odl.uniform_sampling(angle_intvl, 5)
+    angle_intvl = odl.Interval(0, 2 * np.pi) - np.pi / 4
+    agrid = odl.uniform_sampling(angle_intvl, 4)
 
-    dparams1 = odl.Interval(0, 10)
-    dgrid1 = odl.uniform_sampling(dparams1, 10)
+    dparams1 = odl.Interval(-11, 11)
+    dgrid1 = odl.uniform_sampling(dparams1, 11)
 
     # Geometry
     geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams1, agrid, dgrid1)
@@ -90,23 +90,93 @@ def test_xray_trafo_parallel2d():
     # Back projection
     Adg = A.adjoint(g)
 
+    # Scaling
+    # Af *= float(dgrid1.stride)
+    # Adg *= discr_vol_space2.grid.cell_volume
+    # Af = A(f) / float(A.range.grid.stride[1])
+
     inner_proj = Af.inner(g)
     inner_vol = f.inner(Adg)
-    r = inner_vol / inner_proj
+    r = inner_vol / inner_proj  # / float(agrid.stride)
 
-    # assert almost_equal(Af.inner(g), f.inner(Adg), 2)
-    print('\nvol stride :', A.domain.grid.stride)
-    print('proj stride:', A.range.grid.stride)
-
-    print('\ninner vol :', inner_vol)
+    print('\n')
+    print('angle grid = {}'.format(agrid.points().transpose() / np.pi))
+    print('vol stride :', discr_vol_space2.grid.stride)
+    print('proj stride:', geom.grid.stride)
+    print('inner vol :', inner_vol)
     print('inner proj:', inner_proj)
     print('ratios: {:.4f}, {:.4f}'.format(r, 1 / r))
     print('ratios-1: {:.4f}, {:.4f}'.format(abs(r - 1), abs(1 / r - 1)))
 
+    # print(dgrid1.points())
+    print(Af.asarray()[0])
+    print(f.norm(), f.space.grid.cell_volume, g.space.grid.cell_volume)
+
+
+@skip_if_no_astra_cuda
+def test_xray_trafo_fanflat():
+    """2D parallel-beam discrete X-ray transform with ASTRA CUDA."""
+
+    # Distances
+    src_radius = 100000
+    det_radius = 10
+
+    # `DiscreteLp` volume space
+    discr_vol_space2 = odl.uniform_discr([-5] * 2, [5] * 2, [5] * 2,
+                                         dtype='float32')
+
+    angle_intvl = odl.Interval(0, 2 * np.pi) - np.pi/4
+    agrid = odl.uniform_sampling(angle_intvl, 4)
+
+    dparams1 = odl.Interval(-10.5, 10.5)
+    dgrid1 = odl.uniform_sampling(dparams1, 21)
+
+    # Geometry
+    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams1, src_radius,
+                                    det_radius, agrid, dgrid1)
+
+    # X-ray transform
+    A = odl.tomo.DiscreteXrayTransform(discr_vol_space2, geom,
+                                       backend='astra_cpu')
+
+    # Domain element
+    f = A.domain.one()
+
+    # Forward projection
+    Af = A(f) * float(dgrid1.stride)
+
+    # Range element
+    g = A.range.one()
+
+    # Back projection
+    Adg = A.adjoint(g)
+
+    # Scaling
+    # Af *= float(dgrid1.stride)
+    # Adg *= discr_vol_space2.grid.cell_volume
+    # Af = A(f) / float(A.range.grid.stride[1])
+
+    inner_proj = Af.inner(g)
+    inner_vol = f.inner(Adg)
+    r = inner_vol / inner_proj # / float(agrid.stride)
+
+    print('\n')
+    print('angle grid = {}'.format(agrid.points().transpose()/np.pi))
+    print('vol stride :', discr_vol_space2.grid.stride)
+    print('proj stride:', geom.grid.stride)
+    print('mag = ', (src_radius+det_radius)/src_radius)
+    print('inner vol :', inner_vol)
+    print('inner proj:', inner_proj)
+    print('ratios: {:.4f}, {:.4f}'.format(r, 1 / r))
+    print('ratios-1: {:.4f}, {:.4f}'.format(abs(r - 1), abs(1 / r - 1)))
+
+    # print(dgrid1.points())
+    print(Af.asarray()[0])
+
 
 @skip_if_no_astra_cuda
 def test_xray_trafo_parallel3d():
-    """Parallel-beam X-ray transform with ASTRA CUDA."""
+    """3D parallel-beam discrete X-ray transform with ASTRA CUDA."""
 
     # Geometry
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams2, agrid, dgrid2)
@@ -133,11 +203,6 @@ def test_xray_trafo_parallel3d():
 
     # Test adjoint
     assert almost_equal(Af.inner(g), f.inner(Adg), 2)
-
-    print('\n')
-    print(Af.inner(g)/f.inner(Adg))
-    print(agrid.points()/np.pi)
-    Af.show(indices=np.s_[0, :, :], show=True)
 
 
 @pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE")
@@ -205,7 +270,7 @@ def test_xray_trafo_conebeam_helical():
     assert geom.pitch != 0
 
     # Test adjoint
-    assert almost_equal(Af.inner(g), f.inner(Adg), 2)
+    assert almost_equal(Af.inner(g), f.inner(Adg), 1)
 
 
 if __name__ == '__main__':
