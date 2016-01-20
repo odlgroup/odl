@@ -31,6 +31,7 @@ from odl.discr.lp_discr import DiscreteLp
 from odl.space import FunctionSpace, Ntuples, CudaNtuples
 from odl.operator.operator import Operator
 from odl.tomo.geometry.geometry import Geometry
+from odl.tomo.geometry.conebeam import HelicalConeFlatGeometry
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
     astra_cpu_forward_projector_call, astra_cpu_backward_projector_call,
@@ -39,8 +40,10 @@ from odl.tomo.backends import (
 
 _SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 
-__all__ = ('DiscreteXrayTransform', 'DiscreteXrayTransformAdjoint')
+__all__ = ('DiscreteXrayTransform', 'DiscreteXrayTransformAdjoint', )
 
+
+# TODO: DiscreteDivergentBeamTransform
 
 class DiscreteXrayTransform(Operator):
 
@@ -125,9 +128,11 @@ class DiscreteXrayTransform(Operator):
         # CHECKME: Is this the right weight?
 
         weight = getattr(geometry.grid, 'cell_volume', 1.0)
+        if isinstance(geometry, HelicalConeFlatGeometry):
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            weight /= ((src_radius + det_radius) / src_radius)**2
 
-        print('\n\nXRAY TRAFO WEIGHT:{}\n'.format(weight))
-        print('domain stride:{}'.format(discr_dom.grid.stride))
 
         ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,
                                            weight=weight,
