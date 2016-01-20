@@ -118,8 +118,8 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
     # Wrap data
     if ndim == 3:
         tmp = proj_space.element(np.rollaxis(astra.data3d.get(sino_id), 0, 3))
-        # line integration weight
-        tmp *= float(vol_data.space.grid.stride[0])
+        # 3D CUDA does not scale with line integration weight
+        tmp *= float(vol_data.space.grid.stride[0])  # isotropic voxel size
         if out is None:
             out = tmp
         else:

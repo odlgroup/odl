@@ -35,7 +35,7 @@ from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
 # Discrete reconstruction space
 xx = 5
-nn = 8
+nn = 5
 discr_vol_space3 = odl.uniform_discr([-xx] * 3, [xx] * 3, [nn] * 3,
                                      dtype='float32')
 discr_vol_space2 = odl.uniform_discr([-xx] * 2, [xx] * 2, [nn] * 2,
@@ -46,8 +46,8 @@ angle_intvl = odl.Interval(0, 2 * np.pi) - np.pi/4
 agrid = odl.uniform_sampling(angle_intvl, 4)
 
 # Detector
-yy = 2 * xx
-mm = 18
+yy = 11
+mm = 11
 dparams1 = odl.Interval(-yy, yy)
 dgrid1 = odl.uniform_sampling(dparams1, mm)
 dparams2 = odl.Rectangle([-yy, -yy], [yy, yy])
@@ -70,6 +70,9 @@ def test_xray_trafo_parallel2d():
 
     dparams1 = odl.Interval(-11, 11)
     dgrid1 = odl.uniform_sampling(dparams1, 11)
+    # dparams1 = odl.Interval(-10.5, 10.5)
+    # dgrid1 = odl.uniform_sampling(dparams1, 21)
+
 
     # Geometry
     geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams1, agrid, dgrid1)
@@ -110,7 +113,7 @@ def test_xray_trafo_parallel2d():
 
     # print(dgrid1.points())
     print(Af.asarray()[0])
-    print(f.norm(), f.space.grid.cell_volume, g.space.grid.cell_volume)
+    print(Adg.asarray()/float(agrid.stride))
 
 
 @skip_if_no_astra_cuda
@@ -203,6 +206,11 @@ def test_xray_trafo_parallel3d():
 
     # Test adjoint
     assert almost_equal(Af.inner(g), f.inner(Adg), 2)
+
+    print(discr_vol_space3.grid.stride)
+    print(geom.grid.stride)
+    print(Af.asarray()[0, :, np.floor(Af.shape[2]/2)])
+    print(Adg.asarray()[:, :, np.round(f.shape[2]/2)]/float(agrid.stride))
 
 
 @pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE")
