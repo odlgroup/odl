@@ -20,6 +20,10 @@ from __future__ import absolute_import
 
 __all__ = ()
 
+from . import advanced
+from .advanced import *
+__all__ += advanced.__all__
+
 from . import findroot
 from .findroot import *
 __all__ += findroot.__all__

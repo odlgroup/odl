@@ -19,6 +19,6 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-# from . import
-# from .newton import *
-# __all__ += newton.__all__
+from . import chambolle_pock
+from .chambolle_pock import *
+__all__ += chambolle_pock.__all__
