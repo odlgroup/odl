@@ -44,8 +44,6 @@ from builtins import super
 
 from odl.discr.lp_discr import uniform_discr
 from odl.operator.operator import Operator
-from odl.set.domain import Cuboid
-from odl.space.fspace import FunctionSpace
 
 try:
     import stir

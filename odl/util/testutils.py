@@ -31,11 +31,12 @@ import sys
 from time import time
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
+           'skip_if_no_largescale', 'skip_if_no_benchmark',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
            'skip_if_no_pywavelets')
 
 
-def _places(a, b, default=5):
+def _places(a, b, default=None):
     """Return 3 if one dtype is 'float32' or 'complex64', else 5."""
     dtype1 = getattr(a, 'dtype', object)
     dtype2 = getattr(b, 'dtype', object)
@@ -44,7 +45,7 @@ def _places(a, b, default=5):
     if dtype1 in small_dtypes or dtype2 in small_dtypes:
         return 3
     else:
-        return default
+        return default if default is not None else 5
 
 
 def almost_equal(a, b, places=None):
@@ -115,6 +116,23 @@ def all_equal(iter1, iter2):
     return True
 
 
+def all_almost_equal_array(v1, v2, places):
+    # Ravel if has order, only DiscreteLpVector has an order
+    if hasattr(v1, 'order'):
+        v1 = v1.__array__().ravel(v1.order)
+    else:
+        v1 = v1.__array__()
+
+    if hasattr(v2, 'order'):
+        v2 = v2.__array__().ravel(v2.order)
+    else:
+        v2 = v2.__array__()
+
+    return np.all(np.isclose(v1, v2,
+                             rtol=10 ** (-places), atol=10 ** (-places),
+                             equal_nan=True))
+
+
 def all_almost_equal(iter1, iter2, places=None):
     """`True` if all elements in ``a`` and ``b`` are almost equal."""
     try:
@@ -128,6 +146,9 @@ def all_almost_equal(iter1, iter2, places=None):
 
     if places is None:
         places = _places(iter1, iter2, None)
+
+    if hasattr(iter1, '__array__') and hasattr(iter2, '__array__'):
+        return all_almost_equal_array(iter1, iter2, places)
 
     try:
         it1 = iter(iter1)
@@ -153,20 +174,39 @@ def is_subdict(subdict, dictionary):
     """`True` if all items of ``subdict`` are in ``dictionary``."""
     return all(item in dictionary.items() for item in subdict.items())
 
-
-def _pass(function):
-    """Trivial decorator used if pytest marks are not available."""
-    return function
-
 try:
+    # Try catch in case user does not have pytest
     import pytest
-    skip_if_no_cuda = pytest.mark.skipif("not odl.CUDA_AVAILABLE",
-                                         reason='CUDA not available')
+
+    def _pass(function):
+        """Trivial decorator used if pytest marks are not available."""
+        return function
+
+    skip_if_no_cuda = pytest.mark.skipif(
+        "not odl.CUDA_AVAILABLE",
+        reason='CUDA not available'
+    )
+
     skip_if_no_pywavelets = pytest.mark.skipif(
         "not odl.trafos.wavelet.PYWAVELETS_AVAILABLE",
-        reason='Wavelet not available')
+        reason='Wavelet not available'
+    )
+
+    skip_if_no_largescale = pytest.mark.skipif(
+        "not pytest.config.getoption('--largescale')",
+        reason='Need --largescale option to run'
+    )
+
+    skip_if_no_benchmark = pytest.mark.skipif(
+        "not pytest.config.getoption('--benchmark')",
+        reason='Need --benchmark option to run'
+    )
+
 except ImportError:
-    skip_if_no_cuda = skip_if_no_pywavelets = _pass
+    skip_if_no_cuda = _pass
+    skip_if_no_pywavelets = _pass
+    skip_if_no_largescale = _pass
+    skip_if_no_benchmark = _pass
 
 
 class FailCounter(object):

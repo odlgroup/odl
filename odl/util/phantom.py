@@ -162,6 +162,16 @@ def _derenzo_sources_2d():
             [1.0, 0.023968, 0.023968, 0.88528, -0.11791, 0.0]]
 
 
+def _make_3d_cylinders(ellipses2d):
+    """Create 3d cylinders from ellipses."""
+    ellipses2d = np.asarray(ellipses2d)
+    ellipses3d = np.zeros((ellipses2d.shape[0], 10))
+    ellipses3d[:, [0, 1, 2, 4, 5, 7]] = ellipses2d
+    ellipses3d[:, 3] = 100000.0
+
+    return ellipses3d
+
+
 def _phantom_2d(space, ellipses):
     """Create a phantom in 2d space.
 
@@ -370,9 +380,14 @@ def derenzo_sources(space):
     """Create the PET/SPECT Derenzo sources phantom.
 
     The Derenzo phantom contains a series of circles of decreasing size.
+
+    In 3d the phantom is simply the 2d phantom extended in the z direction as
+    cylinders.
     """
     if space.ndim == 2:
         return _phantom_2d(space, _derenzo_sources_2d())
+    if space.ndim == 3:
+        return _phantom_3d(space, _make_3d_cylinders(_derenzo_sources_2d()))
     else:
         raise ValueError("Dimension not 2, no phantom available")
 
@@ -648,6 +663,7 @@ if __name__ == '__main__':
     discr = odl.uniform_discr([-2.5, -2.5], [2.5, 2.5], [n, n])
     submarine_phantom(discr, smooth=False).show()
     submarine_phantom(discr, smooth=True).show()
+    derenzo_sources(discr).show()
 
     # Shepp-logan 3d
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
