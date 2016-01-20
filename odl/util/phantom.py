@@ -162,7 +162,7 @@ def _derenzo_sources_2d():
 
 
 def _make_3d_cylinders(ellipses2d):
-    """ Create 3d cylinders from ellipses """
+    """Create 3d cylinders from ellipses."""
     ellipses2d = np.asarray(ellipses2d)
     ellipses3d = np.zeros((ellipses2d.shape[0], 10))
     ellipses3d[:, [0, 1, 2, 4, 5, 7]] = ellipses2d
@@ -381,7 +381,7 @@ def derenzo_sources(space):
     The Derenzo phantom contains a series of circles of decreasing size.
 
     In 3d the phantom is simply the 2d phantom extended in the z direction as
-    ellipses.
+    cylinders.
     """
     if space.ndim == 2:
         return _phantom_2d(space, _derenzo_sources_2d())
