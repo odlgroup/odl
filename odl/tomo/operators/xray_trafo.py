@@ -32,6 +32,7 @@ from odl.space import FunctionSpace, Ntuples, CudaNtuples
 from odl.operator.operator import Operator
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.geometry.conebeam import HelicalConeFlatGeometry
+from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
     astra_cpu_forward_projector_call, astra_cpu_backward_projector_call,
@@ -130,7 +131,11 @@ class DiscreteXrayTransform(Operator):
         if isinstance(geometry, HelicalConeFlatGeometry):
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
-            weight /= ((src_radius + det_radius) / src_radius)**2
+            weight /= ((src_radius + det_radius) / src_radius) ** 2
+        elif isinstance(geometry, FanFlatGeometry):
+            src_radius = geometry.src_radius
+            det_radius = geometry.det_radius
+            weight /= ((src_radius + det_radius) / src_radius)
 
         ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,
                                            weight=weight,
@@ -168,13 +173,11 @@ class DiscreteXrayTransform(Operator):
         """
         back, impl = self.backend.split('_')
         if back == 'astra':
-            # line integration weight
-            weight = float(self.domain.grid.stride[0])
             if impl == 'cpu':
-                return weight * astra_cpu_forward_projector_call(
+                return astra_cpu_forward_projector_call(
                     inp, self.geometry, self.range)
             elif impl == 'cuda':
-                return weight * astra_cuda_forward_projector_call(
+                return astra_cuda_forward_projector_call(
                     inp, self.geometry, self.range)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
