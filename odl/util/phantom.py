@@ -381,7 +381,7 @@ def derenzo_sources(space):
     The Derenzo phantom contains a series of circles of decreasing size.
 
     In 3d the phantom is simply the 2d phantom extended in the z direction as
-    ellipses.
+    cylinders.
     """
     if space.ndim == 2:
         return ellipse_phantom_2d(space, _derenzo_sources_2d())
