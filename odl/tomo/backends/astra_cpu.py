@@ -109,8 +109,11 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     algo_id = astra_algorithm('forward', ndim, vol_id, sino_id, proj_id,
                               impl='cpu')
 
-    # Run algorithm and delete it
+    # Run algorithm
     astra.algorithm.run(algo_id)
+
+    # 2D CPU does not scale with line integration weight
+    out *= float(vol_data.space.grid.stride[0])  # isotropic voxel size
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
