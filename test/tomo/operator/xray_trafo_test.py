@@ -30,30 +30,34 @@ import pytest
 # Internal
 import odl
 from odl.util.testutils import almost_equal
-
+from odl.tomo import ASTRA_CUDA_AVAILABLE
+from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
 # Discrete reconstruction space
-discr_vol_space3 = odl.uniform_discr([-10] * 3, [10] * 3, [10] * 3,
+xx = 5
+nn = 8
+discr_vol_space3 = odl.uniform_discr([-xx] * 3, [xx] * 3, [nn] * 3,
                                      dtype='float32')
-discr_vol_space2 = odl.uniform_discr([-10] * 2, [10] * 2, [10] * 2,
+discr_vol_space2 = odl.uniform_discr([-xx] * 2, [xx] * 2, [nn] * 2,
                                      dtype='float32')
 
 # Angle
-angle_intvl = odl.Interval(0, 2 * np.pi)
-agrid = odl.uniform_sampling(angle_intvl, 10)
+angle_intvl = odl.Interval(0, 2 * np.pi) - np.pi/4
+agrid = odl.uniform_sampling(angle_intvl, 4)
 
 # Detector
-dparams1 = odl.Interval(-20, 20)
-dgrid1 = odl.uniform_sampling(dparams1, 25)
-dparams2 = odl.Rectangle([-20, -20], [20, 20])
-dgrid2 = odl.uniform_sampling(dparams2, [25] * 2)
+yy = 2 * xx
+mm = 18
+dparams1 = odl.Interval(-yy, yy)
+dgrid1 = odl.uniform_sampling(dparams1, mm)
+dparams2 = odl.Rectangle([-yy, -yy], [yy, yy])
+dgrid2 = odl.uniform_sampling(dparams2, [mm] * 2)
 
 # Distances
 src_radius = 1000
 det_radius = 500
 
-
-@pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE")
+@skip_if_no_astra_cuda
 def test_xray_trafo_parallel2d():
     """Test discrete X-ray transform with ASTRA CUDA and parallel 3D beam."""
 
@@ -100,9 +104,9 @@ def test_xray_trafo_parallel2d():
     print('ratios-1: {:.4f}, {:.4f}'.format(abs(r - 1), abs(1 / r - 1)))
 
 
-@pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE")
+@skip_if_no_astra_cuda
 def test_xray_trafo_parallel3d():
-    """Test discrete X-ray transform with ASTRA CUDA and parallel 3D beam."""
+    """Parallel-beam X-ray transform with ASTRA CUDA."""
 
     # Geometry
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams2, agrid, dgrid2)
@@ -123,16 +127,24 @@ def test_xray_trafo_parallel3d():
     # Back projection
     Adg = A.adjoint(g)
 
+    # Assure not to use unit cell sizes
+    assert discr_vol_space3.grid.cell_volume != 1
+    assert geom.grid.cell_volume != 1
+
+    # Test adjoint
     assert almost_equal(Af.inner(g), f.inner(Adg), 2)
 
+    print('\n')
+    print(Af.inner(g)/f.inner(Adg))
+    print(agrid.points()/np.pi)
+    Af.show(indices=np.s_[0, :, :], show=True)
 
-# @pytest.mark.xfail  # Expected to fail since scaling of adjoint is wrong.
+
 @pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE")
 def test_xray_trafo_conebeam_circular():
-    """Test discrete X-ray transform using ASTRA with CUDA."""
+    """Cone-beam trafo with circular acquisition and ASTRA CUDA backend."""
 
     # Geometry
-    # geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, agrid, dgrid)
     geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams2,
                                              src_radius, det_radius,
                                              agrid, dgrid2,
@@ -141,7 +153,6 @@ def test_xray_trafo_conebeam_circular():
     # X-ray transform
     A = odl.tomo.DiscreteXrayTransform(discr_vol_space3, geom,
                                        backend='astra_cuda')
-
     # Domain element
     f = A.domain.one()
 
@@ -154,18 +165,47 @@ def test_xray_trafo_conebeam_circular():
     # Back projection
     Adg = A.adjoint(g)
 
-    inner_proj = Af.inner(g)
-    inner_vol = f.inner(Adg)
-    r = inner_vol / inner_proj
-    mag = (src_radius + det_radius) / src_radius
-    print('\nvol stride :', discr_vol_space3.grid.stride)
-    print('proj strid e:', geom.grid.stride)
-    print('mag:', mag)
-    print('inner vol :', inner_vol)
-    print('inner proj:', inner_proj)
-    print('ratios: {:.4f}, {:.4f}'.format(r, 1 / r))
-    print('ratios-1: {:.4f}, {:.4f}'.format(abs(r - 1), abs(1 / r - 1)))
-    # assert almost_equal(Af.inner(g), f.inner(Adg), 2)
+    # Assure not to use unit cell sizes
+    assert discr_vol_space3.grid.cell_volume != 1
+    assert geom.grid.cell_volume != 1
+
+    # Test adjoint
+    assert almost_equal(Af.inner(g), f.inner(Adg), 1)
+
+
+# @pytest.mark.xfail  # Expected to fail since scaling of adjoint is wrong.
+@skip_if_no_astra_cuda
+def test_xray_trafo_conebeam_helical():
+    """Cone-beam trafo with helical acquisition and ASTRA CUDA backend."""
+
+    # Geometry
+    geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams2,
+                                            src_radius, det_radius, pitch=2,
+                                            agrid=agrid, dgrid=dgrid2,
+                                            axis=[0, 0, 1])
+
+    # X-ray transform
+    A = odl.tomo.DiscreteXrayTransform(discr_vol_space3, geom,
+                                       backend='astra_cuda')
+    # Domain element
+    f = A.domain.one()
+
+    # Forward projection
+    Af = A(f)
+
+    # Range element
+    g = A.range.one()
+
+    # Back projection
+    Adg = A.adjoint(g)
+
+    # Assure not to use trivial pitch or cell sizes
+    assert discr_vol_space3.grid.cell_volume != 1
+    assert geom.grid.cell_volume != 1
+    assert geom.pitch != 0
+
+    # Test adjoint
+    assert almost_equal(Af.inner(g), f.inner(Adg), 2)
 
 
 if __name__ == '__main__':
