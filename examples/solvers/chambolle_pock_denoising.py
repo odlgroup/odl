@@ -33,28 +33,25 @@ import odl
 from odl.solvers import chambolle_pock_solver, f_cc_prox_l2_tv, g_prox_none
 
 
-# TODO: change test image
-impath = '../temp/barbara.png'
-
 # Read the image
-im = np.rot90(scipy.misc.imread(impath)[::2, ::2], 3)
+im = np.rot90(scipy.misc.lena()[::2, ::2], 3)
 shape = im.shape
-# Resacel to [0, 1]
+# Rescale max to 1
 im = im / np.max(im[:])
-# Add noise
-imnoise = im + np.random.normal(0, 0.05, shape)
-imnoise = imnoise - np.min(imnoise[:])
 
 # Discretized spaces
 discr_space = odl.uniform_discr([0, 0], shape, shape)
 
 # Original image
 orig = discr_space.element(im)
-# g0.show(title='original image')
+
+# Add noise
+im = im + np.random.normal(0, 0.05, shape)
+# Rescale back to [0, 1]
+im = (im - np.min(im)) / (np.max(im) - np.min(im))
 
 # Data: noisy image
-noisy = discr_space.element(imnoise)
-# g.show(title='noisy image')
+noisy = discr_space.element(im)
 
 # Gradient operator
 grad = odl.DiscreteGradient(discr_space, method='forward')
@@ -68,12 +65,17 @@ K_norm = 1.1 * odl.operator.oputils.power_method_opnorm(K, 200)
 # Display partial
 fig = plt.figure('iterations')
 partial = odl.solvers.util.ForEachPartial(
-    lambda (result, iter): result.show(
-        title='iteration number:{}'.format(iter), fig=fig))
+    lambda result: result.show(fig=fig))
+partial &= odl.solvers.util.PrintIterationPartial()
 
+# Run algorithms
 rec = chambolle_pock_solver(K, f_cc_prox_l2_tv(K.range, noisy, lam=1 / 16),
                             g_prox_none(K.domain),
                             sigma=1 / K_norm, tau=1 / K_norm,
-                            niter=40, partial=partial)[0]
+                            niter=50, partial=partial)[0]
+
+# Display images
+orig.show(title='original image')
+noisy.show(title='noisy image')
 rec.show(title='reconstruction')
 plt.show()
