@@ -100,7 +100,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     """
     # Importing pyplot takes ~2 sec, only import when needed.
     import matplotlib.pyplot as plt
-
+    plt.hold(True)
     args_re = []
     args_im = []
     dsp_kwargs = {}
@@ -327,12 +327,13 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     if show:
         if updatefig:
-            plt.show(block=False)
+            plt.pause(0.01)
+            # plt.show(block=False)
         else:
             plt.show()
 
     if updatefig:
-        plt.draw()
+        # plt.draw()
         plt.pause(0.01)
 
     if saveto is not None:
