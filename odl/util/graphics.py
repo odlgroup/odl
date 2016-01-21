@@ -327,7 +327,6 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         else:
             plt.show()
 
-    if updatefig:
         plt.draw()
         plt.pause(0.01)
 
