@@ -576,7 +576,7 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None):
         for ax, arr in zip(axes, alist):
             # Meshgrid-style slice
             slc = [None] * ndarr.ndim
-            slc[ax] = np.s_[:]
+            slc[ax] = slice(None)
             factor = factor * arr[slc]
 
         ndarr *= factor
@@ -584,15 +584,10 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None):
     else:
         # Hybrid approach
 
-        # Get the axis to spare for the final multiplication. Fastest is
-        # the first axis, followed by the last. Middle axes are slowest.
-        min_ax = np.min(axes)
-        max_ax = np.max(axes)
-        if min_ax < len(axes) - max_ax:
-            last_ax = min_ax
-        else:
-            last_ax = max_ax
-
+        # Get the axis to spare for the final multiplication, the one
+        # with the largest stride.
+        axis_order = np.argsort(ndarr.strides)
+        last_ax = axis_order[-1]
         last_arr = alist[axes.index(last_ax)]
 
         # Build the semi-big array and multiply

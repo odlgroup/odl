@@ -111,20 +111,20 @@ def test_fast_1d_tensor_mult():
     fast_1d_tensor_mult(test_arr, [2, y, z])
     assert all_equal(test_arr, simple_mult_3(np.ones(1) * 2, y, z))
 
-    # Reduced multiplication
-    def simple_mult_2(x, z, ny):
-        return x[:, None, None] * np.ones((1, ny, 1)) * z[None, None, :]
+    # Reduced multiplication, axis 0 not contained
+    def simple_mult_2(y, z, nx):
+        return np.ones((nx, 1, 1)) * y[None, :, None] * z[None, None, :]
 
     shape = (2, 3, 4)
     x, y, z = (np.arange(size, dtype='float64') for size in shape)
-    true_result = simple_mult_2(x, z, 3)
+    true_result = simple_mult_2(y, z, 2)
 
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [x, z], axes=(0, 2))
+    fast_1d_tensor_mult(test_arr, [y, z], axes=(1, 2))
     assert all_equal(test_arr, true_result)
 
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [z, x], axes=(2, 0))
+    fast_1d_tensor_mult(test_arr, [z, y], axes=(2, 1))
     assert all_equal(test_arr, true_result)
 
 
