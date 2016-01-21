@@ -61,9 +61,9 @@ def chambolle_pock_solver(K, f_cc_prox, g_prox, sigma, tau, theta=1,
     tau : positive `float`
         Convergence proofed for ``||K||_2^2 * sigma * tau < 1``
     theta : `float` in [0, 1], optional
-        Relaxation paramter. Default: 1
+        Relaxation paramter
     niter : `int`, optional
-        Number of iterations. Default: 100
+        Number of iterations
     partial : `Partial`, optional
         If not `None` the object passed executes code per iteration,
         e.g. plotting each iterate
@@ -79,7 +79,7 @@ def chambolle_pock_solver(K, f_cc_prox, g_prox, sigma, tau, theta=1,
     article on convex optimization problem prototyping for image
     reconstruction in computed tomography by `Sidky et al.`_.
 
-    .. _Chambolle and Pock: http://dx.doi.org/10.1007/s10851-010-0251-1/
+    .. _Chambolle and Pock: http://dx.doi.org/10.1007/s10851-010-0251-1
     .. _diagonal preconditioning: http://dx.doi.org/10.1109/ICCV.2011.6126441
     .. _Sidky et al.: http://stacks.iop.org/0031-9155/57/i=10/a=3065
     """
@@ -106,9 +106,8 @@ def chambolle_pock_solver(K, f_cc_prox, g_prox, sigma, tau, theta=1,
         # Overrelaxation in the primal variable x
         xbar = x + theta * (x - xold)
 
-        # TODO: decide on what to send
         if partial is not None:
-            partial.send((x[0], nn))
+            partial.send(x)
 
     return x
 

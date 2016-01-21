@@ -111,8 +111,8 @@ conv(discr_phantom, out=g)
 # Optionally pass partial to the solver to display intermediate results
 fig = plt.figure('intermediate results')
 partial = odl.solvers.util.ForEachPartial(
-    lambda (result, iter): result.show(title='iteraton:{}'.format(iter),
-                                       fig=fig))
+    lambda result: result.show(fig=fig))
+partial &= odl.solvers.util.PrintIterationPartial()
 
 # Run algorithms
 rec = chambolle_pock_solver(prod_op,
@@ -120,8 +120,8 @@ rec = chambolle_pock_solver(prod_op,
                             g_prox_none(prod_op.domain),
                             sigma=1 / prod_op_norm,
                             tau=1 / prod_op_norm,
-                            niter=400,
-                            partial=None)[0]
+                            niter=100,
+                            partial=partial)[0]
 
 # Display images
 discr_phantom.show(title='original image')
