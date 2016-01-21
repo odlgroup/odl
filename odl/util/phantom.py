@@ -26,7 +26,8 @@ standard_library.install_aliases()
 # External
 import numpy as np
 
-__all__ = ('cuboid', 'derenzo_sources', 'shepp_logan', 'submarine_phantom')
+__all__ = ('cuboid', 'derenzo_sources', 'indicate_proj_axis', 'shepp_logan',
+           'submarine_phantom')
 
 
 def _shepp_logan_ellipse_2d():
@@ -159,6 +160,16 @@ def _derenzo_sources_2d():
             [1.0, 0.02387, 0.02387, 0.78932, -0.11793, 0.0],
             [1.0, 0.023572, 0.023572, 0.83686, -0.20134, 0.0],
             [1.0, 0.023968, 0.023968, 0.88528, -0.11791, 0.0]]
+
+
+def _make_3d_cylinders(ellipses2d):
+    """Create 3d cylinders from ellipses."""
+    ellipses2d = np.asarray(ellipses2d)
+    ellipses3d = np.zeros((ellipses2d.shape[0], 10))
+    ellipses3d[:, [0, 1, 2, 4, 5, 7]] = ellipses2d
+    ellipses3d[:, 3] = 100000.0
+
+    return ellipses3d
 
 
 def _phantom_2d(space, ellipses):
@@ -369,9 +380,14 @@ def derenzo_sources(space):
     """Create the PET/SPECT Derenzo sources phantom.
 
     The Derenzo phantom contains a series of circles of decreasing size.
+
+    In 3d the phantom is simply the 2d phantom extended in the z direction as
+    cylinders.
     """
     if space.ndim == 2:
         return _phantom_2d(space, _derenzo_sources_2d())
+    if space.ndim == 3:
+        return _phantom_3d(space, _make_3d_cylinders(_derenzo_sources_2d()))
     else:
         raise ValueError("Dimension not 2, no phantom available")
 
@@ -490,12 +506,13 @@ def _submarine_phantom_2d_nonsmooth(discr):
     return out.ufunc.minimum(1)
 
 
-def cuboid(space, begin, end):
+def cuboid(discr_space, begin, end):
     """Rectangular cuboid.
 
     Parameters
     ----------
-    space : discrete space
+    discr_space : `Discretization`
+        Discretized space in which the phantom is supposed to be created
     begin : array-like or `float` in [0, 1]
         The lower left corner of the cuboid within the space grid relative
         to the extend of the grid
@@ -505,8 +522,8 @@ def cuboid(space, begin, end):
 
     Returns
     -------
-    out : discrete space element
-       Returns an element in ``space``
+    phantom : `LinearSpaceVector`
+        Returns an element in ``discr_space``
 
     Example
     -------
@@ -521,8 +538,8 @@ def cuboid(space, begin, end):
      [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
      [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
     """
-    ndim = space.ndim
-    shape = space.shape
+    ndim = discr_space.ndim
+    shape = discr_space.shape
 
     if np.isscalar(begin):
         begin = (begin,) * ndim
@@ -542,7 +559,93 @@ def cuboid(space, begin, end):
 
     phan[slice1] = 1
 
-    return space.element(phan)
+    return discr_space.element(phan)
+
+
+def indicate_proj_axis(discr_space, scale_structures=0.5):
+    """Phantom indicating along which axis it is projected.
+
+    The number (n) of rectangles in a parallel-beam projection along a main
+    axis (0, 1, or 2) indicates the projection to be along the (n-1)the
+    dimension.
+
+    Parameters
+    ----------
+    discr_space : `Discretization`
+        Discretized space in which the phantom is supposed to be created
+    scale_structures : positive `float` in (0, 1]
+        Scales objects (cube, cuboids)
+
+    Returns
+    -------
+    phantom : `LinearSpaceVector`
+        Returns an element in ``discr_space``
+
+    Example
+    -------
+    >>> import odl
+    >>> space = odl.uniform_discr([0]*3, [1]*3, [8, 8, 8])
+    >>> phan = indicate_proj_axis(space).asarray()
+    >>> print(np.sum(phan, 0))
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  3.  3.  0.  0.  0.]
+     [ 0.  0.  0.  3.  3.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    >>> print(np.sum(phan, 1))
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  1.  1.  0.  0.  0.]
+     [ 0.  0.  0.  1.  1.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    >>> print(np.sum(phan, 2))
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  2.  0.  0.  0.]
+     [ 0.  0.  0.  2.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    """
+    if not 0 < scale_structures <= 1:
+        raise ValueError('scale structure ({}) is not in (0, 1]'
+                         ''.format(scale_structures))
+
+    shape = discr_space.shape
+    phan = np.zeros(shape)
+    shape = np.array(shape) - 1
+    cen = np.round(0.5 * shape)
+    dx = np.floor(scale_structures * 0.25 * shape)
+    dx[dx == 0] = 1
+
+    # cube of size 2 * dx
+    x0 = (cen - 3 * dx)[0]
+    x, y, z = cen - 1 * dx
+    phan[x0:x, y:-y, z:-z] = 1
+
+    # 1st cuboid of size (dx[0], dx[1], 2 * dx[2])
+    x0 = (cen + 1 * dx)[1]
+    x1 = (cen + 2 * dx)[1]
+    y0 = cen[1]
+    z = (cen - dx)[2]
+    phan[x0:x1, y0:-y, z:-z] = 1
+
+    # 2nd cuboid of (dx[0], dx[1], 2 * dx[2]) touching the first diagonally
+    # at a long edge
+    x0 = (cen + 2 * dx)[1]
+    x1 = (cen + 3 * dx)[1]
+    y1 = cen[1]
+    z = (cen - dx)[2]
+    phan[x0:x1, y:y1, z:-z] = 1
+
+    return discr_space.element(phan)
 
 
 if __name__ == '__main__':
@@ -560,6 +663,7 @@ if __name__ == '__main__':
     discr = odl.uniform_discr([-2.5, -2.5], [2.5, 2.5], [n, n])
     submarine_phantom(discr, smooth=False).show()
     submarine_phantom(discr, smooth=True).show()
+    derenzo_sources(discr).show()
 
     # Shepp-logan 3d
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])

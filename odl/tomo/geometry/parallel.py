@@ -32,7 +32,7 @@ from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
-from odl.tomo.util.trafos import euler_matrix, perpendicular_vector
+from odl.tomo.util.utility import euler_matrix, perpendicular_vector
 
 __all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dGeometry')
 
@@ -49,7 +49,7 @@ class ParallelGeometry(Geometry):
 
         Parameters
         ----------
-        ndim : positive int
+        ndim : positive `int`
             The dimensionality of the problem
         angle_intvl : `Interval` or 1-dim. `IntervalProd`
             The motion parameters given in radians

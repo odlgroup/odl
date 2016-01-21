@@ -32,10 +32,8 @@ if ASTRA_AVAILABLE:
 # Internal
 import odl
 from odl.tomo.util.testutils import skip_if_no_astra
-from odl.util.testutils import is_subdict, all_equal
+from odl.util.testutils import is_subdict
 
-
-# TODO: test scaling of ASTRA projectors
 
 def _discrete_domain(ndim, interp):
     """Create `DiscreteLp` space with isotropic grid stride.
@@ -163,8 +161,6 @@ def test_proj_geom_parallel_2d():
 
     assert is_subdict(correct_subdict, proj_geom)
     assert 'ProjectionAngles' in proj_geom
-    a0 = 0.5 * 2. / 5
-    assert all_equal(proj_geom['ProjectionAngles'], np.linspace(a0, 2 - a0, 5))
 
 
 @skip_if_no_astra
@@ -359,25 +355,22 @@ def test_astra_algorithm():
                                  'none')
     with pytest.raises(ValueError):
         odl.tomo.astra_algorithm('backward', ndim, vol_id, sino_id,
-                                 proj_id=None,
-                                 impl='cpu')
+                                 proj_id=None, impl='cpu')
     alg_id = odl.tomo.astra_algorithm(direction, ndim, vol_id, sino_id,
                                       proj_id, impl)
     astra.algorithm.delete(alg_id)
 
-    ndim = 2
     # 2D CPU
+    ndim = 2
     impl = 'cpu'
     for direction in {'forward', 'backward'}:
         alg_id = odl.tomo.astra_algorithm(direction, ndim, vol_id, sino_id,
-                                          proj_id,
-                                          impl)
+                                          proj_id, impl)
         astra.algorithm.delete(alg_id)
 
     # 2D CUDA
     proj_id = odl.tomo.astra_projector('nearest', vol_geom_2d, proj_geom_2d,
-                                       ndim=ndim,
-                                       impl='cuda')
+                                       ndim=ndim, impl='cuda')
 
     # 2D CUDA FP
     alg_id = odl.tomo.astra_algorithm('forward', ndim, vol_id, sino_id,
@@ -393,18 +386,15 @@ def test_astra_algorithm():
     vol_id = odl.tomo.astra_data(vol_geom_3d, 'volume', ndim=ndim)
     sino_id = odl.tomo.astra_data(proj_geom_3d, 'projection', ndim=ndim)
     proj_id = odl.tomo.astra_projector('nearest', vol_geom_3d, proj_geom_3d,
-                                       ndim=ndim,
-                                       impl='cuda')
+                                       ndim=ndim, impl='cuda')
 
     with pytest.raises(NotImplementedError):
         odl.tomo.astra_algorithm(direction, ndim, vol_id, sino_id,
-                                 proj_id=proj_id,
-                                 impl='cpu')
+                                 proj_id=proj_id, impl='cpu')
 
     for direction in {'forward', 'backward'}:
         odl.tomo.astra_algorithm(direction, ndim, vol_id, sino_id,
-                                 proj_id=proj_id,
-                                 impl='cuda')
+                                 proj_id=proj_id, impl='cuda')
 
 
 @skip_if_no_astra
@@ -436,10 +426,9 @@ def test_geom_to_vec():
     assert vec.shape == (angle_grid.ntotal, 12)
 
     # HELICAL CONE FLAT
-    spiral_pitch_factor = 1
+    pitch = 1
     geom_hcf = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                                det_rad,
-                                                spiral_pitch_factor,
+                                                det_rad, pitch,
                                                 agrid=angle_grid,
                                                 dgrid=det_grid)
     vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_hcf)

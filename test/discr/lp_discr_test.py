@@ -31,18 +31,17 @@ from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
                                 skip_if_no_cuda)
 
 
-# TODO: element from function - waiting for vectorization
 def _array(fn):
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(fn.dtype, np.floating):
-        return np.random.rand(fn.size).astype(fn.dtype, copy=False)
+        arr = np.random.rand(fn.size)
     elif np.issubdtype(fn.dtype, np.integer):
-        return np.random.randint(0, 10, fn.size).astype(fn.dtype, copy=False)
+        arr = np.random.randint(0, 10, fn.size)
     elif np.issubdtype(fn.dtype, np.complexfloating):
-        return (np.random.rand(fn.size) +
-                1j * np.random.rand(fn.size)).astype(fn.dtype, copy=False)
+        arr = np.random.rand(fn.size) + 1j * np.random.rand(fn.size)
     else:
         raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
+    return arr.astype(fn.dtype, copy=False)
 
 
 def _element(fn):

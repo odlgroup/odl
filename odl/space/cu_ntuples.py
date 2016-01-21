@@ -483,7 +483,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
         See also
         --------
-        NtuplesBaseUFuncs
+        odl.util.ufuncs.NtuplesBaseUFuncs
             Base class for ufuncs in `NtuplesBase` spaces.
         """
         return CudaNtuplesUFuncs(self)

@@ -24,7 +24,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-import numpy as np
 try:
     import astra
 except ImportError:
@@ -36,7 +35,7 @@ from odl.space.ntuples import Ntuples
 from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                            astra_volume_geometry, astra_data,
                                            astra_projector, astra_algorithm)
-from odl.tomo.geometry import Geometry, FanFlatGeometry
+from odl.tomo.geometry import Geometry
 
 __all__ = ('astra_cpu_forward_projector_call',
            'astra_cpu_backward_projector_call')
@@ -95,10 +94,6 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     # Create astra geometries
     vol_geom = astra_volume_geometry(vol_data.space)
     proj_geom = astra_projection_geometry(geometry)
-
-    # for fanflat geometry an angle offset is needed
-    if proj_geom['type'] == 'fanflat':
-        proj_geom['ProjectionAngles'] += np.pi
 
     # Create ASTRA data structures
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
