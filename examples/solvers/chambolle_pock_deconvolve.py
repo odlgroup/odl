@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 
 # Internal
 import odl
-from odl.solvers import chambolle_pock_solver, f_dual_prox_l2_tv, g_prox_none
+from odl.solvers import chambolle_pock_solver, f_cc_prox_l2_tv, g_prox_none
 
 
 class Convolution(odl.Operator):
@@ -67,14 +67,14 @@ def kernel(x):
 def adjkernel(x):
     return kernel((-x[0], -x[1]))
 
+# Continuous definition of problem
+cont_space = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
+kernel_space = odl.FunctionSpace(cont_space.domain - cont_space.domain)
+
 # Discretization parameters
 n = 50
 npoints = np.array([n + 1, n + 1])
 npoints_kernel = np.array([2 * n + 1, 2 * n + 1])
-
-# Continuous definition of problem
-cont_space = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
-kernel_space = odl.FunctionSpace(cont_space.domain - cont_space.domain)
 
 # Discretized spaces
 discr_space = odl.uniform_discr_fromspace(cont_space, npoints)
@@ -84,40 +84,47 @@ discr_kernel_space = odl.uniform_discr_fromspace(kernel_space, npoints_kernel)
 disc_kernel = discr_kernel_space.element(kernel)
 disc_adjkernel = discr_kernel_space.element(adjkernel)
 
-# Create operator
+# Load phantom
+discr_phantom = odl.util.phantom.shepp_logan(discr_space, modified=True)
+
+# Initialize convolution operator
 conv = Convolution(discr_space, disc_kernel, disc_adjkernel)
 
-odl.diagnostics.OperatorTest(conv).run_tests()
+# Run diagnosticts to test the adjoint
+# odl.diagnostics.OperatorTest(conv).run_tests()
 
-phantom = odl.util.phantom.shepp_logan(discr_space, modified=True)
-
-phantom.show(title='phantom')
-
-# Data
-g = discr_space.element()
-conv(phantom, out=g)
-
-g.show(title='data')
-
-# Gradient operator
+# Initialize gradient operator
 grad = odl.DiscreteGradient(discr_space, method='forward')
 
 # Matrix of operators
-K = odl.ProductSpaceOperator([[conv], [grad]])
+prod_op = odl.ProductSpaceOperator([[conv], [grad]])
 
-# Operator norm
-K_norm = odl.operator.oputils.power_method_opnorm(K, 50)
-print(K_norm)
-K_norm *= 1.1
-# K_norm = 1.1 * 30  # add 10 percent to the above value
+# Operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
+# prod_op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(prod_op, 50)
+# print(prod_op_norm)
+prod_op_norm = 77
 
-# Display partial
+# Create data: convoluted image
+g = discr_space.element()
+conv(discr_phantom, out=g)
+
+# Optionally pass partial to the solver to display intermediate results
+fig = plt.figure('intermediate results')
 partial = odl.solvers.util.ForEachPartial(
-    lambda (result, iter): result.show(title='iteraton:{}'.format(iter)))
+    lambda (result, iter): result.show(title='iteraton:{}'.format(iter),
+                                       fig=fig))
 
-rec = chambolle_pock_solver(K, f_dual_prox_l2_tv(K.range, g, lam=0.0001),
-                            g_prox_none(K.domain),
-                            tau=1/K_norm, sigma=1/K_norm,
-                            niter=200, partial=None)
-rec.show(title='reconstruction')
+# Run algorithms
+rec = chambolle_pock_solver(prod_op,
+                            f_cc_prox_l2_tv(prod_op.range, g, lam=0.0001),
+                            g_prox_none(prod_op.domain),
+                            sigma=1 / prod_op_norm,
+                            tau=1 / prod_op_norm,
+                            niter=400,
+                            partial=None)[0]
+
+# Display images
+discr_phantom.show(title='original image')
+g.show(title='convolved image')
+rec.show(title='deconvolved image')
 plt.show()
