@@ -32,12 +32,13 @@ import pytest
 # ODL imports
 import odl
 from odl.trafos.fourier import (
-    reciprocal, _shift_list, dft_preprocess_data, dft_postprocess_data,
+    reciprocal, dft_preprocess_data, dft_postprocess_data,
     pyfftw_call, DiscreteFourierTransform, _TYPE_MAP_R2C)
 from odl.util.testutils import all_almost_equal, all_equal
 from odl.util.utility import is_real_dtype
 
 
+# TODO: add reciprocal test with axes
 pytestmark = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE")
 
 

@@ -69,7 +69,7 @@ def _shift_list(shift, length):
     return shift_lst
 
 
-def reciprocal(grid, shift=True, halfcomplex=False):
+def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     """Return the reciprocal of the given regular grid.
 
     This function calculates the reciprocal (Fourier/frequency space)
@@ -116,6 +116,10 @@ def reciprocal(grid, shift=True, halfcomplex=False):
         If `True`, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
         each axis.
+    axes : sequence of `int`, optional
+        Dimensions in which to calculate the reciprocal. The sequence
+        must have the same length as ``shift``. `None` means all axes
+        in ``grid``.
     halfcomplex : `bool`, optional
         If `True`, return the half of the grid with last coordinate
         less than zero. This is related to the fact that for real-valued
@@ -127,50 +131,59 @@ def reciprocal(grid, shift=True, halfcomplex=False):
     recip : `odl.RegularGrid`
         The reciprocal grid
     """
-    # TODO: axes
-    shift_lst = _shift_list(shift, grid.ndim)
-    rmin = np.empty_like(grid.min_pt)
-    rmax = np.empty_like(grid.max_pt)
-    rsamples = list(grid.shape)
+    # TODO: santiy checks
+    if axes is None:
+        axes = list(range(grid.ndim))
 
+    # List indicating shift or not per "active" axis, same length as axes
+        shift_lst = _shift_list(shift, len(axes))
+
+    # Full-length vectors
     stride = grid.stride
     shape = np.array(grid.shape)
+    rmin = grid.min_pt.copy()
+    rmax = grid.max_pt.copy()
+    rshape = list(shape)
 
-    # Shifted axes
-    shift = np.where(shift_lst)
-    rmin[shift] = -pi / stride[shift]
+    # Shifted axes (full length to avoid ugly double indexing)
+    shifted = np.zeros(grid.ndim, dtype=bool)
+    shifted[axes] = shift_lst
+    rmin[shifted] = -pi / stride[shifted]
     # Length min->max increases by double the shift, so we
     # have to compensate by a full stride
-    rmax[shift] = (-rmin[shift] - 2 * pi / (stride[shift] * shape[shift]))
+    rmax[shifted] = (-rmin[shifted] -
+                     2 * pi / (stride[shifted] * shape[shifted]))
 
     # Non-shifted axes
-    no_shift = np.where(np.logical_not(shift_lst))
-    rmin[no_shift] = (-1.0 + 1.0 / shape[no_shift]) * pi / stride[no_shift]
-    rmax[no_shift] = -rmin[no_shift]
+    not_shifted = np.zeros(grid.ndim, dtype=bool)
+    not_shifted[axes] = np.logical_not(shift_lst)
+    rmin[not_shifted] = ((-1.0 + 1.0 / shape[not_shifted]) *
+                         pi / stride[not_shifted])
+    rmax[not_shifted] = -rmin[not_shifted]
 
     # Change last axis shape and max if halfcomplex
     if halfcomplex:
-        rsamples[-1] = shape[-1] // 2 + 1
+        rshape[axes[-1]] = shape[axes[-1]] // 2 + 1
 
         # - Odd and not shifted or even and shifted -> 0
         # - Odd and shifted -> - stride / 2
         # - Even and not shifted -> + stride / 2
-        odd = shape[-1] % 2 == 1
-        shifted = shift_lst[-1]
-        half_rstride = pi / (shape[-1] * stride[-1])
+        last_odd = shape[axes[-1]] % 2 == 1
+        last_shifted = shift_lst[-1]
+        half_rstride = pi / (shape[axes[-1]] * stride[axes[-1]])
 
-        if odd:
-            if shifted:
-                rmax[-1] = -half_rstride
+        if last_odd:
+            if last_shifted:
+                rmax[axes[-1]] = -half_rstride
             else:
-                rmax[-1] = 0
+                rmax[axes[-1]] = 0
         else:
-            if shifted:
-                rmax[-1] = 0
+            if last_shifted:
+                rmax[axes[-1]] = 0
             else:
-                rmax[-1] = half_rstride
+                rmax[axes[-1]] = half_rstride
 
-    return RegularGrid(rmin, rmax, rsamples, as_midp=False)
+    return RegularGrid(rmin, rmax, rshape, as_midp=False)
 
 
 def dft_preprocess_data(dfunc, shift=True):
