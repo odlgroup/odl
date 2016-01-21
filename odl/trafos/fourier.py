@@ -136,7 +136,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
         axes = list(range(grid.ndim))
 
     # List indicating shift or not per "active" axis, same length as axes
-        shift_lst = _shift_list(shift, len(axes))
+    shift_lst = _shift_list(shift, len(axes))
 
     # Full-length vectors
     stride = grid.stride

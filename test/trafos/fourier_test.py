@@ -239,6 +239,33 @@ def test_reciprocal_nd_shift_list():
     assert all_almost_equal(rgrid[n // 2], [0] * 3)
 
 
+def test_reciprocal_nd_axes():
+
+    cube = odl.Cuboid([0] * 3, [1] * 3)
+    grid = odl.uniform_sampling(cube, num_nodes=(3, 4, 5), as_midp=True)
+    s = grid.stride
+    n = np.array(grid.shape)
+    axes_list = [[1, -1], [0], [0, 2, 1], [2, 0]]
+
+    for axes in axes_list:
+        active = np.zeros(grid.ndim, dtype=bool)
+        active[axes] = True
+        inactive = np.logical_not(active)
+
+        true_recip_stride = np.empty(grid.ndim)
+        true_recip_stride[active] = 2 * pi / (s[active] * n[active])
+        true_recip_stride[inactive] = s[inactive]
+
+        # Without shift altogether
+        rgrid = reciprocal(grid, shift=False, axes=axes, halfcomplex=False)
+
+        assert all_equal(rgrid.shape, n)
+        assert all_almost_equal(rgrid.stride, true_recip_stride)
+        assert all_almost_equal(rgrid.min_pt[active], -rgrid.max_pt[active])
+        assert all_equal(rgrid.min_pt[inactive], grid.min_pt[inactive])
+        assert all_equal(rgrid.max_pt[inactive], grid.max_pt[inactive])
+
+
 def test_reciprocal_nd_halfcomplex():
 
     cube = odl.Cuboid([0] * 3, [1] * 3)
