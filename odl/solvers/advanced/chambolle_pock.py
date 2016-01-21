@@ -27,14 +27,16 @@ from builtins import super
 
 # Internal
 from odl.operator.operator import Operator
+from odl.operator.pspace_ops import ProductSpaceOperator
 
-__all__ = ('chambolle_pock_solver', 'f_dual_prox_l2_tv', 'g_prox_none')
+__all__ = ('chambolle_pock_solver', 'f_cc_prox_l2_tv', 'g_prox_none')
 
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
+# TODO: add positivity constraint
 
-def chambolle_pock_solver(K, f_dual_prox, g_prox, tau, sigma, theta=1,
+def chambolle_pock_solver(K, f_cc_prox, g_prox, sigma, tau, theta=1,
                           niter=100, partial=None):
     """Chambolle-Pock aglgorithms for convex optimization problems.
 
@@ -45,10 +47,26 @@ def chambolle_pock_solver(K, f_dual_prox, g_prox, tau, sigma, theta=1,
 
     Parameters
     ----------
+    K : `Operator` or `ProductSpaceOperator`
+    f_cc_prox : `function`
+       Factory function which, evaluated at ``sigma``, returns the proximal
+       operator of F^*. Domain and range of the returned proximal operator
+       is the range of ``K``.
+    g_prox : `function`
+        Factory function which, evaluated at ``tau``, returns the proximal
+       operator of ``G``. Domain and range of the returned proximal operator
+       is the domain of ``K``.
+    sigma : positive `float`
+        Convergence proofed for ``||K||_2^2 * sigma * tau < 1``
+    tau : positive `float`
+        Convergence proofed for ``||K||_2^2 * sigma * tau < 1``
+    theta : `float` in [0, 1], optional
+        Relaxation paramter. Default: 1
     niter : `int`, optional
-        Number of iterations
+        Number of iterations. Default: 100
     partial : `Partial`, optional
-        Object executing code per iteration, e.g. plotting each iterate
+        If not `None` the object passed executes code per iteration,
+        e.g. plotting each iterate
 
     Returns
     -------
@@ -65,28 +83,37 @@ def chambolle_pock_solver(K, f_dual_prox, g_prox, tau, sigma, theta=1,
     .. _diagonal preconditioning: http://dx.doi.org/10.1109/ICCV.2011.6126441
     .. _Sidky et al.: http://stacks.iop.org/0031-9155/57/i=10/a=3065
     """
-    x = K.domain.one()
-    xbar = x.copy()
+    # Initialize the primal and dual variable
+    x = K.domain.zero()
     y = K.range.zero()
+    # Relaxation variable
+    xbar = x.copy()
 
-    f_dual_prox_sigma = f_dual_prox(sigma)
+    # Initialize the proximal operator of the convex conjugate of functional F
+    f_cc_prox_sigma = f_cc_prox(sigma)
+    # Initialize the proximal operator of functional G
     g_prox_tau = g_prox(tau)
+    # Adjoint of the product space operator
     Kadjoint = K.adjoint
 
-    for _ in range(niter):
+    for nn in range(niter):
+        # Copy required for relaxation
         xold = x.copy()
-        f_dual_prox_sigma(y + sigma * K(xbar), out=y)
+        # Gradient descent in the dual variable y
+        f_cc_prox_sigma(y + sigma * K(xbar), out=y)
+        # Gradient descent in the primal variable x
         g_prox_tau(x - tau * Kadjoint(y), out=x)
+        # Overrelaxation in the primal variable x
         xbar = x + theta * (x - xold)
 
         # TODO: decide on what to send
         if partial is not None:
-            partial.send((x[0], _))
+            partial.send((x[0], nn))
 
     return x
 
 
-def f_dual_prox_l2_tv(space, g, lam):
+def f_cc_prox_l2_tv(space, g, lam):
     """Function for the proximal operator with l2-data plus TV-regularization.
 
     Factory function which provides a function to initialize the proximal
@@ -101,14 +128,15 @@ def f_dual_prox_l2_tv(space, g, lam):
 
         K = (A, grad)^T
 
-    The domain and range of the proximal operator are given by the range of
-    ``K``.
+    The proximal operator is mapping from a vector space X to its dual space
+    X^*. We assume X to be Hilbert spaces which is self-dual. Here, the domain
+    and range of the proximal operator are given by the range of ``K``.
 
     Parameters
     ----------
     space : `ProductSpace`
-       Product space of the range of forward operator ``A`` and of the range
-       of the gradient operator i.e. a product space of the image space
+        Product space of the range of forward operator ``A`` and of the range
+        of the gradient operator i.e. a product space of the image space
     g : `DiscreteLpVector`
         Element in the range of the forward operator ``A``
     lam : positive `float`
@@ -144,16 +172,12 @@ def f_dual_prox_l2_tv(space, g, lam):
 
                 Parameters
                 ----------
-                sigma
-
-                Returns
-                -------
-
+                sigma : positive `float`
                 """
                 self.sigma = sigma
                 super().__init__(domain=space, range=space)
 
-            def _call(self, x, out=None):
+            def _call(self, x, out):
                 """Apply the operator to ``x`` and stores the result in
                 ``out``"""
 
@@ -191,15 +215,15 @@ def f_dual_prox_l2_tv(space, g, lam):
 def g_prox_none(space):
     """Function to create the proximal operator of the constraining functional.
 
-    This factory function which provides a function to initialize the
-    proximal operator for the functional which accounts for constraints on
-    the image ``x``.
-
+    Factory function which provides a function to initialize the proximal
+    operator of the functional ``G`` which accounts for constraints on the
+    primal variable ``x``.
 
     Parameters
     ----------
     space : `DiscreteLp`
-        Image domain
+        Vector space related to the primal variable ``x``. It is given by
+        the domain of the combined product space operator ``K``.
 
     Returns
     -------
@@ -208,7 +232,7 @@ def g_prox_none(space):
     """
 
     def make_prox(tau):
-        """Returns an instance of the proximal operator.
+        """Return an instance of the proximal operator.
 
         Parameters
         ----------
@@ -218,8 +242,7 @@ def g_prox_none(space):
         Returns
         -------
         prox_op : `Operator`
-            Proximal operator initialized with ``sigma``
-
+            Proximal operator
         """
 
         class _prox_op(Operator):
@@ -227,12 +250,23 @@ def g_prox_none(space):
             """The proximal operator. """
 
             def __init__(self, tau):
+                """Initialize the proximal operator.
+
+                Parameters
+                ----------
+                tau : positive `float`
+                    Unused. Introduced to have a common interface
+            """
                 self.tau = tau
                 super().__init__(domain=space, range=space)
 
-            def _call(self, x, out=None):
-                """TODO"""
+            def _call(self, x, out):
+                """Return the input
 
+                Parameters
+                ----------
+                x : element in ``space``
+                """
                 out.assign(x)
 
         return _prox_op(tau)
