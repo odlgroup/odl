@@ -31,6 +31,9 @@ from odl.operator.operator import Operator
 __all__ = ('chambolle_pock_solver', 'f_dual_prox_l2_tv', 'g_prox_none')
 
 
+# TODO: add dual gap as convergence measure
+# TODO: diagonal preconditioning
+
 def chambolle_pock_solver(K, f_dual_prox, g_prox, tau, sigma, theta=1,
                           niter=100, partial=None):
     """Chambolle-Pock aglgorithms for convex optimization problems.
@@ -71,9 +74,8 @@ def chambolle_pock_solver(K, f_dual_prox, g_prox, tau, sigma, theta=1,
     Kadjoint = K.adjoint
 
     for _ in range(niter):
-
         xold = x.copy()
-        f_dual_prox_sigma(y + sigma * K(xbar), out = y)
+        f_dual_prox_sigma(y + sigma * K(xbar), out=y)
         g_prox_tau(x - tau * Kadjoint(y), out=x)
         xbar = x + theta * (x - xold)
 
@@ -151,7 +153,7 @@ def f_dual_prox_l2_tv(space, g, lam):
                 self.sigma = sigma
                 super().__init__(domain=space, range=space)
 
-            def _call(self, x, out):
+            def _call(self, x, out=None):
                 """Apply the operator to ``x`` and stores the result in
                 ``out``"""
 
@@ -228,7 +230,7 @@ def g_prox_none(space):
                 self.tau = tau
                 super().__init__(domain=space, range=space)
 
-            def _call(self, x, out):
+            def _call(self, x, out=None):
                 """TODO"""
 
                 out.assign(x)
