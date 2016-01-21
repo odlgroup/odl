@@ -33,7 +33,7 @@ import pytest
 import odl
 from odl.trafos.fourier import (
     reciprocal, dft_preprocess_data, dft_postprocess_data,
-    pyfftw_call, DiscreteFourierTransform, _TYPE_MAP_R2C)
+    pyfftw_call, FourierTransform, _TYPE_MAP_R2C)
 from odl.util.testutils import all_almost_equal, all_equal
 from odl.util.utility import is_real_dtype
 
@@ -343,50 +343,6 @@ def test_dft_preprocess_data_with_axes():
     dft_preprocess_data(dfunc, shift=True, axes=axes)
 
 
-@pytest.mark.xfail(reason='Function rewritten, new test necessary')
-def test_dft_postprocess_data():
-
-    shape = (2, 3, 4)
-    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape,
-                                    field=odl.ComplexNumbers())
-
-    # With shift
-    rgrid = reciprocal(space_discr.grid, shift=True)
-    freq_cube = rgrid.convex_hull()
-    recip_space_discr = odl.DiscreteLp(
-        odl.FunctionSpace(freq_cube, field=odl.ComplexNumbers()),
-        rgrid, odl.Cn(np.prod(shape)))
-
-    correct_arr = []
-    x0 = space_discr.grid.min_pt
-    xi_0, rstride, shape = rgrid.min_pt, rgrid.stride, rgrid.shape
-    for k in product(range(shape[0]), range(shape[1]), range(shape[2])):
-        correct_arr.append(np.exp(-1j * np.dot(x0, xi_0 + rstride * k)))
-
-    dfunc = recip_space_discr.one()
-    dft_postprocess_data(dfunc, x0)
-
-    assert all_almost_equal(dfunc.ntuple, correct_arr)
-
-    # Without shift
-    rgrid = reciprocal(space_discr.grid, shift=False)
-    freq_cube = rgrid.convex_hull()
-    recip_space_discr = odl.DiscreteLp(
-        odl.FunctionSpace(freq_cube, field=odl.ComplexNumbers()),
-        rgrid, odl.Cn(np.prod(shape)))
-
-    correct_arr = []
-    x0 = space_discr.grid.min_pt
-    xi_0, rstride, shape = rgrid.min_pt, rgrid.stride, rgrid.shape
-    for k in product(range(shape[0]), range(shape[1]), range(shape[2])):
-        correct_arr.append(np.exp(-1j * np.dot(x0, xi_0 + rstride * k)))
-
-    dfunc = recip_space_discr.one()
-    dft_postprocess_data(dfunc, x0)
-
-    assert all_almost_equal(dfunc.ntuple, correct_arr)
-
-
 def _params_from_dtype(dt):
     if is_real_dtype(dt):
         halfcomplex = True
@@ -668,7 +624,7 @@ def test_dft_range(exponent, dtype):
     space_discr = odl.uniform_discr(0, 1, shape, exponent=exponent,
                                     impl='numpy', dtype=dtype, field=field)
 
-    dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
+    dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
     halfcomplex = True if is_real_dtype(dtype) else False
     assert dft.range.grid == reciprocal(dft.domain.grid,
@@ -682,7 +638,7 @@ def test_dft_range(exponent, dtype):
     space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, exponent=exponent,
                                     impl='numpy', dtype=dtype, field=field)
 
-    dft = DiscreteFourierTransform(space_discr, halfcomplex=True, shift=True)
+    dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
     halfcomplex = True if is_real_dtype(dtype) else False
     assert dft.range.grid == reciprocal(dft.domain.grid,
@@ -691,10 +647,8 @@ def test_dft_range(exponent, dtype):
     assert dft.range.exponent == conj(exponent)
 
 
-@pytest.mark.xfail(reason='Wrong scaling and shift issue')
-def test_dft_with_known_functions():
+def test_dft_with_known_pairs_1d():
 
-    # 1d
     # Characteristic function of [0, 1], its Fourier transform is
     # given by 1j * (exp(-1j * y) - 1) / y
     def char_interval(x):
@@ -711,11 +665,23 @@ def test_dft_with_known_functions():
                         _at_small_args(x)) / np.sqrt(2 * np.pi)
 
     discr = odl.uniform_discr(-2, 2, 64, impl='numpy')
-    dft = DiscreteFourierTransform(discr)
+    dft = FourierTransform(discr)
     func = dft.domain.element(char_interval)
     func_true_ft = dft.range.element(char_interval_ft)
     func_dft = dft(func)
     assert all_almost_equal(func_dft, func_true_ft)
+
+    # Gaussian function, will be mapped to itself. Truncation error is
+    # relatively large, though.
+    def gaussian(x):
+        return np.exp(-x ** 2 / 2)
+
+    discr = odl.uniform_discr(-10, 10, 128, impl='numpy')
+    dft = FourierTransform(discr)
+    func = dft.domain.element(gaussian)
+    func_true_ft = dft.range.element(gaussian)
+    func_dft = dft(func)
+    assert all_almost_equal(func_dft, func_true_ft, places=2)
 
 
 if __name__ == '__main__':

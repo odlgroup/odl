@@ -35,7 +35,7 @@ except ImportError:
     PYFFTW_AVAILABLE = False
 
 # Internal
-from odl.discr.grid import RegularGrid, sparse_meshgrid
+from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import DiscreteLp, dspace_type
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
@@ -44,7 +44,7 @@ from odl.space.fspace import FunctionSpace
 from odl.util.utility import is_real_dtype, fast_1d_tensor_mult
 
 
-__all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
+__all__ = ('FourierTransform', 'InverseFourierTransform',
            'pyfftw_call', 'dft_preprocess_data', 'dft_postprocess_data',
            'PYFFTW_AVAILABLE')
 
@@ -61,7 +61,7 @@ def _shift_list(shift, length):
     try:
         shift_list = [bool(s) for s in shift]
         if len(shift_list) != length:
-            raise ValueError('Expected {} entries in shift list, got {}.'
+            raise ValueError('Expected {} entries in shift sequence, got {}.'
                              ''.format(length, len(shift_list)))
     except TypeError:
         shift_list = [bool(shift)] * length
@@ -182,6 +182,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
             else:
                 rmax[axes[-1]] = half_rstride
 
+    # TODO: specify as_midp per axis, not supported currently
     return RegularGrid(rmin, rmax, rshape, as_midp=False)
 
 
@@ -260,11 +261,10 @@ def _interp_kernel_ft(norm_freqs, interp):
     function returns
 
         :math:`\widehat{\phi}(x) =
-        (2\pi)^{-1/2}\, s\, \mathrm{sinc}^k(\pi \\xi)`
+        (2\pi)^{-1/2}\, \mathrm{sinc}^k(\pi \\xi)`
 
     where :math:`k = 1` for 'nearest', :math:`k = 2` for 'linear' and
-    :math:`k = 3` for 'cubic' interpolation, and :math:`s` is the
-    stride of the real space grid.
+    :math:`k = 3` for 'cubic' interpolation.
 
     Parameters
     ----------
@@ -289,19 +289,21 @@ def _interp_kernel_ft(norm_freqs, interp):
         raise RuntimeError
 
 
-def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, interp):
+def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
+                         interp):
     """Post-process the Fourier-space data after DFT.
 
     This function multiplies the given data with the separable
     function
 
         :math:`q(\\xi) = e^{-i x_0^{\mathrm{T}}\\xi} \cdot
-        \widehat{\Phi}(\\bar\\xi)`,
+        s\, \widehat{\Phi}(\\bar\\xi)`,
 
     where :math:`x_0` and :math:`\\xi_0` are the minimum coodinates of
-    the real space and reciprocal grids, respectively, and
+    the real space and reciprocal grids, respectively,
     :math:`\widehat{\Phi}(\\bar\\xi)` is the separable FT of the
-    interpolation kernel. In discretized form, the exponential part
+    interpolation kernel, and :math:`s` is the stride of the real
+    space grid. In discretized form, the exponential part
     of this function becomes for each axis separately an array
 
         :math:`q_k = e^{-i x_0
@@ -333,6 +335,8 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, interp):
         have the same length as ``shifts``.
     orig_shape : sequence of positive `int`
         Shape of the original array
+    orig_stride : sequence of positive `float`
+        Stride of the original array
     interp : `str`
         Interpolation scheme used in real space
 
@@ -389,7 +393,8 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, interp):
 
         freqs = np.linspace(fmin, fmax, num=len_dft)
 
-        onedim_arr *= _interp_kernel_ft(freqs, interp)
+        stride = orig_stride[ax]
+        onedim_arr *= stride * _interp_kernel_ft(freqs, interp)
         onedim_arrs.append(onedim_arr)
 
     if dfunc.space.order == 'C':
@@ -422,7 +427,7 @@ def _pyfftw_destroys_input(flags, direction, halfcomplex, ndim):
 
 
 def _pyfftw_check_in_out(arr_in, arr_out, axes, halfcomplex, direction):
-    """Raise an error if anything is not ok."""
+    """Raise an error if anything is not ok with in and out."""
     if len(set(axes)) != len(axes):
         raise ValueError('Duplicate axes are not allowed.')
 
@@ -749,7 +754,7 @@ class PyfftwTransform(Operator):
         # TODO: Implement zero padding
 
 
-class DiscreteFourierTransform(Operator):
+class FourierTransform(Operator):
 
     """Discretized Fourier transform between discrete Lp spaces.
 
@@ -811,7 +816,7 @@ class DiscreteFourierTransform(Operator):
             if it is equal to 2.0, this operator has an adjoint which
             is equal to the inverse.
         axes : sequence of `int`, optional
-            Dimensions in which a transform is to be calculated.
+            Dimensions along which to take the transform.
             Default: all axes
         halfcomplex : `bool`, optional
             If `True`, calculate only the negative frequency part
@@ -825,16 +830,15 @@ class DiscreteFourierTransform(Operator):
 
             Default: `True`
 
-        shift : `bool` or iterable, optional
+        shift : `bool` or sequence of `bool`, optional
             If `True`, the reciprocal grid is shifted by half a stride in
-            the negative direction.
-            With a boolean array or iterable, this option is applied
-            separately on each axis. At least ``dom.grid.ndim``
-            values must be provided.
-
-            This option only applies to 'uni-to-uni' transforms.
-
+            the negative direction. With a boolean sequence, this option
+            is applied separately to each axis.
+            If a sequence is provided, it must have the same length as
+            ``axes`` if supplied.
             Default: `True`
+
+            This option only applies to 'uniform-to-uniform' transforms.
 
         Notes
         -----
@@ -854,6 +858,8 @@ class DiscreteFourierTransform(Operator):
                 'Only Numpy-based data spaces are supported, got {}.'
                 ''.format(dom.dspace))
 
+        self._axes = list(kwargs.pop('axes', range(dom.ndim)))
+
         # Check exponents
         if dom.exponent < 1:
             raise ValueError('domain exponent {} < 1 not allowed.'
@@ -871,14 +877,14 @@ class DiscreteFourierTransform(Operator):
             else:
                 self._halfcomplex = bool(kwargs.pop('halfcomplex', True))
 
-            self._shift = bool(kwargs.pop('shift', True))
+            self._shifts = _shift_list(kwargs.pop('shift', True),
+                                       length=len(self.axes))
         else:
             raise NotImplementedError('irregular grids not yet supported.')
 
         # Calculate range
-        # TODO: axes
-        recip_grid = reciprocal(dom.grid, shift=self._shift,
-                                halfcomplex=self._halfcomplex)
+        recip_grid = reciprocal(dom.grid, shift=self.shifts,
+                                halfcomplex=self._halfcomplex, axes=self.axes)
 
         # Always complex space
         ran_fspace = FunctionSpace(recip_grid.convex_hull(), ComplexNumbers())
@@ -894,34 +900,74 @@ class DiscreteFourierTransform(Operator):
                                      exponent=conj_exp)
 
         ran = DiscreteLp(ran_fspace, recip_grid, ran_dspace, exponent=conj_exp)
-
         super().__init__(dom, ran, linear=True)
 
-    def _call(self, x, out, **kwargs):
-        """Raw out-of-place evaluation method.
+        self._fftw_plan = None
 
-        TODO: write doc
+    def _call(self, x, out, **kwargs):
+        """Implement ``self(x, out)``.
+
+        Parameters
+        ----------
+        x : domain element-like
+            Discretized function to transform
+        out : range element
+            Element to which the output is written
+        planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
+            Flag for the amount of effort put into finding an optimal
+            FFTW plan. See the `FFTW doc on planner flags
+            <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
+        planning_timelimit : `float`, optional
+            Limit planning time to roughly this amount of seconds.
+            Default: `None` (no limit)
+        threads : `int`, optional
+            Number of threads to use. Default: 1
         """
-        # TODO: custom axes
-        # TODO: handle return value of pyfftw_call, maybe an init kwarg?
         # TODO: Implement version using Numpy FFT
         # TODO: Implement zero padding
 
-        # Always use the 'halfcomplex' option given during init, not the
-        # one which may have been specified in kwargs.
+        # We pop some kwargs options here so that we always use the ones
+        # given during init or implicitly assumed.
+        kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
+        kwargs.pop('normalise_idft', None)
 
         # We're always modifying the input, so a copy is unavoidable
         x_cpy = x.copy()
-        dft_preprocess_data(x_cpy, shift=self._shift)
-        pyfftw_call(x_cpy.asarray(), out.asarray(), direction='forward',
-                    halfcomplex=self._halfcomplex, **kwargs)
-        dft_postprocess_data(out, self.domain.grid.min_pt)
+
+        # Pre-processing before calculating the sums
+        dft_preprocess_data(x_cpy, shift=self.shifts, axes=self.axes)
+
+        # The actual call to the FFT library. We store the plan for re-use.
+        self._fftw_plan = pyfftw_call(
+            x_cpy.asarray(), out.asarray(), direction='forward',
+            halfcomplex=self.halfcomplex, axes=self.axes, **kwargs)
+
+        # Post-processing accounting for shift, scaling and interpolation
+        dft_postprocess_data(out, self.domain.grid.min_pt, shifts=self.shifts,
+                             axes=self.axes, orig_shape=self.domain.shape,
+                             orig_stride=self.domain.grid.stride,
+                             interp=self.domain.interp)
         return out
 
     @property
+    def axes(self):
+        """Axes along the FT is calculated by this operator."""
+        return self._axes
+
+    @property
+    def halfcomplex(self):
+        """Return `True` if the last transform axis is halved."""
+        return self._halfcomplex
+
+    @property
+    def shifts(self):
+        """Return the boolean list indicating shifting per axis."""
+        return self._shifts
+
+    @property
     def adjoint(self):
-        """The adjoint wavelet transform."""
+        """The adjoint Fourier transform."""
         if self.domain.exponent == 2.0:
             return self.inverse
         else:
@@ -930,12 +976,12 @@ class DiscreteFourierTransform(Operator):
 
     @property
     def inverse(self):
-        """The inverse wavelet transform."""
+        """The inverse Fourier transform."""
         # TODO: add appropriate arguments
         raise NotImplementedError
 
 
-class DiscreteFourierTransformInverse(Operator):
+class InverseFourierTransform(Operator):
     pass
 
 
