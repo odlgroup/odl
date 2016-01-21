@@ -24,12 +24,14 @@ standard_library.install_aliases()
 
 # External
 from abc import ABCMeta, abstractmethod
+from time import time
 
 # Internal
 from odl.util.utility import with_metaclass
 
 __all__ = ('Partial', 'StorePartial', 'ForEachPartial',
-           'PrintIterationPartial', 'PrintNormPartial', 'ShowPartial')
+           'PrintIterationPartial', 'PrintIterationTimePartial',
+           'PrintNormPartial', 'ShowPartial')
 
 
 class Partial(with_metaclass(ABCMeta, object)):
@@ -106,7 +108,7 @@ class ForEachPartial(Partial):
 
 class PrintIterationPartial(Partial):
 
-    """Print the interation count."""
+    """Print the iteration count."""
 
     def __init__(self):
         self.iter = 0
@@ -142,6 +144,23 @@ class ShowPartial(Partial):
     def send(self, x):
         """Show the current iteration."""
         self.fig = x.show(fig=self.fig, show=True, *self.args, **self.kwargs)
+
+
+class PrintIterationTimePartial(Partial):
+
+    """Print the iteration count and the time elapsed to the previous."""
+
+    def __init__(self):
+        self.iter = 0
+        self.t = time()
+
+    def send(self, _):
+        """Print current iteration count and time elapsed to the previous."""
+        t = time()
+        print("iter = {}: time elapsed = {:<5.03f} s".format(
+            self.iter, t - self.t))
+        self.iter += 1
+        self.t = t
 
 
 if __name__ == '__main__':
