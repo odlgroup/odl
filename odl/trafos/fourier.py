@@ -59,14 +59,14 @@ if platform.system() == 'Linux':
 def _shift_list(shift, length):
     """Turn a single boolean or sequence into a list of given length."""
     try:
-        shift_lst = [bool(s) for s in shift]
-        if len(shift_lst) != length:
+        shift_list = [bool(s) for s in shift]
+        if len(shift_list) != length:
             raise ValueError('Expected {} entries in shift list, got {}.'
-                             ''.format(length, len(shift_lst)))
+                             ''.format(length, len(shift_list)))
     except TypeError:
-        shift_lst = [bool(shift)] * length
+        shift_list = [bool(shift)] * length
 
-    return shift_lst
+    return shift_list
 
 
 def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
@@ -118,8 +118,8 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
         each axis.
     axes : sequence of `int`, optional
         Dimensions in which to calculate the reciprocal. The sequence
-        must have the same length as ``shift``. `None` means all axes
-        in ``grid``.
+        must have the same length as ``shift`` if the latter is given
+        as a sequence. `None` means all axes in ``grid``.
     halfcomplex : `bool`, optional
         If `True`, return the half of the grid with last coordinate
         less than zero. This is related to the fact that for real-valued
@@ -131,12 +131,11 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     recip : `odl.RegularGrid`
         The reciprocal grid
     """
-    # TODO: santiy checks
     if axes is None:
         axes = list(range(grid.ndim))
 
     # List indicating shift or not per "active" axis, same length as axes
-    shift_lst = _shift_list(shift, len(axes))
+    shift_list = _shift_list(shift, len(axes))
 
     # Full-length vectors
     stride = grid.stride
@@ -147,7 +146,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
 
     # Shifted axes (full length to avoid ugly double indexing)
     shifted = np.zeros(grid.ndim, dtype=bool)
-    shifted[axes] = shift_lst
+    shifted[axes] = shift_list
     rmin[shifted] = -pi / stride[shifted]
     # Length min->max increases by double the shift, so we
     # have to compensate by a full stride
@@ -156,7 +155,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
 
     # Non-shifted axes
     not_shifted = np.zeros(grid.ndim, dtype=bool)
-    not_shifted[axes] = np.logical_not(shift_lst)
+    not_shifted[axes] = np.logical_not(shift_list)
     rmin[not_shifted] = ((-1.0 + 1.0 / shape[not_shifted]) *
                          pi / stride[not_shifted])
     rmax[not_shifted] = -rmin[not_shifted]
@@ -169,7 +168,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
         # - Odd and shifted -> - stride / 2
         # - Even and not shifted -> + stride / 2
         last_odd = shape[axes[-1]] % 2 == 1
-        last_shifted = shift_lst[-1]
+        last_shifted = shift_list[-1]
         half_rstride = pi / (shape[axes[-1]] * stride[axes[-1]])
 
         if last_odd:
@@ -186,7 +185,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     return RegularGrid(rmin, rmax, rshape, as_midp=False)
 
 
-def dft_preprocess_data(dfunc, shift=True):
+def dft_preprocess_data(dfunc, shift=True, axes=None):
     """Pre-process the real-space data before DFT.
 
     This function multiplies the given data with the separable
@@ -221,17 +220,19 @@ def dft_preprocess_data(dfunc, shift=True):
         If `True`, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
         each axis.
-
-    Returns
-    -------
-    `None`
+    axes : sequence of `int`, optional
+        Dimensions in which to calculate the reciprocal. The sequence
+        must have the same length as ``shift`` if the latter is given
+        as a sequence. `None` means all axes in ``dfunc``.
     """
-    # TODO: axes
     if dfunc.space.field == RealNumbers() and not shift:
         raise ValueError('cannot pre-process in-place without shift.')
 
-    nsamples = dfunc.space.grid.shape
-    shift_lst = _shift_list(shift, dfunc.ndim)
+    if axes is None:
+        axes = list(range(dfunc.ndim))
+
+    shape = dfunc.space.grid.shape
+    shift_list = _shift_list(shift, dfunc.ndim)
 
     def _onedim_arr(length, shift):
         if shift:
@@ -239,17 +240,17 @@ def dft_preprocess_data(dfunc, shift=True):
             indices = np.arange(length, dtype='int8')
             arr = -2 * np.mod(indices, 2) + 1
         else:
-            indices = np.arange(length, dtype=float)
+            indices = np.arange(length, dtype='float64')
             arr = np.exp(1j * pi * indices * (1 - 1.0 / length))
         return arr
 
-    onedim_arrs = [_onedim_arr(nsamp, shft)
-                   for nsamp, shft in zip(nsamples, shift_lst)]
-    meshgrid = sparse_meshgrid(*onedim_arrs, order=dfunc.space.order)
+    onedim_arrs = []
+    for axis in axes:
+        shift = shift_list[axis]
+        length = shape[axis]
+        onedim_arrs.append(_onedim_arr(length, shift))
 
-    # Multiply with broadcasting
-    for vec in meshgrid:
-        np.multiply(dfunc, vec, out=dfunc.asarray())
+    fast_1d_tensor_mult(dfunc.asarray(), onedim_arrs, axes=axes)
 
 
 def _interp_kernel_ft(norm_freqs, interp):
@@ -344,7 +345,7 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, interp):
     """
     # Reciprocal grid
     rgrid = dfunc.space.grid
-    shift_lst = list(shifts)
+    shift_list = list(shifts)
     axes = list(axes)
 
     onedim_arrs = []
@@ -360,7 +361,7 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, interp):
         len_orig = orig_shape[ax]
         halfcomplex = (len_dft < len_orig)
         odd = len_orig % 2
-        shift = shift_lst[ax]
+        shift = shift_list[ax]
 
         if shift:
             # f_k = -0.5 + k / N

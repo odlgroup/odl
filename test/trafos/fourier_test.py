@@ -316,6 +316,33 @@ def test_dft_preprocess_data():
     assert all_almost_equal(dfunc.ntuple, correct_arr)
 
 
+def test_dft_preprocess_data_with_axes():
+
+    shape = (2, 3, 4)
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape,
+                                    field=odl.ComplexNumbers())
+
+    axes = [1]  # Only middle index counts
+    # With shift
+    correct_arr = []
+    for _, j, __ in product(range(shape[0]), range(shape[1]), range(shape[2])):
+        correct_arr.append(1 - 2 * (j % 2))
+
+    dfunc = space_discr.one()
+    dft_preprocess_data(dfunc, shift=True, axes=axes)
+
+    assert all_almost_equal(dfunc.ntuple, correct_arr)
+
+    axes = [0, -1]  # First and last
+    # With shift
+    correct_arr = []
+    for i, _, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
+        correct_arr.append(1 - 2 * ((i + k) % 2))
+
+    dfunc = space_discr.one()
+    dft_preprocess_data(dfunc, shift=True, axes=axes)
+
+
 @pytest.mark.xfail(reason='Function rewritten, new test necessary')
 def test_dft_postprocess_data():
 
