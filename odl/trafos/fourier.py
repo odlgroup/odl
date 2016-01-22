@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Discrete wavelet transformation on :math:`L^p` spaces."""
+"""Discretized Fourier transform on L^p spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -257,19 +257,18 @@ def dft_preprocess_data(dfunc, shift=True, axes=None):
 def _interp_kernel_ft(norm_freqs, interp):
     """Scaled FT of a one-dimensional interpolation kernel.
 
-    For normalized frequencies :math:`\\xi\\in [-1/2, 1/2]`, this
+    For normalized frequencies -1/2 <= xi <= 1/2, this
     function returns
 
-        :math:`\widehat{\phi}(x) =
-        (2\pi)^{-1/2}\, \mathrm{sinc}^k(\pi \\xi)`
+        ``sinc(pi * xi) ** k / sqrt(2 * pi)``
 
-    where :math:`k = 1` for 'nearest', :math:`k = 2` for 'linear' and
-    :math:`k = 3` for 'cubic' interpolation.
+    where ``k = 1`` for 'nearest', ``k = 2`` for 'linear' and
+    ``k = 3`` for 'cubic' interpolation.
 
     Parameters
     ----------
     norm_freqs : `numpy.ndarray`
-        Normalized frequencies between -0.5 and 0.5
+        Normalized frequencies between -1/2 and 1/2
     interp : {'nearest', 'linear', 'cubic'}
         Type of interpolation kernel
 
@@ -659,6 +658,9 @@ class PyfftwTransform(Operator):
             from the domain and has a grid with minimum point
             ``(0, ..., 0)``, stride ``(1, ..., 1)`` and the same shape
             as ``dom``.
+        axes : sequence of `int`, optional
+            Dimensions in which a transform is to be calculated.
+            Default: ``(-1,)``
         halfcomplex : `bool`, optional
             If `True`, calculate only the negative frequency part
             along the last axis for real input. If `False`,
@@ -707,6 +709,7 @@ class PyfftwTransform(Operator):
                              exponent=conj_exp)
 
         super().__init__(dom, ran, linear=True)
+        self._fftw_plan = None
 
     def _call(self, x, out=None, **kwargs):
         """Implementation of ``self(x[, out])``.
@@ -717,9 +720,6 @@ class PyfftwTransform(Operator):
             Input vector to be transformed
         out : range element, optional
             Output vector storing the result
-        axes : sequence of `int`, optional
-            Dimensions in which a transform is to be calculated.
-            Default: ``(-1,)``
         direction : {'FFTW_FORWARD', 'FFTW_BACKWARD'}, optional
             Direction of the transform
         normalise_idft : `bool`, optional
@@ -747,6 +747,9 @@ class PyfftwTransform(Operator):
         """
         if out is None:
             out = self.range.element()
+
+        self._fftw_plan = pyfftw_call(
+            x.asarray(), out.asarray(), direction='forward', axes=axes,)
 
 
         # TODO: Implement and update doc
@@ -806,15 +809,20 @@ class FourierTransform(Operator):
 
     """
 
-    def __init__(self, dom, **kwargs):
+    def __init__(self, dom, ran=None, impl='numpy', **kwargs):
         """
         Parameters
         ----------
         dom : `DiscreteLp`
-            Domain of the wavelet transform. Its
+            Domain of the Fourier transform. Its
             :attr:`odl.DiscreteLp.exponent` must be at least 1.0;
             if it is equal to 2.0, this operator has an adjoint which
             is equal to the inverse.
+        ran : `DiscreteLp`, optional
+            Range of the Fourier transform. If not given, the range
+            is determined from ``dom`` and the other parameters. The
+            exponent is chosen to be the conjugate ``p / (p - 1)``,
+            which is read as 'inf' for p=1 and 1 for p='inf'.
         axes : sequence of `int`, optional
             Dimensions along which to take the transform.
             Default: all axes
@@ -822,13 +830,10 @@ class FourierTransform(Operator):
             If `True`, calculate only the negative frequency part
             along the last axis for real input. If `False`,
             calculate the full complex FFT.
-
-            TODO: doc combination with shift
-
-            This option only applies to 'uni-to-uni' transforms.
             For complex ``dom``, it has no effect.
-
             Default: `True`
+
+            This option only applies to 'uniform-to-uniform' transforms.
 
         shift : `bool` or sequence of `bool`, optional
             If `True`, the reciprocal grid is shifted by half a stride in
@@ -865,6 +870,7 @@ class FourierTransform(Operator):
             raise ValueError('domain exponent {} < 1 not allowed.'
                              ''.format(dom.exponent))
 
+        # Half-complex yes/no and shifts
         if isinstance(dom.grid, RegularGrid):
             if dom.field == ComplexNumbers():
                 self._halfcomplex = False
@@ -909,12 +915,36 @@ class FourierTransform(Operator):
         return ran
 
     def _call(self, x, out, **kwargs):
-        """Implement ``self(x, out)``.
+        """Implement ``self(x, out)`` for pyfftw backend.
 
         Parameters
         ----------
-        x : domain element-like
-            Discretized function to transform
+        x : domain element
+            Discretized function to be transformed
+        out : range element
+            Element to which the output is written
+
+        Notes
+        -----
+        See the `pyfftw_call` function for further options.
+
+        See also
+        --------
+        pyfftw_call : Call pyfftw backend directly
+        """
+        self._call_pyfftw(x, out, **kwargs)
+
+    def _call_numpy(self, x, out):
+        """Implement ``self(x, out)`` for numpy backend."""
+        raise NotImplementedError
+
+    def _call_pyfftw(self, x, out, **kwargs):
+        """Implement ``self(x, out)`` for pyfftw backend.
+
+        Parameters
+        ----------
+        x : domain element
+            Discretized function to be transformed
         out : range element
             Element to which the output is written
         planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
