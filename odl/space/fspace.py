@@ -362,7 +362,7 @@ class FunctionSetVector(Operator):
             if not self.range.contains_all(out):
                 raise ValueError('output contains points outside '
                                  'the range {}.'
-                                 ''.format(self.domain))
+                                 ''.format(self.range))
 
         # Numpy does not implement __complex__ for arrays (in contrast to
         # __float__), so we have to fish out the scalar ourselves.

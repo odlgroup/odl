@@ -266,7 +266,9 @@ class GridCollocation(FunctionSetMapping):
             else:
                 func(mesh, out=out.asarray().reshape(self.grid.shape,
                                                      order=self.order))
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as err:
+            if str(err.args[0]).startswith('output contains points outside'):
+                raise err
             points = self.grid.points()
             if out is None:
                 out = func(points)
