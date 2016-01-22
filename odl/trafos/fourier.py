@@ -864,12 +864,6 @@ class FourierTransform(Operator):
         if dom.exponent < 1:
             raise ValueError('domain exponent {} < 1 not allowed.'
                              ''.format(dom.exponent))
-        if dom.exponent == 1.0:
-            conj_exp = float('inf')
-        elif dom.exponent == float('inf'):
-            conj_exp = 1.0  # This is not strictly correct in math, but anyway
-        else:
-            conj_exp = dom.exponent / (dom.exponent - 1.0)
 
         if isinstance(dom.grid, RegularGrid):
             if dom.field == ComplexNumbers():
@@ -882,9 +876,18 @@ class FourierTransform(Operator):
         else:
             raise NotImplementedError('irregular grids not yet supported.')
 
+        if ran is None:
+            ran = self._conj_range(dom)
+
+        super().__init__(dom, ran, linear=True)
+        self._fftw_plan = None
+
+    def _conj_range(self, dom):
+        """Returned the conjugate range determined from ``dom``."""
         # Calculate range
-        recip_grid = reciprocal(dom.grid, shift=self.shifts,
-                                halfcomplex=self._halfcomplex, axes=self.axes)
+        recip_grid = reciprocal(
+            dom.grid, shift=self.shifts, halfcomplex=self.halfcomplex,
+            axes=self.axes)
 
         # Always complex space
         ran_fspace = FunctionSpace(recip_grid.convex_hull(), ComplexNumbers())
@@ -894,15 +897,16 @@ class FourierTransform(Operator):
         else:
             ran_dtype = dom.dtype
 
+        conj_exp = dom.conj_exponent
         ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
                                       dtype=ran_dtype)
         ran_dspace = ran_dspace_type(recip_grid.size, dtype=ran_dtype,
                                      exponent=conj_exp)
 
-        ran = DiscreteLp(ran_fspace, recip_grid, ran_dspace, exponent=conj_exp)
-        super().__init__(dom, ran, linear=True)
+        ran = DiscreteLp(ran_fspace, recip_grid, ran_dspace,
+                         exponent=conj_exp)
 
-        self._fftw_plan = None
+        return ran
 
     def _call(self, x, out, **kwargs):
         """Implement ``self(x, out)``.
