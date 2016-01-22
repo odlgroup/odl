@@ -136,14 +136,16 @@ class ShowPartial(Partial):
 
     """Show the partial result."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, fig=None, show=True, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        self.fig = None
+        self.fig = fig
+        self.show = show
 
     def send(self, x):
         """Show the current iteration."""
-        self.fig = x.show(fig=self.fig, show=True, *self.args, **self.kwargs)
+        self.fig = x.show(fig=self.fig, show=self.show, *self.args,
+                          **self.kwargs)
 
 
 class PrintIterationTimePartial(Partial):

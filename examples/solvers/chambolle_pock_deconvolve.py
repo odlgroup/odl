@@ -99,6 +99,9 @@ grad = odl.DiscreteGradient(discr_space, method='forward')
 # Matrix of operators
 prod_op = odl.ProductSpaceOperator([[conv], [grad]])
 
+# Starting point
+x = prod_op.domain.zero()
+
 # Operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 # prod_op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(prod_op, 50)
 # print(prod_op_norm)
@@ -111,20 +114,20 @@ conv(discr_phantom, out=g)
 # Optionally pass partial to the solver to display intermediate results
 fig = plt.figure('intermediate results')
 partial = odl.solvers.util.ForEachPartial(
-    lambda result: result.show(fig=fig))
+    lambda result: result.show(fig=fig, show=False))
 partial &= odl.solvers.util.PrintIterationPartial()
 
 # Run algorithms
-rec = chambolle_pock_solver(prod_op,
-                            f_cc_prox_l2_tv(prod_op.range, g, lam=0.0001),
-                            g_prox_none(prod_op.domain),
-                            sigma=1 / prod_op_norm,
-                            tau=1 / prod_op_norm,
-                            niter=100,
-                            partial=partial)[0]
+chambolle_pock_solver(prod_op, x,
+                      f_cc_prox_l2_tv(prod_op.range, g, lam=0.0001),
+                      g_prox_none(prod_op.domain),
+                      sigma=1 / prod_op_norm,
+                      tau=1 / prod_op_norm,
+                      niter=100,
+                      partial=partial)[0]
 
 # Display images
 discr_phantom.show(title='original image')
 g.show(title='convolved image')
-rec.show(title='deconvolved image')
+x.show(title='deconvolved image')
 plt.show()

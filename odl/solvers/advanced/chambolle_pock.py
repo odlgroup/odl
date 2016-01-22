@@ -28,6 +28,7 @@ from builtins import super
 # Internal
 from odl.operator.operator import Operator
 from odl.operator.pspace_ops import ProductSpaceOperator
+from odl.operator.default_ops import IdentityOperator
 
 __all__ = ('chambolle_pock_solver', 'f_cc_prox_l2_tv', 'g_prox_none')
 
@@ -36,41 +37,43 @@ __all__ = ('chambolle_pock_solver', 'f_cc_prox_l2_tv', 'g_prox_none')
 # TODO: diagonal preconditioning
 # TODO: add positivity constraint
 
-def chambolle_pock_solver(K, f_cc_prox, g_prox, sigma, tau, theta=1,
-                          niter=100, partial=None):
-    """Chambolle-Pock aglgorithms for convex optimization problems.
+def chambolle_pock_solver(K, x, f_cc_prox, g_prox, sigma, tau, theta=1,
+                          niter=1, partial=None):
+    """Chambolle-Pock algorithm for convex optimization problems.
 
     First order primal-dual hybrid-gradient (PDHG) method for non-smooth
     convex optimization probelms with known saddle-point structure developed
     by `Chambolle and Pock`_ (CP).
 
+    Convergence proofed for ``||K||_2^2 * sigma * tau < 1``
 
     Parameters
     ----------
     K : `Operator` or `ProductSpaceOperator`
+        A (product space) operator mapping X to Y where X and Y are
+        Hilbert spaces
+    x : element in the domain of ``K``
+        Starting point of the iteration with ``x`` in ``X``
     f_cc_prox : `function`
-       Factory function which, evaluated at ``sigma``, returns the proximal
-       operator of F^*. Domain and range of the returned proximal operator
-       is the range of ``K``.
+        Factory function which, evaluated at ``sigma``, returns the proximal
+        operator of F^*. Domain and range of the returned proximal operator
+        is the range of ``K``.
     g_prox : `function`
         Factory function which, evaluated at ``tau``, returns the proximal
-       operator of ``G``. Domain and range of the returned proximal operator
-       is the domain of ``K``.
+        operator of ``G``. Domain and range of the returned proximal operator
+        is the domain of ``K``.
     sigma : positive `float`
-        Convergence proofed for ``||K||_2^2 * sigma * tau < 1``
+        Step length parameter for the update of the dual variable ``y``
     tau : positive `float`
-        Convergence proofed for ``||K||_2^2 * sigma * tau < 1``
+        Step length parameter for the update of the primal variable ``x``
     theta : `float` in [0, 1], optional
-        Relaxation paramter
+        Relaxation parameter
     niter : `int`, optional
         Number of iterations
     partial : `Partial`, optional
         If not `None` the object passed executes code per iteration,
         e.g. plotting each iterate
 
-    Returns
-    -------
-    x : `DiscreteLpVector`
 
     References
     ----------
@@ -84,10 +87,11 @@ def chambolle_pock_solver(K, f_cc_prox, g_prox, sigma, tau, theta=1,
     .. _Sidky et al.: http://stacks.iop.org/0031-9155/57/i=10/a=3065
     """
     # Initialize the primal and dual variable
-    x = K.domain.zero()
+    # x = K.domain.zero()
     y = K.range.zero()
     # Relaxation variable
     xbar = x.copy()
+    xold = x.copy()
 
     # Initialize the proximal operator of the convex conjugate of functional F
     f_cc_prox_sigma = f_cc_prox(sigma)
@@ -96,20 +100,20 @@ def chambolle_pock_solver(K, f_cc_prox, g_prox, sigma, tau, theta=1,
     # Adjoint of the product space operator
     Kadjoint = K.adjoint
 
-    for nn in range(niter):
+    for _ in range(niter):
         # Copy required for relaxation
-        xold = x.copy()
+        # xold = x.copy()
+        xold.assign(x)
         # Gradient descent in the dual variable y
         f_cc_prox_sigma(y + sigma * K(xbar), out=y)
         # Gradient descent in the primal variable x
-        g_prox_tau(x - tau * Kadjoint(y), out=x)
+        g_prox_tau(x + (- tau) * Kadjoint(y), out=x)
         # Overrelaxation in the primal variable x
-        xbar = x + theta * (x - xold)
+        # xbar = x + theta * (x - xold)
+        xbar.lincomb(1 + theta, x, -1, xold)
 
         if partial is not None:
             partial.send(x)
-
-    return x
 
 
 def f_cc_prox_l2_tv(space, g, lam):
@@ -147,13 +151,13 @@ def f_cc_prox_l2_tv(space, g, lam):
         Function initialize the proximal operator with a given step
         length parameter ``sigma``
     """
-
+    lam = float(lam)
     def make_prox(sigma):
         """Returns an instance of the proximal operator.
 
         Parameters
         ----------
-        sigma : positive `float'
+        sigma : positive `float`
             Step length parameter
 
         Returns
@@ -173,7 +177,7 @@ def f_cc_prox_l2_tv(space, g, lam):
                 ----------
                 sigma : positive `float`
                 """
-                self.sigma = sigma
+                self.sigma = float(sigma)
                 super().__init__(domain=space, range=space)
 
             def _call(self, x, out):
@@ -185,26 +189,45 @@ def f_cc_prox_l2_tv(space, g, lam):
 
                 # First component: (y - sig*g) / (1 + sig)
 
-                sig = self.sigma
-                out[0][...] = y / sig
-                out[0] -= g
-                out[0] *= sig / (1 + sig)
+                sig = float(self.sigma)
+
+                # out[0].assign(y)
+                # out[0] /= sig
+                # out[0] -= g
+                # out[0] *= sig / (1 + sig)
+
+                out[0].lincomb(1 / (1 + sig), y, -sig / (1 + sig), g)
 
                 # Second component: lam * z / (max(lam, |z|))
 
                 # Calculate |z| = pointwise 2-norm of z
-                tmp = z[0].space.zero()
-                for zi in z:
-                    tmp += zi ** 2
+
+                # tmp = z[0].space.zero()
+                # for zi in z:
+                #     tmp += zi ** 2
+
+                # tmp = sum((zi ** 2 for zi in z), z[0].space.zero())
+
+                tmp = sum((zi**2 for zi in z[1:]), z[0]**2)
+
+                # tmp = z[0] ** 2
+                # sq_tmp = z[0].space.element()
+                # for zi in z:
+                #     sq_tmp.multiply(zi, zi)
+                #     tmp +=sq_tmp
+
                 tmp.ufunc.sqrt(out=tmp)
 
                 # Pointwise maximum of |z| and lambda
                 tmp.ufunc.maximum(lam, out=tmp)
                 tmp /= lam
 
-                out[1] = z.copy()
+                out[1].assign(z)
+
                 for zi in out[1]:
                     zi /= tmp
+                # for oi, zi in zip(out[1], z):
+                #     zi.divide(oi, tmp)
 
         return _prox_op(sigma)
 
@@ -244,31 +267,31 @@ def g_prox_none(space):
             Proximal operator
         """
 
-        class _prox_op(Operator):
+        # class _prox_op(Operator):
+        #
+        #     """The proximal operator. """
+        #
+        #     def __init__(self, tau):
+        #         """Initialize the proximal operator.
+        #
+        #         Parameters
+        #         ----------
+        #         tau : positive `float`
+        #             Unused. Introduced to have a common interface
+        #     """
+        #         self.tau = tau
+        #         super().__init__(domain=space, range=space)
+        #
+        #     def _call(self, x, out):
+        #         """Return the input
+        #
+        #         Parameters
+        #         ----------
+        #         x : element in ``space``
+        #             Unused. Introduced for a common interface
+        #         """
 
-            """The proximal operator. """
-
-            def __init__(self, tau):
-                """Initialize the proximal operator.
-
-                Parameters
-                ----------
-                tau : positive `float`
-                    Unused. Introduced to have a common interface
-            """
-                self.tau = tau
-                super().__init__(domain=space, range=space)
-
-            def _call(self, x, out):
-                """Return the input
-
-                Parameters
-                ----------
-                x : element in ``space``
-                """
-                out.assign(x)
-
-        return _prox_op(tau)
+        return IdentityOperator(space)
 
     return make_prox
 

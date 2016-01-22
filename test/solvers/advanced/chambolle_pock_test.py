@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""(Quasi-)Newton schemes to find zeros of functions (gradients)."""
+"""Test for the Chambolle-Pock solver."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -47,7 +47,7 @@ def test_proximal_factories():
     x_data = x_space.element(np.arange(-10, 0))
 
     # Product space for matrix of operators
-    K_range = odl.ProductSpace(g_space, odl.ProductSpace(x_space, x_space))
+    K_range = odl.ProductSpace(g_space, odl.ProductSpace(x_space, 2))
 
     # Product space element
     p = np.arange(0, g.size)
@@ -63,6 +63,7 @@ def test_proximal_factories():
     # Proximal operator of F^*
     sigma = 0.5
     prox_op_f_cc = make_prox_f(sigma)
+    print(sigma)
 
     # Optimal point of the auxiliary minimization problem prox_sigma[F^*]
     y_opt = prox_op_f_cc(y)
@@ -99,26 +100,33 @@ def test_chambolle_pock_solver():
     # Operator
     op = odl.IdentityOperator(discr_space)
 
+    # Starting point
+    x = op.domain.zero()
+
     # Proximal operator, use same the factory function for F^* and G
     prox = g_prox_none(discr_space)
 
     # Run the algorihtms
-    rec = chambolle_pock_solver(op, prox, prox, tau=0.2, sigma=0.5,
-                                niter=3, partial=None)
-    assert all(rec) == 0
+    chambolle_pock_solver(op, x, prox, prox, tau=0.2, sigma=0.5, niter=3,
+                          partial=None)
+
+    assert all(x) == 0
 
     # Product space operator
     prod_op = odl.ProductSpaceOperator([[op], [op]])
+
+    # Starting point
+    x = prod_op.domain.zero()
 
     # Proximal operator, use same the factory function for F^* and G
     prox_range = g_prox_none(prod_op.range)
     prox_domain = g_prox_none(prod_op.domain)
 
     # Run the algorihtms
-    rec = chambolle_pock_solver(prod_op, prox_range, prox_domain,
-                                sigma=0.1, tau=0.2, niter=3, partial=None)[0]
+    chambolle_pock_solver(prod_op, x, prox_range, prox_domain, sigma=0.1,
+                          tau=0.2, niter=3, partial=None)
 
-    assert all(rec) == 0
+    assert all(x[0]) == 0
 
 
 if __name__ == '__main__':

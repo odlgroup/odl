@@ -46,7 +46,7 @@ discr_space = odl.uniform_discr([0, 0], shape, shape)
 orig = discr_space.element(im)
 
 # Add noise
-im = im + np.random.normal(0, 0.05, shape)
+im = im + np.random.normal(0, 0.1, shape)
 # Rescale back to [0, 1]
 im = (im - np.min(im)) / (np.max(im) - np.min(im))
 
@@ -59,23 +59,29 @@ grad = odl.DiscreteGradient(discr_space, method='forward')
 # Matrix of operators
 K = odl.ProductSpaceOperator([[odl.IdentityOperator(discr_space)], [grad]])
 
+# Starting point
+x = K.domain.zero()
+
 # Operator norm
 K_norm = 1.1 * odl.operator.oputils.power_method_opnorm(K, 200)
 
 # Display partial
-fig = plt.figure('iterations')
+fig = plt.figure('iteration')
 partial = odl.solvers.util.ForEachPartial(
-    lambda result: result.show(fig=fig))
-partial &= odl.solvers.util.PrintIterationPartial()
+    lambda result: result.show(fig=fig, show=False))
+# partial = odl.solvers.util.ShowPartial(fig=fig, show=True, title='iteration')
+partial &= odl.solvers.util.PrintIterationTimePartial()
 
 # Run algorithms
-rec = chambolle_pock_solver(K, f_cc_prox_l2_tv(K.range, noisy, lam=1 / 16),
-                            g_prox_none(K.domain),
-                            sigma=1 / K_norm, tau=1 / K_norm,
-                            niter=50, partial=partial)[0]
+chambolle_pock_solver(K, x,
+                      f_cc_prox_l2_tv(K.range, noisy, lam=1 / 16),
+                      g_prox_none(K.domain),
+                      sigma=1 / K_norm,
+                      tau=1 / K_norm,
+                      niter=10, partial=partial)
 
 # Display images
 orig.show(title='original image')
 noisy.show(title='noisy image')
-rec.show(title='reconstruction')
+# x.show(title='reconstruction')
 plt.show()
