@@ -605,7 +605,7 @@ def test_pyfftw_call_backward_with_plan():
         assert all_almost_equal(idft_arr, true_idft)
 
 
-def test_dft_range(exponent, dtype):
+def test_ft_range(exponent, dtype):
     # Check if the range is initialized correctly. Encompasses the init test
 
     def conj(ex):
@@ -647,42 +647,140 @@ def test_dft_range(exponent, dtype):
     assert dft.range.exponent == conj(exponent)
 
 
-def test_dft_with_known_pairs_1d():
+def sinc(x):
+    # numpy.sinc scales by pi, we don't want that
+    return np.sinc(x / np.pi)
 
+
+def test_ft_charfun_1d():
     # Characteristic function of [0, 1], its Fourier transform is
-    # given by 1j * (exp(-1j * y) - 1) / y
+    # given by exp(-1j * y / 2) * sinc(y/2)
     def char_interval(x):
-        return np.where(np.logical_and(x >= 0, x <= 1), 1.0, 0.0)
+        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
 
     def char_interval_ft(x):
-        def _at_small_args(x):
-            return 1 - 1j * x / 2 + x ** 2 / 6
-
-        def _at_large_args(x):
-            return (1 - np.exp(-1j * x)) / (1j * x)
-
-        return np.where(np.abs(x) > 1e-5, _at_large_args(x),
-                        _at_small_args(x)) / np.sqrt(2 * np.pi)
+        return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
 
     discr = odl.uniform_discr(-2, 2, 64, impl='numpy')
     dft = FourierTransform(discr)
-    func = dft.domain.element(char_interval)
-    func_true_ft = dft.range.element(char_interval_ft)
-    func_dft = dft(func)
-    assert all_almost_equal(func_dft, func_true_ft)
 
+    func_true_ft = dft.range.element(char_interval_ft)
+    func_dft = dft(char_interval)
+    assert (func_dft - func_true_ft).norm() < 1e-6
+
+    # Complex version, should be as good
+    discr = odl.uniform_discr(-2, 2, 64, impl='numpy',
+                              field=odl.ComplexNumbers())
+    dft = FourierTransform(discr)
+
+    func_true_ft = dft.range.element(char_interval_ft)
+    func_dft = dft(char_interval)
+    assert (func_dft - func_true_ft).norm() < 1e-6
+
+    # Truly complex input
+    discr = odl.uniform_discr(-2, 2, 64, impl='numpy',
+                              field=odl.ComplexNumbers())
+    dft = FourierTransform(discr)
+
+    func_true_ft = dft.range.element(char_interval_ft) * (1 + 1j)
+    func = discr.element(char_interval) * (1 + 1j)
+    func_dft = dft(func)
+    assert (func_dft - func_true_ft).norm() < 1e-6
+
+    # Without shift
+    discr = odl.uniform_discr(-2, 2, 64, impl='numpy',
+                              field=odl.ComplexNumbers())
+    dft = FourierTransform(discr, shift=False)
+
+    func_true_ft = dft.range.element(char_interval_ft)
+    func_dft = dft(char_interval)
+    assert (func_dft - func_true_ft).norm() < 1e-6
+
+
+def test_ft_hat_1d():
+    # Hat function as used in linear interpolation. It is not so
+    # well discretized by nearest neighbor interpolation, so a larger
+    # error is to be expected.
+    def hat_func(x):
+        out = np.where(x < 0, 1 + x, 1 - x)
+        out[x < -1] = 0
+        out[x > 1] = 0
+        return out
+
+    def hat_func_ft(x):
+        return sinc(x / 2) ** 2 / np.sqrt(2 * np.pi)
+
+    # Using a single-precision implementation, should be as good
+    discr = odl.uniform_discr(-2, 2, 101, impl='numpy', dtype='float32')
+    dft = FourierTransform(discr)
+    func_true_ft = dft.range.element(hat_func_ft)
+    func_dft = dft(hat_func)
+    assert (func_dft - func_true_ft).norm() < 0.001
+
+    # With linear interpolation in the discretization, should be better?
+    discr = odl.uniform_discr(-2, 2, 101, impl='numpy', dtype='float32',
+                              interp='linear')
+    dft = FourierTransform(discr)
+    func_true_ft = dft.range.element(hat_func_ft)
+    func_dft = dft(hat_func)
+    assert (func_dft - func_true_ft).norm() < 0.001
+
+
+def test_ft_gaussian_1d():
     # Gaussian function, will be mapped to itself. Truncation error is
-    # relatively large, though.
+    # relatively large, though, we need a large support.
     def gaussian(x):
         return np.exp(-x ** 2 / 2)
 
-    discr = odl.uniform_discr(-10, 10, 128, impl='numpy')
+    discr = odl.uniform_discr(-10, 10, 201, impl='numpy')
     dft = FourierTransform(discr)
-    func = dft.domain.element(gaussian)
     func_true_ft = dft.range.element(gaussian)
-    func_dft = dft(func)
-    assert all_almost_equal(func_dft, func_true_ft, places=2)
+    func_dft = dft(gaussian)
+    assert (func_dft - func_true_ft).norm() < 0.001
 
+
+@pytest.mark.xfail(reason='Some scaling / phase factor issue')
+def test_ft_freq_shifted_charfun_1d():
+    # Frequency-shifted characteristic function
+    def fshift_char_interval(x):
+        return np.exp(-1j * x) * np.where((x >= -0.5) & (x <= 0.5), 1.0, 0.0)
+
+    def fshift_char_interval_ft(x):
+        return sinc((x + 1) / 2) / np.sqrt(2 * np.pi)
+
+    discr = odl.uniform_discr(-5 * np.pi, 5 * np.pi, 101, impl='numpy',
+                              field=odl.ComplexNumbers())
+    dft = FourierTransform(discr)
+    func_true_ft = dft.range.element(fshift_char_interval_ft)
+    func_dft = dft(fshift_char_interval)
+    assert (func_dft - func_true_ft).norm() < 0.01
+
+
+@pytest.mark.xfail(reason='test functions not yet adapted, TODO')
+def test_dft_with_known_pairs_2d():
+
+    # Frequency-shifted product of characteristic functions
+    def fshift_char_rect(x):
+        # Characteristic function of the cuboid
+        # [-1, 1] x [1, 2]
+        return (np.where((x[0] >= -1) & (x[0] <= 1), 1, 0) *
+                np.where((x[1] >= 1) & (x[1] <= 2), 1, 0))
+
+    def fshift_char_rect_ft(x):
+        # FT is a product of shifted and frequency-shifted sinc functions
+        # 1st comp.: 2 * sinc(y)
+        # 2nd comp.: exp(-1j * y * 3/2) * sinc(y/2)
+        # Overall factor: (2 * pi)^(-1)
+        return (2 * sinc(x[0]) *
+                np.exp(-1j * x[1] * 3 / 2) * sinc(x[1] / 2) /
+                (2 * np.pi))
+
+    discr = odl.uniform_discr([-2] * 2, [2] * 2, (65,) * 2, impl='numpy',
+                              field=odl.ComplexNumbers())
+    dft = FourierTransform(discr)
+    func_true_ft = dft.range.element(fshift_char_rect_ft)
+    func_dft = dft(fshift_char_rect)
+    assert (func_dft - func_true_ft).norm() < 0.001
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
