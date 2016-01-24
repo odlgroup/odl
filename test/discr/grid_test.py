@@ -288,6 +288,35 @@ def test_tensorgrid_is_subgrid():
     assert grid.is_subgrid(fuzzy_sup_grid, atol=0.15)
 
 
+def test_tensorgrid_insert():
+    vec1 = np.arange(2, 6)
+    vec2 = np.arange(-4, 5, 2)
+    vec3 = np.arange(-1, 1)
+    scalar = 0.5
+
+    grid = TensorGrid(vec1, vec2)
+    grid2 = TensorGrid(scalar, vec3)
+
+    # Test all positions
+    ins_grid = grid.insert(0, grid2)
+    assert ins_grid == TensorGrid(scalar, vec3, vec1, vec2)
+
+    ins_grid = grid.insert(1, grid2)
+    assert ins_grid == TensorGrid(vec1, scalar, vec3, vec2)
+
+    ins_grid = grid.insert(2, grid2)
+    assert ins_grid == TensorGrid(vec1, vec2, scalar, vec3)
+
+    ins_grid = grid.insert(-1, grid2)
+    assert ins_grid == TensorGrid(vec1, scalar, vec3, vec2)
+
+    with pytest.raises(IndexError):
+        grid.insert(3, grid2)
+
+    with pytest.raises(IndexError):
+        grid.insert(-4, grid2)
+
+
 def test_tensorgrid_points():
     vec1 = np.arange(2, 6)
     vec2 = np.arange(-4, 5, 2)
@@ -436,7 +465,7 @@ def test_tensorgrid_meshgrid():
     assert all(arr.flags.f_contiguous for arr in (xx, yy, zz))
 
 
-def test_tensor_getitem():
+def test_tensorgrid_getitem():
     vec1 = (0, 1)
     vec2 = (-1, 0, 1)
     vec3 = (2, 3, 4, 5)
@@ -774,6 +803,53 @@ def test_regulargrid_is_subgrid():
                                  shape_sup)
     assert grid.is_subgrid(fuzzy_sup_grid, atol=0.015)
     assert not grid.is_subgrid(fuzzy_sup_grid, atol=0.005)
+
+
+def test_regulargrid_insert():
+    minpt = (0.75, 0, -5)
+    maxpt = (1.25, 0, 1)
+    shape = (2, 1, 3)
+
+    minpt2 = (1, 1)
+    maxpt2 = (3, 1)
+    shape2 = (5, 1)
+
+    grid = RegularGrid(minpt, maxpt, shape)
+    grid2 = RegularGrid(minpt2, maxpt2, shape2)
+
+    # Test all positions
+    ins_grid = grid.insert(0, grid2)
+    assert isinstance(ins_grid, RegularGrid)
+    ins_minpt = minpt2 + minpt
+    ins_maxpt = maxpt2 + maxpt
+    ins_shape = shape2 + shape
+    assert ins_grid == RegularGrid(ins_minpt, ins_maxpt, ins_shape)
+
+    ins_grid = grid.insert(1, grid2)
+    ins_minpt = minpt[:1] + minpt2 + minpt[1:]
+    ins_maxpt = maxpt[:1] + maxpt2 + maxpt[1:]
+    ins_shape = shape[:1] + shape2 + shape[1:]
+    assert ins_grid == RegularGrid(ins_minpt, ins_maxpt, ins_shape)
+
+    ins_grid = grid.insert(2, grid2)
+    ins_minpt = minpt[:2] + minpt2 + minpt[2:]
+    ins_maxpt = maxpt[:2] + maxpt2 + maxpt[2:]
+    ins_shape = shape[:2] + shape2 + shape[2:]
+    assert ins_grid == RegularGrid(ins_minpt, ins_maxpt, ins_shape)
+    ins_grid = grid.insert(-1, grid2)
+    assert ins_grid == RegularGrid(ins_minpt, ins_maxpt, ins_shape)
+
+    ins_grid = grid.insert(3, grid2)
+    ins_minpt = minpt + minpt2
+    ins_maxpt = maxpt + maxpt2
+    ins_shape = shape + shape2
+    assert ins_grid == RegularGrid(ins_minpt, ins_maxpt, ins_shape)
+
+    with pytest.raises(IndexError):
+        grid.insert(4, grid2)
+
+    with pytest.raises(IndexError):
+        grid.insert(-5, grid2)
 
 
 def test_regulargrid_getitem():
