@@ -423,12 +423,12 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other :  `TensorGrid`, `float` or array-like
-            The grid to be inserted. A `float` or array ``a`` is treated as
-            ``TensorGrid(a)``.
         index : `numbers.Integral`
             The index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
+        other :  `TensorGrid`, `float` or array-like
+            The grid to be inserted. A `float` or array ``a`` is treated as
+            ``TensorGrid(a)``.
 
         Returns
         -------
@@ -446,17 +446,19 @@ class TensorGrid(Set):
         --------
         append
         """
-        if index not in Integers():
-            raise TypeError('{!r} is not an integer.'.format(index))
-        if not 0 <= index <= self.ndim:
-            raise IndexError('index {} out of valid range 0 -> {}.'
-                             ''.format(index, self.ndim))
+        idx = int(index)
+        # Support backward indexing
+        if idx < 0:
+            idx = self.ndim + idx
+        if not 0 <= idx <= self.ndim:
+            raise IndexError('index out of valid range 0 -> {}.'
+                             ''.format(self.ndim))
 
         if not isinstance(other, TensorGrid):
             other = TensorGrid(other)
 
-        new_vecs = (self.coord_vectors[:index] + other.coord_vectors +
-                    self.coord_vectors[index:])
+        new_vecs = (self.coord_vectors[:idx] + other.coord_vectors +
+                    self.coord_vectors[idx:])
         return TensorGrid(*new_vecs, order=self.order)
 
     def append(self, other):
@@ -806,7 +808,7 @@ class RegularGrid(TensorGrid):
     This is a sparse representation of an n-dimensional grid defined
     as the tensor product of n coordinate vectors with equidistant
     nodes. The grid points are calculated according to the rule
-
+    ::
         x_j = min_pt + j * (max_pt - min_pt) / (shape - 1)
 
     with elementwise addition and multiplication.
@@ -983,7 +985,7 @@ class RegularGrid(TensorGrid):
             self_tg = TensorGrid(*self.coord_vectors, order=self.order)
             return self_tg.is_subgrid(other)
 
-    def insert(self, other, index):
+    def insert(self, index, other):
         """Insert another regular grid before the given index.
 
         The given grid (``m`` dimensions) is inserted into the current
@@ -993,12 +995,12 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        other : `TensorGrid`
-            The grid to be inserted. If a `RegularGrid` is given,
-            the output will be a `RegularGrid`.
         index : `numbers.Integral`
             The index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
+        other : `TensorGrid`
+            The grid to be inserted. If a `RegularGrid` is given,
+            the output will be a `RegularGrid`.
 
         Returns
         -------
@@ -1010,14 +1012,18 @@ class RegularGrid(TensorGrid):
         --------
         >>> rg1 = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg2 = RegularGrid(-3, 7, 6)
-        >>> rg1.insert(rg2, 1)
-        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], [2, 6, 3])
+        >>> rg1.insert(1, rg2)
+        RegularGrid([-1.5 -3.  -1. ], [-0.5  7.   3. ], (2, 6, 3))
         """
         if isinstance(other, RegularGrid):
             idx = int(index)
+
+            # Support backward indexing
+            if idx < 0:
+                idx = self.ndim + idx
             if not 0 <= idx <= self.ndim:
-                raise IndexError('index {} out of valid range 0 -> {}.'
-                                 ''.format(index, self.ndim))
+                raise IndexError('index out of valid range 0 -> {}.'
+                                 ''.format(self.ndim))
 
             new_shape = self.shape[:idx] + other.shape + self.shape[idx:]
             new_minpt = (self.min_pt[:idx].tolist() + other.min_pt.tolist() +
