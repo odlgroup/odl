@@ -28,7 +28,7 @@ from __future__ import print_function, division, absolute_import
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
+from builtins import object, range, super, zip
 
 # External module imports
 import numpy as np
@@ -95,7 +95,7 @@ class RectPartition(object):
         end = self._calc_begin_end(grid, end_axes, end, 'end')
 
         super().__init__()
-        self._bounding_box = IntervalProd(begin, end)
+        self._bbox = IntervalProd(begin, end)
         self._grid = grid
 
     def _calc_begin_end(self, grid, vec_axes, vector, which):
@@ -199,8 +199,23 @@ class RectPartition(object):
         return self._grid
 
     @property
-    def bounding_box(self):
-        """The `IntervalProd` partitioned by this partition.
+    def ndim(self):
+        """Number of dimensions."""
+        return self.grid.ndim
+
+    @property
+    def shape(self):
+        """Number of cells per axis, equal to ``self.grid.shape``."""
+        return self.grid.shape
+
+    @property
+    def order(self):
+        """Return axis ordering, equal to that of the grid."""
+        return self.grid.order
+
+    @property
+    def bbox(self):
+        """The bounding box, i.e. the `IntervalProd` being partitioned.
 
         Examples
         --------
@@ -209,17 +224,27 @@ class RectPartition(object):
 
         >>> grid = TensorGrid([0, 1], [-1, 0, 2])
         >>> part = RectPartition(grid)  # Implicit begin and end
-        >>> part.bounding_box
+        >>> part.bbox
         Rectangle([-0.5, -1.5], [1.5, 3.0])
 
         This behavior can be changed by explicitly giving begin and
         end:
 
         >>> part = RectPartition(grid, begin=[0, -1], end=[1, 2])
-        >>> part.bounding_box
+        >>> part.bbox
         Rectangle([0.0, -1.0], [1.0, 2.0])
         """
-        return self._bounding_box
+        return self._bbox
+
+    @property
+    def begin(self):
+        """Vector with minimum bounding box coordinates."""
+        return self.bbox.begin
+
+    @property
+    def end(self):
+        """Vector with maximum bounding box coordinates."""
+        return self.bbox.end
 
     def min(self):
         """Return the 'minimum corner' of ``self.interv_prod``.
@@ -237,9 +262,9 @@ class RectPartition(object):
 
         See also
         --------
-        bounding_box
+        bbox
         """
-        return self.bounding_box.min()
+        return self.bbox.min()
 
     def max(self):
         """Return the 'minimum corner' of ``self.interv_prod``.
@@ -257,19 +282,9 @@ class RectPartition(object):
 
         See also
         --------
-        bounding_box
+        bbox
         """
-        return self.bounding_box.max()
-
-    @property
-    def shape(self):
-        """Number of cells per axis, equal to ``self.grid.shape``."""
-        return self.grid.shape
-
-    @property
-    def order(self):
-        """Return axis ordering, equal to that of the grid."""
-        return self.grid.order
+        return self.bbox.max()
 
     def extent(self):
         """Return a vector containing the total extent (max - min)."""
@@ -279,18 +294,18 @@ class RectPartition(object):
         """Return the grid sampling points."""
         return self.grid.points()
 
-    def cell_boundary_vecs(self):
+    def cell_boundaries(self):
         """Return the cell boundaries as coordinate vectors.
 
         Examples
         --------
         >>> grid = TensorGrid([0, 1], [-1, 0, 2])
         >>> part = RectPartition(grid)  # Implicit begin and end
-        >>> part.cell_boundary_vecs()
+        >>> part.cell_boundaries()
         (array([-0.5,  0.5,  1.5]), array([-1.5, -0.5,  1. ,  3. ]))
 
         >>> part = RectPartition(grid, begin=[0, -1], end=[1, 2])
-        >>> part.cell_boundary_vecs()
+        >>> part.cell_boundaries()
         (array([ 0. ,  0.5,  1. ]), array([-1. , -0.5,  1. ,  2. ]))
         """
         bdry_vecs = []
@@ -355,17 +370,51 @@ class RectPartition(object):
         return float(np.prod(self.extent() / self.shape))
 
     def approx_equals(self, other, atol):
-        pass
+        """Return `True` in case of approximate equality.
+
+        Returns
+        -------
+        approx_eq : `bool`
+            `True` if ``other`` is a `RectPartition` instance with
+            ``self.bbox == other.bbox`` up to ``atol`` and
+            ``self.grid == other.other`` up to ``atol``.
+        """
+        if other is self:
+            return True
+        elif not isinstance(other, RectPartition):
+            return False
+        else:
+            return (self.bbox.approx_equals(other.bbox, atol=atol) and
+                    self.grid.approx_equals(other.grid, atol=atol))
 
     def __eq__(self, other):
-        pass
+        """Return ``self == other``."""
+        return self.bbox == other.bbox and self.grid == other.grid
 
     def insert(self, index, other):
-        # other may be another partition or a grid
-        pass
+        """Return a copy with ``other`` inserted before ``index``.
 
-    # TODO: determine whether __contains__ and __getitem__ make sense,
-    # and in which sense if yes
+        Parameters
+        ----------
+        index : `int`
+            Index of the dimension before which ``other`` is to
+            be inserted. Must fulfill ``0 <= index <= ndim``.
+        other : `RectPartition`
+            Partition to be inserted
+
+        Returns
+        -------
+        newpart : `RectPartition`
+            Partition with the inserted other partition
+
+        Examples
+        --------
+        """
+        newgrid = self.grid.insert(index, other.grid)
+        newbbox = self.bbox.insert(index, other.bbox)
+        new_b = newbbox.begin
+        new_e = newbbox.end
+        return RectPartition(newgrid, begin=new_b, end=new_e)
 
     # TODO: pretty-print
     def __repr__(self):
@@ -374,24 +423,80 @@ class RectPartition(object):
         sep = ',\n '
         if self._custom_begin:
             inner_str += sep + 'begin={}'.format(
-                array1d_repr(self.interv_prod.begin))
+                array1d_repr(self.bbox.begin))
             sep = ', '
         if self._custom_end:
             inner_str += sep + 'end={}'.format(
-                array1d_repr(self.interv_prod.end))
+                array1d_repr(self.bbox.end))
 
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 def uniform_partition(intv_prod, num_nodes, order='C', node_at_bdry=True):
-    """Return a partition of ``intv_prod`` by a regular grid."""
-    pass
-#    if as_midp:
-#        grid_min = intv_prod.begin + intv_prod.extent / (2 * num_nodes)
-#        grid_max = intv_prod.end - intv_prod.extent / (2 * num_nodes)
-#        return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp,
-#                           _exact_min=intv_prod.begin,
-#                           _exact_max=intv_prod.end)
+    """Return a partition of ``intv_prod`` by a regular grid.
+
+    Parameters
+    ----------
+    intv_prod : `IntervalProd`
+        Interval product to be partitioned
+    num_nodes : `int` or sequence of `int`
+        Number of nodes per axis. For 1d intervals, a single integer
+        can be specified.
+    order : {'C', 'F'}
+        Ordering of the generated grid
+    node_at_bdry : `bool` or array-like
+        If `True`, the bounding box ends exactly at the boundary grid
+        nodes. For `False`, it extends the grid by half a cell size.
+        If an array-like is given, it must have shape ``(ndim, 2)``,
+        where ``ndim`` is the number of dimensions. It defines per axis
+        if the bounding box ends at the left node (first column) and
+        at the right node (second column).
+
+    Examples
+    --------
+    """
+    # Sanity checks
+    if np.shape(num_nodes) == ():
+        num_nodes = (num_nodes,)
+    elif len(num_nodes) != intv_prod.ndim:
+        raise ValueError('num_nodes has length {}, expected {}.'
+                         ''.format(len(num_nodes), (intv_prod.ndim)))
+
+    if np.shape(node_at_bdry) == ():
+        node_at_bdry = ([(bool(node_at_bdry), bool(node_at_bdry))] *
+                        intv_prod.ndim)
+    elif np.shape(node_at_bdry) == (intv_prod.ndim, 2):
+        pass
+    else:
+        raise ValueError('node_at_bdry has shape {}, expected {}.'
+                         ''.format(np.shape(node_at_bdry),
+                                   (intv_prod.ndim, 2)))
+
+    gmin, gmax = [], []
+    for n, beg, end, (bdry_l, bdry_r) in zip(num_nodes, intv_prod.begin,
+                                             intv_prod.end, node_at_bdry):
+        # Shift left and right boundary grid node if necessary.
+        # The conditions to be met are:
+        # 1. The node should be half a stride away from the boundary
+        # 2. Adding (n-1) * stride in the corresponding direction should
+        #    give the other boundary.
+        # From these conditions, it follows that stride = (b - a) / (n - 1/2)
+        # in the asymmetric cases and stride = (b - a) / n for both shifted.
+        if bdry_l and bdry_r:
+            gmin.append(beg)
+            gmax.append(end)
+        elif bdry_l and not bdry_r:
+            gmin.append(beg)
+            gmax.append(end - (end - beg) / (2 * n - 1))
+        elif not bdry_l and bdry_r:
+            gmin.append(beg + (end - beg) / (2 * n - 1))
+            gmax.append(end)
+        else:
+            gmin.append(beg + (end - beg) / (2 * n))
+            gmax.append(end - (end - beg) / (2 * n))
+
+    grid = RegularGrid(gmin, gmax, num_nodes, order=order)
+    return RectPartition(grid, begin=intv_prod.begin, end=intv_prod.end)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
