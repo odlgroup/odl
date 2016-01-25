@@ -32,7 +32,8 @@ from odl.set.pspace import ProductSpace
 
 
 __all__ = ('ProductSpaceOperator',
-           'ComponentProjection', 'ComponentProjectionAdjoint')
+           'ComponentProjection', 'ComponentProjectionAdjoint',
+           'BroadcastOperator', 'ReductionOperator')
 
 
 class ProductSpaceOperator(Operator):
@@ -603,6 +604,249 @@ class ComponentProjectionAdjoint(Operator):
         ComponentProjection
         """
         return ComponentProjection(self.range, self.index)
+
+
+class BroadcastOperator(Operator):
+    """Broadcast argument to set of operators.
+
+    An argument is broadcasted by evaluating several operators in the same
+    point
+
+        ``BroadcastOperator(op1, op2)(x) = [op1(x), op2(x)]``
+
+    It is implemented using a `ProductSpaceOperator`.
+    """
+    def __init__(self, *operators):
+        self._operators = operators
+        self._prod_op = ProductSpaceOperator([[op] for op in operators])
+
+        super().__init__(self.prod_op.domain[0],
+                         self.prod_op.range,
+                         self.prod_op.is_linear)
+
+    @property
+    def prod_op(self):
+        """The prod-op implementation"""
+        return self._prod_op
+
+    @property
+    def operators(self):
+        """A tuple of sub-operators"""
+        return self._operators
+
+    def _call(self, x, out=None):
+        """Apply operators to ``x``.
+
+        Parameters
+        ----------
+        x : domain element
+            Input vector to be evaluated by operators
+        out : range element, optional
+            output vector to write result to
+
+        Returns
+        -------
+        out : range element
+            Values of operators evaluated in point
+
+        Examples
+        --------
+        >>> import odl
+        >>> I = odl.IdentityOperator(odl.Rn(3))
+        >>> op = BroadcastOperator(I, 2 * I)
+        >>> x = [1, 2, 3]
+        >>> op(x)
+        ProductSpace(Rn(3), 2).element([
+            [1.0, 2.0, 3.0],
+            [2.0, 4.0, 6.0]
+        ])
+        """
+        wrapped_x = self.prod_op.domain.element([x], cast=False)
+        return self.prod_op(wrapped_x, out=out)
+
+    def derivative(self, x):
+        """Derivative of the broadcast operator.
+
+        Parameters
+        ----------
+        x : domain element
+            The point to take the derivative in
+
+        Returns
+        -------
+        adjoint : linear `BroadcastOperator`
+            The derivative
+
+        Examples
+        --------
+        >>> import odl
+        >>> I = odl.IdentityOperator(odl.Rn(3))
+        >>> x = [1, 2, 3]
+
+        Example with linear operator (derivative is itself)
+
+        >>> op = BroadcastOperator(I, 2 * I)
+        >>> op(x)
+        ProductSpace(Rn(3), 2).element([
+            [1.0, 2.0, 3.0],
+            [2.0, 4.0, 6.0]
+        ])
+        >>> op.derivative(x)(x)
+        ProductSpace(Rn(3), 2).element([
+            [1.0, 2.0, 3.0],
+            [2.0, 4.0, 6.0]
+        ])
+        """
+        return BroadcastOperator(*[op.derivative(x) for op in
+                                   self.operators])
+
+    @property
+    def adjoint(self):
+        """Adjoint of the broadcast operator.
+
+        Parameters
+        ----------
+        x : domain element
+            The point to take the derivative in
+
+        Returns
+        -------
+        adjoint : linear `BroadcastOperator`
+            The adjoint
+
+        Examples
+        --------
+        >>> import odl
+        >>> I = odl.IdentityOperator(odl.Rn(3))
+        >>> op = BroadcastOperator(I, 2 * I)
+        >>> op.adjoint([[1, 2, 3], [2, 3, 4]])
+        Rn(3).element([5.0, 8.0, 11.0])
+        """
+        return ReductionOperator(*[op.adjoint for op in self.operators])
+
+
+class ReductionOperator(Operator):
+    """Reduce argument to over set of operators.
+
+    An argument is reduced by evaluating several operators and summing the
+    result
+
+        ``ReductionOperator(op1, op2)(x) = op1(x[0]) + op2(x[1])``
+
+    It is implemented using a `ProductSpaceOperator`.
+    """
+    def __init__(self, *operators):
+        self._operators = operators
+        self._prod_op = ProductSpaceOperator([operators])
+
+        super().__init__(self.prod_op.domain,
+                         self.prod_op.range[0],
+                         self.prod_op.is_linear)
+
+    @property
+    def prod_op(self):
+        """The prod-op implementation"""
+        return self._prod_op
+
+    @property
+    def operators(self):
+        """A tuple of sub-operators"""
+        return self._operators
+
+    def _call(self, x, out=None):
+        """Apply operators to ``x`` and sum.
+
+        Parameters
+        ----------
+        x : domain element
+            Input vector to be extended
+        out : range element, optional
+            output vector to write result to
+
+
+        Parameters
+        ----------
+        x : domain element
+            Input vector to be evaluated by operators
+        out : range element, optional
+            output vector to write result to
+
+        Returns
+        -------
+        out : range element
+            Sum of operators evaluated in point
+
+        Examples
+        --------
+        >>> import odl
+        >>> I = odl.IdentityOperator(odl.Rn(3))
+        >>> op = ReductionOperator(I, 2 * I)
+        >>> op([[1.0, 2.0, 3.0], [4.0, 6.0, 8.0]])
+        Rn(3).element([9.0, 14.0, 19.0])
+        """
+        if out is None:
+            return self.prod_op(x)[0]
+        else:
+            wrapped_out = self.prod_op.range.element([out], cast=False)
+            return self.prod_op(x, out=wrapped_out)
+
+    def derivative(self, x):
+        """Derivative of the reduction operator.
+
+        Parameters
+        ----------
+        x : domain element
+            The point to take the derivative in
+
+        Returns
+        -------
+        adjoint : linear `BroadcastOperator`
+            The derivative
+
+        Examples
+        --------
+        >>> import odl
+        >>> I = odl.IdentityOperator(odl.Rn(3))
+        >>> x = [1.0, 2.0, 3.0]
+        >>> y = [4.0, 6.0, 8.0]
+
+        Example with linear operator (derivative is itself)
+
+        >>> op = ReductionOperator(I, 2 * I)
+        >>> op([x, y])
+        Rn(3).element([9.0, 14.0, 19.0])
+        >>> op.derivative([x, y])([x, y])
+        Rn(3).element([9.0, 14.0, 19.0])
+        """
+        return ReductionOperator(*[op.derivative(xi)
+                                   for op, xi in zip(self.operators, x)])
+
+    @property
+    def adjoint(self):
+        """Adjoint of the reduction operator.
+
+        Parameters
+        ----------
+        x : domain element
+            The point to take the derivative in
+
+        Returns
+        -------
+        adjoint : linear `BroadcastOperator`
+            The adjoint
+
+        Examples
+        --------
+        >>> import odl
+        >>> I = odl.IdentityOperator(odl.Rn(3))
+        >>> op = ReductionOperator(I, 2 * I)
+        >>> op.adjoint([1, 2, 3])
+        ProductSpace(Rn(3), 2).element([
+            [1.0, 2.0, 3.0],
+            [2.0, 4.0, 6.0]
+        ])
+        """
+        return BroadcastOperator(*[op.adjoint for op in self.operators])
 
 
 if __name__ == '__main__':
