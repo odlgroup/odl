@@ -236,29 +236,9 @@ class TensorGrid(Set):
         """Return ``self.min_pt``."""
         return self.min_pt
 
-        # TODO: move code to Partition
-#        if not self.as_midp:
-#            return self.min_pt
-#        elif self._exact_min is not None:
-#            return self._exact_min
-#        else:
-#            minpt_cell_size = np.array([cs[0] for cs in self.cell_sizes()])
-#            return self.min_pt - minpt_cell_size / 2
-
     def max(self):
         """Return ``self.max_pt``."""
         return self.max_pt
-
-        # TODO: move code to Partition
-#        if not self.as_midp:
-#            return self.max_pt
-#        elif self._exact_max is not None:
-#            return self._exact_max
-#        else:
-#            maxpt_cell_size = np.array([cs[-1] for cs in self.cell_sizes()])
-#            return self.max_pt + maxpt_cell_size / 2
-
-    # Methods
 
     def extent(self):
         """Return a vector containing the total grid extent."""
@@ -592,43 +572,6 @@ class TensorGrid(Set):
         """
         return self.corner_grid().points(order=order)
 
-    # TODO: move code to Partition
-#    def cell_sizes(self):
-#        """The grid cell sizes as coordinate vectors.
-#
-#        Returns
-#        -------
-#        csizes : `tuple` of `numpy.ndarray`
-#            The cell sizes per axis. The length of the vectors will be
-#            one less than `coord_vectors` if `as_midp` is `False`,
-#            otherwise they will have the same length.
-#            For axes with 1 grid point, cell size is set to 0.
-#
-#        Examples
-#        --------
-#        >>> g = TensorGrid([0, 1], [-1, 0, 2])
-#        >>> g.cell_sizes()
-#        (array([ 1.]), array([ 1.,  2.]))
-#        >>> g = TensorGrid([0, 1], [-1, 0, 2], as_midp=True)
-#        >>> g.cell_sizes()
-#        (array([ 1.,  1.]), array([ 1. ,  1.5,  2. ]))
-#        """
-#        csizes = []
-#        for vec in self.coord_vectors:
-#            if len(vec) == 1:
-#                csizes.append(np.array([0.0]))
-#            else:
-#                if self.as_midp:
-#                    csize = np.empty_like(vec)
-#                    csize[1:-1] = (vec[2:] - vec[:-2]) / 2.0
-#                    csize[0] = vec[1] - vec[0]
-#                    csize[-1] = vec[-1] - vec[-2]
-#                else:
-#                    csize = vec[1:] - vec[:-1]
-#                csizes.append(csize)
-#
-#        return tuple(csizes)
-
     def meshgrid(self, squeeze=False):
         """A grid suitable for function evaluation.
 
@@ -682,32 +625,6 @@ class TensorGrid(Set):
         """
         return sparse_meshgrid(*self.coord_vectors,
                                squeeze=squeeze, order=self.order)
-
-        # TODO: move code to Partition
-#    def convex_hull(self):
-#        """The "inner" of the grid, an `IntervalProd`.
-#
-#        The convex hull of a set is the union of all line segments
-#        between points in the set. For a tensor grid, it is the
-#        interval product given by the extremal coordinates.
-#
-#        Returns
-#        -------
-#        chull : `IntervalProd`
-#            Interval product defined by the minimum and maximum of
-#            the grid (depends on `as_midp`)
-#
-#        Examples
-#        --------
-#        >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
-#        >>> g.convex_hull()
-#        IntervalProd([-1.0, 2.0, 5.0, 2.0], [3.0, 4.0, 5.0, 7.0])
-#        >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7],
-#        ...                as_midp=True)
-#        >>> g.convex_hull()
-#        IntervalProd([-1.5, 1.0, 5.0, 1.0], [4.5, 5.0, 5.0, 8.5])
-#        """
-#        return IntervalProd(self.min(), self.max())
 
     def __getitem__(self, slc):
         """self[slc] implementation.
@@ -910,19 +827,6 @@ class RegularGrid(TensorGrid):
         array([ 1.,  2.])
         """
         return self._stride
-
-    # TODO: move code to Partition
-#    @property
-#    def cell_volume(self):
-#        """Cell volume of an underlying regular grid.
-#
-#        Examples
-#        --------
-#        >>> rg = RegularGrid([0, 0], [1, 1], (2, 2))
-#        >>> rg.cell_volume
-#        1.0
-#        """
-#        return float(np.prod(self.stride))
 
     def is_subgrid(self, other, atol=0.0):
         """Test if this grid is contained in another grid.
@@ -1209,13 +1113,6 @@ def uniform_sampling(intv_prod, num_nodes, order='C'):
         raise ValueError('degenerate axes {} cannot be sampled with more '
                          'than one node.'.format(tuple(intv_prod._ideg)))
 
-    # TODO: move code to Partition
-#    if as_midp:
-#        grid_min = intv_prod.begin + intv_prod.extent / (2 * num_nodes)
-#        grid_max = intv_prod.end - intv_prod.extent / (2 * num_nodes)
-#        return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp,
-#                           _exact_min=intv_prod.begin,
-#                           _exact_max=intv_prod.end)
     return RegularGrid(intv_prod.begin, intv_prod.end, num_nodes, order=order)
 
 
