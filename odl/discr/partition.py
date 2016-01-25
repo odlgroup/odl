@@ -291,8 +291,12 @@ class RectPartition(object):
         return self.max() - self.min()
 
     def sampling_points(self):
-        """Return the grid sampling points."""
+        """Return the sampling grid points."""
         return self.grid.points()
+
+    def sampling_meshgrid(self):
+        """Return the sparse meshgrid of sampling points."""
+        return self.grid.meshgrid()
 
     def cell_boundaries(self):
         """Return the cell boundaries as coordinate vectors.
@@ -353,6 +357,27 @@ class RectPartition(object):
         return tuple(csizes)
 
     @property
+    def cell_size(self):
+        """Size of the 'inner' cells, regardless of begin and end.
+
+        Only defined if ``self.grid`` is a `RegularGrid`.
+
+        Examples
+        --------
+        >>> grid = RegularGrid([0, 0], [1, 1], (3, 5))
+        >>> part = RectPartition(grid)
+        >>> part.cell_size
+        array([ 0.5 ,  0.25])
+        """
+
+        if not isinstance(self.grid, RegularGrid):
+            raise NotImplementedError(
+                'cell size not defined for non-uniform grids. Use '
+                '`grid.cell_sizes()` instead.')
+
+        return self.extent() / self.shape
+
+    @property
     def cell_volume(self):
         """Volume of the 'inner' cells, regardless of begin and end.
 
@@ -360,14 +385,12 @@ class RectPartition(object):
 
         Examples
         --------
-        >>> grid = RegularGrid([0, 0], [1, 1], (3, 3))
+        >>> grid = RegularGrid([0, 0], [1, 1], (3, 5))
         >>> part = RectPartition(grid)
         >>> part.cell_volume
-        0.25
+        0.125
         """
-        if not isinstance(self.grid, RegularGrid):
-            raise TypeError('cell_volume not defined for non-regular grids.')
-        return float(np.prod(self.extent() / self.shape))
+        return float(np.prod(self.cell_size))
 
     def approx_equals(self, other, atol):
         """Return `True` in case of approximate equality.
