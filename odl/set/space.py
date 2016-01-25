@@ -244,12 +244,12 @@ class LinearSpace(Set):
                                        ''.format(out, self))
 
         if a not in self.field:
-            raise LinearSpaceTypeError('first scalar {!r} not in the field'
+            raise LinearSpaceTypeError('first scalar {!r} not in the field '
                                        '{!r} of the space {!r}.'
                                        ''.format(a, self.field, self))
 
         if x1 not in self:
-            raise LinearSpaceTypeError('first input vector {!r}'
+            raise LinearSpaceTypeError('first input vector {!r} '
                                        'not in space {!r}.'
                                        ''.format(x1, self))
 
@@ -262,12 +262,12 @@ class LinearSpace(Set):
 
         else:  # Two arguments
             if b not in self.field:
-                raise LinearSpaceTypeError('second scalar {!r} not in the'
+                raise LinearSpaceTypeError('second scalar {!r} not in the '
                                            'field {!r} of the space {!r}.'
                                            ''.format(b, self.field, self))
 
             if x2 not in self:
-                raise LinearSpaceTypeError('second input vector {!r} not'
+                raise LinearSpaceTypeError('second input vector {!r} not '
                                            'in space {!r}.'.format(x2, self))
 
             # Call method

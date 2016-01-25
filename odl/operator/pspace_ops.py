@@ -169,14 +169,14 @@ class ProductSpaceOperator(Operator):
             if domains[col] is None:
                 domains[col] = op.domain
             elif domains[col] != op.domain:
-                raise ValueError('Column {}, has inconsistent domains,'
+                raise ValueError('Column {}, has inconsistent domains, '
                                  'got {} and {}'
                                  ''.format(col, domains[col], op.domain))
 
             if ranges[row] is None:
                 ranges[row] = op.range
             elif ranges[row] != op.range:
-                raise ValueError('Row {}, has inconsistent ranges,'
+                raise ValueError('Row {}, has inconsistent ranges, '
                                  'got {} and {}'
                                  ''.format(row, ranges[row], op.range))
 
@@ -274,6 +274,15 @@ class ProductSpaceOperator(Operator):
                     out[i].set_zero()
 
         return out
+
+    def derivative(self, x):
+        """Derivative of the product space operator.
+        """
+        deriv_ops = [op.derivative(x[col]) for op, col in zip(self.ops.data, self.ops.col)]
+        indices = [self.ops.row, self.ops.col]
+        shape = (self.ops.shape[0], self.ops.shape[1])
+        adj_matrix = sp.sparse.coo_matrix((deriv_ops, indices), shape)
+        return ProductSpaceOperator(adj_matrix, self.domain, self.range)
 
     @property
     def adjoint(self):
