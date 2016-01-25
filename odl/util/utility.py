@@ -32,9 +32,11 @@ import numpy as np
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr')
 
+
 def _indent_rows(string, indent=4):
-    out_string = '\n'.join((' '*indent) + row for row in string.split('\n'))
+    out_string = '\n'.join((' ' * indent) + row for row in string.split('\n'))
     return out_string
+
 
 def array1d_repr(array, nprint=6):
     """Stringification of a 1D array, keeping byte / unicode.
@@ -51,8 +53,8 @@ def array1d_repr(array, nprint=6):
     if len(array) <= nprint:
         return repr(list(array))
     else:
-        return (repr(list(array[:nprint//2])).rstrip(']') + ', ..., ' +
-                repr(list(array[-nprint//2:])).lstrip('['))
+        return (repr(list(array[:nprint // 2])).rstrip(']') + ', ..., ' +
+                repr(list(array[-(nprint // 2):])).lstrip('['))
 
 
 def array1d_str(array, nprint=6):
@@ -71,8 +73,8 @@ def array1d_str(array, nprint=6):
         inner_str = ', '.join(str(a) for a in array)
         return '[{}]'.format(inner_str)
     else:
-        left_str = ', '.join(str(a) for a in array[:nprint//2])
-        right_str = ', '.join(str(a) for a in array[-nprint//2:])
+        left_str = ', '.join(str(a) for a in array[:nprint // 2])
+        right_str = ', '.join(str(a) for a in array[-(nprint // 2):])
         return '[{}, ..., {}]'.format(left_str, right_str)
 
 
@@ -109,9 +111,9 @@ def arraynd_repr(array, nprint=None):
             return '[{}]'.format(inner_str)
         else:
             left_str = ',\n '.join(arraynd_repr(a) for a in
-                                   array[:nprint//2])
+                                   array[:nprint // 2])
             right_str = ',\n '.join(arraynd_repr(a) for a in
-                                    array[-nprint//2:])
+                                    array[-(nprint // 2):])
             return '[{},\n ...,\n {}]'.format(left_str, right_str)
     else:
         return array1d_repr(array)
@@ -153,8 +155,10 @@ def arraynd_str(array, nprint=None):
             inner_str = ',\n'.join(arraynd_str(a) for a in array)
             return '[\n{}\n]'.format(_indent_rows(inner_str))
         else:
-            left_str = ',\n'.join(arraynd_str(a) for a in array[:nprint//2])
-            right_str = ',\n'.join(arraynd_str(a) for a in array[-nprint//2:])
+            left_str = ',\n'.join(arraynd_str(a) for a in
+                                  array[:nprint // 2])
+            right_str = ',\n'.join(arraynd_str(a) for a in
+                                   array[- (nprint // 2):])
             return '[\n{},\n    ...,\n{}\n]'.format(_indent_rows(left_str),
                                                     _indent_rows(right_str))
     else:
