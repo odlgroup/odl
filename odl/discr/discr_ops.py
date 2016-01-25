@@ -455,8 +455,10 @@ class PartialDerivative(Operator):
         >>> f = par_deriv.domain.element(data)
         >>> par_div_f = par_deriv(f)
         >>> print(par_div_f)
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [0.0, 1.0, 2.0, 3.0, 4.0]]
+        [
+            [0.0, 1.0, 2.0, 3.0, 4.0],
+            [0.0, 1.0, 2.0, 3.0, 4.0]
+        ]
         """
         if out is None:
             out = self.range.element()
