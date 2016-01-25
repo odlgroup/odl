@@ -38,10 +38,6 @@ class Convolution(odl.Operator):
     def __init__(self, space, kernel, adjkernel):
         self.kernel = kernel
         self.adjkernel = adjkernel
-
-        # Scaling factor needed to account for non-unity cell volume
-        # self.scale = disc_kernel.space.cell_volume
-
         super().__init__(space, space, linear=True)
 
     def _call(self, rhs, out):
@@ -49,14 +45,12 @@ class Convolution(odl.Operator):
                                self.kernel,
                                output=out.asarray(),
                                mode='wrap')
-
-        # out *= self.scale
-
         return out
 
     @property
     def adjoint(self):
         return Convolution(self.domain, self.adjkernel, self.kernel)
+
 
 def kernel(x):
     mean = [0.0, 0.5]
@@ -90,7 +84,7 @@ discr_phantom = odl.util.phantom.shepp_logan(discr_space, modified=True)
 # Initialize convolution operator
 conv = Convolution(discr_space, disc_kernel, disc_adjkernel)
 
-# Run diagnosticts to test the adjoint
+# Run diagnostics to test the adjoint
 # odl.diagnostics.OperatorTest(conv).run_tests()
 
 # Initialize gradient operator
@@ -115,16 +109,15 @@ conv(discr_phantom, out=g)
 fig = plt.figure('intermediate results')
 partial = odl.solvers.util.ForEachPartial(
     lambda result: result.show(fig=fig, show=False))
-partial &= odl.solvers.util.PrintIterationPartial()
+partial &= odl.solvers.util.PrintIterationTimePartial()
 
 # Run algorithms
-chambolle_pock_solver(prod_op, x,
-                      f_cc_prox_l2_tv(prod_op.range, g, lam=0.0001),
-                      g_prox_none(prod_op.domain),
-                      sigma=1 / prod_op_norm,
-                      tau=1 / prod_op_norm,
+chambolle_pock_solver(prod_op, x, tau=1/prod_op_norm, sigma=1/prod_op_norm,
+                      proximal_primal=g_prox_none(prod_op.domain),
+                      proximal_dual=f_cc_prox_l2_tv(prod_op.range, g,
+                                                    lam=0.0001),
                       niter=100,
-                      partial=partial)[0]
+                      partial=partial)
 
 # Display images
 discr_phantom.show(title='original image')

@@ -753,6 +753,13 @@ class LinearSpaceVector(object):
         """
         return self.space.multiply(x, y, out=self)
 
+    def divide(self, x, y):
+        """Divide by ``other`` inplace.
+
+        `LinearSpace.divide`
+        """
+        return self.space.divide(x, y, out=self)
+
     @property
     def T(self):
         """The transpose of a vector, the functional given by (. , self)

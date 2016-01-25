@@ -32,6 +32,7 @@ from odl.solvers import chambolle_pock_solver, f_cc_prox_l2_tv, g_prox_none
 from odl.util.testutils import all_almost_equal
 
 
+# TODO: improve test documentation
 def test_proximal_factories():
     """Test factory function creating the proximal operator."""
 
@@ -47,18 +48,18 @@ def test_proximal_factories():
     x_data = x_space.element(np.arange(-10, 0))
 
     # Product space for matrix of operators
-    K_range = odl.ProductSpace(g_space, odl.ProductSpace(x_space, 2))
+    operator_range = odl.ProductSpace(g_space, odl.ProductSpace(x_space, 2))
 
     # Product space element
-    p = np.arange(0, g.size)
+    p = np.arange(g.size)
     vec0 = np.arange(5, 15)
     vec1 = np.arange(10, 0, -1)
     # dual variable
-    y = K_range.element([p, [vec0, vec1]])
+    y = operator_range.element([p, [vec0, vec1]])
 
     # Factory function for the prox op of the convex conjugate,F^*, of F
     lam = 12
-    make_prox_f = f_cc_prox_l2_tv(K_range, g_data, lam=lam)
+    make_prox_f = f_cc_prox_l2_tv(operator_range, g_data, lam=lam)
 
     # Proximal operator of F^*
     sigma = 0.5
@@ -68,14 +69,15 @@ def test_proximal_factories():
     # Optimal point of the auxiliary minimization problem prox_sigma[F^*]
     y_opt = prox_op_f_cc(y)
 
-    # First compoment of y_opt
+    # First component of y_opt
     assert all_almost_equal(y_opt[0].asarray(),
                             (p - sigma * g) / (1 + sigma), precision)
 
-    # Second compoment of y_opt
+    # Second component of y_opt
     tmp = np.sqrt(vec0 ** 2 + vec1 ** 2)
     tmp[tmp < lam] = lam
     tmp = lam * vec0 / tmp
+
     assert all_almost_equal(y_opt[1][0], tmp, precision)
 
     # Factory function for the proximal operator of G
@@ -95,38 +97,54 @@ def test_chambolle_pock_solver():
     """Simple execution test for the Chambolle-Pock solver"""
 
     # Discretized space
-    discr_space = odl.uniform_discr(0, 1, 10)
+    n = 5
+    discr_space = odl.uniform_discr(0, 1, n)
 
     # Operator
-    op = odl.IdentityOperator(discr_space)
+    identity = odl.IdentityOperator(discr_space)
 
     # Starting point
-    x = op.domain.zero()
+    x0 = np.arange(n)
+    x = identity.domain.element(x0)
 
     # Proximal operator, use same the factory function for F^* and G
     prox = g_prox_none(discr_space)
 
-    # Run the algorihtms
-    chambolle_pock_solver(op, x, prox, prox, tau=0.2, sigma=0.5, niter=3,
-                          partial=None)
+    # Run the algorithm
+    tau = 0.2
+    sigma = 0.5
+    theta = 0.1
+    chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
+                          proximal_primal=prox, proximal_dual=prox,
+                          theta=theta, niter=1, partial=None)
 
-    assert all(x) == 0
+    x1 = (1 - tau * sigma) * x0
+    assert all_almost_equal(x, x1, 8)
 
-    # Product space operator
-    prod_op = odl.ProductSpaceOperator([[op], [op]])
+    # Warm start with previous x but without previous relaxation
+    chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
+                          proximal_primal=prox, proximal_dual=prox,
+                          theta=theta, niter=1, partial=None)
 
-    # Starting point
-    x = prod_op.domain.zero()
+    print((1 - sigma * tau) * x1)
+    print(x)
 
-    # Proximal operator, use same the factory function for F^* and G
-    prox_range = g_prox_none(prod_op.range)
-    prox_domain = g_prox_none(prod_op.domain)
 
-    # Run the algorihtms
-    chambolle_pock_solver(prod_op, x, prox_range, prox_domain, sigma=0.1,
-                          tau=0.2, niter=3, partial=None)
-
-    assert all(x[0]) == 0
+    # # Product space operator
+    # prod_id = odl.ProductSpaceOperator([[identity], [identity]])
+    #
+    # # Starting point
+    # x = prod_id.domain.zero()
+    #
+    # # Proximal operator, use same the factory function for F^* and G
+    # prox_range = g_prox_none(prod_id.range)
+    # prox_domain = g_prox_none(prod_id.domain)
+    #
+    # # Run the algorithm
+    # chambolle_pock_solver(prod_id, x, prox_range, prox_domain, sigma=0.1,
+    #                       tau=0.2, niter=3, partial=None)
+    #
+    # assert all(x[0]) == 0
 
 
 if __name__ == '__main__':

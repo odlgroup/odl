@@ -34,24 +34,24 @@ from odl.solvers import chambolle_pock_solver, f_cc_prox_l2_tv, g_prox_none
 
 
 # Read the image
-im = np.rot90(scipy.misc.lena()[::2, ::2], 3)
-shape = im.shape
+image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
+shape = image.shape
 # Rescale max to 1
-im = im / np.max(im[:])
+image /= np.max(image[:])
 
 # Discretized spaces
 discr_space = odl.uniform_discr([0, 0], shape, shape)
 
 # Original image
-orig = discr_space.element(im)
+orig = discr_space.element(image)
 
 # Add noise
-im = im + np.random.normal(0, 0.1, shape)
+image += np.random.normal(0, 0.1, shape)
 # Rescale back to [0, 1]
-im = (im - np.min(im)) / (np.max(im) - np.min(im))
+image = (image - np.min(image)) / (np.max(image) - np.min(image))
 
 # Data: noisy image
-noisy = discr_space.element(im)
+noisy = discr_space.element(image)
 
 # Gradient operator
 grad = odl.DiscreteGradient(discr_space, method='forward')
@@ -69,15 +69,14 @@ K_norm = 1.1 * odl.operator.oputils.power_method_opnorm(K, 200)
 fig = plt.figure('iteration')
 partial = odl.solvers.util.ForEachPartial(
     lambda result: result.show(fig=fig, show=False))
-# partial = odl.solvers.util.ShowPartial(fig=fig, show=True, title='iteration')
+# partial = odl.solvers.util.ShowPartial(fig=fig, show=False,
+# title='iteration')
 partial &= odl.solvers.util.PrintIterationTimePartial()
 
-# Run algorithms
-chambolle_pock_solver(K, x,
-                      f_cc_prox_l2_tv(K.range, noisy, lam=1 / 16),
-                      g_prox_none(K.domain),
-                      sigma=1 / K_norm,
-                      tau=1 / K_norm,
+# Run algorithms (and display intermediates)
+chambolle_pock_solver(K, x, tau=1/K_norm, sigma=1/K_norm,
+                      proximal_primal=g_prox_none(K.domain),
+                      proximal_dual=f_cc_prox_l2_tv(K.range, noisy, lam=1/16),
                       niter=10, partial=partial)
 
 # Display images

@@ -15,7 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""First-order primal-dual algorithm developed by Chambolle and Pock."""
+"""First-order primal-dual algorithm developed by Chambolle and Pock.
+
+The method is proposed in `[1]_` and augmented with diagonal preconditioners
+in [2]_. The algorithm is flexible and particularly suited for non-smooth,
+convex optimization problems in imaging. This implementation is along the
+lines of `[3]`_.
+
+.. [1]: http://dx.doi.org/10.1007/s10851-010-0251-1
+.. [2]: http://dx.doi.org/10.1109/ICCV.2011.6126441
+.. [3]: http://stacks.iop.org/0031-9155/57/i=10/a=3065
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -27,8 +37,8 @@ from builtins import super
 
 # Internal
 from odl.operator.operator import Operator
-from odl.operator.pspace_ops import ProductSpaceOperator
 from odl.operator.default_ops import IdentityOperator
+from odl.solvers.util import Partial
 
 __all__ = ('chambolle_pock_solver', 'f_cc_prox_l2_tv', 'g_prox_none')
 
@@ -36,84 +46,141 @@ __all__ = ('chambolle_pock_solver', 'f_cc_prox_l2_tv', 'g_prox_none')
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 # TODO: add positivity constraint
+# TODO: improve doc including reference
+# TODO: split f_cc_prox_l2_tv
+# TODO: add checks
 
-def chambolle_pock_solver(K, x, f_cc_prox, g_prox, sigma, tau, theta=1,
-                          niter=1, partial=None):
-    """Chambolle-Pock algorithm for convex optimization problems.
+def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
+                          theta=1, niter=1, partial=None):
+    """Chambolle-Pock algorithm for non-smooth convex optimization problems.
 
     First order primal-dual hybrid-gradient (PDHG) method for non-smooth
-    convex optimization probelms with known saddle-point structure developed
-    by `Chambolle and Pock`_ (CP).
+    convex optimization problems with known saddle-point structure developed
+    by Chambolle and Pock (CP) [1]_.
 
-    Convergence proofed for ``||K||_2^2 * sigma * tau < 1``
+    Convergence proven for ``||K||_2^2 * sigma * tau < 1``
+
+    For the use of CP with simple and easy to use preconditioning techniques
+    see [2]_. This implementation is based on the
+    article on convex optimization problem prototyping for image
+    reconstruction in computed tomography by [3]_. For more on
+    proximal operators and algorithms see [4]_.
+
 
     Parameters
     ----------
-    K : `Operator` or `ProductSpaceOperator`
-        A (product space) operator mapping X to Y where X and Y are
-        Hilbert spaces
-    x : element in the domain of ``K``
+    op : `Operator`
+        A (product space) operator between Hilbert spaces with domain ``X``
+        and range ``Y``
+    x : element in the domain of ``op``
         Starting point of the iteration with ``x`` in ``X``
-    f_cc_prox : `function`
-        Factory function which, evaluated at ``sigma``, returns the proximal
-        operator of F^*. Domain and range of the returned proximal operator
-        is the range of ``K``.
-    g_prox : `function`
-        Factory function which, evaluated at ``tau``, returns the proximal
-        operator of ``G``. Domain and range of the returned proximal operator
-        is the domain of ``K``.
-    sigma : positive `float`
-        Step length parameter for the update of the dual variable ``y``
     tau : positive `float`
-        Step length parameter for the update of the primal variable ``x``
+        Parameter similar to a step size for the update of the primal
+        variable ``x``. Controls the extent to which ``proximal_primal``
+        maps points towards the minimum of ``G``.
+    sigma : positive `float`
+        Parameter similar to a step size for the update of the dual
+        variable ``y``. Controls the extent to which ``proximal_dual``
+        maps points towards the minimum of ``F^*``.
+    proximal_primal : callable `function`
+        Evaluated at ``tau``, the function returns the proximal operator,
+        ``prox_tau[G](x)``, of the function ``G``. The domain of ``G`` and
+        the returned proximal operator is the space, ``X``, of the primal
+        variable ``x``  i.e. domain of ``op``.
+    proximal_dual : callable `function`
+        Evaluated at ``sigma``, the function returns the proximal operator,
+        ``prox_sigma[F^*](x)``, of the convex conjugate, ``F^*``, of the
+        function ``F``. The domain of ``F^*`` and the returned proximal
+        operator is the space, ``Y``, of the dual variable ``y = op(x)``
+          i.e. the range of ``op``.
     theta : `float` in [0, 1], optional
         Relaxation parameter
-    niter : `int`, optional
+    niter : non-negative `int`, optional
         Number of iterations
     partial : `Partial`, optional
         If not `None` the object passed executes code per iteration,
         e.g. plotting each iterate
 
-
     References
     ----------
-    Original paper by `Chambolle and Pock`_. Also see `diagonal
-    preconditioning`_ techniques. This implementation is based on the
-    article on convex optimization problem prototyping for image
-    reconstruction in computed tomography by `Sidky et al.`_.
+    .. [1]: Chambolle, Antonin, and Pock, Thomas. *A First-Order Primal-Dual
+    Algorithm for Convex Problems with Applications to Imaging*. J. Math.
+    Imaging Vis. 40 120, 2011.
+    http://dx.doi.org/10.1007/s10851-010-0251-1
 
-    .. _Chambolle and Pock: http://dx.doi.org/10.1007/s10851-010-0251-1
-    .. _diagonal preconditioning: http://dx.doi.org/10.1109/ICCV.2011.6126441
-    .. _Sidky et al.: http://stacks.iop.org/0031-9155/57/i=10/a=3065
+    .. [2]: Chambolle, Antonin, and Pock, Thomas. *Diagonal preconditioning
+    for first order primal-dual algorithms in convex optimization*. 2011
+    IEEE International Conference on Computer Vision (ICCV), 1762, 2011.
+     http://dx.doi.org/10.1109/ICCV.2011.6126441
+
+    .. [3]: Emil Y, Sidky, Jakob H, Jorgensen, and Xiaochuan, Pan. *Convex
+    optimization problem prototyping for image reconstruction in computed
+    tomography with the Chambolle-Pock algorithm*, Phys Med Biol, 57 3065,
+    2012. http://stacks.iop.org/0031-9155/57/i=10/a=3065
+
+    .. [4]: Parikh Neal, and Boyd Stephen. *Proximal Algorithms* .
+    Foundations and Trends in Optimization 1 127, 2014.
+    http://dx.doi.org/10.1561/2400000003
     """
-    # Initialize the primal and dual variable
-    # x = K.domain.zero()
-    y = K.range.zero()
-    # Relaxation variable
-    xbar = x.copy()
-    xold = x.copy()
+    if not isinstance(op, Operator):
+        raise TypeError('operator ({}) is not an instance of {}'
+                        ''.format(op, Operator))
+
+    if x.space != op.domain:
+        raise TypeError('starting point ({}) is not in the domain of `op` '
+                        '({})'.format(x.space, op.domain))
+    if tau <= 0:
+        raise ValueError('update parameter ({0}) not positive.'.format(tau))
+    else:
+        tau = float(tau)
+    if sigma <= 0:
+        raise ValueError('update parameter ({0})  not positive.'.format(sigma))
+    else:
+        sigma = float(sigma)
+    if not 0 <= theta <= 1:
+        raise ValueError('relaxation parameter ({0}) not in [0, 1].'
+                         ''.format(theta))
+    else:
+        theta = float(theta)
+    if not isinstance(niter, int) or niter < 0:
+        raise ValueError('number of iterations ({0}) not valid.'
+                         ''.format(niter))
+    if not (partial is None or isinstance(partial, Partial)):
+        raise TypeError('partial ({}) is not an instance of {}'
+                        ''.format(op, Partial))
+
+    # Initialize the dual variable
+    y = op.range.zero()
+    # Relaxation variables
+    x_bar = x.copy()
+    x_old = x.space.element()
 
     # Initialize the proximal operator of the convex conjugate of functional F
-    f_cc_prox_sigma = f_cc_prox(sigma)
+    f_cc_prox_sigma = proximal_dual(sigma)
     # Initialize the proximal operator of functional G
-    g_prox_tau = g_prox(tau)
-    # Adjoint of the product space operator
-    Kadjoint = K.adjoint
+    g_prox_tau = proximal_primal(tau)
 
+    # Adjoint of the product space operator
+    op_adjoint = op.adjoint
+    print('\n')
     for _ in range(niter):
         # Copy required for relaxation
-        # xold = x.copy()
-        xold.assign(x)
+        x_old.assign(x)
+
         # Gradient descent in the dual variable y
-        f_cc_prox_sigma(y + sigma * K(xbar), out=y)
+        f_cc_prox_sigma(y + sigma * op(x_bar), out=y)
+
         # Gradient descent in the primal variable x
-        g_prox_tau(x + (- tau) * Kadjoint(y), out=x)
-        # Overrelaxation in the primal variable x
-        # xbar = x + theta * (x - xold)
-        xbar.lincomb(1 + theta, x, -1, xold)
+        g_prox_tau(x + (- tau) * op_adjoint(y), out=x)
+
+        # Over-relaxation in the primal variable x
+        x_bar.lincomb(1 + theta, x, -theta, x_old)
 
         if partial is not None:
             partial.send(x)
+
+        # print('iter: {}. x: {}. xb: {}'.format(_, x.asarray(),
+        #                                        x_bar.asarray()))
 
 
 def f_cc_prox_l2_tv(space, g, lam):
@@ -121,13 +188,13 @@ def f_cc_prox_l2_tv(space, g, lam):
 
     Factory function which provides a function to initialize the proximal
     operator of the convex conjugate of the functional ``F`` given by the
-    L2-data term and the isotropic total variation semi-norm as in the primal
+    L2-data term and the isotropic total variation semi-norm of in the primal
     minimization problem:
 
     F(y,z)= 1/2 * ||y - g||_2^2 + lambda * ||(|grad u|)||_1
 
-    with y = Au and z = grad u. The operators ``A`` and ``grad`` are
-    combined to a matrix operator ``K`` as:
+    where y = Au and z = grad u. The operators ``A`` and ``grad`` are
+    combined in a matrix operator ``K`` as:
 
         K = (A, grad)^T
 
@@ -152,6 +219,7 @@ def f_cc_prox_l2_tv(space, g, lam):
         length parameter ``sigma``
     """
     lam = float(lam)
+
     def make_prox(sigma):
         """Returns an instance of the proximal operator.
 
@@ -166,7 +234,7 @@ def f_cc_prox_l2_tv(space, g, lam):
             Proximal operator initialized with ``sigma``
         """
 
-        class _prox_op(Operator):
+        class _ProxOp(Operator):
 
             """The proximal operator."""
 
@@ -178,7 +246,7 @@ def f_cc_prox_l2_tv(space, g, lam):
                 sigma : positive `float`
                 """
                 self.sigma = float(sigma)
-                super().__init__(domain=space, range=space)
+                super().__init__(domain=space, range=space, linear=False)
 
             def _call(self, x, out):
                 """Apply the operator to ``x`` and stores the result in
@@ -189,47 +257,27 @@ def f_cc_prox_l2_tv(space, g, lam):
 
                 # First component: (y - sig*g) / (1 + sig)
 
-                sig = float(self.sigma)
-
-                # out[0].assign(y)
-                # out[0] /= sig
-                # out[0] -= g
-                # out[0] *= sig / (1 + sig)
-
+                sig = self.sigma
                 out[0].lincomb(1 / (1 + sig), y, -sig / (1 + sig), g)
 
                 # Second component: lam * z / (max(lam, |z|))
 
                 # Calculate |z| = pointwise 2-norm of z
-
-                # tmp = z[0].space.zero()
-                # for zi in z:
-                #     tmp += zi ** 2
-
-                # tmp = sum((zi ** 2 for zi in z), z[0].space.zero())
-
-                tmp = sum((zi**2 for zi in z[1:]), z[0]**2)
-
-                # tmp = z[0] ** 2
-                # sq_tmp = z[0].space.element()
-                # for zi in z:
-                #     sq_tmp.multiply(zi, zi)
-                #     tmp +=sq_tmp
-
+                tmp = z[0] ** 2
+                sq_tmp = z[0].space.element()
+                for zi in z[1:]:
+                    sq_tmp.multiply(zi, zi)
+                    tmp += sq_tmp
                 tmp.ufunc.sqrt(out=tmp)
 
                 # Pointwise maximum of |z| and lambda
                 tmp.ufunc.maximum(lam, out=tmp)
                 tmp /= lam
 
-                out[1].assign(z)
+                for oi, zi in zip(out[1], z):
+                    oi.divide(zi, tmp)
 
-                for zi in out[1]:
-                    zi /= tmp
-                # for oi, zi in zip(out[1], z):
-                #     zi.divide(oi, tmp)
-
-        return _prox_op(sigma)
+        return _ProxOp(sigma)
 
     return make_prox
 
@@ -243,9 +291,9 @@ def g_prox_none(space):
 
     Parameters
     ----------
-    space : `DiscreteLp`
-        Vector space related to the primal variable ``x``. It is given by
-        the domain of the combined product space operator ``K``.
+    space : domain of ``op``
+        Space of the domain of the (combined) operator ``op`` in which the
+        primal variable ``x`` resides in
 
     Returns
     -------
@@ -258,38 +306,16 @@ def g_prox_none(space):
 
         Parameters
         ----------
-        tau : positive `float'
-            Step length parameter
+        tau : positive `float`
+            Step length parameter. Unused here but introduced to provide a
+            common interface
 
         Returns
         -------
-        prox_op : `Operator`
-            Proximal operator
+        id : `IdentityOperator`
+            The proximal operator for an unconstrained the primal variable
+            is the identity map
         """
-
-        # class _prox_op(Operator):
-        #
-        #     """The proximal operator. """
-        #
-        #     def __init__(self, tau):
-        #         """Initialize the proximal operator.
-        #
-        #         Parameters
-        #         ----------
-        #         tau : positive `float`
-        #             Unused. Introduced to have a common interface
-        #     """
-        #         self.tau = tau
-        #         super().__init__(domain=space, range=space)
-        #
-        #     def _call(self, x, out):
-        #         """Return the input
-        #
-        #         Parameters
-        #         ----------
-        #         x : element in ``space``
-        #             Unused. Introduced for a common interface
-        #         """
 
         return IdentityOperator(space)
 
