@@ -35,8 +35,8 @@ from odl.util.testutils import all_equal
 
 
 def test_tensorgrid_init():
-    sorted1 = np.arange(2, 6)
-    sorted2 = np.arange(-4, 5, 2)
+    sorted1 = np.array([2, 3, 4, 5])
+    sorted2 = np.array([-4, -2, 0, 2, 4])
     sorted3 = np.linspace(-1, 2, 50)
     scalar = 0.5
 
@@ -54,8 +54,8 @@ def test_tensorgrid_init_error():
     # Check different error scenarios
 
     # Good input
-    sorted1 = np.arange(2, 6)
-    sorted2 = np.arange(-4, 5, 2)
+    sorted1 = np.array([2, 3, 4, 5])
+    sorted2 = np.array([-4, -2, 0, 2, 4])
 
     # Bad input
     unsorted = np.arange(4)
@@ -96,8 +96,8 @@ def test_tensorgrid_init_error():
 
 
 def test_tensorgrid_ndim():
-    vec1 = np.arange(2, 6)
-    vec2 = np.arange(-4, 5, 2)
+    vec1 = np.array([2, 3, 4, 5])
+    vec2 = np.array([-4, -2, 0, 2, 4])
     vec3 = np.linspace(-2, 2, 50)
 
     grid1 = TensorGrid(vec1)
@@ -108,7 +108,7 @@ def test_tensorgrid_ndim():
 
 
 def test_tensorgrid_shape():
-    vec1 = np.arange(2, 6)
+    vec1 = np.array([2, 3, 4, 5])
     vec2 = np.linspace(-2, 2, 50)
     scalar = 0.5
 
@@ -122,7 +122,7 @@ def test_tensorgrid_shape():
 
 
 def test_tensorgrid_size():
-    vec1 = np.arange(2, 6)
+    vec1 = np.array([2, 3, 4, 5])
     vec2 = np.linspace(-2, 2, 50)
     scalar = 0.5
 
@@ -136,9 +136,9 @@ def test_tensorgrid_size():
 
 
 def test_tensorgrid_minpt_maxpt():
-    vec1 = np.arange(2, 6)
-    vec2 = np.arange(-4, 5, 2)
-    vec3 = np.arange(-1, 1)
+    vec1 = np.array([2, 3, 4, 5])
+    vec2 = np.array([-4, -2, 0, 2, 4])
+    vec3 = np.array([-1, 0])
     scalar = 0.5
 
     grid = TensorGrid(vec1, vec2, vec3)
@@ -151,8 +151,8 @@ def test_tensorgrid_minpt_maxpt():
 
 
 def test_tensorgrid_element():
-    vec1 = np.arange(2, 6)
-    vec2 = np.arange(-4, 5, 2)
+    vec1 = np.array([2, 3, 4, 5])
+    vec2 = np.array([-4, -2, 0, 2, 4])
 
     grid = TensorGrid(vec1, vec2)
     some_pt = grid.element()
@@ -161,9 +161,9 @@ def test_tensorgrid_element():
 
 # TODO: move to Partition tests
 #def test_min_max():
-#    vec1 = np.arange(2, 6)
-#    vec2 = np.arange(-4, 5, 2)
-#    vec3 = np.arange(-1, 1)
+#    vec1 = np.array([2, 3, 4, 5])
+#    vec2 = np.array([-4, -2, 0, 2, 4])
+#    vec3 = np.array([-1, 0])
 #    scalar = 0.5
 #
 #    grid = TensorGrid(vec1, vec2, vec3, as_midp=False)
@@ -184,8 +184,8 @@ def test_tensorgrid_element():
 
 
 def test_tensorgrid_equals():
-    vec1 = np.arange(2, 6)
-    vec2 = np.arange(-4, 5, 2)
+    vec1 = np.array([2, 3, 4, 5])
+    vec2 = np.array([-4, -2, 0, 2, 4])
 
     grid1 = TensorGrid(vec1)
     grid1_diff_order = TensorGrid(vec1, order='F')
@@ -219,8 +219,8 @@ def test_tensorgrid_equals():
 
 
 def test_tensorgrid_contains():
-    vec1 = np.arange(2, 6)
-    vec2 = np.arange(-4, 5, 2)
+    vec1 = np.array([2, 3, 4, 5])
+    vec2 = np.array([-4, -2, 0, 2, 4])
 
     grid = TensorGrid(vec1, vec2)
 
@@ -246,11 +246,11 @@ def test_tensorgrid_contains():
 
 
 def test_tensorgrid_is_subgrid():
-    vec1 = np.arange(2, 6)
-    vec1_sup = np.arange(2, 8)
-    vec2 = np.arange(-4, 5, 2)
-    vec2_sup = np.arange(-6, 7, 2)
-    vec2_sub = np.arange(-4, 3, 2)
+    vec1 = np.array([2, 3, 4, 5])
+    vec1_sup = np.array([2, 3, 4, 5, 6, 7])
+    vec2 = np.array([-4, -2, 0, 2, 4])
+    vec2_sup = np.array([-6, -4, -2, 0, 2, 4, 6])
+    vec2_sub = np.array([-4, -2, 0, 2])
     scalar = 0.5
 
     grid = TensorGrid(vec1, vec2)
@@ -289,9 +289,9 @@ def test_tensorgrid_is_subgrid():
 
 
 def test_tensorgrid_insert():
-    vec1 = np.arange(2, 6)
-    vec2 = np.arange(-4, 5, 2)
-    vec3 = np.arange(-1, 1)
+    vec1 = np.array([2, 3, 4, 5])
+    vec2 = np.array([-4, -2, 0, 2, 4])
+    vec3 = np.array([-1, 0])
     scalar = 0.5
 
     grid = TensorGrid(vec1, vec2)
@@ -318,8 +318,8 @@ def test_tensorgrid_insert():
 
 
 def test_tensorgrid_points():
-    vec1 = np.arange(2, 6)
-    vec2 = np.arange(-4, 5, 2)
+    vec1 = np.array([2, 3, 4, 5])
+    vec2 = np.array([-4, -2, 0, 2, 4])
     scalar = 0.5
 
     # C ordering
@@ -372,9 +372,9 @@ def test_tensorgrid_points():
 
 
 def test_tensorgrid_corners():
-    vec1 = np.arange(2, 6)
-    vec2 = np.arange(-4, 5, 2)
-    vec3 = np.arange(-1, 1)
+    vec1 = np.array([2, 3, 4, 5])
+    vec2 = np.array([-4, -2, 0, 2, 4])
+    vec3 = np.array([-1, 0])
     scalar = 0.5
 
     minmax1 = (vec1[0], vec1[-1])
