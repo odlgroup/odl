@@ -51,12 +51,30 @@ __all__ = ('chambolle_pock_solver', 'f_cc_prox_l2_tv', 'g_prox_none')
 # TODO: add checks
 
 def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
-                          theta=1, niter=1, partial=None):
+                          theta=1, niter=1, partial=None, x_relaxation=None,
+                          y=None):
     """Chambolle-Pock algorithm for non-smooth convex optimization problems.
 
     First order primal-dual hybrid-gradient (PDHG) method for non-smooth
-    convex optimization problems with known saddle-point structure developed
-    by Chambolle and Pock (CP) [1]_.
+    convex optimization problems with known saddle-point structure
+    developed by Chambolle and Pock (CP) [1]_.
+
+    Generic saddle-point optimization problem:
+
+        min_{x in X} max_{y in Y} <Kx,y>_Y + G(x) - F^*(y)
+
+    where X and Y are finite-dimensional Hilbert spaces with inner product
+    <.,.>, K is a continuous linear operator K : X -> Y. G : X -> [0,+infty]
+    and F^* : Y -> [0,+infty] are proper, lower-semicontinuous functions with
+    F^* being the convex (or Fenchel) conjugate of
+
+    Corresponding primal minimization problem
+
+        min_x G(x) + F(Kx)
+
+    Corresponding dual maximization:
+
+        max_y G(-K^*x) - F^*(y)
 
     Convergence proven for ``||K||_2^2 * sigma * tau < 1``
 
@@ -65,7 +83,6 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     article on convex optimization problem prototyping for image
     reconstruction in computed tomography by [3]_. For more on
     proximal operators and algorithms see [4]_.
-
 
     Parameters
     ----------
@@ -100,6 +117,10 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     partial : `Partial`, optional
         If not `None` the object passed executes code per iteration,
         e.g. plotting each iterate
+    x_relaxation : element in the domain of ``op``
+        Required to resume iteration. If `None` it is equal to ``x``.
+    y : element in the range of ``op``
+        Required to resume iteration. If `None` it is set to zero.
 
     References
     ----------
@@ -149,10 +170,23 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         raise TypeError('partial ({}) is not an instance of {}'
                         ''.format(op, Partial))
 
+    # Relaxation variable
+    if x_relaxation is None:
+            x_relaxation = x.copy()
+    else:
+        if x_relaxation.space != op.domain:
+            raise TypeError('relaxation variable {} is not in the domain of '
+                            '`op` ({})'.format(x_relaxation.space, op.domain))
+
     # Initialize the dual variable
-    y = op.range.zero()
-    # Relaxation variables
-    x_bar = x.copy()
+    if y is None:
+        y = op.range.zero()
+    else:
+        if y.space != op.domain:
+            raise TypeError('variable {} is not in the range of `op` '
+                            '({})'.format(x_relaxation.space, op.domain))
+
+    # Temporal copy of previous iterate
     x_old = x.space.element()
 
     # Initialize the proximal operator of the convex conjugate of functional F
@@ -162,25 +196,22 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     # Adjoint of the product space operator
     op_adjoint = op.adjoint
-    print('\n')
+
     for _ in range(niter):
         # Copy required for relaxation
         x_old.assign(x)
 
         # Gradient descent in the dual variable y
-        f_cc_prox_sigma(y + sigma * op(x_bar), out=y)
+        f_cc_prox_sigma(y + sigma * op(x_relaxation), out=y)
 
         # Gradient descent in the primal variable x
         g_prox_tau(x + (- tau) * op_adjoint(y), out=x)
 
         # Over-relaxation in the primal variable x
-        x_bar.lincomb(1 + theta, x, -theta, x_old)
+        x_relaxation.lincomb(1 + theta, x, -theta, x_old)
 
         if partial is not None:
             partial.send(x)
-
-        # print('iter: {}. x: {}. xb: {}'.format(_, x.asarray(),
-        #                                        x_bar.asarray()))
 
 
 def f_cc_prox_l2_tv(space, g, lam):
