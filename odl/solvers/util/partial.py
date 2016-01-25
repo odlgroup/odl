@@ -108,12 +108,13 @@ class PrintIterationPartial(Partial):
 
     """Print the interation count."""
 
-    def __init__(self):
+    def __init__(self, text=None):
+        self.text = text if text is not None else text
         self.iter = 0
 
     def send(self, _):
         """Print the current iteration."""
-        print("iter = {}".format(self.iter))
+        print("{} = {}".format(self.text, self.iter))
         self.iter += 1
 
 
