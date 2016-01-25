@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 Jonas Adler
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #

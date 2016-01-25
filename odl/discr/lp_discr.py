@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -20,6 +20,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import super, str
 
@@ -146,14 +147,22 @@ class DiscreteLp(Discretization):
             pass
 
         # Sequence-type input
-        arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-        if arr.ndim > 1 and arr.shape != self.shape:
-            arr = np.squeeze(arr)  # Squeeze could solve the problem
-            if arr.shape != self.shape:
-                raise ValueError('input shape {} does not match grid shape {}'
-                                 ''.format(arr.shape, self.shape))
-        arr = arr.ravel(order=self.order)
-        return self.element_type(self, self.dspace.element(arr))
+        try:
+            arr = np.asarray(inp, dtype=self.dtype, order=self.order)
+            if arr.ndim > 1 and arr.shape != self.shape:
+                arr = np.squeeze(arr)  # Squeeze could solve the problem
+                if arr.shape != self.shape:
+                    raise ValueError(
+                        'input shape {} does not match grid shape {}.'
+                        ''.format(arr.shape, self.shape))
+            arr = arr.ravel(order=self.order)
+            return self.element_type(self, self.dspace.element(arr))
+        except TypeError as err:
+            if str(err.args[0]).startswith('output contains points outside'):
+                raise err
+            else:
+                raise_from(TypeError('unable to create an element of {} from '
+                                     '{!r}.'.format(self, inp)), err)
 
     @property
     def grid(self):
@@ -179,7 +188,7 @@ class DiscreteLp(Discretization):
                                       'instead.')
         csize = self.grid.stride
         idcs = np.where(csize == 0)
-        csize[idcs] = self.domain.size[idcs]
+        csize[idcs] = self.domain.extent[idcs]
         return csize
 
     @property
@@ -288,12 +297,12 @@ class DiscreteLpVector(DiscretizationVector):
                                              order=self.space.order)
         else:
             if out.shape not in (self.space.grid.shape,
-                                 (self.space.grid.ntotal,)):
+                                 (self.space.grid.size,)):
                 raise ValueError('output array has shape {}, expected '
                                  '{} or ({},).'
                                  ''.format(out.shape,
                                            self.space.grid.shape,
-                                           self.space.grid.ntotal))
+                                           self.space.grid.size))
             out_r = out.reshape(self.space.grid.shape,
                                 order=self.space.order)
             if out_r.flags.c_contiguous:
@@ -553,17 +562,17 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     if weighting_ == 'simple':
         csize = grid.stride
         idcs = np.where(csize == 0)
-        csize[idcs] = fspace.domain.size[idcs]
+        csize[idcs] = fspace.domain.extent[idcs]
         weight = np.prod(csize)
     else:  # weighting_ == 'consistent'
         # TODO: implement
         raise NotImplementedError
 
     if dtype is not None:
-        dspace = ds_type(grid.ntotal, dtype=dtype, weight=weight,
+        dspace = ds_type(grid.size, dtype=dtype, weight=weight,
                          exponent=exponent)
     else:
-        dspace = ds_type(grid.ntotal, weight=weight, exponent=exponent)
+        dspace = ds_type(grid.size, weight=weight, exponent=exponent)
 
     order = kwargs.pop('order', 'C')
 

@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -113,7 +113,7 @@ class IntervalProd(Set):
         return len(self._inondeg)
 
     @property
-    def size(self):
+    def extent(self):
         """The interval length per axis."""
         return self.end - self.begin
 
