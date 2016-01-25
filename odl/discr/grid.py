@@ -382,7 +382,7 @@ class TensorGrid(Set):
         return True
 
     def insert(self, index, other):
-        """Insert another grid before the given index.
+        """Return a copy with ``other`` inserted before ``index``.
 
         The given grid (``m`` dimensions) is inserted into the current
         one (``n`` dimensions) before the given index, resulting in a new
@@ -391,7 +391,7 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        index : `numbers.Integral`
+        index : `int`
             The index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
         other :  `TensorGrid`, `float` or array-like
@@ -898,11 +898,11 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        index : `numbers.Integral`
-            The index of the dimension before which ``other`` is to
+        index : `int`
+            Index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
         other : `TensorGrid`
-            The grid to be inserted. If a `RegularGrid` is given,
+            Grid to be inserted. If a `RegularGrid` is given,
             the output will be a `RegularGrid`.
 
         Returns

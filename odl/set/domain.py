@@ -488,29 +488,25 @@ class IntervalProd(Set):
         return IntervalProd(b_new, e_new)
 
     def insert(self, index, other):
-        """Insert another interval product before the given index.
+        """Return a copy with ``other`` inserted before ``index``.
 
         The given interval product (``ndim=m``) is inserted into the
         current one (``ndim=n``) before the given index, resulting in a
         new interval product with ``n+m`` dimensions.
 
-        No changes are made in-place.
-
         Parameters
         ----------
-        other : `IntervalProd`, `float` or array-like
-            The set to be inserted. A `float` or array a is
-            treated as an ``IntervalProd(a, a)``.
-        index : `int`, optional
-            The index of the dimension before which ``other`` is to
-            be inserted. Must fulfill ``0 <= index <= ndim``.
-
-            Default: `ndim`
+        index : `int`
+            Index of the dimension before which ``other`` is to
+            be inserted. Must fulfill ``-ndim <= index <= ndim``.
+            Negative indices are added to ``ndim``.
+        other : `IntervalProd`
+            Interval product to be inserted
 
         Returns
         -------
-        larger_set : `IntervalProd`
-            The enlarged set
+        newintvp : `IntervalProd`
+            Interval product with ``other`` inserted
 
         Examples
         --------
@@ -521,22 +517,14 @@ class IntervalProd(Set):
         IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
         >>> rbox.insert(2, [-1.0, 0.0])
         IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
-
-        Can also insert by array
-
-        >>> rbox.insert(0, 1).squeeze() == rbox
-        True
-
-        See Also
-        --------
-        append
         """
+        if index < 0:
+            index = int(index) + self.ndim
+        else:
+            index = int(index)
+
         if not 0 <= index <= self.ndim:
             raise IndexError('Index ({}) out of range'.format(index))
-
-        # TODO: do we want this?
-        if not isinstance(other, IntervalProd):
-            other = IntervalProd(other, other)
 
         new_beg = np.empty(self.ndim + other.ndim)
         new_end = np.empty(self.ndim + other.ndim)

@@ -26,6 +26,7 @@ import pytest
 import numpy as np
 
 # ODL imports
+from odl.discr.grid import sparse_meshgrid
 from odl.set.domain import IntervalProd, Interval, Rectangle, Cuboid
 from odl.util.testutils import almost_equal, all_equal
 
@@ -247,6 +248,71 @@ def test_contains_set():
                     {'hello': 1.0}]:
         with pytest.raises(AttributeError):
             set_.contains_set(non_set)
+
+
+def test_contains_all():
+    # 1d
+    intvp = IntervalProd(1, 2)
+
+    arr_in1 = np.array([1.0, 1.6, 1.3, 2.0])
+    arr_in2 = np.array([[1.0, 1.6, 1.3, 2.0]])
+    mesh_in = sparse_meshgrid([1.0, 1.7, 1.9])
+    arr_not_in1 = np.array([1.0, 1.6, 1.3, 2.0, 0.8])
+    arr_not_in2 = np.array([[1.0, 1.6, 2.0], [1.0, 1.5, 1.6]])
+    mesh_not_in = sparse_meshgrid([-1.0, 1.7, 1.9])
+
+    assert intvp.contains_all(arr_in1)
+    assert intvp.contains_all(arr_in2)
+    assert intvp.contains_all(mesh_in)
+    assert not intvp.contains_all(arr_not_in1)
+    assert not intvp.contains_all(arr_not_in2)
+    assert not intvp.contains_all(mesh_not_in)
+
+    # 2d
+    intvp = IntervalProd([0, 0], [1, 2])
+    arr_in = np.array([[0.5, 1.9],
+                       [0.0, 1.0],
+                       [1.0, 0.1]]).T
+    mesh_in = sparse_meshgrid([0, 0.1, 0.6, 0.7, 1.0], [0])
+    arr_not_in = np.array([[0.5, 1.9],
+                           [1.1, 1.0],
+                           [1.0, 0.1]]).T
+    mesh_not_in = sparse_meshgrid([0, 0.1, 0.6, 0.7, 1.0], [0, -1])
+
+    assert intvp.contains_all(arr_in)
+    assert intvp.contains_all(mesh_in)
+    assert not intvp.contains_all(arr_not_in)
+    assert not intvp.contains_all(mesh_not_in)
+
+
+def test_insert():
+    intvp1 = IntervalProd([0, 0], [1, 2])
+    intvp2 = IntervalProd(1, 3)
+
+    intvp = intvp1.insert(0, intvp2)
+    true_begin = [1, 0, 0]
+    true_end = [3, 1, 2]
+    assert intvp == IntervalProd(true_begin, true_end)
+
+    intvp = intvp1.insert(1, intvp2)
+    true_begin = [0, 1, 0]
+    true_end = [1, 3, 2]
+    assert intvp == IntervalProd(true_begin, true_end)
+
+    intvp = intvp1.insert(2, intvp2)
+    true_begin = [0, 0, 1]
+    true_end = [1, 2, 3]
+    assert intvp == IntervalProd(true_begin, true_end)
+
+    intvp = intvp1.insert(-1, intvp2)  # same as 1
+    true_begin = [0, 1, 0]
+    true_end = [1, 3, 2]
+    assert intvp == IntervalProd(true_begin, true_end)
+
+    with pytest.raises(IndexError):
+        intvp1.insert(3, intvp2)
+    with pytest.raises(IndexError):
+        intvp1.insert(-4, intvp2)
 
 
 # Set arithmetic
