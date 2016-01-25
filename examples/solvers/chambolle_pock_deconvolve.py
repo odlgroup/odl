@@ -20,6 +20,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import super
 
@@ -31,7 +32,8 @@ import matplotlib.pyplot as plt
 
 # Internal
 import odl
-from odl.solvers import chambolle_pock_solver, f_cc_prox_l2_tv, g_prox_none
+from odl.solvers import (chambolle_pock_solver,
+                         proximal_convexconjugate_l2_l1, proximal_zero)
 
 
 class Convolution(odl.Operator):
@@ -58,8 +60,10 @@ def kernel(x):
     return np.exp(-(((x[0] - mean[0]) / std[0]) ** 2 + ((x[1] - mean[1]) /
                                                         std[1]) ** 2))
 
+
 def adjkernel(x):
     return kernel((-x[0], -x[1]))
+
 
 # Continuous definition of problem
 cont_space = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
@@ -108,14 +112,14 @@ conv(discr_phantom, out=g)
 # Optionally pass partial to the solver to display intermediate results
 fig = plt.figure('intermediate results')
 partial = odl.solvers.util.ForEachPartial(
-    lambda result: result.show(fig=fig, show=False))
+        lambda result: result.show(fig=fig, show=False))
 partial &= odl.solvers.util.PrintIterationTimePartial()
 
 # Run algorithms
-chambolle_pock_solver(prod_op, x, tau=1/prod_op_norm, sigma=1/prod_op_norm,
-                      proximal_primal=g_prox_none(prod_op.domain),
-                      proximal_dual=f_cc_prox_l2_tv(prod_op.range, g,
-                                                    lam=0.0001),
+chambolle_pock_solver(prod_op, x, tau=1 / prod_op_norm, sigma=1 / prod_op_norm,
+                      proximal_primal=proximal_zero(prod_op.domain),
+                      proximal_dual=proximal_convexconjugate_l2_l1(
+                              prod_op.range, g, lam=0.0001),
                       niter=100,
                       partial=partial)
 

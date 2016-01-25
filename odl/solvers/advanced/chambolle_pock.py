@@ -40,14 +40,15 @@ from odl.operator.operator import Operator
 from odl.operator.default_ops import IdentityOperator
 from odl.solvers.util import Partial
 
-__all__ = ('chambolle_pock_solver', 'f_cc_prox_l2_tv', 'g_prox_none')
+__all__ = ('chambolle_pock_solver', 'proximal_convexconjugate_l2_l1',
+           'proximal_zero')
 
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 # TODO: add positivity constraint
-# TODO: improve doc including reference
-# TODO: split f_cc_prox_l2_tv
+# TODO: improve doc including references
+# TODO: split proximal_convexconjugate_l2_l1
 # TODO: add checks
 
 def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
@@ -79,10 +80,9 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     Convergence proven for ``||K||_2^2 * sigma * tau < 1``
 
     For the use of CP with simple and easy to use preconditioning techniques
-    see [2]_. This implementation is based on the
-    article on convex optimization problem prototyping for image
-    reconstruction in computed tomography by [3]_. For more on
-    proximal operators and algorithms see [4]_.
+    see [2]_. This implementation is based on the article on convex
+    optimization problem prototyping for image reconstruction in computed
+    tomography by [3]_. For more on proximal operators and algorithms see [4]_.
 
     Parameters
     ----------
@@ -139,7 +139,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     tomography with the Chambolle-Pock algorithm*, Phys Med Biol, 57 3065,
     2012. http://stacks.iop.org/0031-9155/57/i=10/a=3065
 
-    .. [4]: Parikh Neal, and Boyd Stephen. *Proximal Algorithms* .
+    .. [4]: Parikh, Neal, and Boyd, Stephen. *Proximal Algorithms* .
     Foundations and Trends in Optimization 1 127, 2014.
     http://dx.doi.org/10.1561/2400000003
     """
@@ -190,9 +190,9 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     x_old = x.space.element()
 
     # Initialize the proximal operator of the convex conjugate of functional F
-    f_cc_prox_sigma = proximal_dual(sigma)
+    proximal_dual_sigma = proximal_dual(sigma)
     # Initialize the proximal operator of functional G
-    g_prox_tau = proximal_primal(tau)
+    proximal_primal_tau = proximal_primal(tau)
 
     # Adjoint of the product space operator
     op_adjoint = op.adjoint
@@ -202,10 +202,10 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_old.assign(x)
 
         # Gradient descent in the dual variable y
-        f_cc_prox_sigma(y + sigma * op(x_relaxation), out=y)
+        proximal_dual_sigma(y + sigma * op(x_relaxation), out=y)
 
         # Gradient descent in the primal variable x
-        g_prox_tau(x + (- tau) * op_adjoint(y), out=x)
+        proximal_primal_tau(x + (- tau) * op_adjoint(y), out=x)
 
         # Over-relaxation in the primal variable x
         x_relaxation.lincomb(1 + theta, x, -theta, x_old)
@@ -214,7 +214,70 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
             partial.send(x)
 
 
-def f_cc_prox_l2_tv(space, g, lam):
+# Proximal operators of f(x):
+#
+#     prox_tau[f](x) = arg min_y { f(y) + 1 / (2 * tau) * L2(x - y)^2 }
+#
+# The proximal operator is also written as:
+#
+#     prox_tau[f](x) = prox_{tau f}(x)
+#
+# Separable sum property:
+# if f is separable across two variables, i.e. f(x, y) = g(x) + h(y),
+# then prox_f(x, y) = prox_g(x) + prox_f(y)
+#
+# Indicator function:
+#
+#     ind_{S}(x) = {0 if x in S, infty if x not in S}
+#
+# Special indicator function:
+#
+#     ind_{box(a)}(x) = {0 if ||x||_infty <= a, infty if ||x||_infty > a}
+
+
+# f(x) = 0
+def proximal_zero(space):
+    """Function to create the proximal operator of f(x) = 0.
+
+    Factory function which provides a function to initialize the proximal
+    operator of ``f(x) = 0`` where ``x`` is an element in ``space``. The
+    proximal operator of this functional is the identity operator.
+
+    Parameters
+    ----------
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
+        Domain of the functional ``f(x)``
+
+    Returns
+    -------
+    make_prox : `function`
+        Function to initialize the proximal operator
+    """
+
+    def make_prox(tau):
+        """Return an instance of the proximal operator.
+
+        Parameters
+        ----------
+        tau : positive `float`
+            Step length parameter. Unused here but introduced to provide a
+            common interface
+
+        Returns
+        -------
+        id : `IdentityOperator`
+            The proximal operator instance of ``f(x) = 0`` which is the
+            identity operator
+        """
+
+        return IdentityOperator(space)
+
+    return make_prox
+
+
+# f(x) = f(y,z) = g^*(x) = ( 1/2 * ||y - x||_2^2 + lam * ||(|z|)||_1 )^*
+# = 1/2 * ||y||_2^2 + <y,g> + ind_{box(lam)}(|z|)
+def proximal_convexconjugate_l2_l1(space, g, lam):
     """Function for the proximal operator with l2-data plus TV-regularization.
 
     Factory function which provides a function to initialize the proximal
@@ -309,46 +372,6 @@ def f_cc_prox_l2_tv(space, g, lam):
                     oi.divide(zi, tmp)
 
         return _ProxOp(sigma)
-
-    return make_prox
-
-
-def g_prox_none(space):
-    """Function to create the proximal operator of the constraining functional.
-
-    Factory function which provides a function to initialize the proximal
-    operator of the functional ``G`` which accounts for constraints on the
-    primal variable ``x``.
-
-    Parameters
-    ----------
-    space : domain of ``op``
-        Space of the domain of the (combined) operator ``op`` in which the
-        primal variable ``x`` resides in
-
-    Returns
-    -------
-    make_prox : `function`
-        Function to initialize the proximal operator
-    """
-
-    def make_prox(tau):
-        """Return an instance of the proximal operator.
-
-        Parameters
-        ----------
-        tau : positive `float`
-            Step length parameter. Unused here but introduced to provide a
-            common interface
-
-        Returns
-        -------
-        id : `IdentityOperator`
-            The proximal operator for an unconstrained the primal variable
-            is the identity map
-        """
-
-        return IdentityOperator(space)
 
     return make_prox
 

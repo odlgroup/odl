@@ -30,7 +30,8 @@ import matplotlib.pyplot as plt
 
 # Internal
 import odl
-from odl.solvers import chambolle_pock_solver, f_cc_prox_l2_tv, g_prox_none
+from odl.solvers import (chambolle_pock_solver,
+                         proximal_convexconjugate_l2_l1, proximal_zero)
 
 
 # Read the image
@@ -75,8 +76,9 @@ partial &= odl.solvers.util.PrintIterationTimePartial()
 
 # Run algorithms (and display intermediates)
 chambolle_pock_solver(K, x, tau=1/K_norm, sigma=1/K_norm,
-                      proximal_primal=g_prox_none(K.domain),
-                      proximal_dual=f_cc_prox_l2_tv(K.range, noisy, lam=1/16),
+                      proximal_primal=proximal_zero(K.domain),
+                      proximal_dual=proximal_convexconjugate_l2_l1(
+                          K.range, noisy, lam=1 / 16),
                       niter=10, partial=partial)
 
 # Display images

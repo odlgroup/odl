@@ -55,7 +55,7 @@ class Partial(with_metaclass(ABCMeta, object)):
         Returns
         -------
         result : `Partial`
-            A partial which's `send` method calls both constituends partials.
+            A partial which's `send` method calls both constituents partials.
 
         Examples
         --------

@@ -28,13 +28,14 @@ import pytest
 
 # Internal
 import odl
-from odl.solvers import chambolle_pock_solver, f_cc_prox_l2_tv, g_prox_none
+from odl.solvers import (chambolle_pock_solver, proximal_zero,
+                         proximal_convexconjugate_l2_l1)
 from odl.util.testutils import all_almost_equal
 
 
 # TODO: improve test documentation
 def test_proximal_factories():
-    """Test factory function creating the proximal operator."""
+    """Test of factory functions creating the proximal operator instances."""
 
     precision = 8
 
@@ -59,7 +60,8 @@ def test_proximal_factories():
 
     # Factory function for the prox op of the convex conjugate,F^*, of F
     lam = 12
-    make_prox_f = f_cc_prox_l2_tv(operator_range, g_data, lam=lam)
+    make_prox_f = proximal_convexconjugate_l2_l1(operator_range, g_data,
+                                                 lam=lam)
 
     # Proximal operator of F^*
     sigma = 0.5
@@ -81,7 +83,7 @@ def test_proximal_factories():
     assert all_almost_equal(y_opt[1][0], tmp, precision)
 
     # Factory function for the proximal operator of G
-    make_prox_g = g_prox_none(x_space)
+    make_prox_g = proximal_zero(x_space)
 
     # Proximal operator of G
     tau = 3
@@ -112,7 +114,7 @@ def test_chambolle_pock_solver():
     y = identity.range.zero()
 
     # Proximal operator, use same the factory function for F^* and G
-    prox = g_prox_none(discr_space)
+    prox = proximal_zero(discr_space)
 
     # Run the algorithm
     tau = 0.3
@@ -156,8 +158,8 @@ def test_chambolle_pock_solver():
     x = x0.copy()
 
     # Proximal operator using the same factory function for F^* and G
-    prox_primal = g_prox_none(prod_op.domain)
-    prox_dual = g_prox_none(prod_op.range)
+    prox_primal = proximal_zero(prod_op.domain)
+    prox_dual = proximal_zero(prod_op.range)
 
     # Run the algorithm
     chambolle_pock_solver(prod_op, x, tau=tau, sigma=sigma,
