@@ -127,6 +127,13 @@ def test_meshgrid_input_order():
     mg = sparse_meshgrid(x, y, z, order='F')
     assert meshgrid_input_order(mg) == 'F'
 
+    # 3d including a degenerate axis
+    mg = sparse_meshgrid(x, y, [0.0], order='C')
+    assert meshgrid_input_order(mg) == 'C'
+
+    mg = sparse_meshgrid(x, y, [0.0], order='F')
+    assert meshgrid_input_order(mg) == 'F'
+
     # 3d, fleshed out meshgrids
     x, y, z = np.zeros(2), np.zeros(3), np.zeros(4)
     mg = np.meshgrid(x, y, z, sparse=False, indexing='ij', copy=True)
