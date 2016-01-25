@@ -33,7 +33,7 @@ from odl.set.pspace import ProductSpace
 
 __all__ = ('ProductSpaceOperator',
            'ComponentProjection', 'ComponentProjectionAdjoint',
-           'BroadcastOperator', 'ReductionOperator')
+           'BroadcastOperator', 'ReductionOperator', 'diagonal_operator')
 
 
 class ProductSpaceOperator(Operator):
@@ -104,11 +104,11 @@ class ProductSpaceOperator(Operator):
         ----------
         operators : `array-like`
             An array of `Operator`'s
-        dom : `ProductSpace`
+        dom : `ProductSpace`, optional
             Domain of the operator. If not provided, it is tried to be
             inferred from the operators. This requires each **column**
             to contain at least one operator.
-        ran : `ProductSpace`
+        ran : `ProductSpace`, optional
             Range of the operator. If not provided, it is tried to be
             inferred from the operators. This requires each **row**
             to contain at least one operator.
@@ -847,6 +847,30 @@ class ReductionOperator(Operator):
         ])
         """
         return BroadcastOperator(*[op.adjoint for op in self.operators])
+
+
+def diagonal_operator(operators, dom=None, ran=None):
+    """Broadcast argument to set of operators.
+
+    Parameters
+    ----------
+    operators : array-like
+        An array of `Operator`'s
+    dom : `ProductSpace`, optional
+        Domain of the operator. If not provided, it is tried to be
+        inferred from the operators. This requires each **column**
+        to contain at least one operator.
+    ran : `ProductSpace`, optional
+        Range of the operator. If not provided, it is tried to be
+        inferred from the operators. This requires each **row**
+        to contain at least one operator.
+    """
+
+    indices = [range(len(operators)), range(len(operators))]
+    shape = (len(operators), len(operators))
+    op_matrix = sp.sparse.coo_matrix((operators, indices), shape)
+
+    return ProductSpaceOperator(op_matrix, dom=dom, ran=ran)
 
 
 if __name__ == '__main__':
