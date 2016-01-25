@@ -96,6 +96,8 @@ def test_proximal_factories():
 def test_chambolle_pock_solver():
     """Simple execution test for the Chambolle-Pock solver"""
 
+    precision = 8
+
     # Discretized space
     n = 5
     discr_space = odl.uniform_discr(0, 1, n)
@@ -106,45 +108,66 @@ def test_chambolle_pock_solver():
     # Starting point
     x0 = np.arange(n)
     x = identity.domain.element(x0)
+    xr = x.copy()
+    y = identity.range.zero()
 
     # Proximal operator, use same the factory function for F^* and G
     prox = g_prox_none(discr_space)
 
     # Run the algorithm
-    tau = 0.2
-    sigma = 0.5
-    theta = 0.1
+    tau = 0.3
+    sigma = 0.7
+    theta = 0.8
     chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
                           proximal_primal=prox, proximal_dual=prox,
-                          theta=theta, niter=1, partial=None)
+                          theta=theta, niter=1, partial=None,
+                          x_relaxation=xr, y=y)
 
     x1 = (1 - tau * sigma) * x0
-    assert all_almost_equal(x, x1, 8)
+    assert all_almost_equal(x, x1, precision)
+    xr1 = (1 + theta) * x1 - theta * x0
+    assert all_almost_equal(xr, xr1)
 
-    # Warm start with previous x but without previous relaxation
+    # Resume iteration with previous x but without previous relaxation xr
     chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
                           proximal_primal=prox, proximal_dual=prox,
                           theta=theta, niter=1, partial=None)
 
-    print((1 - sigma * tau) * x1)
-    print(x)
+    x2 = (1 - sigma * tau) * x1
+    assert all_almost_equal(x, x2, precision)
 
+    # Resume iteration with x1 as above and with relaxation parameter xr
+    x[:] = x1
+    chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
+                          proximal_primal=prox, proximal_dual=prox,
+                          theta=theta, niter=1, partial=None,
+                          x_relaxation=xr, y=y)
 
-    # # Product space operator
-    # prod_id = odl.ProductSpaceOperator([[identity], [identity]])
-    #
-    # # Starting point
-    # x = prod_id.domain.zero()
-    #
-    # # Proximal operator, use same the factory function for F^* and G
-    # prox_range = g_prox_none(prod_id.range)
-    # prox_domain = g_prox_none(prod_id.domain)
-    #
-    # # Run the algorithm
-    # chambolle_pock_solver(prod_id, x, prox_range, prox_domain, sigma=0.1,
-    #                       tau=0.2, niter=3, partial=None)
-    #
-    # assert all(x[0]) == 0
+    x2 = x1 - tau * sigma * (x0 + xr1)
+    assert all_almost_equal(x, x2, precision)
+
+    # Test with product space operator
+
+    # Create product space operator
+    prod_op = odl.ProductSpaceOperator([[identity], [-2 * identity]])
+
+    # Starting point
+    x0 = prod_op.domain.element([x0])
+    x = x0.copy()
+
+    # Proximal operator using the same factory function for F^* and G
+    prox_primal = g_prox_none(prod_op.domain)
+    prox_dual = g_prox_none(prod_op.range)
+
+    # Run the algorithm
+    chambolle_pock_solver(prod_op, x, tau=tau, sigma=sigma,
+                          proximal_primal=prox_primal,
+                          proximal_dual=prox_dual,
+                          theta=theta, niter=1, partial=None)
+
+    x1 = x0 - tau * sigma * prod_op.adjoint(prod_op(prod_op.domain.element([
+        x0])))
+    assert all_almost_equal(x, x1, precision)
 
 
 if __name__ == '__main__':
