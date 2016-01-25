@@ -277,12 +277,46 @@ class ProductSpaceOperator(Operator):
 
     def derivative(self, x):
         """Derivative of the product space operator.
+
+        Parameters
+        ----------
+        x : domain element
+            The point to take the derivative in
+
+        Returns
+        -------
+        adjoint : linear`ProductSpaceOperator`
+            The derivative
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.Rn(3)
+        >>> X = odl.ProductSpace(r3, r3)
+        >>> I = odl.IdentityOperator(r3)
+        >>> x = X.element([[1, 2, 3], [4, 5, 6]])
+
+        Example with linear operator (derivative is itself)
+
+        >>> prod_op = ProductSpaceOperator([[0, I], [0, 0]],
+        ...                                dom=X, ran=X)
+        >>> prod_op(x)
+        ProductSpace(Rn(3), 2).element([
+            [4.0, 5.0, 6.0],
+            [0.0, 0.0, 0.0]
+        ])
+        >>> prod_op.derivative(x)(x)
+        ProductSpace(Rn(3), 2).element([
+            [4.0, 5.0, 6.0],
+            [0.0, 0.0, 0.0]
+        ])
         """
-        deriv_ops = [op.derivative(x[col]) for op, col in zip(self.ops.data, self.ops.col)]
+        deriv_ops = [op.derivative(x[col]) for op, col in zip(self.ops.data,
+                                                              self.ops.col)]
         indices = [self.ops.row, self.ops.col]
-        shape = (self.ops.shape[0], self.ops.shape[1])
-        adj_matrix = sp.sparse.coo_matrix((deriv_ops, indices), shape)
-        return ProductSpaceOperator(adj_matrix, self.domain, self.range)
+        shape = self.ops.shape
+        deriv_matrix = sp.sparse.coo_matrix((deriv_ops, indices), shape)
+        return ProductSpaceOperator(deriv_matrix, self.domain, self.range)
 
     @property
     def adjoint(self):
