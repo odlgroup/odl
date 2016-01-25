@@ -33,6 +33,11 @@ from odl.set.domain import IntervalProd
 from odl.util.testutils import all_equal
 
 
+# TODO: tests for
+# - cell boundaries
+# - cell sizes
+
+
 def test_partition_init():
     interv_prod = odl.Rectangle([0, 1], [2, 4])
     grid = odl.uniform_sampling(interv_prod, (5, 15))

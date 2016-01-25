@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Partitons of interval products based on tensor grid.
+"""Partitons of interval products based on tensor grids.
 
 A partition of a set is a finite collection of nonempty, pairwise
 disjoint subsets whose union is the original set. The partitions
@@ -82,7 +82,6 @@ class RectPartition(object):
             begin = x[0] - (x[1] - x[0]) / 2
             end = x[N-1] + (x[N-1] - x[N-2]) / 2
         """
-        # TODO: add switch for boundary mode
         if not isinstance(grid, TensorGrid):
             raise TypeError('{!r} is not a TensorGrid instance.'
                             ''.format(grid))
@@ -201,17 +200,71 @@ class RectPartition(object):
 
     @property
     def bounding_box(self):
-        """The `IntervalProd` partitioned by this partition."""
+        """The `IntervalProd` partitioned by this partition.
+
+        Examples
+        --------
+        By default, the bounding box is inferred from the grid and
+        extends beyond the grid boundaries:
+
+        >>> grid = TensorGrid([0, 1], [-1, 0, 2])
+        >>> part = RectPartition(grid)  # Implicit begin and end
+        >>> part.bounding_box
+        Rectangle([-0.5, -1.5], [1.5, 3.0])
+
+        This behavior can be changed by explicitly giving begin and
+        end:
+
+        >>> part = RectPartition(grid, begin=[0, -1], end=[1, 2])
+        >>> part.bounding_box
+        Rectangle([0.0, -1.0], [1.0, 2.0])
+        """
         return self._bounding_box
 
-    # TODO: doctests
     def min(self):
-        """Return the 'minimum corner' of ``self.interv_prod``."""
+        """Return the 'minimum corner' of ``self.interv_prod``.
+
+        Examples
+        --------
+        >>> grid = TensorGrid([0, 1], [-1, 0, 2])
+        >>> part = RectPartition(grid)  # Implicit begin and end
+        >>> part.min()
+        array([-0.5, -1.5])
+
+        >>> part = RectPartition(grid, begin=[0, -1], end=[1, 2])
+        >>> part.min()
+        array([ 0., -1.])
+
+        See also
+        --------
+        bounding_box
+        """
         return self.bounding_box.min()
 
     def max(self):
-        """Return the 'minimum corner' of ``self.interv_prod``."""
+        """Return the 'minimum corner' of ``self.interv_prod``.
+
+        Examples
+        --------
+        >>> grid = TensorGrid([0, 1], [-1, 0, 2])
+        >>> part = RectPartition(grid)  # Implicit begin and end
+        >>> part.max()
+        array([ 1.5,  3. ])
+
+        >>> part = RectPartition(grid, begin=[0, -1], end=[1, 2])
+        >>> part.max()
+        array([ 1.,  2.])
+
+        See also
+        --------
+        bounding_box
+        """
         return self.bounding_box.max()
+
+    @property
+    def shape(self):
+        """Number of cells per axis, equal to ``self.grid.shape``."""
+        return self.grid.shape
 
     @property
     def order(self):
@@ -219,16 +272,36 @@ class RectPartition(object):
         return self.grid.order
 
     def extent(self):
-        """Return a vector containing the total extent."""
+        """Return a vector containing the total extent (max - min)."""
         return self.max() - self.min()
 
     def sampling_points(self):
         """Return the grid sampling points."""
         return self.grid.points()
 
-    def subintv_bdry_vecs():
-        """Return the subinterval boundaries as coordineate vectors."""
-        pass
+    def cell_boundary_vecs(self):
+        """Return the cell boundaries as coordinate vectors.
+
+        Examples
+        --------
+        >>> grid = TensorGrid([0, 1], [-1, 0, 2])
+        >>> part = RectPartition(grid)  # Implicit begin and end
+        >>> part.cell_boundary_vecs()
+        (array([-0.5,  0.5,  1.5]), array([-1.5, -0.5,  1. ,  3. ]))
+
+        >>> part = RectPartition(grid, begin=[0, -1], end=[1, 2])
+        >>> part.cell_boundary_vecs()
+        (array([ 0. ,  0.5,  1. ]), array([-1. , -0.5,  1. ,  2. ]))
+        """
+        bdry_vecs = []
+        for ax, vec in enumerate(self.grid.coord_vectors):
+            bdry = np.empty(len(vec) + 1)
+            bdry[1:-1] = (vec[1:] + vec[:-1]) / 2.0
+            bdry[0] = self.min()[ax]
+            bdry[-1] = self.max()[ax]
+            bdry_vecs.append(bdry)
+
+        return tuple(bdry_vecs)
 
     def cell_sizes(self):
         """Return the cell sizes as coordinate vectors.
@@ -238,45 +311,48 @@ class RectPartition(object):
         csizes : `tuple` of `numpy.ndarray`
             The cell sizes per axis. The length of the vectors is the
             same as the corresponding ``grid.coord_vectors``.
-            For axes with 1 grid point, cell size is set to 0.
+            For axes with 1 grid point, cell size is set to 0.0.
 
         Examples
         --------
-        >>> g = TensorGrid([0, 1], [-1, 0, 2])
-        >>> g.cell_sizes()
-        (array([ 1.]), array([ 1.,  2.]))
-        >>> g = TensorGrid([0, 1], [-1, 0, 2], as_midp=True)
-        >>> g.cell_sizes()
+        >>> grid = TensorGrid([0, 1], [-1, 0, 2])
+        >>> part = RectPartition(grid)  # Implicit begin and end
+        >>> part.cell_sizes()
         (array([ 1.,  1.]), array([ 1. ,  1.5,  2. ]))
+
+        >>> part = RectPartition(grid, begin=[0, -1], end=[1, 2])
+        >>> part.cell_sizes()
+        (array([ 0.5,  0.5]), array([ 0.5,  1.5,  1. ]))
         """
-        # TODO: adapt doctest and add unit test
         csizes = []
-        for vec in self.grid.coord_vectors:
+        for ax, vec in enumerate(self.grid.coord_vectors):
             if len(vec) == 1:
                 csizes.append(np.array([0.0]))
             else:
                 csize = np.empty_like(vec)
                 csize[1:-1] = (vec[2:] - vec[:-2]) / 2.0
-                csize[0] = vec[1] - vec[0]
-                csize[-1] = vec[-1] - vec[-2]
+                csize[0] = (vec[0] + vec[1]) / 2 - self.min()[ax]
+                csize[-1] = self.max()[ax] - (vec[-2] + vec[-1]) / 2
                 csizes.append(csize)
 
         return tuple(csizes)
 
     @property
     def cell_volume(self):
-        """Cell volume of an underlying regular grid.
+        """Volume of the 'inner' cells, regardless of begin and end.
+
+        Only defined if ``self.grid`` is a `RegularGrid`.
 
         Examples
         --------
-        >>> rg = RegularGrid([0, 0], [1, 1], (2, 2))
-        >>> rg.cell_volume
-        1.0
+        >>> grid = RegularGrid([0, 0], [1, 1], (3, 3))
+        >>> part = RectPartition(grid)
+        >>> part.cell_volume
+        0.25
         """
-        # TODO: adapt doctest
         if not isinstance(self.grid, RegularGrid):
             raise TypeError('cell_volume not defined for non-regular grids.')
-        return float(np.prod(self.grid.stride))
+        return float(np.prod(self.extent() / self.shape))
 
     def approx_equals(self, other, atol):
         pass
