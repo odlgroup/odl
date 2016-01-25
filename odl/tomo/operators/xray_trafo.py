@@ -137,7 +137,7 @@ class DiscreteXrayTransform(Operator):
             det_radius = geometry.det_radius
             weight /= ((src_radius + det_radius) / src_radius)
 
-        ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,
+        ran_dspace = discr_dom.dspace_type(geometry.grid.size,
                                            weight=weight,
                                            dtype=discr_dom.dspace.dtype)
 
