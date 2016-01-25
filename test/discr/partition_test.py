@@ -240,41 +240,43 @@ def test_uniform_partition():
     nsamp = (4, 10)
 
     # All nodes at the boundary
-    part = uniform_partition(intvp, nsamp, node_at_bdry=True)
+    part = uniform_partition(intvp, nsamp, nodes_on_bdry=True)
     assert all_equal(part.begin, intvp.begin)
     assert all_equal(part.end, intvp.end)
     assert all_equal(part.grid.min_pt, intvp.begin)
     assert all_equal(part.grid.max_pt, intvp.end)
     for cs in part.cell_sizes():
-        # First and last cell sizes are halved
+        # Check that all cell sizes are equal (except first and last which
+        # are halved)
         assert np.allclose(np.diff(cs[1:-1]), 0)
         assert all_almost_equal(cs[0], cs[1] / 2)
         assert all_almost_equal(cs[-1], cs[-2] / 2)
 
     # All nodes not the boundary
-    part = uniform_partition(intvp, nsamp, node_at_bdry=False)
+    part = uniform_partition(intvp, nsamp, nodes_on_bdry=False)
     assert all_equal(part.begin, intvp.begin)
     assert all_equal(part.end, intvp.end)
     for cs in part.cell_sizes():
+        # Check that all cell sizes are equal
         assert np.allclose(np.diff(cs), 0)
 
     # Only left nodes at the boundary
-    part = uniform_partition(intvp, nsamp, node_at_bdry=[[True, False]] * 2)
+    part = uniform_partition(intvp, nsamp, nodes_on_bdry=[[True, False]] * 2)
     assert all_equal(part.begin, intvp.begin)
     assert all_equal(part.end, intvp.end)
     assert all_equal(part.grid.min_pt, intvp.begin)
     for cs in part.cell_sizes():
-        # Last cell sizes is halved
+        # Check that all cell sizes are equal (except first)
         assert np.allclose(np.diff(cs[1:]), 0)
         assert all_almost_equal(cs[0], cs[1] / 2)
 
     # Only right nodes at the boundary
-    part = uniform_partition(intvp, nsamp, node_at_bdry=[[False, True]] * 2)
+    part = uniform_partition(intvp, nsamp, nodes_on_bdry=[[False, True]] * 2)
     assert all_equal(part.begin, intvp.begin)
     assert all_equal(part.end, intvp.end)
     assert all_equal(part.grid.max_pt, intvp.end)
     for cs in part.cell_sizes():
-        # First and last cell sizes are halved
+        # Check that all cell sizes are equal (except last)
         assert np.allclose(np.diff(cs[:-1]), 0)
         assert all_almost_equal(cs[-1], cs[-2] / 2)
 

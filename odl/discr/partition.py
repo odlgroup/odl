@@ -199,6 +199,11 @@ class RectPartition(object):
         return self._grid
 
     @property
+    def is_regular(self):
+        """Return `True` if ``self.grid`` is a `RegularGrid`."""
+        return isinstance(self.grid, RegularGrid)
+
+    @property
     def ndim(self):
         """Number of dimensions."""
         return self.grid.ndim
@@ -207,6 +212,11 @@ class RectPartition(object):
     def shape(self):
         """Number of cells per axis, equal to ``self.grid.shape``."""
         return self.grid.shape
+
+    @property
+    def size(self):
+        """Total number of cells, equal to ``self.grid.size``."""
+        return self.grid.size
 
     @property
     def order(self):
@@ -370,10 +380,10 @@ class RectPartition(object):
         array([ 0.5 ,  0.25])
         """
 
-        if not isinstance(self.grid, RegularGrid):
+        if not self.is_regular:
             raise NotImplementedError(
-                'cell size not defined for non-uniform grids. Use '
-                '`grid.cell_sizes()` instead.')
+                'cell size not defined for irregular partitions. Use '
+                'cell_sizes() instead.')
 
         return self.extent() / self.shape
 
@@ -455,7 +465,7 @@ class RectPartition(object):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-def uniform_partition(intv_prod, num_nodes, order='C', node_at_bdry=True):
+def uniform_partition(intv_prod, num_nodes, order='C', nodes_on_bdry=True):
     """Return a partition of ``intv_prod`` by a regular grid.
 
     Parameters
@@ -467,13 +477,13 @@ def uniform_partition(intv_prod, num_nodes, order='C', node_at_bdry=True):
         can be specified.
     order : {'C', 'F'}
         Ordering of the generated grid
-    node_at_bdry : `bool` or array-like
-        If `True`, the bounding box ends exactly at the boundary grid
-        nodes. For `False`, it extends the grid by half a cell size.
+    nodes_on_bdry : `bool` or boolean array-like
+        If `True`, place the outermost grid points at the boundary. For
+        `False`, they are shifted by half a cell size to the 'inner'.
         If an array-like is given, it must have shape ``(ndim, 2)``,
         where ``ndim`` is the number of dimensions. It defines per axis
-        if the bounding box ends at the left node (first column) and
-        at the right node (second column).
+        whether the leftmost (first column) and rightmost (second column)
+        nodes node lie on the boundary.
 
     Examples
     --------
@@ -485,19 +495,19 @@ def uniform_partition(intv_prod, num_nodes, order='C', node_at_bdry=True):
         raise ValueError('num_nodes has length {}, expected {}.'
                          ''.format(len(num_nodes), (intv_prod.ndim)))
 
-    if np.shape(node_at_bdry) == ():
-        node_at_bdry = ([(bool(node_at_bdry), bool(node_at_bdry))] *
-                        intv_prod.ndim)
-    elif np.shape(node_at_bdry) == (intv_prod.ndim, 2):
+    if np.shape(nodes_on_bdry) == ():
+        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
+                         intv_prod.ndim)
+    elif np.shape(nodes_on_bdry) == (intv_prod.ndim, 2):
         pass
     else:
         raise ValueError('node_at_bdry has shape {}, expected {}.'
-                         ''.format(np.shape(node_at_bdry),
+                         ''.format(np.shape(nodes_on_bdry),
                                    (intv_prod.ndim, 2)))
 
     gmin, gmax = [], []
     for n, beg, end, (bdry_l, bdry_r) in zip(num_nodes, intv_prod.begin,
-                                             intv_prod.end, node_at_bdry):
+                                             intv_prod.end, nodes_on_bdry):
         # Shift left and right boundary grid node if necessary.
         # The conditions to be met are:
         # 1. The node should be half a stride away from the boundary
