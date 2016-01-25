@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -121,7 +121,7 @@ class TensorGrid(Set):
         2
         >>> g.shape  # points per axis
         (3, 3)
-        >>> g.ntotal  # total number of points
+        >>> g.size  # total number of points
         9
 
         Grid points can be extracted with index notation (NOTE: This is
@@ -201,7 +201,7 @@ class TensorGrid(Set):
         return tuple(len(vec) for vec in self.coord_vectors)
 
     @property
-    def ntotal(self):
+    def size(self):
         """The total number of grid points."""
         return np.prod(self.shape)
 
@@ -289,8 +289,8 @@ class TensorGrid(Set):
 
     # Methods
 
-    def size(self):
-        """Return a vector containing the total sizes."""
+    def extent(self):
+        """Return a vector containing the total grid extent."""
         return self.max() - self.min()
 
     def element(self):
@@ -489,8 +489,8 @@ class TensorGrid(Set):
         Returns
         -------
         points : `numpy.ndarray`
-            The size of the array is ntotal x ndim, i.e. the points are
-            stored as rows.
+            The shape of the array is ``size x ndim``, i.e. the points
+            are stored as rows.
 
         Examples
         --------
@@ -517,7 +517,7 @@ class TensorGrid(Set):
 
         axes = range(self.ndim) if order == 'C' else reversed(range(self.ndim))
         shape = self.shape if order == 'C' else tuple(reversed(self.shape))
-        point_arr = np.empty((self.ntotal, self.ndim))
+        point_arr = np.empty((self.size, self.ndim))
 
         for i, axis in enumerate(axes):
             view = point_arr[:, axis].reshape(shape)
@@ -804,7 +804,7 @@ class RegularGrid(TensorGrid):
         RegularGrid([-1.5, -1.0], [-0.5, 3.0], [2, 3])
         >>> rg.coord_vectors
         (array([-1.5, -0.5]), array([-1.,  1.,  3.]))
-        >>> rg.ndim, rg.ntotal
+        >>> rg.ndim, rg.size
         (2, 6)
         """
         min_pt = np.atleast_1d(min_pt).astype('float64')
@@ -1189,8 +1189,8 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
                          'than one node.'.format(tuple(intv_prod._ideg)))
 
     if as_midp:
-        grid_min = intv_prod.begin + intv_prod.size / (2 * num_nodes)
-        grid_max = intv_prod.end - intv_prod.size / (2 * num_nodes)
+        grid_min = intv_prod.begin + intv_prod.extent / (2 * num_nodes)
+        grid_max = intv_prod.end - intv_prod.extent / (2 * num_nodes)
         return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp,
                            _exact_min=intv_prod.begin,
                            _exact_max=intv_prod.end)

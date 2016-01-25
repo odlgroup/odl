@@ -15,10 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
+"""Examples on using the vector.show() syntax
 
-__all__ = ()
+NOTES
+-----
+The behaviour of blocking shows etc in matplotlib is experimental and can cause
+issues with these examples.
+"""
 
-from . import newton
-from .newton import *
-__all__ += newton.__all__
+import odl
+
+spc = odl.uniform_discr([0, 0], [1, 1], [100, 100], field=odl.ComplexNumbers())
+vec = odl.util.shepp_logan(spc, modified=True) * (1 + 0.5j)
+
+# Can also force "instant" plotting
+vec.show(show=True)

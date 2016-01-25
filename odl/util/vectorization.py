@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -21,12 +21,11 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-from future.utils import raise_from
 standard_library.install_aliases()
+from builtins import super
 
 # External module imports
 from functools import wraps
-from itertools import product
 import numpy as np
 
 
@@ -36,11 +35,11 @@ __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
            'vectorize')
 
 
-def is_valid_input_array(x, ndim):
+def is_valid_input_array(x, ndim=None):
     """Test if ``x`` is a correctly shaped point array in R^d."""
     if not isinstance(x, np.ndarray):
         return False
-    if ndim == 1:
+    if ndim is None or ndim == 1:
         return x.ndim == 1 or x.ndim == 2 and x.shape[0] == 1
     else:
         return x.ndim == 2 and x.shape[0] == ndim
@@ -48,13 +47,19 @@ def is_valid_input_array(x, ndim):
 
 def is_valid_input_meshgrid(x, ndim):
     """Test if ``x`` is a meshgrid sequence for points in R^d."""
+    # This case is triggered in FunctionSetVector.__call__ if the
+    # domain does not have an 'ndim' attribute. We return False and
+    # continue.
+    if ndim is None:
+        return False
     try:
-        iter(x)
+        len(x)
     except TypeError:
         return False
 
     if isinstance(x, np.ndarray):
         return False
+
     if ndim > 1:
         try:
             np.broadcast(*x)
@@ -127,169 +132,218 @@ def out_shape_from_array(arr):
         return (arr.shape[1],)
 
 
-def vectorize(dtype=None):
-    """Vectorization decorator for our input parameter pattern.
+class OptionalArgDecorator(object):
 
-    The wrapped function must be callable with one positional
-    parameter. Keyword arguments are passed through, hence positional
-    arguments with defaults can either be left out or passed by keyword,
-    but not by position.
+    """Abstract class to create decorators with optional arguments.
 
-    The decorated function has the call signature
+    This class implements the functionality of a decorator that can
+    be used with and without arguments, i.e. the following patterns
+    both work::
 
-    ``func(x, out=None, **kwargs)``,
+        @decorator
+        def myfunc(x, *args, **kwargs):
+            pass
 
-    where the optional ``out`` argument is an array of adequate size
-    to which the result is written.
+        @decorator(param, **dec_kwargs)
+        def myfunc(x, *args, **kwargs):
+            pass
 
-    **Important**: It is not possible to give array-like input to
-    a manually vectorized function since there is no reliable way
-    to distinguish between arrays or meshgrids with equally long
-    vectors in that case.
+    The arguments to the decorator are passed on to the underlying
+    wrapper.
 
-    Parameters
-    ----------
-    dtype : `type` or `str`, optional
-        Data type of the output array. Needs to be understood by the
-        `numpy.dtype` function. If not provided, a "lazy" vectorization
-        is performed, meaning that the results are collected in a
-        list instead of an array.
+    To use this class, subclass it and implement the static ``_wrapper``
+    method.
+    """
 
-    Notes
-    -----
-    The decorated function returns the array given as ``out`` argument
-    if it is not `None`.
+    def __new__(cls, *args, **kwargs):
+        """Create a new decorator instance.
+
+        There are two cases to distinguish:
+
+        1. Without arguments::
+
+               @decorator
+               def myfunc(x):
+                   pass
+
+           which is equivalent to
+           ::
+
+               def myfunc(x):
+                   pass
+
+               myfunc = decorator(myfunc)
+
+
+           Hence, in this case, the ``__new__`` method of the decorator
+           immediately returns the wrapped function.
+
+        2. With arguments::
+
+               @decorator(*dec_args, **dec_kwargs)
+               def myfunc(x):
+                   pass
+
+           which is equivalent to
+           ::
+
+               def myfunc(x):
+                   pass
+
+               dec_instance = decorator(*dec_args, **dec_kwargs)
+               myfunc = dec_instance(myfunc)
+
+           Hence, in this case, the first call creates an actual class
+           instance of ``decorator``, and in the second statement, the
+           ``dec_instance.__call__`` method returns the wrapper using
+           the stored ``dec_args`` and ``dec_kwargs``.
+        """
+        # Decorating without arguments: return wrapper w/o args directly
+        instance = super().__new__(cls)
+
+        if (not kwargs and
+                len(args) == 1 and
+                callable(args[0])):
+            func = args[0]
+
+            return instance._wrapper(func)
+
+        # With arguments, return class instance
+        else:
+            instance.wrapper_args = args
+            instance.wrapper_kwargs = kwargs
+            return instance
+
+    def __call__(self, func):
+        """Return ``self(func)``.
+
+        This method is invoked when the decorator was created with
+        arguments.
+
+        Parameters
+        ----------
+        func : callable
+            Original function to be wrapped
+
+        Returns
+        -------
+        wrapped : callable
+            The wrapped function
+        """
+        return self._wrapper(func, *self.wrapper_args, **self.wrapper_kwargs)
+
+    @staticmethod
+    def _wrapper(func, *wrapper_args, **wrapper_kwargs):
+        """Return the wrapped function."""
+        raise NotImplementedError
+
+
+class vectorize(OptionalArgDecorator):
+
+    """Decorator class for function vectorization.
+
+    This vectorizer expects a function with exactly one positional
+    argument (input) and optional keyword arguments. The decorated
+    function has an optional ``out`` parameter for in-place evaluation.
 
     Examples
     --------
-    Vectorize a step function in the first variable:
+    Use the decorator witout arguments:
 
-    >>> @vectorize(dtype=float)
-    ... def step(x):
-    ...     return 0 if x[0] <= 0 else 1
+    >>> @vectorize
+    ... def f(x):
+    ...     return x[0] + x[1] if x[0] < x[1] else x[0] - x[1]
+    >>>
+    >>> f([0, 1])  # np.vectorize'd functions always return an array
+    array(1)
+    >>> f([[0, -2], [1, 4]])  # corresponds to points [0, 1], [-2, 4]
+    array([1, 2])
 
-    This corresponds to (but is much slower than)
+    The function may have ``kwargs``:
 
-    >>> import numpy as np
-    >>> def step_vec(x):
-    ...     x0, x1 = x
-    ...     # np.broadcast is your friend to determine the output shape
-    ...     out = np.zeros(np.broadcast(x0, x1).shape, dtype=x0.dtype)
-    ...     idcs = np.where(x0 > 0)
-    ...     # Need to throw away the indices from the empty dimensions
-    ...     idcs = idcs[0] if len(idcs) > 1 else idcs
-    ...     out[idcs] = 1
-    ...     return out
+    >>> @vectorize
+    ... def f(x, param=1.0):
+    ...     return x[0] + x[1] if x[0] < param else x[0] - x[1]
+    >>>
+    >>> f([[0, -2], [1, 4]])
+    array([1, 2])
+    >>> f([[0, -2], [1, 4]], param=-1.0)
+    array([-1,  2])
 
-    Both versions work for arrays and meshgrids:
+    You can pass arguments to the vectorizer, too:
 
-    >>> x = np.linspace(-5, 13, 10, dtype=float).reshape((2, 5))
-    >>> x  # array representing 5 points in 2d
-    array([[ -5.,  -3.,  -1.,   1.,   3.],
-           [  5.,   7.,   9.,  11.,  13.]])
-    >>> np.array_equal(step(x), step_vec(x))
-    True
-
-    >>> x = y = np.linspace(-1, 2, 5)
-    >>> mg_sparse = np.meshgrid(x, y, indexing='ij', sparse=True)
-    >>> np.array_equal(step(mg_sparse), step_vec(mg_sparse))
-    True
-    >>> mg_dense = np.meshgrid(x, y, indexing='ij', sparse=False)
-    >>> np.array_equal(step(mg_dense), step_vec(mg_dense))
-    True
-
-    With output parameter:
-
-    >>> @vectorize(dtype=float)
-    ... def step(x):
-    ...     return 0 if x[0] <= 0 else 1
-    >>> x = np.linspace(-5, 13, 10, dtype=float).reshape((2, 5))
-    >>> out = np.empty(5, dtype=float)
-    >>> step(x, out)  # returns out
-    array([ 0.,  0.,  0.,  1.,  1.])
+    >>> @vectorize(otypes=['float32'])
+    ... def f(x):
+    ...     return x[0] + x[1] if x[0] < x[1] else x[0] - x[1]
+    >>> f([[0, -2], [1, 4]])
+    array([ 1.,  2.], dtype=float32)
     """
-    def vect_decorator(func):
 
-        def _vect_wrapper_array(x, out, **kwargs):
-            # Assume that x is an ndarray
-            if out is None:
-                out_shape = out_shape_from_array(x)
-                if dtype is None:
-                    out = [None] * out_shape[0]  # lazy vectorization
-                else:
-                    out = np.empty(out_shape, dtype=dtype)
+    @staticmethod
+    def _wrapper(func, *vect_args, **vect_kwargs):
+        """Return the vectorized wrapper function."""
+        return wraps(func)(_NumpyVectorizeWrapper(func, *vect_args,
+                                                  **vect_kwargs))
 
-            for i, xi in enumerate(x.T):
-                out[i] = func(xi, **kwargs)
-            return np.asarray(out)
 
-        def _vect_wrapper_meshgrid(x, out, ndim, **kwargs):
-            if out is None:
-                out_shape = out_shape_from_meshgrid(x)
+class _NumpyVectorizeWrapper(object):
 
-                if dtype is None:
+    """Class for vectorization wrapping using `numpy.vectorize`.
 
-                    # Small helper to initialize a nested list
-                    def _nested(shape):
-                        if len(shape) == 0:
-                            return None
-                        else:
-                            return [_nested(shape[1:])
-                                    for _ in range(shape[0])]
-                    out = _nested(out_shape)
+    The purpose of this class is to store the vectorized version of
+    a function when it is called for the first time.
+    """
 
-                else:
-                    out = np.empty(out_shape, dtype=dtype)
+    def __init__(self, func, *vect_args, **vect_kwargs):
+        """Initialize a new instance.
 
-            order = meshgrid_input_order(x)
-            vecs = vecs_from_meshgrid(x, order=order)
-            if ndim == 1:
-                for i, xi in enumerate(vecs[0]):
-                    out[i] = func(xi, **kwargs)
-            elif dtype is None:
-                for i, xi in enumerate(product(*vecs)):
-                    # Worst multi-index implementation ever, but still good
-                    # enough for slow code
-                    index = np.unravel_index(i, out_shape)
-                    sub = out
-                    for j in index[:-1]:
-                        sub = sub[j]
-                    sub[index[-1]] = func(xi, **kwargs)
-            else:
-                for i, xi in enumerate(product(*vecs)):
-                    out.flat[i] = func(xi, **kwargs)
-            return np.asarray(out)
+        Parameters
+        ----------
+        func : callable
+            Python function or method to be wrapped
+        vect_args :
+            positional arguments for `numpy.vectorize`
+        vect_kwargs :
+            keyword arguments for `numpy.vectorize`
+        """
+        self.func = func
+        self.vfunc = None
+        self.vect_args = vect_args
+        self.vect_kwargs = vect_kwargs
 
-        @wraps(func)
-        def vect_wrapper(x, out=None, **kwargs):
-            # Find out dimension first
-            if isinstance(x, np.ndarray):  # array
-                if x.ndim == 1:
-                    ndim = 1
-                elif x.ndim == 2:
-                    ndim = len(x)
-                else:
-                    raise ValueError('only 1- or 2-dimensional arrays '
-                                     'supported.')
-            else:  # meshgrid or single value
-                try:
-                    ndim = len(x)
-                except TypeError:
-                    ndim = 1
+    def __call__(self, x, out=None, **kwargs):
+        """Vectorized function call.
 
-            if is_valid_input_meshgrid(x, ndim):
-                return _vect_wrapper_meshgrid(x, out, ndim, **kwargs)
-            elif is_valid_input_array(x, ndim):
-                return _vect_wrapper_array(x, out, **kwargs)
-            else:
-                try:
-                    return func(x)
-                except Exception as err:
-                    raise_from(
-                        TypeError('invalid vectorized input type.'), err)
+        Parameters
+        ----------
+        x : array-like or sequence of array-like
+            Input argument(s) to the wrapped function
+        out : `numpy.ndarray`, optional
+            Appropriately sized array to write to
 
-        return vect_wrapper
-    return vect_decorator
+        Returns
+        -------
+        out : `numpy.ndarray`
+            Result of the vectorized function evaluation. If ``out``
+            was given, the returned object is a reference to it.
+        """
+        if np.isscalar(x):
+            x = np.array([x])
+        elif isinstance(x, np.ndarray) and x.ndim == 1:
+            x = x[None, :]
+
+        if self.vfunc is None:
+            # Not yet vectorized
+            def _func(*x, **kw):
+                return self.func(np.array(x), **kw)
+
+            self.vfunc = np.vectorize(_func, *self.vect_args,
+                                      **self.vect_kwargs)
+
+        if out is None:
+            return self.vfunc(*x, **kwargs)
+        else:
+            out[:] = self.vfunc(*x, **kwargs)
 
 
 if __name__ == '__main__':
