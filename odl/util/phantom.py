@@ -700,7 +700,6 @@ if __name__ == '__main__':
     derenzo_sources(discr).show()
     submarine_phantom(discr, smooth=False).show()
     submarine_phantom(discr, smooth=True).show()
-    derenzo_sources(discr).show()
     submarine_phantom(discr, smooth=True, taper=50).show()
 
     # Shepp-logan 3d
