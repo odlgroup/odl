@@ -20,6 +20,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+
 standard_library.install_aliases()
 
 # External
@@ -31,7 +32,6 @@ import odl
 from odl.util.testutils import almost_equal
 from odl.tomo import ASTRA_CUDA_AVAILABLE
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
-
 
 # DiscreteLp volume / reconstruction space
 xx = 5
@@ -46,14 +46,14 @@ discr_vol_space_3d = odl.uniform_discr([-xx] * 3, [xx] * 3, [nn] * 3,
                                        dtype='float32')
 
 # Angle grid
-angle_intvl = odl.Interval(0, 2 * np.pi) - np.pi/4
+angle_intvl = odl.Interval(0, 2 * np.pi) - np.pi / 4
 agrid = odl.uniform_sampling(angle_intvl, 4)
 astride = float(agrid.stride)
 num_angle = agrid.ntotal
 
 # Detector grid
-yy = 11
-mm = 11
+# yy = 11
+# mm = 11
 yy = 10.5
 mm = 2 * 21
 dparams_2d = odl.Interval(-yy, yy)
@@ -69,6 +69,9 @@ mag = (src_radius + det_radius) / src_radius
 # Slice index to print
 z_vol = np.round(discr_vol_space_3d.shape[2] / 2)
 y_proj = np.floor(dgrid_3d.shape[1] / 2)
+
+# Precision for adjoint test
+precision = 4
 
 # Print section
 print('\n')
@@ -117,7 +120,7 @@ def test_xray_trafo_cpu_parallel2d():
     r = inner_vol / inner_proj
 
     # Adjoint matching
-    assert almost_equal(inner_vol, inner_proj)
+    assert almost_equal(inner_vol, inner_proj, precision)
 
     print('\n\nCPU PARALLEL')
     print('vol stride', A.domain.grid.stride)
@@ -125,7 +128,7 @@ def test_xray_trafo_cpu_parallel2d():
     print('forward')
     print(Af.asarray()[0])
     print('backward / angle_stride / num_angle')
-    print(Adg.asarray()/ astride / num_angle)
+    print(Adg.asarray() / astride / num_angle)
     print('<A f,g> =  ', inner_proj, '\n<f,Ad g> = ', inner_vol)
     print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
 
@@ -163,7 +166,7 @@ def test_xray_trafo_cpu_fanflat():
     r = inner_vol / inner_proj
 
     # Adjoint matching
-    assert almost_equal(inner_vol, inner_proj)
+    assert almost_equal(inner_vol, inner_proj, precision)
 
     print('\nCPU FANFLAT')
     print('vol stride', A.domain.grid.stride)
@@ -173,7 +176,7 @@ def test_xray_trafo_cpu_fanflat():
     print('forward')
     print(Af.asarray()[0])
     print('backward / angle_stride / num_angle')
-    print(Adg.asarray()/ astride / num_angle)
+    print(Adg.asarray() / astride / num_angle)
     print('<A f,g> =  ', inner_proj, '\n<f,Ad g> = ', inner_vol)
     print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
 
@@ -208,7 +211,7 @@ def test_xray_trafo_cuda_parallel2d():
     # Adjoint matching
     inner_proj = Af.inner(g)
     inner_vol = f.inner(Adg)
-    assert almost_equal(inner_vol, inner_proj)
+    assert almost_equal(inner_vol, inner_proj, precision)
 
     print('\nCUDA PARALLEL 2D')
     print('vol stride', A.domain.grid.stride)
@@ -253,7 +256,7 @@ def test_xray_trafo_cuda_fanflat():
     # Adjoint matching
     inner_proj = Af.inner(g)
     inner_vol = f.inner(Adg)
-    assert almost_equal(inner_vol, inner_proj)
+    assert almost_equal(inner_vol, inner_proj, precision)
 
     print('\nCUDA FANFLAT')
     print('vol stride', A.domain.grid.stride)
@@ -261,7 +264,7 @@ def test_xray_trafo_cuda_fanflat():
     print('forward')
     print(Af.asarray()[0])
     print('backward / angle_stride / num_angle')
-    print(Adg.asarray()/ astride / num_angle)
+    print(Adg.asarray() / astride / num_angle)
     print('<A f,g> =  ', inner_proj, '\n<f,Ad g> = ', inner_vol)
     r = inner_vol / inner_proj
     print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
@@ -297,7 +300,7 @@ def test_xray_trafo_cuda_parallel3d():
     # Adjoint matching
     inner_proj = Af.inner(g)
     inner_vol = f.inner(Adg)
-    assert almost_equal(inner_vol, inner_proj)
+    assert almost_equal(inner_vol, inner_proj, precision)
 
     print('\nCUDA PARALLEL 3D')
     print('vol stride', A.domain.grid.stride)
@@ -342,7 +345,7 @@ def test_xray_trafo_cuda_conebeam_circular():
     # Adjoint matching
     inner_proj = Af.inner(g)
     inner_vol = f.inner(Adg)
-    assert almost_equal(inner_vol, inner_proj)
+    assert almost_equal(inner_vol, inner_proj, precision - 1)
 
     print('\nCUDA CONE CIRCULAR')
     print('vol stride', A.domain.grid.stride)
@@ -390,7 +393,7 @@ def test_xray_trafo_cuda_conebeam_helical():
     # Test adjoint matching
     inner_proj = Af.inner(g)
     inner_vol = f.inner(Adg)
-    assert almost_equal(inner_proj, inner_vol, 2)
+    assert almost_equal(inner_proj, inner_vol, precision - 2)
 
     print('\nCUDA CONE HELICAL')
     print('vol stride', A.domain.grid.stride)
