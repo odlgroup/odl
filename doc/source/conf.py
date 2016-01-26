@@ -45,7 +45,7 @@ def mock_modules(modules):
     sys.modules.update((mod_name, Mock()) for mod_name in modules)
 
 if on_rtd:
-    mock_modules(['future', 'future.utils',
+    mock_modules(['future', 'future.utils', 'builtins'
                   'past', 'past.builtins',
                   'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
                   'scipy.interpolate', 'scipy.interpolate.interpnd',
