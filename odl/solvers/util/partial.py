@@ -24,11 +24,10 @@ standard_library.install_aliases()
 
 # External
 from abc import ABCMeta, abstractmethod
-from time import time
+import time
 
 # Internal
 from odl.util.utility import with_metaclass
-import time
 
 __all__ = ('Partial', 'StorePartial', 'ForEachPartial', 'PrintTimingPartial',
            'PrintIterationPartial', 'PrintNormPartial', 'ShowPartial')

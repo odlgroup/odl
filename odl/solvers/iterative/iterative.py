@@ -235,6 +235,9 @@ Conjugate_gradient_on_the_normal_equations>`_.
     # TODO: add a book reference
     # TODO: update doc
 
+    assert x in op.domain
+    assert rhs in op.range
+
     d = op(x)
     d.lincomb(1, rhs, -1, d)               # d = rhs - A x
     p = op.derivative(x).adjoint(d)
