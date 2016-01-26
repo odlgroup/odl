@@ -27,10 +27,7 @@ import numpy as np
 
 try:
     import astra
-    if astra.astra.use_cuda():
-        ASTRA_CUDA_AVAILABLE = True
-    else:
-        ASTRA_CUDA_AVAILABLE = False
+    ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
@@ -129,7 +126,7 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
     # Fix scaling issue
     if isinstance(geometry, Parallel2dGeometry):
         # cuda parallel2d scales linearly with linear pixel stride
-        out *= 1/float(geometry.det_grid.stride[0])
+        out *= 1 / float(geometry.det_grid.stride[0])
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
