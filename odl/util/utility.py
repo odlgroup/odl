@@ -30,7 +30,7 @@ import numpy as np
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr')
+           'dtype_repr', 'pspace_squared_sum')
 
 
 def array1d_repr(array):
@@ -281,6 +281,39 @@ def preload_default_oop_call_with(vector):
 
     return decorator
 
+
+def pspace_squared_sum(x, out=None):
+    """ Compute the pointwise squared sum of a `ProductSpaceVector`.
+
+    Parameters
+    ----------
+    x : `ProductSpaceVector`
+        The vector to compute the sum of, has to be a powerspace
+    out : `LinearSpaceVector`, optional
+        Vector to store the result to
+
+    Returns
+    -------
+    sum : `LinearSpaceVector`
+        The sum of ``x``, element in ``x.space[0]``.
+        If out was given as a parameter, this is a reference to it.
+
+    Examples
+    --------
+    >>> import odl
+    >>> X = odl.ProductSpace(odl.Rn(3), 2)
+    >>> x = X.element([[1, 2, 3], [4, 5, 6]])
+    >>> pspace_squared_sum(x)
+    Rn(3).element([17.0, 29.0, 45.0])
+    """
+    if out is None:
+        out = x.space[0].element()
+
+    sq_tmp = x.space[0].element()
+    for xi in x:
+        sq_tmp.multiply(xi, xi)
+        out += sq_tmp
+    return out
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
