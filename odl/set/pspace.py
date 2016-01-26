@@ -640,8 +640,17 @@ class ProductSpaceVector(LinearSpaceVector):
 
             # else try with indices as is
 
-        for i, part in zip(indices, self[indices]):
-            part.show(*args, title='{}. Part {}'.format(title, i), **kwargs)
+        in_figs = kwargs.pop('fig', None)
+        in_figs = [None] * len(indices) if in_figs is None else in_figs
+
+        figs = []
+        for i, part, fig in zip(indices, self[indices], in_figs):
+            fig = part.show(*args,
+                            title='{}. Part {}'.format(title, i), fig=fig,
+                            **kwargs)
+            figs += [fig]
+
+        return figs
 
 
 if __name__ == '__main__':
