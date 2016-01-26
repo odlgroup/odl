@@ -229,7 +229,7 @@ class BarzilaiBorweinStep(object):
         gradf : `Operator`
             The gradient of the objective function at a point
         step0 : `float`, optional
-            Initial steplength parameter
+            Initial step length parameter
         """
         self.gradf = gradf
         self.step0 = step0

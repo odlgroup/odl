@@ -119,7 +119,7 @@ def test_chambolle_pock_solver():
     # Run the algorithm
     tau = 0.3
     sigma = 0.7
-    theta = 0.8
+    theta = 0.9
     chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
                           proximal_primal=prox, proximal_dual=prox,
                           theta=theta, niter=1, partial=None,
