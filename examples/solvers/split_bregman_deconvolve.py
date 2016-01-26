@@ -97,9 +97,9 @@ grad = odl.DiscreteGradient(discr_space, method='forward')
 rhs = conv(discr_phantom)
 
 # Optionally pass partial to the solver to display intermediate results
-partial = (odl.solvers.ShowPartial(clim=[0, 1]) &
-           odl.solvers.ShowPartial(indices=np.s_[:, n//2]) &
-           odl.solvers.PrintIterationPartial())
+partial = (odl.solvers.ShowPartial(title='intermediate results') &
+           odl.solvers.PrintIterationPartial() &
+           odl.solvers.PrintTimingPartial())
 
 # Starting point
 x = discr_space.zero()
@@ -108,7 +108,7 @@ x = discr_space.zero()
 la = 0.05  # Relaxation
 mu = 50.  # Data fidelity
 H_grad = l2_gradient(conv, rhs)
-split_bregman_solver(mu * H_grad, grad, x, la, 50, 1,
+split_bregman_solver(mu * H_grad, grad, x, la, 1000, 1,
                      isotropic=True,
                      partial=partial)
 
