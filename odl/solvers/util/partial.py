@@ -78,6 +78,7 @@ class Partial(with_metaclass(ABCMeta, object)):
         return AndPartial(self, other)
 
     def __repr__(self):
+        """Return ``repr(self)``"""
         return '{}()'.format(self.__class__.__name__)
 
 
@@ -86,14 +87,23 @@ class AndPartial(Partial):
     """Partial used for combining several partials"""
 
     def __init__(self, *partials):
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        *partials : `Partial`'s
+            Partials to be called in sequence as listed.
+        """
         assert all(isinstance(p, Partial) for p in partials)
         self.partials = partials
 
     def __call__(self, result):
+        """Apply all partials to result."""
         for p in self.partials:
             p(result)
 
     def __repr__(self):
+        """Return ``repr(self)``"""
         return ' & '.join('{}'.format(p) for p in self.partials)
 
 
@@ -107,7 +117,8 @@ class StorePartial(Partial):
         Parameters
         ----------
         results : `list`
-            List in which to store the partial results
+            List in which to store the partial results.
+            Default: new list (``[]``)
         """
         self._results = [] if results is None else results
 
@@ -133,10 +144,14 @@ class StorePartial(Partial):
         return len(self.results)
 
     def __str__(self):
-        return 'StorePartial({})'.format(self.results)
+        """Return ``str(self)``"""
+        resultstr = '' if self.results == [] else str(self.results)
+        return 'StorePartial({})'.format(resultstr)
 
     def __repr__(self):
-        return 'StorePartial({!r})'.format(self.results)
+        """Return ``repr(self)``"""
+        resultrepr = '' if self.results == [] else repr(self.results)
+        return 'StorePartial({})'.format(resultrepr)
 
 
 class ForEachPartial(Partial):
@@ -144,6 +159,13 @@ class ForEachPartial(Partial):
     """Simple object for applying a function to each iterate."""
 
     def __init__(self, function):
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        function : `callable`
+            Function to call for each iteration
+        """
         assert callable(function)
         self.function = function
 
@@ -152,9 +174,11 @@ class ForEachPartial(Partial):
         self.function(result)
 
     def __str__(self):
+        """Return ``str(self)``"""
         return 'ForEachPartial({})'.format(self.function)
 
     def __repr__(self):
+        """Return ``repr(self)``"""
         return 'ForEachPartial({!r})'.format(self.function)
 
 
@@ -165,6 +189,13 @@ class PrintIterationPartial(Partial):
     default_text = 'iter ='
 
     def __init__(self, text=None):
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        text : `str`
+            Text to display before the iteration count. Default: 'iter ='
+        """
         self.text = text if text is not None else self.default_text
         self.iter = 0
 
@@ -183,10 +214,11 @@ class PrintTimingPartial(Partial):
     """Print the time elapsed since the previous iteration."""
 
     def __init__(self):
+        """Initialize an instance."""
         self.time = time.time()
 
     def __call__(self, _):
-        """Print current iteration count and time elapsed to the previous."""
+        """Print time elapsed from the previous iteration."""
         t = time.time()
         print("Time elapsed = {:<5.03f} s".format(t - self.time))
         self.time = t
@@ -197,6 +229,7 @@ class PrintNormPartial(Partial):
     """Print the current norm."""
 
     def __init__(self):
+        """Initialize an instance."""
         self.iter = 0
 
     def __call__(self, result):
@@ -237,9 +270,11 @@ class ShowPartial(Partial):
         self.iter += 1
 
     def __str__(self):
+        """Return ``str(self)``"""
         return 'ShowPartial(*{}, **{})'.format(self.args, self.kwargs)
 
     def __repr__(self):
+        """Return ``repr(self)``"""
         return 'ShowPartial(*{!r}, **{!r})'.format(self.args, self.kwargs)
 
 
