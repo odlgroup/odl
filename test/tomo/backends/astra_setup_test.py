@@ -50,11 +50,11 @@ def _discrete_domain(ndim, interp):
     space : `DiscreteLp`
         Returns a `DiscreteLp` instance
     """
-    minpt = np.arange(-1, -ndim - 1, -1)  # -1, -2 [, -3]
-    maxpt = np.arange(1, ndim + 1, 1)  # 1, 2 [, 3]
+    min_pt = np.arange(-1, -ndim - 1, -1)  # -1, -2 [, -3]
+    max_pt = np.arange(1, ndim + 1, 1)  # 1, 2 [, 3]
     nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
 
-    return odl.uniform_discr(minpt, maxpt, nsamples=nsamples, interp=interp,
+    return odl.uniform_discr(min_pt, max_pt, nsamples=nsamples, interp=interp,
                              dtype='float32')
 
 
@@ -73,11 +73,11 @@ def _discrete_domain_anisotropic(ndim, interp):
     space : `DiscreteLp`
         Returns a `DiscreteLp` instance
     """
-    minpt = [-1] * ndim
-    maxpt = [1] * ndim
+    min_pt = [-1] * ndim
+    max_pt = [1] * ndim
     nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
 
-    return odl.uniform_discr(minpt, maxpt, nsamples=nsamples, interp=interp,
+    return odl.uniform_discr(min_pt, max_pt, nsamples=nsamples, interp=interp,
                              dtype='float32')
 
 
@@ -204,47 +204,47 @@ def test_astra_projection_geometry():
                                            det_grid)
     odl.tomo.astra_projection_geometry(geom_p2d)
 
-    # PARALLEL 2D GEOMETRY
+    # Parallel 2D geometry
     geom_p2d = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
                                            det_grid)
-    ageom = odl.tomo.astra_projection_geometry(geom_p2d)
-    assert ageom['type'] == 'parallel'
+    astra_geom = odl.tomo.astra_projection_geometry(geom_p2d)
+    assert astra_geom['type'] == 'parallel'
 
     # FANFLAT
     src_rad = 10
     det_rad = 5
     geom_ff = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
                                        agrid=angle_grid, dgrid=det_grid)
-    ageom = odl.tomo.astra_projection_geometry(geom_ff)
-    assert ageom['type'] == 'fanflat_vec'
+    astra_geom = odl.tomo.astra_projection_geometry(geom_ff)
+    assert astra_geom['type'] == 'fanflat_vec'
 
     dparams = odl.IntervalProd([-40, -3], [40, 3])
     det_grid = odl.uniform_sampling(dparams, (10, 5))
 
-    # PARALLEL 3D GEOMETRY
+    # Parallel 3D geometry
     geom_p3d = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, angle_grid,
                                            det_grid)
     odl.tomo.astra_projection_geometry(geom_p3d)
-    ageom = odl.tomo.astra_projection_geometry(geom_p3d)
-    assert ageom['type'] == 'parallel3d_vec'
+    astra_geom = odl.tomo.astra_projection_geometry(geom_p3d)
+    assert astra_geom['type'] == 'parallel3d_vec'
 
-    # CIRCULAR CONEFLAT
+    # Circular conebeam flat
     geom_ccf = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
                                                  det_rad,
                                                  agrid=angle_grid,
                                                  dgrid=det_grid)
-    ageom = odl.tomo.astra_projection_geometry(geom_ccf)
-    assert ageom['type'] == 'cone_vec'
+    astra_geom = odl.tomo.astra_projection_geometry(geom_ccf)
+    assert astra_geom['type'] == 'cone_vec'
 
-    # HELICAL CONEFLAT
+    # Helical conebeam flat
     spiral_pitch_factor = 1
     geom_hcf = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                                 det_rad,
                                                 spiral_pitch_factor,
                                                 agrid=angle_grid,
                                                 dgrid=det_grid)
-    ageom = odl.tomo.astra_projection_geometry(geom_hcf)
-    assert ageom['type'] == 'cone_vec'
+    astra_geom = odl.tomo.astra_projection_geometry(geom_hcf)
+    assert astra_geom['type'] == 'cone_vec'
 
 
 vol_geom_2d = {
@@ -406,7 +406,7 @@ def test_geom_to_vec():
     dparams = odl.Interval(-40, 40)
     det_grid = odl.uniform_sampling(dparams, 10)
 
-    # FAN FLAT
+    # Fanbeam flat
     src_rad = 10
     det_rad = 5
     geom_ff = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
@@ -415,7 +415,7 @@ def test_geom_to_vec():
 
     assert vec.shape == (angle_grid.ntotal, 6)
 
-    # CIRCULAR CONE FLAT
+    # Circular cone flat
     dparams = odl.IntervalProd([-40, -3], [40, 3])
     det_grid = odl.uniform_sampling(dparams, (10, 5))
     geom_ccf = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
@@ -425,7 +425,7 @@ def test_geom_to_vec():
     vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_ccf)
     assert vec.shape == (angle_grid.ntotal, 12)
 
-    # HELICAL CONE FLAT
+    # Helical cone flat
     pitch = 1
     geom_hcf = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
                                                 det_rad, pitch,

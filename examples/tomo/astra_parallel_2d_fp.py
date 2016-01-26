@@ -54,8 +54,8 @@ det_pixels = odl.uniform_sampling(det_range, 50)
 geom = odl.tomo.Parallel2dGeometry(angle_range, det_range, angles, det_pixels)
 
 # Initialize the operator
-xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                        backend='astra')
+xray_trafo = odl.tomo.XrayTransform(discr_reco_space, geom,
+                                    backend='astra')
 
 # Make a discrete phantom
 cont_phantom = reco_space.element(phantom)

@@ -45,8 +45,8 @@ def parallel_2d():
                                        agrid=agrid, dgrid=dgrid)
 
     # X-ray transform
-    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                                backend='astra_cuda')
+    xray_trafo = odl.tomo.XrayTransform(discr_reco_space, geom,
+                                        backend='astra_cuda')
 
     # Domain element
     discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
@@ -83,8 +83,8 @@ def parallel_3d():
                                        agrid=agrid, dgrid=dgrid)
 
     # X-ray transform
-    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                                backend='astra_cuda')
+    xray_trafo = odl.tomo.XrayTransform(discr_reco_space, geom,
+                                        backend='astra_cuda')
 
     # Domain element
     discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
@@ -120,8 +120,8 @@ def fanbeam():
                                     agrid=agrid, dgrid=dgrid)
 
     # X-ray transform
-    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                                backend='astra_cuda')
+    xray_trafo = odl.tomo.XrayTransform(discr_reco_space, geom,
+                                        backend='astra_cuda')
 
     # Domain element
     discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
@@ -154,8 +154,8 @@ def conebeam():
                                              agrid=agrid, dgrid=dgrid)
 
     # X-ray transform
-    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                                backend='astra_cuda')
+    xray_trafo = odl.tomo.XrayTransform(discr_reco_space, geom,
+                                        backend='astra_cuda')
 
     # Domain element
     discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)
@@ -189,8 +189,8 @@ def helical():
                                             agrid=agrid, dgrid=dgrid)
 
     # X-ray transform
-    xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                                backend='astra_cuda')
+    xray_trafo = odl.tomo.XrayTransform(discr_reco_space, geom,
+                                        backend='astra_cuda')
 
     # Domain element
     discr_vol_data = odl.util.phantom.shepp_logan(discr_reco_space, True)

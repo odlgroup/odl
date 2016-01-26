@@ -54,3 +54,4 @@ __all__ += space.__all__
 from . import solvers
 from . import tomo
 from . import trafos
+from . import util
