@@ -41,12 +41,15 @@ from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                            astra_projector, astra_data,
                                            astra_algorithm)
 from odl.tomo.geometry import Geometry
-
+from odl.tomo.geometry import (Parallel2dGeometry, FanFlatGeometry,
+                               Parallel3dGeometry, HelicalConeFlatGeometry)
 
 __all__ = ('astra_cuda_forward_projector_call',
            'astra_cuda_backward_projector_call',
            'ASTRA_CUDA_AVAILABLE')
 
+
+# TODO: use context manager when creating data structures
 
 def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
                                       out=None):
@@ -118,12 +121,15 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
     # Wrap data
     if ndim == 3:
         tmp = proj_space.element(np.rollaxis(astra.data3d.get(sino_id), 0, 3))
-        # 3D CUDA does not scale with line integration weight
-        tmp *= float(vol_data.space.grid.stride[0])  # isotropic voxel size
         if out is None:
             out = tmp
         else:
             out.assign(tmp)
+
+    # Fix scaling issue
+    if isinstance(geometry, Parallel2dGeometry):
+        # cuda parallel2d scales linearly with linear pixel stride
+        out *= 1/float(geometry.det_grid.stride[0])
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
@@ -210,6 +216,15 @@ def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
 
     # Run algorithm
     astra.algorithm.run(algo_id)
+
+    # Fix scaling issues
+    if isinstance(geometry, (FanFlatGeometry, Parallel2dGeometry)):
+        # cuda fanflat and parallel2d scale linearly with cell volume
+        out *= float(reco_space.cell_volume)
+    elif isinstance(geometry, (HelicalConeFlatGeometry, Parallel3dGeometry)):
+        # cuda cone and parallel3d scale linearly with linear voxel size
+        out /= float(reco_space.cell_size[0])
+
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
