@@ -29,13 +29,14 @@ import time
 # Internal
 from odl.util.utility import with_metaclass
 
+
 __all__ = ('Partial', 'StorePartial', 'ForEachPartial', 'PrintTimingPartial',
            'PrintIterationPartial', 'PrintNormPartial', 'ShowPartial')
 
 
 class Partial(with_metaclass(ABCMeta, object)):
 
-    """Abstract base class for sending partial results of iterations."""
+    """Abstract base class for handling partial results of iterations."""
 
     @abstractmethod
     def __call__(self, result):

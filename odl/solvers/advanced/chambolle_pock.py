@@ -57,32 +57,64 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     """Chambolle-Pock algorithm for non-smooth convex optimization problems.
 
     First order primal-dual hybrid-gradient (PDHG) method for non-smooth
-    convex optimization problems with known saddle-point structure
-    developed by Chambolle and Pock (CP) [1]_.
+    convex optimization problems with known saddle-point structure as
+    developed by Chambolle and Pock (CP) in [1]_.
 
-    Generic saddle-point optimization problem:
+    Generic saddle-point optimization problem
 
-        min_{x in X} max_{y in Y} <Kx,y>_Y + G(x) - F^*(y)
+        min_{x in X} max_{y in Y} <K x,y>_Y + G(x) - F^*(y)    (1)
 
-    where X and Y are finite-dimensional Hilbert spaces with inner product
-    <.,.>, K is a continuous linear operator K : X -> Y. G : X -> [0,+infty]
-    and F^* : Y -> [0,+infty] are proper, lower-semicontinuous functions with
-    F^* being the convex (or Fenchel) conjugate of
+    where ``X`` and ``Y`` are finite-dimensional Hilbert spaces with an
+    inner product <.,.> and norm ||.|| = <.,.>^(1/2), ``K`` is a continuous
+    linear operator ``K : X -> Y``. ``G : X -> [0, +infty]`` and ``F^* : Y
+    -> [0,+infty]`` are proper, lower-semicontinuous functions, and ``F^* is
+    the convex (or Fenchel) conjugate of ``F``. (The conjugacy operation ``F
+    -> F^*`` is closely related to the classical Legendre transformation in
+    the case of differentiable convex functions.)
 
-    Corresponding primal minimization problem
+    The nonlinear primal minimization problem related to (1) reads
 
         min_x G(x) + F(Kx)
 
-    Corresponding dual maximization:
+    and the corresponding dual maximization problem
 
         max_y G(-K^*x) - F^*(y)
 
-    Convergence proven for ``||K||_2^2 * sigma * tau < 1``
+    For more details see [5]_. The following implementation of the CP
+    algorithms is along the lines of [3]_.
 
-    For the use of CP with simple and easy to use preconditioning techniques
-    see [2]_. This implementation is based on the article on convex
-    optimization problem prototyping for image reconstruction in computed
-    tomography by [3]_. For more on proximal operators and algorithms see [4]_.
+
+    Basic algorithm
+    ---------------
+    The algorithms basically consists of alternating a gradient ascend in the
+    dual variable ``y`` and a gradient descent in the primal variable ``x``.
+    Additionally an over-relaxation (``xb``) in the primal variable is
+    performed.
+
+    Initialization:
+
+        choose ``tau, sigma > 0``, ``theta`` in [0,1], ``(x_0, y_0)`` in
+        ``X`` * ``Y``, ``xb_0 = x_0``
+
+    Iteration: for ``n > 0`` update ``x_n``, ``y_n``, ``xb_n`` as follows
+
+        y_{n+1} = prox_sigma[F^*](y_n + sigma * K xb_n)
+        x_{n+1} = prox_tau[G](x_n - tau * K^* * y_{n+1}
+        xb_{n+1} = x_{n+1} + theta * (x_{n+1} - x_n)
+
+    Let ``L`` be the induced norm of the operator
+
+        K = ||K|| = max{||K x|| : x in X with ||x|| < 1}
+
+    convergence is assured for ``L * sigma * tau < 1``. Then step length
+    parameters can be chosen as ``tau = sigma < 1/L``. Instead of choosing
+    step length parameters preconditioning techniques can be employed as in
+    [2]_. In this case the the steps ``tau`` and ``sigma`` are replaced by
+    symmetric and positive definite matrices ``tau -> T``, ``sigma ->
+    Sigma`` and convergence is assured for ``||Sigma^(1/2) * K * T*(1/2)||^2
+    < 1``.
+
+    For more on proximal operators and algorithms see [4]_.
 
     Parameters
     ----------
@@ -115,12 +147,13 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     niter : non-negative `int`, optional
         Number of iterations
     partial : `Partial`, optional
-        If not `None` the object passed executes code per iteration,
-        e.g. plotting each iterate
-    x_relaxation : element in the domain of ``op``
-        Required to resume iteration. If `None` it is equal to ``x``.
-    y : element in the range of ``op``
-        Required to resume iteration. If `None` it is set to zero.
+        If not `None` the `Partial` instance(s) are executed in each
+        iteration, e.g. plotting each iterate
+    x_relaxation : element in the domain of ``op``, optional
+        Required to resume iteration. If `None` it is a copy of ``x``.
+    y : element in the range of ``op``, optional
+        Required to resume iteration. If `None` it is set to a zero element
+        in ``Y`` i.e. the range of ``op``.
 
     References
     ----------
@@ -142,11 +175,13 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     .. [4]: Parikh, Neal, and Boyd, Stephen. *Proximal Algorithms* .
     Foundations and Trends in Optimization 1 127, 2014.
     http://dx.doi.org/10.1561/2400000003
+
+    .. [5]: Rockafellar, R. Tyrrell. *Convex analysis*. Princeton University
+     Press, 1970.
     """
     if not isinstance(op, Operator):
         raise TypeError('operator ({}) is not an instance of {}'
                         ''.format(op, Operator))
-
     if x.space != op.domain:
         raise TypeError('starting point ({}) is not in the domain of `op` '
                         '({})'.format(x.space, op.domain))
@@ -155,7 +190,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     else:
         tau = float(tau)
     if sigma <= 0:
-        raise ValueError('update parameter ({0})  not positive.'.format(sigma))
+        raise ValueError('update parameter ({0}) not positive.'.format(sigma))
     else:
         sigma = float(sigma)
     if not 0 <= theta <= 1:
@@ -194,7 +229,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     # Initialize the proximal operator of functional G
     proximal_primal_tau = proximal_primal(tau)
 
-    # Adjoint of the product space operator
+    # Adjoint of the (product space) operator
     op_adjoint = op.adjoint
 
     for _ in range(niter):
@@ -211,7 +246,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_relaxation.lincomb(1 + theta, x, -theta, x_old)
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 # Proximal operators of f(x):

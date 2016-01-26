@@ -100,7 +100,6 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     """
     # Importing pyplot takes ~2 sec, only import when needed.
     import matplotlib.pyplot as plt
-
     args_re = []
     args_im = []
     dsp_kwargs = {}
