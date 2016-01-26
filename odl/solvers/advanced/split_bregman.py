@@ -33,7 +33,7 @@ from builtins import super
 
 # Internal
 from odl.operator.operator import Operator
-from odl.solvers.iterative import conjugate_gradient as cgn
+from odl.solvers.iterative import conjugate_gradient
 from odl.util import pspace_squared_sum
 
 __all__ = ('l2_gradient', 'split_bregman_solver',)
@@ -112,7 +112,8 @@ def split_bregman_solver(H_grad, Phi, x, lam,
 
     # If no solver is given, create a new.
     if inner_solver is None:
-        inner_solver = lambda op, x, rhs: cgn(op, x, rhs, 1)
+        def inner_solver(op, x, rhs):
+            conjugate_gradient(op, x, rhs, 1)
     else:
         assert callable(inner_solver)
 
