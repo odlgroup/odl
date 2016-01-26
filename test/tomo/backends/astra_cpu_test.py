@@ -31,9 +31,7 @@ from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
 from odl.tomo.util.testutils import skip_if_no_astra
 
 
-# TODO: test scaling of ASTRA projectors
-# TODO: smarter tests
-# TODO: test other interpolations once implemented
+# TODO: clean up and improve tests
 
 @skip_if_no_astra
 def test_astra_cpu_projector_parallel2d():
@@ -117,7 +115,6 @@ def test_astra_cpu_projector_fanflat():
                                                    dtype='float32')
 
     # forward
-    discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
     proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_data, geom,
                                                           discr_proj_space)
     assert proj_data.shape == proj_shape

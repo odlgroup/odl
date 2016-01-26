@@ -33,6 +33,9 @@ from odl.util.testutils import almost_equal
 from odl.tomo import ASTRA_CUDA_AVAILABLE
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
+
+# TODO: increase test coverage and improve tests
+
 # DiscreteLp volume / reconstruction space
 xx = 5
 nn = 5
@@ -100,8 +103,8 @@ def test_xray_trafo_cpu_parallel2d():
     geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
-                                       backend='astra_cpu')
+    A = odl.tomo.XrayTransform(discr_vol_space, geom,
+                               backend='astra_cpu')
 
     # Domain element
     f = A.domain.one()
@@ -146,8 +149,8 @@ def test_xray_trafo_cpu_fanflat():
                                     det_radius, agrid, dgrid)
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
-                                       backend='astra_cpu')
+    A = odl.tomo.XrayTransform(discr_vol_space, geom,
+                               backend='astra_cpu')
 
     # Domain element
     f = A.domain.one()
@@ -171,8 +174,6 @@ def test_xray_trafo_cpu_fanflat():
     print('\nCPU FANFLAT')
     print('vol stride', A.domain.grid.stride)
     print('proj stride', A.range.grid.stride)
-    # print('volume f:')
-    # print(f.asarray())
     print('forward')
     print(Af.asarray()[0])
     print('backward / angle_stride / num_angle')
@@ -193,8 +194,8 @@ def test_xray_trafo_cuda_parallel2d():
     geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
-                                       backend='astra_cuda')
+    A = odl.tomo.XrayTransform(discr_vol_space, geom,
+                               backend='astra_cuda')
 
     # Domain element
     f = A.domain.one()
@@ -238,8 +239,8 @@ def test_xray_trafo_cuda_fanflat():
                                     det_radius, agrid, dgrid)
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
-                                       backend='astra_cuda')
+    A = odl.tomo.XrayTransform(discr_vol_space, geom,
+                               backend='astra_cuda')
 
     # Domain element
     f = A.domain.one()
@@ -282,8 +283,8 @@ def test_xray_trafo_cuda_parallel3d():
     geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, agrid, dgrid)
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
-                                       backend='astra_cuda')
+    A = odl.tomo.XrayTransform(discr_vol_space, geom,
+                               backend='astra_cuda')
 
     # Domain element
     f = A.domain.one()
@@ -328,8 +329,8 @@ def test_xray_trafo_cuda_conebeam_circular():
                                              axis=[0, 0, 1])
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space_3d, geom,
-                                       backend='astra_cuda')
+    A = odl.tomo.XrayTransform(discr_vol_space_3d, geom,
+                               backend='astra_cuda')
     # Domain element
     f = A.domain.one()
 
@@ -374,8 +375,8 @@ def test_xray_trafo_cuda_conebeam_helical():
                                             axis=[0, 0, 1])
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
-                                       backend='astra_cuda')
+    A = odl.tomo.XrayTransform(discr_vol_space, geom,
+                               backend='astra_cuda')
     # Domain element
     f = A.domain.one()
 

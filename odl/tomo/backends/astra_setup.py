@@ -319,10 +319,10 @@ def astra_parallel_3d_geom_to_vec(geometry):
     # Astra has a different axis convention to ODL (z, y, x), so we need
     # to adapt to this by changing the order
 
-    newind = []
+    new_ind = []
     for i in range(4):
-        newind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
-    vectors = vectors[:, newind]
+        new_ind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
+    vectors = vectors[:, new_ind]
 
     return vectors
 

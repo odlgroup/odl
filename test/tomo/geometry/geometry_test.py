@@ -32,7 +32,7 @@ import odl
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 
 
-# TODO: test for rotations about arbitray axis once implemented
+# TODO: test for rotations about arbitrary axis
 
 def test_parallel_2d_geometry():
     """General parallel 2D geometries."""
