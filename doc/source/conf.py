@@ -49,7 +49,7 @@ if on_rtd:
                   'past', 'past.builtins',
                   'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
                   'scipy.interpolate', 'scipy.interpolate.interpnd',
-                  'numpy', 'numpy.linalg', 'numpy.distutils',
+                  'numpy.linalg', 'numpy.distutils',
                   'matplotlib', 'matplotlib.pyplot',
                   'odlpp', 'odlpp.odlpp_cuda'])
 
