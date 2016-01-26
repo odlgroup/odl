@@ -29,7 +29,7 @@ from abc import ABCMeta, abstractmethod
 from odl.util.utility import with_metaclass
 import time
 
-__all__ = ('Partial', 'StorePartial', 'ForEachPartial', 'PrintTimePartial',
+__all__ = ('Partial', 'StorePartial', 'ForEachPartial', 'PrintTimingPartial',
            'PrintIterationPartial', 'PrintNormPartial', 'ShowPartial')
 
 
@@ -39,10 +39,20 @@ class Partial(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def __call__(self, result):
-        """Send the result to the partial object."""
+        """Apply the partial object to result.
+
+        Parameters
+        ----------
+        result : `LinearSpaceVector`
+            Partial result after n iterations
+
+        Returns
+        -------
+        `None`
+        """
 
     def __and__(self, other):
-        """ Return ``self & other``
+        """Return ``self & other``
 
         Compose partials, calls both in sequence.
 
@@ -54,7 +64,7 @@ class Partial(with_metaclass(ABCMeta, object)):
         Returns
         -------
         result : `Partial`
-            A partial which's `__call__` method calls both constituends
+            A partial whose `__call__` method calls both constituends
             partials.
 
         Examples
@@ -72,7 +82,9 @@ class Partial(with_metaclass(ABCMeta, object)):
 
 
 class AndPartial(Partial):
+
     """Partial used for combining several partials"""
+
     def __init__(self, *partials):
         assert all(isinstance(p, Partial) for p in partials)
         self.partials = partials
@@ -103,7 +115,7 @@ class StorePartial(Partial):
 
     def __iter__(self):
         """Allow iteration over the results"""
-        return self.results.__iter__()
+        return iter(self.results)
 
     def __getitem__(self, index):
         """Get partial result."""
@@ -119,10 +131,11 @@ class ForEachPartial(Partial):
     """Simple object for applying a function to each iterate."""
 
     def __init__(self, function):
+        assert callable(function)
         self.function = function
 
     def __call__(self, result):
-        """Applies function to result."""
+        """Apply function to result."""
         self.function(result)
 
 
@@ -131,18 +144,18 @@ class PrintIterationPartial(Partial):
     """Print the interation count."""
 
     def __init__(self, text=None):
-        self.text = text if text is not None else 'iter'
+        self.text = text if text is not None else 'iter ='
         self.iter = 0
 
     def __call__(self, _):
         """Print the current iteration."""
-        print("{} = {}".format(self.text, self.iter))
+        print("{} {}".format(self.text, self.iter))
         self.iter += 1
 
 
-class PrintTimePartial(Partial):
+class PrintTimingPartial(Partial):
 
-    """Print the time elapsed to the previous iteration."""
+    """Print the time elapsed since the previous iteration."""
 
     def __init__(self):
         self.time = time.time()
@@ -162,7 +175,7 @@ class PrintNormPartial(Partial):
         self.iter = 0
 
     def __call__(self, result):
-        """Print the current iteration and norm."""
+        """Print the current norm."""
         print("norm = {}".format(result.norm()))
         self.iter += 1
 
@@ -181,8 +194,8 @@ class ShowPartial(Partial):
         ----------
         *args, **kwargs
             passed ax ``x.show(*args, **kwargs)``
-        display_step : positive int
-            Plot every n:th image, default: 1
+        display_step : positive `int`
+            Number of iterations between plots. Default: 1
         """
         self.args = args
         self.kwargs = kwargs
