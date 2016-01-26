@@ -17,33 +17,8 @@
 
 from __future__ import absolute_import
 
-
 __all__ = ()
 
-from . import advanced
-from .advanced import *
-__all__ += advanced.__all__
-
-from . import findroot
-from .findroot import *
-__all__ += findroot.__all__
-
-from . import iterative
-from .iterative import *
-__all__ += iterative.__all__
-
-from . import linear
-from .linear import *
-__all__ += linear.__all__
-
-from . import scalar
-from .scalar import *
-__all__ += scalar.__all__
-
-from . import vector
-from .vector import *
-__all__ += vector.__all__
-
-from . import util
-from .util import *
-__all__ += util.__all__
+from . import chambolle_pock
+from .chambolle_pock import *
+__all__ += chambolle_pock.__all__
