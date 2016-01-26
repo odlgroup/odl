@@ -110,16 +110,14 @@ g = discr_space.element()
 conv(discr_phantom, out=g)
 
 # Optionally pass partial to the solver to display intermediate results
-fig = plt.figure('intermediate results')
-partial = odl.solvers.util.ForEachPartial(
-        lambda result: result.show(fig=fig, show=False))
-partial &= odl.solvers.util.PrintIterationTimePartial()
+partial = (odl.solvers.util.ShowPartial(title='intermediate results') &
+           odl.solvers.util.PrintTimingPartial())
 
 # Run algorithms
 chambolle_pock_solver(prod_op, x, tau=1 / prod_op_norm, sigma=1 / prod_op_norm,
                       proximal_primal=proximal_zero(prod_op.domain),
                       proximal_dual=proximal_convexconjugate_l2_l1(
-                              prod_op.range, g, lam=0.0001),
+                          prod_op.range, g, lam=0.0001),
                       niter=100,
                       partial=partial)
 

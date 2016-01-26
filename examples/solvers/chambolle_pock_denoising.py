@@ -66,13 +66,9 @@ x = K.domain.zero()
 # Operator norm
 K_norm = 1.1 * odl.operator.oputils.power_method_opnorm(K, 200)
 
-# Display partial
-fig = plt.figure('iteration')
-partial = odl.solvers.util.ForEachPartial(
-    lambda result: result.show(fig=fig, show=False))
-# partial = odl.solvers.util.ShowPartial(fig=fig, show=False,
-# title='iteration')
-partial &= odl.solvers.util.PrintIterationTimePartial()
+# Optionally pass partial to the solver to display intermediate results
+partial = (odl.solvers.util.ShowPartial(title='intermediate results') &
+           odl.solvers.util.PrintTimingPartial())
 
 # Run algorithms (and display intermediates)
 chambolle_pock_solver(K, x, tau=1/K_norm, sigma=1/K_norm,

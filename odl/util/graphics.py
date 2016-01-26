@@ -100,7 +100,6 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     """
     # Importing pyplot takes ~2 sec, only import when needed.
     import matplotlib.pyplot as plt
-    plt.hold(True)
     args_re = []
     args_im = []
     dsp_kwargs = {}
@@ -215,6 +214,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     if fig is None:
         fig = plt.figure(figsize=figsize)
+        fig.hold(True)
         updatefig = False
     else:
         if not isinstance(fig, plt.Figure):
@@ -227,6 +227,11 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
         plt.figure(fig.number)
         updatefig = True
+
+        if values.ndim > 1:
+            # If the figure is larger than 1d, we can clear it since we
+            # dont reuse anything.
+            fig.clf()
 
     if dfunc_is_complex:
         # Real

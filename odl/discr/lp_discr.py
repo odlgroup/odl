@@ -20,6 +20,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import super, str
 
@@ -146,14 +147,22 @@ class DiscreteLp(Discretization):
             pass
 
         # Sequence-type input
-        arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-        if arr.ndim > 1 and arr.shape != self.shape:
-            arr = np.squeeze(arr)  # Squeeze could solve the problem
-            if arr.shape != self.shape:
-                raise ValueError('input shape {} does not match grid shape {}'
-                                 ''.format(arr.shape, self.shape))
-        arr = arr.ravel(order=self.order)
-        return self.element_type(self, self.dspace.element(arr))
+        try:
+            arr = np.asarray(inp, dtype=self.dtype, order=self.order)
+            if arr.ndim > 1 and arr.shape != self.shape:
+                arr = np.squeeze(arr)  # Squeeze could solve the problem
+                if arr.shape != self.shape:
+                    raise ValueError(
+                        'input shape {} does not match grid shape {}.'
+                        ''.format(arr.shape, self.shape))
+            arr = arr.ravel(order=self.order)
+            return self.element_type(self, self.dspace.element(arr))
+        except TypeError as err:
+            if str(err.args[0]).startswith('output contains points outside'):
+                raise err
+            else:
+                raise_from(TypeError('unable to create an element of {} from '
+                                     '{!r}.'.format(self, inp)), err)
 
     @property
     def grid(self):

@@ -117,4 +117,4 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
         x += step_length * search_direction
 
         if partial is not None:
-            partial.send(x)
+            partial(x)

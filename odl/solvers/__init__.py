@@ -45,3 +45,5 @@ from .vector import *
 __all__ += vector.__all__
 
 from . import util
+from .util import *
+__all__ += util.__all__

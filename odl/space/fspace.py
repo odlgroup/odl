@@ -126,7 +126,7 @@ class FunctionSet(Set):
             raise TypeError('function {!r} is not callable.'.format(fcall))
 
         if not vectorized:
-            fcall = vectorize(dtype=None)(fcall)
+            fcall = vectorize(fcall)
 
         return self.element_type(self, fcall)
 
@@ -199,7 +199,9 @@ class FunctionSetVector(Operator):
         if isinstance(fcall, FunctionSetVector):
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 bound_call=fcall._call)
-        elif isinstance(fcall, np.ufunc):
+
+        # Numpy Ufuncs and similar objects (e.g. Numba DUfuncs)
+        elif hasattr(fcall, 'nin') and hasattr(fcall, 'nout'):
             if fcall.nin != 1:
                 raise ValueError('ufunc {} has {} input parameter(s), '
                                  'expected 1.'
@@ -360,7 +362,7 @@ class FunctionSetVector(Operator):
             if not self.range.contains_all(out):
                 raise ValueError('output contains points outside '
                                  'the range {}.'
-                                 ''.format(self.domain))
+                                 ''.format(self.range))
 
         # Numpy does not implement __complex__ for arrays (in contrast to
         # __float__), so we have to fish out the scalar ourselves.
@@ -500,7 +502,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 else:
                     dtype = 'complex128'
 
-                fcall = vectorize(dtype=dtype)(fcall)
+                fcall = vectorize(otypes=[dtype])(fcall)
 
             return self.element_type(self, fcall)
 

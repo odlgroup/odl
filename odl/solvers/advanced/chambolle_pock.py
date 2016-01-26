@@ -246,7 +246,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_relaxation.lincomb(1 + theta, x, -theta, x_old)
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 # Proximal operators of f(x):
