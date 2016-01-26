@@ -52,9 +52,9 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
 
     Parameters
     ----------
-    deriv : `Operator`
+    op : `Operator`
         Gradient of the objective function, :math:`x \mapsto grad f(x)`
-    x : `element` of the domain of ``deriv``
+    x : element in the domain of ``op``
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length
@@ -62,7 +62,7 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
         Number of iterations
     cg_iter : `int`, optional
         Number of iterations in the the conjugate gradient solver,
-        for comuting the search direction.
+        for computing the search direction.
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 

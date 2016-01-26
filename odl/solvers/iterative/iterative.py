@@ -352,7 +352,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     None
     """
     x0 = x.copy()
-    I = IdentityOperator(op.domain)
+    id_op = IdentityOperator(op.domain)
     dx = x.space.zero()
 
     tmp_dom = op.domain.element()
@@ -375,9 +375,9 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
         deriv_adjoint(v, out=u)         # eval/assign  u = deriv.T(v)
 
         # Solve equation Tikhonov regularized system
-        # (deriv.T o deriv + tm * I)^-1 u = dx
+        # (deriv.T o deriv + tm * id_op)^-1 u = dx
         tikh_op = OperatorSum(OperatorComp(deriv.adjoint, deriv),
-                              tm * I, tmp_dom)
+                              tm * id_op, tmp_dom)
 
         # TODO: allow user to select other method
         conjugate_gradient(tikh_op, dx, u, 3)
