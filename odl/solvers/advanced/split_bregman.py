@@ -123,7 +123,7 @@ def split_bregman_solver(H_grad, Phi, x, lam,
         for n in range(inner_niter):
             # Solve tomography part using the given solver
             inner_op = H_grad + lam * (Phi.adjoint * Phi)
-            inner_rhs = lam * Phi.adjoint(d-b)
+            inner_rhs = lam * Phi.adjoint(d - b)
             inner_solver(inner_op, x, inner_rhs)
 
             # Solve for d using soft threshholding

@@ -26,4 +26,3 @@ __all__ += chambolle_pock.__all__
 from . import split_bregman
 from .split_bregman import *
 __all__ += split_bregman.__all__
-

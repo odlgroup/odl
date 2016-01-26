@@ -234,7 +234,6 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             # dont reuse anything.
             fig.clf()
 
-
     if dfunc_is_complex:
         # Real
         if len(fig.axes) == 0:
