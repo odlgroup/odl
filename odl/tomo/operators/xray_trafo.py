@@ -144,6 +144,7 @@ class DiscreteXrayTransform(Operator):
         discr_range = DiscreteLp(range_uspace, geometry.grid, range_dspace,
                                  interp=range_interp,
                                  order=geometry.grid.order)
+
         super().__init__(discr_domain, discr_range, linear=True)
 
         self._adjoint = DiscreteXrayTransformAdjoint(self)
@@ -158,13 +159,16 @@ class DiscreteXrayTransform(Operator):
         """Geometry of this operator."""
         return self._geometry
 
-    def _call(self, inp):
+    def _call(self, inp, out=None):
         """Call the transform on an input, producing a new vector.
 
         Parameters
         ----------
         inp : `DiscreteLpVector`
            Element in the domain of the operator to be forward projected
+        out : `DiscreteLpVector`, optional
+            Vector in the projection space to which the result is written.
+            If `None` creates an element in the range of the operator.
 
         Returns
         -------
@@ -175,10 +179,10 @@ class DiscreteXrayTransform(Operator):
         if back == 'astra':
             if impl == 'cpu':
                 return astra_cpu_forward_projector_call(
-                    inp, self.geometry, self.range)
+                    inp, self.geometry, self.range, out)
             elif impl == 'cuda':
                 return astra_cuda_forward_projector_call(
-                    inp, self.geometry, self.range)
+                    inp, self.geometry, self.range, out)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
@@ -206,13 +210,16 @@ class DiscreteXrayTransformAdjoint(Operator):
         super().__init__(forward.range, forward.domain, forward.is_linear)
         self._backend = forward.backend
 
-    def _call(self, inp):
+    def _call(self, inp, out=None):
         """Call the adjoint transform on an input, producing a new vector.
 
         Parameters
         ----------
         inp : `DiscreteLpVector`
             Element in the domain of the operator to be back-projected
+        out : `DiscreteLpVector`, optional
+            Vector in the reconstruction space to which the result is written.
+            If `None` creates an element in the range of the operator
 
         Returns
         -------
@@ -227,10 +234,10 @@ class DiscreteXrayTransformAdjoint(Operator):
                 weight = 1.0
             if impl == 'cpu':
                 return weight * astra_cpu_backward_projector_call(
-                    inp, self.forward.geometry, self.range)
+                    inp, self.forward.geometry, self.range, out)
             elif impl == 'cuda':
                 return weight * astra_cuda_backward_projector_call(
-                    inp, self.forward.geometry, self.range)
+                    inp, self.forward.geometry, self.range, out)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen

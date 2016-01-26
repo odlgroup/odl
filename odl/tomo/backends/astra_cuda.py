@@ -225,7 +225,6 @@ def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
         # cuda cone and parallel3d scale linearly with linear voxel size
         out /= float(reco_space.cell_size[0])
 
-
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
     if ndim == 2:
