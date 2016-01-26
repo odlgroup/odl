@@ -48,7 +48,7 @@ class IntervalProd(Set):
     n-dimensional rectangular box aligned with the coordinate axes
     as a subset of :math:`R^n`.
 
-    `IntervalProd` objects are immutable, all methods involving the return
+    `IntervalProd` objects are immutable, all methods involving them return
     a new `IntervalProd`.
     """
 
@@ -641,6 +641,7 @@ class IntervalProd(Set):
         Rectangle([-1.0, 0.0], [-0.5, 0.5])
 
         By list of ints
+
         >>> rbox[[0, 1]]
         Rectangle([-1.0, 2.0], [-0.5, 3.0])
         """
