@@ -163,7 +163,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
      The 3D vectors are used to create an ASTRA projection geometry for
-     cone beam geometries ('conv_vec') with helical acquisition curves.
+     cone beam geometries ('cone_vec') with helical acquisition curves.
 
     Output vectors:
 
@@ -393,7 +393,7 @@ def astra_projection_geometry(geometry):
         proj_geom = astra.create_proj_geom(
             'cone_vec', det_row_count, det_col_count, vec)
     else:
-        raise NotImplementedError('unkown ASTRA geometry type {}.'.format(
+        raise NotImplementedError('unknown ASTRA geometry type {}.'.format(
             geometry))
 
     return proj_geom

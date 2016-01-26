@@ -36,12 +36,14 @@ from odl.tomo.backends.astra_setup import (astra_projection_geometry,
                                            astra_volume_geometry, astra_data,
                                            astra_projector, astra_algorithm)
 from odl.tomo.geometry import Geometry
+from odl.tomo.geometry.fanbeam import FanFlatGeometry
 
 __all__ = ('astra_cpu_forward_projector_call',
            'astra_cpu_backward_projector_call')
 
 
 # TODO: Fix inconsistent scaling of ASTRA projector with pixel size
+# TODO: use context manager when creating data structures
 
 def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the CPU.
@@ -112,8 +114,9 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     # Run algorithm
     astra.algorithm.run(algo_id)
 
+    # Fix scaling issue
     # 2D CPU does not scale with line integration weight
-    out *= float(vol_data.space.grid.stride[0])  # isotropic voxel size
+    # out *= float(vol_data.space.grid.stride[0])  # isotropic voxel size
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
@@ -193,6 +196,18 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
 
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
+
+    # Fix scaling issue
+    # parallel2d and fanflat do scale quadratically with linear voxel size
+    # and linearly with inverse pixel size
+    sf = float(geometry.det_grid.stride[0])
+    sf /= float(reco_space.grid.stride[0]) ** 2
+    # magnification factor
+    if isinstance(geometry, FanFlatGeometry):
+        src_radius = geometry.src_radius
+        det_radius = geometry.det_radius
+        sf /= ((src_radius + det_radius) / src_radius)
+    out *= sf
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)

@@ -43,7 +43,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
     reference point is opposite to the source on a circle with radius
     ``R``.
 
-    The motion parameter is the (1d) rotation angle parametrizing source and
+    The motion parameter is the (1d) rotation angle parameterizing source and
     detector positions.
     """
 
@@ -61,7 +61,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         det_radius : positive `float`
             Radius of the detector circle, must be positive
         agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`. Default: `None`
+            A sampling grid for `angle_intvl`
         src_to_det : 2-element array, optional
             The direction from the source to the point (0) of the detector
             angle=0

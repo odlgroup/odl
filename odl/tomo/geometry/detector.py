@@ -240,7 +240,7 @@ class Flat1dDetector(FlatDetector):
 
     @property
     def detector_axis(self):
-        """The directions of the principial axes of the detector."""
+        """The directions of the principal axes of the detector."""
         return self._detector_axis
 
     def surface(self, param):
@@ -275,7 +275,7 @@ class Flat1dDetector(FlatDetector):
 
         Returns
         -------
-        deriv : `numpy.ndarray`, shape (2,)
+        derivative : `numpy.ndarray`, shape (2,)
             The constant derivative (0, 1)
         """
         if param is not None and param not in self.params:
@@ -315,7 +315,7 @@ class Flat2dDetector(FlatDetector):
 
     @property
     def detector_axes(self):
-        """The directions of the principial axes of the detector."""
+        """The directions of the principal axes of the detector."""
         return self._detector_axes
 
     def surface(self, param):
@@ -367,7 +367,7 @@ class CircleSectionDetector(Detector):
 
     """A 1d detector lying on a section of a circle.
 
-    The reference cirular section is part of a circle with radius ``r``,
+    The reference circular section is part of a circle with radius ``r``,
     which is shifted by the vector ``(-r, 0)`` such that the parameter
     value 0 results in the detector reference point ``(0, 0)``.
 

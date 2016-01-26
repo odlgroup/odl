@@ -46,7 +46,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     the source and moves on a spiral with radius ``R`` in the azimuthal
     plane and pitch ``P``.
 
-    The motion parameter is the (1d) rotation angle parametrizing source and
+    The motion parameter is the (1d) rotation angle parameterizing source and
     detector positions.
     """
 
@@ -229,7 +229,7 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
     reference point is opposite to the source on a circle with radius ``R``
     and aligned tangential to the circle.
 
-    The motion parameter is the (1d) rotation angle parametrizing source and
+    The motion parameter is the (1d) rotation angle parameterizing source and
     detector positions.
     """
 

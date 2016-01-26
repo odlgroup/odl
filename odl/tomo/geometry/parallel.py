@@ -188,9 +188,9 @@ class Parallel2dGeometry(ParallelGeometry):
         dparams : `Interval` or 1-dim. `IntervalProd`
             The detector parameters
         agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the `angle_intvl`. Default: `None`
+            A sampling grid for the `angle_intvl`
         dgrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the detector parameters. Default: `None`
+            A sampling grid for the detector parameters
         origin_to_det : 2-element array, optional
             The direction from the origin to the point (0) of the detector
             when angle=0

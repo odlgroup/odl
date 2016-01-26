@@ -168,7 +168,7 @@ class ForwardProjectorByBinWrapper(Operator):
 
 class BackProjectorByBinWrapper(Operator):
 
-    """A backprojector using STIR."""
+    """A back projector using STIR."""
 
     def __init__(self, dom, ran, volume, proj_data,
                  back_projector=None, adjoint=None):
@@ -184,7 +184,7 @@ class BackProjectorByBinWrapper(Operator):
             ``volume.shape()``.
         volume : ``stir.FloatVoxelsOnCartesianGrid``
             The stir volume to use in the forward projection
-        projection_data : ``stir.ProjData``
+        proj_data : ``stir.ProjData``
             The stir description of the projection.
         back_projector : ``stir.BackProjectorByBin``, optional
             A pre-initialized back-projector.

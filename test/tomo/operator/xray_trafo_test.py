@@ -20,7 +20,6 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-
 standard_library.install_aliases()
 
 # External
@@ -33,159 +32,165 @@ from odl.util.testutils import almost_equal
 from odl.tomo import ASTRA_CUDA_AVAILABLE
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
-# Discrete reconstruction space
+
+# DiscreteLp volume / reconstruction space
 xx = 5
 nn = 5
-discr_vol_space3 = odl.uniform_discr([-xx] * 3, [xx] * 3, [nn] * 3,
-                                     dtype='float32')
-discr_vol_space2 = odl.uniform_discr([-xx] * 2, [xx] * 2, [nn] * 2,
-                                     dtype='float32')
+# xx = 5.5
+# nn = 11
+# xx = 5.25
+# nn = 21
+discr_vol_space_2d = odl.uniform_discr([-xx] * 2, [xx] * 2, [nn] * 2,
+                                       dtype='float32')
+discr_vol_space_3d = odl.uniform_discr([-xx] * 3, [xx] * 3, [nn] * 3,
+                                       dtype='float32')
 
-# Angle
+# Angle grid
 angle_intvl = odl.Interval(0, 2 * np.pi) - np.pi/4
 agrid = odl.uniform_sampling(angle_intvl, 4)
+astride = float(agrid.stride)
+num_angle = agrid.ntotal
 
-# Detector
+# Detector grid
 yy = 11
 mm = 11
-dparams1 = odl.Interval(-yy, yy)
-dgrid1 = odl.uniform_sampling(dparams1, mm)
-dparams2 = odl.Rectangle([-yy, -yy], [yy, yy])
-dgrid2 = odl.uniform_sampling(dparams2, [mm] * 2)
+yy = 10.5
+mm = 2 * 21
+dparams_2d = odl.Interval(-yy, yy)
+dgrid_2d = odl.uniform_sampling(dparams_2d, mm)
+dparams_3d = odl.Rectangle([-yy, -yy], [yy, yy])
+dgrid_3d = odl.uniform_sampling(dparams_3d, [mm] * 2)
 
 # Distances
 src_radius = 1000
 det_radius = 500
+mag = (src_radius + det_radius) / src_radius
 
-@skip_if_no_astra_cuda
-def test_xray_trafo_parallel2d():
-    """2D parallel-beam discrete X-ray transform with ASTRA CUDA."""
+# Slice index to print
+z_vol = np.round(discr_vol_space_3d.shape[2] / 2)
+y_proj = np.floor(dgrid_3d.shape[1] / 2)
 
-    # `DiscreteLp` volume space
-    discr_vol_space2 = odl.uniform_discr([-5] * 2, [5] * 2, [5] * 2,
-                                         dtype='float32')
-
-    angle_intvl = odl.Interval(0, 2 * np.pi) - np.pi / 4
-    agrid = odl.uniform_sampling(angle_intvl, 4)
-
-    dparams1 = odl.Interval(-11, 11)
-    dgrid1 = odl.uniform_sampling(dparams1, 11)
-    # dparams1 = odl.Interval(-10.5, 10.5)
-    # dgrid1 = odl.uniform_sampling(dparams1, 21)
-
-
-    # Geometry
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams1, agrid, dgrid1)
-
-    # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space2, geom,
-                                       backend='astra_cuda')
-
-    # Domain element
-    f = A.domain.one()
-
-    # Forward projection
-    Af = A(f) / float(A.range.grid.stride[1])
-
-    # Range element
-    g = A.range.one()
-
-    # Back projection
-    Adg = A.adjoint(g)
-
-    # Scaling
-    # Af *= float(dgrid1.stride)
-    # Adg *= discr_vol_space2.grid.cell_volume
-    # Af = A(f) / float(A.range.grid.stride[1])
-
-    inner_proj = Af.inner(g)
-    inner_vol = f.inner(Adg)
-    r = inner_vol / inner_proj  # / float(agrid.stride)
-
-    print('\n')
-    print('angle grid = {}'.format(agrid.points().transpose() / np.pi))
-    print('vol stride :', discr_vol_space2.grid.stride)
-    print('proj stride:', geom.grid.stride)
-    print('inner vol :', inner_vol)
-    print('inner proj:', inner_proj)
-    print('ratios: {:.4f}, {:.4f}'.format(r, 1 / r))
-    print('ratios-1: {:.4f}, {:.4f}'.format(abs(r - 1), abs(1 / r - 1)))
-
-    # print(dgrid1.points())
-    print(Af.asarray()[0])
-    print(Adg.asarray()/float(agrid.stride))
+# Print section
+print('\n')
+print('angle grid = {}'.format(agrid.points().transpose() / np.pi))
+print('magnification = ', mag)
+print('2D:\n shape = ', discr_vol_space_2d.shape)
+print(' size = ', discr_vol_space_2d.grid.size())
+print(' dgrid = ', dgrid_2d.points().transpose()[0])
+print(' vol_grid = ', discr_vol_space_2d.points()[::nn][:, 0])
+print('3D:\n shape = ', discr_vol_space_3d.shape)
+print(' size = ', discr_vol_space_3d.grid.size())
+print(' dgrid = ', dgrid_3d.points()[:2 * nn][:, 1])
+print(' vol_grid = ', discr_vol_space_3d.points()[:, 2][:nn])
+print('\n vol z index = ', z_vol, '\n proj y index = ', y_proj)
 
 
 @skip_if_no_astra_cuda
-def test_xray_trafo_fanflat():
-    """2D parallel-beam discrete X-ray transform with ASTRA CUDA."""
+def test_xray_trafo_cpu_parallel2d():
+    """2D parallel-beam discrete X-ray transform with ASTRA and CPU."""
 
-    # Distances
-    src_radius = 100000
-    det_radius = 10
-
-    # `DiscreteLp` volume space
-    discr_vol_space2 = odl.uniform_discr([-5] * 2, [5] * 2, [5] * 2,
-                                         dtype='float32')
-
-    angle_intvl = odl.Interval(0, 2 * np.pi) - np.pi/4
-    agrid = odl.uniform_sampling(angle_intvl, 4)
-
-    dparams1 = odl.Interval(-10.5, 10.5)
-    dgrid1 = odl.uniform_sampling(dparams1, 21)
+    dparams = dparams_2d
+    dgrid = dgrid_2d
+    discr_vol_space = discr_vol_space_2d
 
     # Geometry
-    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams1, src_radius,
-                                    det_radius, agrid, dgrid1)
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space2, geom,
+    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
                                        backend='astra_cpu')
 
     # Domain element
     f = A.domain.one()
 
     # Forward projection
-    Af = A(f) * float(dgrid1.stride)
+    Af = A(f)
 
     # Range element
     g = A.range.one()
 
     # Back projection
     Adg = A.adjoint(g)
-
-    # Scaling
-    # Af *= float(dgrid1.stride)
-    # Adg *= discr_vol_space2.grid.cell_volume
-    # Af = A(f) / float(A.range.grid.stride[1])
 
     inner_proj = Af.inner(g)
     inner_vol = f.inner(Adg)
-    r = inner_vol / inner_proj # / float(agrid.stride)
+    r = inner_vol / inner_proj
 
-    print('\n')
-    print('angle grid = {}'.format(agrid.points().transpose()/np.pi))
-    print('vol stride :', discr_vol_space2.grid.stride)
-    print('proj stride:', geom.grid.stride)
-    print('mag = ', (src_radius+det_radius)/src_radius)
-    print('inner vol :', inner_vol)
-    print('inner proj:', inner_proj)
-    print('ratios: {:.4f}, {:.4f}'.format(r, 1 / r))
-    print('ratios-1: {:.4f}, {:.4f}'.format(abs(r - 1), abs(1 / r - 1)))
+    # Adjoint matching
+    assert almost_equal(inner_vol, inner_proj)
 
-    # print(dgrid1.points())
+    print('\n\nCPU PARALLEL')
+    print('vol stride', A.domain.grid.stride)
+    print('proj stride', A.range.grid.stride)
+    print('forward')
     print(Af.asarray()[0])
+    print('backward / angle_stride / num_angle')
+    print(Adg.asarray()/ astride / num_angle)
+    print('<A f,g> =  ', inner_proj, '\n<f,Ad g> = ', inner_vol)
+    print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
 
 
 @skip_if_no_astra_cuda
-def test_xray_trafo_parallel3d():
-    """3D parallel-beam discrete X-ray transform with ASTRA CUDA."""
+def test_xray_trafo_cpu_fanflat():
+    """2D fanbeam discrete X-ray transform with ASTRA and CUDA."""
+
+    dparams = dparams_2d
+    dgrid = dgrid_2d
+    discr_vol_space = discr_vol_space_2d
 
     # Geometry
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams2, agrid, dgrid2)
+    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_radius,
+                                    det_radius, agrid, dgrid)
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space3, geom,
+    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
+                                       backend='astra_cpu')
+
+    # Domain element
+    f = A.domain.one()
+
+    # Forward projection
+    Af = A(f)
+
+    # Range element
+    g = A.range.one()
+
+    # Back projection
+    Adg = A.adjoint(g)
+
+    inner_proj = Af.inner(g)
+    inner_vol = f.inner(Adg)
+    r = inner_vol / inner_proj
+
+    # Adjoint matching
+    assert almost_equal(inner_vol, inner_proj)
+
+    print('\nCPU FANFLAT')
+    print('vol stride', A.domain.grid.stride)
+    print('proj stride', A.range.grid.stride)
+    # print('volume f:')
+    # print(f.asarray())
+    print('forward')
+    print(Af.asarray()[0])
+    print('backward / angle_stride / num_angle')
+    print(Adg.asarray()/ astride / num_angle)
+    print('<A f,g> =  ', inner_proj, '\n<f,Ad g> = ', inner_vol)
+    print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
+
+
+@skip_if_no_astra_cuda
+def test_xray_trafo_cuda_parallel2d():
+    """2D parallel-beam discrete X-ray transform with ASTRA and CUDA."""
+
+    dparams = dparams_2d
+    dgrid = dgrid_2d
+    discr_vol_space = discr_vol_space_2d
+
+    # Geometry
+    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
+
+    # X-ray transform
+    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
                                        backend='astra_cuda')
 
     # Domain element
@@ -200,31 +205,127 @@ def test_xray_trafo_parallel3d():
     # Back projection
     Adg = A.adjoint(g)
 
-    # Assure not to use unit cell sizes
-    assert discr_vol_space3.grid.cell_volume != 1
-    assert geom.grid.cell_volume != 1
+    # Adjoint matching
+    inner_proj = Af.inner(g)
+    inner_vol = f.inner(Adg)
+    assert almost_equal(inner_vol, inner_proj)
 
-    # Test adjoint
-    assert almost_equal(Af.inner(g), f.inner(Adg), 2)
+    print('\nCUDA PARALLEL 2D')
+    print('vol stride', A.domain.grid.stride)
+    print('proj stride', A.range.grid.stride)
+    print('forward')
+    print(Af.asarray()[0])
+    print('backward / angle_stride / num_angle')
+    print(Adg.asarray() / astride / num_angle)
+    print('<A f,g> =  ', inner_proj, '\n<f,Ad g> = ', inner_vol)
+    r = inner_vol / inner_proj
+    print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
 
-    print(discr_vol_space3.grid.stride)
-    print(geom.grid.stride)
-    print(Af.asarray()[0, :, np.floor(Af.shape[2]/2)])
-    print(Adg.asarray()[:, :, np.round(f.shape[2]/2)]/float(agrid.stride))
+
+@skip_if_no_astra_cuda
+def test_xray_trafo_cuda_fanflat():
+    """2D fanbeam discrete X-ray transform with ASTRA and CUDA."""
+
+    dparams = dparams_2d
+    dgrid = dgrid_2d
+    discr_vol_space = discr_vol_space_2d
+
+    # Geometry
+    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_radius,
+                                    det_radius, agrid, dgrid)
+
+    # X-ray transform
+    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
+                                       backend='astra_cuda')
+
+    # Domain element
+    f = A.domain.one()
+
+    # Forward projection
+    Af = A(f)
+
+    # Range element
+    g = A.range.one()
+
+    # Back projection
+    Adg = A.adjoint(g)
+
+    # Adjoint matching
+    inner_proj = Af.inner(g)
+    inner_vol = f.inner(Adg)
+    assert almost_equal(inner_vol, inner_proj)
+
+    print('\nCUDA FANFLAT')
+    print('vol stride', A.domain.grid.stride)
+    print('proj stride', A.range.grid.stride)
+    print('forward')
+    print(Af.asarray()[0])
+    print('backward / angle_stride / num_angle')
+    print(Adg.asarray()/ astride / num_angle)
+    print('<A f,g> =  ', inner_proj, '\n<f,Ad g> = ', inner_vol)
+    r = inner_vol / inner_proj
+    print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
+
+
+@skip_if_no_astra_cuda
+def test_xray_trafo_cuda_parallel3d():
+    """3D parallel-beam discrete X-ray transform with ASTRA CUDA."""
+
+    dparams = dparams_3d
+    dgrid = dgrid_3d
+    discr_vol_space = discr_vol_space_3d
+
+    # Geometry
+    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, agrid, dgrid)
+
+    # X-ray transform
+    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
+                                       backend='astra_cuda')
+
+    # Domain element
+    f = A.domain.one()
+
+    # Forward projection
+    Af = A(f)
+
+    # Range element
+    g = A.range.one()
+
+    # Back projection
+    Adg = A.adjoint(g)
+
+    # Adjoint matching
+    inner_proj = Af.inner(g)
+    inner_vol = f.inner(Adg)
+    assert almost_equal(inner_vol, inner_proj)
+
+    print('\nCUDA PARALLEL 3D')
+    print('vol stride', A.domain.grid.stride)
+    print('proj stride', A.range.grid.stride)
+    print('forward')
+    print(Af.asarray()[0, :, y_proj])
+    print('backward / angle_stride / num_angle')
+    print(Adg.asarray()[:, :, z_vol] / astride / num_angle)
+    print('<A f,g> = ', inner_proj, '\n<f,Ad g> =', inner_vol)
+    r = inner_vol / inner_proj
+    print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
 
 
 @pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE")
-def test_xray_trafo_conebeam_circular():
+def test_xray_trafo_cuda_conebeam_circular():
     """Cone-beam trafo with circular acquisition and ASTRA CUDA backend."""
 
+    dparams = dparams_3d
+    dgrid = dgrid_3d
+
     # Geometry
-    geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams2,
+    geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams,
                                              src_radius, det_radius,
-                                             agrid, dgrid2,
+                                             agrid, dgrid,
                                              axis=[0, 0, 1])
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space3, geom,
+    A = odl.tomo.DiscreteXrayTransform(discr_vol_space_3d, geom,
                                        backend='astra_cuda')
     # Domain element
     f = A.domain.one()
@@ -238,27 +339,39 @@ def test_xray_trafo_conebeam_circular():
     # Back projection
     Adg = A.adjoint(g)
 
-    # Assure not to use unit cell sizes
-    assert discr_vol_space3.grid.cell_volume != 1
-    assert geom.grid.cell_volume != 1
+    # Adjoint matching
+    inner_proj = Af.inner(g)
+    inner_vol = f.inner(Adg)
+    assert almost_equal(inner_vol, inner_proj)
 
-    # Test adjoint
-    assert almost_equal(Af.inner(g), f.inner(Adg), 1)
+    print('\nCUDA CONE CIRCULAR')
+    print('vol stride', A.domain.grid.stride)
+    print('proj stride', A.range.grid.stride)
+    print('forward')
+    print(Af.asarray()[0, :, y_proj])
+    print('backward / angle_stride / num_angle')
+    print(Adg.asarray()[:, :, z_vol] / astride / num_angle)
+    print('<A f,g>: ', Af.inner(g), '\n<f,Ad g>', f.inner(Adg))
+    r = inner_vol / inner_proj
+    print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
 
 
-# @pytest.mark.xfail  # Expected to fail since scaling of adjoint is wrong.
 @skip_if_no_astra_cuda
-def test_xray_trafo_conebeam_helical():
+def test_xray_trafo_cuda_conebeam_helical():
     """Cone-beam trafo with helical acquisition and ASTRA CUDA backend."""
 
+    dparams = dparams_3d
+    dgrid = dgrid_3d
+    discr_vol_space = discr_vol_space_3d
+
     # Geometry
-    geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams2,
+    geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams,
                                             src_radius, det_radius, pitch=2,
-                                            agrid=agrid, dgrid=dgrid2,
+                                            agrid=agrid, dgrid=dgrid,
                                             axis=[0, 0, 1])
 
     # X-ray transform
-    A = odl.tomo.DiscreteXrayTransform(discr_vol_space3, geom,
+    A = odl.tomo.DiscreteXrayTransform(discr_vol_space, geom,
                                        backend='astra_cuda')
     # Domain element
     f = A.domain.one()
@@ -272,13 +385,23 @@ def test_xray_trafo_conebeam_helical():
     # Back projection
     Adg = A.adjoint(g)
 
-    # Assure not to use trivial pitch or cell sizes
-    assert discr_vol_space3.grid.cell_volume != 1
-    assert geom.grid.cell_volume != 1
     assert geom.pitch != 0
 
-    # Test adjoint
-    assert almost_equal(Af.inner(g), f.inner(Adg), 1)
+    # Test adjoint matching
+    inner_proj = Af.inner(g)
+    inner_vol = f.inner(Adg)
+    assert almost_equal(inner_proj, inner_vol, 2)
+
+    print('\nCUDA CONE HELICAL')
+    print('vol stride', A.domain.grid.stride)
+    print('proj stride', A.range.grid.stride)
+    print('forward')
+    print(Af.asarray()[0, :, y_proj])
+    print('backward / angle_stride / num_angle')
+    print(Adg.asarray()[:, :, z_vol] / astride / num_angle)
+    print('<A f,g>: ', Af.inner(g), '\n<f,Ad g>', f.inner(Adg))
+    r = inner_vol / inner_proj
+    print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
 
 
 if __name__ == '__main__':

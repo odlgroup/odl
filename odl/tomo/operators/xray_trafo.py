@@ -43,18 +43,19 @@ _SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 __all__ = ('DiscreteXrayTransform', 'DiscreteXrayTransformAdjoint', )
 
 
+# TODO: Check scaling with magnification
 # TODO: DiscreteDivergentBeamTransform
 
 class DiscreteXrayTransform(Operator):
 
     """The discrete X-ray transform between :math:`L^p` spaces."""
 
-    def __init__(self, discr_dom, geometry, backend='astra', **kwargs):
+    def __init__(self, discr_domain, geometry, backend='astra', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        discr_dom : `odl.DiscreteLp`
+        discr_domain : `odl.DiscreteLp`
             Discretization of a two-dimensional space, the domain of
             the discretized operator
         geometry : `Geometry`
@@ -62,7 +63,7 @@ class DiscreteXrayTransform(Operator):
             the operator range. It needs to have a sampling grid for
             motion and detector parameters.
         backend : {'astra', 'astra_cuda', 'astra_cpu'}, optional
-            Implementation backend for the transform. Supported backends:
+            Implementation back-end for the transform. Supported backends:
             'astra': ASTRA toolbox, uses CPU or CUDA depending on the
             underlying data space of ``discr_dom``
             'astra_cpu': ASTRA toolbox using CPU, only 2D
@@ -73,9 +74,9 @@ class DiscreteXrayTransform(Operator):
                 Interpolation type for the discretization of the
                 operator range. Default: 'nearest'
         """
-        if not isinstance(discr_dom, DiscreteLp):
+        if not isinstance(discr_domain, DiscreteLp):
             raise TypeError('discretized domain {!r} is not a `DiscreteLp`'
-                            ' instance.'.format(discr_dom))
+                            ' instance.'.format(discr_domain))
 
         if not isinstance(geometry, Geometry):
             raise TypeError('geometry {!r} is not a `Geometry` instance.'
@@ -95,13 +96,13 @@ class DiscreteXrayTransform(Operator):
                              ''.format(backend))
 
         if backend == 'astra':
-            if isinstance(discr_dom.dspace, CudaNtuples):
+            if isinstance(discr_domain.dspace, CudaNtuples):
                 self._backend = 'astra_cuda'
-            elif isinstance(discr_dom.dspace, Ntuples):
+            elif isinstance(discr_domain.dspace, Ntuples):
                 self._backend = 'astra_cpu'
             else:
                 raise TypeError('discr_dom.dspace {} must be a CudaNtuples '
-                                'or a Ntuples'.format(discr_dom.dspace))
+                                'or a Ntuples'.format(discr_domain.dspace))
         else:
             self._backend = backend
 
@@ -110,22 +111,21 @@ class DiscreteXrayTransform(Operator):
                 raise ValueError('ASTRA backend not available.')
             if not ASTRA_CUDA_AVAILABLE and self.backend == 'astra_cuda':
                 raise ValueError('ASTRA CUDA backend not available.')
-            if discr_dom.dspace.dtype not in (np.float32, np.complex64):
+            if discr_domain.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
                                  'real and `complex64` for complex data.')
-            if not np.allclose(discr_dom.grid.stride[1:],
-                               discr_dom.grid.stride[:-1]):
+            if not np.allclose(discr_domain.grid.stride[1:],
+                               discr_domain.grid.stride[:-1]):
                 raise ValueError('ASTRA does not support different pixel/voxel'
                                  ' sizes per axis (got {}).'
-                                 ''.format(discr_dom.grid.stride))
+                                 ''.format(discr_domain.grid.stride))
 
         self._geometry = geometry
 
         # Create discretized space (operator range). Use same data space
         # type as the domain.
         # TODO: maybe use a ProductSpace structure
-        ran_uspace = FunctionSpace(geometry.params)
-        # CHECKME: Is this the right weight?
+        range_uspace = FunctionSpace(geometry.params)
 
         weight = getattr(geometry.grid, 'cell_volume', 1.0)
         if isinstance(geometry, HelicalConeFlatGeometry):
@@ -137,14 +137,14 @@ class DiscreteXrayTransform(Operator):
             det_radius = geometry.det_radius
             weight /= ((src_radius + det_radius) / src_radius)
 
-        ran_dspace = discr_dom.dspace_type(geometry.grid.size,
-                                           weight=weight,
-                                           dtype=discr_dom.dspace.dtype)
+        range_dspace = discr_domain.dspace_type(
+            geometry.grid.size, weight=weight, dtype=discr_domain.dspace.dtype)
 
-        ran_interp = kwargs.pop('range_interpolation', 'nearest')
-        discr_ran = DiscreteLp(ran_uspace, geometry.grid, ran_dspace,
-                               interp=ran_interp, order=geometry.grid.order)
-        super().__init__(discr_dom, discr_ran, linear=True)
+        range_interp = kwargs.pop('range_interpolation', 'nearest')
+        discr_range = DiscreteLp(range_uspace, geometry.grid, range_dspace,
+                                 interp=range_interp,
+                                 order=geometry.grid.order)
+        super().__init__(discr_domain, discr_range, linear=True)
 
         self._adjoint = DiscreteXrayTransformAdjoint(self)
 
@@ -223,6 +223,8 @@ class DiscreteXrayTransformAdjoint(Operator):
         if back == 'astra':
             # angle interval weight
             weight = float(self.forward.geometry.motion_grid.stride)
+            if weight <= 0:
+                weight = 1.0
             if impl == 'cpu':
                 return weight * astra_cpu_backward_projector_call(
                     inp, self.forward.geometry, self.range)

@@ -216,12 +216,12 @@ class DivergentBeamGeometry(Geometry):
         ----------
         ndim : int
             number of dimensions of geometry
-        angle_intvl : 1d `IntervalProd`
+        angle_intvl : 1-dim. `IntervalProd`
             Admissible angles
         detector : `Detector`
             The detector to use
         agrid : `TensorGrid`, optional
-            Optional discretization of the angle_intvl
+            Optional discretization of the ``angle_intvl``
         """
         if not (isinstance(angle_intvl, IntervalProd) and
                 angle_intvl.ndim == 1):
@@ -326,7 +326,7 @@ class AxisOrientedGeometry(object):
         self._axis = np.asarray(axis, dtype=float) / np.linalg.norm(axis)
 
         if self.axis.shape != (3,):
-            raise ValueError('axis {!r} not a 3 element arraylike'
+            raise ValueError('axis {!r} not a 3 element array-like'
                              ''.format(axis))
 
     @property
