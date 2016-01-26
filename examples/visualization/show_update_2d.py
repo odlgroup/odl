@@ -35,5 +35,6 @@ fig = None
 # Reuse the figure indefinitely, values are overwritten.
 for i in range(m):
     fig = (vec * i).show(fig=fig, clim=[0, m])
+    plt.pause(0.1)
 
 plt.show()
