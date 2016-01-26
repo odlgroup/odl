@@ -417,7 +417,7 @@ class TensorGrid(Set):
 
         return True
 
-    def insert(self, other, index):
+    def insert(self, index, other):
         """Insert another grid before the given index.
 
         The given grid (``m`` dimensions) is inserted into the current
@@ -443,8 +443,12 @@ class TensorGrid(Set):
         --------
         >>> g1 = TensorGrid([0, 1], [-1, 2])
         >>> g2 = TensorGrid([1], [-6, 15])
-        >>> g1.insert(g2, 1)
+        >>> g1.insert(1, g2)
         TensorGrid([0.0, 1.0], [1.0], [-6.0, 15.0], [-1.0, 2.0])
+
+        See Also
+        --------
+        append
         """
         if index not in Integers():
             raise TypeError('{!r} is not an integer.'.format(index))
@@ -458,6 +462,28 @@ class TensorGrid(Set):
         new_vecs = (self.coord_vectors[:index] + other.coord_vectors +
                     self.coord_vectors[index:])
         return TensorGrid(*new_vecs)
+
+    def append(self, other):
+        """Insert at the end.
+
+        Parameters
+        ----------
+        other : `IntervalProd`, `float` or array-like
+            The set to be inserted. A `float` or array a is
+            treated as an ``IntervalProd(a, a)``.
+
+        Examples
+        --------
+        >>> g1 = TensorGrid([0, 1], [-1, 2])
+        >>> g2 = TensorGrid([1], [-6, 15])
+        >>> g1.append(g2)
+        TensorGrid([0.0, 1.0], [-1.0, 2.0], [1.0], [-6.0, 15.0])
+
+        See Also
+        --------
+        insert
+        """
+        return self.insert(self.ndim, other)
 
     def squeeze(self):
         """Remove the degenerate dimensions.
