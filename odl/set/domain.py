@@ -47,6 +47,9 @@ class IntervalProd(Set):
     An interval product is a Cartesian product of n intervals, i.e. an
     n-dimensional rectangular box aligned with the coordinate axes
     as a subset of :math:`R^n`.
+
+    `IntervalProd` objects are immutable, all methods involving them return
+    a new `IntervalProd`.
     """
 
     def __init__(self, begin, end):
@@ -625,6 +628,42 @@ class IntervalProd(Set):
     def __len__(self):
         """Return ``len(self)``."""
         return self.ndim
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``
+
+        Parameters
+        ----------
+        indices : numpy style index
+            Any of: int, slice, list of ints
+
+        Returns
+        -------
+        subinterval : `IntervalProd`
+            Interval given by the indices
+
+        Examples
+        --------
+        >>> rbox = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])
+
+        By integer
+
+        >>> rbox[0]
+        Interval(-1.0, -0.5)
+
+        By slice
+
+        >>> rbox[:]
+        Cuboid([-1.0, 2.0, 0.0], [-0.5, 3.0, 0.5])
+        >>> rbox[::2]
+        Rectangle([-1.0, 0.0], [-0.5, 0.5])
+
+        By list of ints
+
+        >>> rbox[[0, 1]]
+        Rectangle([-1.0, 2.0], [-0.5, 3.0])
+        """
+        return IntervalProd(self.begin[indices], self.end[indices])
 
     def __pos__(self):
         """Return ``+self``."""
