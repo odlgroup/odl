@@ -101,8 +101,15 @@ class StorePartial(Partial):
 
     """Simple object for storing all partial results of the solvers."""
 
-    def __init__(self):
-        self._results = []
+    def __init__(self, results=None):
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        results : `list`
+            List in which to store the partial results
+        """
+        self._results = [] if results is None else results
 
     @property
     def results(self):
@@ -125,6 +132,12 @@ class StorePartial(Partial):
         """The number of results stored."""
         return len(self.results)
 
+    def __str__(self):
+        return 'StorePartial({})'.format(self.results)
+
+    def __repr__(self):
+        return 'StorePartial({!r})'.format(self.results)
+
 
 class ForEachPartial(Partial):
 
@@ -138,19 +151,31 @@ class ForEachPartial(Partial):
         """Apply function to result."""
         self.function(result)
 
+    def __str__(self):
+        return 'ForEachPartial({})'.format(self.function)
+
+    def __repr__(self):
+        return 'ForEachPartial({!r})'.format(self.function)
+
 
 class PrintIterationPartial(Partial):
 
     """Print the interation count."""
 
+    default_text = 'iter ='
+
     def __init__(self, text=None):
-        self.text = text if text is not None else 'iter ='
+        self.text = text if text is not None else self.default_text
         self.iter = 0
 
     def __call__(self, _):
         """Print the current iteration."""
         print("{} {}".format(self.text, self.iter))
         self.iter += 1
+
+    def __repr__(self):
+        textstr = '' if self.text == self.default_text else self.text
+        return 'PrintIterationPartial({})'.format(textstr)
 
 
 class PrintTimingPartial(Partial):
@@ -210,6 +235,12 @@ class ShowPartial(Partial):
                               *self.args, **self.kwargs)
 
         self.iter += 1
+
+    def __str__(self):
+        return 'ShowPartial(*{}, **{})'.format(self.args, self.kwargs)
+
+    def __repr__(self):
+        return 'ShowPartial(*{!r}, **{!r})'.format(self.args, self.kwargs)
 
 
 if __name__ == '__main__':
