@@ -224,7 +224,7 @@ class DiscreteLp(Discretization):
             arg_fstr = '{}, {}, {}'
             if self.exponent != 2.0:
                 arg_fstr += ', exponent={exponent}'
-            if not self.dtype == default_dtype:
+            if self.dtype != default_dtype:
                 arg_fstr += ', dtype={dtype}'
             if self.interp != 'nearest':
                 arg_fstr += ', interp={interp!r}'
@@ -576,8 +576,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
 
 def uniform_discr(min_corner, max_corner, nsamples,
-                  exponent=2.0, field=None,
-                  interp='nearest', impl='numpy', **kwargs):
+                  exponent=2.0, interp='nearest', impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
     Parameters
