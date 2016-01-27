@@ -311,6 +311,28 @@ class ProductSpaceOperator(Operator):
             [4.0, 5.0, 6.0],
             [0.0, 0.0, 0.0]
         ])
+
+        Example with affine operator
+
+        >>> residual_op = odl.ResidualOperator(I, r3.element([1, 1, 1]))
+        >>> op = ProductSpaceOperator([[0, residual_op], [0, 0]],
+        ...                           dom=X, ran=X)
+
+        Calling operator gives offset by [1, 1, 1]
+
+        >>> op(x)
+        ProductSpace(Rn(3), 2).element([
+            [3.0, 4.0, 5.0],
+            [0.0, 0.0, 0.0]
+        ])
+
+        Derivative of affine operator does not have this offset
+
+        >>> op.derivative(x)(x)
+        ProductSpace(Rn(3), 2).element([
+            [4.0, 5.0, 6.0],
+            [0.0, 0.0, 0.0]
+        ])
         """
         deriv_ops = [op.derivative(x[col]) for op, col in zip(self.ops.data,
                                                               self.ops.col)]
@@ -679,18 +701,25 @@ class BroadcastOperator(Operator):
 
         Examples
         --------
+
+        Example with affine operator
+
         >>> import odl
         >>> I = odl.IdentityOperator(odl.Rn(3))
+        >>> residual_op = odl.ResidualOperator(I, I.domain.element([1, 1, 1]))
+        >>> op = BroadcastOperator(residual_op, 2 * residual_op)
+
+        Calling operator gives offset by [1, 1, 1]
+
         >>> x = [1, 2, 3]
-
-        Example with linear operator (derivative is itself)
-
-        >>> op = BroadcastOperator(I, 2 * I)
         >>> op(x)
         ProductSpace(Rn(3), 2).element([
-            [1.0, 2.0, 3.0],
-            [2.0, 4.0, 6.0]
+            [0.0, 1.0, 2.0],
+            [0.0, 2.0, 4.0]
         ])
+
+        Derivative of affine operator does not have this offset
+
         >>> op.derivative(x)(x)
         ProductSpace(Rn(3), 2).element([
             [1.0, 2.0, 3.0],
@@ -703,11 +732,6 @@ class BroadcastOperator(Operator):
     @property
     def adjoint(self):
         """Adjoint of the broadcast operator.
-
-        Parameters
-        ----------
-        x : domain element
-            The point to take the derivative in
 
         Returns
         -------
@@ -726,7 +750,7 @@ class BroadcastOperator(Operator):
 
 
 class ReductionOperator(Operator):
-    """Reduce argument to over set of operators.
+    """Reduce argument over set of operators.
 
     An argument is reduced by evaluating several operators and summing the
     result
@@ -759,7 +783,7 @@ class ReductionOperator(Operator):
         Parameters
         ----------
         x : domain element
-            Input vector to be extended
+            Input vector that should be used in the reduction
         out : range element, optional
             output vector to write result to
 
@@ -806,15 +830,31 @@ class ReductionOperator(Operator):
         Examples
         --------
         >>> import odl
-        >>> I = odl.IdentityOperator(odl.Rn(3))
-        >>> x = [1.0, 2.0, 3.0]
-        >>> y = [4.0, 6.0, 8.0]
+        >>> r3 = odl.Rn(3)
+        >>> I = odl.IdentityOperator(r3)
+        >>> x = r3.element([1.0, 2.0, 3.0])
+        >>> y = r3.element([4.0, 6.0, 8.0])
 
         Example with linear operator (derivative is itself)
 
         >>> op = ReductionOperator(I, 2 * I)
         >>> op([x, y])
         Rn(3).element([9.0, 14.0, 19.0])
+        >>> op.derivative([x, y])([x, y])
+        Rn(3).element([9.0, 14.0, 19.0])
+
+        Example with affine operator
+
+        >>> residual_op = odl.ResidualOperator(I, r3.element([1, 1, 1]))
+        >>> op = ReductionOperator(residual_op, 2 * residual_op)
+
+        Calling operator gives offset by [3, 3, 3]
+
+        >>> op([x, y])
+        Rn(3).element([6.0, 11.0, 16.0])
+
+        Derivative of affine operator does not have this offset
+
         >>> op.derivative([x, y])([x, y])
         Rn(3).element([9.0, 14.0, 19.0])
         """
@@ -824,11 +864,6 @@ class ReductionOperator(Operator):
     @property
     def adjoint(self):
         """Adjoint of the reduction operator.
-
-        Parameters
-        ----------
-        x : domain element
-            The point to take the derivative in
 
         Returns
         -------

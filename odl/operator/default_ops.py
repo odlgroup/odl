@@ -606,6 +606,16 @@ class ResidualOperator(Operator):
         ----------
         x : ``domain`` `element`
             Any element in the domain where the derivative should be taken
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> op = IdentityOperator(r3)
+        >>> res = ResidualOperator(op, r3.element([1, 2, 3]))
+        >>> x = r3.element([4, 5, 6])
+        >>> res.derivative(x)(x)
+        Rn(3).element([4.0, 5.0, 6.0])
         """
         return self.op.derivative(point)
 
