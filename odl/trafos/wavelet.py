@@ -35,7 +35,7 @@ except ImportError:
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
 
-__all__ = ('DiscreteWaveletTransform', 'DiscreteWaveletTransformInverse',
+__all__ = ('WaveletTransform', 'WaveletTransformInverse',
            'PYWAVELETS_AVAILABLE')
 
 
@@ -508,7 +508,7 @@ signal-extension-modes.html>`_
     return x
 
 
-class DiscreteWaveletTransform(Operator):
+class WaveletTransform(Operator):
 
     """Discrete wavelet trafo between discrete L2 spaces."""
 
@@ -578,7 +578,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         >>> import odl, pywt
         >>> wbasis = pywt.Wavelet('db1')
         >>> discr_domain = odl.uniform_discr([0, 0], [1, 1], (16, 16))
-        >>> op = DiscreteWaveletTransform(discr_domain, nscales=1,
+        >>> op = WaveletTransform(discr_domain, nscales=1,
         ...                               wbasis=wbasis, mode='per')
         >>> op.is_biorthogonal
         True
@@ -682,12 +682,12 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     @property
     def inverse(self):
         """The inverse wavelet transform."""
-        return DiscreteWaveletTransformInverse(
+        return WaveletTransformInverse(
             ran=self.domain, nscales=self.nscales, wbasis=self.wbasis,
             mode=self.mode)
 
 
-class DiscreteWaveletTransformInverse(Operator):
+class WaveletTransformInverse(Operator):
 
     """Discrete inverse wavelet trafo between discrete L2 spaces."""
 
@@ -840,8 +840,8 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     @property
     def inverse(self):
         """The inverse wavelet transform."""
-        return DiscreteWaveletTransform(dom=self.range, nscales=self.nscales,
-                                        wbasis=self.wbasis, mode=self.mode)
+        return WaveletTransform(dom=self.range, nscales=self.nscales,
+                                wbasis=self.wbasis, mode=self.mode)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

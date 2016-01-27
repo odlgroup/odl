@@ -31,7 +31,7 @@ from odl.set.pspace import ProductSpace
 from odl.discr.lp_discr import DiscreteLp
 
 
-__all__ = ('DiscretePartDeriv', 'DiscreteGradient', 'DiscreteDivergence')
+__all__ = ('PartialDerivative', 'Gradient', 'Divergence')
 
 
 def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
@@ -241,7 +241,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
     return out
 
 
-class DiscretePartDeriv(Operator):
+class PartialDerivative(Operator):
     """Calculate the discrete partial derivative along a given axis.
 
     Calls helper function `finite_diff` to calculate finite difference.
@@ -306,7 +306,7 @@ class DiscretePartDeriv(Operator):
         >>> data = np.array([[ 0.,  1.,  2.,  3.,  4.],
         ...                  [ 0.,  2.,  4.,  6.,  8.]])
         >>> discr = uniform_discr([0, 0], [2, 1], data.shape)
-        >>> par_div = DiscretePartDeriv(discr)
+        >>> par_div = PartialDerivative(discr)
         >>> f = par_div.domain.element(data)
         >>> par_div_f = par_div(f)
         >>> print(par_div_f)
@@ -336,20 +336,20 @@ class DiscretePartDeriv(Operator):
         raise NotImplementedError('adjoint not implemented')
 
 
-class DiscreteGradient(Operator):
+class Gradient(Operator):
     """Spatial gradient operator for `DiscreteLp` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
     resulting product space vector. For the adjoint of the
-    `DiscreteGradient` operator to match the negative `DiscreteDivergence`
+    `Gradient` operator to match the negative `Divergence`
     operator ``zero_padding`` is assumed.
     """
 
     def __init__(self, space, method='central'):
-        """Initialize a `DiscreteGradient` operator instance.
+        """Initialize a `Gradient` operator instance.
 
-        Zero padding is assumed for the adjoint of the `DiscreteGradient`
-        operator to match  negative `DiscreteDivergence` operator.
+        Zero padding is assumed for the adjoint of the `Gradient`
+        operator to match  negative `Divergence` operator.
 
         Parameters
         ----------
@@ -375,7 +375,7 @@ class DiscreteGradient(Operator):
         Parameters
         ----------
         x : ``domain`` element
-            Input vector to which the `DiscreteGradient` operator is
+            Input vector to which the `Gradient` operator is
             applied
         out : ``range`` element, optional
             Output vector to which the result is written
@@ -393,7 +393,7 @@ class DiscreteGradient(Operator):
         ...                  [ 0., 2., 4., 6., 8.]])
         >>> discr = uniform_discr([0,0], [2,5], data.shape)
         >>> f = discr.element(data)
-        >>> grad = DiscreteGradient(discr)
+        >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
         >>> print(grad_f[0])
         [
@@ -438,36 +438,36 @@ class DiscreteGradient(Operator):
         """Return the adjoint operator.
 
         Assuming implicit zero padding, the adjoint operator is given by the
-        negative of the `DiscreteDivergence` operator
+        negative of the `Divergence` operator
 
-        Note that the ``space`` argument of the `DiscreteDivergence`
-        operator is not the range but the domain of the `DiscreteGradient`
+        Note that the ``space`` argument of the `Divergence`
+        operator is not the range but the domain of the `Gradient`
         operator.
         """
         if self.method == 'central':
-            return - DiscreteDivergence(self.domain, 'central')
+            return - Divergence(self.domain, 'central')
         elif self.method == 'forward':
-            return - DiscreteDivergence(self.domain, 'backward')
+            return - Divergence(self.domain, 'backward')
         elif self.method == 'backward':
-            return - DiscreteDivergence(self.domain, 'forward')
+            return - Divergence(self.domain, 'forward')
         else:
             return super().adjoint
 
 
-class DiscreteDivergence(Operator):
+class Divergence(Operator):
     """Divergence operator for `DiscreteLp` spaces.
 
     Calls helper function `finite_diff` for each component of the input
-    product space vector. For the adjoint of the `DiscreteDivergence`
-    operator to match the negative `DiscreteGradient` operator implicit zero
+    product space vector. For the adjoint of the `Divergence`
+    operator to match the negative `Gradient` operator implicit zero
     padding is assumed.
     """
 
     def __init__(self, space, method='central'):
-        """Initialize a `DiscreteDivergence` operator instance.
+        """Initialize a `Divergence` operator instance.
 
-        Zero padding is assumed for the adjoint of the `DiscreteDivergence`
-        operator to match negative `DiscreteGradient` operator.
+        Zero padding is assumed for the adjoint of the `Divergence`
+        operator to match negative `Gradient` operator.
 
         Parameters
         ----------
@@ -510,7 +510,7 @@ class DiscreteDivergence(Operator):
         ...                  [1., 2., 3., 4., 5.],
         ...                  [2., 3., 4., 5., 6.]])
         >>> discr = uniform_discr([0, 0], [3, 5], data.shape)
-        >>> div = DiscreteDivergence(discr)
+        >>> div = Divergence(discr)
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
         >>> print(div_f)
@@ -551,14 +551,14 @@ class DiscreteDivergence(Operator):
         """Return the adjoint operator.
 
         Assuming implicit zero padding the adjoint operator is given by the
-        negative of the `DiscreteGradient` operator.
+        negative of the `Gradient` operator.
         """
         if self.method == 'central':
-            return - DiscreteGradient(self.range, 'central')
+            return - Gradient(self.range, 'central')
         elif self.method == 'forward':
-            return - DiscreteGradient(self.range, 'backward')
+            return - Gradient(self.range, 'backward')
         elif self.method == 'backward':
-            return - DiscreteGradient(self.range, 'forward')
+            return - Gradient(self.range, 'forward')
         else:
             return super().adjoint
 
