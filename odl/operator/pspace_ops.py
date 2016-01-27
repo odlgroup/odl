@@ -631,7 +631,7 @@ class ComponentProjectionAdjoint(Operator):
 class BroadcastOperator(Operator):
     """Broadcast argument to set of operators.
 
-    An argument is broadcasted by evaluating several operators in the same
+    An argument is broadcast by evaluating several operators in the same
     point
 
         ``BroadcastOperator(op1, op2)(x) = [op1(x), op2(x)]``
