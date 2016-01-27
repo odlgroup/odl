@@ -228,6 +228,11 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         plt.figure(fig.number)
         updatefig = True
 
+        if values.ndim > 1:
+            # If the figure is larger than 1d, we can clear it since we
+            # dont reuse anything.
+            fig.clf()
+
     if dfunc_is_complex:
         # Real
         if len(fig.axes) == 0:

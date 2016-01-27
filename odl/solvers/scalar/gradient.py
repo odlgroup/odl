@@ -85,7 +85,7 @@ def steepest_descent(grad, x, line_search, niter=1, partial=None):
         x.lincomb(1, x, -step, grad_x)
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 if __name__ == '__main__':

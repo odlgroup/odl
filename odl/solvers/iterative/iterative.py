@@ -109,7 +109,7 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
         x.lincomb(1, x, -omega, tmp_dom)
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 def conjugate_gradient(op, x, rhs, niter=1, partial=None):
@@ -186,7 +186,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         p.lincomb(1, r, beta, p)                       # p = s + b * p
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 def conjugate_gradient_normal(op, x, rhs, niter=1, partial=None):
@@ -260,7 +260,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         p.lincomb(1, s, b, p)               # p = s + b * p
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 def exp_zero_seq(base):
@@ -371,7 +371,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
         x.lincomb(1, x0, 1, dx)  # x = x0 + dx
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
