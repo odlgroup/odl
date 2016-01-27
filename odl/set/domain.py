@@ -47,6 +47,9 @@ class IntervalProd(Set):
     An interval product is a Cartesian product of n intervals, i.e. an
     n-dimensional rectangular box aligned with the coordinate axes
     as a subset of :math:`R^n`.
+
+    `IntervalProd` objects are immutable, all methods involving them return
+    a new `IntervalProd`.
     """
 
     def __init__(self, begin, end):
@@ -484,7 +487,7 @@ class IntervalProd(Set):
         e_new = self.end[self._inondeg]
         return IntervalProd(b_new, e_new)
 
-    def insert(self, other, index=None):
+    def insert(self, index, other):
         """Insert another interval product before the given index.
 
         The given interval product (``ndim=m``) is inserted into the
@@ -514,24 +517,21 @@ class IntervalProd(Set):
 
         >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
         >>> rbox2 = IntervalProd([0, 0], [1, 0])
-        >>> rbox.insert(rbox2, 1)
+        >>> rbox.insert(1, rbox2)
         IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
-        >>> rbox.insert([-1.0, 0.0], 2)
-        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
-
-        Without index, inserts at the end
-
-        >>> rbox.insert([-1.0, 0.0])
+        >>> rbox.insert(2, [-1.0, 0.0])
         IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
 
         Can also insert by array
 
         >>> rbox.insert(0, 1).squeeze() == rbox
         True
+
+        See Also
+        --------
+        append
         """
-        if index is None:
-            index = self.ndim
-        elif not 0 <= index <= self.ndim:
+        if not 0 <= index <= self.ndim:
             raise IndexError('Index ({}) out of range'.format(index))
 
         # TODO: do we want this?
@@ -550,6 +550,27 @@ class IntervalProd(Set):
             new_end[index + other.ndim:] = self.end[index:]
 
         return IntervalProd(new_beg, new_end)
+
+    def append(self, other):
+        """Insert at the end.
+
+        Parameters
+        ----------
+        other : `IntervalProd`, `float` or array-like
+            The set to be inserted. A `float` or array a is
+            treated as an ``IntervalProd(a, a)``.
+
+        Examples
+        --------
+        >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
+        >>> rbox.append([-1.0, 0.0])
+        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
+
+        See Also
+        --------
+        insert
+        """
+        return self.insert(self.ndim, other)
 
     def corners(self, order='C'):
         """The corner points in a single array.
@@ -607,6 +628,42 @@ class IntervalProd(Set):
     def __len__(self):
         """Return ``len(self)``."""
         return self.ndim
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``
+
+        Parameters
+        ----------
+        indices : numpy style index
+            Any of: int, slice, list of ints
+
+        Returns
+        -------
+        subinterval : `IntervalProd`
+            Interval given by the indices
+
+        Examples
+        --------
+        >>> rbox = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])
+
+        By integer
+
+        >>> rbox[0]
+        Interval(-1.0, -0.5)
+
+        By slice
+
+        >>> rbox[:]
+        Cuboid([-1.0, 2.0, 0.0], [-0.5, 3.0, 0.5])
+        >>> rbox[::2]
+        Rectangle([-1.0, 0.0], [-0.5, 0.5])
+
+        By list of ints
+
+        >>> rbox[[0, 1]]
+        Rectangle([-1.0, 2.0], [-0.5, 3.0])
+        """
+        return IntervalProd(self.begin[indices], self.end[indices])
 
     def __pos__(self):
         """Return ``+self``."""

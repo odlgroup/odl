@@ -37,5 +37,6 @@ plt.ylim(-m, m)
 # Reuse the figure indefinitely
 for i in range(m):
     fig = (vec * i).show(fig=fig)
+    plt.pause(0.1)
 
 plt.show()

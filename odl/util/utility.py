@@ -171,6 +171,8 @@ def dtype_repr(dtype):
         return "'int'"
     elif dtype == np.dtype(float):
         return "'float'"
+    elif dtype == np.dtype(complex):
+        return "'complex'"
     else:
         return "'{}'".format(dtype)
 

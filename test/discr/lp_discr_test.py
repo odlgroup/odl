@@ -117,7 +117,7 @@ def test_factory(exponent):
     assert discr.dspace.exponent == exponent
 
     # Complex
-    discr = odl.uniform_discr(0, 1, 10, field=odl.ComplexNumbers(),
+    discr = odl.uniform_discr(0, 1, 10, dtype='complex',
                               impl='numpy', exponent=exponent)
 
     assert isinstance(discr.dspace, odl.Fn)
@@ -134,8 +134,7 @@ def test_factory_cuda(exponent):
 
     # Cuda currently does not support complex numbers, check error
     with pytest.raises(NotImplementedError):
-        odl.uniform_discr(0, 1, 10, impl='cuda',
-                          field=odl.ComplexNumbers())
+        odl.uniform_discr(0, 1, 10, impl='cuda', dtype='complex')
 
 
 def test_factory_dtypes():
@@ -144,40 +143,21 @@ def test_factory_dtypes():
                        np.uint8, np.uint16, np.uint32, np.uint64]
     complex_float_dtypes = [np.complex64, np.complex128]
 
-    # Real
-    invalid_dtypes = complex_float_dtypes
-
     for dtype in real_float_dtypes:
-        discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
-                                  field=odl.RealNumbers())
+        discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype)
         assert isinstance(discr.dspace, odl.Fn)
         assert discr.is_rn
 
     for dtype in nonfloat_dtypes:
-        discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
-                                  field=odl.RealNumbers())
+        discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype)
         assert isinstance(discr.dspace, odl.Fn)
         assert discr.dspace.element().space.dtype == dtype
 
-    for dtype in invalid_dtypes:
-        with pytest.raises(TypeError):
-            odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
-                              field=odl.RealNumbers())
-
-    # Complex
-    invalid_dtypes = real_float_dtypes + nonfloat_dtypes
-
     for dtype in complex_float_dtypes:
-        discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
-                                  field=odl.ComplexNumbers())
+        discr = odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype)
         assert isinstance(discr.dspace, odl.Fn)
         assert discr.is_cn
         assert discr.dspace.element().space.dtype == dtype
-
-    for dtype in invalid_dtypes:
-        with pytest.raises(TypeError):
-            odl.uniform_discr(0, 1, 10, impl='numpy', dtype=dtype,
-                              field=odl.ComplexNumbers())
 
 
 @skip_if_no_cuda
@@ -186,9 +166,6 @@ def test_factory_dtypes_cuda():
     nonfloat_dtypes = [np.int8, np.int16, np.int32, np.int64,
                        np.uint8, np.uint16, np.uint32, np.uint64]
     complex_float_dtypes = [np.complex64, np.complex128]
-
-    # Real
-    invalid_dtypes = complex_float_dtypes
 
     for dtype in real_float_dtypes:
         if dtype not in odl.CUDA_DTYPES:
@@ -210,22 +187,9 @@ def test_factory_dtypes_cuda():
             assert not discr.is_rn
             assert discr.dspace.element().space.dtype == dtype
 
-    for dtype in invalid_dtypes:
-        with pytest.raises(TypeError):
-            odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
-
-    # Complex (not implemented)
-    invalid_dtypes = real_float_dtypes + nonfloat_dtypes
-
     for dtype in complex_float_dtypes:
         with pytest.raises(NotImplementedError):
-            odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype,
-                              field=odl.ComplexNumbers())
-
-    for dtype in invalid_dtypes:
-        with pytest.raises(TypeError):
-            odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype,
-                              field=odl.ComplexNumbers())
+            odl.uniform_discr(0, 1, 10, impl='cuda', dtype=dtype)
 
 
 def test_factory_nd(exponent):
@@ -337,7 +301,7 @@ def test_getslice():
     assert isinstance(vec[:], odl.FnVector)
     assert all_equal(vec[:], [1, 2, 3])
 
-    discr = odl.uniform_discr(0, 1, 3, field=odl.ComplexNumbers())
+    discr = odl.uniform_discr(0, 1, 3, dtype='complex')
     vec = discr.element([1 + 2j, 2 - 2j, 3])
 
     assert isinstance(vec[:], odl.FnVector)
