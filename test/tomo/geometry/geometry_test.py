@@ -287,8 +287,6 @@ def test_helical_cone_flat():
     assert geom.ndim == 3
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
 
-    assert all_equal(dparams.extent, dparams.max() - dparams.min())
-
     det_refpoint = geom.det_refpoint(2 * np.pi)
     assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
 
