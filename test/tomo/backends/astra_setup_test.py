@@ -413,7 +413,7 @@ def test_geom_to_vec():
                                        agrid=angle_grid, dgrid=det_grid)
     vec = odl.tomo.astra_conebeam_2d_geom_to_vec(geom_ff)
 
-    assert vec.shape == (angle_grid.ntotal, 6)
+    assert vec.shape == (angle_grid.size, 6)
 
     # CIRCULAR CONE FLAT
     dparams = odl.IntervalProd([-40, -3], [40, 3])
@@ -423,7 +423,7 @@ def test_geom_to_vec():
                                                  agrid=angle_grid,
                                                  dgrid=det_grid)
     vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_ccf)
-    assert vec.shape == (angle_grid.ntotal, 12)
+    assert vec.shape == (angle_grid.size, 12)
 
     # HELICAL CONE FLAT
     pitch = 1
@@ -432,7 +432,7 @@ def test_geom_to_vec():
                                                 agrid=angle_grid,
                                                 dgrid=det_grid)
     vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_hcf)
-    assert vec.shape == (angle_grid.ntotal, 12)
+    assert vec.shape == (angle_grid.size, 12)
 
 
 if __name__ == '__main__':
