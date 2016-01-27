@@ -310,8 +310,10 @@ class PartialDerivative(Operator):
         >>> f = par_div.domain.element(data)
         >>> par_div_f = par_div(f)
         >>> print(par_div_f)
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [0.0, 1.0, 2.0, 3.0, 4.0]]
+        [
+            [0.0, 1.0, 2.0, 3.0, 4.0],
+            [0.0, 1.0, 2.0, 3.0, 4.0]
+        ]
         """
         if out is None:
             out = self.range.element()
@@ -394,16 +396,22 @@ class Gradient(Operator):
         >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
         >>> print(grad_f[0])
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [-0.0, -0.5, -1.0, -1.5, -2.0]]
+        [
+            [0.0, 1.0, 2.0, 3.0, 4.0],
+             [-0.0, -0.5, -1.0, -1.5, -2.0]
+         ]
         >>> print(grad_f[1])
-        [[0.5, 1.0, 1.0, 1.0, -1.5],
-         [1.0, 2.0, 2.0, 2.0, -3.0]]
+        [
+            [0.5, 1.0, 1.0, 1.0, -1.5],
+            [1.0, 2.0, 2.0, 2.0, -3.0]
+        ]
         >>> g = grad.range.element((data, data ** 2))
         >>> adj_g = grad.adjoint(g)
         >>> print(adj_g)
-        [[-0.5, -3.0, -6.0, -9.0, 0.5],
-         [-2.0, -7.5, -15.0, -22.5, 20.0]]
+        [
+            [-0.5, -3.0, -6.0, -9.0, 0.5],
+            [-2.0, -7.5, -15.0, -22.5, 20.0]
+        ]
         >>> g.inner(grad_f) - f.inner(adj_g)
         0.0
         """
@@ -506,9 +514,11 @@ class Divergence(Operator):
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
         >>> print(div_f)
-        [[1.0, 2.0, 2.5, 3.0, 1.0],
-         [2.0, 2.0, 2.0, 2.0, -1.0],
-         [1.0, 0.0, -0.5, -1.0, -5.0]]
+        [
+            [1.0, 2.0, 2.5, 3.0, 1.0],
+            [2.0, 2.0, 2.0, 2.0, -1.0],
+            [1.0, 0.0, -0.5, -1.0, -5.0]
+        ]
         >>> g = div.range.element(data ** 2)
         >>> adj_g = div.adjoint(g)
         >>> g.inner(div_f)
