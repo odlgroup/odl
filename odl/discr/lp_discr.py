@@ -33,12 +33,10 @@ from odl.discr.discretization import (
 from odl.discr.discr_mappings import (
     GridCollocation, NearestInterpolation, LinearInterpolation)
 from odl.discr.grid import uniform_sampling, RegularGrid
-from odl.set.sets import Field, RealNumbers
-from odl.set.domain import IntervalProd
-from odl.space.ntuples import Fn
-from odl.space.fspace import FunctionSpace
-from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
+from odl.set import RealNumbers, ComplexNumbers, IntervalProd
+from odl.space import Fn, FunctionSpace, CudaFn, CUDA_AVAILABLE
 from odl.util.ufuncs import DiscreteLpUFuncs
+from odl.util.utility import is_real_dtype, dtype_repr
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr', 'uniform_discr_fromspace')
@@ -217,15 +215,17 @@ class DiscreteLp(Discretization):
                              as_midp=True) == self.grid):
             if isinstance(self.dspace, Fn):
                 impl = 'numpy'
+                default_dtype = np.float64
             elif isinstance(self.dspace, CudaFn):
                 impl = 'cuda'
+                default_dtype = np.float32
             else:  # This should never happen
                 raise RuntimeError('unable to determine data space impl.')
             arg_fstr = '{}, {}, {}'
             if self.exponent != 2.0:
                 arg_fstr += ', exponent={exponent}'
-            if not isinstance(self.field, RealNumbers):
-                arg_fstr += ', field={field!r}'
+            if self.dtype != default_dtype:
+                arg_fstr += ', dtype={dtype}'
             if self.interp != 'nearest':
                 arg_fstr += ', interp={interp!r}'
             if impl != 'numpy':
@@ -245,7 +245,7 @@ class DiscreteLp(Discretization):
             arg_str = arg_fstr.format(
                 min_str, max_str, shape_str,
                 exponent=self.exponent,
-                field=self.field,
+                dtype=dtype_repr(self.dtype),
                 interp=self.interp,
                 impl=impl,
                 order=self.order)
@@ -576,8 +576,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
 
 def uniform_discr(min_corner, max_corner, nsamples,
-                  exponent=2.0, field=RealNumbers(),
-                  interp='nearest', impl='numpy', **kwargs):
+                  exponent=2.0, interp='nearest', impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
     Parameters
@@ -592,8 +591,6 @@ def uniform_discr(min_corner, max_corner, nsamples,
     exponent : positive `float`, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    field : `Field`, optional
-        The field of the `FunctionSpace`, default `RealNumbers`.
     interp : `str`, optional
             Interpolation type to be used for discretization.
 
@@ -629,18 +626,22 @@ def uniform_discr(min_corner, max_corner, nsamples,
     >>> uniform_discr([0, 0], [1, 1], [10, 10])
     uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10])
 
-    >>> from odl import ComplexNumbers
-    >>> uniform_discr([0, 0], [1, 1], [10, 10], field=ComplexNumbers())
-    uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10], field=ComplexNumbers())
+    Can create complex space by giving a dtype
+
+    >>> uniform_discr([0, 0], [1, 1], [10, 10], dtype='complex')
+    uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10], dtype='complex')
 
     See also
     --------
     uniform_discr_fromspace : uniform discretization from an existing
         function space
     """
-    if not isinstance(field, Field):
-        raise TypeError('field {} not a Field instance'
-                        ''.format(field))
+    # Select field by dtype
+    dtype = kwargs.get('dtype', None)
+    if dtype is None or is_real_dtype(dtype):
+        field = RealNumbers()
+    else:
+        field = ComplexNumbers()
 
     fspace = FunctionSpace(IntervalProd(min_corner, max_corner), field)
 
