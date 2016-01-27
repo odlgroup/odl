@@ -126,7 +126,7 @@ class DiscreteXrayTransform(Operator):
 
         weight = getattr(geometry.grid, 'cell_volume', 1.0)
 
-        ran_dspace = discr_dom.dspace_type(geometry.grid.ntotal,
+        ran_dspace = discr_dom.dspace_type(geometry.grid.size,
                                            weight=weight,
                                            dtype=discr_dom.dspace.dtype)
 

@@ -127,7 +127,7 @@ class Detector(with_metaclass(ABCMeta, object)):
         """The number of pixels (sampling points)."""
         if not self.has_sampling:
             raise ValueError('no sampling defined.')
-        return self.param_grid.ntotal
+        return self.param_grid.size
 
     def surface_deriv(self, param):
         """The partial derivative(s) of the surface parametrization.

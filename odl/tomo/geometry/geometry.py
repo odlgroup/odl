@@ -185,7 +185,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
         Returns an `IntervalProduct` with the motion parameters inserted
         before the detector parameters.
         """
-        return self.motion_params.insert(self.det_params)
+        return self.motion_params.append(self.det_params)
 
     @property
     def grid(self):
@@ -195,7 +195,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
             grid = self.motion_grid
         else:
             grid = TensorGrid(*self.motion_grid.coord_vectors)
-        return grid.insert(self.det_grid, grid.ndim)
+        return grid.append(self.det_grid)
 
 
 class DivergentBeamGeometry(Geometry):

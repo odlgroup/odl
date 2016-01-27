@@ -975,7 +975,7 @@ class RegularGrid(TensorGrid):
             self_tg = TensorGrid(*self.coord_vectors)
             return self_tg.is_subgrid(other)
 
-    def insert(self, grid, index):
+    def insert(self, index, grid):
         """Insert another regular grid before the given index.
 
         The given grid (``m`` dimensions) is inserted into the current
@@ -1000,7 +1000,7 @@ class RegularGrid(TensorGrid):
         --------
         >>> rg1 = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg2 = RegularGrid(-3, 7, 6)
-        >>> rg1.insert(rg2, 1)
+        >>> rg1.insert(1, rg2)
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], [2, 6, 3])
         """
         idx = int(index)
