@@ -30,8 +30,8 @@ import pytest
 # ODL imports
 import odl
 from odl.discr.lp_discr import uniform_discr
-from odl.discr.discr_ops import (finite_diff, DiscretePartDeriv,
-                                 DiscreteGradient, DiscreteDivergence)
+from odl.discr.discr_ops import (finite_diff, PartialDerivative,
+                                 Gradient, Divergence)
 from odl.space.ntuples import Rn
 from odl.util.testutils import almost_equal, all_equal, skip_if_no_cuda
 
@@ -148,7 +148,7 @@ def test_discr_part_deriv():
 
     discr_space = Rn(1)
     with pytest.raises(TypeError):
-        DiscretePartDeriv(discr_space)
+        PartialDerivative(discr_space)
 
     # phantom data
     data = np.array([[0., 1., 2., 3., 4.],
@@ -178,8 +178,8 @@ def test_discr_part_deriv():
     discr_space = uniform_discr([0, 0], [2, 1], data.shape)
 
     # operator
-    partial_0 = DiscretePartDeriv(discr_space, axis=0, zero_padding=True)
-    partial_1 = DiscretePartDeriv(discr_space, axis=1, zero_padding=True)
+    partial_0 = PartialDerivative(discr_space, axis=0, zero_padding=True)
+    partial_1 = PartialDerivative(discr_space, axis=1, zero_padding=True)
 
     # discretized space vector
     vec = partial_0.domain.element(data)
@@ -193,7 +193,7 @@ def test_discr_part_deriv():
     assert all_equal(partial_vec_1.asarray(), dfe1)
 
     # operator
-    partial_0 = DiscretePartDeriv(discr_space, axis=1, dx=0.2, edge_order=2,
+    partial_0 = PartialDerivative(discr_space, axis=1, dx=0.2, edge_order=2,
                                   zero_padding=True)
 
     # adjoint not implemented
@@ -220,7 +220,7 @@ def test_discr_part_deriv_cuda():
     discr_space = uniform_discr(0, data.size, data.shape, impl='cuda')
 
     # operator
-    partial = DiscretePartDeriv(discr_space, zero_padding=True)
+    partial = PartialDerivative(discr_space, zero_padding=True)
 
     # discretized space vector
     discr_vec = partial.domain.element(data)
@@ -257,7 +257,7 @@ def test_discrete_gradient():
 
     discr_space = Rn(1)
     with pytest.raises(TypeError):
-        DiscreteGradient(discr_space)
+        Gradient(discr_space)
 
     # Check result of operator with explicit summation
     # phantom data
@@ -279,7 +279,7 @@ def test_discrete_gradient():
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 
     # gradient
-    grad = DiscreteGradient(discr_space)
+    grad = Gradient(discr_space)
     grad_vec = grad(dom_vec)
     assert len(grad_vec) == data.ndim
     assert all_equal(grad_vec[0].asarray(), df0)
@@ -304,7 +304,7 @@ def test_discrete_gradient():
         dom_vec = discr_space.element(ndvolume(lin_size, ndim))
 
         # gradient
-        grad = DiscreteGradient(discr_space)
+        grad = Gradient(discr_space)
         grad(dom_vec)
 
 
@@ -328,7 +328,7 @@ def test_discrete_gradient_cuda():
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 
     # gradient
-    grad = DiscreteGradient(discr_space)
+    grad = Gradient(discr_space)
     grad_vec = grad(dom_vec)
     assert len(grad_vec) == data.ndim
     assert all_equal(grad_vec[0].asarray(), df0)
@@ -350,7 +350,7 @@ def test_discrete_divergence():
     # Invalid arguments
     discr_space = Rn(1)
     with pytest.raises(TypeError):
-        DiscreteDivergence(discr_space)
+        Divergence(discr_space)
 
     # Check result of operator with explicit summation
     data = np.array([[0., 1., 2., 3., 4.],
@@ -361,7 +361,7 @@ def test_discrete_divergence():
     discr_space = uniform_discr([0, 0], [6, 2.5], data.shape)
 
     # Operator instance
-    div = DiscreteDivergence(discr_space)
+    div = Divergence(discr_space)
 
     # Apply operator
     dom_vec = div.domain.element([data, data])
@@ -393,7 +393,7 @@ def test_discrete_divergence():
         discr_space = uniform_discr([0.] * ndim, [lin_size] * ndim,
                                     [lin_size] * ndim)
         # Divergence
-        div = DiscreteDivergence(discr_space)
+        div = Divergence(discr_space)
         dom_vec = div.domain.element([ndvolume(lin_size, ndim)] * ndim)
         div(dom_vec)
 
@@ -412,7 +412,7 @@ def test_discrete_divergence_cuda():
     discr_space = uniform_discr([0, 0], [1.5, 10], data.shape, impl='cuda')
 
     # operator instance
-    div = DiscreteDivergence(discr_space)
+    div = Divergence(discr_space)
 
     # apply operator
     dom_vec = div.domain.element([data, data])

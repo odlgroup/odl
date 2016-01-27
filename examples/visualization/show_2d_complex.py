@@ -25,7 +25,7 @@ issues with these examples.
 
 import odl
 
-spc = odl.uniform_discr([0, 0], [1, 1], [100, 100], field=odl.ComplexNumbers())
+spc = odl.uniform_discr([0, 0], [1, 1], [100, 100], dtype='complex')
 vec = odl.util.shepp_logan(spc, modified=True) * (1 + 0.5j)
 
 # Can also force "instant" plotting
