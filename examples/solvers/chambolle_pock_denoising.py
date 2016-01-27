@@ -84,5 +84,5 @@ chambolle_pock_solver(K, x, tau=1/K_norm, sigma=1/K_norm,
 # Display images
 orig.show(title='original image')
 noisy.show(title='noisy image')
-# x.show(title='reconstruction')
+x.show(title='reconstruction')
 plt.show()

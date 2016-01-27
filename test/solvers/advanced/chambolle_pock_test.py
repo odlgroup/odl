@@ -29,8 +29,32 @@ import pytest
 # Internal
 import odl
 from odl.solvers import (chambolle_pock_solver, proximal_zero,
-                         proximal_convexconjugate_l2_l1)
-from odl.util.testutils import all_almost_equal
+                         proximal_convexconjugate_l2_l1, proximal_primal)
+from odl.util.testutils import all_almost_equal, all_equal
+
+
+def test_proximal():
+
+    # Image space
+    x_space = odl.uniform_discr(0, 10, 10)
+    x_data = x_space.element(np.arange(-5, 5))
+    out = x_space.element()
+
+    make_prox = proximal_primal(x_space)
+
+    prox_op = make_prox(0)
+
+    assert isinstance(prox_op, odl.IdentityOperator)
+
+    make_prox = proximal_primal(x_space, 'non-negative')
+
+    prox_op = make_prox(0)
+
+    prox_op(x_data, out)
+
+    assert all(out.asarray() >= 0)
+
+
 
 
 # TODO: improve test documentation

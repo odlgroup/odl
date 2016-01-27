@@ -37,18 +37,22 @@ from builtins import super
 
 # Internal
 from odl.operator.operator import Operator
+from odl.operator.pspace_ops import ProductSpaceOperator
 from odl.operator.default_ops import IdentityOperator
 from odl.solvers.util import Partial
+from odl import
 
 __all__ = ('chambolle_pock_solver', 'proximal_convexconjugate_l2_l1',
-           'proximal_zero')
+           'proximal_zero', 'proximal_primal')
 
+
+# TODO: operators or factory functions or something else
+# TODO: variable step length. currently requires init of prox in each each
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 # TODO: add positivity constraint
 # TODO: improve doc including references
-# TODO: split proximal_convexconjugate_l2_l1
 # TODO: add checks
 
 def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
@@ -79,6 +83,9 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     and the corresponding dual maximization problem
 
         max_y G(-K^*x) - F^*(y)
+
+    The convex conjugate is mapping from a vector space ``X`` to its dual
+    space ``X^*``. Since Hilbert spaces are self-dual, ``X^* == X``.
 
     For more details see [5]_. The following implementation of the CP
     algorithms is along the lines of [3]_.
@@ -161,21 +168,17 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     Algorithm for Convex Problems with Applications to Imaging*. J. Math.
     Imaging Vis. 40 120, 2011.
     http://dx.doi.org/10.1007/s10851-010-0251-1
-
     .. [2]: Chambolle, Antonin, and Pock, Thomas. *Diagonal preconditioning
     for first order primal-dual algorithms in convex optimization*. 2011
     IEEE International Conference on Computer Vision (ICCV), 1762, 2011.
      http://dx.doi.org/10.1109/ICCV.2011.6126441
-
     .. [3]: Emil Y, Sidky, Jakob H, Jorgensen, and Xiaochuan, Pan. *Convex
     optimization problem prototyping for image reconstruction in computed
     tomography with the Chambolle-Pock algorithm*, Phys Med Biol, 57 3065,
     2012. http://stacks.iop.org/0031-9155/57/i=10/a=3065
-
     .. [4]: Parikh, Neal, and Boyd, Stephen. *Proximal Algorithms* .
     Foundations and Trends in Optimization 1 127, 2014.
     http://dx.doi.org/10.1561/2400000003
-
     .. [5]: Rockafellar, R. Tyrrell. *Convex analysis*. Princeton University
      Press, 1970.
     """
@@ -217,16 +220,18 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     if y is None:
         y = op.range.zero()
     else:
-        if y.space != op.domain:
+        if y.space != op.range:
             raise TypeError('variable {} is not in the range of `op` '
-                            '({})'.format(x_relaxation.space, op.domain))
+                            '({})'.format(x_relaxation.space, op.range))
 
     # Temporal copy of previous iterate
     x_old = x.space.element()
 
-    # Initialize the proximal operator of the convex conjugate of functional F
+    # Initialize proximal operator
+
+    # Proximal operator of the convex conjugate of functional F
     proximal_dual_sigma = proximal_dual(sigma)
-    # Initialize the proximal operator of functional G
+    # Proximal operator of functional G
     proximal_primal_tau = proximal_primal(tau)
 
     # Adjoint of the (product space) operator
@@ -249,28 +254,6 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
             partial.send(x)
 
 
-# Proximal operators of f(x):
-#
-#     prox_tau[f](x) = arg min_y { f(y) + 1 / (2 * tau) * L2(x - y)^2 }
-#
-# The proximal operator is also written as:
-#
-#     prox_tau[f](x) = prox_{tau f}(x)
-#
-# Separable sum property:
-# if f is separable across two variables, i.e. f(x, y) = g(x) + h(y),
-# then prox_f(x, y) = prox_g(x) + prox_f(y)
-#
-# Indicator function:
-#
-#     ind_{S}(x) = {0 if x in S, infty if x not in S}
-#
-# Special indicator function:
-#
-#     ind_{box(a)}(x) = {0 if ||x||_infty <= a, infty if ||x||_infty > a}
-
-
-# f(x) = 0
 def proximal_zero(space):
     """Function to create the proximal operator of f(x) = 0.
 
@@ -310,42 +293,37 @@ def proximal_zero(space):
     return make_prox
 
 
-# f(x) = f(y,z) = g^*(x) = ( 1/2 * ||y - x||_2^2 + lam * ||(|z|)||_1 )^*
-# = 1/2 * ||y||_2^2 + <y,g> + ind_{box(lam)}(|z|)
+# TODO: check space of g
+# TODO: remove implicit product space assumption on z
 def proximal_convexconjugate_l2_l1(space, g, lam):
-    """Function for the proximal operator with l2-data plus TV-regularization.
+    """Proximal operator factory of the convex conjugate of an L2-data and
+    L1-regularisation objective.
 
-    Factory function which provides a function to initialize the proximal
-    operator of the convex conjugate of the functional ``F`` given by the
-    L2-data term and the isotropic total variation semi-norm of in the primal
-    minimization problem:
+    Factory function providing a function to initialize the proximal
+    operator of the convex conjugate of the functional ``F`` which is given
+    by an L2-data term and an L1 semi-norm regularisation. The primal
+    minimization problem thus reads
 
-    F(y,z)= 1/2 * ||y - g||_2^2 + lambda * ||(|grad u|)||_1
+        F(x) = F(y, z) = 1/2 * ||y - g||_2^2 + lambda * ||(|z|)||_1
 
-    where y = Au and z = grad u. The operators ``A`` and ``grad`` are
-    combined in a matrix operator ``K`` as:
+    The convex conjugate, F^*, of F is given by
 
-        K = (A, grad)^T
-
-    The proximal operator is mapping from a vector space X to its dual space
-    X^*. We assume X to be Hilbert spaces which is self-dual. Here, the domain
-    and range of the proximal operator are given by the range of ``K``.
+        F^*(x) = 1/2 * ||y||_2^2 + <y,g> + ind_{box(lam)}(|z|)
 
     Parameters
     ----------
-    space : `ProductSpace`
-        Product space of the range of forward operator ``A`` and of the range
-        of the gradient operator i.e. a product space of the image space
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
+        Domain of F(x)
     g : `DiscreteLpVector`
-        Element in the range of the forward operator ``A``
+        Element in ``space``
     lam : positive `float`
         Regularization parameter
 
     Returns
     -------
-    make_prox : `function`
-        Function initialize the proximal operator with a given step
-        length parameter ``sigma``
+    make_prox : `callable`
+        Function which initializes the proximal operator at a given
+        parameter value
     """
     lam = float(lam)
 
@@ -407,6 +385,104 @@ def proximal_convexconjugate_l2_l1(space, g, lam):
                     oi.divide(zi, tmp)
 
         return _ProxOp(sigma)
+
+    return make_prox
+
+
+###############################################################################
+# TEST SECTION
+
+def proximal_primal(space, constraint_type='unconstrained'):
+    """Function to create the proximal operator of f(x) = 0.
+
+    Factory function which provides a function to initialize the proximal
+    operator of ``f(x)`` where ``x`` is an element in ``space``.
+
+    Parameters
+    ----------
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
+        Domain of the functional ``f(x)``
+
+    Returns
+    -------
+    make_prox : `function`
+        Function to initialize the proximal operator
+    """
+
+    def make_prox(tau):
+        """Return an instance of the proximal operator.
+
+        Parameters
+        ----------
+        tau : positive `float`
+            Step length parameter. Unused here but introduced to provide a
+            common interface
+
+        Returns
+        -------
+        id : `Operator`
+            The proximal operator instance
+        """
+
+        if constraint_type == 'unconstrained':
+            return IdentityOperator(space)
+        elif constraint_type == 'non-negative':
+
+            class _ProxOpNonNegative(Operator):
+
+                """The proximal operator."""
+
+                def __init__(self):
+                    """Initialize the proximal operator.
+
+                    Parameters
+                    ----------
+                    tau : positive `float`
+                    """
+                    super().__init__(domain=space, range=space, linear=False)
+
+                def _call(self, x, out):
+                    """Apply the operator to ``x`` and store the result in
+                    ``out``"""
+
+                    tmp = x.asarray()
+                    tmp[tmp < 0] = 0
+                    out[:] = tmp
+
+            return _ProxOpNonNegative()
+
+        else:
+            raise ValueError('unknown constraint type {}'
+                             ''.format(constraint_type))
+
+    return make_prox
+
+
+# TODO: check space of g
+# TODO: remove implicit product space assumption on z
+def prox_convconj_l2_l1(space, g, lam):
+    """Function for the proximal operator
+    """
+    lam = float(lam)
+
+    def make_prox(sigma):
+        """Returns an instance of the proximal operator.
+
+        Parameters
+        ----------
+        sigma : positive `float`
+            Step length parameter
+
+        Returns
+        -------
+        prox_op : `Operator`
+            Proximal operator initialized with ``sigma``
+        """
+
+        op = ProductSpaceOperator([
+            [Proximal_ConvConj_L2(sigma, space, g, 1), None]
+            [None, Proximal_ConvConj_L1(sigma, space, lam)]])
+        return op
 
     return make_prox
 
