@@ -28,14 +28,82 @@ standard_library.install_aliases()
 from odl.operator.default_ops import IdentityOperator
 from odl.operator.operator import OperatorComp, OperatorSum
 
-__all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
-           'gauss_newton')
+__all__ = ('gradient_descent', 'landweber', 'conjugate_gradient',
+           'conjugate_gradient_normal', 'gauss_newton')
 
 
 # TODO: update all docs
 
 
-def landweber(op, x, rhs, niter=1, omega=1, partial=None):
+def gradient_descent(gradient_op, x, niter=1, omega=1, projection=None,
+                     partial=None):
+    """Optimized implementation of gradient descent method.
+
+    Also known as steepest descent method.
+
+    This method calculates an approximate solution of the optimization problem
+
+        :math:`\min_{x\\in \mathcal{X}} \mathcal{A}(x)`
+
+    for a (Frechet-) differentiable operator
+    :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}` between Hilbert
+    spaces :math:`\mathcal{X}` and :math:`\mathcal{Y}`. The method
+    starts from an initial guess :math:`x_0` and uses the
+    iteration
+
+    :math:`x_{k+1} = x_k - \omega \nabla \mathcal{A}(x)`,
+
+    where :math:`\nabla \mathcal{A}(x)` is the gradient of :math:`\mathcal{A}`
+    at :math:`x` and :math:`\omega` is a relaxation parameter.
+
+    Users may also optionally provide a projection operator to project each
+    partial result on some subset.
+
+    This implementation uses a minimum amount of memory copies by
+    applying re-usable temporaries and in-place evaluation.
+
+    The method is also described in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Gradient_descent>`_.
+
+    Parameters
+    ----------
+    gradient_op : `Operator`
+        Operator in the inverse problem.
+    x : element of the domain of ``op``
+        Vector to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    niter : `int`, optional
+        Maximum number of iterations
+    omega : positive `float`
+        Relaxation parameter in the iteration
+    projection : `callable`, optional
+        Function that can be used to modify the iterates in each iteration,
+        for example enforcing positivity. The function should take one
+        argument and modify it inplace.
+    partial : `Partial`, optional
+        Object executing code per iteration, e.g. plotting each iterate
+
+    Returns
+    -------
+    `None`
+    """
+    # Reusable temporary
+    gradient = gradient_op.domain.element()
+
+    for _ in range(niter):
+        gradient_op(x, out=gradient)
+        x.lincomb(1, x, -omega, gradient)
+
+        if projection is not None:
+            projection(x)
+
+        if partial is not None:
+            partial(x)
+
+
+def landweber(op, x, rhs, niter=1, omega=1, projection=None, partial=None):
     """Optimized implementation of Landweber's method.
 
     This method calculates an approximate least-squares solution of
@@ -65,6 +133,9 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
     convergence, where :math:`\\lVert\mathcal{A}\\rVert` stands for the
     operator norm of :math:`\mathcal{A}`.
 
+    Users may also optionally provide a projection operator to project each
+    partial result on some subset.
+
     This implementation uses a minimum amount of memory copies by
     applying re-usable temporaries and in-place evaluation.
 
@@ -89,6 +160,10 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
         Maximum number of iterations
     omega : positive `float`
         Relaxation parameter in the iteration
+    projection : `callable`, optional
+        Function that can be used to modify the iterates in each iteration,
+        for example enforcing positivity. The function should take one
+        argument and modify it inplace.
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
@@ -107,6 +182,9 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
         tmp_ran -= rhs
         op.derivative(x).adjoint(tmp_ran, out=tmp_dom)
         x.lincomb(1, x, -omega, tmp_dom)
+
+        if projection is not None:
+            projection(x)
 
         if partial is not None:
             partial(x)
