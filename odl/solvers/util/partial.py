@@ -186,7 +186,7 @@ class PrintIterationPartial(Partial):
 
     """Print the interation count."""
 
-    default_text = 'iter ='
+    _default_text = 'iter ='
 
     def __init__(self, text=None):
         """Initialize an instance.
@@ -196,7 +196,7 @@ class PrintIterationPartial(Partial):
         text : `str`
             Text to display before the iteration count. Default: 'iter ='
         """
-        self.text = text if text is not None else self.default_text
+        self.text = text if text is not None else self._default_text
         self.iter = 0
 
     def __call__(self, _):
@@ -205,7 +205,7 @@ class PrintIterationPartial(Partial):
         self.iter += 1
 
     def __repr__(self):
-        textstr = '' if self.text == self.default_text else self.text
+        textstr = '' if self.text == self._default_text else self.text
         return 'PrintIterationPartial({})'.format(textstr)
 
 

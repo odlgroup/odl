@@ -197,8 +197,8 @@ class RawDiscretization(NtuplesBase):
         equals : `bool`
             `True` if ``other`` is a `RawDiscretization`
             instance and all attributes `uspace`, `dspace`,
-            `restriction` and `extension` of ``other``
-            and this discretization are equal, `False` otherwise.
+            `RawDiscretization.restriction` and `RawDiscretization.extension`
+            of ``other`` and this discretization are equal, `False` otherwise.
         """
         if other is self:
             return True

@@ -4,6 +4,8 @@
 Glossary
 ########
 
+.. _numpy vectorization: http://docs.scipy.org/doc/numpy-1.10.1/reference/generated/numpy.vectorize.html
+
 .. glossary::
 
     array-like
@@ -63,5 +65,5 @@ Glossary
 
         The vectorization concept in ODL differs slightly from the one in NumPy
         in that arguments have to be passed as a single tuple rather than a
-        number of (positional) arguments. See :ref:`vectorization` for more
+        number of (positional) arguments. See `numpy vectorization`_ for more
         details.

@@ -106,7 +106,7 @@ class FunctionSet(Set):
         ----------
         fcall : `callable`, optional
             The actual instruction for out-of-place evaluation.
-            It must return an `range` element or a
+            It must return an `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
 
         vectorized : bool
@@ -137,8 +137,7 @@ class FunctionSet(Set):
         -------
         equals : `bool`
             `True` if ``other`` is a `FunctionSet` with same
-            `FunctionSet.domain` and `FunctionSet.range`,
-            `False` otherwise.
+            `FunctionSet.domain` and `FunctionSet.range`, `False` otherwise.
         """
         if other is self:
             return True
@@ -559,8 +558,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a `FunctionSpace` with same `domain`
-            and `range`, `False` otherwise.
+            `True` if ``other`` is a `FunctionSpace` with same
+            `FunctionSpace.domain` and `FunctionSpace.range`,
+            `False` otherwise.
         """
         if other is self:
             return True

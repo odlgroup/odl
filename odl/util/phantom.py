@@ -405,7 +405,7 @@ def submarine_phantom(discr, smooth=True, taper=20.0):
 
     Parameters
     ----------
-    discr : `Discretization`
+    discr : `DiscreteLp`
         Discretized space in which the phantom is supposed to be created
     smooth : `bool`, optional
         If `True`, the boundaries are smoothed out. Otherwise, the
@@ -416,7 +416,7 @@ def submarine_phantom(discr, smooth=True, taper=20.0):
 
     Returns
     -------
-    phantom : `DiscretizationVector`
+    phantom : `DiscreteLpVector`
 
     References
     ----------
