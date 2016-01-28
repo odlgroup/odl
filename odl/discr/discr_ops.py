@@ -31,7 +31,7 @@ from odl.set.pspace import ProductSpace
 from odl.discr.lp_discr import DiscreteLp
 
 
-__all__ = ('PartialDerivative', 'Gradient', 'Divergence')
+__all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
 
 def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
@@ -418,7 +418,7 @@ class Gradient(Operator):
             out_arr = out[axis].asarray()
 
             finite_diff(x_data, out=out_arr, axis=axis,
-                        dx=dx[axis], edge_order=2, zero_padding=True,
+                        dx=dx[axis], zero_padding=True,
                         method=self.method)
 
             out[axis][:] = out_arr
@@ -526,7 +526,7 @@ class Divergence(Operator):
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
         for axis in range(ndim):
             finite_diff(x[axis], out=tmp, axis=axis, dx=dx[axis],
-                        edge_order=2, zero_padding=True, method=self.method)
+                        zero_padding=True, method=self.method)
             if axis == 0:
                 arr[:] = tmp
             else:
@@ -551,6 +551,102 @@ class Divergence(Operator):
             return - Gradient(self.range, 'forward')
         else:
             return super().adjoint
+
+
+class Laplacian(Operator):
+    """Spatial laplacian operator for `DiscreteLp` spaces.
+
+    Calls helper function `finite_diff` to calculate each component of the
+    resulting product space vector.
+
+    Outside the domain ``zero_padding`` is assumed.
+    """
+
+    def __init__(self, space):
+        """Initialize a `Laplacian` operator instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp`
+            The space of elements which the operator is acting on.
+        method : {'central', 'forward', 'backward'}, optional
+            What method that should be used.
+        """
+
+        if not isinstance(space, DiscreteLp):
+            raise TypeError('space {!r} is not a `DiscreteLp` '
+                            'instance.'.format(space))
+
+        super().__init__(domain=space, range=space, linear=True)
+
+    def _call(self, x, out=None):
+        """Calculate the spatial Laplacian of ``x``.
+
+        Parameters
+        ----------
+        x : ``domain`` element
+            Input vector to which the `Laplacian` operator is
+            applied
+        out : ``range`` element, optional
+            Output vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` element, optional
+            Result of the evaluation. If ``out`` was
+            provided, the returned object is a reference to it.
+
+        Examples
+        --------
+        >>> from odl import uniform_discr
+        >>> data = np.array([[ 0., 0., 0.],
+        ...                  [ 0., 1., 0.],
+        ...                  [ 0., 0., 0.]])
+        >>> discr = uniform_discr([0,0], [3,3], data.shape)
+        >>> f = discr.element(data)
+        >>> lap = Laplacian(discr)
+        >>> print(lap(f))
+        [[0.0, 1.0, 0.0],
+         [1.0, -4.0, 1.0],
+         [0.0, 1.0, 0.0]]
+        """
+        if out is None:
+            out = self.range.zero()
+        else:
+            out.set_zero()
+
+        x_data = x.asarray()
+        out_arr = out.asarray()
+        tmp = np.empty(out.shape, out.dtype, order=out.space.order)
+
+        ndim = self.domain.ndim
+        dx = self.domain.grid.stride
+
+        for axis in range(ndim):
+            # TODO: this can be optimized
+
+            finite_diff(x_data, out=tmp, axis=axis,
+                        dx=dx[axis] ** 2, zero_padding=True,
+                        method='forward')
+
+            out_arr[:] += tmp
+
+            finite_diff(x_data, out=tmp, axis=axis,
+                        dx=dx[axis] ** 2, zero_padding=True,
+                        method='backward')
+
+            out_arr[:] -= tmp
+
+        out[:] = out_arr
+        return out
+
+    @property
+    def adjoint(self):
+        """Return the adjoint operator.
+
+        The laplacian is self-adjoint, so this returns ``self``.
+        """
+        return self
 
 
 if __name__ == '__main__':
