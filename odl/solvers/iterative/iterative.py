@@ -25,85 +25,11 @@ standard_library.install_aliases()
 # Internal
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 
-__all__ = ('gradient_descent', 'landweber', 'conjugate_gradient',
-           'conjugate_gradient_normal', 'gauss_newton')
+__all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
+           'gauss_newton')
 
 
 # TODO: update all docs
-
-
-def gradient_descent(gradient_op, x, niter=1, omega=1, projection=None,
-                     partial=None):
-    """Optimized implementation of gradient descent method.
-
-    Also known as steepest descent method.
-
-    This method calculates an approximate solution of the optimization problem
-
-        :math:`\min_{x\\in \mathcal{X}} f(x)`
-
-    for a (Frechet-) differentiable operator
-    :math:`\mathcal{A}: \mathcal{X} \\to R` where :math:`\mathcal{X}` is a
-    hilbert space.
-
-    The method starts from an initial guess :math:`x_0` and uses the
-    iteration
-
-    :math:`x_{k+1} = x_k - \omega \nabla \mathcal{A}(x)`,
-
-    where :math:`\nabla \mathcal{A}(x)` is the gradient of :math:`\mathcal{A}`
-    at :math:`x` and :math:`\omega` is a relaxation parameter.
-
-    Users may also optionally provide a projection operator to project each
-    partial result on some subset.
-
-    This implementation uses a minimum amount of memory copies by
-    applying re-usable temporaries and in-place evaluation.
-
-    The method is also described in a
-    `Wikipedia article
-    <https://en.wikipedia.org/wiki/Gradient_descent>`_.
-
-    Parameters
-    ----------
-    gradient_op : `Operator`
-        Gradient of the functional that should be optimized.
-    x : element of the domain of ``op``
-        Vector to which the result is written. Its initial value is
-        used as starting point of the iteration, and its values are
-        updated in each iteration step.
-    niter : `int`, optional
-        Maximum number of iterations
-    omega : positive `float`, optional
-        Relaxation parameter in the iteration
-    projection : `callable`, optional
-        Function that can be used to modify the iterates in each iteration,
-        for example enforcing positivity. The function should take one
-        argument and modify it inplace.
-    partial : `Partial`, optional
-        Object executing code per iteration, e.g. plotting each iterate
-
-    Returns
-    -------
-    `None`
-
-    See Also
-    --------
-    landweber : Optimized solver for the case f(x) = ||Ax - b||_2^2
-    conjugate_gradient : Optimized solver for the case f(x) = x^T Ax - 2 x^T b
-    """
-    # Reusable temporary
-    gradient = gradient_op.domain.element()
-
-    for _ in range(niter):
-        gradient_op(x, out=gradient)
-        x.lincomb(1, x, -omega, gradient)
-
-        if projection is not None:
-            projection(x)
-
-        if partial is not None:
-            partial(x)
 
 
 def landweber(op, x, rhs, niter=1, omega=1, projection=None, partial=None):

@@ -29,7 +29,7 @@ import numpy as np
 
 
 # Find the valid projectors
-solvers = ['gradient_descent',
+solvers = ['steepest_descent',
            'landweber',
            'conjugate_gradient',
            'conjugate_gradient_normal']
@@ -40,18 +40,18 @@ solvers = ['gradient_descent',
 def iterative_solver(request):
     solver_name = request.param
 
-    if solver_name == 'gradient_descent':
+    if solver_name == 'steepest_descent':
         def solver(A, x, rhs):
             norm2 = A.adjoint(A(x)).norm() / x.norm()
 
             # Define gradient as A* (Ax - b)
             gradient_op = A.adjoint * odl.ResidualOperator(A, rhs)
-            odl.solvers.gradient_descent(gradient_op, x, niter=10,
-                                         omega=0.5/norm2)
+            odl.solvers.steepest_descent(gradient_op, x, niter=10,
+                                         line_search=0.5 / norm2)
     elif solver_name == 'landweber':
         def solver(A, x, rhs):
             norm2 = A.adjoint(A(x)).norm() / x.norm()
-            odl.solvers.landweber(A, x, rhs, niter=10, omega=0.5/norm2)
+            odl.solvers.landweber(A, x, rhs, niter=10, omega=0.5 / norm2)
     elif solver_name == 'conjugate_gradient':
         def solver(A, x, rhs):
             odl.solvers.conjugate_gradient(A, x, rhs, niter=10)
@@ -67,15 +67,18 @@ def iterative_solver(request):
 def test_solver(iterative_solver):
     """Test discrete X-ray transform using ASTRA for reconstruction."""
 
+    # Solve within 1%
     places = 2
 
-    space = odl.Rn(5)
-    rhs_arr = np.ones(5)
+    # Define problem
     op_arr = np.eye(5) * 5 + np.ones([5, 5])
+    op = odl.MatVecOperator(op_arr)
 
-    op = odl.MatVecOperator(op_arr, space, space)
+    # Simple right hand side
+    rhs = op.range.one()
+
+    # Solve problem
     x = op.domain.one()
-    rhs = op.range.element(rhs_arr)
     iterative_solver(op, x, rhs)
 
     assert all_almost_equal(op(x), rhs, places)

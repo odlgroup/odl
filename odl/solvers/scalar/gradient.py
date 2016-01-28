@@ -22,17 +22,14 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
-
-# Internal
-
 __all__ = ('steepest_descent',)
 
 
 # TODO: update all docs
 
 
-def steepest_descent(grad, x, line_search, niter=1, partial=None):
+def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
+                     partial=None):
     """Steepest descent method to minimize an objective function.
 
     General implementation of steepest decent (also known as gradient
@@ -43,9 +40,9 @@ def steepest_descent(grad, x, line_search, niter=1, partial=None):
     The algorithm is intended for unconstrained problems. It needs line
     search in order guarantee convergence. With appropriate line search,
     it can also be used for constrained problems where one wants to
-    minimize over some given set :math:`C`. This is done by defining
-    :math:`f(x) = \infty` for :math:`x\\not\\in C`.
-
+    minimize over some given set :math:`C`. This can be done by defining
+    :math:`f(x) = \infty` for :math:`x\\not\\in C`, or by providing a
+    ``projection`` function that projects the iterates on :math:`C`.
 
     The algorithm is described in [1]_, section 9.3--9.4
     (`book available online
@@ -61,10 +58,15 @@ def steepest_descent(grad, x, line_search, niter=1, partial=None):
         :math:`x \mapsto \\nabla f(x)`
     x : element in the domain of ``deriv``
         Starting point of the iteration
-    line_search : `LineSearch`
-        Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
+    line_search : float or `LineSearch`, optional
+        Strategy to choose the step length, if a float is given. Uses it as a
+        fixed step length.
+    projection : `callable`, optional
+        Function that can be used to modify the iterates in each iteration,
+        for example enforcing positivity. The function should take one
+        argument and modify it inplace.
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
@@ -75,14 +77,31 @@ def steepest_descent(grad, x, line_search, niter=1, partial=None):
 
     .. [2] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
        and nonlinear optimization. Siam, 2009
+
+    See Also
+    --------
+    landweber : Optimized solver for the case f(x) = ||Ax - b||_2^2
+    conjugate_gradient : Optimized solver for the case f(x) = x^T Ax - 2 x^T b
     """
+
+    if not callable(line_search):
+        step = float(line_search)
+        smart_line_search = False
+    else:
+        smart_line_search = True
 
     grad_x = grad.range.element()
     for _ in range(niter):
         grad(x, out=grad_x)
-        dir_derivative = -grad_x.norm() ** 2
-        step = line_search(x, -grad_x, dir_derivative)
+
+        if smart_line_search:
+            dir_derivative = -grad_x.norm() ** 2
+            step = line_search(x, -grad_x, dir_derivative)
+
         x.lincomb(1, x, -step, grad_x)
+
+        if projection is not None:
+            projection(x)
 
         if partial is not None:
             partial(x)
