@@ -224,7 +224,6 @@ def show_discrete_data(values, grid, method='', title=None,
             plt.colorbar(csub_re, orientation='horizontal',
                          ticks=ticks_re, format='%.4g')
 
-        print(len(fig.axes))
         # Imaginary
         if len(fig.axes) < 3:
             sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)

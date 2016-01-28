@@ -625,12 +625,21 @@ class ProductSpaceVector(LinearSpaceVector):
         Parameters
         ----------
         indices : index expression, optional
-            If a single index (``indices=0``) displays that part
-            If a slice, displays those parts (``indices=slice(None)``)
-            If `list` of indices, display those (``indices=[0, 1, 3]``)
-            If a tuple is given, interprets the first element as an index for
-            this product space vector and passes the rest on.
-            (``indices=np.s_[0, :, :]``).
+            Indices can refer to parts of a `ProductSpaceVector` and slices
+            in the parts in the following way:
+
+            Single index (``indices=0``)
+            => display that part
+
+            Single `slice` (``indices=slice(None)``), or
+            index `list` (``indices=[0, 1, 3]``)
+            => display those parts
+
+            Any `tuple`, for example:
+            Created by `numpy.s_` ``indices=np.s_[0, :, :]`` or
+            Using a raw `tuple` ``indices=([0, 3], slice(None))``
+            => take the first elements to select the parts and
+            pass the rest on to the underlying show methods.
 
         kwargs
             Arguments for the underlying vectors.
