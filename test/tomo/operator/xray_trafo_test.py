@@ -33,7 +33,9 @@ import numpy as np
 projectors = []
 if tomo.ASTRA_AVAILABLE:
     projectors += ['par2d cpu unifrom',
-                   'cone2d cpu unifrom']
+                   'cone2d cpu unifrom',
+                   'par2d cpu random',
+                   'cone2d cpu random']
 if tomo.ASTRA_CUDA_AVAILABLE:
     projectors += ['par2d cuda unifrom',
                    'cone2d cuda unifrom',
@@ -57,8 +59,8 @@ def projector(request):
         agrid = odl.uniform_sampling(angle_intvl, n_angles)
     elif angle == 'random':
         angle_intvl = odl.Interval(0, 2 * np.pi)
-        minp = (2.0 * np.pi) / n_angles
-        maxp = (2.0 * np.pi) - (2.0 * np.pi) / n_angles
+        minp = 2 * (2.0 * np.pi) / n_angles
+        maxp = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
         points = np.sort(np.random.rand(n_angles)) * (maxp - minp) + minp
 
         agrid = odl.TensorGrid(points, as_midp=True)
