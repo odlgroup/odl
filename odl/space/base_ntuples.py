@@ -347,6 +347,53 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """
         return NtuplesBaseUFuncs(self)
 
+    def show(self, method='scatter', title='', show=False, fig=None, **kwargs):
+        """Display the function graphically.
+
+        Parameters
+        ----------
+        method : `str`, optional
+            1d methods:
+
+            'plot' : graph plot
+
+        title : `str`, optional
+            Set the title of the figure
+
+        show : `bool`, optional
+            If the plot should be showed now or deferred until later.
+
+        fig : ``matplotlib`` figure
+            The figure to show in. Expected to be of same "style", as
+            the figure given by this function. The most common use case
+            is that ``fig`` is the return value from an earlier call to
+            this function.
+
+        kwargs : {'figsize', 'saveto', ...}
+            Extra keyword arguments passed on to display method
+            See the Matplotlib functions for documentation of extra
+            options.
+
+        Returns
+        -------
+        fig : ``matplotlib`` figure
+            The resulting figure. It is also shown to the user.
+
+        See Also
+        --------
+        matplotlib.pyplot.plot : Show graph plot
+
+        matplotlib.pyplot.imshow : Show data as image
+
+        matplotlib.pyplot.scatter : Show scattered 3d points
+        """
+        from odl.util.graphics import show_discrete_data
+        from odl.discr import RegularGrid
+        grid = RegularGrid(0, self.size - 1, self.size)
+        return show_discrete_data(self.asarray(), grid, method=method,
+                                  title=title, show=show, fig=fig, **kwargs)
+
+
 
 class FnBase(NtuplesBase, LinearSpace):
 
