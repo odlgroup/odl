@@ -61,7 +61,7 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
     niter : `int`, optional
         Number of iterations
     line_search : float or `LineSearch`, optional
-        Strategy to choose the step length, if a float is given. Uses it as a
+        Strategy to choose the step length. If a float is given, uses it as a
         fixed step length.
     projection : `callable`, optional
         Function that can be used to modify the iterates in each iteration,
