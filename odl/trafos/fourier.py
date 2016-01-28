@@ -25,18 +25,18 @@ from builtins import range, super
 
 # External
 from math import pi
+from multiprocessing import cpu_count
 import numpy as np
-import platform
 try:
     import pyfftw
     PYFFTW_AVAILABLE = True
 except ImportError:
-    pyfftw = None
     PYFFTW_AVAILABLE = False
 
 # Internal
 from odl.discr.grid import RegularGrid
-from odl.discr.lp_discr import DiscreteLp, dspace_type
+from odl.discr.lp_discr import (
+    DiscreteLp, dspace_type, conj_exponent, uniform_discr)
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.ntuples import Ntuples
@@ -49,11 +49,8 @@ __all__ = ('FourierTransform', 'InverseFourierTransform',
            'PYFFTW_AVAILABLE')
 
 
-_TYPE_MAP_R2C = {np.dtype('float32'): np.dtype('complex64'),
-                 np.dtype('float64'): np.dtype('complex128')}
-
-if platform.system() == 'Linux':
-    _TYPE_MAP_R2C[np.dtype('float128')] = np.dtype('complex256')
+_TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
+                 for dtype in np.sctypes['float']}
 
 
 def _shift_list(shift, length):
@@ -425,7 +422,7 @@ def _pyfftw_destroys_input(flags, direction, halfcomplex, ndim):
         return False
 
 
-def _pyfftw_check_in_out(arr_in, arr_out, axes, halfcomplex, direction):
+def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
     """Raise an error if anything is not ok with in and out."""
     if len(set(axes)) != len(axes):
         raise ValueError('Duplicate axes are not allowed.')
@@ -516,18 +513,20 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         Limit planning time to roughly this amount of seconds.
         Default: `None` (no limit)
     threads : `int`, optional
-        Number of threads to use. Default: 1
+        Number of threads to use.
+        Default: Number of CPUs if the number of data points is larger
+        than 1000, else 1.
     normalise_idft : `bool`, optional
         If `True`, the backward transform is normalized by
         ``1 / N``, where ``N`` is the total number of points in
         ``array_in[axes]``. This ensures that the IDFT is the true
         inverse of the forward DFT.
         Default: `False`
-    import_wisdom : `str`, optional
-        File name to load FFTW wisdom from. If the file does not exist,
+    import_wisdom : filename or file handle, optional
+        File to load FFTW wisdom from. If the file does not exist,
         it is ignored.
-    export_wisdom : `str`, optional
-        File name to append the accumulated FFTW wisdom to
+    export_wisdom : filename or file handle, optional
+        File to append the accumulated FFTW wisdom to
 
     Returns
     -------
@@ -576,7 +575,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     planning_effort = _pyfftw_to_local(kwargs.pop('planning_effort',
                                                   'estimate'))
     planning_timelimit = kwargs.pop('planning_timelimit', None)
-    threads = kwargs.pop('threads', 1)
+    threads = kwargs.pop('threads', None)
     normalise_idft = kwargs.pop('normalise_idft', False)
     wimport = kwargs.pop('import_wisdom', '')
     wexport = kwargs.pop('export_wisdom', '')
@@ -588,18 +587,21 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         array_in = array_in.astype(_TYPE_MAP_R2C[array_in.dtype])
         array_in_copied = True
 
-    # Do consistency checks on the arrays
-    _pyfftw_check_in_out(array_in, array_out, axes, halfcomplex, direction)
+    # Do consistency checks on the arguments
+    _pyfftw_check_args(array_in, array_out, axes, halfcomplex, direction)
 
     # Import wisdom if possible
     if wimport:
         try:
             with open(wimport, 'rb') as wfile:
                 wisdom = pickle.load(wfile)
-            if wisdom:
-                pyfftw.import_wisdom(wisdom)
         except IOError:
-            pass
+            wisdom = []
+        except TypeError:  # Got file handle
+            wisdom = pickle.load(wimport)
+
+        if wisdom:
+            pyfftw.import_wisdom(wisdom)
 
     # Copy input array if it hasn't been done yet and the planner is likely
     # to destroy it. If we already have a plan, we don't have to worry.
@@ -615,6 +617,12 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         flags = [_local_to_pyfftw(planning_effort)]
 
     if fftw_plan is None:
+        if threads is None:
+            if plan_arr_in.size < 1000:
+                threads = 1
+            else:
+                threads = cpu_count()
+
         fft_plan = pyfftw.FFTW(
             plan_arr_in, array_out, direction=_local_to_pyfftw(direction),
             flags=flags, planning_timelimit=planning_timelimit,
@@ -623,8 +631,11 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     fft_plan(array_in, array_out, normalise_idft=normalise_idft)
 
     if wexport:
-        with open(wexport, 'ab') as wfile:
-            pickle.dump(pyfftw.export_wisdom(), wfile)
+        try:
+            with open(wexport, 'ab') as wfile:
+                pickle.dump(pyfftw.export_wisdom(), wfile)
+        except TypeError:  # Got file handle
+            pickle.dump(pyfftw.export_wisdom(), wexport)
 
     return fftw_plan
 
@@ -903,7 +914,7 @@ class FourierTransform(Operator):
         else:
             ran_dtype = dom.dtype
 
-        conj_exp = dom.conj_exponent
+        conj_exp = conj_exponent(dom.exponent)
         ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
                                       dtype=ran_dtype)
         ran_dspace = ran_dspace_type(recip_grid.size, dtype=ran_dtype,
@@ -957,7 +968,6 @@ class FourierTransform(Operator):
         threads : `int`, optional
             Number of threads to use. Default: 1
         """
-        # TODO: Implement version using Numpy FFT
         # TODO: Implement zero padding
 
         # We pop some kwargs options here so that we always use the ones
