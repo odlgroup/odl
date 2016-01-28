@@ -24,15 +24,13 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-from numbers import Integral
 import numpy as np
 
 # ODL
 from odl.util.utility import is_real_dtype
 
 
-__all__ = ('show_discrete_data', 'show_discrete_function')
-
+__all__ = ('show_discrete_data',)
 
 
 def show_discrete_data(values, grid, method='', title=None,
@@ -49,6 +47,9 @@ def show_discrete_data(values, grid, method='', title=None,
         1d methods:
 
         'plot' : graph plot
+
+        'scatter' : scattered 2d points
+        (2nd axis <-> value)
 
         2d methods:
 
@@ -311,75 +312,3 @@ def show_discrete_data(values, grid, method='', title=None,
         fig.savefig(saveto)
 
     return fig
-
-
-def show_discrete_function(dfunc, indices=None, **kwargs):
-    """Display a discrete 1d or 2d function.
-
-    Parameters
-    ----------
-    dfunc : `DiscreteLpVector`
-        The discretized funciton to visualize.
-
-    indices : index expression, optional
-        Display a slice of the array instead of the full array. The
-        index expression is most easily created with the `numpy.s_`
-        constructor, i.e. supply ``np.s_[:, 1, :]`` to display the
-        first slice along the second axis.
-
-        For data with 3 or more dimensions, the 2d slice in the first
-        two axes at the "middle" along the remaining axes is shown
-        (semantically ``[:, :, shape[2:] // 2]``).
-
-    kwargs
-        Extra arguments as passed to `show_discrete_data`
-
-    Returns
-    -------
-    fig : ``matplotlib`` figure
-        The resulting figure. It is also shown to the user.
-
-    See Also
-    --------
-    show_discrete_data : Implementation
-    """
-
-    # Default to showing x-y slice "in the middle"
-    if indices is None and dfunc.ndim >= 3:
-        indices = [np.s_[:]] * 2
-        indices += [n // 2 for n in dfunc.space.grid.shape[2:]]
-
-    if isinstance(indices, (Integral, slice)):
-        indices = [indices]
-    elif indices is None or indices == Ellipsis:
-        indices = [np.s_[:]] * dfunc.ndim
-    else:
-        indices = list(indices)
-
-    if Ellipsis in indices:
-        # Replace Ellipsis with the correct number of [:] expressions
-        pos = indices.index(Ellipsis)
-        indices = (indices[:pos] +
-                   [np.s_[:]] * (dfunc.ndim - len(indices) + 1) +
-                   indices[pos + 1:])
-
-    if len(indices) < dfunc.ndim:
-        raise ValueError('too few axes ({} < {}).'.format(len(indices),
-                                                          dfunc.ndim))
-    if len(indices) > dfunc.ndim:
-        raise ValueError('too many axes ({} > {}).'.format(len(indices),
-                                                           dfunc.ndim))
-
-    if dfunc.ndim <= 3:
-        axis_labels = ['x', 'y', 'z']
-    else:
-        axis_labels = ['x{}'.format(axis) for axis in range(dfunc.ndim)]
-    squeezed_axes = [axis for axis in range(dfunc.ndim)
-                     if not isinstance(indices[axis], Integral)]
-    axis_labels = [axis_labels[axis] for axis in squeezed_axes]
-
-    # Squeeze grid and values according to the index expression
-    grid = dfunc.space.grid[indices].squeeze()
-    values = dfunc.asarray()[indices].squeeze()
-
-    return show_discrete_data(values, grid, **kwargs)

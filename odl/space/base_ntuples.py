@@ -357,6 +357,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
             'plot' : graph plot
 
+            'scatter' : point plot
+
         title : `str`, optional
             Set the title of the figure
 
@@ -381,18 +383,13 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
         See Also
         --------
-        matplotlib.pyplot.plot : Show graph plot
-
-        matplotlib.pyplot.imshow : Show data as image
-
-        matplotlib.pyplot.scatter : Show scattered 3d points
+        show_discrete_data : underlying implementation
         """
         from odl.util.graphics import show_discrete_data
         from odl.discr import RegularGrid
         grid = RegularGrid(0, self.size - 1, self.size)
         return show_discrete_data(self.asarray(), grid, method=method,
                                   title=title, show=show, fig=fig, **kwargs)
-
 
 
 class FnBase(NtuplesBase, LinearSpace):
