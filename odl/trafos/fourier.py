@@ -720,13 +720,48 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     return fftw_plan
 
 
+def _recip_space(spc, axes, halfcomplex):
+    """Return the reciprocal space of ``spc`` with unit stride."""
+    # Calculate range
+    # Make a reciprocal grid with stride 1 and min (0, ..., 0)
+    tmp_grid = reciprocal(
+        spc.grid, shift=False, halfcomplex=halfcomplex, axes=axes)
+    recip_grid = RegularGrid([0] * tmp_grid.ndim, tmp_grid.shape,
+                             tmp_grid.shape, as_midp=False)
+    # Always complex space
+    ran_fspace = FunctionSpace(recip_grid.convex_hull(), ComplexNumbers())
+
+    if is_real_dtype(spc.dtype):
+        ran_dtype = _TYPE_MAP_R2C[spc.dtype]
+    else:
+        ran_dtype = spc.dtype
+
+    ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
+                                  dtype=ran_dtype)
+    ran_dspace = ran_dspace_type(recip_grid.size, dtype=ran_dtype,
+                                 exponent=2.0)
+    ran = DiscreteLp(ran_fspace, recip_grid, ran_dspace, exponent=2.0)
+    return ran
+
+
 class PyfftwTransform(Operator):
 
-    """Plain forward or backward DFT as implemented in ``pyfftw``.
+    """Plain forward DFT as implemented in ``pyfftw``.
 
-    This operator calculates the DFT without any shifting
-    or scaling compensation. See the `pyfftw API documentation`_
-    and `What FFTW really computes`_ for further information.
+    This operator calculates the forward DFT
+    ::
+        f_hat[k] = sum_j( f[j] * exp(-2*pi*1j * j*k/N) )
+
+    without any shifting or scaling compensation. See the
+    `pyfftw API documentation`_ and `What FFTW really computes`_
+    for further information.
+
+    The domain and range of this operator are both `DiscreteLp`
+    spaces with exponent 2 and sampling grid stride 1.
+
+    See also
+    --------
+    pyfftw_call : apply an FFTW transform
 
     References
     ----------
@@ -735,75 +770,49 @@ class PyfftwTransform(Operator):
     .. _What FFTW really computes:
        http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
     """
-    def __init__(self, dom, ran=None):
+    def __init__(self, dom_shape, dom_dtype='complex',
+                 axes=(-1,), halfcomplex=False):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `DiscreteLp`
-            Domain of the operator. Its `DiscreteLp.exponent` must be
-            at least 1.0, and its `DiscreteLp.grid` must be a
-            `RegularGrid`.
-        ran : `DiscreteLp`, optional
-            Range of the operator. By default, the range is inferred
-            from the domain and has a grid with minimum point
-            ``(0, ..., 0)``, stride ``(1, ..., 1)`` and the same shape
-            as ``dom``.
+        dom_shape : sequence of positive `int`
+            Number of sampling points per axis. This determines the
+            domain of the operator.
+        dom_dtype : optional
+            Data type of the input arrays
         axes : sequence of `int`, optional
-            Dimensions in which a transform is to be calculated.
-            Default: ``(-1,)``
+            Dimensions in which a transform is to be calculated
         halfcomplex : `bool`, optional
             If `True`, calculate only the negative frequency part
-            along the last axis for real input. If `False`,
-            calculate the full complex FFT.
-            Default: `False`
+            along the last axis in ``axes`` for real input. This
+            reduces the size of the range to ``floor(N[i]/2) + 1`` in
+            this axis ``i``, where ``N`` is the shape of the input
+            arrays.
+            Otherwise, calculate the full complex FFT. If ``dom_dtype``
+            is a complex type, this option has no effect.
         """
-        if not isinstance(dom, DiscreteLp):
-            raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
-                            ''.format(dom))
+        # TODO: add option ran_shape to allow zero-padding
+        if not np.all(np.array(dom_shape) > 0):
+            raise ValueError('invalid entries in dom_shape {}.'
+                             ''.format(dom_shape))
 
-        if not isinstance(dom.dspace, Ntuples):
-            raise TypeError('Only numpy.ndarray data supported by pyfftw. '
-                            'Got data space {!r}.'.format(dom.dspace))
-        if dom.exponent < 1:
-            raise ValueError('domain exponent {} < 1 not allowed.'
-                             ''.format(dom.exponent))
-        if not isinstance(dom.grid, RegularGrid):
-            raise TypeError('irregular grids not supported.')
+        # Domain is a DiscreteLp with stride (1, ..., 1)
+        dom_shape = tuple(dom_shape)
+        dom = uniform_discr([0] * len(dom_shape), dom_shape, dom_shape,
+                            dtype=dom_dtype)
+        self._axes = list(axes)
+        if dom.field == ComplexNumbers():
+            self._halfcomplex = False
+        else:
+            self._halfcomplex = bool(halfcomplex)
 
-        if ran is None:
-            # Calculate range - a complex DiscreteLp with conjugate exponent
-            if dom.exponent == 1.0:
-                conj_exp = float('inf')
-            elif dom.exponent == float('inf'):
-                conj_exp = 1.0
-            else:
-                conj_exp = dom.exponent / (dom.exponent - 1.0)
-
-            # Standard grid with stride 1 and minimum (0, ..., 0)
-            ran_grid = RegularGrid([0] * dom.ndim, np.array(dom.shape) - 1,
-                                   dom.shape, as_midp=False)
-
-            ran_fspace = FunctionSpace(ran_grid.convex_hull(),
-                                       ComplexNumbers())
-
-            if is_real_dtype(dom.dtype):
-                ran_dtype = _TYPE_MAP_R2C[dom.dtype]
-            else:
-                ran_dtype = dom.dtype
-
-            ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
-                                          dtype=ran_dtype)
-            ran_dspace = ran_dspace_type(ran_grid.size, dtype=ran_dtype,
-                                         exponent=conj_exp)
-            ran = DiscreteLp(ran_fspace, ran_grid, ran_dspace,
-                             exponent=conj_exp)
-
+        ran = _recip_space(dom, self.axes, self.halfcomplex)
         super().__init__(dom, ran, linear=True)
         self._fftw_plan = None
 
     def _call(self, x, out=None, **kwargs):
-        """Implementation of ``self(x[, out])``.
+        """Implement ``self(x[, out, **kwargs])``.
 
         Parameters
         ----------
@@ -811,16 +820,10 @@ class PyfftwTransform(Operator):
             Input vector to be transformed
         out : range element, optional
             Output vector storing the result
-        direction : {'FFTW_FORWARD', 'FFTW_BACKWARD'}, optional
-            Direction of the transform
-        normalise_idft : `bool`, optional
-            If `True`, the IDFT (``'FFTW_BACKWARD'``) is normalized by
-            ``1 / N``, where ``N`` is the total number of points in
-            ``x[axes]``. This ensures that the IDFT is the true inverse
-            of the forward DFT.
-            Default: `True`
         flags : sequence of `str`, optional
-            Flags for the transform. See the `pyfftw API documentation`_
+            Flags for the transform. ``'FFTW_UNALIGNED'`` is not
+            supported, and ``'FFTW_DESTROY_INPUT'`` is enabled by
+            default. See the `pyfftw API documentation`_
             for futher information.
             Default: ``('FFTW_MEASURE',)``
         threads : positive `int`, optional
@@ -835,17 +838,202 @@ class PyfftwTransform(Operator):
         out : `DiscreteLpVector`
             Result of the transform. If ``out`` was given, the returned
             object is a reference to it.
+
+        References
+        ----------
+        .. _pyfftw API documentation:
+           http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
         """
         if out is None:
             out = self.range.element()
 
+        kwargs.pop('normalise_idft', None)  # Not used here, filtering out
+        flags = list(_pyfftw_to_local(flag) for flag in
+                     kwargs.pop('flags', ('FFTW_MEASURE',)))
+        try:
+            flags.remove('unaligned')
+        except ValueError:
+            pass
+        try:
+            flags.remove('destroy_input')
+        except ValueError:
+            pass
+        effort = flags[0] if flags else 'measure'
+
         self._fftw_plan = pyfftw_call(
-            x.asarray(), out.asarray(), direction='forward', axes=axes,)
+            x.asarray(), out.asarray(), direction='forward', axes=self.axes,
+            planning_effort=effort, fftw_plan=self._fftw_plan, **kwargs)
 
-
-        # TODO: Implement and update doc
-        # TODO: Handle returned plan, maybe an init flag?
         # TODO: Implement zero padding
+
+    @property
+    def axes(self):
+        """Axes along the FT is calculated by this operator."""
+        return self._axes
+
+    @property
+    def halfcomplex(self):
+        """Return `True` if the last transform axis is halved."""
+        return self._halfcomplex
+
+    @property
+    def adjoint(self):
+        """Adjoint transform, equal to the inverse."""
+        return self.inverse
+
+    @property
+    def inverse(self):
+        """Inverse Fourier transform."""
+        return PyfftwTransformInverse(
+            self.domain.shape, self.domain.dtype,
+            axes=self.axes, halfcomplex=self.halfcomplex)
+
+
+class PyfftwTransformInverse(Operator):
+
+    """Plain backward DFT as implemented in ``pyfftw``.
+
+    This operator calculates the inverse DFT
+    ::
+        f[k] = 1/prod(N) * sum_j( f_hat[j] * exp(2*pi*1j * j*k/N) )
+
+    without any further shifting or scaling compensation. See the
+    `pyfftw API documentation`_ and `What FFTW really computes`_
+    for further information.
+
+    The domain and range of this operator are both `DiscreteLp`
+    spaces with exponent 2 and sampling grid stride 1.
+
+    See also
+    --------
+    pyfftw_call : apply an FFTW transform
+
+    References
+    ----------
+    .. _pyfftw API documentation:
+       http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
+    .. _What FFTW really computes:
+       http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
+    """
+    def __init__(self, ran_shape, ran_dtype='complex', axes=(-1,),
+                 halfcomplex=False):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        ran_shape : sequence of positive `int`
+            Number of sampling points per axis. This determines the
+            domain of the operator.
+        ran_dtype : optional
+            Data type of the output arrays
+        axes : sequence of `int`, optional
+            Dimensions in which a transform is to be calculated
+        halfcomplex : `bool`, optional
+            If `True`, interpret the last axis in ``axes`` as the
+            negative frequency part of the transform of a real signal
+            and calculate a "half-complex-to-real" inverse FFT. In this
+            case, the domain has shape ``floor(N[i]/2) + 1`` in this
+            axis ``i``.
+            Otherwise, domain and range have the same shape. If
+            ``ran_dtype`` is a complex type, this option has no effect.
+        """
+        # TODO: add option dom_shape to allow zero-padding
+        if not np.all(np.array(ran_shape) > 0):
+            raise ValueError('invalid entries in dom_shape {}.'
+                             ''.format(ran_shape))
+
+        # Range is a DiscreteLp with stride (1, ..., 1)
+        ran_shape = tuple(ran_shape)
+        ran = uniform_discr([0] * len(ran_shape), ran_shape, ran_shape,
+                            dtype=ran_dtype)
+        self._axes = list(axes)
+        if ran.field == ComplexNumbers():
+            self._halfcomplex = False
+        else:
+            self._halfcomplex = bool(halfcomplex)
+
+        # self._halfcomplex and self._axes need to be set for this
+        dom = _recip_space(ran, self.axes, self.halfcomplex)
+        super().__init__(dom, ran, linear=True)
+        self._fftw_plan = None
+
+    def _call(self, x, out=None, **kwargs):
+        """Implement ``self(x[, out, **kwargs])``.
+
+        Parameters
+        ----------
+        x : domain element
+            Input vector to be transformed
+        out : range element, optional
+            Output vector storing the result
+        flags : sequence of `str`, optional
+            Flags for the transform. ``'FFTW_UNALIGNED'`` is not
+            supported, and ``'FFTW_DESTROY_INPUT'`` is enabled by
+            default. See the `pyfftw API documentation`_
+            for futher information.
+            Default: ``('FFTW_MEASURE',)``
+        threads : positive `int`, optional
+            Number of threads to use. Default: 1
+        planning_timelimit : `float` or `None`, optional
+            Rough upper limit in seconds for the planning step of the
+            transform. `None` means no limit. See the
+            `pyfftw API documentation`_ for futher information.
+
+        Returns
+        -------
+        out : `DiscreteLpVector`
+            Result of the transform. If ``out`` was given, the returned
+            object is a reference to it.
+
+        References
+        ----------
+        .. _pyfftw API documentation:
+           http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
+        """
+        if out is None:
+            out = self.range.element()
+
+        kwargs.pop('normalise_idft', None)  # Always using True here
+        flags = list(_pyfftw_to_local(flag) for flag in
+                     kwargs.pop('flags', ('FFTW_MEASURE',)))
+        try:
+            flags.remove('unaligned')
+        except ValueError:
+            pass
+        try:
+            flags.remove('destroy_input')
+        except ValueError:
+            pass
+        effort = flags[0] if flags else 'measure'
+
+        self._fftw_plan = pyfftw_call(
+            x.asarray(), out.asarray(), direction='backward', axes=self.axes,
+            planning_effort=effort, normalise_idft=True,
+            fftw_plan=self._fftw_plan, **kwargs)
+
+        # TODO: Implement zero padding
+
+    @property
+    def axes(self):
+        """Axes along the FT is calculated by this operator."""
+        return self._axes
+
+    @property
+    def halfcomplex(self):
+        """Return `True` if the last transform axis is halved."""
+        return self._halfcomplex
+
+    @property
+    def adjoint(self):
+        """Adjoint transform, equal to the inverse."""
+        return self.inverse
+
+    @property
+    def inverse(self):
+        """Inverse Fourier transform."""
+        return PyfftwTransform(
+            self.range.shape, self.range.dtype,
+            axes=self.axes, halfcomplex=self.halfcomplex)
 
 
 class FourierTransform(Operator):
