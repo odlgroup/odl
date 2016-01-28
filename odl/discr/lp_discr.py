@@ -200,16 +200,6 @@ class DiscreteLp(Discretization):
         """The exponent ``p`` in ``L^p``."""
         return self._exponent
 
-    @property
-    def conj_exponent(self):
-        """The conjugate exponent p / (p-1)."""
-        if self.exponent == 1.0:
-            return float('inf')
-        elif self.exponent == float('inf'):
-            return 1.0  # This is not strictly correct in math, but anyway
-        else:
-            return self.exponent / (self.exponent - 1.0)
-
     def element(self, inp=None):
         """Create an element from ``inp`` or from scratch.
 
@@ -232,6 +222,11 @@ class DiscreteLp(Discretization):
             return self.element_type(self, self.dspace.element())
         elif inp in self.dspace:
             return self.element_type(self, inp)
+        elif isinstance(inp, self.element_type):
+            raise TypeError('input {!r} not an element of {}.'
+                            ''.format(inp, self))
+
+        # uspace element -> discretize
         try:
             inp_elem = self.uspace.element(inp)
             return self.element_type(self, self.restriction(inp_elem))
@@ -956,6 +951,30 @@ def _scaling_func_list(bdry_fracs, exponent=1.0):
 
         func_list.append(func_list_entry)
     return func_list
+
+
+def conj_exponent(exp):
+    """The conjugate exponent p / (p-1).
+
+    Parameters
+    ----------
+    exp : positive `float` or inf
+        Exponent for which to calculate the conjugate. Must be
+        at least 1.0.
+
+    Returns
+    -------
+    conj : positive `float` or inf
+        Conjugate exponent. For ``exp=1``, return ``float('inf')``,
+        for ``exp=float('inf')`` return 1. In all other cases, return
+        ``exp / (exp - 1)``.
+    """
+    if exp == 1.0:
+        return float('inf')
+    elif exp == float('inf'):
+        return 1.0  # This is not strictly correct in math, but anyway
+    else:
+        return exp / (exp - 1.0)
 
 
 if __name__ == '__main__':
