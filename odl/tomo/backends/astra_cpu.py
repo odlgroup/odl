@@ -114,10 +114,6 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     # Run algorithm
     astra.algorithm.run(algo_id)
 
-    # Fix scaling issue
-    # 2D CPU does not scale with line integration weight
-    # out *= float(vol_data.space.grid.stride[0])  # isotropic voxel size
-
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
     astra.data2d.delete((vol_id, sino_id))
@@ -197,17 +193,18 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
 
-    # Fix scaling issue
-    # parallel2d and fanflat do scale quadratically with linear voxel size
-    # and linearly with inverse pixel size
-    sf = float(geometry.det_grid.stride[0])
-    sf /= float(reco_space.grid.stride[0]) ** 2
-    # magnification factor
+    # Fix scaling issues
+    # parallel2d & fanflat scale quadratically with voxel stride
+    # and linearly with inverse pixel stride
+    # TODO: check anisotropic pixels
+    scaling_factor = float(geometry.det_grid.stride[0])
+    scaling_factor /= float(reco_space.grid.stride[0]) ** 2
+    # magnification
     if isinstance(geometry, FanFlatGeometry):
         src_radius = geometry.src_radius
         det_radius = geometry.det_radius
-        sf /= ((src_radius + det_radius) / src_radius)
-    out *= sf
+        scaling_factor /= ((src_radius + det_radius) / src_radius)
+    out *= scaling_factor
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)

@@ -34,7 +34,8 @@ from odl.tomo import ASTRA_CUDA_AVAILABLE
 from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
 
-# TODO: increase test coverage and improve tests
+# TODO: improve tests
+# TODO: increase test coverage, see largescale test section
 
 # DiscreteLp volume / reconstruction space
 xx = 5
@@ -103,35 +104,35 @@ def test_xray_trafo_cpu_parallel2d():
     geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
 
     # X-ray transform
-    A = odl.tomo.XrayTransform(discr_vol_space, geom,
-                               backend='astra_cpu')
+    projector = odl.tomo.XrayTransform(discr_vol_space, geom,
+                                       backend='astra_cpu')
 
     # Domain element
-    f = A.domain.one()
+    vol_phantom = projector.domain.one()
 
     # Forward projection
-    Af = A(f)
+    proj_data = projector(vol_phantom)
 
     # Range element
-    g = A.range.one()
+    proj_phantom = projector.range.one()
 
     # Back projection
-    Adg = A.adjoint(g)
+    reco_data = projector.adjoint(proj_phantom)
 
-    inner_proj = Af.inner(g)
-    inner_vol = f.inner(Adg)
+    inner_proj = proj_data.inner(proj_phantom)
+    inner_vol = vol_phantom.inner(reco_data)
     r = inner_vol / inner_proj
 
     # Adjoint matching
     assert almost_equal(inner_vol, inner_proj, precision)
 
     print('\n\nCPU PARALLEL')
-    print('vol stride', A.domain.grid.stride)
-    print('proj stride', A.range.grid.stride)
+    print('vol stride', projector.domain.grid.stride)
+    print('proj stride', projector.range.grid.stride)
     print('forward')
-    print(Af.asarray()[0])
+    print(proj_data.asarray()[0])
     print('backward / angle_stride / num_angle')
-    print(Adg.asarray() / astride / num_angle)
+    print(reco_data.asarray() / astride / num_angle)
     print('<A f,g> =  ', inner_proj, '\n<f,Ad g> = ', inner_vol)
     print('ratio: v/p = {:f}, p/v = {:f}'.format(r, 1 / r))
 
@@ -317,7 +318,7 @@ def test_xray_trafo_cuda_parallel3d():
 
 @pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE")
 def test_xray_trafo_cuda_conebeam_circular():
-    """Cone-beam trafo with circular acquisition and ASTRA CUDA backend."""
+    """Cone-beam trafo with circular acquisition and ASTRA CUDA back-end."""
 
     dparams = dparams_3d
     dgrid = dgrid_3d
@@ -362,7 +363,7 @@ def test_xray_trafo_cuda_conebeam_circular():
 
 @skip_if_no_astra_cuda
 def test_xray_trafo_cuda_conebeam_helical():
-    """Cone-beam trafo with helical acquisition and ASTRA CUDA backend."""
+    """Cone-beam trafo with helical acquisition and ASTRA CUDA back-end."""
 
     dparams = dparams_3d
     dgrid = dgrid_3d

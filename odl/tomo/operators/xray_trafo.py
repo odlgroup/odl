@@ -44,12 +44,14 @@ _SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 __all__ = ('XrayTransform', 'XrayTransformAdjoint',)
 
 
+# TODO: Check scaling with non-isotropic pixel size
 # TODO: Check scaling with magnification
 # TODO: DivergentBeamTransform
+# TODO: rename adjoint trafo
 
 class XrayTransform(Operator):
 
-    """The discrete X-ray transform between :math:`L^p` spaces."""
+    """The discrete X-ray transform between `L^p` spaces."""
 
     def __init__(self, discr_domain, geometry, backend='astra', **kwargs):
         """Initialize a new instance.
@@ -64,14 +66,14 @@ class XrayTransform(Operator):
             the operator range. It needs to have a sampling grid for
             motion and detector parameters.
         backend : {'astra', 'astra_cuda', 'astra_cpu'}, optional
-            Implementation back-end for the transform. Supported backends:
+            Implementation back-end for the transform. Supported back-ends:
             'astra': ASTRA toolbox, uses CPU or CUDA depending on the
             underlying data space of ``discr_dom``
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
             Default: 'astra'
-        kwargs : {'range_interpolation'}
-            'range_interpolation' : {'nearest', 'linear', 'cubic'}
+        kwargs : {'interp'}
+            'interp' : {'nearest', 'linear', 'cubic'}
                 Interpolation type for the discretization of the
                 operator range. Default: 'nearest'
         """
@@ -142,7 +144,7 @@ class XrayTransform(Operator):
             geometry.grid.ntotal, weight=weight,
             dtype=discr_domain.dspace.dtype)
 
-        range_interp = kwargs.pop('range_interpolation', 'nearest')
+        range_interp = kwargs.pop('interp', 'nearest')
         discr_range = DiscreteLp(
             range_uspace, geometry.grid,
             range_dspace,
@@ -153,7 +155,7 @@ class XrayTransform(Operator):
 
     @property
     def backend(self):
-        """Computational backend for this operator."""
+        """Computational back-end for this operator."""
         return self._backend
 
     @property
@@ -232,14 +234,16 @@ class XrayTransformAdjoint(Operator):
         if back == 'astra':
             # angle interval weight
             weight = float(self.forward.geometry.motion_grid.stride)
-            if weight <= 0:
-                weight = 1.0
             if impl == 'cpu':
-                return weight * astra_cpu_backward_projector_call(
-                    x, self.forward.geometry, self.range, out)
+                astra_cpu_backward_projector_call(x, self.forward.geometry,
+                                                  self.range, out)
+                out *= weight
+                return out
             elif impl == 'cuda':
-                return weight * astra_cuda_backward_projector_call(
-                    x, self.forward.geometry, self.range, out)
+                astra_cuda_backward_projector_call(x, self.forward.geometry,
+                                                   self.range, out)
+                out *= weight
+                return out
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
@@ -247,7 +251,7 @@ class XrayTransformAdjoint(Operator):
 
     @property
     def backend(self):
-        """Computational backend for this operator."""
+        """Computational back-end for this operator."""
         return self._backend
 
     @property
