@@ -554,7 +554,8 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
     Parameters
     ----------
     direction : {'forward', 'backward'}
-        Apply the forward projection if 'forward', otherwise the backprojection
+        Apply the forward projection if 'forward', otherwise the back
+        projection
     ndim : {2, 3}
         Number of dimensions of the projector
     vol_id : `int`

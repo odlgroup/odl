@@ -171,7 +171,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
                              ''.format(angle, self.motion_params))
         return euler_matrix(angle)
 
-    # TODO: backprojection weighting function?
+    # TODO: back projection weighting function?
 
     def __repr__(self):
         """Returns ``repr(self)``."""

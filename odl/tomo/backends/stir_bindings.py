@@ -16,7 +16,7 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""Backend for STIR: Software for Tomographic Reconstruction
+"""Back-end for STIR: Software for Tomographic Reconstruction
 
 Back and forward projectors for PET.
 

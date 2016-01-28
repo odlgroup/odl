@@ -216,7 +216,7 @@ class FlatDetector(with_metaclass(ABCMeta, Detector)):
 
 class Flat1dDetector(FlatDetector):
 
-    """A 1d line detector aligned with the y-axis."""
+    """A 1d line detector aligned with the ``detector_axis``."""
 
     def __init__(self, params, detector_axis, grid=None):
         """Initialize a new instance.
@@ -225,6 +225,8 @@ class Flat1dDetector(FlatDetector):
         ----------
         params : `Interval` or 1-dim. `IntervalProd`
             The range of the parameters defining the detector area.
+        detector_axis : 2-element array
+            Unit direction along the detector parameter of the detector.
         grid : 1-dim. `TensorGrid`, optional
             A sampling grid for the parameter interval, in which it must
             be contained
@@ -240,7 +242,7 @@ class Flat1dDetector(FlatDetector):
 
     @property
     def detector_axis(self):
-        """The directions of the principal axes of the detector."""
+        """The direction of the principal axis of the detector."""
         return self._detector_axis
 
     def surface(self, param):
@@ -268,6 +270,7 @@ class Flat1dDetector(FlatDetector):
 
     def surface_deriv(self, param=None):
         """The derivative of the surface parametrization.
+
         Parameters
         ----------
         param : element of `params`, optional
@@ -276,7 +279,7 @@ class Flat1dDetector(FlatDetector):
         Returns
         -------
         derivative : `numpy.ndarray`, shape (2,)
-            The constant derivative (0, 1)
+            The constant derivative
         """
         if param is not None and param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
@@ -286,7 +289,7 @@ class Flat1dDetector(FlatDetector):
 
 class Flat2dDetector(FlatDetector):
 
-    """A 2d flat panel detector aligned with the y-z axes."""
+    """A 2d flat panel detector aligned with the ``detector_axes``."""
 
     def __init__(self, params, detector_axes, grid=None):
         """Initialize a new instance.
@@ -348,12 +351,12 @@ class Flat2dDetector(FlatDetector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : element of `params`, optional
             The parameter value where to evaluate the function
 
         Returns
         -------
-        deriv : 2-tuple of ndarray with shape (3,)
+        derivatives : 2-tuple of ndarray with shape (3,)
             The constant partial derivatives, where each axis "points" in
             space.
         """

@@ -50,9 +50,9 @@ def _discrete_domain(ndim, interp):
     space : `DiscreteLp`
         Returns a `DiscreteLp` instance
     """
-    min_pt = np.arange(-1, -ndim - 1, -1)  # -1, -2 [, -3]
-    max_pt = np.arange(1, ndim + 1, 1)  # 1, 2 [, 3]
-    nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
+    max_pt = np.arange(1, ndim + 1)
+    min_pt = - max_pt
+    nsamples = np.arange(1, ndim + 1) * 10
 
     return odl.uniform_discr(min_pt, max_pt, nsamples=nsamples, interp=interp,
                              dtype='float32')
@@ -75,7 +75,7 @@ def _discrete_domain_anisotropic(ndim, interp):
     """
     min_pt = [-1] * ndim
     max_pt = [1] * ndim
-    nsamples = np.arange(1, ndim + 1, 1) * 10  # 10, 20 [, 30]
+    nsamples = np.arange(1, ndim + 1) * 10
 
     return odl.uniform_discr(min_pt, max_pt, nsamples=nsamples, interp=interp,
                              dtype='float32')
@@ -229,20 +229,17 @@ def test_astra_projection_geometry():
     assert astra_geom['type'] == 'parallel3d_vec'
 
     # Circular conebeam flat
-    geom_ccf = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                                 det_rad,
-                                                 agrid=angle_grid,
-                                                 dgrid=det_grid)
+    geom_ccf = odl.tomo.CircularConeFlatGeometry(
+        angle_intvl, dparams, src_rad, det_rad, agrid=angle_grid,
+        dgrid=det_grid)
     astra_geom = odl.tomo.astra_projection_geometry(geom_ccf)
     assert astra_geom['type'] == 'cone_vec'
 
     # Helical conebeam flat
-    spiral_pitch_factor = 1
-    geom_hcf = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                                det_rad,
-                                                spiral_pitch_factor,
-                                                agrid=angle_grid,
-                                                dgrid=det_grid)
+    pitch = 1
+    geom_hcf = odl.tomo.HelicalConeFlatGeometry(
+        angle_intvl, dparams, src_rad, det_rad, pitch, agrid=angle_grid,
+        dgrid=det_grid)
     astra_geom = odl.tomo.astra_projection_geometry(geom_hcf)
     assert astra_geom['type'] == 'cone_vec'
 
@@ -418,19 +415,17 @@ def test_geom_to_vec():
     # Circular cone flat
     dparams = odl.IntervalProd([-40, -3], [40, 3])
     det_grid = odl.uniform_sampling(dparams, (10, 5))
-    geom_ccf = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                                 det_rad,
-                                                 agrid=angle_grid,
-                                                 dgrid=det_grid)
+    geom_ccf = odl.tomo.CircularConeFlatGeometry(
+        angle_intvl, dparams, src_rad, det_rad, agrid=angle_grid,
+        dgrid=det_grid)
     vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_ccf)
     assert vec.shape == (angle_grid.size, 12)
 
     # Helical cone flat
     pitch = 1
-    geom_hcf = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                                det_rad, pitch,
-                                                agrid=angle_grid,
-                                                dgrid=det_grid)
+    geom_hcf = odl.tomo.HelicalConeFlatGeometry(
+        angle_intvl, dparams, src_rad, det_rad, pitch, agrid=angle_grid,
+        dgrid=det_grid)
     vec = odl.tomo.astra_conebeam_3d_geom_to_vec(geom_hcf)
     assert vec.shape == (angle_grid.size, 12)
 
