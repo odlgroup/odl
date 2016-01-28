@@ -223,6 +223,7 @@ def show_discrete_data(values, grid, method='', title=None,
             plt.colorbar(csub_re, orientation='horizontal',
                          ticks=ticks_re, format='%.4g')
 
+        print(len(fig.axes))
         # Imaginary
         if len(fig.axes) < 3:
             sub_im = plt.subplot(arrange_subplots[1], **sub_kwargs)
@@ -233,7 +234,7 @@ def show_discrete_data(values, grid, method='', title=None,
             else:
                 sub_im.set_ylabel('value')
         else:
-            sub_im = fig.axes[1]
+            sub_im = fig.axes[2]
 
         display_im = getattr(sub_im, method)
         csub_im = display_im(*args_im, **dsp_kwargs)
@@ -291,7 +292,9 @@ def show_discrete_data(values, grid, method='', title=None,
     fig.tight_layout()
 
     if title is not None:
-        plt.title(title)
+        if not values_are_complex:
+            # Do not overwrite title for complex values
+            plt.title(title)
         fig.canvas.manager.set_window_title(title)
 
     if show:
@@ -310,31 +313,13 @@ def show_discrete_data(values, grid, method='', title=None,
     return fig
 
 
-def show_discrete_function(dfunc, method='', title=None, indices=None,
-                           show=False, fig=None, **kwargs):
+def show_discrete_function(dfunc, indices=None, **kwargs):
     """Display a discrete 1d or 2d function.
 
     Parameters
     ----------
     dfunc : `DiscreteLpVector`
         The discretized funciton to visualize.
-    method : `str`, optional
-        1d methods:
-
-        'plot' : graph plot
-
-        2d methods:
-
-        'imshow' : image plot with coloring according to value,
-        including a colorbar.
-
-        'scatter' : cloud of scattered 3d points
-        (3rd axis <-> value)
-
-        'wireframe', 'plot_wireframe' : surface plot
-
-    title : `str`, optional
-        Set the title of the figure
 
     indices : index expression, optional
         Display a slice of the array instead of the full array. The
@@ -346,33 +331,17 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         two axes at the "middle" along the remaining axes is shown
         (semantically ``[:, :, shape[2:] // 2]``).
 
-    show : `bool`, optional
-        If the plot should be showed now or deferred until later
-
-    fig : ``matplotlib`` figure
-        The figure to show in. Expected to be of same "style", as the figure
-        given by this function. The most common usecase is that fig is the
-        return value from an earlier call to this function.
-
-    kwargs : {'figsize', 'saveto', ...}
-        Extra keyword arguments passed on to display method
-        See the Matplotlib functions for documentation of extra
-        options.
+    kwargs
+        Extra arguments as passed to `show_discrete_data`
 
     Returns
     -------
     fig : ``matplotlib`` figure
         The resulting figure. It is also shown to the user.
-    colorbar : ``matplotlib`` colorbar
-        The colorbar
 
     See Also
     --------
-    matplotlib.pyplot.plot : Show graph plot
-
-    matplotlib.pyplot.imshow : Show data as image
-
-    matplotlib.pyplot.scatter : Show scattered 3d points
+    show_discrete_data : Implementation
     """
 
     # Default to showing x-y slice "in the middle"
@@ -413,6 +382,4 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     grid = dfunc.space.grid[indices].squeeze()
     values = dfunc.asarray()[indices].squeeze()
 
-    return show_discrete_data(values, grid, method=method, title=title,
-                              show=show, fig=fig, interp=dfunc.space.interp,
-                              **kwargs)
+    return show_discrete_data(values, grid, **kwargs)
