@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -82,7 +82,7 @@ def _default_call_in_place(op, x, out, **kwargs):
     -------
     `None`
     """
-    out.assign(op._call_out_of_place(x, **kwargs))
+    out.assign(op.range.element(op._call_out_of_place(x, **kwargs)))
 
 
 def _signature_from_spec(func):
@@ -678,7 +678,7 @@ class Operator(object):
             except (TypeError, ValueError) as err:
                 raise_from(OpDomainError(
                     'unable to cast {!r} to an element of '
-                    'the domain {}.'.format(x, self.domain)), err)
+                    'the domain {!r}.'.format(x, self.domain)), err)
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
@@ -701,7 +701,7 @@ class Operator(object):
                 except (TypeError, ValueError) as err:
                     new_exc = OpRangeError(
                         'unable to cast {!r} to an element of '
-                        'the range {}.'.format(out, self.range))
+                        'the range {!r}.'.format(out, self.range))
                     raise_from(new_exc, err)
         return out
 

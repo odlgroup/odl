@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -37,5 +37,6 @@ plt.ylim(-m, m)
 # Reuse the figure indefinitely
 for i in range(m):
     fig = (vec * i).show(fig=fig)
+    plt.pause(0.1)
 
 plt.show()

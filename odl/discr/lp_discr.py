@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -20,6 +20,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import super, str
 
@@ -32,12 +33,10 @@ from odl.discr.discretization import (
 from odl.discr.discr_mappings import (
     GridCollocation, NearestInterpolation, LinearInterpolation)
 from odl.discr.grid import uniform_sampling, RegularGrid
-from odl.set.sets import Field, RealNumbers
-from odl.set.domain import IntervalProd
-from odl.space.ntuples import Fn
-from odl.space.fspace import FunctionSpace
-from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
+from odl.set import RealNumbers, ComplexNumbers, IntervalProd
+from odl.space import Fn, FunctionSpace, CudaFn, CUDA_AVAILABLE
 from odl.util.ufuncs import DiscreteLpUFuncs
+from odl.util.utility import is_real_dtype, dtype_repr
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr', 'uniform_discr_fromspace')
@@ -146,14 +145,22 @@ class DiscreteLp(Discretization):
             pass
 
         # Sequence-type input
-        arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-        if arr.ndim > 1 and arr.shape != self.shape:
-            arr = np.squeeze(arr)  # Squeeze could solve the problem
-            if arr.shape != self.shape:
-                raise ValueError('input shape {} does not match grid shape {}'
-                                 ''.format(arr.shape, self.shape))
-        arr = arr.ravel(order=self.order)
-        return self.element_type(self, self.dspace.element(arr))
+        try:
+            arr = np.asarray(inp, dtype=self.dtype, order=self.order)
+            if arr.ndim > 1 and arr.shape != self.shape:
+                arr = np.squeeze(arr)  # Squeeze could solve the problem
+                if arr.shape != self.shape:
+                    raise ValueError(
+                        'input shape {} does not match grid shape {}.'
+                        ''.format(arr.shape, self.shape))
+            arr = arr.ravel(order=self.order)
+            return self.element_type(self, self.dspace.element(arr))
+        except TypeError as err:
+            if str(err.args[0]).startswith('output contains points outside'):
+                raise err
+            else:
+                raise_from(TypeError('unable to create an element of {} from '
+                                     '{!r}.'.format(self, inp)), err)
 
     @property
     def grid(self):
@@ -179,7 +186,7 @@ class DiscreteLp(Discretization):
                                       'instead.')
         csize = self.grid.stride
         idcs = np.where(csize == 0)
-        csize[idcs] = self.domain.size[idcs]
+        csize[idcs] = self.domain.extent[idcs]
         return csize
 
     @property
@@ -208,15 +215,17 @@ class DiscreteLp(Discretization):
                              as_midp=True) == self.grid):
             if isinstance(self.dspace, Fn):
                 impl = 'numpy'
+                default_dtype = np.float64
             elif isinstance(self.dspace, CudaFn):
                 impl = 'cuda'
+                default_dtype = np.float32
             else:  # This should never happen
                 raise RuntimeError('unable to determine data space impl.')
             arg_fstr = '{}, {}, {}'
             if self.exponent != 2.0:
                 arg_fstr += ', exponent={exponent}'
-            if not isinstance(self.field, RealNumbers):
-                arg_fstr += ', field={field!r}'
+            if self.dtype != default_dtype:
+                arg_fstr += ', dtype={dtype}'
             if self.interp != 'nearest':
                 arg_fstr += ', interp={interp!r}'
             if impl != 'numpy':
@@ -236,7 +245,7 @@ class DiscreteLp(Discretization):
             arg_str = arg_fstr.format(
                 min_str, max_str, shape_str,
                 exponent=self.exponent,
-                field=self.field,
+                dtype=dtype_repr(self.dtype),
                 interp=self.interp,
                 impl=impl,
                 order=self.order)
@@ -288,12 +297,12 @@ class DiscreteLpVector(DiscretizationVector):
                                              order=self.space.order)
         else:
             if out.shape not in (self.space.grid.shape,
-                                 (self.space.grid.ntotal,)):
+                                 (self.space.grid.size,)):
                 raise ValueError('output array has shape {}, expected '
                                  '{} or ({},).'
                                  ''.format(out.shape,
                                            self.space.grid.shape,
-                                           self.space.grid.ntotal))
+                                           self.space.grid.size))
             out_r = out.reshape(self.space.grid.shape,
                                 order=self.space.order)
             if out_r.flags.c_contiguous:
@@ -331,6 +340,11 @@ class DiscreteLpVector(DiscretizationVector):
     def cell_volume(self):
         """Cell volume of an underlying regular grid."""
         return self.space.cell_volume
+
+    @property
+    def order(self):
+        """Axis ordering for array flattening."""
+        return self.space.order
 
     def __setitem__(self, indices, values):
         """Set values of this vector.
@@ -548,17 +562,17 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     if weighting_ == 'simple':
         csize = grid.stride
         idcs = np.where(csize == 0)
-        csize[idcs] = fspace.domain.size[idcs]
+        csize[idcs] = fspace.domain.extent[idcs]
         weight = np.prod(csize)
     else:  # weighting_ == 'consistent'
         # TODO: implement
         raise NotImplementedError
 
     if dtype is not None:
-        dspace = ds_type(grid.ntotal, dtype=dtype, weight=weight,
+        dspace = ds_type(grid.size, dtype=dtype, weight=weight,
                          exponent=exponent)
     else:
-        dspace = ds_type(grid.ntotal, weight=weight, exponent=exponent)
+        dspace = ds_type(grid.size, weight=weight, exponent=exponent)
 
     order = kwargs.pop('order', 'C')
 
@@ -567,8 +581,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
 
 def uniform_discr(min_corner, max_corner, nsamples,
-                  exponent=2.0, field=RealNumbers(),
-                  interp='nearest', impl='numpy', **kwargs):
+                  exponent=2.0, interp='nearest', impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
     Parameters
@@ -583,8 +596,6 @@ def uniform_discr(min_corner, max_corner, nsamples,
     exponent : positive `float`, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    field : `Field`, optional
-        The field of the `FunctionSpace`, default `RealNumbers`.
     interp : `str`, optional
             Interpolation type to be used for discretization.
 
@@ -620,18 +631,22 @@ def uniform_discr(min_corner, max_corner, nsamples,
     >>> uniform_discr([0, 0], [1, 1], [10, 10])
     uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10])
 
-    >>> from odl import ComplexNumbers
-    >>> uniform_discr([0, 0], [1, 1], [10, 10], field=ComplexNumbers())
-    uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10], field=ComplexNumbers())
+    Can create complex space by giving a dtype
+
+    >>> uniform_discr([0, 0], [1, 1], [10, 10], dtype='complex')
+    uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10], dtype='complex')
 
     See also
     --------
     uniform_discr_fromspace : uniform discretization from an existing
         function space
     """
-    if not isinstance(field, Field):
-        raise TypeError('field {} not a Field instance'
-                        ''.format(field))
+    # Select field by dtype
+    dtype = kwargs.get('dtype', None)
+    if dtype is None or is_real_dtype(dtype):
+        field = RealNumbers()
+    else:
+        field = ComplexNumbers()
 
     fspace = FunctionSpace(IntervalProd(min_corner, max_corner), field)
 

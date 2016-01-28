@@ -130,7 +130,11 @@ class XrayTransform(Operator):
         # TODO: maybe use a ProductSpace structure
         range_uspace = FunctionSpace(geometry.params)
 
-        weight = getattr(geometry.grid, 'cell_volume', 1.0)
+        # Approximate cell volume
+        extent = float(geometry.grid.extent().prod())
+        size = float(geometry.grid.size)
+        weight = extent / size
+
         if isinstance(geometry, HelicalConeFlatGeometry):
             src_radius = geometry.src_radius
             det_radius = geometry.det_radius
@@ -141,7 +145,7 @@ class XrayTransform(Operator):
             weight /= ((src_radius + det_radius) / src_radius)
 
         range_dspace = discr_domain.dspace_type(
-            geometry.grid.ntotal, weight=weight,
+            geometry.grid.size, weight=weight,
             dtype=discr_domain.dspace.dtype)
 
         range_interp = kwargs.pop('interp', 'nearest')
@@ -232,8 +236,11 @@ class XrayTransformAdjoint(Operator):
         """
         back, impl = self.backend.split('_')
         if back == 'astra':
-            # angle interval weight
-            weight = float(self.forward.geometry.motion_grid.stride)
+            # angle interval weight by approximate cell volume
+            extent = float(self.forward.geometry.motion_grid.extent())
+            size = float(self.forward.geometry.motion_grid.size)
+            weight = extent / size
+
             if impl == 'cpu':
                 # TODO: optimize scaling
                 result = astra_cpu_backward_projector_call(

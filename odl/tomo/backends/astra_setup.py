@@ -186,7 +186,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
     """
 
     angles = geometry.motion_grid
-    vectors = np.zeros((angles.ntotal, 12))
+    vectors = np.zeros((angles.size, 12))
 
     for ang_idx, angle in enumerate(angles.points()):
         rot_matrix = geometry.rotation_matrix(angle)
@@ -241,7 +241,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
     """
 
     angles = geometry.motion_grid
-    vectors = np.zeros((angles.ntotal, 6))
+    vectors = np.zeros((angles.size, 6))
 
     for ang_idx, angle in enumerate(angles.points()):
         rot_matrix = geometry.rotation_matrix(angle)
@@ -296,7 +296,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
     """
 
     angles = geometry.motion_grid
-    vectors = np.zeros((angles.ntotal, 12))
+    vectors = np.zeros((angles.size, 12))
 
     for ang_idx, angle in enumerate(angles.points()):
         rot_matrix = geometry.rotation_matrix(angle)

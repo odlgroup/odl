@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -117,4 +117,4 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
         x += step_length * search_direction
 
         if partial is not None:
-            partial.send(x)
+            partial(x)

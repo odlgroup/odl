@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -483,7 +483,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
         See also
         --------
-        NtuplesBaseUFuncs
+        odl.util.ufuncs.NtuplesBaseUFuncs
             Base class for ufuncs in `NtuplesBase` spaces.
         """
         return CudaNtuplesUFuncs(self)

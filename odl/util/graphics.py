@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -63,7 +63,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     indices : index expression, optional
         Display a slice of the array instead of the full array. The
         index expression is most easily created with the `numpy.s_`
-        constructur, i.e. supply ``np.s_[:, 1, :]`` to display the
+        constructor, i.e. supply ``np.s_[:, 1, :]`` to display the
         first slice along the second axis.
 
         For data with 3 or more dimensions, the 2d slice in the first
@@ -228,6 +228,11 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         plt.figure(fig.number)
         updatefig = True
 
+        if values.ndim > 1:
+            # If the figure is larger than 1d, we can clear it since we
+            # dont reuse anything.
+            fig.clf()
+
     if dfunc_is_complex:
         # Real
         if len(fig.axes) == 0:
@@ -245,7 +250,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         display_re = getattr(sub_re, method)
         csub_re = display_re(*args_re, **dsp_kwargs)
 
-        if method == 'imshow' and len(fig.axes < 2):
+        if method == 'imshow' and len(fig.axes) < 2:
             # Create colorbar if none seems to exist
             minval_re = np.min(values.real)
             maxval_re = np.max(values.real)
@@ -262,14 +267,14 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             if values.ndim == 2:
                 sub_im.set_ylabel(axis_labels[1])
             else:
-                sub_re.set_ylabel('value')
+                sub_im.set_ylabel('value')
         else:
-            sub_re = fig.axes[1]
+            sub_im = fig.axes[1]
 
         display_im = getattr(sub_im, method)
         csub_im = display_im(*args_im, **dsp_kwargs)
 
-        if method == 'imshow' and len(fig.axes < 4):
+        if method == 'imshow' and len(fig.axes) < 4:
             # Create colorbar if none seems to exist
             minval_im = np.min(values.imag)
             maxval_im = np.max(values.imag)
@@ -317,6 +322,10 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
             plt.colorbar(mappable=csub, ticks=ticks, format=format)
 
+    # Fixes overlapping stuff at the expense of potentially squashed
+    # subplots
+    fig.tight_layout()
+
     if title is not None:
         plt.title(title)
         fig.canvas.manager.set_window_title(title)
@@ -327,7 +336,6 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         else:
             plt.show()
 
-    if updatefig:
         plt.draw()
         plt.pause(0.01)
 

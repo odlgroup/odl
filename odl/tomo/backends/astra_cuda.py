@@ -220,7 +220,10 @@ def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
         out *= float(reco_space.cell_volume)
     elif isinstance(geometry, (HelicalConeFlatGeometry, Parallel3dGeometry)):
         # cuda cone and parallel3d scale linearly with linear voxel size
-        out /= float(reco_space.cell_size[0])
+        extent = reco_space.grid.extent()
+        shape = np.array(reco_space.shape, dtype=float)
+        # Subtracting 1 is empirical
+        out /= float(extent[0] / (shape[0] - 1.0))
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)

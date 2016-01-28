@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -108,7 +108,7 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
                 x_update * x_update.T / y_inner_s)
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 def broydens_first_method(grad, x, line_search, niter=1, partial=None):
@@ -189,7 +189,7 @@ def broydens_first_method(grad, x, line_search, niter=1, partial=None):
         hess -= u * v.T
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 def broydens_second_method(grad, x, line_search, niter=1, partial=None):
@@ -262,7 +262,7 @@ def broydens_second_method(grad, x, line_search, niter=1, partial=None):
         hess -= u * grad_diff.T
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 if __name__ == '__main__':

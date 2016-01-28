@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -33,50 +33,134 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr')
 
 
-def array1d_repr(array):
-    """Stringification of a 1D array, keeping byte / unicode."""
-    if len(array) < 7:
+def _indent_rows(string, indent=4):
+    out_string = '\n'.join((' ' * indent) + row for row in string.split('\n'))
+    return out_string
+
+
+def array1d_repr(array, nprint=6):
+    """Stringification of a 1D array, keeping byte / unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print
+    """
+    assert int(nprint) > 0
+
+    if len(array) <= nprint:
         return repr(list(array))
     else:
-        return (repr(list(array[:3])).rstrip(']') + ', ..., ' +
-                repr(list(array[-3:])).lstrip('['))
+        return (repr(list(array[:nprint // 2])).rstrip(']') + ', ..., ' +
+                repr(list(array[-(nprint // 2):])).lstrip('['))
 
 
-def array1d_str(array):
-    """Stringification of a 1D array, regardless of byte or unicode."""
-    if len(array) < 7:
+def array1d_str(array, nprint=6):
+    """Stringification of a 1D array, regardless of byte or unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print
+    """
+    assert int(nprint) > 0
+
+    if len(array) <= nprint:
         inner_str = ', '.join(str(a) for a in array)
         return '[{}]'.format(inner_str)
     else:
-        left_str = ', '.join(str(a) for a in array[:3])
-        right_str = ', '.join(str(a) for a in array[-3:])
+        left_str = ', '.join(str(a) for a in array[:nprint // 2])
+        right_str = ', '.join(str(a) for a in array[-(nprint // 2):])
         return '[{}, ..., {}]'.format(left_str, right_str)
 
 
-def arraynd_repr(array):
-    """Stringification of an nD array, keeping byte / unicode."""
+def arraynd_repr(array, nprint=None):
+    """Stringification of an nD array, keeping byte / unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print.
+        Default: 6 if array.ndim <= 2, else 2
+
+    Examples
+    --------
+    >>> print(arraynd_repr([[1, 2, 3], [4, 5, 6]]))
+    [[1, 2, 3],
+     [4, 5, 6]]
+    >>> print(arraynd_repr([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
+    [[1, 2, 3],
+     [4, 5, 6],
+     [7, 8, 9]]
+    """
+    array = np.asarray(array)
+    if nprint is None:
+        nprint = 6 if array.ndim <= 2 else 2
+    else:
+        assert nprint > 0
+
     if array.ndim > 1:
-        if len(array) < 7:
+        if len(array) <= nprint:
             inner_str = ',\n '.join(arraynd_repr(a) for a in array)
-            return '[\n{}\n]'.format(inner_str)
+            return '[{}]'.format(inner_str)
         else:
-            left_str = ',\n '.join(arraynd_repr(a) for a in array[:3])
-            right_str = ',\n '.join(arraynd_repr(a) for a in array[-3:])
-            return '[\n{},\n ...,\n{}\n]'.format(left_str, right_str)
+            left_str = ',\n '.join(arraynd_repr(a) for a in
+                                   array[:nprint // 2])
+            right_str = ',\n '.join(arraynd_repr(a) for a in
+                                    array[-(nprint // 2):])
+            return '[{},\n ...,\n {}]'.format(left_str, right_str)
     else:
         return array1d_repr(array)
 
 
-def arraynd_str(array):
-    """Stringification of a nD array, regardless of byte or unicode."""
+def arraynd_str(array, nprint=None):
+    """Stringification of a nD array, regardless of byte or unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print.
+        Default: 6 if array.ndim <= 2, else 2
+
+    Examples
+    --------
+    >>> print(arraynd_str([[1, 2, 3], [4, 5, 6]]))
+    [
+        [1, 2, 3],
+        [4, 5, 6]
+    ]
+    >>> print(arraynd_str([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
+    [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ]
+    """
+    array = np.asarray(array)
+    if nprint is None:
+        nprint = 6 if array.ndim <= 2 else 2
+    else:
+        assert nprint > 0
+
     if array.ndim > 1:
-        if len(array) < 7:
-            inner_str = ',\n '.join(arraynd_str(a) for a in array)
-            return '[{}]'.format(inner_str)
+        if len(array) <= nprint:
+            inner_str = ',\n'.join(arraynd_str(a) for a in array)
+            return '[\n{}\n]'.format(_indent_rows(inner_str))
         else:
-            left_str = ',\n '.join(arraynd_str(a) for a in array[:3])
-            right_str = ',\n '.join(arraynd_str(a) for a in array[-3:])
-            return '[{},\n ...,\n{}]'.format(left_str, right_str)
+            left_str = ',\n'.join(arraynd_str(a) for a in
+                                  array[:nprint // 2])
+            right_str = ',\n'.join(arraynd_str(a) for a in
+                                   array[- (nprint // 2):])
+            return '[\n{},\n    ...,\n{}\n]'.format(_indent_rows(left_str),
+                                                    _indent_rows(right_str))
     else:
         return array1d_str(array)
 
@@ -87,6 +171,8 @@ def dtype_repr(dtype):
         return "'int'"
     elif dtype == np.dtype(float):
         return "'float'"
+    elif dtype == np.dtype(complex):
+        return "'complex'"
     else:
         return "'{}'".format(dtype)
 

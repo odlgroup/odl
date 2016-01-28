@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -121,7 +121,7 @@ class TensorGrid(Set):
         2
         >>> g.shape  # points per axis
         (3, 3)
-        >>> g.ntotal  # total number of points
+        >>> g.size  # total number of points
         9
 
         Grid points can be extracted with index notation (NOTE: This is
@@ -201,7 +201,7 @@ class TensorGrid(Set):
         return tuple(len(vec) for vec in self.coord_vectors)
 
     @property
-    def ntotal(self):
+    def size(self):
         """The total number of grid points."""
         return np.prod(self.shape)
 
@@ -289,8 +289,8 @@ class TensorGrid(Set):
 
     # Methods
 
-    def size(self):
-        """Return a vector containing the total sizes."""
+    def extent(self):
+        """Return a vector containing the total grid extent."""
         return self.max() - self.min()
 
     def element(self):
@@ -417,7 +417,7 @@ class TensorGrid(Set):
 
         return True
 
-    def insert(self, other, index):
+    def insert(self, index, other):
         """Insert another grid before the given index.
 
         The given grid (``m`` dimensions) is inserted into the current
@@ -443,8 +443,12 @@ class TensorGrid(Set):
         --------
         >>> g1 = TensorGrid([0, 1], [-1, 2])
         >>> g2 = TensorGrid([1], [-6, 15])
-        >>> g1.insert(g2, 1)
+        >>> g1.insert(1, g2)
         TensorGrid([0.0, 1.0], [1.0], [-6.0, 15.0], [-1.0, 2.0])
+
+        See Also
+        --------
+        append
         """
         if index not in Integers():
             raise TypeError('{!r} is not an integer.'.format(index))
@@ -458,6 +462,28 @@ class TensorGrid(Set):
         new_vecs = (self.coord_vectors[:index] + other.coord_vectors +
                     self.coord_vectors[index:])
         return TensorGrid(*new_vecs)
+
+    def append(self, other):
+        """Insert at the end.
+
+        Parameters
+        ----------
+        other : `IntervalProd`, `float` or array-like
+            The set to be inserted. A `float` or array a is
+            treated as an ``IntervalProd(a, a)``.
+
+        Examples
+        --------
+        >>> g1 = TensorGrid([0, 1], [-1, 2])
+        >>> g2 = TensorGrid([1], [-6, 15])
+        >>> g1.append(g2)
+        TensorGrid([0.0, 1.0], [-1.0, 2.0], [1.0], [-6.0, 15.0])
+
+        See Also
+        --------
+        insert
+        """
+        return self.insert(self.ndim, other)
 
     def squeeze(self):
         """Remove the degenerate dimensions.
@@ -489,8 +515,8 @@ class TensorGrid(Set):
         Returns
         -------
         points : `numpy.ndarray`
-            The size of the array is ntotal x ndim, i.e. the points are
-            stored as rows.
+            The shape of the array is ``size x ndim``, i.e. the points
+            are stored as rows.
 
         Examples
         --------
@@ -517,7 +543,7 @@ class TensorGrid(Set):
 
         axes = range(self.ndim) if order == 'C' else reversed(range(self.ndim))
         shape = self.shape if order == 'C' else tuple(reversed(self.shape))
-        point_arr = np.empty((self.ntotal, self.ndim))
+        point_arr = np.empty((self.size, self.ndim))
 
         for i, axis in enumerate(axes):
             view = point_arr[:, axis].reshape(shape)
@@ -804,7 +830,7 @@ class RegularGrid(TensorGrid):
         RegularGrid([-1.5, -1.0], [-0.5, 3.0], [2, 3])
         >>> rg.coord_vectors
         (array([-1.5, -0.5]), array([-1.,  1.,  3.]))
-        >>> rg.ndim, rg.ntotal
+        >>> rg.ndim, rg.size
         (2, 6)
         """
         min_pt = np.atleast_1d(min_pt).astype('float64')
@@ -949,7 +975,7 @@ class RegularGrid(TensorGrid):
             self_tg = TensorGrid(*self.coord_vectors)
             return self_tg.is_subgrid(other)
 
-    def insert(self, grid, index):
+    def insert(self, index, grid):
         """Insert another regular grid before the given index.
 
         The given grid (``m`` dimensions) is inserted into the current
@@ -974,7 +1000,7 @@ class RegularGrid(TensorGrid):
         --------
         >>> rg1 = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg2 = RegularGrid(-3, 7, 6)
-        >>> rg1.insert(rg2, 1)
+        >>> rg1.insert(1, rg2)
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], [2, 6, 3])
         """
         idx = int(index)
@@ -1189,8 +1215,8 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
                          'than one node.'.format(tuple(intv_prod._ideg)))
 
     if as_midp:
-        grid_min = intv_prod.begin + intv_prod.size / (2 * num_nodes)
-        grid_max = intv_prod.end - intv_prod.size / (2 * num_nodes)
+        grid_min = intv_prod.begin + intv_prod.extent / (2 * num_nodes)
+        grid_max = intv_prod.end - intv_prod.extent / (2 * num_nodes)
         return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp,
                            _exact_min=intv_prod.begin,
                            _exact_max=intv_prod.end)

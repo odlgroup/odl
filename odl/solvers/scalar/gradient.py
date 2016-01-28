@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -85,7 +85,7 @@ def steepest_descent(grad, x, line_search, niter=1, partial=None):
         x.lincomb(1, x, -step, grad_x)
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 if __name__ == '__main__':

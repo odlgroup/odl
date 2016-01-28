@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -35,5 +35,6 @@ fig = None
 # Reuse the figure indefinitely, values are overwritten.
 for i in range(m):
     fig = (vec * i).show(fig=fig, clim=[0, m])
+    plt.pause(0.1)
 
 plt.show()

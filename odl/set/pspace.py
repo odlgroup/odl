@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -210,7 +210,7 @@ class ProductSpace(LinearSpace):
         """A tuple containing all spaces."""
         return self._spaces
 
-    def element(self, inp=None):
+    def element(self, inp=None, cast=True):
         """Create an element in the product space.
 
         Parameters
@@ -222,6 +222,8 @@ class ProductSpace(LinearSpace):
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
+        cast : `bool`
+            True if casting should be allowed
 
         Returns
         -------
@@ -256,15 +258,16 @@ class ProductSpace(LinearSpace):
         if inp is None:
             inp = [space.element() for space in self.spaces]
 
-        # TODO: how does this differ from "if inp in self"?
-        if (all(isinstance(v, LinearSpaceVector) for v in inp) and
-                all(part.space == space
-                    for part, space in zip(inp, self.spaces))):
+        if (all(isinstance(v, LinearSpaceVector) and v.space == space
+                for v, space in zip(inp, self.spaces))):
             parts = list(inp)
-        else:
+        elif cast:
             # Delegate constructors
             parts = [space.element(arg)
                      for arg, space in zip(inp, self.spaces)]
+        else:
+            raise TypeError('input {!r} not a sequence of elements in the '
+                            'subspaces'.format(inp))
 
         return self.element_type(self, parts)
 
@@ -640,8 +643,17 @@ class ProductSpaceVector(LinearSpaceVector):
 
             # else try with indices as is
 
-        for i, part in zip(indices, self[indices]):
-            part.show(*args, title='{}. Part {}'.format(title, i), **kwargs)
+        in_figs = kwargs.pop('fig', None)
+        in_figs = [None] * len(indices) if in_figs is None else in_figs
+
+        figs = []
+        for i, part, fig in zip(indices, self[indices], in_figs):
+            fig = part.show(*args,
+                            title='{}. Part {}'.format(title, i), fig=fig,
+                            **kwargs)
+            figs += [fig]
+
+        return figs
 
 
 if __name__ == '__main__':

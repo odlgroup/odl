@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -25,6 +25,7 @@ standard_library.install_aliases()
 
 # External
 import numpy as np
+
 
 __all__ = ('cuboid', 'derenzo_sources', 'indicate_proj_axis', 'shepp_logan',
            'submarine_phantom')
@@ -160,6 +161,16 @@ def _derenzo_sources_2d():
             [1.0, 0.02387, 0.02387, 0.78932, -0.11793, 0.0],
             [1.0, 0.023572, 0.023572, 0.83686, -0.20134, 0.0],
             [1.0, 0.023968, 0.023968, 0.88528, -0.11791, 0.0]]
+
+
+def _make_3d_cylinders(ellipses2d):
+    """Create 3d cylinders from ellipses."""
+    ellipses2d = np.asarray(ellipses2d)
+    ellipses3d = np.zeros((ellipses2d.shape[0], 10))
+    ellipses3d[:, [0, 1, 2, 4, 5, 7]] = ellipses2d
+    ellipses3d[:, 3] = 100000.0
+
+    return ellipses3d
 
 
 def _phantom_2d(space, ellipses):
@@ -370,9 +381,14 @@ def derenzo_sources(space):
     """Create the PET/SPECT Derenzo sources phantom.
 
     The Derenzo phantom contains a series of circles of decreasing size.
+
+    In 3d the phantom is simply the 2d phantom extended in the z direction as
+    cylinders.
     """
     if space.ndim == 2:
         return _phantom_2d(space, _derenzo_sources_2d())
+    if space.ndim == 3:
+        return _phantom_3d(space, _make_3d_cylinders(_derenzo_sources_2d()))
     else:
         raise ValueError("Dimension not 2, no phantom available")
 
@@ -399,7 +415,7 @@ def shepp_logan(space, modified=False):
     return phantom(space, ellipses)
 
 
-def submarine_phantom(discr, smooth=False):
+def submarine_phantom(discr, smooth=True, taper=20.0):
     """Return a 'submarine' phantom consisting in an ellipsoid and a box.
 
     This phantom is used in [1]_ for shape-based reconstruction.
@@ -411,10 +427,13 @@ def submarine_phantom(discr, smooth=False):
     smooth : `bool`, optional
         If `True`, the boundaries are smoothed out. Otherwise, the
         function steps from 0 to 1 at the boundaries.
+    taper : `float`, optional
+        Tapering parameter for the boundary smoothing. Larger values
+        mean faster taper, i.e. sharper boundaries.
 
     Returns
     -------
-    phantom : `LinearSpaceVector`
+    phantom : `DiscretizationVector`
 
     References
     ----------
@@ -424,7 +443,7 @@ def submarine_phantom(discr, smooth=False):
     """
     if discr.ndim == 2:
         if smooth:
-            return _submarine_phantom_2d_smooth(discr)
+            return _submarine_phantom_2d_smooth(discr, taper)
         else:
             return _submarine_phantom_2d_nonsmooth(discr)
     else:
@@ -432,63 +451,96 @@ def submarine_phantom(discr, smooth=False):
                          ''.format(discr.dim))
 
 
-def _submarine_phantom_2d_smooth(discr):
+def _submarine_phantom_2d_smooth(discr, taper):
     """Return a 2d smooth 'submarine' phantom."""
 
-    # Smaller value = more blurring
-    c = 20
-
-    def logistic(x):
-        return 1. / (1 + np.exp(-x))
+    def logistic(x, c):
+        """Smoothed step function from 0 to 1, centered at 0."""
+        return 1. / (1 + np.exp(-c * x))
 
     def blurred_ellipse(x):
-        sq_ndist = np.zeros_like(x[0])
-        radii = (2, 0.7)
-        center = (0.5, -1)
+        """Blurred characteristic function of an ellipse.
 
-        for xi, rad, cen in zip(x, radii, center):
+        If ``discr.domain`` is a rectangle ``[-1, 1] x [-1, 1]``,
+        the ellipse is centered at ``(0.2, -0.4)`` and has half-axes
+        ``(0.8, 0.28)``. For other domains, the values are scaled
+        accordingly.
+        """
+        halfaxes = np.array([0.8, 0.28]) * discr.domain.extent / 2
+        center = np.array([0.2, -0.4]) * discr.domain.extent / 2
+
+        # Efficiently calculate |z|^2, z = (x - center) / radii
+        sq_ndist = np.zeros_like(x[0])
+        for xi, rad, cen in zip(x, halfaxes, center):
             sq_ndist = sq_ndist + ((xi - cen) / rad) ** 2
 
         out = np.sqrt(sq_ndist)
         out -= 1
-        out *= (-c)
-        return logistic(out)
+        # Return logistic(taper * (1 - |z|))
+        return logistic(out, -taper)
 
     def blurred_rect(x):
+        """Blurred characteristic function of a rectangle.
+
+        If ``discr.domain`` is a rectangle ``[-1, 1] x [-1, 1]``,
+        the rect has lower left ``(0.12, -0.2)`` and upper right
+        ``(0.52, 0.2)``. For other domains, the values are scaled
+        accordingly.
+        """
+        xlower = np.array([0.12, -0.2]) * discr.domain.extent / 2
+        xupper = np.array([0.52, 0.2]) * discr.domain.extent / 2
+
         out = np.ones_like(x[0])
-        xlower, xupper = (.3, -.5), (1.3, .5)
         for xi, low, upp in zip(x, xlower, xupper):
-            out = out * logistic(c * (xi - low)) * logistic(c * (upp - xi))
+            length = upp - low
+            out = out * (logistic((xi - low) / length, taper) *
+                         logistic((upp - xi) / length, taper))
         return out
 
     out = discr.element(blurred_ellipse)
     out += discr.element(blurred_rect)
-    return out.ufunc.minimum(1)
+    return out.ufunc.minimum(1, out=out)
 
 
 def _submarine_phantom_2d_nonsmooth(discr):
     """Return a 2d nonsmooth 'submarine' phantom."""
 
     def ellipse(x):
-        sq_ndist = np.zeros_like(x[0])
-        radii = (2, 0.7)
-        center = (0.5, -1)
+        """Characteristic function of an ellipse.
 
-        for xi, rad, cen in zip(x, radii, center):
+        If ``discr.domain`` is a rectangle ``[-1, 1] x [-1, 1]``,
+        the ellipse is centered at ``(0.2, -0.4)`` and has half-axes
+        ``(0.8, 0.28)``. For other domains, the values are scaled
+        accordingly.
+        """
+        halfaxes = np.array([0.8, 0.28]) * discr.domain.extent / 2
+        center = np.array([0.2, -0.4]) * discr.domain.extent / 2
+
+        sq_ndist = np.zeros_like(x[0])
+        for xi, rad, cen in zip(x, halfaxes, center):
             sq_ndist = sq_ndist + ((xi - cen) / rad) ** 2
 
         return np.where(sq_ndist <= 1, 1, 0)
 
     def rect(x):
+        """Characteristic function of a rectangle.
+
+        If ``discr.domain`` is a rectangle ``[-1, 1] x [-1, 1]``,
+        the rectangle has lower left ``(0.12, -0.2)`` and upper right
+        ``(0.52, 0.2)``. For other domains, the values are scaled
+        accordingly.
+        """
+        xlower = np.array([0.12, -0.2]) * discr.domain.extent / 2
+        xupper = np.array([0.52, 0.2]) * discr.domain.extent / 2
+
         out = np.ones_like(x[0])
-        xlower, xupper = (.3, -.5), (1.3, .5)
         for xi, low, upp in zip(x, xlower, xupper):
-            out = out * np.where(np.logical_and(xi >= low, xi <= upp), 1, 0)
+            out = out * ((xi >= low) & (xi <= upp))
         return out
 
     out = discr.element(ellipse)
     out += discr.element(rect)
-    return out.ufunc.minimum(1)
+    return out.ufunc.minimum(1, out=out)
 
 
 def cuboid(discr_space, begin, end):
@@ -518,10 +570,12 @@ def cuboid(discr_space, begin, end):
     [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
     >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6], dtype='float32')
     >>> print(cuboid(space, [0.25, 0], [0.75, 0.5]))
-    [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-     [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-     [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+    [
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+        [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ]
     """
     ndim = discr_space.ndim
     shape = discr_space.shape
@@ -644,10 +698,9 @@ if __name__ == '__main__':
     shepp_logan(discr, modified=True).show()
     shepp_logan(discr, modified=False).show()
     derenzo_sources(discr).show()
-
-    discr = odl.uniform_discr([-2.5, -2.5], [2.5, 2.5], [n, n])
     submarine_phantom(discr, smooth=False).show()
     submarine_phantom(discr, smooth=True).show()
+    submarine_phantom(discr, smooth=True, taper=50).show()
 
     # Shepp-logan 3d
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
