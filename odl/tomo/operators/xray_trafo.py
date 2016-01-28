@@ -233,15 +233,16 @@ class XrayTransformAdjoint(Operator):
             # angle interval weight
             weight = float(self.forward.geometry.motion_grid.stride)
             if impl == 'cpu':
-                astra_cpu_backward_projector_call(x, self.forward.geometry,
-                                                  self.range, out)
-                out *= weight
-                return out
+                # TODO: optimize scaling
+                result = astra_cpu_backward_projector_call(
+                    x, self.forward.geometry, self.range, out)
+                result *= weight
+                return result
             elif impl == 'cuda':
-                astra_cuda_backward_projector_call(x, self.forward.geometry,
-                                                   self.range, out)
-                out *= weight
-                return out
+                result = astra_cuda_backward_projector_call(
+                    x, self.forward.geometry, self.range, out)
+                result *= weight
+                return result
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
