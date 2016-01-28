@@ -722,26 +722,20 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
 def _recip_space(spc, axes, halfcomplex):
     """Return the reciprocal space of ``spc`` with unit stride."""
-    # Calculate range
-    # Make a reciprocal grid with stride 1 and min (0, ..., 0)
-    tmp_grid = reciprocal(
-        spc.grid, shift=False, halfcomplex=halfcomplex, axes=axes)
-    recip_grid = RegularGrid([0] * tmp_grid.ndim, tmp_grid.shape,
-                             tmp_grid.shape, as_midp=False)
-    # Always complex space
-    ran_fspace = FunctionSpace(recip_grid.convex_hull(), ComplexNumbers())
+    # Calculate reciprocal space with a grid with stride 1 and min (0, ..., 0)
+
+    # Just to get the shape right
+    shape = reciprocal(
+        spc.grid, shift=False, halfcomplex=halfcomplex, axes=axes).shape
 
     if is_real_dtype(spc.dtype):
-        ran_dtype = _TYPE_MAP_R2C[spc.dtype]
+        rspc_dtype = _TYPE_MAP_R2C[spc.dtype]
     else:
-        ran_dtype = spc.dtype
+        rspc_dtype = spc.dtype
 
-    ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
-                                  dtype=ran_dtype)
-    ran_dspace = ran_dspace_type(recip_grid.size, dtype=ran_dtype,
-                                 exponent=2.0)
-    ran = DiscreteLp(ran_fspace, recip_grid, ran_dspace, exponent=2.0)
-    return ran
+    rspc = uniform_discr([0] * spc.ndim, shape, shape, dtype=rspc_dtype,
+                         as_midp=False)
+    return rspc
 
 
 class PyfftwTransform(Operator):
@@ -800,7 +794,7 @@ class PyfftwTransform(Operator):
         # Domain is a DiscreteLp with stride (1, ..., 1)
         dom_shape = tuple(dom_shape)
         dom = uniform_discr([0] * len(dom_shape), dom_shape, dom_shape,
-                            dtype=dom_dtype)
+                            dtype=dom_dtype, as_midp=False)
         self._axes = list(axes)
         if dom.field == ComplexNumbers():
             self._halfcomplex = False
@@ -811,14 +805,14 @@ class PyfftwTransform(Operator):
         super().__init__(dom, ran, linear=True)
         self._fftw_plan = None
 
-    def _call(self, x, out=None, **kwargs):
+    def _call(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])``.
 
         Parameters
         ----------
         x : domain element
             Input vector to be transformed
-        out : range element, optional
+        out : range element
             Output vector storing the result
         flags : sequence of `str`, optional
             Flags for the transform. ``'FFTW_UNALIGNED'`` is not
@@ -844,9 +838,6 @@ class PyfftwTransform(Operator):
         .. _pyfftw API documentation:
            http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
         """
-        if out is None:
-            out = self.range.element()
-
         kwargs.pop('normalise_idft', None)  # Not used here, filtering out
         flags = list(_pyfftw_to_local(flag) for flag in
                      kwargs.pop('flags', ('FFTW_MEASURE',)))
@@ -862,7 +853,8 @@ class PyfftwTransform(Operator):
 
         self._fftw_plan = pyfftw_call(
             x.asarray(), out.asarray(), direction='forward', axes=self.axes,
-            planning_effort=effort, fftw_plan=self._fftw_plan, **kwargs)
+            halfcomplex=self.halfcomplex, planning_effort=effort,
+            fftw_plan=self._fftw_plan, **kwargs)
 
         # TODO: Implement zero padding
 
@@ -945,7 +937,7 @@ class PyfftwTransformInverse(Operator):
         # Range is a DiscreteLp with stride (1, ..., 1)
         ran_shape = tuple(ran_shape)
         ran = uniform_discr([0] * len(ran_shape), ran_shape, ran_shape,
-                            dtype=ran_dtype)
+                            dtype=ran_dtype, as_midp=False)
         self._axes = list(axes)
         if ran.field == ComplexNumbers():
             self._halfcomplex = False
@@ -957,14 +949,14 @@ class PyfftwTransformInverse(Operator):
         super().__init__(dom, ran, linear=True)
         self._fftw_plan = None
 
-    def _call(self, x, out=None, **kwargs):
+    def _call(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])``.
 
         Parameters
         ----------
         x : domain element
             Input vector to be transformed
-        out : range element, optional
+        out : range element
             Output vector storing the result
         flags : sequence of `str`, optional
             Flags for the transform. ``'FFTW_UNALIGNED'`` is not
@@ -990,9 +982,6 @@ class PyfftwTransformInverse(Operator):
         .. _pyfftw API documentation:
            http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
         """
-        if out is None:
-            out = self.range.element()
-
         kwargs.pop('normalise_idft', None)  # Always using True here
         flags = list(_pyfftw_to_local(flag) for flag in
                      kwargs.pop('flags', ('FFTW_MEASURE',)))
@@ -1008,8 +997,8 @@ class PyfftwTransformInverse(Operator):
 
         self._fftw_plan = pyfftw_call(
             x.asarray(), out.asarray(), direction='backward', axes=self.axes,
-            planning_effort=effort, normalise_idft=True,
-            fftw_plan=self._fftw_plan, **kwargs)
+            halfcomplex=self.halfcomplex, planning_effort=effort,
+            normalise_idft=True, fftw_plan=self._fftw_plan, **kwargs)
 
         # TODO: Implement zero padding
 
