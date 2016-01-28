@@ -22,11 +22,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
-
 # Internal
-from odl.operator.default_ops import IdentityOperator
-from odl.operator.operator import OperatorComp, OperatorSum
+from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 
 __all__ = ('gradient_descent', 'landweber', 'conjugate_gradient',
            'conjugate_gradient_normal', 'gauss_newton')
@@ -43,12 +40,13 @@ def gradient_descent(gradient_op, x, niter=1, omega=1, projection=None,
 
     This method calculates an approximate solution of the optimization problem
 
-        :math:`\min_{x\\in \mathcal{X}} \mathcal{A}(x)`
+        :math:`\min_{x\\in \mathcal{X}} f(x)`
 
     for a (Frechet-) differentiable operator
-    :math:`\mathcal{A}: \mathcal{X} \\to \mathcal{Y}` between Hilbert
-    spaces :math:`\mathcal{X}` and :math:`\mathcal{Y}`. The method
-    starts from an initial guess :math:`x_0` and uses the
+    :math:`\mathcal{A}: \mathcal{X} \\to R` where :math:`\mathcal{X}` is a
+    hilbert space.
+
+    The method starts from an initial guess :math:`x_0` and uses the
     iteration
 
     :math:`x_{k+1} = x_k - \omega \nabla \mathcal{A}(x)`,
@@ -69,14 +67,14 @@ def gradient_descent(gradient_op, x, niter=1, omega=1, projection=None,
     Parameters
     ----------
     gradient_op : `Operator`
-        Operator in the inverse problem.
+        Gradient of the functional that should be optimized.
     x : element of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
     niter : `int`, optional
         Maximum number of iterations
-    omega : positive `float`
+    omega : positive `float`, optional
         Relaxation parameter in the iteration
     projection : `callable`, optional
         Function that can be used to modify the iterates in each iteration,
@@ -88,6 +86,11 @@ def gradient_descent(gradient_op, x, niter=1, omega=1, projection=None,
     Returns
     -------
     `None`
+
+    See Also
+    --------
+    landweber : Optimized solver for the case f(x) = ||Ax - b||_2^2
+    conjugate_gradient : Optimized solver for the case f(x) = x^T Ax - 2 x^T b
     """
     # Reusable temporary
     gradient = gradient_op.domain.element()
@@ -158,7 +161,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, partial=None):
         Right-hand side of the equation defining the inverse problem
     niter : `int`, optional
         Maximum number of iterations
-    omega : positive `float`
+    omega : positive `float`, optional
         Relaxation parameter in the iteration
     projection : `callable`, optional
         Function that can be used to modify the iterates in each iteration,
@@ -226,6 +229,10 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     Returns
     -------
     `None`
+
+    See Also
+    --------
+    conjugate_gradient_normal : Solver for nonsymmetric matrices
     """
     # TODO: add a book reference
     # TODO: update doc
@@ -309,6 +316,10 @@ Conjugate_gradient_on_the_normal_equations>`_.
     Returns
     -------
     `None`
+
+    See Also
+    --------
+    conjugate_gradient : Optimized solver for symmetric matrices
     """
     # TODO: add a book reference
     # TODO: update doc
