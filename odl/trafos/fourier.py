@@ -71,19 +71,18 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
 
     This function calculates the reciprocal (Fourier/frequency space)
     grid for a given regular grid defined by the nodes
+    ::
+        x[k] = x[0] + k * s,
 
-        :math:`x_k = x_0 + k \odot s, \quad k \\in I_N`
-
-    with an index set :math:`I_N = \{k\\in\mathbb{Z}\ |\ 0\\leq k< N\}`.
-    The multiplication ":math:`\odot`" and the comarisons are to be
-    understood component-wise.
-
+    where ``k = (k[0], ..., k[d-1])`` is a ``d``-dimensional index in
+    the range ``0 <= k < N`` (component-wise). The multi-index
+    ``N`` is the shape of the input grid.
     This grid's reciprocal is then given by the nodes
+    ::
+        xi[j] = xi[0] + j * sigma,
 
-        :math:`\\xi_j = \\xi_0 + j \odot \sigma, \quad
-        \sigma = 2\pi (s \odot N)^{-1}`.
-
-    The minimum frequency :math:`\\xi_0` can in principle be chosen
+    with the reciprocal grid stride ``sigma = 2*pi / (s * N)``.
+    The minimum frequency ``xi[0]`` can in principle be chosen
     freely, but usually it is chosen in a such a way that the reciprocal
     grid is centered around zero. For this, there are two possibilities:
 
@@ -93,17 +92,20 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
        it to the left by half a reciprocal stride.
 
     In the first case, the minimum frequency (per axis) is given as
+    ::
+        xi_1[0] = -pi/s + pi/(s*n) = -pi/s + sigma/2.
 
-        :math:`\\xi_{0, \\text{symm}} = -\pi / s + \pi / (sn) =
-        -\pi / s + \sigma/2`.
-
-    For the second case, it is:
-
-        :math:`\\xi_{0, \\text{shift}} = -\pi / s.`
+    For the second case, it is
+    ::
+        xi_1[0] = -pi / s.
 
     Note that the zero frequency is contained in case 1 for an odd
     number of points, while for an even size, the second option
     guarantees that 0 is contained.
+
+    If a real-to-complex (half-complex) transform is to be computed,
+    the reciprocal grid has the shape ``M[i] = floor(N[i]/2) + 1``
+    in the last transform axis ``i``.
 
     Parameters
     ----------
@@ -183,29 +185,108 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     return RegularGrid(rmin, rmax, rshape, as_midp=False)
 
 
+def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
+                       halfcx_parity='even'):
+    """Return the inverse reciprocal of the given regular grid.
+
+    Given a reciprocal grid
+    ::
+        xi[j] = xi[0] + j * sigma,
+
+    with a multi-index ``j = (j[0], ..., j[d-1])`` in the range
+    ``0 <= j < M``, this function calculates the original grid
+    ::
+        x[k] = x[0] + k * s
+
+    by using a provided ``x[0]`` and calculating the stride ``s``.
+
+    If the reciprocal grid is interpreted as coming from a usual
+    complex-to-complex FFT, it is ``N == M``, and the stride is
+    ::
+        s = 2*pi / (sigma * N)
+
+    For a reciprocal grid from a real-to-complex (half-complex) FFT,
+    it is ``M[i] = floor(N[i]/2) + 1`` in the last transform axis ``i``.
+    To resolve the ambiguity regarding the parity of ``N[i]``, the
+    it must be specified if the output shape should be even or odd,
+    resulting in
+    ::
+        odd : N[i] = 2 * M[i] - 1
+        even: N[i] = 2 * M[i] - 2
+
+    The output stride is calculated with this ``N`` as above in this
+    case.
+
+    Parameters
+    ----------
+    grid : `odl.RegularGrid`
+        Original sampling grid
+    x0 : array-like
+        Minimal point of the inverse reciprocal grid
+    axes : sequence of `int`, optional
+        Dimensions in which to calculate the reciprocal. The sequence
+        must have the same length as ``shift`` if the latter is given
+        as a sequence. `None` means all axes in ``grid``.
+    halfcomplex : `bool`, optional
+        If `True`, interpret the given grid as the reciprocal as used
+        in a half-complex FFT (see above). Otherwise, the grid is
+        regarded as being used in a complex-to-complex transform.
+    halfcx_parity : {'even', 'odd'}
+        Use this parity for the shape of the returned grid in the
+        last axis of ``axes`` in the case ``halfcomplex=True``
+
+    Returns
+    -------
+    irecip : `odl.RegularGrid`
+        The inverse reciprocal grid
+    """
+    if axes is None:
+        axes = list(range(grid.ndim))
+
+    rstride = grid.stride
+    rshape = grid.shape
+
+    # Calculate shape of the output grid by adjusting in axes[-1]
+    irshape = list(rshape)
+    if halfcomplex:
+        if str(halfcx_parity).lower() == 'even':
+            irshape[axes[-1]] = 2 * rshape[axes[-1]] - 2
+        elif str(halfcx_parity).lower() == 'odd':
+            irshape[axes[-1]] = 2 * rshape[axes[-1]] - 1
+        else:
+            raise ValueError("halfcomplex parity '{}' not understood."
+                             "".format(halfcx_parity))
+
+    irmin = np.asarray(x0)
+    irmax = irmin + 2 * pi / (irshape * rstride)
+
+    # TODO: specify as_midp per axis, not supported currently
+    return RegularGrid(irmin, irmax, irshape, as_midp=True)
+
+
 def dft_preprocess_data(dfunc, shift=True, axes=None):
     """Pre-process the real-space data before DFT.
 
     This function multiplies the given data with the separable
     function
+    ::
+        p(x) = exp(-1j * dot(x - x[0], xi[0]))
 
-        :math:`p(x) = e^{-i(x-x_0)^{\mathrm{T}}\\xi_0},`
-
-    where :math:`x_0` :math:`\\xi_0` are the minimum coodinates of
+    where ``x[0]`` and ``xi[0]`` are the minimum coodinates of
     the real space and reciprocal grids, respectively. In discretized
-    form, this function becomes for each axis separately an array
+    form, this function becomes for an array
+    ::
+        p[k] = exp(-1j * k * s * xi[0])
 
-        :math:`p_k = e^{-i k (s \\xi_0)}.`
+    If the reciprocal grid is not shifted, i.e. symmetric around 0,
+    it is ``xi[0] =  pi/s * (-1 + 1/N)``, hence
+    ::
+        p[k] = exp(1j * pi * k * (1 - 1/N))
 
-    If the reciprocal grid is symmetric, it is
-    :math:`\\xi_0 =  \pi/s (-1 + 1/N)`, hence
-
-        :math:`p_{k, \\text{symm}} = e^{i \pi k (1-1/N)}.`
-
-    For a shifted grid, we have :math:`\\xi_0 =  -\pi/s`, thus the array
-    is given by
-
-        :math:`p_{k, \\text{shift}} = e^{i \pi k} = (-1)^k.`
+    For a shifted grid, we have :math:``xi[0] =  -pi/s``, thus the
+    array is given by
+    ::
+        p[k] = (-1)**k
 
     Parameters
     ----------
@@ -254,13 +335,13 @@ def dft_preprocess_data(dfunc, shift=True, axes=None):
 def _interp_kernel_ft(norm_freqs, interp):
     """Scaled FT of a one-dimensional interpolation kernel.
 
-    For normalized frequencies -1/2 <= xi <= 1/2, this
+    For normalized frequencies ``-1/2 <= xi <= 1/2``, this
     function returns
+    ::
+        sinc(pi * xi)**k / sqrt(2 * pi)
 
-        ``sinc(pi * xi) ** k / sqrt(2 * pi)``
-
-    where ``k = 1`` for 'nearest', ``k = 2`` for 'linear' and
-    ``k = 3`` for 'cubic' interpolation.
+    where ``k=1`` for 'nearest', ``k=2`` for 'linear' and ``k=3``
+    for 'cubic' interpolation.
 
     Parameters
     ----------
@@ -291,26 +372,21 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
 
     This function multiplies the given data with the separable
     function
+    ::
+        q(xi) = exp(-1j * dot(x[0], xi)) * s * phi_hat(xi_bar)
 
-        :math:`q(\\xi) = e^{-i x_0^{\mathrm{T}}\\xi} \cdot
-        s\, \widehat{\Phi}(\\bar\\xi)`,
+    where ``x[0]`` and ``s`` are the minimum point and the stride of
+    the real space grid, respectively, and ``phi_hat(xi_bar)`` is the FT
+    of the interpolation kernel. In discretized form, the exponential
+    part of this function becomes an array
+    ::
+        q[k] = exp(-1j * dot(x[0], xi[k]))
 
-    where :math:`x_0` and :math:`\\xi_0` are the minimum coodinates of
-    the real space and reciprocal grids, respectively,
-    :math:`\widehat{\Phi}(\\bar\\xi)` is the separable FT of the
-    interpolation kernel, and :math:`s` is the stride of the real
-    space grid. In discretized form, the exponential part
-    of this function becomes for each axis separately an array
-
-        :math:`q_k = e^{-i x_0
-        \\big(\\xi_0 + 2\pi k / (s N)\\big)}, \quad k=0,\ldots,N-1`,
-
-    and the arguments :math:`\\bar\\xi` to the interpolation kernel
+    and the arguments ``xi_bar`` to the interpolation kernel
     are the normalized frequencies
-
-        :math:`-\pi + \pi\, \\frac{2k}{N}` for ``shift=True`` and
-
-        :math:`-\pi + \pi\, \\frac{2k+1}{N}` for ``shift=False``.
+    ::
+        for ``shift=True`` : xi_bar[k] = -pi + pi * (2*k) / N
+        for ``shift=False``: xi_bar[k] = -pi + pi * (2*k+1) / N
 
     See [1]_, Section 13.9 "Computing Fourier Integrals Using the FFT"
     for a similar approach.
@@ -475,16 +551,22 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
 
 def pyfftw_call(array_in, array_out, direction='forward', axes=None,
                 halfcomplex=False, **kwargs):
-    """Calculate the DFT.
+    """Calculate the DFT with pyfftw.
 
-    The discrete Fourier transform calcuates the sum
+    The discrete Fourier (forward) transform calcuates the sum
+    ::
+        f_hat[k] = sum_j( f[j] * exp(-2*pi*1j * j*k/N) )
 
-        :math:`\widehat{f}_k =
-        \sum_{j \\in I_N} f_j\ e^{-i 2\pi j\odot k / N}`
+    where the summation is taken over all indices
+    ``j = (j[0], ..., j[d-1])`` in the range ``0 <= j < N``
+    (component-wise), with ``N`` being the shape of the input array.
 
-    for indices :math:`k \\in I_N` or, in the half-complex case,
-    :math:`0 \\leq k_d \\leq \\lfloor N_d / 2 \\rfloor + 1` for the
-    last component.
+    The output indices ``k`` lie in the same range, except
+    for half-complex transforms, where the last axis ``i`` in ``axes``
+    is shortened to ``0 <= k[i] < floor(N[i]/2) + 1``.
+
+    In the backward transform, sign of the the exponential argument
+    is flipped.
 
     Parameters
     ----------
@@ -509,6 +591,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         Flag for the amount of effort put into finding an optimal
         FFTW plan. See the `FFTW doc on planner flags
         <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
+        Default: 'estimate'.
     planning_timelimit : `float`, optional
         Limit planning time to roughly this amount of seconds.
         Default: `None` (no limit)
@@ -544,16 +627,13 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
       capitalized and prepended by ``'FFTW_'``, i.e. in the original
       FFTW form.
     * For a ``halfcomplex`` forward transform, the arrays must fulfill
-      ``array_out[axes].shape[-1] == array_in[axes].shape[-1] // 2 + 1``,
+      ``array_out.shape[axes[-1]] == array_in.shape[axes[-1]] // 2 + 1``,
       and vice versa for backward transforms.
     * All planning schemes except ``'estimate'`` require an internal copy
       of the input array but are often several times faster after the
       first call (measuring results are cached). Typically,
       'measure' is a good compromise. If you cannot afford the copy,
       use 'estimate'.
-    * The input can be destroyed if a planner different from
-      ``'estimate'`` is used or a complex-to-real backward transform is
-      computed.
     """
     import pickle
 
@@ -894,6 +974,7 @@ class FourierTransform(Operator):
             raise NotImplementedError('irregular grids not yet supported.')
 
         if ran is None:
+            # self._halfcomplex and self._axes need to be set for this
             ran = self._conj_range(dom)
 
         super().__init__(dom, ran, linear=True)
@@ -926,7 +1007,7 @@ class FourierTransform(Operator):
         return ran
 
     def _call(self, x, out, **kwargs):
-        """Implement ``self(x, out)`` for pyfftw backend.
+        """Implement ``self(x[, out, **kwargs])``.
 
         Parameters
         ----------
@@ -937,7 +1018,7 @@ class FourierTransform(Operator):
 
         Notes
         -----
-        See the `pyfftw_call` function for further options.
+        See the `pyfftw_call` function for ``**kwargs`` options.
 
         See also
         --------
@@ -946,11 +1027,12 @@ class FourierTransform(Operator):
         self._call_pyfftw(x, out, **kwargs)
 
     def _call_numpy(self, x, out):
-        """Implement ``self(x, out)`` for numpy backend."""
+        """Implement ``self(x[, out, **kwargs])`` for numpy back-end."""
+        # TODO: Implement this
         raise NotImplementedError
 
     def _call_pyfftw(self, x, out, **kwargs):
-        """Implement ``self(x, out)`` for pyfftw backend.
+        """Implement ``self(x[, out, **kwargs])`` for pyfftw back-end.
 
         Parameters
         ----------
