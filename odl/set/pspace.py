@@ -619,10 +619,34 @@ class ProductSpaceVector(LinearSpaceVector):
 
         return '{!r}.element({})'.format(self.space, inner_str)
 
-    def show(self, *args, **kwargs):
-        """Display the parts of this vector."""
+    def show(self, indices=None, **kwargs):
+        """Display the parts of this vector graphically
+
+        Parameters
+        ----------
+        indices : index expression, optional
+            If a single index (``indices=0``) displays that part
+            If a slice, displays those parts (``indices=slice(None)``)
+            If `list` of indices, display those (``indices=[0, 1, 3]``)
+            If a tuple is given, interprets the first element as an index for
+            this product space vector and passes the rest on.
+            (``indices=np.s_[0, :, :]``).
+
+        kwargs
+            Arguments for the underlying vectors.
+
+        Returns
+        -------
+        fig : list of ``matplotlib`` figure's
+            The resulting figures. It is also shown to the user.
+
+        See Also
+        --------
+        DiscreteLpVector.show : Show for discretized data
+        NtuplesBaseVector.show : Show for sequence type data
+        show_discrete_data : underlying implementation
+        """
         title = kwargs.pop('title', 'ProductSpaceVector')
-        indices = kwargs.pop('indices', None)
 
         if indices is None:
             if len(self) < 5:
@@ -640,8 +664,16 @@ class ProductSpaceVector(LinearSpaceVector):
 
             # else try with indices as is
 
-        for i, part in zip(indices, self[indices]):
-            part.show(*args, title='{}. Part {}'.format(title, i), **kwargs)
+        in_figs = kwargs.pop('fig', None)
+        in_figs = [None] * len(indices) if in_figs is None else in_figs
+
+        figs = []
+        for i, part, fig in zip(indices, self[indices], in_figs):
+            fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
+                            **kwargs)
+            figs += [fig]
+
+        return figs
 
 
 if __name__ == '__main__':
