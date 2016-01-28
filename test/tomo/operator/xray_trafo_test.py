@@ -154,7 +154,7 @@ def projector(request):
         raise ValueError('geom not valid')
 
 
-def test_reconstruction(projector):
+def test_projector(projector):
     """Test discrete X-ray transform using ASTRA for reconstruction."""
 
     # TODO: this needs to be improved

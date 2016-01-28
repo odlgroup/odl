@@ -27,7 +27,6 @@ import pytest
 
 # Internal
 import odl
-from odl.tomo.backends.astra_setup import ASTRA_AVAILABLE
 from odl.tomo.util.testutils import skip_if_no_astra
 
 
@@ -38,8 +37,8 @@ def test_astra_cpu_projector_parallel2d():
     """ASTRA CPU forward and back projection for 2d parallel geometry."""
 
     # `DiscreteLp` space for volume data
-    vol_shape = (4, 5)
-    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], vol_shape,
+    vol_shape = (5, 5)
+    discr_vol_space = odl.uniform_discr([-5, -5], [5, 5], vol_shape,
                                         dtype='float32')
 
     # Create an element in the `DiscreteLp` space
@@ -83,8 +82,8 @@ def test_astra_cpu_projector_fanflat():
     """ASTRA CPU forward and back projection for fanflat geometry."""
 
     # `DiscreteLp` space for volume data
-    vol_shape = (4, 5)
-    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], vol_shape,
+    vol_shape = (5, 5)
+    discr_vol_space = odl.uniform_discr([-5, -5], [5, 5], vol_shape,
                                         dtype='float32')
 
     # Create an element in the `DiscreteLp` space
