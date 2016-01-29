@@ -81,6 +81,9 @@ def _random_array(shape, dtype):
                 1j * np.random.rand(*shape).astype(dtype))
 
 
+# ---- reciprocal ---- #
+
+
 def test_reciprocal_1d_odd():
 
     grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=11, as_midp=True)
@@ -317,6 +320,9 @@ def test_reciprocal_nd_halfcomplex():
     assert irgrid.approx_equals(grid, tol=1e-6)
 
 
+# ---- dft_preprocess_data ---- #
+
+
 def test_dft_preprocess_data():
 
     shape = (2, 3, 4)
@@ -370,6 +376,9 @@ def test_dft_preprocess_data_with_axes():
 
     dfunc = space_discr.one()
     dft_preprocess_data(dfunc, shift=True, axes=axes)
+
+
+# ---- pyfftw_call ---- #
 
 
 def _params_from_dtype(dt):
@@ -527,7 +536,7 @@ def test_pyfftw_call_backward_real_not_halfcomplex():
         assert all_almost_equal(idft_arr, true_idft)
 
 
-def test_pyfftw_plan_preserve_input(planning):
+def test_pyfftw_call_plan_preserve_input(planning):
 
     for shape in [(10,), (3, 4)]:
         arr = _random_array(shape, dtype='complex128')
@@ -644,6 +653,9 @@ def test_pyfftw_call_backward_with_plan():
         assert all_almost_equal(idft_arr, true_idft)
 
 
+# ---- PyfftwTransform ---- #
+
+
 def test_pyfftw_trafo_init():
     # Just check if the code runs at all
     shape = (5, 10)
@@ -693,6 +705,9 @@ def test_pyfftw_trafo_range():
     fft = PyfftwTransform(shape, dom_dtype='float64', axes=axes,
                           halfcomplex=True)
     assert fft.range.grid.approx_equals(ran_grid, tol=1e-6)
+
+
+# ---- PyfftwTransformInverse ---- #
 
 
 def test_pyfftw_inverse_trafo_init():
@@ -771,7 +786,10 @@ def test_pyfftw_trafo_call():
     assert (arr_ift - arr).norm() < 1e-6
 
 
-def test_fourier_trafo_range(exponent, dtype):
+# ---- FourierTransform ---- #
+
+
+def test_ft_range(exponent, dtype):
     # Check if the range is initialized correctly. Encompasses the init test
 
     # Testing R2C for real dtype, else C2C
@@ -832,15 +850,6 @@ def test_ft_charfun_1d():
     func_dft = dft(char_interval)
     assert (func_dft - func_true_ft).norm() < 1e-6
 
-    # Truly complex input
-    discr = odl.uniform_discr(-2, 2, 64, impl='numpy', dtype='complex64')
-    dft = FourierTransform(discr)
-
-    func_true_ft = dft.range.element(char_interval_ft) * (1 + 1j)
-    func = discr.element(char_interval) * (1 + 1j)
-    func_dft = dft(func)
-    assert (func_dft - func_true_ft).norm() < 1e-6
-
     # Without shift
     discr = odl.uniform_discr(-2, 2, 64, impl='numpy', dtype='complex64')
     dft = FourierTransform(discr, shift=False)
@@ -879,6 +888,35 @@ def test_ft_hat_1d():
     assert (func_dft - func_true_ft).norm() < 0.001
 
 
+@pytest.mark.xfail(reason='Some scaling / phase factor issue')
+def test_ft_complex_sum():
+    # Sum of characteristic function and hat function, both with
+    # known FT's.
+    def hat_func(x):
+        out = 1 - np.abs(x)
+        out[x < -1] = 0
+        out[x > 1] = 0
+        return out
+
+    def hat_func_ft(x):
+        return sinc(x / 2) ** 2 / np.sqrt(2 * np.pi)
+
+    def char_interval(x):
+        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
+
+    def char_interval_ft(x):
+        return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
+
+    discr = odl.uniform_discr(-2, 2, 65, impl='numpy', dtype='complex128')
+    dft = FourierTransform(discr, shift=False)
+
+    func = discr.element(hat_func) + 1j * discr.element(char_interval)
+    func_true_ft = (dft.range.element(hat_func_ft) +
+                    1j * dft.range.element(char_interval_ft))
+    func_dft = dft(func)
+    assert (func_dft - func_true_ft).norm() < 1e-6
+
+
 def test_ft_gaussian_1d():
     # Gaussian function, will be mapped to itself. Truncation error is
     # relatively large, though, we need a large support.
@@ -894,14 +932,16 @@ def test_ft_gaussian_1d():
 
 @pytest.mark.xfail(reason='Some scaling / phase factor issue')
 def test_ft_freq_shifted_charfun_1d():
-    # Frequency-shifted characteristic function
+    # Frequency-shifted characteristic function: mult. with
+    # exp(-1j * b * x) corresponds to shifting the FT by b.
     def fshift_char_interval(x):
-        return np.exp(-1j * x) * np.where((x >= -0.5) & (x <= 0.5), 1.0, 0.0)
+        return (np.exp(-1j * x * np.pi) *
+                np.where((x >= -0.5) & (x <= 0.5), 1.0, 0.0))
 
     def fshift_char_interval_ft(x):
-        return sinc((x + 1) / 2) / np.sqrt(2 * np.pi)
+        return sinc((x + np.pi) / 2) / np.sqrt(2 * np.pi)
 
-    discr = odl.uniform_discr(-5 * np.pi, 5 * np.pi, 101, impl='numpy',
+    discr = odl.uniform_discr(-2, 2, 101, impl='numpy',
                               dtype='complex64')
     dft = FourierTransform(discr)
     func_true_ft = dft.range.element(fshift_char_interval_ft)
