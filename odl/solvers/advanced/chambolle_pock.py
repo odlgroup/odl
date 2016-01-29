@@ -31,29 +31,22 @@ lines of `[3]`_.
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
 
 # External
 
 # Internal
 from odl.operator.operator import Operator
-from odl.operator.pspace_ops import ProductSpaceOperator
-from odl.operator.default_ops import IdentityOperator
 from odl.solvers.util import Partial
-from odl import
 
-__all__ = ('chambolle_pock_solver', 'proximal_convexconjugate_l2_l1',
-           'proximal_zero', 'proximal_primal')
+__all__ = ('chambolle_pock_solver',)
 
 
-# TODO: operators or factory functions or something else
-# TODO: variable step length. currently requires init of prox in each each
-
+# TODO: variable step length
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
-# TODO: add positivity constraint
 # TODO: improve doc including references
 # TODO: add checks
+# TODO: updated doc
 
 def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
                           theta=1, niter=1, partial=None, x_relaxation=None,
@@ -70,11 +63,11 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     where ``X`` and ``Y`` are finite-dimensional Hilbert spaces with an
     inner product <.,.> and norm ||.|| = <.,.>^(1/2), ``K`` is a continuous
-    linear operator ``K : X -> Y``. ``G : X -> [0, +infty]`` and ``F^* : Y
-    -> [0,+infty]`` are proper, lower-semicontinuous functions, and ``F^* is
-    the convex (or Fenchel) conjugate of ``F``. (The conjugacy operation ``F
-    -> F^*`` is closely related to the classical Legendre transformation in
-    the case of differentiable convex functions.)
+    linear operator ``K : X -> Y``. ``G : X -> [0, +infinity]`` and ``F^* :
+    Y -> [0,+infinity]`` are proper, lower-semicontinuous functions,
+    and ``F^*`` is the convex (or Fenchel) conjugate of ``F``. (The
+    conjugacy operation ``F -> F^*`` is closely related to the classical
+    Legendre transformation in the case of differentiable convex functions.)
 
     The nonlinear primal minimization problem related to (1) reads
 
@@ -252,239 +245,6 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
         if partial is not None:
             partial.send(x)
-
-
-def proximal_zero(space):
-    """Function to create the proximal operator of f(x) = 0.
-
-    Factory function which provides a function to initialize the proximal
-    operator of ``f(x) = 0`` where ``x`` is an element in ``space``. The
-    proximal operator of this functional is the identity operator.
-
-    Parameters
-    ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
-        Domain of the functional ``f(x)``
-
-    Returns
-    -------
-    make_prox : `function`
-        Function to initialize the proximal operator
-    """
-
-    def make_prox(tau):
-        """Return an instance of the proximal operator.
-
-        Parameters
-        ----------
-        tau : positive `float`
-            Step length parameter. Unused here but introduced to provide a
-            common interface
-
-        Returns
-        -------
-        id : `IdentityOperator`
-            The proximal operator instance of ``f(x) = 0`` which is the
-            identity operator
-        """
-
-        return IdentityOperator(space)
-
-    return make_prox
-
-
-# TODO: check space of g
-# TODO: remove implicit product space assumption on z
-def proximal_convexconjugate_l2_l1(space, g, lam):
-    """Proximal operator factory of the convex conjugate of an L2-data and
-    L1-regularisation objective.
-
-    Factory function providing a function to initialize the proximal
-    operator of the convex conjugate of the functional ``F`` which is given
-    by an L2-data term and an L1 semi-norm regularisation. The primal
-    minimization problem thus reads
-
-        F(x) = F(y, z) = 1/2 * ||y - g||_2^2 + lambda * ||(|z|)||_1
-
-    The convex conjugate, F^*, of F is given by
-
-        F^*(x) = 1/2 * ||y||_2^2 + <y,g> + ind_{box(lam)}(|z|)
-
-    Parameters
-    ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
-        Domain of F(x)
-    g : `DiscreteLpVector`
-        Element in ``space``
-    lam : positive `float`
-        Regularization parameter
-
-    Returns
-    -------
-    make_prox : `callable`
-        Function which initializes the proximal operator at a given
-        parameter value
-    """
-    lam = float(lam)
-
-    def make_prox(sigma):
-        """Returns an instance of the proximal operator.
-
-        Parameters
-        ----------
-        sigma : positive `float`
-            Step length parameter
-
-        Returns
-        -------
-        prox_op : `Operator`
-            Proximal operator initialized with ``sigma``
-        """
-
-        class _ProxOp(Operator):
-
-            """The proximal operator."""
-
-            def __init__(self, sigma):
-                """Initialize the proximal operator.
-
-                Parameters
-                ----------
-                sigma : positive `float`
-                """
-                self.sigma = float(sigma)
-                super().__init__(domain=space, range=space, linear=False)
-
-            def _call(self, x, out):
-                """Apply the operator to ``x`` and stores the result in
-                ``out``"""
-
-                y = x[0]
-                z = x[1]
-
-                # First component: (y - sig*g) / (1 + sig)
-
-                sig = self.sigma
-                out[0].lincomb(1 / (1 + sig), y, -sig / (1 + sig), g)
-
-                # Second component: lam * z / (max(lam, |z|))
-
-                # Calculate |z| = pointwise 2-norm of z
-                tmp = z[0] ** 2
-                sq_tmp = z[0].space.element()
-                for zi in z[1:]:
-                    sq_tmp.multiply(zi, zi)
-                    tmp += sq_tmp
-                tmp.ufunc.sqrt(out=tmp)
-
-                # Pointwise maximum of |z| and lambda
-                tmp.ufunc.maximum(lam, out=tmp)
-                tmp /= lam
-
-                for oi, zi in zip(out[1], z):
-                    oi.divide(zi, tmp)
-
-        return _ProxOp(sigma)
-
-    return make_prox
-
-
-###############################################################################
-# TEST SECTION
-
-def proximal_primal(space, constraint_type='unconstrained'):
-    """Function to create the proximal operator of f(x) = 0.
-
-    Factory function which provides a function to initialize the proximal
-    operator of ``f(x)`` where ``x`` is an element in ``space``.
-
-    Parameters
-    ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
-        Domain of the functional ``f(x)``
-
-    Returns
-    -------
-    make_prox : `function`
-        Function to initialize the proximal operator
-    """
-
-    def make_prox(tau):
-        """Return an instance of the proximal operator.
-
-        Parameters
-        ----------
-        tau : positive `float`
-            Step length parameter. Unused here but introduced to provide a
-            common interface
-
-        Returns
-        -------
-        id : `Operator`
-            The proximal operator instance
-        """
-
-        if constraint_type == 'unconstrained':
-            return IdentityOperator(space)
-        elif constraint_type == 'non-negative':
-
-            class _ProxOpNonNegative(Operator):
-
-                """The proximal operator."""
-
-                def __init__(self):
-                    """Initialize the proximal operator.
-
-                    Parameters
-                    ----------
-                    tau : positive `float`
-                    """
-                    super().__init__(domain=space, range=space, linear=False)
-
-                def _call(self, x, out):
-                    """Apply the operator to ``x`` and store the result in
-                    ``out``"""
-
-                    tmp = x.asarray()
-                    tmp[tmp < 0] = 0
-                    out[:] = tmp
-
-            return _ProxOpNonNegative()
-
-        else:
-            raise ValueError('unknown constraint type {}'
-                             ''.format(constraint_type))
-
-    return make_prox
-
-
-# TODO: check space of g
-# TODO: remove implicit product space assumption on z
-def prox_convconj_l2_l1(space, g, lam):
-    """Function for the proximal operator
-    """
-    lam = float(lam)
-
-    def make_prox(sigma):
-        """Returns an instance of the proximal operator.
-
-        Parameters
-        ----------
-        sigma : positive `float`
-            Step length parameter
-
-        Returns
-        -------
-        prox_op : `Operator`
-            Proximal operator initialized with ``sigma``
-        """
-
-        op = ProductSpaceOperator([
-            [Proximal_ConvConj_L2(sigma, space, g, 1), None]
-            [None, Proximal_ConvConj_L1(sigma, space, lam)]])
-        return op
-
-    return make_prox
 
 
 if __name__ == '__main__':

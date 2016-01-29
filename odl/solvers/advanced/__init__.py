@@ -22,3 +22,7 @@ __all__ = ()
 from . import chambolle_pock
 from .chambolle_pock import *
 __all__ += chambolle_pock.__all__
+
+from . import proximal_operators
+from .proximal_operators import *
+__all__ += proximal_operators.__all__

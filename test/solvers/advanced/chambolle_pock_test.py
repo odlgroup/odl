@@ -28,95 +28,10 @@ import pytest
 
 # Internal
 import odl
-from odl.solvers import (chambolle_pock_solver, proximal_zero,
-                         proximal_convexconjugate_l2_l1, proximal_primal)
+from odl.solvers import (
+    chambolle_pock_solver, proximal_zero, proximal_convexconjugate_l1,
+    proximal_convexconjugate_l2)
 from odl.util.testutils import all_almost_equal, all_equal
-
-
-def test_proximal():
-
-    # Image space
-    x_space = odl.uniform_discr(0, 10, 10)
-    x_data = x_space.element(np.arange(-5, 5))
-    out = x_space.element()
-
-    make_prox = proximal_primal(x_space)
-
-    prox_op = make_prox(0)
-
-    assert isinstance(prox_op, odl.IdentityOperator)
-
-    make_prox = proximal_primal(x_space, 'non-negative')
-
-    prox_op = make_prox(0)
-
-    prox_op(x_data, out)
-
-    assert all(out.asarray() >= 0)
-
-
-
-
-# TODO: improve test documentation
-def test_proximal_factories():
-    """Test of factory functions creating the proximal operator instances."""
-
-    precision = 8
-
-    # Projection
-    g = np.arange(20) / 2.
-    g_space = odl.uniform_discr(0, 10, g.shape)
-    g_data = g_space.element(g)
-
-    # Image space
-    x_space = odl.uniform_discr(0, 10, 10)
-    x_data = x_space.element(np.arange(-10, 0))
-
-    # Product space for matrix of operators
-    operator_range = odl.ProductSpace(g_space, odl.ProductSpace(x_space, 2))
-
-    # Product space element
-    p = np.arange(g.size)
-    vec0 = np.arange(5, 15)
-    vec1 = np.arange(10, 0, -1)
-    # dual variable
-    y = operator_range.element([p, [vec0, vec1]])
-
-    # Factory function for the prox op of the convex conjugate,F^*, of F
-    lam = 12
-    make_prox_f = proximal_convexconjugate_l2_l1(operator_range, g_data,
-                                                 lam=lam)
-
-    # Proximal operator of F^*
-    sigma = 0.5
-    prox_op_f_cc = make_prox_f(sigma)
-    print(sigma)
-
-    # Optimal point of the auxiliary minimization problem prox_sigma[F^*]
-    y_opt = prox_op_f_cc(y)
-
-    # First component of y_opt
-    assert all_almost_equal(y_opt[0].asarray(),
-                            (p - sigma * g) / (1 + sigma), precision)
-
-    # Second component of y_opt
-    tmp = np.sqrt(vec0 ** 2 + vec1 ** 2)
-    tmp[tmp < lam] = lam
-    tmp = lam * vec0 / tmp
-
-    assert all_almost_equal(y_opt[1][0], tmp, precision)
-
-    # Factory function for the proximal operator of G
-    make_prox_g = proximal_zero(x_space)
-
-    # Proximal operator of G
-    tau = 3
-    prox_op_g = make_prox_g(tau)
-
-    # Optimal point of the auxiliary minimization problem prox_tau[F]
-    x_opt = prox_op_g(x_data)
-
-    assert x_data == x_opt
 
 
 def test_chambolle_pock_solver():
