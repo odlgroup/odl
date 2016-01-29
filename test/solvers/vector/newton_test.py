@@ -31,23 +31,6 @@ import odl
 from odl.util.testutils import all_almost_equal
 
 
-class ResidualOp(odl.Operator):
-
-    """Calculate op(x) - rhs."""
-
-    def __init__(self, op, rhs):
-        super().__init__(op.domain, op.range, linear=False)
-        self.op = op
-        self.rhs = rhs.copy()
-
-    def _call(self, x, out):
-        self.op(x, out)
-        out -= self.rhs
-
-    def derivative(self, x):
-        return self.op.derivative(x)
-
-
 # Example problem of the form min f(x) = 0, for f(x) the non-convex
 # Rosenbrock function often used in optimization (see e.g.
 # https://en.wikipedia.org/wiki/Rosenbrock_function). In this case a = 1 and
@@ -93,15 +76,14 @@ def test_newton_solver_quadratic():
 
     # Create derivative operator operator
     Aop = odl.MatVecOperator(H, rn, rn)
-    deriv_op = ResidualOp(Aop, -c)
+    deriv_op = odl.ResidualOperator(Aop, -c)
 
     # Create line search object
     line_search = odl.solvers.BacktrackingLineSearch(
         lambda x: x.inner(Aop(x) / 2.0 + c), 0.5, 0.05, 10)
 
     # Solve using Newton's method
-    odl.solvers.newtons_method(deriv_op, xvec, line_search, num_iter=20,
-                               cg_iter=3)
+    odl.solvers.newtons_method(deriv_op, xvec, line_search, num_iter=5)
 
     assert all_almost_equal(xvec, x_opt, places=6)
 
@@ -110,25 +92,19 @@ def test_newton_solver_rosenbrock():
     # Test of Newton's method by minimizing Rosenbrock function in two
     # dimensions
 
-    # Creating the vector space
-    n = 2
-    rn = odl.Rn(n)
-
-    # The optimal solution to the problem
-    x_opt = np.array([1, 1])
-
     # Create derivative operator and line search object
     ros_deriv_op = RosenbrockDerivOp()
     line_search = odl.solvers.BacktrackingLineSearch(
         rosenbrock_function, 0.5, 0.05, 10)
 
     # Initial guess
-    x = rn.element([-1, 1])
+    x = ros_deriv_op.domain.zero()
 
     # Solving the problem
     odl.solvers.newtons_method(ros_deriv_op, x, line_search, num_iter=20)
 
-    assert all_almost_equal(x, x_opt, places=6)
+    # Assert x is close to the optimum at [1, 1]
+    assert all_almost_equal(x, [1, 1], places=6)
 
 
 if __name__ == '__main__':

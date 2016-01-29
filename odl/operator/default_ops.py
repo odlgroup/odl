@@ -32,7 +32,7 @@ from odl.set.sets import Field
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator',
-           'InnerProductOperator', 'ConstantOperator')
+           'InnerProductOperator', 'ConstantOperator', 'ResidualOperator')
 
 
 class ScalingOperator(Operator):
