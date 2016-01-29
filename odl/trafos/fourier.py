@@ -788,6 +788,34 @@ class PyfftwTransform(Operator):
             arrays.
             Otherwise, calculate the full complex FFT. If ``dom_dtype``
             is a complex type, this option has no effect.
+
+        Examples
+        --------
+        Complex-to-complex (default) transforms have the same grids
+        in domain and range:
+
+        >>> dom_shape = (2, 4)
+        >>> fft = PyfftwTransform(dom_shape)
+        >>> fft.domain.shape
+        (2, 4)
+        >>> fft.range.shape
+        (2, 4)
+        >>> print(fft(fft.domain.one()))  # FFT of an array of ones
+        [[(4+0j), 0j, 0j, 0j],
+         [(4+0j), 0j, 0j, 0j]]
+
+        Real-to-complex transforms have a range grid with shape
+        ``n // 2 + 1`` in the last tranform axis:
+
+        >>> dom_shape = (2, 3, 4)
+        >>> axes = (0, 1)
+        >>> fft = PyfftwTransform(
+        ...     dom_shape, dom_dtype='float', halfcomplex=True,
+        ...     axes=axes)
+        >>> fft.domain.shape   # shortened in the second axis
+        (2, 2, 4)
+        >>> fft.range.shape
+        (2, 3, 4)
         """
         # TODO: add option ran_shape to allow zero-padding
         if not np.all(np.array(dom_shape) > 0):
@@ -795,10 +823,17 @@ class PyfftwTransform(Operator):
                              ''.format(dom_shape))
 
         # Domain is a DiscreteLp with stride (1, ..., 1)
-        dom_shape = tuple(dom_shape)
+        dom_shape = tuple(np.atleast_1d(dom_shape))
+        # TODO: as_midp is deprecated, use partition instead
         dom = uniform_discr([0] * len(dom_shape), dom_shape, dom_shape,
                             dtype=dom_dtype, as_midp=False)
-        self._axes = list(axes)
+
+        axes_ = np.atleast_1d(axes)
+        axes_[axes_ < 0] += len(dom_shape)
+        if not all(0 <= ax < len(dom_shape) for ax in axes_):
+            raise ValueError('invalid entries in axes.')
+        self._axes = list(axes_)
+
         if dom.field == ComplexNumbers():
             self._halfcomplex = False
         else:
@@ -918,7 +953,7 @@ class PyfftwTransformInverse(Operator):
         ----------
         ran_shape : sequence of positive `int`
             Number of sampling points per axis. This determines the
-            domain of the operator.
+            range of the operator.
         ran_dtype : optional
             Data type of the output arrays
         axes : sequence of `int`, optional
@@ -931,6 +966,34 @@ class PyfftwTransformInverse(Operator):
             axis ``i``.
             Otherwise, domain and range have the same shape. If
             ``ran_dtype`` is a complex type, this option has no effect.
+
+        Examples
+        --------
+        Complex-to-complex (default) transforms have the same grids
+        in domain and range:
+
+        >>> ran_shape = (2, 4)
+        >>> ifft = PyfftwTransformInverse(ran_shape)
+        >>> ifft.domain.shape
+        (2, 4)
+        >>> ifft.range.shape
+        (2, 4)
+        >>> print(ifft(ifft.domain.one()))  # IFFT of an array of ones
+        [[(1+0j), 0j, 0j, 0j],
+         [(1+0j), 0j, 0j, 0j]]
+
+        Complex-to-real transforms have a domain grid with shape
+        ``n // 2 + 1`` in the last tranform axis:
+
+        >>> ran_shape = (2, 3, 4)
+        >>> axes = (0, 1)
+        >>> ifft = PyfftwTransformInverse(
+        ...     ran_shape, ran_dtype='float', halfcomplex=True,
+        ...     axes=axes)
+        >>> ifft.domain.shape   # shortened in the second axis
+        (2, 2, 4)
+        >>> ifft.range.shape
+        (2, 3, 4)
         """
         # TODO: add option dom_shape to allow zero-padding
         if not np.all(np.array(ran_shape) > 0):
@@ -938,10 +1001,17 @@ class PyfftwTransformInverse(Operator):
                              ''.format(ran_shape))
 
         # Range is a DiscreteLp with stride (1, ..., 1)
-        ran_shape = tuple(ran_shape)
+        ran_shape = tuple(np.atleast_1d(ran_shape))
+        # TODO: as_midp is deprecated, use partition instead
         ran = uniform_discr([0] * len(ran_shape), ran_shape, ran_shape,
                             dtype=ran_dtype, as_midp=False)
-        self._axes = list(axes)
+
+        axes_ = np.atleast_1d(axes)
+        axes_[axes_ < 0] += len(ran_shape)
+        if not all(0 <= ax < len(ran_shape) for ax in axes_):
+            raise ValueError('invalid entries in axes.')
+        self._axes = list(axes_)
+
         if ran.field == ComplexNumbers():
             self._halfcomplex = False
         else:
@@ -1077,7 +1147,6 @@ class FourierTransform(Operator):
     .. [1] Stein, Elias and Weiss, Guido (1971). Introduction to
        Fourier Analysis on Euclidean Spaces. Princeton, N.J.:
        Princeton University Press. ISBN 978-0-691-08078-9
-
     """
 
     def __init__(self, dom, ran=None, impl='numpy', **kwargs):

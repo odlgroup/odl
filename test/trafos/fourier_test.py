@@ -30,6 +30,7 @@ import pytest
 
 # ODL imports
 import odl
+from odl.discr.lp_discr import conj_exponent
 from odl.trafos.fourier import (
     reciprocal, inverse_reciprocal, dft_preprocess_data,  pyfftw_call,
     PyfftwTransform, PyfftwTransformInverse,
@@ -643,16 +644,135 @@ def test_pyfftw_call_backward_with_plan():
         assert all_almost_equal(idft_arr, true_idft)
 
 
-def test_ft_range(exponent, dtype):
-    # Check if the range is initialized correctly. Encompasses the init test
+def test_pyfftw_trafo_init():
+    # Just check if the code runs at all
+    shape = (5, 10)
 
-    def conj(ex):
-        if ex == 1.0:
-            return float('inf')
-        elif ex == float('inf'):
-            return 1.0
-        else:
-            return ex / (ex - 1.0)
+    PyfftwTransform(shape)
+    PyfftwTransform(shape, dom_dtype='float32')
+    PyfftwTransform(shape, dom_dtype='float32', axes=(0,))
+    PyfftwTransform(shape, dom_dtype='float32', axes=(0, -1))
+    PyfftwTransform(shape, dom_dtype='float32', axes=(0,), halfcomplex=True)
+
+
+def test_pyfftw_trafo_init_raise():
+    # Test different error scenarios
+    shape = (5, 10)
+
+    with pytest.raises(ValueError):
+        PyfftwTransform((-1, 1))
+
+    with pytest.raises(ValueError):
+        PyfftwTransform(shape, axes=(1, 2))
+
+
+def test_pyfftw_trafo_range():
+    # 1d
+    shape = 10
+    # TODO: this is a temporary hack since as_midp is not handled consistently
+    ran_grid = odl.uniform_sampling(odl.Interval(0, shape), shape,
+                                    as_midp=True)
+    fft = PyfftwTransform(shape, dom_dtype='complex64')
+    assert fft.range.grid.approx_equals(ran_grid, tol=1e-6)
+
+    # 3d
+    shape = (3, 4, 5)
+    # TODO: this is a temporary hack since as_midp is not handled consistently
+    ran_grid = odl.uniform_sampling(odl.IntervalProd([0] * 3, shape), shape,
+                                    as_midp=True)
+    fft = PyfftwTransform(shape, dom_dtype='complex64')
+    assert fft.range.grid.approx_equals(ran_grid, tol=1e-6)
+
+    # 3d, with axes and halfcomplex
+    shape = (3, 4, 5)
+    axes = (-1, -2)
+    ran_shape = (3, 3, 5)
+    # TODO: this is a temporary hack since as_midp is not handled consistently
+    ran_grid = odl.uniform_sampling(odl.IntervalProd([0] * 3, ran_shape),
+                                    ran_shape, as_midp=True)
+    fft = PyfftwTransform(shape, dom_dtype='float64', axes=axes,
+                          halfcomplex=True)
+    assert fft.range.grid.approx_equals(ran_grid, tol=1e-6)
+
+
+def test_pyfftw_inverse_trafo_init():
+    # Just check if the code runs at all
+    shape = (5, 10)
+
+    PyfftwTransformInverse(shape)
+    PyfftwTransformInverse(shape, ran_dtype='float32')
+    PyfftwTransformInverse(shape, ran_dtype='float32', axes=0)
+    PyfftwTransformInverse(shape, ran_dtype='float32', axes=(0, -1))
+    PyfftwTransformInverse(shape, ran_dtype='float32', axes=(0,),
+                           halfcomplex=True)
+
+
+def test_pyfftw_inverse_trafo_init_raise():
+    # Test different error scenarios
+    shape = (5, 10)
+
+    with pytest.raises(ValueError):
+        PyfftwTransformInverse((-1, 1))
+
+    with pytest.raises(ValueError):
+        PyfftwTransformInverse(shape, axes=(1, 2))
+
+
+def test_pyfftw_inverse_trafo_domain():
+    # 1d
+    shape = 10
+    # TODO: this is a temporary hack since as_midp is not handled consistently
+    dom_grid = odl.uniform_sampling(odl.Interval(0, shape), shape,
+                                    as_midp=True)
+    ifft = PyfftwTransformInverse(shape, ran_dtype='complex64')
+    assert ifft.domain.grid.approx_equals(dom_grid, tol=1e-6)
+
+    # 3d
+    shape = (3, 4, 5)
+    # TODO: this is a temporary hack since as_midp is not handled consistently
+    dom_grid = odl.uniform_sampling(odl.IntervalProd([0] * 3, shape), shape,
+                                    as_midp=True)
+    ifft = PyfftwTransformInverse(shape, ran_dtype='complex64')
+    assert ifft.domain.grid.approx_equals(dom_grid, tol=1e-6)
+
+    # 3d, with axes and halfcomplex
+    shape = (3, 4, 5)
+    axes = (0, -1)
+    dom_shape = (3, 4, 3)
+    # TODO: this is a temporary hack since as_midp is not handled consistently
+    dom_grid = odl.uniform_sampling(odl.IntervalProd([0] * 3, dom_shape),
+                                    dom_shape, as_midp=True)
+    ifft = PyfftwTransformInverse(shape, ran_dtype='float64', axes=axes,
+                                  halfcomplex=True)
+    assert ifft.domain.grid.approx_equals(dom_grid, tol=1e-6)
+
+
+def test_pyfftw_trafo_call():
+
+    # 2d, complex
+    shape = (50, 25)
+    fft = PyfftwTransform(dom_shape=shape, dom_dtype='complex128')
+    ifft = PyfftwTransformInverse(ran_shape=shape, ran_dtype='complex128')
+    arr = _random_array(shape, 'complex128')
+    arr_ft = fft(arr, flags=('FFTW_ESTIMATE',))
+    arr_ift = ifft(arr_ft, flags=('FFTW_ESTIMATE',))
+    assert (arr_ift - arr).norm() < 1e-6
+
+    # 2d, halfcomplex, with axes
+    shape = (50, 25)
+    axes = (0,)
+    fft = PyfftwTransform(dom_shape=shape, dom_dtype='complex128', axes=axes,
+                          halfcomplex=True)
+    ifft = PyfftwTransformInverse(ran_shape=shape, ran_dtype='complex128',
+                                  axes=axes, halfcomplex=True)
+    arr = _random_array(shape, 'complex128')
+    arr_ft = fft(arr, flags=('FFTW_ESTIMATE',))
+    arr_ift = ifft(arr_ft, flags=('FFTW_ESTIMATE',))
+    assert (arr_ift - arr).norm() < 1e-6
+
+
+def test_fourier_trafo_range(exponent, dtype):
+    # Check if the range is initialized correctly. Encompasses the init test
 
     # Testing R2C for real dtype, else C2C
 
@@ -667,7 +787,7 @@ def test_ft_range(exponent, dtype):
     assert dft.range.grid == reciprocal(dft.domain.grid,
                                         halfcomplex=halfcomplex,
                                         shift=True)
-    assert dft.range.exponent == conj(exponent)
+    assert dft.range.exponent == conj_exponent(exponent)
 
     # 3D
     shape = (3, 4, 5)
@@ -680,7 +800,7 @@ def test_ft_range(exponent, dtype):
     assert dft.range.grid == reciprocal(dft.domain.grid,
                                         halfcomplex=halfcomplex,
                                         shift=True)
-    assert dft.range.exponent == conj(exponent)
+    assert dft.range.exponent == conj_exponent(exponent)
 
 
 def sinc(x):
