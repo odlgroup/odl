@@ -258,7 +258,10 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
                              "".format(halfcx_parity))
 
     irmin = np.asarray(x0)
-    irmax = irmin + 2 * pi / (irshape * rstride)
+    irshape = np.asarray(irshape)
+    irstride = np.copy(rstride)
+    irstride[axes] = 2 * pi / (irshape[axes] * rstride[axes])
+    irmax = irmin + (irshape - 1) * irstride
 
     # TODO: specify as_midp per axis, not supported currently
     return RegularGrid(irmin, irmax, irshape, as_midp=True)

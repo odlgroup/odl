@@ -26,14 +26,14 @@ standard_library.install_aliases()
 from itertools import product
 from math import pi
 import numpy as np
-import platform
 import pytest
 
 # ODL imports
 import odl
 from odl.trafos.fourier import (
-    reciprocal, dft_preprocess_data, dft_postprocess_data,
-    pyfftw_call, FourierTransform, _TYPE_MAP_R2C)
+    reciprocal, inverse_reciprocal, dft_preprocess_data,  pyfftw_call,
+    PyfftwTransform, PyfftwTransformInverse,
+    FourierTransform, _TYPE_MAP_R2C)
 from odl.util.testutils import all_almost_equal, all_equal
 from odl.util.utility import is_real_dtype
 
@@ -52,28 +52,22 @@ def exponent(request):
     return request.param
 
 
-if platform.system() == 'Linux':
-    dtype_params = ['float32', 'float64', 'float128',
-                    'complex64', 'complex128', 'complex256']
-else:
-    dtype_params = ['float32', 'float64', 'complex64', 'complex128']
+dtype_params = [str(dtype) for dtype in _TYPE_MAP_R2C.keys()]
+dtype_params += [str(dtype) for dtype in _TYPE_MAP_R2C.values()]
+dtype_params = list(set(dtype_params))
 dtype_ids = [' dtype = {} '.format(dt) for dt in dtype_params]
-dtype_fixture = pytest.fixture(scope="module", ids=dtype_ids,
-                               params=dtype_params)
 
 
-@dtype_fixture
+@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
 def dtype(request):
     return request.param
 
 
 plan_params = ['estimate', 'measure', 'patient', 'exhaustive']
 plan_ids = [" planning = '{}' ".format(p) for p in plan_params]
-plan_fixture = pytest.fixture(scope="module", ids=plan_ids,
-                              params=plan_params)
 
 
-@plan_fixture
+@pytest.fixture(scope="module", ids=plan_ids, params=plan_params)
 def planning(request):
     return request.param
 
@@ -116,6 +110,10 @@ def test_reciprocal_1d_odd():
     tol = 0.999 * true_recip_stride / 2
     assert not rgrid.approx_contains(0, tol=tol)
 
+    # Inverting the reciprocal should give back the original
+    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
+    assert irgrid.approx_equals(grid, tol=1e-6)
+
 
 def test_reciprocal_1d_odd_halfcomplex():
 
@@ -142,6 +140,11 @@ def test_reciprocal_1d_odd_halfcomplex():
     assert all_almost_equal(rgrid.stride, true_recip_stride)
     # Max point should be half a positive recip stride
     assert all_almost_equal(rgrid.max_pt, -true_recip_stride / 2)
+
+    # Inverting the reciprocal should give back the original
+    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
+                                halfcx_parity='odd')
+    assert irgrid.approx_equals(grid, tol=1e-6)
 
 
 def test_reciprocal_1d_even():
@@ -174,6 +177,10 @@ def test_reciprocal_1d_even():
     # Zero should be at index n // 2
     assert all_almost_equal(rgrid[n // 2], 0)
 
+    # Inverting the reciprocal should give back the original
+    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
+    assert irgrid.approx_equals(grid, tol=1e-6)
+
 
 def test_reciprocal_1d_even_halfcomplex():
 
@@ -201,6 +208,11 @@ def test_reciprocal_1d_even_halfcomplex():
     # Max should be zero
     assert all_almost_equal(rgrid.max_pt, 0)
 
+    # Inverting the reciprocal should give back the original
+    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
+                                halfcx_parity='even')
+    assert irgrid.approx_equals(grid, tol=1e-6)
+
 
 def test_reciprocal_nd():
 
@@ -217,6 +229,10 @@ def test_reciprocal_nd():
     assert all_equal(rgrid.shape, n)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
     assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
+
+    # Inverting the reciprocal should give back the original
+    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
+    assert irgrid.approx_equals(grid, tol=1e-6)
 
 
 def test_reciprocal_nd_shift_list():
@@ -237,6 +253,10 @@ def test_reciprocal_nd_shift_list():
     assert all_almost_equal(rgrid.stride, true_recip_stride)
     assert all_almost_equal(rgrid.min_pt[noshift], -rgrid.max_pt[noshift])
     assert all_almost_equal(rgrid[n // 2], [0] * 3)
+
+    # Inverting the reciprocal should give back the original
+    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
+    assert irgrid.approx_equals(grid, tol=1e-6)
 
 
 def test_reciprocal_nd_axes():
@@ -265,6 +285,11 @@ def test_reciprocal_nd_axes():
         assert all_equal(rgrid.min_pt[inactive], grid.min_pt[inactive])
         assert all_equal(rgrid.max_pt[inactive], grid.max_pt[inactive])
 
+        # Inverting the reciprocal should give back the original
+        irgrid = inverse_reciprocal(rgrid, grid.min_pt, axes=axes,
+                                    halfcomplex=False)
+        assert irgrid.approx_equals(grid, tol=1e-6)
+
 
 def test_reciprocal_nd_halfcomplex():
 
@@ -285,12 +310,16 @@ def test_reciprocal_nd_halfcomplex():
     assert all_equal(rgrid.shape, n)
     assert rgrid.max_pt[-1] == -stride_last / 2
 
+    # Inverting the reciprocal should give back the original
+    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
+                                halfcx_parity='odd')
+    assert irgrid.approx_equals(grid, tol=1e-6)
+
 
 def test_dft_preprocess_data():
 
     shape = (2, 3, 4)
-    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape,
-                                    field=odl.ComplexNumbers())
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, dtype='complex64')
 
     # With shift
     correct_arr = []
@@ -319,8 +348,7 @@ def test_dft_preprocess_data():
 def test_dft_preprocess_data_with_axes():
 
     shape = (2, 3, 4)
-    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape,
-                                    field=odl.ComplexNumbers())
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, dtype='complex64')
 
     axes = [1]  # Only middle index counts
     # With shift
@@ -364,6 +392,9 @@ def _halfcomplex_shape(shape, axes=None):
 
 def test_pyfftw_call_forward(dtype):
     # Test against Numpy's FFT
+    if dtype == np.dtype('float16'):  # not supported, skipping
+        return
+
     halfcomplex, out_dtype = _params_from_dtype(dtype)
 
     for shape in [(10,), (3, 4, 5)]:
@@ -384,6 +415,9 @@ def test_pyfftw_call_forward(dtype):
 
 def test_pyfftw_call_backward(dtype):
     # Test against Numpy's IFFT, no normalization
+    if dtype == np.dtype('float16'):  # not supported, skipping
+        return
+
     halfcomplex, in_dtype = _params_from_dtype(dtype)
 
     for shape in [(10,), (3, 4, 5)]:
@@ -514,6 +548,8 @@ def test_pyfftw_plan_preserve_input(planning):
 
 
 def test_pyfftw_call_forward_with_axes(dtype):
+    if dtype == np.dtype('float16'):  # not supported, skipping
+        return
 
     halfcomplex, out_dtype = _params_from_dtype(dtype)
     shape = (3, 4, 5)
@@ -536,6 +572,8 @@ def test_pyfftw_call_forward_with_axes(dtype):
 
 
 def test_pyfftw_call_backward_with_axes(dtype):
+    if dtype == np.dtype('float16'):  # not supported, skipping
+        return
 
     halfcomplex, in_dtype = _params_from_dtype(dtype)
     shape = (3, 4, 5)
@@ -619,10 +657,9 @@ def test_ft_range(exponent, dtype):
     # Testing R2C for real dtype, else C2C
 
     # 1D
-    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
     shape = 10
     space_discr = odl.uniform_discr(0, 1, shape, exponent=exponent,
-                                    impl='numpy', dtype=dtype, field=field)
+                                    impl='numpy', dtype=dtype)
 
     dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
@@ -633,10 +670,9 @@ def test_ft_range(exponent, dtype):
     assert dft.range.exponent == conj(exponent)
 
     # 3D
-    field = odl.RealNumbers() if is_real_dtype(dtype) else odl.ComplexNumbers()
     shape = (3, 4, 5)
     space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, exponent=exponent,
-                                    impl='numpy', dtype=dtype, field=field)
+                                    impl='numpy', dtype=dtype)
 
     dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
@@ -669,8 +705,7 @@ def test_ft_charfun_1d():
     assert (func_dft - func_true_ft).norm() < 1e-6
 
     # Complex version, should be as good
-    discr = odl.uniform_discr(-2, 2, 64, impl='numpy',
-                              field=odl.ComplexNumbers())
+    discr = odl.uniform_discr(-2, 2, 64, impl='numpy', dtype='complex64')
     dft = FourierTransform(discr)
 
     func_true_ft = dft.range.element(char_interval_ft)
@@ -678,8 +713,7 @@ def test_ft_charfun_1d():
     assert (func_dft - func_true_ft).norm() < 1e-6
 
     # Truly complex input
-    discr = odl.uniform_discr(-2, 2, 64, impl='numpy',
-                              field=odl.ComplexNumbers())
+    discr = odl.uniform_discr(-2, 2, 64, impl='numpy', dtype='complex64')
     dft = FourierTransform(discr)
 
     func_true_ft = dft.range.element(char_interval_ft) * (1 + 1j)
@@ -688,8 +722,7 @@ def test_ft_charfun_1d():
     assert (func_dft - func_true_ft).norm() < 1e-6
 
     # Without shift
-    discr = odl.uniform_discr(-2, 2, 64, impl='numpy',
-                              field=odl.ComplexNumbers())
+    discr = odl.uniform_discr(-2, 2, 64, impl='numpy', dtype='complex64')
     dft = FourierTransform(discr, shift=False)
 
     func_true_ft = dft.range.element(char_interval_ft)
@@ -749,7 +782,7 @@ def test_ft_freq_shifted_charfun_1d():
         return sinc((x + 1) / 2) / np.sqrt(2 * np.pi)
 
     discr = odl.uniform_discr(-5 * np.pi, 5 * np.pi, 101, impl='numpy',
-                              field=odl.ComplexNumbers())
+                              dtype='complex64')
     dft = FourierTransform(discr)
     func_true_ft = dft.range.element(fshift_char_interval_ft)
     func_dft = dft(fshift_char_interval)
@@ -776,7 +809,7 @@ def test_dft_with_known_pairs_2d():
                 (2 * np.pi))
 
     discr = odl.uniform_discr([-2] * 2, [2] * 2, (65,) * 2, impl='numpy',
-                              field=odl.ComplexNumbers())
+                              dtype='complex64')
     dft = FourierTransform(discr)
     func_true_ft = dft.range.element(fshift_char_rect_ft)
     func_dft = dft(fshift_char_rect)
