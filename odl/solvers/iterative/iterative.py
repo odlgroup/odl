@@ -62,8 +62,8 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, partial=None):
     convergence, where :math:`\\lVert\mathcal{A}\\rVert` stands for the
     operator norm of :math:`\mathcal{A}`.
 
-    Users may also optionally provide a projection operator to project each
-    partial result on some subset.
+    Users may also optionally provide a projection to project each
+    iterate onto some subset. For example enforcing positivity.
 
     This implementation uses a minimum amount of memory copies by
     applying re-usable temporaries and in-place evaluation.
@@ -92,7 +92,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, partial=None):
     projection : `callable`, optional
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
-        argument and modify it inplace.
+        argument and modify it in place.
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 

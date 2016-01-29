@@ -29,35 +29,33 @@ import numpy as np
 
 
 # Find the valid projectors
-solvers = ['steepest_descent',
-           'landweber',
-           'conjugate_gradient',
-           'conjugate_gradient_normal']
-
-
 @pytest.fixture(scope="module",
-                params=solvers)
+                params=['steepest_descent',
+                        'landweber',
+                        'conjugate_gradient',
+                        'conjugate_gradient_normal'])
 def iterative_solver(request):
+    """Return a solver given by a name with interface solve(op, x, rhs)."""
     solver_name = request.param
 
     if solver_name == 'steepest_descent':
-        def solver(A, x, rhs):
-            norm2 = A.adjoint(A(x)).norm() / x.norm()
+        def solver(op, x, rhs):
+            norm2 = op.adjoint(op(x)).norm() / x.norm()
 
-            # Define gradient as A* (Ax - b)
-            gradient_op = A.adjoint * odl.ResidualOperator(A, rhs)
+            # Define gradient as ``Ax - b``
+            gradient_op = op.adjoint * odl.ResidualOperator(op, rhs)
             odl.solvers.steepest_descent(gradient_op, x, niter=10,
                                          line_search=0.5 / norm2)
     elif solver_name == 'landweber':
-        def solver(A, x, rhs):
-            norm2 = A.adjoint(A(x)).norm() / x.norm()
-            odl.solvers.landweber(A, x, rhs, niter=10, omega=0.5 / norm2)
+        def solver(op, x, rhs):
+            norm2 = op.adjoint(op(x)).norm() / x.norm()
+            odl.solvers.landweber(op, x, rhs, niter=10, omega=0.5 / norm2)
     elif solver_name == 'conjugate_gradient':
-        def solver(A, x, rhs):
-            odl.solvers.conjugate_gradient(A, x, rhs, niter=10)
+        def solver(op, x, rhs):
+            odl.solvers.conjugate_gradient(op, x, rhs, niter=10)
     elif solver_name == 'conjugate_gradient_normal':
-        def solver(A, x, rhs):
-            odl.solvers.conjugate_gradient_normal(A, x, rhs, niter=10)
+        def solver(op, x, rhs):
+            odl.solvers.conjugate_gradient_normal(op, x, rhs, niter=10)
     else:
         raise ValueError('solver not valid')
 
@@ -81,6 +79,7 @@ def test_solver(iterative_solver):
     x = op.domain.one()
     iterative_solver(op, x, rhs)
 
+    # Assert residual is small
     assert all_almost_equal(op(x), rhs, places)
 
 if __name__ == '__main__':
