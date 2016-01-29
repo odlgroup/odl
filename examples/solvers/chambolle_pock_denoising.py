@@ -31,7 +31,8 @@ import matplotlib.pyplot as plt
 # Internal
 import odl
 from odl.solvers import (chambolle_pock_solver,
-                         proximal_convexconjugate_l2_l1, proximal_zero)
+                         combine_proximals, proximal_convexconjugate_l1,
+                         proximal_convexconjugate_l2, proximal_zero)
 
 
 # Read the image
@@ -66,20 +67,22 @@ x = K.domain.zero()
 # Operator norm
 K_norm = 1.1 * odl.operator.oputils.power_method_opnorm(K, 200)
 
-# Display partial
-fig = plt.figure('iteration')
-partial = odl.solvers.util.ForEachPartial(
-    lambda result: result.show(fig=fig, show=False))
-# partial = odl.solvers.util.ShowPartial(fig=fig, show=False,
-# title='iteration')
-partial &= odl.solvers.util.PrintIterationTimePartial()
+# Optionally pass partial to the solver to display intermediate results
+# partial = (odl.solvers.util.ShowPartial(title='intermediate results') &
+#            odl.solvers.util.PrintTimingPartial())
+partial = None
+
+prox_convconj_l2 = proximal_convexconjugate_l2(discr_space, lam=1, g=noisy)
+prox_convconj_l1 = proximal_convexconjugate_l1(grad.range, lam=1 / 16)
+
+# Order should correspond to the operator K
+proximal_dual = combine_proximals([prox_convconj_l2, prox_convconj_l1])
 
 # Run algorithms (and display intermediates)
 chambolle_pock_solver(K, x, tau=1/K_norm, sigma=1/K_norm,
                       proximal_primal=proximal_zero(K.domain),
-                      proximal_dual=proximal_convexconjugate_l2_l1(
-                          K.range, noisy, lam=1 / 16),
-                      niter=10, partial=partial)
+                      proximal_dual=proximal_dual,
+                      niter=500, partial=partial)
 
 # Display images
 orig.show(title='original image')

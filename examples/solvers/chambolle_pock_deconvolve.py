@@ -32,8 +32,9 @@ import matplotlib.pyplot as plt
 
 # Internal
 import odl
-from odl.solvers import (chambolle_pock_solver,
-                         proximal_convexconjugate_l2_l1, proximal_zero)
+from odl.solvers import (chambolle_pock_solver, combine_proximals,
+                         proximal_convexconjugate_l1,
+                         proximal_convexconjugate_l2, proximal_zero)
 
 
 class Convolution(odl.Operator):
@@ -109,18 +110,26 @@ prod_op_norm = 77
 g = discr_space.element()
 conv(discr_phantom, out=g)
 
-# Optionally pass partial to the solver to display intermediate results
-fig = plt.figure('intermediate results')
-partial = odl.solvers.util.ForEachPartial(
-        lambda result: result.show(fig=fig, show=False))
-partial &= odl.solvers.util.PrintIterationTimePartial()
 
+prox_convconj_l2 = proximal_convexconjugate_l2(discr_space, lam=1/1, g=g)
+prox_convconj_l1 = proximal_convexconjugate_l1(grad.range, lam=0.01)
+
+# Order should correspond to the operator K
+proximal_dual = combine_proximals([prox_convconj_l2, prox_convconj_l1])
+
+# Optionally pass partial to the solver to display intermediate results
+# partial = (odl.solvers.util.ShowPartial(title='intermediate results') &
+#            odl.solvers.util.PrintTimingPartial())
+fig = plt.figure()
+partial = odl.solvers.util.PrintTimingPartial()
+partial &= odl.solvers.util.ForEachPartial(lambda x: x.show(fig=fig,
+                                                            show=False))
+partial &= odl.solvers.util.PrintIterationPartial()
 # Run algorithms
 chambolle_pock_solver(prod_op, x, tau=1 / prod_op_norm, sigma=1 / prod_op_norm,
                       proximal_primal=proximal_zero(prod_op.domain),
-                      proximal_dual=proximal_convexconjugate_l2_l1(
-                              prod_op.range, g, lam=0.0001),
-                      niter=100,
+                      proximal_dual=proximal_dual,
+                      niter=200,
                       partial=partial)
 
 # Display images
