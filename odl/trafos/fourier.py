@@ -809,9 +809,9 @@ class PyfftwTransform(Operator):
         >>> fft = PyfftwTransform(
         ...     dom_shape, dom_dtype='float', halfcomplex=True,
         ...     axes=axes)
-        >>> fft.domain.shape   # shortened in the second axis
+        >>> fft.range.shape   # shortened in the second axis
         (2, 2, 4)
-        >>> fft.range.shape
+        >>> fft.domain.shape
         (2, 3, 4)
         """
         # TODO: add option ran_shape to allow zero-padding
