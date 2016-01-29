@@ -800,9 +800,6 @@ class PyfftwTransform(Operator):
         (2, 4)
         >>> fft.range.shape
         (2, 4)
-        >>> print(fft(fft.domain.one()))  # FFT of an array of ones
-        [[(4+0j), 0j, 0j, 0j],
-         [(4+0j), 0j, 0j, 0j]]
 
         Real-to-complex transforms have a range grid with shape
         ``n // 2 + 1`` in the last tranform axis:
@@ -978,9 +975,6 @@ class PyfftwTransformInverse(Operator):
         (2, 4)
         >>> ifft.range.shape
         (2, 4)
-        >>> print(ifft(ifft.domain.one()))  # IFFT of an array of ones
-        [[(1+0j), 0j, 0j, 0j],
-         [(1+0j), 0j, 0j, 0j]]
 
         Complex-to-real transforms have a domain grid with shape
         ``n // 2 + 1`` in the last tranform axis:
