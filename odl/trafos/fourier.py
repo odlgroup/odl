@@ -267,219 +267,6 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
     return RegularGrid(irmin, irmax, irshape, as_midp=True)
 
 
-def dft_preprocess_data(dfunc, shift=True, axes=None):
-    """Pre-process the real-space data before DFT.
-
-    This function multiplies the given data with the separable
-    function
-    ::
-        p(x) = exp(-1j * dot(x - x[0], xi[0]))
-
-    where ``x[0]`` and ``xi[0]`` are the minimum coodinates of
-    the real space and reciprocal grids, respectively. In discretized
-    form, this function becomes for an array
-    ::
-        p[k] = exp(-1j * k * s * xi[0])
-
-    If the reciprocal grid is not shifted, i.e. symmetric around 0,
-    it is ``xi[0] =  pi/s * (-1 + 1/N)``, hence
-    ::
-        p[k] = exp(1j * pi * k * (1 - 1/N))
-
-    For a shifted grid, we have :math:``xi[0] =  -pi/s``, thus the
-    array is given by
-    ::
-        p[k] = (-1)**k
-
-    Parameters
-    ----------
-    dfunc : `DiscreteLpVector`
-        Discrete function to be pre-processed. Changes are made
-        in place. For real input data, this is only possible if
-        ``shift=True`` since the factors :math:`p_k` are real only
-        in this case.
-    shift : `bool` or sequence of `bool`, optional
-        If `True`, the grid is shifted by half a stride in the negative
-        direction. With a sequence, this option is applied separately on
-        each axis.
-    axes : sequence of `int`, optional
-        Dimensions in which to calculate the reciprocal. The sequence
-        must have the same length as ``shift`` if the latter is given
-        as a sequence. `None` means all axes in ``dfunc``.
-    """
-    if dfunc.space.field == RealNumbers() and not shift:
-        raise ValueError('cannot pre-process in-place without shift.')
-
-    if axes is None:
-        axes = list(range(dfunc.ndim))
-
-    shape = dfunc.space.grid.shape
-    shift_list = _shift_list(shift, dfunc.ndim)
-
-    def _onedim_arr(length, shift):
-        if shift:
-            # (-1)^indices
-            indices = np.arange(length, dtype='int8')
-            arr = -2 * np.mod(indices, 2) + 1
-        else:
-            indices = np.arange(length, dtype='float64')
-            arr = np.exp(1j * pi * indices * (1 - 1.0 / length))
-        return arr
-
-    onedim_arrs = []
-    for axis in axes:
-        shift = shift_list[axis]
-        length = shape[axis]
-        onedim_arrs.append(_onedim_arr(length, shift))
-
-    fast_1d_tensor_mult(dfunc.asarray(), onedim_arrs, axes=axes)
-
-
-def _interp_kernel_ft(norm_freqs, interp):
-    """Scaled FT of a one-dimensional interpolation kernel.
-
-    For normalized frequencies ``-1/2 <= xi <= 1/2``, this
-    function returns
-    ::
-        sinc(pi * xi)**k / sqrt(2 * pi)
-
-    where ``k=1`` for 'nearest', ``k=2`` for 'linear' and ``k=3``
-    for 'cubic' interpolation.
-
-    Parameters
-    ----------
-    norm_freqs : `numpy.ndarray`
-        Normalized frequencies between -1/2 and 1/2
-    interp : {'nearest', 'linear', 'cubic'}
-        Type of interpolation kernel
-
-    Returns
-    -------
-    ker_ft : `numpy.ndarray`
-        Values of the kernel FT at the given frequencies
-    """
-    # Numpy's sinc(x) is equal to the 'math' sinc(pi * x)
-    if interp == 'nearest':
-        return np.sinc(norm_freqs) / np.sqrt(2 * np.pi)
-    elif interp == 'linear':
-        return np.sinc(norm_freqs) ** 2 / np.sqrt(2 * np.pi)
-    elif interp == 'cubic':
-        return np.sinc(norm_freqs) ** 3 / np.sqrt(2 * np.pi)
-    else:  # Shouldn't happen
-        raise RuntimeError
-
-
-def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
-                         interp):
-    """Post-process the Fourier-space data after DFT.
-
-    This function multiplies the given data with the separable
-    function
-    ::
-        q(xi) = exp(-1j * dot(x[0], xi)) * s * phi_hat(xi_bar)
-
-    where ``x[0]`` and ``s`` are the minimum point and the stride of
-    the real space grid, respectively, and ``phi_hat(xi_bar)`` is the FT
-    of the interpolation kernel. In discretized form, the exponential
-    part of this function becomes an array
-    ::
-        q[k] = exp(-1j * dot(x[0], xi[k]))
-
-    and the arguments ``xi_bar`` to the interpolation kernel
-    are the normalized frequencies
-    ::
-        for ``shift=True`` : xi_bar[k] = -pi + pi * (2*k) / N
-        for ``shift=False``: xi_bar[k] = -pi + pi * (2*k+1) / N
-
-    See [1]_, Section 13.9 "Computing Fourier Integrals Using the FFT"
-    for a similar approach.
-
-    Parameters
-    ----------
-    dfunc : `DiscreteLpVector`
-        Discrete function to be post-processed. Its grid is assumed
-        to be the reciprocal grid. Changes are made in place.
-    x0 : array-like
-        Minimal grid point of the spatial grid before transform
-    shifts : sequence of `bool`
-        If `True`, the grid is shifted by half a stride in the negative
-        direction in the corresponding axes. The sequence must have the
-        same length as ``axes``.
-    axes : sequence of `int`
-        Dimensions along which to take the transform. The sequence must
-        have the same length as ``shifts``.
-    orig_shape : sequence of positive `int`
-        Shape of the original array
-    orig_stride : sequence of positive `float`
-        Stride of the original array
-    interp : `str`
-        Interpolation scheme used in real space
-
-    References
-    ----------
-    .. [1] Press, William H, Teukolsky, Saul A, Vetterling, William T,
-       and Flannery, Brian P. *Numerical Recipes in C - The Art of
-       Scientific Computing* (Volume 3). Cambridge University Press,
-       2007.
-    """
-    # Reciprocal grid
-    rgrid = dfunc.space.grid
-    shift_list = list(shifts)
-    axes = list(axes)
-
-    onedim_arrs = []
-    for ax in axes:
-        x = x0[ax]
-        xi = rgrid.coord_vectors[ax]
-
-        # First part: exponential array
-        onedim_arr = (np.exp(-1j * x * xi))
-
-        # Second part: interpolation kernel
-        len_dft = rgrid.shape[ax]
-        len_orig = orig_shape[ax]
-        halfcomplex = (len_dft < len_orig)
-        odd = len_orig % 2
-        shift = shift_list[ax]
-
-        if shift:
-            # f_k = -0.5 + k / N
-            fmin = -0.5
-            if halfcomplex:
-                if odd:
-                    fmax = - 1.0 / (2 * len_orig)
-                else:
-                    fmax = 0.0
-            else:
-                # Always -0.5 + (N-1)/N = 0.5 - 1/N
-                fmax = 0.5 - 1.0 / len_orig
-
-        else:
-            # f_k = -0.5 + 1/(2*N) + k / N
-            fmin = -0.5 + 1.0 / (2 * len_orig)
-            if halfcomplex:
-                if odd:
-                    fmax = 0.0
-                else:
-                    fmax = 1.0 / (2 * len_orig)
-            else:
-                # Always -0.5 + (N-1)/N = 0.5 - 1/N
-                fmax = 0.5 - 1.0 / (2 * len_orig)
-
-        freqs = np.linspace(fmin, fmax, num=len_dft)
-
-        stride = orig_stride[ax]
-        onedim_arr *= stride * _interp_kernel_ft(freqs, interp)
-        onedim_arrs.append(onedim_arr)
-
-    if dfunc.space.order == 'C':
-        mult_axes = axes
-    else:
-        mult_axes = list(reversed(axes))
-
-    fast_1d_tensor_mult(dfunc.asarray(), onedim_arrs, axes=mult_axes)
-
-
 def _pyfftw_to_local(flag):
     return flag.lstrip('FFTW_').lower()
 
@@ -1092,6 +879,219 @@ class PyfftwTransformInverse(Operator):
             axes=self.axes, halfcomplex=self.halfcomplex)
 
 
+def dft_preprocess_data(dfunc, shift=True, axes=None):
+    """Pre-process the real-space data before DFT.
+
+    This function multiplies the given data with the separable
+    function
+    ::
+        p(x) = exp(-1j * dot(x - x[0], xi[0]))
+
+    where ``x[0]`` and ``xi[0]`` are the minimum coodinates of
+    the real space and reciprocal grids, respectively. In discretized
+    form, this function becomes for an array
+    ::
+        p[k] = exp(-1j * k * s * xi[0])
+
+    If the reciprocal grid is not shifted, i.e. symmetric around 0,
+    it is ``xi[0] =  pi/s * (-1 + 1/N)``, hence
+    ::
+        p[k] = exp(1j * pi * k * (1 - 1/N))
+
+    For a shifted grid, we have :math:``xi[0] =  -pi/s``, thus the
+    array is given by
+    ::
+        p[k] = (-1)**k
+
+    Parameters
+    ----------
+    dfunc : `DiscreteLpVector`
+        Discrete function to be pre-processed. Changes are made
+        in place. For real input data, this is only possible if
+        ``shift=True`` since the factors :math:`p_k` are real only
+        in this case.
+    shift : `bool` or sequence of `bool`, optional
+        If `True`, the grid is shifted by half a stride in the negative
+        direction. With a sequence, this option is applied separately on
+        each axis.
+    axes : sequence of `int`, optional
+        Dimensions in which to calculate the reciprocal. The sequence
+        must have the same length as ``shift`` if the latter is given
+        as a sequence. `None` means all axes in ``dfunc``.
+    """
+    if dfunc.space.field == RealNumbers() and not shift:
+        raise ValueError('cannot pre-process in-place without shift.')
+
+    if axes is None:
+        axes = list(range(dfunc.ndim))
+
+    shape = dfunc.space.grid.shape
+    shift_list = _shift_list(shift, dfunc.ndim)
+
+    def _onedim_arr(length, shift):
+        if shift:
+            # (-1)^indices
+            indices = np.arange(length, dtype='int8')
+            arr = -2 * np.mod(indices, 2) + 1
+        else:
+            indices = np.arange(length, dtype='float64')
+            arr = np.exp(1j * pi * indices * (1 - 1.0 / length))
+        return arr
+
+    onedim_arrs = []
+    for axis in axes:
+        shift = shift_list[axis]
+        length = shape[axis]
+        onedim_arrs.append(_onedim_arr(length, shift))
+
+    fast_1d_tensor_mult(dfunc.asarray(), onedim_arrs, axes=axes)
+
+
+def _interp_kernel_ft(norm_freqs, interp):
+    """Scaled FT of a one-dimensional interpolation kernel.
+
+    For normalized frequencies ``-1/2 <= xi <= 1/2``, this
+    function returns
+    ::
+        sinc(pi * xi)**k / sqrt(2 * pi)
+
+    where ``k=1`` for 'nearest', ``k=2`` for 'linear' and ``k=3``
+    for 'cubic' interpolation.
+
+    Parameters
+    ----------
+    norm_freqs : `numpy.ndarray`
+        Normalized frequencies between -1/2 and 1/2
+    interp : {'nearest', 'linear', 'cubic'}
+        Type of interpolation kernel
+
+    Returns
+    -------
+    ker_ft : `numpy.ndarray`
+        Values of the kernel FT at the given frequencies
+    """
+    # TODO: use correct cubic formula
+    # Numpy's sinc(x) is equal to the 'math' sinc(pi * x)
+    if interp == 'nearest':
+        return np.sinc(norm_freqs) / np.sqrt(2 * np.pi)
+    elif interp == 'linear':
+        return np.sinc(norm_freqs) ** 2 / np.sqrt(2 * np.pi)
+    elif interp == 'cubic':
+        return np.sinc(norm_freqs) ** 3 / np.sqrt(2 * np.pi)
+    else:  # Shouldn't happen
+        raise RuntimeError
+
+
+def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
+                         interp):
+    """Post-process the Fourier-space data after DFT.
+
+    This function multiplies the given data with the separable
+    function
+    ::
+        q(xi) = exp(-1j * dot(x[0], xi)) * s * phi_hat(xi_bar)
+
+    where ``x[0]`` and ``s`` are the minimum point and the stride of
+    the real space grid, respectively, and ``phi_hat(xi_bar)`` is the FT
+    of the interpolation kernel. In discretized form, the exponential
+    part of this function becomes an array
+    ::
+        q[k] = exp(-1j * dot(x[0], xi[k]))
+
+    and the arguments ``xi_bar`` to the interpolation kernel
+    are the normalized frequencies
+    ::
+        for ``shift=True`` : xi_bar[k] = -pi + pi * (2*k) / N
+        for ``shift=False``: xi_bar[k] = -pi + pi * (2*k+1) / N
+
+    See [1]_, Section 13.9 "Computing Fourier Integrals Using the FFT"
+    for a similar approach.
+
+    Parameters
+    ----------
+    dfunc : `DiscreteLpVector`
+        Discrete function to be post-processed. Its grid is assumed
+        to be the reciprocal grid. Changes are made in place.
+    x0 : array-like
+        Minimal grid point of the spatial grid before transform
+    shifts : sequence of `bool`
+        If `True`, the grid is shifted by half a stride in the negative
+        direction in the corresponding axes. The sequence must have the
+        same length as ``axes``.
+    axes : sequence of `int`
+        Dimensions along which to take the transform. The sequence must
+        have the same length as ``shifts``.
+    orig_shape : sequence of positive `int`
+        Shape of the original array
+    orig_stride : sequence of positive `float`
+        Stride of the original array
+    interp : `str`
+        Interpolation scheme used in real space
+
+    References
+    ----------
+    .. [1] Press, William H, Teukolsky, Saul A, Vetterling, William T,
+       and Flannery, Brian P. *Numerical Recipes in C - The Art of
+       Scientific Computing* (Volume 3). Cambridge University Press,
+       2007.
+    """
+    # Reciprocal grid
+    rgrid = dfunc.space.grid
+    shift_list = list(shifts)
+    axes = list(axes)
+
+    onedim_arrs = []
+    for ax in axes:
+        x = x0[ax]
+        xi = rgrid.coord_vectors[ax]
+
+        # First part: exponential array
+        onedim_arr = (np.exp(-1j * x * xi))
+
+        # Second part: interpolation kernel
+        len_dft = rgrid.shape[ax]
+        len_orig = orig_shape[ax]
+        halfcomplex = (len_dft < len_orig)
+        odd = len_orig % 2
+        shift = shift_list[ax]
+
+        if shift:
+            # f_k = -0.5 + k / N
+            fmin = -0.5
+            if halfcomplex:
+                if odd:
+                    fmax = - 1.0 / (2 * len_orig)
+                else:
+                    fmax = 0.0
+            else:
+                # Always -0.5 + (N-1)/N = 0.5 - 1/N
+                fmax = 0.5 - 1.0 / len_orig
+
+        else:
+            # f_k = -0.5 + 1/(2*N) + k / N
+            fmin = -0.5 + 1.0 / (2 * len_orig)
+            if halfcomplex:
+                if odd:
+                    fmax = 0.0
+                else:
+                    fmax = 1.0 / (2 * len_orig)
+            else:
+                # Always -0.5 + 1/(2*N) + (N-1)/N = 0.5 - 1/(2*N)
+                fmax = 0.5 - 1.0 / (2 * len_orig)
+
+        freqs = np.linspace(fmin, fmax, num=len_dft)
+        stride = orig_stride[ax]
+        onedim_arr *= stride * _interp_kernel_ft(freqs, interp)
+        onedim_arrs.append(onedim_arr)
+
+    if dfunc.space.order == 'C':
+        mult_axes = axes
+    else:
+        mult_axes = list(reversed(axes))
+
+    fast_1d_tensor_mult(dfunc.asarray(), onedim_arrs, axes=mult_axes)
+
+
 class FourierTransform(Operator):
 
     """Discretized Fourier transform between discrete Lp spaces.
@@ -1346,7 +1346,6 @@ class FourierTransform(Operator):
     @property
     def inverse(self):
         """The inverse Fourier transform."""
-        # TODO: add appropriate arguments
         raise NotImplementedError
 
 
