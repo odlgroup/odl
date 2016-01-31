@@ -48,10 +48,6 @@ def sparse_meshgrid(*x, **kwargs):
     ----------
     x1,...,xN : array-like
         Input arrays to turn into sparse meshgrid vectors
-    order : {'C', 'F'}, optional
-        Ordering of the output meshgrid. The vectors in the produced
-        meshgrid tuple are guaranteed to be contiguous in this
-        ordering,
 
     Returns
     -------
@@ -61,6 +57,13 @@ def sparse_meshgrid(*x, **kwargs):
     See also
     --------
     numpy.meshgrid : dense or sparse meshgrids
+
+    Examples
+    --------
+    >>> x, y = [0, 1], [2, 3, 4]
+    >>> mesh = sparse_meshgrid(x, y)
+    >>> sum(xi for xi in mesh).ravel()  # first axis slowest
+    array([2, 3, 4, 3, 4, 5])
     """
     n = len(x)
     mesh = []
