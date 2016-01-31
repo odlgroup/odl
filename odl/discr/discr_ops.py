@@ -364,7 +364,7 @@ class Gradient(Operator):
         self.method = method
 
         super().__init__(domain=space,
-                         range=ProductSpace(space, space.grid.ndim),
+                         range=ProductSpace(space, space.ndim),
                          linear=True)
 
     def _call(self, x, out=None):
@@ -411,8 +411,8 @@ class Gradient(Operator):
             out = self.range.element()
 
         x_data = x.asarray()
-        ndim = self.domain.grid.ndim
-        dx = self.domain.grid.stride
+        ndim = self.domain.ndim
+        dx = self.domain.stride
 
         for axis in range(ndim):
             out_arr = out[axis].asarray()
@@ -475,7 +475,7 @@ class Divergence(Operator):
         self.space = space
         self.method = method
 
-        super().__init__(domain=ProductSpace(space, space.grid.ndim),
+        super().__init__(domain=ProductSpace(space, space.ndim),
                          range=space, linear=True)
 
     def _call(self, x, out=None):
@@ -519,8 +519,8 @@ class Divergence(Operator):
         if out is None:
             out = self.range.element()
 
-        ndim = self.range.grid.ndim
-        dx = self.range.grid.stride
+        ndim = self.range.ndim
+        dx = self.range.stride
 
         arr = out.asarray()
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
@@ -620,7 +620,7 @@ class Laplacian(Operator):
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
 
         ndim = self.domain.ndim
-        dx = self.domain.grid.stride
+        dx = self.domain.stride
 
         for axis in range(ndim):
             # TODO: this can be optimized
