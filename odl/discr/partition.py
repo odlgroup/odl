@@ -39,7 +39,7 @@ from odl.set.domain import IntervalProd
 from odl.util.utility import array1d_repr
 
 
-__all__ = ('RectPartition',)
+__all__ = ('RectPartition', 'uniform_partition')
 
 _POINT_POSITIONS = ('center', 'left')
 
