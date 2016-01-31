@@ -367,11 +367,11 @@ class DiscreteLpVector(DiscretizationVector):
             if indices == slice(None):
                 values = np.atleast_1d(values)
                 if (values.ndim > 1 and
-                        values.shape != self.space.grid.shape):
+                        values.shape != self.space.shape):
                     raise ValueError('shape {} of value array {} not equal'
                                      ' to sampling grid shape {}.'
                                      ''.format(values.shape, values,
-                                               self.space.grid.shape))
+                                               self.space.shape))
                 values = values.ravel(order=self.space.order)
 
             super().__setitem__(indices, values)
@@ -482,7 +482,7 @@ class DiscreteLpVector(DiscretizationVector):
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
             indices = [np.s_[:]] * 2
-            indices += [n // 2 for n in self.space.grid.shape[2:]]
+            indices += [n // 2 for n in self.space.shape[2:]]
 
         if isinstance(indices, (Integral, slice)):
             indices = [indices]
@@ -617,10 +617,10 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         raise NotImplementedError
 
     if dtype is not None:
-        dspace = ds_type(partition.grid.size, dtype=dtype, weight=weight,
+        dspace = ds_type(partition.size, dtype=dtype, weight=weight,
                          exponent=exponent)
     else:
-        dspace = ds_type(partition.grid.size, weight=weight, exponent=exponent)
+        dspace = ds_type(partition.size, weight=weight, exponent=exponent)
 
     return DiscreteLp(fspace, partition, dspace, exponent, interp)
 

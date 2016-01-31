@@ -274,7 +274,7 @@ def test_discrete_gradient():
     dom_vec = discr_space.element(data)
 
     # computation of gradient components with helper function
-    dx0, dx1 = discr_space.grid.stride
+    dx0, dx1 = discr_space.stride
     df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 
@@ -323,7 +323,7 @@ def test_discrete_gradient_cuda():
     dom_vec = discr_space.element(data)
 
     # computation of gradient components with helper function
-    dx0, dx1 = discr_space.grid.stride
+    dx0, dx1 = discr_space.stride
     df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 
@@ -368,7 +368,7 @@ def test_discrete_divergence():
     div_dom_vec = div(dom_vec)
 
     # computation of divergence with helper function
-    dx0, dx1 = discr_space.grid.stride
+    dx0, dx1 = discr_space.stride
     df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 
@@ -419,7 +419,7 @@ def test_discrete_divergence_cuda():
     div_dom_vec = div(dom_vec)
 
     # computation of divergence with helper function
-    dx0, dx1 = discr_space.grid.stride
+    dx0, dx1 = discr_space.stride
     df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 

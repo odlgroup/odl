@@ -515,8 +515,8 @@ class IntervalProd(Set):
         >>> rbox2 = IntervalProd([0, 0], [1, 0])
         >>> rbox.insert(1, rbox2)
         IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
-        >>> rbox.insert(2, [-1.0, 0.0])
-        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
+        >>> rbox.insert(2, rbox2)
+        IntervalProd([-1.0, 2.0, 0.0, 0.0], [-0.5, 3.0, 1.0, 0.0])
         """
         if index < 0:
             index = int(index) + self.ndim

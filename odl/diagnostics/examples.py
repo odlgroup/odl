@@ -102,7 +102,7 @@ def vector_examples(space):
         # Indicator function in first dimension
         def _step_fun(x):
             z = np.zeros(space.shape, dtype=space.dtype)
-            z[:space.grid.shape[0] // 2, ...] = 1
+            z[:space.shape[0] // 2, ...] = 1
             return z
 
         yield ('Step', element(_step_fun))
@@ -119,7 +119,7 @@ def vector_examples(space):
         yield ('Cube', element(_cube_fun))
 
         # Indicator function on hypersphere
-        if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate cube
+        if space.ndim > 1:  # Only if ndim > 1, don't duplicate cube
             def _sphere_fun(x):
                 r = np.zeros(space.shape)
 
@@ -141,7 +141,7 @@ def vector_examples(space):
         yield ('Gaussian', element(_gaussian_fun))
 
         # Gradient in each dimensions
-        for dim in range(space.grid.ndim):
+        for dim in range(space.ndim):
             def _gradient_fun(x):
                 s = np.zeros(space.shape)
                 s += (x[dim] - mins[dim]) / (maxs[dim] - mins[dim])
@@ -152,7 +152,7 @@ def vector_examples(space):
                    element(_gradient_fun))
 
         # Gradient in all dimensions
-        if space.grid.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
+        if space.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
             def _all_gradient_fun(x):
                 s = np.zeros(space.shape)
 

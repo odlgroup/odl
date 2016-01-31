@@ -634,7 +634,6 @@ class PerAxisInterpolation(FunctionSetMapping):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-# TODO: use partition information to steer behavior at the boundary
 class _Interpolator(object):
 
     """Abstract interpolator class.
@@ -935,6 +934,7 @@ class _PerAxisInterpolator(_Interpolator):
         for lo_hi, edge in zip(product(*([['l', 'h']] * len(indices))),
                                product(*edge_indices)):
             weight = 1.0
+            # TODO: determine best summation order from array strides
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
                 # We don't multiply in place to exploit the cheap operations

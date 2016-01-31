@@ -34,7 +34,7 @@ import numpy as np
 
 # ODL imports
 from odl.set.domain import IntervalProd
-from odl.set.sets import Set, Integers
+from odl.set.sets import Set
 from odl.util.utility import array1d_repr, array1d_str
 
 
@@ -131,7 +131,7 @@ class TensorGrid(Set):
         >>> g
         TensorGrid([1.0, 2.0, 5.0], [-2.0, 1.5, 2.0])
         >>> print(g)
-        grid [1.0, 2.0, 5.0] x [-2.0, 1.5, 2.0]
+        [1.0, 2.0, 5.0] x [-2.0, 1.5, 2.0]
         >>> g.ndim  # number of axes
         2
         >>> g.shape  # points per axis
@@ -326,7 +326,7 @@ class TensorGrid(Set):
         Examples
         --------
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
-        >>> g.approx_contains([0, 0], tol=0.0)
+        >>> g.approx_contains([0, 0], atol=0.0)
         True
         >>> [0, 0] in g  # equivalent
         True
@@ -542,6 +542,7 @@ class TensorGrid(Set):
         --------
         >>> g = TensorGrid([0, 1], [-1, 0, 2])  # default 'C' ordering
         >>> g.corner_grid()
+        TensorGrid([0.0, 1.0], [-1.0, 2.0])
         """
         minmax_vecs = []
         for axis in range(self.ndim):
@@ -748,7 +749,7 @@ class RegularGrid(TensorGrid):
         --------
         >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg
-        RegularGrid([-1.5, -1.0], [-0.5, 3.0], [2, 3])
+        RegularGrid([-1.5, -1.0], [-0.5, 3.0], (2, 3))
         >>> rg.coord_vectors
         (array([-1.5, -0.5]), array([-1.,  1.,  3.]))
         >>> rg.ndim, rg.size
@@ -912,7 +913,7 @@ class RegularGrid(TensorGrid):
         >>> rg1 = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg2 = RegularGrid(-3, 7, 6)
         >>> rg1.insert(1, rg2)
-        RegularGrid([-1.5 -3.  -1. ], [-0.5  7.   3. ], (2, 6, 3))
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], (2, 6, 3))
         """
         if isinstance(other, RegularGrid):
             idx = int(index)
@@ -951,7 +952,7 @@ class RegularGrid(TensorGrid):
         --------
         >>> g = RegularGrid([0, 0, 0], [1, 0, 1], (5, 1, 5))
         >>> g.squeeze()
-        RegularGrid([0.0, 0.0], [1.0, 1.0], [5, 5])
+        RegularGrid([0.0, 0.0], [1.0, 1.0], (5, 5))
         """
         sq_minpt = [self.min_pt[axis] for axis in self._inondeg]
         sq_maxpt = [self.max_pt[axis] for axis in self._inondeg]
@@ -972,12 +973,12 @@ class RegularGrid(TensorGrid):
         >>> g[0, 0, 0]
         array([-1.5, -3. , -1. ])
         >>> g[:, 0, 0]
-        RegularGrid([-1.5, -3.0, -1.0], [-0.5, -3.0, -1.0], [2, 1, 1])
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, -3.0, -1.0], (2, 1, 1))
 
         Ellipsis can be used, too:
 
         >>> g[..., ::3]
-        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 2.0], [2, 3, 2])
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 2.0], (2, 3, 2))
         """
         from math import ceil
 
@@ -1053,7 +1054,8 @@ class RegularGrid(TensorGrid):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '{}, {}, {}'.format(self.min_pt, self.max_pt, self.shape)
+        inner_str = '{}, {}, {}'.format(list(self.min_pt), list(self.max_pt),
+                                        tuple(self.shape))
         if self.order == 'F':
             inner_str += ", order='F'"
 
@@ -1062,6 +1064,11 @@ class RegularGrid(TensorGrid):
 
 def uniform_sampling(intv_prod, num_nodes, order='C'):
     """Sample an interval product uniformly.
+
+    The resulting grid will include ``begin`` and ``end`` of
+    ``intv_prod`` as grid points. If you want a subdivision into
+    equally sized cells with grid points in the middle, use
+    `uniform_partition` instead.
 
     Parameters
     ----------
@@ -1080,13 +1087,18 @@ def uniform_sampling(intv_prod, num_nodes, order='C'):
     sampling : `RegularGrid`
         Uniform sampling grid for the interval product
 
+    See also
+    --------
+    uniform_partition :
+        divide interval products into equally sized subsets
+
     Examples
     --------
     >>> from odl import IntervalProd
     >>> rbox = IntervalProd([-1.5, 2], [-0.5, 3])
-    >>> grid = uniform_sampling(rbox, [2, 4])
+    >>> grid = uniform_sampling(rbox, [3, 3])
     >>> grid.coord_vectors
-    (array([-1.5, -0.5]), array([ 2.  ,  2.25,  2.5,  2.75,  3.  ]))
+    (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
     """
     num_nodes = np.atleast_1d(num_nodes).astype('int64')
 
