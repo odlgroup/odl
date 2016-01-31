@@ -63,21 +63,13 @@ def sparse_meshgrid(*x, **kwargs):
     numpy.meshgrid : dense or sparse meshgrids
     """
     n = len(x)
-    order = kwargs.pop('order', 'C')
     mesh = []
     for ax, xi in enumerate(x):
         xi = np.asarray(xi)
         slc = [None] * n
-        slc[ax] = np.s_[:]
+        slc[ax] = slice(None)
 
-        if order == 'C':
-            mesh.append(np.ascontiguousarray(xi[slc]))
-        else:
-            mesh.append(np.asfortranarray(xi[slc]))
-    if order == 'C':
-        return tuple(mesh)
-    else:
-        return tuple(reversed(mesh))
+    return tuple(mesh)
 
 
 class TensorGrid(Set):
@@ -590,7 +582,7 @@ class TensorGrid(Set):
         Returns
         -------
         meshgrid : `tuple` of `numpy.ndarray`
-            Function evaluation grid with :attr:`ndim` axes
+            Function evaluation grid with ``ndim`` axes
 
         See also
         --------
@@ -613,19 +605,8 @@ class TensorGrid(Set):
         >>> x**2 - y**2
         array([[-1.,  0., -4.],
                [ 0.,  1., -3.]])
-
-        Fortran ordering of the grid is respected:
-
-        >>> g = TensorGrid([0, 1], [-1, 0, 2], order='F')
-        >>> x, y = g.meshgrid()
-        >>> x.flags.f_contiguous, y.flags.f_contiguous
-        (True, True)
-
-        See Also
-        --------
-        coord_vectors : Same result but with 1d arrays
         """
-        return sparse_meshgrid(*self.coord_vectors, order=self.order)
+        return sparse_meshgrid(*self.coord_vectors)
 
     def __getitem__(self, slc):
         """self[slc] implementation.
