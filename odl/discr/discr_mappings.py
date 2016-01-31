@@ -241,7 +241,7 @@ class PointCollocation(FunctionSetMapping):
         try:
             mesh = self.grid.meshgrid()
             if out is None:
-                out = func(mesh).ravel(order=self.order)
+                out = func(mesh).ravel()
             else:
                 func(mesh, out=out.asarray().reshape(self.grid.shape,
                                                      order=self.order))

@@ -969,7 +969,7 @@ def test_sparse_meshgrid():
 
     # Two arrays, 'F' ordering
     x, y = np.zeros(2), np.zeros(3)
-    true_mg = (y[None, :], x[:, None])
+    true_mg = (x[None, :], y[:, None])
     mg = sparse_meshgrid(x, y, order='F')
     assert all_equal(mg, true_mg)
     assert all(vec.flags.f_contiguous for vec in mg)

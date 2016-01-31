@@ -49,9 +49,16 @@ def sparse_meshgrid(*x, **kwargs):
     x1,...,xN : array-like
         Input arrays to turn into sparse meshgrid vectors
     order : {'C', 'F'}, optional
-        Ordering of the output meshgrid. The vectors in the produced
-        meshgrid tuple are guaranteed to be contiguous in this
-        ordering,
+        Ordering of the output meshgrid.
+
+        'C' : The non-empty axis of the ``i``-th array appears in
+        dimension ``i``.
+
+        'F' : The non-empty axis of the ``i``-th array appears in
+        dimension ``ndim - 1 - i``.
+
+        The arrays in the returned tuple are guaranteed to be
+        contiguous in the given ordering.
 
     Returns
     -------
@@ -61,6 +68,16 @@ def sparse_meshgrid(*x, **kwargs):
     See also
     --------
     numpy.meshgrid : dense or sparse meshgrids
+
+    Examples
+    --------
+    >>> x, y = [0, 1], [2, 3, 4]
+    >>> mesh = sparse_meshgrid(x, y, order='C')
+    >>> sum(xi for xi in mesh).ravel()  # first axis slowest
+    array([2, 3, 4, 3, 4, 5])
+    >>> mesh = sparse_meshgrid(x, y, order='F')
+    >>> sum(xi for xi in mesh).ravel()  # first axis fastest
+    array([2, 3, 3, 4, 4, 5])
     """
     n = len(x)
     order = kwargs.pop('order', 'C')
@@ -72,7 +89,7 @@ def sparse_meshgrid(*x, **kwargs):
             slc[ax] = np.s_[:]
             mesh.append(np.ascontiguousarray(xi[slc]))
         elif order == 'F':
-            slc[-ax] = np.s_[:]
+            slc[-ax - 1] = np.s_[:]
             mesh.append(np.asfortranarray(xi[slc]))
         else:
             raise ValueError("order '{}' not understood.".format(order))
