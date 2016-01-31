@@ -178,25 +178,29 @@ def show_discrete_data(values, grid, method='', title=None,
     # Additional keyword args are passed on to the display method
     dsp_kwargs.update(**kwargs)
 
-    if fig is None:
-        fig = plt.figure(figsize=figsize)
-        updatefig = False
-    else:
+    if fig is not None:
+        # Reuse figure if given as input
         if not isinstance(fig, plt.Figure):
-            raise TypeError('fig {} not a matplotlib figure'
-                            ''.format(fig))
+            raise TypeError('fig {} not a matplotlib figure'.format(fig))
 
         if not plt.fignum_exists(fig.number):
-            raise TypeError('fig {} not an open matplotlib figure'
-                            ''.format(fig))
+            # If figure does not exist, user either closed the figure or
+            # is using IPython, in this case we need a new figure.
 
-        plt.figure(fig.number)
-        updatefig = True
+            fig = plt.figure(figsize=figsize)
+            updatefig = False
+        else:
+            # Set current figure to given input
+            plt.figure(fig.number)
+            updatefig = True
 
-        if values.ndim > 1:
-            # If the figure is larger than 1d, we can clear it since we
-            # dont reuse anything.
-            fig.clf()
+            if values.ndim > 1:
+                # If the figure is larger than 1d, we can clear it since we
+                # dont reuse anything. Keeping it causes performance problems.
+                fig.clf()
+    else:
+        fig = plt.figure(figsize=figsize)
+        updatefig = False
 
     if values_are_complex:
         # Real
