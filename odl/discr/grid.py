@@ -48,8 +48,6 @@ def sparse_meshgrid(*x, **kwargs):
     ----------
     x1,...,xN : array-like
         Input arrays to turn into sparse meshgrid vectors
-    squeeze : `bool`
-        If True, all returned vectors are one dimensional
     order : {'C', 'F'}, optional
         Ordering of the output meshgrid. The vectors in the produced
         meshgrid tuple are guaranteed to be contiguous in this
@@ -66,24 +64,20 @@ def sparse_meshgrid(*x, **kwargs):
     """
     n = len(x)
     order = kwargs.pop('order', 'C')
-    squeeze = kwargs.pop('squeeze', False)
     mesh = []
     for ax, xi in enumerate(x):
         xi = np.asarray(xi)
-        if squeeze:
-            slc = slice(None)
-        else:
-            slc = [None] * n
-            slc[ax] = np.s_[:]
-
+        slc = [None] * n
         if order == 'C':
+            slc[ax] = np.s_[:]
             mesh.append(np.ascontiguousarray(xi[slc]))
-        else:
+        elif order == 'F':
+            slc[-ax] = np.s_[:]
             mesh.append(np.asfortranarray(xi[slc]))
-    if order == 'C':
-        return tuple(mesh)
-    else:
-        return tuple(reversed(mesh))
+        else:
+            raise ValueError("order '{}' not understood.".format(order))
+
+    return tuple(mesh)
 
 
 class TensorGrid(Set):
@@ -572,18 +566,13 @@ class TensorGrid(Set):
         """
         return self.corner_grid().points(order=order)
 
-    def meshgrid(self, squeeze=False):
+    def meshgrid(self):
         """A grid suitable for function evaluation.
-
-        Parameters
-        ----------
-        squeeze : `bool`
-            If True, all returned vectors are one dimensional
 
         Returns
         -------
         meshgrid : `tuple` of `numpy.ndarray`
-            Function evaluation grid with :attr:`ndim` axes
+            Function evaluation grid with ``ndim`` axes
 
         See also
         --------
@@ -607,24 +596,14 @@ class TensorGrid(Set):
         array([[-1.,  0., -4.],
                [ 0.,  1., -3.]])
 
-        Can return 1d arrays by using squeeze
-
-        >>> x, y = g.meshgrid(squeeze=True)
-        >>> x
-        array([ 0., 1.])
-        >>> y
-        array([-1.,  0.,  2.])
-
         Fortran ordering of the grid is respected:
 
         >>> g = TensorGrid([0, 1], [-1, 0, 2], order='F')
         >>> x, y = g.meshgrid()
         >>> x.flags.f_contiguous, y.flags.f_contiguous
         (True, True)
-
         """
-        return sparse_meshgrid(*self.coord_vectors,
-                               squeeze=squeeze, order=self.order)
+        return sparse_meshgrid(*self.coord_vectors, order=self.order)
 
     def __getitem__(self, slc):
         """self[slc] implementation.
