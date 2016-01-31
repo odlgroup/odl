@@ -48,8 +48,6 @@ def sparse_meshgrid(*x, **kwargs):
     ----------
     x1,...,xN : array-like
         Input arrays to turn into sparse meshgrid vectors
-    squeeze : `bool`
-        If True, all returned vectors are one dimensional
     order : {'C', 'F'}, optional
         Ordering of the output meshgrid. The vectors in the produced
         meshgrid tuple are guaranteed to be contiguous in this
@@ -66,15 +64,11 @@ def sparse_meshgrid(*x, **kwargs):
     """
     n = len(x)
     order = kwargs.pop('order', 'C')
-    squeeze = kwargs.pop('squeeze', False)
     mesh = []
     for ax, xi in enumerate(x):
         xi = np.asarray(xi)
-        if squeeze:
-            slc = slice(None)
-        else:
-            slc = [None] * n
-            slc[ax] = np.s_[:]
+        slc = [None] * n
+        slc[ax] = np.s_[:]
 
         if order == 'C':
             mesh.append(np.ascontiguousarray(xi[slc]))
@@ -194,7 +188,25 @@ class TensorGrid(Set):
     # Attributes
     @property
     def coord_vectors(self):
-        """The coordinate vectors of the grid."""
+        """The coordinate vectors of the grid.
+
+        Returns
+        -------
+        coord_vectors : tuple of `numpy.ndarray`'s
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> x, y = g.coord_vectors
+        >>> x
+        array([ 0.,  1.])
+        >>> y
+        array([-1.,  0.,  2.])
+
+        See Also
+        --------
+        meshgrid : Same result but with nd arrays
+        """
         return self._coord_vectors
 
     @property
@@ -639,13 +651,8 @@ class TensorGrid(Set):
 
         return tuple(csizes)
 
-    def meshgrid(self, squeeze=False):
+    def meshgrid(self):
         """A grid suitable for function evaluation.
-
-        Parameters
-        ----------
-        squeeze : `bool`
-            If True, all returned vectors are one dimensional
 
         Returns
         -------
@@ -674,14 +681,6 @@ class TensorGrid(Set):
         array([[-1.,  0., -4.],
                [ 0.,  1., -3.]])
 
-        Can return 1d arrays by using squeeze
-
-        >>> x, y = g.meshgrid(squeeze=True)
-        >>> x
-        array([ 0., 1.])
-        >>> y
-        array([-1.,  0.,  2.])
-
         Fortran ordering of the grid is respected:
 
         >>> g = TensorGrid([0, 1], [-1, 0, 2], order='F')
@@ -689,9 +688,11 @@ class TensorGrid(Set):
         >>> x.flags.f_contiguous, y.flags.f_contiguous
         (True, True)
 
+        See Also
+        --------
+        coord_vectors : Same result but with 1d arrays
         """
-        return sparse_meshgrid(*self.coord_vectors,
-                               squeeze=squeeze, order=self.order)
+        return sparse_meshgrid(*self.coord_vectors, order=self.order)
 
     def convex_hull(self):
         """The "inner" of the grid, an `IntervalProd`.
