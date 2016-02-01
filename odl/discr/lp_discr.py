@@ -39,6 +39,7 @@ from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
 from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
+from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import is_real_dtype, dtype_repr
 
@@ -53,7 +54,7 @@ class DiscreteLp(Discretization):
     """Discretization of a Lebesgue :math:`L^p` space."""
 
     def __init__(self, fspace, partition, dspace, exponent=2.0,
-                 interp='nearest'):
+                 interp='nearest', **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -76,6 +77,11 @@ class DiscreteLp(Discretization):
             'nearest' : use nearest-neighbor interpolation (default)
 
             'linear' : use linear interpolation
+
+        order : {'C', 'F'}, optional
+            Ordering of the axes in the data storage. 'C' means the
+            first axis varies slowest, the last axis fastest;
+            vice versa for 'F'.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{!r} is not a FunctionSpace instance.'
@@ -95,22 +101,36 @@ class DiscreteLp(Discretization):
             raise TypeError('{!r} is not among the supported interpolation'
                             'types {}.'.format(interp, _SUPPORTED_INTERP))
 
-        restriction = PointCollocation(fspace, partition, dspace)
+        order = str(kwargs.pop('order', 'C'))
+        if str(order).upper() not in ('C', 'F'):
+            raise ValueError('order {!r} not recognized.'.format(order))
+        else:
+            self._order = str(order).upper()
+
+        self._partition = partition
+        restriction = PointCollocation(fspace, self.partition, dspace,
+                                       order=self.order)
         if self.interp == 'nearest':
-            extension = NearestInterpolation(fspace, partition, dspace)
+            extension = NearestInterpolation(fspace, self.partition, dspace,
+                                             order=self.order)
         elif self.interp == 'linear':
-            extension = LinearInterpolation(fspace, partition, dspace)
+            extension = LinearInterpolation(fspace, self.partition, dspace,
+                                            order=self.order)
         else:
             # Should not happen
             raise RuntimeError
 
         Discretization.__init__(self, fspace, dspace, restriction, extension)
-        self._partition = partition
         self._exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
                 self.exponent != dspace.exponent):
             raise ValueError('exponent {} not equal to data space exponent '
                              '{}.'.format(self.exponent, dspace.exponent))
+
+    @property
+    def order(self):
+        """Axis ordering for array flattening."""
+        return self._order
 
     @property
     def partition(self):
@@ -133,9 +153,9 @@ class DiscreteLp(Discretization):
         return self.partition.ndim
 
     @property
-    def order(self):
-        """Axis ordering for array flattening."""
-        return self.partition.order
+    def size(self):
+        """Total number of underlying partition cells."""
+        return self.partition.size
 
     @property
     def cell_size(self):
@@ -212,10 +232,77 @@ class DiscreteLp(Discretization):
         """Interpolation type of this discretization."""
         return self._interp
 
+    # Overrides for space functions depending on partition
+    def _inner(self, x, y):
+        """Return ``self.inner(x, y)``."""
+        if any(bdry[0] or bdry[1]
+               for bdry in self.partition.nodes_on_boundary()):
+
+            # Need to halve the boundary nodes to get correct contributions.
+            # This requires copies, unfortunately.
+            # TODO: implement without copy
+            x_cpy = x.copy()
+            on_bdry = self.partition.nodes_on_boundary()
+            apply_on_boundary(
+                x_cpy.asarray(), func=lambda x: x / 2,
+                only_once=False, which_boundaries=on_bdry)
+
+            return super()._inner(x_cpy, y)
+        else:
+            # Standard case
+            return super()._inner(x, y)
+
+    def _norm(self, x):
+        """Return ``self.norm(x)``."""
+        if any(bdry[0] or bdry[1]
+               for bdry in self.partition.nodes_on_boundary()):
+
+            # TODO: implement without copy
+            x_cpy = x.copy()
+            on_bdry = self.partition.nodes_on_boundary()
+            if self.exponent != float('inf'):
+                # For p != inf we mimic the integral of f(x)**p, i.e. by
+                # the following scaling we effectively multiply the
+                # boundary contribution by 1/2.
+                bdry_fac = 2 ** (1.0 / self.exponent)
+                apply_on_boundary(
+                    x_cpy.asarray(), func=lambda x: x / bdry_fac,
+                    only_once=False, which_boundaries=on_bdry)
+
+            return super()._norm(x_cpy)
+        else:
+            # Standard case
+            return super()._norm(x)
+
+    def _dist(self, x, y):
+        """Return ``self.dist(x, y)``."""
+        if any(bdry[0] or bdry[1]
+               for bdry in self.partition.nodes_on_boundary()):
+
+            # TODO: implement without copy
+            x_cpy, y_cpy = x.copy(), y.copy()
+            on_bdry = self.partition.nodes_on_boundary()
+            if self.exponent != float('inf'):
+                # For p != inf we mimic the integral of (f(x)-g(x)**p, i.e. by
+                # the following scaling we effectively multiply the
+                # boundary contribution by 1/2.
+                bdry_fac = 2 ** (1.0 / self.exponent)
+                apply_on_boundary(
+                    x_cpy.asarray(), func=lambda x: x / bdry_fac,
+                    only_once=False, which_boundaries=on_bdry)
+                apply_on_boundary(
+                    y_cpy.asarray(), func=lambda x: x / bdry_fac,
+                    only_once=False, which_boundaries=on_bdry)
+
+            return super()._dist(x_cpy, y_cpy)
+        else:
+            # Standard case
+            return super()._dist(x, y)
+
     def __repr__(self):
         """Return ``repr(self).``"""
         # Check if the factory repr can be used
-        if (uniform_partition(self.uspace.domain, self.shape) ==
+        if (uniform_partition(self.uspace.domain, self.shape, False) ==
                 self.partition):
             if isinstance(self.dspace, Fn):
                 impl = 'numpy'
@@ -234,6 +321,8 @@ class DiscreteLp(Discretization):
                 arg_fstr += ', interp={interp!r}'
             if impl != 'numpy':
                 arg_fstr += ', impl={impl!r}'
+            if self.order != 'C':
+                arg_fstr += ', order={order!r}'
 
             if self.ndim == 1:
                 min_str = '{!r}'.format(self.uspace.domain.min()[0])
@@ -267,7 +356,7 @@ class DiscreteLp(Discretization):
 
             arg_str = arg_fstr.format(
                 self.uspace, self.partition, self.dspace, interp=self.interp,
-                ex=self.exponent)
+                ex=self.exponent, order=self.order)
             return '{}({})'.format(self.__class__.__name__, arg_str)
 
     def __str__(self):
@@ -298,15 +387,13 @@ class DiscreteLpVector(DiscretizationVector):
             return super().asarray().reshape(self.space.shape,
                                              order=self.space.order)
         else:
-            if out.shape not in (self.space.shape,
-                                 (self.space.partition.size,)):
+            if out.shape not in (self.space.shape, (self.space.size,)):
                 raise ValueError('output array has shape {}, expected '
                                  '{} or ({},).'
-                                 ''.format(out.shape,
-                                           self.space.partition.shape,
-                                           self.space.partition.size))
-            out_r = out.reshape(self.space.partition.shape,
-                                order=self.partition.order)
+                                 ''.format(out.shape, self.space.shape,
+                                           self.space.size))
+            out_r = out.reshape(self.space.shape,
+                                order=self.space.order)
             if out_r.flags.c_contiguous:
                 out_order = 'C'
             elif out_r.flags.f_contiguous:
@@ -552,6 +639,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         where ``ndim`` is the number of dimensions. It defines per axis
         whether the leftmost (first column) and rightmost (second column)
         nodes node lie on the boundary.
+        Default: `False`
     order : {'C', 'F'}  (Default: 'C')
         Axis ordering in the data storage
     dtype : dtype
@@ -559,7 +647,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
             Default for 'numpy': 'float64' / 'complex128'
 
-            Default for 'cuda': 'float32' / TODO
+            Default for 'cuda': 'float32' / (not implemented)
 
     weighting : {'simple', 'consistent'}
         Weighting of the discretized space functions.
@@ -567,7 +655,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
             'simple': weight is a constant (cell volume)
 
             'consistent': weight is a matrix depending on the
-            interpolation type
+            interpolation type (not implemented)
 
     Returns
     -------
@@ -601,9 +689,8 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     ds_type = dspace_type(fspace, impl, dtype)
 
     order = kwargs.pop('order', 'C')
-    nodes_on_bdry = kwargs.pop('nodes_on_bdry', True)
-    partition = uniform_partition(fspace.domain, nsamples, order,
-                                  nodes_on_bdry)
+    nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
+    partition = uniform_partition(fspace.domain, nsamples, nodes_on_bdry)
 
     weighting = kwargs.pop('weighting', 'simple')
     weighting_ = weighting.lower()
@@ -622,7 +709,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     else:
         dspace = ds_type(partition.size, weight=weight, exponent=exponent)
 
-    return DiscreteLp(fspace, partition, dspace, exponent, interp)
+    return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order)
 
 
 def uniform_discr(min_corner, max_corner, nsamples,
@@ -657,6 +744,7 @@ def uniform_discr(min_corner, max_corner, nsamples,
         where ``ndim`` is the number of dimensions. It defines per axis
         whether the leftmost (first column) and rightmost (second column)
         nodes node lie on the boundary.
+        Default: `False`
     order : {'C', 'F'}  (Default: 'C')
         Axis ordering in the data storage
     dtype : dtype

@@ -219,11 +219,6 @@ class RectPartition(object):
         return self.grid.size
 
     @property
-    def order(self):
-        """Return axis ordering, equal to that of the grid."""
-        return self.grid.order
-
-    @property
     def bbox(self):
         """The bounding box, i.e. the `IntervalProd` being partitioned.
 
@@ -299,6 +294,32 @@ class RectPartition(object):
     def extent(self):
         """Return a vector containing the total extent (max - min)."""
         return self.max() - self.min()
+
+    def nodes_on_boundary(self):
+        """Return a list indicating if nodes lie on the boundary.
+
+        Returns
+        -------
+        on_bdry : `tuple` of 2-tuple of `bool`
+            Each 2-tuple contains the information whether the leftmost
+            (first entry) and rightmost (second entry) grid nodes lie
+            on the boundary of the bounding box in the corresponding
+            dimension.
+
+        Examples
+        --------
+        >>> grid = TensorGrid([0, 1], [-1, 0, 2])
+        >>> part = RectPartition(grid, begin=[0, -2], end=[2, 2])
+        >>> part.nodes_on_boundary()
+        ((True, False), (False, True))
+        """
+        bdry_list = []
+        for ax, (minpt, maxpt, bmin, bmax) in enumerate(zip(
+                self.grid.min_pt, self.grid.max_pt,
+                self.bbox.begin, self.bbox.end)):
+            bdry_list.append((minpt == bmin, maxpt == bmax))
+
+        return tuple(bdry_list)
 
     def sampling_points(self):
         """Return the sampling grid points."""
@@ -385,7 +406,13 @@ class RectPartition(object):
                 'cell size not defined for irregular partitions. Use '
                 'cell_sizes() instead.')
 
-        return self.extent() / self.shape
+        on_boundary = self.nodes_on_boundary()
+        num_cells = []
+        for n, on_bdry in zip(self.shape, on_boundary):
+            num_on_bdry = sum(on for on in on_bdry)
+            num_cells.append(n - num_on_bdry / 2)
+
+        return self.extent() / num_cells
 
     @property
     def cell_volume(self):
@@ -465,7 +492,7 @@ class RectPartition(object):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-def uniform_partition(intv_prod, num_nodes, order='C', nodes_on_bdry=True):
+def uniform_partition(intv_prod, num_nodes, nodes_on_bdry=True):
     """Return a partition of ``intv_prod`` by a regular grid.
 
     Parameters
@@ -475,8 +502,6 @@ def uniform_partition(intv_prod, num_nodes, order='C', nodes_on_bdry=True):
     num_nodes : `int` or sequence of `int`
         Number of nodes per axis. For 1d intervals, a single integer
         can be specified.
-    order : {'C', 'F'}
-        Ordering of the generated grid
     nodes_on_bdry : `bool` or boolean array-like
         If `True`, place the outermost grid points at the boundary. For
         `False`, they are shifted by half a cell size to the 'inner'.
@@ -528,7 +553,7 @@ def uniform_partition(intv_prod, num_nodes, order='C', nodes_on_bdry=True):
             gmin.append(beg + (end - beg) / (2 * n))
             gmax.append(end - (end - beg) / (2 * n))
 
-    grid = RegularGrid(gmin, gmax, num_nodes, order=order)
+    grid = RegularGrid(gmin, gmax, num_nodes)
     return RectPartition(grid, begin=intv_prod.begin, end=intv_prod.end)
 
 if __name__ == '__main__':

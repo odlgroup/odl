@@ -77,37 +77,37 @@ def exponent(request):
 def test_init(exponent):
     # Validate that the different init patterns work and do not crash.
     space = odl.FunctionSpace(odl.Interval(0, 1))
-    grid = odl.uniform_sampling(space.domain, 10)
+    part = odl.uniform_partition(space.domain, 10)
     rn = odl.Rn(10, exponent=exponent)
-    odl.DiscreteLp(space, grid, rn, exponent=exponent)
+    odl.DiscreteLp(space, part, rn, exponent=exponent)
 
     # Normal discretization of unit interval with complex
     complex_space = odl.FunctionSpace(odl.Interval(0, 1),
                                       field=odl.ComplexNumbers())
     cn = odl.Cn(10, exponent=exponent)
-    odl.DiscreteLp(complex_space, grid, cn, exponent=exponent)
+    odl.DiscreteLp(complex_space, part, cn, exponent=exponent)
 
     # Real space should not work with complex
     with pytest.raises(ValueError):
-        odl.DiscreteLp(space, grid, cn)
+        odl.DiscreteLp(space, part, cn)
 
     # Complex space should not work with reals
     with pytest.raises(ValueError):
-        odl.DiscreteLp(complex_space, grid, rn)
+        odl.DiscreteLp(complex_space, part, rn)
 
     # Wrong size of underlying space
     rn_wrong_size = odl.Rn(20)
     with pytest.raises(ValueError):
-        odl.DiscreteLp(space, grid, rn_wrong_size)
+        odl.DiscreteLp(space, part, rn_wrong_size)
 
 
 @skip_if_no_cuda
 def test_init_cuda(exponent):
     # Normal discretization of unit interval
     space = odl.FunctionSpace(odl.Interval(0, 1))
-    grid = odl.uniform_sampling(space.domain, 10)
+    part = odl.uniform_partition(space.domain, 10)
     rn = odl.CudaRn(10, exponent=exponent)
-    odl.DiscreteLp(space, grid, rn, exponent=exponent)
+    odl.DiscreteLp(space, part, rn, exponent=exponent)
 
 
 def test_factory(exponent):
@@ -490,7 +490,7 @@ def test_transpose():
 
 
 def test_cell_size():
-    # Non-degenerated case, should be same as grid stride
+    # Non-degenerated case, should be same as cell size
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
     vec = discr.element()
 

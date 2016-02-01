@@ -41,24 +41,13 @@ from odl.util.utility import array1d_repr, array1d_str
 __all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling')
 
 
-def sparse_meshgrid(*x, **kwargs):
-    """Make a sparse meshgrid with C- or F-contiguous arrays.
+def sparse_meshgrid(*x):
+    """Make a sparse meshgrid by adding empty dimensions.
 
     Parameters
     ----------
     x1,...,xN : array-like
         Input arrays to turn into sparse meshgrid vectors
-    order : {'C', 'F'}, optional
-        Ordering of the output meshgrid.
-
-        'C' : The non-empty axis of the ``i``-th array appears in
-        dimension ``i``.
-
-        'F' : The non-empty axis of the ``i``-th array appears in
-        dimension ``ndim - 1 - i``.
-
-        The arrays in the returned tuple are guaranteed to be
-        contiguous in the given ordering.
 
     Returns
     -------
@@ -72,27 +61,17 @@ def sparse_meshgrid(*x, **kwargs):
     Examples
     --------
     >>> x, y = [0, 1], [2, 3, 4]
-    >>> mesh = sparse_meshgrid(x, y, order='C')
+    >>> mesh = sparse_meshgrid(x, y)
     >>> sum(xi for xi in mesh).ravel()  # first axis slowest
     array([2, 3, 4, 3, 4, 5])
-    >>> mesh = sparse_meshgrid(x, y, order='F')
-    >>> sum(xi for xi in mesh).ravel()  # first axis fastest
-    array([2, 3, 3, 4, 4, 5])
     """
     n = len(x)
-    order = kwargs.pop('order', 'C')
     mesh = []
     for ax, xi in enumerate(x):
         xi = np.asarray(xi)
         slc = [None] * n
-        if order == 'C':
-            slc[ax] = np.s_[:]
-            mesh.append(np.ascontiguousarray(xi[slc]))
-        elif order == 'F':
-            slc[-ax - 1] = np.s_[:]
-            mesh.append(np.asfortranarray(xi[slc]))
-        else:
-            raise ValueError("order '{}' not understood.".format(order))
+        slc[ax] = slice(None)
+        mesh.append(np.ascontiguousarray(xi[slc]))
 
     return tuple(mesh)
 
@@ -112,7 +91,7 @@ class TensorGrid(Set):
     ``p = (xi, yj, zk)``, hence 2 * 4 * 3 = 24 points in total.
     """
 
-    def __init__(self, *coord_vectors, **kwargs):
+    def __init__(self, *coord_vectors):
         """Initialize a TensorGrid instance.
 
         Parameters
@@ -121,9 +100,6 @@ class TensorGrid(Set):
             The coordinate vectors defining the grid points. They must
             be sorted in ascending order and may not contain
             duplicates. Empty vectors are not allowed.
-        order : {'C', 'F'}, optional
-            Ordering of the grid axes. 'C' means the first axis
-            varies slowest, the last axis fastest; vice versa for 'F'.
 
         Examples
         --------
@@ -182,11 +158,6 @@ class TensorGrid(Set):
                                  ''.format(i + 1))
 
         self._coord_vectors = vecs
-        order = str(kwargs.pop('order', 'C'))
-        if str(order).upper() not in ('C', 'F'):
-            raise ValueError('order {!r} not recognized.'.format(order))
-        else:
-            self._order = str(order).upper()
         self._ideg = np.array([i for i in range(len(vecs))
                                if len(vecs[i]) == 1])
         self._inondeg = np.array([i for i in range(len(vecs))
@@ -211,11 +182,6 @@ class TensorGrid(Set):
     def size(self):
         """The total number of grid points."""
         return np.prod(self.shape)
-
-    @property
-    def order(self):
-        """Axis ordering of this grid."""
-        return self._order
 
     @property
     def min_pt(self):
@@ -297,9 +263,7 @@ class TensorGrid(Set):
                                               other.coord_vectors)))
 
     def __eq__(self, other):
-        """Return ``self == other``.
-
-        Note that axis ordering does not matter for this check.
+        """Return ``self == other``..
         """
         # Implemented separately for performance reasons
         if other is self:
@@ -438,7 +402,7 @@ class TensorGrid(Set):
 
         new_vecs = (self.coord_vectors[:idx] + other.coord_vectors +
                     self.coord_vectors[idx:])
-        return TensorGrid(*new_vecs, order=self.order)
+        return TensorGrid(*new_vecs)
 
     def append(self, other):
         """Insert at the end.
@@ -477,15 +441,15 @@ class TensorGrid(Set):
         TensorGrid([0.0, 1.0], [-1.0, 0.0, 2.0])
         """
         coord_vecs = [self.coord_vectors[axis] for axis in self._inondeg]
-        return TensorGrid(*coord_vecs, order=self.order)
+        return TensorGrid(*coord_vecs)
 
-    def points(self, order=None):
+    def points(self, order='C'):
         """All grid points in a single array.
 
         Parameters
         ----------
         order : {'C', 'F'}
-            Force this axis ordering instead of the grid's own
+            Axis ordering in the resulting point array
 
         Returns
         -------
@@ -495,8 +459,8 @@ class TensorGrid(Set):
 
         Examples
         --------
-        >>> g = TensorGrid([0, 1], [-1, 0, 2])  # default 'C' ordering
-        >>> g.points()
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> g.points()  # default 'C' ordering
         array([[ 0., -1.],
                [ 0.,  0.],
                [ 0.,  2.],
@@ -511,9 +475,7 @@ class TensorGrid(Set):
                [ 0.,  2.],
                [ 1.,  2.]])
         """
-        if order is None:
-            order = self.order
-        elif str(order).upper() not in ('C', 'F'):
+        if str(order).upper() not in ('C', 'F'):
             raise ValueError('order {!r} not recognized.'.format(order))
         else:
             order = str(order).upper()
@@ -540,7 +502,7 @@ class TensorGrid(Set):
 
         Examples
         --------
-        >>> g = TensorGrid([0, 1], [-1, 0, 2])  # default 'C' ordering
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
         >>> g.corner_grid()
         TensorGrid([0.0, 1.0], [-1.0, 2.0])
         """
@@ -552,15 +514,15 @@ class TensorGrid(Set):
                 minmax_vecs.append((self.coord_vectors[axis][0],
                                     self.coord_vectors[axis][-1]))
 
-        return TensorGrid(*minmax_vecs, order=self.order)
+        return TensorGrid(*minmax_vecs)
 
-    def corners(self, order=None):
+    def corners(self, order='C'):
         """The corner points of the grid in a single array.
 
         Parameters
         ----------
         order : {'C', 'F'}
-            Force this axis ordering instead of the grid's own
+            Axis ordering in the resulting point array
 
         Returns
         -------
@@ -570,8 +532,8 @@ class TensorGrid(Set):
 
         Examples
         --------
-        >>> g = TensorGrid([0, 1], [-1, 0, 2])  # default 'C' ordering
-        >>> g.corners()
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> g.corners()  # default 'C' ordering
         array([[ 0., -1.],
                [ 0.,  2.],
                [ 1., -1.],
@@ -613,15 +575,8 @@ class TensorGrid(Set):
         >>> x**2 - y**2
         array([[-1.,  0., -4.],
                [ 0.,  1., -3.]])
-
-        Fortran ordering of the grid is respected:
-
-        >>> g = TensorGrid([0, 1], [-1, 0, 2], order='F')
-        >>> x, y = g.meshgrid()
-        >>> x.flags.f_contiguous, y.flags.f_contiguous
-        (True, True)
         """
-        return sparse_meshgrid(*self.coord_vectors, order=self.order)
+        return sparse_meshgrid(*self.coord_vectors)
 
     def __getitem__(self, slc):
         """self[slc] implementation.
@@ -695,22 +650,16 @@ class TensorGrid(Set):
         for i in reversed(list(range(1, num_after_ellipsis + 1))):
             new_vecs.append(self.coord_vectors[-i][slc_list[-i]])
 
-        return TensorGrid(*new_vecs, order=self.order)
+        return TensorGrid(*new_vecs)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         inner_str = ', '.join(array1d_repr(vec) for vec in self.coord_vectors)
-        if self.order == 'F':
-            inner_str += ", order='F'"
-
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """Return ``str(self)``."""
         grid_str = ' x '.join(array1d_str(vec) for vec in self.coord_vectors)
-        if self.order == 'F':
-            grid_str += "('F' ordered)"
-
         return grid_str
 
 
@@ -727,7 +676,7 @@ class RegularGrid(TensorGrid):
     with elementwise addition and multiplication.
     """
 
-    def __init__(self, min_pt, max_pt, shape, order='C'):
+    def __init__(self, min_pt, max_pt, shape):
         """Initialize a new instance.
 
         Parameters
@@ -741,9 +690,6 @@ class RegularGrid(TensorGrid):
         shape : array-like or `int`
             The number of grid points per axis, can be an integer for
             1D grids
-        order : {'C', 'F'}, optional
-            Ordering of the grid axes. 'C' means the first axis
-            varies slowest, the last axis fastest; vice versa for 'F'.
 
         Examples
         --------
@@ -794,7 +740,7 @@ class RegularGrid(TensorGrid):
 
         coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
-        TensorGrid.__init__(self, *coord_vecs, order=order)
+        TensorGrid.__init__(self, *coord_vecs)
         self._center = (self.max_pt + self.min_pt) / 2
         self._stride = np.zeros(len(shape), dtype='float64')
         idcs = np.where(shape > 1)
@@ -882,7 +828,7 @@ class RegularGrid(TensorGrid):
 
         elif isinstance(other, TensorGrid):
             # other is a TensorGrid, we need to fall back to full check
-            self_tg = TensorGrid(*self.coord_vectors, order=self.order)
+            self_tg = TensorGrid(*self.coord_vectors)
             return self_tg.is_subgrid(other)
 
     def insert(self, index, other):
@@ -930,11 +876,10 @@ class RegularGrid(TensorGrid):
                          self.min_pt[idx:].tolist())
             new_maxpt = (self.max_pt[:idx].tolist() + other.max_pt.tolist() +
                          self.max_pt[idx:].tolist())
-            return RegularGrid(new_minpt, new_maxpt, new_shape,
-                               order=self.order)
+            return RegularGrid(new_minpt, new_maxpt, new_shape)
 
         elif isinstance(other, TensorGrid):
-            self_tg = TensorGrid(*self.coord_vectors, order=self.order)
+            self_tg = TensorGrid(*self.coord_vectors)
             return self_tg.insert(other, index)
 
         else:
@@ -957,7 +902,7 @@ class RegularGrid(TensorGrid):
         sq_minpt = [self.min_pt[axis] for axis in self._inondeg]
         sq_maxpt = [self.max_pt[axis] for axis in self._inondeg]
         sq_shape = [self.shape[axis] for axis in self._inondeg]
-        return RegularGrid(sq_minpt, sq_maxpt, sq_shape, order=self.order)
+        return RegularGrid(sq_minpt, sq_maxpt, sq_shape)
 
     def __getitem__(self, slc):
         """self[slc] implementation.
@@ -1050,19 +995,16 @@ class RegularGrid(TensorGrid):
                 new_maxpt.append(cvec[last])
                 new_shape.append(num)
 
-        return RegularGrid(new_minpt, new_maxpt, new_shape, order=self.order)
+        return RegularGrid(new_minpt, new_maxpt, new_shape)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         inner_str = '{}, {}, {}'.format(list(self.min_pt), list(self.max_pt),
                                         tuple(self.shape))
-        if self.order == 'F':
-            inner_str += ", order='F'"
-
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-def uniform_sampling(intv_prod, num_nodes, order='C'):
+def uniform_sampling(intv_prod, num_nodes):
     """Sample an interval product uniformly.
 
     The resulting grid will include ``begin`` and ``end`` of
@@ -1078,9 +1020,6 @@ def uniform_sampling(intv_prod, num_nodes, order='C'):
         Number of nodes per axis. For dimension >= 2, a `tuple`
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
-    order : {'C', 'F'}, optional
-        Ordering of the grid axes. 'C' means the first axis
-        varies slowest, the last axis fastest; vice versa for 'F'.
 
     Returns
     -------
@@ -1121,7 +1060,7 @@ def uniform_sampling(intv_prod, num_nodes, order='C'):
         raise ValueError('degenerate axes {} cannot be sampled with more '
                          'than one node.'.format(tuple(intv_prod._ideg)))
 
-    return RegularGrid(intv_prod.begin, intv_prod.end, num_nodes, order=order)
+    return RegularGrid(intv_prod.begin, intv_prod.end, num_nodes)
 
 
 if __name__ == '__main__':

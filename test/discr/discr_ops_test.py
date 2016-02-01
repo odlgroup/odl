@@ -29,10 +29,8 @@ import pytest
 
 # ODL imports
 import odl
-from odl.discr.lp_discr import uniform_discr
 from odl.discr.discr_ops import (finite_diff, PartialDerivative,
                                  Gradient, Divergence)
-from odl.space.ntuples import Rn
 from odl.util.testutils import almost_equal, all_equal, skip_if_no_cuda
 
 
@@ -146,7 +144,7 @@ def test_backward_diff():
 def test_discr_part_deriv():
     """Discretized partial derivative."""
 
-    discr_space = Rn(1)
+    discr_space = odl.Rn(1)
     with pytest.raises(TypeError):
         PartialDerivative(discr_space)
 
@@ -175,7 +173,7 @@ def test_discr_part_deriv():
     assert (dfe0 != dfe1).any()
 
     # discretized space
-    discr_space = uniform_discr([0, 0], [2, 1], data.shape)
+    discr_space = odl.uniform_discr([0, 0], [2, 1], data.shape)
 
     # operator
     partial_0 = PartialDerivative(discr_space, axis=0, zero_padding=True)
@@ -217,7 +215,7 @@ def test_discr_part_deriv_cuda():
     dfe[-1] = -data[-2] / 2.0
 
     # discretized space using CUDA
-    discr_space = uniform_discr(0, data.size, data.shape, impl='cuda')
+    discr_space = odl.uniform_discr(0, data.size, data.shape, impl='cuda')
 
     # operator
     partial = PartialDerivative(discr_space, zero_padding=True)
@@ -255,7 +253,7 @@ def ndvolume(lin_size, ndim, dtype=np.float64):
 def test_discrete_gradient():
     """Discretized spatial gradient operator."""
 
-    discr_space = Rn(1)
+    discr_space = odl.Rn(1)
     with pytest.raises(TypeError):
         Gradient(discr_space)
 
@@ -270,11 +268,11 @@ def test_discrete_gradient():
                      [0., 1., 2., 3., 4.]])
 
     # DiscreteLp Vector
-    discr_space = uniform_discr([0, 0], [6, 2.5], data.shape)
+    discr_space = odl.uniform_discr([0, 0], [6, 2.5], data.shape)
     dom_vec = discr_space.element(data)
 
     # computation of gradient components with helper function
-    dx0, dx1 = discr_space.stride
+    dx0, dx1 = discr_space.cell_size
     df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 
@@ -299,8 +297,8 @@ def test_discrete_gradient():
     for ndim in range(1, 6):
 
         # DiscreteLp Vector
-        discr_space = uniform_discr([0.] * ndim, [lin_size] * ndim,
-                                    [lin_size] * ndim)
+        discr_space = odl.uniform_discr([0.] * ndim, [lin_size] * ndim,
+                                        [lin_size] * ndim)
         dom_vec = discr_space.element(ndvolume(lin_size, ndim))
 
         # gradient
@@ -319,11 +317,11 @@ def test_discrete_gradient_cuda():
                      [2., 3., 4., 5., 6.]])
 
     # DiscreteLp Vector
-    discr_space = uniform_discr([0, 0], [6, 2.5], data.shape, impl='cuda')
+    discr_space = odl.uniform_discr([0, 0], [6, 2.5], data.shape, impl='cuda')
     dom_vec = discr_space.element(data)
 
     # computation of gradient components with helper function
-    dx0, dx1 = discr_space.stride
+    dx0, dx1 = discr_space.cell_size
     df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 
@@ -348,7 +346,7 @@ def test_discrete_divergence():
     """Discretized spatial divergence operator."""
 
     # Invalid arguments
-    discr_space = Rn(1)
+    discr_space = odl.Rn(1)
     with pytest.raises(TypeError):
         Divergence(discr_space)
 
@@ -358,7 +356,7 @@ def test_discrete_divergence():
                      [2., 3., 4., 5., 6.]])
 
     # DiscreteLp
-    discr_space = uniform_discr([0, 0], [6, 2.5], data.shape)
+    discr_space = odl.uniform_discr([0, 0], [6, 2.5], data.shape)
 
     # Operator instance
     div = Divergence(discr_space)
@@ -368,7 +366,7 @@ def test_discrete_divergence():
     div_dom_vec = div(dom_vec)
 
     # computation of divergence with helper function
-    dx0, dx1 = discr_space.stride
+    dx0, dx1 = discr_space.cell_size
     df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 
@@ -390,8 +388,8 @@ def test_discrete_divergence():
     for ndim in range(1, 6):
         # DiscreteLp Vector
         lin_size = 3
-        discr_space = uniform_discr([0.] * ndim, [lin_size] * ndim,
-                                    [lin_size] * ndim)
+        discr_space = odl.uniform_discr([0.] * ndim, [lin_size] * ndim,
+                                        [lin_size] * ndim)
         # Divergence
         div = Divergence(discr_space)
         dom_vec = div.domain.element([ndvolume(lin_size, ndim)] * ndim)
@@ -409,7 +407,7 @@ def test_discrete_divergence_cuda():
                      [2., 3., 4., 5., 6.]])
 
     # DiscreteLp
-    discr_space = uniform_discr([0, 0], [1.5, 10], data.shape, impl='cuda')
+    discr_space = odl.uniform_discr([0, 0], [1.5, 10], data.shape, impl='cuda')
 
     # operator instance
     div = Divergence(discr_space)
@@ -419,7 +417,7 @@ def test_discrete_divergence_cuda():
     div_dom_vec = div(dom_vec)
 
     # computation of divergence with helper function
-    dx0, dx1 = discr_space.stride
+    dx0, dx1 = discr_space.cell_size
     df0 = finite_diff(data, axis=0, dx=dx0, zero_padding=True, edge_order=2)
     df1 = finite_diff(data, axis=1, dx=dx1, zero_padding=True, edge_order=2)
 

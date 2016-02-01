@@ -33,8 +33,7 @@ import numpy as np
 from odl.set.sets import Set, RealNumbers
 from odl.util.utility import array1d_repr
 from odl.util.vectorization import (
-    is_valid_input_array, is_valid_input_meshgrid, meshgrid_input_order,
-    vecs_from_meshgrid)
+    is_valid_input_array, is_valid_input_meshgrid)
 
 
 __all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cuboid')
@@ -304,8 +303,7 @@ class IntervalProd(Set):
         if other in self:
             return True
         elif is_valid_input_meshgrid(other, self.ndim):
-            order = meshgrid_input_order(other)
-            vecs = vecs_from_meshgrid(other, order)
+            vecs = tuple(vec.squeeze() for vec in other)
             mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
             maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
             return np.all(mins >= self.begin) and np.all(maxs <= self.end)
@@ -551,8 +549,8 @@ class IntervalProd(Set):
         Examples
         --------
         >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
-        >>> rbox.append([-1.0, 0.0])
-        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
+        >>> rbox.append(Interval(-1.0, 0.0))
+        Cuboid([-1.0, 2.0, -1.0], [-0.5, 3.0, 0.0])
 
         See Also
         --------
@@ -600,8 +598,6 @@ class IntervalProd(Set):
                [-0.5,  3. ,  0.5]])
         """
         from odl.discr.grid import TensorGrid
-        if order not in ('C', 'F'):
-            raise ValueError('order {} not understood.'.format(order))
 
         minmax_vecs = [0] * self.ndim
         for axis in self._ideg:
