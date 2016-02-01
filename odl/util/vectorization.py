@@ -30,9 +30,7 @@ import numpy as np
 
 
 __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
-           'meshgrid_input_order', 'vecs_from_meshgrid',
-           'out_shape_from_meshgrid', 'out_shape_from_array',
-           'vectorize')
+           'out_shape_from_meshgrid', 'out_shape_from_array', 'vectorize')
 
 
 def is_valid_input_array(x, ndim=None):
@@ -69,59 +67,6 @@ def is_valid_input_meshgrid(x, ndim):
     return (len(x) == ndim and
             all(isinstance(xi, np.ndarray) for xi in x) and
             all(xi.ndim == ndim for xi in x))
-
-
-def meshgrid_input_order(x):
-    """Determine the ordering of a meshgrid argument."""
-    # Case 1: all elements have the same shape -> non-sparse
-    if all(xi.shape == x[0].shape for xi in x):
-        # Contiguity check only works for meshgrid created with copy=True.
-        # Otherwise, there is no way to find out the intended ordering.
-        if all(xi.flags.c_contiguous for xi in x):
-            return 'C'
-        elif all(xi.flags.f_contiguous for xi in x):
-            return 'F'
-        else:
-            raise ValueError('unable to determine ordering.')
-    # Case 2: sparse meshgrid, each member's shape has at most one non-one
-    # entry (corner case of all ones is included)
-    elif all(xi.shape.count(1) >= len(x) - 1 for xi in x):
-        # Reversed ordering of dimensions in the meshgrid tuple indicates
-        # 'F' ordering intention
-        # All other dimension except 'i' have length 1 -> 'C'
-        if all(xi.shape[j] == 1
-               for j in range(len(x))
-               for i, xi in enumerate(x)
-               if j != i):
-            return 'C'
-        # All other dimension except 'n - i' have length 1 -> 'C'
-        if all(xi.shape[j] == 1
-               for j in range(len(x))
-               for i, xi in enumerate(x)
-               if j != len(x) - 1 - i):
-            return 'F'
-        else:
-            raise ValueError('unable to determine ordering.')
-
-
-def vecs_from_meshgrid(mesh, order):
-    """Get the coordinate vectors from a meshgrid (as a tuple)."""
-    vecs = []
-    order_ = str(order).upper()
-    if order_ not in ('C', 'F'):
-        raise ValueError("unknown ordering '{}'.".format(order))
-
-    if order == 'C':
-        seq = mesh
-    else:
-        seq = reversed(mesh)
-
-    for ax, vec in enumerate(seq):
-        select = [0] * len(mesh)
-        select[ax] = np.s_[:]
-        vecs.append(vec[select])
-
-    return tuple(vecs)
 
 
 def out_shape_from_meshgrid(mesh):

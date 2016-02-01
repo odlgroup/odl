@@ -315,24 +315,23 @@ def test_collocation_interpolation_identity():
     # Check if interpolation followed by collocation on the same grid
     # is the identity
     rect = odl.Rectangle([0, 0], [1, 1])
-    part_c = odl.uniform_partition(rect, [4, 2], order='C')
-    part_f = odl.uniform_partition(rect, [4, 2], order='F')
+    part = odl.uniform_partition(rect, [4, 2])
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(part_c.size)
+    dspace = odl.Rn(part.size)
 
-    coll_op_c = PointCollocation(space, part_c, dspace)
-    coll_op_f = PointCollocation(space, part_f, dspace)
+    coll_op_c = PointCollocation(space, part, dspace, order='C')
+    coll_op_f = PointCollocation(space, part, dspace, order='F')
     interp_ops_c = [
-        NearestInterpolation(space, part_c, dspace, variant='left'),
-        NearestInterpolation(space, part_c, dspace, variant='right'),
-        LinearInterpolation(space, part_c, dspace),
-        PerAxisInterpolation(space, part_c, dspace,
+        NearestInterpolation(space, part, dspace, variant='left', order='C'),
+        NearestInterpolation(space, part, dspace, variant='right', order='C'),
+        LinearInterpolation(space, part, dspace, order='C'),
+        PerAxisInterpolation(space, part, dspace, order='C',
                              schemes=['linear', 'nearest'])]
     interp_ops_f = [
-        NearestInterpolation(space, part_f, dspace, variant='left'),
-        NearestInterpolation(space, part_f, dspace, variant='right'),
-        LinearInterpolation(space, part_f, dspace),
-        PerAxisInterpolation(space, part_f, dspace,
+        NearestInterpolation(space, part, dspace, variant='left', order='F'),
+        NearestInterpolation(space, part, dspace, variant='right', order='F'),
+        LinearInterpolation(space, part, dspace, order='F'),
+        PerAxisInterpolation(space, part, dspace, order='F',
                              schemes=['linear', 'nearest'])]
 
     values = np.arange(1, 9, dtype='float64')

@@ -52,7 +52,8 @@ class FunctionSetMapping(Operator):
 
     """Abstract base class for function set discretization mappings."""
 
-    def __init__(self, map_type, fset, partition, dspace, linear=False):
+    def __init__(self, map_type, fset, partition, dspace, linear=False,
+                 **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -72,6 +73,10 @@ class FunctionSetMapping(Operator):
         linear : bool
             Create a linear operator if `True`, otherwise a non-linear
             operator.
+        order : {'C', 'F'}, optional
+            Ordering of the axes in the data storage. 'C' means the
+            first axis varies slowest, the last axis fastest;
+            vice versa for 'F'.
         """
         map_type_ = str(map_type).lower()
         if map_type_ not in ('restriction', 'extension'):
@@ -115,6 +120,12 @@ class FunctionSetMapping(Operator):
                                  '{} of the data space are not equal.'
                                  ''.format(fset.field, dspace.field))
 
+        order = str(kwargs.pop('order', 'C'))
+        if str(order).upper() not in ('C', 'F'):
+            raise ValueError('order {!r} not recognized.'.format(order))
+        else:
+            self._order = str(order).upper()
+
     def __eq__(self, other):
         return (isinstance(other, type(self)) and
                 isinstance(self, type(other)) and
@@ -134,8 +145,8 @@ class FunctionSetMapping(Operator):
 
     @property
     def order(self):
-        """The axis ordering."""
-        return self.partition.order
+        """Axis ordering in the data storage."""
+        return self._order
 
 
 class PointCollocation(FunctionSetMapping):
@@ -152,7 +163,7 @@ class PointCollocation(FunctionSetMapping):
     discretization classes.
     """
 
-    def __init__(self, ip_fset, partition, dspace, order='C'):
+    def __init__(self, ip_fset, partition, dspace, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -168,10 +179,14 @@ class PointCollocation(FunctionSetMapping):
             Data space providing containers for the values of a
             discretized object. Its `NtuplesBase.size` must be equal
             to the total number of grid points.
+        order : {'C', 'F'}, optional
+            Ordering of the axes in the data storage. 'C' means the
+            first axis varies slowest, the last axis fastest;
+            vice versa for 'F'.
         """
         linear = isinstance(ip_fset, FunctionSpace)
         FunctionSetMapping.__init__(self, 'restriction', ip_fset, partition,
-                                    dspace, linear)
+                                    dspace, linear, **kwargs)
 
     def _call(self, func, out=None):
         """Evaluate ``func`` at the grid of this operator.
@@ -241,7 +256,7 @@ class PointCollocation(FunctionSetMapping):
         try:
             mesh = self.grid.meshgrid()
             if out is None:
-                out = func(mesh).ravel()
+                out = func(mesh).ravel(order=self.order)
             else:
                 func(mesh, out=out.asarray().reshape(self.grid.shape,
                                                      order=self.order))
@@ -257,12 +272,10 @@ class PointCollocation(FunctionSetMapping):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(self.domain,
-                                                        self.grid,
-                                                        self.range)
-        if self.order == 'F':
-            inner_str += ",\n  order='F'"
-
+        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(
+            self.domain, self.grid, self.range)
+        if self.order != 'C':
+            inner_str += ",\n order='{}'".format(self.order)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
@@ -306,6 +319,10 @@ class NearestInterpolation(FunctionSetMapping):
             'left' : favor left neighbor (default)
 
             'right' : favor right neighbor
+        order : {'C', 'F'}, optional
+            Ordering of the axes in the data storage. 'C' means the
+            first axis varies slowest, the last axis fastest;
+            vice versa for 'F'.
 
         Notes
         -----
@@ -315,7 +332,7 @@ class NearestInterpolation(FunctionSetMapping):
         """
         linear = isinstance(fset, FunctionSpace)
         FunctionSetMapping.__init__(self, 'extension', fset, partition,
-                                    dspace, linear)
+                                    dspace, linear, **kwargs)
 
         variant = kwargs.pop('variant', 'left')
         self._variant = str(variant).lower()
@@ -368,7 +385,7 @@ class NearestInterpolation(FunctionSetMapping):
         (will shift the grid points):
 
         >>> from odl import uniform_partition, Ntuples
-        >>> part = uniform_partition(rect, [4, 2], nodes_at_bdry=False)
+        >>> part = uniform_partition(rect, [4, 2], nodes_on_bdry=False)
         >>> part.grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
@@ -408,13 +425,14 @@ class NearestInterpolation(FunctionSetMapping):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(self.range,
-                                                        self.grid,
-                                                        self.domain)
-        if self.order == 'F':
-            inner_str += ",\n  order='F'"
-        if self._variant == 'right':
-            inner_str += ",\n  variant='right'"
+        inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(
+            self.range, self.grid, self.domain)
+        sep = ',\n '
+        if self.order != 'C':
+            inner_str += sep + "order='{}'".format(self.order)
+            sep = ', '
+        if self._variant != 'left':
+            inner_str += sep + "variant='{}'".format(self._variant)
 
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
@@ -423,7 +441,7 @@ class LinearInterpolation(FunctionSetMapping):
 
     """Linear interpolation interpolation as an `Operator`."""
 
-    def __init__(self, fspace, partition, dspace, order='C'):
+    def __init__(self, fspace, partition, dspace, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -441,13 +459,17 @@ class LinearInterpolation(FunctionSetMapping):
             discretized object. Its `NtuplesBase.size` must be equal
             to the total number of grid points, and its `FnBase.field`
             must be the same as that of the function space.
+        order : {'C', 'F'}, optional
+            Ordering of the axes in the data storage. 'C' means the
+            first axis varies slowest, the last axis fastest;
+            vice versa for 'F'.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
                             'instance.'.format(fspace))
 
         FunctionSetMapping.__init__(self, 'extension', fspace, partition,
-                                    dspace, linear=True)
+                                    dspace, linear=True, **kwargs)
 
     def _call(self, x, out=None):
         """Create an interpolator from grid values ``x``.
@@ -488,8 +510,8 @@ class LinearInterpolation(FunctionSetMapping):
         inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(self.range,
                                                         self.grid,
                                                         self.domain)
-        if self.order == 'F':
-            inner_str += ",\n  order='F'"
+        if self.order != 'C':
+            inner_str += ",\n  order='{}'".format(self.order)
 
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
@@ -498,7 +520,7 @@ class PerAxisInterpolation(FunctionSetMapping):
 
     """Interpolation scheme set for each axis individually."""
 
-    def __init__(self, fspace, partition, dspace, schemes, nn_variants=None):
+    def __init__(self, fspace, partition, dspace, schemes, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -526,13 +548,17 @@ class PerAxisInterpolation(FunctionSetMapping):
             as a global variant for all axes.
             This option has no effect for schemes other than nearest
             neighbor.
+        order : {'C', 'F'}, optional
+            Ordering of the axes in the data storage. 'C' means the
+            first axis varies slowest, the last axis fastest;
+            vice versa for 'F'.
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
                             'instance.'.format(fspace))
 
         FunctionSetMapping.__init__(self, 'extension', fspace, partition,
-                                    dspace, linear=True)
+                                    dspace, linear=True, **kwargs)
 
         try:
             schemes_ = str(schemes + '').lower()  # pythonic string check
@@ -541,6 +567,7 @@ class PerAxisInterpolation(FunctionSetMapping):
             schemes_ = [str(scm).lower() if scm is not None else None
                         for scm in schemes]
 
+        nn_variants = kwargs.pop('nn_variants', None)
         if nn_variants is None:
             variants_ = ['left' if scm == 'nearest' else None
                          for scm in schemes]
@@ -618,18 +645,21 @@ class PerAxisInterpolation(FunctionSetMapping):
         else:
             schemes = self.schemes
 
-        inner_str = '\n  {!r},\n  {!r},\n  {!r},\n  {!r}'.format(
+        inner_str = '\n {!r},\n {!r},\n {!r},\n {!r}'.format(
             self.range, self.grid, self.domain, schemes)
-        if self.order == 'F':
-            inner_str += ",\n  order='F'"
+        sep = '\n, '
+        if self.order != 'C':
+            inner_str += sep + "order='{}'".format(self.order)
+            sep = ', '
 
         if all(var == self.nn_variants[0] for var in self.nn_variants):
             variants = self.nn_variants[0]
         else:
             variants = self.nn_variants
+            sep = ',\n '
 
         if variants is not None:
-            inner_str += ',\n  nn_variants={}'.format(variants)
+            inner_str += sep + 'nn_variants={}'.format(variants)
 
         return '{}({})'.format(self.__class__.__name__, inner_str)
 

@@ -46,8 +46,6 @@ def test_tensorgrid_init():
     TensorGrid(sorted1, sorted1)
     TensorGrid(sorted1, sorted2, sorted3)
     TensorGrid(sorted2, scalar, sorted1)
-    TensorGrid(sorted1, sorted2, order='C')
-    TensorGrid(sorted1, sorted2, order='F')
 
 
 def test_tensorgrid_init_error():
@@ -90,9 +88,6 @@ def test_tensorgrid_init_error():
 
     with pytest.raises(ValueError):
         TensorGrid(sorted1, empty, sorted2)
-
-    with pytest.raises(ValueError):
-        TensorGrid(sorted1, sorted2, order='A')
 
 
 def test_tensorgrid_ndim():
@@ -164,14 +159,12 @@ def test_tensorgrid_equals():
     vec2 = np.array([-4, -2, 0, 2, 4])
 
     grid1 = TensorGrid(vec1)
-    grid1_diff_order = TensorGrid(vec1, order='F')
     grid2 = TensorGrid(vec1, vec2)
     grid2_again = TensorGrid(vec1, vec2)
     grid2_rev = TensorGrid(vec2, vec1)
 
     assert grid1 == grid1
     assert not grid1 != grid1
-    assert grid1 == grid1_diff_order
     assert grid2 == grid2
     assert not grid2 != grid2
     assert grid2 == grid2_again
@@ -434,11 +427,6 @@ def test_tensorgrid_meshgrid():
     assert all_equal(mgx, xx)
     assert all_equal(mgy, yy)
     assert all_equal(mgz, zz)
-
-    # Fortran ordering
-    grid = TensorGrid(vec1, vec2, vec3, order='F')
-    xx, yy, zz = grid.meshgrid()
-    assert all(arr.flags.f_contiguous for arr in (xx, yy, zz))
 
 
 def test_tensorgrid_getitem():
@@ -865,24 +853,17 @@ def test_sparse_meshgrid():
     true_mg = (x,)
     assert all_equal(sparse_meshgrid(x), true_mg)
 
-    # Two arrays, 'C' ordering
+    # Two arrays
     x, y = np.zeros(2), np.zeros(3)
     true_mg = (x[:, None], y[None, :])
-    mg = sparse_meshgrid(x, y, order='C')
+    mg = sparse_meshgrid(x, y)
     assert all_equal(mg, true_mg)
     assert all(vec.flags.c_contiguous for vec in mg)
-
-    # Two arrays, 'F' ordering
-    x, y = np.zeros(2), np.zeros(3)
-    true_mg = (x[None, :], y[:, None])
-    mg = sparse_meshgrid(x, y, order='F')
-    assert all_equal(mg, true_mg)
-    assert all(vec.flags.f_contiguous for vec in mg)
 
     # Array-like input
     x, y = [1, 2, 3], [4, 5, 6]
     true_mg = (np.array(x)[:, None], np.array(y)[None, :])
-    mg = sparse_meshgrid(x, y, order='C')
+    mg = sparse_meshgrid(x, y)
     assert all_equal(mg, true_mg)
     assert all(vec.flags.c_contiguous for vec in mg)
 

@@ -34,8 +34,7 @@ from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.utility import preload_call_with, preload_default_oop_call_with
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
-    meshgrid_input_order, out_shape_from_array, out_shape_from_meshgrid,
-    vectorize)
+    out_shape_from_array, out_shape_from_meshgrid, vectorize)
 
 
 __all__ = ('FunctionSet', 'FunctionSetVector',
@@ -518,13 +517,14 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def zero_vec(x, out=None):
             """The zero function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
-                order = meshgrid_input_order(x)
+                out_shape = out_shape_from_meshgrid(x)
+            elif is_valid_input_array(x, self.domain.ndim):
+                out_shape = out_shape_from_array(x)
             else:
-                order = 'C'
+                raise TypeError('invalid input type.')
 
-            out_shape = out_shape_from_meshgrid(x)
             if out is None:
-                return np.zeros(out_shape, dtype=dtype, order=order)
+                return np.zeros(out_shape, dtype=dtype)
             else:
                 out.fill(0)
 
@@ -540,13 +540,14 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def one_vec(x, out=None):
             """The one function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
-                order = meshgrid_input_order(x)
+                out_shape = out_shape_from_meshgrid(x)
+            elif is_valid_input_array(x, self.domain.ndim):
+                out_shape = out_shape_from_array(x)
             else:
-                order = 'C'
+                raise TypeError('invalid input type.')
 
-            out_shape = out_shape_from_meshgrid(x)
             if out is None:
-                return np.ones(out_shape, dtype=dtype, order=order)
+                return np.ones(out_shape, dtype=dtype)
             else:
                 out.fill(1)
 

@@ -389,7 +389,7 @@ class Gradient(Operator):
         >>> from odl import uniform_discr
         >>> data = np.array([[ 0., 1., 2., 3., 4.],
         ...                  [ 0., 2., 4., 6., 8.]])
-        >>> discr = uniform_discr([0,0], [2,5], data.shape)
+        >>> discr = uniform_discr([0, 0], [2, 5], data.shape)
         >>> f = discr.element(data)
         >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
@@ -412,7 +412,7 @@ class Gradient(Operator):
 
         x_data = x.asarray()
         ndim = self.domain.ndim
-        dx = self.domain.grid.stride
+        dx = self.domain.cell_size
 
         for axis in range(ndim):
             out_arr = out[axis].asarray()
@@ -520,7 +520,7 @@ class Divergence(Operator):
             out = self.range.element()
 
         ndim = self.range.ndim
-        dx = self.range.grid.stride
+        dx = self.range.cell_size
 
         arr = out.asarray()
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
@@ -602,7 +602,7 @@ class Laplacian(Operator):
         >>> data = np.array([[ 0., 0., 0.],
         ...                  [ 0., 1., 0.],
         ...                  [ 0., 0., 0.]])
-        >>> discr = uniform_discr([0,0], [3,3], data.shape)
+        >>> discr = uniform_discr([0, 0], [3, 3], data.shape)
         >>> f = discr.element(data)
         >>> lap = Laplacian(discr)
         >>> print(lap(f))
@@ -620,7 +620,7 @@ class Laplacian(Operator):
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
 
         ndim = self.domain.ndim
-        dx = self.domain.grid.stride
+        dx = self.domain.cell_size
 
         for axis in range(ndim):
             # TODO: this can be optimized
