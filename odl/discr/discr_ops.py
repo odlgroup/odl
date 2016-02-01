@@ -412,7 +412,7 @@ class Gradient(Operator):
 
         x_data = x.asarray()
         ndim = self.domain.ndim
-        dx = self.domain.stride
+        dx = self.domain.grid.stride
 
         for axis in range(ndim):
             out_arr = out[axis].asarray()
@@ -520,7 +520,7 @@ class Divergence(Operator):
             out = self.range.element()
 
         ndim = self.range.ndim
-        dx = self.range.stride
+        dx = self.range.grid.stride
 
         arr = out.asarray()
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
@@ -620,7 +620,7 @@ class Laplacian(Operator):
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
 
         ndim = self.domain.ndim
-        dx = self.domain.stride
+        dx = self.domain.grid.stride
 
         for axis in range(ndim):
             # TODO: this can be optimized
