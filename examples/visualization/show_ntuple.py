@@ -15,17 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Gradient-based optimization schemes."""
+"""Examples on using the vector.show() syntax for ntuples"""
 
-from __future__ import absolute_import
+import odl
 
-__all__ = ()
+spc = odl.Rn(5)
+vec = spc.element([1, 2, 3, 4, 5])
 
-
-from . import gradient
-from .gradient import *
-__all__ += gradient.__all__
-
-from . import steplen
-from .steplen import *
-__all__ += steplen.__all__
+vec.show()

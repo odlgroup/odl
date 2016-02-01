@@ -24,28 +24,32 @@ from future import standard_library
 standard_library.install_aliases()
 
 # External
-from numbers import Integral
 import numpy as np
 
 # ODL
 from odl.util.utility import is_real_dtype
 
 
-__all__ = ('show_discrete_function',)
+__all__ = ('show_discrete_data',)
 
 
-def show_discrete_function(dfunc, method='', title=None, indices=None,
-                           show=False, fig=None, **kwargs):
+def show_discrete_data(values, grid, method='', title=None,
+                       show=False, fig=None, **kwargs):
     """Display a discrete 1d or 2d function.
 
     Parameters
     ----------
-    dfunc : `DiscreteLpVector`
-        The discretized funciton to visualize.
+    values : `numpy.ndarray`
+        The values to visualize
+    grid : `RegularGrid`
+        Grid of the values
     method : `str`, optional
         1d methods:
 
         'plot' : graph plot
+
+        'scatter' : scattered 2d points
+        (2nd axis <-> value)
 
         2d methods:
 
@@ -60,16 +64,6 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     title : `str`, optional
         Set the title of the figure
 
-    indices : index expression, optional
-        Display a slice of the array instead of the full array. The
-        index expression is most easily created with the `numpy.s_`
-        constructor, i.e. supply ``np.s_[:, 1, :]`` to display the
-        first slice along the second axis.
-
-        For data with 3 or more dimensions, the 2d slice in the first
-        two axes at the "middle" along the remaining axes is shown
-        (semantically ``[:, :, shape[2:] // 2]``).
-
     show : `bool`, optional
         If the plot should be showed now or deferred until later
 
@@ -77,6 +71,12 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
         The figure to show in. Expected to be of same "style", as the figure
         given by this function. The most common usecase is that fig is the
         return value from an earlier call to this function.
+
+    interp : {'nearest', 'linear'}
+        Interpolation method to use.
+
+    axis_labels : `str`
+        Axis labels, default: ['x', 'y']
 
     kwargs : {'figsize', 'saveto', ...}
         Extra keyword arguments passed on to display method
@@ -107,60 +107,25 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     sub_kwargs = {}
     arrange_subplots = (121, 122)  # horzontal arrangement
 
-    # Default to showing x-y slice "in the middle"
-    if indices is None and dfunc.ndim >= 3:
-        indices = [np.s_[:]] * 2
-        indices += [n // 2 for n in dfunc.space.grid.shape[2:]]
-
-    if isinstance(indices, (Integral, slice)):
-        indices = [indices]
-    elif indices is None or indices == Ellipsis:
-        indices = [np.s_[:]] * dfunc.ndim
-    else:
-        indices = list(indices)
-
-    if Ellipsis in indices:
-        # Replace Ellipsis with the correct number of [:] expressions
-        pos = indices.index(Ellipsis)
-        indices = (indices[:pos] +
-                   [np.s_[:]] * (dfunc.ndim - len(indices) + 1) +
-                   indices[pos + 1:])
-
-    if len(indices) < dfunc.ndim:
-        raise ValueError('too few axes ({} < {}).'.format(len(indices),
-                                                          dfunc.ndim))
-    if len(indices) > dfunc.ndim:
-        raise ValueError('too many axes ({} > {}).'.format(len(indices),
-                                                           dfunc.ndim))
-
     # Create axis labels which remember their original meaning
-    if dfunc.ndim <= 3:
-        axis_labels = ['x', 'y', 'z']
-    else:
-        axis_labels = ['x{}'.format(axis) for axis in range(dfunc.ndim)]
-    squeezed_axes = [axis for axis in range(dfunc.ndim)
-                     if not isinstance(indices[axis], Integral)]
-    axis_labels = [axis_labels[axis] for axis in squeezed_axes]
+    axis_labels = kwargs.pop('axis_labels', ['x', 'y'])
 
-    # Squeeze grid and values according to the index expression
-    grid = dfunc.space.grid[indices].squeeze()
-    values = dfunc.asarray()[indices].squeeze()
-
-    dfunc_is_complex = not is_real_dtype(dfunc.space.dspace.dtype)
+    values_are_complex = not is_real_dtype(values.dtype)
     figsize = kwargs.pop('figsize', None)
     saveto = kwargs.pop('saveto', None)
+    interp = kwargs.pop('interp', 'nearest')
 
     if values.ndim == 1:  # TODO: maybe a plotter class would be better
         if not method:
-            if dfunc.space.interp == 'nearest':
+            if interp == 'nearest':
                 method = 'step'
                 dsp_kwargs['where'] = 'mid'
-            elif dfunc.space.interp == 'linear':
+            elif interp == 'linear':
                 method = 'plot'
             else:
                 method = 'plot'
 
-        if method == 'plot' or method == 'step':
+        if method == 'plot' or method == 'step' or method == 'scatter':
             args_re += [grid.coord_vectors[0], values.real]
             args_im += [grid.coord_vectors[0], values.imag]
         else:
@@ -173,14 +138,14 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
         if method == 'imshow':
             args_re = [np.rot90(values.real)]
-            args_im = [np.rot90(values.imag)] if dfunc_is_complex else []
+            args_im = [np.rot90(values.imag)] if values_are_complex else []
 
             extent = [grid.min()[0], grid.max()[0],
                       grid.min()[1], grid.max()[1]]
 
-            if dfunc.space.interp == 'nearest':
+            if interp == 'nearest':
                 interpolation = 'nearest'
-            elif dfunc.space.interp == 'linear':
+            elif interp == 'linear':
                 interpolation = 'bilinear'
             else:
                 interpolation = 'none'
@@ -193,13 +158,13 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             pts = grid.points()
             args_re = [pts[:, 0], pts[:, 1], values.ravel().real]
             args_im = ([pts[:, 0], pts[:, 1], values.ravel().imag]
-                       if dfunc_is_complex else [])
+                       if values_are_complex else [])
             sub_kwargs.update({'projection': '3d'})
         elif method in ('wireframe', 'plot_wireframe'):
             method = 'plot_wireframe'
             x, y = grid.meshgrid()
             args_re = [x, y, np.rot90(values.real)]
-            args_im = ([x, y, np.rot90(values.imag)] if dfunc_is_complex
+            args_im = ([x, y, np.rot90(values.imag)] if values_are_complex
                        else [])
             sub_kwargs.update({'projection': '3d'})
         else:
@@ -208,32 +173,36 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
 
     else:
         raise NotImplementedError('no method for {}d display implemented.'
-                                  ''.format(dfunc.ndim))
+                                  ''.format(values.ndim))
 
     # Additional keyword args are passed on to the display method
     dsp_kwargs.update(**kwargs)
 
-    if fig is None:
-        fig = plt.figure(figsize=figsize)
-        updatefig = False
-    else:
+    if fig is not None:
+        # Reuse figure if given as input
         if not isinstance(fig, plt.Figure):
-            raise TypeError('fig {} not a matplotlib figure'
-                            ''.format(fig))
+            raise TypeError('fig {} not a matplotlib figure'.format(fig))
 
         if not plt.fignum_exists(fig.number):
-            raise TypeError('fig {} not an open matplotlib figure'
-                            ''.format(fig))
+            # If figure does not exist, user either closed the figure or
+            # is using IPython, in this case we need a new figure.
 
-        plt.figure(fig.number)
-        updatefig = True
+            fig = plt.figure(figsize=figsize)
+            updatefig = False
+        else:
+            # Set current figure to given input
+            plt.figure(fig.number)
+            updatefig = True
 
-        if values.ndim > 1:
-            # If the figure is larger than 1d, we can clear it since we
-            # dont reuse anything.
-            fig.clf()
+            if values.ndim > 1:
+                # If the figure is larger than 1d, we can clear it since we
+                # dont reuse anything. Keeping it causes performance problems.
+                fig.clf()
+    else:
+        fig = plt.figure(figsize=figsize)
+        updatefig = False
 
-    if dfunc_is_complex:
+    if values_are_complex:
         # Real
         if len(fig.axes) == 0:
             # Create new axis if needed
@@ -269,7 +238,7 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
             else:
                 sub_im.set_ylabel('value')
         else:
-            sub_im = fig.axes[1]
+            sub_im = fig.axes[2]
 
         display_im = getattr(sub_im, method)
         csub_im = display_im(*args_im, **dsp_kwargs)
@@ -327,7 +296,9 @@ def show_discrete_function(dfunc, method='', title=None, indices=None,
     fig.tight_layout()
 
     if title is not None:
-        plt.title(title)
+        if not values_are_complex:
+            # Do not overwrite title for complex values
+            plt.title(title)
         fig.canvas.manager.set_window_title(title)
 
     if show:

@@ -69,6 +69,7 @@ def sparse_meshgrid(*x, **kwargs):
         xi = np.asarray(xi)
         slc = [None] * n
         slc[ax] = np.s_[:]
+
         if order == 'C':
             mesh.append(np.ascontiguousarray(xi[slc]))
         else:
@@ -187,7 +188,25 @@ class TensorGrid(Set):
     # Attributes
     @property
     def coord_vectors(self):
-        """The coordinate vectors of the grid."""
+        """The coordinate vectors of the grid.
+
+        Returns
+        -------
+        coord_vectors : tuple of `numpy.ndarray`'s
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> x, y = g.coord_vectors
+        >>> x
+        array([ 0.,  1.])
+        >>> y
+        array([-1.,  0.,  2.])
+
+        See Also
+        --------
+        meshgrid : Same result but with nd arrays
+        """
         return self._coord_vectors
 
     @property
@@ -668,6 +687,10 @@ class TensorGrid(Set):
         >>> x, y = g.meshgrid()
         >>> x.flags.f_contiguous, y.flags.f_contiguous
         (True, True)
+
+        See Also
+        --------
+        coord_vectors : Same result but with 1d arrays
         """
         return sparse_meshgrid(*self.coord_vectors, order=self.order)
 

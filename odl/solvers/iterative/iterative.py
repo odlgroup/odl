@@ -22,11 +22,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
-
 # Internal
-from odl.operator.default_ops import IdentityOperator
-from odl.operator.operator import OperatorComp, OperatorSum
+from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
            'gauss_newton')
@@ -35,7 +32,7 @@ __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
 # TODO: update all docs
 
 
-def landweber(op, x, rhs, niter=1, omega=1, partial=None):
+def landweber(op, x, rhs, niter=1, omega=1, projection=None, partial=None):
     """Optimized implementation of Landweber's method.
 
     This method calculates an approximate least-squares solution of
@@ -65,6 +62,9 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
     convergence, where :math:`\\lVert\mathcal{A}\\rVert` stands for the
     operator norm of :math:`\mathcal{A}`.
 
+    Users may also optionally provide a projection to project each
+    iterate onto some subset. For example enforcing positivity.
+
     This implementation uses a minimum amount of memory copies by
     applying re-usable temporaries and in-place evaluation.
 
@@ -87,8 +87,12 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
         Right-hand side of the equation defining the inverse problem
     niter : `int`, optional
         Maximum number of iterations
-    omega : positive `float`
+    omega : positive `float`, optional
         Relaxation parameter in the iteration
+    projection : `callable`, optional
+        Function that can be used to modify the iterates in each iteration,
+        for example enforcing positivity. The function should take one
+        argument and modify it in place.
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
@@ -107,6 +111,9 @@ def landweber(op, x, rhs, niter=1, omega=1, partial=None):
         tmp_ran -= rhs
         op.derivative(x).adjoint(tmp_ran, out=tmp_dom)
         x.lincomb(1, x, -omega, tmp_dom)
+
+        if projection is not None:
+            projection(x)
 
         if partial is not None:
             partial(x)
@@ -148,6 +155,10 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     Returns
     -------
     `None`
+
+    See Also
+    --------
+    conjugate_gradient_normal : Solver for nonsymmetric matrices
     """
     # TODO: add a book reference
     # TODO: update doc
@@ -231,6 +242,10 @@ Conjugate_gradient_on_the_normal_equations>`_.
     Returns
     -------
     `None`
+
+    See Also
+    --------
+    conjugate_gradient : Optimized solver for symmetric matrices
     """
     # TODO: add a book reference
     # TODO: update doc
