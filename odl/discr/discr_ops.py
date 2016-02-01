@@ -748,9 +748,11 @@ class Laplacian(Operator):
         >>> f = space.element(data)
         >>> lap = Laplacian(space)
         >>> print(lap(f))
-        [[0.0, 1.0, 0.0],
-         [1.0, -4.0, 1.0],
-         [0.0, 1.0, 0.0]]
+        [
+            [0.0, 1.0, 0.0],
+            [1.0, -4.0, 1.0],
+            [0.0, 1.0, 0.0]
+        ]
         """
         if out is None:
             out = self.range.zero()
