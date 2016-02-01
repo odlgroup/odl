@@ -219,10 +219,14 @@ def test_contains():
     assert 2 in set_
     assert 1.5 in set_
     assert 3 not in set_
+    assert 'string' not in set_
+    assert [1, 2] not in set_
+    assert np.nan not in set_
 
     positive_reals = IntervalProd(0, np.inf)
     assert 1 in positive_reals
     assert np.inf in positive_reals
+    assert -np.inf not in positive_reals
     assert -1 not in positive_reals
 
 
@@ -247,6 +251,19 @@ def test_contains_set():
                     {'hello': 1.0}]:
         with pytest.raises(AttributeError):
             set_.contains_set(non_set)
+
+
+def test_dist():
+    set_ = IntervalProd(1, 2)
+
+    for interior in [1.0, 1.1, 2.0]:
+        assert set_.dist(interior) == 0.0
+
+    for exterior in [0.0, 2.0, np.inf]:
+        assert set_.dist(exterior) == min(abs(set_.begin - exterior),
+                                          abs(exterior - set_.end))
+
+    assert set_.dist(np.NaN) == np.inf
 
 
 # Set arithmetic
