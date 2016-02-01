@@ -563,9 +563,10 @@ class Operator(object):
         out-of-place call even if you choose the respective other
         pattern.
         """
-        raise NotImplementedError('This operator does not implement `_call`. '
-                                  'See `Operator._call` for instructions on '
-                                  'how to do this.')
+        raise NotImplementedError('This operator {!r} does not implement '
+                                  '`_call`. See `Operator._call` for '
+                                  'instructions on how to do this.'
+                                  ''.format(self))
 
     @property
     def domain(self):

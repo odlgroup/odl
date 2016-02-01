@@ -37,7 +37,7 @@ A `LinearSpace` is a very important subclass of `Set` and is a general implement
 
 * :math:`\mathbb{F}^n` type spaces such as `Rn` and `Cn`, but also the `CUDA`_ accelerated version `CudaRn`.
 
-* Discretizations of continous spaces. This may for example be a discretization of a cube using voxels. All discretizations inherit form `Discretization`, but the most important is `DiscreteLp`.
+* Discretizations of continous spaces. This may for example be a discretization of a cube using voxels. All discretizations inherit form `RawDiscretization`, but the most important is `DiscreteLp`.
 
 * In addition to this, there are utility spaces such as `ProductSpace` which allows the composition of several spaces into a larger space.
 
