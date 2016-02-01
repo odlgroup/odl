@@ -220,10 +220,14 @@ def test_contains():
     assert 2 in set_
     assert 1.5 in set_
     assert 3 not in set_
+    assert 'string' not in set_
+    assert [1, 2] not in set_
+    assert np.nan not in set_
 
     positive_reals = IntervalProd(0, np.inf)
     assert 1 in positive_reals
     assert np.inf in positive_reals
+    assert -np.inf not in positive_reals
     assert -1 not in positive_reals
 
 
