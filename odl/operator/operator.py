@@ -958,7 +958,7 @@ class Operator(object):
         Rn(3).element([1.0, 2.0, 3.0])
         """
         if isinstance(other, Number):
-            return OperatorRightScalarMult(self, 1.0 / other)
+            return self * (1.0 / other)
         else:
             return NotImplemented
 
