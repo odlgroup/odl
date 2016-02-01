@@ -346,6 +346,11 @@ def astra_projection_geometry(geometry):
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry {!r} is not a `Geometry` instance.'
                         ''.format(geometry))
+
+    if 'astra' in geometry.implementations:
+        # Shortcut, reuse already computed value.
+        return geometry.implementations['astra']
+
     if not geometry.has_det_sampling:
         raise ValueError('geometry has no detector sampling grid.')
     if not geometry.has_motion_sampling:
@@ -395,6 +400,10 @@ def astra_projection_geometry(geometry):
     else:
         raise NotImplementedError('unkown ASTRA geometry type {}.'.format(
             geometry))
+
+    if 'astra' not in geometry.implementations:
+        # Shortcut, reuse already computed value.
+        geometry.implementations['astra'] = proj_geom
 
     return proj_geom
 
