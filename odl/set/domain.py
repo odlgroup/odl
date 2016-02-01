@@ -273,7 +273,7 @@ class IntervalProd(Set):
         False
         """
         try:
-            # Ducktyped check
+            # Duck-typed check of type
             point = np.array(other, dtype=np.float, copy=False, ndmin=1)
         except (ValueError, TypeError):
             return False

@@ -61,7 +61,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
            The number of dimensions of the geometry
         """
         self._ndim = ndim
-        self._implementations = {}
+        self._implementation_cache = {}
 
     @abstractproperty
     def motion_params(self):
@@ -155,16 +155,17 @@ class Geometry(with_metaclass(ABCMeta, object)):
         return self._ndim
 
     @property
-    def implementations(self):
+    def implementation_cache(self):
         """Dict where computed implementations of this geometry can be saved.
 
-        Intended for reuse of computations.
+        Intended for reuse of computations. Implementations that use this
+        storage should take care to use a sufficiently unique name.
 
         Returns
         -------
         implementations : `dict`
         """
-        return self._implementations
+        return self._implementation_cache
 
     @property
     def motion_grid(self):
