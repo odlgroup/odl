@@ -315,6 +315,19 @@ def test_insert():
         intvp1.insert(-4, intvp2)
 
 
+def test_dist():
+    set_ = IntervalProd(1, 2)
+
+    for interior in [1.0, 1.1, 2.0]:
+        assert set_.dist(interior) == 0.0
+
+    for exterior in [0.0, 2.0, np.inf]:
+        assert set_.dist(exterior) == min(abs(set_.begin - exterior),
+                                          abs(exterior - set_.end))
+
+    assert set_.dist(np.NaN) == np.inf
+
+
 # Set arithmetic
 def test_pos():
     interv = Interval(1, 2)
