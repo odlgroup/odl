@@ -174,7 +174,7 @@ class TensorGrid(Set):
         self._inondeg = np.array([i for i in range(len(vecs))
                                   if len(vecs[i]) != 1])
 
-        # Thes args are not public and thus not checked for consistency!
+        # These args are not public and thus not checked for consistency!
         _exact_min = kwargs.pop('_exact_min', None)
         _exact_max = kwargs.pop('_exact_max', None)
         if _exact_min is not None:
@@ -461,7 +461,11 @@ class TensorGrid(Set):
 
         new_vecs = (self.coord_vectors[:index] + other.coord_vectors +
                     self.coord_vectors[index:])
-        return TensorGrid(*new_vecs)
+
+        if other.as_midp != self.as_midp:
+            raise ValueError('not implemented')
+
+        return TensorGrid(*new_vecs, as_midp=self.as_midp)
 
     def append(self, other):
         """Insert at the end.
@@ -921,7 +925,7 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-
+        other : `RegularGrid`
         tol : `float`
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
@@ -975,7 +979,7 @@ class RegularGrid(TensorGrid):
             self_tg = TensorGrid(*self.coord_vectors)
             return self_tg.is_subgrid(other)
 
-    def insert(self, index, grid):
+    def insert(self, index, other):
         """Insert another regular grid before the given index.
 
         The given grid (``m`` dimensions) is inserted into the current
@@ -985,7 +989,7 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        grid : `RegularGrid`
+        other : `RegularGrid` or `TensorGrid`
             The grid to be inserted.
         index : `numbers.Integral`
             The index of the dimension before which 'other' is to
@@ -993,8 +997,8 @@ class RegularGrid(TensorGrid):
 
         Returns
         -------
-        newgrid : `RegularGrid`
-            The enlarged grid
+        newgrid : `RegularGrid` or `TensorGrid`
+            The enlarged grid. If ``other`` is a `TensorGrid`, so is result.
 
         Examples
         --------
@@ -1002,21 +1006,35 @@ class RegularGrid(TensorGrid):
         >>> rg2 = RegularGrid(-3, 7, 6)
         >>> rg1.insert(1, rg2)
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], [2, 6, 3])
+
+        If other is a TensorGrid, result is too
+
+        >>> tg = TensorGrid([0, 1, 2])
+        >>> rg1.insert(2, tg)
+        TensorGrid([-1.5, -0.5], [-1.0, 1.0, 3.0], [0.0, 1.0, 2.0])
         """
         idx = int(index)
         if not 0 <= idx <= self.ndim:
             raise IndexError('index {} out of valid range 0 -> {}.'
                              ''.format(index, self.ndim))
 
-        if not isinstance(grid, RegularGrid):
-            raise TypeError('{!r} is not a regular grid.'.format(grid))
+        if not isinstance(other, RegularGrid):
+            if isinstance(other, TensorGrid):
+                return TensorGrid.insert(self, index, other)
+            else:
+                raise TypeError('{!r} is not a regular grid.'.format(other))
 
-        new_shape = self.shape[:idx] + grid.shape + self.shape[idx:]
-        new_minpt = (self.min_pt[:idx].tolist() + grid.min_pt.tolist() +
+        new_shape = self.shape[:idx] + other.shape + self.shape[idx:]
+        new_minpt = (self.min_pt[:idx].tolist() + other.min_pt.tolist() +
                      self.min_pt[idx:].tolist())
-        new_maxpt = (self.max_pt[:idx].tolist() + grid.max_pt.tolist() +
+        new_maxpt = (self.max_pt[:idx].tolist() + other.max_pt.tolist() +
                      self.max_pt[idx:].tolist())
-        return RegularGrid(new_minpt, new_maxpt, new_shape)
+
+        if self.as_midp != other.as_midp:
+            raise ValueError('not implemented')
+
+        return RegularGrid(new_minpt, new_maxpt, new_shape,
+                           as_midp=self.as_midp)
 
     def squeeze(self):
         """Remove the degenerate dimensions.
