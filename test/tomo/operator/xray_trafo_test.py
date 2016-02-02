@@ -36,17 +36,17 @@ from odl.util.testutils import almost_equal
 # Find the valid projectors
 projectors = []
 if tomo.ASTRA_AVAILABLE:
-    projectors += ['par2d cpu unifrom',
-                   'cone2d cpu unifrom',
+    projectors += ['par2d cpu uniform',
+                   'cone2d cpu uniform',
                    'par2d cpu random',
                    'cone2d cpu random']
 if tomo.ASTRA_CUDA_AVAILABLE:
-    projectors += ['par2d cuda unifrom',
-                   'cone2d cuda unifrom',
-                   'par3d cuda unifrom',
-                   'cone3d cuda unifrom',
+    projectors += ['par2d cuda uniform',
+                   'cone2d cuda uniform',
+                   'par3d cuda uniform',
+                   'cone3d cuda uniform',
                    'cone3d cuda random',
-                   'helical cuda unifrom']
+                   'helical cuda uniform']
 
 
 @pytest.fixture(scope="module",
@@ -58,7 +58,7 @@ def projector(request):
 
     geom, version, angle = request.param.split()
 
-    if angle == 'unifrom':
+    if angle == 'uniform':
         angle_intvl = odl.Interval(0, 2 * np.pi)
         agrid = odl.uniform_sampling(angle_intvl, n_angles)
     elif angle == 'random':

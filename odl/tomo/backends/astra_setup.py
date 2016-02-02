@@ -365,6 +365,7 @@ def astra_projection_geometry(geometry):
     # projection geometries do not have to be rescaled any more by the (
     # isotropic) voxel size.
     if isinstance(geometry, Parallel2dGeometry):
+        # TODO: change to parallel_vec when available (if ever)
         det_width = geometry.det_grid.stride[0]
         det_count = geometry.detector.npixels
         # convention in 'astra_conebeam_2d_geom_to_vec' differs from ASTRA's

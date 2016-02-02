@@ -402,7 +402,13 @@ class CircleSectionDetector(Detector):
         return self._circ_rad
 
     def surface(self, param):
-        """The parametrization of the detector reference surface."""
+        """The parametrization of the detector reference surface.
+
+        Parameters
+        ----------
+        param : element of `params`
+            The parameter value where to evaluate the function
+        """
         if (param in self.params or
                 (isinstance(param, np.ndarray) and
                  all(par in self.params for par in param))):
@@ -413,7 +419,13 @@ class CircleSectionDetector(Detector):
                              '{}.'.format(param, self.params))
 
     def surface_deriv(self, param):
-        """The partial derivative(s) of the surface parametrization."""
+        """The partial derivative(s) of the surface parametrization.
+
+        Parameters
+        ----------
+        param : element of `params`
+            The parameter value where to evaluate the function
+        """
         if (param in self.params or
                 (isinstance(param, np.ndarray) and
                  all(par in self.params for par in param))):

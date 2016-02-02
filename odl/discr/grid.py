@@ -179,6 +179,17 @@ class TensorGrid(Set):
         self._inondeg = np.array([i for i in range(len(vecs))
                                   if len(vecs[i]) != 1])
 
+        # These args are not public and thus not checked for consistency!
+        _exact_min = kwargs.pop('_exact_min', None)
+        _exact_max = kwargs.pop('_exact_max', None)
+        if _exact_min is not None:
+            _exact_min = np.atleast_1d(_exact_min)
+        if _exact_max is not None:
+            _exact_max = np.atleast_1d(_exact_max)
+        self._exact_min = _exact_min
+        self._exact_max = _exact_max
+
+    # Attributes
     @property
     def coord_vectors(self):
         """The coordinate vectors of the grid.
@@ -921,7 +932,8 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-
+        other :
+            Check if this object is a subgrid
         atol : `float`
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
@@ -995,7 +1007,7 @@ class RegularGrid(TensorGrid):
 
         Returns
         -------
-        newgrid : `TensorGrid`
+        newgrid : `TensorGrid` or `RegularGrid`
             The enlarged grid. If the inserted grid is a `RegularGrid`,
             so is the return value.
 
@@ -1005,6 +1017,12 @@ class RegularGrid(TensorGrid):
         >>> rg2 = RegularGrid(-3, 7, 6)
         >>> rg1.insert(1, rg2)
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], (2, 6, 3))
+
+        If other is a TensorGrid, so is the result:
+
+        >>> tg = TensorGrid([0, 1, 2])
+        >>> rg1.insert(2, tg)
+        TensorGrid([-1.5, -0.5], [-1.0, 1.0, 3.0], [0.0, 1.0, 2.0])
         """
         if isinstance(other, RegularGrid):
             idx = int(index)

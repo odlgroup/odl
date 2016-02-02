@@ -29,7 +29,7 @@ import numpy as np
 
 # Internal
 from odl.util.utility import with_metaclass
-from odl.discr.grid import RegularGrid, TensorGrid
+from odl.discr.grid import TensorGrid
 from odl.set.domain import IntervalProd
 
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
@@ -204,12 +204,8 @@ class Geometry(with_metaclass(ABCMeta, object)):
     @property
     def grid(self):
         """Joined sampling grid for motion and detector parameters."""
-        if (isinstance(self.motion_grid, RegularGrid) and
-                isinstance(self.det_grid, RegularGrid)):
-            grid = self.motion_grid
-        else:
-            grid = TensorGrid(*self.motion_grid.coord_vectors)
-        return grid.append(self.det_grid)
+        # TODO: document order
+        return self.motion_grid.append(self.det_grid)
 
 
 class DivergentBeamGeometry(Geometry):
