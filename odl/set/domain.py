@@ -115,11 +115,6 @@ class IntervalProd(Set):
         return len(self._inondeg)
 
     @property
-    def extent(self):
-        """The interval length per axis."""
-        return self.end - self.begin
-
-    @property
     def volume(self):
         """The 'dim'-dimensional volume of this interval product."""
         return self.measure(ndim=self.ndim)
@@ -153,11 +148,14 @@ class IntervalProd(Set):
         """The maximum value in this interval product"""
         return self.end
 
+    def extent(self):
+        """The interval length per axis."""
+        return self.max() - self.min()
+
     def element(self):
         """An arbitrary element, the midpoint."""
         return self.midpoint
 
-    # Overrides of the abstract base class methods
     def approx_equals(self, other, tol):
         """Test if ``other`` is equal to this set up to ``tol``.
 
