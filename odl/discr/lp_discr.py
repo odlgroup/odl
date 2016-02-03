@@ -98,8 +98,8 @@ class DiscreteLp(Discretization):
 
         self._interp = str(interp).lower()
         if self.interp not in _SUPPORTED_INTERP:
-            raise TypeError('{!r} is not among the supported interpolation'
-                            'types {}.'.format(interp, _SUPPORTED_INTERP))
+            raise ValueError("'{}' is not among the supported interpolation "
+                             "types {}.".format(interp, _SUPPORTED_INTERP))
 
         order = str(kwargs.pop('order', 'C'))
         if str(order).upper() not in ('C', 'F'):
@@ -233,6 +233,11 @@ class DiscreteLp(Discretization):
         return self._interp
 
     # Overrides for space functions depending on partition
+    #
+    # The inherited methods by default use a weighting by a constant
+    # (the grid cell size). In dimensions where the partitioned set ends at
+    # the outermost grid points, the corresponding contribuitons to
+    # discretized integrals need to be scaled by 1/2.
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
         on_boundary = self.partition.nodes_on_boundary
@@ -649,14 +654,6 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
             Default for 'cuda': 'float32' / (not implemented)
 
-    weighting : {'simple', 'consistent'}
-        Weighting of the discretized space functions.
-
-            'simple': weight is a constant (cell volume)
-
-            'consistent': weight is a matrix depending on the
-            interpolation type (not implemented)
-
     Returns
     -------
     discr : `DiscreteLp`
@@ -693,16 +690,9 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     partition = uniform_partition_fromintv(fspace.domain, nsamples,
                                            nodes_on_bdry)
 
-    weighting = kwargs.pop('weighting', 'simple')
-    weighting_ = weighting.lower()
-    if weighting_ not in ('simple', 'consistent'):
-        raise ValueError('weighting {!r} not understood.'.format(weighting))
-
-    if weighting_ == 'simple':
-        weight = partition.cell_volume
-    else:  # weighting_ == 'consistent'
-        # TODO: implement
-        raise NotImplementedError
+    # This is simplified: a consistent weighting wrt the interpolation type
+    # would involve a block-tri-diagonal matrix multiplication.
+    weight = partition.cell_volume
 
     if dtype is not None:
         dspace = ds_type(partition.size, dtype=dtype, weight=weight,
@@ -738,16 +728,20 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
-    nodes_on_bdry : `bool` or boolean array-like
-        If `True`, place the outermost grid points at the boundary. For
-        `False`, they are shifted by half a cell size to the 'inner'.
-        If an array-like is given, it must have shape ``(ndim, 2)``,
-        where ``ndim`` is the number of dimensions. It defines per axis
-        whether the leftmost (first column) and rightmost (second column)
-        nodes node lie on the boundary.
+    nodes_on_bdry : `bool` or sequence, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (True) or shift it
+        by half a cell size into the interior (False). In each axis,
+        an entry may consist in a single `bool` or a 2-tuple of
+        `bool`. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
         Default: `False`
-    order : {'C', 'F'}  (Default: 'C')
-        Axis ordering in the data storage
+    order : {'C', 'F'}
+        Axis ordering in the data storage. Default: 'C'
     dtype : dtype
         Data type for the discretized space
 
