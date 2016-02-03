@@ -197,7 +197,6 @@ def test_helical_cone_flat():
     det_rad = 5.0
     pitch = 1.5
 
-
     with pytest.raises(TypeError):
         odl.tomo.HelicalConeFlatGeometry([0, 1], dgrid,
                                          src_rad, det_rad, pitch)
