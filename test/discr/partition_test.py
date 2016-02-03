@@ -27,7 +27,9 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.discr.partition import RectPartition, uniform_partition
+from odl.discr.partition import (
+    RectPartition, uniform_partition_fromintv, uniform_partition_fromgrid,
+    uniform_partition)
 from odl.set.domain import IntervalProd
 from odl.util.testutils import all_equal, all_almost_equal
 
@@ -40,34 +42,23 @@ def test_partition_init():
     vec2 = np.array([-4, -3, 0, 1, 4])
     begin = [2, -5]
     end = [10, 4]
-    grid = odl.TensorGrid(vec1, vec2)
 
     # Simply test if code runs
-    RectPartition(grid)
-    RectPartition(grid, begin=begin)
-    RectPartition(grid, end=end)
-    RectPartition(grid, begin=begin, begin_axes=(1,))
-    RectPartition(grid, end=end, end_axes=(-1,))
+    RectPartition(odl.Rectangle(begin, end), odl.TensorGrid(vec1, vec2))
+    RectPartition(odl.Interval(begin[0], end[0]), odl.TensorGrid(vec1))
 
-    # 1d
-    grid = odl.TensorGrid(vec1)
-    RectPartition(grid)
-
-    # Degenerate dimensions should work with explicit begin / end
-    # in corresponding axes
-    grid = odl.TensorGrid(vec1, [1.0])
-    RectPartition(grid, begin=begin, end=end)
-    RectPartition(grid, begin=begin, end=end,
-                  begin_axes=(1,), end_axes=(1,))
+    # Degenerate dimensions should work, too
+    vec2 = np.array([1.0])
+    RectPartition(odl.Rectangle(begin, end), odl.TensorGrid(vec1, vec2))
 
 
 def test_partition_init_error():
     # Check different error scenarios
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])
+    grid = odl.TensorGrid(vec1, vec2)
     begin = [2, -5]
     end = [10, 4]
-    grid = odl.TensorGrid(vec1, vec2)
 
     beg_toolarge = (2, -3.5)
     end_toosmall = (7, 1)
@@ -75,78 +66,39 @@ def test_partition_init_error():
     end_badshape = (2,)
 
     with pytest.raises(ValueError):
-        RectPartition(grid, begin=beg_toolarge)
+        RectPartition(odl.IntervalProd(beg_toolarge, end), grid)
 
     with pytest.raises(ValueError):
-        RectPartition(grid, end=end_toosmall)
+        RectPartition(odl.IntervalProd(begin, end_toosmall), grid)
 
     with pytest.raises(ValueError):
-        RectPartition(grid, begin=beg_badshape)
+        RectPartition(odl.IntervalProd(beg_badshape, end_badshape), grid)
 
-    with pytest.raises(ValueError):
-        RectPartition(grid, end=end_badshape)
+    with pytest.raises(TypeError):
+        RectPartition(None, grid)
 
-    # Degenerate dimension, needs both explicit begin and end
-    grid = odl.TensorGrid(vec1, [1.0])
-    with pytest.raises(ValueError):
-        RectPartition(grid)
-    with pytest.raises(ValueError):
-        RectPartition(grid, begin=begin)
-    with pytest.raises(ValueError):
-        RectPartition(grid, end=end)
-
-    # begin_axes (and end_axes, same function, testing only begin)
-
-    # begin is required
-    with pytest.raises(ValueError):
-        RectPartition(grid, begin_axes=(0,))
-
-    # OOB indices
-    with pytest.raises(IndexError):
-        RectPartition(grid, begin=begin, begin_axes=(0, 2))
-    with pytest.raises(IndexError):
-        RectPartition(grid, begin=begin, begin_axes=(-3,))
-
-    # Duplicate indices
-    with pytest.raises(ValueError):
-        RectPartition(grid, begin=begin, begin_axes=(0, 0, 1,))
+    with pytest.raises(TypeError):
+        RectPartition(odl.IntervalProd(beg_toolarge, end), None)
 
 
-def test_partition_bbox():
+def test_partition_set():
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])
     grid = odl.TensorGrid(vec1, vec2)
 
     begin = [1, -4]
     end = [10, 5]
-    minpt_calc = [2 - (4 - 2) / 2, -4 - (-3 + 4) / 2]
-    maxpt_calc = [7 + (7 - 5) / 2, 4 + (4 - 1) / 2]
+    intv = odl.IntervalProd(begin, end)
 
-    # Explicit begin / end
-    part = RectPartition(grid, begin=begin, end=end)
-    assert part.bbox == IntervalProd(begin, end)
-
-    # Implicit begin / end
-    part = RectPartition(grid, begin=begin)
-    assert part.bbox == IntervalProd(begin, maxpt_calc)
-
-    part = RectPartition(grid, end=end)
-    assert part.bbox == IntervalProd(minpt_calc, end)
-
-    part = RectPartition(grid)
-    assert part.bbox == IntervalProd(minpt_calc, maxpt_calc)
-
-    # Mixture
-    part = RectPartition(grid, begin=begin, begin_axes=(1,))
-    minpt_mix = [minpt_calc[0], begin[1]]
-    assert part.bbox == IntervalProd(minpt_mix, maxpt_calc)
-
-    part = RectPartition(grid, end=end, end_axes=(-2,))
-    maxpt_mix = [end[0], maxpt_calc[1]]
-    assert part.bbox == IntervalProd(minpt_calc, maxpt_mix)
+    part = RectPartition(intv, grid)
+    assert part.set == IntervalProd(begin, end)
+    assert all_equal(part.begin, begin)
+    assert all_equal(part.min(), begin)
+    assert all_equal(part.end, end)
+    assert all_equal(part.max(), end)
 
 
-def test_partition_cell_boundaries():
+def test_partition_cell_boundary_vecs():
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])
     grid = odl.TensorGrid(vec1, vec2)
@@ -154,24 +106,18 @@ def test_partition_cell_boundaries():
     midpts1 = [3, 4.5, 6]
     midpts2 = [-3.5, -1.5, 0.5, 2.5]
 
-    # Explicit
     begin = [2, -6]
     end = [10, 4]
+    intv = odl.IntervalProd(begin, end)
+
     true_bvec1 = [2] + midpts1 + [10]
     true_bvec2 = [-6] + midpts2 + [4]
 
-    part = RectPartition(grid, begin=begin, end=end)
-    assert all_equal(part.cell_boundaries(), (true_bvec1, true_bvec2))
-
-    # Implicit
-    true_bvec1 = [1] + midpts1 + [8]
-    true_bvec2 = [-4.5] + midpts2 + [5.5]
-
-    part = RectPartition(grid)
-    assert all_equal(part.cell_boundaries(), (true_bvec1, true_bvec2))
+    part = RectPartition(intv, grid)
+    assert all_equal(part.cell_boundary_vecs, (true_bvec1, true_bvec2))
 
 
-def test_partition_cell_sizes():
+def test_partition_cell_sizes_vecs():
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])
     grid = odl.TensorGrid(vec1, vec2)
@@ -179,31 +125,31 @@ def test_partition_cell_sizes():
     midpts1 = [3, 4.5, 6]
     midpts2 = [-3.5, -1.5, 0.5, 2.5]
 
-    # Explicit
     begin = [2, -6]
     end = [10, 4]
+    intv = odl.IntervalProd(begin, end)
+
     bvec1 = np.array([2] + midpts1 + [10])
     bvec2 = np.array([-6] + midpts2 + [4])
     true_csizes1 = bvec1[1:] - bvec1[:-1]
     true_csizes2 = bvec2[1:] - bvec2[:-1]
 
-    part = RectPartition(grid, begin=begin, end=end)
-    assert all_equal(part.cell_sizes(), (true_csizes1, true_csizes2))
+    part = RectPartition(intv, grid)
+    assert all_equal(part.cell_sizes_vecs, (true_csizes1, true_csizes2))
 
-    # Implicit
-    bvec1 = np.array([1] + midpts1 + [8])
-    bvec2 = np.array([-4.5] + midpts2 + [5.5])
 
-    true_csizes1 = bvec1[1:] - bvec1[:-1]
-    true_csizes2 = bvec2[1:] - bvec2[:-1]
-
-    part = RectPartition(grid)
-    assert all_equal(part.cell_sizes(), (true_csizes1, true_csizes2))
+def test_partition_cell_sides():
+    grid = odl.RegularGrid([0, 1], [2, 4], (5, 3))
+    intv = odl.IntervalProd([0, 1], [2, 4])
+    part = RectPartition(intv, grid)
+    true_sides = [0.5, 1.5]
+    assert all_equal(part.cell_sides, true_sides)
 
 
 def test_partition_cell_volume():
     grid = odl.RegularGrid([0, 1], [2, 4], (5, 3))
-    part = RectPartition(grid)
+    intv = odl.IntervalProd([0, 1], [2, 4])
+    part = RectPartition(intv, grid)
     true_volume = 0.5 * 1.5
     assert part.cell_volume == true_volume
 
@@ -211,41 +157,47 @@ def test_partition_cell_volume():
 def test_partition_insert():
     vec11 = [2, 4, 5, 7]
     vec12 = [-4, -3, 0, 1, 4]
+    begin1 = [1, -4]
+    end1 = [7, 5]
     grid1 = odl.TensorGrid(vec11, vec12)
-    part1 = RectPartition(grid1)
+    intv1 = odl.IntervalProd(begin1, end1)
+    part1 = RectPartition(intv1, grid1)
 
     vec21 = [-2, 0, 3]
     vec22 = [0]
+    begin2 = [-2, -2]
+    end2 = [4, 0]
     grid2 = odl.TensorGrid(vec21, vec22)
-    part2 = RectPartition(grid2, begin=[-2, 0], end=[3, 0])
+    intv2 = odl.IntervalProd(begin2, end2)
+    part2 = RectPartition(intv2, grid2)
 
     part = part1.insert(0, part2)
-    true_beg = [-2, 0, 1, -4.5]
-    true_end = [3, 0, 8, 5.5]
-    assert all_equal(part.begin, true_beg)
-    assert all_equal(part.end, true_end)
+    assert all_equal(part.begin, [-2, -2, 1, -4])
+    assert all_equal(part.end, [4, 0, 7, 5])
+    assert all_equal(part.grid.min_pt, [-2, 0, 2, -4])
+    assert all_equal(part.grid.max_pt, [3, 0, 7, 4])
 
     part = part1.insert(1, part2)
-    true_beg = [1, -2, 0, -4.5]
-    true_end = [8, 3, 0, 5.5]
-    assert all_equal(part.begin, true_beg)
-    assert all_equal(part.end, true_end)
+    assert all_equal(part.begin, [1, -2, -2, -4])
+    assert all_equal(part.end, [7, 4, 0, 5])
+    assert all_equal(part.grid.min_pt, [2, -2, 0, -4])
+    assert all_equal(part.grid.max_pt, [7, 3, 0, 4])
 
 
 # ---- Functions ---- #
 
 
-def test_uniform_partition():
+def test_uniform_partition_fromintv():
     intvp = odl.IntervalProd([0, 0], [1, 2])
     nsamp = (4, 10)
 
     # All nodes at the boundary
-    part = uniform_partition(intvp, nsamp, nodes_on_bdry=True)
+    part = uniform_partition_fromintv(intvp, nsamp, nodes_on_bdry=True)
     assert all_equal(part.begin, intvp.begin)
     assert all_equal(part.end, intvp.end)
     assert all_equal(part.grid.min_pt, intvp.begin)
     assert all_equal(part.grid.max_pt, intvp.end)
-    for cs in part.cell_sizes():
+    for cs in part.cell_sizes_vecs:
         # Check that all cell sizes are equal (except first and last which
         # are halved)
         assert np.allclose(np.diff(cs[1:-1]), 0)
@@ -253,31 +205,90 @@ def test_uniform_partition():
         assert all_almost_equal(cs[-1], cs[-2] / 2)
 
     # All nodes not the boundary
-    part = uniform_partition(intvp, nsamp, nodes_on_bdry=False)
+    part = uniform_partition_fromintv(intvp, nsamp, nodes_on_bdry=False)
     assert all_equal(part.begin, intvp.begin)
     assert all_equal(part.end, intvp.end)
-    for cs in part.cell_sizes():
+    for cs in part.cell_sizes_vecs:
         # Check that all cell sizes are equal
         assert np.allclose(np.diff(cs), 0)
 
     # Only left nodes at the boundary
-    part = uniform_partition(intvp, nsamp, nodes_on_bdry=[[True, False]] * 2)
+    part = uniform_partition_fromintv(intvp, nsamp,
+                                      nodes_on_bdry=[[True, False]] * 2)
     assert all_equal(part.begin, intvp.begin)
     assert all_equal(part.end, intvp.end)
     assert all_equal(part.grid.min_pt, intvp.begin)
-    for cs in part.cell_sizes():
+    for cs in part.cell_sizes_vecs:
         # Check that all cell sizes are equal (except first)
         assert np.allclose(np.diff(cs[1:]), 0)
         assert all_almost_equal(cs[0], cs[1] / 2)
 
     # Only right nodes at the boundary
-    part = uniform_partition(intvp, nsamp, nodes_on_bdry=[[False, True]] * 2)
+    part = uniform_partition_fromintv(intvp, nsamp,
+                                      nodes_on_bdry=[[False, True]] * 2)
     assert all_equal(part.begin, intvp.begin)
     assert all_equal(part.end, intvp.end)
     assert all_equal(part.grid.max_pt, intvp.end)
-    for cs in part.cell_sizes():
+    for cs in part.cell_sizes_vecs:
         # Check that all cell sizes are equal (except last)
         assert np.allclose(np.diff(cs[:-1]), 0)
+        assert all_almost_equal(cs[-1], cs[-2] / 2)
+
+
+def test_uniform_partition_fromgrid():
+    vec1 = np.array([2, 4, 5, 7])
+    vec2 = np.array([-4, -3, 0, 1, 4])
+    begin = [0, -4]
+    end = [7, 8]
+    beg_calc = [2 - (4 - 2) / 2, -4 - (-3 + 4) / 2]
+    end_calc = [7 + (7 - 5) / 2, 4 + (4 - 1) / 2]
+
+    # Default case
+    grid = odl.TensorGrid(vec1, vec2)
+    part = uniform_partition_fromgrid(grid)
+    assert part.set == IntervalProd(beg_calc, end_calc)
+
+    # Explicit begin / end, full vectors
+    part = uniform_partition_fromgrid(grid, begin=begin)
+    assert part.set == IntervalProd(begin, end_calc)
+    part = uniform_partition_fromgrid(grid, end=end)
+    assert part.set == IntervalProd(beg_calc, end)
+
+    # begin / end as dictionaries
+    beg_dict = {0: 0.5}
+    end_dict = {-1: 8}
+    part = uniform_partition_fromgrid(grid, begin=beg_dict, end=end_dict)
+    true_beg = [0.5, beg_calc[1]]
+    true_end = [end_calc[0], 8]
+    assert part.set == IntervalProd(true_beg, true_end)
+
+    # Degenerate dimension, needs both explicit begin and end
+    grid = odl.TensorGrid(vec1, [1.0])
+    with pytest.raises(ValueError):
+        uniform_partition_fromgrid(grid)
+    with pytest.raises(ValueError):
+        uniform_partition_fromgrid(grid, begin=begin)
+    with pytest.raises(ValueError):
+        uniform_partition_fromgrid(grid, end=end)
+
+
+def test_uniform_partition():
+    # Testing just the standard case, everything else is covered by
+    # uniform_partition_frominterv
+    begin = [0, 0]
+    end = [1, 2]
+    nsamp = (4, 10)
+    part = uniform_partition(begin, end, nsamp, nodes_on_bdry=True)
+
+    assert all_equal(part.begin, begin)
+    assert all_equal(part.end, end)
+    assert all_equal(part.grid.min_pt, begin)
+    assert all_equal(part.grid.max_pt, end)
+    for cs in part.cell_sizes_vecs:
+        # Check that all cell sizes are equal (except first and last which
+        # are halved)
+        assert np.allclose(np.diff(cs[1:-1]), 0)
+        assert all_almost_equal(cs[0], cs[1] / 2)
         assert all_almost_equal(cs[-1], cs[-2] / 2)
 
 

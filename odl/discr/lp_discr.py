@@ -33,7 +33,7 @@ from odl.discr.discretization import (
     Discretization, DiscretizationVector, dspace_type)
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation)
-from odl.discr.partition import RectPartition, uniform_partition_from_intv_prod
+from odl.discr.partition import RectPartition, uniform_partition_fromintv
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
@@ -92,7 +92,7 @@ class DiscreteLp(Discretization):
         if not isinstance(partition, RectPartition):
             raise TypeError('Partition {!r} is not a RectPartition '
                             'instance.'.format(partition))
-        if not fspace.domain.contains_set(partition.bbox):
+        if not fspace.domain.contains_set(partition.set):
             raise ValueError('Partition {} is not a subset of the function '
                              'domain {}'.format(partition, fspace.domain))
 
@@ -158,9 +158,9 @@ class DiscreteLp(Discretization):
         return self.partition.size
 
     @property
-    def cell_size(self):
-        """Cell size of an underlying regular partition."""
-        return self.partition.cell_size
+    def cell_sides(self):
+        """Side lengths of a cell in an underlying *uniform* partition."""
+        return self.partition.cell_sides
 
     @property
     def cell_volume(self):
@@ -169,11 +169,11 @@ class DiscreteLp(Discretization):
 
     def meshgrid(self):
         """All sampling points in the partition as a sparse meshgrid."""
-        return self.partition.sampling_meshgrid()
+        return self.partition.meshgrid()
 
     def points(self):
         """All sampling points in the partition."""
-        return self.partition.sampling_points()
+        return self.partition.points()
 
     @property
     def exponent(self):
@@ -302,7 +302,7 @@ class DiscreteLp(Discretization):
     def __repr__(self):
         """Return ``repr(self).``"""
         # Check if the factory repr can be used
-        if (uniform_partition_from_intv_prod(
+        if (uniform_partition_fromintv(
                 self.uspace.domain, self.shape) == self.partition):
             if isinstance(self.dspace, Fn):
                 impl = 'numpy'
@@ -421,9 +421,9 @@ class DiscreteLpVector(DiscretizationVector):
         return self.space.shape
 
     @property
-    def cell_size(self):
-        """Cell size of an underlying regular grid."""
-        return self.space.cell_size
+    def cell_sides(self):
+        """Side lengths of a cell in an underlying *uniform* partition."""
+        return self.space.cell_sides
 
     @property
     def cell_volume(self):
@@ -690,8 +690,8 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     order = kwargs.pop('order', 'C')
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
-    partition = uniform_partition_from_intv_prod(fspace.domain, nsamples,
-                                                 nodes_on_bdry)
+    partition = uniform_partition_fromintv(fspace.domain, nsamples,
+                                           nodes_on_bdry)
 
     weighting = kwargs.pop('weighting', 'simple')
     weighting_ = weighting.lower()
