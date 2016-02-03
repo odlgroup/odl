@@ -235,66 +235,66 @@ class DiscreteLp(Discretization):
     # Overrides for space functions depending on partition
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
-        if any(bdry[0] or bdry[1]
-               for bdry in self.partition.nodes_on_boundary()):
-
+        on_boundary = self.partition.nodes_on_boundary
+        if any(on_bdry[0] or on_bdry[1] for on_bdry in on_boundary):
             # Need to halve the boundary nodes to get correct contributions.
             # This requires copies, unfortunately.
             # TODO: implement without copy
-            x_cpy = x.copy()
-            on_bdry = self.partition.nodes_on_boundary()
+            x_arr = x.asarray()
+            if not x_arr.flags.owndata:
+                x_arr = x_arr.copy()
             apply_on_boundary(
-                x_cpy.asarray(), func=lambda x: x / 2,
-                only_once=False, which_boundaries=on_bdry)
-
-            return super()._inner(x_cpy, y)
+                x_arr, func=lambda x: x / 2,
+                only_once=False, which_boundaries=on_boundary)
+            return super()._inner(self.element(x_arr), y)
         else:
             # Standard case
             return super()._inner(x, y)
 
     def _norm(self, x):
         """Return ``self.norm(x)``."""
-        if any(bdry[0] or bdry[1]
-               for bdry in self.partition.nodes_on_boundary()):
-
+        on_boundary = self.partition.nodes_on_boundary
+        if any(on_bdry[0] or on_bdry[1] for on_bdry in on_boundary):
             # TODO: implement without copy
-            x_cpy = x.copy()
-            on_bdry = self.partition.nodes_on_boundary()
+            x_arr = x.asarray()
+            if not x_arr.flags.owndata:
+                x_arr = x_arr.copy()
             if self.exponent != float('inf'):
                 # For p != inf we mimic the integral of f(x)**p, i.e. by
                 # the following scaling we effectively multiply the
                 # boundary contribution by 1/2.
-                bdry_fac = 2 ** (1.0 / self.exponent)
+                bdry_fac = 0.5 ** (1.0 / self.exponent)
                 apply_on_boundary(
-                    x_cpy.asarray(), func=lambda x: x / bdry_fac,
-                    only_once=False, which_boundaries=on_bdry)
-
-            return super()._norm(x_cpy)
+                    x_arr, func=lambda x: x / bdry_fac,
+                    only_once=False, which_boundaries=on_boundary)
+            return super()._norm(self.element(x_arr))
         else:
             # Standard case
             return super()._norm(x)
 
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
-        if any(bdry[0] or bdry[1]
-               for bdry in self.partition.nodes_on_boundary()):
+        on_boundary = self.partition.nodes_on_boundary
+        if any(on_bdry[0] or on_bdry[1] for on_bdry in on_boundary):
 
             # TODO: implement without copy
-            x_cpy, y_cpy = x.copy(), y.copy()
-            on_bdry = self.partition.nodes_on_boundary()
-            if self.exponent != float('inf'):
+            x_arr, y_arr = x.asarray(), y.asarray()
+            if not x_arr.flags.owndata:
+                x_arr = x_arr.copy()
+            if not y_arr.flags.owndata:
+                y_arr = y_arr.copy()
+
                 # For p != inf we mimic the integral of (f(x)-g(x)**p, i.e. by
                 # the following scaling we effectively multiply the
                 # boundary contribution by 1/2.
-                bdry_fac = 2 ** (1.0 / self.exponent)
-                apply_on_boundary(
-                    x_cpy.asarray(), func=lambda x: x / bdry_fac,
-                    only_once=False, which_boundaries=on_bdry)
-                apply_on_boundary(
-                    y_cpy.asarray(), func=lambda x: x / bdry_fac,
-                    only_once=False, which_boundaries=on_bdry)
+                if self.exponent != float('inf'):
+                    bdry_fac = 0.5 ** (1.0 / self.exponent)
+                    for arr in (x_arr, y_arr):
+                        apply_on_boundary(
+                            arr, func=lambda x: x / bdry_fac,
+                            only_once=False, which_boundaries=on_boundary)
 
-            return super()._dist(x_cpy, y_cpy)
+            return super()._dist(self.element(x_arr), self.element(y_arr))
         else:
             # Standard case
             return super()._dist(x, y)
