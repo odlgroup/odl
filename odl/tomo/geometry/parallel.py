@@ -58,31 +58,10 @@ class ParallelGeometry(Geometry):
             The direction from the origin to the point (0) of the detector
             when angle=0
         """
-        if not isinstance(agrid, TensorGrid) or agrid.ndim != 1:
-            raise TypeError('angle grid {!r} is not a 1d-`TensorGrid` '
-                            'instance.'.format(agrid))
+        super().__init__(ndim, agrid, detector)
 
-        super().__init__(ndim)
-        self._motion_params = agrid.convex_hull()
-        self._motion_grid = agrid
-        self._detector = detector
         self._origin_to_det = (np.array(origin_to_det) /
                                np.linalg.norm(origin_to_det))
-
-    @property
-    def motion_params(self):
-        """Motion parameters of this geometry."""
-        return self._motion_params
-
-    @property
-    def motion_grid(self):
-        """Sampling grid for this geometry's motion parameters."""
-        return self._motion_grid
-
-    @property
-    def detector(self):
-        """Detector of this geometry."""
-        return self._detector
 
     @property
     def origin_to_det(self):

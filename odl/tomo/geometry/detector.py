@@ -29,7 +29,6 @@ import numpy as np
 
 # Internal
 from odl.util.utility import with_metaclass
-from odl.set.domain import IntervalProd
 from odl.discr.grid import TensorGrid
 
 __all__ = ('Detector', 'FlatDetector', 'Flat1dDetector', 'Flat2dDetector',
