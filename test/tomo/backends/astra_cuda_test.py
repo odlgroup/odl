@@ -39,24 +39,20 @@ def test_astra_cuda_projector_parallel2d():
     """Parallel 2D forward and backward projectors on the GPU."""
 
     # Create `DiscreteLp` space for volume data
-    vol_shape = (4, 5)
-    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], vol_shape,
+    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], [4, 5],
                                         dtype='float32')
 
     # Create an element in the volume space
     vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    angle_grid = odl.uniform_sampling(angle_intvl, 8)
+    angle_grid = odl.uniform_sampling(0, 2 * np.pi, 8)
 
     # Detector
-    dparams = odl.Interval(-6, 6)
-    det_grid = odl.uniform_sampling(dparams, 6)
+    det_grid = odl.uniform_sampling(-6, 6, 6)
 
     # Create geometry instances
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
-                                       det_grid)
+    geom = odl.tomo.Parallel2dGeometry(angle_grid, det_grid)
 
     # Projection space
     proj_space = odl.FunctionSpace(geom.params)
@@ -75,7 +71,7 @@ def test_astra_cuda_projector_parallel2d():
     # backward
     reco_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom,
                                                             discr_vol_space)
-    assert reco_data.shape == vol_shape
+    assert reco_data.shape == discr_vol_space.shape
     assert reco_data.norm() > 0
 
 
@@ -84,28 +80,24 @@ def test_astra_cuda_projector_fanflat():
     """Fanflat 2D forward and backward projectors on the GPU."""
 
     # Create `DiscreteLp` space for volume data
-    vol_shape = (4, 5)
-    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], vol_shape,
+    discr_vol_space = odl.uniform_discr([-4, -5], [4, 5], [4, 5],
                                         dtype='float32')
 
     # Create an element in the volume space
     vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    angle_grid = odl.uniform_sampling(angle_intvl, 8)
+    angle_grid = odl.uniform_sampling(0, 2 * np.pi, 8)
 
     # Detector
-    dparams = odl.Interval(-6, 6)
-    det_grid = odl.uniform_sampling(dparams, 6)
+    det_grid = odl.uniform_sampling(-6, 6, 6)
 
     # Distances for fanflat geometry
     src_rad = 100
     det_rad = 10
 
     # Create geometry instances
-    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                    angle_grid, det_grid)
+    geom = odl.tomo.FanFlatGeometry(angle_grid, det_grid, src_rad, det_rad)
 
     # Projection space
     proj_space = odl.FunctionSpace(geom.params)
@@ -124,7 +116,7 @@ def test_astra_cuda_projector_fanflat():
     # backward
     reco_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom,
                                                             discr_vol_space)
-    assert reco_data.shape == vol_shape
+    assert reco_data.shape == discr_vol_space.shape
     assert reco_data.norm() > 0
 
 
@@ -133,24 +125,20 @@ def test_astra_cuda_projector_parallel3d():
     """Test 3D forward and backward projection functions on the GPU."""
 
     # `DiscreteLp` volume space
-    vol_shape = (4, 5, 6)
-    discr_vol_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6],
-                                        vol_shape, dtype='float32')
+    discr_vol_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], [4, 5, 6],
+                                        dtype='float32')
 
     # Create an element in the volume space
     vol_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    angle_grid = odl.uniform_sampling(angle_intvl, 9)
+    angle_grid = odl.uniform_sampling(0, 2 * np.pi, 9)
 
     # Detector
-    dparams = odl.Rectangle([-7, -8], [7, 8])
-    det_grid = odl.uniform_sampling(dparams, (7, 8))
+    det_grid = odl.uniform_sampling([-7, -8], [7, 8], (7, 8))
 
     # Create geometries
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, angle_grid,
-                                       det_grid)
+    geom = odl.tomo.Parallel3dGeometry(angle_grid, det_grid)
 
     # Projection space
     proj_space = odl.FunctionSpace(geom.params)
@@ -175,32 +163,25 @@ def test_astra_gpu_projector_circular_conebeam():
     """Test 3D forward and backward projection functions on the GPU."""
 
     # `DiscreteLp` volume space
-    vol_shape = (4, 5, 6)
-    discr_vol_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6],
-                                        vol_shape, dtype='float32')
-
-    # Phantom
-    phan = np.zeros(vol_shape)
-    phan[1, 1:3, 1:4] = 1
+    discr_vol_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], [4, 5, 6],
+                                        dtype='float32')
 
     # Create an element in the volume space
-    discr_data = discr_vol_space.element(phan)
+    discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    angle_grid = odl.uniform_sampling(angle_intvl, 9)
+    angle_grid = odl.uniform_sampling(0, 2 * np.pi, 9)
 
     # Detector
-    dparams = odl.Rectangle([-7, -8], [7, 8])
-    det_grid = odl.uniform_sampling(dparams, (7, 8))
+    det_grid = odl.uniform_sampling([-7, -8], [7, 8], (7, 8))
 
     # Parameter for cone beam geometries
     src_rad = 1000
     det_rad = 100
 
     # Create geometries
-    geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                             det_rad, angle_grid, det_grid)
+    geom = odl.tomo.CircularConeFlatGeometry(angle_grid, det_grid,
+                                             src_rad, det_rad)
 
     # Projection space
     proj_space = odl.FunctionSpace(geom.params)
@@ -225,31 +206,26 @@ def test_astra_cuda_projector_helical_conebeam():
     """Test 3D forward and backward projection functions on the GPU."""
 
     # `DiscreteLp` volume space
-    vol_shape = (4, 5, 6)
-    discr_vol_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6],
-                                        vol_shape, dtype='float32')
+    discr_vol_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], [4, 5, 6],
+                                        dtype='float32')
 
     # Create an element in the volume space
     discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    angle_grid = odl.uniform_sampling(angle_intvl, 9)
+    angle_grid = odl.uniform_sampling(0, 2 * np.pi, 9)
 
     # Detector
-    dparams = odl.Rectangle([-7, -8], [7, 8])
-    det_grid = odl.uniform_sampling(dparams, (7, 8))
+    det_grid = odl.uniform_sampling([-7, -8], [7, 8], (7, 8))
 
     # Parameter for cone beam geometries
     src_rad = 1000
     det_rad = 100
-    pitch_factor = 0.5
+    pitch = 0.5
 
     # Create geometries
-    geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                            det_rad,
-                                            pitch=pitch_factor,
-                                            agrid=angle_grid, dgrid=det_grid)
+    geom = odl.tomo.HelicalConeFlatGeometry(angle_grid, det_grid,
+                                            src_rad, det_rad, pitch)
 
     # Projection space
     proj_space = odl.FunctionSpace(geom.params)

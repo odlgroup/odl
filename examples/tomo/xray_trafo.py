@@ -37,10 +37,8 @@ def parallel_2d():
                                          [300, 300], dtype='float32')
 
     # Geometry
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    dparams = odl.Interval(-30, 30)
-    agrid = odl.uniform_sampling(angle_intvl, 360)
-    dgrid = odl.uniform_sampling(dparams, 558)
+    agrid = odl.uniform_sampling(0, 2 * np.pi, 360)
+    dgrid = odl.uniform_sampling(-30, 30, 558)
     geom = odl.tomo.Parallel2dGeometry(agrid, dgrid)
 
     # X-ray transform
@@ -69,10 +67,8 @@ def parallel_3d():
                                          [300, 300, 300], dtype='float32')
 
     # Geometry
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    dparams = odl.Rectangle([-30, -30], [30, 30])
-    agrid = odl.uniform_sampling(angle_intvl, 360, as_midp=False)
-    dgrid = odl.uniform_sampling(dparams, [558, 558])
+    agrid = odl.uniform_sampling(0, 2 * np.pi, 360)
+    dgrid = odl.uniform_sampling([-30, -30], [30, 30], [558, 558])
 
     # Astra cannot handle axis aligned origin_to_det unless it is aligned
     # with the third coordinate axis. See issue #18 at ASTRA's github.
@@ -109,10 +105,8 @@ def fanbeam():
                                          [300, 300], dtype='float32')
 
     # Geometry
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    dparams = odl.Interval(-30, 30)
-    agrid = odl.uniform_sampling(angle_intvl, 360)
-    dgrid = odl.uniform_sampling(dparams, 558)
+    agrid = odl.uniform_sampling(0, 2 * np.pi, 360)
+    dgrid = odl.uniform_sampling(-30, 30, 558)
     geom = odl.tomo.FanFlatGeometry(agrid, dgrid,
                                     src_radius=1000, det_radius=100)
 
@@ -142,10 +136,8 @@ def conebeam():
                                          [300, 300, 300], dtype='float32')
 
     # Geometry
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    dparams = odl.Rectangle([-30, -30], [30, 30])
-    agrid = odl.uniform_sampling(angle_intvl, 360)
-    dgrid = odl.uniform_sampling(dparams, [558, 558])
+    agrid = odl.uniform_sampling(0, 2 * np.pi, 360)
+    dgrid = odl.uniform_sampling([-30, -30], [30, 30], [558, 558])
     geom = odl.tomo.CircularConeFlatGeometry(agrid, dgrid,
                                              src_radius=1000, det_radius=100,
                                              axis=[1, 0, 0])
@@ -177,10 +169,8 @@ def helical():
 
     # Geometry
     n_angle = 2000
-    angle_intvl = odl.Interval(0, 8 * 2 * np.pi)
-    dparams = odl.Rectangle([-30, -3], [30, 3])
-    agrid = odl.uniform_sampling(angle_intvl, n_angle)
-    dgrid = odl.uniform_sampling(dparams, [558, 60])
+    agrid = odl.uniform_sampling(0, 8 * 2 * np.pi, n_angle)
+    dgrid = odl.uniform_sampling([-30, -3], [30, 3], [558, 60])
     geom = odl.tomo.HelicalConeFlatGeometry(agrid, dgrid, pitch=5.0,
                                             src_radius=1000, det_radius=100)
 
