@@ -50,17 +50,17 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius, pitch,
-                 agrid=None, dgrid=None, axis=[0, 0, 1], src_to_det=None,
+    def __init__(self, agrid, dgrid, src_radius, det_radius, pitch,
+                 axis=[0, 0, 1], src_to_det=None,
                  detector_axes=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radian
-        dparams : `Rectangle` or 2-dim. `IntervalProd`
-            The detector parameters
+        agrid : 1-dim. `TensorGrid`
+            A sampling grid for the he motion parameters given in radians
+        dgrid : 2-dim. `TensorGrid`
+            A sampling grid for the detector parameters
         src_radius : `float`
             Radius of the source circle, must be positive
         det_radius : `float`
@@ -68,10 +68,6 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         pitch : positive `float`
             Constant vertical distance between two source positions, one at
             angle ``phi``, the other at angle ``phi + 2 * pi``
-        agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`
-        dgrid : 2-dim. `TensorGrid`, optional
-            A sampling grid for `dparams`
         axis : 3-element array, optional
             Fixed rotation axis defined by a 3-element vector
         src_to_det : 3-element array, optional
@@ -94,9 +90,9 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             detector_axes = [np.cross(self.axis, self._src_to_det),
                              self.axis]
 
-        detector = Flat2dDetector(dparams, detector_axes, dgrid)
+        detector = Flat2dDetector(dgrid, detector_axes)
 
-        DivergentBeamGeometry.__init__(self, 3, angle_intvl, detector, agrid)
+        DivergentBeamGeometry.__init__(self, 3, agrid, detector)
 
         self._pitch = pitch
         self._src_radius = float(src_radius)
@@ -195,10 +191,6 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         arg_fstr = '{!r}, {!r},\n    src_radius={}, det_radius={}'
         if self.pitch != 0:
             arg_fstr += ',\n    pitch={pitch!r}'
-        if self.has_motion_sampling:
-            arg_fstr += ',\n    agrid={agrid!r}'
-        if self.has_det_sampling:
-            arg_fstr += ',\n    dgrid={dgrid!r}'
         if not np.allclose(self.axis, [0, 0, 1]):
             arg_fstr += ',\n    axis={axis!r}'
         if not np.allclose(self._src_to_det, [1, 0, 0]):
@@ -208,11 +200,9 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         if not np.allclose(self.detector.detector_axes, default_axes):
             arg_fstr += ',\n    detector_axes={detector_axes!r}'
 
-        arg_str = arg_fstr.format(self.motion_params, self.det_params,
+        arg_str = arg_fstr.format(self.motion_grid, self.det_grid,
                                   self.src_radius, self.det_radius,
                                   pitch=self.pitch,
-                                  agrid=self.motion_grid,
-                                  dgrid=self.det_grid,
                                   axis=self.axis,
                                   src_to_det=self._src_to_det,
                                   detector_axes=self.detector.detector_axes)
@@ -233,25 +223,20 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 agrid=None, dgrid=None, axis=[0, 0, 1], src_to_det=None,
-                 detector_axes=None):
+    def __init__(self, agrid, dgrid, src_radius, det_radius,
+                 axis=[0, 0, 1], src_to_det=None, detector_axes=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radian
-        dparams : `Rectangle` or 2-dim. `IntervalProd`
-            The detector parameters
+        agrid : 1-dim. `TensorGrid`
+            A sampling grid for the he motion parameters given in radians
+        dgrid : 2-dim. `TensorGrid`
+            A sampling grid for the detector parameters
         src_radius : `float`
             Radius of the source circle, must be positive
         det_radius : `float`
             Radius of the detector circle, must be positive
-        agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for ``angle_intvl``
-        dgrid : 2-dim. `TensorGrid`, optional
-            A sampling grid for ``dparams``
         axis : 3-element array, optional
             Fixed rotation axis defined by a 3-element vector
         src_to_det : 3-element array, optional
@@ -263,5 +248,5 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
             Default: (normalized) [np.cross(axis, source_to_detector), axis]
         """
         pitch = 0
-        super().__init__(angle_intvl, dparams, src_radius, det_radius,
-                         pitch, agrid, dgrid, axis, src_to_det, detector_axes)
+        super().__init__(agrid, dgrid, src_radius, det_radius,
+                         pitch, axis, src_to_det, detector_axes)

@@ -41,8 +41,7 @@ def parallel_2d():
     dparams = odl.Interval(-30, 30)
     agrid = odl.uniform_sampling(angle_intvl, 360)
     dgrid = odl.uniform_sampling(dparams, 558)
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams,
-                                       agrid=agrid, dgrid=dgrid)
+    geom = odl.tomo.Parallel2dGeometry(agrid, dgrid)
 
     # X-ray transform
     xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
@@ -79,8 +78,7 @@ def parallel_3d():
     # with the third coordinate axis. See issue #18 at ASTRA's github.
     # This is fixed in new versions of astra, with older versions, this could
     # give a zero result.
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams,
-                                       agrid=agrid, dgrid=dgrid)
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid)
 
     # X-ray transform
     xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
@@ -115,9 +113,8 @@ def fanbeam():
     dparams = odl.Interval(-30, 30)
     agrid = odl.uniform_sampling(angle_intvl, 360)
     dgrid = odl.uniform_sampling(dparams, 558)
-    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams,
-                                    src_radius=1000, det_radius=100,
-                                    agrid=agrid, dgrid=dgrid)
+    geom = odl.tomo.FanFlatGeometry(agrid, dgrid,
+                                    src_radius=1000, det_radius=100)
 
     # X-ray transform
     xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
@@ -149,9 +146,8 @@ def conebeam():
     dparams = odl.Rectangle([-30, -30], [30, 30])
     agrid = odl.uniform_sampling(angle_intvl, 360)
     dgrid = odl.uniform_sampling(dparams, [558, 558])
-    geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams,
+    geom = odl.tomo.CircularConeFlatGeometry(agrid, dgrid,
                                              src_radius=1000, det_radius=100,
-                                             agrid=agrid, dgrid=dgrid,
                                              axis=[1, 0, 0])
 
     # X-ray transform
@@ -185,9 +181,8 @@ def helical():
     dparams = odl.Rectangle([-30, -3], [30, 3])
     agrid = odl.uniform_sampling(angle_intvl, n_angle)
     dgrid = odl.uniform_sampling(dparams, [558, 60])
-    geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, pitch=5.0,
-                                            src_radius=1000, det_radius=100,
-                                            agrid=agrid, dgrid=dgrid)
+    geom = odl.tomo.HelicalConeFlatGeometry(agrid, dgrid, pitch=5.0,
+                                            src_radius=1000, det_radius=100)
 
     # X-ray transform
     xray_trafo = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,
