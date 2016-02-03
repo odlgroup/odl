@@ -174,7 +174,8 @@ def _test_lincomb(fn, a, b):
     z_arr[:] = a * x_arr + b * y_arr
     z.lincomb(a, x, b, y)
 
-    assert all_almost_equal(z.asarray().ravel(z.order), z_arr, places=2)
+    order = getattr(z, 'order', None)
+    assert all_almost_equal(z.asarray().ravel(order), z_arr, places=2)
 
 
 def test_lincomb(fn):
