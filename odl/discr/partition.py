@@ -284,7 +284,7 @@ class RectPartition(object):
         on_boundary = self.nodes_on_boundary
         num_cells = []
         for n, on_bdry in zip(self.shape, on_boundary):
-            num_on_bdry = sum(on for on in on_bdry)
+            num_on_bdry = sum(on_bdry)
             num_cells.append(n - num_on_bdry / 2)
 
         return self.extent() / num_cells
@@ -428,10 +428,12 @@ def uniform_partition_fromintv(intv_prod, num_nodes, nodes_on_bdry=False):
     """
     # Sanity checks
     if np.shape(num_nodes) == ():
-        num_nodes = (num_nodes,)
+        num_nodes = (int(num_nodes),)
     elif len(num_nodes) != intv_prod.ndim:
         raise ValueError('num_nodes has length {}, expected {}.'
                          ''.format(len(num_nodes), (intv_prod.ndim)))
+    else:
+        num_nodes = tuple(int(n) for n in num_nodes)
 
     if np.shape(nodes_on_bdry) == ():
         nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
@@ -441,13 +443,28 @@ def uniform_partition_fromintv(intv_prod, num_nodes, nodes_on_bdry=False):
                          ''.format(len(nodes_on_bdry), intv_prod.ndim, 2))
 
     # We need to determine the placement of the grid minimum and maximum
-    # points based on the choices in nodes_on_bdry.
-    # The conditions to be met are:
-    # 1. The node should be half a stride away from the boundary
-    # 2. Adding (n-1) * stride in the corresponding direction should
-    #    give the other boundary.
-    # From these conditions, it follows that stride = (b - a) / (n - 1/2)
-    # in the asymmetric cases and stride = (b - a) / n for both shifted.
+    # points based on the choices in nodes_on_bdry. If in a given axis,
+    # and for a given side (left or right), the entry is True, the node lies
+    # on the boundary, so this coordinate can simply be taken as-is.
+    #
+    # Otherwise, the following conditionsmust be met:
+    #
+    # 1. The node should be half a stride s away from the boundary
+    # 2. Adding or subtracting (n-1)*s should give the other extremal node.
+    #
+    # If both nodes are to be shifted half a stride inside,
+    # the second condition yields
+    # a + s/2 + (n-1)*s = b - s/2 => s = (b - a) / n,
+    # hence the extremal grid points are
+    # gmin = a + s/2 = a + (b - a) / (2 * n),
+    # gmax = b - s/2 = b - (b - a) / (2 * n).
+    #
+    # In the case where one node, say the rightmost, lies on the boundary,
+    # the condition 2. reads as
+    # a + s/2 + (n-1)*s = b => s = (b - a) / (n - 1/2),
+    # thus
+    # gmin = a + (b - a) / (2 * n - 1).
+
     gmin, gmax = [], []
     for n, beg, end, on_bdry in zip(num_nodes, intv_prod.begin, intv_prod.end,
                                     nodes_on_bdry):
