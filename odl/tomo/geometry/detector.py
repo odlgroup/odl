@@ -51,38 +51,27 @@ class Detector(with_metaclass(ABCMeta, object)):
     * optionally a sampling grid for the parameters
     """
 
-    def __init__(self, ndim, params, grid=None):
+    def __init__(self, ndim, grid):
         """Initialize a new instance.
 
         Parameters
         ----------
         ndim : non-negative `int`
             The number of dimensions of the detector
-        params : `IntervalProd`
-            The parameter set defining the detector area
         grid : `TensorGrid`, optional
-            A sampling grid for the parameter set, in which it must be
-            contained
+            A sampling grid for the parameter set (pixels)
         """
-        if not isinstance(params, IntervalProd):
-            raise TypeError('parameter set {!r} is not a an interval product.'
-                            ''.format(params))
 
-        if params.ndim != ndim:
-            raise ValueError('parameters {!r} are not {}-dimensional.'
-                             ''.format(params, ndim))
+        if not isinstance(grid, TensorGrid):
+            raise TypeError('grid {!r} is not a `TensorGrid` instance.'
+                            ''.format(grid))
 
-        if grid is not None:
-            if not isinstance(grid, TensorGrid):
-                raise TypeError('grid {!r} is not a `TensorGrid` instance.'
-                                ''.format(grid))
-
-            if not params.contains_set(grid):
-                raise ValueError('grid {!r} not contained in parameter set '
-                                 '{!r}.'.format(grid, params))
+        if grid.ndim != ndim:
+            raise ValueError('grid {!r} are not {}-dimensional.'
+                             ''.format(grid, ndim))
 
         self._ndim = ndim
-        self._params = params
+        self._params = grid.convex_hull()
         self._param_grid = grid
 
     @abstractmethod
@@ -111,22 +100,13 @@ class Detector(with_metaclass(ABCMeta, object)):
         return self._param_grid
 
     @property
-    def has_sampling(self):
-        """Return `True` if a sampling grid is given, else `False`."""
-        return self.param_grid is not None
-
-    @property
     def shape(self):
         """The shape of the detector grid."""
-        if not self.has_sampling:
-            raise ValueError('no sampling defined for {}.'.format(self))
         return self.param_grid.shape
 
     @property
     def npixels(self):
         """The number of pixels (sampling points)."""
-        if not self.has_sampling:
-            raise ValueError('no sampling defined.')
         return self.param_grid.size
 
     def surface_deriv(self, param):
@@ -218,13 +198,14 @@ class Flat1dDetector(FlatDetector):
 
     """A 1d line detector aligned with the ``detector_axis``."""
 
-    def __init__(self, params, detector_axis, grid=None):
+    def __init__(self, grid, detector_axis):
         """Initialize a new instance.
 
         Parameters
         ----------
-        params : `Interval` or 1-dim. `IntervalProd`
-            The range of the parameters defining the detector area.
+        grid : 1-dim. `TensorGrid`
+            A sampling grid for the parameter interval, corresponding
+            to the line elements
         detector_axis : 2-element array
             Unit direction along the detector parameter of the detector.
         grid : 1-dim. `TensorGrid`, optional
@@ -232,7 +213,7 @@ class Flat1dDetector(FlatDetector):
             be contained
         """
 
-        super().__init__(1, params, grid)
+        super().__init__(1, grid)
 
         self._detector_axis = np.asarray(detector_axis)
 
@@ -291,22 +272,19 @@ class Flat2dDetector(FlatDetector):
 
     """A 2d flat panel detector aligned with the ``detector_axes``."""
 
-    def __init__(self, params, detector_axes, grid=None):
+    def __init__(self, grid, detector_axes):
         """Initialize a new instance.
 
         Parameters
         ----------
-        params : `Rectangle` or 2-dim. `IntervalProd`
-            The range of the parameters defining the detector area.
+        grid : 2-dim. `IntervalProd`
+            A sampling grid for the parameters (pixels)
         detector_axes : sequence of two 3-element array
             The directions of the axes of the detector
             Example: [(0, 1, 0), (0, 0, 1)]
-        grid : 2-dim. `TensorGrid`, optional
-            A sampling grid for the parameter rectangle, in which it
-            must be contained
         """
 
-        super().__init__(2, params, grid)
+        super().__init__(2, grid)
 
         self._detector_axes = (np.asarray(detector_axes[0]),
                                np.asarray(detector_axes[1]))
@@ -376,20 +354,17 @@ class CircleSectionDetector(Detector):
 
     """
 
-    def __init__(self, params, circ_rad, grid=None):
+    def __init__(self, grid, circ_rad):
         """Initialize a new instance.
 
         Parameters
         ----------
-        params : `Interval` or 1-dim. `IntervalProd`
-            The range of the parameters defining the detector area.
+        grid : `Interval` or 1-dim. `IntervalProd`
+            A sampling grid for the pixels.
         circ_rad : positive `float`
             Radius of the circle on which the detector is situated
-        grid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the parameter interval, in which it must
-            be contained. Default: `None`
         """
-        super().__init__(1, params, grid)
+        super().__init__(1, grid)
 
         self._circ_rad = float(circ_rad)
         if self.circ_rad <= 0:

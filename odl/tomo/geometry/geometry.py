@@ -219,35 +219,29 @@ class DivergentBeamGeometry(Geometry):
     Special cases include fanbeam in 2d and conebeam in 3d.
     """
 
-    def __init__(self, ndim, angle_intvl, detector, agrid=None):
+    def __init__(self, ndim, agrid, detector):
         """Initialize a new instance.
 
         Parameters
         ----------
         ndim : int
             number of dimensions of geometry
-        angle_intvl : 1-dim. `IntervalProd`
-            Admissible angles
+        agrid : ndim `TensorGrid`
+            Discretization of the angles
         detector : `Detector`
             The detector to use
-        agrid : `TensorGrid`, optional
-            Optional discretization of the ``angle_intvl``
         """
-        if not (isinstance(angle_intvl, IntervalProd) and
-                angle_intvl.ndim == 1):
-            raise TypeError('angle parameters {!r} are not an interval.'
-                            ''.format(angle_intvl))
-        self._motion_params = angle_intvl
+        if not isinstance(agrid, TensorGrid) or agrid.ndim != 1:
+            raise TypeError('angle grid {!r} is not a {}-d `TensorGrid` '
+                            'instance.'.format(agrid, ndim))
+
+        if detector.ndim != ndim - 1:
+            raise TypeError('detector {!r} is not a ({}-1)-d `Detector` '
+                            'instance.'.format(detector, ndim))
+
+        self._motion_params = agrid.convex_hull()
         self._motion_grid = agrid
         self._detector = detector
-
-        if agrid is not None:
-            if not isinstance(agrid, TensorGrid):
-                raise TypeError('angle grid {!r} is not a `TensorGrid` '
-                                'instance.'.format(agrid))
-            if not angle_intvl.contains_set(agrid):
-                raise ValueError('angular grid {} not contained in angle '
-                                 'interval {}.'.format(agrid, angle_intvl))
 
         super().__init__(ndim=ndim)
 
