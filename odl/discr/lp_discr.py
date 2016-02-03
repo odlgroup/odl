@@ -33,7 +33,7 @@ from odl.discr.discretization import (
     Discretization, DiscretizationVector, dspace_type)
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation)
-from odl.discr.partition import RectPartition, uniform_partition
+from odl.discr.partition import RectPartition, uniform_partition_from_intv_prod
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
@@ -302,8 +302,8 @@ class DiscreteLp(Discretization):
     def __repr__(self):
         """Return ``repr(self).``"""
         # Check if the factory repr can be used
-        if (uniform_partition(self.uspace.domain, self.shape, False) ==
-                self.partition):
+        if (uniform_partition_from_intv_prod(
+                self.uspace.domain, self.shape) == self.partition):
             if isinstance(self.dspace, Fn):
                 impl = 'numpy'
                 default_dtype = np.float64
@@ -690,7 +690,8 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     order = kwargs.pop('order', 'C')
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
-    partition = uniform_partition(fspace.domain, nsamples, nodes_on_bdry)
+    partition = uniform_partition_from_intv_prod(fspace.domain, nsamples,
+                                                 nodes_on_bdry)
 
     weighting = kwargs.pop('weighting', 'simple')
     weighting_ = weighting.lower()

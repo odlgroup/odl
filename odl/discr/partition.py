@@ -39,7 +39,8 @@ from odl.set.domain import IntervalProd
 from odl.util.utility import array1d_repr
 
 
-__all__ = ('RectPartition', 'uniform_partition')
+__all__ = ('RectPartition', 'uniform_partition_from_intv_prod',
+           'uniform_partition_from_grid', 'uniform_partition')
 
 _POINT_POSITIONS = ('center', 'left')
 
@@ -56,142 +57,38 @@ class RectPartition(object):
         I[i] = [(x[i-1]+x[i])/2, (x[i]+x[i+1])/2]
     """
 
-    def __init__(self, grid, begin=None, end=None, **kwargs):
+    def __init__(self, intv_prod, grid):
         """Initialize a new instance.
 
         Parameters
         ----------
+        intv_prod : `IntervalProd`
+            Set to be partitioned
         grid : `TensorGrid`
-            Spatial points supporting the partition
-        begin, end : array-like, shape ``(grid.ndim,)``
-            Spatial points defining the begin and end of an interval
-            product to be partitioned. ``begin`` must be component-wise
-            at most ``grid.min_pt``, and ``end`` at least
-            ``grid.max_pt``. If not provided, they are inferred from
-            the grid.
-        begin_axes, end_axes : sequence of `int`, optional
-            Dimensions in which to apply ``begin`` and ``end``. If
-            given, only these dimensions in ``begin`` or ``end``, resp.,
-            are considered - other entries are ignored.
-
-        Notes
-        -----
-        The endpoints ``begin`` and ``end`` are determined from the grid
-        as follows::
-
-            begin = x[0] - (x[1] - x[0]) / 2
-            end = x[N-1] + (x[N-1] - x[N-2]) / 2
+            Spatial points supporting the partition. They must be
+            contained in ``intv_prod``.
         """
+        if not isinstance(intv_prod, IntervalProd):
+            raise TypeError('{!r} is not an IntervalProd instance.'
+                            ''.format(intv_prod))
         if not isinstance(grid, TensorGrid):
             raise TypeError('{!r} is not a TensorGrid instance.'
                             ''.format(grid))
 
-        # Begin and end: check correct shapes and values if given,
-        # calculate otherwise.
-        begin_axes = kwargs.pop('begin_axes', None)
-        end_axes = kwargs.pop('end_axes', None)
+        # More conclusive error than the one from contains_set
+        if intv_prod.ndim != grid.ndim:
+            raise ValueError('interval product {} is {}-dimensional while '
+                             'grid {} is {}-dimensional.'
+                             ''.format(intv_prod, intv_prod.ndim,
+                                       grid, grid.ndim))
 
-        begin = self._calc_begin_end(grid, begin_axes, begin, 'begin')
-        end = self._calc_begin_end(grid, end_axes, end, 'end')
+        if not intv_prod.contains_set(grid):
+            raise ValueError('{} is not contained in {}.'
+                             ''.format(grid, intv_prod))
 
         super().__init__()
-        self._bbox = IntervalProd(begin, end)
+        self._bbox = intv_prod
         self._grid = grid
-
-    def _calc_begin_end(self, grid, vec_axes, vector, which):
-        """Return the interval product begin/end from ``grid``.
-
-        Parameters
-        ----------
-        grid : `TensorGrid`
-            Grid from which to infer
-        vec_axes : sequence of `int`
-            Dimensions in which to take the values from ``vector``
-        vector : array-like, shape ``(grid.ndim,)``
-            Array from which to take the values corresponding to the
-            dimensions in ``vec_axes``
-        which : {'begin', 'end'}
-            Which one of the endpoints to calculate
-
-        Returns
-        -------
-        newvec : `numpy.ndarray`
-            The new begin or end vector, depending on ``which``
-        """
-        # Check axes sanity
-        if vector is None:
-            vector = np.zeros(grid.ndim)
-            if vec_axes is None:
-                vec_axes = []
-            else:
-                raise ValueError('{which}_axes cannot be given without '
-                                 '{which} parameter.'.format(which=which))
-        elif vec_axes is None:
-            vec_axes = list(range(grid.ndim))
-
-        # Normalize negative values and check for errors
-        vec_axes = [i if i >= 0 else grid.ndim + i
-                    for i in vec_axes]
-        if any(i < 0 or i >= grid.ndim for i in vec_axes):
-            raise IndexError('{}_axes {} contains out-ouf-bounds indices.'
-                             ''.format(which, vec_axes))
-
-        if len(set(vec_axes)) != len(vec_axes):
-            raise ValueError('{}_axes {} contains duplicate indices.'
-                             ''.format(which, vec_axes))
-
-        # Set private attribute to be used in __repr__
-        # TODO: find good way to handle this without running into slight
-        # rounding errors. Best would be to determine in __repr__ if
-        # begin/end are as calculated, but it may be better to store if
-        # begin/end was given and just always add it to the __repr__ output
-        # in that case, regardless of other factors
-        if which == 'begin':
-            if vec_axes:
-                self._custom_begin = True
-            else:
-                self._custom_begin = False
-        else:
-            if vec_axes:
-                self._custom_end = True
-            else:
-                self._custom_end = False
-
-        # The other axes
-        calc_axes = [i for i in range(grid.ndim) if i not in vec_axes]
-
-        # Check vector sanity (shape and bounds in relevant axes)
-        vector = np.asarray(vector, dtype='float64')
-        if vector.shape != (grid.ndim,):
-            raise ValueError('{} has shape {}, expected {}.'
-                             ''.format(which, vector.shape, (grid.ndim,)))
-        if (which == 'begin' and
-                np.any(vector[vec_axes] > grid.min_pt[vec_axes])):
-            raise ValueError('begin {} has entries larger than the '
-                             'minimum grid point {} in one of the axes {}.'
-                             ''.format(vector, grid.min_pt, vec_axes))
-        elif (which == 'end' and
-              np.any(vector[vec_axes] < grid.max_pt[vec_axes])):
-            raise ValueError('end {} has entries smaller than the '
-                             'maximum grid point {} in one of the axes {}.'
-                             ''.format(vector, grid.max_pt, vec_axes))
-
-        # Create the new vector
-        new_vec = np.empty(grid.ndim, dtype='float64')
-        new_vec[vec_axes] = vector[vec_axes]
-        for ax in calc_axes:
-            cvec = grid.coord_vectors[ax]
-            if len(cvec) == 1:
-                raise ValueError(
-                    'Degenerate dimension {} requires explicit begin and '
-                    'end.'.format(ax))
-
-            if which == 'begin':
-                new_vec[ax] = cvec[0] - (cvec[1] - cvec[0]) / 2
-            else:
-                new_vec[ax] = cvec[-1] + (cvec[-1] - cvec[-2]) / 2
-
-        return new_vec
 
     @property
     def grid(self):
@@ -479,21 +376,129 @@ class RectPartition(object):
     # TODO: pretty-print
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n {!r}'.format(self.grid)
-        sep = ',\n '
-        if self._custom_begin:
-            inner_str += sep + 'begin={}'.format(
-                array1d_repr(self.bbox.begin))
-            sep = ', '
-        if self._custom_end:
-            inner_str += sep + 'end={}'.format(
-                array1d_repr(self.bbox.end))
-
+        inner_str = '\n {!r},\n {!r}'.format(self.bbox, self.grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-def uniform_partition(intv_prod, num_nodes, nodes_on_bdry=True):
-    """Return a partition of ``intv_prod`` by a regular grid.
+def uniform_partition_from_grid(grid, begin=None, end=None):
+    """Return a partition of an interval product based on a given grid.
+
+    This method is complementary to
+    `uniform_partition_from_intv_prod` in that it infers the
+    set to be partitioned from a given grid and optional parameters
+    for the begin and the end of the set.
+
+    Parameters
+    ----------
+    grid : `TensorGrid`
+        Grid on which the partition is based
+    begin, end : array-like or `dict`
+        Spatial points defining the begin and end of an interval
+        product to be partitioned. The points can be specified in
+        two ways:
+
+        array-like: These values are used directly as begin and/or end.
+
+        dict: Index-value pairs specifying an axis and a spatial
+        coordinate to be used in that axis. In axes which are not a key
+        in the dictionary, the coordinate for the vector is calculated
+        as::
+            begin = x[0] - (x[1] - x[0]) / 2
+        or::
+            end = x[-1] + (x[-1] - x[-2]) / 2
+        respectively. See ``Examples`` below.
+
+        In general, ``begin`` may not be larger than ``grid.min_pt``,
+        and ``end`` not smaller than ``grid.max_pt`` in any component.
+        `None` is equivalent to an empty dictionary, i.e. the values
+        are calculated in each dimension.
+
+    See also
+    --------
+    uniform_partition_from_intv_prod
+
+    Examples
+    --------
+    Have begin and end of the bounding box automatically calculated:
+
+    >>> grid = RegularGrid(0, 1, 3)
+    >>> grid.coord_vectors
+    (array([ 0. ,  0.5,  1. ]),)
+    >>> part = uniform_partition_from_grid(grid)
+    >>> part.cell_boundaries()
+    (array([-0.25,  0.25,  0.75,  1.25]),)
+
+    Begin and end can be given explicitly as array-like:
+
+    >>> part = uniform_partition_from_grid(grid, begin=0, end=1)
+    >>> part.cell_boundaries()
+    (array([ 0.  ,  0.25,  0.75,  1.  ]),)
+
+    Using dictionaries, selective axes can be explicitly set. The
+    keys refer to axes, the values to the coordinates to use:
+
+    >>> grid = RegularGrid([0, 0], [1, 1], (3, 3))
+    >>> part = uniform_partition_from_grid(grid, begin={0: -1},
+    ...                                    end={-1: 3})
+    >>> part.cell_boundaries()[0]
+    array([-1.  ,  0.25,  0.75,  1.25])
+    >>> part.cell_boundaries()[1]
+    array([-0.25,  0.25,  0.75,  3.  ])
+    """
+    # Make dictionaries from begin and end and fill with None where no value
+    # is given.
+    if begin is None:
+        begin = {i: None for i in range(grid.ndim)}
+    elif not hasattr(begin, 'items'):  # array-like
+        begin = np.atleast_1d(begin)
+        begin = {i: float(v) for i, v in enumerate(begin)}
+    else:
+        if len(set(begin.items())) != len(begin.items()):
+            raise ValueError('dictionary {} for begin point has duplicate '
+                             'keys.'.format(begin))
+        begin.update({i: None for i in range(grid.ndim) if i not in begin})
+
+    if end is None:
+        end = {i: None for i in range(grid.ndim)}
+    elif not hasattr(end, 'items'):
+        end = np.atleast_1d(end)
+        end = {i: float(v) for i, v in enumerate(end)}
+    else:
+        if len(set(end.items())) != len(end.items()):
+            raise ValueError('dictionary {} for end point has duplicate keys.'
+                             ''.format(end))
+        end.update({i: None for i in range(grid.ndim) if i not in end})
+
+    # Set the values in the vectors by computing (None) or directly from the
+    # given vectors (otherwise).
+    begin_vec = np.empty(grid.ndim)
+    for ax, beg_val in begin.items():
+        if beg_val is None:
+            cvec = grid.coord_vectors[ax]
+            if len(cvec) == 1:
+                raise ValueError('cannot calculate begin in axis {} with '
+                                 'only 1 grid point.'.format(ax))
+            begin_vec[ax] = cvec[0] - (cvec[1] - cvec[0]) / 2
+        else:
+            begin_vec[ax] = beg_val
+
+    end_vec = np.empty(grid.ndim)
+    for ax, end_val in end.items():
+        if end_val is None:
+            cvec = grid.coord_vectors[ax]
+            if len(cvec) == 1:
+                raise ValueError('cannot calculate end in axis {} with '
+                                 'only 1 grid point.'.format(ax))
+            end_vec[ax] = cvec[-1] + (cvec[-1] - cvec[-2]) / 2
+        else:
+            end_vec[ax] = end_val
+
+    return RectPartition(IntervalProd(begin_vec, end_vec), grid)
+
+
+def uniform_partition_from_intv_prod(intv_prod, num_nodes,
+                                     nodes_on_bdry=False):
+    """Return a partition of an interval product into equally sized cells.
 
     Parameters
     ----------
@@ -502,16 +507,57 @@ def uniform_partition(intv_prod, num_nodes, nodes_on_bdry=True):
     num_nodes : `int` or sequence of `int`
         Number of nodes per axis. For 1d intervals, a single integer
         can be specified.
-    nodes_on_bdry : `bool` or boolean array-like
-        If `True`, place the outermost grid points at the boundary. For
-        `False`, they are shifted by half a cell size to the 'inner'.
-        If an array-like is given, it must have shape ``(ndim, 2)``,
-        where ``ndim`` is the number of dimensions. It defines per axis
-        whether the leftmost (first column) and rightmost (second column)
-        nodes node lie on the boundary.
+    nodes_on_bdry : `bool` or sequence, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (True) or shift it
+        by half a cell size into the interior (False). In each axis,
+        an entry may consist in a single `bool` or a 2-tuple of
+        `bool`. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
+
+    See also
+    --------
+    uniform_partition_from_grid
 
     Examples
     --------
+    By default, no grid points are placed on the boundary:
+
+    >>> bbox = IntervalProd(0, 1)
+    >>> part = uniform_partition_from_intv_prod(bbox, 4)
+    >>> part.cell_boundaries()
+    (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]),)
+    >>> part.grid.coord_vectors
+    (array([ 0.125,  0.375,  0.625,  0.875]),)
+
+    This can be changed with the nodes_on_bdry parameter:
+
+    >>> part = uniform_partition_from_intv_prod(bbox, 3,
+    ...                                         nodes_on_bdry=True)
+    >>> part.cell_boundaries()
+    (array([ 0.  ,  0.25,  0.75,  1.  ]),)
+    >>> part.grid.coord_vectors
+    (array([ 0. ,  0.5,  1. ]),)
+
+    We can specify this per axis, too. In this case we choose both
+    in the first axis and only the rightmost in the second:
+
+    >>> bbox = IntervalProd([0, 0], [1, 1])
+    >>> part = uniform_partition_from_intv_prod(
+    ...     bbox, (3, 3), nodes_on_bdry=(True, (False, True)))
+    ...
+    >>> part.cell_boundaries()[0]  # first axis, as above
+    array([ 0.  ,  0.25,  0.75,  1.  ])
+    >>> part.grid.coord_vectors[0]
+    array([ 0. ,  0.5,  1. ])
+    >>> part.cell_boundaries()[1]  # second, asymmetric axis
+    array([ 0. ,  0.4,  0.8,  1. ])
+    >>> part.grid.coord_vectors[1]
+    array([ 0.2,  0.6,  1. ])
     """
     # Sanity checks
     if np.shape(num_nodes) == ():
@@ -523,23 +569,28 @@ def uniform_partition(intv_prod, num_nodes, nodes_on_bdry=True):
     if np.shape(nodes_on_bdry) == ():
         nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
                          intv_prod.ndim)
-    elif np.shape(nodes_on_bdry) == (intv_prod.ndim, 2):
-        pass
-    else:
-        raise ValueError('node_at_bdry has shape {}, expected {}.'
-                         ''.format(np.shape(nodes_on_bdry),
-                                   (intv_prod.ndim, 2)))
+    elif len(nodes_on_bdry) != intv_prod.ndim:
+        raise ValueError('nodes_on_bdry has length {}, expected {}.'
+                         ''.format(len(nodes_on_bdry), intv_prod.ndim, 2))
 
+    # We need to determine the placement of the grid minimum and maximum
+    # points based on the choices in nodes_on_bdry.
+    # The conditions to be met are:
+    # 1. The node should be half a stride away from the boundary
+    # 2. Adding (n-1) * stride in the corresponding direction should
+    #    give the other boundary.
+    # From these conditions, it follows that stride = (b - a) / (n - 1/2)
+    # in the asymmetric cases and stride = (b - a) / n for both shifted.
     gmin, gmax = [], []
-    for n, beg, end, (bdry_l, bdry_r) in zip(num_nodes, intv_prod.begin,
-                                             intv_prod.end, nodes_on_bdry):
-        # Shift left and right boundary grid node if necessary.
-        # The conditions to be met are:
-        # 1. The node should be half a stride away from the boundary
-        # 2. Adding (n-1) * stride in the corresponding direction should
-        #    give the other boundary.
-        # From these conditions, it follows that stride = (b - a) / (n - 1/2)
-        # in the asymmetric cases and stride = (b - a) / n for both shifted.
+    for n, beg, end, on_bdry in zip(num_nodes, intv_prod.begin, intv_prod.end,
+                                    nodes_on_bdry):
+
+        # Unpack the tuple if possible, else use bool globally for this axis
+        try:
+            bdry_l, bdry_r = on_bdry
+        except TypeError:
+            bdry_l = bdry_r = on_bdry
+
         if bdry_l and bdry_r:
             gmin.append(beg)
             gmax.append(end)
@@ -554,7 +605,75 @@ def uniform_partition(intv_prod, num_nodes, nodes_on_bdry=True):
             gmax.append(end - (end - beg) / (2 * n))
 
     grid = RegularGrid(gmin, gmax, num_nodes)
-    return RectPartition(grid, begin=intv_prod.begin, end=intv_prod.end)
+    return RectPartition(intv_prod, grid)
+
+
+def uniform_partition(begin, end, num_nodes, nodes_on_bdry=False):
+    """Return a partition of [begin, end] with equally sized cells.
+
+    Parameters
+    ----------
+    begin, end : array-like
+        Vectors defining the begin end end points of an `IntervalProd`
+        (a rectangular box)
+    num_nodes : `int` or sequence of `int`
+        Number of nodes per axis. For 1d intervals, a single integer
+        can be specified.
+    nodes_on_bdry : `bool` or sequence, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (True) or shift it
+        by half a cell size into the interior (False). In each axis,
+        an entry may consist in a single `bool` or a 2-tuple of
+        `bool`. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
+
+    See also
+    --------
+    uniform_partition_from_intv_prod : partition an existing set
+    uniform_partition_from_grid : use an existing grid as basis
+
+    Examples
+    --------
+    Examples
+    --------
+    By default, no grid points are placed on the boundary:
+
+    >>> part = uniform_partition(0, 1, 4)
+    >>> part.cell_boundaries()
+    (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]),)
+    >>> part.grid.coord_vectors
+    (array([ 0.125,  0.375,  0.625,  0.875]),)
+
+    This can be changed with the nodes_on_bdry parameter:
+
+    >>> part = uniform_partition(0, 1, 3, nodes_on_bdry=True)
+    >>> part.cell_boundaries()
+    (array([ 0.  ,  0.25,  0.75,  1.  ]),)
+    >>> part.grid.coord_vectors
+    (array([ 0. ,  0.5,  1. ]),)
+
+    We can specify this per axis, too. In this case we choose both
+    in the first axis and only the rightmost in the second:
+
+    >>> part = uniform_partition([0, 0], [1, 1], (3, 3),
+    ...                          nodes_on_bdry=(True, (False, True)))
+    ...
+    >>> part.cell_boundaries()[0]  # first axis, as above
+    array([ 0.  ,  0.25,  0.75,  1.  ])
+    >>> part.grid.coord_vectors[0]
+    array([ 0. ,  0.5,  1. ])
+    >>> part.cell_boundaries()[1]  # second, asymmetric axis
+    array([ 0. ,  0.4,  0.8,  1. ])
+    >>> part.grid.coord_vectors[1]
+    array([ 0.2,  0.6,  1. ])
+    """
+    return uniform_partition_from_intv_prod(
+        IntervalProd(begin, end), num_nodes, nodes_on_bdry)
+
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
