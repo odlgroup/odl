@@ -234,9 +234,10 @@ class PointCollocation(FunctionSetMapping):
 
         Partition the rectangle by a tensor grid:
 
-        >>> from odl import TensorGrid, RectPartition, Rn
+        >>> from odl import TensorGrid, Rectangle, RectPartition, Rn
+        >>> rect = Rectangle([1, 3], [2, 5])
         >>> grid = TensorGrid([1, 2], [3, 4, 5])
-        >>> partition = RectPartition(grid, begin=[1, 3], end=[2, 5])
+        >>> partition = RectPartition(rect, grid)
         >>> rn = Rn(grid.size)
 
         Finally create the operator and test it on a function:
@@ -384,8 +385,9 @@ class NearestInterpolation(FunctionSetMapping):
         Partitioning the domain uniformly with no nodes on the boundary
         (will shift the grid points):
 
-        >>> from odl import uniform_partition, Ntuples
-        >>> part = uniform_partition(rect, [4, 2], nodes_on_bdry=False)
+        >>> from odl import uniform_partition_fromintv, Ntuples
+        >>> part = uniform_partition_fromintv(rect, [4, 2],
+        ...                                   nodes_on_bdry=False)
         >>> part.grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
