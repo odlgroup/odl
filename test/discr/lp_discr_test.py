@@ -77,7 +77,7 @@ def exponent(request):
 def test_init(exponent):
     # Validate that the different init patterns work and do not crash.
     space = odl.FunctionSpace(odl.Interval(0, 1))
-    part = odl.uniform_partition(space.domain, 10)
+    part = odl.uniform_partition_fromintv(space.domain, 10)
     rn = odl.Rn(10, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent)
 
@@ -105,7 +105,7 @@ def test_init(exponent):
 def test_init_cuda(exponent):
     # Normal discretization of unit interval
     space = odl.FunctionSpace(odl.Interval(0, 1))
-    part = odl.uniform_partition(space.domain, 10)
+    part = odl.uniform_partition_fromintv(space.domain, 10)
     rn = odl.CudaRn(10, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent)
 
@@ -489,20 +489,20 @@ def test_transpose():
     assert all_equal(x.T.adjoint(1.0), x)
 
 
-def test_cell_size():
+def test_cell_sides():
     # Non-degenerated case, should be same as cell size
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
     vec = discr.element()
 
-    assert all_equal(discr.cell_size, [0.5] * 2)
-    assert all_equal(vec.cell_size, [0.5] * 2)
+    assert all_equal(discr.cell_sides, [0.5] * 2)
+    assert all_equal(vec.cell_sides, [0.5] * 2)
 
     # Degenerated case, uses interval size in 1-point dimensions
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 1])
     vec = discr.element()
 
-    assert all_equal(discr.cell_size, [0.5, 1])
-    assert all_equal(vec.cell_size, [0.5, 1])
+    assert all_equal(discr.cell_sides, [0.5, 1])
+    assert all_equal(vec.cell_sides, [0.5, 1])
 
 
 def test_cell_volume():
