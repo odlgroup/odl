@@ -37,29 +37,11 @@ from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 def test_parallel_2d_geometry():
     """General parallel 2D geometries."""
 
-    # initialize
+    # Parameters
     full_angle = np.pi
-    angle_intvl = odl.Interval(0, full_angle)
-    agrid = odl.uniform_sampling(angle_intvl, 10)
-    dparams = odl.Interval(0, 1)
-    dgrid = odl.uniform_sampling(dparams, 10)
-    odl.tomo.Parallel2dGeometry(angle_intvl, dparams)
-
-    with pytest.raises(TypeError):
-        odl.tomo.Parallel2dGeometry([0, 1], dparams)
-    with pytest.raises(TypeError):
-        odl.tomo.Parallel2dGeometry(angle_intvl, [0, 1])
-    with pytest.raises(ValueError):
-        odl.tomo.Parallel2dGeometry(angle_intvl, dparams,
-                                    agrid=odl.TensorGrid([0, 2 * full_angle]))
-    with pytest.raises(ValueError):
-        odl.tomo.Parallel2dGeometry(angle_intvl, dparams,
-                                    dgrid=odl.TensorGrid([0, 2]))
-    with pytest.raises(ValueError):
-        odl.tomo.Parallel2dGeometry(angle_intvl, dparams,
-                                    dgrid=odl.TensorGrid([0, 0.1], [0.2, 0.3]))
-
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
+    agrid = odl.uniform_sampling(0, full_angle, 10)
+    dgrid = odl.uniform_sampling(0, 1, 10)
+    geom = odl.tomo.Parallel2dGeometry(agrid, dgrid)
 
     assert geom.ndim == 2
     assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
@@ -76,100 +58,85 @@ def test_parallel_2d_geometry():
 def test_parallel_3d_geometry():
     """General parallel 3D geometries."""
 
-    # initialize
+    # Parameters
     full_angle = np.pi
-    angle_intvl = odl.Interval(0, full_angle)
-    dparams = odl.IntervalProd([0, 0], [1, 1])
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 0, 1])
+    agrid = odl.uniform_sampling(0, full_angle, 10)
+    dgrid = odl.uniform_sampling([0, 0], [1, 1], [10, 10])
 
+    # Bad init
     with pytest.raises(TypeError):
-        odl.tomo.Parallel3dGeometry([0, 1], dparams)
+        odl.tomo.FanFlatGeometry([0, 1], dgrid)
     with pytest.raises(TypeError):
-        odl.tomo.Parallel3dGeometry(angle_intvl, [0, 1])
+        odl.tomo.FanFlatGeometry(agrid, [0, 1])
 
-    with pytest.raises(ValueError):
-        odl.tomo.Parallel3dGeometry(angle_intvl, dparams,
-                                    agrid=odl.TensorGrid([0, 2 * full_angle]))
-    with pytest.raises(ValueError):
-        odl.tomo.Parallel3dGeometry(angle_intvl, dparams,
-                                    dgrid=odl.TensorGrid([0, 0.5], [0.5, 1.5]))
+    # Initialize
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 0, 1])
 
-    assert geom.ndim == 3
-    assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
-
-    # detector rotation
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 0, 1])
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
 
     # rotation of cartesian basis vectors about each other
     coords = np.eye(3)
 
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[1, 0, 0])
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[1, 0, 0])
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_almost_equal(rot_mat.dot(coords), [[1, 0, 0],
                                                   [0, 0, -1],
                                                   [0, 1, 0]])
 
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 1, 0])
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 1, 0])
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_almost_equal(rot_mat.dot(coords), [[0, 0, 1],
                                                   [0, 1, 0],
                                                   [-1, 0, 0]])
 
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 0, 1])
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 0, 1])
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_almost_equal(rot_mat.dot(coords), [[0, -1, 0],
                                                   [1, 0, 0],
                                                   [0, 0, 1]])
 
     # rotation axis
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[1, 0, 0])
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[1, 0, 0])
     assert all_equal(geom.axis, np.array([1, 0, 0]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 1, 0])
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 1, 0])
     assert all_equal(geom.axis, np.array([0, 1, 0]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[0, 0, 1])
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 0, 1])
     assert all_equal(geom.axis, np.array([0, 0, 1]))
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=[1, 2, 3])
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[1, 2, 3])
     assert all_equal(geom.axis,
                      np.array([1, 2, 3]) / np.linalg.norm([1, 2, 3]))
 
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1,))
+        odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=(1,))
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2))
+        odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=(1, 2))
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dGeometry(angle_intvl, dparams, axis=(1, 2, 3, 4))
+        odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=(1, 2, 3, 4))
 
 
 def test_fanflat():
     """2D fanbeam geometry with 1D line detector."""
 
-    # initialize
+    # Parameters
     full_angle = np.pi
-    angle_intvl = odl.Interval(0, full_angle)
-    dparams = odl.Interval(0, 1)
+    agrid = odl.uniform_sampling(0, full_angle, 10)
+    dgrid = odl.uniform_sampling(0, 1, 10)
     src_rad = 10
     det_rad = 5
-    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad)
 
     with pytest.raises(TypeError):
-        odl.tomo.FanFlatGeometry([0, 1], dparams, src_rad, det_rad)
+        odl.tomo.FanFlatGeometry([0, 1], dgrid, src_rad, det_rad)
     with pytest.raises(TypeError):
-        odl.tomo.FanFlatGeometry(angle_intvl, [0, 1], src_rad, det_rad)
+        odl.tomo.FanFlatGeometry(agrid, [0, 1], src_rad, det_rad)
     with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                 agrid=odl.TensorGrid([0, 2 * full_angle]))
+        odl.tomo.FanFlatGeometry(agrid, dgrid, -1, det_rad)
     with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                 dgrid=odl.TensorGrid([0, 2]))
-    with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                 dgrid=odl.TensorGrid([0, 0.1], [0.2, 0.3]))
-    with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(angle_intvl, dparams, -1, det_rad)
-    with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, -1)
+        odl.tomo.FanFlatGeometry(agrid, dgrid, src_rad, -1)
+
+    # Initialize
+    geom = odl.tomo.FanFlatGeometry(agrid, dgrid, src_rad, det_rad)
+
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
 
@@ -191,40 +158,25 @@ def test_fanflat():
 def test_circular_cone_flat():
     """Conebeam geometry with circular acquisition and a flat 2D detector."""
 
-    # initialize
+    # Parameters
     full_angle = np.pi
-    angle_intvl = odl.Interval(0, full_angle)
-    dparams = odl.IntervalProd([0, 0], [1, 1])
+    agrid = odl.uniform_sampling(0, full_angle, 10)
+    dgrid = odl.uniform_sampling([0, 0], [1, 1], [10, 10])
     src_rad = 10
     det_rad = 5
 
-    geom = odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                             det_rad)
+    with pytest.raises(TypeError):
+        odl.tomo.CircularConeFlatGeometry([0, 1], dgrid, src_rad, det_rad)
+    with pytest.raises(TypeError):
+        odl.tomo.CircularConeFlatGeometry(agrid, [0, 1], src_rad, det_rad)
+    with pytest.raises(ValueError):
+        odl.tomo.CircularConeFlatGeometry(agrid, dgrid, -1, det_rad)
+    with pytest.raises(ValueError):
+        odl.tomo.CircularConeFlatGeometry(agrid, dgrid, src_rad, -1)
 
-    with pytest.raises(TypeError):
-        odl.tomo.CircularConeFlatGeometry([0, 1], dparams, src_rad, det_rad)
-    with pytest.raises(TypeError):
-        odl.tomo.CircularConeFlatGeometry(angle_intvl, [0, 1], src_rad,
-                                          det_rad)
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                          det_rad, agrid=odl.TensorGrid(
-                                              [0, 2 * full_angle]))
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                          det_rad,
-                                          dgrid=odl.TensorGrid([0, 2]))
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                          det_rad,
-                                          dgrid=odl.TensorGrid([0, 0.1],
-                                                               [0.2, 0.3],
-                                                               [0.3, 0.4,
-                                                                0.5]))
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, -1, det_rad)
-    with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(angle_intvl, dparams, src_rad, -1)
+    # Initialize
+    geom = odl.tomo.CircularConeFlatGeometry(agrid, dgrid, src_rad, det_rad)
+
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
 
@@ -237,46 +189,30 @@ def test_circular_cone_flat():
 def test_helical_cone_flat():
     """Conebeam geometry with helical acquisition and a flat 2D detector."""
 
-    # initialize
+    # Parameters
     full_angle = 2 * np.pi
-    angle_intvl = odl.Interval(0, full_angle)
-    motion_grid = odl.uniform_sampling(angle_intvl, 5, as_midp=False)
-    dparams = odl.IntervalProd([-40, -3], [40, 3])
-    det_grid = odl.uniform_sampling(dparams, (10, 5))
+    agrid = odl.uniform_sampling(0, full_angle, 10)
+    dgrid = odl.uniform_sampling([0, 0], [1, 1], [10, 10])
     src_rad = 10.0
     det_rad = 5.0
     pitch = 1.5
 
-    geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                            det_rad, pitch)
 
     with pytest.raises(TypeError):
-        odl.tomo.HelicalConeFlatGeometry([0, 1], dparams, src_rad, det_rad,
-                                         pitch)
+        odl.tomo.HelicalConeFlatGeometry([0, 1], dgrid,
+                                         src_rad, det_rad, pitch)
     with pytest.raises(TypeError):
-        odl.tomo.HelicalConeFlatGeometry(angle_intvl, [0, 1], src_rad,
-                                         det_rad, pitch)
+        odl.tomo.HelicalConeFlatGeometry(agrid, [0, 1],
+                                         src_rad, det_rad, pitch)
     with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                         det_rad, pitch,
-                                         agrid=odl.TensorGrid(
-                                             [0, 2 * full_angle]))
+        odl.tomo.HelicalConeFlatGeometry(agrid, dgrid, -1, det_rad, pitch)
     with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                         det_rad, pitch,
-                                         dgrid=odl.TensorGrid([0, 2]))
-    with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                         det_rad, pitch,
-                                         dgrid=odl.TensorGrid(
-                                             [0, 0.1], [0.2, 0.3],
-                                             [0.3, 0.4, 0.5]))
-    with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, -1, det_rad,
-                                         pitch)
-    with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad, -1,
-                                         pitch)
+        odl.tomo.HelicalConeFlatGeometry(agrid, dgrid, src_rad, -1, pitch)
+
+    # Initialize
+    geom = odl.tomo.HelicalConeFlatGeometry(agrid, dgrid,
+                                            src_rad, det_rad, pitch)
+
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
 
@@ -289,10 +225,6 @@ def test_helical_cone_flat():
 
     det_refpoint = geom.det_refpoint(2 * np.pi)
     assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
-
-    geom = odl.tomo.HelicalConeFlatGeometry(angle_intvl, dparams, src_rad,
-                                            det_rad, pitch, motion_grid,
-                                            det_grid)
 
     angles = geom.motion_grid
     num_angles = geom.motion_grid.size
