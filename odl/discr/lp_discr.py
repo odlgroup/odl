@@ -235,74 +235,65 @@ class DiscreteLp(Discretization):
     # Overrides for space functions depending on partition
     #
     # The inherited methods by default use a weighting by a constant
-    # (the grid cell size). In dimensions where the partitioned set ends at
-    # the outermost grid points, the corresponding contribuitons to
-    # discretized integrals need to be scaled by 1/2.
+    # (the grid cell size). In dimensions where the partitioned set contains
+    # only a fraction of the outermost cells (e.g. if the outermost grid
+    # points lie at the boundary), the corresponding contribuitons to
+    # discretized integrals need to be scaled by that fraction.
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
-        on_boundary = self.partition.nodes_on_boundary
-        if any(on_bdry[0] or on_bdry[1] for on_bdry in on_boundary):
-            # Need to halve the boundary nodes to get correct contributions.
-            # This requires copies, unfortunately.
-            # TODO: implement without copy
+        bdry_fracs = self.partition.boundary_cell_fractions
+        if np.allclose(bdry_fracs, 1.0) or self.exponent == float('inf'):
+            # no boundary weighting
+            return super()._inner(x, y)
+        else:
+            # TODO: implement without copying x
+            func_list = _scaling_func_list(bdry_fracs)
+
             x_arr = x.asarray()
             if not x_arr.flags.owndata:
                 x_arr = x_arr.copy()
-            apply_on_boundary(
-                x_arr, func=lambda x: x / 2,
-                only_once=False, which_boundaries=on_boundary)
+
+            apply_on_boundary(x_arr, func=func_list, only_once=False)
             return super()._inner(self.element(x_arr), y)
-        else:
-            # Standard case
-            return super()._inner(x, y)
 
     def _norm(self, x):
         """Return ``self.norm(x)``."""
-        on_boundary = self.partition.nodes_on_boundary
-        if any(on_bdry[0] or on_bdry[1] for on_bdry in on_boundary):
-            # TODO: implement without copy
+        bdry_fracs = self.partition.boundary_cell_fractions
+        if np.allclose(bdry_fracs, 1.0) or self.exponent == float('inf'):
+            # no boundary weighting
+            return super()._norm(x)
+        else:
+            # TODO: implement without copying x
+            func_list = _scaling_func_list(bdry_fracs,
+                                           exponent=self.exponent)
             x_arr = x.asarray()
             if not x_arr.flags.owndata:
                 x_arr = x_arr.copy()
-            if self.exponent != float('inf'):
-                # For p != inf we mimic the integral of f(x)**p, i.e. by
-                # the following scaling we effectively multiply the
-                # boundary contribution by 1/2.
-                bdry_fac = 0.5 ** (1.0 / self.exponent)
-                apply_on_boundary(
-                    x_arr, func=lambda x: x / bdry_fac,
-                    only_once=False, which_boundaries=on_boundary)
+
+            apply_on_boundary(x_arr, func=func_list, only_once=False)
             return super()._norm(self.element(x_arr))
-        else:
-            # Standard case
-            return super()._norm(x)
 
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
-        on_boundary = self.partition.nodes_on_boundary
-        if any(on_bdry[0] or on_bdry[1] for on_bdry in on_boundary):
+        bdry_fracs = self.partition.boundary_cell_fractions
+        if np.allclose(bdry_fracs, 1.0) or self.exponent == float('inf'):
+            # no boundary weighting
+            return super()._dist(x, y)
+        else:
+            # TODO: implement without copying x
+            func_list = _scaling_func_list(bdry_fracs,
+                                           exponent=self.exponent)
 
-            # TODO: implement without copy
             x_arr, y_arr = x.asarray(), y.asarray()
             if not x_arr.flags.owndata:
                 x_arr = x_arr.copy()
             if not y_arr.flags.owndata:
                 y_arr = y_arr.copy()
 
-                # For p != inf we mimic the integral of (f(x)-g(x)**p, i.e. by
-                # the following scaling we effectively multiply the
-                # boundary contribution by 1/2.
-                if self.exponent != float('inf'):
-                    bdry_fac = 0.5 ** (1.0 / self.exponent)
-                    for arr in (x_arr, y_arr):
-                        apply_on_boundary(
-                            arr, func=lambda x: x / bdry_fac,
-                            only_once=False, which_boundaries=on_boundary)
+            for arr in (x_arr, y_arr):
+                apply_on_boundary(arr, func=func_list, only_once=False)
 
             return super()._dist(self.element(x_arr), self.element(y_arr))
-        else:
-            # Standard case
-            return super()._dist(x, y)
 
     def __repr__(self):
         """Return ``repr(self).``"""
@@ -692,7 +683,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     # This is simplified: a consistent weighting wrt the interpolation type
     # would involve a block-tri-diagonal matrix multiplication.
-    weight = partition.cell_volume
+    weight = 1.0 if float(exponent) == float('inf') else partition.cell_volume
 
     if dtype is not None:
         dspace = ds_type(partition.size, dtype=dtype, weight=weight,
@@ -790,6 +781,30 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     return uniform_discr_fromspace(fspace, nsamples, exponent, interp, impl,
                                    **kwargs)
+
+
+def _scaling_func_list(bdry_fracs, exponent=1.0):
+    """Return a list of lists of scaling functions for the boundary."""
+    def scaling(factor):
+        def scaling_func(x):
+            return x * factor
+        return scaling_func
+
+    func_list = []
+    for frac_l, frac_r in bdry_fracs:
+        func_list_entry = []
+        if np.isclose(frac_l, 1.0):
+            func_list_entry.append(None)
+        else:
+            func_list_entry.append(scaling(frac_l ** (1 / exponent)))
+
+        if np.isclose(frac_r, 1.0):
+            func_list_entry.append(None)
+        else:
+            func_list_entry.append(scaling(frac_r ** (1 / exponent)))
+
+        func_list.append(func_list_entry)
+    return func_list
 
 
 if __name__ == '__main__':
