@@ -63,14 +63,14 @@ def test_astra_cuda_projector_parallel2d():
                                                    dtype='float32')
 
     # forward
-    proj_data = odl.tomo.astra_cuda_forward_projector_call(vol_data, geom,
-                                                           discr_proj_space)
+    proj_data = odl.tomo.astra_cuda_forward_projector(vol_data, geom,
+                                                      discr_proj_space)
     assert proj_data.shape == proj_shape
     assert proj_data.norm() > 0
 
     # backward
-    reco_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom,
-                                                            discr_vol_space)
+    reco_data = odl.tomo.astra_cuda_back_projector(proj_data, geom,
+                                                   discr_vol_space)
     assert reco_data.shape == discr_vol_space.shape
     assert reco_data.norm() > 0
 
@@ -108,14 +108,14 @@ def test_astra_cuda_projector_fanflat():
                                                    dtype='float32')
 
     # forward
-    proj_data = odl.tomo.astra_cuda_forward_projector_call(vol_data, geom,
-                                                           discr_proj_space)
+    proj_data = odl.tomo.astra_cuda_forward_projector(vol_data, geom,
+                                                      discr_proj_space)
     assert proj_data.shape == proj_shape
     assert proj_data.norm() > 0
 
     # backward
-    reco_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom,
-                                                            discr_vol_space)
+    reco_data = odl.tomo.astra_cuda_back_projector(proj_data, geom,
+                                                   discr_vol_space)
     assert reco_data.shape == discr_vol_space.shape
     assert reco_data.norm() > 0
 
@@ -148,13 +148,13 @@ def test_astra_cuda_projector_parallel3d():
                                                    dtype='float32')
 
     # Forward
-    proj_data = odl.tomo.astra_cuda_forward_projector_call(vol_data, geom,
-                                                           discr_proj_space)
+    proj_data = odl.tomo.astra_cuda_forward_projector(vol_data, geom,
+                                                      discr_proj_space)
     assert proj_data.norm() > 0
 
     # Backward
-    rec_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom,
-                                                           discr_vol_space)
+    rec_data = odl.tomo.astra_cuda_back_projector(proj_data, geom,
+                                                  discr_vol_space)
     assert rec_data.norm() > 0
 
 
@@ -191,13 +191,13 @@ def test_astra_gpu_projector_circular_conebeam():
                                                    dtype='float32')
 
     # Forward
-    proj_data = odl.tomo.astra_cuda_forward_projector_call(discr_data, geom,
-                                                           discr_proj_space)
+    proj_data = odl.tomo.astra_cuda_forward_projector(discr_data, geom,
+                                                      discr_proj_space)
     assert proj_data.norm() > 0
 
     # Backward
-    rec_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom,
-                                                           discr_vol_space)
+    rec_data = odl.tomo.astra_cuda_back_projector(proj_data, geom,
+                                                  discr_vol_space)
     assert rec_data.norm() > 0
 
 
@@ -235,13 +235,13 @@ def test_astra_cuda_projector_helical_conebeam():
                                                    dtype='float32')
 
     # Forward
-    proj_data = odl.tomo.astra_cuda_forward_projector_call(discr_data, geom,
-                                                           discr_proj_space)
+    proj_data = odl.tomo.astra_cuda_forward_projector(discr_data, geom,
+                                                      discr_proj_space)
     assert proj_data.norm() > 0
 
     # Backward
-    rec_data = odl.tomo.astra_cuda_backward_projector_call(proj_data, geom,
-                                                           discr_vol_space)
+    rec_data = odl.tomo.astra_cuda_back_projector(proj_data, geom,
+                                                  discr_vol_space)
     assert rec_data.norm() > 0
 
 

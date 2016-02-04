@@ -62,14 +62,14 @@ def test_astra_cpu_projector_parallel2d():
                                                    dtype='float32')
 
     # forward
-    proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_data, geom,
-                                                          discr_proj_space)
+    proj_data = odl.tomo.astra_cpu_forward_projector(discr_data, geom,
+                                                     discr_proj_space)
     assert proj_data.shape == proj_shape
     assert proj_data.norm() > 0
 
     # backward
-    reco_data = odl.tomo.astra_cpu_backward_projector_call(proj_data, geom,
-                                                           discr_vol_space)
+    reco_data = odl.tomo.astra_cpu_back_projector(proj_data, geom,
+                                                  discr_vol_space)
     assert reco_data.shape == vol_shape
     assert reco_data.norm() > 0
 
@@ -108,14 +108,14 @@ def test_astra_cpu_projector_fanflat():
                                                    dtype='float32')
 
     # forward
-    proj_data = odl.tomo.astra_cpu_forward_projector_call(discr_data, geom,
-                                                          discr_proj_space)
+    proj_data = odl.tomo.astra_cpu_forward_projector(discr_data, geom,
+                                                     discr_proj_space)
     assert proj_data.shape == proj_shape
     assert proj_data.norm() > 0
 
     # backward
-    reco_data = odl.tomo.astra_cpu_backward_projector_call(proj_data, geom,
-                                                           discr_vol_space)
+    reco_data = odl.tomo.astra_cpu_back_projector(proj_data, geom,
+                                                  discr_vol_space)
     assert reco_data.shape == vol_shape
     assert reco_data.norm() > 0
 

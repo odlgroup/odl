@@ -31,20 +31,17 @@ from odl.discr.lp_discr import DiscreteLp
 from odl.space import FunctionSpace, Ntuples, CudaNtuples
 from odl.operator.operator import Operator
 from odl.tomo.geometry.geometry import Geometry
-from odl.tomo.geometry.conebeam import HelicalConeFlatGeometry
-from odl.tomo.geometry.fanbeam import FanFlatGeometry
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
-    astra_cpu_forward_projector_call, astra_cpu_backward_projector_call,
-    astra_cuda_forward_projector_call, astra_cuda_backward_projector_call)
+    astra_cpu_forward_projector, astra_cpu_back_projector,
+    astra_cuda_forward_projector, astra_cuda_back_projector)
 
 _SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 
-__all__ = ('XrayTransform', 'XrayTransformAdjoint',)
+__all__ = ('XrayTransform', 'XrayBackProjector')
 
 
 # TODO: DivergentBeamTransform
-# TODO: rename adjoint trafo
 
 class XrayTransform(Operator):
 
@@ -56,8 +53,7 @@ class XrayTransform(Operator):
         Parameters
         ----------
         discr_domain : `odl.DiscreteLp`
-            Discretization of a two-dimensional space, the domain of
-            the discretized operator
+            Discretized space, the domain of the forward projector
         geometry : `Geometry`
             The geometry of the transform, contains information about
             the operator range. It needs to have a sampling grid for
@@ -93,7 +89,7 @@ class XrayTransform(Operator):
             elif isinstance(discr_domain.dspace, Ntuples):
                 self._backend = 'astra_cpu'
             else:
-                raise TypeError('discr_dom.dspace {} must be a CudaNtuples '
+                raise TypeError('discr_domain.dspace {} must be a CudaNtuples '
                                 'or a Ntuples'.format(discr_domain.dspace))
         else:
             self._backend = backend
@@ -108,38 +104,33 @@ class XrayTransform(Operator):
                                  'real and `complex64` for complex data.')
             if not np.allclose(discr_domain.grid.stride[1:],
                                discr_domain.grid.stride[:-1]):
-                raise ValueError('ASTRA does not support different pixel/voxel'
-                                 ' sizes per axis (got {}).'
+                raise ValueError('ASTRA does not support different voxel '
+                                 'sizes per axis (got {}).'
                                  ''.format(discr_domain.grid.stride))
 
         self._geometry = geometry
+        self.kwargs = kwargs
 
-        # Create a discretized space (operator range) with the same data space
+        # Create a discretized space (operator range) with the same data-space
         # type as the domain.
         # TODO: maybe use a ProductSpace structure
         range_uspace = FunctionSpace(geometry.params)
 
-        weight = getattr(geometry.grid, 'cell_volume', 1.0)
-        if isinstance(geometry, HelicalConeFlatGeometry):
-            src_radius = geometry.src_radius
-            det_radius = geometry.det_radius
-            weight /= ((src_radius + det_radius) / src_radius) ** 2
-        elif isinstance(geometry, FanFlatGeometry):
-            src_radius = geometry.src_radius
-            det_radius = geometry.det_radius
-            weight /= ((src_radius + det_radius) / src_radius)
+        # Approximate cell volume
+        extent = float(geometry.grid.extent().prod())
+        size = float(geometry.grid.size)
+        weight = extent / size
 
         range_dspace = discr_domain.dspace_type(
             geometry.grid.size, weight=weight, dtype=discr_domain.dspace.dtype)
 
         range_interp = kwargs.pop('interp', 'nearest')
+
         discr_range = DiscreteLp(
             range_uspace, geometry.grid, range_dspace,
             interp=range_interp, order=geometry.grid.order)
 
         super().__init__(discr_domain, discr_range, linear=True)
-
-        self._adjoint = XrayTransformAdjoint(self)
 
     @property
     def backend(self):
@@ -170,11 +161,11 @@ class XrayTransform(Operator):
         back, impl = self.backend.split('_')
         if back == 'astra':
             if impl == 'cpu':
-                return astra_cpu_forward_projector_call(x, self.geometry,
-                                                        self.range, out)
+                return astra_cpu_forward_projector(x, self.geometry,
+                                                   self.range, out)
             elif impl == 'cuda':
-                return astra_cuda_forward_projector_call(x, self.geometry,
-                                                         self.range, out)
+                return astra_cuda_forward_projector(x, self.geometry,
+                                                    self.range, out)
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
@@ -183,53 +174,102 @@ class XrayTransform(Operator):
     @property
     def adjoint(self):
         """Return the adjoint operator."""
-        return self._adjoint
+        return XrayBackProjector(self.domain, self.geometry, self.backend,
+                                 **self.kwargs)
 
 
-class XrayTransformAdjoint(Operator):
+class XrayBackProjector(Operator):
+    """The adjoint of the discrete X-ray transform between `L^p` spaces."""
 
-    """The adjoint of the discrete X-ray transform."""
-
-    def __init__(self, forward):
+    def __init__(self, discr_range, geometry, backend='astra', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        forward : `XrayTransform`
-            An instance of the discrete X-ray transform
+        discr_range : `odl.DiscreteLp`
+            Reconstruction space, the range of the back-projector
+        geometry : `Geometry`
+            The geometry of the transform, contains information about
+            the operator domain. It needs to have a sampling grid for
+            motion and detector parameters.
+        backend : {'astra', 'astra_cuda', 'astra_cpu'}, optional
+            Implementation back-end for the transform. Supported back-ends:
+            'astra': ASTRA toolbox, uses CPU or CUDA depending on the
+            underlying data space of ``discr_range``
+            'astra_cpu': ASTRA toolbox using CPU, only 2D
+            'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
+            Default: 'astra'
+        kwargs : {'interp'}
+            'interp' : {'nearest', 'linear', 'cubic'}
+                Interpolation type for the discretization of the
+                operator range. Default: 'nearest'
         """
-        self.forward = forward
-        super().__init__(forward.range, forward.domain, forward.is_linear)
-        self._backend = forward.backend
+        if not isinstance(discr_range, DiscreteLp):
+            raise TypeError('discretized range {!r} is not a `DiscreteLp`'
+                            ' instance.'.format(discr_range))
 
-    def _call(self, x, out=None):
-        """Apply the operator to ``x`` and store the result in ``out``.
+        if not isinstance(geometry, Geometry):
+            raise TypeError('geometry {!r} is not a `Geometry` instance.'
+                            ''.format(geometry))
 
-        Parameters
-        ----------
-        x : `DiscreteLpVector`
-            Element in the domain of the operator which is back-projected
-        out : `DiscreteLpVector`, optional
-            Vector in the reconstruction space to which the result is written.
-            If `None` creates an element in the range of the operator.
+        if not geometry.has_motion_sampling:
+            raise ValueError('geometry {} does not have sampling grids for '
+                             'motion.'.format(geometry))
 
-        Returns
-        -------
-        out : `DiscreteLpVector`
-            Returns an element in the reconstruction space
-        """
-        back, impl = self.backend.split('_')
-        if back == 'astra':
-            if impl == 'cpu':
-                return astra_cpu_backward_projector_call(
-                    x, self.forward.geometry, self.range, out)
-            elif impl == 'cuda':
-                return astra_cuda_backward_projector_call(
-                    x, self.forward.geometry, self.range, out)
+        if not geometry.has_det_sampling:
+            raise ValueError('geometry {} does not have sampling grids for '
+                             'the detector.'.format(geometry))
+
+        backend = str(backend).lower()
+        if backend not in _SUPPORTED_BACKENDS:
+            raise ValueError('backend {!r} not supported.'
+                             ''.format(backend))
+
+        if backend == 'astra':
+            if isinstance(discr_range.dspace, CudaNtuples):
+                self._backend = 'astra_cuda'
+            elif isinstance(discr_range.dspace, Ntuples):
+                self._backend = 'astra_cpu'
             else:
-                raise ValueError('unknown implementation {}.'.format(impl))
-        else:  # Should never happen
-            raise RuntimeError('backend support information is inconsistent.')
+                raise TypeError('discr_range.dspace {} must be a CudaNtuples '
+                                'or a Ntuples'.format(discr_range.dspace))
+        else:
+            self._backend = backend
+
+        if self.backend.startswith('astra'):
+            if not ASTRA_AVAILABLE:
+                raise ValueError('ASTRA backend not available.')
+            if not ASTRA_CUDA_AVAILABLE and self.backend == 'astra_cuda':
+                raise ValueError('ASTRA CUDA backend not available.')
+            if discr_range.dspace.dtype not in (np.float32, np.complex64):
+                raise ValueError('ASTRA support is limited to `float32` for '
+                                 'real and `complex64` for complex data.')
+            if not np.allclose(discr_range.grid.stride[1:],
+                               discr_range.grid.stride[:-1]):
+                raise ValueError('ASTRA does not support different voxel '
+                                 'sizes per axis (got {}).'
+                                 ''.format(discr_range.grid.stride))
+
+        self._geometry = geometry
+        self.kwargs = kwargs
+
+        # Create a discretized space (operator domain) with the same data-space
+        # type as the range.
+        domain_uspace = FunctionSpace(geometry.params)
+
+        # Approximate cell volume
+        extent = float(geometry.grid.extent().prod())
+        size = float(geometry.grid.size)
+        weight = extent / size
+
+        domain_dspace = discr_range.dspace_type(
+            geometry.grid.size, weight=weight, dtype=discr_range.dspace.dtype)
+
+        domain_interp = kwargs.pop('interp', 'nearest')
+        disc_domain = DiscreteLp(
+            domain_uspace, geometry.grid, domain_dspace,
+            interp=domain_interp, order=geometry.grid.order)
+        super().__init__(disc_domain, discr_range, linear=True)
 
     @property
     def backend(self):
@@ -237,6 +277,42 @@ class XrayTransformAdjoint(Operator):
         return self._backend
 
     @property
+    def geometry(self):
+        """Geometry of this operator."""
+        return self._geometry
+
+    def _call(self, x, out=None):
+        """Apply the operator to ``x`` and store the result in ``out``.
+
+        Parameters
+        ----------
+        x : `DiscreteLpVector`
+           Element in the domain of the operator which is back-projected
+        out : `DiscreteLpVector`, optional
+            Element in the reconstruction space to which the result is
+            written. If `None` an element in the range of the operator is
+            created.
+
+        Returns
+        -------
+        out : `DiscreteLpVector`
+            Returns an element in the projection space
+        """
+        back, impl = self.backend.split('_')
+        if back == 'astra':
+            if impl == 'cpu':
+                return astra_cpu_back_projector(x, self.geometry,
+                                                self.range, out)
+            elif impl == 'cuda':
+                return astra_cuda_back_projector(x, self.geometry,
+                                                 self.range, out)
+            else:
+                raise ValueError('unknown implementation {}.'.format(impl))
+        else:  # Should never happen
+            raise RuntimeError('backend support information is inconsistent.')
+
+    @property
     def adjoint(self):
-        """Return the adjoint operator. """
-        return self.forward
+        """Return the adjoint operator."""
+        return XrayTransform(self.range, self.geometry, self.backend,
+                             **self.kwargs)

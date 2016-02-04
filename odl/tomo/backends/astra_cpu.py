@@ -32,19 +32,19 @@ except ImportError:
 # Internal
 from odl.discr import DiscreteLp, DiscreteLpVector
 from odl.space.ntuples import Ntuples
-from odl.tomo.backends.astra_setup import (astra_projection_geometry,
-                                           astra_volume_geometry, astra_data,
-                                           astra_projector, astra_algorithm)
+from odl.tomo.backends.astra_setup import (
+    astra_projection_geometry, astra_volume_geometry, astra_data,
+    astra_projector, astra_algorithm)
 from odl.tomo.geometry import Geometry
 from odl.tomo.geometry.fanbeam import FanFlatGeometry
 
-__all__ = ('astra_cpu_forward_projector_call',
-           'astra_cpu_backward_projector_call')
+__all__ = ('astra_cpu_forward_projector', 'astra_cpu_back_projector')
 
 
 # TODO: use context manager when creating data structures
+# TODO: is magnification scaling at the right place?
 
-def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
+def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the CPU.
 
     Parameters
@@ -121,8 +121,7 @@ def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
     return out
 
 
-def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
-                                      out=None):
+def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     """Run an ASTRA backward projection on the given data using the CPU.
 
     Parameters
@@ -200,11 +199,7 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
     # parallel2d & fanflat scale with (voxel stride)**2 / (pixel stride)
     scaling_factor *= float(geometry.det_grid.stride[0])
     scaling_factor /= float(reco_space.grid.stride[0]) ** 2
-    # fan flat magnification
-    if isinstance(geometry, FanFlatGeometry):
-        src_radius = geometry.src_radius
-        det_radius = geometry.det_radius
-        scaling_factor /= ((src_radius + det_radius) / src_radius)
+
     out *= scaling_factor
 
     # Delete ASTRA objects
