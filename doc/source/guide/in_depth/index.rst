@@ -10,3 +10,4 @@ This is a more in depth guide to the different parts of odl.
     operator_guide
     linearspace_guide
     discretization_guide
+    vectorization_guide
