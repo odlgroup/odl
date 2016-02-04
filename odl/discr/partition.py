@@ -384,7 +384,10 @@ class RectPartition(object):
         newset = self.set.insert(index, other.set)
         return RectPartition(newset, newgrid)
 
-    # TODO: pretty-print
+    def __str__(self):
+        """Return ``str(self)``."""
+        return 'partition of {} using {}'.format(self.set, self.grid)
+
     def __repr__(self):
         """Return ``repr(self)``."""
         inner_str = '\n {!r},\n {!r}'.format(self.set, self.grid)
