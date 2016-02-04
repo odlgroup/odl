@@ -42,7 +42,6 @@ __all__ = ('astra_cpu_forward_projector_call',
            'astra_cpu_backward_projector_call')
 
 
-# TODO: Fix inconsistent scaling of ASTRA projector with pixel size
 # TODO: use context manager when creating data structures
 
 def astra_cpu_forward_projector_call(vol_data, geometry, proj_space, out=None):
@@ -193,13 +192,15 @@ def astra_cpu_backward_projector_call(proj_data, geometry, reco_space,
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
 
-    # Fix scaling issues
-    # parallel2d & fanflat scale quadratically with voxel stride
-    # and linearly with inverse pixel stride
-    # TODO: check anisotropic pixels
-    scaling_factor = float(geometry.det_grid.stride[0])
+    # Fix inconsistent scaling
+    # angle interval weight by approximate cell volume
+    extent = float(geometry.motion_grid.extent())
+    size = float(geometry.motion_grid.size)
+    scaling_factor = extent / size
+    # parallel2d & fanflat scale with (voxel stride)**2 / (pixel stride)
+    scaling_factor *= float(geometry.det_grid.stride[0])
     scaling_factor /= float(reco_space.grid.stride[0]) ** 2
-    # magnification
+    # fan flat magnification
     if isinstance(geometry, FanFlatGeometry):
         src_radius = geometry.src_radius
         det_radius = geometry.det_radius

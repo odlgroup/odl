@@ -33,13 +33,13 @@ except ImportError:
 
 # Internal
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
-from odl.tomo.backends.astra_setup import (astra_projection_geometry,
-                                           astra_volume_geometry,
-                                           astra_projector, astra_data,
-                                           astra_algorithm)
+from odl.tomo.backends.astra_setup import (
+    astra_projection_geometry, astra_volume_geometry, astra_projector,
+    astra_data, astra_algorithm)
 from odl.tomo.geometry import Geometry
-from odl.tomo.geometry import (Parallel2dGeometry, FanFlatGeometry,
-                               Parallel3dGeometry, HelicalConeFlatGeometry)
+from odl.tomo.geometry import (
+    Parallel2dGeometry, FanFlatGeometry, Parallel3dGeometry,
+    HelicalConeFlatGeometry)
 
 __all__ = ('astra_cuda_forward_projector_call',
            'astra_cuda_backward_projector_call',
@@ -123,9 +123,9 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
         else:
             out.assign(tmp)
 
-    # Fix scaling issue
+    # Fix inconsistent scaling
     if isinstance(geometry, Parallel2dGeometry):
-        # cuda parallel2d scales linearly with linear pixel stride
+        # parallel2d scales with (pixel stride)
         out *= 1 / float(geometry.det_grid.stride[0])
 
     # Delete ASTRA objects
@@ -214,13 +214,18 @@ def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
     # Run algorithm
     astra.algorithm.run(algo_id)
 
-    # Fix scaling issues
+    # Fix inconsistent scaling
+    # angle interval weight by approximate cell volume
+    extent = float(geometry.motion_grid.extent())
+    size = float(geometry.motion_grid.size)
+    scaling_factor = extent / size
     if isinstance(geometry, (FanFlatGeometry, Parallel2dGeometry)):
-        # cuda fanflat and parallel2d scale linearly with cell volume
-        out *= float(reco_space.cell_volume)
+        # fanflat and parallel2d scale linearly 1 / (cell volume)
+        scaling_factor *= float(reco_space.cell_volume)
     elif isinstance(geometry, (HelicalConeFlatGeometry, Parallel3dGeometry)):
-        # cuda cone and parallel3d scale linearly with linear voxel size
-        out /= float(reco_space.cell_size[0])
+        # cone and parallel3d scale with voxel size
+        scaling_factor = float(reco_space.cell_size[0])
+    out *= scaling_factor
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
