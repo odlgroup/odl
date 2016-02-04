@@ -190,32 +190,62 @@ class RectPartition(object):
 
     # Further derived methods / properties
     @property
-    def nodes_on_boundary(self):
-        """Return a list indicating if nodes lie on the boundary.
+    def boundary_cell_fractions(self):
+        """Return a tuple of contained fractions of boundary cells.
+
+        Since the outermost grid points can have any distance to the
+        boundary of the partitioned set, the "natural" outermost cell
+        around these points can either be cropped or extended. This
+        property is a tuple of (float, float) tuples, one entry per
+        dimension, where the fractions of the left- and rightmost
+        cells inside the set are stored. If a grid point lies exactly
+        on the boundary, the value is 1/2 since the cell is cut in half.
+        Otherwise, any value larger than 1/2 is possible.
 
         Returns
         -------
-        on_bdry : `tuple` of 2-tuple of `bool`
-            Each 2-tuple contains the information whether the leftmost
-            (first entry) and rightmost (second entry) grid nodes lie
-            on the boundary of the partitioned set in the corresponding
-            dimension.
+        on_bdry : `tuple` of 2-tuple of `float`
+            Each 2-tuple contains the fraction of the leftmost
+            (first entry) and rightmost (second entry) cell in the
+            partitioned set in the corresponding dimension.
+
+        See also
+        --------
+        cell_boundary_vecs
 
         Examples
         --------
-        >>> rect = IntervalProd([0, -2], [2, 2])
+        We create a partition of the rectangle [0, 1.5] x [-2, 2] with
+        the grid points [0, 1] x [-1, 0, 2]. The "natural" cells at the
+        boundary would be:
+
+            [-0.5, 0.5] and [0.5, 1.5] in the first axis
+
+            [-1.5, -0.5] and [1, 3] in the second axis
+
+        Thus, in the first axis, the fractions contained in [0, 1.5]
+        are 0.5 and 1, and in the second axis, [-2, 2] contains the
+        fractions 1.5 and 0.5.
+
+        >>> rect = IntervalProd([0, -2], [1.5, 2])
         >>> grid = TensorGrid([0, 1], [-1, 0, 2])
         >>> part = RectPartition(rect, grid)
-        >>> part.nodes_on_boundary
-        ((True, False), (False, True))
+        >>> part.boundary_cell_fractions
+        ((0.5, 1.0), (1.5, 0.5))
         """
-        bdry_list = []
-        for ax, (minpt, maxpt, bmin, bmax) in enumerate(zip(
-                self.grid.min_pt, self.grid.max_pt,
-                self.set.begin, self.set.end)):
-            bdry_list.append((minpt == bmin, maxpt == bmax))
+        frac_list = []
+        for ax, (cvec, bmin, bmax) in enumerate(zip(
+                self.grid.coord_vectors, self.set.begin, self.set.end)):
+            # Degenerate axes have a value of 1.0 (this is used as weight
+            # in integration formulas later)
+            if len(cvec) == 1:
+                frac_list.append((1.0, 1.0))
+            else:
+                left_frac = 0.5 + (cvec[0] - bmin) / (cvec[1] - cvec[0])
+                right_frac = 0.5 + (bmax - cvec[-1]) / (cvec[-1] - cvec[-2])
+            frac_list.append((left_frac, right_frac))
 
-        return tuple(bdry_list)
+        return tuple(frac_list)
 
     @property
     def cell_sizes_vecs(self):
@@ -245,14 +275,14 @@ class RectPartition(object):
         (array([ 0.5,  0.5]), array([ 0.5,  1.5,  1. ]))
         """
         csizes = []
-        for ax, vec in enumerate(self.grid.coord_vectors):
-            if len(vec) == 1:
+        for ax, cvec in enumerate(self.grid.coord_vectors):
+            if len(cvec) == 1:
                 csizes.append(np.array([0.0]))
             else:
-                csize = np.empty_like(vec)
-                csize[1:-1] = (vec[2:] - vec[:-2]) / 2.0
-                csize[0] = (vec[0] + vec[1]) / 2 - self.min()[ax]
-                csize[-1] = self.max()[ax] - (vec[-2] + vec[-1]) / 2
+                csize = np.empty_like(cvec)
+                csize[1:-1] = (cvec[2:] - cvec[:-2]) / 2.0
+                csize[0] = (cvec[0] + cvec[1]) / 2 - self.min()[ax]
+                csize[-1] = self.max()[ax] - (cvec[-2] + cvec[-1]) / 2
                 csizes.append(csize)
 
         return tuple(csizes)
@@ -281,13 +311,9 @@ class RectPartition(object):
                 'cell sides not defined for irregular partitions. Use '
                 'cell_sizes_vecs() instead.')
 
-        on_boundary = self.nodes_on_boundary
-        num_cells = []
-        for n, on_bdry in zip(self.shape, on_boundary):
-            num_on_bdry = sum(on_bdry)
-            num_cells.append(n - num_on_bdry / 2)
-
-        return self.extent() / num_cells
+        sides = self.grid.stride
+        sides[sides == 0] = self.extent()[sides == 0]
+        return sides
 
     @property
     def cell_volume(self):

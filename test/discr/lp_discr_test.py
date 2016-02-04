@@ -27,6 +27,7 @@ import numpy as np
 
 # Internal
 import odl
+from odl.discr.lp_discr import DiscreteLp
 from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
                                 skip_if_no_cuda)
 
@@ -206,7 +207,8 @@ def test_factory_nd(exponent):
 
 def test_element_1d(exponent):
     discr = odl.uniform_discr(0, 1, 3, impl='numpy', exponent=exponent)
-    dspace = odl.Rn(3, exponent=exponent, weight=discr.cell_volume)
+    weight = 1.0 if exponent == float('inf') else discr.cell_volume
+    dspace = odl.Rn(3, exponent=exponent, weight=weight)
     vec = discr.element()
     assert isinstance(vec, odl.DiscreteLpVector)
     assert vec.ntuple in dspace
@@ -215,7 +217,8 @@ def test_element_1d(exponent):
 def test_element_2d(exponent):
     discr = odl.uniform_discr([0, 0], [1, 1], [3, 3],
                               impl='numpy', exponent=exponent)
-    dspace = odl.Rn(9, exponent=exponent, weight=discr.cell_volume)
+    weight = 1.0 if exponent == float('inf') else discr.cell_volume
+    dspace = odl.Rn(9, exponent=exponent, weight=weight)
     vec = discr.element()
     assert isinstance(vec, odl.DiscreteLpVector)
     assert vec.ntuple in dspace
@@ -651,6 +654,67 @@ def test_norm_rectangle(exponent):
     else:
         true_norm = ((1 + 2 * p) * (1 + 3 * p) / 2) ** (-1 / p)
         assert almost_equal(discr_testfunc.norm(), true_norm, places=2)
+
+
+def test_norm_rectangle_boundary(exponent):
+    # Check the constant function 1 in different situations regarding the
+    # placement of the outermost grid points.
+    rect = odl.Rectangle([-1, -2], [1, 2])
+
+    # Standard case
+    discr = odl.uniform_discr_fromspace(odl.FunctionSpace(rect), (4, 8),
+                                        exponent=exponent)
+    if exponent == float('inf'):
+        assert discr.one().norm() == 1
+    else:
+        assert almost_equal(discr.one().norm(),
+                            (rect.volume) ** (1 / exponent))
+
+    # Nodes on the boundary (everywhere)
+    discr = odl.uniform_discr_fromspace(
+        odl.FunctionSpace(rect), (4, 8), exponent=exponent,
+        nodes_on_bdry=True)
+
+    if exponent == float('inf'):
+        assert discr.one().norm() == 1
+    else:
+        assert almost_equal(discr.one().norm(),
+                            (rect.volume) ** (1 / exponent))
+
+    # Nodes on the boundary (selective)
+    discr = odl.uniform_discr_fromspace(
+        odl.FunctionSpace(rect), (4, 8), exponent=exponent,
+        nodes_on_bdry=((False, True), False))
+
+    if exponent == float('inf'):
+        assert discr.one().norm() == 1
+    else:
+        assert almost_equal(discr.one().norm(),
+                            (rect.volume) ** (1 / exponent))
+
+    discr = odl.uniform_discr_fromspace(
+        odl.FunctionSpace(rect), (4, 8), exponent=exponent,
+        nodes_on_bdry=(False, (True, False)))
+
+    if exponent == float('inf'):
+        assert discr.one().norm() == 1
+    else:
+        assert almost_equal(discr.one().norm(),
+                            (rect.volume) ** (1 / exponent))
+
+    # Completely arbitrary boundary
+    grid = odl.RegularGrid([0, 0], [1, 1], (4, 4))
+    part = odl.RectPartition(rect, grid)
+    weight = 1.0 if exponent == float('inf') else part.cell_volume
+    dspace = odl.Rn(part.size, exponent=exponent, weight=weight)
+    discr = DiscreteLp(odl.FunctionSpace(rect), part, dspace,
+                       exponent=exponent)
+
+    if exponent == float('inf'):
+        assert discr.one().norm() == 1
+    else:
+        assert almost_equal(discr.one().norm(),
+                            (rect.volume) ** (1 / exponent))
 
 
 if __name__ == '__main__':

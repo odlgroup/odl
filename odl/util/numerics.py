@@ -38,17 +38,19 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     ----------
     array : `numpy.ndarray`
         Modify the boundary of this array in place
-    func : callable or sequence
+    func : `callable` or `sequence`
         If a single function is given, assign
         ``array[slice] = func(array[slice])`` on the boundary slices,
         e.g. use ``lamda x: x / 2`` to divide values by 2.
         A sequence of functions is applied per axis separately. It
         must have length ``array.ndim`` and may consist of one function
         or a 2-tuple of functions per axis.
+        `None` entries in a sequence cause the axis (side) to be
+        skipped.
     only_once : `bool`, optional
         If `True`, ensure that each boundary point appears in exactly
         one slice.
-    which_boundaries : sequence, optional
+    which_boundaries : `sequence`, optional
         If provided, this sequence determines per axis whether to
         apply the function at the boundaries in each axis. The entry
         in each axis may consist in a single `bool` or a 2-tuple of
@@ -56,7 +58,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         the left, the second for the right boundary. The length of the
         sequence must be ``array.ndim``. `None` is interpreted as
         'all boundaries'.
-    axis_order : sequence of `int`
+    axis_order : `sequence` of `int`
         Permutation of ``range(array.ndim)`` defining the order in which
         to process the axes. If combined with ``only_once`` and a
         function list, this determines which function is evaluated in
@@ -104,9 +106,12 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         raise ValueError('axis_order has length {}, expected {}.'
                          ''.format(len(axis_order), array.ndim))
 
+    # The 'only_once' functionality is implemented by storing for each axis
+    # if the left and right boundaries have been processed. This information
+    # is stored in a list of slices which is reused for the next axis in the
+    # list.
     slices = [slice(None)] * array.ndim
     for ax, function, which in zip(axis_order, func, which_boundaries):
-        # Make slices selecting left and right
         if only_once:
             slc_l = list(slices)  # Make a copy; copy() exists in Py3 only
             slc_r = list(slices)
@@ -114,6 +119,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
             slc_l = [slice(None)] * array.ndim
             slc_r = [slice(None)] * array.ndim
 
+        # slc_l and slc_r select left and right boundary in this axis, resp.
         slc_l[ax] = 0
         slc_r[ax] = -1
 
@@ -131,13 +137,13 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
             # Single bool
             mod_left = mod_right = which
 
-        if mod_left:
+        if mod_left and func_l is not None:
             array[slc_l] = func_l(array[slc_l])
             start = 1
         else:
             start = None
 
-        if mod_right:
+        if mod_right and func_r is not None:
             array[slc_r] = func_r(array[slc_r])
             end = -1
         else:
