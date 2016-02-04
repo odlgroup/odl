@@ -44,8 +44,6 @@ _SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
 __all__ = ('XrayTransform', 'XrayTransformAdjoint',)
 
 
-# TODO: Check scaling with non-isotropic pixel size
-# TODO: Check scaling with magnification
 # TODO: DivergentBeamTransform
 # TODO: rename adjoint trafo
 
@@ -236,22 +234,12 @@ class XrayTransformAdjoint(Operator):
         """
         back, impl = self.backend.split('_')
         if back == 'astra':
-            # angle interval weight by approximate cell volume
-            extent = float(self.forward.geometry.motion_grid.extent())
-            size = float(self.forward.geometry.motion_grid.size)
-            weight = extent / size
-
             if impl == 'cpu':
-                # TODO: optimize scaling
-                result = astra_cpu_backward_projector_call(
+                return astra_cpu_backward_projector_call(
                     x, self.forward.geometry, self.range, out)
-                result *= weight
-                return result
             elif impl == 'cuda':
-                result = astra_cuda_backward_projector_call(
+                return astra_cuda_backward_projector_call(
                     x, self.forward.geometry, self.range, out)
-                result *= weight
-                return result
             else:
                 raise ValueError('unknown implementation {}.'.format(impl))
         else:  # Should never happen
