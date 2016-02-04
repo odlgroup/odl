@@ -22,11 +22,14 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+# External
+import pytest
+import numpy as np
+
+# Internal
 import odl
 import odl.tomo as tomo
 from odl.util.testutils import almost_equal
-import pytest
-import numpy as np
 
 
 # Find the valid projectors
@@ -62,10 +65,9 @@ def projector(request):
         minp = 2 * (2.0 * np.pi) / n_angles
         maxp = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
         points = np.sort(np.random.rand(n_angles)) * (maxp - minp) + minp
-
         agrid = odl.TensorGrid(points, as_midp=True)
     else:
-        raise ValueError('agnle not valid')
+        raise ValueError('angle not valid')
 
     if geom == 'par2d':
         # Discrete reconstruction space
@@ -173,7 +175,7 @@ def test_projector(projector):
     expected_max = projector.domain.grid.extent()[0] * np.sqrt(2)
     assert almost_equal(proj.ufunc.max(), expected_max, places=places)
 
-    # Adjoint defintion <Ax, Ax> = <x, A*A x>
+    # Adjoint definition <Ax, Ax> = <x, A*A x>
     result_AxAx = proj.inner(proj)
     result_xAtAx = vol.inner(projector.adjoint(proj))
     assert almost_equal(result_AxAx, result_xAtAx, places=places)

@@ -72,7 +72,7 @@ def parallel_3d():
     # Geometry
     angle_intvl = odl.Interval(0, 2 * np.pi)
     dparams = odl.Rectangle([-30, -30], [30, 30])
-    agrid = odl.uniform_sampling(angle_intvl, 360, as_midp=False)
+    agrid = odl.uniform_sampling(angle_intvl, 360)
     dgrid = odl.uniform_sampling(dparams, [558, 558])
 
     # Astra cannot handle axis aligned origin_to_det unless it is aligned

@@ -41,15 +41,14 @@ from odl.tomo.geometry import (
     Parallel2dGeometry, FanFlatGeometry, Parallel3dGeometry,
     HelicalConeFlatGeometry)
 
-__all__ = ('astra_cuda_forward_projector_call',
-           'astra_cuda_backward_projector_call',
+__all__ = ('astra_cuda_forward_projector', 'astra_cuda_back_projector',
            'ASTRA_CUDA_AVAILABLE')
 
 
 # TODO: use context manager when creating data structures
+# TODO: is magnification scaling at the right place?
 
-def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
-                                      out=None):
+def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
     """Run an ASTRA forward projection on the given data using the GPU.
 
     Parameters
@@ -125,7 +124,7 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
 
     # Fix inconsistent scaling
     if isinstance(geometry, Parallel2dGeometry):
-        # parallel2d scales with (pixel stride)
+        # parallel2d scales with pixel stride
         out *= 1 / float(geometry.det_grid.stride[0])
 
     # Delete ASTRA objects
@@ -140,8 +139,7 @@ def astra_cuda_forward_projector_call(vol_data, geometry, proj_space,
     return out
 
 
-def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
-                                       out=None):
+def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
     """Run an ASTRA backward projection on the given data using the GPU.
 
         Parameters
@@ -219,14 +217,30 @@ def astra_cuda_backward_projector_call(proj_data, geometry, reco_space,
     extent = float(geometry.motion_grid.extent())
     size = float(geometry.motion_grid.size)
     scaling_factor = extent / size
-    if isinstance(geometry, (FanFlatGeometry, Parallel2dGeometry)):
-        # fanflat and parallel2d scale linearly 1 / (cell volume)
+    if isinstance(geometry, Parallel2dGeometry):
+        # scales with 1 / (cell volume)
         scaling_factor *= float(reco_space.cell_volume)
-    elif isinstance(geometry, (HelicalConeFlatGeometry, Parallel3dGeometry)):
-        # cone and parallel3d scale with voxel size
+    elif isinstance(geometry, FanFlatGeometry):
+        # scales with 1 / (cell volume)
+        scaling_factor *= float(reco_space.cell_volume)
+        # magnification correction
+        src_radius = geometry.src_radius
+        det_radius = geometry.det_radius
+        scaling_factor *= ((src_radius + det_radius) / src_radius)
+    elif isinstance(geometry, Parallel3dGeometry):
+        # scales with voxel stride
         extent = reco_space.grid.extent()
         shape = np.array(reco_space.shape, dtype=float)
         scaling_factor /= float(extent[0] / shape[0])
+    elif isinstance(geometry, HelicalConeFlatGeometry):
+        # cone scales with voxel stride
+        extent = reco_space.grid.extent()
+        shape = np.array(reco_space.shape, dtype=float)
+        scaling_factor /= float(extent[0] / shape[0])
+        # magnification correction
+        src_radius = geometry.src_radius
+        det_radius = geometry.det_radius
+        scaling_factor *= ((src_radius + det_radius) / src_radius) ** 2
     out *= scaling_factor
 
     # Delete ASTRA objects
