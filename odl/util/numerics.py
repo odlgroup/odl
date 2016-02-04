@@ -108,10 +108,8 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     for ax, function, which in zip(axis_order, func, which_boundaries):
         # Make slices selecting left and right
         if only_once:
-            # Exclude first and last in the dimensions which have already
-            # been processed
-            slc_l = slices.copy()
-            slc_r = slices.copy()
+            slc_l = list(slices)  # Make a copy; copy() exists in Py3 only
+            slc_r = list(slices)
         else:
             slc_l = [slice(None)] * array.ndim
             slc_r = [slice(None)] * array.ndim
