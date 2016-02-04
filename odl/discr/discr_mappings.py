@@ -61,7 +61,7 @@ class FunctionSetMapping(Operator):
         map_type : {'restriction', 'extension'}
             The type of operator
         fset : `FunctionSet`
-            The undiscretized (abstract) set of functions to be
+            The non-discretized (abstract) set of functions to be
             discretized
         partition : `RectPartition`
             Partition of (a subset of) ``fset.domain`` based on a
@@ -77,6 +77,7 @@ class FunctionSetMapping(Operator):
             Ordering of the axes in the data storage. 'C' means the
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
+            Default: 'C'
         """
         map_type_ = str(map_type).lower()
         if map_type_ not in ('restriction', 'extension'):
@@ -94,7 +95,7 @@ class FunctionSetMapping(Operator):
                             ''.format(dspace))
 
         if not fset.domain.contains_set(partition):
-            raise ValueError('partition {} not contained in the domain {} '
+            raise ValueError('{} not contained in the domain {} '
                              'of the function set {}.'
                              ''.format(partition, fset.domain, fset))
 
@@ -131,7 +132,8 @@ class FunctionSetMapping(Operator):
                 isinstance(self, type(other)) and
                 self.domain == other.domain and
                 self.range == other.range and
-                self.partition == other.partition)
+                self.partition == other.partition and
+                self.order == other.order)
 
     @property
     def partition(self):
@@ -153,13 +155,22 @@ class PointCollocation(FunctionSetMapping):
 
     """Function evaluation at grid points.
 
-    Given a partition ``P = {s1, s2, ..., sN}`` of the domain of
-    a set of functions, this operator evaluates the function at
-    the sampling points ``{x1, ..., xN}`` of the partition. This
-    yields an array of length ``N``, hence the range of this operator
-    is a space of N-tuples.
+    This operator evaluates a given function in a set of points. These
+    points are given as the sampling grid of a partition of the
+    function domain. The result of this evaluation is an array of
+    function values at these points.
 
-    This is the default 'restriction' used by all core
+    If, for example, a function is defined on the interval [0, 1],
+    and a partition divides the interval into ``N`` subintervals,
+    the resulting array will have length ``N``. The sampling points
+    are defined by the partition, usually they are the midpoints
+    of the subintervals.
+
+    In higher dimensions, the same principle is applied, with the
+    only difference being the additional information about the ordering
+    of the axes in the flat storage array (C- vs. Fortran ordering).
+
+    This operator is the default 'restriction' used by all core
     discretization classes.
     """
 
@@ -169,9 +180,9 @@ class PointCollocation(FunctionSetMapping):
         Parameters
         ----------
         fset : `FunctionSet`
-            The undiscretized (abstract) set of functions to be
+            The non-discretized (abstract) set of functions to be
             discretized. The function domain must provide a
-            ``contains_set`` method such as `IntervalProd` does.
+            `IntervalProd.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``ip_fset.domain`` based on a
             `TensorGrid`
@@ -183,6 +194,7 @@ class PointCollocation(FunctionSetMapping):
             Ordering of the axes in the data storage. 'C' means the
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
+            Default: 'C'
         """
         linear = isinstance(ip_fset, FunctionSpace)
         FunctionSetMapping.__init__(self, 'restriction', ip_fset, partition,
@@ -209,14 +221,11 @@ class PointCollocation(FunctionSetMapping):
 
         Notes
         -----
-        The code of this call tries to make use of vectorization of
-        the input function, which makes execution much faster and
-        memory-saving. If this fails, it falls back to a slow
-        loop-based variant.
-
-        Write your function such that every variable occurs -
-        otherwise, the values will not be broadcasted to the correct
-        size (see example below).
+        This operator expects its input functions to be written in
+        a vectorization-conforming manner to ensure fast evaluation.
+        See the `vectorization guide
+        <https://odl.readthedocs.org/guide/in_depth/\
+vectorization_guide.html>`_ for a detailed introduction.
 
         See also
         --------
@@ -253,6 +262,12 @@ class PointCollocation(FunctionSetMapping):
         >>> out = Rn(6).element()
         >>> coll_op(func_elem, out=out)  # In-place
         Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+
+        Fortran ordering:
+
+        >>> coll_op = PointCollocation(funcset, partition, rn, order='F')
+        >>> coll_op(func_elem)
+        Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
         try:
             mesh = self.grid.meshgrid()
@@ -293,9 +308,13 @@ class NearestInterpolation(FunctionSetMapping):
     neighbors. For higher dimensions, this rule is applied per
     component.
 
-    The nearest neighbor interpolation operator is now defined as the
+    The nearest neighbor interpolation operator is defined as the
     mapping from the values ``f1, ..., fN`` to the function ``I(x)``
     (as a whole).
+
+    In higher dimensions, this principle is applied per axis, the
+    only difference being the additional information about the ordering
+    of the axes in the flat storage array (C- vs. Fortran ordering).
     """
 
     def __init__(self, fset, partition, dspace, **kwargs):
@@ -324,6 +343,7 @@ class NearestInterpolation(FunctionSetMapping):
             Ordering of the axes in the data storage. 'C' means the
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
+            Default: 'C'
 
         Notes
         -----
@@ -368,8 +388,8 @@ class NearestInterpolation(FunctionSetMapping):
         for efficiency reasons.
 
         Nearest neighbor interpolation is the only scheme which works
-        with arbitrary data since it does not involve any arithmetic
-        operations on the values.
+        with data of non-scalar type since it does not involve any
+        arithmetic operations on the values.
 
         Examples
         --------
@@ -465,6 +485,7 @@ class LinearInterpolation(FunctionSetMapping):
             Ordering of the axes in the data storage. 'C' means the
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
+            Default: 'C'
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
@@ -540,20 +561,22 @@ class PerAxisInterpolation(FunctionSetMapping):
             discretized object. Its `NtuplesBase.size` must be equal
             to the total number of grid points, and its `FnBase.field`
             must be the same as that of the function space.
-        schemes : `str` or sequence of `str`
+        schemes : `str` or `sequence` of `str`
             Indicates which interpolation scheme to use for which axis.
             A single string is interpreted as a global scheme for all
             axes.
-        nn_variants : `str` or sequence of `str`, optional
+        nn_variants : `str` or `sequence` of `str`, optional
             Which variant ('left' or 'right') to use in nearest neighbor
             interpolation for which axis. A single string is interpreted
             as a global variant for all axes.
             This option has no effect for schemes other than nearest
             neighbor.
+            Default: 'left'
         order : {'C', 'F'}, optional
             Ordering of the axes in the data storage. 'C' means the
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
+            Default: 'C'
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
@@ -684,7 +707,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
-        coord_vecs : sequence of `numpy.ndarray`
+        coord_vecs : `sequence` of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
         values : array-like
             Grid values to use for interpolation
@@ -794,7 +817,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     def __init__(self, coord_vecs, values, input_type, variant):
         """Initialize a new instance.
 
-        coord_vecs : sequence of `numpy.ndarray`
+        coord_vecs : `sequence` of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
         values : array-like
             Grid values to use for interpolation
@@ -923,15 +946,15 @@ class _PerAxisInterpolator(_Interpolator):
     def __init__(self, coord_vecs, values, input_type, schemes, nn_variants):
         """Initialize a new instance.
 
-        coord_vecs : sequence of `numpy.ndarray`
+        coord_vecs : `sequence` of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
         values : array-like
             Grid values to use for interpolation
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
-        schemes : sequence of `str`
+        schemes : `sequence` of `str`
             Indicates which interpolation scheme to use for which axis
-        nn_variants : sequence of `str`
+        nn_variants : `sequence` of `str`
             Which variant ('left' or 'right') to use in nearest neighbor
             interpolation for which axis.
             This option has no effect for schemes other than nearest
@@ -992,7 +1015,7 @@ class _LinearInterpolator(_PerAxisInterpolator):
     def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
-        coord_vecs : sequence of `numpy.ndarray`
+        coord_vecs : `sequence` of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
         values : array-like
             Grid values to use for interpolation
