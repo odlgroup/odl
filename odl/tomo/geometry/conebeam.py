@@ -50,7 +50,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius, pitch,
+    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
+                 pitch, pitch_offset=0,
                  agrid=None, dgrid=None, axis=[0, 0, 1], src_to_det=None,
                  detector_axes=None):
         """Initialize a new instance.
@@ -68,6 +69,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         pitch : positive `float`
             Constant vertical distance between two source positions, one at
             angle ``phi``, the other at angle ``phi + 2 * pi``
+        pitch_offset : `float`
+            Offset along the axis at ``angle=0``.
         agrid : 1-dim. `TensorGrid`, optional
             A sampling grid for `angle_intvl`
         dgrid : 2-dim. `TensorGrid`, optional
@@ -98,7 +101,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         DivergentBeamGeometry.__init__(self, 3, angle_intvl, detector, agrid)
 
-        self._pitch = pitch
+        self._pitch = float(pitch)
+        self._pitch_offset = float(pitch_offset)
         self._src_radius = float(src_radius)
         if self.src_radius <= 0:
             raise ValueError('source circle radius {} is not positive.'
@@ -128,6 +132,16 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         """
         return self._pitch
 
+    @property
+    def pitch_offset(self):
+        """Vertical offset at ``angle=0``
+
+        Returns
+        -------
+        pitch_offset : `float`
+        """
+        return self._pitch_offset
+
     def det_refpoint(self, angle):
         """The detector reference point function.
 
@@ -155,7 +169,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         circle_component = self.rotation_matrix(angle).dot(origin_to_det)
 
         # Increment by pitch
-        pitch_component = self.axis * self.pitch * angle / (np.pi * 2)
+        pitch_component = self.axis * (self.pitch_offset +
+                                       self.pitch * angle / (np.pi * 2))
 
         return circle_component + pitch_component
 
@@ -185,7 +200,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         circle_component = self.rotation_matrix(angle).dot(origin_to_src)
 
         # Increment by pitch
-        pitch_component = self.axis * self.pitch * angle / (np.pi * 2)
+        pitch_component = self.axis * (self.pitch_offset +
+                                       self.pitch * angle / (np.pi * 2))
 
         return circle_component + pitch_component
 
@@ -195,6 +211,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         arg_fstr = '{!r}, {!r},\n    src_radius={}, det_radius={}'
         if self.pitch != 0:
             arg_fstr += ',\n    pitch={pitch!r}'
+        if self.pitch_offset != 0:
+            arg_fstr += ',\n    pitch_offset={pitch_offset!r}'
         if self.has_motion_sampling:
             arg_fstr += ',\n    agrid={agrid!r}'
         if self.has_det_sampling:
@@ -211,6 +229,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         arg_str = arg_fstr.format(self.motion_params, self.det_params,
                                   self.src_radius, self.det_radius,
                                   pitch=self.pitch,
+                                  pitch_offset=self.pitch_offset,
                                   agrid=self.motion_grid,
                                   dgrid=self.det_grid,
                                   axis=self.axis,
@@ -263,5 +282,7 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
             Default: (normalized) [np.cross(axis, source_to_detector), axis]
         """
         pitch = 0
+        pitch_offset = 0
         super().__init__(angle_intvl, dparams, src_radius, det_radius,
-                         pitch, agrid, dgrid, axis, src_to_det, detector_axes)
+                         pitch, pitch_offset, agrid, dgrid, axis, src_to_det,
+                         detector_axes)
