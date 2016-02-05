@@ -28,10 +28,12 @@ import odl
 import numpy as np
 
 spc = odl.uniform_discr(0, 5, 100)
-vec = spc.element(np.sin(spc.points()))
+vec = spc.element(np.sin)
 
-vec.show()
-(vec * 2).show()
+# Get figure object
+fig = vec.show(title='Sine functions')
+# Plot into the same figure
+fig = (vec / 2).show(fig=fig)
 
 # Plotting is deferred until show() is called
 plt.show()

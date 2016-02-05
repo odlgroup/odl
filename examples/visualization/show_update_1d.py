@@ -30,7 +30,7 @@ m = 20
 spc = odl.uniform_discr(0, 5, n)
 vec = spc.element(np.sin(spc.points()))
 
-# Pre-create a plot and set some property
+# Pre-create a plot and set some property, here the plot limits in the y axis.
 fig = plt.figure()
 plt.ylim(-m, m)
 

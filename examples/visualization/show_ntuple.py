@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Examples on using the vector.show() syntax for ntuples"""
+"""Example on the usage of the vector.show() syntax for n-tuples"""
 
 import odl
 
