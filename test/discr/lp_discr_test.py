@@ -76,7 +76,7 @@ def exponent(request):
 def test_init(exponent):
     # Validate that the different init patterns work and do not crash.
     space = odl.FunctionSpace(odl.Interval(0, 1))
-    grid = odl.uniform_sampling(space.domain, 10)
+    grid = odl.uniform_sampling_fromintv(space.domain, 10)
     rn = odl.Rn(10, exponent=exponent)
     odl.DiscreteLp(space, grid, rn, exponent=exponent)
 
@@ -104,7 +104,7 @@ def test_init(exponent):
 def test_init_cuda(exponent):
     # Normal discretization of unit interval
     space = odl.FunctionSpace(odl.Interval(0, 1))
-    grid = odl.uniform_sampling(space.domain, 10)
+    grid = odl.uniform_sampling_fromintv(space.domain, 10)
     rn = odl.CudaRn(10, exponent=exponent)
     odl.DiscreteLp(space, grid, rn, exponent=exponent)
 

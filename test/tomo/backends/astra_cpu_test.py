@@ -48,16 +48,13 @@ def test_astra_cpu_projector_parallel2d():
     discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    angle_grid = odl.uniform_sampling(angle_intvl, 8)
+    angle_grid = odl.uniform_sampling(0, 2 * np.pi, 8)
 
     # Detector
-    dparams = odl.Interval(-6, 6)
-    det_grid = odl.uniform_sampling(dparams, 6)
+    det_grid = odl.uniform_sampling(-6, 6, 6)
 
     # 2D geometry instances for parallel and fan beam with flat line detector
-    geom = odl.tomo.Parallel2dGeometry(angle_intvl, dparams, angle_grid,
-                                       det_grid)
+    geom = odl.tomo.Parallel2dGeometry(angle_grid, det_grid)
 
     # Projection space
     proj_space = odl.FunctionSpace(geom.params)
@@ -93,20 +90,17 @@ def test_astra_cpu_projector_fanflat():
     discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
 
     # Angles
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    angle_grid = odl.uniform_sampling(angle_intvl, 8)
+    angle_grid = odl.uniform_sampling(0, 2 * np.pi, 8)
 
     # Detector
-    dparams = odl.Interval(-6, 6)
-    det_grid = odl.uniform_sampling(dparams, 6)
+    det_grid = odl.uniform_sampling(-6, 6, 6)
 
     # Distances for fanflat geometries
     src_rad = 100
     det_rad = 10
 
     # 2D geometry instances for parallel and fan beam with flat line detector
-    geom = odl.tomo.FanFlatGeometry(angle_intvl, dparams, src_rad, det_rad,
-                                    angle_grid, det_grid)
+    geom = odl.tomo.FanFlatGeometry(angle_grid, det_grid, src_rad, det_rad)
 
     # Projection space
     proj_space = odl.FunctionSpace(geom.params)

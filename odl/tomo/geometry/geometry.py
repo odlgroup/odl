@@ -30,7 +30,7 @@ import numpy as np
 # Internal
 from odl.util.utility import with_metaclass
 from odl.discr.grid import RegularGrid, TensorGrid
-from odl.set.domain import IntervalProd
+from odl.tomo.geometry.detector import Detector
 
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
 
@@ -52,24 +52,79 @@ class Geometry(with_metaclass(ABCMeta, object)):
     * optionally a mapping from the motion parameters to the source position
     """
 
-    def __init__(self, ndim):
+    def __init__(self, ndim, motion_grid, detector):
         """Initialize a new instance.
 
         Parameters
         ----------
         ndim : `int`
            The number of dimensions of the geometry
+        motion_grid : `TensorGrid`
+           Grid for the motion of the detector
+        detector : `Detector`
+           The detector
         """
-        self._ndim = ndim
+        if ndim < 1:
+            raise ValueError('ndim {!r} not a positive integer.'
+                             ''.format(ndim))
+
+        if not isinstance(motion_grid, TensorGrid):
+            raise TypeError('motion_grid {!r} not a `TensorGrid` instance.'
+                            ''.format(motion_grid))
+
+        if not isinstance(detector, Detector):
+            raise ValueError('motion_grid {!r} not a `Detector` instance.'
+                             ''.format(detector))
+
+        self._ndim = int(ndim)
+        self._motion_grid = motion_grid
+        self._motion_params = motion_grid.convex_hull()
+        self._detector = detector
         self._implementation_cache = {}
 
-    @abstractproperty
+    @property
     def motion_params(self):
         """The motion parameters given as an `IntervalProd`."""
+        return self._motion_params
 
-    @abstractproperty
+    @property
+    def motion_grid(self):
+        """A sampling grid for `motion_params`."""
+        return self._motion_grid
+
+    @property
+    def det_params(self):
+        """The detector parameters."""
+        return self.detector.params
+
+    @property
+    def det_grid(self):
+        """A sampling grid for `det_params`."""
+        return self.detector.param_grid
+
+    @property
+    def params(self):
+        """Joined motion and detector parameters.
+
+        Returns an `IntervalProduct` with the motion parameters inserted
+        before the detector parameters.
+        """
+        return self.motion_params.append(self.det_params)
+
+    @property
+    def grid(self):
+        """Joined sampling grid for motion and detector parameters."""
+        if (isinstance(self.motion_grid, RegularGrid) and
+                isinstance(self.det_grid, RegularGrid)):
+            grid = self.motion_grid
+        else:
+            grid = TensorGrid(*self.motion_grid.coord_vectors)
+        return grid.append(self.det_grid)
+
+    @property
     def detector(self):
         """The detector representation."""
+        return self._detector
 
     @abstractmethod
     def det_refpoint(self, mpar):
@@ -167,50 +222,6 @@ class Geometry(with_metaclass(ABCMeta, object)):
         """
         return self._implementation_cache
 
-    @property
-    def motion_grid(self):
-        """A sampling grid for `motion_params`."""
-        return None
-
-    @property
-    def has_motion_sampling(self):
-        """Whether there is a `motion_grid` or not."""
-        return self.motion_grid is not None
-
-    @property
-    def det_params(self):
-        """The detector parameters."""
-        return self.detector.params
-
-    @property
-    def det_grid(self):
-        """A sampling grid for `det_params`."""
-        return self.detector.param_grid
-
-    @property
-    def has_det_sampling(self):
-        """Whether there is a `det_grid` or not."""
-        return self.det_grid is not None
-
-    @property
-    def params(self):
-        """Joined motion and detector parameters.
-
-        Returns an `IntervalProduct` with the motion parameters inserted
-        before the detector parameters.
-        """
-        return self.motion_params.append(self.det_params)
-
-    @property
-    def grid(self):
-        """Joined sampling grid for motion and detector parameters."""
-        if (isinstance(self.motion_grid, RegularGrid) and
-                isinstance(self.det_grid, RegularGrid)):
-            grid = self.motion_grid
-        else:
-            grid = TensorGrid(*self.motion_grid.coord_vectors)
-        return grid.append(self.det_grid)
-
 
 class DivergentBeamGeometry(Geometry):
 
@@ -223,52 +234,27 @@ class DivergentBeamGeometry(Geometry):
     Special cases include fanbeam in 2d and conebeam in 3d.
     """
 
-    def __init__(self, ndim, angle_intvl, detector, agrid=None):
+    def __init__(self, ndim, agrid, detector):
         """Initialize a new instance.
 
         Parameters
         ----------
         ndim : int
             number of dimensions of geometry
-        angle_intvl : 1d `IntervalProd`
-            Admissible angles
+        agrid : ndim `TensorGrid`
+            Discretization of the angles
         detector : `Detector`
             The detector to use
-        agrid : `TensorGrid`, optional
-            Optional discretization of the angle_intvl
         """
-        if not (isinstance(angle_intvl, IntervalProd) and
-                angle_intvl.ndim == 1):
-            raise TypeError('angle parameters {!r} are not an interval.'
-                            ''.format(angle_intvl))
-        self._motion_params = angle_intvl
-        self._motion_grid = agrid
-        self._detector = detector
+        super().__init__(ndim, agrid, detector)
 
-        if agrid is not None:
-            if not isinstance(agrid, TensorGrid):
-                raise TypeError('angle grid {!r} is not a `TensorGrid` '
-                                'instance.'.format(agrid))
-            if not angle_intvl.contains_set(agrid):
-                raise ValueError('angular grid {} not contained in angle '
-                                 'interval {}.'.format(agrid, angle_intvl))
+        if self.motion_grid.ndim != 1:
+            raise TypeError('angle grid {!r} is not a {}-d `TensorGrid` '
+                            'instance.'.format(agrid, ndim))
 
-        super().__init__(ndim=ndim)
-
-    @property
-    def motion_params(self):
-        """Motion parameters of this geometry."""
-        return self._motion_params
-
-    @property
-    def motion_grid(self):
-        """Sampling grid for this geometry's motion parameters."""
-        return self._motion_grid
-
-    @property
-    def detector(self):
-        """Detector of this geometry."""
-        return self._detector
+        if detector.ndim != ndim - 1:
+            raise TypeError('detector {!r} is not a ({}-1)-d `Detector` '
+                            'instance.'.format(detector, ndim))
 
     @abstractmethod
     def src_position(self, mpar):

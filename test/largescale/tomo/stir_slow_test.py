@@ -48,7 +48,7 @@ def test_from_file():
 
     # Calculate operator norm for landweber
     op_norm_est_squared = proj.adjoint(projections).norm() / vol.norm()
-    omega = 1.0 / op_norm_est_squared
+    omega = 0.5 / op_norm_est_squared
 
     # Reconstruct using ODL
     recon = proj.domain.zero()

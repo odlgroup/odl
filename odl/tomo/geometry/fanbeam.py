@@ -47,21 +47,20 @@ class FanFlatGeometry(DivergentBeamGeometry):
     detector positions.
     """
 
-    def __init__(self, angle_intvl, dparams, src_radius, det_radius,
-                 agrid=None, dgrid=None, src_to_det=[1, 0],
-                 detector_axis=None):
+    def __init__(self, agrid, dgrid, src_radius, det_radius,
+                 src_to_det=[1, 0], detector_axis=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        angle_intvl : `Interval` or 1-dim. `IntervalProd`
-            The motion parameters given in radian
+        agrid : 1-dim. `TensorGrid`
+            A sampling grid for angles
+        dgrid : 1-dim. `TensorGrid`
+            A sampling grid for the detector pixels
         src_radius : positive `float`
             Radius of the source circle, must be positive
         det_radius : positive `float`
             Radius of the detector circle, must be positive
-        agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`. Default: `None`
         src_to_det : 2-element array, optional
             The direction from the source to the point (0) of the detector
             angle=0
@@ -87,8 +86,8 @@ class FanFlatGeometry(DivergentBeamGeometry):
             raise ValueError('detector circle radius {} is not positive.'
                              ''.format(det_radius))
 
-        detector = Flat1dDetector(dparams, detector_axis, dgrid)
-        super().__init__(2, angle_intvl, detector, agrid)
+        detector = Flat1dDetector(dgrid, detector_axis)
+        super().__init__(2, agrid, detector)
 
     @property
     def src_radius(self):
@@ -176,10 +175,6 @@ class FanFlatGeometry(DivergentBeamGeometry):
     def __repr__(self):
         """Returns ``repr(self)``."""
         arg_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
-        if self.has_motion_sampling:
-            arg_fstr += ',\n agrid={agrid!r}'
-        if self.has_det_sampling:
-            arg_fstr += ',\n dgrid={dgrid!r}'
 
         if not np.allclose(self._src_to_det, [1, 0]):
             arg_fstr += ',\n    src_to_det={src_to_det!r}'
@@ -188,10 +183,8 @@ class FanFlatGeometry(DivergentBeamGeometry):
         if not np.allclose(self.detector.detector_axis, default_axis):
             arg_fstr += ',\n    detector_axes={detector_axes!r}'
 
-        arg_str = arg_fstr.format(self.motion_params, self.det_params,
+        arg_str = arg_fstr.format(self.motion_grid, self.det_grid,
                                   self.src_radius, self.det_radius,
-                                  agrid=self.motion_grid,
-                                  dgrid=self.det_grid,
                                   src_to_det=self._src_to_det,
                                   detector_axis=self.detector.detector_axis)
 
