@@ -28,17 +28,17 @@ import odl
 
 
 class AddOp(odl.Operator):
-    def __init__(self, n, x):
-        super().__init__(odl.Rn(n), odl.Rn(n))
-        self.x = x
+    def __init__(self, size, add_this):
+        super().__init__(odl.Rn(size), odl.Rn(size))
+        self.value = add_this
 
-    def _call(self, rhs, out):
-        out[:] = rhs.data + self.x
+    def _call(self, x, out):
+        out[:] = x.data + self.value
 
-n = 3
-rn = odl.Rn(n)
+size = 3
+rn = odl.Rn(size)
 x = rn.element([1, 2, 3])
 
-op = AddOp(n, 10)
+op = AddOp(size, add_this=10)
 
 print(op(x))
