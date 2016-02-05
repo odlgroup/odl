@@ -82,6 +82,7 @@ class DiscreteLp(Discretization):
             Ordering of the axes in the data storage. 'C' means the
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
+            Default: 'C'
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('{!r} is not a FunctionSpace instance.'
@@ -203,7 +204,6 @@ class DiscreteLp(Discretization):
         elif inp in self.dspace:
             return self.element_type(self, inp)
         try:
-            # pylint: disable=not-callable
             inp_elem = self.uspace.element(inp)
             return self.element_type(self, self.restriction(inp_elem))
         except TypeError:
@@ -299,7 +299,19 @@ class DiscreteLp(Discretization):
         """Return ``repr(self).``"""
         # Check if the factory repr can be used
         if (uniform_partition_fromintv(
-                self.uspace.domain, self.shape) == self.partition):
+                self.uspace.domain, self.shape,
+                nodes_on_bdry=False) == self.partition):
+            use_uniform = True
+            nodes_on_bdry = False
+        elif (uniform_partition_fromintv(
+                self.uspace.domain, self.shape,
+                nodes_on_bdry=True) == self.partition):
+            use_uniform = True
+            nodes_on_bdry = True
+        else:
+            use_uniform = False
+
+        if use_uniform:
             if isinstance(self.dspace, Fn):
                 impl = 'numpy'
                 default_dtype = np.float64
@@ -319,6 +331,8 @@ class DiscreteLp(Discretization):
                 arg_fstr += ', impl={impl!r}'
             if self.order != 'C':
                 arg_fstr += ', order={order!r}'
+            if nodes_on_bdry:
+                arg_fstr += ', nodes_on_bdry={nodes_on_bdry!r}'
 
             if self.ndim == 1:
                 min_str = '{!r}'.format(self.uspace.domain.min()[0])
@@ -335,7 +349,8 @@ class DiscreteLp(Discretization):
                 dtype=dtype_repr(self.dtype),
                 interp=self.interp,
                 impl=impl,
-                order=self.order)
+                order=self.order,
+                nodes_on_bdry=nodes_on_bdry)
             return 'uniform_discr({})'.format(arg_str)
         else:
             arg_fstr = '''
@@ -433,7 +448,7 @@ class DiscreteLpVector(DiscretizationVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, `NtuplesVector`}
+        values : scalar, `array-like` or `NtuplesVector`
             The value(s) that are to be assigned.
             If ``indices`` is an `int`, ``values`` must be a single
             value.
@@ -545,7 +560,7 @@ class DiscreteLpVector(DiscretizationVector):
             is that ``fig`` is the return value from an earlier call to
             this function.
 
-        kwargs : {'figsize', 'saveto', ...}
+        kwargs : {'figsize', 'saveto', 'clim', ...}
             Extra keyword arguments passed on to display method
             See the Matplotlib functions for documentation of extra
             options.
@@ -628,7 +643,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
 
-    nodes_on_bdry : `bool` or boolean array-like
+    nodes_on_bdry : `bool` or boolean `array-like`
         If `True`, place the outermost grid points at the boundary. For
         `False`, they are shifted by half a cell size to the 'inner'.
         If an array-like is given, it must have shape ``(ndim, 2)``,
@@ -636,8 +651,8 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         whether the leftmost (first column) and rightmost (second column)
         nodes node lie on the boundary.
         Default: `False`
-    order : {'C', 'F'}  (Default: 'C')
-        Axis ordering in the data storage
+    order : {'C', 'F'}
+        Axis ordering in the data storage. Default: 'C'
     dtype : dtype
         Data type for the discretized space
 
@@ -719,7 +734,7 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
-    nodes_on_bdry : `bool` or sequence, optional
+    nodes_on_bdry : `bool` or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (True) or shift it
         by half a cell size into the interior (False). In each axis,

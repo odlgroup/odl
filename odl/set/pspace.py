@@ -107,13 +107,14 @@ class ProductSpace(LinearSpace):
 
             Note that ``0 <= ord < 1`` are not allowed since these
             pseudo-norms are very unstable numerically.
-        weights : array-like, optional, only usable with 'ord'
+        weights : `array-like`, optional
             Array of weights, same size as number of space
             components. All weights must be positive. It is
             multiplied with the tuple of distances before
             applying the Rn norm or ``prod_norm``.
-
             Default: ``(1.0,...,1.0)``
+
+            This option can only be used together with ``ord``.
 
         prod_norm : `callable`, optional
             Function that should be applied to the array of
@@ -642,7 +643,7 @@ class ProductSpaceVector(LinearSpaceVector):
             pass the rest on to the underlying show methods.
 
         kwargs
-            Arguments for the underlying vectors.
+            Additional arguments passed on to the underlying vectors
 
         Returns
         -------

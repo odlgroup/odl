@@ -52,7 +52,7 @@ def test_partition_init():
     RectPartition(odl.Rectangle(begin, end), odl.TensorGrid(vec1, vec2))
 
 
-def test_partition_init_error():
+def test_partition_init_raise():
     # Check different error scenarios
     vec1 = np.array([2, 4, 5, 7])
     vec2 = np.array([-4, -3, 0, 1, 4])

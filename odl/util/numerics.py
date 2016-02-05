@@ -49,7 +49,10 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         skipped.
     only_once : `bool`, optional
         If `True`, ensure that each boundary point appears in exactly
-        one slice.
+        one slice. If ``func`` is a list of functions, the
+        ``axis_order`` determines which functions are applied to nodes
+        which appear in multiple slices, according to the principle
+        "first-come, first-served".
     which_boundaries : `sequence`, optional
         If provided, this sequence determines per axis whether to
         apply the function at the boundaries in each axis. The entry
@@ -119,7 +122,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
             slc_l = [slice(None)] * array.ndim
             slc_r = [slice(None)] * array.ndim
 
-        # slc_l and slc_r select left and right boundary in this axis, resp.
+        # slc_l and slc_r select left and right boundary, resp, in this axis.
         slc_l[ax] = 0
         slc_r[ax] = -1
 
@@ -149,6 +152,8 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         else:
             end = None
 
+        # Write the information for the processed axis into the slice list.
+        # Start and end include the boundary if it was processed.
         slices[ax] = slice(start, end)
 
 if __name__ == '__main__':

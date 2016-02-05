@@ -545,7 +545,7 @@ class ResidualOperator(Operator):
         op : `Operator`
             Operator to be used in the residual expression. Its
             `Operator.range` must be a `LinearSpace`.
-        vec : `Operator.range` element-like
+        vec : `Operator.range` `element-like`
             Vector to be subtracted from the operator result
         """
         if not isinstance(op, Operator):

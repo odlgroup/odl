@@ -36,7 +36,6 @@ import numpy as np
 # ODL imports
 from odl.discr.grid import TensorGrid, RegularGrid
 from odl.set.domain import IntervalProd
-from odl.util.utility import array1d_repr
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -401,10 +400,10 @@ def uniform_partition_fromintv(intv_prod, num_nodes, nodes_on_bdry=False):
     ----------
     intv_prod : `IntervalProd`
         Interval product to be partitioned
-    num_nodes : `int` or sequence of `int`
+    num_nodes : `int` or `sequence` of `int`
         Number of nodes per axis. For 1d intervals, a single integer
         can be specified.
-    nodes_on_bdry : `bool` or sequence, optional
+    nodes_on_bdry : `bool` or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (True) or shift it
         by half a cell size into the interior (False). In each axis,
@@ -526,13 +525,13 @@ def uniform_partition(begin, end, num_nodes, nodes_on_bdry=False):
 
     Parameters
     ----------
-    begin, end : array-like
+    begin, end : `array-like`
         Vectors defining the begin end end points of an `IntervalProd`
         (a rectangular box)
-    num_nodes : `int` or sequence of `int`
+    num_nodes : `int` or `sequence` of `int`
         Number of nodes per axis. For 1d intervals, a single integer
         can be specified.
-    nodes_on_bdry : `bool` or sequence, optional
+    nodes_on_bdry : `bool` or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (True) or shift it
         by half a cell size into the interior (False). In each axis,
@@ -600,20 +599,22 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
     ----------
     grid : `TensorGrid`
         Grid on which the partition is based
-    begin, end : array-like or `dict`
+    begin, end : `array-like` or `dictionary`
         Spatial points defining the begin and end of an interval
         product to be partitioned. The points can be specified in
         two ways:
 
         array-like: These values are used directly as begin and/or end.
 
-        dict: Index-value pairs specifying an axis and a spatial
+        dictionary: Index-value pairs specifying an axis and a spatial
         coordinate to be used in that axis. In axes which are not a key
         in the dictionary, the coordinate for the vector is calculated
         as::
             begin = x[0] - (x[1] - x[0]) / 2
+
         or::
             end = x[-1] + (x[-1] - x[-2]) / 2
+
         respectively. See ``Examples`` below.
 
         In general, ``begin`` may not be larger than ``grid.min_pt``,

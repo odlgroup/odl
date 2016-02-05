@@ -48,7 +48,7 @@ def test_tensorgrid_init():
     TensorGrid(sorted2, scalar, sorted1)
 
 
-def test_tensorgrid_init_error():
+def test_tensorgrid_init_raise():
     # Check different error scenarios
 
     # Good input
@@ -67,6 +67,7 @@ def test_tensorgrid_init_error():
     with_inf = np.arange(4, dtype=float)
     with_inf[3] = np.inf
     empty = np.arange(0)
+    bad_shape = np.array([[1, 2], [3, 4]])
 
     with pytest.raises(ValueError):
         TensorGrid()
@@ -88,6 +89,9 @@ def test_tensorgrid_init_error():
 
     with pytest.raises(ValueError):
         TensorGrid(sorted1, empty, sorted2)
+
+    with pytest.raises(ValueError):
+        TensorGrid(sorted1, bad_shape)
 
 
 def test_tensorgrid_ndim():
@@ -176,6 +180,7 @@ def test_tensorgrid_equals():
     grid1 = TensorGrid(vec1, vec2)
     grid2 = TensorGrid(vec1 + (0.1, 0.05, 0, -0.1),
                        vec2 + (0.1, 0.05, 0, -0.1, -0.1))
+    assert grid1.approx_equals(grid1, atol=0.0)
     assert grid1.approx_equals(grid2, atol=0.15)
     assert grid2.approx_equals(grid1, atol=0.15)
 
@@ -203,6 +208,7 @@ def test_tensorgrid_contains():
     assert not (0, 0) in grid
     assert (0, 0) not in grid
     assert (2, 0, 0) not in grid
+    assert [None, object] not in grid
 
     # Fuzzy check
     assert grid.approx_contains((2.1, -2.1), atol=0.15)
@@ -339,6 +345,10 @@ def test_tensorgrid_points():
     grid = TensorGrid(vec1, vec2, scalar)
     assert all_equal(points, grid.points())
 
+    # Bad input
+    with pytest.raises(ValueError):
+        grid.points(order='A')
+
 
 def test_tensorgrid_corners():
     vec1 = np.array([2, 3, 4, 5])
@@ -471,20 +481,21 @@ def test_tensorgrid_getitem():
     assert grid[1, ..., 0] == sub_grid
     assert grid[1, :, :, ..., 0] == sub_grid
 
+    # Two ellipses not allowed
     with pytest.raises(IndexError):
         grid[1, ..., ..., 0]
 
+    # Too few indices
     with pytest.raises(IndexError):
         grid[1, :, 1]
 
+    # Too many indices
     with pytest.raises(IndexError):
         grid[1, 0, 1:2, 0, :]
 
+    # Empty axes not allowed
     with pytest.raises(IndexError):
-        grid[1, 0, None, 1, 0]
-
-    with pytest.raises(IndexError):
-        grid[1, 0, None, 1, 0]
+        grid[1, 0, None, 0]
 
     # One-dimensional grid
     grid = TensorGrid(vec3)
@@ -510,7 +521,7 @@ def test_regulargrid_init():
     assert all_equal(grid.coord_vectors, (vec1, vec2, vec3))
 
 
-def test_regulargrid_init_error():
+def test_regulargrid_init_raise():
     # Check different error scenarios
     minpt = (0.75, 0, -5)
     maxpt = (1.25, 0, 1)
@@ -543,10 +554,11 @@ def test_regulargrid_init_error():
     with pytest.raises(ValueError):
         RegularGrid(minpt, maxpt_with_inf, shape)
 
-    with pytest.raises(ValueError):
+    # Shape casting to int raises a TypeError
+    with pytest.raises(TypeError):
         RegularGrid(minpt, maxpt, shape_with_nan)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         RegularGrid(minpt, maxpt, shape_with_inf)
 
     maxpt_smaller_minpt1 = (0.7, 0, 1)
@@ -564,6 +576,7 @@ def test_regulargrid_init_error():
     too_long_maxpt = (1.25, 0, 1, 25)
     too_short_shape = (2, 3)
     too_long_shape = (2, 1, 4, 3)
+    bad_dim_shape = ((1, 2), (3, 4))
 
     with pytest.raises(ValueError):
         RegularGrid(too_short_minpt, maxpt, shape)
@@ -588,6 +601,9 @@ def test_regulargrid_init_error():
     with pytest.raises(ValueError):
         RegularGrid(minpt, maxpt_eq_minpt_at_shape_larger_than_1,
                     shape)
+
+    with pytest.raises(ValueError):
+        RegularGrid(minpt, maxpt, bad_dim_shape)
 
 
 def test_regulargrid_center():
@@ -738,11 +754,21 @@ def test_regulargrid_insert():
     ins_shape = shape + shape2
     assert ins_grid == RegularGrid(ins_minpt, ins_maxpt, ins_shape)
 
+    # Insert a TensorGrid
+    vec = [-1, 0, 3]
+    tgrid = TensorGrid(vec)
+    ins_tgrid = grid.insert(3, tgrid)
+    assert isinstance(ins_tgrid, TensorGrid)
+    assert ins_tgrid == TensorGrid(*(grid.coord_vectors + (vec,)))
+
     with pytest.raises(IndexError):
         grid.insert(4, grid2)
 
     with pytest.raises(IndexError):
         grid.insert(-5, grid2)
+
+    with pytest.raises(TypeError):
+        grid.insert(0, [1, 2])
 
 
 def test_regulargrid_getitem():
@@ -817,20 +843,25 @@ def test_regulargrid_getitem():
     assert all_equal(grid[:, :, 1, :].coord_vectors,
                      tensor_grid[test_slice].coord_vectors)
 
+    # Two ellipses not allowed
     with pytest.raises(IndexError):
         grid[1, ..., ..., 0]
 
+    # Too few axes
     with pytest.raises(IndexError):
         grid[1, :, 1]
 
+    # Too many axes
     with pytest.raises(IndexError):
         grid[1, 0, 1:2, 0, :]
 
+    # New axes not supported
     with pytest.raises(IndexError):
         grid[1, 0, None, 1, 0]
 
+    # Empty axes not allowed
     with pytest.raises(IndexError):
-        grid[1, 0, None, 1, 0]
+        grid[1, 0, 0:0, 1]
 
     # One-dimensional grid
     grid = RegularGrid(1, 5, 5)

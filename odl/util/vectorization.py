@@ -44,7 +44,7 @@ def is_valid_input_array(x, ndim=None):
 
 
 def is_valid_input_meshgrid(x, ndim):
-    """Test if ``x`` is a meshgrid sequence for points in R^d."""
+    """Test if ``x`` is a `meshgrid` sequence for points in R^d."""
     # This case is triggered in FunctionSetVector.__call__ if the
     # domain does not have an 'ndim' attribute. We return False and
     # continue.
@@ -70,7 +70,7 @@ def is_valid_input_meshgrid(x, ndim):
 
 
 def out_shape_from_meshgrid(mesh):
-    """Get the broadcast output shape from a meshgrid."""
+    """Get the broadcast output shape from a `meshgrid`."""
     if len(mesh) == 1:
         return (len(mesh[0]),)
     else:
@@ -175,12 +175,12 @@ class OptionalArgDecorator(object):
 
         Parameters
         ----------
-        func : callable
+        func : `callable`
             Original function to be wrapped
 
         Returns
         -------
-        wrapped : callable
+        wrapped : `callable`
             The wrapped function
         """
         return self._wrapper(func, *self.wrapper_args, **self.wrapper_kwargs)
@@ -252,7 +252,7 @@ class _NumpyVectorizeWrapper(object):
 
         Parameters
         ----------
-        func : callable
+        func : `callable`
             Python function or method to be wrapped
         vect_args :
             positional arguments for `numpy.vectorize`
@@ -269,7 +269,7 @@ class _NumpyVectorizeWrapper(object):
 
         Parameters
         ----------
-        x : array-like or sequence of array-like
+        x : `array-like` or `sequence` of `array-like`
             Input argument(s) to the wrapped function
         out : `numpy.ndarray`, optional
             Appropriately sized array to write to

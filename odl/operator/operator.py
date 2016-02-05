@@ -388,7 +388,7 @@ class Operator(object):
 
     **Returns:**
 
-    out : `Operator.range` element-like
+    out : `Operator.range` `element-like`
         An object in the operator range holding the result of the
         operator evaluation
 
@@ -545,14 +545,14 @@ class Operator(object):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Element to which the operator is applied
         out : `Operator.range` element, optional
             Element to which the result is written
 
         Returns
         -------
-        out : `Operator.range` element-like
+        out : `Operator.range` `element-like`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -630,7 +630,7 @@ class Operator(object):
                                     ''.format(self))
 
     def __call__(self, x, out=None, **kwargs):
-        """Return ``self(x)``.
+        """Return ``self(x[, out, **kwargs])``.
 
         Implementation of the call pattern ``op(x)`` with the private
         ``_call()`` method and added error checking.
@@ -645,7 +645,8 @@ class Operator(object):
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
-        **kwargs : Further arguments to the function, optional
+        kwargs : Further arguments to the function, optional
+            Passed on to the underlying implementation in `_call`
 
         Returns
         -------
@@ -1086,7 +1087,7 @@ class OperatorSum(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Evaluation point of the derivative
         """
         return OperatorSum(self._op1.derivative(x), self._op2.derivative(x))
@@ -1195,7 +1196,7 @@ class OperatorComp(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Evaluation point of the derivative. Needs to be usable as
             input for the ``right`` operator.
         """
@@ -1355,7 +1356,7 @@ class OperatorLeftScalarMult(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Evaluation point of the derivative
 
         See also
@@ -1475,7 +1476,7 @@ class OperatorRightScalarMult(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Evaluation point of the derivative
         """
         return OperatorLeftScalarMult(self._op.derivative(self._scalar * x),
