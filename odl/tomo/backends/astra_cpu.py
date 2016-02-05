@@ -191,12 +191,15 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     # Run algorithm and delete it
     astra.algorithm.run(algo_id)
 
-    # Fix inconsistent scaling
+    # Angular integration weighting factor
     # angle interval weight by approximate cell volume
     extent = float(geometry.motion_grid.extent())
     size = float(geometry.motion_grid.size)
     scaling_factor = extent / size
+
+    # Fix inconsistent scaling
     # parallel2d & fanflat scale with (voxel stride)**2 / (pixel stride)
+    # currently only square voxels are supported
     scaling_factor *= float(geometry.det_grid.stride[0])
     scaling_factor /= float(reco_space.grid.stride[0]) ** 2
 

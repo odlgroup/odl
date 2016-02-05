@@ -116,11 +116,11 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
 
     # Wrap data
     if ndim == 3:
-        tmp = proj_space.element(np.rollaxis(astra.data3d.get(sino_id), 0, 3))
         if out is None:
-            out = tmp
+            out = proj_space.element(np.rollaxis(astra.data3d.get(sino_id),
+                                                 0, 3))
         else:
-            out.assign(tmp)
+            out[:] = np.rollaxis(astra.data3d.get(sino_id), 0, 3)
 
     # Fix inconsistent scaling
     if isinstance(geometry, Parallel2dGeometry):
@@ -212,11 +212,13 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
     # Run algorithm
     astra.algorithm.run(algo_id)
 
-    # Fix inconsistent scaling
+    # Angular integration weighting factor
     # angle interval weight by approximate cell volume
     extent = float(geometry.motion_grid.extent())
     size = float(geometry.motion_grid.size)
     scaling_factor = extent / size
+
+    # Fix inconsistent scaling
     if isinstance(geometry, Parallel2dGeometry):
         # scales with 1 / (cell volume)
         scaling_factor *= float(reco_space.cell_volume)
@@ -229,11 +231,13 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         scaling_factor *= ((src_radius + det_radius) / src_radius)
     elif isinstance(geometry, Parallel3dGeometry):
         # scales with voxel stride
+        # currently only square voxels are supported
         extent = reco_space.grid.extent()
         shape = np.array(reco_space.shape, dtype=float)
         scaling_factor /= float(extent[0] / shape[0])
     elif isinstance(geometry, HelicalConeFlatGeometry):
         # cone scales with voxel stride
+        # currently only square voxels are supported
         extent = reco_space.grid.extent()
         shape = np.array(reco_space.shape, dtype=float)
         scaling_factor /= float(extent[0] / shape[0])

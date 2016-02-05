@@ -318,7 +318,6 @@ def astra_parallel_3d_geom_to_vec(geometry):
     # Astra order, needed for data to match what we expect from astra.
     # Astra has a different axis convention to ODL (z, y, x), so we need
     # to adapt to this by changing the order
-
     new_ind = []
     for i in range(4):
         new_ind += [2 + 3 * i, 1 + 3 * i, 0 + 3 * i]
@@ -360,7 +359,7 @@ def astra_projection_geometry(geometry):
     # projection geometries do not have to be rescaled any more by the (
     # isotropic) voxel size.
     if isinstance(geometry, Parallel2dGeometry):
-        # TODO: change to parallel_vec when available (if ever)
+        # TODO: change to parallel_vec when available
         det_width = geometry.det_grid.stride[0]
         det_count = geometry.detector.npixels
         # convention in 'astra_conebeam_2d_geom_to_vec' differs from ASTRA's
@@ -510,8 +509,7 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
 
     # Mapping from interpolation type and geometry to ASTRA projector type.
     # "I" means probably mathematically inconsistent. Some projectors are
-    # not implemented, e.g. CPU 3d projectors in general. Using 'line'
-    # raises Exception depending on parameters (number of pixels, voxels)
+    # not implemented, e.g. CPU 3d projectors in general.
     type_map_cpu = {'parallel': {'nearest': 'line',
                                  'linear': 'linear'},  # I
                     'fanflat': {'nearest': 'line_fanflat',

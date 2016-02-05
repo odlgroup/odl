@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test reconstruction with ASTRA."""
+"""Test for X-ray transform."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -182,4 +182,4 @@ def test_projector(projector):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v --largescale'))
+    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
