@@ -28,7 +28,6 @@ from builtins import super
 import numpy as np
 
 # Internal
-from odl.discr.grid import TensorGrid
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
 from odl.tomo.util.utility import euler_matrix, perpendicular_vector
@@ -58,10 +57,10 @@ class ParallelGeometry(Geometry):
             The direction from the origin to the point (0) of the detector
             when angle=0
         """
-        super().__init__(ndim, agrid, detector)
-
         self._origin_to_det = (np.array(origin_to_det) /
                                np.linalg.norm(origin_to_det))
+
+        super().__init__(ndim, agrid, detector)
 
     @property
     def origin_to_det(self):

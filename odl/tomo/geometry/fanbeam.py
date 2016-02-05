@@ -56,7 +56,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         agrid : 1-dim. `TensorGrid`
             A sampling grid for angles
         dgrid : 1-dim. `TensorGrid`
-            A sampling grid for the detector pixels
+            A sampling grid for the detector
         src_radius : positive `float`
             Radius of the source circle, must be positive
         det_radius : positive `float`

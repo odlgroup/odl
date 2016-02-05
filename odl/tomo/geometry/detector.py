@@ -58,7 +58,7 @@ class Detector(with_metaclass(ABCMeta, object)):
         ndim : non-negative `int`
             The number of dimensions of the detector
         grid : `TensorGrid`, optional
-            A sampling grid for the parameter set (pixels)
+            A sampling grid for the parameter set
         """
 
         if not isinstance(grid, TensorGrid):
@@ -270,7 +270,7 @@ class Flat2dDetector(FlatDetector):
 
         Parameters
         ----------
-        grid : 2-dim. `IntervalProd`
+        grid : 2-dim. `TensorGrid`
             A sampling grid for the parameters (pixels)
         detector_axes : sequence of two 3-element array
             The directions of the axes of the detector
@@ -352,8 +352,8 @@ class CircleSectionDetector(Detector):
 
         Parameters
         ----------
-        grid : `Interval` or 1-dim. `IntervalProd`
-            A sampling grid for the pixels.
+        grid : 1d `TensorGrid`
+            A sampling grid for the detector
         circ_rad : positive `float`
             Radius of the circle on which the detector is situated
         """

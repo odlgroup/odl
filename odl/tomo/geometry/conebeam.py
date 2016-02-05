@@ -58,7 +58,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         Parameters
         ----------
         agrid : 1-dim. `TensorGrid`
-            A sampling grid for the he motion parameters given in radians
+            A sampling grid for the angles given in radians
         dgrid : 2-dim. `TensorGrid`
             A sampling grid for the detector parameters
         src_radius : `float`
@@ -230,7 +230,7 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
         Parameters
         ----------
         agrid : 1-dim. `TensorGrid`
-            A sampling grid for the he motion parameters given in radians
+            A sampling grid for the angles given in radians
         dgrid : 2-dim. `TensorGrid`
             A sampling grid for the detector parameters
         src_radius : `float`
