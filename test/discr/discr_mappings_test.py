@@ -37,7 +37,7 @@ from odl.util.testutils import all_almost_equal, all_equal, almost_equal
 
 def test_nearest_interpolation_1d_complex():
     intv = odl.Interval(0, 1)
-    grid = odl.uniform_sampling(intv, 5, as_midp=True)
+    grid = odl.uniform_sampling_fromintv(intv, 5, as_midp=True)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
@@ -70,7 +70,7 @@ def test_nearest_interpolation_1d_complex():
 
 def test_nearest_interpolation_1d_variants():
     intv = odl.Interval(0, 1)
-    grid = odl.uniform_sampling(intv, 5, as_midp=True)
+    grid = odl.uniform_sampling_fromintv(intv, 5, as_midp=True)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
@@ -98,7 +98,7 @@ def test_nearest_interpolation_1d_variants():
 
 def test_nearest_interpolation_2d_float():
     rect = odl.Rectangle([0, 0], [1, 1])
-    grid = odl.uniform_sampling(rect, [4, 2], as_midp=True)
+    grid = odl.uniform_sampling_fromintv(rect, [4, 2], as_midp=True)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
@@ -131,7 +131,7 @@ def test_nearest_interpolation_2d_float():
 
 def test_nearest_interpolation_2d_string():
     rect = odl.Rectangle([0, 0], [1, 1])
-    grid = odl.uniform_sampling(rect, [4, 2], as_midp=True)
+    grid = odl.uniform_sampling_fromintv(rect, [4, 2], as_midp=True)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
@@ -165,7 +165,7 @@ def test_nearest_interpolation_2d_string():
 
 def test_nearest_interpolation_2d_fortran_ordering():
     rect = odl.Rectangle([0, 0], [1, 1])
-    grid = odl.uniform_sampling(rect, [4, 2], as_midp=True)
+    grid = odl.uniform_sampling_fromintv(rect, [4, 2], as_midp=True)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
@@ -199,7 +199,7 @@ def test_nearest_interpolation_2d_fortran_ordering():
 
 def test_linear_interpolation_1d():
     intv = odl.Interval(0, 1)
-    grid = odl.uniform_sampling(intv, 5, as_midp=True)
+    grid = odl.uniform_sampling_fromintv(intv, 5, as_midp=True)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
@@ -221,7 +221,7 @@ def test_linear_interpolation_1d():
 
 def test_linear_interpolation_2d():
     rect = odl.Rectangle([0, 0], [1, 1])
-    grid = odl.uniform_sampling(rect, [4, 2], as_midp=True)
+    grid = odl.uniform_sampling_fromintv(rect, [4, 2], as_midp=True)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
@@ -290,7 +290,7 @@ def test_linear_interpolation_2d():
 
 def test_per_axis_interpolation():
     rect = odl.Rectangle([0, 0], [1, 1])
-    grid = odl.uniform_sampling(rect, [4, 2], as_midp=True)
+    grid = odl.uniform_sampling_fromintv(rect, [4, 2], as_midp=True)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
@@ -349,7 +349,7 @@ def test_collocation_interpolation_identity():
     # Check if interpolation followed by collocation on the same grid
     # is the identity
     rect = odl.Rectangle([0, 0], [1, 1])
-    grid = odl.uniform_sampling(rect, [4, 2], as_midp=True)
+    grid = odl.uniform_sampling_fromintv(rect, [4, 2], as_midp=True)
     space = odl.FunctionSpace(rect)
     dspace = odl.Rn(grid.size)
 

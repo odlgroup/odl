@@ -33,7 +33,7 @@ from odl.discr.discretization import (
     Discretization, DiscretizationVector, dspace_type)
 from odl.discr.discr_mappings import (
     GridCollocation, NearestInterpolation, LinearInterpolation)
-from odl.discr.grid import uniform_sampling, RegularGrid
+from odl.discr.grid import uniform_sampling_fromintv, RegularGrid
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import Fn, FunctionSpace, CudaFn, CUDA_AVAILABLE
 from odl.util.ufuncs import DiscreteLpUFuncs
@@ -212,8 +212,8 @@ class DiscreteLp(Discretization):
     def __repr__(self):
         """Return ``repr(self).``"""
         # Check if the factory repr can be used
-        if (uniform_sampling(self.uspace.domain, self.shape,
-                             as_midp=True) == self.grid):
+        if (uniform_sampling_fromintv(self.uspace.domain, self.shape,
+                                      as_midp=True) == self.grid):
             if isinstance(self.dspace, Fn):
                 impl = 'numpy'
                 default_dtype = np.float64
@@ -593,7 +593,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     dtype = kwargs.pop('dtype', None)
     ds_type = dspace_type(fspace, impl, dtype)
 
-    grid = uniform_sampling(fspace.domain, nsamples, as_midp=True)
+    grid = uniform_sampling_fromintv(fspace.domain, nsamples, as_midp=True)
 
     weighting = kwargs.pop('weighting', 'simple')
     weighting_ = weighting.lower()

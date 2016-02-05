@@ -43,11 +43,9 @@ def test_xray_trafo():
                                          [10, 10, 10], dtype='float32')
 
     # Geometry
-    angle_intvl = odl.Interval(0, 2 * np.pi)
-    dparams = odl.Rectangle([-20, -20], [20, 20])
-    agrid = odl.uniform_sampling(angle_intvl, 10)
-    dgrid = odl.uniform_sampling(dparams, [20, 20])
-    geom = odl.tomo.Parallel3dGeometry(angle_intvl, dparams, agrid, dgrid)
+    agrid = odl.uniform_sampling(0, 2 * np.pi, 10)
+    dgrid = odl.uniform_sampling([-20, -20], [20, 20], [20, 20])
+    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid)
 
     # X-ray transform
     A = odl.tomo.DiscreteXrayTransform(discr_reco_space, geom,

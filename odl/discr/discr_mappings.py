@@ -403,8 +403,8 @@ class NearestInterpolation(FunctionSetMapping):
         (`TensorGrid.as_midp` indicates that the points will
         be cell midpoints instead of corners).
 
-        >>> from odl import uniform_sampling, Ntuples
-        >>> grid = uniform_sampling(rect, [4, 2], as_midp=True)
+        >>> from odl import uniform_sampling_fromintv, Ntuples
+        >>> grid = uniform_sampling_fromintv(rect, [4, 2], as_midp=True)
         >>> grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 

@@ -78,14 +78,6 @@ class DiscreteXrayTransform(Operator):
             raise TypeError('geometry {!r} is not a `Geometry` instance.'
                             ''.format(geometry))
 
-        if not geometry.has_motion_sampling:
-            raise ValueError('geometry {} does not have sampling grids for '
-                             'motion.'.format(geometry))
-
-        if not geometry.has_det_sampling:
-            raise ValueError('geometry {} does not have sampling grids for '
-                             'the detector.'.format(geometry))
-
         backend = str(backend).lower()
         if backend not in _SUPPORTED_BACKENDS:
             raise ValueError('backend {!r} not supported.'

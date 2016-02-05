@@ -23,21 +23,21 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import lp_discr
-from .lp_discr import *
-__all__ += lp_discr.__all__
+from . import grid
+from .grid import *
+__all__ += grid.__all__
 
 from . import discretization
 from .discretization import *
 __all__ += discretization.__all__
 
-from . import grid
-from .grid import *
-__all__ += grid.__all__
-
 from . import discr_mappings
 from .discr_mappings import *
 __all__ += discr_mappings.__all__
+
+from . import lp_discr
+from .lp_discr import *
+__all__ += lp_discr.__all__
 
 from . import discr_ops
 from .discr_ops import *
