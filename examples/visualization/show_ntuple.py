@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2016 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,30 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Discretizations in ODL."""
+"""Examples on using the vector.show() syntax for ntuples"""
 
-# TODO: write intro documentation
+import odl
 
-from __future__ import absolute_import
+spc = odl.Rn(5)
+vec = spc.element([1, 2, 3, 4, 5])
 
-__all__ = ()
-
-from . import grid
-from .grid import *
-__all__ += grid.__all__
-
-from . import discretization
-from .discretization import *
-__all__ += discretization.__all__
-
-from . import discr_mappings
-from .discr_mappings import *
-__all__ += discr_mappings.__all__
-
-from . import lp_discr
-from .lp_discr import *
-__all__ += lp_discr.__all__
-
-from . import discr_ops
-from .discr_ops import *
-__all__ += discr_ops.__all__
+vec.show()

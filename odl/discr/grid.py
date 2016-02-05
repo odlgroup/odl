@@ -38,7 +38,8 @@ from odl.set.sets import Set, Integers
 from odl.util.utility import array1d_repr, array1d_str
 
 
-__all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling')
+__all__ = ('TensorGrid', 'RegularGrid',
+           'uniform_sampling_fromintv', 'uniform_sampling')
 
 
 def sparse_meshgrid(*x, **kwargs):
@@ -69,6 +70,7 @@ def sparse_meshgrid(*x, **kwargs):
         xi = np.asarray(xi)
         slc = [None] * n
         slc[ax] = np.s_[:]
+
         if order == 'C':
             mesh.append(np.ascontiguousarray(xi[slc]))
         else:
@@ -187,7 +189,25 @@ class TensorGrid(Set):
     # Attributes
     @property
     def coord_vectors(self):
-        """The coordinate vectors of the grid."""
+        """The coordinate vectors of the grid.
+
+        Returns
+        -------
+        coord_vectors : tuple of `numpy.ndarray`'s
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> x, y = g.coord_vectors
+        >>> x
+        array([ 0.,  1.])
+        >>> y
+        array([-1.,  0.,  2.])
+
+        See Also
+        --------
+        meshgrid : Same result but with nd arrays
+        """
         return self._coord_vectors
 
     @property
@@ -672,6 +692,10 @@ class TensorGrid(Set):
         >>> x, y = g.meshgrid()
         >>> x.flags.f_contiguous, y.flags.f_contiguous
         (True, True)
+
+        See Also
+        --------
+        coord_vectors : Same result but with 1d arrays
         """
         return sparse_meshgrid(*self.coord_vectors, order=self.order)
 
@@ -1175,7 +1199,7 @@ class RegularGrid(TensorGrid):
             return 'regular grid ' + ' x '.join(str_lst)
 
 
-def uniform_sampling(intv_prod, num_nodes, as_midp=True):
+def uniform_sampling_fromintv(intv_prod, num_nodes, as_midp=True):
     """Sample an interval product uniformly.
 
     Parameters
@@ -1202,14 +1226,18 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
     --------
     >>> from odl import IntervalProd
     >>> rbox = IntervalProd([-1.5, 2], [-0.5, 3])
-    >>> grid = uniform_sampling(rbox, [2, 5])
+    >>> grid = uniform_sampling_fromintv(rbox, [2, 5])
     >>> grid.coord_vectors
     (array([-1.25, -0.75]), array([ 2.1,  2.3,  2.5,  2.7,  2.9]))
-    >>> grid = uniform_sampling(rbox, [2, 5], as_midp=False)
+    >>> grid = uniform_sampling_fromintv(rbox, [2, 5], as_midp=False)
     >>> grid.coord_vectors
     (array([-1.5, -0.5]), array([ 2.  ,  2.25,  2.5 ,  2.75,  3.  ]))
+
+    See also
+    --------
+    uniform_sampling : Sample an implicitly created `IntervalProd`
     """
-    num_nodes = np.atleast_1d(num_nodes).astype('int64')
+    num_nodes = np.atleast_1d(num_nodes).astype('int64', casting='safe')
 
     if not isinstance(intv_prod, IntervalProd):
         raise TypeError('interval product {!r} not an `IntervalProd` instance.'
@@ -1242,6 +1270,51 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
         grid_min = intv_prod.begin
         grid_max = intv_prod.end
         return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp)
+
+
+def uniform_sampling(begin, end, num_nodes, as_midp=True):
+    """Sample an `IntervalProd` uniformly.
+
+    Parameters
+    ----------
+    begin : `float` or array-like
+        Minimum corner of the sampling volume
+    begin : `float` or array-like
+        Maximum corner of the sampling volume
+    num_nodes : `int` or array-like of `int`
+        Number of nodes per axis. For dimension >= 2, a array-like
+        is required. All entries must be positive. Entries
+        corresponding to degenerate axes must be equal to 1.
+    as_midp : `bool`, optional
+        If `True`, the midpoints of an interval partition will be
+        returned, which excludes the endpoints. Otherwise,
+        equispaced nodes including the endpoints are generated.
+        Note that the resulting strides are different.
+        Default: `True`.
+
+    Returns
+    -------
+    sampling : `RegularGrid`
+        Uniform sampling grid for the interval product
+
+    Examples
+    --------
+    >>> from odl import IntervalProd
+    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], [2, 5])
+    >>> grid.coord_vectors
+    (array([-1.25, -0.75]), array([ 2.1,  2.3,  2.5,  2.7,  2.9]))
+    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], [2, 5], as_midp=False)
+    >>> grid.coord_vectors
+    (array([-1.5, -0.5]), array([ 2.  ,  2.25,  2.5 ,  2.75,  3.  ]))
+
+    See also
+    --------
+    uniform_sampling_fromintv : Sampling of a given `IntervalProd`
+    """
+
+    intv = IntervalProd(begin, end)
+
+    return uniform_sampling_fromintv(intv, num_nodes, as_midp=as_midp)
 
 
 if __name__ == '__main__':

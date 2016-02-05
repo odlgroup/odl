@@ -30,8 +30,8 @@ standard_library.install_aliases()
 import numpy as np
 
 # ODL imports
-from odl.set.sets import Set, RealNumbers
-from odl.util.utility import array1d_repr
+from odl.set.sets import Set
+from odl.util.utility import array1d_repr, is_real_dtype
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid, meshgrid_input_order,
     vecs_from_meshgrid)
@@ -154,9 +154,37 @@ class IntervalProd(Set):
         """The maximum value in this interval product"""
         return self.end
 
-    def element(self):
-        """An arbitrary element, the midpoint."""
-        return self.midpoint
+    def element(self, inp=None):
+        """Create element in this set.
+
+        Parameters
+        ----------
+        inp : `float` or array-like, optional
+            Point to be cast to an element in self
+
+        Returns
+        -------
+        element
+            Returns ``inp`` if given, else ``self.midpoint``
+
+        Raises
+        ------
+        TypeError
+            If ``inp`` is not a valid element.
+
+        Examples
+        --------
+        >>> interv = IntervalProd(0, 1)
+        >>> interv.element(0.5)
+        0.5
+        """
+        if inp is None:
+            return self.midpoint
+        elif inp in self:
+            return inp
+        else:
+            raise TypeError('inp {!r} not a valid element in {!r}.'
+                            ''.format(inp, self))
 
     # Overrides of the abstract base class methods
     def approx_equals(self, other, tol):
@@ -218,23 +246,44 @@ class IntervalProd(Set):
         True
         """
         point = np.atleast_1d(point)
-        if point.dtype == object:
+        if point.shape != (self.ndim,):
             return False
-        if np.any(np.isnan(point)):
+        if not is_real_dtype(point.dtype):
             return False
-        if point.ndim > 1:
-            return False
-        if len(point) != self.ndim:
-            return False
-        if point[0] not in RealNumbers():
-            return False
-        if self.dist(point, ord=np.inf) > tol:
-            return False
-        return True
+        return self.dist(point, ord=np.inf) <= tol
 
     def __contains__(self, other):
-        """Return ``other in self``."""
-        return self.approx_contains(other, tol=0)
+        """Return ``other in self``.
+
+        Parameters
+        ----------
+        other
+            Arbitrary object to be tested.
+
+        Returns
+        -------
+        containts : `bool`
+            True if other is inside self.
+
+        Examples
+        --------
+        >>> interv = IntervalProd(0, 1)
+        >>> 0.5 in interv
+        True
+        >>> 2 in interv
+        False
+        >>> 'string' in interv
+        False
+        """
+        try:
+            # Duck-typed check of type
+            point = np.array(other, dtype=np.float, copy=False, ndmin=1)
+        except (ValueError, TypeError):
+            return False
+
+        if point.shape != (self.ndim,):
+            return False
+        return (self.begin <= point).all() and (point <= self.end).all()
 
     def contains_set(self, other, tol=0.0):
         """Test if another set is contained.
@@ -370,6 +419,13 @@ class IntervalProd(Set):
               The order of the norm (see `numpy.linalg.norm`).
               Default: 2.0
 
+        Returns
+        -------
+        dist : `float`
+            Distance to the interior of the IntervalProd.
+            Points strictly inside have distance ``0.0``, points with ``NaN``
+            have distance ``infinity``.
+
         Examples
         --------
 
@@ -385,6 +441,9 @@ class IntervalProd(Set):
             raise ValueError('length {} of point {} does not match '
                              'the dimension {} of the set {}.'
                              ''.format(len(point), point, self.ndim, self))
+
+        if np.any(np.isnan(point)):
+            return np.inf
 
         i_larger = np.where(point > self.end)
         i_smaller = np.where(point < self.begin)

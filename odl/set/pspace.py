@@ -622,10 +622,43 @@ class ProductSpaceVector(LinearSpaceVector):
 
         return '{!r}.element({})'.format(self.space, inner_str)
 
-    def show(self, *args, **kwargs):
-        """Display the parts of this vector."""
+    def show(self, indices=None, **kwargs):
+        """Display the parts of this vector graphically
+
+        Parameters
+        ----------
+        indices : index expression, optional
+            Indices can refer to parts of a `ProductSpaceVector` and slices
+            in the parts in the following way:
+
+            Single index (``indices=0``)
+            => display that part
+
+            Single `slice` (``indices=slice(None)``), or
+            index `list` (``indices=[0, 1, 3]``)
+            => display those parts
+
+            Any `tuple`, for example:
+            Created by `numpy.s_` ``indices=np.s_[0, :, :]`` or
+            Using a raw `tuple` ``indices=([0, 3], slice(None))``
+            => take the first elements to select the parts and
+            pass the rest on to the underlying show methods.
+
+        kwargs
+            Arguments for the underlying vectors.
+
+        Returns
+        -------
+        fig : list of ``matplotlib`` figure's
+            The resulting figures. It is also shown to the user.
+
+        See Also
+        --------
+        DiscreteLpVector.show : Show for discretized data
+        NtuplesBaseVector.show : Show for sequence type data
+        show_discrete_data : underlying implementation
+        """
         title = kwargs.pop('title', 'ProductSpaceVector')
-        indices = kwargs.pop('indices', None)
 
         if indices is None:
             if len(self) < 5:
@@ -648,8 +681,7 @@ class ProductSpaceVector(LinearSpaceVector):
 
         figs = []
         for i, part, fig in zip(indices, self[indices], in_figs):
-            fig = part.show(*args,
-                            title='{}. Part {}'.format(title, i), fig=fig,
+            fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
                             **kwargs)
             figs += [fig]
 

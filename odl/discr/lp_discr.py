@@ -26,13 +26,14 @@ from builtins import super, str
 
 # External
 import numpy as np
+from numbers import Integral
 
 # ODL
 from odl.discr.discretization import (
     Discretization, DiscretizationVector, dspace_type)
 from odl.discr.discr_mappings import (
     GridCollocation, NearestInterpolation, LinearInterpolation)
-from odl.discr.grid import uniform_sampling, RegularGrid
+from odl.discr.grid import uniform_sampling_fromintv, RegularGrid
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import Fn, FunctionSpace, CudaFn, CUDA_AVAILABLE
 from odl.util.ufuncs import DiscreteLpUFuncs
@@ -211,8 +212,8 @@ class DiscreteLp(Discretization):
     def __repr__(self):
         """Return ``repr(self).``"""
         # Check if the factory repr can be used
-        if (uniform_sampling(self.uspace.domain, self.shape,
-                             as_midp=True) == self.grid):
+        if (uniform_sampling_fromintv(self.uspace.domain, self.shape,
+                                      as_midp=True) == self.grid):
             if isinstance(self.dspace, Fn):
                 impl = 'numpy'
                 default_dtype = np.float64
@@ -422,8 +423,8 @@ class DiscreteLpVector(DiscretizationVector):
         """
         return DiscreteLpUFuncs(self)
 
-    def show(self, method='', title='', indices=None,
-             show=False, fig=None, **kwargs):
+    def show(self, method='', title=None, indices=None, show=False, fig=None,
+             **kwargs):
         """Display the function graphically.
 
         Parameters
@@ -433,6 +434,9 @@ class DiscreteLpVector(DiscretizationVector):
 
             'plot' : graph plot
 
+            'scatter' : scattered 2d points
+            (2nd axis <-> value)
+
             2d methods:
 
             'imshow' : image plot with coloring according to value,
@@ -441,11 +445,14 @@ class DiscreteLpVector(DiscretizationVector):
             'scatter' : cloud of scattered 3d points
             (3rd axis <-> value)
 
-        indices : index expression
-            Display a slice of the array instead of the full array.
-            The index expression is most easily created with the
-            `numpy.s_` constructur, i.e. supply ``np.s_[:, 1, :]``
-            to display the first slice along the second axis.
+        indices : index expression, optional
+            Display a slice of the array instead of the full array. The
+            index expression is most easily created with the `numpy.s_`
+            constructor, i.e. supply ``np.s_[:, 1, :]`` to display the
+            first slice along the second axis.
+            For data with 3 or more dimensions, the 2d slice in the first
+            two axes at the "middle" along the remaining axes is shown
+            (semantically ``[:, :, shape[2:] // 2]``).
 
         title : `str`, optional
             Set the title of the figure
@@ -471,17 +478,51 @@ class DiscreteLpVector(DiscretizationVector):
 
         See Also
         --------
-        matplotlib.pyplot.plot : Show graph plot
-
-        matplotlib.pyplot.imshow : Show data as image
-
-        matplotlib.pyplot.scatter : Show scattered 3d points
+        show_discrete_data : Underlying implementation
         """
 
-        from odl.util.graphics import show_discrete_function
-        return show_discrete_function(self, method=method, title=title,
-                                      indices=indices, show=show, fig=fig,
-                                      **kwargs)
+        from odl.util.graphics import show_discrete_data
+
+        # Default to showing x-y slice "in the middle"
+        if indices is None and self.ndim >= 3:
+            indices = [np.s_[:]] * 2
+            indices += [n // 2 for n in self.space.grid.shape[2:]]
+
+        if isinstance(indices, (Integral, slice)):
+            indices = [indices]
+        elif indices is None or indices == Ellipsis:
+            indices = [np.s_[:]] * self.ndim
+        else:
+            indices = list(indices)
+
+        if Ellipsis in indices:
+            # Replace Ellipsis with the correct number of [:] expressions
+            pos = indices.index(Ellipsis)
+            indices = (indices[:pos] +
+                       [np.s_[:]] * (self.ndim - len(indices) + 1) +
+                       indices[pos + 1:])
+
+        if len(indices) < self.ndim:
+            raise ValueError('too few axes ({} < {}).'.format(len(indices),
+                                                              self.ndim))
+        if len(indices) > self.ndim:
+            raise ValueError('too many axes ({} > {}).'.format(len(indices),
+                                                               self.ndim))
+
+        if self.ndim <= 3:
+            axis_labels = ['x', 'y', 'z']
+        else:
+            axis_labels = ['x{}'.format(axis) for axis in range(self.ndim)]
+        squeezed_axes = [axis for axis in range(self.ndim)
+                         if not isinstance(indices[axis], Integral)]
+        axis_labels = [axis_labels[axis] for axis in squeezed_axes]
+
+        # Squeeze grid and values according to the index expression
+        grid = self.space.grid[indices].squeeze()
+        values = self.asarray()[indices].squeeze()
+
+        return show_discrete_data(values, grid, method=method, title=title,
+                                  show=show, fig=fig, **kwargs)
 
 
 def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
@@ -552,7 +593,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     dtype = kwargs.pop('dtype', None)
     ds_type = dspace_type(fspace, impl, dtype)
 
-    grid = uniform_sampling(fspace.domain, nsamples, as_midp=True)
+    grid = uniform_sampling_fromintv(fspace.domain, nsamples, as_midp=True)
 
     weighting = kwargs.pop('weighting', 'simple')
     weighting_ = weighting.lower()
