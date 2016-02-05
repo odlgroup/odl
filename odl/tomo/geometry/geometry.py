@@ -113,8 +113,11 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
     @property
     def grid(self):
-        """Joined sampling grid for motion and detector parameters."""
-        # TODO: document order
+        """Joined sampling grid for motion and detector parameters.
+
+        The sampling grid for detector parameters is appended to the
+        sampling grid for the motion parameters.
+        """
         return self.motion_grid.append(self.det_grid)
 
     @property
