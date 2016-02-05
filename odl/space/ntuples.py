@@ -838,7 +838,7 @@ class Fn(FnBase, Ntuples):
 
         Returns
         -------
-        inner : `field` element
+        inner : `field` `element`
             Inner product of the vectors
 
         Examples

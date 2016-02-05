@@ -212,14 +212,14 @@ class ProductSpace(LinearSpace):
         return self._spaces
 
     def element(self, inp=None):
-        """Create an element in the product space.
+        """Create an element of the product space.
 
         Parameters
         ----------
-        inp : `object`, optional
+        inp : optional
             If ``inp`` is `None`, a new element is created from
             scratch by allocation in the spaces. If ``inp`` is
-            already an element in this space, it is re-wrapped.
+            already an element of this space, it is re-wrapped.
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
@@ -241,7 +241,7 @@ class ProductSpace(LinearSpace):
         >>> vec_3.space == vec_2x3[1].space
         True
 
-        Creates an element in the product space
+        Create an element of the product space
 
         >>> from odl import Rn
         >>> r2, r3 = Rn(2), Rn(3)

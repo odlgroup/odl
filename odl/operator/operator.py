@@ -50,13 +50,13 @@ def _default_call_out_of_place(op, x, **kwargs):
 
     Parameters
     ----------
-    x : ``domain`` element
+    x : ``domain`` `element`
         An object in the operator domain. The operator is applied
         to it.
 
     Returns
     -------
-    out : ``range`` element
+    out : ``range`` `element`
         An object in the operator range. The result of an operator
         evaluation.
     """
@@ -70,11 +70,11 @@ def _default_call_in_place(op, x, out, **kwargs):
 
     Parameters
     ----------
-    x : ``domain`` element
+    x : ``domain`` `element`
         An object in the operator domain. The operator is applied
         to it.
 
-    out : ``range`` element
+    out : ``range`` `element`
         An object in the operator range. The result of an operator
         evaluation.
 
@@ -359,11 +359,11 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element
+    x : `Operator.domain` `element`
         An object in the operator domain to which the operator is
         applied
 
-    out : `Operator.range` element
+    out : `Operator.range` `element`
         An object in the operator range to which the result of the
         operator evaluation is written.
 
@@ -382,7 +382,7 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element
+    x : `Operator.domain` `element`
         An object in the operator domain to which the operator is
         applied
 
@@ -399,11 +399,11 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element
+    x : `Operator.domain` `element`
         An object in the operator domain to which the operator is
         applied
 
-    out : `Operator.range` element, optional
+    out : `Operator.range` `element`, optional
         An object in the operator range to which the result of the
         operator evaluation is written
 
@@ -547,7 +547,7 @@ class Operator(object):
         ----------
         x : `Operator.domain` `element-like`
             Element to which the operator is applied
-        out : `Operator.range` element, optional
+        out : `Operator.range` `element`, optional
             Element to which the result is written
 
         Returns
@@ -570,12 +570,12 @@ class Operator(object):
 
     @property
     def domain(self):
-        """The domain of this operator."""
+        """Set of objects on which this operator can be evaluated."""
         return self._domain
 
     @property
     def range(self):
-        """The range of this operator."""
+        """Set in which the result of an evaluation of this operator lies."""
         return self._range
 
     @property
@@ -637,11 +637,12 @@ class Operator(object):
 
         Parameters
         ----------
-        x : `Operator.domain` element
-            An object in the operator domain to which the operator is
-            applied. The object is treated as immutable, hence it is
-            not modified during evaluation.
-        out : `Operator.range` element, optional
+        x : `Operator.domain` `element-like`
+            An object which can be converted into an element of this
+            operator's domain with the ``self.domain.element`` method.
+            The operator is applied to this object, which is treated
+            as immutable, hence it is not modified during evaluation.
+        out : `Operator.range` `element`, optional
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
@@ -650,7 +651,7 @@ class Operator(object):
 
         Returns
         -------
-        out : `Operator.range` element
+        out : `Operator.range` `element`
             Result of the operator evaluation. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -937,9 +938,8 @@ class Operator(object):
         Parameters
         ----------
         other : scalar
-            If `Operator.range` is a `LinearSpace`,
-            ``scalar`` must be an element of this operator's
-            ``field``.
+            If `Operator.range` is a `LinearSpace`, ``scalar`` must be
+            an element of the ``field`` of this operator's range.
 
         Returns
         -------
@@ -1022,10 +1022,10 @@ class OperatorSum(Operator):
             The second summand. Must have the same
             `Operator.domain` and `Operator.range` as
             ``op1``.
-        tmp_ran : `Operator.range` element, optional
+        tmp_ran : `Operator.range` `element`, optional
             Used to avoid the creation of a temporary when applying the
             operator.
-        tmp_dom : `Operator.domain` element, optional
+        tmp_dom : `Operator.domain` `element`, optional
             Used to avoid the creation of a temporary when applying the
             operator adjoint.
         """
@@ -1143,7 +1143,7 @@ class OperatorComp(Operator):
         right : `Operator`
             The right ("inner") operator. Its range must coincide with the
             domain of ``left``.
-        tmp : element of the range of ``right``, optional
+        tmp : `element` of the range of ``right``, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
@@ -1306,7 +1306,7 @@ class OperatorLeftScalarMult(Operator):
         op : `Operator`
             The range of ``op`` must be a `LinearSpace`
             or `Field`.
-        scalar : ``op.range.field`` element
+        scalar : ``op.range.field`` `element`
             A real or complex number, depending on the field of
             the range.
         """
@@ -1415,10 +1415,10 @@ class OperatorRightScalarMult(Operator):
         op : `Operator`
             The domain of ``op`` must be a `LinearSpace` or
             `Field`.
-        scalar : ``op.range.field`` element
+        scalar : ``op.range.field`` `element`
             A real or complex number, depending on the field of
             the operator domain.
-        tmp : domain element, optional
+        tmp : domain `element`, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """

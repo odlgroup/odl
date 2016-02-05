@@ -132,7 +132,7 @@ def power_method_opnorm(op, niter, xstart=None):
         operator must be linear).
     niter : positive `int`
         Number of iterations to perform
-    xstart : `Operator.domain` element, optional
+    xstart : `Operator.domain` `element`, optional
         Starting point of the iteration. By default, the ``one``
         element of the `Operator.domain` is used.
 

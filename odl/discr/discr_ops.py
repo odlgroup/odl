@@ -289,14 +289,14 @@ class PartialDerivative(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             Input vector to which the operator is applied to
         out : ``range`` element, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element, optional
+        out : ``range`` `element`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -372,15 +372,15 @@ class Gradient(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             Input vector to which the `Gradient` operator is
             applied
-        out : ``range`` element, optional
+        out : ``range`` `element`, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element, optional
+        out : ``range`` `element`
             Result of the evaluation. If ``out`` was
             provided, the returned object is a reference to it.
 
@@ -483,15 +483,15 @@ class Divergence(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             `ProductSpaceVector` to which the divergence operator
             is applied
-        out : ``range`` element, optional
+        out : ``range`` `element`, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element, optional
+        out : ``range`` `element`
             Result of the evaluationIf ``out`` was
             provided, the returned object is a reference to it.
 
@@ -584,15 +584,15 @@ class Laplacian(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             Input vector to which the `Laplacian` operator is
             applied
-        out : ``range`` element, optional
+        out : ``range`` `element`, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element, optional
+        out : ``range`` `element`
             Result of the evaluation. If ``out`` was
             provided, the returned object is a reference to it.
 
