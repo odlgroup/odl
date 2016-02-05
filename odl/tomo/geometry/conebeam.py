@@ -34,8 +34,7 @@ from odl.tomo.geometry.geometry import (DivergentBeamGeometry,
 from odl.tomo.util.utility import perpendicular_vector
 
 
-__all__ = ('CircularConeFlatGeometry',
-           'HelicalConeFlatGeometry',)
+__all__ = ('CircularConeFlatGeometry', 'HelicalConeFlatGeometry',)
 
 
 class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
@@ -48,11 +47,14 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
     The motion parameter is the (1d) rotation angle parametrizing source and
     detector positions.
+
+    See Also
+    --------
+    CircularConeFlatGeometry : Case with no pitch
     """
 
     def __init__(self, agrid, dgrid, src_radius, det_radius,
-                 pitch, pitch_offset=0,
-                 axis=[0, 0, 1], src_to_det=None, detector_axes=None):
+                 pitch, axis=[0, 0, 1], **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -68,10 +70,10 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         pitch : positive `float`
             Constant vertical distance between two source positions, one at
             angle ``phi``, the other at angle ``phi + 2 * pi``
-        pitch_offset : `float`
-            Offset along the axis at ``angle=0``.
         axis : 3-element array, optional
             Fixed rotation axis defined by a 3-element vector
+        pitch_offset : `float`, optional
+            Offset along the axis at ``angle=0``.
         src_to_det : 3-element array, optional
             The direction from the source to the point (0, 0) of the detector
             angle=0. Default: Vector in x, y plane orthogonal to axis.
@@ -82,22 +84,21 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         AxisOrientedGeometry.__init__(self, axis)
 
-        if src_to_det is None:
-            src_to_det = perpendicular_vector(axis)
+        src_to_det = kwargs.pop('src_to_det', perpendicular_vector(self.axis))
 
         self._src_to_det = (np.array(src_to_det) /
                             np.linalg.norm(src_to_det))
 
-        if detector_axes is None:
-            detector_axes = [np.cross(self.axis, self._src_to_det),
-                             self.axis]
+        detector_axes = kwargs.pop('src_to_det',
+                                   [np.cross(self.axis, self._src_to_det),
+                                    self.axis])
 
         detector = Flat2dDetector(dgrid, detector_axes)
 
         DivergentBeamGeometry.__init__(self, 3, agrid, detector)
 
         self._pitch = float(pitch)
-        self._pitch_offset = float(pitch_offset)
+        self._pitch_offset = float(kwargs.pop('pitch_offset', 0.0))
         self._src_radius = float(src_radius)
         if self.src_radius <= 0:
             raise ValueError('source circle radius {} is not positive.'
@@ -239,10 +240,14 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
 
     The motion parameter is the (1d) rotation angle parametrizing source and
     detector positions.
+
+    See Also
+    --------
+    HelicalConeFlatGeometry : General case with motion in z direction
     """
 
-    def __init__(self, agrid, dgrid, src_radius, det_radius,
-                 axis=[0, 0, 1], src_to_det=None, detector_axes=None):
+    def __init__(self, agrid, dgrid, src_radius, det_radius, axis=[0, 0, 1],
+                 **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -266,6 +271,5 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
             Default: (normalized) [np.cross(axis, source_to_detector), axis]
         """
         pitch = 0
-        pitch_offset = 0
         super().__init__(agrid, dgrid, src_radius, det_radius,
-                         pitch, pitch_offset, axis, src_to_det, detector_axes)
+                         pitch, axis, **kwargs)
