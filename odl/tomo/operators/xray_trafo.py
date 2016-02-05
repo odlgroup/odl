@@ -64,10 +64,9 @@ class XrayTransform(Operator):
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
             Default: 'astra'
-        kwargs : {'interp'}
-            'interp' : {'nearest', 'linear'}
-                Interpolation type for the discretization of the
-                operator range. Default: 'nearest'
+        interp : {'nearest', 'linear'}
+            Interpolation type for the discretization of the operator range.
+            Default: 'nearest'
         """
         if not isinstance(discr_domain, DiscreteLp):
             raise TypeError('discretized domain {!r} is not a `DiscreteLp`'
@@ -186,10 +185,9 @@ class XrayBackProjector(Operator):
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
             Default: 'astra'
-        kwargs : {'interp'}
-            'interp' : {'nearest', 'linear'}
-                Interpolation type for the discretization of the
-                operator range. Default: 'nearest'
+        interp : {'nearest', 'linear'}
+            Interpolation type for the discretization of the operator range.
+            Default: 'nearest'
         """
         if not isinstance(discr_range, DiscreteLp):
             raise TypeError('discretized range {!r} is not a `DiscreteLp`'
@@ -198,14 +196,6 @@ class XrayBackProjector(Operator):
         if not isinstance(geometry, Geometry):
             raise TypeError('geometry {!r} is not a `Geometry` instance.'
                             ''.format(geometry))
-
-        if not geometry.has_motion_sampling:
-            raise ValueError('geometry {} does not have sampling grids for '
-                             'motion.'.format(geometry))
-
-        if not geometry.has_det_sampling:
-            raise ValueError('geometry {} does not have sampling grids for '
-                             'the detector.'.format(geometry))
 
         backend = str(backend).lower()
         if backend not in _SUPPORTED_BACKENDS:

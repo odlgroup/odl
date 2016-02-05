@@ -1000,7 +1000,7 @@ class RegularGrid(TensorGrid):
         ----------
         index : `int`
             Index of the dimension before which ``other`` is to
-            be inserted. Must fulfill ``0 <= index <= ndim``.
+            be inserted. Negative indices are added to ``ndim``.
         other : `TensorGrid`
             Grid to be inserted. If a `RegularGrid` is given,
             the output will be a `RegularGrid`.

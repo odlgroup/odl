@@ -186,7 +186,7 @@ def test_astra_projection_geometry():
     geom_p2d = odl.tomo.Parallel2dGeometry(angle_grid, det_grid)
     astra_geom = odl.tomo.astra_projection_geometry(geom_p2d)
     assert astra_geom['type'] == 'parallel'
-    print(astra_geom)
+
     # Fan flat
     src_rad = 10
     det_rad = 5
