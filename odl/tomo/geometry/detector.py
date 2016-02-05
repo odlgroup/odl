@@ -400,9 +400,8 @@ class CircleSectionDetector(Detector):
         param : element of `params`
             The parameter value where to evaluate the function
         """
-        if (param in self.params or
-                (isinstance(param, np.ndarray) and
-                 all(par in self.params for par in param))):
+        if (param in self.params or (param.contains_all(np.ndarray) and all(
+                par in self.params for par in param))):
             return self.circ_rad * np.array([-np.sin(param), np.cos(param)]).T
         else:
             raise ValueError('parameter value(s) {} not in the valid range '

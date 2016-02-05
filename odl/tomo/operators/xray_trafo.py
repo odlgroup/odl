@@ -28,7 +28,7 @@ import numpy as np
 
 # Internal
 from odl.discr.lp_discr import DiscreteLp
-from odl.space import FunctionSpace, Ntuples, CudaNtuples
+from odl.space import FunctionSpace
 from odl.operator.operator import Operator
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.backends import (
@@ -36,7 +36,8 @@ from odl.tomo.backends import (
     astra_cpu_forward_projector, astra_cpu_back_projector,
     astra_cuda_forward_projector, astra_cuda_back_projector)
 
-_SUPPORTED_BACKENDS = ('astra', 'astra_cpu', 'astra_cuda')
+
+_SUPPORTED_BACKENDS = ('astra_cpu', 'astra_cuda')
 
 __all__ = ('XrayTransform', 'XrayBackProjector')
 
@@ -58,15 +59,13 @@ class XrayTransform(Operator):
             The geometry of the transform, contains information about
             the operator range. It needs to have a sampling grid for
             motion and detector parameters.
-        backend : {'astra', 'astra_cuda', 'astra_cpu'}, optional
+        backend : {'astra_cuda', 'astra_cpu'}, optional
             Implementation back-end for the transform. Supported back-ends:
-            'astra': ASTRA toolbox, uses CPU or CUDA depending on the
-            underlying data space of ``discr_dom``
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
             Default: 'astra'
         kwargs : {'interp'}
-            'interp' : {'nearest', 'linear', 'cubic'}
+            'interp' : {'nearest', 'linear'}
                 Interpolation type for the discretization of the
                 operator range. Default: 'nearest'
         """
@@ -83,21 +82,10 @@ class XrayTransform(Operator):
             raise ValueError('backend {!r} not supported.'
                              ''.format(backend))
 
-        if backend == 'astra':
-            if isinstance(discr_domain.dspace, CudaNtuples):
-                self._backend = 'astra_cuda'
-            elif isinstance(discr_domain.dspace, Ntuples):
-                self._backend = 'astra_cpu'
-            else:
-                raise TypeError('discr_domain.dspace {} must be a CudaNtuples '
-                                'or a Ntuples'.format(discr_domain.dspace))
-        else:
-            self._backend = backend
-
-        if self.backend.startswith('astra'):
+        if backend.startswith('astra'):
             if not ASTRA_AVAILABLE:
                 raise ValueError('ASTRA backend not available.')
-            if not ASTRA_CUDA_AVAILABLE and self.backend == 'astra_cuda':
+            if not ASTRA_CUDA_AVAILABLE and backend == 'astra_cuda':
                 raise ValueError('ASTRA CUDA backend not available.')
             if discr_domain.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
@@ -109,6 +97,7 @@ class XrayTransform(Operator):
                                  ''.format(discr_domain.grid.stride))
 
         self._geometry = geometry
+        self._backend = backend
         self.kwargs = kwargs
 
         # Create a discretized space (operator range) with the same data-space
@@ -124,7 +113,7 @@ class XrayTransform(Operator):
         range_dspace = discr_domain.dspace_type(
             geometry.grid.size, weight=weight, dtype=discr_domain.dspace.dtype)
 
-        range_interp = kwargs.pop('interp', 'nearest')
+        range_interp = kwargs.get('interp', 'nearest')
 
         discr_range = DiscreteLp(
             range_uspace, geometry.grid, range_dspace,
@@ -192,15 +181,13 @@ class XrayBackProjector(Operator):
             The geometry of the transform, contains information about
             the operator domain. It needs to have a sampling grid for
             motion and detector parameters.
-        backend : {'astra', 'astra_cuda', 'astra_cpu'}, optional
+        backend : {'astra_cuda', 'astra_cpu'}, optional
             Implementation back-end for the transform. Supported back-ends:
-            'astra': ASTRA toolbox, uses CPU or CUDA depending on the
-            underlying data space of ``discr_range``
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
             Default: 'astra'
         kwargs : {'interp'}
-            'interp' : {'nearest', 'linear', 'cubic'}
+            'interp' : {'nearest', 'linear'}
                 Interpolation type for the discretization of the
                 operator range. Default: 'nearest'
         """
@@ -225,21 +212,10 @@ class XrayBackProjector(Operator):
             raise ValueError('backend {!r} not supported.'
                              ''.format(backend))
 
-        if backend == 'astra':
-            if isinstance(discr_range.dspace, CudaNtuples):
-                self._backend = 'astra_cuda'
-            elif isinstance(discr_range.dspace, Ntuples):
-                self._backend = 'astra_cpu'
-            else:
-                raise TypeError('discr_range.dspace {} must be a CudaNtuples '
-                                'or a Ntuples'.format(discr_range.dspace))
-        else:
-            self._backend = backend
-
-        if self.backend.startswith('astra'):
+        if backend.startswith('astra'):
             if not ASTRA_AVAILABLE:
                 raise ValueError('ASTRA backend not available.')
-            if not ASTRA_CUDA_AVAILABLE and self.backend == 'astra_cuda':
+            if not ASTRA_CUDA_AVAILABLE and backend == 'astra_cuda':
                 raise ValueError('ASTRA CUDA backend not available.')
             if discr_range.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
@@ -251,6 +227,7 @@ class XrayBackProjector(Operator):
                                  ''.format(discr_range.grid.stride))
 
         self._geometry = geometry
+        self._backend = backend
         self.kwargs = kwargs
 
         # Create a discretized space (operator domain) with the same data-space
@@ -265,7 +242,7 @@ class XrayBackProjector(Operator):
         domain_dspace = discr_range.dspace_type(
             geometry.grid.size, weight=weight, dtype=discr_range.dspace.dtype)
 
-        domain_interp = kwargs.pop('interp', 'nearest')
+        domain_interp = kwargs.get('interp', 'nearest')
         disc_domain = DiscreteLp(
             domain_uspace, geometry.grid, domain_dspace,
             interp=domain_interp, order=geometry.grid.order)
