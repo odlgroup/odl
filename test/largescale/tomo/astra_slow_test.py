@@ -22,10 +22,13 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import odl
-import odl.tomo as tomo
+# External
 import pytest
 import numpy as np
+
+# Internal
+import odl
+import odl.tomo as tomo
 
 
 pytestmark = odl.util.skip_if_no_largescale
@@ -40,8 +43,7 @@ if tomo.ASTRA_CUDA_AVAILABLE:
                    'par3d cuda', 'cone3d cuda']
 
 
-@pytest.fixture(scope="module",
-                params=projectors)
+@pytest.fixture(scope="module", params=projectors)
 def projector(request):
     geom, version = request.param.split()
     if geom == 'par2d':
@@ -56,7 +58,7 @@ def projector(request):
 
         # X-ray transform
         return tomo.XrayTransform(discr_reco_space, geom,
-                                          backend='astra_' + version)
+                                  backend='astra_' + version)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
@@ -95,9 +97,8 @@ def projector(request):
         # Geometry
         agrid = odl.uniform_sampling(0, 2 * np.pi, 200)
         dgrid = odl.uniform_sampling([-30, -30], [30, 30], [200, 200])
-        geom = tomo.CircularConeFlatGeometry(agrid, dgrid,
-                                             src_radius=200, det_radius=100,
-                                             axis=[1, 0, 0])
+        geom = tomo.CircularConeFlatGeometry(
+            agrid, dgrid, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
         # X-ray transform
         return tomo.XrayTransform(discr_reco_space, geom,

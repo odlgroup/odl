@@ -61,8 +61,6 @@ class FanFlatGeometry(DivergentBeamGeometry):
             Radius of the source circle, must be positive
         det_radius : positive `float`
             Radius of the detector circle, must be positive
-        agrid : 1-dim. `TensorGrid`, optional
-            A sampling grid for `angle_intvl`
         src_to_det : 2-element array, optional
             The direction from the source to the point (0) of the detector
             angle=0
