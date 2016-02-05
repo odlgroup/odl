@@ -483,6 +483,7 @@ class TensorGrid(Set):
                     self.coord_vectors[index:])
 
         if other.as_midp != self.as_midp:
+            print('\n\nOTHER:', other.as_midp, 'SELF:', self.as_midp)
             raise ValueError('not implemented')
 
         return TensorGrid(*new_vecs, as_midp=self.as_midp)
@@ -950,7 +951,7 @@ class RegularGrid(TensorGrid):
         Parameters
         ----------
         other : `RegularGrid`
-        tol : `float`
+        tol : `float`, optional
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
@@ -1013,11 +1014,11 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        other : `RegularGrid` or `TensorGrid`
-            The grid to be inserted.
         index : `numbers.Integral`
             The index of the dimension before which 'other' is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
+        other : `RegularGrid` or `TensorGrid`
+            The grid to be inserted.
 
         Returns
         -------

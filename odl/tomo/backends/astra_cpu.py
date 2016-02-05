@@ -36,7 +36,6 @@ from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_data,
     astra_projector, astra_algorithm)
 from odl.tomo.geometry import Geometry
-from odl.tomo.geometry.fanbeam import FanFlatGeometry
 
 __all__ = ('astra_cpu_forward_projector', 'astra_cpu_back_projector')
 
@@ -197,9 +196,8 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     size = float(geometry.motion_grid.size)
     scaling_factor = extent / size
 
-    # Fix inconsistent scaling
-    # parallel2d & fanflat scale with (voxel stride)**2 / (pixel stride)
-    # currently only square voxels are supported
+    # Fix inconsistent scaling: parallel2d & fanflat scale with (voxel
+    # stride)**2 / (pixel stride), currently only square voxels are supported
     scaling_factor *= float(geometry.det_grid.stride[0])
     scaling_factor /= float(reco_space.grid.stride[0]) ** 2
 

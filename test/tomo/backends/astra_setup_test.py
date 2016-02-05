@@ -182,15 +182,15 @@ def test_astra_projection_geometry():
 
     # Parallel 2D geometry
     geom_p2d = odl.tomo.Parallel2dGeometry(angle_grid, det_grid)
-    ageom = odl.tomo.astra_projection_geometry(geom_p2d)
-    assert ageom['type'] == 'parallel'
+    astra_geom = odl.tomo.astra_projection_geometry(geom_p2d)
+    assert astra_geom['type'] == 'parallel'
 
     # Fan flat
     src_rad = 10
     det_rad = 5
     geom_ff = odl.tomo.FanFlatGeometry(angle_grid, det_grid, src_rad, det_rad)
-    ageom = odl.tomo.astra_projection_geometry(geom_ff)
-    assert ageom['type'] == 'fanflat_vec'
+    astra_geom = odl.tomo.astra_projection_geometry(geom_ff)
+    assert astra_geom['type'] == 'fanflat_vec'
 
     det_grid = odl.uniform_sampling([-40, -3], [40, 3], (10, 5))
 
@@ -203,16 +203,16 @@ def test_astra_projection_geometry():
     # Circular conebeam flat
     geom_ccf = odl.tomo.CircularConeFlatGeometry(angle_grid, det_grid,
                                                  src_rad, det_rad)
-    ageom = odl.tomo.astra_projection_geometry(geom_ccf)
-    assert ageom['type'] == 'cone_vec'
+    astra_geom = odl.tomo.astra_projection_geometry(geom_ccf)
+    assert astra_geom['type'] == 'cone_vec'
 
     # Helical conebeam flat
     spiral_pitch_factor = 1
     geom_hcf = odl.tomo.HelicalConeFlatGeometry(angle_grid, det_grid,
                                                 src_rad, det_rad,
                                                 spiral_pitch_factor)
-    ageom = odl.tomo.astra_projection_geometry(geom_hcf)
-    assert ageom['type'] == 'cone_vec'
+    astra_geom = odl.tomo.astra_projection_geometry(geom_hcf)
+    assert astra_geom['type'] == 'cone_vec'
 
 
 vol_geom_2d = {

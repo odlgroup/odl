@@ -177,18 +177,14 @@ class FlatDetector(with_metaclass(ABCMeta, Detector)):
 
     def __repr__(self):
         """Returns ``repr(self)``."""
-        inner_fstr = '{!r}'
-        if self.has_sampling:
-            inner_fstr += ',\n grid={grid!r}'
+        inner_fstr = '{!r},\n grid={grid!r}'
         inner_str = inner_fstr.format(self.params, grid=self.param_grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """d.__str__() <==> str(d)."""
         # TODO: prettify
-        inner_fstr = '{}'
-        if self.has_sampling:
-            inner_fstr += ',\n grid={grid}'
+        inner_fstr = '{},\n grid={grid}'
         inner_str = inner_fstr.format(self.params, grid=self.param_grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
@@ -426,9 +422,7 @@ class CircleSectionDetector(Detector):
 
     def __repr__(self):
         """Returns ``repr(self)``."""
-        inner_fstr = '{!r}, {}'
-        if self.has_sampling:
-            inner_fstr += ',\n grid={grid!r}'
+        inner_fstr = '{!r}, {},\n grid={grid!r}'
         inner_str = inner_fstr.format(self.params, self.circ_rad,
                                       grid=self.param_grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
@@ -436,9 +430,7 @@ class CircleSectionDetector(Detector):
     def __str__(self):
         """d.__str__() <==> str(d)."""
         # TODO: prettify
-        inner_fstr = '{}, {}'
-        if self.has_sampling:
-            inner_fstr += ',\n grid={grid}'
+        inner_fstr = '{}, {},\n grid={grid}'
         inner_str = inner_fstr.format(self.params, self.circ_rad,
                                       grid=self.param_grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)

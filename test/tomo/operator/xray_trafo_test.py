@@ -48,8 +48,7 @@ if tomo.ASTRA_CUDA_AVAILABLE:
                    'helical cuda uniform']
 
 
-@pytest.fixture(scope="module",
-                params=projectors)
+@pytest.fixture(scope="module", params=projectors)
 def projector(request):
     n_voxels = 100
     n_angles = 100
@@ -58,42 +57,35 @@ def projector(request):
     geom, version, angle = request.param.split()
 
     if angle == 'uniform':
-        angle_intvl = odl.Interval(0, 2 * np.pi)
-        agrid = odl.uniform_sampling(angle_intvl, n_angles)
+        agrid = odl.uniform_sampling(0, 2 * np.pi, n_angles)
     elif angle == 'random':
-        angle_intvl = odl.Interval(0, 2 * np.pi)
-        minp = 2 * (2.0 * np.pi) / n_angles
-        maxp = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
-        points = np.sort(np.random.rand(n_angles)) * (maxp - minp) + minp
+        min_pt = 2 * (2.0 * np.pi) / n_angles
+        max_pt = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
+        points = np.sort(np.random.rand(n_angles)) * (max_pt - min_pt) + min_pt
         agrid = odl.TensorGrid(points, as_midp=True)
     else:
         raise ValueError('angle not valid')
 
     if geom == 'par2d':
         # Discrete reconstruction space
-        discr_reco_space = odl.uniform_discr([-20, -20],
-                                             [20, 20],
+        discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
                                              [n_voxels] * 2, dtype='float32')
 
         # Geometry
-        dparams = odl.Interval(-30, 30)
-        dgrid = odl.uniform_sampling(dparams, n_pixels)
+        dgrid = odl.uniform_sampling(-30, 30, n_pixels)
+        geom = tomo.Parallel2dGeometry(agrid, dgrid)
 
-        geom = tomo.Parallel2dGeometry(angle_intvl, dparams, agrid, dgrid)
         return tomo.XrayTransform(discr_reco_space, geom,
                                   backend='astra_' + version)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
-        discr_reco_space = odl.uniform_discr([-20, -20, -20],
-                                             [20, 20, 20],
+        discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
                                              [n_voxels] * 3, dtype='float32')
 
         # Geometry
-        dparams = odl.Rectangle([-30, -30], [30, 30])
-        dgrid = odl.uniform_sampling(dparams, [n_pixels] * 2)
-
-        geom = tomo.Parallel3dGeometry(angle_intvl, dparams, agrid, dgrid)
+        dgrid = odl.uniform_sampling([-30, -30], [30, 30], [n_pixels] * 2)
+        geom = tomo.Parallel3dGeometry(agrid, dgrid)
 
         # X-ray transform
         return tomo.XrayTransform(discr_reco_space, geom,
@@ -101,17 +93,13 @@ def projector(request):
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
-        discr_reco_space = odl.uniform_discr([-20, -20],
-                                             [20, 20],
+        discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
                                              [n_voxels] * 2, dtype='float32')
 
         # Geometry
-        dparams = odl.Interval(-30, 30)
-        dgrid = odl.uniform_sampling(dparams, n_pixels)
-
-        geom = tomo.FanFlatGeometry(angle_intvl, dparams,
-                                    src_radius=200, det_radius=100,
-                                    agrid=agrid, dgrid=dgrid)
+        dgrid = odl.uniform_sampling(-30, 30, n_pixels)
+        geom = tomo.FanFlatGeometry(agrid, dgrid, src_radius=200,
+                                    det_radius=100)
 
         # X-ray transform
         return tomo.XrayTransform(discr_reco_space, geom,
@@ -119,17 +107,14 @@ def projector(request):
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
-        discr_reco_space = odl.uniform_discr([-20, -20, -20],
-                                             [20, 20, 20],
+        discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
                                              [n_voxels] * 3, dtype='float32')
 
         # Geometry
-        dparams = odl.Rectangle([-30, -30], [30, 30])
-        dgrid = odl.uniform_sampling(dparams, [n_pixels] * 2)
+        dgrid = odl.uniform_sampling([-30, -30], [30, 30], [n_pixels] * 2)
 
-        geom = tomo.CircularConeFlatGeometry(angle_intvl, dparams,
-                                             src_radius=200, det_radius=100,
-                                             agrid=agrid, dgrid=dgrid)
+        geom = tomo.CircularConeFlatGeometry(agrid, dgrid, src_radius=200,
+                                             det_radius=100)
 
         # X-ray transform
         return tomo.XrayTransform(discr_reco_space, geom,
@@ -137,19 +122,14 @@ def projector(request):
 
     elif geom == 'helical':
         # Discrete reconstruction space
-        discr_reco_space = odl.uniform_discr([-20, -20, 0],
-                                             [20, 20, 40],
+        discr_reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
                                              [n_voxels] * 3, dtype='float32')
 
         # overwrite angle
-        angle_intvl = odl.Interval(0, 8 * 2 * np.pi)
-        agrid = odl.uniform_sampling(angle_intvl, n_angles)
-
-        dparams = odl.Rectangle([-30, -3], [30, 3])
-        dgrid = odl.uniform_sampling(dparams, [n_pixels] * 2)
-        geom = tomo.HelicalConeFlatGeometry(angle_intvl, dparams, pitch=5.0,
-                                            src_radius=200, det_radius=100,
-                                            agrid=agrid, dgrid=dgrid)
+        agrid = odl.uniform_sampling(0, 8 * 2 * np.pi, n_angles)
+        dgrid = odl.uniform_sampling([-30, -3], [30, 3], [n_pixels] * 2)
+        geom = tomo.HelicalConeFlatGeometry(agrid, dgrid, pitch=5.0,
+                                            src_radius=200, det_radius=100)
 
         # X-ray transform
         return tomo.XrayTransform(discr_reco_space, geom,
