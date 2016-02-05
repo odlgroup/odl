@@ -26,7 +26,8 @@ standard_library.install_aliases()
 # External
 import numpy as np
 
-__all__ = ('derenzo_sources', 'shepp_logan', 'submarine_phantom')
+__all__ = ('ellipse_phantom_2d', 'ellipse_phantom_3d',
+           'derenzo_sources', 'shepp_logan', 'submarine_phantom')
 
 
 def _shepp_logan_ellipse_2d():
@@ -161,7 +162,17 @@ def _derenzo_sources_2d():
             [1.0, 0.023968, 0.023968, 0.88528, -0.11791, 0.0]]
 
 
-def _phantom_2d(space, ellipses):
+def _make_3d_cylinders(ellipses2d):
+    """Create 3d cylinders from ellipses."""
+    ellipses2d = np.asarray(ellipses2d)
+    ellipses3d = np.zeros((ellipses2d.shape[0], 10))
+    ellipses3d[:, [0, 1, 2, 4, 5, 7]] = ellipses2d
+    ellipses3d[:, 3] = 100000.0
+
+    return ellipses3d
+
+
+def ellipse_phantom_2d(space, ellipses):
     """Create a phantom in 2d space.
 
     Parameters
@@ -234,7 +245,7 @@ def _getshapes(center, max_radius, shape):
     return idx, shapes
 
 
-def _phantom_3d(space, ellipses):
+def ellipse_phantom_3d(space, ellipses):
     """Create a phantom in 3d space.
 
     Parameters
@@ -358,9 +369,9 @@ def phantom(space, ellipses):
     """Return a phantom given by ellipses."""
 
     if space.ndim == 2:
-        return _phantom_2d(space, ellipses)
+        return ellipse_phantom_2d(space, ellipses)
     elif space.ndim == 3:
-        return _phantom_3d(space, ellipses)
+        return ellipse_phantom_3d(space, ellipses)
     else:
         raise ValueError("Dimension not 2 or 3, no phantom available")
 
@@ -371,7 +382,10 @@ def derenzo_sources(space):
     The Derenzo phantom contains a series of circles of decreasing size.
     """
     if space.ndim == 2:
-        return _phantom_2d(space, _derenzo_sources_2d())
+        return ellipse_phantom_2d(space, _derenzo_sources_2d())
+    if space.ndim == 3:
+        return ellipse_phantom_3d(space,
+                                  _make_3d_cylinders(_derenzo_sources_2d()))
     else:
         raise ValueError("Dimension not 2, no phantom available")
 
