@@ -228,7 +228,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, `NtuplesBaseVector`}
+        values : scalar, `array-like` or `NtuplesBaseVector`
             The value(s) that are to be assigned.
 
             If ``index`` is an integer, ``value`` must be single value.

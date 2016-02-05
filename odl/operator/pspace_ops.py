@@ -101,7 +101,7 @@ class ProductSpaceOperator(Operator):
 
         Parameters
         ----------
-        operators : array-like
+        operators : `array-like`
             An array of `Operator`'s
         dom : `ProductSpace`
             Domain of the operator. If not provided, it is tried to be

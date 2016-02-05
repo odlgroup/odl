@@ -51,7 +51,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
 
     Parameters
     ----------
-    f : array-like
+    f : `array-like`
          An N-dimensional array
     out : `numpy.ndarray`, optional
          An N-dimensional array to which the output is written.

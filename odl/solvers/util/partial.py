@@ -250,10 +250,10 @@ class ShowPartial(Partial):
 
         Parameters
         ----------
-        *args, **kwargs
-            passed ax ``x.show(*args, **kwargs)``
         display_step : positive `int`
             Number of iterations between plots. Default: 1
+        args, kwargs :
+            Optional arguments passed on to ``x.show``
         """
         self.args = args
         self.kwargs = kwargs
@@ -262,7 +262,7 @@ class ShowPartial(Partial):
         self.iter = 0
 
     def __call__(self, x):
-        """Show the current iteration."""
+        """Show the current iterate."""
         if (self.iter % self.display_step) == 0:
             self.fig = x.show(fig=self.fig, show=True,
                               *self.args, **self.kwargs)
@@ -271,11 +271,13 @@ class ShowPartial(Partial):
 
     def __str__(self):
         """Return ``str(self)``"""
-        return 'ShowPartial(*{}, **{})'.format(self.args, self.kwargs)
+        return '{}(*{}, **{})'.format(self.__class__.__name__, self.args,
+                                      self.kwargs)
 
     def __repr__(self):
         """Return ``repr(self)``"""
-        return 'ShowPartial(*{!r}, **{!r})'.format(self.args, self.kwargs)
+        return '{}(*{!r}, **{!r})'.format(self.__class__.__name__, self.args,
+                                          self.kwargs)
 
 
 if __name__ == '__main__':

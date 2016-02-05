@@ -709,7 +709,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
         coord_vecs : `sequence` of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
-        values : array-like
+        values : `array-like`
             Grid values to use for interpolation
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
@@ -819,7 +819,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
         coord_vecs : `sequence` of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
-        values : array-like
+        values : `array-like`
             Grid values to use for interpolation
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
@@ -948,7 +948,7 @@ class _PerAxisInterpolator(_Interpolator):
 
         coord_vecs : `sequence` of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
-        values : array-like
+        values : `array-like`
             Grid values to use for interpolation
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
@@ -1017,7 +1017,7 @@ class _LinearInterpolator(_PerAxisInterpolator):
 
         coord_vecs : `sequence` of `numpy.ndarray`
             Coordinate vectors defining the interpolation grid
-        values : array-like
+        values : `array-like`
             Grid values to use for interpolation
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``

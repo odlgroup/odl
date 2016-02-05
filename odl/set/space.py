@@ -87,15 +87,15 @@ class LinearSpace(Set):
     def element(self, inp=None, **kwargs):
         """Create a `LinearSpaceVector` from ``inp`` or from scratch.
 
-        If called without ``inp`` argument, an arbitrary element in the
+        If called without ``inp`` argument, an arbitrary element of the
         space is generated without guarantee of its state.
 
         Parameters
         ----------
-        inp : `object`, optional
-            The input data from which to create the element
-        **args : `dict`, optional
-            Optional further arguments.
+        inp : optional
+            Input data from which to create the element
+        kwargs :
+            Optional further arguments
 
         Returns
         -------

@@ -183,7 +183,6 @@ class RawDiscretization(NtuplesBase):
         if inp is None:
             return self.element_type(self, self.dspace.element())
         try:
-            # pylint: disable=not-callable
             return self.element_type(self, self.restriction(inp))
         except TypeError:
             # Sequence-type input
@@ -282,7 +281,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
                 self.ntuple == other.ntuple)
 
     def __getitem__(self, indices):
-        """Access values of this vector.
+        """Return ``self[indices]``.
 
         Parameters
         ----------
@@ -297,13 +296,13 @@ class RawDiscretizationVector(NtuplesBaseVector):
         return self.ntuple.__getitem__(indices)
 
     def __setitem__(self, indices, values):
-        """Set values of this vector.
+        """Implement ``self[indices] = values``.
 
         Parameters
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, `NtuplesBaseVector`}
+        values : scalar, `array-like` or `NtuplesBaseVector`
             The value(s) that are to be assigned.
 
             If ``index`` is an `int`, ``value`` must be single value.
@@ -341,7 +340,7 @@ class Discretization(RawDiscretization, FnBase):
     `Operator`'s.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None, **kwargs):
+    def __init__(self, uspace, dspace, restr=None, ext=None):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -364,7 +363,7 @@ class Discretization(RawDiscretization, FnBase):
             to a `RawDiscretization.uspace` element. Must satisfy
             ``ext.domain == dspace``, ``ext.range == uspace``.
         """
-        super().__init__(uspace, dspace, restr, ext, **kwargs)
+        super().__init__(uspace, dspace, restr, ext)
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
