@@ -240,9 +240,9 @@ class DivergentBeamGeometry(Geometry):
         Parameters
         ----------
         ndim : int
-            number of dimensions of geometry
-        agrid : ndim `TensorGrid`
-            Discretization of the angles
+            Number of dimensions of geometry
+        agrid : 1d `TensorGrid`
+            A sampling grid for the angles given in radians
         detector : `Detector`
             The detector to use
         """

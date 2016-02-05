@@ -1213,6 +1213,10 @@ def uniform_sampling_fromintv(intv_prod, num_nodes):
     >>> grid = uniform_sampling_fromintv(rbox, (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
+
+    See also
+    --------
+    uniform_sampling : Sample an implicitly created `IntervalProd`
     """
     num_nodes = np.atleast_1d(num_nodes).astype('int64', casting='safe')
 
@@ -1291,7 +1295,7 @@ def uniform_sampling(begin, end, num_nodes, as_midp=True):
 
     See also
     --------
-    uniform_sampling_fromintv : Sampling of a given interval
+    uniform_sampling_fromintv : Sampling of a given `IntervalProd`
     """
 
     intv = IntervalProd(begin, end)
