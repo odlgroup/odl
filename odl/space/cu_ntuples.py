@@ -608,7 +608,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         inner : `callable`, optional
             The inner product implementation. It must accept two
-            `CudaFnVector` arguments, return a element from
+            `CudaFnVector` arguments, return an element from
             the field of the space (real or complex number) and
             satisfy the following conditions for all vectors
             :math:`x, y, z` and scalars :math:`s`:
@@ -675,7 +675,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        a, b : `LinearSpace.field` element
+        a, b : `LinearSpace.field` `element`
             Scalar to multiply ``x`` and ``y`` with.
         x, y : `CudaFnVector`
             The summands

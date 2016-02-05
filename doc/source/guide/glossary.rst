@@ -21,9 +21,17 @@ Glossary
     domain
         Set of elements to which an operator can be applied.
 
+    element
+        Saying that ``x`` is an element of a given `Set` ``my_set`` means that ``x in my_set``
+        evaluates to `True`. The term is typically used as "element of <set>" or "<set>" element.
+        When referring to a `LinearSpace` like, e.g., `DiscreteLp`, an element is of the
+        corresponding type `LinearSpaceVector`, i.e. `DiscreteLpVector` in the above example.
+        Elements of a set can be created by the `Set.element` method.
+
     element-like
-        Any data structure which can be converted into a ``<set>Vector`` by
-        the ``<set>.element`` method.
+        Any data structure which can be converted into an :term:`element` of a `Set` by
+        the `Set.element` method. For example, an ``Rn(3) element-like`` is any :term:`array-like`
+        object with 3 real entries.
     
         Example: ```DiscreteLp` element-like`` means that
         `DiscreteLp.element` can create a `DiscreteLpVector` from the input.

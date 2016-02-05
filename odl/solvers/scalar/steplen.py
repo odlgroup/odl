@@ -46,9 +46,9 @@ class StepLength(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        x : `Operator.domain` element
+        x : `Operator.domain` `element`
             The current point
-        direction : `Operator.domain` element
+        direction : `Operator.domain` `element`
             Search direction in which the line search should be computed
         dir_derivative : `float`
             Directional derivative along the ``direction``
@@ -70,9 +70,9 @@ class LineSearch(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        x : `Operator.domain` element
+        x : `Operator.domain` `element`
             The current point
-        direction : `Operator.domain` element
+        direction : `Operator.domain` `element`
             Search direction in which the line search should be computed
         dir_derivative : `float`
             Directional derivative along the ``direction``
@@ -144,9 +144,9 @@ class BacktrackingLineSearch(LineSearch):
 
         Parameters
         ----------
-        x : `Operator.domain` element
+        x : `Operator.domain` `element`
             The current point
-        direction : `Operator.domain` element
+        direction : `Operator.domain` `element`
             Search direction in which the line search should be computed
         dir_derivative : `float`
             Directional derivative along the ``direction``
@@ -187,9 +187,9 @@ class ConstantLineSearch(LineSearch):
 
         Parameters
         ----------
-        x : `Operator.domain` element
+        x : `Operator.domain` `element`
             The current point
-        direction : `Operator.domain` element
+        direction : `Operator.domain` `element`
             Search direction in which the line search should be computed
         dir_derivative : `float`
             Directional derivative along the ``direction``
@@ -239,9 +239,9 @@ class BarzilaiBorweinStep(object):
 
         Parameters
         ----------
-        x : `Operator.domain` element
+        x : `Operator.domain` `element`
             The current point
-        x0 : `Operator.domain` element
+        x0 : `Operator.domain` `element`
             The previous point
 
         Returns
