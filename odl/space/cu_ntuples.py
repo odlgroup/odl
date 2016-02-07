@@ -143,22 +143,15 @@ class CudaNtuples(NtuplesBase):
         element : `CudaNtuplesVector`
             The new element
 
-        Notes
-        -----
-        This method preserves "array views" of correct size and type,
-        see the examples below.
-
-        TODO: No, it does not yet!
-
         Examples
         --------
-        >>> uc3 = CudaNtuples(3, 'uint8')
+        >>> uc3 = CudaNtuples(3, 'float')
         >>> x = uc3.element(np.array([1, 2, 3], dtype='uint8'))
         >>> x
-        CudaNtuples(3, 'uint8').element([1, 2, 3])
+        CudaNtuples(3, 'float').element([1.0, 2.0, 3.0])
         >>> y = uc3.element([1, 2, 3])
         >>> y
-        CudaNtuples(3, 'uint8').element([1, 2, 3])
+        CudaNtuples(3, 'float').element([1.0, 2.0, 3.0])
         """
         if inp is None:
             if data_ptr is None:
@@ -282,10 +275,10 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
         Examples
         --------
-        >>> vec1 = CudaNtuples(3, 'uint8').element([1, 2, 3])
+        >>> vec1 = CudaNtuples(3, 'float').element([1, 2, 3])
         >>> vec2 = vec1.copy()
         >>> vec2
-        CudaNtuples(3, 'uint8').element([1, 2, 3])
+        CudaNtuples(3, 'float').element([1.0, 2.0, 3.0])
         >>> vec1 == vec2
         True
         >>> vec1 is vec2
@@ -357,29 +350,38 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
         Examples
         --------
-        >>> uc3 = CudaNtuples(3, 'uint8')
+        >>> uc3 = CudaNtuples(3, 'float')
         >>> y = uc3.element([1, 2, 3])
-        >>> y[0]
-        1
+
+        Access by index
+
+        >>> y[0] == 1
+        True
+
+        Or by slice
+
         >>> z = y[1:3]
         >>> z
-        CudaNtuples(2, 'uint8').element([2, 3])
+        CudaNtuples(2, 'float').element([2.0, 3.0])
         >>> y[::2]
-        CudaNtuples(2, 'uint8').element([1, 3])
+        CudaNtuples(2, 'float').element([1.0, 3.0])
         >>> y[::-1]
-        CudaNtuples(3, 'uint8').element([3, 2, 1])
+        CudaNtuples(3, 'float').element([3.0, 2.0, 1.0])
 
         The returned value is a view, modifications are reflected
         in the original data:
 
         >>> z[:] = [4, 5]
         >>> y
-        CudaNtuples(3, 'uint8').element([1, 4, 5])
+        CudaNtuples(3, 'float').element([1.0, 4.0, 5.0])
         """
         if isinstance(indices, slice):
             data = self.data.getslice(indices)
             return type(self.space)(data.size, data.dtype).element(data)
         else:
+            if indices < 0:
+                indices += self.size
+
             return self.data.__getitem__(indices)
 
     def __setitem__(self, indices, values):
@@ -407,38 +409,46 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
 
         Examples
         --------
-        >>> uc3 = CudaNtuples(3, 'uint8')
+        >>> uc3 = CudaNtuples(3, 'float')
         >>> y = uc3.element([1, 2, 3])
+
+        Assign by index
+
         >>> y[0] = 5
         >>> y
-        CudaNtuples(3, 'uint8').element([5, 2, 3])
+        CudaNtuples(3, 'float').element([5.0, 2.0, 3.0])
+
+        Or by slice
+
         >>> y[1:3] = [7, 8]
         >>> y
-        CudaNtuples(3, 'uint8').element([5, 7, 8])
+        CudaNtuples(3, 'float').element([5.0, 7.0, 8.0])
         >>> y[:] = np.array([0, 0, 0])
         >>> y
-        CudaNtuples(3, 'uint8').element([0, 0, 0])
+        CudaNtuples(3, 'float').element([0.0, 0.0, 0.0])
 
         Scalar assignment
 
         >>> y[:] = 5
         >>> y
-        CudaNtuples(3, 'uint8').element([5, 5, 5])
+        CudaNtuples(3, 'float').element([5.0, 5.0, 5.0])
         """
         if isinstance(values, CudaNtuplesVector):
             self.assign(values)  # use lincomb magic
-        else:
-            if isinstance(indices, slice):
-                # Convert value to the correct type if needed
-                value_array = np.asarray(values, dtype=self.space.dtype)
+        elif isinstance(indices, slice):
+            # Convert value to the correct type if needed
+            value_array = np.asarray(values, dtype=self.space.dtype)
 
-                if value_array.ndim == 0:
-                    self.data.fill(values)
-                else:
-                    # Size checking is performed in c++
-                    self.data.setslice(indices, value_array)
+            if (value_array.ndim == 0):
+                self.data.fill(values)
             else:
-                self.data.__setitem__(int(indices), values)
+                # Size checking is performed in c++
+                self.data.setslice(indices, value_array)
+        else:
+            if indices < 0:
+                indices += self.size
+
+            self.data.__setitem__(int(indices), values)
 
     @property
     def ufunc(self):

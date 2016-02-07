@@ -319,15 +319,6 @@ def test_slice_is_view():
     assert all_equal(yh, yd)
 
 
-def test_getslice_index_error():
-    r3 = odl.CudaRn(3)
-    xd = r3.element([1, 2, 3])
-
-    # Bad slice
-    with pytest.raises(IndexError):
-        xd[10:13]
-
-
 def _test_setslice(slice):
     # Validate set against python list behaviour
     r6 = odl.CudaRn(6)
