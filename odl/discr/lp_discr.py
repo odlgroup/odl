@@ -249,12 +249,7 @@ class DiscreteLp(Discretization):
             # TODO: implement without copying x
             func_list = _scaling_func_list(bdry_fracs)
 
-            x_arr = x.asarray()
-            if not x_arr.flags.owndata:
-                x_arr = x_arr.copy()
-
-            apply_on_boundary(x_arr, func=func_list, only_once=False,
-                              out=x_arr)
+            x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return super()._inner(self.element(x_arr), y)
 
     def _norm(self, x):
@@ -265,14 +260,9 @@ class DiscreteLp(Discretization):
             return super()._norm(x)
         else:
             # TODO: implement without copying x
-            func_list = _scaling_func_list(bdry_fracs,
-                                           exponent=self.exponent)
-            x_arr = x.asarray()
-            if not x_arr.flags.owndata:
-                x_arr = x_arr.copy()
+            func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
 
-            apply_on_boundary(x_arr, func=func_list, only_once=False,
-                              out=x_arr)
+            x_arr = apply_on_boundary(x, func=func_list, only_once=False)
             return super()._norm(self.element(x_arr))
 
     def _dist(self, x, y):
@@ -283,20 +273,12 @@ class DiscreteLp(Discretization):
             return super()._dist(x, y)
         else:
             # TODO: implement without copying x
-            func_list = _scaling_func_list(bdry_fracs,
-                                           exponent=self.exponent)
+            func_list = _scaling_func_list(bdry_fracs, exponent=self.exponent)
 
-            x_arr, y_arr = x.asarray(), y.asarray()
-            if not x_arr.flags.owndata:
-                x_arr = x_arr.copy()
-            if not y_arr.flags.owndata:
-                y_arr = y_arr.copy()
+            arrs = [apply_on_boundary(vec, func=func_list, only_once=False)
+                    for vec in (x, y)]
 
-            for arr in (x_arr, y_arr):
-                apply_on_boundary(arr, func=func_list, only_once=False,
-                                  out=x_arr)
-
-            return super()._dist(self.element(x_arr), self.element(y_arr))
+            return super()._dist(self.element(arrs[0]), self.element(arrs[1]))
 
     def __repr__(self):
         """Return ``repr(self).``"""
