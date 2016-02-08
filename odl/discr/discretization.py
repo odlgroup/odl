@@ -363,7 +363,7 @@ class Discretization(RawDiscretization, FnBase):
             to a `RawDiscretization.uspace` element. Must satisfy
             ``ext.domain == dspace``, ``ext.range == uspace``.
         """
-        super().__init__(uspace, dspace, restr, ext)
+        RawDiscretization.__init__(self, uspace, dspace, restr, ext)
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):

@@ -183,9 +183,10 @@ class RectPartition(object):
         """Return the sampling grid points."""
         return self.grid.points()
 
+    @property
     def meshgrid(self):
         """Return the sparse meshgrid of sampling points."""
-        return self.grid.meshgrid()
+        return self.grid.meshgrid
 
     # Further derived methods / properties
     @property

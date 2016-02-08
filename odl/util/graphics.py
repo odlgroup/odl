@@ -162,7 +162,7 @@ def show_discrete_data(values, grid, method='', title=None,
             sub_kwargs.update({'projection': '3d'})
         elif method in ('wireframe', 'plot_wireframe'):
             method = 'plot_wireframe'
-            x, y = grid.meshgrid()
+            x, y = grid.meshgrid
             args_re = [x, y, np.rot90(values.real)]
             args_im = ([x, y, np.rot90(values.imag)] if values_are_complex
                        else [])

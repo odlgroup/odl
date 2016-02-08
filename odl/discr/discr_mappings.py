@@ -182,7 +182,7 @@ class PointCollocation(FunctionSetMapping):
         fset : `FunctionSet`
             The non-discretized (abstract) set of functions to be
             discretized. The function domain must provide a
-            `IntervalProd.contains_set` method.
+            `Set.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``ip_fset.domain`` based on a
             `TensorGrid`
@@ -270,7 +270,7 @@ vectorization_guide.html>`_ for a detailed introduction.
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
         try:
-            mesh = self.grid.meshgrid()
+            mesh = self.grid.meshgrid
             if out is None:
                 out = func(mesh).ravel(order=self.order)
             else:
@@ -291,7 +291,7 @@ vectorization_guide.html>`_ for a detailed introduction.
         inner_str = '\n  {!r},\n  {!r},\n  {!r}'.format(
             self.domain, self.grid, self.range)
         if self.order != 'C':
-            inner_str += ",\n order='{}'".format(self.order)
+            inner_str += ",\n  order='{}'".format(self.order)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
@@ -325,10 +325,10 @@ class NearestInterpolation(FunctionSetMapping):
         fset : `FunctionSet`
             The undiscretized (abstract) set of functions to be
             discretized. The function domain must provide a
-            ``contains_set`` method such as `IntervalProd` does.
+            `Set.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``ip_fset.domain`` based on a
-            `TensorGrid`
+            spatial grid
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object. Its `NtuplesBase.size` must be equal
@@ -472,7 +472,7 @@ class LinearInterpolation(FunctionSetMapping):
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
             space. The function domain must provide a
-            ``contains_set`` method such as `IntervalProd` does.
+            `Set.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `TensorGrid`
@@ -552,7 +552,7 @@ class PerAxisInterpolation(FunctionSetMapping):
             The undiscretized (abstract) space of functions to be
             discretized. Its field must be the same as that of data
             space. The function domain must provide a
-            ``contains_set`` method such as `IntervalProd` does.
+            `Set.contains_set` method.
         partition : `RectPartition`
             Partition of (a subset of) ``fspace.domain`` based on a
             `TensorGrid`

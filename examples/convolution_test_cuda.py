@@ -42,8 +42,7 @@ class CudaConvolution(odl.Operator):
         self.kernel = kernel
         self.adjkernel = (adjointkernel if adjointkernel is not None
                           else self.space.element(kernel[::-1].copy()))
-        kernel_abs = self.kernel.ufunc.absolute()
-        self.norm = float(kernel_abs.ufunc.sum())
+        self.norm = float(np.sum(np.abs(self.kernel)))
         super().__init__(self.space, self.space, linear=True)
 
     def _call(self, rhs, out):

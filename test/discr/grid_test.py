@@ -428,12 +428,12 @@ def test_tensorgrid_meshgrid():
     mgz = np.array(vec3)[None, None, :]
 
     grid = TensorGrid(vec1, vec2, vec3)
-    xx, yy, zz = grid.meshgrid()
+    xx, yy, zz = grid.meshgrid
     assert all_equal(mgx, xx)
     assert all_equal(mgy, yy)
     assert all_equal(mgz, zz)
 
-    xx, yy, zz = grid.meshgrid()
+    xx, yy, zz = grid.meshgrid
     assert all_equal(mgx, xx)
     assert all_equal(mgy, yy)
     assert all_equal(mgz, zz)

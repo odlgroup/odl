@@ -168,9 +168,10 @@ class DiscreteLp(Discretization):
         """Cell volume of an underlying regular partition."""
         return self.partition.cell_volume
 
+    @property
     def meshgrid(self):
         """All sampling points in the partition as a sparse meshgrid."""
-        return self.partition.meshgrid()
+        return self.partition.meshgrid
 
     def points(self):
         """All sampling points in the partition."""

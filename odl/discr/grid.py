@@ -273,7 +273,7 @@ class TensorGrid(Set):
         return self.max_pt
 
     def extent(self):
-        """Return a vector containing the total grid extent.
+        """Return the edge lengths of this grid's minimal bounding box.
 
         Examples
         --------
@@ -284,7 +284,7 @@ class TensorGrid(Set):
         return self.max_pt - self.min_pt
 
     def convex_hull(self):
-        """The smallest `IntervalProd` containing this grid.
+        """Return the smallest `IntervalProd` containing this grid.
 
         The convex hull of a set is the union of all line segments
         between points in the set. For a tensor grid, it is the
@@ -450,7 +450,7 @@ class TensorGrid(Set):
         ----------
         index : `int`
             The index of the dimension before which ``other`` is to
-            be inserted. Must fulfill ``0 <= index <= ndim``.
+            be inserted. Negative indices are added to `ndim`.
         other :  `TensorGrid`, `float` or `array-like`
             The grid to be inserted
 
@@ -505,7 +505,7 @@ class TensorGrid(Set):
         return self.insert(self.ndim, other)
 
     def squeeze(self):
-        """Return the grid with removed degenerate dimensions.
+        """Return the grid with removed degenerate (length 1) dimensions.
 
         Returns
         -------
@@ -538,7 +538,7 @@ class TensorGrid(Set):
         Examples
         --------
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
-        >>> g.points()  # default 'C' ordering
+        >>> g.points()
         array([[ 0., -1.],
                [ 0.,  0.],
                [ 0.,  2.],
@@ -611,7 +611,7 @@ class TensorGrid(Set):
         Examples
         --------
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
-        >>> g.corners()  # default 'C' ordering
+        >>> g.corners()
         array([[ 0., -1.],
                [ 0.,  2.],
                [ 1., -1.],
@@ -624,6 +624,7 @@ class TensorGrid(Set):
         """
         return self.corner_grid().points(order=order)
 
+    @property
     def meshgrid(self):
         """A grid suitable for function evaluation.
 
@@ -641,7 +642,7 @@ class TensorGrid(Set):
         Examples
         --------
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
-        >>> x, y = g.meshgrid()
+        >>> x, y = g.meshgrid
         >>> x
         array([[ 0.],
                [ 1.]])

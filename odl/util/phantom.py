@@ -269,7 +269,7 @@ def _phantom_3d(space, ellipses):
     p = np.zeros(space.shape)
 
     # Create the pixel grid
-    grid_in = space.grid.meshgrid()
+    grid_in = space.grid.meshgrid
     minp = space.grid.min()
     maxp = space.grid.max()
 
