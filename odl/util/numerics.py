@@ -24,6 +24,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+import numpy as np
+
 
 __all__ = ('apply_on_boundary',)
 
@@ -36,7 +38,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
 
     Parameters
     ----------
-    array : `numpy.ndarray`
+    array : array-like
         Modify the boundary of this array
     func : `callable` or `sequence`
         If a single function is given, assign
@@ -103,6 +105,8 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     >>> result is out
     True
     """
+    array = np.asarray(array)
+
     if callable(func):
         func = [func] * array.ndim
     elif len(func) != array.ndim:
