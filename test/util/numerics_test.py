@@ -34,33 +34,34 @@ def test_apply_on_boundary_default():
 
     # 1d
     arr = np.ones(5)
-    apply_on_boundary(arr, lambda x: x * 2)
-    assert all_equal(arr, [2, 1, 1, 1, 2])
+    result = apply_on_boundary(arr, lambda x: x * 2)
+    assert all_equal(arr, [1, 1, 1, 1, 1])
+    assert all_equal(result, [2, 1, 1, 1, 2])
 
     # 3d
     arr = np.ones((3, 4, 5))
-    apply_on_boundary(arr, lambda x: x * 2)
+    result = apply_on_boundary(arr, lambda x: x * 2)
     true_arr = 2 * np.ones((3, 4, 5))
     true_arr[1:-1, 1:-1, 1:-1] = 1
-    assert all_equal(arr, true_arr)
+    assert all_equal(result, true_arr)
 
 
 def test_apply_on_boundary_func_sequence_2d():
 
     arr = np.ones((3, 5))
-    apply_on_boundary(arr, [lambda x: x * 2, lambda x: x * 3])
-    assert all_equal(arr, [[2, 2, 2, 2, 2],
-                           [3, 1, 1, 1, 3],
-                           [2, 2, 2, 2, 2]])
+    result = apply_on_boundary(arr, [lambda x: x * 2, lambda x: x * 3])
+    assert all_equal(result, [[2, 2, 2, 2, 2],
+                              [3, 1, 1, 1, 3],
+                              [2, 2, 2, 2, 2]])
 
 
 def test_apply_on_boundary_multiple_times_2d():
 
     arr = np.ones((3, 5))
-    apply_on_boundary(arr, lambda x: x * 2, only_once=False)
-    assert all_equal(arr, [[4, 2, 2, 2, 4],
-                           [2, 1, 1, 1, 2],
-                           [4, 2, 2, 2, 4]])
+    result = apply_on_boundary(arr, lambda x: x * 2, only_once=False)
+    assert all_equal(result, [[4, 2, 2, 2, 4],
+                              [2, 1, 1, 1, 2],
+                              [4, 2, 2, 2, 4]])
 
 
 def test_apply_on_boundary_which_boundaries():
@@ -68,16 +69,16 @@ def test_apply_on_boundary_which_boundaries():
     # 1d
     arr = np.ones(5)
     which = ((True, False),)
-    apply_on_boundary(arr, lambda x: x * 2, which_boundaries=which)
-    assert all_equal(arr, [2, 1, 1, 1, 1])
+    result = apply_on_boundary(arr, lambda x: x * 2, which_boundaries=which)
+    assert all_equal(result, [2, 1, 1, 1, 1])
 
     # 2d
     arr = np.ones((3, 5))
     which = ((True, False), True)
-    apply_on_boundary(arr, lambda x: x * 2, which_boundaries=which)
-    assert all_equal(arr, [[2, 2, 2, 2, 2],
-                           [2, 1, 1, 1, 2],
-                           [2, 1, 1, 1, 2]])
+    result = apply_on_boundary(arr, lambda x: x * 2, which_boundaries=which)
+    assert all_equal(result, [[2, 2, 2, 2, 2],
+                              [2, 1, 1, 1, 2],
+                              [2, 1, 1, 1, 2]])
 
 
 def test_apply_on_boundary_which_boundaries_multiple_times_2d():
@@ -85,22 +86,22 @@ def test_apply_on_boundary_which_boundaries_multiple_times_2d():
     # 2d
     arr = np.ones((3, 5))
     which = ((True, False), True)
-    apply_on_boundary(arr, lambda x: x * 2, which_boundaries=which,
-                      only_once=False)
-    assert all_equal(arr, [[4, 2, 2, 2, 4],
-                           [2, 1, 1, 1, 2],
-                           [2, 1, 1, 1, 2]])
+    result = apply_on_boundary(arr, lambda x: x * 2, which_boundaries=which,
+                               only_once=False)
+    assert all_equal(result, [[4, 2, 2, 2, 4],
+                              [2, 1, 1, 1, 2],
+                              [2, 1, 1, 1, 2]])
 
 
 def test_apply_on_boundary_axis_order_2d():
 
     arr = np.ones((3, 5))
     axis_order = (-1, -2)
-    apply_on_boundary(arr, [lambda x: x * 3, lambda x: x * 2],
-                      axis_order=axis_order)
-    assert all_equal(arr, [[3, 2, 2, 2, 3],
-                           [3, 1, 1, 1, 3],
-                           [3, 2, 2, 2, 3]])
+    result = apply_on_boundary(arr, [lambda x: x * 3, lambda x: x * 2],
+                               axis_order=axis_order)
+    assert all_equal(result, [[3, 2, 2, 2, 3],
+                              [3, 1, 1, 1, 3],
+                              [3, 2, 2, 2, 3]])
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
