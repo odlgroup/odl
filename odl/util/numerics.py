@@ -63,12 +63,12 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         the left, the second for the right boundary. The length of the
         sequence must be ``array.ndim``. `None` is interpreted as
         'all boundaries'.
-    axis_order : `sequence` of `int`
+    axis_order : `sequence` of `int`, optional
         Permutation of ``range(array.ndim)`` defining the order in which
         to process the axes. If combined with ``only_once`` and a
         function list, this determines which function is evaluated in
         the points that are potentially processed multiple times.
-    out : `numpy.ndarray`
+    out : `numpy.ndarray`, optional
         Location in which to store the result, can be the same as ``array``.
         Default: copy of ``array``
 
