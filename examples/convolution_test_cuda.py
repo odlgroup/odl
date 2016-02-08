@@ -29,9 +29,7 @@ import matplotlib.pyplot as plt
 
 # ODL
 import odl
-from odl.space import cu_ntuples
 import odl.solvers as solvers
-from odl.util.testutils import Timer
 from odlpp import odlpp_cuda
 
 
@@ -44,7 +42,7 @@ class CudaConvolution(odl.Operator):
         self.kernel = kernel
         self.adjkernel = (adjointkernel if adjointkernel is not None
                           else self.space.element(kernel[::-1].copy()))
-        self.norm = float(cu_ntuples.sum(cu_ntuples.abs(self.kernel.ntuple)))
+        self.norm = float(np.sum(np.abs(self.kernel)))
         super().__init__(self.space, self.space, linear=True)
 
     def _call(self, rhs, out):

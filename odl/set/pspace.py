@@ -107,13 +107,14 @@ class ProductSpace(LinearSpace):
 
             Note that ``0 <= ord < 1`` are not allowed since these
             pseudo-norms are very unstable numerically.
-        weights : array-like, optional, only usable with 'ord'
+        weights : `array-like`, optional
             Array of weights, same size as number of space
             components. All weights must be positive. It is
             multiplied with the tuple of distances before
             applying the Rn norm or ``prod_norm``.
-
             Default: ``(1.0,...,1.0)``
+
+            This option can only be used together with ``ord``.
 
         prod_norm : `callable`, optional
             Function that should be applied to the array of
@@ -211,14 +212,14 @@ class ProductSpace(LinearSpace):
         return self._spaces
 
     def element(self, inp=None):
-        """Create an element in the product space.
+        """Create an element of the product space.
 
         Parameters
         ----------
-        inp : `object`, optional
+        inp : optional
             If ``inp`` is `None`, a new element is created from
             scratch by allocation in the spaces. If ``inp`` is
-            already an element in this space, it is re-wrapped.
+            already an element of this space, it is re-wrapped.
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
@@ -240,7 +241,7 @@ class ProductSpace(LinearSpace):
         >>> vec_3.space == vec_2x3[1].space
         True
 
-        Creates an element in the product space
+        Create an element of the product space
 
         >>> from odl import Rn
         >>> r2, r3 = Rn(2), Rn(3)
@@ -642,7 +643,7 @@ class ProductSpaceVector(LinearSpaceVector):
             pass the rest on to the underlying show methods.
 
         kwargs
-            Arguments for the underlying vectors.
+            Additional arguments passed on to the underlying vectors
 
         Returns
         -------

@@ -34,24 +34,21 @@ import numpy as np
 
 # ODL imports
 from odl.set.domain import IntervalProd
-from odl.set.sets import Set, Integers
+from odl.set.sets import Set
 from odl.util.utility import array1d_repr, array1d_str
 
 
-__all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling')
+__all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling_fromintv',
+           'uniform_sampling')
 
 
-def sparse_meshgrid(*x, **kwargs):
-    """Make a sparse meshgrid with C- or F-contiguous arrays.
+def sparse_meshgrid(*x):
+    """Make a sparse `meshgrid` by adding empty dimensions.
 
     Parameters
     ----------
-    x1,...,xN : array-like
+    x1,...,xN : `array-like`
         Input arrays to turn into sparse meshgrid vectors
-    order : {'C', 'F'}, optional
-        Ordering of the output meshgrid. The vectors in the produced
-        meshgrid tuple are guaranteed to be contiguous in this
-        ordering,
 
     Returns
     -------
@@ -61,55 +58,64 @@ def sparse_meshgrid(*x, **kwargs):
     See also
     --------
     numpy.meshgrid : dense or sparse meshgrids
+
+    Examples
+    --------
+    >>> x, y = [0, 1], [2, 3, 4]
+    >>> mesh = sparse_meshgrid(x, y)
+    >>> sum(xi for xi in mesh).ravel()  # first axis slowest
+    array([2, 3, 4, 3, 4, 5])
     """
     n = len(x)
-    order = kwargs.pop('order', 'C')
     mesh = []
     for ax, xi in enumerate(x):
         xi = np.asarray(xi)
         slc = [None] * n
-        slc[ax] = np.s_[:]
+        slc[ax] = slice(None)
+        mesh.append(np.ascontiguousarray(xi[slc]))
 
-        if order == 'C':
-            mesh.append(np.ascontiguousarray(xi[slc]))
-        else:
-            mesh.append(np.asfortranarray(xi[slc]))
-    if order == 'C':
-        return tuple(mesh)
-    else:
-        return tuple(reversed(mesh))
+    return tuple(mesh)
 
 
 class TensorGrid(Set):
 
     """An n-dimensional tensor grid.
 
-    This is a sparse representation of a collection of n-dimensional
-    points defined by the tensor product of n coordinate vectors.
+    A tensor grid is the set of points defined by all possible
+    combination of coordinates taken from fixed coordinate vectors.
 
-    Example:
-    ``x = (x_1, x_2), y = (y_1, y_2, y_3, y_4), z = (z_1, z_2, z_3)``
-    The resulting grid consists of all possible combinations
-    p = (x_i, y_j, z_k), hence 2 * 4 * 3 = 24 points in total.
+    In 2 dimensions, for example, given two coordinate vectors
+    ::
+        coord_vec1 = [0, 1]
+        coord_vec2 = [-1, 0, 2]
+
+    the corresponding tensor grid is the set of all 2d points whose
+    first component is from ``coord_vec1`` and the second component from
+    ``coord_vec2``. The total number of such points is 2 * 3 = 6::
+
+        points = [[0, -1], [0, 0], [0, 2],
+                  [1, -1], [1, 0], [1, 2]]
+
+    Note that this is the standard 'C' ordering where the first axis
+    (``coord_vec1``) varies slowest. Ordering is only relevant when
+    the point array is actually created; the grid itself is independent
+    of this ordering.
+
+    The storage need for a tensor grid is only the sum of the lengths
+    of the coordinate vectors, while the total number of points is
+    the product of these lengths. This class makes use of this
+    sparse storage.
     """
 
-    def __init__(self, *coord_vectors, **kwargs):
+    def __init__(self, *coord_vectors):
         """Initialize a TensorGrid instance.
 
         Parameters
         ----------
-        v1,...,vn : array-like
+        vec1,...,vecN : `array-like`
             The coordinate vectors defining the grid points. They must
             be sorted in ascending order and may not contain
             duplicates. Empty vectors are not allowed.
-        as_midp : `bool`, optional  (Default: `False`)
-            Treat grid points as midpoints of rectangular cells.
-            This influences the behavior of `min`, `max` and
-            `cell_sizes`.
-        order : {'C', 'F'}, optional
-            Ordering of the grid axes. 'C' means the first axis
-            varies slowest, the last axis fastest; vice versa for
-            'F'.
 
         Examples
         --------
@@ -168,24 +174,11 @@ class TensorGrid(Set):
                                  ''.format(i + 1))
 
         self._coord_vectors = vecs
-        self._as_midp = bool(kwargs.pop('as_midp', False))
-        self._order = str(kwargs.pop('order', 'C'))
         self._ideg = np.array([i for i in range(len(vecs))
                                if len(vecs[i]) == 1])
         self._inondeg = np.array([i for i in range(len(vecs))
                                   if len(vecs[i]) != 1])
 
-        # Thes args are not public and thus not checked for consistency!
-        _exact_min = kwargs.pop('_exact_min', None)
-        _exact_max = kwargs.pop('_exact_max', None)
-        if _exact_min is not None:
-            _exact_min = np.atleast_1d(_exact_min)
-        if _exact_max is not None:
-            _exact_max = np.atleast_1d(_exact_max)
-        self._exact_min = _exact_min
-        self._exact_max = _exact_max
-
-    # Attributes
     @property
     def coord_vectors(self):
         """The coordinate vectors of the grid.
@@ -225,16 +218,6 @@ class TensorGrid(Set):
         return np.prod(self.shape)
 
     @property
-    def order(self):
-        """Axis ordering of this grid."""
-        return self._order
-
-    @property
-    def as_midp(self):
-        """If the grid is "pixel" centered."""
-        return self._as_midp
-
-    @property
     def min_pt(self):
         """Vector containing the minimal grid coordinates per axis.
 
@@ -258,72 +241,81 @@ class TensorGrid(Set):
         """
         return np.array([vec[-1] for vec in self.coord_vectors])
 
+    # min, max and extent are for set duck-typing
     def min(self):
-        """Return vector with minimal cell coordinates per axis.
+        """Return `min_pt`.
 
-        This is relevant if the grid was initialized with
-        `as_midp` ``True``, in which case the minimum is half a cell
-        smaller than the minimum grid point.
+        See also
+        --------
+        Intervalprod.min
 
         Examples
         --------
-        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2], as_midp=False)
+        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.min()
         array([ 1., -2.])
-        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2], as_midp=True)
-        >>> g.min()
-        array([ 0.5 , -3.75])
         """
-        if not self.as_midp:
-            return self.min_pt
-        elif self._exact_min is not None:
-            return self._exact_min
-        else:
-            minpt_cell_size = np.array([cs[0] for cs in self.cell_sizes()])
-            return self.min_pt - minpt_cell_size / 2
+        return self.min_pt
 
     def max(self):
-        """Return vector with maximal cell coordinates per axis.
+        """Return `max_pt`.
 
-        This is relevant if the grid was initialized with
-        `as_midp` ``True``, in which case the maximum is half a cell
-        larger than the maximum grid point.
+        See also
+        --------
+        Intervalprod.max
 
         Examples
         --------
-        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2], as_midp=False)
+        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.max()
         array([ 5.,  2.])
-        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2], as_midp=True)
-        >>> g.max()
-        array([ 6.5 ,  2.25])
         """
-        if not self.as_midp:
-            return self.max_pt
-        elif self._exact_max is not None:
-            return self._exact_max
-        else:
-            maxpt_cell_size = np.array([cs[-1] for cs in self.cell_sizes()])
-            return self.max_pt + maxpt_cell_size / 2
-
-    # Methods
+        return self.max_pt
 
     def extent(self):
-        """Return a vector containing the total grid extent."""
-        return self.max() - self.min()
+        """Return the edge lengths of this grid's minimal bounding box.
+
+        Examples
+        --------
+        >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
+        >>> g.extent()
+        array([ 4.,  4.])
+        """
+        return self.max_pt - self.min_pt
+
+    def convex_hull(self):
+        """Return the smallest `IntervalProd` containing this grid.
+
+        The convex hull of a set is the union of all line segments
+        between points in the set. For a tensor grid, it is the
+        interval product given by the extremal coordinates.
+
+        Returns
+        -------
+        chull : `IntervalProd`
+            Interval product defined by the minimum and maximum of
+            the grid
+
+        Examples
+        --------
+        >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
+        >>> g.convex_hull()
+        IntervalProd([-1.0, 2.0, 5.0, 2.0], [3.0, 4.0, 5.0, 7.0])
+        """
+        return IntervalProd(self.min(), self.max())
 
     def element(self):
         """An arbitrary element, the minimum coordinates."""
         return self.min_pt
 
-    def approx_equals(self, other, tol):
+    def approx_equals(self, other, atol):
         """Test if this grid is equal to another grid.
 
         Parameters
         ----------
         other : `object`
             Object to be tested
-        tol : `float`
+        atol : `float`
             Allow deviations up to this number in absolute value
             per vector entry.
 
@@ -338,71 +330,79 @@ class TensorGrid(Set):
         --------
         >>> g1 = TensorGrid([0, 1], [-1, 0, 2])
         >>> g2 = TensorGrid([-0.1, 1.1], [-1, 0.1, 2])
-        >>> g1.approx_equals(g2, tol=0)
+        >>> g1.approx_equals(g2, atol=0)
         False
-        >>> g1.approx_equals(g2, tol=0.15)
+        >>> g1.approx_equals(g2, atol=0.15)
         True
         """
         if other is self:
             return True
 
-        if self.as_midp != getattr(other, 'as_midp', self.as_midp):
-            return False
-
         return (isinstance(other, TensorGrid) and
                 self.ndim == other.ndim and
                 self.shape == other.shape and
-                all(np.allclose(vec_s, vec_o, atol=tol, rtol=0.0)
+                all(np.allclose(vec_s, vec_o, atol=atol, rtol=0.0)
                     for (vec_s, vec_o) in zip(self.coord_vectors,
                                               other.coord_vectors)))
 
     def __eq__(self, other):
-        """Return ``self == other``."""
-        return self.approx_equals(other, tol=0.0)
+        """Return ``self == other``.
+        """
+        # Implemented separately for performance reasons
+        if other is self:
+            return True
 
-    def approx_contains(self, other, tol):
+        return (isinstance(other, TensorGrid) and
+                self.shape == other.shape and
+                all(np.array_equal(vec_s, vec_o)
+                    for (vec_s, vec_o) in zip(self.coord_vectors,
+                                              other.coord_vectors)))
+
+    def approx_contains(self, other, atol):
         """Test if ``other`` belongs to this grid up to a tolerance.
 
         Parameters
         ----------
-        other : array-like or `float`
+        other : `array-like` or `float`
             The object to test for membership in this grid
-        tol : `float`
+        atol : `float`
             Allow deviations up to this number in absolute value
             per vector entry.
 
         Examples
         --------
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
-        >>> g.approx_contains([0, 0], tol=0.0)
+        >>> g.approx_contains([0, 0], atol=0.0)
         True
         >>> [0, 0] in g  # equivalent
         True
-        >>> g.approx_contains([0.1, -0.1], tol=0.0)
+        >>> g.approx_contains([0.1, -0.1], atol=0.0)
         False
-        >>> g.approx_contains([0.1, -0.1], tol=0.15)
+        >>> g.approx_contains([0.1, -0.1], atol=0.15)
         True
         """
         other = np.atleast_1d(other)
         return (other.shape == (self.ndim,) and
-                all(np.any(np.isclose(vector, coord, atol=tol, rtol=0.0))
+                all(np.any(np.isclose(vector, coord, atol=atol, rtol=0.0))
                     for vector, coord in zip(self.coord_vectors, other)))
 
     def __contains__(self, other):
         """Return ``other in self``."""
         other = np.atleast_1d(other)
+        if other.dtype == np.dtype(object):
+            return False
         return (other.shape == (self.ndim,) and
                 all(coord in vector
                     for vector, coord in zip(self.coord_vectors, other)))
 
-    def is_subgrid(self, other, tol=0.0):
+    def is_subgrid(self, other, atol=0.0):
         """Test if this grid is contained in another grid.
 
         Parameters
         ----------
         other :  `TensorGrid`
             The other grid which is supposed to contain this grid
-        tol : `float`
+        atol : `float`
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
@@ -415,7 +415,7 @@ class TensorGrid(Set):
         >>> g_sub = TensorGrid([0.1], [-1.05, 2.1])
         >>> g_sub.is_subgrid(g)
         False
-        >>> g_sub.is_subgrid(g, tol=0.15)
+        >>> g_sub.is_subgrid(g, atol=0.15)
         True
         """
         # Optimization for some common cases
@@ -423,21 +423,23 @@ class TensorGrid(Set):
             return True
         if not (isinstance(other, TensorGrid) and
                 np.all(self.shape <= other.shape) and
-                np.all(self.min_pt >= other.min_pt - tol) and
-                np.all(self.max_pt <= other.max_pt + tol)):
+                np.all(self.min_pt >= other.min_pt - atol) and
+                np.all(self.max_pt <= other.max_pt + atol)):
             return False
 
         # Array version of the fuzzy subgrid test, about 3 times faster
         # than the loop version.
         for vec_o, vec_s in zip(other.coord_vectors, self.coord_vectors):
+            # Create array of differences of all entries in vec_o and vec_s.
+            # If there is no almost zero entry in each row, return False.
             vec_o_mg, vec_s_mg = sparse_meshgrid(vec_o, vec_s)
-            if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= tol, axis=0)):
+            if not np.all(np.any(np.abs(vec_s_mg - vec_o_mg) <= atol, axis=0)):
                 return False
 
         return True
 
     def insert(self, index, other):
-        """Insert another grid before the given index.
+        """Return a copy with ``other`` inserted before ``index``.
 
         The given grid (``m`` dimensions) is inserted into the current
         one (``n`` dimensions) before the given index, resulting in a new
@@ -446,12 +448,11 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other :  `TensorGrid`, `float` or array-like
-            The grid to be inserted. A `float` or array ``a`` is treated as
-            ``TensorGrid(a)``.
-        index : `numbers.Integral`
+        index : `int`
             The index of the dimension before which ``other`` is to
-            be inserted. Must fulfill ``0 <= index <= ndim``.
+            be inserted. Negative indices are added to `ndim`.
+        other :  `TensorGrid`, `float` or `array-like`
+            The grid to be inserted
 
         Returns
         -------
@@ -469,25 +470,24 @@ class TensorGrid(Set):
         --------
         append
         """
-        if index not in Integers():
-            raise TypeError('{!r} is not an integer.'.format(index))
-        if not 0 <= index <= self.ndim:
-            raise IndexError('index {} out of valid range 0 -> {}.'
-                             ''.format(index, self.ndim))
+        idx = int(index)
+        # Support backward indexing
+        if idx < 0:
+            idx = self.ndim + idx
+        if not 0 <= idx <= self.ndim:
+            raise IndexError('index {} outside the valid range 0 ... {}.'
+                             ''.format(idx, self.ndim))
 
-        if not isinstance(other, TensorGrid):
-            other = TensorGrid(other)
-
-        new_vecs = (self.coord_vectors[:index] + other.coord_vectors +
-                    self.coord_vectors[index:])
+        new_vecs = (self.coord_vectors[:idx] + other.coord_vectors +
+                    self.coord_vectors[idx:])
         return TensorGrid(*new_vecs)
 
     def append(self, other):
-        """Insert at the end.
+        """Insert grid ``other`` at the end.
 
         Parameters
         ----------
-        other : `IntervalProd`, `float` or array-like
+        other : `IntervalProd`, `float` or `array-like`
             The set to be inserted. A `float` or array a is
             treated as an ``IntervalProd(a, a)``.
 
@@ -505,9 +505,7 @@ class TensorGrid(Set):
         return self.insert(self.ndim, other)
 
     def squeeze(self):
-        """Remove the degenerate dimensions.
-
-        Note that no changes are made in-place.
+        """Return the grid with removed degenerate (length 1) dimensions.
 
         Returns
         -------
@@ -521,15 +519,15 @@ class TensorGrid(Set):
         TensorGrid([0.0, 1.0], [-1.0, 0.0, 2.0])
         """
         coord_vecs = [self.coord_vectors[axis] for axis in self._inondeg]
-        return TensorGrid(*coord_vecs, as_midp=self.as_midp, order=self.order)
+        return TensorGrid(*coord_vecs)
 
-    def points(self, order=None):
+    def points(self, order='C'):
         """All grid points in a single array.
 
         Parameters
         ----------
         order : {'C', 'F'}
-            Force this axis ordering instead of the grid's own
+            Axis ordering in the resulting point array
 
         Returns
         -------
@@ -539,7 +537,7 @@ class TensorGrid(Set):
 
         Examples
         --------
-        >>> g = TensorGrid([0, 1], [-1, 0, 2])  # default 'C' ordering
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
         >>> g.points()
         array([[ 0., -1.],
                [ 0.,  0.],
@@ -555,10 +553,10 @@ class TensorGrid(Set):
                [ 0.,  2.],
                [ 1.,  2.]])
         """
-        if order is None:
-            order = self.order
-        elif order not in ('C', 'F'):
+        if str(order).upper() not in ('C', 'F'):
             raise ValueError('order {!r} not recognized.'.format(order))
+        else:
+            order = str(order).upper()
 
         axes = range(self.ndim) if order == 'C' else reversed(range(self.ndim))
         shape = self.shape if order == 'C' else tuple(reversed(self.shape))
@@ -571,13 +569,38 @@ class TensorGrid(Set):
 
         return point_arr
 
-    def corners(self, order=None):
+    def corner_grid(self):
+        """Return a grid with only the corner points.
+
+        Returns
+        -------
+        cgrid : `TensorGrid`
+            Grid with size 2 in non-degenerate dimensions and 1
+            in degenerate ones
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
+        >>> g.corner_grid()
+        TensorGrid([0.0, 1.0], [-1.0, 2.0])
+        """
+        minmax_vecs = []
+        for axis in range(self.ndim):
+            if self.shape[axis] == 1:
+                minmax_vecs.append(self.coord_vectors[axis][0])
+            else:
+                minmax_vecs.append((self.coord_vectors[axis][0],
+                                    self.coord_vectors[axis][-1]))
+
+        return TensorGrid(*minmax_vecs)
+
+    def corners(self, order='C'):
         """The corner points of the grid in a single array.
 
         Parameters
         ----------
         order : {'C', 'F'}
-            Force this axis ordering instead of the grid's own
+            Axis ordering in the resulting point array
 
         Returns
         -------
@@ -587,7 +610,7 @@ class TensorGrid(Set):
 
         Examples
         --------
-        >>> g = TensorGrid([0, 1], [-1, 0, 2])  # default 'C' ordering
+        >>> g = TensorGrid([0, 1], [-1, 0, 2])
         >>> g.corners()
         array([[ 0., -1.],
                [ 0.,  2.],
@@ -599,65 +622,16 @@ class TensorGrid(Set):
                [ 0.,  2.],
                [ 1.,  2.]])
         """
-        if order is None:
-            order = self.order
-        elif order not in ('C', 'F'):
-            raise ValueError('order {!r} not recognized.'.format(order))
+        return self.corner_grid().points(order=order)
 
-        minmax_vecs = []
-        for axis in range(self.ndim):
-            if self.shape[axis] == 1:
-                minmax_vecs.append(self.coord_vectors[axis][0])
-            else:
-                minmax_vecs.append((self.coord_vectors[axis][0],
-                                    self.coord_vectors[axis][-1]))
-
-        minmax_grid = TensorGrid(*minmax_vecs)
-        return minmax_grid.points(order=order)
-
-    def cell_sizes(self):
-        """The grid cell sizes as coordinate vectors.
-
-        Returns
-        -------
-        csizes : `tuple` of `numpy.ndarray`
-            The cell sizes per axis. The length of the vectors will be
-            one less than `coord_vectors` if `as_midp` is `False`,
-            otherwise they will have the same length.
-            For axes with 1 grid point, cell size is set to 0.
-
-        Examples
-        --------
-        >>> g = TensorGrid([0, 1], [-1, 0, 2])
-        >>> g.cell_sizes()
-        (array([ 1.]), array([ 1.,  2.]))
-        >>> g = TensorGrid([0, 1], [-1, 0, 2], as_midp=True)
-        >>> g.cell_sizes()
-        (array([ 1.,  1.]), array([ 1. ,  1.5,  2. ]))
-        """
-        csizes = []
-        for vec in self.coord_vectors:
-            if len(vec) == 1:
-                csizes.append(np.array([0.0]))
-            else:
-                if self.as_midp:
-                    csize = np.empty_like(vec)
-                    csize[1:-1] = (vec[2:] - vec[:-2]) / 2.0
-                    csize[0] = vec[1] - vec[0]
-                    csize[-1] = vec[-1] - vec[-2]
-                else:
-                    csize = vec[1:] - vec[:-1]
-                csizes.append(csize)
-
-        return tuple(csizes)
-
+    @property
     def meshgrid(self):
         """A grid suitable for function evaluation.
 
         Returns
         -------
         meshgrid : `tuple` of `numpy.ndarray`
-            Function evaluation grid with :attr:`ndim` axes
+            Function evaluation grid with ``ndim`` axes
 
         See also
         --------
@@ -668,7 +642,7 @@ class TensorGrid(Set):
         Examples
         --------
         >>> g = TensorGrid([0, 1], [-1, 0, 2])
-        >>> x, y = g.meshgrid()
+        >>> x, y = g.meshgrid
         >>> x
         array([[ 0.],
                [ 1.]])
@@ -680,47 +654,11 @@ class TensorGrid(Set):
         >>> x**2 - y**2
         array([[-1.,  0., -4.],
                [ 0.,  1., -3.]])
-
-        Fortran ordering of the grid is respected:
-
-        >>> g = TensorGrid([0, 1], [-1, 0, 2], order='F')
-        >>> x, y = g.meshgrid()
-        >>> x.flags.f_contiguous, y.flags.f_contiguous
-        (True, True)
-
-        See Also
-        --------
-        coord_vectors : Same result but with 1d arrays
         """
-        return sparse_meshgrid(*self.coord_vectors, order=self.order)
-
-    def convex_hull(self):
-        """The "inner" of the grid, an `IntervalProd`.
-
-        The convex hull of a set is the union of all line segments
-        between points in the set. For a tensor grid, it is the
-        interval product given by the extremal coordinates.
-
-        Returns
-        -------
-        chull : `IntervalProd`
-            Interval product defined by the minimum and maximum of
-            the grid (depends on `as_midp`)
-
-        Examples
-        --------
-        >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
-        >>> g.convex_hull()
-        IntervalProd([-1.0, 2.0, 5.0, 2.0], [3.0, 4.0, 5.0, 7.0])
-        >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7],
-        ...                as_midp=True)
-        >>> g.convex_hull()
-        IntervalProd([-1.5, 1.0, 5.0, 1.0], [4.5, 5.0, 5.0, 8.5])
-        """
-        return IntervalProd(self.min(), self.max())
+        return sparse_meshgrid(*self.coord_vectors)
 
     def __getitem__(self, slc):
-        """self[slc] implementation.
+        """Return ``self[slc]``.
 
         Parameters
         ----------
@@ -744,7 +682,8 @@ class TensorGrid(Set):
             raise IndexError('Creation of new axes not supported.')
 
         try:
-            idx = np.array(slc_list, dtype=int)  # All single indices
+            # All single indices
+            idx = np.array(slc_list).astype('int64', casting='safe')
             if len(idx) < self.ndim:
                 raise IndexError('too few indices ({} < {}).'
                                  ''.format(len(idx), self.ndim))
@@ -791,23 +730,17 @@ class TensorGrid(Set):
         for i in reversed(list(range(1, num_after_ellipsis + 1))):
             new_vecs.append(self.coord_vectors[-i][slc_list[-i]])
 
-        return TensorGrid(*new_vecs, as_midp=self.as_midp)
+        return TensorGrid(*new_vecs)
 
     def __repr__(self):
-        """g.__repr__() <==> repr(g)."""
-        vec_str = ', '.join(array1d_repr(vec) for vec in self.coord_vectors)
-        if self.as_midp:
-            return 'TensorGrid({}, as_midp=True)'.format(vec_str)
-        else:
-            return 'TensorGrid({})'.format(vec_str)
+        """Return ``repr(self)``."""
+        inner_str = ', '.join(array1d_repr(vec) for vec in self.coord_vectors)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """g.__str__() <==> str(g)."""
+        """Return ``str(self)``."""
         grid_str = ' x '.join(array1d_str(vec) for vec in self.coord_vectors)
-        if self.as_midp:
-            return 'midp grid {}'.format(grid_str)
-        else:
-            return 'grid {}'.format(grid_str)
+        return 'grid ' + grid_str
 
 
 class RegularGrid(TensorGrid):
@@ -817,40 +750,32 @@ class RegularGrid(TensorGrid):
     This is a sparse representation of an n-dimensional grid defined
     as the tensor product of n coordinate vectors with equidistant
     nodes. The grid points are calculated according to the rule
+    ::
+        x_j = min_pt + j * (max_pt - min_pt) / (shape - 1)
 
-    x_j = center + (j - (shape-1)/2 * stride)
-
-    with elementwise addition and multiplication. Note that the
-    division is a true division (no rounding), thus if there is an
-    axis with an even number of nodes, the center is not a grid point.
+    with elementwise addition and multiplication.
     """
 
-    def __init__(self, min_pt, max_pt, shape, **kwargs):
+    def __init__(self, min_pt, max_pt, shape):
         """Initialize a new instance.
 
         Parameters
         ----------
-        min_pt : array-like or `float`
+        min_pt : `array-like` or `float`
             Grid point with minimum coordinates, can be a single float
             for 1D grids
-        max_pt : array-like or `float`
+        max_pt : `array-like` or `float`
             Grid point with maximum coordinates, can be a single float
             for 1D grids
-        shape : array-like or `int`
+        shape : `array-like` or `int`
             The number of grid points per axis, can be an integer for
             1D grids
-        as_midp : `bool`, optional
-            Treat grid points as midpoints of rectangular cells.
-            This influences the behavior of `TensorGrid.min`,
-            `TensorGrid.max` and `TensorGrid.cell_sizes`.
-
-            Default: `False`
 
         Examples
         --------
         >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg
-        RegularGrid([-1.5, -1.0], [-0.5, 3.0], [2, 3])
+        RegularGrid([-1.5, -1.0], [-0.5, 3.0], (2, 3))
         >>> rg.coord_vectors
         (array([-1.5, -0.5]), array([-1.,  1.,  3.]))
         >>> rg.ndim, rg.size
@@ -858,16 +783,15 @@ class RegularGrid(TensorGrid):
         """
         min_pt = np.atleast_1d(min_pt).astype('float64')
         max_pt = np.atleast_1d(max_pt).astype('float64')
-        shape = np.atleast_1d(shape).astype('int64')
+        shape = np.atleast_1d(shape).astype('int64', casting='safe')
 
         if any(x.ndim != 1 for x in (min_pt, max_pt, shape)):
-            raise ValueError('input arrays have dimensions {!r}, {!r}, {!r} '
+            raise ValueError('input arrays have dimensions {}, {}, {} '
                              'instead of 1.'
                              ''.format(min_pt.ndim, max_pt.ndim, shape.ndim))
 
         if not min_pt.shape == max_pt.shape == shape.shape:
-            raise ValueError('input array shapes are {!r}, {!r}, {!r} but '
-                             'should be equal.'
+            raise ValueError('input array shapes {}, {}, {} are not equal.'
                              ''.format(min_pt.shape, max_pt.shape,
                                        shape.shape))
 
@@ -896,7 +820,7 @@ class RegularGrid(TensorGrid):
 
         coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
-        TensorGrid.__init__(self, *coord_vecs, **kwargs)
+        TensorGrid.__init__(self, *coord_vecs)
         self._center = (self.max_pt + self.min_pt) / 2
         self._stride = np.zeros(len(shape), dtype='float64')
         idcs = np.where(shape > 1)
@@ -927,25 +851,13 @@ class RegularGrid(TensorGrid):
         """
         return self._stride
 
-    @property
-    def cell_volume(self):
-        """Cell volume of an underlying regular grid.
-
-        Examples
-        --------
-        >>> rg = RegularGrid([0, 0], [1, 1], (2, 2))
-        >>> rg.cell_volume
-        1.0
-        """
-        return float(np.prod(self.stride))
-
-    def is_subgrid(self, other, tol=0.0):
+    def is_subgrid(self, other, atol=0.0):
         """Test if this grid is contained in another grid.
 
         Parameters
         ----------
 
-        tol : `float`
+        atol : `float`
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
@@ -964,9 +876,9 @@ class RegularGrid(TensorGrid):
         applies to the coordinate vectors.
 
         >>> rg_sub = RegularGrid([-1.015, 2], [0, 3.99], (2, 2))
-        >>> rg_sub.is_subgrid(rg, tol=0.01)
+        >>> rg_sub.is_subgrid(rg, atol=0.01)
         False
-        >>> rg_sub.is_subgrid(rg, tol=0.02)
+        >>> rg_sub.is_subgrid(rg, atol=0.02)
         True
         """
         # Optimize some common cases
@@ -974,8 +886,8 @@ class RegularGrid(TensorGrid):
             return True
         if not (isinstance(other, TensorGrid) and
                 np.all(self.shape <= other.shape) and
-                np.all(self.min_pt >= other.min_pt - tol) and
-                np.all(self.max_pt <= other.max_pt + tol)):
+                np.all(self.min_pt >= other.min_pt - atol) and
+                np.all(self.max_pt <= other.max_pt + atol)):
             return False
 
         # For regular grids, it suffices to show that min_pt, max_pt
@@ -984,12 +896,13 @@ class RegularGrid(TensorGrid):
         # and the corresponding indices in the other check point are
         # set to 0.
         if isinstance(other, RegularGrid):
-            minmax_contained = (other.approx_contains(self.min_pt, tol=tol) and
-                                other.approx_contains(self.max_pt, tol=tol))
+            minmax_contained = (
+                other.approx_contains(self.min_pt, atol=atol) and
+                other.approx_contains(self.max_pt, atol=atol))
             check_idx = np.zeros(self.ndim, dtype=int)
             check_idx[np.array(self.shape) >= 3] = 1
             checkpt_contained = other.approx_contains(self[check_idx.tolist()],
-                                                      tol=tol)
+                                                      atol=atol)
 
             return minmax_contained and checkpt_contained
 
@@ -998,7 +911,7 @@ class RegularGrid(TensorGrid):
             self_tg = TensorGrid(*self.coord_vectors)
             return self_tg.is_subgrid(other)
 
-    def insert(self, grid, index):
+    def insert(self, index, other):
         """Insert another regular grid before the given index.
 
         The given grid (``m`` dimensions) is inserted into the current
@@ -1008,43 +921,52 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        grid : `RegularGrid`
-            The grid to be inserted.
-        index : `numbers.Integral`
-            The index of the dimension before which 'other' is to
+        index : `int`
+            Index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``0 <= index <= ndim``.
+        other : `TensorGrid`
+            Grid to be inserted. If a `RegularGrid` is given,
+            the output will be a `RegularGrid`.
 
         Returns
         -------
-        newgrid : `RegularGrid`
-            The enlarged grid
+        newgrid : `TensorGrid`
+            The enlarged grid. If the inserted grid is a `RegularGrid`,
+            so is the return value.
 
         Examples
         --------
         >>> rg1 = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg2 = RegularGrid(-3, 7, 6)
-        >>> rg1.insert(rg2, 1)
-        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], [2, 6, 3])
+        >>> rg1.insert(1, rg2)
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], (2, 6, 3))
         """
-        idx = int(index)
-        if not 0 <= idx <= self.ndim:
-            raise IndexError('index {} out of valid range 0 -> {}.'
-                             ''.format(index, self.ndim))
+        if isinstance(other, RegularGrid):
+            idx = int(index)
 
-        if not isinstance(grid, RegularGrid):
-            raise TypeError('{!r} is not a regular grid.'.format(grid))
+            # Support backward indexing
+            if idx < 0:
+                idx = self.ndim + idx
+            if not 0 <= idx <= self.ndim:
+                raise IndexError('index out of valid range 0 -> {}.'
+                                 ''.format(self.ndim))
 
-        new_shape = self.shape[:idx] + grid.shape + self.shape[idx:]
-        new_minpt = (self.min_pt[:idx].tolist() + grid.min_pt.tolist() +
-                     self.min_pt[idx:].tolist())
-        new_maxpt = (self.max_pt[:idx].tolist() + grid.max_pt.tolist() +
-                     self.max_pt[idx:].tolist())
-        return RegularGrid(new_minpt, new_maxpt, new_shape)
+            new_shape = self.shape[:idx] + other.shape + self.shape[idx:]
+            new_minpt = (self.min_pt[:idx].tolist() + other.min_pt.tolist() +
+                         self.min_pt[idx:].tolist())
+            new_maxpt = (self.max_pt[:idx].tolist() + other.max_pt.tolist() +
+                         self.max_pt[idx:].tolist())
+            return RegularGrid(new_minpt, new_maxpt, new_shape)
+
+        elif isinstance(other, TensorGrid):
+            self_tg = TensorGrid(*self.coord_vectors)
+            return self_tg.insert(index, other)
+
+        else:
+            raise TypeError('{!r} is not a TensorGrid instance.'.format(other))
 
     def squeeze(self):
-        """Remove the degenerate dimensions.
-
-        Note that no changes are made in-place.
+        """Return the grid with removed degenerate dimensions.
 
         Returns
         -------
@@ -1055,12 +977,12 @@ class RegularGrid(TensorGrid):
         --------
         >>> g = RegularGrid([0, 0, 0], [1, 0, 1], (5, 1, 5))
         >>> g.squeeze()
-        RegularGrid([0.0, 0.0], [1.0, 1.0], [5, 5])
+        RegularGrid([0.0, 0.0], [1.0, 1.0], (5, 5))
         """
         sq_minpt = [self.min_pt[axis] for axis in self._inondeg]
         sq_maxpt = [self.max_pt[axis] for axis in self._inondeg]
         sq_shape = [self.shape[axis] for axis in self._inondeg]
-        return RegularGrid(sq_minpt, sq_maxpt, sq_shape, as_midp=self._as_midp)
+        return RegularGrid(sq_minpt, sq_maxpt, sq_shape)
 
     def __getitem__(self, slc):
         """self[slc] implementation.
@@ -1076,23 +998,28 @@ class RegularGrid(TensorGrid):
         >>> g[0, 0, 0]
         array([-1.5, -3. , -1. ])
         >>> g[:, 0, 0]
-        RegularGrid([-1.5, -3.0, -1.0], [-0.5, -3.0, -1.0], [2, 1, 1])
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, -3.0, -1.0], (2, 1, 1))
 
         Ellipsis can be used, too:
 
         >>> g[..., ::3]
-        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 2.0], [2, 3, 2])
+        RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 2.0], (2, 3, 2))
         """
         from math import ceil
 
         slc_list = list(np.atleast_1d(np.s_[slc]))
         if None in slc_list:
             raise IndexError('Creation of new axes not supported.')
-        if slc_list == [np.s_[:]] or slc_list == [Ellipsis]:
-            slc_list = [np.s_[:]] * self.ndim
+        if slc_list == [slice(None)] or slc_list == [Ellipsis]:
+            slc_list = [slice(None)] * self.ndim
+
+        if any(s.start == s.stop and s.start is not None
+               for s in slc_list if isinstance(s, slice)):
+            raise IndexError('Slices with empty axes not allowed.')
 
         try:
-            idx = np.array(slc_list, dtype=int)  # All single indices
+            # All single indices
+            idx = np.array(slc_list).astype('int64', casting='safe')
             if len(idx) < self.ndim:
                 raise IndexError('too few indices ({} < {}).'
                                  ''.format(len(idx), self.ndim))
@@ -1153,35 +1080,27 @@ class RegularGrid(TensorGrid):
                 new_maxpt.append(cvec[last])
                 new_shape.append(num)
 
-        return RegularGrid(new_minpt, new_maxpt, new_shape,
-                           as_midp=self.as_midp)
-
-    def __repr__(self):
-        """g.__repr__() <==> repr(g)."""
-        if self.as_midp:
-            return 'RegularGrid({}, {}, {}, as_midp=True)'.format(
-                list(self.min_pt), list(self.max_pt), list(self.shape))
-        else:
-            return 'RegularGrid({}, {}, {})'.format(
-                list(self.min_pt), list(self.max_pt), list(self.shape))
+        return RegularGrid(new_minpt, new_maxpt, new_shape)
 
     def __str__(self):
-        """g.__str__() <==> str(g)."""
-        str_lst = []
-        for vec in self.coord_vectors:
-            if len(vec) <= 3:
-                str_lst.append('{!r}'.format(vec.tolist()))
-            else:
-                str_lst.append('[{}, {}, ..., {}]'.format(vec[0], vec[1],
-                                                          vec[-1]))
-        if self.as_midp:
-            return 'midp regular grid ' + ' x '.join(str_lst)
-        else:
-            return 'regular grid ' + ' x '.join(str_lst)
+        """Return ``str(self)``."""
+        grid_str = ' x '.join(array1d_str(vec) for vec in self.coord_vectors)
+        return 'regular grid ' + grid_str
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        inner_str = '{}, {}, {}'.format(list(self.min_pt), list(self.max_pt),
+                                        tuple(self.shape))
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-def uniform_sampling(intv_prod, num_nodes, as_midp=True):
+def uniform_sampling_fromintv(intv_prod, num_nodes):
     """Sample an interval product uniformly.
+
+    The resulting grid will include ``begin`` and ``end`` of
+    ``intv_prod`` as grid points. If you want a subdivision into
+    equally sized cells with grid points in the middle, use
+    `uniform_partition` instead.
 
     Parameters
     ----------
@@ -1191,62 +1110,65 @@ def uniform_sampling(intv_prod, num_nodes, as_midp=True):
         Number of nodes per axis. For dimension >= 2, a `tuple`
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
-    as_midp : `bool`, optional
-        If `True`, the midpoints of an interval partition will be
-        returned, which excludes the endpoints. Otherwise,
-        equispaced nodes including the endpoints are generated.
-        Note that the resulting strides are different.
-        Default: `True`.
 
     Returns
     -------
     sampling : `RegularGrid`
         Uniform sampling grid for the interval product
 
+    See also
+    --------
+    uniform_sampling:
+        sample an implicitly defined interval product
+    uniform_partition_fromintv :
+        divide interval product into equally sized subsets
+
     Examples
     --------
     >>> from odl import IntervalProd
     >>> rbox = IntervalProd([-1.5, 2], [-0.5, 3])
-    >>> grid = uniform_sampling(rbox, [2, 5])
+    >>> grid = uniform_sampling_fromintv(rbox, (3, 3))
     >>> grid.coord_vectors
-    (array([-1.25, -0.75]), array([ 2.1,  2.3,  2.5,  2.7,  2.9]))
-    >>> grid = uniform_sampling(rbox, [2, 5], as_midp=False)
-    >>> grid.coord_vectors
-    (array([-1.5, -0.5]), array([ 2.  ,  2.25,  2.5 ,  2.75,  3.  ]))
+    (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
     """
     num_nodes = np.atleast_1d(num_nodes).astype('int64')
 
     if not isinstance(intv_prod, IntervalProd):
-        raise TypeError('interval product {!r} not an `IntervalProd` instance.'
+        raise TypeError('{!r} is not an `IntervalProd` instance.'
                         ''.format(intv_prod))
 
-    if np.any(np.isinf(intv_prod.begin)) or np.any(np.isinf(intv_prod.end)):
-        raise ValueError('uniform sampling undefined for infinite '
-                         'domains.')
+    return RegularGrid(intv_prod.begin, intv_prod.end, num_nodes)
 
-    if num_nodes.shape != (intv_prod.ndim,):
-        raise ValueError('number of nodes {} has wrong shape '
-                         '({} != ({},)).'
-                         ''.format(num_nodes, num_nodes.shape, intv_prod.ndim))
 
-    if np.any(num_nodes <= 0):
-        raise ValueError('number of nodes {} has non-positive entries.'
-                         ''.format(num_nodes))
+def uniform_sampling(begin, end, num_nodes):
+    """Sample an implicitly defined interval product uniformly.
 
-    if np.any(num_nodes[intv_prod._ideg] > 1):
-        raise ValueError('degenerate axes {} cannot be sampled with more '
-                         'than one node.'.format(tuple(intv_prod._ideg)))
+    Parameters
+    ----------
+    begin : `array-like` or `float`
+        The lower ends of the intervals in the product
+    end : `array-like` or `float`
+        The upper ends of the intervals in the product
+    num_nodes : `int` or `tuple` of `int`
+        Number of nodes per axis. For dimension >= 2, a `tuple`
+        is required. All entries must be positive. Entries
+        corresponding to degenerate axes must be equal to 1.
 
-    if as_midp:
-        grid_min = intv_prod.begin + intv_prod.extent / (2 * num_nodes)
-        grid_max = intv_prod.end - intv_prod.extent / (2 * num_nodes)
-        return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp,
-                           _exact_min=intv_prod.begin,
-                           _exact_max=intv_prod.end)
-    else:
-        grid_min = intv_prod.begin
-        grid_max = intv_prod.end
-        return RegularGrid(grid_min, grid_max, num_nodes, as_midp=as_midp)
+    See also
+    --------
+    uniform_sampling_fromintv:
+        sample a given interval product
+    uniform_partition :
+        divide implicitly defined interval product into equally
+        sized subsets
+
+    Examples
+    --------
+    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], (3, 3))
+    >>> grid.coord_vectors
+    (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
+    """
+    return uniform_sampling_fromintv(IntervalProd(begin, end), num_nodes)
 
 
 if __name__ == '__main__':

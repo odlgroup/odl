@@ -37,4 +37,8 @@ from . import graphics
 from .graphics import *
 __all__ += graphics.__all__
 
+from .import numerics
+from .numerics import *
+__all__ += numerics.__all__
+
 from . import ufuncs

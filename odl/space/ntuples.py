@@ -68,7 +68,7 @@ class Ntuples(NtuplesBase):
 
         Parameters
         ----------
-        inp : array-like, optional
+        inp : `array-like`, optional
             Input to initialize the new element.
 
             If ``inp`` is `None`, an empty element is created with no
@@ -331,7 +331,7 @@ class NtuplesVector(NtuplesBaseVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, `NtuplesVector`}
+        values : scalar, `array-like` or `NtuplesVector`
             The value(s) that are to be assigned.
 
             If ``indices`` is an integer, ``value`` must be scalar.
@@ -564,13 +564,12 @@ def _repr_space_funcs(space):
 
 class Fn(FnBase, Ntuples):
 
-    """The vector space :math:`\mathbb{F}^n` with vector multiplication.
+    """The vector space F^n with vector multiplication.
 
-    This space implements n-tuples of elements from a field
-    :math:`\mathbb{F}`, which can be the real or the complex numbers.
+    This space implements n-tuples of elements from a `Field` ``F``,
+    which is usually the real or complex numbers.
 
-    Its elements are represented as instances of the
-    `FnVector` class.
+    Its elements are represented as instances of the `FnVector` class.
     """
 
     def __init__(self, size, dtype, **kwargs):
@@ -587,25 +586,22 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        weight : array-like, float or `None`
+        weight : `array-like` or `float`, optional
             Use weighted inner product, norm, and dist.
 
-            `None` (default):
-                No weighting, use standard functions
+            float: Weighting by a constant
 
-            `float`:
-                Weighting by a constant
+            array-like: Weighting by a matrix (2-dim. array) or a vector
+            (1-dim. array, corresponds to a diagonal matrix). A matrix
+            can also be given as a sparse matrix
+            ( ``scipy.sparse.spmatrix``).
 
-            array-like:
-                Weighting by a matrix (2-dim. array) or a vector
-                (1-dim. array, corresponds to a diagonal matrix).
-                A matrix can also be given as a sparse matrix
-                ( ``scipy.sparse.spmatrix``).
+            Default: no weighting
 
             This option cannot be combined with ``dist``,
             ``norm`` or ``inner``.
 
-        exponent : positive `float`
+        exponent : positive `float`, optional
             Exponent of the norm. For values other than 2.0, no
             inner product is defined.
             If ``weight`` is a sparse matrix, only 1.0, 2.0 and
@@ -842,7 +838,7 @@ class Fn(FnBase, Ntuples):
 
         Returns
         -------
-        inner : `field` element
+        inner : `field` `element`
             Inner product of the vectors
 
         Examples
@@ -1075,7 +1071,7 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Parameters
         ----------
-        newreal : array-like or scalar
+        newreal : `array-like` or scalar
             The new real part for this vector.
 
         Examples
@@ -1133,7 +1129,7 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Parameters
         ----------
-        newreal : array-like or scalar
+        newreal : `array-like` or scalar
             The new imaginary part for this vector.
 
         Examples
@@ -1267,7 +1263,7 @@ class MatVecOperator(Operator):
 
         Parameters
         ----------
-        matrix : array-like or  ``scipy.sparse.spmatrix``
+        matrix : `array-like` or  ``scipy.sparse.spmatrix``
             Matrix representing the linear operator. Its shape must be
             ``(m, n)``, where ``n`` is the size of ``dom`` and ``m`` the
             size of ``ran``. Its dtype must be castable to the range
@@ -1396,7 +1392,7 @@ def weighted_inner(weight):
 
     Parameters
     ----------
-    weight : scalar or array-like
+    weight : scalar or `array-like`
         Weight of the inner product. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
@@ -1420,7 +1416,7 @@ def weighted_norm(weight, exponent=2.0):
 
     Parameters
     ----------
-    weight : scalar or array-like
+    weight : scalar or `array-like`
         Weight of the norm. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
@@ -1447,7 +1443,7 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
 
     Parameters
     ----------
-    weight : scalar or array-like
+    weight : scalar or `array-like`
         Weight of the distance. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
@@ -1562,7 +1558,7 @@ class FnMatrixWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        matrix :  ``scipy.sparse.spmatrix`` or array-like, 2-dim.
+        matrix :  ``scipy.sparse.spmatrix`` or `array-like`, 2-dim.
             Square weighting matrix of the inner product
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
@@ -1874,7 +1870,7 @@ class FnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        vector : array-like, one-dim.
+        vector : `array-like`, one-dim.
             Weighting vector of the inner product
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner

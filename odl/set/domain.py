@@ -33,8 +33,7 @@ import numpy as np
 from odl.set.sets import Set, RealNumbers
 from odl.util.utility import array1d_repr
 from odl.util.vectorization import (
-    is_valid_input_array, is_valid_input_meshgrid, meshgrid_input_order,
-    vecs_from_meshgrid)
+    is_valid_input_array, is_valid_input_meshgrid)
 
 
 __all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cuboid')
@@ -57,9 +56,9 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        begin : array-like or float
+        begin : `array-like` or `float`
             The lower ends of the intervals in the product
-        end : array-like or float
+        end : `array-like` or `float`
             The upper ends of the intervals in the product
 
         Examples
@@ -116,11 +115,6 @@ class IntervalProd(Set):
         return len(self._inondeg)
 
     @property
-    def extent(self):
-        """The interval length per axis."""
-        return self.end - self.begin
-
-    @property
     def volume(self):
         """The 'dim'-dimensional volume of this interval product."""
         return self.measure(ndim=self.ndim)
@@ -154,11 +148,14 @@ class IntervalProd(Set):
         """The maximum value in this interval product"""
         return self.end
 
+    def extent(self):
+        """The interval length per axis."""
+        return self.max() - self.min()
+
     def element(self):
         """An arbitrary element, the midpoint."""
         return self.midpoint
 
-    # Overrides of the abstract base class methods
     def approx_equals(self, other, tol):
         """Test if ``other`` is equal to this set up to ``tol``.
 
@@ -197,7 +194,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        point : array-like or `float`
+        point : `array-like` or `float`
             The point to be tested. Its length must be equal
             to the set's dimension. In the 1d case, 'point'
             can be given as a `float`.
@@ -273,7 +270,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : object
+        other :
             Can be a single point, a ``(d, N)`` array where ``d`` is the
             number of dimensions or a length-``d`` meshgrid sequence
 
@@ -304,8 +301,7 @@ class IntervalProd(Set):
         if other in self:
             return True
         elif is_valid_input_meshgrid(other, self.ndim):
-            order = meshgrid_input_order(other)
-            vecs = vecs_from_meshgrid(other, order)
+            vecs = tuple(vec.squeeze() for vec in other)
             mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
             maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
             return np.all(mins >= self.begin) and np.all(maxs <= self.end)
@@ -363,7 +359,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        point : array-like or `float`
+        point : `array-like` or `float`
                 The point. Its length must be equal to the set's
                 dimension. Can be a `float` in the 1d case.
         ord : non-zero int or float('inf'), optional
@@ -408,7 +404,7 @@ class IntervalProd(Set):
         ----------
         indices : `int` or `tuple` of `int`
             The indices of the dimensions along which to collapse
-        values : `float` or array-like
+        values : `array-like` or `float`
             The values to which to collapse. Must have the same
             length as ``indices``. Values must lie within the interval
             boundaries.
@@ -427,13 +423,8 @@ class IntervalProd(Set):
         Cuboid([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
         Cuboid([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
-        >>> rbox.collapse([1, 2], [0, 3.5])
-        Traceback (most recent call last):
-            ...
-        ValueError: values [ 0.   3.5] not below the upper interval
-        boundaries [ 1.  3.].
         """
-        indices = np.atleast_1d(indices)
+        indices = np.atleast_1d(indices).astype('int64', casting='safe')
         values = np.atleast_1d(values)
         if len(indices) != len(values):
             raise ValueError('lengths of indices {} and values {} do not '
@@ -488,29 +479,25 @@ class IntervalProd(Set):
         return IntervalProd(b_new, e_new)
 
     def insert(self, index, other):
-        """Insert another interval product before the given index.
+        """Return a copy with ``other`` inserted before ``index``.
 
         The given interval product (``ndim=m``) is inserted into the
         current one (``ndim=n``) before the given index, resulting in a
         new interval product with ``n+m`` dimensions.
 
-        No changes are made in-place.
-
         Parameters
         ----------
-        other : `IntervalProd`, `float` or array-like
-            The set to be inserted. A `float` or array a is
-            treated as an ``IntervalProd(a, a)``.
-        index : `int`, optional
-            The index of the dimension before which ``other`` is to
-            be inserted. Must fulfill ``0 <= index <= ndim``.
-
-            Default: `ndim`
+        index : `int`
+            Index of the dimension before which ``other`` is to
+            be inserted. Must fulfill ``-ndim <= index <= ndim``.
+            Negative indices are added to ``ndim``.
+        other : `IntervalProd`
+            Interval product to be inserted
 
         Returns
         -------
-        larger_set : `IntervalProd`
-            The enlarged set
+        newintvp : `IntervalProd`
+            Interval product with ``other`` inserted
 
         Examples
         --------
@@ -519,24 +506,17 @@ class IntervalProd(Set):
         >>> rbox2 = IntervalProd([0, 0], [1, 0])
         >>> rbox.insert(1, rbox2)
         IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
-        >>> rbox.insert(2, [-1.0, 0.0])
-        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
-
-        Can also insert by array
-
-        >>> rbox.insert(0, 1).squeeze() == rbox
-        True
-
-        See Also
-        --------
-        append
+        >>> rbox.insert(-1, rbox2)
+        IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
         """
-        if not 0 <= index <= self.ndim:
-            raise IndexError('Index ({}) out of range'.format(index))
+        if index < 0:
+            index = int(index) + self.ndim
+        else:
+            index = int(index)
 
-        # TODO: do we want this?
-        if not isinstance(other, IntervalProd):
-            other = IntervalProd(other, other)
+        if not 0 <= index <= self.ndim:
+            raise IndexError('index {} outside the valid range 0 ... {}.'
+                             ''.format(index, self.ndim))
 
         new_beg = np.empty(self.ndim + other.ndim)
         new_end = np.empty(self.ndim + other.ndim)
@@ -563,8 +543,8 @@ class IntervalProd(Set):
         Examples
         --------
         >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
-        >>> rbox.append([-1.0, 0.0])
-        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
+        >>> rbox.append(Interval(-1.0, 0.0))
+        Cuboid([-1.0, 2.0, -1.0], [-0.5, 3.0, 0.0])
 
         See Also
         --------
@@ -612,8 +592,6 @@ class IntervalProd(Set):
                [-0.5,  3. ,  0.5]])
         """
         from odl.discr.grid import TensorGrid
-        if order not in ('C', 'F'):
-            raise ValueError('order {} not understood.'.format(order))
 
         minmax_vecs = [0] * self.ndim
         for axis in self._ideg:
@@ -762,9 +740,9 @@ def Interval(begin, end):
 
     Parameters
     ----------
-    begin : array-like or float
+    begin : `array-like`, shape ``(1,)``, or `float`
         The lower ends of the intervals in the product
-    end : array-like or float
+    end : `array-like`, shape ``(1,)``, or `float`
         The upper ends of the intervals in the product
 
     """
@@ -780,9 +758,9 @@ def Rectangle(begin, end):
 
     Parameters
     ----------
-    begin : array-like with two elements convertible to float
+    begin : `array-like`, shape ``(2,)``
         The lower ends of the intervals in the product
-    end : array-like with two elements convertible to float
+    end : `array-like`, shape ``(2,)``
         The upper ends of the intervals in the product
     """
     rectangle = IntervalProd(begin, end)
@@ -797,9 +775,9 @@ def Cuboid(begin, end):
 
     Parameters
     ----------
-    begin : array-like with three elements convertible to float
+    begin : `array-like`, shape ``(3,)``
         The lower ends of the intervals in the product
-    end : array-like with three elements convertible to float
+    end : `array-like`, shape ``(3,)``
         The upper ends of the intervals in the product
     """
     cuboid = IntervalProd(begin, end)

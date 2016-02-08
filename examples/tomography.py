@@ -36,7 +36,7 @@ import odl
 
 class ForwardProjector(odl.Operator):
     def __init__(self, dom, ran):
-        self.theta = ran.grid.meshgrid()[1][0] * 180 / np.pi
+        self.theta = ran.grid.meshgrid[1][0] * 180 / np.pi
         super().__init__(dom, ran, True)
 
     def _call(self, x):
@@ -49,7 +49,7 @@ class ForwardProjector(odl.Operator):
 
 class BackProjector(odl.Operator):
     def __init__(self, dom, ran):
-        self.theta = dom.grid.meshgrid()[1][0] * 180 / np.pi
+        self.theta = dom.grid.meshgrid[1][0] * 180 / np.pi
         self.npoint = ran.grid.shape[0]
         super().__init__(dom, ran, True)
 

@@ -54,7 +54,7 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
     ----------
     deriv : `Operator`
         Gradient of the objective function, :math:`x \mapsto grad f(x)`
-    x : element in the domain of ``deriv``
+    x : `element` of the domain of ``deriv``
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length

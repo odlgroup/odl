@@ -101,7 +101,7 @@ class ProductSpaceOperator(Operator):
 
         Parameters
         ----------
-        operators : array-like
+        operators : `array-like`
             An array of `Operator`'s
         dom : `ProductSpace`
             Domain of the operator. If not provided, it is tried to be
@@ -208,14 +208,14 @@ class ProductSpaceOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : domain `element`
             input vector to be evaluated
-        out : range element, optional
+        out : range `element`, optional
             output vector to write result to
 
         Returns
         -------
-        out : range element
+        out : range `element`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -389,14 +389,14 @@ class ComponentProjection(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : domain `element`
             input vector to be projected
-        out : range element, optional
+        out : range `element`, optional
             output vector to write result to
 
         Returns
         -------
-        out : range element
+        out : range `element`
             Projection of x onto subspace. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -500,14 +500,14 @@ class ComponentProjectionAdjoint(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : domain `element`
             Input vector to be extended
-        out : range element, optional
+        out : range `element`, optional
             output vector to write result to
 
         Returns
         -------
-        out : range element
+        out : range `element`
             Extension of x to superspace. If ``out`` was provided, the
             returned object is a reference to it.
 

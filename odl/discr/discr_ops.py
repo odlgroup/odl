@@ -51,7 +51,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, edge_order=2,
 
     Parameters
     ----------
-    f : array-like
+    f : `array-like`
          An N-dimensional array
     out : `numpy.ndarray`, optional
          An N-dimensional array to which the output is written.
@@ -289,14 +289,14 @@ class PartialDerivative(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             Input vector to which the operator is applied to
         out : ``range`` element, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element, optional
+        out : ``range`` `element`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -364,7 +364,7 @@ class Gradient(Operator):
         self.method = method
 
         super().__init__(domain=space,
-                         range=ProductSpace(space, space.grid.ndim),
+                         range=ProductSpace(space, space.ndim),
                          linear=True)
 
     def _call(self, x, out=None):
@@ -372,15 +372,15 @@ class Gradient(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             Input vector to which the `Gradient` operator is
             applied
-        out : ``range`` element, optional
+        out : ``range`` `element`, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element, optional
+        out : ``range`` `element`
             Result of the evaluation. If ``out`` was
             provided, the returned object is a reference to it.
 
@@ -389,7 +389,7 @@ class Gradient(Operator):
         >>> from odl import uniform_discr
         >>> data = np.array([[ 0., 1., 2., 3., 4.],
         ...                  [ 0., 2., 4., 6., 8.]])
-        >>> discr = uniform_discr([0,0], [2,5], data.shape)
+        >>> discr = uniform_discr([0, 0], [2, 5], data.shape)
         >>> f = discr.element(data)
         >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
@@ -411,8 +411,8 @@ class Gradient(Operator):
             out = self.range.element()
 
         x_data = x.asarray()
-        ndim = self.domain.grid.ndim
-        dx = self.domain.grid.stride
+        ndim = self.domain.ndim
+        dx = self.domain.cell_sides
 
         for axis in range(ndim):
             out_arr = out[axis].asarray()
@@ -475,7 +475,7 @@ class Divergence(Operator):
         self.space = space
         self.method = method
 
-        super().__init__(domain=ProductSpace(space, space.grid.ndim),
+        super().__init__(domain=ProductSpace(space, space.ndim),
                          range=space, linear=True)
 
     def _call(self, x, out=None):
@@ -483,15 +483,15 @@ class Divergence(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             `ProductSpaceVector` to which the divergence operator
             is applied
-        out : ``range`` element, optional
+        out : ``range`` `element`, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element, optional
+        out : ``range`` `element`
             Result of the evaluationIf ``out`` was
             provided, the returned object is a reference to it.
 
@@ -519,8 +519,8 @@ class Divergence(Operator):
         if out is None:
             out = self.range.element()
 
-        ndim = self.range.grid.ndim
-        dx = self.range.grid.stride
+        ndim = self.range.ndim
+        dx = self.range.cell_sides
 
         arr = out.asarray()
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
@@ -584,15 +584,15 @@ class Laplacian(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             Input vector to which the `Laplacian` operator is
             applied
-        out : ``range`` element, optional
+        out : ``range`` `element`, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element, optional
+        out : ``range`` `element`
             Result of the evaluation. If ``out`` was
             provided, the returned object is a reference to it.
 
@@ -602,7 +602,7 @@ class Laplacian(Operator):
         >>> data = np.array([[ 0., 0., 0.],
         ...                  [ 0., 1., 0.],
         ...                  [ 0., 0., 0.]])
-        >>> discr = uniform_discr([0,0], [3,3], data.shape)
+        >>> discr = uniform_discr([0, 0], [3, 3], data.shape)
         >>> f = discr.element(data)
         >>> lap = Laplacian(discr)
         >>> print(lap(f))
@@ -620,7 +620,7 @@ class Laplacian(Operator):
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
 
         ndim = self.domain.ndim
-        dx = self.domain.grid.stride
+        dx = self.domain.cell_sides
 
         for axis in range(ndim):
             # TODO: this can be optimized

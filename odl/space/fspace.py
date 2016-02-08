@@ -34,8 +34,7 @@ from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.utility import preload_call_with, preload_default_oop_call_with
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
-    meshgrid_input_order, out_shape_from_array, out_shape_from_meshgrid,
-    vectorize)
+    out_shape_from_array, out_shape_from_meshgrid, vectorize)
 
 
 __all__ = ('FunctionSet', 'FunctionSetVector',
@@ -252,23 +251,21 @@ class FunctionSetVector(Operator):
             self._call_in_place(x, out=out, **kwargs)
 
     def __call__(self, x, out=None, **kwargs):
-        """Evaluate the function at one or multiple values ``x``.
+        """Return ``self(x[, out, **kwargs])``.
 
         Parameters
         ----------
-        x : object
+        x : domain `element-like`, `meshgrid` or `numpy.ndarray`
             Input argument for the function evaluation. Conditions
-            on ``x`` depend on vectorization:
+            on ``x`` depend on its type:
 
-            `False` : ``x`` must be a domain element
+            element-like: must be a castable to a domain element
 
-            `True` : ``x`` must be a `numpy.ndarray` with shape
-            ``(d, N)``, where ``d`` is the number of dimensions of
-            the function domain
-            OR
-            ``x`` is a sequence of `numpy.ndarray` with length
-            ``space.ndim``, and the arrays can be broadcast
-            against each other.
+            meshgrid: length must be ``space.ndim``, and the arrays must
+            be broadcastable against each other.
+
+            array:  shape must be ``(d, N)``, where ``d`` is the number
+            of dimensions of the function domain
 
         out : `numpy.ndarray`, optional
             Output argument holding the result of the function
@@ -276,12 +273,10 @@ class FunctionSetVector(Operator):
             functions. Its shape must be equal to
             ``np.broadcast(*x).shape``.
 
-        bounds_check : bool
-            Whether or not to check if all input points lie in
-            the function domain. For vectorized evaluation,
-            this requires the domain to implement
-            `Set.contains_all`.
-
+        bounds_check : `bool`
+            If `True`, check if all input points lie in the function
+            domain in the case of vectorized evaluation. This requires
+            the domain to implement `Set.contains_all`.
             Default: `True`
 
         Returns
@@ -518,13 +513,14 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def zero_vec(x, out=None):
             """The zero function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
-                order = meshgrid_input_order(x)
+                out_shape = out_shape_from_meshgrid(x)
+            elif is_valid_input_array(x, self.domain.ndim):
+                out_shape = out_shape_from_array(x)
             else:
-                order = 'C'
+                raise TypeError('invalid input type.')
 
-            out_shape = out_shape_from_meshgrid(x)
             if out is None:
-                return np.zeros(out_shape, dtype=dtype, order=order)
+                return np.zeros(out_shape, dtype=dtype)
             else:
                 out.fill(0)
 
@@ -540,13 +536,14 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def one_vec(x, out=None):
             """The one function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
-                order = meshgrid_input_order(x)
+                out_shape = out_shape_from_meshgrid(x)
+            elif is_valid_input_array(x, self.domain.ndim):
+                out_shape = out_shape_from_array(x)
             else:
-                order = 'C'
+                raise TypeError('invalid input type.')
 
-            out_shape = out_shape_from_meshgrid(x)
             if out is None:
-                return np.ones(out_shape, dtype=dtype, order=order)
+                return np.ones(out_shape, dtype=dtype)
             else:
                 out.fill(1)
 

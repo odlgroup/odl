@@ -39,7 +39,7 @@ def vector(array, dtype=None, impl='numpy'):
 
     Parameters
     ----------
-    array : array-like
+    array : `array-like`
         Array from which to create the vector. Scalars become
         one-dimensional vectors.
     dtype : `object`, optional

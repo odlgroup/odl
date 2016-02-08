@@ -30,9 +30,7 @@ import numpy as np
 
 
 __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
-           'meshgrid_input_order', 'vecs_from_meshgrid',
-           'out_shape_from_meshgrid', 'out_shape_from_array',
-           'vectorize')
+           'out_shape_from_meshgrid', 'out_shape_from_array', 'vectorize')
 
 
 def is_valid_input_array(x, ndim=None):
@@ -46,7 +44,7 @@ def is_valid_input_array(x, ndim=None):
 
 
 def is_valid_input_meshgrid(x, ndim):
-    """Test if ``x`` is a meshgrid sequence for points in R^d."""
+    """Test if ``x`` is a `meshgrid` sequence for points in R^d."""
     # This case is triggered in FunctionSetVector.__call__ if the
     # domain does not have an 'ndim' attribute. We return False and
     # continue.
@@ -71,61 +69,8 @@ def is_valid_input_meshgrid(x, ndim):
             all(xi.ndim == ndim for xi in x))
 
 
-def meshgrid_input_order(x):
-    """Determine the ordering of a meshgrid argument."""
-    # Case 1: all elements have the same shape -> non-sparse
-    if all(xi.shape == x[0].shape for xi in x):
-        # Contiguity check only works for meshgrid created with copy=True.
-        # Otherwise, there is no way to find out the intended ordering.
-        if all(xi.flags.c_contiguous for xi in x):
-            return 'C'
-        elif all(xi.flags.f_contiguous for xi in x):
-            return 'F'
-        else:
-            raise ValueError('unable to determine ordering.')
-    # Case 2: sparse meshgrid, each member's shape has at most one non-one
-    # entry (corner case of all ones is included)
-    elif all(xi.shape.count(1) >= len(x) - 1 for xi in x):
-        # Reversed ordering of dimensions in the meshgrid tuple indicates
-        # 'F' ordering intention
-        # All other dimension except 'i' have length 1 -> 'C'
-        if all(xi.shape[j] == 1
-               for j in range(len(x))
-               for i, xi in enumerate(x)
-               if j != i):
-            return 'C'
-        # All other dimension except 'n - i' have length 1 -> 'C'
-        if all(xi.shape[j] == 1
-               for j in range(len(x))
-               for i, xi in enumerate(x)
-               if j != len(x) - 1 - i):
-            return 'F'
-        else:
-            raise ValueError('unable to determine ordering.')
-
-
-def vecs_from_meshgrid(mesh, order):
-    """Get the coordinate vectors from a meshgrid (as a tuple)."""
-    vecs = []
-    order_ = str(order).upper()
-    if order_ not in ('C', 'F'):
-        raise ValueError("unknown ordering '{}'.".format(order))
-
-    if order == 'C':
-        seq = mesh
-    else:
-        seq = reversed(mesh)
-
-    for ax, vec in enumerate(seq):
-        select = [0] * len(mesh)
-        select[ax] = np.s_[:]
-        vecs.append(vec[select])
-
-    return tuple(vecs)
-
-
 def out_shape_from_meshgrid(mesh):
-    """Get the broadcast output shape from a meshgrid."""
+    """Get the broadcast output shape from a `meshgrid`."""
     if len(mesh) == 1:
         return (len(mesh[0]),)
     else:
@@ -230,12 +175,12 @@ class OptionalArgDecorator(object):
 
         Parameters
         ----------
-        func : callable
+        func : `callable`
             Original function to be wrapped
 
         Returns
         -------
-        wrapped : callable
+        wrapped : `callable`
             The wrapped function
         """
         return self._wrapper(func, *self.wrapper_args, **self.wrapper_kwargs)
@@ -307,7 +252,7 @@ class _NumpyVectorizeWrapper(object):
 
         Parameters
         ----------
-        func : callable
+        func : `callable`
             Python function or method to be wrapped
         vect_args :
             positional arguments for `numpy.vectorize`
@@ -324,7 +269,7 @@ class _NumpyVectorizeWrapper(object):
 
         Parameters
         ----------
-        x : array-like or sequence of array-like
+        x : `array-like` or `sequence` of `array-like`
             Input argument(s) to the wrapped function
         out : `numpy.ndarray`, optional
             Appropriately sized array to write to

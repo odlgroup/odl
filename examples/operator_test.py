@@ -43,11 +43,9 @@ class Convolution(odl.Operator):
 
         super().__init__(space, space, linear=True)
 
-    def _call(self, rhs, out):
-        scipy.ndimage.convolve(rhs,
-                               self.kernel,
-                               output=out.asarray(),
-                               mode='wrap')
+    def _call(self, x, out):
+        scipy.ndimage.convolve(
+            x, self.kernel, output=out.asarray(), mode='wrap')
 
         out *= self.scale
 
@@ -59,7 +57,8 @@ class Convolution(odl.Operator):
 def kernel(x):
     mean = [0.0, 0.25]
     std = [0.05, 0.05]
-    return np.exp(-(((x[0] - mean[0]) / std[0])**2 + ((x[1] - mean[1]) / std[1])**2))
+    return np.exp(-(((x[0] - mean[0]) / std[0]) ** 2 +
+                    ((x[1] - mean[1]) / std[1]) ** 2))
 
 
 def adjkernel(x):
