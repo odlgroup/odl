@@ -24,20 +24,20 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
-
 
 __all__ = ('apply_on_boundary',)
 
 
 def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
-                      axis_order=None):
+                      axis_order=None, out=None):
     """Apply a function of the boundary of an n-dimensional array.
+
+    All other values are preserved as is.
 
     Parameters
     ----------
     array : `numpy.ndarray`
-        Modify the boundary of this array in place
+        Modify the boundary of this array
     func : `callable` or `sequence`
         If a single function is given, assign
         ``array[slice] = func(array[slice])`` on the boundary slices,
@@ -66,30 +66,42 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         to process the axes. If combined with ``only_once`` and a
         function list, this determines which function is evaluated in
         the points that are potentially processed multiple times.
+    out : `numpy.ndarray`
+        Location in which to store the result, can be the same as ``array``.
+        Default: copy of ``array``
 
     Examples
     --------
     >>> import numpy as np
     >>> arr = np.ones((3, 3))
     >>> apply_on_boundary(arr, lambda x: x / 2)
-    >>> arr
     array([[ 0.5,  0.5,  0.5],
            [ 0.5,  1. ,  0.5],
            [ 0.5,  0.5,  0.5]])
-    >>>
-    >>> arr = np.ones((3, 3))
+
+    If called with ``only_once=False``, applies function repeatedly
+
     >>> apply_on_boundary(arr, lambda x: x / 2, only_once=False)
-    >>> arr
     array([[ 0.25,  0.5 ,  0.25],
            [ 0.5 ,  1.  ,  0.5 ],
            [ 0.25,  0.5 ,  0.25]])
-    >>> arr = np.ones((3, 3))
+
     >>> apply_on_boundary(arr, lambda x: x / 2, only_once=True,
     ...                   which_boundaries=((True, False), True))
-    >>> arr
     array([[ 0.5,  0.5,  0.5],
            [ 0.5,  1. ,  0.5],
            [ 0.5,  1. ,  0.5]])
+
+    Also accepts out parameter
+
+    >>> out = np.empty_like(arr)
+    >>> result = apply_on_boundary(arr, lambda x: x / 2, out=out)
+    >>> result
+    array([[ 0.5,  0.5,  0.5],
+           [ 0.5,  1. ,  0.5],
+           [ 0.5,  0.5,  0.5]])
+    >>> result is out
+    True
     """
     if callable(func):
         func = [func] * array.ndim
@@ -108,6 +120,11 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     elif len(axis_order) != array.ndim:
         raise ValueError('axis_order has length {}, expected {}.'
                          ''.format(len(axis_order), array.ndim))
+
+    if out is None:
+        out = array.copy()
+    else:
+        out[:] = array  # Self assignment is free, in case out is array
 
     # The 'only_once' functionality is implemented by storing for each axis
     # if the left and right boundaries have been processed. This information
@@ -141,13 +158,13 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
             mod_left = mod_right = which
 
         if mod_left and func_l is not None:
-            array[slc_l] = func_l(array[slc_l])
+            out[slc_l] = func_l(out[slc_l])
             start = 1
         else:
             start = None
 
         if mod_right and func_r is not None:
-            array[slc_r] = func_r(array[slc_r])
+            out[slc_r] = func_r(out[slc_r])
             end = -1
         else:
             end = None
@@ -155,6 +172,9 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         # Write the information for the processed axis into the slice list.
         # Start and end include the boundary if it was processed.
         slices[ax] = slice(start, end)
+
+    return out
+
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

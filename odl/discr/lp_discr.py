@@ -253,7 +253,8 @@ class DiscreteLp(Discretization):
             if not x_arr.flags.owndata:
                 x_arr = x_arr.copy()
 
-            apply_on_boundary(x_arr, func=func_list, only_once=False)
+            apply_on_boundary(x_arr, func=func_list, only_once=False,
+                              out=x_arr)
             return super()._inner(self.element(x_arr), y)
 
     def _norm(self, x):
@@ -270,7 +271,8 @@ class DiscreteLp(Discretization):
             if not x_arr.flags.owndata:
                 x_arr = x_arr.copy()
 
-            apply_on_boundary(x_arr, func=func_list, only_once=False)
+            apply_on_boundary(x_arr, func=func_list, only_once=False,
+                              out=x_arr)
             return super()._norm(self.element(x_arr))
 
     def _dist(self, x, y):
@@ -291,7 +293,8 @@ class DiscreteLp(Discretization):
                 y_arr = y_arr.copy()
 
             for arr in (x_arr, y_arr):
-                apply_on_boundary(arr, func=func_list, only_once=False)
+                apply_on_boundary(arr, func=func_list, only_once=False,
+                                  out=x_arr)
 
             return super()._dist(self.element(x_arr), self.element(y_arr))
 
