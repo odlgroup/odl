@@ -119,8 +119,7 @@ class OptionalArgDecorator(object):
                def myfunc(x):
                    pass
 
-           which is equivalent to
-           ::
+           which is equivalent to::
 
                def myfunc(x):
                    pass
@@ -137,8 +136,7 @@ class OptionalArgDecorator(object):
                def myfunc(x):
                    pass
 
-           which is equivalent to
-           ::
+           which is equivalent to::
 
                def myfunc(x):
                    pass

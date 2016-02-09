@@ -84,8 +84,8 @@ class TensorGrid(Set):
     A tensor grid is the set of points defined by all possible
     combination of coordinates taken from fixed coordinate vectors.
 
-    In 2 dimensions, for example, given two coordinate vectors
-    ::
+    In 2 dimensions, for example, given two coordinate vectors::
+
         coord_vec1 = [0, 1]
         coord_vec2 = [-1, 0, 2]
 
@@ -749,8 +749,8 @@ class RegularGrid(TensorGrid):
 
     This is a sparse representation of an n-dimensional grid defined
     as the tensor product of n coordinate vectors with equidistant
-    nodes. The grid points are calculated according to the rule
-    ::
+    nodes. The grid points are calculated according to the rule::
+
         x_j = min_pt + j * (max_pt - min_pt) / (shape - 1)
 
     with elementwise addition and multiplication.

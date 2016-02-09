@@ -51,9 +51,10 @@ class RectPartition(object):
     In 1d, a partition of an interval is implicitly defined by a
     collection of points x[0], ..., x[N-1] (a grid) which are chosen to
     lie in the center of the subintervals. The i-th subinterval is thus
-    given by
-    ::
+    given by::
+
         I[i] = [(x[i-1]+x[i])/2, (x[i]+x[i+1])/2]
+
     """
 
     def __init__(self, intv_prod, grid):
@@ -611,9 +612,11 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
         coordinate to be used in that axis. In axes which are not a key
         in the dictionary, the coordinate for the vector is calculated
         as::
+
             begin = x[0] - (x[1] - x[0]) / 2
 
         or::
+
             end = x[-1] + (x[-1] - x[-2]) / 2
 
         respectively. See ``Examples`` below.

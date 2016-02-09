@@ -300,8 +300,8 @@ class NearestInterpolation(FunctionSetMapping):
     """Nearest neighbor interpolation as an `Operator`.
 
     Given points ``x1 < x2 < ... < xN``, and values ``f1, ..., fN``,
-    nearest neighbor interpolation at ``x`` is defined by
-    ::
+    nearest neighbor interpolation at ``x`` is defined by::
+
         I(x) = fj  with j such that |x - xj| is minimal.
 
     The ambiguity at the midpoints is resolved by preferring one of the

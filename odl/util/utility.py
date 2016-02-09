@@ -259,6 +259,7 @@ def preload_default_oop_call_with(vector):
     Usually this decorator is used as as a function factory::
 
         preload_default_oop_call_with(<vec>)(<call>)
+
     """
 
     def decorator(call):
