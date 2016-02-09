@@ -46,14 +46,14 @@ Usage in ODL
 ============
 
 Python functions are in most cases used as input to a discretization process. For example, we may
-want to discretize a two-dimensional Gaussian function
-::
+want to discretize a two-dimensional Gaussian function::
+
     def gaussian2(x):
         return np.exp(-(x[0] ** 2 + x[1] ** 2) / 2)
     
 on the rectangle [-5, 5] x [-5, 5] with 100 pixels in each
-dimension. The code for this is simply
-::
+dimension. The code for this is simply::
+
     # Note that the minimum and maxiumum coordinates are given as
     # vectors, not one interval at a time.
     discr = odl.uniform_discr([-5, -5], [5, 5], (100, 100))
