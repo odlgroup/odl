@@ -247,7 +247,7 @@ class TensorGrid(Set):
 
         See also
         --------
-        Intervalprod.min
+        IntervalProd.min
 
         Examples
         --------
@@ -262,7 +262,7 @@ class TensorGrid(Set):
 
         See also
         --------
-        Intervalprod.max
+        IntervalProd.max
 
         Examples
         --------
@@ -1120,7 +1120,7 @@ def uniform_sampling_fromintv(intv_prod, num_nodes):
     --------
     uniform_sampling:
         sample an implicitly defined interval product
-    uniform_partition_fromintv :
+    odl.discr.partition.uniform_partition_fromintv :
         divide interval product into equally sized subsets
 
     Examples
@@ -1156,9 +1156,9 @@ def uniform_sampling(begin, end, num_nodes):
 
     See also
     --------
-    uniform_sampling_fromintv:
+    uniform_sampling_fromintv :
         sample a given interval product
-    uniform_partition :
+    odl.discr.partition.uniform_partition :
         divide implicitly defined interval product into equally
         sized subsets
 

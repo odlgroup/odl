@@ -46,7 +46,7 @@ _POINT_POSITIONS = ('center', 'left')
 
 class RectPartition(object):
 
-    """Rectangular partition by hypercubes based on `TensorGrid`s.
+    """Rectangular partition by hypercubes based on `TensorGrid`.
 
     In 1d, a partition of an interval is implicitly defined by a
     collection of points x[0], ..., x[N-1] (a grid) which are chosen to
@@ -137,7 +137,7 @@ class RectPartition(object):
 
         See also
         --------
-        Intervalprod.min
+        IntervalProd.min
         """
         return self.set.min()
 
@@ -146,7 +146,7 @@ class RectPartition(object):
 
         See also
         --------
-        Intervalprod.max
+        IntervalProd.max
         """
         return self.set.max()
 
@@ -369,7 +369,7 @@ class RectPartition(object):
         ----------
         index : `int`
             Index of the dimension before which ``other`` is to
-            be inserted. Must fulfill ``0 <= index <= ndim``.
+            be inserted. Negative indices are added to ``self.ndim``.
         other : `RectPartition`
             Partition to be inserted
 

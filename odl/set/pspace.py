@@ -647,14 +647,14 @@ class ProductSpaceVector(LinearSpaceVector):
 
         Returns
         -------
-        fig : list of ``matplotlib`` figure's
+        fig : list of `matplotlib.figure.Figure`
             The resulting figures. It is also shown to the user.
 
         See Also
         --------
         DiscreteLpVector.show : Show for discretized data
         NtuplesBaseVector.show : Show for sequence type data
-        show_discrete_data : underlying implementation
+        odl.util.graphics.show_discrete_data : Underlying implementation
         """
         title = kwargs.pop('title', 'ProductSpaceVector')
 

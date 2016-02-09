@@ -365,7 +365,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         show : `bool`, optional
             If the plot should be showed now or deferred until later.
 
-        fig : ``matplotlib`` figure
+        fig : `matplotlib.figure.Figure`
             The figure to show in. Expected to be of same "style", as
             the figure given by this function. The most common use case
             is that ``fig`` is the return value from an earlier call to
@@ -378,12 +378,12 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        fig : ``matplotlib`` figure
+        fig : `matplotlib.figure.Figure`
             The resulting figure. It is also shown to the user.
 
         See Also
         --------
-        show_discrete_data : underlying implementation
+        odl.util.graphics.show_discrete_data : Underlying implementation
         """
         from odl.util.graphics import show_discrete_data
         from odl.discr import RegularGrid

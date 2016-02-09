@@ -540,7 +540,7 @@ class DiscreteLpVector(DiscretizationVector):
         show : `bool`, optional
             If the plot should be showed now or deferred until later.
 
-        fig : ``matplotlib`` figure
+        fig : `matplotlib.figure.Figure`
             The figure to show in. Expected to be of same "style", as
             the figure given by this function. The most common use case
             is that ``fig`` is the return value from an earlier call to
@@ -553,12 +553,12 @@ class DiscreteLpVector(DiscretizationVector):
 
         Returns
         -------
-        fig : ``matplotlib`` figure
+        fig : `matplotlib.figure.Figure`
             The resulting figure. It is also shown to the user.
 
         See Also
         --------
-        show_discrete_data : Underlying implementation
+        odl.util.graphics.show_discrete_data : Underlying implementation
         """
 
         from odl.util.graphics import show_discrete_data
@@ -662,7 +662,8 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     See also
     --------
     uniform_discr : implicit uniform Lp discretization
-    uniform_partition : partition of the function domain
+    odl.discr.partition.uniform_partition :
+        partition of the function domain
     """
     if not isinstance(fspace, FunctionSpace):
         raise TypeError('space {!r} is not a `FunctionSpace` instance.'

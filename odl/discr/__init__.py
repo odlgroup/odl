@@ -17,8 +17,6 @@
 
 """Discretizations in ODL."""
 
-# TODO: write intro documentation
-
 from __future__ import absolute_import
 
 __all__ = ()

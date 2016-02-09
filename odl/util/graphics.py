@@ -67,7 +67,7 @@ def show_discrete_data(values, grid, method='', title=None,
     show : `bool`, optional
         If the plot should be showed now or deferred until later
 
-    fig : ``matplotlib`` figure
+    fig : `matplotlib.figure.Figure`
         The figure to show in. Expected to be of same "style", as the figure
         given by this function. The most common usecase is that fig is the
         return value from an earlier call to this function.
@@ -85,9 +85,9 @@ def show_discrete_data(values, grid, method='', title=None,
 
     Returns
     -------
-    fig : ``matplotlib`` figure
+    fig : `matplotlib.figure.Figure`
         The resulting figure. It is also shown to the user.
-    colorbar : ``matplotlib`` colorbar
+    colorbar : `matplotlib.colorbar.Colorbar`
         The colorbar
 
     See Also
