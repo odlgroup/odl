@@ -266,7 +266,9 @@ class DiscreteLp(Discretization):
     def _inner(self, x, y):
         """Return ``self.inner(x, y)``."""
         bdry_fracs = self.partition.boundary_cell_fractions
-        if np.allclose(bdry_fracs, 1.0) or self.exponent == float('inf'):
+        if (np.allclose(bdry_fracs, 1.0) or
+                self.exponent == float('inf') or
+                not getattr(self.dspace, 'is_weighted', False)):
             # no boundary weighting
             return super()._inner(x, y)
         else:
@@ -279,7 +281,9 @@ class DiscreteLp(Discretization):
     def _norm(self, x):
         """Return ``self.norm(x)``."""
         bdry_fracs = self.partition.boundary_cell_fractions
-        if np.allclose(bdry_fracs, 1.0) or self.exponent == float('inf'):
+        if (np.allclose(bdry_fracs, 1.0) or
+                self.exponent == float('inf') or
+                not getattr(self.dspace, 'is_weighted', False)):
             # no boundary weighting
             return super()._norm(x)
         else:
@@ -292,7 +296,9 @@ class DiscreteLp(Discretization):
     def _dist(self, x, y):
         """Return ``self.dist(x, y)``."""
         bdry_fracs = self.partition.boundary_cell_fractions
-        if np.allclose(bdry_fracs, 1.0) or self.exponent == float('inf'):
+        if (np.allclose(bdry_fracs, 1.0) or
+                self.exponent == float('inf') or
+                not getattr(self.dspace, 'is_weighted', False)):
             # no boundary weighting
             return super()._dist(x, y)
         else:
@@ -653,21 +659,21 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
 
             'linear' : use linear interpolation
 
-    impl : {'numpy', 'cuda'}
+    impl : {'numpy', 'cuda'}, optional
         Implementation of the data storage arrays
 
     Other Parameters
     ----------------
-    order : {'C', 'F'}
+    order : {'C', 'F'}, optional
         Axis ordering in the data storage. Default: 'C'
     dtype : dtype
         Data type for the discretized space
 
             Default for 'numpy': 'float64' / 'complex128'
 
-            Default for 'cuda': 'float32' / (not implemented)
+            Default for 'cuda': 'float32'
 
-    weighting : {'const', 'none'}
+    weighting : {'const', 'none'}, optional
         Weighting of the discretized space functions.
 
             'const' : weight is a constant, the cell volume (default)
@@ -751,7 +757,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
     exponent : positive `float`, optional
-        The parameter :math:`p` in :math:`L^p`. If the exponent is not
+        The parameter ``p`` in ``L^p``. If the exponent is not
         equal to the default 2.0, the space has no inner product.
     interp : `str` or `sequence` of `str`, optional
         Interpolation type to be used for discretization.
@@ -761,9 +767,11 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
             'linear' : use linear interpolation
 
-    impl : {'numpy', 'cuda'}
+    impl : {'numpy', 'cuda'}, optional
         Implementation of the data storage arrays
 
+    Other Parameters
+    ----------------
     nodes_on_bdry : `bool` or boolean `array-like`
         If `True`, place the outermost grid points at the boundary. For
         `False`, they are shifted by half a cell size to the 'inner'.
@@ -772,14 +780,21 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         whether the leftmost (first column) and rightmost (second column)
         nodes node lie on the boundary.
         Default: `False`
-    order : {'C', 'F'}
+    order : {'C', 'F'}, optional
         Axis ordering in the data storage. Default: 'C'
-    dtype : dtype
+    dtype : dtype, optional
         Data type for the discretized space
 
             Default for 'numpy': 'float64' / 'complex128'
 
-            Default for 'cuda': 'float32' / (not implemented)
+            Default for 'cuda': 'float32'
+
+    weighting : {'const', 'none'}, optional
+        Weighting of the discretized space functions.
+
+            'const' : weight is a constant, the cell volume (default)
+
+            'none' : no weighting
 
     Returns
     -------
@@ -857,7 +872,7 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
             'linear' : use linear interpolation
 
-    impl : {'numpy', 'cuda'}
+    impl : {'numpy', 'cuda'}, optional
         Implementation of the data storage arrays
     nodes_on_bdry : `bool` or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
@@ -872,10 +887,10 @@ def uniform_discr(min_corner, max_corner, nsamples,
         boundaries.
         Default: `False`
 
-    dtype : dtype
+    dtype : dtype, optional
         Data type for the discretized space
 
-            Default for 'numpy': 'float64'
+            Default for 'numpy': 'float64' / 'complex128'
 
             Default for 'cuda': 'float32'
 
@@ -884,13 +899,12 @@ def uniform_discr(min_corner, max_corner, nsamples,
         first axis varies slowest, the last axis fastest;
         vice versa for 'F'.
         Default: 'C'
-    weighting : {'const', 'none'}
+    weighting : {'const', 'none'}, optional
         Weighting of the discretized space functions.
 
-            'simple': weight is a constant (cell volume)
+            'const' : weight is a constant, the cell volume (default)
 
-            'consistent': weight is a matrix depending on the
-            interpolation type
+            'none' : no weighting
 
     Returns
     -------

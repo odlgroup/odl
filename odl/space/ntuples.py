@@ -767,6 +767,16 @@ class Fn(FnBase, Ntuples):
         """Exponent of the norm and distance."""
         return self._space_funcs.exponent
 
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return self._space_funcs
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the weighting is not `FnNoWeighting`."""
+        return not isinstance(self.weighting, FnNoWeighting)
+
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``.
 
