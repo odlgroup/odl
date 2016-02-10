@@ -35,6 +35,7 @@ from odl.solvers.util import Partial
 __all__ = ('chambolle_pock_solver',)
 
 
+# TODO: check how scaling of objective function propagates to the algorithm
 # TODO: variable step size
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
@@ -233,14 +234,12 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     # Temporal copy to store previous iterate
     x_old = x.space.element()
 
-    # Initialize proximal operator
+    # Initialize the proximal operators
 
     # Proximal operator of the convex conjugate of functional F
     proximal_dual_sigma = proximal_dual(sigma)
     # Proximal operator of functional G
     proximal_primal_tau = proximal_primal(tau)
-
-
 
     # Adjoint of the (product space) operator
     op_adjoint = op.adjoint
@@ -259,7 +258,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_relax.lincomb(1 + theta, x, -theta, x_old)
 
         if partial is not None:
-            partial.send(x)
+            partial(x)
 
 
 if __name__ == '__main__':

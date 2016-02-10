@@ -57,12 +57,13 @@ Moreau decomposition (or identity):
     `Wikipedia <https://en.wikipedia.org/wiki/Convex_conjugate>`_
 
 
-Indicator function: useful to incorporate constraints
+Indicator functions are typically used to incorporate constraints. The
+indicator function for a given set S is defined as
 
     ind_{S}(x) = {0 if x in S,
                   infinity if x not in S}
 
-Special indicator function:
+Special indicator function for a box centered at origin and with width 2 a:
 
     ind_{box(a)}(x) = {0 if ||x||_infinity <= a,
                        infinity if ||x||_infinity > a}
@@ -88,6 +89,7 @@ from odl.operator.operator import Operator
 from odl.operator.default_ops import IdentityOperator
 from odl.operator.pspace_ops import ProductSpaceOperator
 from odl.set.pspace import ProductSpace
+
 
 __all__ = ('combine_proximals', 'proximal_zero', 'proximal_nonnegativity',
            'proximal_convexconjugate_l1', 'proximal_convexconjugate_l2')
@@ -150,7 +152,7 @@ def combine_proximals(factory_list):
         -------
         diag_op : `Operator`
         """
-        return  diagonal_operator(
+        return diagonal_operator(
             [factory(step_size) for factory in factory_list])
 
     return make_diag
@@ -287,12 +289,11 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
     """
     lam = float(lam)
 
-    if not g is None:
-        if not g in space:
-            raise TypeError('element ({}) does not belong to {}'
-                            ''.format(g, space))
-    else:  # g is None
+    if g is None:
         g = space.zero()
+    else:
+        if g not in space:
+            raise TypeError('{} is not an element of {}'.format(g, space))
 
     class _ProximalConvConjL2(Operator):
 
@@ -321,7 +322,7 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
     return _ProximalConvConjL2
 
 
-# TODO: check scaling of the convex conjuate in the docstring
+# TODO: check scaling of the convex conjugate in the docstring
 def proximal_convexconjugate_l1(space, lam=1, g=None):
     """Proximal operator factory of the convex conjugate of the l1-semi-norm.
 
@@ -365,12 +366,11 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
     """
     lam = float(lam)
 
-    if not g is None:
-        if not g in space:
-            raise TypeError('element ({}) does not belong to {}'
-                            ''.format(g, space))
-    else:  # g is None
+    if g is None:
         g = space.zero()
+    else:
+        if g not in space:
+            raise TypeError('{} is not an element of {}'.format(g, space))
 
     class _ProximalConvConjL1(Operator):
 
@@ -428,8 +428,6 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
                 out.divide(diff, out)
 
     return _ProximalConvConjL1
-
-
 
 
 if __name__ == '__main__':

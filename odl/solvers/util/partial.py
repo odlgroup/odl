@@ -64,7 +64,7 @@ class Partial(with_metaclass(ABCMeta, object)):
         Returns
         -------
         result : `Partial`
-            A partial whose `__call__` method calls both constituends
+            A partial whose `__call__` method calls both constituents
             partials.
 
         Examples
@@ -184,7 +184,7 @@ class ForEachPartial(Partial):
 
 class PrintIterationPartial(Partial):
 
-    """Print the interation count."""
+    """Print the iteration count."""
 
     _default_text = 'iter ='
 
@@ -250,11 +250,12 @@ class ShowPartial(Partial):
 
         Parameters
         ----------
-        kwargs
-            Arguments to the show method
-        display_step : positive `int`
+        display_step : positive `int`, optional
             Number of iterations between plots. Default: 1
-        args, kwargs :
+
+        Other Parameters
+        ----------------
+        kwargs :
             Optional arguments passed on to ``x.show``
         """
         self.kwargs = kwargs

@@ -36,8 +36,7 @@ from odl.solvers import (chambolle_pock_solver,
 
 
 # TODO: Use BroadCastOperator instead of ProductSpaceOperator
-# TODO: Use ShowPartial
-# TODO: remove scaling factor
+# TODO: remove scaling factor when scaling issue of CP algorithm is checked
 
 # Read the image
 image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
@@ -59,12 +58,13 @@ image = (image - np.min(image)) / (np.max(image) - np.min(image))
 noisy = discr_space.element(image)
 
 # Gradient operator
-grad = odl.DiscreteGradient(discr_space, method='forward')
+grad_op = odl.Gradient(discr_space, method='forward')
 
 # Matrix of operators
 scale = 16
+
 prod_op = odl.ProductSpaceOperator(
-    [[np.sqrt(scale) * odl.IdentityOperator(discr_space)], [grad]])
+    [[np.sqrt(scale) * odl.IdentityOperator(discr_space)], [grad_op]])
 
 # Starting point
 x = prod_op.domain.zero()
@@ -73,16 +73,17 @@ x = prod_op.domain.zero()
 prod_op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(prod_op, 200)
 print('Norm of the product space operator: {}'.format(prod_op_norm))
 
-# Optionally pass partial to the solver to display intermediate results
+# Optional: pass partial to the solver to display intermediate results
 partial = (odl.solvers.PrintIterationPartial() &
            odl.solvers.util.PrintTimingPartial())
-fig = plt.figure()
-partial &= odl.solvers.util.ForEachPartial(
-    lambda x: x[0].show(show=False, fig=fig))
+# TODO: partial fails if fig is provided, other wise empty figure pops up
+# fig = plt.figure('intermediate reconstruction')
+fig = None
+partial &= odl.solvers.util.ShowPartial(show=False, fig=fig)
 
 prox_convconj_l2 = proximal_convexconjugate_l2(
     discr_space, lam=1, g=noisy * np.sqrt(scale))
-prox_convconj_l1 = proximal_convexconjugate_l1(grad.range, lam=scale / 16)
+prox_convconj_l1 = proximal_convexconjugate_l1(grad_op.range, lam=scale / 16)
 
 # Order should correspond to the operator K
 proximal_dual = combine_proximals([prox_convconj_l2, prox_convconj_l1])
@@ -91,8 +92,7 @@ proximal_dual = combine_proximals([prox_convconj_l2, prox_convconj_l1])
 chambolle_pock_solver(prod_op, x,
                       tau=1 / prod_op_norm, sigma=1 / prod_op_norm,
                       proximal_primal=proximal_zero(prod_op.domain),
-                      proximal_dual=proximal_dual,
-                      niter=100, partial=partial)
+                      proximal_dual=proximal_dual, niter=100, partial=partial)
 
 # Display images
 orig.show(title='original image')

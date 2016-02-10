@@ -82,24 +82,27 @@ npoints_kernel = np.array([2 * n + 1, 2 * n + 1])
 discr_space = odl.uniform_discr_fromspace(cont_space, npoints)
 discr_kernel_space = odl.uniform_discr_fromspace(kernel_space, npoints_kernel)
 
-# Discretie the functions
+# Discretize the functions
 disc_kernel = discr_kernel_space.element(kernel)
 disc_adjkernel = discr_kernel_space.element(adjkernel)
+
+# Initialize convolution operator
+conv_op = Convolution(discr_space, disc_kernel, disc_adjkernel)
+
+# Run diagnostics to assure the adjoint is properly implemented
+# odl.diagnostics.OperatorTest(conv_op).run_tests()
+
+# Initialize gradient operator
+grad_op = odl.Gradient(discr_space, method='forward')
+
+# Matrix of operators
+prod_op = odl.ProductSpaceOperator([[conv_op], [grad_op]])
 
 # Load phantom
 discr_phantom = odl.util.phantom.shepp_logan(discr_space, modified=True)
 
-# Initialize convolution operator
-conv = Convolution(discr_space, disc_kernel, disc_adjkernel)
-
-# Run diagnostics to assure the adjoint is properly implemented
-# odl.diagnostics.OperatorTest(conv).run_tests()
-
-# Initialize gradient operator
-grad = odl.DiscreteGradient(discr_space, method='forward')
-
-# Matrix of operators
-prod_op = odl.ProductSpaceOperator([[conv], [grad]])
+# Create data: convolved image of phantom
+data = conv_op(discr_phantom)
 
 # Starting point
 x = prod_op.domain.zero()
@@ -108,12 +111,9 @@ x = prod_op.domain.zero()
 prod_op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(prod_op, 50)
 print('Norm of the product space operator: {}'.format(prod_op_norm))
 
-# Create data: convolved image
-g = conv(discr_phantom)
-
 # Create proximal operators
-prox_convconj_l2 = proximal_convexconjugate_l2(discr_space, lam=1/1, g=g)
-prox_convconj_l1 = proximal_convexconjugate_l1(grad.range, lam=0.01)
+prox_convconj_l2 = proximal_convexconjugate_l2(discr_space, lam=1/1, g=data)
+prox_convconj_l1 = proximal_convexconjugate_l1(grad_op.range, lam=0.01)
 
 # Combine proximal operators, order must correspond to the operator K
 proximal_dual = combine_proximals([prox_convconj_l2, prox_convconj_l1])
@@ -121,19 +121,19 @@ proximal_dual = combine_proximals([prox_convconj_l2, prox_convconj_l1])
 # Optionally pass partial to the solver to display intermediate results
 partial = (odl.solvers.util.PrintIterationPartial() &
            odl.solvers.util.PrintTimingPartial())
-fig = plt.figure()
-partial &= odl.solvers.util.ForEachPartial(
-    lambda x: x[0].show(fig=fig, show=False))
+# fig = plt.figure()
+# partial &= odl.solvers.util.ForEachPartial(
+#     lambda x: x[0].show(fig=fig, show=False))
+partial &= odl.solvers.util.ShowPartial(fig=None, show=False)
 
 # Run algorithms
-chambolle_pock_solver(prod_op, x, tau=1 / prod_op_norm, sigma=1 / prod_op_norm,
-                      proximal_primal=proximal_zero(prod_op.domain),
-                      proximal_dual=proximal_dual,
-                      niter=200,
-                      partial=partial)
+chambolle_pock_solver(
+    prod_op, x, tau=1 / prod_op_norm, sigma=1 / prod_op_norm,
+    proximal_primal=proximal_zero(prod_op.domain),
+    proximal_dual=proximal_dual, niter=100, partial=partial)
 
 # Display images
 discr_phantom.show(title='original image')
-g.show(title='convolved image')
+data.show(title='convolved image')
 x.show(title='deconvolved image')
 plt.show()
