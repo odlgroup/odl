@@ -100,7 +100,10 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
         out = proj_space.element()
 
     vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
-    sino_id = astra_data(proj_geom, datatype='projection', data=out,
+
+    # needs to be improved, cuda does not use out anyway
+    data_out = out if ndim == 2 else None
+    sino_id = astra_data(proj_geom, datatype='projection', data=data_out,
                          ndim=proj_space.ndim)
 
     # Create projector
