@@ -118,6 +118,12 @@ def test_chambolle_pock_solver():
         x0])))
     assert all_almost_equal(x, x1, places)
 
+    # Test partial
+    chambolle_pock_solver(prod_op, x, tau=tau, sigma=sigma,
+                          proximal_primal=prox_primal,
+                          proximal_dual=prox_dual, theta=theta, niter=1,
+                          partial=odl.solvers.util.PrintIterationPartial())
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))

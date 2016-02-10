@@ -124,7 +124,37 @@ def test_combine_proximal():
     assert out == x
 
 
-def test_proximal_factory_convconj_l2():
+def test_proximal_factory_convconj_l2_wo_data():
+    """Proximal factory for the convex conjugate of the L2-norm."""
+
+    # Image space
+    x_space = odl.uniform_discr(0, 10, 10)
+
+    # Create an element in the image space
+    x0 = np.arange(-5, 5)
+    x_data = x_space.element(x0)
+
+    # Factory function for the proximal operator
+    lam = 2
+    make_prox = proximal_convexconjugate_l2(x_space, lam=lam)
+
+    # Initialize the proximal operator
+    sigma = 0.5
+    prox_op = make_prox(sigma)
+
+    assert isinstance(prox_op, odl.Operator)
+
+    # Optimal point returned by the proximal operator
+    x_out = x_space.element()
+    prox_op(x_data, x_out)
+
+    # Explicit computation: (x - sigma * g) / (1 + sigma / lambda)
+    x_verify = x_data / (1 + sigma / lam)
+
+    assert all_almost_equal(x_out, x_verify, PLACES)
+
+
+def test_proximal_factory_convconj_l2_with_data():
     """Proximal factory for the convex conjugate of the L2-norm."""
 
     # Image space
@@ -157,7 +187,36 @@ def test_proximal_factory_convconj_l2():
     assert all_almost_equal(x_out, x_verify, PLACES)
 
 
-def test_proximal_factory_convconj_l1_simple_space():
+def test_proximal_factory_convconj_l1_simple_space_wo_data():
+    """Proximal factory for the convex conjugate of the L1-semi-norm."""
+
+    # Image space
+    x_space = odl.uniform_discr(0, 10, 10)
+    x0 = np.arange(-5, 5)
+    x_data = x_space.element(x0)
+
+    # Factory function for the proximal operator
+    lam = 2
+    make_prox = proximal_convexconjugate_l1(x_space, lam=lam)
+
+    # Initialize the proximal operator of F^*
+    sigma = 0.5
+    prox_op = make_prox(sigma)
+
+    assert isinstance(prox_op, odl.Operator)
+
+    # Apply the proximal operator returning its optimal point
+    x_opt = x_space.element()
+    prox_op(x_data, x_opt)
+
+    # Explicit computation: x / max(lam, |x|)
+    denom = np.maximum(lam * np.ones(x0.shape), np.sqrt(x0 ** 2))
+    x0_verify = lam * x0 / denom
+
+    assert all_almost_equal(x_opt, x0_verify, PLACES)
+
+
+def test_proximal_factory_convconj_l1_simple_space_with_data():
     """Proximal factory for the convex conjugate of the L1-semi-norm."""
 
     # Image space
