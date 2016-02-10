@@ -316,6 +316,26 @@ class RawDiscretizationVector(NtuplesBaseVector):
         else:
             self.ntuple.__setitem__(indices, values)
 
+    @property
+    def restriction(self):
+        """The restriction operator associated with this vector.
+
+        See Also
+        --------
+        RawDiscretization.restriction : For full description
+        """
+        return self.space.restriction(self.ntuple)
+
+    @property
+    def extension(self):
+        """The extension operator associated with this vector.
+
+        See Also
+        --------
+        RawDiscretization.extension : For full description
+        """
+        return self.space.extension(self.ntuple)
+
     def __str__(self):
         """Return ``str(self)``."""
         return arraynd_str(self.asarray())
