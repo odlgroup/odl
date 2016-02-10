@@ -35,6 +35,10 @@ from odl.solvers import (chambolle_pock_solver,
                          proximal_convexconjugate_l2, proximal_zero)
 
 
+# TODO: Use BroadCastOperator instead of ProductSpaceOperator
+# TODO: Use ShowPartial
+# TODO: remove scaling factor
+
 # Read the image
 image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
 shape = image.shape
@@ -47,9 +51,8 @@ discr_space = odl.uniform_discr([0, 0], shape, shape)
 # Original image
 orig = discr_space.element(image)
 
-# Add noise
+# Add noise and rescale back to [0, 1]
 image += np.random.normal(0, 0.1, shape)
-# Rescale back to [0, 1]
 image = (image - np.min(image)) / (np.max(image) - np.min(image))
 
 # Data: noisy image
@@ -59,30 +62,37 @@ noisy = discr_space.element(image)
 grad = odl.DiscreteGradient(discr_space, method='forward')
 
 # Matrix of operators
-K = odl.ProductSpaceOperator([[odl.IdentityOperator(discr_space)], [grad]])
+scale = 16
+prod_op = odl.ProductSpaceOperator(
+    [[np.sqrt(scale) * odl.IdentityOperator(discr_space)], [grad]])
 
 # Starting point
-x = K.domain.zero()
+x = prod_op.domain.zero()
 
 # Operator norm
-K_norm = 1.1 * odl.operator.oputils.power_method_opnorm(K, 200)
+prod_op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(prod_op, 200)
+print('Norm of the product space operator: {}'.format(prod_op_norm))
 
 # Optionally pass partial to the solver to display intermediate results
-# partial = (odl.solvers.util.ShowPartial(title='intermediate results') &
-#            odl.solvers.util.PrintTimingPartial())
-partial = None
+partial = (odl.solvers.PrintIterationPartial() &
+           odl.solvers.util.PrintTimingPartial())
+fig = plt.figure()
+partial &= odl.solvers.util.ForEachPartial(
+    lambda x: x[0].show(show=False, fig=fig))
 
-prox_convconj_l2 = proximal_convexconjugate_l2(discr_space, lam=1, g=noisy)
-prox_convconj_l1 = proximal_convexconjugate_l1(grad.range, lam=1 / 16)
+prox_convconj_l2 = proximal_convexconjugate_l2(
+    discr_space, lam=1, g=noisy * np.sqrt(scale))
+prox_convconj_l1 = proximal_convexconjugate_l1(grad.range, lam=scale / 16)
 
 # Order should correspond to the operator K
 proximal_dual = combine_proximals([prox_convconj_l2, prox_convconj_l1])
 
 # Run algorithms (and display intermediates)
-chambolle_pock_solver(K, x, tau=1/K_norm, sigma=1/K_norm,
-                      proximal_primal=proximal_zero(K.domain),
+chambolle_pock_solver(prod_op, x,
+                      tau=1 / prod_op_norm, sigma=1 / prod_op_norm,
+                      proximal_primal=proximal_zero(prod_op.domain),
                       proximal_dual=proximal_dual,
-                      niter=500, partial=partial)
+                      niter=100, partial=partial)
 
 # Display images
 orig.show(title='original image')

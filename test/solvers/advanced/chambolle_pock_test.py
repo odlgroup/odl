@@ -28,28 +28,31 @@ import pytest
 
 # Internal
 import odl
-from odl.solvers import (
-    chambolle_pock_solver, proximal_zero, proximal_convexconjugate_l1,
-    proximal_convexconjugate_l2)
-from odl.util.testutils import all_almost_equal, all_equal
+from odl.solvers import chambolle_pock_solver, proximal_zero
+from odl.util.testutils import all_almost_equal
 
 
 def test_chambolle_pock_solver():
     """Simple execution test for the Chambolle-Pock solver"""
 
-    precision = 8
+    # Places for the accepted error when comparing results
+    places = 8
 
-    # Discretized space
-    n = 5
-    discr_space = odl.uniform_discr(0, 1, n)
+    # Create a discretized image space
+    pts = 5
+    discr_space = odl.uniform_discr(0, 1, pts)
 
     # Operator
     identity = odl.IdentityOperator(discr_space)
 
-    # Starting point
-    x0 = np.arange(n)
+    # Starting point (image)
+    x0 = np.arange(pts)
     x = identity.domain.element(x0)
+
+    # Relaxation variable needed to resume iteration
     xr = x.copy()
+
+    # Dual variable needed to resume iteration
     y = identity.range.zero()
 
     # Proximal operator, use same the factory function for F^* and G
@@ -62,12 +65,17 @@ def test_chambolle_pock_solver():
     chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
                           proximal_primal=prox, proximal_dual=prox,
                           theta=theta, niter=1, partial=None,
-                          x_relaxation=xr, y=y)
+                          x_relax=xr, y=y)
 
+    # Explicit computation
     x1 = (1 - tau * sigma) * x0
-    assert all_almost_equal(x, x1, precision)
+
+    assert all_almost_equal(x, x1, places)
+
+    # Explicit computation for the relaxation
     xr1 = (1 + theta) * x1 - theta * x0
-    assert all_almost_equal(xr, xr1)
+
+    assert all_almost_equal(xr, xr1, places)
 
     # Resume iteration with previous x but without previous relaxation xr
     chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
@@ -75,17 +83,17 @@ def test_chambolle_pock_solver():
                           theta=theta, niter=1, partial=None)
 
     x2 = (1 - sigma * tau) * x1
-    assert all_almost_equal(x, x2, precision)
+    assert all_almost_equal(x, x2, places)
 
     # Resume iteration with x1 as above and with relaxation parameter xr
     x[:] = x1
     chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
                           proximal_primal=prox, proximal_dual=prox,
                           theta=theta, niter=1, partial=None,
-                          x_relaxation=xr, y=y)
+                          x_relax=xr, y=y)
 
     x2 = x1 - tau * sigma * (x0 + xr1)
-    assert all_almost_equal(x, x2, precision)
+    assert all_almost_equal(x, x2, places)
 
     # Test with product space operator
 
@@ -108,7 +116,7 @@ def test_chambolle_pock_solver():
 
     x1 = x0 - tau * sigma * prod_op.adjoint(prod_op(prod_op.domain.element([
         x0])))
-    assert all_almost_equal(x, x1, precision)
+    assert all_almost_equal(x, x1, places)
 
 
 if __name__ == '__main__':
