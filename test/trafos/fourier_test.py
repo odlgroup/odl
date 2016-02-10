@@ -86,7 +86,7 @@ def _random_array(shape, dtype):
 
 def test_reciprocal_1d_odd():
 
-    grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=11, as_midp=True)
+    grid = odl.uniform_sampling(0, 1, num_nodes=11)
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -111,17 +111,17 @@ def test_reciprocal_1d_odd():
     assert all_equal(rgrid.shape, n)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
     # No point should be closer to 0 than half a recip stride
-    tol = 0.999 * true_recip_stride / 2
-    assert not rgrid.approx_contains(0, tol=tol)
+    atol = 0.999 * true_recip_stride / 2
+    assert not rgrid.approx_contains(0, atol=atol)
 
     # Inverting the reciprocal should give back the original
     irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
-    assert irgrid.approx_equals(grid, tol=1e-6)
+    assert irgrid.approx_equals(grid, atol=1e-6)
 
 
 def test_reciprocal_1d_odd_halfcomplex():
 
-    grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=11, as_midp=True)
+    grid = odl.uniform_sampling(0, 1, num_nodes=11)
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -148,12 +148,12 @@ def test_reciprocal_1d_odd_halfcomplex():
     # Inverting the reciprocal should give back the original
     irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
                                 halfcx_parity='odd')
-    assert irgrid.approx_equals(grid, tol=1e-6)
+    assert irgrid.approx_equals(grid, atol=1e-6)
 
 
 def test_reciprocal_1d_even():
 
-    grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=10, as_midp=True)
+    grid = odl.uniform_sampling(0, 1, num_nodes=10)
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -169,8 +169,8 @@ def test_reciprocal_1d_even():
     assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
     assert all_almost_equal(rgrid.center, 0)
     # No point should be closer to 0 than half a recip stride
-    tol = 0.999 * true_recip_stride / 2
-    assert not rgrid.approx_contains(0, tol=tol)
+    atol = 0.999 * true_recip_stride / 2
+    assert not rgrid.approx_contains(0, atol=atol)
 
     # With shift
     rgrid = reciprocal(grid, shift=True, halfcomplex=False)
@@ -183,12 +183,12 @@ def test_reciprocal_1d_even():
 
     # Inverting the reciprocal should give back the original
     irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
-    assert irgrid.approx_equals(grid, tol=1e-6)
+    assert irgrid.approx_equals(grid, atol=1e-6)
 
 
 def test_reciprocal_1d_even_halfcomplex():
 
-    grid = odl.uniform_sampling(odl.Interval(0, 1), num_nodes=10, as_midp=True)
+    grid = odl.uniform_sampling(0, 1, num_nodes=10)
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -215,13 +215,12 @@ def test_reciprocal_1d_even_halfcomplex():
     # Inverting the reciprocal should give back the original
     irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
                                 halfcx_parity='even')
-    assert irgrid.approx_equals(grid, tol=1e-6)
+    assert irgrid.approx_equals(grid, atol=1e-6)
 
 
 def test_reciprocal_nd():
 
-    cube = odl.Cuboid([0] * 3, [1] * 3)
-    grid = odl.uniform_sampling(cube, num_nodes=(3, 4, 5), as_midp=True)
+    grid = odl.uniform_sampling([0] * 3, [1] * 3, num_nodes=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -236,13 +235,12 @@ def test_reciprocal_nd():
 
     # Inverting the reciprocal should give back the original
     irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
-    assert irgrid.approx_equals(grid, tol=1e-6)
+    assert irgrid.approx_equals(grid, atol=1e-6)
 
 
 def test_reciprocal_nd_shift_list():
 
-    cube = odl.Cuboid([0] * 3, [1] * 3)
-    grid = odl.uniform_sampling(cube, num_nodes=(3, 4, 5), as_midp=True)
+    grid = odl.uniform_sampling([0] * 3, [1] * 3, num_nodes=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
     shift = [False, True, False]
@@ -260,13 +258,12 @@ def test_reciprocal_nd_shift_list():
 
     # Inverting the reciprocal should give back the original
     irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
-    assert irgrid.approx_equals(grid, tol=1e-6)
+    assert irgrid.approx_equals(grid, atol=1e-6)
 
 
 def test_reciprocal_nd_axes():
 
-    cube = odl.Cuboid([0] * 3, [1] * 3)
-    grid = odl.uniform_sampling(cube, num_nodes=(3, 4, 5), as_midp=True)
+    grid = odl.uniform_sampling([0] * 3, [1] * 3, num_nodes=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
     axes_list = [[1, -1], [0], [0, 2, 1], [2, 0]]
@@ -292,13 +289,12 @@ def test_reciprocal_nd_axes():
         # Inverting the reciprocal should give back the original
         irgrid = inverse_reciprocal(rgrid, grid.min_pt, axes=axes,
                                     halfcomplex=False)
-        assert irgrid.approx_equals(grid, tol=1e-6)
+        assert irgrid.approx_equals(grid, atol=1e-6)
 
 
 def test_reciprocal_nd_halfcomplex():
 
-    cube = odl.Cuboid([0] * 3, [1] * 3)
-    grid = odl.uniform_sampling(cube, num_nodes=(3, 4, 5), as_midp=True)
+    grid = odl.uniform_sampling([0] * 3, [1] * 3, num_nodes=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
     stride_last = 2 * pi / (s[-1] * n[-1])
@@ -317,7 +313,7 @@ def test_reciprocal_nd_halfcomplex():
     # Inverting the reciprocal should give back the original
     irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
                                 halfcx_parity='odd')
-    assert irgrid.approx_equals(grid, tol=1e-6)
+    assert irgrid.approx_equals(grid, atol=1e-6)
 
 
 # ---- dft_preprocess_data ---- #
@@ -681,30 +677,24 @@ def test_pyfftw_trafo_init_raise():
 def test_pyfftw_trafo_range():
     # 1d
     shape = 10
-    # TODO: this is a temporary hack since as_midp is not handled consistently
-    ran_grid = odl.uniform_sampling(odl.Interval(0, shape), shape,
-                                    as_midp=True)
+    ran_grid = odl.uniform_sampling(0, shape, shape)
     fft = PyfftwTransform(shape, dom_dtype='complex64')
-    assert fft.range.grid.approx_equals(ran_grid, tol=1e-6)
+    assert fft.range.grid.approx_equals(ran_grid, atol=1e-6)
 
     # 3d
     shape = (3, 4, 5)
-    # TODO: this is a temporary hack since as_midp is not handled consistently
-    ran_grid = odl.uniform_sampling(odl.IntervalProd([0] * 3, shape), shape,
-                                    as_midp=True)
+    ran_grid = odl.uniform_sampling([0] * 3, shape, shape)
     fft = PyfftwTransform(shape, dom_dtype='complex64')
-    assert fft.range.grid.approx_equals(ran_grid, tol=1e-6)
+    assert fft.range.grid.approx_equals(ran_grid, atol=1e-6)
 
     # 3d, with axes and halfcomplex
     shape = (3, 4, 5)
     axes = (-1, -2)
     ran_shape = (3, 3, 5)
-    # TODO: this is a temporary hack since as_midp is not handled consistently
-    ran_grid = odl.uniform_sampling(odl.IntervalProd([0] * 3, ran_shape),
-                                    ran_shape, as_midp=True)
+    ran_grid = odl.uniform_sampling([0] * 3, ran_shape, ran_shape)
     fft = PyfftwTransform(shape, dom_dtype='float64', axes=axes,
                           halfcomplex=True)
-    assert fft.range.grid.approx_equals(ran_grid, tol=1e-6)
+    assert fft.range.grid.approx_equals(ran_grid, atol=1e-6)
 
 
 # ---- PyfftwTransformInverse ---- #
@@ -736,30 +726,24 @@ def test_pyfftw_inverse_trafo_init_raise():
 def test_pyfftw_inverse_trafo_domain():
     # 1d
     shape = 10
-    # TODO: this is a temporary hack since as_midp is not handled consistently
-    dom_grid = odl.uniform_sampling(odl.Interval(0, shape), shape,
-                                    as_midp=True)
+    dom_grid = odl.uniform_sampling(0, shape, shape)
     ifft = PyfftwTransformInverse(shape, ran_dtype='complex64')
-    assert ifft.domain.grid.approx_equals(dom_grid, tol=1e-6)
+    assert ifft.domain.grid.approx_equals(dom_grid, atol=1e-6)
 
     # 3d
     shape = (3, 4, 5)
-    # TODO: this is a temporary hack since as_midp is not handled consistently
-    dom_grid = odl.uniform_sampling(odl.IntervalProd([0] * 3, shape), shape,
-                                    as_midp=True)
+    dom_grid = odl.uniform_sampling([0] * 3, shape, shape)
     ifft = PyfftwTransformInverse(shape, ran_dtype='complex64')
-    assert ifft.domain.grid.approx_equals(dom_grid, tol=1e-6)
+    assert ifft.domain.grid.approx_equals(dom_grid, atol=1e-6)
 
     # 3d, with axes and halfcomplex
     shape = (3, 4, 5)
     axes = (0, -1)
     dom_shape = (3, 4, 3)
-    # TODO: this is a temporary hack since as_midp is not handled consistently
-    dom_grid = odl.uniform_sampling(odl.IntervalProd([0] * 3, dom_shape),
-                                    dom_shape, as_midp=True)
+    dom_grid = odl.uniform_sampling([0] * 3, dom_shape, dom_shape)
     ifft = PyfftwTransformInverse(shape, ran_dtype='float64', axes=axes,
                                   halfcomplex=True)
-    assert ifft.domain.grid.approx_equals(dom_grid, tol=1e-6)
+    assert ifft.domain.grid.approx_equals(dom_grid, atol=1e-6)
 
 
 def test_pyfftw_trafo_call():

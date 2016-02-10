@@ -37,6 +37,7 @@ except ImportError:
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import (
     DiscreteLp, dspace_type, conj_exponent, uniform_discr)
+from odl.discr.partition import uniform_partition_fromgrid
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.ntuples import Ntuples
@@ -127,7 +128,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
 
     Returns
     -------
-    recip : `odl.RegularGrid`
+    recip : `RegularGrid`
         The reciprocal grid
     """
     if axes is None:
@@ -181,8 +182,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
             else:
                 rmax[axes[-1]] = half_rstride
 
-    # TODO: specify as_midp per axis, not supported currently
-    return RegularGrid(rmin, rmax, rshape, as_midp=False)
+    return RegularGrid(rmin, rmax, rshape)
 
 
 def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
@@ -237,7 +237,7 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
 
     Returns
     -------
-    irecip : `odl.RegularGrid`
+    irecip : `RegularGrid`
         The inverse reciprocal grid
     """
     if axes is None:
@@ -263,8 +263,7 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
     irstride[axes] = 2 * pi / (irshape[axes] * rstride[axes])
     irmax = irmin + (irshape - 1) * irstride
 
-    # TODO: specify as_midp per axis, not supported currently
-    return RegularGrid(irmin, irmax, irshape, as_midp=True)
+    return RegularGrid(irmin, irmax, irshape)
 
 
 def _pyfftw_to_local(flag):
@@ -510,7 +509,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     return fftw_plan
 
 
-def _recip_space(spc, axes, halfcomplex):
+def _recip_space_unity(spc, axes, halfcomplex):
     """Return the reciprocal space of ``spc`` with unit stride."""
     # Calculate reciprocal space with a grid with stride 1 and min (0, ..., 0)
 
@@ -524,7 +523,7 @@ def _recip_space(spc, axes, halfcomplex):
         rspc_dtype = spc.dtype
 
     rspc = uniform_discr([0] * spc.ndim, shape, shape, dtype=rspc_dtype,
-                         as_midp=False)
+                         nodes_on_bdry=True, weighting='none')
     return rspc
 
 
@@ -532,8 +531,8 @@ class PyfftwTransform(Operator):
 
     """Plain forward DFT as implemented in ``pyfftw``.
 
-    This operator calculates the forward DFT
-    ::
+    This operator calculates the forward DFT::
+
         f_hat[k] = sum_j( f[j] * exp(-2*pi*1j * j*k/N) )
 
     without any shifting or scaling compensation. See the
@@ -608,9 +607,9 @@ class PyfftwTransform(Operator):
 
         # Domain is a DiscreteLp with stride (1, ..., 1)
         dom_shape = tuple(np.atleast_1d(dom_shape))
-        # TODO: as_midp is deprecated, use partition instead
         dom = uniform_discr([0] * len(dom_shape), dom_shape, dom_shape,
-                            dtype=dom_dtype, as_midp=False)
+                            dtype=dom_dtype, nodes_on_bdry=True,
+                            weigting='none')
 
         axes_ = np.atleast_1d(axes)
         axes_[axes_ < 0] += len(dom_shape)
@@ -623,7 +622,7 @@ class PyfftwTransform(Operator):
         else:
             self._halfcomplex = bool(halfcomplex)
 
-        ran = _recip_space(dom, self.axes, self.halfcomplex)
+        ran = _recip_space_unity(dom, self.axes, self.halfcomplex)
         super().__init__(dom, ran, linear=True)
         self._fftw_plan = None
 
@@ -783,9 +782,9 @@ class PyfftwTransformInverse(Operator):
 
         # Range is a DiscreteLp with stride (1, ..., 1)
         ran_shape = tuple(np.atleast_1d(ran_shape))
-        # TODO: as_midp is deprecated, use partition instead
         ran = uniform_discr([0] * len(ran_shape), ran_shape, ran_shape,
-                            dtype=ran_dtype, as_midp=False)
+                            dtype=ran_dtype, nodes_on_bdry=True,
+                            weighting='none')
 
         axes_ = np.atleast_1d(axes)
         axes_[axes_ < 0] += len(ran_shape)
@@ -799,7 +798,7 @@ class PyfftwTransformInverse(Operator):
             self._halfcomplex = bool(halfcomplex)
 
         # self._halfcomplex and self._axes need to be set for this
-        dom = _recip_space(ran, self.axes, self.halfcomplex)
+        dom = _recip_space_unity(ran, self.axes, self.halfcomplex)
         super().__init__(dom, ran, linear=True)
         self._fftw_plan = None
 
@@ -932,7 +931,7 @@ def dft_preprocess_data(dfunc, shift=True, axes=None):
         if shift:
             # (-1)^indices
             indices = np.arange(length, dtype='int8')
-            arr = -2 * np.mod(indices, 2) + 1
+            arr = -2 * np.mod(indices, 2) + 1.0
         else:
             indices = np.arange(length, dtype='float64')
             arr = np.exp(1j * pi * indices * (1 - 1.0 / length))
@@ -1092,6 +1091,32 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
     fast_1d_tensor_mult(dfunc.asarray(), onedim_arrs, axes=mult_axes)
 
 
+def _recip_space(space, shifts, halfcomplex, axes):
+    """Return the reciprocal space of ``space``."""
+    # Calculate range
+    recip_grid = reciprocal(space.grid, shift=shifts, halfcomplex=halfcomplex,
+                            axes=axes)
+
+    # Always complex space
+    part = uniform_partition_fromgrid(recip_grid)
+    ran_fspace = FunctionSpace(part.set, field=ComplexNumbers())
+
+    if is_real_dtype(space.dtype):
+        ran_dtype = _TYPE_MAP_R2C[space.dtype]
+    else:
+        ran_dtype = space.dtype
+
+    conj_exp = conj_exponent(space.exponent)
+    ran_dspace_type = dspace_type(ran_fspace, impl='numpy', dtype=ran_dtype)
+    ran_dspace = ran_dspace_type(part.size, dtype=ran_dtype,
+                                 weight=part.cell_volume, exponent=conj_exp)
+
+    recip_spc = DiscreteLp(ran_fspace, part, ran_dspace,
+                           exponent=conj_exp)
+
+    return recip_spc
+
+
 class FourierTransform(Operator):
 
     """Discretized Fourier transform between discrete Lp spaces.
@@ -1218,36 +1243,10 @@ class FourierTransform(Operator):
 
         if ran is None:
             # self._halfcomplex and self._axes need to be set for this
-            ran = self._conj_range(dom)
+            ran = _recip_space(dom, self.shifts, self.halfcomplex, self.axes)
 
         super().__init__(dom, ran, linear=True)
         self._fftw_plan = None
-
-    def _conj_range(self, dom):
-        """Returned the conjugate range determined from ``dom``."""
-        # Calculate range
-        recip_grid = reciprocal(
-            dom.grid, shift=self.shifts, halfcomplex=self.halfcomplex,
-            axes=self.axes)
-
-        # Always complex space
-        ran_fspace = FunctionSpace(recip_grid.convex_hull(), ComplexNumbers())
-
-        if is_real_dtype(dom.dtype):
-            ran_dtype = _TYPE_MAP_R2C[dom.dtype]
-        else:
-            ran_dtype = dom.dtype
-
-        conj_exp = conj_exponent(dom.exponent)
-        ran_dspace_type = dspace_type(ran_fspace, impl='numpy',
-                                      dtype=ran_dtype)
-        ran_dspace = ran_dspace_type(recip_grid.size, dtype=ran_dtype,
-                                     exponent=conj_exp)
-
-        ran = DiscreteLp(ran_fspace, recip_grid, ran_dspace,
-                         exponent=conj_exp)
-
-        return ran
 
     def _call(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])``.
@@ -1313,6 +1312,7 @@ class FourierTransform(Operator):
             halfcomplex=self.halfcomplex, axes=self.axes, **kwargs)
 
         # Post-processing accounting for shift, scaling and interpolation
+        # TODO: partitions?
         dft_postprocess_data(out, self.domain.grid.min_pt, shifts=self.shifts,
                              axes=self.axes, orig_shape=self.domain.shape,
                              orig_stride=self.domain.grid.stride,
