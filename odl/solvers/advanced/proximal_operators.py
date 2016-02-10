@@ -60,15 +60,13 @@ Moreau decomposition (or identity):
 Indicator functions are typically used to incorporate constraints. The
 indicator function for a given set S is defined as
 
-    ind_{S}(x) = {0 if x in S,
-                  infinity if x not in S}
+    ind_{S}(x) = {0 if x in S, infinity if x not in S}
 
 Special indicator function for a box centered at origin and with width 2 a:
 
-    ind_{box(a)}(x) = {0 if ||x||_infinity <= a,
-                       infinity if ||x||_infinity > a}
+    ind_{box(a)}(x) = {0 if ||x||_infty <= a, infty if ||x||_infty > a}
 
-where ||.||_infinity denotes the infinity- or supremum-norm
+where ||.||_infty denotes the infinity- or supremum-norm
 
 
 For more details on proximal operators including how to evaluate the
@@ -106,7 +104,7 @@ def combine_proximals(factory_list):
 
     Parameters
     ----------
-    factory_list : list of `Operator`s
+    factory_list : list of `Operator`
         A list containing proximal operators which are created by the
         corresponding factory functions
 
@@ -212,10 +210,10 @@ def proximal_nonnegativity(space):
 
     with x being an element in ``space``.
 
-    The proximal operator of G is a point-wise non-negativity thresholding of x
+    The proximal operator of G is the point-wise non-negativity thresholding
+    of x
 
-         prox_tau[G](x) = {x if x > 0,
-                           0 if <= 0}
+         prox_tau[G](x) = {x if x > 0, 0 if <= 0}
 
     It is independent of tau and invariant under a positive rescaling of G
     since which leaves the indicator function as it stands.
@@ -329,26 +327,26 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
     Function for the proximal operator of the convex conjugate of the
     functional F where F is an l1-semi-norm
 
-        F(x) = lam ||(|x - g|)||_1
+        F(x) = lam || ||x-g||_p ||_1
 
     with x and g elements in ``space``, scaling factor lam, and point-wise
-    magnitude |x| of x. If x is vector-valued, |x| is the point-wise l2-norm
-    across the vector components.
+    magnitude ||x||_p of x. If x is vector-valued, ||x||_p is the point-wise
+    l2-norm across the vector components.
 
     The convex conjugate, F_cc, of F is given by the indicator function of
     the set box(lam)
 
-        F_cc(y) = lam ind_{box(lam)}(|y / lam| + <y / lam, g>)
+        F_cc(y) = lam ind_{box(lam)}(||y / lam||_p + <y / lam, g>)
 
     where box(lam) is a hypercube centered at the origin with width 2 lam.
 
     The proximal operator of F_cc is
 
-        prox_sigma[F_cc](y) =
-            lam (y - sigma g) / (max(lam 1_{|y|}, |y - sigma g|)
+        prox_sigma[F_cc](y) = lam (y - sigma g) / (max(lam 1_{||y||_p},
+        ||y - sigma g||_p)
 
-    where max(.,.) thresholds the lower bound of |y| point-wise and 1_{|y|}
-    is a unit vector in the space of |y|.
+    where max(.,.) thresholds the lower bound of ||y||_p point-wise and
+    1_{||y||_p} is a unit vector in the space of ||y||_p.
 
     Parameters
     ----------
