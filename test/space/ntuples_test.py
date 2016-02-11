@@ -39,11 +39,6 @@ from odl.space.ntuples import (
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 from odl.util.ufuncs import UFUNCS, REDUCTIONS
 
-# TODO: add tests for:
-# * inner, norm, dist as free functions
-# * Vector weighting
-# * Custom inner/norm/dist
-
 
 # Helpers to generate data
 

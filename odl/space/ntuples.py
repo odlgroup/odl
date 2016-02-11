@@ -612,8 +612,13 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        weight : `array-like` or `float`, optional
-            Use weighted inner product, norm, and dist.
+        weight : optional
+            Use weighted inner product, norm, and dist. The following
+            types are supported as ``weight``:
+
+            `FnWeightingBase` :
+                Use this weighting as-is. Compatibility with this
+                space's elements is not checked during init.
 
             float: Weighting by a constant
 
@@ -725,7 +730,9 @@ class Fn(FnBase, Ntuples):
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
-            if np.isscalar(weight):
+            if isinstance(weight, FnWeightingBase):
+                self._space_funcs = weight
+            elif np.isscalar(weight):
                 self._space_funcs = FnConstWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner)
             elif weight is None:

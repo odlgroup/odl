@@ -536,19 +536,24 @@ class CudaFn(FnBase, CudaNtuples):
 
             Only scalar data types are allowed.
 
-        weight : `array-like`, `CudaFnVector` or `float`, optional
-            Use weighted inner product, norm, and dist.
+        weight : optional
+            Use weighted inner product, norm, and dist. The following
+            types are supported as ``weight``:
 
-            `float`:
+            `FnWeightingBase` :
+                Use this weighting as-is. Compatibility with this
+                space's elements is not checked during init.
+
+            `float` :
                 Weighting by a constant
 
-            array-like:
+            `array-like` :
                 Weighting by a vector (1-dim. array, corresponds to
                 a diagonal matrix). Note that the array is stored in
                 main memory, which results in slower space functions
                 due to a copy during evaluation.
 
-            `CudaFnVector`:
+            `CudaFnVector` :
                 same as 1-dim. array-like, except that copying is
                 avoided if the ``dtype`` of the vector is the
                 same as this space's ``dtype``.
@@ -638,7 +643,9 @@ class CudaFn(FnBase, CudaNtuples):
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
-            if np.isscalar(weight):
+            if isinstance(weight, FnWeightingBase):
+                self._space_funcs = weight
+            elif np.isscalar(weight):
                 self._space_funcs = CudaFnConstWeighting(
                     weight, exponent=exponent)
             elif isinstance(weight, CudaFnVector):
