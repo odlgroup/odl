@@ -32,7 +32,7 @@ import pytest
 import odl
 from odl.discr.lp_discr import conj_exponent
 from odl.trafos.fourier import (
-    reciprocal, inverse_reciprocal, dft_preprocess_data,  pyfftw_call,
+    reciprocal, inverse_reciprocal, dft_preprocess_data, pyfftw_call,
     PyfftwTransform, PyfftwTransformInverse,
     FourierTransform, _TYPE_MAP_R2C)
 from odl.util.testutils import all_almost_equal, all_equal
@@ -327,11 +327,44 @@ def test_dft_preprocess_data():
     # With shift
     correct_arr = []
     for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
+        correct_arr.append((1 + 1j) * (1 - 2 * ((i + j + k) % 2)))
+
+    dfunc = space_discr.one() * (1 + 1j)
+    preproc = dft_preprocess_data(dfunc, shift=True)  # out of place
+    dft_preprocess_data(dfunc, shift=True, out=dfunc)  # in place
+
+    assert all_almost_equal(preproc.ntuple, correct_arr)
+    assert all_almost_equal(dfunc.ntuple, correct_arr)
+
+    # Without shift
+    correct_arr = []
+    for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
+        argsum = sum((idx * (1 - 1 / shp))
+                     for idx, shp in zip((i, j, k), shape))
+
+        correct_arr.append((1 + 1j) * np.exp(1j * np.pi * argsum))
+
+    dfunc = space_discr.one() * (1 + 1j)
+    dft_preprocess_data(dfunc, shift=False, out=dfunc)
+
+    assert all_almost_equal(dfunc.ntuple, correct_arr)
+
+
+def test_dft_preprocess_data_halfcomplex():
+
+    shape = (2, 3, 4)
+    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, dtype='float64')
+
+    # With shift
+    correct_arr = []
+    for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append(1 - 2 * ((i + j + k) % 2))
 
     dfunc = space_discr.one()
-    dft_preprocess_data(dfunc, shift=True)
+    preproc = dft_preprocess_data(dfunc, shift=True)
+    dft_preprocess_data(dfunc, shift=True, out=dfunc)
 
+    assert all_almost_equal(preproc.ntuple, correct_arr)
     assert all_almost_equal(dfunc.ntuple, correct_arr)
 
     # Without shift
@@ -343,9 +376,13 @@ def test_dft_preprocess_data():
         correct_arr.append(np.exp(1j * np.pi * argsum))
 
     dfunc = space_discr.one()
-    dft_preprocess_data(dfunc, shift=False)
+    preproc = dft_preprocess_data(dfunc, shift=False)
 
-    assert all_almost_equal(dfunc.ntuple, correct_arr)
+    assert all_almost_equal(preproc.ntuple, correct_arr)
+
+    with pytest.raises(ValueError):
+        # Not possible in this case
+        dft_preprocess_data(dfunc, shift=False, out=dfunc)
 
 
 def test_dft_preprocess_data_with_axes():
@@ -360,7 +397,7 @@ def test_dft_preprocess_data_with_axes():
         correct_arr.append(1 - 2 * (j % 2))
 
     dfunc = space_discr.one()
-    dft_preprocess_data(dfunc, shift=True, axes=axes)
+    dft_preprocess_data(dfunc, shift=True, axes=axes, out=dfunc)
 
     assert all_almost_equal(dfunc.ntuple, correct_arr)
 
@@ -371,7 +408,9 @@ def test_dft_preprocess_data_with_axes():
         correct_arr.append(1 - 2 * ((i + k) % 2))
 
     dfunc = space_discr.one()
-    dft_preprocess_data(dfunc, shift=True, axes=axes)
+    dft_preprocess_data(dfunc, shift=True, axes=axes, out=dfunc)
+
+    assert all_almost_equal(dfunc.ntuple, correct_arr)
 
 
 # ---- pyfftw_call ---- #
@@ -841,6 +880,27 @@ def test_ft_charfun_1d():
     func_true_ft = dft.range.element(char_interval_ft)
     func_dft = dft(char_interval)
     assert (func_dft - func_true_ft).norm() < 1e-6
+
+
+def test_ft_scaling():
+    # Test if the FT scales correctly
+
+    # Characteristic function of [0, 1], its Fourier transform is
+    # given by exp(-1j * y / 2) * sinc(y/2)
+    def char_interval(x):
+        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
+
+    def char_interval_ft(x):
+        return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
+
+    fspace = odl.FunctionSpace(odl.Interval(-2, 2), field=odl.ComplexNumbers())
+    discr = odl.uniform_discr_fromspace(fspace, 64, impl='numpy')
+    dft = FourierTransform(discr)
+
+    for factor in (2, 1j, -2.5j, 1 - 4j):
+        func_true_ft = factor * dft.range.element(char_interval_ft)
+        func_dft = dft(factor * fspace.element(char_interval))
+        assert (func_dft - func_true_ft).norm() < 1e-6
 
 
 def test_ft_hat_1d():

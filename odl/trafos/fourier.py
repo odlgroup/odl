@@ -40,18 +40,16 @@ from odl.discr.lp_discr import (
 from odl.discr.partition import uniform_partition_fromgrid
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.space.base_ntuples import _TYPE_MAP_R2C
 from odl.space.ntuples import Ntuples
 from odl.space.fspace import FunctionSpace
-from odl.util.utility import is_real_dtype, fast_1d_tensor_mult
+from odl.util.numerics import fast_1d_tensor_mult
+from odl.util.utility import is_real_dtype, complex_space
 
 
 __all__ = ('FourierTransform', 'InverseFourierTransform',
            'pyfftw_call', 'dft_preprocess_data', 'dft_postprocess_data',
            'PYFFTW_AVAILABLE')
-
-
-_TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
-                 for dtype in np.sctypes['float']}
 
 
 def _shift_list(shift, length):
@@ -881,7 +879,7 @@ class PyfftwTransformInverse(Operator):
             axes=self.axes, halfcomplex=self.halfcomplex)
 
 
-def dft_preprocess_data(dfunc, shift=True, axes=None):
+def dft_preprocess_data(dfunc, shift=True, axes=None, out=None):
     """Pre-process the real-space data before DFT.
 
     This function multiplies the given data with the separable
@@ -908,10 +906,7 @@ def dft_preprocess_data(dfunc, shift=True, axes=None):
     Parameters
     ----------
     dfunc : `DiscreteLpVector`
-        Discrete function to be pre-processed. Changes are made
-        in place. For real input data, this is only possible if
-        ``shift=True`` since the factors :math:`p_k` are real only
-        in this case.
+        Discrete function to be pre-processed
     shift : `bool` or sequence of `bool`, optional
         If `True`, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
@@ -920,9 +915,28 @@ def dft_preprocess_data(dfunc, shift=True, axes=None):
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
         as a sequence. `None` means all axes in ``dfunc``.
+    out : `DiscreteLpVector`, optional
+        Element in which the result is stored. If ``out is dfunc``,
+        an in-place modification is done. For real ``dfunc``, this
+        is only possible for ``shift=True`` since the factors are
+        complex otherwise.
+
+    Returns
+    -------
+    preproc : `DiscreteLpVector`
+        Result of the pre-processing. If ``out`` was given, the returned
+        object is a reference to it.
     """
-    if dfunc.space.field == RealNumbers() and not shift:
-        raise ValueError('cannot pre-process in-place without shift.')
+    if out is None:
+        if dfunc.space.field == RealNumbers() and not shift:
+            out = complex_space(dfunc.space).element(dfunc.asarray())
+        else:
+            out = dfunc.copy()
+    elif out is dfunc:
+        if dfunc.space.field == RealNumbers() and not shift:
+            raise ValueError('cannot pre-process in-place without shift.')
+    else:
+        out[:] = dfunc
 
     if axes is None:
         axes = list(range(dfunc.ndim))
@@ -946,7 +960,8 @@ def dft_preprocess_data(dfunc, shift=True, axes=None):
         length = shape[axis]
         onedim_arrs.append(_onedim_arr(length, shift))
 
-    fast_1d_tensor_mult(dfunc.asarray(), onedim_arrs, axes=axes)
+    fast_1d_tensor_mult(out.asarray(), onedim_arrs, axes=axes)
+    return out
 
 
 def _interp_kernel_ft(norm_freqs, interp):
@@ -957,14 +972,13 @@ def _interp_kernel_ft(norm_freqs, interp):
 
         sinc(pi * xi)**k / sqrt(2 * pi)
 
-    where ``k=1`` for 'nearest', ``k=2`` for 'linear' and ``k=3``
-    for 'cubic' interpolation.
+    where ``k=1`` for 'nearest' and ``k=2`` for 'linear' interpolation.
 
     Parameters
     ----------
     norm_freqs : `numpy.ndarray`
         Normalized frequencies between -1/2 and 1/2
-    interp : {'nearest', 'linear', 'cubic'}
+    interp : {'nearest', 'linear'}
         Type of interpolation kernel
 
     Returns
@@ -972,20 +986,18 @@ def _interp_kernel_ft(norm_freqs, interp):
     ker_ft : `numpy.ndarray`
         Values of the kernel FT at the given frequencies
     """
-    # TODO: use correct cubic formula
     # Numpy's sinc(x) is equal to the 'math' sinc(pi * x)
-    if interp == 'nearest':
+    interp_ = str(interp).lower()
+    if interp_ == 'nearest':
         return np.sinc(norm_freqs) / np.sqrt(2 * np.pi)
-    elif interp == 'linear':
+    elif interp_ == 'linear':
         return np.sinc(norm_freqs) ** 2 / np.sqrt(2 * np.pi)
-    elif interp == 'cubic':
-        return np.sinc(norm_freqs) ** 3 / np.sqrt(2 * np.pi)
-    else:  # Shouldn't happen
-        raise RuntimeError
+    else:
+        raise ValueError("interpolation '{}' not understood.".format(interp))
 
 
 def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
-                         interp):
+                         interp, out=None):
     """Post-process the Fourier-space data after DFT.
 
     This function multiplies the given data with the separable
@@ -1029,6 +1041,15 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
         Stride of the original array
     interp : `str`
         Interpolation scheme used in real space
+    out : `DiscreteLpVector`, optional
+        Element in which the result is stored. If ``out is dfunc``,
+        an in-place modification is done.
+
+    Returns
+    -------
+    preproc : `DiscreteLpVector`
+        Result of the post-processing. If ``out`` was given, the returned
+        object is a reference to it.
 
     References
     ----------
@@ -1037,6 +1058,11 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
        Scientific Computing* (Volume 3). Cambridge University Press,
        2007.
     """
+    if out is None:
+        out = dfunc.copy()
+    elif out is not dfunc:
+        out[:] = dfunc
+
     # Reciprocal grid
     rgrid = dfunc.space.grid
     shift_list = list(shifts)
@@ -1091,7 +1117,8 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
     else:
         mult_axes = list(reversed(axes))
 
-    fast_1d_tensor_mult(dfunc.asarray(), onedim_arrs, axes=mult_axes)
+    fast_1d_tensor_mult(out.asarray(), onedim_arrs, axes=mult_axes)
+    return out
 
 
 def _recip_space(space, shifts, halfcomplex, axes):
@@ -1100,8 +1127,11 @@ def _recip_space(space, shifts, halfcomplex, axes):
     recip_grid = reciprocal(space.grid, shift=shifts, halfcomplex=halfcomplex,
                             axes=axes)
 
+    # Make a partition with nodes on the boundary in the transform axes.
+    begin = {i: recip_grid.min_pt[i] for i in axes}
+    end = {i: recip_grid.max_pt[i] for i in axes}
+    part = uniform_partition_fromgrid(recip_grid, begin=begin, end=end)
     # Always complex space
-    part = uniform_partition_fromgrid(recip_grid)
     ran_fspace = FunctionSpace(part.set, field=ComplexNumbers())
 
     if is_real_dtype(space.dtype):
@@ -1202,10 +1232,9 @@ class FourierTransform(Operator):
             the negative direction. With a boolean sequence, this option
             is applied separately to each axis.
             If a sequence is provided, it must have the same length as
-            ``axes`` if supplied.
+            ``axes`` if supplied. Note that this must be set to `True`
+            in the halved axis in half-complex transforms.
             Default: `True`
-
-            This option only applies to 'uniform-to-uniform' transforms.
 
         Notes
         -----
@@ -1243,6 +1272,11 @@ class FourierTransform(Operator):
                                        length=len(self.axes))
         else:
             raise NotImplementedError('irregular grids not yet supported.')
+
+        # Need to filter out this situation
+        if dom.field == RealNumbers() and not self.shifts[self.axes[-1]]:
+            raise ValueError('shift must be True in the halved (last) axis '
+                             'in half-complex transforms.')
 
         if ran is None:
             # self._halfcomplex and self._axes need to be set for this
@@ -1303,23 +1337,19 @@ class FourierTransform(Operator):
         kwargs.pop('halfcomplex', None)
         kwargs.pop('normalise_idft', None)
 
-        # We're always modifying the input, so a copy is unavoidable
-        x_cpy = x.copy()
-
         # Pre-processing before calculating the sums
-        dft_preprocess_data(x_cpy, shift=self.shifts, axes=self.axes)
+        preproc = dft_preprocess_data(x, shift=self.shifts, axes=self.axes)
 
         # The actual call to the FFT library. We store the plan for re-use.
         self._fftw_plan = pyfftw_call(
-            x_cpy.asarray(), out.asarray(), direction='forward',
+            preproc.asarray(), out.asarray(), direction='forward',
             halfcomplex=self.halfcomplex, axes=self.axes, **kwargs)
 
         # Post-processing accounting for shift, scaling and interpolation
-        # TODO: partitions?
         dft_postprocess_data(out, self.domain.grid.min_pt, shifts=self.shifts,
                              axes=self.axes, orig_shape=self.domain.shape,
                              orig_stride=self.domain.grid.stride,
-                             interp=self.domain.interp)
+                             interp=self.domain.interp, out=out)
         return out
 
     @property
