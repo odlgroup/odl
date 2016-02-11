@@ -71,15 +71,15 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     """Return the reciprocal of the given regular grid.
 
     This function calculates the reciprocal (Fourier/frequency space)
-    grid for a given regular grid defined by the nodes
-    ::
+    grid for a given regular grid defined by the nodes::
+
         x[k] = x[0] + k * s,
 
     where ``k = (k[0], ..., k[d-1])`` is a ``d``-dimensional index in
     the range ``0 <= k < N`` (component-wise). The multi-index
     ``N`` is the shape of the input grid.
-    This grid's reciprocal is then given by the nodes
-    ::
+    This grid's reciprocal is then given by the nodes::
+
         xi[j] = xi[0] + j * sigma,
 
     with the reciprocal grid stride ``sigma = 2*pi / (s * N)``.
@@ -92,12 +92,12 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     2. Make the grid "almost" point-symmetric around zero by shifting
        it to the left by half a reciprocal stride.
 
-    In the first case, the minimum frequency (per axis) is given as
-    ::
+    In the first case, the minimum frequency (per axis) is given as::
+
         xi_1[0] = -pi/s + pi/(s*n) = -pi/s + sigma/2.
 
-    For the second case, it is
-    ::
+    For the second case, it is::
+
         xi_1[0] = -pi / s.
 
     Note that the zero frequency is contained in case 1 for an odd
@@ -189,28 +189,28 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
                        halfcx_parity='even'):
     """Return the inverse reciprocal of the given regular grid.
 
-    Given a reciprocal grid
-    ::
+    Given a reciprocal grid::
+
         xi[j] = xi[0] + j * sigma,
 
     with a multi-index ``j = (j[0], ..., j[d-1])`` in the range
-    ``0 <= j < M``, this function calculates the original grid
-    ::
+    ``0 <= j < M``, this function calculates the original grid::
+
         x[k] = x[0] + k * s
 
     by using a provided ``x[0]`` and calculating the stride ``s``.
 
     If the reciprocal grid is interpreted as coming from a usual
-    complex-to-complex FFT, it is ``N == M``, and the stride is
-    ::
+    complex-to-complex FFT, it is ``N == M``, and the stride is::
+
         s = 2*pi / (sigma * N)
 
     For a reciprocal grid from a real-to-complex (half-complex) FFT,
     it is ``M[i] = floor(N[i]/2) + 1`` in the last transform axis ``i``.
     To resolve the ambiguity regarding the parity of ``N[i]``, the
     it must be specified if the output shape should be even or odd,
-    resulting in
-    ::
+    resulting in::
+
         odd : N[i] = 2 * M[i] - 1
         even: N[i] = 2 * M[i] - 2
 
@@ -342,8 +342,8 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
                 halfcomplex=False, **kwargs):
     """Calculate the DFT with pyfftw.
 
-    The discrete Fourier (forward) transform calcuates the sum
-    ::
+    The discrete Fourier (forward) transform calcuates the sum::
+
         f_hat[k] = sum_j( f[j] * exp(-2*pi*1j * j*k/N) )
 
     where the summation is taken over all indices
@@ -372,6 +372,9 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         If `True`, calculate only the negative frequency part along the
         last axis. If `False`, calculate the full complex FFT.
         This option can only be used with real input data.
+
+    Other Parameters
+    ----------------
     fftw_plan : ``pyfftw.FFTW``, optional
         Use this plan instead of calculating a new one. If specified,
         the options ``planning_effort``, ``planning_timelimit`` and
@@ -487,7 +490,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     if fftw_plan is None:
         if threads is None:
-            if plan_arr_in.size < 1000:
+            if plan_arr_in.size < 1000:  # Somewhat arbitrary
                 threads = 1
             else:
                 threads = cpu_count()
@@ -706,8 +709,8 @@ class PyfftwTransformInverse(Operator):
 
     """Plain backward DFT as implemented in ``pyfftw``.
 
-    This operator calculates the inverse DFT
-    ::
+    This operator calculates the inverse DFT::
+
         f[k] = 1/prod(N) * sum_j( f_hat[j] * exp(2*pi*1j * j*k/N) )
 
     without any further shifting or scaling compensation. See the
@@ -882,24 +885,24 @@ def dft_preprocess_data(dfunc, shift=True, axes=None):
     """Pre-process the real-space data before DFT.
 
     This function multiplies the given data with the separable
-    function
-    ::
+    function::
+
         p(x) = exp(-1j * dot(x - x[0], xi[0]))
 
     where ``x[0]`` and ``xi[0]`` are the minimum coodinates of
     the real space and reciprocal grids, respectively. In discretized
-    form, this function becomes for an array
-    ::
+    form, this function becomes for an array::
+
         p[k] = exp(-1j * k * s * xi[0])
 
     If the reciprocal grid is not shifted, i.e. symmetric around 0,
-    it is ``xi[0] =  pi/s * (-1 + 1/N)``, hence
-    ::
+    it is ``xi[0] =  pi/s * (-1 + 1/N)``, hence::
+
         p[k] = exp(1j * pi * k * (1 - 1/N))
 
     For a shifted grid, we have :math:``xi[0] =  -pi/s``, thus the
-    array is given by
-    ::
+    array is given by::
+
         p[k] = (-1)**k
 
     Parameters
@@ -950,8 +953,8 @@ def _interp_kernel_ft(norm_freqs, interp):
     """Scaled FT of a one-dimensional interpolation kernel.
 
     For normalized frequencies ``-1/2 <= xi <= 1/2``, this
-    function returns
-    ::
+    function returns::
+
         sinc(pi * xi)**k / sqrt(2 * pi)
 
     where ``k=1`` for 'nearest', ``k=2`` for 'linear' and ``k=3``
@@ -986,20 +989,20 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
     """Post-process the Fourier-space data after DFT.
 
     This function multiplies the given data with the separable
-    function
-    ::
+    function::
+
         q(xi) = exp(-1j * dot(x[0], xi)) * s * phi_hat(xi_bar)
 
     where ``x[0]`` and ``s`` are the minimum point and the stride of
     the real space grid, respectively, and ``phi_hat(xi_bar)`` is the FT
     of the interpolation kernel. In discretized form, the exponential
-    part of this function becomes an array
-    ::
+    part of this function becomes an array::
+
         q[k] = exp(-1j * dot(x[0], xi[k]))
 
     and the arguments ``xi_bar`` to the interpolation kernel
-    are the normalized frequencies
-    ::
+    are the normalized frequencies::
+
         for ``shift=True`` : xi_bar[k] = -pi + pi * (2*k) / N
         for ``shift=False``: xi_bar[k] = -pi + pi * (2*k+1) / N
 
