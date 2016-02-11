@@ -541,22 +541,22 @@ class CudaFn(FnBase, CudaNtuples):
             types are supported as ``weight``:
 
             `FnWeightingBase` :
-                Use this weighting as-is. Compatibility with this
-                space's elements is not checked during init.
+            Use this weighting as-is. Compatibility with this
+            space's elements is not checked during init.
 
-            float:
-                Weighting by a constant
+            `float` :
+            Weighting by a constant
 
-            array-like:
-                Weighting by a vector (1-dim. array, corresponds to
-                a diagonal matrix). Note that the array is stored in
-                main memory, which results in slower space functions
-                due to a copy during evaluation.
+            `array-like` :
+            Weighting by a vector (1-dim. array, corresponds to
+            a diagonal matrix). Note that the array is stored in
+            main memory, which results in slower space functions
+            due to a copy during evaluation.
 
-            `CudaFnVector`:
-                same as 1-dim. array-like, except that copying is
-                avoided if the ``dtype`` of the vector is the
-                same as this space's ``dtype``.
+            `CudaFnVector` :
+            same as 1-dim. array-like, except that copying is
+            avoided if the ``dtype`` of the vector is the
+            same as this space's ``dtype``.
 
             Default: no weighting
 

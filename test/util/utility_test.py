@@ -27,21 +27,42 @@ import pytest
 import numpy as np
 
 # Internal
-from odl.util.testutils import all_equal
+import odl
+from odl.space.base_ntuples import _TYPE_MAP_R2C, _TYPE_MAP_C2R
+from odl.util.testutils import skip_if_no_cuda
 from odl.util.utility import (
     is_scalar_dtype, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype,
-    fast_1d_tensor_mult)
+    is_complex_floating_dtype, complex_space, real_space)
 
-real_float_dtypes = [np.float32, np.float64]
-complex_float_dtypes = [np.complex64, np.complex128]
-nonfloat_scalar_dtypes = [np.int8, np.int16, np.int32, np.int64,
-                          np.uint8, np.uint16, np.uint32, np.uint64]
-nonscalar_dtypes = [np.dtype('S1'), np.dtype('<U2'), np.dtype(object)]
 
+real_float_dtypes = np.sctypes['float']
+dtype_ids = [' {} '.format(dt) for dt in real_float_dtypes]
+
+
+@pytest.fixture(scope="module", ids=dtype_ids, params=real_float_dtypes)
+def real_float_dtype(request):
+    return np.dtype(request.param)
+
+
+complex_float_dtypes = np.sctypes['complex']
+dtype_ids = [' {} '.format(dt) for dt in complex_float_dtypes]
+
+
+@pytest.fixture(scope="module", ids=dtype_ids, params=complex_float_dtypes)
+def complex_float_dtype(request):
+    return np.dtype(request.param)
+
+
+nonfloat_scalar_dtypes = np.sctypes['uint'] + np.sctypes['int']
 scalar_dtypes = (real_float_dtypes + complex_float_dtypes +
                  nonfloat_scalar_dtypes)
 real_dtypes = real_float_dtypes + nonfloat_scalar_dtypes
+# Need to make concrete instances here (with string lengths)
+nonscalar_dtypes = [np.dtype('S1'), np.dtype('<U2'), np.dtype(object),
+                    np.dtype(bool), np.void]
+
+
+# ---- Data type helpers ---- #
 
 
 def test_is_scalar_dtype():
@@ -64,104 +85,74 @@ def test_is_complex_floating_dtype():
         assert is_complex_floating_dtype(dtype)
 
 
-def test_fast_1d_tensor_mult():
-
-    # Full multiplication
-    def simple_mult_3(x, y, z):
-        return x[:, None, None] * y[None, :, None] * z[None, None, :]
-
-    shape = (2, 3, 4)
-    x, y, z = (np.arange(size, dtype='float64') for size in shape)
-    true_result = simple_mult_3(x, y, z)
-
-    # Standard call
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [x, y, z])
-    assert all_equal(test_arr, true_result)
-
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [x, y, z], axes=(0, 1, 2))
-    assert all_equal(test_arr, true_result)
-
-    # Different orderings
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [y, x, z], axes=(1, 0, 2))
-    assert all_equal(test_arr, true_result)
-
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [x, z, y], axes=(0, 2, 1))
-    assert all_equal(test_arr, true_result)
-
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [z, x, y], axes=(2, 0, 1))
-    assert all_equal(test_arr, true_result)
-
-    # More arrays than dimensions also ok with explicit axes
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [z, x, y, np.ones(3)], axes=(2, 0, 1, 1))
-    assert all_equal(test_arr, true_result)
-
-    # Squeezable or extendable arrays also possible
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [x, y, z[None, :]])
-    assert all_equal(test_arr, true_result)
-
-    shape = (1, 3, 4)
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [2, y, z])
-    assert all_equal(test_arr, simple_mult_3(np.ones(1) * 2, y, z))
-
-    # Reduced multiplication, axis 0 not contained
-    def simple_mult_2(y, z, nx):
-        return np.ones((nx, 1, 1)) * y[None, :, None] * z[None, None, :]
-
-    shape = (2, 3, 4)
-    x, y, z = (np.arange(size, dtype='float64') for size in shape)
-    true_result = simple_mult_2(y, z, 2)
-
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [y, z], axes=(1, 2))
-    assert all_equal(test_arr, true_result)
-
-    test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [z, y], axes=(2, 1))
-    assert all_equal(test_arr, true_result)
+# ---- Space conversion ---- #
 
 
-def test_fast_1d_tensor_mult_error():
+# Testing on discretizations since they also cover FunctionSpace and FnBase
 
-    shape = (2, 3, 4)
-    test_arr = np.ones(shape)
-    x, y, z = (np.arange(size, dtype='float64') for size in shape)
+def test_complex_space_discr(real_float_dtype):
 
-    # No ndarray to operate on
+    discr = odl.uniform_discr([0, 0], [1, 2], (10, 20),
+                              dtype=real_float_dtype)
+    true_cdiscr = odl.uniform_discr([0, 0], [1, 2], (10, 20),
+                                    dtype=_TYPE_MAP_R2C[real_float_dtype])
+
+    cdiscr = complex_space(discr)
+    assert cdiscr == true_cdiscr
+
+
+def test_complex_space_identity_on_complex(complex_float_dtype):
+
+    discr = odl.uniform_discr([0, 0], [1, 2], (10, 20),
+                              dtype=complex_float_dtype)
+    assert complex_space(discr) == discr
+
+
+def test_real_space_discr(complex_float_dtype):
+
+    discr = odl.uniform_discr([0, 0], [1, 2], (10, 20),
+                              dtype=complex_float_dtype)
+    true_rdiscr = odl.uniform_discr([0, 0], [1, 2], (10, 20),
+                                    dtype=_TYPE_MAP_C2R[complex_float_dtype])
+
+    rdiscr = real_space(discr)
+    assert rdiscr == true_rdiscr
+
+
+def test_real_space_identity_on_real(real_float_dtype):
+
+    discr = odl.uniform_discr([0, 0], [1, 2], (10, 20),
+                              dtype=real_float_dtype)
+    assert real_space(discr) == discr
+
+
+def test_real_complex_space_mutual_inverse(real_float_dtype):
+
+    if real_float_dtype == np.dtype('float16'):
+        return
+
+    discr = odl.uniform_discr([0, 0], [1, 2], (10, 20),
+                              dtype=real_float_dtype)
+
+    cdiscr = odl.uniform_discr([0, 0], [1, 2], (10, 20),
+                               dtype=_TYPE_MAP_R2C[real_float_dtype])
+
+    assert real_space(complex_space(discr)) == discr
+    assert complex_space(real_space(cdiscr)) == cdiscr
+
+
+@skip_if_no_cuda
+def test_complex_space_discr_cuda(real_float_dtype):
+
+    if real_float_dtype not in odl.space.cu_ntuples.CUDA_DTYPES:
+        return
+
+    discr = odl.uniform_discr([0, 0], [1, 2], (10, 20), impl='cuda',
+                              dtype=real_float_dtype)
+
     with pytest.raises(TypeError):
-        fast_1d_tensor_mult([[0, 0], [0, 0]], [x, x])
+        complex_space(discr)
 
-    # No 1d arrays given
-    with pytest.raises(ValueError):
-        fast_1d_tensor_mult(test_arr, [])
-
-    # Length or dimension mismatch
-    with pytest.raises(ValueError):
-        fast_1d_tensor_mult(test_arr, [x, y])
-
-    with pytest.raises(ValueError):
-        fast_1d_tensor_mult(test_arr, [x, y], (1, 2, 0))
-
-    with pytest.raises(ValueError):
-        fast_1d_tensor_mult(test_arr, [x, x, y, z])
-
-    # Axes out of bounds
-    with pytest.raises(ValueError):
-        fast_1d_tensor_mult(test_arr, [x, y, z], (1, 2, 3))
-
-    with pytest.raises(ValueError):
-        fast_1d_tensor_mult(test_arr, [x, y, z], (-2, -3, -4))
-
-    # Other than 1d arrays
-    with pytest.raises(ValueError):
-        fast_1d_tensor_mult(test_arr, [x, y, np.ones((4, 2))], (-2, -3, -4))
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

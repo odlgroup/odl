@@ -614,8 +614,8 @@ class Fn(FnBase, Ntuples):
             types are supported as ``weight``:
 
             `FnWeightingBase`:
-                Use this weighting as-is. Compatibility with this
-                space's elements is not checked during init.
+            Use this weighting as-is. Compatibility with this
+            space's elements is not checked during init.
 
             float: Weighting by a constant
 
