@@ -500,6 +500,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
             return self.element_type(self, fcall)
 
+    @property
+    def out_dtype(self):
+        """Output data type of functions in this space."""
+        return 'complex128' if self.field == ComplexNumbers() else 'float64'
+
     def zero(self):
         """The function mapping everything to zero.
 
@@ -508,8 +513,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
         Since `FunctionSpace.lincomb` may be slow, we implement this function
         directly.
         """
-        dtype = 'complex128' if self.field == ComplexNumbers() else 'float64'
-
         def zero_vec(x, out=None):
             """The zero function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
@@ -520,7 +523,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 raise TypeError('invalid input type.')
 
             if out is None:
-                return np.zeros(out_shape, dtype=dtype)
+                return np.zeros(out_shape, dtype=self.out_dtype)
             else:
                 out.fill(0)
 
@@ -543,7 +546,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 raise TypeError('invalid input type.')
 
             if out is None:
-                return np.ones(out_shape, dtype=dtype)
+                return np.ones(out_shape, dtype=self.out_dtype)
             else:
                 out.fill(1)
 
@@ -585,18 +588,18 @@ class FunctionSpace(FunctionSet, LinearSpace):
             # ensure the correct final shape. The rest is optimized as
             # far as possible.
             if a == 0 and b != 0:
-                out = x2_call_oop(x)
+                out = x2_call_oop(x).astype(self.out_dtype)
                 if b != 1:
                     out *= b
             elif b == 0:  # Contains the case a == 0
-                out = x1_call_oop(x)
+                out = x1_call_oop(x).astype(self.out_dtype)
                 if a != 1:
                     out *= a
             else:
-                out = x1_call_oop(x)
+                out = x1_call_oop(x).astype(self.out_dtype)
                 if a != 1:
                     out *= a
-                tmp = x2_call_oop(x)
+                tmp = x2_call_oop(x).astype(self.out_dtype)
                 if b != 1:
                     tmp *= b
                 out += tmp
@@ -651,11 +654,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def product_call_out_of_place(x):
             """The product out-of-place evaluation function."""
-            return x1_call_oop(x) * x2_call_oop(x)
+            return (x1_call_oop(x) * x2_call_oop(x)).astype(self.out_dtype)
 
         def product_call_in_place(x, out):
             """The product in-place evaluation function."""
-            tmp = np.empty_like(out)
+            tmp = np.empty_like(out, dtype=self.out_dtype)
             x1_call_ip(x, out)
             x2_call_ip(x, tmp)
             out *= tmp
@@ -676,11 +679,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def quotient_call_out_of_place(x):
             """The quotient out-of-place evaluation function."""
-            return x1_call_oop(x) / x2_call_oop(x)
+            return (x1_call_oop(x) / x2_call_oop(x)).astype(self.out_dtype)
 
         def quotient_call_in_place(x, out):
             """The quotient in-place evaluation function."""
-            tmp = np.empty_like(out)
+            tmp = np.empty_like(out, dtype=self.out_dtype)
             x1_call_ip(x, out)
             x2_call_ip(x, tmp)
             out /= tmp
@@ -721,9 +724,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
         def power_call_out_of_place(x):
             """The power out-of-place evaluation function."""
             if p == int(p) and p >= 1:
-                return pow_posint(x_call_oop(x), int(p))
+                return pow_posint(x_call_oop(x), int(p)).astype(self.out_dtype)
             else:
-                return x_call_oop(x) ** p
+                return (x_call_oop(x) ** p).astype(self.out_dtype)
 
         def power_call_in_place(x, out):
             """The power in-place evaluation function."""
