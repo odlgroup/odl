@@ -191,7 +191,7 @@ def show_discrete_data(values, grid, method='', title=None,
             updatefig = False
         else:
             # Set current figure to given input
-            plt.figure(fig.number)
+            fig = plt.figure(fig.number)
             updatefig = True
 
             if values.ndim > 1:
@@ -291,8 +291,7 @@ def show_discrete_data(values, grid, method='', title=None,
 
             plt.colorbar(mappable=csub, ticks=ticks, format=format)
 
-    # Fixes overlapping stuff at the expense of potentially squashed
-    # subplots
+    # Fixes overlapping stuff at the expense of potentially squashed subplots
     fig.tight_layout()
 
     if title is not None:
@@ -301,17 +300,14 @@ def show_discrete_data(values, grid, method='', title=None,
             plt.title(title)
         fig.canvas.manager.set_window_title(title)
 
-    if show:
-        if updatefig:
-            plt.show(block=False)
-        else:
-            plt.show()
-
-    if updatefig:
+    if updatefig or plt.isinteractive():
+        plt.show(block=False)
         plt.draw()
-        plt.pause(0.01)
+        plt.pause(0.1)
+
+    if show:
+        plt.show()
 
     if saveto is not None:
         fig.savefig(saveto)
-
     return fig
