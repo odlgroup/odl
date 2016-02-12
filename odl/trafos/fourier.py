@@ -1152,53 +1152,21 @@ def _recip_space(space, shifts, halfcomplex, axes):
 
 class FourierTransform(Operator):
 
-    """Discretized Fourier transform between discrete Lp spaces.
+    """Discretized Fourier transform between discrete L^p spaces.
 
-    The Fourier transform is defined as the linear operator
+    This operator is the discretized variant of the continuous
+    `Fourier Transform
+    <https://en.wikipedia.org/wiki/Fourier_Transform>`_ between
+    Lebesgue L^p spaces. It applies a three-step procedure consisting
+    of a pre-processing step of the data, an FFT evaluation and
+    a post-processing step. Pre- and post-processing account for
+    the shift and scaling of the real space and Fourier space grids.
 
-        :math:`\mathcal{F}: L^p(\mathbb{R}^d) \\to L^q(\mathbb{R}^d)`,
-
-        :math:`\mathcal{F}(\phi)(\\xi) = \widehat{\phi}(\\xi) =
-        (2\pi)^{-\\frac{d}{2}}
-        \int_{\mathbb{R}^d} \phi(x)\ e^{-i x^{\mathrm{T}}\\xi}
-        \ \mathrm{d}x`,
-
-    where :math:`p \geq 1` and :math:`q = p / (p-1)`. The Fourier
-    transform is bounded for :math:`1 \\leq p \\leq 2` and can be
-    reasonably defined for :math:`p > 2` in the distributional sense
-    [1]_.
-    Its inverse is given by the formula
-
-        :math:`\mathcal{F^{-1}}(\phi)(x) = \widetilde{\phi}(\\xi) =
-        (2\pi)^{-\\frac{d}{2}}
-        \int_{\mathbb{R}^d} \phi(\\xi)\ e^{i \\xi^{\mathrm{T}}x}
-        \ \mathrm{d}\\xi`,
-
-    For :math:`p = 2`, it is :math:`q = 2`, and the inverse Fourier
-    transform is the adjoint operator,
-    :math:`\mathcal{F}^* = \mathcal{F}^{-1}`. Note that
-
-        :math:`\mathcal{F^{-1}}(\phi) = \mathcal{F}(\check\phi)
-        = \mathcal{F}(\phi)(-\cdot)
-        = \overline{\mathcal{F}(\overline{\phi})}
-        = \mathcal{F}^3(\phi), \quad \check\phi(x) = \phi(-x)`.
-
-    This implies in particular that for real-valued :math:`\phi`,
-    it is :math:`\overline{\mathcal{F}(\phi)}(\\xi) =
-    \mathcal{F}(\phi)(-\\xi)`, i.e. the Fourier transform is completely
-    known already from the its values in a half-space only. This
-    property is used in the `halfcomplex storage format
-    <http://fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html>`_.
-
-    Further properties are summarized in `the Wikipedia article on
-    the Fourier transform
-    <https://en.wikipedia.org/wiki/Fourier_transform>`_.
-
-    References
-    ----------
-    .. [1] Stein, Elias and Weiss, Guido (1971). Introduction to
-       Fourier Analysis on Euclidean Spaces. Princeton, N.J.:
-       Princeton University Press. ISBN 978-0-691-08078-9
+    See also
+    --------
+    dft_preprocess_data
+    pyfftw_call
+    dft_postprocess_data
     """
 
     def __init__(self, dom, ran=None, impl='numpy', **kwargs):
