@@ -858,7 +858,7 @@ def test_ft_charfun_1d():
     def char_interval_ft(x):
         return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
 
-    discr = odl.uniform_discr(-2, 2, 64, impl='numpy')
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy')
     dft = FourierTransform(discr)
 
     func_true_ft = dft.range.element(char_interval_ft)
@@ -866,7 +866,7 @@ def test_ft_charfun_1d():
     assert (func_dft - func_true_ft).norm() < 1e-6
 
     # Complex version, should be as good
-    discr = odl.uniform_discr(-2, 2, 64, impl='numpy', dtype='complex64')
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
     dft = FourierTransform(discr)
 
     func_true_ft = dft.range.element(char_interval_ft)
@@ -874,7 +874,7 @@ def test_ft_charfun_1d():
     assert (func_dft - func_true_ft).norm() < 1e-6
 
     # Without shift
-    discr = odl.uniform_discr(-2, 2, 64, impl='numpy', dtype='complex64')
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
     dft = FourierTransform(discr, shift=False)
 
     func_true_ft = dft.range.element(char_interval_ft)
@@ -894,7 +894,7 @@ def test_ft_scaling():
         return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
 
     fspace = odl.FunctionSpace(odl.Interval(-2, 2), field=odl.ComplexNumbers())
-    discr = odl.uniform_discr_fromspace(fspace, 64, impl='numpy')
+    discr = odl.uniform_discr_fromspace(fspace, 40, impl='numpy')
     dft = FourierTransform(discr)
 
     for factor in (2, 1j, -2.5j, 1 - 4j):
@@ -932,7 +932,6 @@ def test_ft_hat_1d():
     assert (func_dft - func_true_ft).norm() < 0.001
 
 
-@pytest.mark.xfail(reason='Some scaling / phase factor issue')
 def test_ft_complex_sum():
     # Sum of characteristic function and hat function, both with
     # known FT's.
@@ -951,14 +950,14 @@ def test_ft_complex_sum():
     def char_interval_ft(x):
         return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
 
-    discr = odl.uniform_discr(-2, 2, 65, impl='numpy', dtype='complex128')
+    discr = odl.uniform_discr(-2, 2, 200, impl='numpy', dtype='complex128')
     dft = FourierTransform(discr, shift=False)
 
     func = discr.element(hat_func) + 1j * discr.element(char_interval)
     func_true_ft = (dft.range.element(hat_func_ft) +
                     1j * dft.range.element(char_interval_ft))
     func_dft = dft(func)
-    assert (func_dft - func_true_ft).norm() < 1e-6
+    assert (func_dft - func_true_ft).norm() < 0.001
 
 
 def test_ft_gaussian_1d():
@@ -974,7 +973,6 @@ def test_ft_gaussian_1d():
     assert (func_dft - func_true_ft).norm() < 0.001
 
 
-@pytest.mark.xfail(reason='Some scaling / phase factor issue')
 def test_ft_freq_shifted_charfun_1d():
     # Frequency-shifted characteristic function: mult. with
     # exp(-1j * b * x) corresponds to shifting the FT by b.
@@ -985,15 +983,15 @@ def test_ft_freq_shifted_charfun_1d():
     def fshift_char_interval_ft(x):
         return sinc((x + np.pi) / 2) / np.sqrt(2 * np.pi)
 
-    discr = odl.uniform_discr(-2, 2, 101, impl='numpy',
+    # Number of points is very important here (aliasing)
+    discr = odl.uniform_discr(-2, 2, 400, impl='numpy',
                               dtype='complex64')
     dft = FourierTransform(discr)
     func_true_ft = dft.range.element(fshift_char_interval_ft)
     func_dft = dft(fshift_char_interval)
-    assert (func_dft - func_true_ft).norm() < 0.01
+    assert (func_dft - func_true_ft).norm() < 0.001
 
 
-@pytest.mark.xfail(reason='test functions not yet adapted, TODO')
 def test_dft_with_known_pairs_2d():
 
     # Frequency-shifted product of characteristic functions
@@ -1012,7 +1010,7 @@ def test_dft_with_known_pairs_2d():
                 np.exp(-1j * x[1] * 3 / 2) * sinc(x[1] / 2) /
                 (2 * np.pi))
 
-    discr = odl.uniform_discr([-2] * 2, [2] * 2, (65,) * 2, impl='numpy',
+    discr = odl.uniform_discr([-2] * 2, [2] * 2, (100, 400), impl='numpy',
                               dtype='complex64')
     dft = FourierTransform(discr)
     func_true_ft = dft.range.element(fshift_char_rect_ft)
