@@ -301,6 +301,9 @@ def show_discrete_data(values, grid, method='', title=None,
         fig.canvas.manager.set_window_title(title)
 
     if updatefig or plt.isinteractive():
+        # If we are running in interactive mode, we can always show the fig
+        # This causes an artifact, where users of ShowPartial without
+        # interactive mode only shows the figure after the second iteration.
         plt.show(block=False)
         plt.draw()
         plt.pause(0.1)
