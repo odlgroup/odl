@@ -43,11 +43,12 @@ from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
-    is_real_dtype, is_complex_floating_dtype, dtype_repr, default_dtype)
+    is_real_dtype, is_complex_floating_dtype, dtype_repr, real_space,
+    default_dtype)
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
-           'uniform_discr')
+           'uniform_discr', 'sequence_space')
 
 _SUPPORTED_INTERP = ('nearest', 'linear')
 
@@ -964,6 +965,60 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     return uniform_discr_fromspace(fspace, nsamples, exponent, interp, impl,
                                    **kwargs)
+
+
+def sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
+    """Return an object mimicing the sequence space ``l^p(R^d)``.
+
+    The returned object is a `DiscreteLp` without restriction and
+    extension operators. It uses a grid with stride 1 and no
+    weighting.
+
+    Parameters
+    ----------
+    shape : `sequence` of `int`
+        Multi-dimensional size of the elements in this space
+    exponent : positive `float`, optional
+        The parameter ``p`` in ```L^p``. If the exponent is
+        not equal to the default 2.0, the space has no inner
+        product.
+    impl : {'numpy', 'cuda'}
+
+    Other Parameters
+    ----------------
+    dtype : dtype
+        Data type for the discretized space
+
+            Default for 'numpy': 'float64'
+
+            Default for 'cuda': 'float32'
+
+    order : {'C', 'F'}, optional
+        Ordering of the axes in the data storage. 'C' means the
+        first axis varies slowest, the last axis fastest;
+        vice versa for 'F'.
+        Default: 'C'
+
+    Returns
+    -------
+    seqspc : `DiscreteLp`
+        The sequence-space-like discrete Lp
+
+    Examples
+    --------
+    >>> seq_spc = sequence_space((3, 3))
+    >>> seq_spc.one().norm() == 3.0
+    True
+    >>> seq_spc = sequence_space((3, 3), exponent=1)
+    >>> seq_spc.one().norm() == 9.0
+    True
+    """
+    kwargs.pop('weighting', None)
+    kwargs.pop('nodes_on_bdry', None)
+    shape = np.atleast_1d(shape)
+    return uniform_discr([0] * len(shape), shape, shape, impl=impl,
+                         exponent=exponent, nodes_on_bdry=False,
+                         weighting='none', **kwargs)
 
 
 def _scaling_func_list(bdry_fracs, exponent=1.0):
