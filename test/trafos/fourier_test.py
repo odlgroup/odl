@@ -31,24 +31,21 @@ import pytest
 # ODL imports
 import odl
 from odl.discr.lp_discr import conj_exponent
+from odl.space.base_ntuples import _TYPE_MAP_R2C
 from odl.trafos.fourier import (
-    reciprocal, inverse_reciprocal, dft_preprocess_data, pyfftw_call,
-    PyfftwTransform, PyfftwTransformInverse,
-    FourierTransform, _TYPE_MAP_R2C)
-from odl.util.testutils import all_almost_equal, all_equal
+    reciprocal, inverse_reciprocal, dft_preprocess_data, dft_postprocess_data,
+    pyfftw_call, _interp_kernel_ft,
+    DiscreteFourierTransform, DiscreteFourierTransformInverse,
+    FourierTransform, PYFFTW_AVAILABLE)
+from odl.util.testutils import all_almost_equal, all_equal, skip_if_no_pyfftw
 from odl.util.utility import is_real_dtype
-
-
-# TODO: add reciprocal test with axes
-pytestmark = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE")
 
 
 exp_params = [2.0, 1.0, float('inf'), 1.5]
 exp_ids = [' p = {} '.format(p) for p in exp_params]
-exp_fixture = pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
 
 
-@exp_fixture
+@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
 def exponent(request):
     return request.param
 
@@ -70,6 +67,17 @@ plan_ids = [" planning = '{}' ".format(p) for p in plan_params]
 
 @pytest.fixture(scope="module", ids=plan_ids, params=plan_params)
 def planning(request):
+    return request.param
+
+
+impl_params = ['numpy']
+if PYFFTW_AVAILABLE:
+    impl_params += ['pyfftw']
+impl_ids = [" impl = '{}' ".format(p) for p in impl_params]
+
+
+@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
+def impl(request):
     return request.param
 
 
@@ -435,6 +443,7 @@ def _halfcomplex_shape(shape, axes=None):
     return shape
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_forward(dtype):
     # Test against Numpy's FFT
     if dtype == np.dtype('float16'):  # not supported, skipping
@@ -458,6 +467,7 @@ def test_pyfftw_call_forward(dtype):
         assert all_almost_equal(dft_arr, true_dft)
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_backward(dtype):
     # Test against Numpy's IFFT, no normalization
     if dtype == np.dtype('float16'):  # not supported, skipping
@@ -483,6 +493,7 @@ def test_pyfftw_call_backward(dtype):
         assert all_almost_equal(idft_arr, true_idft)
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_forward_bad_input():
 
     # Complex
@@ -545,6 +556,7 @@ def test_pyfftw_call_forward_bad_input():
             pyfftw_call(arr_in, arr_out, axes=axes, halfcomplex=True)
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_forward_real_not_halfcomplex():
     # Test against Numpy's FFT
     for shape in [(10,), (3, 4, 5)]:
@@ -557,6 +569,7 @@ def test_pyfftw_call_forward_real_not_halfcomplex():
         assert all_almost_equal(dft_arr, true_dft)
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_backward_real_not_halfcomplex():
     # Test against Numpy's IFFT, no normalization
     for shape in [(10,), (3, 4, 5)]:
@@ -571,6 +584,7 @@ def test_pyfftw_call_backward_real_not_halfcomplex():
         assert all_almost_equal(idft_arr, true_idft)
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_plan_preserve_input(planning):
 
     for shape in [(10,), (3, 4)]:
@@ -592,6 +606,7 @@ def test_pyfftw_call_plan_preserve_input(planning):
         assert all_almost_equal(idft_arr, true_idft)
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_forward_with_axes(dtype):
     if dtype == np.dtype('float16'):  # not supported, skipping
         return
@@ -616,6 +631,7 @@ def test_pyfftw_call_forward_with_axes(dtype):
         assert all_almost_equal(dft_arr, true_dft)
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_backward_with_axes(dtype):
     if dtype == np.dtype('float16'):  # not supported, skipping
         return
@@ -645,6 +661,7 @@ def test_pyfftw_call_backward_with_axes(dtype):
         assert all_almost_equal(idft_arr, true_idft)
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_forward_with_plan():
 
     for shape in [(10,), (3, 4, 5)]:
@@ -666,6 +683,7 @@ def test_pyfftw_call_forward_with_plan():
         assert all_almost_equal(dft_arr, true_dft)
 
 
+@skip_if_no_pyfftw
 def test_pyfftw_call_backward_with_plan():
 
     for shape in [(10,), (3, 4, 5)]:
@@ -688,131 +706,203 @@ def test_pyfftw_call_backward_with_plan():
         assert all_almost_equal(idft_arr, true_idft)
 
 
-# ---- PyfftwTransform ---- #
+# ---- DiscreteFourierTransform ---- #
 
 
-def test_pyfftw_trafo_init():
+def test_dft_init(impl):
     # Just check if the code runs at all
-    shape = (5, 10)
+    shape = (4, 5)
+    dom = odl.sequence_space(shape)
+    dom_nonseq = odl.uniform_discr([0, 0], [1, 1], shape)
+    dom_f32 = odl.sequence_space(shape, dtype='float32')
+    ran = odl.sequence_space(shape, dtype='complex128')
+    ran_c64 = odl.sequence_space(shape, dtype='complex64')
+    ran_hc = odl.sequence_space((3, 5), dtype='complex128')
 
-    PyfftwTransform(shape)
-    PyfftwTransform(shape, dom_dtype='float32')
-    PyfftwTransform(shape, dom_dtype='float32', axes=(0,))
-    PyfftwTransform(shape, dom_dtype='float32', axes=(0, -1))
-    PyfftwTransform(shape, dom_dtype='float32', axes=(0,), halfcomplex=True)
+    # Implicit range
+    DiscreteFourierTransform(dom, impl=impl)
+    DiscreteFourierTransform(dom_nonseq, impl=impl)
+    DiscreteFourierTransform(dom_f32, impl=impl)
+    DiscreteFourierTransform(dom, axes=(0,), impl=impl)
+    DiscreteFourierTransform(dom, axes=(0, -1), impl=impl)
+    DiscreteFourierTransform(dom, axes=(0,), halfcomplex=True, impl=impl)
+
+    # Explicit range
+    DiscreteFourierTransform(dom, ran=ran, impl=impl)
+    DiscreteFourierTransform(dom_f32, ran=ran_c64, impl=impl)
+    DiscreteFourierTransform(dom, ran=ran, axes=(0,), impl=impl)
+    DiscreteFourierTransform(dom, ran=ran, axes=(0, -1), impl=impl)
+    DiscreteFourierTransform(dom, ran=ran_hc, axes=(0,), impl=impl,
+                             halfcomplex=True)
 
 
-def test_pyfftw_trafo_init_raise():
+def test_dft_init_raise():
     # Test different error scenarios
-    shape = (5, 10)
+    shape = (4, 5)
+    dom = odl.sequence_space(shape)
+    dom_f32 = odl.sequence_space(shape, dtype='float32')
+
+    # Bad types
+    with pytest.raises(TypeError):
+        DiscreteFourierTransform(dom.dspace)
+
+    with pytest.raises(TypeError):
+        DiscreteFourierTransform(dom, dom.dspace)
+
+    # Illegal arguments
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom, impl='fftw')
 
     with pytest.raises(ValueError):
-        PyfftwTransform((-1, 1))
+        DiscreteFourierTransform(dom, axes=(1, 2))
 
     with pytest.raises(ValueError):
-        PyfftwTransform(shape, axes=(1, 2))
+        DiscreteFourierTransform(dom, axes=(1, -3))
+
+    # Badly shaped range
+    bad_ran = odl.sequence_space((3, 5), dtype='complex128')
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom, bad_ran)
+
+    bad_ran = odl.sequence_space((10, 10), dtype='complex128')
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom, bad_ran)
+
+    bad_ran = odl.sequence_space((4, 5), dtype='complex128')
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom, bad_ran, halfcomplex=True)
+
+    bad_ran = odl.sequence_space((4, 3), dtype='complex128')
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom, bad_ran, halfcomplex=True, axes=(0,))
+
+    # Bad data types
+    bad_ran = odl.sequence_space(shape, dtype='complex64')
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom, bad_ran)
+
+    bad_ran = odl.sequence_space(shape, dtype='float64')
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom, bad_ran)
+
+    bad_ran = odl.sequence_space((4, 3), dtype='float64')
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom, bad_ran, halfcomplex=True)
+
+    bad_ran = odl.sequence_space((4, 3), dtype='complex128')
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom_f32, bad_ran, halfcomplex=True)
 
 
-def test_pyfftw_trafo_range():
+def test_dft_range():
     # 1d
     shape = 10
-    ran_grid = odl.uniform_sampling(0, shape, shape)
-    fft = PyfftwTransform(shape, dom_dtype='complex64')
-    assert fft.range.grid.approx_equals(ran_grid, atol=1e-6)
+    dom = odl.sequence_space(shape, dtype='complex128')
+    fft = DiscreteFourierTransform(dom)
+    true_ran = odl.sequence_space(shape, dtype='complex128')
+    assert fft.range == true_ran
 
     # 3d
     shape = (3, 4, 5)
-    ran_grid = odl.uniform_sampling([0] * 3, shape, shape)
-    fft = PyfftwTransform(shape, dom_dtype='complex64')
-    assert fft.range.grid.approx_equals(ran_grid, atol=1e-6)
+    ran = odl.sequence_space(shape, dtype='complex64')
+    fft = DiscreteFourierTransform(ran)
+    true_ran = odl.sequence_space(shape, dtype='complex64')
+    assert fft.range == true_ran
 
     # 3d, with axes and halfcomplex
     shape = (3, 4, 5)
     axes = (-1, -2)
     ran_shape = (3, 3, 5)
-    ran_grid = odl.uniform_sampling([0] * 3, ran_shape, ran_shape)
-    fft = PyfftwTransform(shape, dom_dtype='float64', axes=axes,
-                          halfcomplex=True)
-    assert fft.range.grid.approx_equals(ran_grid, atol=1e-6)
+    dom = odl.sequence_space(shape, dtype='float32')
+    fft = DiscreteFourierTransform(dom, axes=axes, halfcomplex=True)
+    true_ran = odl.sequence_space(ran_shape, dtype='complex64')
+    assert fft.range == true_ran
 
 
-# ---- PyfftwTransformInverse ---- #
+# ---- DiscreteFourierTransformInverse ---- #
 
 
-def test_pyfftw_inverse_trafo_init():
-    # Just check if the code runs at all
-    shape = (5, 10)
+def test_idft_init(impl):
+    # Just check if the code runs at all; this uses the init function of
+    # DiscreteFourierTransform, so we don't need exhaustive tests here
+    shape = (4, 5)
+    ran = odl.sequence_space(shape, dtype='complex128')
+    ran_hc = odl.sequence_space(shape, dtype='float64')
+    dom = odl.sequence_space(shape, dtype='complex128')
+    dom_hc = odl.sequence_space((3, 5), dtype='complex128')
 
-    PyfftwTransformInverse(shape)
-    PyfftwTransformInverse(shape, ran_dtype='float32')
-    PyfftwTransformInverse(shape, ran_dtype='float32', axes=0)
-    PyfftwTransformInverse(shape, ran_dtype='float32', axes=(0, -1))
-    PyfftwTransformInverse(shape, ran_dtype='float32', axes=(0,),
-                           halfcomplex=True)
+    # Implicit range
+    DiscreteFourierTransformInverse(dom, impl=impl)
 
-
-def test_pyfftw_inverse_trafo_init_raise():
-    # Test different error scenarios
-    shape = (5, 10)
-
-    with pytest.raises(ValueError):
-        PyfftwTransformInverse((-1, 1))
-
-    with pytest.raises(ValueError):
-        PyfftwTransformInverse(shape, axes=(1, 2))
+    # Explicit range
+    DiscreteFourierTransformInverse(ran, dom=dom, impl=impl)
+    DiscreteFourierTransformInverse(ran_hc, dom=dom_hc, axes=(0,), impl=impl,
+                                    halfcomplex=True)
 
 
-def test_pyfftw_inverse_trafo_domain():
-    # 1d
-    shape = 10
-    dom_grid = odl.uniform_sampling(0, shape, shape)
-    ifft = PyfftwTransformInverse(shape, ran_dtype='complex64')
-    assert ifft.domain.grid.approx_equals(dom_grid, atol=1e-6)
+def test_dft_call(impl):
 
-    # 3d
-    shape = (3, 4, 5)
-    dom_grid = odl.uniform_sampling([0] * 3, shape, shape)
-    ifft = PyfftwTransformInverse(shape, ran_dtype='complex64')
-    assert ifft.domain.grid.approx_equals(dom_grid, atol=1e-6)
+    # 2d, complex, all ones and random back & forth
+    shape = (4, 5)
+    dft_dom = odl.sequence_space(shape, dtype='complex64')
+    dft = DiscreteFourierTransform(dom=dft_dom, impl=impl)
+    idft = DiscreteFourierTransformInverse(ran=dft_dom, impl=impl)
 
-    # 3d, with axes and halfcomplex
-    shape = (3, 4, 5)
-    axes = (0, -1)
-    dom_shape = (3, 4, 3)
-    dom_grid = odl.uniform_sampling([0] * 3, dom_shape, dom_shape)
-    ifft = PyfftwTransformInverse(shape, ran_dtype='float64', axes=axes,
-                                  halfcomplex=True)
-    assert ifft.domain.grid.approx_equals(dom_grid, atol=1e-6)
+    assert dft.domain == idft.range
+    assert dft.range == idft.domain
 
+    one = dft.domain.one()
+    one_dft = dft(one, flags=('FFTW_ESTIMATE',))
+    true_dft = [[20, 0, 0, 0, 0],  # along all axes by default
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0]]
+    assert np.allclose(one_dft, true_dft)
 
-def test_pyfftw_trafo_call():
+    one_idft1 = idft(one_dft, flags=('FFTW_ESTIMATE',))
+    one_idft2 = dft.inverse(one_dft, flags=('FFTW_ESTIMATE',))
+    assert np.allclose(one_idft1, one)
+    assert np.allclose(one_idft2, one)
 
-    # 2d, complex
-    shape = (50, 25)
-    fft = PyfftwTransform(dom_shape=shape, dom_dtype='complex128')
-    ifft = PyfftwTransformInverse(ran_shape=shape, ran_dtype='complex128')
-    arr = _random_array(shape, 'complex128')
-    arr_ft = fft(arr, flags=('FFTW_ESTIMATE',))
-    arr_ift = ifft(arr_ft, flags=('FFTW_ESTIMATE',))
-    assert (arr_ift - arr).norm() < 1e-6
+    rand_arr = _random_array(shape, 'complex128')
+    rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
+    rand_arr_idft = idft(rand_arr_dft, flags=('FFTW_ESTIMATE',))
+    assert (rand_arr_idft - rand_arr).norm() < 1e-6
 
-    # 2d, halfcomplex, with axes
-    shape = (50, 25)
+    # 2d, halfcomplex, first axis
+    shape = (4, 5)
     axes = (0,)
-    fft = PyfftwTransform(dom_shape=shape, dom_dtype='complex128', axes=axes,
-                          halfcomplex=True)
-    ifft = PyfftwTransformInverse(ran_shape=shape, ran_dtype='complex128',
-                                  axes=axes, halfcomplex=True)
-    arr = _random_array(shape, 'complex128')
-    arr_ft = fft(arr, flags=('FFTW_ESTIMATE',))
-    arr_ift = ifft(arr_ft, flags=('FFTW_ESTIMATE',))
-    assert (arr_ift - arr).norm() < 1e-6
+    dft_dom = odl.sequence_space(shape, dtype='float32')
+    dft = DiscreteFourierTransform(dom=dft_dom, impl=impl, halfcomplex=True,
+                                   axes=axes)
+    idft = DiscreteFourierTransformInverse(ran=dft_dom, impl=impl,
+                                           halfcomplex=True, axes=axes)
+
+    assert dft.domain == idft.range
+    assert dft.range == idft.domain
+
+    one = dft.domain.one()
+    one_dft = dft(one, flags=('FFTW_ESTIMATE',))
+    true_dft = [[4, 4, 4, 4, 4],  # transform axis shortened
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0]]
+    assert np.allclose(one_dft, true_dft)
+
+    one_idft1 = idft(one_dft, flags=('FFTW_ESTIMATE',))
+    one_idft2 = dft.inverse(one_dft, flags=('FFTW_ESTIMATE',))
+    assert np.allclose(one_idft1, one)
+    assert np.allclose(one_idft2, one)
+
+    rand_arr = _random_array(shape, 'complex128')
+    rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
+    rand_arr_idft = idft(rand_arr_dft, flags=('FFTW_ESTIMATE',))
+    assert (rand_arr_idft - rand_arr).norm() < 1e-6
 
 
 # ---- FourierTransform ---- #
 
 
-def test_ft_range(exponent, dtype):
+def test_fourier_trafo_range(exponent, dtype):
     # Check if the range is initialized correctly. Encompasses the init test
 
     # Testing R2C for real dtype, else C2C
@@ -849,7 +939,7 @@ def sinc(x):
     return np.sinc(x / np.pi)
 
 
-def test_ft_charfun_1d():
+def test_fourier_trafo_charfun_1d():
     # Characteristic function of [0, 1], its Fourier transform is
     # given by exp(-1j * y / 2) * sinc(y/2)
     def char_interval(x):
@@ -882,7 +972,7 @@ def test_ft_charfun_1d():
     assert (func_dft - func_true_ft).norm() < 1e-6
 
 
-def test_ft_scaling():
+def test_fourier_trafo_scaling():
     # Test if the FT scales correctly
 
     # Characteristic function of [0, 1], its Fourier transform is
@@ -903,7 +993,7 @@ def test_ft_scaling():
         assert (func_dft - func_true_ft).norm() < 1e-6
 
 
-def test_ft_hat_1d():
+def test_fourier_trafo_hat_1d():
     # Hat function as used in linear interpolation. It is not so
     # well discretized by nearest neighbor interpolation, so a larger
     # error is to be expected.
@@ -932,7 +1022,7 @@ def test_ft_hat_1d():
     assert (func_dft - func_true_ft).norm() < 0.001
 
 
-def test_ft_complex_sum():
+def test_fourier_trafo_complex_sum():
     # Sum of characteristic function and hat function, both with
     # known FT's.
     def hat_func(x):
@@ -960,7 +1050,7 @@ def test_ft_complex_sum():
     assert (func_dft - func_true_ft).norm() < 0.001
 
 
-def test_ft_gaussian_1d():
+def test_fourier_trafo_gaussian_1d():
     # Gaussian function, will be mapped to itself. Truncation error is
     # relatively large, though, we need a large support.
     def gaussian(x):
@@ -973,7 +1063,7 @@ def test_ft_gaussian_1d():
     assert (func_dft - func_true_ft).norm() < 0.001
 
 
-def test_ft_freq_shifted_charfun_1d():
+def test_fourier_trafo_freq_shifted_charfun_1d():
     # Frequency-shifted characteristic function: mult. with
     # exp(-1j * b * x) corresponds to shifting the FT by b.
     def fshift_char_interval(x):
@@ -1016,6 +1106,148 @@ def test_dft_with_known_pairs_2d():
     func_true_ft = dft.range.element(fshift_char_rect_ft)
     func_dft = dft(fshift_char_rect)
     assert (func_dft - func_true_ft).norm() < 0.001
+
+
+def test_fourier_trafo_completely():
+    # Complete explicit test of all FT components on two small examples
+
+    # Discretization with 4 points
+    discr = odl.uniform_discr(-2, 2, 4, dtype='complex')
+    # Interval boundaries -2, -1, 0, 1, 2
+    assert np.allclose(discr.partition.cell_boundary_vecs[0],
+                       [-2, -1, 0, 1, 2])
+    # Grid points -1.5, -0.5, 0.5, 1.5
+    assert np.allclose(discr.grid.coord_vectors[0],
+                       [-1.5, -0.5, 0.5, 1.5])
+
+    # First test function, symmetric. Can be represented exactly in the
+    # discretization.
+    def f(x):
+        return np.where((x >= -1) & (x <= 1), 1, 0)
+
+    def fhat(x):
+        return np.sqrt(2 / np.pi) * sinc(x)
+
+    # Discretize f, check values
+    f_discr = discr.element(f)
+    assert np.allclose(f_discr, [0, 1, 1, 0])
+
+    # "s" = shifted, "n" = not shifted
+
+    # Reciprocal grids
+    recip_s = reciprocal(discr.grid, shift=True)
+    recip_n = reciprocal(discr.grid, shift=False)
+    assert np.allclose(recip_s.coord_vectors[0],
+                       np.linspace(-np.pi, np.pi / 2, 4))
+    assert np.allclose(recip_n.coord_vectors[0],
+                       np.linspace(-3 * np.pi / 4, 3 * np.pi / 4, 4))
+
+    # Range
+    range_part_s = odl.uniform_partition_fromgrid(recip_s)
+    range_s = odl.uniform_discr_frompartition(range_part_s, dtype='complex')
+    range_part_n = odl.uniform_partition_fromgrid(recip_n)
+    range_n = odl.uniform_discr_frompartition(range_part_n, dtype='complex')
+
+    # Pre-processing
+    preproc_s = [1, -1, 1, -1]
+    preproc_n = [np.exp(1j * 3 / 4 * np.pi * k) for k in range(4)]
+
+    fpre_s = dft_preprocess_data(f_discr, shift=True)
+    fpre_n = dft_preprocess_data(f_discr, shift=False)
+    assert np.allclose(fpre_s, f_discr * discr.element(preproc_s))
+    assert np.allclose(fpre_n, f_discr * discr.element(preproc_n))
+
+    # FFT step, replicating the _call_numpy method
+    fft_s = np.fft.fftn(fpre_s, s=discr.shape, axes=[0])
+    fft_n = np.fft.fftn(fpre_n, s=discr.shape, axes=[0])
+    assert np.allclose(fft_s, [0, -1 + 1j, 2, -1 - 1j])
+    assert np.allclose(
+        fft_n, [np.exp(1j * np.pi * (3 - 2 * k) / 4) +
+                np.exp(1j * np.pi * (3 - 2 * k) / 2)
+                for k in range(4)])
+
+    # Interpolation kernel FT
+    interp_s = np.sinc(np.linspace(-1 / 2, 1 / 4, 4)) / np.sqrt(2 * np.pi)
+    interp_n = np.sinc(np.linspace(-3 / 8, 3 / 8, 4)) / np.sqrt(2 * np.pi)
+    assert np.allclose(interp_s,
+                       _interp_kernel_ft(np.linspace(-1 / 2, 1 / 4, 4),
+                                         interp='nearest'))
+    assert np.allclose(interp_n,
+                       _interp_kernel_ft(np.linspace(-3 / 8, 3 / 8, 4),
+                                         interp='nearest'))
+
+    # Post-processing
+    postproc_s = np.exp(1j * np.pi * np.linspace(-3 / 2, 3 / 4, 4))
+    postproc_n = np.exp(1j * np.pi * np.linspace(-9 / 8, 9 / 8, 4))
+
+    fpost_s = dft_postprocess_data(
+        range_s.element(fft_s), x0=[-1.5], shifts=[True], axes=(0,),
+        orig_shape=(4,), orig_stride=[1.0], interp='nearest')
+    fpost_n = dft_postprocess_data(
+        range_n.element(fft_n), x0=[-1.5], shifts=[False], axes=(0,),
+        orig_shape=(4,), orig_stride=[1.0], interp='nearest')
+
+    assert np.allclose(fpost_s, fft_s * postproc_s * interp_s)
+    assert np.allclose(fpost_n, fft_n * postproc_n * interp_n)
+
+    # Comparing to the known result sqrt(2/pi) * sinc(x)
+    assert np.allclose(fpost_s, fhat(recip_s.coord_vectors[0]))
+    assert np.allclose(fpost_n, fhat(recip_n.coord_vectors[0]))
+
+    # Doing the exact same with direct application of the FT operator
+    ft_op_s = FourierTransform(discr, shift=True)
+    ft_op_n = FourierTransform(discr, shift=False)
+    assert ft_op_s.range.grid == recip_s
+    assert ft_op_n.range.grid == recip_n
+
+    ft_f_s = ft_op_s(f)
+    ft_f_n = ft_op_n(f)
+    assert np.allclose(ft_f_s, fhat(recip_s.coord_vectors[0]))
+    assert np.allclose(ft_f_n, fhat(recip_n.coord_vectors[0]))
+
+    # Second test function, asymmetric. Can also be represented exactly in the
+    # discretization.
+    def f(x):
+        return np.where((x >= 0) & (x <= 1), 1, 0)
+
+    def fhat(x):
+        return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
+
+    # Discretize f, check values
+    f_discr = discr.element(f)
+    assert np.allclose(f_discr, [0, 0, 1, 0])
+
+    # Pre-processing
+    fpre_s = dft_preprocess_data(f_discr, shift=True)
+    fpre_n = dft_preprocess_data(f_discr, shift=False)
+    assert np.allclose(fpre_s, [0, 0, 1, 0])
+    assert np.allclose(fpre_n, [0, 0, -1j, 0])
+
+    # FFT step
+    fft_s = np.fft.fftn(fpre_s, s=discr.shape, axes=[0])
+    fft_n = np.fft.fftn(fpre_n, s=discr.shape, axes=[0])
+    assert np.allclose(fft_s, [1, -1, 1, -1])
+    assert np.allclose(fft_n, [-1j, 1j, -1j, 1j])
+
+    fpost_s = dft_postprocess_data(
+        range_s.element(fft_s), x0=[-1.5], shifts=[True], axes=(0,),
+        orig_shape=(4,), orig_stride=[1.0], interp='nearest')
+    fpost_n = dft_postprocess_data(
+        range_n.element(fft_n), x0=[-1.5], shifts=[False], axes=(0,),
+        orig_shape=(4,), orig_stride=[1.0], interp='nearest')
+
+    assert np.allclose(fpost_s, fft_s * postproc_s * interp_s)
+    assert np.allclose(fpost_n, fft_n * postproc_n * interp_n)
+
+    # Comparing to the known result exp(-1j*x/2) * sinc(x/2) / sqrt(2*pi)
+    assert np.allclose(fpost_s, fhat(recip_s.coord_vectors[0]))
+    assert np.allclose(fpost_n, fhat(recip_n.coord_vectors[0]))
+
+    # Doing the exact same with direct application of the FT operator
+    ft_f_s = ft_op_s(f)
+    ft_f_n = ft_op_n(f)
+    assert np.allclose(ft_f_s, fhat(recip_s.coord_vectors[0]))
+    assert np.allclose(ft_f_n, fhat(recip_n.coord_vectors[0]))
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
