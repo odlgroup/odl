@@ -42,10 +42,13 @@ from odl.space.fspace import FunctionSpace
 from odl.space.ntuples import Ntuples
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
-from odl.util.utility import is_real_dtype, dtype_repr, equiv_views
+from odl.util.utility import (
+    is_real_dtype, is_complex_floating_dtype, dtype_repr, default_dtype,
+    equiv_views)
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
-           'uniform_discr', 'uniform_discr_fromspace')
+           'uniform_discr_frompartition', 'uniform_discr_fromspace',
+           'uniform_discr', 'sequence_space')
 
 _SUPPORTED_INTERP = ('nearest', 'linear')
 
@@ -620,6 +623,108 @@ class DiscreteLpVector(DiscretizationVector):
                                   **kwargs)
 
 
+def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
+                                impl='numpy', **kwargs):
+    """Discretize an Lp function space given a uniform partition.
+
+    Parameters
+    ----------
+    partition : `RectPartition`
+        Regular (uniform) partition to be used for discretization
+    exponent : positive `float`, optional
+        The parameter ``p`` in ``L^p``. If the exponent is not
+        equal to the default 2.0, the space has no inner product.
+    interp : `str`, optional
+        Interpolation type to be used for discretization.
+
+            'nearest' : use nearest-neighbor interpolation (default)
+
+            'linear' : use linear interpolation (not implemented)
+
+    impl : {'numpy', 'cuda'}
+        Implementation of the data storage arrays
+
+    Other Parameters
+    ----------------
+    order : {'C', 'F'}
+        Axis ordering in the data storage. Default: 'C'
+    dtype : dtype
+        Data type for the discretized space
+
+            Default for 'numpy': 'float64' / 'complex128'
+
+            Default for 'cuda': 'float32' / (not implemented)
+
+    weighting : {'const', 'none'}
+        Weighting of the discretized space functions.
+
+            'const' : weight is a constant, the cell volume (default)
+
+            'none' : no weighting
+
+    Returns
+    -------
+    discr : `DiscreteLp`
+        The uniformly discretized function space
+
+    Examples
+    --------
+    >>> from odl import uniform_partition
+    >>> part = uniform_partition(0, 1, 10)
+    >>> uniform_discr_frompartition(part)
+    uniform_discr(0.0, 1.0, 10)
+
+    See also
+    --------
+    uniform_discr : implicit uniform Lp discretization
+    uniform_discr_fromspace : uniform Lp discretization from an existing
+        function space
+    uniform_partition : partition of the function domain
+    """
+    if not isinstance(partition, RectPartition):
+        raise TypeError('partition {!r} is not a RectPartition instance.'
+                        ''.format(partition))
+    if not partition.is_regular:
+        raise ValueError('partition is not regular.')
+
+    impl_ = str(impl).lower()
+    if impl_ == 'numpy':
+        dtype = np.dtype(kwargs.pop('dtype', 'float64'))
+    elif impl_ == 'cuda':
+        if not CUDA_AVAILABLE:
+            raise ValueError('CUDA not available.')
+        dtype = np.dtype(kwargs.pop('dtype', 'float32'))
+
+    if is_real_dtype(dtype):
+        field = RealNumbers()
+    elif is_complex_floating_dtype(dtype):
+        field = ComplexNumbers()
+    else:
+        raise ValueError('cannot use non-scalar data type {}.'.format(dtype))
+
+    fspace = FunctionSpace(partition.set, field=field)
+    ds_type = dspace_type(fspace, impl, dtype)
+
+    order = kwargs.pop('order', 'C')
+
+    weighting = kwargs.pop('weighting', 'const')
+    weighting_ = str(weighting).lower()
+    if weighting_ == 'none' or float(exponent) == float('inf'):
+        weight = None
+    elif weighting_ == 'const':
+        weight = partition.cell_volume
+    else:
+        raise ValueError("weighting '{}' not understood.".format(weighting))
+
+    if dtype is not None:
+        dspace = ds_type(partition.size, dtype=dtype, weight=weight,
+                         exponent=exponent)
+    else:
+        dspace = ds_type(partition.size, weight=weight, exponent=exponent)
+
+    return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order)
+
+
 def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
                             impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform partition.
@@ -677,6 +782,8 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     See also
     --------
     uniform_discr : implicit uniform Lp discretization
+    uniform_discr_frompartition : uniform Lp discretization using a given
+        uniform partition of a function domain
     odl.discr.partition.uniform_partition :
         partition of the function domain
     """
@@ -687,28 +794,28 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         raise TypeError('domain {!r} of the function space is not an '
                         '`IntervalProd` instance.'.format(fspace.domain))
 
-    if impl == 'cuda' and not CUDA_AVAILABLE:
-        raise ValueError('CUDA not available.')
-
+    field = fspace.field
     dtype = kwargs.pop('dtype', None)
-    ds_type = dspace_type(fspace, impl, dtype)
+    if dtype is None:
+        dtype = default_dtype(str(impl).lower(), field)
+    else:
+        dtype = np.dtype(dtype)
 
-    order = kwargs.pop('order', 'C')
+    if field == RealNumbers() and not is_real_dtype(dtype):
+        raise ValueError('cannot discretize real space {} with '
+                         'non-real data type {}.'
+                         ''.format(fspace, dtype))
+    elif field == ComplexNumbers() and not is_complex_floating_dtype(dtype):
+        raise ValueError('cannot discretize complex space {} with '
+                         'non-complex-floating data type {}.'
+                         ''.format(fspace, dtype))
+
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
     partition = uniform_partition_fromintv(fspace.domain, nsamples,
                                            nodes_on_bdry)
 
-    # This is simplified: a consistent weighting wrt the interpolation type
-    # would involve a block-tri-diagonal matrix multiplication.
-    weight = 1.0 if float(exponent) == float('inf') else partition.cell_volume
-
-    if dtype is not None:
-        dspace = ds_type(partition.size, dtype=dtype, weight=weight,
-                         exponent=exponent)
-    else:
-        dspace = ds_type(partition.size, weight=weight, exponent=exponent)
-
-    return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order)
+    return uniform_discr_frompartition(partition, exponent, interp, impl,
+                                       dtype=dtype, **kwargs)
 
 
 def uniform_discr(min_corner, max_corner, nsamples,
@@ -748,16 +855,20 @@ def uniform_discr(min_corner, max_corner, nsamples,
         A single boolean is interpreted as a global choice for all
         boundaries.
         Default: `False`
-    order : {'C', 'F'}
-        Axis ordering in the data storage. Default: 'C'
+
     dtype : dtype
         Data type for the discretized space
 
-            Default for 'numpy': 'float64' / 'complex128'
+            Default for 'numpy': 'float64'
 
-            Default for 'cuda': 'float32' / TODO
+            Default for 'cuda': 'float32'
 
-    weighting : {'simple', 'consistent'}
+    order : {'C', 'F'}, optional
+        Ordering of the axes in the data storage. 'C' means the
+        first axis varies slowest, the last axis fastest;
+        vice versa for 'F'.
+        Default: 'C'
+    weighting : {'const', 'none'}
         Weighting of the discretized space functions.
 
             'simple': weight is a constant (cell volume)
@@ -784,6 +895,8 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     See also
     --------
+    uniform_discr_frompartition : uniform Lp discretization using a given
+        uniform partition of a function domain
     uniform_discr_fromspace : uniform discretization from an existing
         function space
     """
@@ -798,6 +911,60 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     return uniform_discr_fromspace(fspace, nsamples, exponent, interp, impl,
                                    **kwargs)
+
+
+def sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
+    """Return an object mimicing the sequence space ``l^p(R^d)``.
+
+    The returned object is a `DiscreteLp` without restriction and
+    extension operators. It uses a grid with stride 1 and no
+    weighting.
+
+    Parameters
+    ----------
+    shape : `sequence` of `int`
+        Multi-dimensional size of the elements in this space
+    exponent : positive `float`, optional
+        The parameter ``p`` in ```L^p``. If the exponent is
+        not equal to the default 2.0, the space has no inner
+        product.
+    impl : {'numpy', 'cuda'}
+
+    Other Parameters
+    ----------------
+    dtype : dtype
+        Data type for the discretized space
+
+            Default for 'numpy': 'float64'
+
+            Default for 'cuda': 'float32'
+
+    order : {'C', 'F'}, optional
+        Ordering of the axes in the data storage. 'C' means the
+        first axis varies slowest, the last axis fastest;
+        vice versa for 'F'.
+        Default: 'C'
+
+    Returns
+    -------
+    seqspc : `DiscreteLp`
+        The sequence-space-like discrete Lp
+
+    Examples
+    --------
+    >>> seq_spc = sequence_space((3, 3))
+    >>> seq_spc.one().norm() == 3.0
+    True
+    >>> seq_spc = sequence_space((3, 3), exponent=1)
+    >>> seq_spc.one().norm() == 9.0
+    True
+    """
+    kwargs.pop('weighting', None)
+    kwargs.pop('nodes_on_bdry', None)
+    shape = np.atleast_1d(shape)
+    return uniform_discr([0] * len(shape), shape, shape, impl=impl,
+                         exponent=exponent, nodes_on_bdry=False,
+                         weighting='none', **kwargs)
 
 
 def _scaling_func_list(bdry_fracs, exponent=1.0):
