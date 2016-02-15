@@ -983,9 +983,11 @@ def dft_preprocess_data(dfunc, shift=True, axes=None, out=None):
 
     if axes is None:
         axes = list(range(dfunc.ndim))
+    else:
+        axes = list(axes)
 
     shape = dfunc.space.grid.shape
-    shift_list = _shift_list(shift, dfunc.ndim)
+    shift_list = _shift_list(shift, len(axes))
 
     def _onedim_arr(length, shift):
         if shift:
@@ -998,8 +1000,7 @@ def dft_preprocess_data(dfunc, shift=True, axes=None, out=None):
         return arr
 
     onedim_arrs = []
-    for axis in axes:
-        shift = shift_list[axis]
+    for axis, shift in zip(axes, shift_list):
         length = shape[axis]
         onedim_arrs.append(_onedim_arr(length, shift))
 
