@@ -28,6 +28,9 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+# External
+import numpy as np
+
 # Internal
 from odl.operator.operator import Operator
 from odl.solvers.util import Partial
@@ -36,13 +39,13 @@ __all__ = ('chambolle_pock_solver',)
 
 
 # TODO: check how scaling of objective function propagates to the algorithm
-# TODO: variable step size
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 # TODO: preferred way to hyperlink References, see Reference section
 
 def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
-                          theta=1, niter=1, partial=None, x_relax=None,
+                          theta=1, gamma=None, niter=1, partial=None,
+                          x_relax=None,
                           y=None):
     """Chambolle-Pock algorithm for non-smooth convex optimization problems.
 
@@ -147,6 +150,10 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         space, Y, of the dual variable y i.e. the range of ``op``.
     theta : `float` in [0, 1], optional
         Relaxation parameter
+    gamma : positive `float`
+        Acceleration parameter. If not `None` overwrites ``theta`` and uses
+        variable relaxation parameter and step sizes with ``tau`` and
+        ``sigma`` as initial values. Requires G or F_cc to be uniformly convex.
     niter : non-negative `int`, optional
         Number of iterations
     partial : `Partial`, optional
@@ -229,17 +236,10 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     else:
         if y.space != op.range:
             raise TypeError('variable {} is not in the range of `op` '
-                            '({})'.format(x_relax.space, op.range))
+                            '({})'.format(y.space, op.range))
 
     # Temporal copy to store previous iterate
     x_old = x.space.element()
-
-    # Initialize the proximal operators
-
-    # Proximal operator of the convex conjugate of functional F
-    proximal_dual_sigma = proximal_dual(sigma)
-    # Proximal operator of functional G
-    proximal_primal_tau = proximal_primal(tau)
 
     # Adjoint of the (product space) operator
     op_adjoint = op.adjoint
@@ -249,10 +249,16 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_old.assign(x)
 
         # Gradient ascent in the dual variable y
-        proximal_dual_sigma(y + sigma * op(x_relax), out=y)
+        proximal_dual(sigma)(y + sigma * op(x_relax), out=y)
 
         # Gradient descent in the primal variable x
-        proximal_primal_tau(x + (- tau) * op_adjoint(y), out=x)
+        proximal_primal(tau)(x + (- tau) * op_adjoint(y), out=x)
+
+        # Acceleration
+        if gamma is not None:
+            theta = float(1 / np.sqrt(1 + 2 * gamma * tau))
+            tau *= theta
+            sigma /= theta
 
         # Over-relaxation in the primal variable x
         x_relax.lincomb(1 + theta, x, -theta, x_old)

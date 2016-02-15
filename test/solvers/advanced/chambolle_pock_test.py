@@ -31,98 +31,134 @@ import odl
 from odl.solvers import chambolle_pock_solver, proximal_zero
 from odl.util.testutils import all_almost_equal
 
+# Places for the accepted error when comparing results
+PLACES = 8
 
-def test_chambolle_pock_solver():
-    """Simple execution test for the Chambolle-Pock solver"""
+# Algorithm parameters
+TAU = 0.3
+SIGMA = 0.7
+THETA = 0.9
 
-    # Places for the accepted error when comparing results
-    places = 8
+# Test data array
+DATA = np.arange(6)
+
+def test_chambolle_pock_solver_simple_space():
+    """Test for the Chambolle-Pock algorithm."""
 
     # Create a discretized image space
-    pts = 5
-    discr_space = odl.uniform_discr(0, 1, pts)
+    discr_space = odl.uniform_discr(0, 1, DATA.size)
 
     # Operator
-    identity = odl.IdentityOperator(discr_space)
+    op = odl.IdentityOperator(discr_space)
 
     # Starting point (image)
-    x0 = np.arange(pts)
-    x = identity.domain.element(x0)
+    discr_vec = op.domain.element(DATA)
 
-    # Relaxation variable needed to resume iteration
-    xr = x.copy()
+    # Relaxation variable required to resume iteration
+    discr_vec_relax = discr_vec.copy()
 
-    # Dual variable needed to resume iteration
-    y = identity.range.zero()
+    # Dual variable required to resume iteration
+    discr_dual = op.range.zero()
 
     # Proximal operator, use same the factory function for F^* and G
     prox = proximal_zero(discr_space)
 
     # Run the algorithm
-    tau = 0.3
-    sigma = 0.7
-    theta = 0.9
-    chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
+    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
                           proximal_primal=prox, proximal_dual=prox,
-                          theta=theta, niter=1, partial=None,
-                          x_relax=xr, y=y)
+                          theta=THETA, niter=1, partial=None,
+                          x_relax=discr_vec_relax, y=discr_dual)
 
     # Explicit computation
-    x1 = (1 - tau * sigma) * x0
+    vec_expl = (1 - TAU * SIGMA) * DATA
 
-    assert all_almost_equal(x, x1, places)
+    assert all_almost_equal(discr_vec, vec_expl, PLACES)
 
-    # Explicit computation for the relaxation
-    xr1 = (1 + theta) * x1 - theta * x0
+    # Explicit computation of the value of the relaxation variable
+    vec_relax_expl = (1 + THETA) * vec_expl - THETA * DATA
 
-    assert all_almost_equal(xr, xr1, places)
+    assert all_almost_equal(discr_vec_relax, vec_relax_expl, PLACES)
 
-    # Resume iteration with previous x but without previous relaxation xr
-    chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
+    # Resume iteration with previous x but without previous relaxation
+    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
                           proximal_primal=prox, proximal_dual=prox,
-                          theta=theta, niter=1, partial=None)
+                          theta=THETA, niter=1)
 
-    x2 = (1 - sigma * tau) * x1
-    assert all_almost_equal(x, x2, places)
+    vec_expl = (1 - SIGMA * TAU) * vec_expl
+    assert all_almost_equal(discr_vec, vec_expl, PLACES)
 
-    # Resume iteration with x1 as above and with relaxation parameter xr
-    x[:] = x1
-    chambolle_pock_solver(identity, x, tau=tau, sigma=sigma,
+    # Resume iteration with x1 as above and with relaxation parameter
+    discr_vec[:] = vec_expl
+    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
                           proximal_primal=prox, proximal_dual=prox,
-                          theta=theta, niter=1, partial=None,
-                          x_relax=xr, y=y)
+                          theta=THETA, niter=1, x_relax=discr_vec_relax,
+                          y=discr_dual)
 
-    x2 = x1 - tau * sigma * (x0 + xr1)
-    assert all_almost_equal(x, x2, places)
+    vec_expl = vec_expl - TAU * SIGMA * (DATA + vec_relax_expl)
+    assert all_almost_equal(discr_vec, vec_expl, PLACES)
 
-    # Test with product space operator
+    # Test acceleration parameter: use output argument for the relaxation
+    # variable since otherwise two iterations are required for the
+    # relaxation to take effect on the input variable
+    # Acceleration parameter gamma=0 corresponds to relaxation parameter
+    # theta=1 without acceleration
+
+    # Relaxation parameter 1 and no acceleration
+    discr_vec = op.domain.element(DATA)
+    discr_vec_relax_gnone = op.domain.element(DATA)
+    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
+                          proximal_primal=prox, proximal_dual=prox,
+                          theta=1, gamma=None, niter=1,
+                          x_relax=discr_vec_relax_gnone)
+
+    # Acceleration parameter 0, overwrites relaxation parameter
+    discr_vec = op.domain.element(DATA)
+    discr_vec_relax_g0 = op.domain.element(DATA)
+    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
+                          proximal_primal=prox, proximal_dual=prox,
+                          theta=0, gamma=0, niter=1,
+                          x_relax=discr_vec_relax_g0)
+
+    assert discr_vec != discr_vec_relax_gnone
+    assert all_almost_equal(discr_vec_relax_gnone, discr_vec_relax_g0)
+
+    # Test partial execution
+    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
+                          proximal_primal=prox, proximal_dual=prox,
+                          theta=THETA, niter=1,
+                          partial=odl.solvers.util.PrintIterationPartial())
+
+
+def test_chambolle_pock_solver_produce_space():
+    """Test the Chambolle-Pock algorithm using a product space operator."""
+
+    # Create a discretized image space
+    discr_space = odl.uniform_discr(0, 1, DATA.size)
+
+    # Operator
+    identity = odl.IdentityOperator(discr_space)
 
     # Create product space operator
     prod_op = odl.ProductSpaceOperator([[identity], [-2 * identity]])
 
     # Starting point
-    x0 = prod_op.domain.element([x0])
-    x = x0.copy()
+    # For explicit computation
+    discr_vec_0 = prod_op.domain.element([DATA])
+    # Copy to be overwritten by the algorithm
+    discr_vec = discr_vec_0.copy()
 
     # Proximal operator using the same factory function for F^* and G
     prox_primal = proximal_zero(prod_op.domain)
     prox_dual = proximal_zero(prod_op.range)
 
     # Run the algorithm
-    chambolle_pock_solver(prod_op, x, tau=tau, sigma=sigma,
+    chambolle_pock_solver(prod_op, discr_vec, tau=TAU, sigma=SIGMA,
                           proximal_primal=prox_primal,
-                          proximal_dual=prox_dual,
-                          theta=theta, niter=1, partial=None)
+                          proximal_dual=prox_dual, theta=THETA, niter=1)
 
-    x1 = x0 - tau * sigma * prod_op.adjoint(prod_op(prod_op.domain.element([
-        x0])))
-    assert all_almost_equal(x, x1, places)
-
-    # Test partial
-    chambolle_pock_solver(prod_op, x, tau=tau, sigma=sigma,
-                          proximal_primal=prox_primal,
-                          proximal_dual=prox_dual, theta=theta, niter=1,
-                          partial=odl.solvers.util.PrintIterationPartial())
+    vec_expl = discr_vec_0 - TAU * SIGMA * prod_op.adjoint(
+        prod_op(prod_op.domain.element([discr_vec_0])))
+    assert all_almost_equal(discr_vec, vec_expl, PLACES)
 
 
 if __name__ == '__main__':
