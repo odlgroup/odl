@@ -227,8 +227,3 @@ Useful Wikipedia articles
 .. [SW71] Stein, Elias and Weiss, Guido (1971). Introduction to
    Fourier Analysis on Euclidean Spaces. Princeton, N.J.:
    Princeton University Press. ISBN 978-0-691-08078-9
-
-.. [P+07] Press, William H, Teukolsky, Saul A, Vetterling, William T,
-   and Flannery, Brian P. *Numerical Recipes in C - The Art of
-   Scientific Computing* (Volume 3). Cambridge University Press,
-   2007.
