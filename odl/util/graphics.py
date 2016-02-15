@@ -289,6 +289,8 @@ def show_discrete_data(values, grid, method='', title=None,
                 decimals = max(4, int(1 + abs(np.log10(maxval - minval))))
             format = '%.{}f'.format(decimals)
 
+            decimals = min(10, decimals)
+
             plt.colorbar(mappable=csub, ticks=ticks, format=format)
 
     # Fixes overlapping stuff at the expense of potentially squashed subplots
