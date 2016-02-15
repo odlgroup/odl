@@ -276,7 +276,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
     @property
     def shape(self):
-        """Shape of this vector."""
+        """Number of entries per axis, equals (size,) for linear storage."""
         return self.space.shape
 
     @property
