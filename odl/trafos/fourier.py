@@ -1061,7 +1061,7 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
         for 'shift=True'  : xi_bar[k] = -pi + pi * (2*k) / N
         for 'shift=False' : xi_bar[k] = -pi + pi * (2*k+1) / N
 
-    See [1]_, Section 13.9 "Computing Fourier Integrals Using the FFT"
+    See [P+07]_, Section 13.9 "Computing Fourier Integrals Using the FFT"
     for a similar approach.
 
     Parameters
@@ -1096,7 +1096,7 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
 
     References
     ----------
-    .. [1] Press, William H, Teukolsky, Saul A, Vetterling, William T,
+    .. [P+07] Press, William H, Teukolsky, Saul A, Vetterling, William T,
        and Flannery, Brian P. *Numerical Recipes in C - The Art of
        Scientific Computing* (Volume 3). Cambridge University Press,
        2007.

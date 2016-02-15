@@ -28,7 +28,7 @@ By unique continuation, the bounded FT operator can be
 
 where :math:`q` is the conjugate exponent of :math:`p` (for :math:`p=1` one sets :math:`q=\infty`).
 Finite exponents larger than 2 also allow the extension of the operator but require the notion of
-`Distributions`_ to characterize its range. See [1]_ for further details.
+`Distributions`_ to characterize its range. See [SW71]_ for further details.
 
 The inverse of :math:`\mathcal{F}` on its range is given by the formula
 
@@ -85,6 +85,10 @@ Discretized Fourier Transform
 General case
 ------------
 
+The approach taken in ODL for the discretization of the FT follows immediately from the way
+:ref:`discretizations` are defined, but the original inspiration for it came from the book
+[P+07]_, Section 13.9 "Computing Fourier Integrals Using the FFT".
+
 Discretization of the Fourier transform operator means evaluating the Fourier integral
 :eq:`def_fourier` on a discretized function
 
@@ -92,7 +96,8 @@ Discretization of the Fourier transform operator means evaluating the Fourier in
     :label: discr_function
 
 with coefficients :math:`\bar f = (f_0, \dots, f_{n-1}) \in \mathbb{C}^n` and functions
-:math:`\phi_0, \dots, \phi_{n-1}`. We consider in particular functions generated from a single
+:math:`\phi_0, \dots, \phi_{n-1}`. This approach follows from the way , but can be 
+We consider in particular functions generated from a single
 kernel :math:`\phi` via
 
 .. math:: \phi_k(x) = \phi\left( \frac{x - x_k}{s_k} \right),
@@ -219,6 +224,11 @@ Useful Wikipedia articles
 .. _computed in FFTW: http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
 .. _in Numpy: http://docs.scipy.org/doc/numpy/reference/routines.fft.html#implementation-details
 
-.. [1] Stein, Elias and Weiss, Guido (1971). Introduction to
+.. [SW71] Stein, Elias and Weiss, Guido (1971). Introduction to
    Fourier Analysis on Euclidean Spaces. Princeton, N.J.:
    Princeton University Press. ISBN 978-0-691-08078-9
+
+.. [P+07] Press, William H, Teukolsky, Saul A, Vetterling, William T,
+   and Flannery, Brian P. *Numerical Recipes in C - The Art of
+   Scientific Computing* (Volume 3). Cambridge University Press,
+   2007.
