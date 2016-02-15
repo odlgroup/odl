@@ -674,6 +674,10 @@ class Operator(object):
         Rn(3).element([2.0, 4.0, 6.0])
         >>> y
         Rn(3).element([2.0, 4.0, 6.0])
+
+        See Also
+        --------
+        _call : Implementation of the method
         """
         if x not in self.domain:
             try:
