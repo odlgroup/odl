@@ -685,7 +685,7 @@ class Operator(object):
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
-                raise OpRangeError('output {!r} not an element of the range'
+                raise OpRangeError('output {!r} not an element of the range '
                                    '{!r} of {!r}.'
                                    ''.format(out, self.range, self))
 

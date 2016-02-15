@@ -316,19 +316,63 @@ class RawDiscretizationVector(NtuplesBaseVector):
         else:
             self.ntuple.__setitem__(indices, values)
 
-    @property
-    def restriction(self):
-        """The restriction operator associated with this vector.
+    def restriction(self, ufunc):
+        """Restrict a continuous function and assign to this vector
+
+        Parameters
+        ----------
+        ufunc : ``self.space.uspace`` element
+            The continuous function that should be restricted.
+
+        Examples
+        --------
+        >>> import odl
+        >>> import numpy as np
+
+        Create discretization
+
+        >>> X = odl.uniform_discr(0, 1, 5)
+        >>> x = X.element()
+
+        Assign x according to continuous vector
+
+        >>> x.restriction(lambda x: x)
+        >>> print(x) # Print values at gridpoints (which are centered)
+        [0.1, 0.3, 0.5, 0.7, 0.9]
 
         See Also
         --------
         RawDiscretization.restriction : For full description
         """
-        return self.space.restriction(self.ntuple)
+        self.space.restriction(ufunc, out=self.ntuple)
 
     @property
     def extension(self):
         """The extension operator associated with this vector.
+
+        Returns
+        -------
+        extension_op : `FunctionSetMapping`
+            Operatior representing a continuous extension of this vector.
+
+        Examples
+        --------
+        >>> import odl
+        >>> import numpy as np
+
+        Create continuous extension of 1d function with nearest neighbour
+
+        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True)
+        >>> x = X.element([0, 1, 0])
+        >>> x.extension(np.array([0.24, 0.26]))
+        array([ 0.,  1.])
+
+        Create continuous extension of 1d function wiht linear interpolation
+
+        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True, interp='linear')
+        >>> x = X.element([0, 1, 0])
+        >>> x.extension(np.array([0.24, 0.26]))
+        array([ 0.48,  0.52])
 
         See Also
         --------
