@@ -66,7 +66,7 @@ Special indicator function for a box centered at origin and with width 2 a:
 
     ind_{box(a)}(x) = {0 if ||x||_infty <= a, infty if ||x||_infty > a}
 
-where ||.||_infty denotes the infinity- or supremum-norm
+where ||.||_infty denotes the maximum-norm
 
 
 For more details on proximal operators including how to evaluate the

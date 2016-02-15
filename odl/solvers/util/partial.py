@@ -246,7 +246,7 @@ class ShowPartial(Partial):
         """Create a show partial
 
         Parameters are passed through to the vectors show method. Additional
-        parameters include
+        parameters included.
 
         Parameters
         ----------
@@ -258,6 +258,7 @@ class ShowPartial(Partial):
         kwargs :
             Optional arguments passed on to ``x.show``
         """
+        self.args = args
         self.kwargs = kwargs
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
