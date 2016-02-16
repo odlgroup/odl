@@ -49,6 +49,11 @@ def finite_diff(f, out=None, axis=0, dx=1.0, method='forward', padding=None,
     The accuracy on the endpoints is determined by the method used in the
     interior. Without padding endpoint accuracy can be set by the edge order.
 
+    With padding forward or backward differences use first-order accuracy on
+    edges while central differences use second-order accuracy at edges.
+    Edge-order accuracy can only be triggered without padding i.e. for
+    one-sided differences at edges.
+
     The returned array has the same shape as the input array ``f``.
 
     Parameters
@@ -64,12 +69,12 @@ def finite_diff(f, out=None, axis=0, dx=1.0, method='forward', padding=None,
     method : {'central', 'forward', 'backward'}, optional
         Finite difference method which is used in the interior of the domain
          of ``f``.
-    padding : `float` or 'replicate', optional
+    padding : `float` or 'edge', optional
         `float` : Implicit padding. Assumes indices outside the domain of
             ``f`` to have the value ``padding``. If `None` forward or
               backward differences are used at the boundary instead of zero
               padding.
-        'replicate' : Replicate values at the boundary. Thus forward or
+        'edge' : Replicate values at the boundary. Thus forward or
         backward difference become zero on the endpoints.
     edge_order : {1, 2}, optional
         Edge-order accuracy at the boundaries if no padding is used. If
@@ -86,21 +91,20 @@ def finite_diff(f, out=None, axis=0, dx=1.0, method='forward', padding=None,
     --------
     >>> f = np.array([ 0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
 
-    # >>> finite_diff(f)
+    >>> finite_diff(f)
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
 
     Without arguments the above defaults to:
-    # >>> finite_diff(f, axis=0, dx=1.0, method='forward', padding=None,
-    # ... edge_order=None)
+    >>> finite_diff(f, axis=0, dx=1.0, method='forward', padding=None,
+    ... edge_order=None)
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.])
 
-    # >>> finite_diff(f, dx=0.5)
+    >>> finite_diff(f, dx=0.5)
     array([ 2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.])
     >>> finite_diff(f, padding=0)
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1., -9.])
 
     Central differences and different edge orders
-    TODO: Why is first entry -0?
     >>> finite_diff(1/2*f**2, method='central')
     array([-0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
     >>> finite_diff(1/2*f**2, method='central', edge_order=1)
@@ -143,7 +147,7 @@ def finite_diff(f, out=None, axis=0, dx=1.0, method='forward', padding=None,
         raise ValueError('method {} is not central, forward or backward'
                          ''.format(method_in))
 
-    if isinstance(padding, (int, float)) or padding in (None, 'replicate'):
+    if isinstance(padding, (int, float)) or padding in (None, 'edge'):
         if isinstance(padding, int):
             padding = float(padding)
     else:
@@ -165,16 +169,14 @@ def finite_diff(f, out=None, axis=0, dx=1.0, method='forward', padding=None,
     if padding is not None:
         if method == 'central' and edge_order == 1:
             raise ValueError(
-                'central differences with padding only use second-order '
-                'accuracy at edges. Edge-order accuracy can only be '
-                'triggered without padding for one-sided differences at '
-                'edges')
+                'central differences with padding cannot be used with '
+                'first-order accurate edges')
         if method in ('forward', 'backward') and edge_order == 2:
             raise ValueError(
-                'forward/backward difference with padding use the same '
+                '{} differences with padding use the same '
                 'accuracy on edges as in the interior. Edge-order accuracy '
                 'can only be triggered without padding for one-sided '
-                'differences at edges.')
+                'differences at edges.'.format(method))
 
     # create slice objects: initially all are [:, :, ..., :]
 
@@ -261,9 +263,8 @@ def finite_diff(f, out=None, axis=0, dx=1.0, method='forward', padding=None,
             # 1D equivalent: out[-1] = f[-1] - f[-2]
             out[slice_out] = f_arr[slice_node1] - f_arr[slice_node2]
 
-    elif padding == 'replicate':
-        # Values of indices outside the domain of ``f`` are replicate of the
-        #  boundary values
+    elif padding == 'edge':
+        # Values of indices outside the domain of f are the values at the edge
 
         # The method used on endpoints is the same as in the interior
 
@@ -381,12 +382,12 @@ class PartialDerivative(Operator):
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method which is used in the interior of the
             domain of ``f``
-        padding : `float` or 'replicate', optional
+        padding : `float` or 'edge', optional
             `float` : Implicit padding. Assumes indices outside the domain of
                 ``f`` to have the value ``padding``. If `None` forward or
                 backward differences are used at the boundary instead of zero
                 padding.
-            'replicate' : Replicate values at the boundary. Thus forward or
+            'edge' : Replicate values at the boundary. Thus forward or
                 backward difference become zero on the endpoints.
         edge_order : {1, 2}, optional
             Edge-order accuracy at the boundaries if no padding is used. If

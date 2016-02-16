@@ -148,10 +148,10 @@ def test_finite_diff_replicate_padding():
 
     # Using replicate padding forward and backward differences have zero
     # derivative at the upper or lower endpoint, respectively
-    assert finite_diff(DATA_1D, method='forward', padding='replicate')[-1] == 0
-    assert finite_diff(DATA_1D, method='backward', padding='replicate')[0] == 0
+    assert finite_diff(DATA_1D, method='forward', padding='edge')[-1] == 0
+    assert finite_diff(DATA_1D, method='backward', padding='edge')[0] == 0
 
-    diff = finite_diff(DATA_1D, method='central', padding='replicate')
+    diff = finite_diff(DATA_1D, method='central', padding='edge')
     assert diff[0] == (DATA_1D[1] - DATA_1D[0]) / 2
     assert diff[-1] == (DATA_1D[-1] - DATA_1D[-2]) / 2
 
