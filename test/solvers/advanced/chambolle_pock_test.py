@@ -42,6 +42,7 @@ THETA = 0.9
 # Test data array
 DATA = np.arange(6)
 
+
 def test_chambolle_pock_solver_simple_space():
     """Test for the Chambolle-Pock algorithm."""
 
@@ -84,7 +85,7 @@ def test_chambolle_pock_solver_simple_space():
                           proximal_primal=prox, proximal_dual=prox,
                           theta=THETA, niter=1)
 
-    vec_expl = (1 - SIGMA * TAU) * vec_expl
+    vec_expl *= (1 - SIGMA * TAU)
     assert all_almost_equal(discr_vec, vec_expl, PLACES)
 
     # Resume iteration with x1 as above and with relaxation parameter
@@ -105,11 +106,11 @@ def test_chambolle_pock_solver_simple_space():
 
     # Relaxation parameter 1 and no acceleration
     discr_vec = op.domain.element(DATA)
-    discr_vec_relax_gnone = op.domain.element(DATA)
+    discr_vec_relax_no_gamma = op.domain.element(DATA)
     chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
                           proximal_primal=prox, proximal_dual=prox,
                           theta=1, gamma=None, niter=1,
-                          x_relax=discr_vec_relax_gnone)
+                          x_relax=discr_vec_relax_no_gamma)
 
     # Acceleration parameter 0, overwrites relaxation parameter
     discr_vec = op.domain.element(DATA)
@@ -119,8 +120,8 @@ def test_chambolle_pock_solver_simple_space():
                           theta=0, gamma=0, niter=1,
                           x_relax=discr_vec_relax_g0)
 
-    assert discr_vec != discr_vec_relax_gnone
-    assert all_almost_equal(discr_vec_relax_gnone, discr_vec_relax_g0)
+    assert discr_vec != discr_vec_relax_no_gamma
+    assert all_almost_equal(discr_vec_relax_no_gamma, discr_vec_relax_g0)
 
     # Test partial execution
     chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,

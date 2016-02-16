@@ -93,7 +93,7 @@ __all__ = ('combine_proximals', 'proximal_zero', 'proximal_nonnegativity',
            'proximal_convexconjugate_l1', 'proximal_convexconjugate_l2')
 
 
-# TODO: remove diagonal op
+# TODO: remove diagonal op once available on master
 def combine_proximals(factory_list):
     """Combine proximal operators into a diagonal product space operator.
 
@@ -397,8 +397,8 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
 
                 tmp = diff[0] ** 2
                 sq_tmp = x[0].space.element()
-                for xi in diff[1:]:
-                    sq_tmp.multiply(xi, xi)
+                for x_i in diff[1:]:
+                    sq_tmp.multiply(x_i, x_i)
                     tmp += sq_tmp
                 tmp.ufunc.sqrt(out=tmp)
 
@@ -409,8 +409,8 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
                 tmp /= lam
 
                 # Pointwise division
-                for out_i, xi in zip(out, diff):
-                    out_i.divide(xi, tmp)
+                for out_i, x_i in zip(out, diff):
+                    out_i.divide(x_i, tmp)
 
             else:
                 # Calculate |x| = pointwise 2-norm of x

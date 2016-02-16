@@ -38,15 +38,13 @@ from odl.solvers.util import Partial
 __all__ = ('chambolle_pock_solver',)
 
 
-# TODO: check how scaling of objective function propagates to the algorithm
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 # TODO: preferred way to hyperlink References, see Reference section
 
 def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
                           theta=1, gamma=None, niter=1, partial=None,
-                          x_relax=None,
-                          y=None):
+                          x_relax=None, y=None):
     """Chambolle-Pock algorithm for non-smooth convex optimization problems.
 
     The Chambolle-Pock (CP) algorithm, as proposed in [CP2011a]_, is a first
@@ -113,11 +111,25 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
         ||K|| = max{||K x|| : x in X, ||x|| < 1}
 
-    Convergence is assured for ||K||^2 sigma tau < 1. Instead of choosing
-    step size parameters preconditioning techniques can be employed, see
-    [CP2011b]_. In this case the steps tau and sigma are replaced by
-    symmetric and positive definite matrices tau -> T, sigma -> Sigma and
-    convergence is assured for ||Sigma^(1/2) K T^(1/2)||^2 < 1.
+    For ||K||^2 sigma tau < 1 the algorithms should converge.
+
+    If G or F_cc is uniformly convex, convergence can be accelerated using
+    variable step sizes: replace tau -> tau_n, sigma -> sigma_n, and theta
+    -> theta_n with t_0 sigma_0 ||K||^2 < 1 and gamma > 0. After the update
+    of the primal variable (x_{n+1}) and before the update of the relaxation
+    variable (xr_{n+1}) update the parameters as
+
+        theta_n = 1 / sqrt(1 + 2 gamma tau_n)
+
+        tau_{n+1} = theta_n tau_n
+
+        sigma_{n+1} = sigma_n / theta_n
+
+
+    Instead of choosing step size parameters preconditioning techniques can
+    be employed, see [CP2011b]_. In this case the steps tau and sigma are
+    replaced by symmetric and positive definite matrices tau -> T, sigma ->
+    Sigma and convergence should hold for ||Sigma^(1/2) K T^(1/2)||^2 < 1.
 
     For more on proximal operators and algorithms see [PB2014]_. The
     following implementation of the CP algorithm is along the lines of
