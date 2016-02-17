@@ -909,24 +909,25 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
             halfcomplex=self.halfcomplex)
 
 
-def dft_preprocess_data(dfunc, shift=True, axes=None, out=None):
+def dft_preprocess_data(dfunc, shift=True, axes=None, sign='-', out=None):
     """Pre-process the real-space data before DFT.
 
     This function multiplies the given data with the separable
     function::
 
-        p(x) = exp(-1j * dot(x - x[0], xi[0]))
+        p(x) = exp(+- 1j * dot(x - x[0], xi[0]))
 
     where ``x[0]`` and ``xi[0]`` are the minimum coodinates of
-    the real space and reciprocal grids, respectively. In discretized
-    form, this function becomes for an array::
+    the real space and reciprocal grids, respectively. The sign of
+    the exponent depends on the choice of ``sign``. In discretized
+    form, this function becomes an array::
 
-        p[k] = exp(-1j * k * s * xi[0])
+        p[k] = exp(+- 1j * k * s * xi[0])
 
     If the reciprocal grid is not shifted, i.e. symmetric around 0,
     it is ``xi[0] =  pi/s * (-1 + 1/N)``, hence::
 
-        p[k] = exp(1j * pi * k * (1 - 1/N))
+        p[k] = exp(-+ 1j * pi * k * (1 - 1/N))
 
     For a shifted grid, we have :math:``xi[0] =  -pi/s``, thus the
     array is given by::
@@ -945,6 +946,8 @@ def dft_preprocess_data(dfunc, shift=True, axes=None, out=None):
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
         as a sequence. `None` means all axes in ``dfunc``.
+    sign : {'-', '+'}, optional
+        Sign of the complex exponent
     out : `DiscreteLpVector`, optional
         Element in which the result is stored. If ``out is dfunc``,
         an in-place modification is done. For real ``dfunc``, this
@@ -975,6 +978,12 @@ def dft_preprocess_data(dfunc, shift=True, axes=None, out=None):
 
     shape = dfunc.space.grid.shape
     shift_list = _shift_list(shift, len(axes))
+    if sign == '-':
+        imag = -1j
+    elif sign == '+':
+        imag = 1j
+    else:
+        raise ValueError("sign '{}' not understood.".format(sign))
 
     def _onedim_arr(length, shift):
         if shift:
@@ -983,7 +992,7 @@ def dft_preprocess_data(dfunc, shift=True, axes=None, out=None):
             arr = -2 * np.mod(indices, 2) + 1.0
         else:
             indices = np.arange(length, dtype='float64')
-            arr = np.exp(1j * pi * indices * (1 - 1.0 / length))
+            arr = np.exp(-imag * pi * indices * (1 - 1.0 / length))
         return arr
 
     onedim_arrs = []
@@ -1028,20 +1037,21 @@ def _interp_kernel_ft(norm_freqs, interp):
 
 
 def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
-                         interp, out=None):
+                         interp, sign='-', out=None):
     """Post-process the Fourier-space data after DFT.
 
     This function multiplies the given data with the separable
     function::
 
-        q(xi) = exp(-1j * dot(x[0], xi)) * s * phi_hat(xi_bar)
+        q(xi) = exp(+- 1j * dot(x[0], xi)) * s * phi_hat(xi_bar)
 
     where ``x[0]`` and ``s`` are the minimum point and the stride of
     the real space grid, respectively, and ``phi_hat(xi_bar)`` is the FT
-    of the interpolation kernel. In discretized form, the exponential
-    part of this function becomes an array::
+    of the interpolation kernel. The sign of the exponent depends on the
+    choice of ``sign`` In discretized form, the exponential part of this
+    function becomes an array::
 
-        q[k] = exp(-1j * dot(x[0], xi[k]))
+        q[k] = exp(+- 1j * dot(x[0], xi[k]))
 
     and the arguments ``xi_bar`` to the interpolation kernel
     are the normalized frequencies::
@@ -1072,6 +1082,8 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
         Stride of the original array
     interp : `str`
         Interpolation scheme used in real space
+    sign : {'-', '+'}, optional
+        Sign of the complex exponent
     out : `DiscreteLpVector`, optional
         Element in which the result is stored. If ``out is dfunc``,
         an in-place modification is done.
@@ -1098,6 +1110,12 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
     rgrid = dfunc.space.grid
     shift_list = list(shifts)
     axes = list(axes)
+    if sign == '-':
+        imag = -1j
+    elif sign == '+':
+        imag = 1j
+    else:
+        raise ValueError("sign '{}' not understood.".format(sign))
 
     onedim_arrs = []
     for ax in axes:
@@ -1105,7 +1123,7 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
         xi = rgrid.coord_vectors[ax]
 
         # First part: exponential array
-        onedim_arr = (np.exp(-1j * x * xi))
+        onedim_arr = (np.exp(imag * x * xi))
 
         # Second part: interpolation kernel
         len_dft = rgrid.shape[ax]
@@ -1193,6 +1211,9 @@ class FourierTransform(Operator):
     a post-processing step. Pre- and post-processing account for
     the shift and scaling of the real space and Fourier space grids.
 
+    The sign convention ('-' vs. '+') can be changed with the ``sign``
+    parameter.
+
     See also
     --------
     dft_preprocess_data
@@ -1222,15 +1243,14 @@ class FourierTransform(Operator):
         axes : sequence of `int`, optional
             Dimensions along which to take the transform.
             Default: all axes
+        sign : {'-', '+'}, optional
+            Sign of the complex exponent. Default: '-'
         halfcomplex : `bool`, optional
             If `True`, calculate only the negative frequency part
             along the last axis for real input. If `False`,
             calculate the full complex FFT.
             For complex ``dom``, it has no effect.
             Default: `True`
-
-            This option only applies to 'uniform-to-uniform' transforms.
-
         shift : `bool` or sequence of `bool`, optional
             If `True`, the reciprocal grid is shifted by half a stride in
             the negative direction. With a boolean sequence, this option
@@ -1278,6 +1298,14 @@ class FourierTransform(Operator):
         else:
             raise NotImplementedError('irregular grids not yet supported.')
 
+        sign = kwargs.pop('sign', '-')
+        if sign not in ('+', '-'):
+            raise ValueError("sign '{}' not understood.".format(sign))
+        if sign == '+' and self.halfcomplex:
+            raise ValueError("cannot combine sign '+' with a half-complex "
+                             "transform.")
+        self._sign = sign
+
         # Need to filter out this situation since the pre-processing step
         # casts to complex otherwise, and then no half-complex transform
         # is possible.
@@ -1321,7 +1349,8 @@ class FourierTransform(Operator):
         """Return ``self(x)`` for numpy back-end."""
 
         # Pre-processing before calculating the sums
-        preproc = dft_preprocess_data(x, shift=self.shifts, axes=self.axes)
+        preproc = dft_preprocess_data(x, shift=self.shifts, axes=self.axes,
+                                      sign=self.sign)
 
         # The actual call to the FFT library
         # TODO: use the 's' parameter for zero-padding
@@ -1329,14 +1358,22 @@ class FourierTransform(Operator):
             out = self.range.element(
                 np.fft.rfftn(preproc, axes=self.axes))
         else:
-            out = self.range.element(
-                np.fft.fftn(preproc, axes=self.axes))
+            if self.sign == '-':
+                out = self.range.element(
+                    np.fft.fftn(preproc, axes=self.axes))
+            elif self.sign == '+':
+                out = self.range.element(
+                    np.fft.ifftn(preproc, axes=self.axes))
+                out *= self.domain.size
+            else:
+                raise RuntimeError('bad sign {}.'.format(self.sign))
 
         # Post-processing accounting for shift, scaling and interpolation
         dft_postprocess_data(out, self.domain.grid.min_pt, shifts=self.shifts,
                              axes=self.axes, orig_shape=self.domain.shape,
                              orig_stride=self.domain.grid.stride,
-                             interp=self.domain.interp, out=out)
+                             sign=self.sign, interp=self.domain.interp,
+                             out=out)
         return out
 
     def _call_pyfftw(self, x, out, **kwargs):
@@ -1367,18 +1404,21 @@ class FourierTransform(Operator):
         kwargs.pop('normalise_idft', None)
 
         # Pre-processing before calculating the sums
-        preproc = dft_preprocess_data(x, shift=self.shifts, axes=self.axes)
+        preproc = dft_preprocess_data(x, shift=self.shifts, axes=self.axes,
+                                      sign=self.sign)
 
         # The actual call to the FFT library. We store the plan for re-use.
+        direction = 'forward' if self.sign == '-' else 'backward'
         self._fftw_plan = pyfftw_call(
-            preproc.asarray(), out.asarray(), direction='forward',
+            preproc.asarray(), out.asarray(), direction=direction,
             halfcomplex=self.halfcomplex, axes=self.axes, **kwargs)
 
         # Post-processing accounting for shift, scaling and interpolation
         dft_postprocess_data(out, self.domain.grid.min_pt, shifts=self.shifts,
                              axes=self.axes, orig_shape=self.domain.shape,
                              orig_stride=self.domain.grid.stride,
-                             interp=self.domain.interp, out=out)
+                             sign=self.sign, interp=self.domain.interp,
+                             out=out)
         return out
 
     @property
@@ -1390,6 +1430,11 @@ class FourierTransform(Operator):
     def axes(self):
         """Axes along the FT is calculated by this operator."""
         return self._axes
+
+    @property
+    def sign(self):
+        """Sign of the complex exponent in the transform."""
+        return self._sign
 
     @property
     def halfcomplex(self):
@@ -1419,6 +1464,9 @@ class FourierTransform(Operator):
     def init_fftw_plan(self, planning_effort='measure', **kwargs):
         """Initialize the FFTW plan for this transform for later use.
 
+        If the implementation of this operator is not 'pyfftw', this
+        method has no effect.
+
         Parameters
         ----------
         planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
@@ -1431,6 +1479,9 @@ class FourierTransform(Operator):
         threads : `int`, optional
             Number of threads to use. Default: 1
         """
+        if self.impl != 'pyfftw':
+            return
+
         x = self.domain.element()
         y = self.range.element()
         kwargs.pop('planning_timelimit', None)

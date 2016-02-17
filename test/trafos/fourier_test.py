@@ -993,6 +993,29 @@ def test_fourier_trafo_scaling():
         assert (func_dft - func_true_ft).norm() < 1e-6
 
 
+def test_fourier_trafo_sign(impl):
+    # Test if the FT sign behaves as expected, i.e. that the FT with sign
+    # '+' and '-' have same real parts and opposite imaginary parts.
+
+    # Characteristic function of [0, 1], its Fourier transform is
+    # given by exp(-1j * y / 2) * sinc(y/2)
+    def char_interval(x):
+        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
+
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
+    ft_minus = FourierTransform(discr, sign='-', impl=impl)
+    ft_plus = FourierTransform(discr, sign='+', impl=impl)
+
+    func_ft_minus = ft_minus(char_interval)
+    func_ft_plus = ft_plus(char_interval)
+    assert np.allclose(func_ft_minus.real, func_ft_plus.real)
+    assert np.allclose(func_ft_minus.imag, -func_ft_plus.imag)
+
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
+    with pytest.raises(ValueError):
+        FourierTransform(discr, sign='+', impl=impl, halfcomplex=True)
+
+
 def test_fourier_trafo_hat_1d():
     # Hat function as used in linear interpolation. It is not so
     # well discretized by nearest neighbor interpolation, so a larger
