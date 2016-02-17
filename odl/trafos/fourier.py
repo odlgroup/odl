@@ -36,11 +36,11 @@ except ImportError:
 # Internal
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import (
-    DiscreteLp, dspace_type, conj_exponent, uniform_discr, sequence_space)
+    DiscreteLp, dspace_type, conj_exponent, sequence_space)
 from odl.discr.partition import uniform_partition_fromgrid
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
-from odl.space.base_ntuples import _TYPE_MAP_R2C, _TYPE_MAP_C2R
+from odl.space.base_ntuples import _TYPE_MAP_R2C
 from odl.space.cu_ntuples import CudaNtuples
 from odl.space.ntuples import Ntuples
 from odl.space.fspace import FunctionSpace
@@ -52,19 +52,6 @@ __all__ = ('FourierTransform', 'InverseFourierTransform',
            'DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'pyfftw_call', 'dft_preprocess_data', 'dft_postprocess_data',
            'PYFFTW_AVAILABLE')
-
-
-def _shift_list(shift, length):
-    """Turn a single boolean or sequence into a list of given length."""
-    try:
-        shift_list = [bool(s) for s in shift]
-        if len(shift_list) != length:
-            raise ValueError('Expected {} entries in shift sequence, got {}.'
-                             ''.format(length, len(shift_list)))
-    except TypeError:
-        shift_list = [bool(shift)] * length
-
-    return shift_list
 
 
 def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
@@ -1429,9 +1416,51 @@ class FourierTransform(Operator):
         """The inverse Fourier transform."""
         raise NotImplementedError
 
+    def init_fftw_plan(self, planning_effort='measure', **kwargs):
+        """Initialize the FFTW plan for this transform for later use.
+
+        Parameters
+        ----------
+        planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
+            Flag for the amount of effort put into finding an optimal
+            FFTW plan. See the `FFTW doc on planner flags
+            <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
+        planning_timelimit : `float`, optional
+            Limit planning time to roughly this amount of seconds.
+            Default: `None` (no limit)
+        threads : `int`, optional
+            Number of threads to use. Default: 1
+        """
+        x = self.domain.element()
+        y = self.range.element()
+        kwargs.pop('planning_timelimit', None)
+
+        direction = 'forward' if self.sign == '-' else 'backward'
+        self._fftw_plan = pyfftw_call(
+            x.asarray(), y.asarray(), direction=direction,
+            halfcomplex=self.halfcomplex, axes=self.axes,
+            planning_effort=planning_effort, **kwargs)
+
+    def clear_fftw_plan(self):
+        """Delete the FFTW plan of this transform."""
+        self._fftw_plan = None
+
 
 class InverseFourierTransform(Operator):
     pass
+
+
+def _shift_list(shift, length):
+    """Turn a single boolean or sequence into a list of given length."""
+    try:
+        shift_list = [bool(s) for s in shift]
+        if len(shift_list) != length:
+            raise ValueError('Expected {} entries in shift sequence, got {}.'
+                             ''.format(length, len(shift_list)))
+    except TypeError:
+        shift_list = [bool(shift)] * length
+
+    return shift_list
 
 
 if __name__ == '__main__':
