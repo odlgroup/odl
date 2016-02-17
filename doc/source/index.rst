@@ -22,13 +22,14 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   guide/guide
-   dev/dev
-   guide/faq
-   guide/glossary
-   odl
+    guide/guide
+    dev/dev
+    guide/faq
+    guide/glossary
+    math/math
+    odl
 
 
 Indices and tables

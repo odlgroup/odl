@@ -1,4 +1,4 @@
-.. _discretization_in_depth:
+.. _discretizations:
 
 ###############
 Discretizations
@@ -30,7 +30,7 @@ tuple
 The following abstract diagram visualizes a discretization:
 
 .. image:: images/discr.png
-   :scale: 50 %
+   :scale: 40 %
 
 Example
 -------
@@ -52,7 +52,7 @@ The abstract object in this case is the input function :math:`f`, and
 the operator evaluates this function at the given points, resulting in
 a vector in :math:`\mathbb{R}^n`.
 
-This operator is implemented as `GridCollocation`.
+This operator is implemented as `PointCollocation`.
 
 **Extension operator:**
 
