@@ -1037,7 +1037,7 @@ def _interp_kernel_ft(norm_freqs, interp):
 
 
 def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
-                         interp, sign='-', out=None):
+                         interp, sign='-', op='multiply', out=None):
     """Post-process the Fourier-space data after DFT.
 
     This function multiplies the given data with the separable
@@ -1048,8 +1048,12 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
     where ``x[0]`` and ``s`` are the minimum point and the stride of
     the real space grid, respectively, and ``phi_hat(xi_bar)`` is the FT
     of the interpolation kernel. The sign of the exponent depends on the
-    choice of ``sign`` In discretized form, the exponential part of this
-    function becomes an array::
+    choice of ``sign``. Note that for ``op='divide'`` the
+    multiplication with ``s * phi_hat(xi_bar)`` is replaced by a
+    division with the same array.
+
+    In discretized form, the exponential part of this function becomes
+    an array::
 
         q[k] = exp(+- 1j * dot(x[0], xi[k]))
 
@@ -1084,6 +1088,9 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
         Interpolation scheme used in real space
     sign : {'-', '+'}, optional
         Sign of the complex exponent
+    op : {'multiply', 'divide'}
+        Operation to perform with the stride times the interpolation
+        kernel FT
     out : `DiscreteLpVector`, optional
         Element in which the result is stored. If ``out is dfunc``,
         an in-place modification is done.
@@ -1096,7 +1103,7 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
 
     References
     ----------
-    .. [P+07] Press, William H, Teukolsky, Saul A, Vetterling, William T,
+    .. [P+2007] Press, William H, Teukolsky, Saul A, Vetterling, William T,
        and Flannery, Brian P. *Numerical Recipes in C - The Art of
        Scientific Computing* (Volume 3). Cambridge University Press,
        2007.
@@ -1108,14 +1115,20 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
 
     # Reciprocal grid
     rgrid = dfunc.space.grid
+
     shift_list = list(shifts)
     axes = list(axes)
+
     if sign == '-':
         imag = -1j
     elif sign == '+':
         imag = 1j
     else:
         raise ValueError("sign '{}' not understood.".format(sign))
+
+    op, op_in = str(op).lower(), op
+    if op not in ('multiply', 'divide'):
+        raise ValueError("kernel op '{}' not understood.".format(op_in))
 
     onedim_arrs = []
     for ax in axes:
@@ -1158,7 +1171,12 @@ def dft_postprocess_data(dfunc, x0, shifts, axes, orig_shape, orig_stride,
 
         freqs = np.linspace(fmin, fmax, num=len_dft)
         stride = orig_stride[ax]
-        onedim_arr *= stride * _interp_kernel_ft(freqs, interp)
+
+        if op == 'multiply':
+            onedim_arr *= stride * _interp_kernel_ft(freqs, interp)
+        else:
+            onedim_arr /= stride * _interp_kernel_ft(freqs, interp)
+
         onedim_arrs.append(onedim_arr)
 
     if dfunc.space.order == 'C':
@@ -1373,7 +1391,7 @@ class FourierTransform(Operator):
                              axes=self.axes, orig_shape=self.domain.shape,
                              orig_stride=self.domain.grid.stride,
                              sign=self.sign, interp=self.domain.interp,
-                             out=out)
+                             op='multiply', out=out)
         return out
 
     def _call_pyfftw(self, x, out, **kwargs):
@@ -1418,7 +1436,7 @@ class FourierTransform(Operator):
                              axes=self.axes, orig_shape=self.domain.shape,
                              orig_stride=self.domain.grid.stride,
                              sign=self.sign, interp=self.domain.interp,
-                             out=out)
+                             op='multiply', out=out)
         return out
 
     @property
