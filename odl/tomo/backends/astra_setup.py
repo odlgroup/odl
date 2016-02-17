@@ -419,7 +419,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         an ASTRA data object filled with zeros
     ndim : {2, 3}, optional
         Dimension of the data. If ``data`` is not `None`, this parameter
-        has no effect. Default: 2
+        has no effect.
 
     Returns
     -------
