@@ -242,42 +242,40 @@ class ShowPartial(Partial):
 
     """Show the partial result."""
 
-    def __init__(self, *args, **kwargs):
-        """ Create a show partial
+    def __init__(self, **kwargs):
+        """Create a show partial
 
-        parameters are passed through to the vectors show method. Additional
+        Parameters are passed through to the vectors show method. Additional
         parameters include
 
         Parameters
         ----------
+        kwargs
+            Arguments to the show method
         display_step : positive `int`
             Number of iterations between plots. Default: 1
         args, kwargs :
             Optional arguments passed on to ``x.show``
         """
-        self.args = args
         self.kwargs = kwargs
-        self.fig = None
+        self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
         self.iter = 0
 
     def __call__(self, x):
         """Show the current iterate."""
         if (self.iter % self.display_step) == 0:
-            self.fig = x.show(fig=self.fig, show=True,
-                              *self.args, **self.kwargs)
+            self.fig = x.show(fig=self.fig, **self.kwargs)
 
         self.iter += 1
 
-    def __str__(self):
-        """Return ``str(self)``"""
-        return '{}(*{}, **{})'.format(self.__class__.__name__, self.args,
-                                      self.kwargs)
-
     def __repr__(self):
         """Return ``repr(self)``"""
-        return '{}(*{!r}, **{!r})'.format(self.__class__.__name__, self.args,
-                                          self.kwargs)
+        return '{}(display_step={}, fig={}, **{!r})'.format(
+            self.__class__.__name__,
+            self.display_step,
+            self.fig,
+            self.kwargs)
 
 
 if __name__ == '__main__':
