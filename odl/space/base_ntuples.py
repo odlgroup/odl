@@ -90,6 +90,11 @@ class NtuplesBase(Set):
         """The number of entries per tuple."""
         return self._size
 
+    @property
+    def shape(self):
+        """The shape of this space."""
+        return (self.size,)
+
     def __contains__(self, other):
         """Return ``other in self``.
 
@@ -271,8 +276,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
     @property
     def shape(self):
-        """Shape of this vector, equals ``(size,)``."""
-        return (self.size,)
+        """Number of entries per axis, equals (size,) for linear storage."""
+        return self.space.shape
 
     @property
     def itemsize(self):
@@ -411,6 +416,7 @@ class FnBase(NtuplesBase, LinearSpace):
             Only scalar data types (numbers) are allowed.
         """
         NtuplesBase.__init__(self, size, dtype)
+
         if not is_scalar_dtype(self.dtype):
             raise TypeError('{!r} is not a scalar data type.'.format(dtype))
 

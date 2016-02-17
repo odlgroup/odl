@@ -132,6 +132,30 @@ class Ntuples(NtuplesBase):
             else:
                 raise ValueError('Cannot provide both `inp` and `data_ptr`')
 
+    def zero(self):
+        """Create a vector of zeros.
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.zero()
+        >>> x
+        Cn(3).element([0j, 0j, 0j])
+        """
+        return self.element(np.zeros(self.size, dtype=self.dtype))
+
+    def one(self):
+        """Create a vector of ones.
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.one()
+        >>> x
+        Cn(3).element([(1+0j), (1+0j), (1+0j)])
+        """
+        return self.element(np.ones(self.size, dtype=self.dtype))
+
     @property
     def element_type(self):
         """ `NtuplesVector` """
@@ -155,7 +179,6 @@ class NtuplesVector(NtuplesBaseVector):
         if data.dtype != space.dtype:
             raise TypeError('data {!r} not of dtype {!r}.'
                             ''.format(data, space.dtype))
-
         self._data = data
 
         NtuplesBaseVector.__init__(self, space)
@@ -918,30 +941,6 @@ class Fn(FnBase, Ntuples):
         """
         np.divide(x1.data, x2.data, out=out.data)
 
-    def zero(self):
-        """Create a vector of zeros.
-
-        Examples
-        --------
-        >>> c3 = Cn(3)
-        >>> x = c3.zero()
-        >>> x
-        Cn(3).element([0j, 0j, 0j])
-        """
-        return self.element(np.zeros(self.size, dtype=self.dtype))
-
-    def one(self):
-        """Create a vector of ones.
-
-        Examples
-        --------
-        >>> c3 = Cn(3)
-        >>> x = c3.one()
-        >>> x
-        Cn(3).element([(1+0j), (1+0j), (1+0j)])
-        """
-        return self.element(np.ones(self.size, dtype=self.dtype))
-
     def __eq__(self, other):
         """Return ``self == other``.
 
@@ -1017,6 +1016,10 @@ class Fn(FnBase, Ntuples):
 
         inner_str += _repr_space_funcs(self)
         return '{}({})'.format(class_name, inner_str)
+
+    # Copy these to handle bug in ABCmeta
+    zero = Ntuples.zero
+    one = Ntuples.one
 
     @property
     def element_type(self):

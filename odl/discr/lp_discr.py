@@ -381,7 +381,7 @@ class DiscreteLpVector(DiscretizationVector):
             shape.
         """
         if out is None:
-            return super().asarray().reshape(self.space.shape,
+            return super().asarray().reshape(self.shape,
                                              order=self.space.order)
         else:
             if out.shape not in (self.space.shape, (self.space.size,)):
