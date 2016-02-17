@@ -485,6 +485,49 @@ class DiscreteLpVector(DiscretizationVector):
             -1, order=self.space.order)
         self.ntuple.imag = newimag_flat
 
+    def conj(self, out=None):
+        """The complex conjugate of this element.
+
+        Parameters
+        ----------
+        out : `DiscreteLpVector`, optional
+            Element to which the complex conjugate is written.
+            Must be an element of this vector's space.
+
+        Returns
+        -------
+        out : `DiscreteLpVector`
+            The complex conjugate vector. If ``out`` is provided,
+            the returned object is a reference to it.
+
+        Examples
+        --------
+        >>> discr = uniform_discr(0, 1, 4, dtype='complex')
+        >>> x = discr.element([5+1j, 3, 2-2j, 1j])
+        >>> y = x.conj(); print(y)
+        [(5-1j), (3-0j), (2+2j), -1j]
+
+        The out parameter allows you to avoid a copy:
+
+        >>> z = discr.element()
+        >>> z_out = x.conj(out=z); print(z)
+        [(5-1j), (3-0j), (2+2j), -1j]
+        >>> z_out is z
+        True
+
+        It can also be used for in-place conjugation:
+
+        >>> x_out = x.conj(out=x); print(x)
+        [(5-1j), (3-0j), (2+2j), -1j]
+        >>> x_out is x
+        True
+        """
+        if out is None:
+            return self.space.element(self.ntuple.conj())
+        else:
+            self.ntuple.conj(out=out.ntuple)
+            return out
+
     def __setitem__(self, indices, values):
         """Set values of this vector.
 
