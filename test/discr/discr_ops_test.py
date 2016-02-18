@@ -21,11 +21,9 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
 import numpy as np
 import pytest
 
-# ODL imports
 import odl
 from odl.discr.discr_ops import (finite_diff, PartialDerivative,
                                  Gradient, Divergence)
@@ -50,9 +48,9 @@ def test_finite_diff_invalid_arguments():
 
     # central differences and zero padding use second-order accurate edges
     with pytest.raises(ValueError):
-        finite_diff(DATA_1D, method='central', padding=0, edge_order=1)
+        finite_diff(DATA_1D, method='central', padding_method=0, edge_order=1)
     with pytest.raises(ValueError):
-        finite_diff(DATA_1D, method='forward', padding=0, edge_order=2)
+        finite_diff(DATA_1D, method='forward', padding_method=0, edge_order=2)
 
     # at least a two-element array is required
     with pytest.raises(ValueError):
@@ -65,7 +63,7 @@ def test_finite_diff_invalid_arguments():
     # in-place argument
     out = np.zeros(DATA_1D.size + 1)
     with pytest.raises(ValueError):
-        finite_diff(DATA_1D, out)
+        finite_diff(DATA_1D, out=out)
     with pytest.raises(ValueError):
         finite_diff(DATA_1D, dx=0)
 
@@ -87,12 +85,12 @@ def test_finite_diff_explicit():
     diff_ex[1:-1] = (arr[2:] - arr[:-2]) / 2.0
 
     # default: out=None, axis=0, dx=1.0, zero_padding=None, method='forward'
-    diff = finite_diff(arr, out=None, axis=0, dx=1.0, padding=None)
+    diff = finite_diff(arr, out=None, axis=0, dx=1.0, padding_method=None)
     assert all_equal(diff, finite_diff(arr))
 
     # boundary: one-sided second-order accurate forward/backward difference
     diff = finite_diff(arr, out=None, axis=0, dx=1.0, method='central',
-                       padding=None)
+                       padding_method=None)
     diff_ex[0] = -(3 * arr[0] - 4 * arr[1] + arr[2]) / 2.0
     diff_ex[-1] = (3 * arr[-1] - 4 * arr[-2] + arr[-3]) / 2.0
     assert all_equal(diff, diff_ex)
@@ -103,7 +101,8 @@ def test_finite_diff_explicit():
     assert all_equal(diff, diff_ex / dx)
 
     # boundary: second-order accurate central differences with zero padding
-    diff = finite_diff(arr, method='central', padding=0)
+    diff = finite_diff(arr, method='central', padding_method='constant',
+                       padding_value=0)
     diff_ex[0] = arr[1] / 2.0
     diff_ex[-1] = -arr[-2] / 2.0
     assert all_equal(diff, diff_ex)
@@ -125,7 +124,7 @@ def test_finite_diff_explicit():
 
     # in-place evaluation
     out = np.zeros_like(arr)
-    assert out is finite_diff(arr, out)
+    assert out is finite_diff(arr, out=out)
     assert all_equal(out, finite_diff(arr))
     assert out is not finite_diff(arr)
 
@@ -148,10 +147,10 @@ def test_finite_diff_replicate_padding():
 
     # Using replicate padding forward and backward differences have zero
     # derivative at the upper or lower endpoint, respectively
-    assert finite_diff(DATA_1D, method='forward', padding='edge')[-1] == 0
-    assert finite_diff(DATA_1D, method='backward', padding='edge')[0] == 0
+    assert finite_diff(DATA_1D, method='forward', padding_method='edge')[-1] == 0
+    assert finite_diff(DATA_1D, method='backward', padding_method='edge')[0] == 0
 
-    diff = finite_diff(DATA_1D, method='central', padding='edge')
+    diff = finite_diff(DATA_1D, method='central', padding_method='edge')
     assert diff[0] == (DATA_1D[1] - DATA_1D[0]) / 2
     assert diff[-1] == (DATA_1D[-1] - DATA_1D[-2]) / 2
 
@@ -161,7 +160,7 @@ def test_forward_diff():
 
     arr = np.array([0., 3., 5., 6.])
 
-    findiff_op = finite_diff(arr, padding=0, method='forward')
+    findiff_op = finite_diff(arr, padding_method='constant', method='forward')
     assert all_equal(findiff_op, [3., 2., 1., -6.])
 
 
@@ -169,7 +168,7 @@ def test_backward_diff():
     """Backward finite differences."""
     arr = np.array([0., 3., 5., 6.])
 
-    findiff_op = finite_diff(arr, padding=0, method='backward')
+    findiff_op = finite_diff(arr, padding_method='constant', method='backward')
     assert all_equal(findiff_op, [0., 3., 2., 1.])
 
 
@@ -179,33 +178,14 @@ def test_part_deriv_cpu():
     with pytest.raises(TypeError):
         PartialDerivative(odl.Rn(1))
 
-    # explicit calculation of finite difference
-    # axis: 0
-    diff_0 = np.zeros_like(DATA_2D)
-    # interior: second-order accurate differences
-    diff_0[1:-1, :] = (DATA_2D[2:, :] - DATA_2D[:-2, :]) / 2.0
-    # boundary: second-order accurate central differences with zero padding
-    diff_0[0, :] = DATA_2D[1, :] / 2.0
-    diff_0[-1, :] = -DATA_2D[-2, :] / 2.0
-    # axis: 1
-    diff_1 = np.zeros_like(DATA_2D)
-    # interior: second-order accurate differences
-    diff_1[:, 1:-1] = (DATA_2D[:, 2:] - DATA_2D[:, :-2]) / 2.0
-    # boundary: second-order accurate central differences with zero padding
-    diff_1[:, 0] = DATA_2D[:, 1] / 2.0
-    diff_1[:, -1] = -DATA_2D[:, -2] / 2.0
-
-    # assert `dfe0` and `dfe1` do differ
-    assert (diff_0 != diff_1).any()
-
     # discretized space
     space = odl.uniform_discr([0, 0], [2, 1], DATA_2D.shape)
 
     # operator
-    partial_0 = PartialDerivative(space, axis=0, dx=1, method='central',
-                                  padding=0)
-    partial_1 = PartialDerivative(space, axis=1, dx=1, method='central',
-                                  padding=0)
+    partial_0 = PartialDerivative(space, axis=0, method='central',
+                                  padding_method='constant')
+    partial_1 = PartialDerivative(space, axis=1, method='central',
+                                  padding_method='constant')
 
     # discretized space vector
     vec = partial_0.domain.element(DATA_2D)
@@ -213,6 +193,29 @@ def test_part_deriv_cpu():
     # partial derivative
     partial_vec_0 = partial_0(vec)
     partial_vec_1 = partial_1(vec)
+
+    # explicit calculation of finite difference
+
+    # axis: 0
+    diff_0 = np.zeros_like(DATA_2D)
+    # interior: second-order accurate differences
+    diff_0[1:-1, :] = (DATA_2D[2:, :] - DATA_2D[:-2, :]) / 2.0
+    # boundary: second-order accurate central differences with zero padding
+    diff_0[0, :] = DATA_2D[1, :] / 2.0
+    diff_0[-1, :] = -DATA_2D[-2, :] / 2.0
+    diff_0 /= space.cell_sides[0]
+
+    # axis: 1
+    diff_1 = np.zeros_like(DATA_2D)
+    # interior: second-order accurate differences
+    diff_1[:, 1:-1] = (DATA_2D[:, 2:] - DATA_2D[:, :-2]) / 2.0
+    # boundary: second-order accurate central differences with zero padding
+    diff_1[:, 0] = DATA_2D[:, 1] / 2.0
+    diff_1[:, -1] = -DATA_2D[:, -2] / 2.0
+    diff_1 /= space.cell_sides[1]
+
+    # assert `dfe0` and `dfe1` do differ
+    assert (diff_0 != diff_1).any()
 
     assert partial_vec_0 != partial_vec_1
     assert all_equal(partial_vec_0.asarray(), diff_0)
@@ -240,7 +243,8 @@ def test_discr_deriv_cuda():
                                     impl='cuda')
 
     # operator
-    partial = PartialDerivative(discr_space, method='central', padding=0)
+    partial = PartialDerivative(discr_space, method='central',
+                                padding_method='constant')
 
     # discretized space vector
     vec = partial.domain.element(DATA_1D)
@@ -284,8 +288,10 @@ def test_gradient_cpu():
 
     # computation of gradient components with helper function
     dx0, dx1 = discr_space.cell_sides
-    diff_0 = finite_diff(DATA_2D, axis=0, dx=dx0, method='forward', padding=0)
-    diff_1 = finite_diff(DATA_2D, axis=1, dx=dx1, method='forward', padding=0)
+    diff_0 = finite_diff(DATA_2D, axis=0, dx=dx0, method='forward',
+                         padding_method='constant')
+    diff_1 = finite_diff(DATA_2D, axis=1, dx=dx1, method='forward',
+                         padding_method='constant')
 
     # gradient
     grad = Gradient(discr_space)
@@ -330,8 +336,8 @@ def test_gradient_cuda():
 
     # computation of gradient components with helper function
     dx0, dx1 = discr_space.cell_sides
-    diff_0 = finite_diff(DATA_2D, axis=0, dx=dx0, padding=0)
-    diff_1 = finite_diff(DATA_2D, axis=1, dx=dx1, padding=0)
+    diff_0 = finite_diff(DATA_2D, axis=0, dx=dx0, padding_method='constant')
+    diff_1 = finite_diff(DATA_2D, axis=1, dx=dx1, padding_method='constant')
 
     # gradient
     grad = Gradient(discr_space)
@@ -371,8 +377,10 @@ def test_divergence_cpu():
 
     # computation of divergence with helper function
     dx0, dx1 = space.cell_sides
-    diff_0 = finite_diff(dom_vec[0].asarray(), axis=0, dx=dx0, padding=0)
-    diff_1 = finite_diff(dom_vec[1].asarray(), axis=1, dx=dx1, padding=0)
+    diff_0 = finite_diff(dom_vec[0].asarray(), axis=0, dx=dx0,
+                         padding_method='constant')
+    diff_1 = finite_diff(dom_vec[1].asarray(), axis=1, dx=dx1,
+                         padding_method='constant')
 
     assert all_equal(diff_0 + diff_1, div_dom_vec.asarray())
 
@@ -420,8 +428,10 @@ def test_discrete_divergence_cuda():
 
     # computation of divergence with helper function
     dx0, dx1 = space.cell_sides
-    diff_0 = finite_diff(dom_vec[0].asarray(), axis=0, dx=dx0, padding=0)
-    diff_1 = finite_diff(dom_vec[1].asarray(), axis=1, dx=dx1, padding=0)
+    diff_0 = finite_diff(dom_vec[0].asarray(), axis=0, dx=dx0,
+                         padding_method='constant')
+    diff_1 = finite_diff(dom_vec[1].asarray(), axis=1, dx=dx1,
+                         padding_method='constant')
 
     assert all_equal(diff_0 + diff_1, div_dom_vec.asarray())
 
