@@ -17,10 +17,9 @@
 
 """First-order primal-dual algorithm developed by Chambolle and Pock.
 
-The method is proposed in [CP2011a]_ and augmented with diagonal
-preconditioners in [CP2011b]_. The algorithm is flexible and well apt suited
-for non-smooth, convex optimization problems in imaging. This implementation
-is along the lines of [Sid+2012]_.
+The Chambolle-Pock algorithm is a flexible method well suited for
+non-smooth convex optimization problems in imaging. It was first
+proposed in [CP2011a]_.
 """
 
 # Imports for common Python 2/3 codebase
@@ -45,92 +44,21 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
                           niter=1, **kwargs):
     """Chambolle-Pock algorithm for non-smooth convex optimization problems.
 
-    The Chambolle-Pock (CP) algorithm, as proposed in [CP2011a]_, is a first
-    order primal-dual hybrid-gradient method for non-smooth convex
-    optimization problems with known saddle-point structure
+    First order primal-dual hybrid-gradient method for non-smooth convex
+    optimization problems with known saddle-point structure. The
+    primal formulation of the general problem is
 
-        min_{x in X} max_{y in Y} <K x, y>_Y + G(x) - F_cc(y)
+        min_{x in X} F(K x) + G(x)
 
-    where X and Y are finite-dimensional Hilbert spaces with inner product
-    <.,.> and norm ||.||_2 = <.,.>^(1/2), K is a continuous linear operator
-    K : X -> Y. G : X -> [0, +infinity] and F_cc : Y -> [0, +infinity] are
-    proper, lower-semicontinuous functionals, and F_cc is the convex (or
-    Fenchel) conjugate of F, see below.
+    where X and Y are finite-dimensional Hilbert spaces, K is a linear
+    map K : X -> Y.  and G : X -> [0, +infinity] and F : Y -> [0,
+    +infinity] are proper, convex, lower-semicontinuous functionals.
 
-    The saddle-point problem is a primal-dual formulation of the following
-    primal minimization problem
-
-        min_{x in X} G(x) + F(Kx)
-
-    The corresponding dual maximization problem is
-
-        max_{y in Y} G(-K_adj x) - F_cc(y)
-
-    with K_adj being the adjoint of K.
-
-    The convex conjugate is a mapping from a normed vector space X to its dual
-    space X_dual and defined by
-
-        F_cc(x_dual) = sup_{x in X} <x_dual, x> - F(x)
-
-    with x_dual in X_dual and dual pairing <.,.>. For Hilbert spaces,
-    which are self-dual, we have X = X_dual and <.,.> is the inner product.
-    The convex conjugate is always convex, and if F is convex, proper,
-    and lower semi-continuous we have F = (F_cc)_cc. For more details
-    see [Roc1970]_.
-
-
-    Algorithm
-
-    The CP algorithm basically consists of alternating a gradient ascend in
-    the dual variable y and a gradient descent in the primal variable x.
+    The Chambolle-Pock algorithm basically consists of alternating a
+    gradient ascent in the dual variable y and a gradient descent in the
+    primal variable x. The proximal operator is used to generate a ascent
+    direction for the convex conjugate of F and descent direction for G.
     Additionally an over-relaxation in the primal variable is performed.
-
-    Initialization:
-
-        choose tau > 0, sigma > 0, theta in [0,1], x_0 in X, y_0 in Y,
-        xr_0 = x_0
-
-    Iteration: for n > 0 update x_n, y_n, and xr_n as follows
-
-        y_{n+1} = prox_sigma[F_cc](y_n + sigma K xr_n)
-
-        x_{n+1} = prox_tau[G](x_n - tau  K_adj y_{n+1})
-
-        xr_{n+1} = x_{n+1} + theta (x_{n+1} - x_n)
-
-    The proximal operator, prox_tau[f](x), of the functional H with step
-    size parameter tau is defined as
-
-        prox_tau[H](x) = arg min_y f(y) + 1 / (2 tau) ||x - y||_2^2
-
-    A simple choice of step size parameters is tau = sigma < 1 / ||K|| with
-    the induced operator norm
-
-        ||K|| = max{||K x|| : x in X, ||x|| < 1}
-
-    For ||K||^2 sigma tau < 1 the algorithms should converge.
-
-    If G or F_cc is uniformly convex, convergence can be accelerated using
-    variable step sizes: replace tau -> tau_n, sigma -> sigma_n, and theta
-    -> theta_n with t_0 sigma_0 ||K||^2 < 1 and gamma > 0. After the update
-    of the primal variable (x_{n+1}) and before the update of the relaxation
-    variable (xr_{n+1}) update the parameters as
-
-        theta_n = 1 / sqrt(1 + 2 gamma tau_n)
-
-        tau_{n+1} = theta_n tau_n
-
-        sigma_{n+1} = sigma_n / theta_n
-
-    Instead of choosing step size parameters preconditioning techniques can
-    be employed, see [CP2011b]_. In this case the steps tau and sigma are
-    replaced by symmetric and positive definite matrices tau -> T, sigma ->
-    Sigma and convergence should hold for ||Sigma^(1/2) K T^(1/2)||^2 < 1.
-
-    For more on proximal operators and algorithms see [PB2014]_. The
-    following implementation of the CP algorithm is along the lines of
-    [Sid+2012]_.
 
     Parameters
     ----------
@@ -163,7 +91,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     Other Parameters
     ----------------
     theta : `float` in [0, 1], optional
-        Relaxation parameter. Default: `None`
+        Relaxation parameter. Default: 1
     gamma : non-negative `float`, optional
         Acceleration parameter. If not `None` overwrites ``theta`` and uses
         variable relaxation parameter and step sizes with ``tau`` and
@@ -179,11 +107,26 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         Required to resume iteration. If `None` it is set to a zero element
         in Y which is the range of ``op``. Default: `None`
 
+    Notes
+    -----
+    For a more detailed documentation see :ref:`chambolle_pock`.
+
+    For references on the Chambolle-Pock algorithm see [CP2011a]_ and
+    [CP2011b]_.
+
+    This implementation of the CP algorithm is along the lines of [Sid+2012]_.
+
+    For more on convex analysis including convex conjugates and
+    resolvent operators see [Roc1970]_.
+
+    For more on proximal operators and algorithms see [PB2014]_.
+
     References
     ----------
     .. [CP2011a] `Chambolle, Antonin and Pock, Thomas. *A First-Order
        Primal-Dual Algorithm for Convex Problems with Applications to
-       Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011), pp 120.
+       Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011),
+       pp 120-145.
 
     .. [CP2011b] `Chambolle, Antonin and Pock, Thomas. *Diagonal
        preconditioning for first order primal-dual algorithms in convex
