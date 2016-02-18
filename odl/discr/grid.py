@@ -242,11 +242,17 @@ class TensorGrid(Set):
         return np.array([vec[-1] for vec in self.coord_vectors])
 
     # min, max and extent are for set duck-typing
-    def min(self):
+    def min(self, **kwargs):
         """Return `min_pt`.
+
+        Parameters
+        ----------
+        kwargs
+            For duck-typing with `numpy.min`
 
         See also
         --------
+        max
         IntervalProd.min
 
         Examples
@@ -254,14 +260,31 @@ class TensorGrid(Set):
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.min()
         array([ 1., -2.])
-        """
-        return self.min_pt
 
-    def max(self):
+        Also works with numpy
+
+        >>> import numpy
+        >>> numpy.min(g)
+        array([ 1., -2.])
+        """
+        out = kwargs.get('out', None)
+        if out is not None:
+            out[:] = self.min_pt
+            return out
+        else:
+            return self.min_pt
+
+    def max(self, **kwargs):
         """Return `max_pt`.
+
+        Parameters
+        ----------
+        kwargs
+            For duck-typing with `numpy.max`
 
         See also
         --------
+        min
         IntervalProd.max
 
         Examples
@@ -269,8 +292,19 @@ class TensorGrid(Set):
         >>> g = TensorGrid([1, 2, 5], [-2, 1.5, 2])
         >>> g.max()
         array([ 5.,  2.])
+
+        Also works with numpy
+
+        >>> import numpy
+        >>> numpy.max(g)
+        array([ 5.,  2.])
         """
-        return self.max_pt
+        out = kwargs.get('out', None)
+        if out is not None:
+            out[:] = self.max_pt
+            return out
+        else:
+            return self.max_pt
 
     def extent(self):
         """Return the edge lengths of this grid's minimal bounding box.
@@ -731,6 +765,37 @@ class TensorGrid(Set):
             new_vecs.append(self.coord_vectors[-i][slc_list[-i]])
 
         return TensorGrid(*new_vecs)
+
+    def __array__(self, dtype=None):
+        """Used with ``numpy``. Returns `points`.
+
+        This allows usage of tensorgrid with some numpy functions.
+
+        Parameters
+        ----------
+        dtype : `numpy.dtype`
+            The numpy dtype of the result array. Default: `float`
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-2, 0, 2])
+
+        Convert to array
+
+        >>> np.asarray(g)
+        array([[ 0., -2.],
+               [ 0.,  0.],
+               [ 0.,  2.],
+               [ 1., -2.],
+               [ 1.,  0.],
+               [ 1.,  2.]])
+
+        Calculate midpoint
+
+        >>> np.mean(g, axis=0)
+        array([ 0.5,  0. ])
+        """
+        return self.points().astype(dtype)
 
     def __repr__(self):
         """Return ``repr(self)``."""

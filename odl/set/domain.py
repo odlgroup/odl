@@ -281,15 +281,19 @@ class IntervalProd(Set):
 
         Examples
         --------
+        >>> import odl
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(b, e)
-        ...
-        ... # Arrays are expected in (ndim, npoints) shape
+
+        rrays are expected in (ndim, npoints) shape
+
         >>> arr = np.array([[-1, 0, 2],   # defining one point at a time
         ...                 [-0.5, 0, 2]])
         >>> rbox.contains_all(arr.T)
         True
-        >>> # Implicit meshgrids defined by coordinate vectors
+
+        Implicit meshgrids defined by coordinate vectors
+
         >>> from odl.discr.grid import sparse_meshgrid
         >>> vec1 = (-1, -0.9, -0.7)
         >>> vec2 = (0, 0, 0)
@@ -297,19 +301,28 @@ class IntervalProd(Set):
         >>> mg = sparse_meshgrid(vec1, vec2, vec3)
         >>> rbox.contains_all(mg)
         True
-        """
-        from odl.discr.grid import TensorGrid
 
+        Also works with any iterable
+
+        >>> rbox.contains_all([[-1, -0.5], # define points by axis
+        ...                    [0, 0],
+        ...                    [2, 2]])
+        True
+
+        And with grids
+
+        >>> agrid = odl.uniform_sampling(rbox.begin, rbox.end, [3, 1, 3])
+        >>> rbox.contains_all(agrid)
+        True
+        """
         if other in self:
             return True
-        elif isinstance(other, TensorGrid):
-            return self.contains_all(other.meshgrid)
         elif is_valid_input_meshgrid(other, self.ndim):
             vecs = tuple(vec.squeeze() for vec in other)
             mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
             maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
             return np.all(mins >= self.begin) and np.all(maxs <= self.end)
-        elif is_valid_input_array(other, self.ndim):
+        else:
             if self.ndim == 1:
                 mins = np.min(other)
                 maxs = np.max(other)
@@ -317,8 +330,6 @@ class IntervalProd(Set):
                 mins = np.min(other, axis=1)
                 maxs = np.max(other, axis=1)
             return np.all(mins >= self.begin) and np.all(maxs <= self.end)
-        else:
-            return False
 
     # Additional property-like methods
     def measure(self, ndim=None):
