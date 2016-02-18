@@ -20,7 +20,7 @@
 The method is proposed in [CP2011a]_ and augmented with diagonal
 preconditioners in [CP2011b]_. The algorithm is flexible and well apt suited
 for non-smooth, convex optimization problems in imaging. This implementation
-is along the lines of [SJP2012]_.
+is along the lines of [Sid+2012]_.
 """
 
 # Imports for common Python 2/3 codebase
@@ -40,11 +40,9 @@ __all__ = ('chambolle_pock_solver',)
 
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
-# TODO: preferred way to hyperlink References, see Reference section
 
 def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
-                          theta=1, gamma=None, niter=1, partial=None,
-                          x_relax=None, y=None):
+                          niter=1, **kwargs):
     """Chambolle-Pock algorithm for non-smooth convex optimization problems.
 
     The Chambolle-Pock (CP) algorithm, as proposed in [CP2011a]_, is a first
@@ -79,7 +77,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     which are self-dual, we have X = X_dual and <.,.> is the inner product.
     The convex conjugate is always convex, and if F is convex, proper,
     and lower semi-continuous we have F = (F_cc)_cc. For more details
-    see [R1970]_.
+    see [Roc1970]_.
 
 
     Algorithm
@@ -125,7 +123,6 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
         sigma_{n+1} = sigma_n / theta_n
 
-
     Instead of choosing step size parameters preconditioning techniques can
     be employed, see [CP2011b]_. In this case the steps tau and sigma are
     replaced by symmetric and positive definite matrices tau -> T, sigma ->
@@ -133,7 +130,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     For more on proximal operators and algorithms see [PB2014]_. The
     following implementation of the CP algorithm is along the lines of
-    [SJP2012]_.
+    [Sid+2012]_.
 
     Parameters
     ----------
@@ -160,95 +157,117 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         prox_sigma[F_cc](x), of the convex conjugate, F_cc, of the function
         F. The domain of F_cc and its proximal operator instance are the
         space, Y, of the dual variable y i.e. the range of ``op``.
-    theta : `float` in [0, 1], optional
-        Relaxation parameter
-    gamma : positive `float`
-        Acceleration parameter. If not `None` overwrites ``theta`` and uses
-        variable relaxation parameter and step sizes with ``tau`` and
-        ``sigma`` as initial values. Requires G or F_cc to be uniformly convex.
     niter : non-negative `int`, optional
         Number of iterations
+
+    Other Parameters
+    ----------------
+    theta : `float` in [0, 1], optional
+        Relaxation parameter. Default: `None`
+    gamma : non-negative `float`, optional
+        Acceleration parameter. If not `None` overwrites ``theta`` and uses
+        variable relaxation parameter and step sizes with ``tau`` and
+        ``sigma`` as initial values. Requires G or F_cc to be uniformly
+        convex. Default: `None`
     partial : `Partial`, optional
         If not `None` the `Partial` instance(s) are executed in each
-        iteration, e.g. plotting each iterate
+        iteration, e.g. plotting each iterate. Default: `None`
     x_relax : element in the domain of ``op``, optional
         Required to resume iteration. If `None` it is a copy of the primal
-        variable x.
+        variable x. Default: `None`
     y : element in the range of ``op``, optional
         Required to resume iteration. If `None` it is set to a zero element
-        in Y which is the range of ``op``.
+        in Y which is the range of ``op``. Default: `None`
 
     References
     ----------
-    .. [CP2011a] `Chambolle, Antonin and Pock, Thomas. A First-Order
-     Primal-Dual Algorithm for Convex Problems with Applications to Imaging.
-     J. Math. Imaging Vis. 40 120, 2011.
-     <http://dx.doi.org/10.1007/s10851-010-0251-1>`_
+    .. [CP2011a] `Chambolle, Antonin and Pock, Thomas. *A First-Order
+       Primal-Dual Algorithm for Convex Problems with Applications to
+       Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011), pp 120.
 
-    .. [CP2011b] `Chambolle, Antonin and Pock, Thomas. Diagonal
-     preconditioning for first order primal-dual algorithms in convex
-     optimization. 2011 IEEE International Conference on Computer Vision
-     (ICCV), 1762, 2011. <http://dx.doi.org/10.1109/ICCV.2011.6126441>`_
+    .. [CP2011b] `Chambolle, Antonin and Pock, Thomas. *Diagonal
+       preconditioning for first order primal-dual algorithms in convex
+       optimization*. 2011 IEEE International Conference on Computer Vision
+       (ICCV), 2011, pp 1762-1769.
 
-    .. [SJP2012] `Sidky, Emil Y, Jorgensen, Jakob H, and Pan, Xiaochuan. Convex
-     optimization problem prototyping for image reconstruction in computed
-     tomography with the Chambolle-Pock algorithm, Phys Med Biol, 57 3065,
-     2012. <http://stacks.iop.org/0031-9155/57/i=10/a=3065>`_
+    .. [Sid+2012] `Sidky, Emil Y, Jorgensen, Jakob H, and Pan, Xiaochuan.
+       *Convex optimization problem prototyping for image reconstruction in
+       computed tomography with the Chambolle-Pock algorithm*. Physics in
+       Medicine and Biology, 57 (2012), pp 3065-3091.
 
     .. [PB2014] Parikh, Neal and Boyd, Stephen. *Proximal Algorithms*.
-     Foundations and Trends in Optimization 1 127, 2014.
-     http://stacks.iop.org/0031-9155/57/i=10/a=3065
+       Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 
-    .. [R1970] Rockafellar, R. Tyrrell. *Convex analysis*. Princeton University
-     Press, 1970.
+    .. [Roc1970] Rockafellar, R. Tyrrell. *Convex analysis*. Princeton
+       University Press, 1970.
     """
+    # Forward operator
     if not isinstance(op, Operator):
-        raise TypeError('operator ({}) is not an instance of {}'
+        raise TypeError('operator {} is not an instance of {}'
                         ''.format(op, Operator))
 
+    # Starting point
     if x.space != op.domain:
-        raise TypeError('starting point ({}) is not in the domain of `op` '
-                        '({})'.format(x.space, op.domain))
+        raise TypeError('starting point {} is not in the domain of `op` {}'
+                        ''.format(x.space, op.domain))
 
+    # Step size parameter
     if tau <= 0:
-        raise ValueError('update parameter ({0}) not positive.'.format(tau))
+        raise ValueError('step size parameter {} not positive.'.format(tau))
     else:
         tau = float(tau)
 
+    # Step size parameter
     if sigma <= 0:
-        raise ValueError('update parameter ({0}) not positive.'.format(sigma))
+        raise ValueError('step size parameter {} not positive.'.format(sigma))
     else:
         sigma = float(sigma)
 
+    # Number of iterations
+    if not isinstance(niter, int) or niter < 0:
+        raise ValueError('number of iterations {} not valid.'
+                         ''.format(niter))
+
+    # Relaxation parameter
+    theta = kwargs.pop('theta', 1)
     if not 0 <= theta <= 1:
-        raise ValueError('relaxation parameter ({0}) not in [0, 1].'
+        raise ValueError('relaxation parameter {} not in [0, 1].'
                          ''.format(theta))
     else:
         theta = float(theta)
 
-    if not isinstance(niter, int) or niter < 0:
-        raise ValueError('number of iterations ({0}) not valid.'
-                         ''.format(niter))
+    # Acceleration parameter
+    gamma = kwargs.pop('gamma', None)
+    if gamma is not None:
+        if gamma < 0:
+            raise ValueError('acceleration parameter {} not '
+                             'non-negative'.format(gamma))
+        else:
+            gamma = float(gamma)
 
+    # Partial object
+    partial = kwargs.pop('partial', None)
     if not (partial is None or isinstance(partial, Partial)):
-        raise TypeError('partial ({}) is not an instance of {}'
+        raise TypeError('partial {} is not an instance of {}'
                         ''.format(op, Partial))
 
     # Initialize the relaxation variable
+    x_relax = kwargs.pop('x_relax', None)
     if x_relax is None:
         x_relax = x.copy()
     else:
         if x_relax.space != op.domain:
             raise TypeError('relaxation variable {} is not in the domain of '
-                            '`op` ({})'.format(x_relax.space, op.domain))
+                            '`op` {}'.format(x_relax.space, op.domain))
 
     # Initialize the dual variable
+    y = kwargs.pop('y', None)
     if y is None:
         y = op.range.zero()
     else:
         if y.space != op.range:
             raise TypeError('variable {} is not in the range of `op` '
-                            '({})'.format(y.space, op.range))
+                            '{}'.format(y.space, op.range))
 
     # Temporal copy to store previous iterate
     x_old = x.space.element()

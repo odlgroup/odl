@@ -202,13 +202,13 @@ def proximal_zero(space):
 def proximal_nonnegativity(space):
     """Function to create the proximal operator of G(x) = ind(x > 0).
 
-    Function for the proximal operator of the functional G(x)=ind_P(x) to be
+    Function for the proximal operator of the functional G(x)=ind(x > 0) to be
     initialized.
 
     If P is the set of non-negative elements, the indicator function of
     which is defined as
 
-        ind_P(x) = {0 if x in P, infinity if x is not in P}
+        ind(x > 0) = {0 if x in P, infinity if x is not in P}
 
     with x being an element in ``space``.
 
@@ -218,7 +218,7 @@ def proximal_nonnegativity(space):
          prox_tau[G](x) = {x if x > 0, 0 if <= 0}
 
     It is independent of tau and invariant under a positive rescaling of G
-    since which leaves the indicator function as it stands.
+    which leaves the indicator function as it stands.
 
     Parameters
     ----------
