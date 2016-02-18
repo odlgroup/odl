@@ -98,7 +98,7 @@ def combine_proximals(factory_list):
     """Combine proximal operators into a diagonal product space operator.
 
     This assumes the functional to be separable across variables in order to
-    make use of the separable sum property of proximal operators
+    make use of the separable sum property of proximal operators.
 
         prox_tau[f(x) + g(y)](x, y) = (prox_tau[f](x), prox_tau[g](y))
 
@@ -200,11 +200,13 @@ def proximal_zero(space):
 
 
 def proximal_nonnegativity(space):
-    """Function to create the proximal operator of G(x) = ind_P(x).
+    """Function to create the proximal operator of G(x) = ind(x > 0).
 
-    Function for the proximal operator of the functional G to be initialized
-    where G is given by the indicator function for the set, P, of non-negative
-    elements
+    Function for the proximal operator of the functional G(x)=ind_P(x) to be
+    initialized.
+
+    If P is the set of non-negative elements, the indicator function of
+    which is defined as
 
         ind_P(x) = {0 if x in P, infinity if x is not in P}
 
