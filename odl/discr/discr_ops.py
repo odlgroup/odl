@@ -33,25 +33,24 @@ from odl.discr.lp_discr import DiscreteLp
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
 
+# TODO: make helper function to set edge slices
+
 def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
-                padding_value=0, edge_order=None, out=None, ):
+                padding_value=0, **kwargs):
     """Calculate the partial derivative of ``f`` along a given ``axis``.
 
-    The partial derivative is computed using first-order accurate forward,
-    first-order accurate backward, or second-order accurate central
-    differences in the interior.
+    In the interior of the domain of f, the partial derivative is computed
+    using first-order accurate forward or backward difference or
+    second-order accurate central differences.
 
-    With padding the same method is used on endpoints as in the interior and
-    the accuracy on the endpoints is thus determined by the method used in
-    the interior i.e. forward or backward differences use first-order
+    With padding the same method and thus accuracy is used on endpoints as
+    in the interior i.e. forward and backward differences use first-order
     accuracy on edges while central differences use second-order accuracy at
     edges.
 
-
     Without padding one-sided forward or backward differences are used at
-    the boundaries and the accuracy at the endpoints can then be also
-    triggered by the edge order. Second-order accurate edges require at
-    least three elements.
+    the boundaries. The accuracy at the endpoints can then also be
+    triggered by the edge order.
 
     The returned array has the same shape as the input array ``f``.
 
@@ -68,22 +67,26 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
     method : {'central', 'forward', 'backward'}, optional
         Finite difference method which is used in the interior of the domain
          of ``f``.
-    padding_method : {'constant', 'edge'}, optional
+    padding_method : {'constant', 'symmetric'}, optional
         'constant' : Pads values outside the domain of ``f`` with a constant
             value given by ``padding_value``
-        'edge' : Replicate values at the boundary
+        'symmetric' : Pads with the reflection of the vector mirrored
+            along the edge of the array
         If `None` one-sided forward or backward differences are used at the
         boundary.
     padding_value : `float`, optional
         If ``padding_method`` is 'constant' ``f`` assumes ``padding_value``
         for indices outside the domain of ``f``
+
+    Other Parameters
+    ----------------
     edge_order : {1, 2}, optional
         Edge-order accuracy at the boundaries if no padding is used. If
         `None` the edge-order accuracy at endpoints corresponds to the
-        accuracy in the interior.
+        accuracy in the interior. Default: `None`
     out : `numpy.ndarray`, optional
          An N-dimensional array to which the output is written. Has to have
-         the same shape as the input array ``f``
+         the same shape as the input array ``f``. Default: `None`
 
     Returns
     -------
@@ -93,6 +96,9 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
 
     Notes
     -----
+    Without padding the use of second-order accurate edges requires at
+    least three elements.
+
     Central differences with padding cannot be used with first-order
     accurate edges.
 
@@ -142,13 +148,6 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
         raise ValueError('In axis {}: at least two elements required, got {}.'
                          ''.format(axis, f_arr.shape[axis]))
 
-    if out is None:
-        out = np.empty_like(f_arr)
-    else:
-        if out.shape != f.shape:
-            raise ValueError('expected output shape {}, got {}.'
-                             ''.format(f.shape, out.shape))
-
     if axis < 0:
         axis += ndim
     if axis >= ndim:
@@ -164,11 +163,12 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
     if method not in ('central', 'forward', 'backward'):
         raise ValueError('method {} is not understood'.format(method_in))
 
-    if padding_method not in ('constant', 'edge', None):
+    if padding_method not in ('constant', 'symmetric', None):
         raise ValueError('padding value {} not valid'.format(padding_method))
     if padding_method is 'constant':
         padding_value = float(padding_value)
 
+    edge_order = kwargs.pop('edge_order', None)
     if edge_order is None:
         if method == 'central':
             edge_order = 2
@@ -177,6 +177,14 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
     else:
         if edge_order not in (1, 2):
             raise ValueError('edge order {} not valid'.format(edge_order))
+
+    out = kwargs.pop('out', None)
+    if out is None:
+        out = np.empty_like(f_arr)
+    else:
+        if out.shape != f.shape:
+            raise ValueError('expected output shape {}, got {}.'
+                             ''.format(f.shape, out.shape))
 
     if f_arr.shape[axis] == 2 and edge_order == 2:
         raise ValueError('shape of array to small to use edge order 2')
@@ -232,7 +240,8 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
     if padding_method is 'constant':
         # Assume constant value c for indices outside the domain of ``f``
 
-        # The method used on endpoints is the same as in the interior
+        # With padding the method used on endpoints is the same as in the
+        # interior of the domain of f
 
         if method == 'central':
             # 2nd-order lower edge
@@ -275,12 +284,12 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
             # 1D equivalent: out[-1] = f[-1] - f[-2]
             out[slice_out] = f_arr[slice_node1] - f_arr[slice_node2]
 
-    elif padding_method == 'edge':
-        # Values of f for indices outside the domain of f are the same as at
-        #  the edge
+    elif padding_method == 'symmetric':
+        # Values of f for indices outside the domain of f are replicates of
+        # the edge values
 
-        # The method used on endpoints is the same as in the interior of
-        # the domain of f
+        # With padding the method used on endpoints is the same as in the
+        # interior of the domain of f
 
         if method == 'central':
             # 2nd-order lower edge
@@ -392,10 +401,11 @@ class PartialDerivative(Operator):
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method which is used in the interior of the
             domain of ``f``
-        padding_method : {'constant', 'edge'}, optional
+        padding_method : {'constant', 'symmetric'}, optional
             'constant' : Pads values outside the domain of ``f`` with a
                 constant value given by ``padding_value``
-            'edge' : Replicate values at the boundary
+            'symmetric' : Pads with the reflection of the vector mirrored
+                along the edge of the array
             If `None` one-sided forward or backward differences are used at
             the boundary
         padding_value : `float`, optional

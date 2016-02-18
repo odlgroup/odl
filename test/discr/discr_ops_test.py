@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Tests for operators defined on `DiscreteLp`."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -37,7 +38,7 @@ DATA_2D = np.array([[0., 1., 2., 3., 4.],
                     [2., 3., 4., 5., 6.]]) ** 1
 
 
-def test_finite_diff_invalid_arguments():
+def test_finite_diff_invalid_args():
     """Test finite difference function for invalid arguments."""
 
     # edge order in {1,2}
@@ -136,21 +137,24 @@ def test_finite_diff_explicit():
     assert all_equal(df0, df1)
 
     # complex arrays
-    arr = np.array([0., 1., 2., 3., 4.]) + 1j * np.array([10., 9., 8., 7., 6.])
+    arr = np.array([0., 1., 2., 3., 4.]) + 1j * np.array([10., 9., 8., 7.,
+                                                          6.])
     diff = finite_diff(arr)
     assert all(diff.real == 1)
     assert all(diff.imag == -1)
 
 
-def test_finite_diff_replicate_padding():
+def test_finite_diff_symmetric_padding():
     """Finite difference using replicate padding."""
 
     # Using replicate padding forward and backward differences have zero
     # derivative at the upper or lower endpoint, respectively
-    assert finite_diff(DATA_1D, method='forward', padding_method='edge')[-1] == 0
-    assert finite_diff(DATA_1D, method='backward', padding_method='edge')[0] == 0
+    assert finite_diff(DATA_1D, method='forward',
+                       padding_method='symmetric')[-1] == 0
+    assert finite_diff(DATA_1D, method='backward',
+                       padding_method='symmetric')[0] == 0
 
-    diff = finite_diff(DATA_1D, method='central', padding_method='edge')
+    diff = finite_diff(DATA_1D, method='central', padding_method='symmetric')
     assert diff[0] == (DATA_1D[1] - DATA_1D[0]) / 2
     assert diff[-1] == (DATA_1D[-1] - DATA_1D[-2]) / 2
 

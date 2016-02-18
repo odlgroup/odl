@@ -268,7 +268,6 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
     return _ProximalConvConjL2
 
 
-# TODO: check scaling of the convex conjugate in the docstring
 def proximal_convexconjugate_l1(space, lam=1, g=None):
     """Proximal operator factory of the convex conjugate of the l1-semi-norm.
 
