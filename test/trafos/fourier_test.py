@@ -330,19 +330,18 @@ def test_reciprocal_nd_halfcomplex():
 def test_dft_preprocess_data():
 
     shape = (2, 3, 4)
-    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, dtype='complex64')
 
     # With shift
     correct_arr = []
     for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append((1 + 1j) * (1 - 2 * ((i + j + k) % 2)))
 
-    dfunc = space_discr.one() * (1 + 1j)
-    preproc = dft_preprocess_data(dfunc, shift=True)  # out of place
-    dft_preprocess_data(dfunc, shift=True, out=dfunc)  # in place
+    arr = np.ones(shape, dtype='complex64') * (1 + 1j)
+    preproc = dft_preprocess_data(arr, shift=True)  # out of place
+    dft_preprocess_data(arr, shift=True, out=arr)  # in place
 
-    assert all_almost_equal(preproc.ntuple, correct_arr)
-    assert all_almost_equal(dfunc.ntuple, correct_arr)
+    assert all_almost_equal(preproc.ravel(), correct_arr)
+    assert all_almost_equal(arr.ravel(), correct_arr)
 
     # Without shift
     correct_arr = []
@@ -352,28 +351,27 @@ def test_dft_preprocess_data():
 
         correct_arr.append((1 + 1j) * np.exp(1j * np.pi * argsum))
 
-    dfunc = space_discr.one() * (1 + 1j)
-    dft_preprocess_data(dfunc, shift=False, out=dfunc)
+    arr = np.ones(shape, dtype='complex64') * (1 + 1j)
+    dft_preprocess_data(arr, shift=False, out=arr)
 
-    assert all_almost_equal(dfunc.ntuple, correct_arr)
+    assert all_almost_equal(arr.ravel(), correct_arr)
 
 
 def test_dft_preprocess_data_halfcomplex():
 
     shape = (2, 3, 4)
-    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, dtype='float64')
 
     # With shift
     correct_arr = []
     for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append(1 - 2 * ((i + j + k) % 2))
 
-    dfunc = space_discr.one()
-    preproc = dft_preprocess_data(dfunc, shift=True)
-    dft_preprocess_data(dfunc, shift=True, out=dfunc)
+    arr = np.ones(shape, dtype='float64')
+    preproc = dft_preprocess_data(arr, shift=True)  # out of place
+    dft_preprocess_data(arr, shift=True, out=arr)  # in place
 
-    assert all_almost_equal(preproc.ntuple, correct_arr)
-    assert all_almost_equal(dfunc.ntuple, correct_arr)
+    assert all_almost_equal(preproc.ravel(), correct_arr)
+    assert all_almost_equal(arr.ravel(), correct_arr)
 
     # Without shift
     correct_arr = []
@@ -383,31 +381,29 @@ def test_dft_preprocess_data_halfcomplex():
 
         correct_arr.append(np.exp(1j * np.pi * argsum))
 
-    dfunc = space_discr.one()
-    preproc = dft_preprocess_data(dfunc, shift=False)
+    arr = np.ones(shape, dtype='float64')
+    preproc = dft_preprocess_data(arr, shift=False)
 
-    assert all_almost_equal(preproc.ntuple, correct_arr)
+    assert all_almost_equal(preproc.ravel(), correct_arr)
 
     with pytest.raises(ValueError):
-        # Not possible in this case
-        dft_preprocess_data(dfunc, shift=False, out=dfunc)
+        # In-place modification not possible in this case
+        dft_preprocess_data(arr, shift=False, out=arr)
 
 
 def test_dft_preprocess_data_with_axes():
 
     shape = (2, 3, 4)
-    space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, dtype='complex64')
 
     axes = [1]  # Only middle index counts
-    # With shift
     correct_arr = []
     for _, j, __ in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append(1 - 2 * (j % 2))
 
-    dfunc = space_discr.one()
-    dft_preprocess_data(dfunc, shift=True, axes=axes, out=dfunc)
+    arr = np.ones(shape, dtype='complex64')
+    dft_preprocess_data(arr, shift=True, axes=axes, out=arr)
 
-    assert all_almost_equal(dfunc.ntuple, correct_arr)
+    assert all_almost_equal(arr.ravel(), correct_arr)
 
     axes = [0, -1]  # First and last
     # With shift
@@ -415,10 +411,10 @@ def test_dft_preprocess_data_with_axes():
     for i, _, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append(1 - 2 * ((i + k) % 2))
 
-    dfunc = space_discr.one()
-    dft_preprocess_data(dfunc, shift=True, axes=axes, out=dfunc)
+    arr = np.ones(shape, dtype='complex64')
+    dft_preprocess_data(arr, shift=True, axes=axes, out=arr)
 
-    assert all_almost_equal(dfunc.ntuple, correct_arr)
+    assert all_almost_equal(arr.ravel(), correct_arr)
 
 
 # ---- pyfftw_call ---- #
@@ -899,6 +895,50 @@ def test_dft_call(impl):
     assert (rand_arr_idft - rand_arr).norm() < 1e-6
 
 
+def test_dft_sign(impl):
+    # Test if the FT sign behaves as expected, i.e. that the FT with sign
+    # '+' and '-' have same real parts and opposite imaginary parts.
+
+    # 2d, complex, all ones and random back & forth
+    shape = (4, 5)
+    dft_dom = odl.sequence_space(shape, dtype='complex64')
+    dft_minus = DiscreteFourierTransform(dom=dft_dom, impl=impl, sign='-')
+    dft_plus = DiscreteFourierTransform(dom=dft_dom, impl=impl, sign='+')
+
+    arr = dft_dom.element([[0, 0, 0, 0, 0],
+                           [0, 0, 1, 1, 0],
+                           [0, 0, 1, 1, 0],
+                           [0, 0, 0, 0, 0]])
+    arr_dft_minus = dft_minus(arr, flags=('FFTW_ESTIMATE',))
+    arr_dft_plus = dft_plus(arr, flags=('FFTW_ESTIMATE',))
+
+    assert all_almost_equal(arr_dft_minus.real, arr_dft_plus.real)
+    assert all_almost_equal(arr_dft_minus.imag, -arr_dft_plus.imag)
+    assert all_almost_equal(dft_minus.inverse(arr_dft_minus), arr)
+    assert all_almost_equal(dft_plus.inverse(arr_dft_plus), arr)
+
+    # 2d, halfcomplex, first axis
+    shape = (4, 5)
+    axes = (0,)
+    dft_dom = odl.sequence_space(shape, dtype='float32')
+    arr = dft_dom.element([[0, 0, 0, 0, 0],
+                           [0, 0, 1, 1, 0],
+                           [0, 0, 1, 1, 0],
+                           [0, 0, 0, 0, 0]])
+
+    dft = DiscreteFourierTransform(
+        dom=dft_dom, impl=impl, halfcomplex=True, sign='-', axes=axes)
+
+    arr_dft_minus = dft(arr, flags=('FFTW_ESTIMATE',))
+    arr_idft_minus = dft.inverse(arr_dft_minus, flags=('FFTW_ESTIMATE',))
+
+    assert all_almost_equal(arr_idft_minus, arr)
+
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(
+            dom=dft_dom, impl=impl, halfcomplex=True, sign='+', axes=axes)
+
+
 # ---- FourierTransform ---- #
 
 
@@ -997,8 +1037,6 @@ def test_fourier_trafo_sign(impl):
     # Test if the FT sign behaves as expected, i.e. that the FT with sign
     # '+' and '-' have same real parts and opposite imaginary parts.
 
-    # Characteristic function of [0, 1], its Fourier transform is
-    # given by exp(-1j * y / 2) * sinc(y/2)
     def char_interval(x):
         return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
 
@@ -1014,6 +1052,63 @@ def test_fourier_trafo_sign(impl):
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
     with pytest.raises(ValueError):
         FourierTransform(discr, sign='+', impl=impl, halfcomplex=True)
+    with pytest.raises(ValueError):
+        FourierTransform(discr, sign=-1, impl=impl)
+
+
+def test_fourier_trafo_inverse(impl):
+    # Test if the inverse really is the inverse
+
+    def char_interval(x):
+        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
+
+    # Complex-to-complex
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
+    discr_char = discr.element(char_interval)
+    ft_minus = FourierTransform(discr, sign='-', impl=impl)
+    ft_plus = FourierTransform(discr, sign='+', impl=impl)
+
+    assert all_almost_equal(ft_minus.inverse(ft_minus(char_interval)),
+                            discr_char)
+    assert all_almost_equal(ft_plus.inverse(ft_plus(char_interval)),
+                            discr_char)
+
+    # Half-complex
+    discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
+    ft = FourierTransform(discr, impl=impl, halfcomplex=True)
+    assert all_almost_equal(ft.inverse(ft(char_interval)), discr_char)
+
+    def char_rect(x):
+        return np.where((x[0] >= 0) & (x[0] <= 1) & (x[1] >= 0) & (x[1] <= 1),
+                        1.0, 0.0)
+
+    # 2D with axes, C2C
+    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
+                              dtype='complex64')
+    discr_rect = discr.element(char_rect)
+    ft_minus_0 = FourierTransform(discr, sign='-', impl=impl, axes=(0,))
+    ft_minus_1 = FourierTransform(discr, sign='-', impl=impl, axes=(1,))
+    ft_plus_0 = FourierTransform(discr, sign='+', impl=impl, axes=(0,))
+    ft_plus_1 = FourierTransform(discr, sign='+', impl=impl, axes=(1,))
+
+    assert all_almost_equal(ft_minus_0.inverse(ft_minus_0(char_rect)),
+                            discr_rect)
+    assert all_almost_equal(ft_minus_1.inverse(ft_minus_1(char_rect)),
+                            discr_rect)
+    assert all_almost_equal(ft_plus_0.inverse(ft_plus_0(char_rect)),
+                            discr_rect)
+    assert all_almost_equal(ft_plus_1.inverse(ft_plus_1(char_rect)),
+                            discr_rect)
+
+    # 2D with axes, halfcomplex
+    discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
+                              dtype='float32')
+    discr_rect = discr.element(char_rect)
+    ft_0 = FourierTransform(discr, impl=impl, axes=(0,))
+    ft_1 = FourierTransform(discr, impl=impl, axes=(1,))
+
+    assert all_almost_equal(ft_0.inverse(ft_0(char_rect)), discr_rect)
+    assert all_almost_equal(ft_1.inverse(ft_1(char_rect)), discr_rect)
 
 
 def test_fourier_trafo_hat_1d():
@@ -1204,11 +1299,11 @@ def test_fourier_trafo_completely():
     postproc_n = np.exp(1j * np.pi * np.linspace(-9 / 8, 9 / 8, 4))
 
     fpost_s = dft_postprocess_data(
-        range_s.element(fft_s), x0=[-1.5], shifts=[True], axes=(0,),
-        orig_shape=(4,), orig_stride=[1.0], interp='nearest')
+        range_s.element(fft_s), real_grid=discr.grid, recip_grid=recip_s,
+        shifts=[True], axes=(0,), interp='nearest')
     fpost_n = dft_postprocess_data(
-        range_n.element(fft_n), x0=[-1.5], shifts=[False], axes=(0,),
-        orig_shape=(4,), orig_stride=[1.0], interp='nearest')
+        range_n.element(fft_n), real_grid=discr.grid, recip_grid=recip_n,
+        shifts=[False], axes=(0,), interp='nearest')
 
     assert np.allclose(fpost_s, fft_s * postproc_s * interp_s)
     assert np.allclose(fpost_n, fft_n * postproc_n * interp_n)
@@ -1253,11 +1348,11 @@ def test_fourier_trafo_completely():
     assert np.allclose(fft_n, [-1j, 1j, -1j, 1j])
 
     fpost_s = dft_postprocess_data(
-        range_s.element(fft_s), x0=[-1.5], shifts=[True], axes=(0,),
-        orig_shape=(4,), orig_stride=[1.0], interp='nearest')
+        range_s.element(fft_s), real_grid=discr.grid, recip_grid=recip_s,
+        shifts=[True], axes=(0,), interp='nearest')
     fpost_n = dft_postprocess_data(
-        range_n.element(fft_n), x0=[-1.5], shifts=[False], axes=(0,),
-        orig_shape=(4,), orig_stride=[1.0], interp='nearest')
+        range_n.element(fft_n), real_grid=discr.grid, recip_grid=recip_n,
+        shifts=[False], axes=(0,), interp='nearest')
 
     assert np.allclose(fpost_s, fft_s * postproc_s * interp_s)
     assert np.allclose(fpost_n, fft_n * postproc_n * interp_n)
