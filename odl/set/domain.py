@@ -298,8 +298,12 @@ class IntervalProd(Set):
         >>> rbox.contains_all(mg)
         True
         """
+        from odl.discr.grid import TensorGrid
+
         if other in self:
             return True
+        elif isinstance(other, TensorGrid):
+            return self.contains_all(other.meshgrid)
         elif is_valid_input_meshgrid(other, self.ndim):
             vecs = tuple(vec.squeeze() for vec in other)
             mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
