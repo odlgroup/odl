@@ -315,21 +315,30 @@ class IntervalProd(Set):
         >>> rbox.contains_all(agrid)
         True
         """
+        # First try optimized methods
         if other in self:
             return True
+        if hasattr(other, 'meshgrid'):
+            return self.contains_all(other.meshgrid)
         elif is_valid_input_meshgrid(other, self.ndim):
             vecs = tuple(vec.squeeze() for vec in other)
             mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
             maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
             return np.all(mins >= self.begin) and np.all(maxs <= self.end)
-        else:
+
+        # Convert to array and check each element
+        other = np.asarray(other)
+        if is_valid_input_array(other, self.ndim):
             if self.ndim == 1:
+
                 mins = np.min(other)
                 maxs = np.max(other)
             else:
                 mins = np.min(other, axis=1)
                 maxs = np.max(other, axis=1)
             return np.all(mins >= self.begin) and np.all(maxs <= self.end)
+        else:
+            return False
 
     # Additional property-like methods
     def measure(self, ndim=None):
