@@ -28,7 +28,7 @@ By unique continuation, the bounded FT operator can be
 
 where :math:`q` is the conjugate exponent of :math:`p` (for :math:`p=1` one sets :math:`q=\infty`).
 Finite exponents larger than 2 also allow the extension of the operator but require the notion of
-`Distributions`_ to characterize its range. See [SW71]_ for further details.
+`Distributions`_ to characterize its range. See [SW1971]_ for further details.
 
 The inverse of :math:`\mathcal{F}` on its range is given by the formula
 
@@ -87,7 +87,7 @@ General case
 
 The approach taken in ODL for the discretization of the FT follows immediately from the way
 :ref:`discretizations` are defined, but the original inspiration for it came from the book
-[P+07]_, Section 13.9 "Computing Fourier Integrals Using the FFT".
+[Pre+2007]_, Section 13.9 "Computing Fourier Integrals Using the FFT".
 
 Discretization of the Fourier transform operator means evaluating the Fourier integral
 :eq:`def_fourier` on a discretized function
@@ -208,6 +208,54 @@ these functions introduce only a slight taper towards higher frequencies given t
 first zeros lie at :math:`\pm 2\pi`.
 
 
+Inverse transform
+-----------------
+
+According to :eq:`def_fourier_inverse`, the inverse of the continuous Fourier transform is given by
+the same formula as the forward transform :eq:`def_fourier`, except for a switched sign in the
+complex exponential. Hence, this operator can rather be viewed as a variation of the forward FT,
+and it is implemented via a ``sign`` parameter in `FourierTransform`.
+
+The inverse of the discretized formula :eq:`discr_fourier_final` is instead gained directly using
+the identity
+
+.. math::
+    \sum_{j=0}^{N-1} e^{i 2\pi \frac{(l-k)j}{N}} 
+    &= \sum_{j=0}^{N-1} \Big( e^{i 2\pi \frac{(l-k)}{N}} \Big)^j = 
+    \begin{cases}
+      N, & \text{if } l = k, \\
+      \frac{1 - e^{i 2\pi (l-k)}}{1 - e^{i 2\pi (l-k)/N}} = 0, & \text{else}
+    \end{cases}\\
+    &= N\, \delta_{l, k}.
+    :label: trig_sum_delta
+
+By dividing :eq:`discr_fourier_final` with the factor
+
+.. math:: \alpha_j = s\widehat{\psi}(s\xi_j)\, e^{- i x_0 \xi_j}
+
+before the sum, multiplying with the exponential factor :math:`e^{i 2\pi \frac{lj}{N}}` and
+summing over :math:`j`, the coefficients :math:`f_k` can be recovered:
+
+.. math::
+    \sum_{j=0}^{N-1} \hat f_j\, \frac{1}{\alpha_j}\, e^{i 2\pi \frac{lj}{N}}
+    &= \sum_{j=0}^{N-1} \sum_{k=0}^{N-1} \bar f_k\, e^{- i 2\pi \frac{jk}{N}}
+    e^{i 2\pi \frac{lj}{N}}
+
+    &= \sum_{k=0}^{N-1} \bar f_k\, N \delta_{l,k}
+
+    &= N\, \bar f_l.
+
+Hence, the inversion formula for the discretized FT reads as
+
+.. math::
+    f_k = e^{i k \bar\xi_0}\, \frac{1}{N} \sum_{j=0}^{N-1} \hat f_j
+    \, \frac{1}{s\widehat{\psi}(s\xi_j)}\, e^{i x_0\xi_j}\, e^{i 2\pi \frac{kj}{N}},
+    :label: discr_fourier_inverse
+
+which can be calculated in the same manner as the forward FT, basically by switching the roles of
+pre- and post-processing steps and flipping the sign in the complex exponentials.
+    
+
 Useful Wikipedia articles
 =========================
 
@@ -224,6 +272,10 @@ Useful Wikipedia articles
 .. _computed in FFTW: http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
 .. _in Numpy: http://docs.scipy.org/doc/numpy/reference/routines.fft.html#implementation-details
 
-.. [SW71] Stein, Elias and Weiss, Guido (1971). Introduction to
-   Fourier Analysis on Euclidean Spaces. Princeton, N.J.:
-   Princeton University Press. ISBN 978-0-691-08078-9
+.. [SW1971] Stein, E and Weiss, G.
+   *Introduction to Fourier Analysis on Euclidean Spaces*.
+   Princeton University Press, 1971.
+
+.. [Pre+2007] Press, W H, Teukolsky, S A, Vetterling, W T, and Flannery, B P.
+   *Numerical Recipes in C - The Art of Scientific Computing* (Volume 3).
+   Cambridge University Press, 2007.
