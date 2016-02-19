@@ -29,7 +29,7 @@ import numpy as np
 
 # Internal
 from odl.util.utility import with_metaclass
-from odl.discr.grid import TensorGrid
+from odl.discr.partition import RectPartition
 
 __all__ = ('Detector', 'FlatDetector', 'Flat1dDetector', 'Flat2dDetector',
            'CircleSectionDetector')
@@ -50,28 +50,20 @@ class Detector(with_metaclass(ABCMeta, object)):
     * optionally a sampling grid for the parameters
     """
 
-    def __init__(self, ndim, grid):
+    def __init__(self, part):
         """Initialize a new instance.
 
         Parameters
         ----------
-        ndim : non-negative `int`
-            The number of dimensions of the detector
-        grid : `TensorGrid`, optional
-            A sampling grid for the parameter set
+        part : `RectPartition`
+           Partition of the detector parameter set (pixelization).
+           It determines dimension, parameter range and discretization.
         """
+        if not isinstance(part, RectPartition):
+            raise TypeError('partition {!r} is not a RectPartition instance.'
+                            ''.format(part))
 
-        if not isinstance(grid, TensorGrid):
-            raise TypeError('grid {!r} is not a `TensorGrid` instance.'
-                            ''.format(grid))
-
-        if grid.ndim != ndim:
-            raise ValueError('grid {!r} are not {}-dimensional.'
-                             ''.format(grid, ndim))
-
-        self._ndim = ndim
-        self._params = grid.convex_hull()
-        self._param_grid = grid
+        self._part = part
 
     @abstractmethod
     def surface(self, param):
@@ -84,29 +76,34 @@ class Detector(with_metaclass(ABCMeta, object)):
         """
 
     @property
+    def partition(self):
+        """Partition of the detector parameter set into subsets."""
+        return self._part
+
+    @property
     def ndim(self):
-        """The number of dimensions of the detector (0, 1 or 2)."""
-        return self._ndim
+        """Number of dimensions of this detector (0, 1 or 2)."""
+        return self.partition.ndim
 
     @property
     def params(self):
-        """Surface parameter set of this geometry."""
-        return self._params
+        """Surface parameter set of this detector."""
+        return self.partition.set
 
     @property
-    def param_grid(self):
+    def grid(self):
         """The sampling grid for the parameters."""
-        return self._param_grid
+        return self.partition.grid
 
     @property
     def shape(self):
         """The shape of the detector grid."""
-        return self.param_grid.shape
+        return self.partition.shape
 
     @property
-    def npixels(self):
-        """The number of pixels (sampling points)."""
-        return self.param_grid.size
+    def size(self):
+        """The total number of pixels (sampling points)."""
+        return self.partition.size
 
     def surface_deriv(self, param):
         """The partial derivative(s) of the surface parametrization.
@@ -153,7 +150,7 @@ class Detector(with_metaclass(ABCMeta, object)):
             raise NotImplementedError
 
 
-class FlatDetector(with_metaclass(ABCMeta, Detector)):
+class FlatDetector(Detector):
 
     """Abstract class for flat detectors in 2 and 3 dimensions."""
 
@@ -176,14 +173,16 @@ class FlatDetector(with_metaclass(ABCMeta, Detector)):
         return 1.0
 
     def __repr__(self):
-        """Returns ``repr(self)``."""
+        """Return ``repr(self)``."""
+        # TODO: adapt to partitions
         inner_fstr = '{!r},\n grid={grid!r}'
         inner_str = inner_fstr.format(self.params, grid=self.param_grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """d.__str__() <==> str(d)."""
+        """Return ``str(self)``."""
         # TODO: prettify
+        # TODO: adapt to partitions
         inner_fstr = '{},\n grid={grid}'
         inner_str = inner_fstr.format(self.params, grid=self.param_grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
@@ -193,27 +192,25 @@ class Flat1dDetector(FlatDetector):
 
     """A 1d line detector aligned with the ``detector_axis``."""
 
-    def __init__(self, grid, detector_axis):
+    def __init__(self, part, detector_axis):
         """Initialize a new instance.
 
         Parameters
         ----------
-        grid : 1-dim. `TensorGrid`
-            A sampling grid for the parameter interval, corresponding
-            to the line elements
-        detector_axis : 2-element array
+        part : 1-dim. `RectPartition`
+            Partition of the parameter interval, corresponding to the
+            line elements
+        detector_axis : 2-element `array-like`
             Unit direction along the detector parameter of the detector.
-        grid : 1-dim. `TensorGrid`, optional
-            A sampling grid for the parameter interval, in which it must
-            be contained
         """
-
-        super().__init__(1, grid)
+        super().__init__(part)
+        if self.ndim != 1:
+            raise ValueError('expected partition to be 1-dimensional ,'
+                             'got {}.'.format(self.ndim))
 
         self._detector_axis = np.asarray(detector_axis)
-
         if np.linalg.norm(self.detector_axis) <= 1e-10:
-            raise ValueError('detector_axis {} not nonzero.'
+            raise ValueError('detector axis vector {} too close to zero.'
                              ''.format(detector_axis))
 
     @property
@@ -267,27 +264,32 @@ class Flat2dDetector(FlatDetector):
 
     """A 2d flat panel detector aligned with the ``detector_axes``."""
 
-    def __init__(self, grid, detector_axes):
+    def __init__(self, part, detector_axes):
         """Initialize a new instance.
 
         Parameters
         ----------
-        grid : 2-dim. `TensorGrid`
-            A sampling grid for the parameters (pixels)
-        detector_axes : sequence of two 3-element array
+        part : 1-dim. `RectPartition`
+            Partition of the parameter interval, corresponding to the
+            pixels
+        detector_axes : `sequence` of two 3-element `array-like`
             The directions of the axes of the detector
             Example: [(0, 1, 0), (0, 0, 1)]
         """
-
-        super().__init__(2, grid)
+        super().__init__(part)
+        if self.ndim != 2:
+            raise ValueError('expected partition to be 2-dimensional ,'
+                             'got {}.'.format(self.ndim))
 
         self._detector_axes = (np.asarray(detector_axes[0]),
                                np.asarray(detector_axes[1]))
 
-        if (np.linalg.norm(self.detector_axes[0]) <= 0 or
-                np.linalg.norm(self.detector_axes[1]) <= 0):
-            raise ValueError('detector_axes {} not nonzero.'
-                             ''.format(detector_axes))
+        if np.linalg.norm(self.detector_axes[0]) <= 1e-10:
+            raise ValueError('first axis vector {} too close to zero.'
+                             ''.format(detector_axes[0]))
+        if np.linalg.norm(self.detector_axes[1]) <= 1e-10:
+            raise ValueError('second axis vector {} too close to zero.'
+                             ''.format(detector_axes[1]))
 
     @property
     def detector_axes(self):
@@ -349,17 +351,21 @@ class CircleSectionDetector(Detector):
 
     """
 
-    def __init__(self, grid, circ_rad):
+    def __init__(self, part, circ_rad):
         """Initialize a new instance.
 
         Parameters
         ----------
-        grid : 1d `TensorGrid`
-            A sampling grid for the detector
+        part : 1-dim. `RectPartition`
+            Partition of the parameter interval, corresponding to the
+            angle sections along the line
         circ_rad : positive `float`
             Radius of the circle on which the detector is situated
         """
-        super().__init__(1, grid)
+        super().__init__(part)
+        if self.ndim != 1:
+            raise ValueError('expected partition to be 1-dimensional ,'
+                             'got {}.'.format(self.ndim))
 
         self._circ_rad = float(circ_rad)
         if self.circ_rad <= 0:
@@ -428,6 +434,7 @@ class CircleSectionDetector(Detector):
 
     def __repr__(self):
         """Returns ``repr(self)``."""
+        # TODO: adapt to partitions
         inner_fstr = '{!r}, {},\n grid={grid!r}'
         inner_str = inner_fstr.format(self.params, self.circ_rad,
                                       grid=self.param_grid)
@@ -435,6 +442,7 @@ class CircleSectionDetector(Detector):
 
     def __str__(self):
         """d.__str__() <==> str(d)."""
+        # TODO: adapt to partitions
         # TODO: prettify
         inner_fstr = '{}, {},\n grid={grid}'
         inner_str = inner_fstr.format(self.params, self.circ_rad,

@@ -22,14 +22,14 @@ from __future__ import print_function, division, absolute_import
 from abc import ABCMeta, abstractmethod
 from future import standard_library
 standard_library.install_aliases()
-from builtins import object, super
+from builtins import object
 
 # External
 import numpy as np
 
 # Internal
 from odl.util.utility import with_metaclass
-from odl.discr.grid import TensorGrid
+from odl.discr.partition import RectPartition
 from odl.tomo.geometry.detector import Detector
 
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
@@ -52,78 +52,96 @@ class Geometry(with_metaclass(ABCMeta, object)):
     * optionally a mapping from the motion parameters to the source position
     """
 
-    def __init__(self, ndim, motion_grid, detector):
+    def __init__(self, ndim, motion_part, detector):
         """Initialize a new instance.
 
         Parameters
         ----------
         ndim : `int`
            The number of dimensions of the geometry
-        motion_grid : `TensorGrid`
-           Grid for the motion of the detector
+        motion_part : `RectPartition`
+           Partition for the "motion" parameters of the detector
         detector : `Detector`
-           The detector
+           The detector of this geometry
         """
         if ndim < 1:
             raise ValueError('ndim {!r} not a positive integer.'
                              ''.format(ndim))
 
-        if not isinstance(motion_grid, TensorGrid):
-            raise TypeError('motion_grid {!r} not a `TensorGrid` instance.'
-                            ''.format(motion_grid))
+        if not isinstance(motion_part, RectPartition):
+            raise TypeError('motion_part {!r} not a RectPartition instance.'
+                            ''.format(motion_part))
 
         if not isinstance(detector, Detector):
-            raise ValueError('motion_grid {!r} not a `Detector` instance.'
-                             ''.format(detector))
+            raise TypeError('detector {!r} not a Detector instance.'
+                            ''.format(detector))
 
         self._ndim = int(ndim)
-        self._motion_grid = motion_grid
-        self._motion_params = motion_grid.convex_hull()
+        self._motion_part = motion_part
         self._detector = detector
         self._implementation_cache = {}
 
     @property
+    def motion_partition(self):
+        """Partition of the motion parameter set into subsets."""
+        return self._motion_part
+
+    @property
     def motion_params(self):
-        """The motion parameters given as an `IntervalProd`."""
-        return self._motion_params
+        """Continuous motion parameter range, an `IntervalProd`."""
+        return self.motion_partition.set
 
     @property
     def motion_grid(self):
-        """A sampling grid for `motion_params`."""
-        return self._motion_grid
+        """Sampling grid of `motion_params`."""
+        return self.motion_partition.grid
+
+    @property
+    def detector(self):
+        """Detector representation of this geometry."""
+        return self._detector
+
+    @property
+    def det_partition(self):
+        """Partition of the detector parameter set into subsets."""
+        return self.detector.partition
 
     @property
     def det_params(self):
-        """The detector parameters."""
+        """Continuous detector parameter range, an `IntervalProd`."""
         return self.detector.params
 
     @property
     def det_grid(self):
-        """A sampling grid for `det_params`."""
-        return self.detector.param_grid
+        """Sampling grid of `det_params`."""
+        return self.detector.grid
+
+    @property
+    def partition(self):
+        """Joined parameter set partition for motion and detector.
+
+        Returns a `RectPartition` with the detector partition inserted
+        after the motion partition.
+        """
+        # TODO: change when RectPartition.append is implemented
+        return self.det_partition.insert(0, self.motion_partition)
 
     @property
     def params(self):
-        """Joined motion and detector parameters.
+        """Joined parameter set for motion and detector.
 
-        Returns an `IntervalProduct` with the motion parameters inserted
-        before the detector parameters.
+        By convention, the motion parameters come before the detector
+        parameters.
         """
-        return self.motion_params.append(self.det_params)
+        return self.partition.set
 
     @property
     def grid(self):
-        """Joined sampling grid for motion and detector parameters.
+        """Joined sampling grid for motion and detector.
 
-        The sampling grid for detector parameters is appended to the
-        sampling grid for the motion parameters.
+        By convention, the motion grid comes before the detector grid.
         """
-        return self.motion_grid.append(self.det_grid)
-
-    @property
-    def detector(self):
-        """The detector representation."""
-        return self._detector
+        return self.partition.grid
 
     @abstractmethod
     def det_refpoint(self, mpar):
@@ -197,7 +215,6 @@ class Geometry(with_metaclass(ABCMeta, object)):
         pos : `numpy.ndarray`, shape (`ndim`,)
             The source position, a `ndim`-dimensional vector
         """
-
         # TODO: check and write test
         return np.asarray(
             (self.det_refpoint(mpar) +
@@ -230,30 +247,8 @@ class DivergentBeamGeometry(Geometry):
     (n-1)-dimensional detector moving in space according to a 1d motion
     parameter.
 
-    Special cases include fanbeam in 2d and conebeam in 3d.
+    Special cases include fan beam in 2d and cone beam in 3d.
     """
-
-    def __init__(self, ndim, agrid, detector):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        ndim : int
-            Number of dimensions of geometry
-        agrid : 1d `TensorGrid`
-            A sampling grid for the angles given in radians
-        detector : `Detector`
-            The detector to use
-        """
-        super().__init__(ndim, agrid, detector)
-
-        if self.motion_grid.ndim != 1:
-            raise TypeError('angle grid {!r} is not a {}-d `TensorGrid` '
-                            'instance.'.format(agrid, ndim))
-
-        if detector.ndim != ndim - 1:
-            raise TypeError('detector {!r} is not a ({}-1)-d `Detector` '
-                            'instance.'.format(detector, ndim))
 
     @abstractmethod
     def src_position(self, mpar):
@@ -311,6 +306,7 @@ class DivergentBeamGeometry(Geometry):
 
 
 class AxisOrientedGeometry(object):
+
     """Mixin class for 3d geometries oriented according to an axis."""
 
     def __init__(self, axis):
@@ -318,25 +314,17 @@ class AxisOrientedGeometry(object):
 
         Parameters
         ----------
-        axis : 3-element array, optional
-            Fixed rotation axis defined by a 3-element vector
+        axis : 3-element `array-like`
+            Vector defining the fixed rotation axis after normalization
         """
-
         self._axis = np.asarray(axis, dtype=float) / np.linalg.norm(axis)
-
         if self.axis.shape != (3,):
             raise ValueError('axis {!r} not a 3 element array-like'
                              ''.format(axis))
 
     @property
     def axis(self):
-        """The normalized axis of rotation.
-
-        Returns
-        -------
-        axis : `numpy.ndarray`, shape (3,)
-            The normalized rotation axis
-        """
+        """The normalized axis of rotation, a 3-element vector."""
         return self._axis
 
     def rotation_matrix(self, angle):
@@ -364,7 +352,6 @@ class AxisOrientedGeometry(object):
             the local coordinate system of the detector reference point,
             expressed in the fixed system.
         """
-
         angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'

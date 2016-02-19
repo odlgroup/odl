@@ -97,11 +97,11 @@ def astra_volume_geometry(discr_reco):
     """
     # TODO: allow other discretizations?
     if not isinstance(discr_reco, DiscreteLp):
-        raise TypeError('discretized domain {!r} is not a `DiscreteLp` '
+        raise TypeError('discretized domain {!r} is not a DiscreteLp '
                         'instance.'.format(discr_reco))
 
     if not isinstance(discr_reco.grid, RegularGrid):
-        raise TypeError('sampling grid {!r} is not a `RegularGrid` '
+        raise TypeError('sampling grid {!r} is not a RegularGrid '
                         'instance.'.format(discr_reco.grid))
 
     vol_shp = discr_reco.grid.shape
@@ -351,7 +351,7 @@ def astra_projection_geometry(geometry):
         return geometry.implementation_cache['astra']
 
     if not isinstance(geometry.det_grid, RegularGrid):
-        raise TypeError('detector sampling grid {!r} is not a `RegularGrid` '
+        raise TypeError('detector sampling grid {!r} is not a RegularGrid '
                         'instance.'.format(geometry.det_grid))
 
     # As of ASTRA version 1.7beta the volume width can be specified in the
@@ -432,8 +432,8 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         elif isinstance(data, np.ndarray):
             ndim = data.ndim
         else:
-            raise TypeError('data {!r} is neither`DiscreteLp.Vector` '
-                            'instance or a `numpy.ndarray`.'.format(data))
+            raise TypeError('data {!r} is neither DiscreteLp.Vector '
+                            'instance or a numpy.ndarray.'.format(data))
     else:
         ndim = int(ndim)
 
@@ -464,7 +464,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
         else:
             # Something else than NumPy data representation
             raise NotImplementedError('ASTRA supports data wrapping only for '
-                                      '`numpy.ndarray` instances, got {!r}'
+                                      'numpy.ndarray instances, got {!r}'
                                       ''.format(data))
     else:
         return create(astra_dtype_str, astra_geom)
@@ -492,11 +492,11 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
         ASTRA reference ID to the ASTRA dict with initialized 'type' key
     """
     if vol_interp not in ('nearest', 'linear'):
-        raise ValueError('volume interpolation type {!r} not understood.'
+        raise ValueError("volume interpolation type '{}' not understood."
                          ''.format(vol_interp))
     impl = str(impl).lower()
     if impl not in ('cpu', 'cuda'):
-        raise ValueError('implementation type {!r} not understood.'
+        raise ValueError("implementation type '{}' not understood."
                          ''.format(impl))
 
     if 'type' not in astra_proj_geom:
@@ -577,12 +577,12 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
         ASTRA internal ID for the new algorithm structure
     """
     if direction not in ('forward', 'backward'):
-        raise ValueError('direction {!r} not understood.'.format(direction))
+        raise ValueError("direction '{}' not understood.".format(direction))
     if ndim not in (2, 3):
         raise ValueError('{}-dimensional projectors not supported.'
                          ''.format(ndim))
     if impl not in ('cpu', 'cuda'):
-        raise ValueError('implementation type {!r} not understood.'
+        raise ValueError("implementation type '{}' not understood."
                          ''.format(impl))
     if ndim is 3 and impl is 'cpu':
         raise NotImplementedError(

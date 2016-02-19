@@ -179,16 +179,6 @@ class TensorGrid(Set):
         self._inondeg = np.array([i for i in range(len(vecs))
                                   if len(vecs[i]) != 1])
 
-        # These args are not public and thus not checked for consistency!
-        _exact_min = kwargs.pop('_exact_min', None)
-        _exact_max = kwargs.pop('_exact_max', None)
-        if _exact_min is not None:
-            _exact_min = np.atleast_1d(_exact_min)
-        if _exact_max is not None:
-            _exact_max = np.atleast_1d(_exact_max)
-        self._exact_min = _exact_min
-        self._exact_max = _exact_max
-
     # Attributes
     @property
     def coord_vectors(self):

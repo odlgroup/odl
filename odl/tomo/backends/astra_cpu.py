@@ -64,20 +64,20 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
         Projection data resulting from the application of the projector
     """
     if not isinstance(vol_data, DiscreteLpVector):
-        raise TypeError('volume data {!r} is not a `DiscreteLpVector` '
+        raise TypeError('volume data {!r} is not a DiscreteLpVector '
                         'instance.'.format(vol_data))
     if not isinstance(vol_data.space.dspace, Ntuples):
         raise TypeError('data type {!r} of the volume space is not an '
-                        'instance of `Ntuples`'.format(vol_data.space.dspace))
+                        'instance of Ntuples'.format(vol_data.space.dspace))
     if not isinstance(geometry, Geometry):
-        raise TypeError('geometry  {!r} is not a `Geometry` instance.'
+        raise TypeError('geometry  {!r} is not a Geometry instance.'
                         ''.format(geometry))
     if not isinstance(proj_space, DiscreteLp):
-        raise TypeError('projection space {!r} is not a `DiscreteLp` '
+        raise TypeError('projection space {!r} is not a DiscreteLp '
                         'instance.'.format(proj_space))
     if not isinstance(proj_space.dspace, Ntuples):
         raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of `Ntuples`'.format(proj_space.dspace))
+                        'instance of Ntuples'.format(proj_space.dspace))
     if vol_data.ndim != geometry.ndim:
         raise ValueError('dimensions {} of volume data and {} of geometry '
                          'do not match.'
@@ -86,8 +86,8 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
         out = proj_space.element()
     else:
         if not isinstance(out, DiscreteLpVector):
-            raise TypeError('out {} is neither `None` nor a '
-                            '`DiscreteLpVector` instance'.format(out))
+            raise TypeError('out {} is neither None nor a '
+                            'DiscreteLpVector instance'.format(out))
 
     ndim = vol_data.ndim
 
@@ -142,20 +142,20 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
         projector
     """
     if not isinstance(proj_data, DiscreteLpVector):
-        raise TypeError('projection data {!r} is not a `DiscreteLpVector` '
+        raise TypeError('projection data {!r} is not a DiscreteLpVector '
                         'instance.'.format(proj_data))
     if not isinstance(proj_data.space.dspace, Ntuples):
         raise TypeError('data type {!r} of the projection space is not an '
-                        'instance of `Ntuples`'.format(proj_data.shape.dspace))
+                        'instance of Ntuples'.format(proj_data.shape.dspace))
     if not isinstance(geometry, Geometry):
-        raise TypeError('geometry  {!r} is not a `Geometry` instance.'
+        raise TypeError('geometry  {!r} is not a Geometry instance.'
                         ''.format(geometry))
     if not isinstance(reco_space, DiscreteLp):
-        raise TypeError('reconstruction space {!r} is not a `DiscreteLp` '
+        raise TypeError('reconstruction space {!r} is not a DiscreteLp '
                         'instance.'.format(reco_space))
     if not isinstance(reco_space.dspace, Ntuples):
         raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of `Ntuples`'.format(reco_space.dspace))
+                        'instance of Ntuples'.format(reco_space.dspace))
     if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
                          'geometry do not match.'.format(
@@ -164,8 +164,8 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
         out = reco_space.element()
     else:
         if not isinstance(out, DiscreteLpVector):
-            raise TypeError('out {} is neither `None` nor a '
-                            '`DiscreteLpVector` instance'.format(out))
+            raise TypeError('out {} is neither None nor a '
+                            'DiscreteLpVector instance'.format(out))
 
     ndim = proj_data.ndim
 
