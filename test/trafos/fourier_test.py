@@ -81,6 +81,11 @@ def impl(request):
     return request.param
 
 
+@pytest.fixture(scope='module', ids=[' - ', ' + '], params=['-', '+'])
+def sign(request):
+    return request.param
+
+
 def _random_array(shape, dtype):
     if is_real_dtype(dtype):
         return np.random.rand(*shape).astype(dtype)
@@ -327,7 +332,7 @@ def test_reciprocal_nd_halfcomplex():
 # ---- dft_preprocess_data ---- #
 
 
-def test_dft_preprocess_data():
+def test_dft_preprocess_data(sign):
 
     shape = (2, 3, 4)
 
@@ -337,27 +342,32 @@ def test_dft_preprocess_data():
         correct_arr.append((1 + 1j) * (1 - 2 * ((i + j + k) % 2)))
 
     arr = np.ones(shape, dtype='complex64') * (1 + 1j)
-    preproc = dft_preprocess_data(arr, shift=True)  # out of place
-    dft_preprocess_data(arr, shift=True, out=arr)  # in place
+    preproc = dft_preprocess_data(arr, shift=True, sign=sign)  # out of place
+    dft_preprocess_data(arr, shift=True, out=arr, sign=sign)  # in place
 
     assert all_almost_equal(preproc.ravel(), correct_arr)
     assert all_almost_equal(arr.ravel(), correct_arr)
 
     # Without shift
+    imag = 1j if sign == '-' else -1j
     correct_arr = []
     for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         argsum = sum((idx * (1 - 1 / shp))
                      for idx, shp in zip((i, j, k), shape))
 
-        correct_arr.append((1 + 1j) * np.exp(1j * np.pi * argsum))
+        correct_arr.append((1 + 1j) * np.exp(imag * np.pi * argsum))
 
     arr = np.ones(shape, dtype='complex64') * (1 + 1j)
-    dft_preprocess_data(arr, shift=False, out=arr)
+    dft_preprocess_data(arr, shift=False, out=arr, sign=sign)
 
     assert all_almost_equal(arr.ravel(), correct_arr)
 
+    # Bad input
+    with pytest.raises(ValueError):
+        dft_preprocess_data(arr, out=arr, sign=1)
 
-def test_dft_preprocess_data_halfcomplex():
+
+def test_dft_preprocess_data_halfcomplex(sign):
 
     shape = (2, 3, 4)
 
@@ -367,31 +377,32 @@ def test_dft_preprocess_data_halfcomplex():
         correct_arr.append(1 - 2 * ((i + j + k) % 2))
 
     arr = np.ones(shape, dtype='float64')
-    preproc = dft_preprocess_data(arr, shift=True)  # out of place
-    dft_preprocess_data(arr, shift=True, out=arr)  # in place
+    preproc = dft_preprocess_data(arr, shift=True, sign=sign)  # out of place
+    dft_preprocess_data(arr, shift=True, out=arr, sign=sign)  # in place
 
     assert all_almost_equal(preproc.ravel(), correct_arr)
     assert all_almost_equal(arr.ravel(), correct_arr)
 
     # Without shift
+    imag = 1j if sign == '-' else -1j
     correct_arr = []
     for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         argsum = sum((idx * (1 - 1 / shp))
                      for idx, shp in zip((i, j, k), shape))
 
-        correct_arr.append(np.exp(1j * np.pi * argsum))
+        correct_arr.append(np.exp(imag * np.pi * argsum))
 
     arr = np.ones(shape, dtype='float64')
-    preproc = dft_preprocess_data(arr, shift=False)
+    preproc = dft_preprocess_data(arr, shift=False, sign=sign)
 
     assert all_almost_equal(preproc.ravel(), correct_arr)
 
     with pytest.raises(ValueError):
         # In-place modification not possible in this case
-        dft_preprocess_data(arr, shift=False, out=arr)
+        dft_preprocess_data(arr, shift=False, out=arr, sign=sign)
 
 
-def test_dft_preprocess_data_with_axes():
+def test_dft_preprocess_data_with_axes(sign):
 
     shape = (2, 3, 4)
 
@@ -401,18 +412,17 @@ def test_dft_preprocess_data_with_axes():
         correct_arr.append(1 - 2 * (j % 2))
 
     arr = np.ones(shape, dtype='complex64')
-    dft_preprocess_data(arr, shift=True, axes=axes, out=arr)
+    dft_preprocess_data(arr, shift=True, axes=axes, out=arr, sign=sign)
 
     assert all_almost_equal(arr.ravel(), correct_arr)
 
     axes = [0, -1]  # First and last
-    # With shift
     correct_arr = []
     for i, _, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append(1 - 2 * ((i + k) % 2))
 
     arr = np.ones(shape, dtype='complex64')
-    dft_preprocess_data(arr, shift=True, axes=axes, out=arr)
+    dft_preprocess_data(arr, shift=True, axes=axes, out=arr, sign=sign)
 
     assert all_almost_equal(arr.ravel(), correct_arr)
 
@@ -722,11 +732,13 @@ def test_dft_init(impl):
     DiscreteFourierTransform(dom, axes=(0,), impl=impl)
     DiscreteFourierTransform(dom, axes=(0, -1), impl=impl)
     DiscreteFourierTransform(dom, axes=(0,), halfcomplex=True, impl=impl)
+    DiscreteFourierTransform(dom, impl=impl, sign='+')
 
     # Explicit range
     DiscreteFourierTransform(dom, ran=ran, impl=impl)
     DiscreteFourierTransform(dom_f32, ran=ran_c64, impl=impl)
     DiscreteFourierTransform(dom, ran=ran, axes=(0,), impl=impl)
+    DiscreteFourierTransform(dom, ran=ran, axes=(0,), impl=impl, sign='+')
     DiscreteFourierTransform(dom, ran=ran, axes=(0, -1), impl=impl)
     DiscreteFourierTransform(dom, ran=ran_hc, axes=(0,), impl=impl,
                              halfcomplex=True)
@@ -788,6 +800,10 @@ def test_dft_init_raise():
     bad_ran = odl.sequence_space((4, 3), dtype='complex128')
     with pytest.raises(ValueError):
         DiscreteFourierTransform(dom_f32, bad_ran, halfcomplex=True)
+
+    # Bad sign
+    with pytest.raises(ValueError):
+        DiscreteFourierTransform(dom, sign=-1)
 
 
 def test_dft_range():
