@@ -237,7 +237,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
 
     # Boundaries
 
-    if padding_method is 'constant':
+    if padding_method == 'constant':
         # Assume constant value c for indices outside the domain of ``f``
 
         # With padding the method used on endpoints is the same as in the
