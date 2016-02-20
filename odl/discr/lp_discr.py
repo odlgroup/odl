@@ -38,13 +38,14 @@ from odl.discr.partition import RectPartition, uniform_partition_fromintv
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
 from odl.space.ntuples import Fn
-from odl.space.fspace import FunctionSpace
 from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
+from odl.space.fspace import FunctionSpace
+from odl.space.ntuples import Ntuples
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr, real_space,
-    default_dtype)
+    default_dtype, equiv_views)
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -547,8 +548,16 @@ class DiscreteLpVector(DiscretizationVector):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            self.ntuple.__setitem__(indices, values.ntuple)
+            # For RawDiscretizationVector of the same type, use ntuple directly
+            return self.ntuple.__setitem__(indices, values.ntuple)
+        elif (isinstance(self.space.dspace, Ntuples) and
+              equiv_views(self.asarray(), values) and
+              indices in (slice(None), Ellipsis)):
+            # Optimization for self[:] = self.asarray() if the implementation
+            # is Numpy. Otherwise, asarray() would create a copy.
+            return self
         else:
+            # Other sequence types are piped through a Numpy array
             if indices == slice(None):
                 values = np.atleast_1d(values)
                 if (values.ndim > 1 and
@@ -559,7 +568,7 @@ class DiscreteLpVector(DiscretizationVector):
                                                self.space.shape))
                 values = values.ravel(order=self.space.order)
 
-            super().__setitem__(indices, values)
+            return super().__setitem__(indices, values)
 
     @property
     def ufunc(self):
