@@ -38,7 +38,7 @@ def euler_matrix(*angles):
 
     Parameters
     ----------
-    angle1,...,angleN : RealNumber
+    angle1,...,angleN : `float`
         One angle results in a (2x2) matrix representing a
         counter-clockwise rotation. Two or three angles result in a
         (3x3) matrix and are interpreted as Euler angles of a 3d
@@ -53,20 +53,20 @@ def euler_matrix(*angles):
     .. _Euler angles:
         https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
     """
-    dim = 3
-
     if len(angles) == 1:
-        phi = angles[0]
+        phi = float(angles[0])
         theta = psi = 0.
-        dim = 2
+        ndim = 2
     elif len(angles) == 2:
-        phi = angles[0]
-        theta = angles[1]
+        phi = float(angles[0])
+        theta = float(angles[1])
         psi = 0.
+        ndim = 3
     elif len(angles) == 3:
-        phi = angles[0]
-        theta = angles[1]
-        psi = angles[2]
+        phi = float(angles[0])
+        theta = float(angles[1])
+        psi = float(angles[2])
+        ndim = 3
     else:
         raise ValueError('Number of angles must be between 1 and 3')
 
@@ -77,7 +77,7 @@ def euler_matrix(*angles):
     cps = cos(psi)
     sps = sin(psi)
 
-    if dim == 2:
+    if ndim == 2:
         mat = np.array([[cph, -sph], [sph, cph]])
     else:
         mat = np.array([[cph * cps - sph * cth * sps,
@@ -245,12 +245,12 @@ def to_local_sys(vec_in_lab_coords, local_sys):
 
 
 def perpendicular_vector(vec):
-    """ Get a vector perpendicular to ``vec``.
+    """Return a vector perpendicular to ``vec``.
 
     Parameters
     ----------
-    vec : array-like
-        Array-like of any dimension >= 2.
+    vec : `array-like`
+        Vector of arbitrary length
 
     Returns
     -------
@@ -259,13 +259,15 @@ def perpendicular_vector(vec):
 
     Examples
     --------
-    Works in 2d
+    Works in 2d:
+
     >>> perpendicular_vector([1, 0])
     array([ 0.,  1.])
     >>> perpendicular_vector([0, 1])
     array([-1.,  0.])
 
-    And in 3d
+    And in 3d:
+
     >>> perpendicular_vector([1, 0, 0])
     array([ 0.,  1.,  0.])
     >>> perpendicular_vector([0, 1, 0])

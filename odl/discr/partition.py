@@ -391,7 +391,7 @@ class RectPartition(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n {!r},\n {!r}'.format(self.set, self.grid)
+        inner_str = '\n    {!r},\n    {!r}'.format(self.set, self.grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
