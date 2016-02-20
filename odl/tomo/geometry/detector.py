@@ -30,6 +30,7 @@ import numpy as np
 # Internal
 from odl.util.utility import with_metaclass
 from odl.discr.partition import RectPartition
+from odl.tomo.util.utility import perpendicular_vector
 
 __all__ = ('Detector', 'FlatDetector', 'Flat1dDetector', 'Flat2dDetector',
            'CircleSectionDetector')
@@ -41,7 +42,6 @@ class Detector(with_metaclass(ABCMeta, object)):
 
     A detector is described by
 
-    * a dimension parameter,
     * a set of parameters for surface parametrization,
     * a function mapping motion and surface parameters to the location
       of a detector point relative to the reference point,
@@ -192,7 +192,7 @@ class Flat1dDetector(FlatDetector):
 
     """A 1d line detector aligned with the ``detector_axis``."""
 
-    def __init__(self, part, detector_axis):
+    def __init__(self, part, axis):
         """Initialize a new instance.
 
         Parameters
@@ -200,23 +200,29 @@ class Flat1dDetector(FlatDetector):
         part : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
             line elements
-        detector_axis : 2-element `array-like`
-            Unit direction along the detector parameter of the detector.
+        axis : `array-like`, shape ``(2,)``
+            Principal axis of the detector
         """
         super().__init__(part)
         if self.ndim != 1:
             raise ValueError('expected partition to be 1-dimensional ,'
                              'got {}.'.format(self.ndim))
 
-        self._detector_axis = np.asarray(detector_axis)
-        if np.linalg.norm(self.detector_axis) <= 1e-10:
-            raise ValueError('detector axis vector {} too close to zero.'
-                             ''.format(detector_axis))
+        if np.linalg.norm(axis) <= 1e-10:
+            raise ValueError('axis vector {} too close to zero.'
+                             ''.format(axis))
+        self._axis = np.asarray(axis) / np.linalg.norm(axis)
+        self._normal = perpendicular_vector(self.axis)
 
     @property
-    def detector_axis(self):
-        """The direction of the principal axis of the detector."""
-        return self._detector_axis
+    def axis(self):
+        """Principal axis of the detector."""
+        return self._axis
+
+    @property
+    def normal(self):
+        """Unit vector perpendicular to the detector."""
+        return self._normal
 
     def surface(self, param):
         """The parametrization of the (1d) detector reference surface.
@@ -264,7 +270,7 @@ class Flat2dDetector(FlatDetector):
 
     """A 2d flat panel detector aligned with the ``detector_axes``."""
 
-    def __init__(self, part, detector_axes):
+    def __init__(self, part, axes):
         """Initialize a new instance.
 
         Parameters
@@ -272,29 +278,39 @@ class Flat2dDetector(FlatDetector):
         part : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
             pixels
-        detector_axes : `sequence` of two 3-element `array-like`
-            The directions of the axes of the detector
-            Example: [(0, 1, 0), (0, 0, 1)]
+        axes : 2-tuple of `array-like` (shape ``(3,)``)
+            Principal axes of the detector, e.g.
+            ``[(0, 1, 0), (0, 0, 1)]``
         """
         super().__init__(part)
         if self.ndim != 2:
             raise ValueError('expected partition to be 2-dimensional ,'
                              'got {}.'.format(self.ndim))
 
-        self._detector_axes = (np.asarray(detector_axes[0]),
-                               np.asarray(detector_axes[1]))
+        for i, a in enumerate(axes):
+            if np.linalg.norm(a) <= 1e-10:
+                raise ValueError('axis vector {} {} too close to zero.'
+                                 ''.format(i, axes[i]))
+            if np.shape(a) != (3,):
+                raise ValueError('axis vector {} has shape {}. expected (3,).'
+                                 ''.format(i, np.shape(a)))
 
-        if np.linalg.norm(self.detector_axes[0]) <= 1e-10:
-            raise ValueError('first axis vector {} too close to zero.'
-                             ''.format(detector_axes[0]))
-        if np.linalg.norm(self.detector_axes[1]) <= 1e-10:
-            raise ValueError('second axis vector {} too close to zero.'
-                             ''.format(detector_axes[1]))
+        self._axes = tuple(np.asarray(a) / np.linalg.norm(a) for a in axes)
+        self._normal = np.cross(self.axes[0], self.axes[1])
+
+        if np.linalg.norm(self.normal) <= 1e-4:
+            raise ValueError('axes are almost parallel (norm of normal = '
+                             '{})'.format(np.linalg.norm(self.normal)))
 
     @property
-    def detector_axes(self):
-        """The directions of the principal axes of the detector."""
-        return self._detector_axes
+    def axes(self):
+        """Principal axes of this detector."""
+        return self._axes
+
+    @property
+    def normal(self):
+        """Unit vector perpendicular to this detector."""
+        return self._normal
 
     def surface(self, param):
         """The parametrization of the (2d) detector reference surface.
@@ -318,8 +334,7 @@ class Flat2dDetector(FlatDetector):
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
 
-        return (self.detector_axes[0] * float(param[0]) +
-                self.detector_axes[1] * float(param[1]))
+        return sum(float(p) * ax for p, ax in zip(param, self.detector_axes))
 
     def surface_deriv(self, param=None):
         """The derivative of the surface parametrization.
@@ -331,9 +346,8 @@ class Flat2dDetector(FlatDetector):
 
         Returns
         -------
-        derivatives : 2-tuple of ndarray with shape (3,)
-            The constant partial derivatives, where each axis "points" in
-            space.
+        derivatives : 2-tuple of `numpy.ndarray` (shape ``(3,)``)
+            The constant partial derivatives given by the detector axes
         """
         if param is not None and param not in self.params:
             raise ValueError('parameter value {} not in the valid range '

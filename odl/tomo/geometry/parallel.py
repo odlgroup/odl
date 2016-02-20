@@ -32,64 +32,135 @@ from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
 from odl.tomo.util.utility import euler_matrix, perpendicular_vector
 
-__all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dGeometry')
+__all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dGeometry',
+           'Parallel3dSingleAxisGeometry')
 
 
 class ParallelGeometry(Geometry):
 
-    """Abstract parallel beam geometry, arbitrary dimension.
+    """Abstract parallel beam geometry in 2 or 3 dimensions.
 
-    The motion parameter is a (1d) rotation angle.
+    Parallel geometries are characterized by a virtual source at
+    infinity, such that a unit vector from a detector point towards
+    the source (`det_to_src`) is independent of the location on the
+    detector.
     """
 
-    def __init__(self, ndim, agrid, detector, origin_to_det):
+    def __init__(self, ndim, apart, detector, det_init_pos):
         """Initialize a new instance.
 
         Parameters
         ----------
-        ndim : positive `int`
-            The dimensionality of the problem
-        agrid : 1-dim. `TensorGrid`
-            A sampling grid for the angles
+        ndim : {2, 3}
+            Number of dimensions of this geometry, i.e. dimensionality
+            of the physical space in which this geometry is embedded
+        apart : `RectPartition`
+            Partition of the angle set
         detector : `Detector`
             The detector to use
-        origin_to_det : `ndim`-element array, optional
-            The direction from the origin to the point (0) of the detector
-            when angle=0
+        det_init_pos : `array-like`
+            Initial position of the detector reference point. The zero
+            vector is not allowed.
         """
-        self._origin_to_det = (np.array(origin_to_det) /
-                               np.linalg.norm(origin_to_det))
+        super().__init__(ndim, apart, detector)
 
-        super().__init__(ndim, agrid, detector)
+        if self.ndim not in (2, 3):
+            raise ValueError('number of dimensions is {}, expected 2 or 3.'
+                             ''.format(ndim))
 
-    @property
-    def origin_to_det(self):
-        """The direction from the origin to the point (0) of the detector
-        when angle=0
-        """
-        return self._origin_to_det
+        self._det_init_pos = np.asarray(det_init_pos, dtype='float64')
+        if self._det_init_pos.shape != (self.ndim,):
+            raise ValueError('initial detector position has shape {}, '
+                             'expected ({},).'
+                             ''.format(self._det_init_pos.shape, self.ndim))
 
-    def det_refpoint(self, angle):
-        """The detector reference point function.
+    def det_refpoint(self, angles):
+        """Return the position of the detector ref. point at ``angles``.
 
-        This is always given by the origin.
+        The reference point is given by a rotation of the initial
+        position by ``angles``.
 
         Parameters
         ----------
-        angle : `float`
-            The motion parameters given in radians. It must be
-            contained in this geometry's motion parameter set
+        angles : `float`
+            Parameters describing the detector rotation. Must be
+            contained in `motion_params`.
 
         Returns
         -------
         point : `numpy.ndarray`, shape (`ndim`,)
-            The reference point, equal to the origin
+            The reference point for the given parameters
         """
-        angle = float(angle)
+        if angles not in self.motion_params:
+            raise ValueError('angles {} not in the valid range {}.'
+                             ''.format(angles, self.motion_params))
+        return self.rotation_matrix(angles).dot(self._det_init_pos)
+
+
+class Parallel2dGeometry(ParallelGeometry):
+
+    """Parallel beam geometry in 2d.
+
+    The motion parameter is the counter-clockwise rotation angle around the
+    origin, and the detector is a line detector perpendicular to the ray
+    direction.
+    """
+
+    def __init__(self, apart, dpart, det_init_pos=[1, 0], det_init_axis=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        apart : 1-dim. `RectPartition`
+            Partition of the angle interval
+        dpart : 1-dim. `RectPartition`
+            Partition of the detector parameter interval
+        det_init_pos : `array-like`, shape ``(2,)``, optional
+            Initial position of the detector reference point. The zero
+            vector is only allowed if ``det_init_axis`` is explicitly
+            given.
+        det_init_axis : `array-like` (shape ``(2,)``), optional
+            Initial axis defining the detector orientation. If `None`,
+            a normalized `perpendicular_vector` to ``det_init_pos`` is
+            used, which is only valid if ``det_init_axis`` is not zero.
+        """
+        if det_init_axis is None:
+            if np.linalg.norm(det_init_pos) <= 1e-10:
+                raise ValueError('initial detector position {} is close to '
+                                 'zero. This is not allowed for '
+                                 'det_init_axis=None.'.format(det_init_pos))
+
+            det_init_axis = perpendicular_vector(det_init_pos)
+
+        detector = Flat1dDetector(part=dpart, axis=det_init_axis)
+        super().__init__(ndim=2, apart=apart, detector=detector,
+                         det_init_pos=det_init_pos)
+
+        if self.motion_partition.ndim != 1:
+            raise ValueError('angle partition has dimension {}, expected 1.'
+                             ''.format(self.motion_partition.ndim))
+
+    def rotation_matrix(self, angle):
+        """The detector rotation function.
+
+        Parameters
+        ----------
+        angle : `float`
+            Rotation angle given in radians, must be contained in
+            this geometry's `motion_params`
+
+        Returns
+        -------
+        rot : `numpy.ndarray`, shape (2, 2)
+            The rotation matrix mapping the standard basis vectors in
+            the fixed ("lab") coordinate system to the basis vectors of
+            the local coordinate system of the detector reference point,
+            expressed in the fixed system.
+        """
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
-        return np.zeros(self.ndim)
+        return euler_matrix(angle)
 
     def det_to_src(self, angle, dpar, normalized=True):
         """Direction from a detector location to the source.
@@ -97,28 +168,32 @@ class ParallelGeometry(Geometry):
         In parallel geometry, this function is independent of the
         detector parameter.
 
-        Since the (virtual) source is infinitely far away, the
-        non-normalized version will return a vector with signed
-        ``inf`` according to the quadrant.
+        Since the (virtual) source is infinitely far away, only the
+        normalized version is valid.
 
         Parameters
         ----------
         angle : `float`
-            The motion parameters given in radians. Must be contained
-            in this geometry's `motion_params`
+            Rotation angle given in radians, must be contained in
+            this geometry's `motion_params`
         dpar : `float`
-            The detector parameter. Must be contained in this
-            geometry's `det_params`.
-        normalized : `bool`
-            If `True`, return the normalized version of that vector.
-            False raises NotImplementedError in this case.
+            Detector parameter, must be contained in this
+            geometry's `det_params`
+        normalized : `bool`, optional
+            If `True`, return the normalized version of the vector.
+            For parallel geometry, this is the only sensible option.
 
         Returns
         -------
         vec : `numpy.ndarray`, shape (`ndim`,)
-            (Unit) vector pointing from the detector to the source
+            Unit vector pointing from the detector to the source
+
+        Raises
+        ------
+        NotImplementedError
+            if ``normalized=False`` is given, since this case is not
+            well defined.
         """
-        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
@@ -131,135 +206,221 @@ class ParallelGeometry(Geometry):
             raise NotImplementedError('non-normalized detector to source is '
                                       'not available in parallel case')
 
-        return self.rotation_matrix(angle).dot(self.origin_to_det)
+        return self.rotation_matrix(angle).dot(self.detector.normal)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        # TODO: det_init_axis
+        inner_fstr = '\n    {!r},\n    {!r}'
+
+        if not np.allclose(self.origin_to_det, [1, 0]):
+            inner_fstr += ',\n    det_init_pos={det_init_pos!r}'
+
+        inner_str = inner_fstr.format(self.motion_partition,
+                                      self.det_partition,
+                                      det_init_pos=self._det_det_init_pos)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class Parallel2dGeometry(ParallelGeometry):
+class Parallel3dGeometry(ParallelGeometry):
 
-    """Parallel beam geometry in 2d.
+    """Parallel beam geometry in 3d.
 
-    The motion parameter is the counter-clockwise rotation angle around the
-    origin, and the detector is a line detector perpendicular to the ray
-    direction.
-
+    The motion parameters are two or three Euler angles, and the detector
+    is flat and two-dimensional.
     """
 
-    def __init__(self, agrid, dgrid, origin_to_det=[1, 0]):
+    def __init__(self, apart, dpart, det_init_pos=[1, 0, 0],
+                 det_init_axes=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        agrid : 1-dim. `TensorGrid`
-            A sampling grid for the angles
-        dgrid : 1-dim. `TensorGrid`
-            A sampling grid for the detector parameters
-        origin_to_det : 2-element array, optional
-            The direction from the origin to the point (0) of the detector
-            when angle=0
+        apart : 2- or 3-dim. `RectPartition`
+            Partition of the angle parameter set
+        dpart : 2-dim. `RectPartition`
+            Partition of the detector parameter interval
+        det_init_pos : `array-like`, shape ``(3,)``, optional
+            Initial position of the detector reference point. The zero
+            vector is only allowed if ``det_init_axes`` is explicitly
+            given.
+        det_init_axes : 2-tuple of `array-like` (shape ``(3,)``), optional
+            Initial axes defining the detector orientation. If `None`,
+            a normalized `perpendicular_vector` to ``det_init_pos`` is
+            taken as first axis, and the normalized cross product of
+            these two as second.
         """
+        if det_init_axes is None:
+            if np.linalg.norm(det_init_pos) <= 1e-10:
+                raise ValueError('initial detector position {} is close to '
+                                 'zero. This is not allowed for '
+                                 'det_init_axes=None.'.format(det_init_pos))
 
-        direction = np.array(origin_to_det) / np.linalg.norm(origin_to_det)
+            det_init_axis_0 = perpendicular_vector(det_init_pos)
+            det_init_axis_1 = np.cross(det_init_pos, det_init_axis_0)
+            det_init_axes = (det_init_axis_0, det_init_axis_1)
 
-        # Only one option since this is easily modified in data space otherwise
-        detector_axis = perpendicular_vector(direction)
+        detector = Flat2dDetector(part=dpart, axes=det_init_axes)
+        super().__init__(ndim=3, apart=apart, detector=detector,
+                         det_init_pos=det_init_pos)
 
-        detector = Flat1dDetector(dgrid, detector_axis)
-        super().__init__(2, agrid, detector, direction)
+        if self.motion_partition.ndim not in (2, 3):
+            raise ValueError('angle set partition has dimension {}, expected '
+                             '2 or 3.'.format(self.motion_partition.ndim))
 
-    def rotation_matrix(self, angle):
-        """The detector rotation function.
+    def rotation_matrix(self, angles):
+        """Matrix defining the detector rotation at ``angles``.
 
         Parameters
         ----------
-        angle : `float`
-            The motion parameters given in radians. It must be contained in
-            this geometry's `motion_params`
+        angles : `sequence` of `array-like`, shape ``(2,)``
+            Angles in radians defining the rotation
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (2, 2)
+        rot : `numpy.ndarray`, shape ``(3, 3)``
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
             expressed in the fixed system.
         """
-        angle = float(angle)
-        if angle not in self.motion_params:
-            raise ValueError('angle {} not in the valid range {}.'
-                             ''.format(angle, self.motion_params))
-        return euler_matrix(angle)
+        if angles not in self.motion_params:
+            raise ValueError('angles {} not in the valid range {}.'
+                             ''.format(angles, self.motion_params))
+        return euler_matrix(*angles)
+
+    def det_to_src(self, angles, dpar, normalized=True):
+        """Direction from a detector location to the source.
+
+        In parallel geometry, this function is independent of the
+        detector parameter.
+
+        Since the (virtual) source is infinitely far away, only the
+        normalized version is valid.
+
+        Parameters
+        ----------
+        angles : `array-like`
+            Euler angles given in radians, must be contained
+            in this geometry's `motion_params`
+        dpar : `float`
+            Detector parameters, must be contained in this
+            geometry's `det_params`
+        normalized : `bool`, optional
+            If `True`, return the normalized version of the vector.
+            For parallel geometry, this is the only sensible option.
+
+        Returns
+        -------
+        vec : `numpy.ndarray`, shape (`ndim`,)
+            Unit vector pointing from the detector to the source
+
+        Raises
+        ------
+        NotImplementedError
+            if ``normalized=False`` is given, since this case is not
+            well defined.
+        """
+        if angles not in self.motion_params:
+            raise ValueError('angles {} not in the valid range {}.'
+                             ''.format(angles, self.motion_params))
+
+        if dpar not in self.det_params:
+            raise ValueError('detector parameters {} not in the valid range '
+                             '{}.'.format(dpar, self.det_params))
+
+        if not normalized:
+            raise NotImplementedError('non-normalized detector to source is '
+                                      'not available in parallel case')
+
+        return self.rotation_matrix(angles).dot(self.detector.normal)
 
     def __repr__(self):
-        """Returns ``repr(self)``."""
-        inner_fstr = '{!r}, {!r}'
+        """Return ``repr(self)``."""
+        # TODO: det_init_axes
+        inner_fstr = '\n    {!r},\n    {!r}'
 
         if not np.allclose(self.origin_to_det, [1, 0]):
-            inner_fstr += ',\n    origin_to_det={origin_to_det!r}'
+            inner_fstr += ',\n    det_init_pos={det_init_pos!r}'
 
-        inner_str = inner_fstr.format(self.motion_grid,
-                                      self.det_grid,
-                                      origin_to_det=self.origin_to_det)
+        inner_str = inner_fstr.format(self.motion_partition,
+                                      self.det_partition,
+                                      det_init_pos=self._det_init_pos)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class Parallel3dGeometry(ParallelGeometry, AxisOrientedGeometry):
+class Parallel3dSingleAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
 
-    """Parallel beam geometry in 3d.
+    """Parallel beam geometry in 3d with single rotation axis.
 
     The motion parameter is the rotation angle around the 3rd unit axis,
     and the detector is a flat 2d detector perpendicular to the ray direction.
 
     """
 
-    def __init__(self, agrid, dgrid, axis=[0, 0, 1],
-                 origin_to_det=None, detector_axes=None):
+    def __init__(self, apart, dpart, axis=[0, 0, 1], det_init_pos=None,
+                 det_init_axes=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        agrid : 1-dim. `TensorGrid`
-            A sampling grid for the angles
-        dgrid : 2-dim. `TensorGrid`.
-            A sampling grid for  the detector
-        axis : 3-element array, optional
+        apart : 1-dim. `RectPartition`
+            Partition of the angle interval
+        dpart : 2-dim. `RectPartition`
+            Partition of the detector parameter interval
+        axis : `array-like`, shape ``(3,)``, optional
             Fixed rotation axis defined by a 3-element vector
-        origin_to_det : 3-element array, optional
-            The direction from the origin to the point (0, 0) of the detector
-            angle=0, default: Vector in x, y plane orthogonal to axis.
-        detector_axes : sequence of two 3-element arrays, optional
-            Unit directions along each detector parameter of the detector.
-            Default: (normalized) [np.cross(axis, origin_to_detector), axis]
+        det_init_pos : `array-like`, shape ``(3,)``, optional
+            Initial position of the detector reference point. The zero
+            vector is only allowed if ``det_init_axes`` is explicitly
+            given. If `None`, a `perpendicular_vector` to ``axis`` is
+            used.
+        det_init_axes : 2-tuple of `array-like` (shape ``(3,)``), optional
+            Initial axes defining the detector orientation. If `None`,
+            the normalized cross product of ``axis`` and ``det_init_pos``
+            is used as first axis and ``axis`` as second.
         """
         AxisOrientedGeometry.__init__(self, axis)
 
-        if origin_to_det is None:
-            origin_to_det = perpendicular_vector(axis)
+        if det_init_pos is None:
+            det_init_pos = perpendicular_vector(axis)
 
-        direction = np.array(origin_to_det) / np.linalg.norm(origin_to_det)
+        if det_init_axes is None:
+            if np.linalg.norm(det_init_pos) <= 1e-10:
+                raise ValueError('initial detector position {} is close to '
+                                 'zero. This is not allowed for '
+                                 'det_init_axes=None.'.format(det_init_pos))
 
-        if detector_axes is None:
-            detector_axes = [np.cross(self.axis, direction), self.axis]
+            det_init_axis_0 = np.cross(self.axis, det_init_pos)
+            det_init_axes = (det_init_axis_0, axis)
 
-        detector = Flat2dDetector(dgrid, detector_axes)
-        ParallelGeometry.__init__(self, 3, agrid, detector, direction)
+        detector = Flat2dDetector(part=dpart, axes=det_init_axes)
+        super().__init__(ndim=3, apart=apart, detector=detector,
+                         det_init_pos=det_init_pos)
+
+        if self.motion_partition.ndim != 1:
+            raise ValueError('angle set partition has dimension {}, expected '
+                             '1.'.format(self.motion_partition.ndim))
 
     def __repr__(self):
-        """Returns ``repr(self)``."""
-        arg_fstr = '{!r}, {!r}'
+        """Return ``repr(self)``."""
+        arg_fstr = '\n    {!r},\n    {!r}'
         if not np.allclose(self.axis, [0, 0, 1]):
             arg_fstr += ',\n    axis={axis!r}'
-        if not np.allclose(self.origin_to_det, [1, 0, 0]):
-            arg_fstr += ',\n    src_to_det={src_to_det!r}'
 
-        default_axes = [np.cross(self.axis, self.origin_to_det), self.axis]
-        if not np.allclose(self.detector.detector_axes, default_axes):
-            arg_fstr += ',\n    detector_axes={detector_axes!r}'
+        if not np.allclose(self._det_init_pos,
+                           perpendicular_vector(self.axis)):
+            arg_fstr += ',\n    det_init_pos={det_init_pos!r}'
 
-        arg_str = arg_fstr.format(self.motion_grid,
-                                  self.det_grid,
+        default_axes = [np.cross(self.axis, self._det_init_pos), self.axis]
+        if not np.allclose(self.detector.axes, default_axes):
+            arg_fstr += ',\n    det_init_axes={det_init_axes!r}'
+
+        arg_str = arg_fstr.format(self.motion_partition,
+                                  self.det_partition,
                                   axis=self.axis,
-                                  src_to_det=self.src_to_det,
-                                  detector_axes=self.detector.detector_axes)
+                                  det_init_pos=self._det_init_pos,
+                                  det_init_axes=self.detector.axes)
         return '{}({})'.format(self.__class__.__name__, arg_str)
 
     # Fix for bug in ABC thinking this is abstract

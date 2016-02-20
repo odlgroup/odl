@@ -57,17 +57,17 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        ndim : `int`
-           The number of dimensions of the geometry
+        ndim : positive `int`
+            Number of dimensions of this geometry, i.e. dimensionality
+            of the physical space in which this geometry is embedded
         motion_part : `RectPartition`
-           Partition for the "motion" parameters of the detector
+           Partition for the set of "motion" parameters
         detector : `Detector`
            The detector of this geometry
         """
-        if ndim < 1:
-            raise ValueError('ndim {!r} not a positive integer.'
+        if int(ndim) <= 0:
+            raise ValueError('number of dimensions {} is not positive.'
                              ''.format(ndim))
-
         if not isinstance(motion_part, RectPartition):
             raise TypeError('motion_part {!r} not a RectPartition instance.'
                             ''.format(motion_part))
@@ -80,6 +80,11 @@ class Geometry(with_metaclass(ABCMeta, object)):
         self._motion_part = motion_part
         self._detector = detector
         self._implementation_cache = {}
+
+    @property
+    def ndim(self):
+        """The number of dimensions of the geometry."""
+        return self._ndim
 
     @property
     def motion_partition(self):
@@ -221,16 +226,11 @@ class Geometry(with_metaclass(ABCMeta, object)):
              self.rotation_matrix(mpar).dot(self.detector.surface(dpar))))
 
     @property
-    def ndim(self):
-        """The number of dimensions of the geometry."""
-        return self._ndim
-
-    @property
     def implementation_cache(self):
-        """Dict where computed implementations of this geometry can be saved.
+        """Dictionary acting as a cache for this geometry.
 
         Intended for reuse of computations. Implementations that use this
-        storage should take care to use a sufficiently unique name.
+        storage should take care of unique naming.
 
         Returns
         -------
@@ -241,11 +241,10 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
 class DivergentBeamGeometry(Geometry):
 
-    """Abstract n-dimensional divergent beam geometry.
+    """Abstract divergent beam geometry class.
 
-    A divergent beam geometry is characterized by a source and an
-    (n-1)-dimensional detector moving in space according to a 1d motion
-    parameter.
+    A divergent beam geometry is characterized by the presence of a
+    point source.
 
     Special cases include fan beam in 2d and cone beam in 3d.
     """
@@ -288,7 +287,6 @@ class DivergentBeamGeometry(Geometry):
         vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
-
         if mpar not in self.motion_params:
             raise ValueError('mpar {} is not in the valid range {}.'
                              ''.format(mpar, self.motion_params))
@@ -317,10 +315,13 @@ class AxisOrientedGeometry(object):
         axis : 3-element `array-like`
             Vector defining the fixed rotation axis after normalization
         """
+        if np.linalg.norm(axis) <= 1e-10:
+            raise ValueError('axis {} too close to zero.'.format(axis))
+
         self._axis = np.asarray(axis, dtype=float) / np.linalg.norm(axis)
         if self.axis.shape != (3,):
-            raise ValueError('axis {!r} not a 3 element array-like'
-                             ''.format(axis))
+            raise ValueError('axis has shape {}, expected (3,).'
+                             ''.format(axis.shape))
 
     @property
     def axis(self):
