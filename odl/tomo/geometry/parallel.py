@@ -57,7 +57,7 @@ class ParallelGeometry(Geometry):
         apart : `RectPartition`
             Partition of the angle set
         detector : `Detector`
-            The detector to use
+            The detector to use in this geometry
         det_init_pos : `array-like`
             Initial position of the detector reference point. The zero
             vector is not allowed.
@@ -83,7 +83,7 @@ class ParallelGeometry(Geometry):
         Parameters
         ----------
         angles : `float`
-            Parameters describing the detector rotation. Must be
+            Parameters describing the detector rotation, must be
             contained in `motion_params`.
 
         Returns
@@ -101,12 +101,15 @@ class Parallel2dGeometry(ParallelGeometry):
 
     """Parallel beam geometry in 2d.
 
-    The motion parameter is the counter-clockwise rotation angle around the
-    origin, and the detector is a line detector perpendicular to the ray
-    direction.
+    The motion parameter is the counter-clockwise rotation angle around
+    the origin, and the detector is a line detector perpendicular to the
+    ray direction.
+
+    In the standard configuration, the detector reference point starts
+    at ``(1, 0)``, and the initial detector axis is ``(0, 1)``.
     """
 
-    def __init__(self, apart, dpart, det_init_pos=[1, 0], det_init_axis=None):
+    def __init__(self, apart, dpart, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -119,16 +122,21 @@ class Parallel2dGeometry(ParallelGeometry):
             Initial position of the detector reference point. The zero
             vector is only allowed if ``det_init_axis`` is explicitly
             given.
+            Default: ``(1, 0)``.
         det_init_axis : `array-like` (shape ``(2,)``), optional
-            Initial axis defining the detector orientation. If `None`,
-            a normalized `perpendicular_vector` to ``det_init_pos`` is
-            used, which is only valid if ``det_init_axis`` is not zero.
+            Initial axis defining the detector orientation.
+            By default, a normalized `perpendicular_vector` to
+            ``det_init_pos`` is used, which is only valid if
+            ``det_init_axis`` is not zero.
         """
+        det_init_pos = kwargs.pop('det_init_pos', (1.0, 0.0))
+        det_init_axis = kwargs.pop('det_init_axis', None)
+
         if det_init_axis is None:
             if np.linalg.norm(det_init_pos) <= 1e-10:
                 raise ValueError('initial detector position {} is close to '
-                                 'zero. This is not allowed for '
-                                 'det_init_axis=None.'.format(det_init_pos))
+                                 'zero. This is only allowed for explicit '
+                                 'det_init_axis.'.format(det_init_pos))
 
             det_init_axis = perpendicular_vector(det_init_pos)
 
@@ -141,7 +149,12 @@ class Parallel2dGeometry(ParallelGeometry):
                              ''.format(self.motion_partition.ndim))
 
     def rotation_matrix(self, angle):
-        """The detector rotation function.
+        """Return the rotation matrix for ``angle``.
+
+        For an angle ``phi``, the matrix is given by::
+
+            rot(phi) = [[cos(phi), -sin(phi)],
+                        [sin(phi), cos(phi)]]
 
         Parameters
         ----------
@@ -155,7 +168,7 @@ class Parallel2dGeometry(ParallelGeometry):
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
-            expressed in the fixed system.
+            expressed in the fixed system
         """
         if angle not in self.motion_params:
             raise ValueError('angle {} not in the valid range {}.'
@@ -228,10 +241,13 @@ class Parallel3dGeometry(ParallelGeometry):
 
     The motion parameters are two or three Euler angles, and the detector
     is flat and two-dimensional.
+
+    In the standard configuration, the detector reference point starts
+    at ``(1, 0, 0)``, and the initial detector axes are
+    ``[(0, 1, 0), (0, 0, 1)]``.
     """
 
-    def __init__(self, apart, dpart, det_init_pos=[1, 0, 0],
-                 det_init_axes=None):
+    def __init__(self, apart, dpart, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -244,17 +260,21 @@ class Parallel3dGeometry(ParallelGeometry):
             Initial position of the detector reference point. The zero
             vector is only allowed if ``det_init_axes`` is explicitly
             given.
+            Default: ``(1, 0, 0)``
         det_init_axes : 2-tuple of `array-like` (shape ``(3,)``), optional
-            Initial axes defining the detector orientation. If `None`,
-            a normalized `perpendicular_vector` to ``det_init_pos`` is
-            taken as first axis, and the normalized cross product of
-            these two as second.
+            Initial axes defining the detector orientation.
+            By default, a normalized `perpendicular_vector` to
+            ``det_init_pos`` is taken as first axis, and the normalized
+            cross product of these two as second.
         """
+        det_init_pos = kwargs.pop('det_init_pos', (1.0, 0.0, 0.0))
+        det_init_axes = kwargs.pop('det_init_axes', None)
+
         if det_init_axes is None:
             if np.linalg.norm(det_init_pos) <= 1e-10:
                 raise ValueError('initial detector position {} is close to '
-                                 'zero. This is not allowed for '
-                                 'det_init_axes=None.'.format(det_init_pos))
+                                 'zero. This is only allowed for explicit '
+                                 'det_init_axes.'.format(det_init_pos))
 
             det_init_axis_0 = perpendicular_vector(det_init_pos)
             det_init_axis_1 = np.cross(det_init_pos, det_init_axis_0)
@@ -273,8 +293,9 @@ class Parallel3dGeometry(ParallelGeometry):
 
         Parameters
         ----------
-        angles : `sequence` of `array-like`, shape ``(2,)``
-            Angles in radians defining the rotation
+        angles : `array-like`
+            Angles in radians defining the rotation, must be contained
+            in this geometry's ``motion_params``
 
         Returns
         -------
@@ -353,13 +374,16 @@ class Parallel3dSingleAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
 
     """Parallel beam geometry in 3d with single rotation axis.
 
-    The motion parameter is the rotation angle around the 3rd unit axis,
-    and the detector is a flat 2d detector perpendicular to the ray direction.
+    The motion parameter is the rotation angle around the specified
+    axis, and the detector is a flat 2d detector perpendicular to the
+    ray direction.
 
+    In the standard configuration, the rotation axis is ``(0, 0, 1)``,
+    the detector reference point starts at ``(1, 0, 0)``, and the
+    initial detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
     """
 
-    def __init__(self, apart, dpart, axis=[0, 0, 1], det_init_pos=None,
-                 det_init_axes=None):
+    def __init__(self, apart, dpart, axis=[0, 0, 1], **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -373,25 +397,26 @@ class Parallel3dSingleAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
         det_init_pos : `array-like`, shape ``(3,)``, optional
             Initial position of the detector reference point. The zero
             vector is only allowed if ``det_init_axes`` is explicitly
-            given. If `None`, a `perpendicular_vector` to ``axis`` is
-            used.
+            given.
+            By default, a `perpendicular_vector` to ``axis`` is used.
         det_init_axes : 2-tuple of `array-like` (shape ``(3,)``), optional
-            Initial axes defining the detector orientation. If `None`,
-            the normalized cross product of ``axis`` and ``det_init_pos``
-            is used as first axis and ``axis`` as second.
+            Initial axes defining the detector orientation.
+            By default, the normalized cross product of ``axis`` and
+            ``det_init_pos`` is used as first axis and ``axis`` as second.
         """
         AxisOrientedGeometry.__init__(self, axis)
 
-        if det_init_pos is None:
-            det_init_pos = perpendicular_vector(axis)
+        det_init_pos = kwargs.pop('det_init_pos', perpendicular_vector(axis))
+        det_init_axes = kwargs.pop('det_init_axes', None)
 
         if det_init_axes is None:
             if np.linalg.norm(det_init_pos) <= 1e-10:
                 raise ValueError('initial detector position {} is close to '
-                                 'zero. This is not allowed for '
-                                 'det_init_axes=None.'.format(det_init_pos))
+                                 'zero. This is only allowed for explicit '
+                                 'det_init_axes.'.format(det_init_pos))
 
             det_init_axis_0 = np.cross(self.axis, det_init_pos)
+            det_init_axis_0 /= np.linalg.norm(det_init_axis_0)
             det_init_axes = (det_init_axis_0, axis)
 
         detector = Flat2dDetector(part=dpart, axes=det_init_axes)

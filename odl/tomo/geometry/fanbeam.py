@@ -29,7 +29,7 @@ import numpy as np
 # Internal
 from odl.tomo.geometry.detector import Flat1dDetector
 from odl.tomo.geometry.geometry import DivergentBeamGeometry
-from odl.tomo.util.utility import euler_matrix
+from odl.tomo.util.utility import euler_matrix, perpendicular_vector
 
 
 __all__ = ('FanFlatGeometry',)
@@ -37,57 +37,73 @@ __all__ = ('FanFlatGeometry',)
 
 class FanFlatGeometry(DivergentBeamGeometry):
 
-    """Abstract 2d fan beam geometry.
+    """Abstract 2d fan beam geometry with flat 1d detector.
 
-    The source moves on a circle with radius ``r``, and the detector
-    reference point is opposite to the source on a circle with radius
-    ``R``.
+    The source moves on a circle with radius ``src_radius``, and the
+    detector reference point is opposite to the source, i.e. at maximum
+    distance, on a circle with radius ``det_radius``. One of the two
+    radii can be chosen as 0, which corresponds to a stationary source
+    or detector, respectively.
 
-    The motion parameter is the (1d) rotation angle parameterizing source and
-    detector positions.
+    The motion parameter is the 1d rotation angle parameterizing source
+    and detector positions simultaneously.
+
+    In the standard configuration, the source and detector start on the
+    first coodinate axis with vector ``(1, 0)`` from source to detector,
+    and the initial detector axis is ``(0, 1)``.
     """
 
-    def __init__(self, agrid, dgrid, src_radius, det_radius,
-                 src_to_det=[1, 0], detector_axis=None):
+    def __init__(self, apart, dpart, src_radius, det_radius, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        agrid : 1-dim. `TensorGrid`
-            A sampling grid for angles
-        dgrid : 1-dim. `TensorGrid`
-            A sampling grid for the detector
-        src_radius : positive `float`
-            Radius of the source circle, must be positive
-        det_radius : positive `float`
-            Radius of the detector circle, must be positive
-        src_to_det : 2-element array, optional
-            The direction from the source to the point (0) of the detector
-            angle=0
-        detector_axis : 2-element array, optional
-            Unit direction along the detector parameter of the detector.
-            Default: (normalized) [-self.src_to_det[1], self.src_to_det[0]]
+        apart : 1-dim. `RectPartition`
+            Partition of the angle interval
+        dpart : 1-dim. `RectPartition`
+            Partition of the detector parameter interval
+        src_radius : nonnegative `float`
+            Radius of the source circle
+        det_radius : nonnegative `float`
+            Radius of the detector circle
+        src_to_det_init : `array-like`, shape ``(2,)``, optional
+            Initial state of the vector pointing from source to  detector
+            reference point. The zero vector is not allowed.
+            Default: ``(1, 0)``.
+        det_init_axis : `array-like` (shape ``(2,)``), optional
+            Initial axis defining the detector orientation.
+            By default, a normalized `perpendicular_vector` to
+            ``src_to_det_init`` is used.
         """
+        src_to_det_init = kwargs.pop('src_to_det_init', (1.0, 0.0))
+        det_init_axis = kwargs.pop('det_init_axis', None)
 
-        self._src_to_det = (np.array(src_to_det) /
-                            np.linalg.norm(src_to_det))
+        if np.shape(src_to_det_init) != (2,):
+            raise ValueError('initial source to detector vector has shape {}, '
+                             'expected (2,).'
+                             ''.format(np.shape(src_to_det_init)))
+        if np.linalg.norm(src_to_det_init) <= 1e-10:
+            raise ValueError('initial source to detector vector {} too close '
+                             'to zero.'.format(src_to_det_init))
+        self._src_to_det_init = (np.asarray(src_to_det_init, dtype='float64') /
+                                 np.linalg.norm(src_to_det_init))
 
-        if detector_axis is None:
-            # Rotated by 90 degrees according to right hand rule
-            detector_axis = np.array([-self._src_to_det[1],
-                                      self._src_to_det[0]])
+        if det_init_axis is None:
+            det_init_axis = perpendicular_vector(self._src_to_det_init)
 
         self._src_radius = float(src_radius)
-        if src_radius <= 0:
-            raise ValueError('source circle radius {} is not positive.'
+        if self.src_radius < 0:
+            raise ValueError('source circle radius {} is negative.'
                              ''.format(src_radius))
         self._det_radius = float(det_radius)
-        if det_radius <= 0:
-            raise ValueError('detector circle radius {} is not positive.'
+        if det_radius < 0:
+            raise ValueError('detector circle radius {} is negative.'
                              ''.format(det_radius))
+        if self.src_radius == 0 and self.det_radius == 0:
+            raise ValueError('source and detector radii cannot both be 0.')
 
-        detector = Flat1dDetector(dgrid, detector_axis)
-        super().__init__(2, agrid, detector)
+        detector = Flat1dDetector(dpart, det_init_axis)
+        super().__init__(ndim=2, motion_part=apart, detector=detector)
 
     @property
     def src_radius(self):
@@ -100,61 +116,84 @@ class FanFlatGeometry(DivergentBeamGeometry):
         return self._det_radius
 
     def src_position(self, angle):
-        """The source position function.
+        """Return the source position at ``angle``.
+
+        For an angle ``phi``, the source position is given by::
+
+            src(phi) = -src_rad * rot_matrix(phi) * src_to_det_init
+
+        where ``src_to_det_init`` is the initial unit vector pointing
+        from source to detector.
 
         Parameters
         ----------
         angle : `float`
-            The motion parameters given in radian. It must be contained in
-            this geometry's motion parameter set
+            Rotation angle given in radians, must be contained in
+            this geometry's `motion_params`
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (2,)
-            The source position on the circle with radius `r` at the given
-            rotation angle ``phi``, defined as ``-r * (cos(phi), sin(phi))``
+        point : `numpy.ndarray`, shape ``(2,)``
+            Source position corresponding to the given angle
         """
-        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
-        # Distance from 0 to source
-        origin_to_det = -self.src_radius * self._src_to_det
-        return self.rotation_matrix(angle).dot(origin_to_det)
+        # Initial vector from 0 to the source. It can be computed this way
+        # since source and detector are at maximum distance, i.e. the
+        # connecting line passes the origin.
+        origin_to_src_init = -self.src_radius * self._src_to_det_init
+        return self.rotation_matrix(angle).dot(origin_to_src_init)
 
     def det_refpoint(self, angle):
-        """The detector reference point function.
+        """Return the detector reference point position at ``angle``.
+
+        For an angle ``phi``, the detector position is given by::
+
+            ref(phi) = det_rad * rot_matrix(phi) * src_to_det_init
+
+        where ``src_to_det_init`` is the initial unit vector pointing
+        from source to detector.
 
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radian. It must be
-            contained in this geometry's motion parameter set
+            Rotation angle given in radians, must be contained in
+            this geometry's `motion_params`
 
         Returns
         -------
         point : `numpy.ndarray`, shape (2,)
-            The reference point on the circle with radius ``R`` at a given
-            rotation angle ``phi`` defined as ``R * (cos(phi), sin(phi))``
+            Detector reference point corresponding to the given angle
+
+        See also
+        --------
+        rotation_matrix
         """
-        angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
-        # Distance from 0 to detector
-        origin_to_det = self.det_radius * self._src_to_det
-        return self.rotation_matrix(angle).dot(origin_to_det)
+        # Initial vector from 0 to the detector. It can be computed this way
+        # since source and detector are at maximum distance, i.e. the
+        # connecting line passes the origin.
+        origin_to_det_init = self.det_radius * self._src_to_det_init
+        return self.rotation_matrix(angle).dot(origin_to_det_init)
 
     def rotation_matrix(self, angle):
-        """The detector rotation function.
+        """Return the rotation matrix for ``angle``.
+
+        For an angle ``phi``, the matrix is given by::
+
+            rot(phi) = [[cos(phi), -sin(phi)],
+                        [sin(phi), cos(phi)]]
 
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radian. It must be
-            contained in this geometry's `motion_params`
+            Rotation angle given in radians, must be contained in
+            this geometry's `motion_params`
 
         Returns
         -------
@@ -176,16 +215,16 @@ class FanFlatGeometry(DivergentBeamGeometry):
         """Returns ``repr(self)``."""
         arg_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
 
-        if not np.allclose(self._src_to_det, [1, 0]):
-            arg_fstr += ',\n    src_to_det={src_to_det!r}'
+        if not np.allclose(self._src_to_det_init, [1, 0]):
+            arg_fstr += ',\n    src_to_det_init={src_to_det_init!r}'
 
-        default_axis = [-self._src_to_det[1], self._src_to_det[0]]
-        if not np.allclose(self.detector.detector_axis, default_axis):
-            arg_fstr += ',\n    detector_axes={detector_axes!r}'
+        default_axis = perpendicular_vector(self._src_to_det_init)
+        if not np.allclose(self.detector.axis, default_axis):
+            arg_fstr += ',\n    det_init_axis={det_init_axis!r}'
 
         arg_str = arg_fstr.format(self.motion_grid, self.det_grid,
                                   self.src_radius, self.det_radius,
-                                  src_to_det=self._src_to_det,
-                                  detector_axis=self.detector.detector_axis)
+                                  src_to_det_init=self._src_to_det_init,
+                                  det_init_axis=self.detector.axis)
 
         return '{}({})'.format(self.__class__.__name__, arg_str)

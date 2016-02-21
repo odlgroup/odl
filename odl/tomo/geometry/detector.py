@@ -42,12 +42,10 @@ class Detector(with_metaclass(ABCMeta, object)):
 
     A detector is described by
 
-    * a set of parameters for surface parametrization,
-    * a function mapping motion and surface parameters to the location
-      of a detector point relative to the reference point,
-    * optionally a surface measure function defined on the surface
-      parametrization parameters only
-    * optionally a sampling grid for the parameters
+    * a set of parameters for surface parametrization (including sampling),
+    * a function mapping a surface parameter to the location of a detector
+      point relative to its reference point,
+    * optionally a surface measure function.
     """
 
     def __init__(self, part):
@@ -67,12 +65,18 @@ class Detector(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def surface(self, param):
-        """The parametrization of the detector reference surface.
+        """Parametrization of the detector reference surface.
 
         Parameters
         ----------
         param : element of `params`
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function
+
+        Returns
+        -------
+        point :
+            Spatial location of the detector point corresponding to
+            ``param``
         """
 
     @property
@@ -92,31 +96,37 @@ class Detector(with_metaclass(ABCMeta, object)):
 
     @property
     def grid(self):
-        """The sampling grid for the parameters."""
+        """Sampling grid of the parameters."""
         return self.partition.grid
 
     @property
     def shape(self):
-        """The shape of the detector grid."""
+        """Number of subsets (pixels) of the detector per axis."""
         return self.partition.shape
 
     @property
     def size(self):
-        """The total number of pixels (sampling points)."""
+        """Total number of pixels."""
         return self.partition.size
 
     def surface_deriv(self, param):
-        """The partial derivative(s) of the surface parametrization.
+        """Partial derivative(s) of the surface parametrization.
 
         Parameters
         ----------
         param : element of `params`
             The parameter value where to evaluate the function
+
+        Returns
+        -------
+        deriv :
+            Vector (``ndim=1``) or sequence of vectors corresponding
+            to the partial derivatives at ``param``
         """
         raise NotImplementedError
 
     def surface_measure(self, param):
-        """The density function of the surface measure.
+        """Density function of the surface measure.
 
         This is the default implementation relying on the `surface_deriv`
         method. For ``ndim == 1``, the density is given by the `Arc
@@ -154,12 +164,12 @@ class FlatDetector(Detector):
 
     """Abstract class for flat detectors in 2 and 3 dimensions."""
 
-    def surface_measure(self, param):
+    def surface_measure(self, param=None):
         """The constant density function of the surface measure.
 
         Parameters
         ----------
-        param : element of `params`
+        param : element of `params`, optional
             The parameter value where to evaluate the function
 
         Returns
@@ -170,27 +180,15 @@ class FlatDetector(Detector):
         if param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        return 1.0
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        # TODO: adapt to partitions
-        inner_fstr = '{!r},\n grid={grid!r}'
-        inner_str = inner_fstr.format(self.params, grid=self.param_grid)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        # TODO: prettify
-        # TODO: adapt to partitions
-        inner_fstr = '{},\n grid={grid}'
-        inner_str = inner_fstr.format(self.params, grid=self.param_grid)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        # TODO: apart from being constant, there is no big simplification
+        # in this method compared to parent. Consider removing FlatDetector
+        # altogether.
+        return super().surface_measure(self.params.begin)
 
 
 class Flat1dDetector(FlatDetector):
 
-    """A 1d line detector aligned with the ``detector_axis``."""
+    """A 1d line detector aligned with ``axis``."""
 
     def __init__(self, part, axis):
         """Initialize a new instance.
@@ -205,7 +203,7 @@ class Flat1dDetector(FlatDetector):
         """
         super().__init__(part)
         if self.ndim != 1:
-            raise ValueError('expected partition to be 1-dimensional ,'
+            raise ValueError('expected partition to have 1 dimension, '
                              'got {}.'.format(self.ndim))
 
         if np.linalg.norm(axis) <= 1e-10:
@@ -216,12 +214,16 @@ class Flat1dDetector(FlatDetector):
 
     @property
     def axis(self):
-        """Principal axis of the detector."""
+        """Normalized principal axis of the detector."""
         return self._axis
 
     @property
     def normal(self):
-        """Unit vector perpendicular to the detector."""
+        """Unit vector perpendicular to the detector.
+
+        Its orientation is chosen such that the system ``axis, normal``
+        is right-handed.
+        """
         return self._normal
 
     def surface(self, param):
@@ -242,10 +244,11 @@ class Flat1dDetector(FlatDetector):
             The point on the detector surface corresponding to the
             given parameters
         """
+        param = float(param)
         if param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        return self.detector_axis * float(param)
+        return self.axis * param
 
     def surface_deriv(self, param=None):
         """The derivative of the surface parametrization.
@@ -263,12 +266,25 @@ class Flat1dDetector(FlatDetector):
         if param is not None and param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        return self.detector_axis
+        return self.axis
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        inner_fstr = '\n    {!r},\n    {!r}'
+        inner_str = inner_fstr.format(self.partition, self.axis)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        # TODO: prettify
+        inner_fstr = '\n    {},\n    {}'
+        inner_str = inner_fstr.format(self.partition, self.axis)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class Flat2dDetector(FlatDetector):
 
-    """A 2d flat panel detector aligned with the ``detector_axes``."""
+    """A 2d flat panel detector aligned with ``axes``."""
 
     def __init__(self, part, axes):
         """Initialize a new instance.
@@ -284,7 +300,7 @@ class Flat2dDetector(FlatDetector):
         """
         super().__init__(part)
         if self.ndim != 2:
-            raise ValueError('expected partition to be 2-dimensional ,'
+            raise ValueError('expected partition to have 2 dimensions, '
                              'got {}.'.format(self.ndim))
 
         for i, a in enumerate(axes):
@@ -304,16 +320,20 @@ class Flat2dDetector(FlatDetector):
 
     @property
     def axes(self):
-        """Principal axes of this detector."""
+        """Normalized principal axes of this detector as a 2-tuple."""
         return self._axes
 
     @property
     def normal(self):
-        """Unit vector perpendicular to this detector."""
+        """Unit vector perpendicular to this detector.
+
+        The orientation is chosen such that the triple
+        ``axes[0], axes[1], normal`` form a right-hand system.
+        """
         return self._normal
 
     def surface(self, param):
-        """The parametrization of the (2d) detector reference surface.
+        """Parametrization of the 2d detector reference surface.
 
         The reference plane segment is chosen to be aligned with the
         second and third coordinate axes, in this order, such that
@@ -334,7 +354,7 @@ class Flat2dDetector(FlatDetector):
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
 
-        return sum(float(p) * ax for p, ax in zip(param, self.detector_axes))
+        return sum(float(p) * ax for p, ax in zip(param, self.axes))
 
     def surface_deriv(self, param=None):
         """The derivative of the surface parametrization.
@@ -352,17 +372,29 @@ class Flat2dDetector(FlatDetector):
         if param is not None and param not in self.params:
             raise ValueError('parameter value {} not in the valid range '
                              '{}.'.format(param, self.params))
-        return self.detector_axes
+        return self.axes
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        inner_fstr = '\n    {!r},\n    {!r}'
+        inner_str = inner_fstr.format(self.partition, self.axes)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        # TODO: prettify
+        inner_fstr = '\n    {},\n    {}'
+        inner_str = inner_fstr.format(self.partition, self.axes)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class CircleSectionDetector(Detector):
 
-    """A 1d detector lying on a section of a circle.
+    """A 1d detector given by a section of a circle.
 
     The reference circular section is part of a circle with radius ``r``,
     which is shifted by the vector ``(-r, 0)`` such that the parameter
     value 0 results in the detector reference point ``(0, 0)``.
-
     """
 
     def __init__(self, part, circ_rad):
@@ -374,11 +406,11 @@ class CircleSectionDetector(Detector):
             Partition of the parameter interval, corresponding to the
             angle sections along the line
         circ_rad : positive `float`
-            Radius of the circle on which the detector is situated
+            Radius of the circle along which the detector is curved
         """
         super().__init__(part)
         if self.ndim != 1:
-            raise ValueError('expected partition to be 1-dimensional ,'
+            raise ValueError('expected partition to have 1 dimension, '
                              'got {}.'.format(self.ndim))
 
         self._circ_rad = float(circ_rad)
@@ -399,9 +431,7 @@ class CircleSectionDetector(Detector):
         param : element of `params`
             The parameter value where to evaluate the function
         """
-        if (param in self.params or
-            (param.contains_all(np.ndarray) and
-             all(par in self.params for par in param))):
+        if param in self.params or self.params.contains_all(param):
             return (self.circ_rad *
                     np.array([np.cos(param) - 1, np.sin(param)]).T)
         else:
@@ -416,8 +446,7 @@ class CircleSectionDetector(Detector):
         param : element of `params`
             The parameter value where to evaluate the function
         """
-        if (param in self.params or (param.contains_all(np.ndarray) and all(
-                par in self.params for par in param))):
+        if param in self.params or self.params.contains_all(param):
             return self.circ_rad * np.array([-np.sin(param), np.cos(param)]).T
         else:
             raise ValueError('parameter value(s) {} not in the valid range '
@@ -439,26 +468,21 @@ class CircleSectionDetector(Detector):
         """
         if param in self.params:
             return self.circ_rad
-        elif (isinstance(param, np.ndarray) and
-              all(par in self.params for par in param)):
+        elif self.params.contains_all(param):
             return self.circ_rad * np.ones_like(param, dtype=float)
         else:
             raise ValueError('parameter value(s) {} not in the valid range '
                              '{}.'.format(param, self.params))
 
     def __repr__(self):
-        """Returns ``repr(self)``."""
-        # TODO: adapt to partitions
-        inner_fstr = '{!r}, {},\n grid={grid!r}'
-        inner_str = inner_fstr.format(self.params, self.circ_rad,
-                                      grid=self.param_grid)
+        """Return ``repr(self)``."""
+        inner_fstr = '\n    {!r},\n    {}'
+        inner_str = inner_fstr.format(self.partition, self.circ_rad)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
-        """d.__str__() <==> str(d)."""
-        # TODO: adapt to partitions
+        """Return ``str(self)``."""
         # TODO: prettify
-        inner_fstr = '{}, {},\n grid={grid}'
-        inner_str = inner_fstr.format(self.params, self.circ_rad,
-                                      grid=self.param_grid)
+        inner_fstr = '\n    {},\n    {}'
+        inner_str = inner_fstr.format(self.partition, self.circ_rad)
         return '{}({})'.format(self.__class__.__name__, inner_str)

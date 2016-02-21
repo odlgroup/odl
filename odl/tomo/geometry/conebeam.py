@@ -38,75 +38,94 @@ __all__ = ('CircularConeFlatGeometry', 'HelicalConeFlatGeometry',)
 
 
 class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
-    """Cone beam geometry with helical acquisition and flat detector.
 
-    The source moves along a spiral with radius ``r`` in the azimuthal plane
-    and a pitch``P``. The detector reference point is opposite to
-    the source and moves on a spiral with radius ``R`` in the azimuthal
-    plane and pitch ``P``.
+    """Cone beam geometry with helical source curve and flat detector.
 
-    The motion parameter is the (1d) rotation angle parameterizing source and
-    detector positions.
+    The source moves along a spiral oriented along a fixed ``axis``, with
+    radius ``src_radius`` in the azimuthal plane and a given ``pitch``.
+    The detector reference point is opposite to the source, i.e. in
+    the point at distance ``src_rad + det_rad`` on the line in the
+    azimuthal plane through the source point and ``axis``.
+
+    The motion parameter is the 1d rotation angle parameterizing source
+    and detector positions simultaneously.
+
+    In the standard configuration, the rotation axis is ``(0, 0, 1)``,
+    the initial source-to-detector vector is ``(1, 0, 0)``, and the
+    initial detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
 
     See Also
     --------
-    CircularConeFlatGeometry : Case with no pitch
+    CircularConeFlatGeometry : Case with zero pitch
     """
 
-    def __init__(self, agrid, dgrid, src_radius, det_radius,
-                 pitch, axis=[0, 0, 1], **kwargs):
+    def __init__(self, apart, dpart, src_radius, det_radius, pitch,
+                 axis=[0, 0, 1], **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        agrid : 1-dim. `TensorGrid`
-            A sampling grid for the angles given in radians
-        dgrid : 2-dim. `TensorGrid`
-            A sampling grid for the detector parameters
-        src_radius : `float`
-            Radius of the source circle, must be positive
-        det_radius : `float`
-            Radius of the detector circle, must be positive
-        pitch : positive `float`
-            Constant vertical distance between two source positions, one at
-            angle ``phi``, the other at angle ``phi + 2 * pi``
-        axis : 3-element array, optional
-            Fixed rotation axis defined by a 3-element vector
+        apart : 1-dim. `RectPartition`
+            Partition of the angle interval
+        dpart : 2-dim. `RectPartition`
+            Partition of the detector parameter rectangle
+        src_radius : nonnegative `float`
+            Radius of the source circle
+        det_radius : nonnegative `float`
+            Radius of the detector circle
+        pitch : `float`
+            Constant vertical distance that a point on the helix
+            traverses when increasing the angle parameter by ``2 * pi``
+        axis : `array-like`, shape ``(3,)``, optional
+            Fixed rotation axis, the symmetry axis of the helix
+        src_to_det_init : `array-like`, shape ``(2,)``, optional
+            Initial state of the vector pointing from source to  detector
+            reference point. The zero vector is not allowed.
+            By default, a `perpendicular_vector` to ``axis`` is used.
+        det_init_axes : 2-tuple of `array-like` (shape ``(2,)``), optional
+            Initial axes defining the detector orientation.
+            By default, the normalized cross product of ``axis`` and
+            ``src_to_det_init`` is used as first axis and ``axis`` as
+            second.
         pitch_offset : `float`, optional
-            Offset along the axis at ``angle=0``.
-        src_to_det : 3-element array, optional
-            The direction from the source to the point (0, 0) of the detector
-            angle=0. Default: Vector in x, y plane orthogonal to axis.
-        detector_axes : sequence of two 3-element arrays, optional
-            Unit directions along each detector parameter of the detector.
-            Default: (normalized) [np.cross(axis, source_to_detector), axis]
+            Offset along the ``axis`` at ``angle=0``
         """
-
         AxisOrientedGeometry.__init__(self, axis)
 
-        src_to_det = kwargs.pop('src_to_det', perpendicular_vector(self.axis))
+        # TODO: the case when this vector points out of the azimuthal plane
+        # is not properly handled
+        src_to_det_init = kwargs.pop('src_to_det_init',
+                                     perpendicular_vector(self.axis))
 
-        self._src_to_det = (np.array(src_to_det) /
-                            np.linalg.norm(src_to_det))
+        if np.linalg.norm(src_to_det_init) <= 1e-10:
+            raise ValueError('initial source to detector vector {} is too '
+                             'close to zero.'.format(src_to_det_init))
+        self._src_to_det_init = (np.array(src_to_det_init) /
+                                 np.linalg.norm(src_to_det_init))
 
-        detector_axes = kwargs.pop('src_to_det',
-                                   [np.cross(self.axis, self._src_to_det),
-                                    self.axis])
+        det_init_axes = kwargs.pop('det_init_axes', None)
+        if det_init_axes is None:
+            det_init_axis_0 = np.cross(self.axis, self._src_to_det_init)
+            det_init_axes = (det_init_axis_0, axis)
 
-        detector = Flat2dDetector(dgrid, detector_axes)
+        detector = Flat2dDetector(dpart, det_init_axes)
 
-        DivergentBeamGeometry.__init__(self, 3, agrid, detector)
+        super().__init__(ndim=3, motion_part=apart, detector=detector)
 
         self._pitch = float(pitch)
-        self._pitch_offset = float(kwargs.pop('pitch_offset', 0.0))
+        self._pitch_offset = float(kwargs.pop('pitch_offset', 0))
         self._src_radius = float(src_radius)
-        if self.src_radius <= 0:
-            raise ValueError('source circle radius {} is not positive.'
+        if self.src_radius < 0:
+            raise ValueError('source circle radius {} is negative.'
                              ''.format(src_radius))
         self._det_radius = float(det_radius)
-        if self.det_radius <= 0:
-            raise ValueError('detector circle radius {} is not positive.'
+        if self.det_radius < 0:
+            raise ValueError('detector circle radius {} is negative.'
                              ''.format(det_radius))
+
+        if self.src_radius == 0 and self.det_radius == 0:
+            raise ValueError('source and detector circle radii cannot both be '
+                             '0.')
 
     @property
     def src_radius(self):
@@ -120,80 +139,93 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
     @property
     def pitch(self):
-        """Constant vertical distance between a full rotation.
-
-        Returns
-        -------
-        pitch : positive `float`
-        """
+        """Constant vertical distance traversed in a full rotation."""
         return self._pitch
 
     @property
     def pitch_offset(self):
-        """Vertical offset at ``angle=0``
-
-        Returns
-        -------
-        pitch_offset : `float`
-        """
+        """Vertical offset at ``angle=0``"""
         return self._pitch_offset
 
     def det_refpoint(self, angle):
-        """The detector reference point function.
+        """Return the detector reference point position at ``angle``.
+
+        For an angle ``phi``, the detector position is given by::
+
+            ref(phi) = det_rad * rot_matrix(phi) * src_to_det_init +
+                       (pitch_offset + pitch * phi) * axis
+
+        where ``src_to_det_init`` is the initial unit vector pointing
+        from source to detector.
 
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radian. It must be
-            contained in this geometry's motion parameter set
+            Rotation angle given in radians, must be contained in
+            this geometry's `motion_params`
 
         Returns
         -------
         point : `numpy.ndarray`, shape (3,)
-            The reference point on a circle in the azimuthal plane with
-            radius ``R`` and at a longitudinal position ``z`` at a given
-            rotation angle ``phi`` defined as ``(-R * sin(phi), R * cos(
-            phi), z)`` where ``z`` is given by the pitch ``P``.
+            Detector reference point corresponding to the given angle
+
+        See also
+        --------
+        rotation_matrix
         """
         angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
-        # Distance from 0 to detector
-        origin_to_det = self.det_radius * self._src_to_det
-        circle_component = self.rotation_matrix(angle).dot(origin_to_det)
+        # Initial vector from 0 to the detector. It can be computed this way
+        # since source and detector are at maximum distance, i.e. the
+        # connecting line passes the origin.
+        origin_to_det_init = self.det_radius * self._src_to_det_init
+        circle_component = self.rotation_matrix(angle).dot(origin_to_det_init)
 
-        # Increment by pitch
+        # Increment along the rotation axis according to pitch and pitch_offset
         pitch_component = self.axis * (self.pitch_offset +
-                                       self.pitch * angle / (np.pi * 2))
+                                       self.pitch * angle / (2 * np.pi))
 
         return circle_component + pitch_component
 
     def src_position(self, angle):
-        """The source position function.
+        """Return the source position at ``angle``.
+
+        For an angle ``phi``, the source position is given by::
+
+            src(phi) = -src_rad * rot_matrix(phi) * src_to_det_init +
+                       (pitch_offset + pitch * phi) * axis
+
+        where ``src_to_det_init`` is the initial unit vector pointing
+        from source to detector.
 
         Parameters
         ----------
         angle : `float`
-            The motion parameter given in radian. It must be contained
-            in this geometry's motion parameter set
+            Rotation angle given in radians, must be contained in
+            this geometry's `motion_params`
 
         Returns
         -------
         point : `numpy.ndarray`, shape (3,)
-            The source position on a spiral with radius ``r`` and pitch
-            ``P`` at a given rotation angle ``phi`` defined as
-            ``(r * sin(phi), -r * cos(phi), P * phi / (2 * pi))``
+            Detector reference point corresponding to the given angle
+
+        See also
+        --------
+        rotation_matrix
         """
         angle = float(angle)
         if angle not in self.motion_params:
             raise ValueError('angle {} is not in the valid range {}.'
                              ''.format(angle, self.motion_params))
 
-        # Distance from 0 to detector
-        origin_to_src = -self.src_radius * self._src_to_det
-        circle_component = self.rotation_matrix(angle).dot(origin_to_src)
+        # Initial vector from 0 to the source. It can be computed this way
+        # since source and detector are at maximum distance, i.e. the
+        # connecting line passes the origin.
+        origin_to_src_init = -self.src_radius * self._src_to_det_init
+        circle_component = self.rotation_matrix(angle).dot(origin_to_src_init)
 
         # Increment by pitch
         pitch_component = self.axis * (self.pitch_offset +
@@ -204,33 +236,29 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     def __repr__(self):
         """Return ``repr(self)``"""
 
-        arg_fstr = '{!r}, {!r},\n    src_radius={}, det_radius={}'
+        arg_fstr = '\n    {!r},\n    {!r},\n    src_radius={}, det_radius={}'
         if self.pitch != 0:
-            arg_fstr += ',\n    pitch={pitch!r}'
+            arg_fstr += ',\n    pitch={pitch}'
         if self.pitch_offset != 0:
-            arg_fstr += ',\n    pitch_offset={pitch_offset!r}'
-        if self.has_motion_sampling:
-            arg_fstr += ',\n    agrid={agrid!r}'
-        if self.has_det_sampling:
-            arg_fstr += ',\n    dgrid={dgrid!r}'
+            arg_fstr += ',\n    pitch_offset={pitch_offset}'
         if not np.allclose(self.axis, [0, 0, 1]):
-            arg_fstr += ',\n    axis={axis!r}'
-        if not np.allclose(self._src_to_det, [1, 0, 0]):
-            arg_fstr += ',\n    src_to_det={src_to_det!r}'
+            arg_fstr += ',\n    axis={axis}'
+        default_src_to_det = perpendicular_vector(self.axis)
+        if not np.allclose(self._src_to_det_init, default_src_to_det):
+            arg_fstr += ',\n    src_to_det_init={src_to_det_init}'
 
-        default_axes = [np.cross(self.axis, self._src_to_det), self.axis]
+        default_axes = [np.cross(self.axis, self._src_to_det_init), self.axis]
         if not np.allclose(self.detector.detector_axes, default_axes):
-            arg_fstr += ',\n    detector_axes={detector_axes!r}'
+            arg_fstr += ',\n    det_init_axes={det_init_axes!r}'
 
-        arg_str = arg_fstr.format(self.motion_grid, self.det_grid,
-                                  self.src_radius, self.det_radius,
-                                  pitch=self.pitch,
-                                  pitch_offset=self.pitch_offset,
-                                  agrid=self.motion_grid,
-                                  dgrid=self.det_grid,
-                                  axis=self.axis,
-                                  src_to_det=self._src_to_det,
-                                  detector_axes=self.detector.detector_axes)
+        arg_str = arg_fstr.format(
+            self.motion_partition, self.det_partition,
+            self.src_radius, self.det_radius,
+            pitch=self.pitch,
+            pitch_offset=self.pitch_offset,
+            axis=list(self.axis),
+            src_to_det_init=list(self._src_to_det_init),
+            det_init_axes=[list(a) for a in self.detector.axes])
         return '{}({})'.format(self.__class__.__name__, arg_str)
 
     # Fix for bug in ABC thinking this is abstract
@@ -238,44 +266,54 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
 
 class CircularConeFlatGeometry(HelicalConeFlatGeometry):
-    """Cone beam geometry with circular acquisition and flat detector.
 
-    The source moves on a circle with radius ``r``, and the detector
-    reference point is opposite to the source on a circle with radius ``R``
-    and aligned tangential to the circle.
+    """Cone beam geometry with circular source curve and flat detector.
 
-    The motion parameter is the (1d) rotation angle parameterizing source and
-    detector positions.
+    The source moves along a circle with radius ``src_radius`` in the
+    plane perpendicular to a fixed ``axis``. The detector reference
+    point is opposite to the source, i.e. in the same plane on a circle
+    with radius ``det_rad`` at maximum distance to the source. This
+    implies that it lies on the line through the source point and
+    the intersection of the ``axis`` with the azimuthal plane.
+
+    The motion parameter is the 1d rotation angle parameterizing source
+    and detector positions simultaneously.
+
+    In the standard configuration, the rotation axis is ``(0, 0, 1)``,
+    the initial source-to-detector vector is ``(1, 0, 0)``, and the
+    initial detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
 
     See Also
     --------
     HelicalConeFlatGeometry : General case with motion in z direction
     """
 
-    def __init__(self, agrid, dgrid, src_radius, det_radius, axis=[0, 0, 1],
+    def __init__(self, apart, dpart, src_radius, det_radius, axis=[0, 0, 1],
                  **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        agrid : 1-dim. `TensorGrid`
-            A sampling grid for the angles given in radians
-        dgrid : 2-dim. `TensorGrid`
-            A sampling grid for the detector parameters
-        src_radius : `float`
-            Radius of the source circle, must be positive
-        det_radius : `float`
-            Radius of the detector circle, must be positive
-        axis : 3-element array, optional
-            Fixed rotation axis defined by a 3-element vector
-        src_to_det : 3-element array, optional
-            The direction from the source to the point (0, 0) of the detector
-            angle=0. Default: Vector in x, y plane orthogonal to axis.
-        detector_axes : sequence of two 3-element arrays, optional
-            Defines the unit directions along each detector parameter of the
-            detector.
-            Default: (normalized) [np.cross(axis, source_to_detector), axis]
+        apart : 1-dim. `RectPartition`
+            Partition of the angle interval
+        dpart : 2-dim. `RectPartition`
+            Partition of the detector parameter rectangle
+        src_radius : nonnegative `float`
+            Radius of the source circle
+        det_radius : nonnegative `float`
+            Radius of the detector circle
+        axis : `array-like`, shape ``(3,)``, optional
+            Fixed rotation axis, the symmetry axis of the helix
+        src_to_det_init : `array-like`, shape ``(2,)``, optional
+            Initial state of the vector pointing from source to  detector
+            reference point. The zero vector is not allowed.
+            By default, a `perpendicular_vector` to ``axis`` is used.
+        det_init_axes : 2-tuple of `array-like` (shape ``(2,)``), optional
+            Initial axes defining the detector orientation.
+            By default, the normalized cross product of ``axis`` and
+            ``src_to_det_init`` is used as first axis and ``axis`` as
+            second.
         """
-        pitch = 0
-        super().__init__(agrid, dgrid, src_radius, det_radius,
-                         pitch, axis, **kwargs)
+        kwargs.pop('pitch_offset', None)
+        super().__init__(apart, dpart, src_radius, det_radius, pitch=0,
+                         axis=axis, **kwargs)
