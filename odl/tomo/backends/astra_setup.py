@@ -115,7 +115,6 @@ def astra_volume_geometry(discr_reco):
         # the meanwhile.
         if not np.allclose(discr_reco.grid.stride[1:],
                            discr_reco.grid.stride[:-1]):
-            # TODO: for parallel geometries, one can work around this issue
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
         # given a 2D array of shape (x, y), a volume geometry is created as:
@@ -162,8 +161,8 @@ def astra_volume_geometry(discr_reco):
 def astra_conebeam_3d_geom_to_vec(geometry):
     """Create vectors for ASTRA projection geometries from ODL geometry.
 
-     The 3D vectors are used to create an ASTRA projection geometry for
-     cone beam geometries ('cone_vec') with helical acquisition curves.
+    The 3D vectors are used to create an ASTRA projection geometry for
+    cone beam geometries ('cone_vec') with helical acquisition curves.
 
     Output vectors:
 
@@ -199,7 +198,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
         vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
 
         # vector from detector pixel (0,0) to (0,1)
-        unit_vecs = geometry.detector.surface_deriv()
+        unit_vecs = geometry.detector.axes
         strides = geometry.det_grid.stride
         vectors[ang_idx, 6:9] = rot_matrix.dot(unit_vecs[0] * strides[0])
         vectors[ang_idx, 9:12] = rot_matrix.dot(unit_vecs[1] * strides[1])
@@ -254,7 +253,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
         vectors[ang_idx, 2:4] = geometry.det_point_position(angle, midp)
 
         # vector from detector pixel (0) to (1)
-        unit_vec = geometry.detector.surface_deriv()
+        unit_vec = geometry.detector.axis
         strides = geometry.det_grid.stride
         vectors[ang_idx, 4:6] = rot_matrix.dot(unit_vec * strides[0])
 
@@ -310,7 +309,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
         vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
 
         # vector from detector pixel (0,0) to (0,1)
-        unit_vecs = geometry.detector.surface_deriv()
+        unit_vecs = geometry.detector.axes
         strides = geometry.det_grid.stride
         vectors[ang_idx, 6:9] = rot_matrix.dot(unit_vecs[0] * strides[0])
         vectors[ang_idx, 9:12] = rot_matrix.dot(unit_vecs[1] * strides[1])
@@ -350,9 +349,8 @@ def astra_projection_geometry(geometry):
         # Shortcut, reuse already computed value.
         return geometry.implementation_cache['astra']
 
-    if not isinstance(geometry.det_grid, RegularGrid):
-        raise TypeError('detector sampling grid {!r} is not a RegularGrid '
-                        'instance.'.format(geometry.det_grid))
+    if not geometry.partition.is_regular:
+        raise ValueError('irregular detector sampling is not supported.')
 
     # As of ASTRA version 1.7beta the volume width can be specified in the
     # volume geometry creator also for 3D geometries. For version < 1.7
@@ -362,19 +360,18 @@ def astra_projection_geometry(geometry):
     if isinstance(geometry, Parallel2dGeometry):
         # TODO: change to parallel_vec when available
         det_width = geometry.det_grid.stride[0]
-        det_count = geometry.detector.npixels
+        det_count = geometry.detector.size
         # convention in 'astra_conebeam_2d_geom_to_vec' differs from ASTRA's
         angles = geometry.motion_grid.coord_vectors[0] - np.pi / 2
-        proj_geom = astra.create_proj_geom(
-            'parallel', det_width, det_count, angles)
+        proj_geom = astra.create_proj_geom('parallel', det_width, det_count,
+                                           angles)
 
     elif (isinstance(geometry, DivergentBeamGeometry) and
           isinstance(geometry.detector, FlatDetector) and
           geometry.ndim == 2):
-        det_count = geometry.detector.npixels
+        det_count = geometry.detector.size
         vec = astra_conebeam_2d_geom_to_vec(geometry)
-        proj_geom = astra.create_proj_geom(
-            'fanflat_vec', det_count, vec)
+        proj_geom = astra.create_proj_geom('fanflat_vec', det_count, vec)
 
     elif (isinstance(geometry, ParallelGeometry) and
           isinstance(geometry.detector, FlatDetector) and
@@ -382,8 +379,8 @@ def astra_projection_geometry(geometry):
         det_row_count = geometry.det_grid.shape[1]
         det_col_count = geometry.det_grid.shape[0]
         vec = astra_parallel_3d_geom_to_vec(geometry)
-        proj_geom = astra.create_proj_geom(
-            'parallel3d_vec', det_row_count, det_col_count, vec)
+        proj_geom = astra.create_proj_geom('parallel3d_vec', det_row_count,
+                                           det_col_count, vec)
 
     elif (isinstance(geometry, DivergentBeamGeometry) and
           isinstance(geometry.detector, FlatDetector) and
@@ -391,11 +388,11 @@ def astra_projection_geometry(geometry):
         det_row_count = geometry.det_grid.shape[1]
         det_col_count = geometry.det_grid.shape[0]
         vec = astra_conebeam_3d_geom_to_vec(geometry)
-        proj_geom = astra.create_proj_geom(
-            'cone_vec', det_row_count, det_col_count, vec)
+        proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
+                                           det_col_count, vec)
     else:
-        raise NotImplementedError('unknown ASTRA geometry type {}.'.format(
-            geometry))
+        raise NotImplementedError('unknown ASTRA geometry type {!r}.'
+                                  ''.format(geometry))
 
     if 'astra' not in geometry.implementation_cache:
         # Save computed value for later

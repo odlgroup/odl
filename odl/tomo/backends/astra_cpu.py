@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Backend for ASTRA using CPU"""
+"""Backend for ASTRA using CPU."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -56,11 +56,11 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
         Space to which the calling operator maps
     out : `DiscreteLpVector`, optional
         Vector in the projection space to which the result is written. If
-        `None` creates an element in the projection space ``proj_space`
+        `None` creates an element in the projection space ``proj_space``
 
     Returns
     -------
-    out : ``proj_space`` element
+    out : ``proj_space`` `element`
         Projection data resulting from the application of the projector
     """
     if not isinstance(vol_data, DiscreteLpVector):

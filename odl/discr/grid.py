@@ -1248,51 +1248,6 @@ def uniform_sampling(begin, end, num_nodes):
     return uniform_sampling_fromintv(IntervalProd(begin, end), num_nodes)
 
 
-def uniform_sampling(begin, end, num_nodes, as_midp=True):
-    """Sample an `IntervalProd` uniformly.
-
-    Parameters
-    ----------
-    begin : `float` or array-like
-        Minimum corner of the sampling volume
-    begin : `float` or array-like
-        Maximum corner of the sampling volume
-    num_nodes : `int` or array-like of `int`
-        Number of nodes per axis. For dimension >= 2, a array-like
-        is required. All entries must be positive. Entries
-        corresponding to degenerate axes must be equal to 1.
-    as_midp : `bool`, optional
-        If `True`, the midpoints of an interval partition will be
-        returned, which excludes the endpoints. Otherwise,
-        equispaced nodes including the endpoints are generated.
-        Note that the resulting strides are different.
-        Default: `True`.
-
-    Returns
-    -------
-    sampling : `RegularGrid`
-        Uniform sampling grid for the interval product
-
-    Examples
-    --------
-    >>> from odl import IntervalProd
-    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], [2, 5])
-    >>> grid.coord_vectors
-    (array([-1.25, -0.75]), array([ 2.1,  2.3,  2.5,  2.7,  2.9]))
-    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], [2, 5], as_midp=False)
-    >>> grid.coord_vectors
-    (array([-1.5, -0.5]), array([ 2.  ,  2.25,  2.5 ,  2.75,  3.  ]))
-
-    See also
-    --------
-    uniform_sampling_fromintv : Sampling of a given `IntervalProd`
-    """
-
-    intv = IntervalProd(begin, end)
-
-    return uniform_sampling_fromintv(intv, num_nodes, as_midp=as_midp)
-
-
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)

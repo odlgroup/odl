@@ -37,9 +37,9 @@ from odl.tomo.backends import (
     astra_cuda_forward_projector, astra_cuda_back_projector)
 
 
-_SUPPORTED_BACKENDS = ('astra_cpu', 'astra_cuda')
+_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda')
 
-__all__ = ('XrayTransform', 'XrayBackProjector')
+__all__ = ('XrayTransform', 'XrayBackProjection')
 
 
 # TODO: DivergentBeamTransform
@@ -48,7 +48,7 @@ class XrayTransform(Operator):
 
     """The discrete X-ray transform between `L^p` spaces."""
 
-    def __init__(self, discr_domain, geometry, backend='astra', **kwargs):
+    def __init__(self, discr_domain, geometry, impl='astra_cpu', **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -56,16 +56,15 @@ class XrayTransform(Operator):
         discr_domain : `odl.DiscreteLp`
             Discretized space, the domain of the forward projector
         geometry : `Geometry`
-            The geometry of the transform, contains information about
-            the operator range. It needs to have a sampling grid for
-            motion and detector parameters.
-        backend : {'astra_cuda', 'astra_cpu'}, optional
+            Geometry of the transform, containing information about
+            the operator range
+        impl : {'astra_cpu', 'astra_cuda'}, optional
             Implementation back-end for the transform. Supported back-ends:
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
-            Default: 'astra'
         interp : {'nearest', 'linear'}
-            Interpolation type for the discretization of the operator range.
+            Interpolation type for the discretization of the operator
+            range.
             Default: 'nearest'
         """
         if not isinstance(discr_domain, DiscreteLp):
@@ -76,16 +75,17 @@ class XrayTransform(Operator):
             raise TypeError('geometry {!r} is not a `Geometry` instance.'
                             ''.format(geometry))
 
-        backend = str(backend).lower()
-        if backend not in _SUPPORTED_BACKENDS:
-            raise ValueError('backend {!r} not supported.'
-                             ''.format(backend))
+        impl, impl_in = str(impl).lower(), impl
+        if impl not in _SUPPORTED_IMPL:
+            raise ValueError('implementation {!r} not supported.'
+                             ''.format(impl_in))
 
-        if backend.startswith('astra'):
+        # TODO: sanity checks between impl and discretization impl
+        if impl.startswith('astra'):
             if not ASTRA_AVAILABLE:
-                raise ValueError('ASTRA backend not available.')
-            if not ASTRA_CUDA_AVAILABLE and backend == 'astra_cuda':
-                raise ValueError('ASTRA CUDA backend not available.')
+                raise ValueError('ASTRA back-end not available.')
+            if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
+                raise ValueError('ASTRA CUDA back-end not available.')
             if discr_domain.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
                                  'real and `complex64` for complex data.')
@@ -95,16 +95,21 @@ class XrayTransform(Operator):
                                  'sizes per axis (got {}).'
                                  ''.format(discr_domain.grid.stride))
 
+        # TODO: sanity checks between domain and geometry (ndim, ...)
         self._geometry = geometry
-        self._backend = backend
+        self._impl = impl
         self.kwargs = kwargs
 
         # Create a discretized space (operator range) with the same data-space
         # type as the domain.
-        # TODO: maybe use a ProductSpace structure
+        # TODO: use a ProductSpace structure or find a way to treat different
+        # dimensions differently in DiscreteLp (i.e. in partitions).
         range_uspace = FunctionSpace(geometry.params)
 
         # Approximate cell volume
+        # TODO: angles and detector must be handled separately. While the
+        # detector should be uniformly discretized, the angles do not have
+        # to and often are not.
         extent = float(geometry.grid.extent().prod())
         size = float(geometry.grid.size)
         weight = extent / size
@@ -113,17 +118,16 @@ class XrayTransform(Operator):
             geometry.grid.size, weight=weight, dtype=discr_domain.dspace.dtype)
 
         range_interp = kwargs.get('interp', 'nearest')
-
         discr_range = DiscreteLp(
-            range_uspace, geometry.grid, range_dspace,
-            interp=range_interp, order=geometry.grid.order)
+            range_uspace, geometry.partition, range_dspace,
+            interp=range_interp, order=discr_domain.order)
 
         super().__init__(discr_domain, discr_range, linear=True)
 
     @property
-    def backend(self):
-        """Computational back-end for this operator."""
-        return self._backend
+    def impl(self):
+        """Implementation back-end for evaluation of this operator."""
+        return self._impl
 
     @property
     def geometry(self):
@@ -146,30 +150,31 @@ class XrayTransform(Operator):
         out : `DiscreteLpVector`
             Returns an element in the projection space
         """
-        back, impl = self.backend.split('_')
-        if back == 'astra':
-            if impl == 'cpu':
+        backend, data_impl = self.impl.split('_')
+        if backend == 'astra':
+            if data_impl == 'cpu':
                 return astra_cpu_forward_projector(x, self.geometry,
                                                    self.range, out)
-            elif impl == 'cuda':
+            elif data_impl == 'cuda':
                 return astra_cuda_forward_projector(x, self.geometry,
                                                     self.range, out)
             else:
-                raise ValueError('unknown implementation {}.'.format(impl))
+                # Should never happen
+                raise RuntimeError('implementation info is inconsistent.')
         else:  # Should never happen
-            raise RuntimeError('backend support information is inconsistent.')
+            raise RuntimeError('implementation info is inconsistent.')
 
     @property
     def adjoint(self):
         """Return the adjoint operator."""
-        return XrayBackProjector(self.domain, self.geometry, self.backend,
-                                 **self.kwargs)
+        return XrayBackProjection(self.domain, self.geometry, self.impl,
+                                  **self.kwargs)
 
 
-class XrayBackProjector(Operator):
+class XrayBackProjection(Operator):
     """The adjoint of the discrete X-ray transform between `L^p` spaces."""
 
-    def __init__(self, discr_range, geometry, backend='astra', **kwargs):
+    def __init__(self, discr_range, geometry, impl='astra_cpu', **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -178,13 +183,11 @@ class XrayBackProjector(Operator):
             Reconstruction space, the range of the back-projector
         geometry : `Geometry`
             The geometry of the transform, contains information about
-            the operator domain. It needs to have a sampling grid for
-            motion and detector parameters.
-        backend : {'astra_cuda', 'astra_cpu'}, optional
+            the operator domain
+        impl : {'astra_cpu', 'astra_cuda'}, optional
             Implementation back-end for the transform. Supported back-ends:
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
-            Default: 'astra'
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator range.
             Default: 'nearest'
@@ -197,15 +200,15 @@ class XrayBackProjector(Operator):
             raise TypeError('geometry {!r} is not a `Geometry` instance.'
                             ''.format(geometry))
 
-        backend = str(backend).lower()
-        if backend not in _SUPPORTED_BACKENDS:
-            raise ValueError('backend {!r} not supported.'
-                             ''.format(backend))
+        impl, impl_in = str(impl).lower(), impl
+        if impl not in _SUPPORTED_IMPL:
+            raise ValueError("implementation '{}' not supported."
+                             ''.format(impl_in))
 
-        if backend.startswith('astra'):
+        if impl.startswith('astra'):
             if not ASTRA_AVAILABLE:
                 raise ValueError('ASTRA backend not available.')
-            if not ASTRA_CUDA_AVAILABLE and backend == 'astra_cuda':
+            if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
                 raise ValueError('ASTRA CUDA backend not available.')
             if discr_range.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
@@ -217,7 +220,7 @@ class XrayBackProjector(Operator):
                                  ''.format(discr_range.grid.stride))
 
         self._geometry = geometry
-        self._backend = backend
+        self._impl = impl
         self.kwargs = kwargs
 
         # Create a discretized space (operator domain) with the same data-space
@@ -239,9 +242,9 @@ class XrayBackProjector(Operator):
         super().__init__(disc_domain, discr_range, linear=True)
 
     @property
-    def backend(self):
-        """Computational back-end for this operator."""
-        return self._backend
+    def impl(self):
+        """Implementation back-end for evaluation of this operator."""
+        return self._impl
 
     @property
     def geometry(self):
@@ -265,18 +268,19 @@ class XrayBackProjector(Operator):
         out : `DiscreteLpVector`
             Returns an element in the projection space
         """
-        back, impl = self.backend.split('_')
-        if back == 'astra':
-            if impl == 'cpu':
+        backend, data_impl = self.impl.split('_')
+        if backend == 'astra':
+            if data_impl == 'cpu':
                 return astra_cpu_back_projector(x, self.geometry,
                                                 self.range, out)
-            elif impl == 'cuda':
+            elif data_impl == 'cuda':
                 return astra_cuda_back_projector(x, self.geometry,
                                                  self.range, out)
             else:
-                raise ValueError('unknown implementation {}.'.format(impl))
+                # Should never happen
+                raise RuntimeError('implementation info is inconsistent.')
         else:  # Should never happen
-            raise RuntimeError('backend support information is inconsistent.')
+            raise RuntimeError('implementation info is inconsistent.')
 
     @property
     def adjoint(self):
