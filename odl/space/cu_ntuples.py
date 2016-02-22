@@ -25,6 +25,7 @@ from builtins import int, super
 
 # External module imports
 import numpy as np
+from contextlib import contextmanager
 
 # ODL imports
 from odl.set.space import LinearSpaceVector
@@ -331,12 +332,26 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
         array([1, 2, 3], dtype=uint8)
         >>> result is out
         True
+
+        Can also be used with a context manager to become writable
+
+        >>> x = uc3.element([0, 0, 0])
+        >>> with x.aswriteablearray() as arr:
+        ...     arr[:] = [1, 2, 3]
+        >>> x
+        CudaNtuples(3, 'uint8').element([1, 2, 3])
+
+        See Also
+        --------
+        aswriteablearray : gives a writable array
         """
+
         if out is None:
-            return self.data.get_to_host(slice(start, stop, step))
+            out = self.data.get_to_host(slice(start, stop, step))
         else:
             self.data.copy_device_to_host(slice(start, stop, step), out)
-            return out
+
+        return out
 
     def __getitem__(self, indices):
         """Access values of this vector.
