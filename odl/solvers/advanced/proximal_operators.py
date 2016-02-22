@@ -36,7 +36,8 @@ from odl.set.pspace import ProductSpace
 
 
 __all__ = ('combine_proximals', 'proximal_zero', 'proximal_nonnegativity',
-           'proximal_convexconjugate_l1', 'proximal_convexconjugate_l2')
+           'proximal_convexconjugate_l1', 'proximal_convexconjugate_l2',
+           'proximal_convexconjugate_kl')
 
 
 # TODO: remove diagonal op once available on master
@@ -293,7 +294,8 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
         ||y - sigma g||_p)
 
     where max(.,.) thresholds the lower bound of ||y||_p point-wise and
-    1_{||y||_p} is a unit vector in the space of ||y||_p.
+    1_{||y||_p} is a vector in the space of ||y||_p with all components set
+    to 1.
 
     Parameters
     ----------
@@ -373,6 +375,113 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
                 out.divide(diff, out)
 
     return _ProximalConvConjL1
+
+
+# TODO: move notes to ODL doc
+def proximal_convexconjugate_kl(space, lam=1, g=None):
+    """Proximal operator factory of the convex conjugate of the KL divergence.
+
+    Function returning the proximal operator of the convex conjugate of the
+    functional F where F is the entropy-type Kullback-Leibler (KL) divergence
+
+        F(x) = sum_i (x - g + g ln(g) - g ln(pos(x)))_i + ind_P(x)
+
+    with x and g in X and g non-negative. The indicator function ind_P(x)
+    for the positive elements of x is used to restrict the domain of F such
+    that F is defined over whole X. The non-negativity thresholding pos is
+    used to define F in the real numbers.
+
+    The proximal operator of the convex conjugate, F_cc, of F is
+
+        F_cc(p) = sum_i (-g ln(pos(1_X - p))_i + ind_P(1_X - p)
+
+    where p is the variable dual to x, and 1_X is a vector in the space X with
+    all components set to 1.
+
+    The proximal operator of the convex conjugate of F is
+
+        prox_sigma[F_cc](x) = 1/2 (lam_X + x - sqrt((x - lam_X)^2 + 4 lam
+        sigma g)
+
+    with the step size parameter sigma and lam_X is a vector in the space X
+    with all components set to lam.
+
+    Parameters
+    ----------
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
+        The space X which is the domain of the functional F
+    g : `DiscreteLpVector`
+        An element in ``space``
+    lam : positive `float`
+        Scaling factor
+
+    Returns
+    -------
+    prox : `Operator`
+        Returns the proximal operator to be initialized
+
+    Notes
+    -----
+    KL based objectives are common in MLEM optimization problems and are often
+    used when data noise governed by a multivariate Poisson probability
+    distribution is significant.
+
+    The intermediate image estimates can have negative values even though
+    the converged solution will be non-negative. Non-negative intermediate
+    image estimates can be enforced by adding an indicator function ind_P
+    the primal objective.
+    """
+    lam = float(lam)
+
+    if g is None:
+        g = space.zero()
+    else:
+        if g not in space:
+            raise TypeError('{} is not an element of {}'.format(g, space))
+
+    class _ProximalConvConjKL(Operator):
+
+        """The proximal operator."""
+
+        def __init__(self, sigma):
+            """Initialize the proximal operator.
+
+            Parameters
+            ----------
+            sigma : positive `float`
+            """
+            self.sigma = float(sigma)
+            super().__init__(domain=space, range=space, linear=False)
+
+        def _call(self, x, out):
+            """Apply the operator to ``x`` and stores the result in ``out``."""
+            sig = self.sigma
+
+            # 1 / 2 (lam_X + x - sqrt((x - lam_X) ^ 2 + 4; lam sigma g)
+
+            # TODO: optimize
+            # out = x - lam_X
+            out.lincomb(1, x, -lam, space.one())
+
+            # (out)^2
+            out.ufunc.square(out=out)
+
+            # out = out + 4 lam sigma g
+            out.lincomb(1, out, 4 * lam * sig, g)
+
+            # out = sqrt(out)
+            out.ufunc.sqrt(out=out)
+
+            # out = x - out
+            out.lincomb(1, x, -1, out)
+
+            # out = lam_X + out
+            out.lincomb(lam, space.one(), 1, out)
+
+            # out = 1/2 * out
+            out /= 2
+
+    return _ProximalConvConjKL
 
 
 if __name__ == '__main__':
