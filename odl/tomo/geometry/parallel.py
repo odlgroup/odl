@@ -96,6 +96,52 @@ class ParallelGeometry(Geometry):
                              ''.format(angles, self.motion_params))
         return self.rotation_matrix(angles).dot(self._det_init_pos)
 
+    def det_to_src(self, angles, dpar, normalized=True):
+        """Direction from a detector location to the source.
+
+        In parallel geometry, this function is independent of the
+        detector parameter.
+
+        Since the (virtual) source is infinitely far away, only the
+        normalized version is valid.
+
+        Parameters
+        ----------
+        angles : `array-like`
+            Euler angles given in radians, must be contained
+            in this geometry's `motion_params`
+        dpar : `float`
+            Detector parameters, must be contained in this
+            geometry's `det_params`
+        normalized : `bool`, optional
+            If `True`, return the normalized version of the vector.
+            For parallel geometry, this is the only sensible option.
+
+        Returns
+        -------
+        vec : `numpy.ndarray`, shape (`ndim`,)
+            Unit vector pointing from the detector to the source
+
+        Raises
+        ------
+        NotImplementedError
+            if ``normalized=False`` is given, since this case is not
+            well defined.
+        """
+        if angles not in self.motion_params:
+            raise ValueError('angles {} not in the valid range {}.'
+                             ''.format(angles, self.motion_params))
+
+        if dpar not in self.det_params:
+            raise ValueError('detector parameters {} not in the valid range '
+                             '{}.'.format(dpar, self.det_params))
+
+        if not normalized:
+            raise NotImplementedError('non-normalized detector to source is '
+                                      'not available in parallel case')
+
+        return self.rotation_matrix(angles).dot(self.detector.normal)
+
 
 class Parallel2dGeometry(ParallelGeometry):
 
@@ -174,52 +220,6 @@ class Parallel2dGeometry(ParallelGeometry):
             raise ValueError('angle {} not in the valid range {}.'
                              ''.format(angle, self.motion_params))
         return euler_matrix(angle)
-
-    def det_to_src(self, angle, dpar, normalized=True):
-        """Direction from a detector location to the source.
-
-        In parallel geometry, this function is independent of the
-        detector parameter.
-
-        Since the (virtual) source is infinitely far away, only the
-        normalized version is valid.
-
-        Parameters
-        ----------
-        angle : `float`
-            Rotation angle given in radians, must be contained in
-            this geometry's `motion_params`
-        dpar : `float`
-            Detector parameter, must be contained in this
-            geometry's `det_params`
-        normalized : `bool`, optional
-            If `True`, return the normalized version of the vector.
-            For parallel geometry, this is the only sensible option.
-
-        Returns
-        -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
-            Unit vector pointing from the detector to the source
-
-        Raises
-        ------
-        NotImplementedError
-            if ``normalized=False`` is given, since this case is not
-            well defined.
-        """
-        if angle not in self.motion_params:
-            raise ValueError('angle {} not in the valid range {}.'
-                             ''.format(angle, self.motion_params))
-
-        if dpar not in self.det_params:
-            raise ValueError('detector parameter {} not in the valid range {}.'
-                             ''.format(dpar, self.det_params))
-
-        if not normalized:
-            raise NotImplementedError('non-normalized detector to source is '
-                                      'not available in parallel case')
-
-        return self.rotation_matrix(angle).dot(self.detector.normal)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -309,52 +309,6 @@ class Parallel3dGeometry(ParallelGeometry):
             raise ValueError('angles {} not in the valid range {}.'
                              ''.format(angles, self.motion_params))
         return euler_matrix(*angles)
-
-    def det_to_src(self, angles, dpar, normalized=True):
-        """Direction from a detector location to the source.
-
-        In parallel geometry, this function is independent of the
-        detector parameter.
-
-        Since the (virtual) source is infinitely far away, only the
-        normalized version is valid.
-
-        Parameters
-        ----------
-        angles : `array-like`
-            Euler angles given in radians, must be contained
-            in this geometry's `motion_params`
-        dpar : `float`
-            Detector parameters, must be contained in this
-            geometry's `det_params`
-        normalized : `bool`, optional
-            If `True`, return the normalized version of the vector.
-            For parallel geometry, this is the only sensible option.
-
-        Returns
-        -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
-            Unit vector pointing from the detector to the source
-
-        Raises
-        ------
-        NotImplementedError
-            if ``normalized=False`` is given, since this case is not
-            well defined.
-        """
-        if angles not in self.motion_params:
-            raise ValueError('angles {} not in the valid range {}.'
-                             ''.format(angles, self.motion_params))
-
-        if dpar not in self.det_params:
-            raise ValueError('detector parameters {} not in the valid range '
-                             '{}.'.format(dpar, self.det_params))
-
-        if not normalized:
-            raise NotImplementedError('non-normalized detector to source is '
-                                      'not available in parallel case')
-
-        return self.rotation_matrix(angles).dot(self.detector.normal)
 
     def __repr__(self):
         """Return ``repr(self)``."""
