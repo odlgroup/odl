@@ -27,6 +27,8 @@ import pytest
 
 # Internal
 import odl
+from odl.tomo.backends.astra_cpu import (
+    astra_cpu_forward_projector, astra_cpu_back_projector)
 from odl.tomo.util.testutils import skip_if_no_astra
 
 
@@ -36,88 +38,57 @@ from odl.tomo.util.testutils import skip_if_no_astra
 def test_astra_cpu_projector_parallel2d():
     """ASTRA CPU forward and back projection for 2d parallel geometry."""
 
-    # `DiscreteLp` space for volume data
-    vol_shape = (5, 5)
-    discr_vol_space = odl.uniform_discr([-5, -5], [5, 5], vol_shape,
-                                        dtype='float32')
+    # Create reco space
+    reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5), dtype='float32')
+    phantom = odl.util.phantom.cuboid(reco_space, begin=0.5, end=1)
 
-    # Create an element in the `DiscreteLp` space
-    discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
+    # Create parallel geometry
+    angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
+    det_part = odl.uniform_partition(-6, 6, 6)
+    geom = odl.tomo.Parallel2dGeometry(angle_part, det_part)
 
-    # Angles
-    angle_grid = odl.uniform_sampling(0, 2 * np.pi, 8)
-
-    # Detector
-    det_grid = odl.uniform_sampling(-6, 6, 6)
-
-    # 2D geometry instances for parallel and fan beam with flat line detector
-    geom = odl.tomo.Parallel2dGeometry(angle_grid, det_grid)
-
-    # Projection space
-    proj_space = odl.FunctionSpace(geom.params)
-
-    # `DiscreteLp` projection space
-    proj_shape = geom.grid.shape
-    discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
-                                                   dtype='float32')
+    # Make projection space
+    proj_space = odl.uniform_discr_frompartition(geom.partition,
+                                                 dtype='float32')
 
     # forward
-    proj_data = odl.tomo.astra_cpu_forward_projector(discr_data, geom,
-                                                     discr_proj_space)
-    assert proj_data.shape == proj_shape
+    proj_data = astra_cpu_forward_projector(phantom, geom, proj_space)
+    assert proj_data.shape == proj_space.shape
     assert proj_data.norm() > 0
 
     # backward
-    reco_data = odl.tomo.astra_cpu_back_projector(proj_data, geom,
-                                                  discr_vol_space)
-    assert reco_data.shape == vol_shape
-    assert reco_data.norm() > 0
+    backproj = astra_cpu_back_projector(proj_data, geom, reco_space)
+    assert backproj.shape == reco_space.shape
+    assert backproj.norm() > 0
 
 
 @skip_if_no_astra
 def test_astra_cpu_projector_fanflat():
     """ASTRA CPU forward and back projection for fanflat geometry."""
 
-    # `DiscreteLp` space for volume data
-    vol_shape = (5, 5)
-    discr_vol_space = odl.uniform_discr([-5, -5], [5, 5], vol_shape,
-                                        dtype='float32')
+    reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5), dtype='float32')
+    phantom = odl.util.phantom.cuboid(reco_space, begin=0.5, end=1)
 
-    # Create an element in the `DiscreteLp` space
-    discr_data = odl.util.phantom.cuboid(discr_vol_space, 0.5, 1)
-
-    # Angles
-    angle_grid = odl.uniform_sampling(0, 2 * np.pi, 8)
-
-    # Detector
-    det_grid = odl.uniform_sampling(-6, 6, 6)
-
-    # Distances for fanflat geometries
+    # Create fan beam geometry with flat detector
+    angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
+    det_part = odl.uniform_partition(-6, 6, 6)
     src_rad = 100
     det_rad = 10
+    geom = odl.tomo.FanFlatGeometry(angle_part, det_part, src_rad, det_rad)
 
-    # 2D geometry instances for parallel and fan beam with flat line detector
-    geom = odl.tomo.FanFlatGeometry(angle_grid, det_grid, src_rad, det_rad)
-
-    # Projection space
-    proj_space = odl.FunctionSpace(geom.params)
-
-    # `DiscreteLp` projection space
-    proj_shape = geom.grid.shape
-    discr_proj_space = odl.uniform_discr_fromspace(proj_space, proj_shape,
-                                                   dtype='float32')
+    # Make projection space
+    proj_space = odl.uniform_discr_frompartition(geom.partition,
+                                                 dtype='float32')
 
     # forward
-    proj_data = odl.tomo.astra_cpu_forward_projector(discr_data, geom,
-                                                     discr_proj_space)
-    assert proj_data.shape == proj_shape
+    proj_data = astra_cpu_forward_projector(phantom, geom, proj_space)
+    assert proj_data.shape == proj_space.shape
     assert proj_data.norm() > 0
 
     # backward
-    reco_data = odl.tomo.astra_cpu_back_projector(proj_data, geom,
-                                                  discr_vol_space)
-    assert reco_data.shape == vol_shape
-    assert reco_data.norm() > 0
+    backproj = astra_cpu_back_projector(proj_data, geom, reco_space)
+    assert backproj.shape == reco_space.shape
+    assert backproj.norm() > 0
 
 
 if __name__ == '__main__':
