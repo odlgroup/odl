@@ -38,8 +38,8 @@ from odl.tomo.util.testutils import skip_if_no_astra
 def test_astra_cpu_projector_parallel2d():
     """ASTRA CPU forward and back projection for 2d parallel geometry."""
 
-    # Create reco space
-    reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5), dtype='float32')
+    # Create reco space and a phantom
+    reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32')
     phantom = odl.util.phantom.cuboid(reco_space, begin=0.5, end=1)
 
     # Create parallel geometry
@@ -51,12 +51,12 @@ def test_astra_cpu_projector_parallel2d():
     proj_space = odl.uniform_discr_frompartition(geom.partition,
                                                  dtype='float32')
 
-    # forward
+    # Forward evaluation
     proj_data = astra_cpu_forward_projector(phantom, geom, proj_space)
     assert proj_data.shape == proj_space.shape
     assert proj_data.norm() > 0
 
-    # backward
+    # Backward evaluation
     backproj = astra_cpu_back_projector(proj_data, geom, reco_space)
     assert backproj.shape == reco_space.shape
     assert backproj.norm() > 0
@@ -66,7 +66,8 @@ def test_astra_cpu_projector_parallel2d():
 def test_astra_cpu_projector_fanflat():
     """ASTRA CPU forward and back projection for fanflat geometry."""
 
-    reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5), dtype='float32')
+    # Create reco space and a phantom
+    reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32')
     phantom = odl.util.phantom.cuboid(reco_space, begin=0.5, end=1)
 
     # Create fan beam geometry with flat detector
@@ -80,12 +81,12 @@ def test_astra_cpu_projector_fanflat():
     proj_space = odl.uniform_discr_frompartition(geom.partition,
                                                  dtype='float32')
 
-    # forward
+    # Forward evaluation
     proj_data = astra_cpu_forward_projector(phantom, geom, proj_space)
     assert proj_data.shape == proj_space.shape
     assert proj_data.norm() > 0
 
-    # backward
+    # Backward evaluation
     backproj = astra_cpu_back_projector(proj_data, geom, reco_space)
     assert backproj.shape == reco_space.shape
     assert backproj.norm() > 0
