@@ -321,7 +321,7 @@ class AxisOrientedGeometry(object):
         self._axis = np.asarray(axis, dtype=float) / np.linalg.norm(axis)
         if self.axis.shape != (3,):
             raise ValueError('axis has shape {}, expected (3,).'
-                             ''.format(axis.shape))
+                             ''.format(self.axis.shape))
 
     @property
     def axis(self):

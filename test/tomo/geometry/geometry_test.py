@@ -39,9 +39,9 @@ def test_parallel_2d_geometry():
 
     # Parameters
     full_angle = np.pi
-    agrid = odl.uniform_sampling(0, full_angle, 10)
-    dgrid = odl.uniform_sampling(0, 1, 10)
-    geom = odl.tomo.Parallel2dGeometry(agrid, dgrid)
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition(0, 1, 10)
+    geom = odl.tomo.Parallel2dGeometry(apart, dpart)
 
     assert geom.ndim == 2
     assert isinstance(geom.detector, odl.tomo.Flat1dDetector)
@@ -55,22 +55,22 @@ def test_parallel_2d_geometry():
     assert all_almost_equal(rot_mat.dot([0, 1]), [-1, 0])
 
 
-def test_parallel_3d_geometry():
+def test_parallel_3d_single_axis_geometry():
     """General parallel 3D geometries."""
 
     # Parameters
     full_angle = np.pi
-    agrid = odl.uniform_sampling(0, full_angle, 10)
-    dgrid = odl.uniform_sampling([0, 0], [1, 1], [10, 10])
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition([0, 0], [1, 1], [10, 10])
 
     # Bad init
     with pytest.raises(TypeError):
-        odl.tomo.FanFlatGeometry([0, 1], dgrid)
+        odl.tomo.Parallel3dSingleAxisGeometry([0, 1], dpart)
     with pytest.raises(TypeError):
-        odl.tomo.FanFlatGeometry(agrid, [0, 1])
+        odl.tomo.Parallel3dSingleAxisGeometry(apart, [0, 1])
 
     # Initialize
-    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 0, 1])
+    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 0, 1])
 
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
@@ -78,41 +78,41 @@ def test_parallel_3d_geometry():
     # rotation of cartesian basis vectors about each other
     coords = np.eye(3)
 
-    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[1, 0, 0])
+    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[1, 0, 0])
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_almost_equal(rot_mat.dot(coords), [[1, 0, 0],
                                                   [0, 0, -1],
                                                   [0, 1, 0]])
 
-    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 1, 0])
+    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 1, 0])
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_almost_equal(rot_mat.dot(coords), [[0, 0, 1],
                                                   [0, 1, 0],
                                                   [-1, 0, 0]])
 
-    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 0, 1])
+    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 0, 1])
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_almost_equal(rot_mat.dot(coords), [[0, -1, 0],
                                                   [1, 0, 0],
                                                   [0, 0, 1]])
 
     # rotation axis
-    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[1, 0, 0])
+    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[1, 0, 0])
     assert all_equal(geom.axis, np.array([1, 0, 0]))
-    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 1, 0])
+    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 1, 0])
     assert all_equal(geom.axis, np.array([0, 1, 0]))
-    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[0, 0, 1])
+    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 0, 1])
     assert all_equal(geom.axis, np.array([0, 0, 1]))
-    geom = odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=[1, 2, 3])
+    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[1, 2, 3])
     assert all_equal(geom.axis,
                      np.array([1, 2, 3]) / np.linalg.norm([1, 2, 3]))
 
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=(1,))
+        odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=(1,))
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=(1, 2))
+        odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=(1, 2))
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dGeometry(agrid, dgrid, axis=(1, 2, 3, 4))
+        odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=(1, 2, 3, 4))
 
 
 def test_fanflat():
@@ -120,22 +120,22 @@ def test_fanflat():
 
     # Parameters
     full_angle = np.pi
-    agrid = odl.uniform_sampling(0, full_angle, 10)
-    dgrid = odl.uniform_sampling(0, 1, 10)
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition(0, 1, 10)
     src_rad = 10
     det_rad = 5
 
     with pytest.raises(TypeError):
-        odl.tomo.FanFlatGeometry([0, 1], dgrid, src_rad, det_rad)
+        odl.tomo.FanFlatGeometry([0, 1], dpart, src_rad, det_rad)
     with pytest.raises(TypeError):
-        odl.tomo.FanFlatGeometry(agrid, [0, 1], src_rad, det_rad)
+        odl.tomo.FanFlatGeometry(apart, [0, 1], src_rad, det_rad)
     with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(agrid, dgrid, -1, det_rad)
+        odl.tomo.FanFlatGeometry(apart, dpart, -1, det_rad)
     with pytest.raises(ValueError):
-        odl.tomo.FanFlatGeometry(agrid, dgrid, src_rad, -1)
+        odl.tomo.FanFlatGeometry(apart, dpart, src_rad, -1)
 
     # Initialize
-    geom = odl.tomo.FanFlatGeometry(agrid, dgrid, src_rad, det_rad)
+    geom = odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad)
 
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
@@ -160,22 +160,22 @@ def test_circular_cone_flat():
 
     # Parameters
     full_angle = np.pi
-    agrid = odl.uniform_sampling(0, full_angle, 10)
-    dgrid = odl.uniform_sampling([0, 0], [1, 1], [10, 10])
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition([0, 0], [1, 1], [10, 10])
     src_rad = 10
     det_rad = 5
 
     with pytest.raises(TypeError):
-        odl.tomo.CircularConeFlatGeometry([0, 1], dgrid, src_rad, det_rad)
+        odl.tomo.CircularConeFlatGeometry([0, 1], dpart, src_rad, det_rad)
     with pytest.raises(TypeError):
-        odl.tomo.CircularConeFlatGeometry(agrid, [0, 1], src_rad, det_rad)
+        odl.tomo.CircularConeFlatGeometry(apart, [0, 1], src_rad, det_rad)
     with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(agrid, dgrid, -1, det_rad)
+        odl.tomo.CircularConeFlatGeometry(apart, dpart, -1, det_rad)
     with pytest.raises(ValueError):
-        odl.tomo.CircularConeFlatGeometry(agrid, dgrid, src_rad, -1)
+        odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad, -1)
 
     # Initialize
-    geom = odl.tomo.CircularConeFlatGeometry(agrid, dgrid, src_rad, det_rad)
+    geom = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad, det_rad)
 
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
@@ -191,25 +191,25 @@ def test_helical_cone_flat():
 
     # Parameters
     full_angle = 2 * np.pi
-    agrid = odl.uniform_sampling(0, full_angle, 10)
-    dgrid = odl.uniform_sampling([0, 0], [1, 1], [10, 10])
+    apart = odl.uniform_partition(0, full_angle, 10)
+    dpart = odl.uniform_partition([0, 0], [1, 1], [10, 10])
     src_rad = 10.0
     det_rad = 5.0
     pitch = 1.5
 
     with pytest.raises(TypeError):
-        odl.tomo.HelicalConeFlatGeometry([0, 1], dgrid,
+        odl.tomo.HelicalConeFlatGeometry([0, 1], dpart,
                                          src_rad, det_rad, pitch)
     with pytest.raises(TypeError):
-        odl.tomo.HelicalConeFlatGeometry(agrid, [0, 1],
+        odl.tomo.HelicalConeFlatGeometry(apart, [0, 1],
                                          src_rad, det_rad, pitch)
     with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(agrid, dgrid, -1, det_rad, pitch)
+        odl.tomo.HelicalConeFlatGeometry(apart, dpart, -1, det_rad, pitch)
     with pytest.raises(ValueError):
-        odl.tomo.HelicalConeFlatGeometry(agrid, dgrid, src_rad, -1, pitch)
+        odl.tomo.HelicalConeFlatGeometry(apart, dpart, src_rad, -1, pitch)
 
     # Initialize
-    geom = odl.tomo.HelicalConeFlatGeometry(agrid, dgrid,
+    geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart,
                                             src_rad, det_rad, pitch)
 
     with pytest.raises(ValueError):
