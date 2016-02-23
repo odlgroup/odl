@@ -120,11 +120,11 @@ def arraynd_repr(array, nprint=None):
 
 
 def arraynd_str(array, nprint=None):
-    """Stringification of a nD array, regardless of byte or unicode.
+    """Stringification of an nD array, regardless of byte or unicode.
 
     Parameters
     ----------
-    array : array-like
+    array : `array-like`
         The array to print
     nprint : int
         Maximum number of elements to print.
@@ -193,7 +193,7 @@ def equiv_views(v1, v2):
         `False` otherwise.
     """
     for v in (v1, v2):
-        if not isinstance(v, np.ndarray) or v.base is None:
+        if getattr(v, 'base', None) is None:
             # base is None means own data, i.e. not a view
             return False
 
