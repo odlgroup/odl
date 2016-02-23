@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example using the X-ray transform with 2d parallel beam geometry."""
+"""Example using the X-ray transform with circular cone beam geometry."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -26,22 +26,23 @@ import numpy as np
 import odl
 
 
-# Discrete reconstruction space: discretized functions on the rectangle
-# [-20, 20]^2 with 300 samples per dimension.
+# Discrete reconstruction space: discretized functions on the cube
+# [-20, 20]^3 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_corner=[-20, -20], max_corner=[20, 20], nsamples=[300, 300],
-    dtype='float32')
+    min_corner=[-20, -20, -20], max_corner=[20, 20, 20],
+    nsamples=[300, 300, 300], dtype='float32')
 
-# Make a parallel beam geometry with flat detector
+# Make a circular cone beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
 angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
-# Detector: uniformly sampled, n = 558, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 558)
-geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
+# Detector: uniformly sampled, n = (558, 558), min = (-30, -30), max = (30, 30)
+detector_partition = odl.uniform_partition([-30, -30], [30, 30], [558, 558])
+geometry = odl.tomo.CircularConeFlatGeometry(
+    angle_partition, detector_partition, src_radius=1000, det_radius=100,
+    axis=[1, 0, 0])
 
 # X-ray transform aka forward projection. We use ASTRA CUDA backend.
-xray_trafo = odl.tomo.XrayTransform(reco_space, geometry,
-                                    impl='astra_cuda')
+xray_trafo = odl.tomo.XrayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create a discrete Shepp-Logan phantom (modified version)
 phantom = odl.util.phantom.shepp_logan(reco_space, True)
@@ -54,6 +55,8 @@ proj_data = xray_trafo(phantom)
 backproj = xray_trafo.adjoint(proj_data)
 
 # Shows a slice of the phantom, projections, and reconstruction
-phantom.show(title='Phantom')
-proj_data.show(title='Projection data (sinogram)')
-backproj.show(title='Back-projected data')
+phantom.show(indices=np.s_[:, :, 150], title='Phantom, middle z slice')
+proj_data.show(indices=np.s_[0, :, :], title='Projection 0')
+proj_data.show(indices=np.s_[90, :, :], title='Projection 90')
+backproj.show(indices=np.s_[:, :, 150],
+              title='back-projection, middle z slice')
