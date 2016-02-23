@@ -104,17 +104,17 @@ def astra_volume_geometry(discr_reco):
         raise TypeError('sampling grid {!r} is not a RegularGrid '
                         'instance.'.format(discr_reco.grid))
 
-    vol_shp = discr_reco.grid.shape
-    vol_min = discr_reco.grid.min()
-    vol_max = discr_reco.grid.max()
+    vol_shp = discr_reco.partition.shape
+    vol_min = discr_reco.partition.begin
+    vol_max = discr_reco.partition.end
 
     if discr_reco.ndim == 2:
         # ASTRA does in principle support custom minimum and maximum
         # values for the volume extent, but projector creation fails
         # if voxels are non-isotropic. We raise an exception here in
         # the meanwhile.
-        if not np.allclose(discr_reco.grid.stride[1:],
-                           discr_reco.grid.stride[:-1]):
+        if not np.allclose(discr_reco.partition.cell_sides[1:],
+                           discr_reco.partition.cell_sides[:-1]):
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
         # given a 2D array of shape (x, y), a volume geometry is created as:
