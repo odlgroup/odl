@@ -602,7 +602,8 @@ class DiscreteLpVector(DiscretizationVector):
         values = self.asarray()[indices].squeeze()
 
         return show_discrete_data(values, grid, method=method, title=title,
-                                  show=show, fig=fig, **kwargs)
+                                  show=show, fig=fig, axis_labels=axis_labels,
+                                  **kwargs)
 
 
 def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
