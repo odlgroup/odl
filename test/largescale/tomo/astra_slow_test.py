@@ -45,7 +45,7 @@ if tomo.ASTRA_CUDA_AVAILABLE:
 
 @pytest.fixture(scope="module", params=projectors)
 def projector(request):
-    geom, version = request.param.split()
+    geom, variant = request.param.split()
     if geom == 'par2d':
         # Discrete reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
@@ -58,7 +58,7 @@ def projector(request):
 
         # X-ray transform
         return tomo.XrayTransform(discr_reco_space, geom,
-                                  backend='astra_' + version)
+                                  impl='astra_' + variant)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
@@ -68,11 +68,11 @@ def projector(request):
         # Geometry
         apart = odl.uniform_partition(0, 2 * np.pi, 200)
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
-        geom = tomo.Parallel3dGeometry(apart, dpart, axis=[1, 0, 0])
+        geom = tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[1, 0, 0])
 
         # X-ray transform
-        return tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                          backend='astra_' + version)
+        return tomo.XrayTransform(discr_reco_space, geom,
+                                  impl='astra_' + variant)
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
@@ -86,8 +86,8 @@ def projector(request):
                                     src_radius=200, det_radius=100)
 
         # X-ray transform
-        return tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                          backend='astra_' + version)
+        return tomo.XrayTransform(discr_reco_space, geom,
+                                  impl='astra_' + variant)
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
@@ -101,8 +101,8 @@ def projector(request):
             apart, dpart, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
         # X-ray transform
-        return tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                          backend='astra_' + version)
+        return tomo.XrayTransform(discr_reco_space, geom,
+                                  impl='astra_' + variant)
 
     elif geom == 'helical':
         # Discrete reconstruction space
@@ -117,8 +117,8 @@ def projector(request):
                                             src_radius=200, det_radius=100)
 
         # X-ray transform
-        return tomo.DiscreteXrayTransform(discr_reco_space, geom,
-                                          backend='astra_' + version)
+        return tomo.XrayTransform(discr_reco_space, geom,
+                                  impl='astra_' + variant)
     else:
         raise ValueError('param not valid')
 
