@@ -222,7 +222,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         if not np.allclose(self.detector.axis, default_axis):
             arg_fstr += ',\n    det_init_axis={det_init_axis!r}'
 
-        arg_str = arg_fstr.format(self.motion_grid, self.det_grid,
+        arg_str = arg_fstr.format(self.motion_partition, self.det_partition,
                                   self.src_radius, self.det_radius,
                                   src_to_det_init=self._src_to_det_init,
                                   det_init_axis=self.detector.axis)

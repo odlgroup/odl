@@ -49,7 +49,6 @@ import numpy as np
 
 # Internal
 from odl.space.ntuples import FnVector
-from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
                                DivergentBeamGeometry,
@@ -90,19 +89,16 @@ def astra_volume_geometry(discr_reco):
 
     Raises
     ------
-    `NotImplementedError`
-        if in 3d, the grid strides (voxel sizes) are not the same in
-        each dimension. This is currently only supported in 2d by
-        ASTRA.
+    NotImplementedError
+        if the cell sizes are not the same in each dimension
     """
     # TODO: allow other discretizations?
     if not isinstance(discr_reco, DiscreteLp):
         raise TypeError('discretized domain {!r} is not a DiscreteLp '
                         'instance.'.format(discr_reco))
 
-    if not isinstance(discr_reco.grid, RegularGrid):
-        raise TypeError('sampling grid {!r} is not a RegularGrid '
-                        'instance.'.format(discr_reco.grid))
+    if not discr_reco.partition.is_regular:
+        raise ValueError('irregular volume sampling not supported')
 
     vol_shp = discr_reco.partition.shape
     vol_min = discr_reco.partition.begin
@@ -131,8 +127,8 @@ def astra_volume_geometry(discr_reco):
                                          vol_min[0], vol_max[0])
     elif discr_reco.ndim == 3:
         # Non-isotropic voxels are not yet supported in 3d ASTRA
-        if not np.allclose(discr_reco.grid.stride[1:],
-                           discr_reco.grid.stride[:-1]):
+        if not np.allclose(discr_reco.partition.cell_sides[1:],
+                           discr_reco.partition.cell_sides[:-1]):
             # TODO: for parallel geometries, one can work around this issue
             raise NotImplementedError('non-isotropic voxels not supported by '
                                       'ASTRA.')
@@ -359,7 +355,7 @@ def astra_projection_geometry(geometry):
     # isotropic) voxel size.
     if isinstance(geometry, Parallel2dGeometry):
         # TODO: change to parallel_vec when available
-        det_width = geometry.det_grid.stride[0]
+        det_width = geometry.det_partition.cell_sides[0]
         det_count = geometry.detector.size
         # convention in 'astra_conebeam_2d_geom_to_vec' differs from ASTRA's
         angles = geometry.motion_grid.coord_vectors[0] - np.pi / 2
@@ -376,8 +372,8 @@ def astra_projection_geometry(geometry):
     elif (isinstance(geometry, ParallelGeometry) and
           isinstance(geometry.detector, FlatDetector) and
           geometry.ndim == 3):
-        det_row_count = geometry.det_grid.shape[1]
-        det_col_count = geometry.det_grid.shape[0]
+        det_row_count = geometry.det_partition.shape[1]
+        det_col_count = geometry.det_partition.shape[0]
         vec = astra_parallel_3d_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom('parallel3d_vec', det_row_count,
                                            det_col_count, vec)
@@ -385,8 +381,8 @@ def astra_projection_geometry(geometry):
     elif (isinstance(geometry, DivergentBeamGeometry) and
           isinstance(geometry.detector, FlatDetector) and
           geometry.ndim == 3):
-        det_row_count = geometry.det_grid.shape[1]
-        det_col_count = geometry.det_grid.shape[0]
+        det_row_count = geometry.det_partition.shape[1]
+        det_col_count = geometry.det_partition.shape[0]
         vec = astra_conebeam_3d_geom_to_vec(geometry)
         proj_geom = astra.create_proj_geom('cone_vec', det_row_count,
                                            det_col_count, vec)

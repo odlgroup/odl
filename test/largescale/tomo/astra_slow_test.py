@@ -52,9 +52,9 @@ def projector(request):
                                              [100, 100], dtype='float32')
 
         # Geometry
-        agrid = odl.uniform_sampling(0, 2 * np.pi, 200)
-        dgrid = odl.uniform_sampling(-30, 30, 200)
-        geom = tomo.Parallel2dGeometry(agrid, dgrid)
+        apart = odl.uniform_partition(0, 2 * np.pi, 200)
+        dpart = odl.uniform_partition(-30, 30, 200)
+        geom = tomo.Parallel2dGeometry(apart, dpart)
 
         # X-ray transform
         return tomo.XrayTransform(discr_reco_space, geom,
@@ -66,9 +66,9 @@ def projector(request):
                                              [100, 100, 100], dtype='float32')
 
         # Geometry
-        agrid = odl.uniform_sampling(0, 2 * np.pi, 200)
-        dgrid = odl.uniform_sampling([-30, -30], [30, 30], [200, 200])
-        geom = tomo.Parallel3dGeometry(agrid, dgrid, axis=[1, 0, 0])
+        apart = odl.uniform_partition(0, 2 * np.pi, 200)
+        dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
+        geom = tomo.Parallel3dGeometry(apart, dpart, axis=[1, 0, 0])
 
         # X-ray transform
         return tomo.DiscreteXrayTransform(discr_reco_space, geom,
@@ -80,9 +80,9 @@ def projector(request):
                                              [100, 100], dtype='float32')
 
         # Geometry
-        agrid = odl.uniform_sampling(0, 2 * np.pi, 200)
-        dgrid = odl.uniform_sampling(-30, 30, 200)
-        geom = tomo.FanFlatGeometry(agrid, dgrid,
+        apart = odl.uniform_partition(0, 2 * np.pi, 200)
+        dpart = odl.uniform_partition(-30, 30, 200)
+        geom = tomo.FanFlatGeometry(apart, dpart,
                                     src_radius=200, det_radius=100)
 
         # X-ray transform
@@ -95,10 +95,10 @@ def projector(request):
                                              [100, 100, 100], dtype='float32')
 
         # Geometry
-        agrid = odl.uniform_sampling(0, 2 * np.pi, 200)
-        dgrid = odl.uniform_sampling([-30, -30], [30, 30], [200, 200])
+        apart = odl.uniform_partition(0, 2 * np.pi, 200)
+        dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
         geom = tomo.CircularConeFlatGeometry(
-            agrid, dgrid, src_radius=200, det_radius=100, axis=[1, 0, 0])
+            apart, dpart, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
         # X-ray transform
         return tomo.DiscreteXrayTransform(discr_reco_space, geom,
@@ -111,9 +111,9 @@ def projector(request):
 
         # Geometry
         n_angle = 700
-        agrid = odl.uniform_sampling(0, 8 * 2 * np.pi, n_angle)
-        dgrid = odl.uniform_sampling([-30, -3], [30, 3], [200, 20])
-        geom = tomo.HelicalConeFlatGeometry(agrid, dgrid, pitch=5.0,
+        apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
+        dpart = odl.uniform_partition([-30, -3], [30, 3], [200, 20])
+        geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
                                             src_radius=200, det_radius=100)
 
         # X-ray transform

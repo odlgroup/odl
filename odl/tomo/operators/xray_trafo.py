@@ -89,11 +89,11 @@ class XrayTransform(Operator):
             if discr_domain.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
                                  'real and `complex64` for complex data.')
-            if not np.allclose(discr_domain.grid.stride[1:],
-                               discr_domain.grid.stride[:-1]):
+            if not np.allclose(discr_domain.partition.cell_sides[1:],
+                               discr_domain.partition.cell_sides[:-1]):
                 raise ValueError('ASTRA does not support different voxel '
-                                 'sizes per axis (got {}).'
-                                 ''.format(discr_domain.grid.stride))
+                                 'sizes per axis, got {}.'
+                                 ''.format(discr_domain.partition.cell_sides))
 
         # TODO: sanity checks between domain and geometry (ndim, ...)
         self._geometry = geometry
@@ -110,12 +110,13 @@ class XrayTransform(Operator):
         # TODO: angles and detector must be handled separately. While the
         # detector should be uniformly discretized, the angles do not have
         # to and often are not.
-        extent = float(geometry.grid.extent().prod())
-        size = float(geometry.grid.size)
+        extent = float(geometry.partition.extent().prod())
+        size = float(geometry.partition.size)
         weight = extent / size
 
         range_dspace = discr_domain.dspace_type(
-            geometry.grid.size, weight=weight, dtype=discr_domain.dspace.dtype)
+            geometry.partition.size, weight=weight,
+            dtype=discr_domain.dspace.dtype)
 
         range_interp = kwargs.get('interp', 'nearest')
         discr_range = DiscreteLp(
@@ -179,7 +180,7 @@ class XrayBackProjection(Operator):
 
         Parameters
         ----------
-        discr_range : `odl.DiscreteLp`
+        discr_range : `DiscreteLp`
             Reconstruction space, the range of the back-projector
         geometry : `Geometry`
             The geometry of the transform, contains information about
@@ -213,11 +214,11 @@ class XrayBackProjection(Operator):
             if discr_range.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
                                  'real and `complex64` for complex data.')
-            if not np.allclose(discr_range.grid.stride[1:],
-                               discr_range.grid.stride[:-1]):
+            if not np.allclose(discr_range.partition.cell_sides[1:],
+                               discr_range.partition.cell_sides[:-1]):
                 raise ValueError('ASTRA does not support different voxel '
-                                 'sizes per axis (got {}).'
-                                 ''.format(discr_range.grid.stride))
+                                 'sizes per axis, got {}.'
+                                 ''.format(discr_range.partition.cell_sides))
 
         self._geometry = geometry
         self._impl = impl
@@ -228,17 +229,18 @@ class XrayBackProjection(Operator):
         domain_uspace = FunctionSpace(geometry.params)
 
         # Approximate cell volume
-        extent = float(geometry.grid.extent().prod())
-        size = float(geometry.grid.size)
+        extent = float(geometry.partition.extent().prod())
+        size = float(geometry.partition.size)
         weight = extent / size
 
         domain_dspace = discr_range.dspace_type(
-            geometry.grid.size, weight=weight, dtype=discr_range.dspace.dtype)
+            geometry.partition.size, weight=weight,
+            dtype=discr_range.dspace.dtype)
 
         domain_interp = kwargs.get('interp', 'nearest')
         disc_domain = DiscreteLp(
-            domain_uspace, geometry.grid, domain_dspace,
-            interp=domain_interp, order=geometry.grid.order)
+            domain_uspace, geometry.partition, domain_dspace,
+            interp=domain_interp, order=discr_range.order)
         super().__init__(disc_domain, discr_range, linear=True)
 
     @property

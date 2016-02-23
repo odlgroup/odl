@@ -38,7 +38,7 @@ from odl.tomo.backends.astra_setup import (
     astra_data, astra_algorithm)
 from odl.tomo.geometry import Geometry
 from odl.tomo.geometry import (
-    Parallel2dGeometry, FanFlatGeometry, Parallel3dGeometry,
+    Parallel2dGeometry, FanFlatGeometry, Parallel3dSingleAxisGeometry,
     HelicalConeFlatGeometry)
 
 __all__ = ('astra_cuda_forward_projector', 'astra_cuda_back_projector',
@@ -128,7 +128,7 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
     # Fix inconsistent scaling
     if isinstance(geometry, Parallel2dGeometry):
         # parallel2d scales with pixel stride
-        out *= 1 / float(geometry.det_grid.stride[0])
+        out *= 1 / float(geometry.det_partition.cell_sides[0])
 
     # Delete ASTRA objects
     astra.algorithm.delete(algo_id)
@@ -217,8 +217,8 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
 
     # Angular integration weighting factor
     # angle interval weight by approximate cell volume
-    extent = float(geometry.motion_grid.extent())
-    size = float(geometry.motion_grid.size)
+    extent = float(geometry.motion_partition.extent())
+    size = float(geometry.motion_partition.size)
     scaling_factor = extent / size
 
     # Fix inconsistent scaling
@@ -232,16 +232,16 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         src_radius = geometry.src_radius
         det_radius = geometry.det_radius
         scaling_factor *= ((src_radius + det_radius) / src_radius)
-    elif isinstance(geometry, Parallel3dGeometry):
+    elif isinstance(geometry, Parallel3dSingleAxisGeometry):
         # scales with voxel stride
         # currently only square voxels are supported
-        extent = reco_space.grid.extent()
+        extent = reco_space.partition.extent()
         shape = np.array(reco_space.shape, dtype=float)
         scaling_factor /= float(extent[0] / shape[0])
     elif isinstance(geometry, HelicalConeFlatGeometry):
         # cone scales with voxel stride
         # currently only square voxels are supported
-        extent = reco_space.grid.extent()
+        extent = reco_space.partition.extent()
         shape = np.array(reco_space.shape, dtype=float)
         scaling_factor /= float(extent[0] / shape[0])
         # magnification correction

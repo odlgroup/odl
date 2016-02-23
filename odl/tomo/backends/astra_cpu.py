@@ -192,14 +192,14 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
 
     # Angular integration weighting factor
     # angle interval weight by approximate cell volume
-    extent = float(geometry.motion_grid.extent())
-    size = float(geometry.motion_grid.size)
+    extent = float(geometry.motion_partition.extent())
+    size = float(geometry.motion_partition.size)
     scaling_factor = extent / size
 
     # Fix inconsistent scaling: parallel2d & fanflat scale with (voxel
     # stride)**2 / (pixel stride), currently only square voxels are supported
-    scaling_factor *= float(geometry.det_grid.stride[0])
-    scaling_factor /= float(reco_space.grid.stride[0]) ** 2
+    scaling_factor *= float(geometry.det_partition.cell_sides[0])
+    scaling_factor /= float(reco_space.partition.cell_sides[0]) ** 2
 
     out *= scaling_factor
 
