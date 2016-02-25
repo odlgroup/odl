@@ -775,13 +775,15 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     if not partition.is_regular:
         raise ValueError('partition is not regular.')
 
-    impl_ = str(impl).lower()
-    if impl_ == 'numpy':
+    impl, impl_in = str(impl).lower(), impl
+    if impl == 'numpy':
         dtype = np.dtype(kwargs.pop('dtype', 'float64'))
-    elif impl_ == 'cuda':
+    elif impl == 'cuda':
         if not CUDA_AVAILABLE:
             raise ValueError('CUDA not available.')
         dtype = np.dtype(kwargs.pop('dtype', 'float32'))
+    else:
+        raise ValueError("implementation '{}' not understood.".format(impl_in))
 
     if is_real_dtype(dtype):
         field = RealNumbers()
@@ -1030,9 +1032,7 @@ def sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
         not equal to the default 2.0, the space has no inner
         product.
     impl : {'numpy', 'cuda'}
-
-    Other Parameters
-    ----------------
+        Implementation of the data storage arrays
     dtype : dtype
         Data type for the discretized space
 
