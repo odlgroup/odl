@@ -41,6 +41,7 @@ from scipy.sparse.base import isspmatrix
 
 # ODL imports
 from odl.operator.operator import Operator
+from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
 from odl.util.utility import (
@@ -776,6 +777,33 @@ class Fn(FnBase, Ntuples):
     def is_weighted(self):
         """Return `True` if the weighting is not `FnNoWeighting`."""
         return not isinstance(self.weighting, FnNoWeighting)
+
+    @staticmethod
+    def default_dtype(field):
+        """Return the default of `Fn` data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`
+            Set of numbers to be represented by a data type.
+            Currently supported : `RealNumbers`, `ComplexNumbers`
+
+        Returns
+        -------
+        dtype : `type`
+            Numpy data type specifier. The returned defaults are:
+
+            ``RealNumbers()`` : ``np.dtype('float64')``
+
+            ``ComplexNumbers()`` : ``np.dtype('complex128')``
+        """
+        if field == RealNumbers():
+            return np.dtype('float64')
+        elif field == ComplexNumbers():
+            return np.dtype('complex128')
+        else:
+            raise ValueError('no default data type defined for field {}.'
+                             ''.format(field))
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``.

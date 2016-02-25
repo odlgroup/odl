@@ -37,14 +37,13 @@ from odl.discr.discr_mappings import (
 from odl.discr.partition import RectPartition, uniform_partition_fromintv
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
+from odl.space.cu_ntuples import CUDA_AVAILABLE, CudaFn
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
-from odl.space.cu_ntuples import CudaFn, CUDA_AVAILABLE
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
-    is_real_dtype, is_complex_floating_dtype, dtype_repr, real_space,
-    default_dtype)
+    is_real_dtype, is_complex_floating_dtype, dtype_repr, real_space)
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -789,7 +788,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
         raise ValueError('cannot use non-scalar data type {}.'.format(dtype))
 
     fspace = FunctionSpace(partition.set, field=field)
-    ds_type = dspace_type(fspace, impl, dtype)
+    ds_type, _ = dspace_type(fspace, impl, dtype)
 
     order = kwargs.pop('order', 'C')
 
@@ -893,8 +892,10 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     field = fspace.field
     dtype = kwargs.pop('dtype', None)
+    impl, impl_in = str(impl).lower(), impl
     if dtype is None:
-        dtype = default_dtype(str(impl).lower(), field)
+        # Try to find default data type
+        dspc_type, dtype = dspace_type(fspace, impl)
     else:
         dtype = np.dtype(dtype)
 
@@ -911,7 +912,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     partition = uniform_partition_fromintv(fspace.domain, nsamples,
                                            nodes_on_bdry)
 
-    return uniform_discr_frompartition(partition, exponent, interp, impl,
+    return uniform_discr_frompartition(partition, exponent, interp, impl_in,
                                        dtype=dtype, **kwargs)
 
 

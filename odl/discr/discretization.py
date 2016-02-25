@@ -532,60 +532,66 @@ def dspace_type(space, impl, dtype=None):
     stype : `type`
         Space type selected after the space's field, the backend and
         the data type
+    dtype : `type` or `None`
+        If dtype was not provided, the default data type is inferred
+        from ``stype`` if possible. Otherwise, `None` is returned.
     """
-    impl_ = str(impl).lower()
-    if impl_ not in ('numpy', 'cuda'):
-        raise ValueError('implementation type {} not understood.'
-                         ''.format(impl))
+    impl, impl_in = str(impl).lower(), impl
+    if impl not in ('numpy', 'cuda'):
+        raise ValueError("implementation '{}' not understood."
+                         ''.format(impl_in))
 
-    if impl_ == 'cuda' and not CUDA_AVAILABLE:
+    if impl == 'cuda' and not CUDA_AVAILABLE:
         raise ValueError('CUDA implementation not available.')
 
     basic_map = {'numpy': Fn, 'cuda': CudaFn}
 
     spacetype_map = {
-        'numpy': {RealNumbers: Rn, ComplexNumbers: Cn,
+        'numpy': {RealNumbers: Fn, ComplexNumbers: Fn,
                   type(None): Ntuples},
-        'cuda': {RealNumbers: CudaRn, ComplexNumbers: None,
+        'cuda': {RealNumbers: CudaFn, ComplexNumbers: None,
                  type(None): CudaNtuples}
     }
 
     field_type = type(getattr(space, 'field', None))
 
     if dtype is None:
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
+        if hasattr(stype, 'default_dtype') and field_type is not None:
+            dtype = stype.default_dtype(field_type())
+
     elif is_real_floating_dtype(dtype):
         if field_type is None or field_type == ComplexNumbers:
             raise TypeError('real floating data type {!r} requires space '
-                            'field to be of type `RealNumbers`, got {}.'
+                            'field to be of type RealNumbers, got {}.'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
     elif is_complex_floating_dtype(dtype):
         if field_type is None or field_type == RealNumbers:
             raise TypeError('complex floating data type {!r} requires space '
-                            'field to be of type `ComplexNumbers`, got {!r}.'
+                            'field to be of type ComplexNumbers, got {!r}.'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
     elif is_scalar_dtype(dtype):
         if field_type == ComplexNumbers:
             raise TypeError('non-floating data type {!r} requires space field '
-                            'to be of type `RealNumbers`, got {!r}.'
+                            'to be of type RealNumbers, got {!r}.'
                             .format(dtype, field_type))
         elif field_type == RealNumbers:
-            stype = basic_map[impl_]
+            stype = basic_map[impl]
         else:
-            stype = spacetype_map[impl_][field_type]
+            stype = spacetype_map[impl][field_type]
     elif field_type is None:  # Only in this case are arbitrary types allowed
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
     else:
         raise TypeError('non-scalar data type {!r} cannot be combined with '
-                        'a `LinearSpace`.'.format(dtype))
+                        'a LinearSpace.'.format(dtype))
 
     if stype is None:
         raise NotImplementedError('no corresponding data space available '
                                   'for space {!r} and implementation {!r}.'
                                   ''.format(space, impl))
-    return stype
+    return stype, dtype
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

@@ -27,6 +27,7 @@ from builtins import int, super
 import numpy as np
 
 # ODL imports
+from odl.set.sets import RealNumbers
 from odl.set.space import LinearSpaceVector
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
@@ -683,6 +684,29 @@ class CudaFn(FnBase, CudaNtuples):
     def is_weighted(self):
         """Return `True` if the weighting is not `CudaFnNoWeighting`."""
         return not isinstance(self.weighting, CudaFnNoWeighting)
+
+    @staticmethod
+    def default_dtype(field):
+        """Return the default of `CudaFn` data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`
+            Set of numbers to be represented by a data type.
+            Currently supported: `RealNumbers`.
+
+        Returns
+        -------
+        dtype : `type`
+            Numpy data type specifier. The returned defaults are:
+
+            ``RealNumbers()`` : , ``np.dtype('float32')``
+        """
+        if field == RealNumbers():
+            return np.dtype('float32')
+        else:
+            raise ValueError('no default data type defined for field {}.'
+                             ''.format(field))
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``, assigned to ``out``.

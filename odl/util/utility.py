@@ -242,27 +242,6 @@ def is_complex_floating_dtype(dtype):
     return np.issubsctype(dtype, np.complexfloating)
 
 
-def default_dtype(impl, field):
-    """Return the default data type of different implementations."""
-    from odl.set.sets import RealNumbers
-    if impl == 'numpy':
-        if field == RealNumbers():
-            dtype = np.dtype('float64')
-        else:
-            dtype = np.dtype('complex128')
-    elif impl == 'cuda':
-        if field == RealNumbers():
-            dtype = np.dtype('float32')
-        else:
-            raise NotImplementedError('complex data types not supported in '
-                                      'CUDA.')
-            # dtype = np.dtype('complex64')
-    else:
-        raise ValueError("'impl '{}' not understood.".format(impl))
-
-    return dtype
-
-
 def complex_space(space):
     """Return the complex counterpart of a given space.
 

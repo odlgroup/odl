@@ -1316,7 +1316,7 @@ def _recip_space(space, shifts, halfcomplex, axes):
         ran_dtype = space.dtype
 
     conj_exp = conj_exponent(space.exponent)
-    ran_dspace_type = dspace_type(ran_fspace, impl='numpy', dtype=ran_dtype)
+    ran_dspace_type, _ = dspace_type(ran_fspace, impl='numpy', dtype=ran_dtype)
     ran_dspace = ran_dspace_type(part.size, dtype=ran_dtype,
                                  weight=part.cell_volume, exponent=conj_exp)
 
