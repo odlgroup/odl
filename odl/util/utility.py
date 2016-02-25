@@ -459,50 +459,6 @@ def preload_call_with(instance, mode):
     return decorator
 
 
-def preload_default_oop_call_with(vector):
-    """Decorator to bind the default out-of-place call to an instance.
-
-    Parameters
-    ----------
-    vector : `FunctionSetVector`
-        Vector with which the default call is preloaded. Its
-        `FunctionSetVector.space` determines the type of
-        implementation chosen for the vectorized evaluation. If
-        ``vector.space`` has a `LinearSpace.field` attribute, the
-        required output data type is inferred from it. Otherwise,
-        a "lazy" vectorization is performed (not implemented).
-
-    Notes
-    -----
-    Usually this decorator is used as as a function factory::
-
-        preload_default_oop_call_with(<vec>)(<call>)
-
-    """
-
-    def decorator(call):
-
-        from odl.set.sets import RealNumbers, ComplexNumbers
-
-        field = getattr(vector.space, 'field', None)
-        if field is None:
-            dtype = None
-        elif field == RealNumbers():
-            dtype = 'float64'
-        elif field == ComplexNumbers():
-            dtype = 'complex128'
-        else:
-            raise TypeError('cannot handle field {!r}.'.format(field))
-
-        @wraps(call)
-        def oop_wrapper(x, **kwargs):
-            return call(vector, dtype, x, **kwargs)
-
-        return oop_wrapper
-
-    return decorator
-
-
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)

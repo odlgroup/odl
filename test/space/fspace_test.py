@@ -160,6 +160,25 @@ def _standard_setup_2d():
     return rect, points, mg
 
 
+def test_fspace_out_dtype():
+    rect = odl.Rectangle([0, 0], [3, 5])
+    points = np.array([[0, 1], [0, 3], [3, 4], [2, 5]], dtype='int').T
+    vec1 = np.array([0, 1, 3])[:, None]
+    vec2 = np.array([1, 2, 4, 5])[None, :]
+    mg = (vec1, vec2)
+
+    true_arr = func_2d_vec_oop(points)
+    true_mg = func_2d_vec_oop(mg)
+
+    fspace = FunctionSpace(rect, out_dtype='int')
+    f_vec = fspace.element(func_2d_vec_oop)
+
+    assert all_equal(f_vec(points), true_arr)
+    assert all_equal(f_vec(mg), true_mg)
+    assert f_vec(points).dtype == np.dtype('int')
+    assert f_vec(mg).dtype == np.dtype('int')
+
+
 def test_fspace_vector_eval_real():
     rect, points, mg = _standard_setup_2d()
 
