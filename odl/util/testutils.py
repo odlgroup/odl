@@ -174,13 +174,15 @@ def is_subdict(subdict, dictionary):
     """`True` if all items of ``subdict`` are in ``dictionary``."""
     return all(item in dictionary.items() for item in subdict.items())
 
+
+def _pass(function):
+    """Trivial decorator used if pytest marks are not available."""
+    return function
+
+
 try:
     # Try catch in case user does not have pytest
     import pytest
-
-    def _pass(function):
-        """Trivial decorator used if pytest marks are not available."""
-        return function
 
     skip_if_no_cuda = pytest.mark.skipif(
         "not odl.CUDA_AVAILABLE",
