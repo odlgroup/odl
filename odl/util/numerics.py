@@ -94,7 +94,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
            [ 0.5,  1. ,  0.5],
            [ 0.5,  1. ,  0.5]])
 
-    Also accepts out parameter
+    Also accepts out parameter:
 
     >>> out = np.empty_like(arr)
     >>> result = apply_on_boundary(arr, lambda x: x / 2, out=out)
@@ -180,7 +180,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     return out
 
 
-def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None):
+def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     """Fast multiplication of an n-dim array with an outer product.
 
     This method implements the multiplication of an n-dimensional array
@@ -213,57 +213,69 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None):
 
     Parameters
     ----------
-    ndarr : `numpy.ndarray`
-        Array to be multiplied with. Manipulations are done in-place.
+    ndarr : `array-like`
+        Array to multiply to
     onedim_arrs : sequence of array-like
         One-dimensional arrays to be multiplied with ``ndarr``. The
         sequence may not be longer than ``ndarr.ndim``.
     axes : sequence of `int`, optional
         Take the 1d transform along these axes. `None` corresponds to
         the last ``len(onedim_arrs)`` axes, in ascending order.
+    out : `numpy.ndarray`, optional
+        Array in which the result is stored
+
+    Returns
+    -------
+    out : `numpy.ndarray`
+        Result of the modification. If ``out`` was given, the returned
+        object is a reference to it.
     """
-    if not isinstance(ndarr, np.ndarray):
-        raise TypeError('Expected a numpy.ndarray, got {!r}.'.format(ndarr))
+    if out is None:
+        out = np.array(ndarr, copy=True)
+    else:
+        out[:] = ndarr  # Self-assignment is free if out is ndarr
 
     if not onedim_arrs:
         raise ValueError('No 1d arrays given.')
 
     if axes is None:
-        axes = list(range(ndarr.ndim - len(onedim_arrs), ndarr.ndim))
+        axes = list(range(out.ndim - len(onedim_arrs), out.ndim))
+        axes_in = None
     elif len(axes) != len(onedim_arrs):
         raise ValueError('There are {} 1d arrays, but {} axes entries.'
                          ''.format(len(onedim_arrs), len(axes)))
     else:
         # Make axes positive
-        axes_ = np.array(axes, dtype=int)
-        axes_[axes_ < 0] += ndarr.ndim
-        axes = list(axes_)
+        axes, axes_in = np.array(axes, dtype=int), axes
+        axes[axes < 0] += out.ndim
+        axes = list(axes)
 
-    if np.any(np.array(axes) >= ndarr.ndim) or np.any(np.array(axes) < 0):
-        raise ValueError('axes sequence contains out-of-bounds indices.')
+    if np.any(np.array(axes) >= out.ndim) or np.any(np.array(axes) < 0):
+        raise ValueError('axes {} out of bounds for {} dimensions.'
+                         ''.format(axes_in, out.ndim))
 
     # Make scalars 1d arrays and squeezable arrays 1d
     alist = [np.atleast_1d(np.asarray(a).squeeze()) for a in onedim_arrs]
     if any(a.ndim != 1 for a in alist):
         raise ValueError('Only 1d arrays allowed.')
 
-    if len(axes) < ndarr.ndim:
+    if len(axes) < out.ndim:
         # Make big factor array (start with 0d)
         factor = np.array(1.0)
         for ax, arr in zip(axes, alist):
             # Meshgrid-style slice
-            slc = [None] * ndarr.ndim
+            slc = [None] * out.ndim
             slc[ax] = slice(None)
             factor = factor * arr[slc]
 
-        ndarr *= factor
+        out *= factor
 
     else:
         # Hybrid approach
 
         # Get the axis to spare for the final multiplication, the one
         # with the largest stride.
-        axis_order = np.argsort(ndarr.strides)
+        axis_order = np.argsort(out.strides)
         last_ax = axis_order[-1]
         last_arr = alist[axes.index(last_ax)]
 
@@ -273,17 +285,18 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None):
             if ax == last_ax:
                 continue
 
-            slc = [None] * ndarr.ndim
+            slc = [None] * out.ndim
             slc[ax] = np.s_[:]
             factor = factor * arr[slc]
 
-        ndarr *= factor
+        out *= factor
 
         # Finally multiply by the remaining 1d array
-        slc = [None] * ndarr.ndim
+        slc = [None] * out.ndim
         slc[last_ax] = np.s_[:]
-        ndarr *= last_arr[slc]
+        out *= last_arr[slc]
 
+    return out
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

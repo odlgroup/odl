@@ -116,40 +116,52 @@ def test_fast_1d_tensor_mult():
 
     # Standard call
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [x, y, z])
+    out = fast_1d_tensor_mult(test_arr, [x, y, z])
+    assert all_equal(out, true_result)
+    assert all_equal(test_arr, np.ones(shape))  # no changes to input
+
+    test_arr = np.ones(shape)
+    out = fast_1d_tensor_mult(test_arr, [x, y, z], axes=(0, 1, 2))
+    assert all_equal(out, true_result)
+
+    # In-place with both same and different array as input
+    test_arr = np.ones(shape)
+    fast_1d_tensor_mult(test_arr, [x, y, z], out=test_arr)
     assert all_equal(test_arr, true_result)
 
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [x, y, z], axes=(0, 1, 2))
-    assert all_equal(test_arr, true_result)
+    out = np.empty(shape)
+    fast_1d_tensor_mult(test_arr, [x, y, z], out=out)
+    assert all_equal(out, true_result)
 
     # Different orderings
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [y, x, z], axes=(1, 0, 2))
-    assert all_equal(test_arr, true_result)
+    out = fast_1d_tensor_mult(test_arr, [y, x, z], axes=(1, 0, 2))
+    assert all_equal(out, true_result)
 
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [x, z, y], axes=(0, 2, 1))
-    assert all_equal(test_arr, true_result)
+    out = fast_1d_tensor_mult(test_arr, [x, z, y], axes=(0, 2, 1))
+    assert all_equal(out, true_result)
 
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [z, x, y], axes=(2, 0, 1))
-    assert all_equal(test_arr, true_result)
+    out = fast_1d_tensor_mult(test_arr, [z, x, y], axes=(2, 0, 1))
+    assert all_equal(out, true_result)
 
     # More arrays than dimensions also ok with explicit axes
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [z, x, y, np.ones(3)], axes=(2, 0, 1, 1))
-    assert all_equal(test_arr, true_result)
+    out = fast_1d_tensor_mult(test_arr, [z, x, y, np.ones(3)],
+                              axes=(2, 0, 1, 1))
+    assert all_equal(out, true_result)
 
     # Squeezable or extendable arrays also possible
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [x, y, z[None, :]])
-    assert all_equal(test_arr, true_result)
+    out = fast_1d_tensor_mult(test_arr, [x, y, z[None, :]])
+    assert all_equal(out, true_result)
 
     shape = (1, 3, 4)
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [2, y, z])
-    assert all_equal(test_arr, simple_mult_3(np.ones(1) * 2, y, z))
+    out = fast_1d_tensor_mult(test_arr, [2, y, z])
+    assert all_equal(out, simple_mult_3(np.ones(1) * 2, y, z))
 
     # Reduced multiplication, axis 0 not contained
     def simple_mult_2(y, z, nx):
@@ -160,12 +172,12 @@ def test_fast_1d_tensor_mult():
     true_result = simple_mult_2(y, z, 2)
 
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [y, z], axes=(1, 2))
-    assert all_equal(test_arr, true_result)
+    out = fast_1d_tensor_mult(test_arr, [y, z], axes=(1, 2))
+    assert all_equal(out, true_result)
 
     test_arr = np.ones(shape)
-    fast_1d_tensor_mult(test_arr, [z, y], axes=(2, 1))
-    assert all_equal(test_arr, true_result)
+    out = fast_1d_tensor_mult(test_arr, [z, y], axes=(2, 1))
+    assert all_equal(out, true_result)
 
 
 def test_fast_1d_tensor_mult_error():

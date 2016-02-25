@@ -378,10 +378,12 @@ def test_dft_preprocess_data_halfcomplex(sign):
 
     arr = np.ones(shape, dtype='float64')
     preproc = dft_preprocess_data(arr, shift=True, sign=sign)  # out of place
+    out = np.empty_like(arr)
+    dft_preprocess_data(arr, shift=True, out=out, sign=sign)  # in place
     dft_preprocess_data(arr, shift=True, out=arr, sign=sign)  # in place
-
     assert all_almost_equal(preproc.ravel(), correct_arr)
     assert all_almost_equal(arr.ravel(), correct_arr)
+    assert all_almost_equal(out.ravel(), correct_arr)
 
     # Without shift
     imag = 1j if sign == '-' else -1j
@@ -394,11 +396,16 @@ def test_dft_preprocess_data_halfcomplex(sign):
 
     arr = np.ones(shape, dtype='float64')
     preproc = dft_preprocess_data(arr, shift=False, sign=sign)
-
     assert all_almost_equal(preproc.ravel(), correct_arr)
 
+    # Non-float input works, too
+    arr = np.ones(shape, dtype='int')
+    preproc = dft_preprocess_data(arr, shift=False, sign=sign)
+    assert all_almost_equal(preproc.ravel(), correct_arr)
+
+    # In-place modification not possible for float array and no shift
+    arr = np.ones(shape, dtype='float64')
     with pytest.raises(ValueError):
-        # In-place modification not possible in this case
         dft_preprocess_data(arr, shift=False, out=arr, sign=sign)
 
 

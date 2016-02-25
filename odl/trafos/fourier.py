@@ -1123,7 +1123,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
         length = shape[axis]
         onedim_arrs.append(_onedim_arr(length, shift))
 
-    fast_1d_tensor_mult(out, onedim_arrs, axes=axes)
+    fast_1d_tensor_mult(out, onedim_arrs, axes=axes, out=out)
     return out
 
 
@@ -1293,7 +1293,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
 
         onedim_arrs.append(onedim_arr)
 
-    fast_1d_tensor_mult(out, onedim_arrs, axes=axes)
+    fast_1d_tensor_mult(out, onedim_arrs, axes=axes, out=out)
     return out
 
 
