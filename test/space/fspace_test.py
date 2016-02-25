@@ -418,6 +418,33 @@ def test_fspace_one():
     assert all_equal(one_vec(mg), np.ones((2, 3), dtype=complex))
 
 
+def test_fspace_as_real_complex():
+
+    rspace = odl.FunctionSpace(odl.Interval(0, 1))
+    cspace = odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
+
+    assert rspace.as_complex_space() == cspace
+    assert (rspace.as_complex_space() !=
+            rspace.as_complex_space(out_dtype='complex64'))
+    assert rspace.as_complex_space().as_real_space() == rspace
+    assert rspace.as_real_space() == rspace
+
+    assert cspace.as_real_space() == rspace
+    assert cspace.as_real_space().as_complex_space() == cspace
+    assert rspace.as_complex_space() == cspace
+
+    rspace = odl.FunctionSpace(odl.Interval(0, 1), out_dtype='float32')
+    cspace = odl.FunctionSpace(odl.Interval(0, 1), out_dtype='complex64')
+
+    assert rspace.as_complex_space() == cspace
+    assert rspace.as_complex_space().as_real_space() == rspace
+    assert rspace.as_real_space() == rspace
+
+    assert cspace.as_real_space() == rspace
+    assert cspace.as_real_space().as_complex_space() == cspace
+    assert rspace.as_complex_space() == cspace
+
+
 scal_params = [2.0, 0.0, -1.0]
 a_ids = [' a = {} '.format(s) for s in scal_params]
 a_fixture = pytest.fixture(scope="module", ids=a_ids, params=scal_params)

@@ -202,6 +202,33 @@ def test_init_space_funcs(exponent):
         assert spc._space_funcs == weight
 
 
+def test_as_real_complex():
+    rn = Rn(3, weight=1.5)
+    cn = Cn(3, weight=1.5)
+
+    assert rn.as_complex_space() == cn
+    assert rn.as_complex_space().as_real_space() == rn
+    assert rn.as_real_space() == rn
+
+    assert cn.as_real_space() == rn
+    assert cn.as_real_space().as_complex_space() == cn
+    assert cn.as_complex_space() == cn
+
+    rn_single = Rn(3, weight=1.5, dtype='float32')
+    cn_single = Cn(3, weight=1.5, dtype='complex64')
+
+    assert rn_single.as_complex_space() == cn_single
+    assert rn_single.as_complex_space().as_real_space() == rn_single
+    assert rn_single.as_real_space() == rn_single
+
+    assert cn_single.as_real_space() == rn_single
+    assert cn_single.as_real_space().as_complex_space() == cn_single
+    assert cn_single.as_complex_space() == cn_single
+
+    assert rn.as_complex_space(dtype='complex64') == cn_single
+    assert cn.as_real_space(dtype='float32') == rn_single
+
+
 def test_vector_class_init(fn):
     # Test that code runs
     arr = _array(fn)

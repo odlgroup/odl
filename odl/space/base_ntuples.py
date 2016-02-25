@@ -34,7 +34,8 @@ from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
-    is_scalar_dtype, is_real_dtype, is_floating_dtype)
+    is_scalar_dtype, is_real_dtype, is_floating_dtype,
+    is_complex_floating_dtype)
 from odl.util.ufuncs import NtuplesBaseUFuncs
 
 
@@ -447,6 +448,66 @@ class FnBase(NtuplesBase, LinearSpace):
         Tuples of complex numbers.
         """
         return (not self._is_real) and self._is_floating
+
+    def as_complex_space(self, dtype=None):
+        """Return a complex version of this space.
+
+        Parameters
+        ----------
+        dtype : optional
+            Data type of the returned space. Can be given in any way
+            `numpy.dtype` understands, e.g. as string ('complex64')
+            or data type (`complex`).
+            By default, the complex data type corresponding to
+            ``self.out_dtype`` is taken.
+
+        Returns
+        -------
+        cspace : `Fn`
+            The complex version of this space
+        """
+        dtype, dtype_in = np.dtype(dtype), dtype
+        if dtype_in is None:
+            if is_complex_floating_dtype(self.dtype):
+                dtype = self.dtype
+            else:
+                dtype = _TYPE_MAP_R2C[self.dtype]
+        else:
+            if not is_complex_floating_dtype(dtype):
+                raise ValueError('{} is not a complex data type.'
+                                 ''.format(dtype_in))
+
+        return type(self)(self.size, dtype=dtype, weight=self.weighting)
+
+    def as_real_space(self, dtype=None):
+        """Return a real version of this space.
+
+        Parameters
+        ----------
+        dtype : optional
+            Data type of the returned space. Can be given in any way
+            `numpy.dtype` understands, e.g. as string ('float128')
+            or data type (`float`).
+            By default, the real data type corresponding to
+            ``self.out_dtype`` is taken.
+
+        Returns
+        -------
+        rspace : `Fn`
+            The complex version of this space
+        """
+        dtype, dtype_in = np.dtype(dtype), dtype
+        if dtype_in is None:
+            if is_complex_floating_dtype(self.dtype):
+                dtype = _TYPE_MAP_C2R[self.dtype]
+            else:
+                dtype = self.dtype
+        else:
+            if not is_real_dtype(dtype):
+                raise ValueError('{} is not a real data type.'
+                                 ''.format(dtype_in))
+
+        return type(self)(self.size, dtype=dtype, weight=self.weighting)
 
     @abstractmethod
     def zero(self):

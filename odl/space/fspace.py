@@ -31,8 +31,9 @@ from inspect import isfunction
 from odl.operator.operator import Operator, _dispatch_call_args
 from odl.set.sets import RealNumbers, ComplexNumbers, Set, Field
 from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.space.base_ntuples import _TYPE_MAP_R2C, _TYPE_MAP_C2R
 from odl.util.utility import (is_real_dtype, is_complex_floating_dtype,
-                              preload_call_with)
+                              preload_call_with, dtype_repr)
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
     out_shape_from_array, out_shape_from_meshgrid, vectorize)
@@ -454,7 +455,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     """A vector space of functions."""
 
-    def __init__(self, domain, field=RealNumbers(), out_dtype=None):
+    def __init__(self, domain, field=None, out_dtype=None):
         """Initialize a new instance.
 
         Parameters
@@ -463,7 +464,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
             The domain of the functions
         field : `Field`, optional
             The range of the functions, usually the `RealNumbers` or
-            `ComplexNumbers`
+            `ComplexNumbers`. If not given, the field is either inferred
+            from ``out_dtype``, or, if the latter is also `None`, set
+            to ``RealNumbers()``.
         out_dtype : optional
             Data type of the return value of a function in this space.
             Can be given in any way `np.dtype` understands, e.g. as
@@ -474,14 +477,30 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if not isinstance(domain, Set):
             raise TypeError('domain {!r} not a Set instance.'.format(domain))
 
-        if not isinstance(field, Field):
+        if field is not None and not isinstance(field, Field):
             raise TypeError('field {!r} not a `Field` instance.'
                             ''.format(field))
 
         # Data type: check if consistent with field, take default for None
         dtype, dtype_in = np.dtype(out_dtype), out_dtype
 
-        if field == RealNumbers():
+        # Default for both None
+        if field is None and out_dtype is None:
+            field = RealNumbers()
+            out_dtype = np.dtype('float64')
+
+        # field None, dtype given -> infer field
+        elif field is None:
+            if is_real_dtype(dtype):
+                field = RealNumbers()
+            elif is_complex_floating_dtype(dtype):
+                field = ComplexNumbers()
+            else:
+                raise ValueError('{} is not a scalar data type.'
+                                 ''.format(dtype_in))
+
+        # field given -> infer dtype if not given, else check consistency
+        elif field == RealNumbers():
             if out_dtype is None:
                 out_dtype = np.dtype('float64')
             elif not is_real_dtype(dtype):
@@ -603,6 +622,58 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         return (isinstance(other, FunctionSpace) and
                 FunctionSet.__eq__(self, other))
+
+    def as_complex_space(self, out_dtype=None):
+        """Return a complex version of this space.
+
+        Parameters
+        ----------
+        out_dtype : optional
+            Data type of the return value of a function in this space.
+            Can be given in any way `numpy.dtype` understands, e.g. as
+            string ('complex64') or data type (`complex`).
+            By default, the complex data type corresponding to
+            ``self.out_dtype`` is taken.
+
+        Returns
+        -------
+        cspace : `FunctionSpace`
+            The complex version of this space
+        """
+        if out_dtype is None:
+            if is_complex_floating_dtype(self.out_dtype):
+                out_dtype = self.out_dtype
+            else:
+                out_dtype = _TYPE_MAP_R2C[self.out_dtype]
+
+        return FunctionSpace(self.domain, field=ComplexNumbers(),
+                             out_dtype=out_dtype)
+
+    def as_real_space(self, out_dtype=None):
+        """Return a real version of this space.
+
+        Parameters
+        ----------
+        out_dtype : optional
+            Data type of the return value of a function in this space.
+            Can be given in any way `numpy.dtype` understands, e.g. as
+            string ('float32') or data type (`float`).
+            By default, the real data type corresponding to
+            ``self.out_dtype`` is taken.
+
+        Returns
+        -------
+        rspace : `FunctionSpace`
+            The real version of this space
+        """
+        if out_dtype is None:
+            if is_complex_floating_dtype(self.out_dtype):
+                out_dtype = _TYPE_MAP_C2R[self.out_dtype]
+            else:
+                out_dtype = self.out_dtype
+
+        return FunctionSpace(self.domain, field=RealNumbers(),
+                             out_dtype=out_dtype)
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination of ``x1`` and ``x2``.
@@ -785,6 +856,52 @@ class FunctionSpace(FunctionSet, LinearSpace):
     def element_type(self):
         """`FunctionSpaceVector`"""
         return FunctionSpaceVector
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        inner_str = '{!r}'.format(self.domain)
+        dtype_str = dtype_repr(self.out_dtype)
+
+        if self.field == RealNumbers():
+            if self.out_dtype == np.dtype('float64'):
+                pass
+            else:
+                inner_str += ', out_dtype={}'.format(dtype_str)
+
+        elif self.field == ComplexNumbers():
+            if self.out_dtype == np.dtype('complex128'):
+                inner_str += ', field={!r}'.format(self.field)
+            else:
+                inner_str += ', out_dtype={}'.format(dtype_str)
+
+        else:  # different field, name explicitly
+            inner_str += ', field={!r}'.format(self.field)
+            inner_str += ', out_dtype={}'.format(dtype_str)
+
+        return '{}({})'.format(self.__class__.__name__, inner_str)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        inner_str = '{}'.format(self.domain)
+        dtype_str = dtype_repr(self.out_dtype)
+
+        if self.field == RealNumbers():
+            if self.out_dtype == np.dtype('float64'):
+                pass
+            else:
+                inner_str += ', out_dtype={}'.format(dtype_str)
+
+        elif self.field == ComplexNumbers():
+            if self.out_dtype == np.dtype('complex128'):
+                inner_str += ', field={!r}'.format(self.field)
+            else:
+                inner_str += ', out_dtype={}'.format(dtype_str)
+
+        else:  # different field, name explicitly
+            inner_str += ', field={!r}'.format(self.field)
+            inner_str += ', out_dtype={}'.format(dtype_str)
+
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
