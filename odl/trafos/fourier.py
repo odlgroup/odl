@@ -22,6 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import range, super
+from future.utils import raise_from
 
 # External
 from math import pi
@@ -288,7 +289,13 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
     if direction == 'forward':
         out_shape = list(arr_in.shape)
         if halfcomplex:
-            out_shape[axes[-1]] = arr_in.shape[axes[-1]] // 2 + 1
+            try:
+                out_shape[axes[-1]] = arr_in.shape[axes[-1]] // 2 + 1
+            except IndexError as err:
+                raise_from(IndexError('axis index {} out of range for array '
+                                      'with {} axes.'
+                                      ''.format(axes[-1], arr_in.ndim)),
+                           err)
 
         if arr_out.shape != tuple(out_shape):
             raise ValueError('Expected output shape {}, got {}.'
@@ -303,13 +310,19 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
             out_dtype = arr_in.dtype
 
         if arr_out.dtype != out_dtype:
-            raise TypeError('Expected output dtype {}, got {}.'
-                            ''.format(out_dtype, arr_out.dtype))
+            raise ValueError('Expected output dtype {}, got {}.'
+                             ''.format(out_dtype, arr_out.dtype))
 
     elif direction == 'backward':
         in_shape = list(arr_out.shape)
         if halfcomplex:
-            in_shape[axes[-1]] = arr_out.shape[axes[-1]] // 2 + 1
+            try:
+                in_shape[axes[-1]] = arr_out.shape[axes[-1]] // 2 + 1
+            except IndexError as err:
+                raise_from(IndexError('axis index {} out of range for array '
+                                      'with {} axes.'
+                                      ''.format(axes[-1], arr_out.ndim)),
+                           err)
 
         if arr_in.shape != tuple(in_shape):
             raise ValueError('Expected input shape {}, got {}.'
@@ -324,8 +337,8 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
             in_dtype = arr_out.dtype
 
         if arr_in.dtype != in_dtype:
-            raise TypeError('Expected input dtype {}, got {}.'
-                            ''.format(in_dtype, arr_in.dtype))
+            raise ValueError('Expected input dtype {}, got {}.'
+                             ''.format(in_dtype, arr_in.dtype))
 
     else:  # Shouldn't happen
         raise RuntimeError
@@ -436,7 +449,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         axes = tuple(axes)
 
     direction = _pyfftw_to_local(direction)
-    fftw_plan = kwargs.pop('fftw_plan', None)
+    fftw_plan_in = kwargs.pop('fftw_plan', None)
     planning_effort = _pyfftw_to_local(kwargs.pop('planning_effort',
                                                   'estimate'))
     planning_timelimit = kwargs.pop('planning_timelimit', None)
@@ -472,7 +485,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     # to destroy it. If we already have a plan, we don't have to worry.
     planner_destroys = _pyfftw_destroys_input(
         [planning_effort], direction, halfcomplex, array_in.ndim)
-    must_copy_array_in = fftw_plan is None and planner_destroys
+    must_copy_array_in = fftw_plan_in is None and planner_destroys
 
     if must_copy_array_in and not array_in_copied:
         plan_arr_in = np.empty_like(array_in)
@@ -481,19 +494,21 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         plan_arr_in = array_in
         flags = [_local_to_pyfftw(planning_effort)]
 
-    if fftw_plan is None:
+    if fftw_plan_in is None:
         if threads is None:
             if plan_arr_in.size < 1000:  # Somewhat arbitrary
                 threads = 1
             else:
                 threads = cpu_count()
 
-        fft_plan = pyfftw.FFTW(
+        fftw_plan = pyfftw.FFTW(
             plan_arr_in, array_out, direction=_local_to_pyfftw(direction),
             flags=flags, planning_timelimit=planning_timelimit,
             threads=threads, axes=axes)
+    else:
+        fftw_plan = fftw_plan_in
 
-    fft_plan(array_in, array_out, normalise_idft=normalise_idft)
+    fftw_plan(array_in, array_out, normalise_idft=normalise_idft)
 
     if wexport:
         try:
@@ -1095,11 +1110,13 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
         else:
             out = arr.copy()
     elif out is arr:
-        if is_real_dtype(arr.dtype) and not shift:
-            raise ValueError('cannot pre-process real input in place without '
-                             'shift.')
+        pass
     else:
         out[:] = arr
+
+    if is_real_dtype(out.dtype) and not shift:
+        raise ValueError('cannot pre-process real input in place without '
+                         'shift.')
 
     if sign == '-':
         imag = -1j
@@ -1365,9 +1382,6 @@ class FourierTransform(Operator):
         impl : {'numpy', 'pyfftw'}
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
-
-        Other Parameters
-        ----------------
         axes : sequence of `int`, optional
             Dimensions along which to take the transform.
             Default: all axes
@@ -1682,9 +1696,6 @@ class FourierTransformInverse(FourierTransform):
         impl : {'numpy', 'pyfftw'}
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
-
-        Other Parameters
-        ----------------
         axes : sequence of `int`, optional
             Dimensions along which to take the transform.
             Default: all axes

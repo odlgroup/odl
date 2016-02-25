@@ -94,6 +94,12 @@ def _random_array(shape, dtype):
                 1j * np.random.rand(*shape).astype(dtype))
 
 
+@pytest.fixture(scope='module', ids=[' forward ', ' backward '],
+                params=['forward', 'backward'])
+def direction(request):
+    return request.param
+
+
 # ---- reciprocal ---- #
 
 
@@ -328,6 +334,9 @@ def test_reciprocal_nd_halfcomplex():
                                 halfcx_parity='odd')
     assert irgrid.approx_equals(grid, atol=1e-6)
 
+    with pytest.raises(ValueError):
+        inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
+                           halfcx_parity='+')
 
 # ---- dft_preprocess_data ---- #
 
@@ -481,6 +490,20 @@ def test_pyfftw_call_forward(dtype):
 
 
 @skip_if_no_pyfftw
+def test_pyfftw_call_threads():
+    shape = (3, 4, 5)
+    arr = _random_array(shape, dtype='complex64')
+
+    true_dft = np.fft.fftn(arr)
+    dft_arr = np.empty(shape, dtype='complex64')
+
+    pyfftw_call(arr, dft_arr, direction='forward', preserve_input=False,
+                threads=4)
+
+    assert all_almost_equal(dft_arr, true_dft)
+
+
+@skip_if_no_pyfftw
 def test_pyfftw_call_backward(dtype):
     # Test against Numpy's IFFT, no normalization
     if dtype == np.dtype('float16'):  # not supported, skipping
@@ -507,7 +530,7 @@ def test_pyfftw_call_backward(dtype):
 
 
 @skip_if_no_pyfftw
-def test_pyfftw_call_forward_bad_input():
+def test_pyfftw_call_bad_input(direction):
 
     # Complex
 
@@ -517,8 +540,9 @@ def test_pyfftw_call_forward_bad_input():
     bad_dtypes_out = ['complex64', 'float64', 'float128']
     for bad_dtype in bad_dtypes_out:
         arr_out = np.empty(3, dtype=bad_dtype)
-        with pytest.raises(TypeError):
-            pyfftw_call(arr_in, arr_out, halfcomplex=False)
+        with pytest.raises(ValueError):
+            pyfftw_call(arr_in, arr_out, halfcomplex=False,
+                        direction=direction)
 
     # Bad shape
     shape = (3, 4)
@@ -527,7 +551,8 @@ def test_pyfftw_call_forward_bad_input():
     for bad_shape in bad_shapes_out:
         arr_out = np.empty(bad_shape, dtype='complex128')
         with pytest.raises(ValueError):
-            pyfftw_call(arr_in, arr_out, halfcomplex=False)
+            pyfftw_call(arr_in, arr_out, halfcomplex=False,
+                        direction=direction)
 
     # Duplicate axes
     arr_in = np.empty((3, 4, 5), dtype='complex128')
@@ -535,7 +560,21 @@ def test_pyfftw_call_forward_bad_input():
     bad_axes_list = [(0, 0, 1), (1, 1, 1), (-1, -1)]
     for bad_axes in bad_axes_list:
         with pytest.raises(ValueError):
-            pyfftw_call(arr_in, arr_out, axes=bad_axes)
+            pyfftw_call(arr_in, arr_out, axes=bad_axes,
+                        direction=direction)
+
+    # Halfcomplex not possible for complex data
+    arr_in = np.empty((3, 4, 5), dtype='complex128')
+    arr_out = np.empty_like(arr_in)
+    with pytest.raises(ValueError):
+        pyfftw_call(arr_in, arr_out, halfcomplex=True,
+                    direction=direction)
+
+    # Data type mismatch
+    arr_in = np.empty((3, 4, 5), dtype='complex128')
+    arr_out = np.empty_like(arr_in, dtype='complex64')
+    with pytest.raises(ValueError):
+        pyfftw_call(arr_in, arr_out, direction=direction)
 
     # Halfcomplex
 
@@ -545,28 +584,43 @@ def test_pyfftw_call_forward_bad_input():
     bad_dtypes_out = ['complex64', 'float64', 'float128', 'complex256']
     for bad_dtype in bad_dtypes_out:
         arr_out = np.empty(6, dtype=bad_dtype)
-        with pytest.raises(TypeError):
-            pyfftw_call(arr_in, arr_out, halfcomplex=True)
+        with pytest.raises(ValueError):
+            if direction == 'forward':
+                pyfftw_call(arr_in, arr_out, halfcomplex=True,
+                            direction='forward')
+            else:
+                pyfftw_call(arr_out, arr_in, halfcomplex=True,
+                            direction='backward')
 
     # Bad shape
     shape = (3, 4, 5)
-    arr_in = np.empty(shape, dtype='float64')
     axes_list = [None, (0, 1), (1,), (1, 2), (2, 1), (-1, -2, -3)]
+    arr_in = np.empty(shape, dtype='float64')
     # Correct shapes:
     # [(3, 4, 3), (3, 3, 5), (3, 3, 5), (3, 4, 3), (3, 3, 5), (2, 4, 5)]
-    bad_shapes_out = [(3, 4, 2), (3, 4, 3), (2, 3, 5), (3, 2, 3), (3, 4, 3),
-                      (3, 4, 3)]
+    bad_shapes_out = [(3, 4, 2), (3, 4, 3), (2, 3, 5), (3, 2, 3),
+                      (3, 4, 3), (3, 4, 3)]
     always_bad_shapes = [(3, 4), (3, 4, 5)]
     for bad_shape, axes in zip(bad_shapes_out, axes_list):
 
         for always_bad_shape in always_bad_shapes:
             arr_out = np.empty(always_bad_shape, dtype='complex128')
             with pytest.raises(ValueError):
-                pyfftw_call(arr_in, arr_out, axes=axes, halfcomplex=True)
+                if direction == 'forward':
+                    pyfftw_call(arr_in, arr_out, axes=axes, halfcomplex=True,
+                                direction='forward')
+                else:
+                    pyfftw_call(arr_out, arr_in, axes=axes, halfcomplex=True,
+                                direction='backward')
 
         arr_out = np.empty(bad_shape, dtype='complex128')
         with pytest.raises(ValueError):
-            pyfftw_call(arr_in, arr_out, axes=axes, halfcomplex=True)
+            if direction == 'forward':
+                pyfftw_call(arr_in, arr_out, axes=axes, halfcomplex=True,
+                            direction='forward')
+            else:
+                pyfftw_call(arr_out, arr_in, axes=axes, halfcomplex=True,
+                            direction='backward')
 
 
 @skip_if_no_pyfftw
@@ -939,6 +993,8 @@ def test_dft_sign(impl):
     assert all_almost_equal(arr_dft_minus.imag, -arr_dft_plus.imag)
     assert all_almost_equal(dft_minus.inverse(arr_dft_minus), arr)
     assert all_almost_equal(dft_plus.inverse(arr_dft_plus), arr)
+    assert all_almost_equal(dft_minus.inverse.inverse(arr), dft_minus(arr))
+    assert all_almost_equal(dft_plus.inverse.inverse(arr), dft_plus(arr))
 
     # 2d, halfcomplex, first axis
     shape = (4, 5)
@@ -960,6 +1016,27 @@ def test_dft_sign(impl):
     with pytest.raises(ValueError):
         DiscreteFourierTransform(
             dom=dft_dom, impl=impl, halfcomplex=True, sign='+', axes=axes)
+
+
+def test_dft_init_plan(impl):
+
+    # 2d, halfcomplex, first axis
+    shape = (4, 5)
+    axes = (0,)
+    dft_dom = odl.sequence_space(shape, dtype='float32')
+
+    dft = DiscreteFourierTransform(dft_dom, impl=impl, axes=axes,
+                                   halfcomplex=True)
+    dft.init_fftw_plan()
+    if impl == 'numpy':
+        assert dft._fftw_plan is None
+    elif impl == 'pyfftw':
+        # Make sure plan can be used
+        dft._fftw_plan(dft.domain.element().asarray(),
+                       dft.range.element().asarray())
+
+    dft.clear_fftw_plan()
+    assert dft._fftw_plan is None
 
 
 # ---- FourierTransform ---- #
@@ -995,6 +1072,28 @@ def test_fourier_trafo_range(exponent, dtype):
                                         halfcomplex=halfcomplex,
                                         shift=True)
     assert dft.range.exponent == conj_exponent(exponent)
+
+    if exponent != 2.0:
+        with pytest.raises(NotImplementedError):
+            dft.adjoint
+
+
+def test_fourier_trafo_init_plan(impl):
+
+    shape = 10
+    space_discr = odl.uniform_discr(0, 1, shape, dtype='complex64')
+
+    dft = FourierTransform(space_discr, impl=impl)
+    dft.init_fftw_plan()
+    if impl == 'numpy':
+        assert dft._fftw_plan is None
+    elif impl == 'pyfftw':
+        # Make sure plan can be used
+        dft._fftw_plan(dft.domain.element().asarray(),
+                       dft.range.element().asarray())
+
+    dft.clear_fftw_plan()
+    assert dft._fftw_plan is None
 
 
 def sinc(x):
@@ -1071,6 +1170,10 @@ def test_fourier_trafo_sign(impl):
     func_ft_plus = ft_plus(char_interval)
     assert np.allclose(func_ft_minus.real, func_ft_plus.real)
     assert np.allclose(func_ft_minus.imag, -func_ft_plus.imag)
+    assert np.allclose(ft_minus.inverse.inverse(char_interval),
+                       ft_minus(char_interval))
+    assert np.allclose(ft_plus.inverse.inverse(char_interval),
+                       ft_plus(char_interval))
 
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
     with pytest.raises(ValueError):
@@ -1094,6 +1197,10 @@ def test_fourier_trafo_inverse(impl):
     assert all_almost_equal(ft_minus.inverse(ft_minus(char_interval)),
                             discr_char)
     assert all_almost_equal(ft_plus.inverse(ft_plus(char_interval)),
+                            discr_char)
+    assert all_almost_equal(ft_minus.adjoint(ft_minus(char_interval)),
+                            discr_char)
+    assert all_almost_equal(ft_plus.adjoint(ft_plus(char_interval)),
                             discr_char)
 
     # Half-complex
