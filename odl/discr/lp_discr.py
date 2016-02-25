@@ -546,8 +546,11 @@ class DiscreteLpVector(DiscretizationVector):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            self.ntuple.__setitem__(indices, values.ntuple)
+            # For RawDiscretizationVector of the same type, use ntuple directly
+            self.ntuple[indices] = values.ntuple
         else:
+            # Other sequence types are piped through a Numpy array. Equivalent
+            # views are optimized for in Numpy.
             if indices == slice(None):
                 values = np.atleast_1d(values)
                 if (values.ndim > 1 and
