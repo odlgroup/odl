@@ -1063,8 +1063,8 @@ def sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
     kwargs.pop('weighting', None)
     kwargs.pop('nodes_on_bdry', None)
     shape = np.atleast_1d(shape)
-    return uniform_discr([0] * len(shape), shape, shape, impl=impl,
-                         exponent=exponent, nodes_on_bdry=False,
+    return uniform_discr([0] * len(shape), shape - 1, shape, impl=impl,
+                         exponent=exponent, nodes_on_bdry=True,
                          weighting='none', **kwargs)
 
 
