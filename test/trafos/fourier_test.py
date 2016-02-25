@@ -375,6 +375,10 @@ def test_dft_preprocess_data(sign):
     with pytest.raises(ValueError):
         dft_preprocess_data(arr, out=arr, sign=1)
 
+    arr = np.zeros(shape, dtype='S2')
+    with pytest.raises(ValueError):
+        dft_preprocess_data(arr)
+
 
 def test_dft_preprocess_data_halfcomplex(sign):
 
@@ -493,12 +497,17 @@ def test_pyfftw_call_forward(dtype):
 def test_pyfftw_call_threads():
     shape = (3, 4, 5)
     arr = _random_array(shape, dtype='complex64')
-
     true_dft = np.fft.fftn(arr)
     dft_arr = np.empty(shape, dtype='complex64')
-
     pyfftw_call(arr, dft_arr, direction='forward', preserve_input=False,
                 threads=4)
+    assert all_almost_equal(dft_arr, true_dft)
+
+    shape = (1000,)  # Trigger cpu_count() as number of threads
+    arr = _random_array(shape, dtype='complex64')
+    true_dft = np.fft.fftn(arr)
+    dft_arr = np.empty(shape, dtype='complex64')
+    pyfftw_call(arr, dft_arr, direction='forward', preserve_input=False)
 
     assert all_almost_equal(dft_arr, true_dft)
 
@@ -560,6 +569,15 @@ def test_pyfftw_call_bad_input(direction):
     bad_axes_list = [(0, 0, 1), (1, 1, 1), (-1, -1)]
     for bad_axes in bad_axes_list:
         with pytest.raises(ValueError):
+            pyfftw_call(arr_in, arr_out, axes=bad_axes,
+                        direction=direction)
+
+    # Axis entry out of range
+    arr_in = np.empty((3, 4, 5), dtype='complex128')
+    arr_out = np.empty_like(arr_in)
+    bad_axes_list = [(0, 3), (-4,)]
+    for bad_axes in bad_axes_list:
+        with pytest.raises(IndexError):
             pyfftw_call(arr_in, arr_out, axes=bad_axes,
                         direction=direction)
 
@@ -925,17 +943,23 @@ def test_dft_call(impl):
     assert dft.range == idft.domain
 
     one = dft.domain.one()
-    one_dft = dft(one, flags=('FFTW_ESTIMATE',))
+    one_dft1 = dft(one, flags=('FFTW_ESTIMATE',))
+    one_dft2 = dft.inverse.inverse(one, flags=('FFTW_ESTIMATE',))
+    one_dft3 = dft.adjoint.adjoint(one, flags=('FFTW_ESTIMATE',))
     true_dft = [[20, 0, 0, 0, 0],  # along all axes by default
                 [0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0]]
-    assert np.allclose(one_dft, true_dft)
+    assert np.allclose(one_dft1, true_dft)
+    assert np.allclose(one_dft2, true_dft)
+    assert np.allclose(one_dft3, true_dft)
 
-    one_idft1 = idft(one_dft, flags=('FFTW_ESTIMATE',))
-    one_idft2 = dft.inverse(one_dft, flags=('FFTW_ESTIMATE',))
+    one_idft1 = idft(one_dft1, flags=('FFTW_ESTIMATE',))
+    one_idft2 = dft.inverse(one_dft1, flags=('FFTW_ESTIMATE',))
+    one_idft3 = dft.adjoint(one_dft1, flags=('FFTW_ESTIMATE',))
     assert np.allclose(one_idft1, one)
     assert np.allclose(one_idft2, one)
+    assert np.allclose(one_idft3, one)
 
     rand_arr = _random_array(shape, 'complex128')
     rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
@@ -1073,9 +1097,17 @@ def test_fourier_trafo_range(exponent, dtype):
                                         shift=True)
     assert dft.range.exponent == conj_exponent(exponent)
 
+    # shift must be True in the last axis
+    if halfcomplex:
+        with pytest.raises(ValueError):
+            FourierTransform(space_discr, shift=(True, True, False))
+
     if exponent != 2.0:
         with pytest.raises(NotImplementedError):
             dft.adjoint
+
+    with pytest.raises(TypeError):
+        FourierTransform(dft.domain.partition)
 
 
 def test_fourier_trafo_init_plan(impl):
