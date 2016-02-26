@@ -368,7 +368,8 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     array_in : `numpy.ndarray`
         Array to be transformed
     array_out : `numpy.ndarray`
-        Output array storing the transformed values
+        Output array storing the transformed values, may be aligned
+        with ``array_in``.
     direction : {'forward', 'backward'}
         Direction of the transform
     axes : sequence of `int`, optional
@@ -431,7 +432,9 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
       of the input array but are often several times faster after the
       first call (measuring results are cached). Typically,
       'measure' is a good compromise. If you cannot afford the copy,
-      use 'estimate'.
+      use ``'estimate'``.
+    * If a plan is provided via the ``fftw_plan`` parameter, no copy
+      is needed internally.
     """
     import pickle
 
@@ -441,8 +444,6 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     if not array_out.flags.aligned:
         raise ValueError('Output array not aligned.')
 
-    # We can use _fftw_to_local here since it strigifies and converts to
-    # lowercase
     if axes is None:
         axes = tuple(range(array_in.ndim))
     else:
@@ -1566,11 +1567,18 @@ class FourierTransform(Operator):
         kwargs.pop('halfcomplex', None)
         kwargs.pop('normalise_idft', None)  # We use 'False'
 
-        # Pre-processing before calculating the sums
-        preproc = dft_preprocess_data(
-            x, shift=self.shifts, axes=self.axes, sign=self.sign)
+        # Pre-processing before calculating the sums. In-place is possible
+        # only for C2C, not for halfcomplex (R2C).
+        if self.halfcomplex:
+            preproc = dft_preprocess_data(
+                x, shift=self.shifts, axes=self.axes, sign=self.sign)
+        else:
+            dft_preprocess_data(
+                x, shift=self.shifts, axes=self.axes, sign=self.sign, out=out)
+            preproc = out
 
         # The actual call to the FFT library. We store the plan for re-use.
+        # The FFT is calculated in-place.
         direction = 'forward' if self.sign == '-' else 'backward'
         self._fftw_plan = pyfftw_call(
             preproc, out, direction=direction, halfcomplex=self.halfcomplex,
@@ -1816,11 +1824,19 @@ class FourierTransformInverse(FourierTransform):
         kwargs.pop('normalise_idft', None)  # We use 'True'
 
         # Pre-processing in IFT = post-processing in FT, but with division
-        # instead of multiplication and switched grids
-        preproc = dft_postprocess_data(
-            x, real_grid=self.range.grid, recip_grid=self.domain.grid,
-            shifts=self.shifts, axes=self.axes, sign=self.sign,
-            interp=self.domain.interp, op='divide')
+        # instead of multiplication and switched grids. In-place is possible
+        # only for C2C, not for halfcomplex (C2R).
+        if self.halfcomplex:
+            preproc = dft_postprocess_data(
+                x, real_grid=self.range.grid, recip_grid=self.domain.grid,
+                shifts=self.shifts, axes=self.axes, sign=self.sign,
+                interp=self.domain.interp, op='divide')
+        else:
+            dft_postprocess_data(
+                x, real_grid=self.range.grid, recip_grid=self.domain.grid,
+                shifts=self.shifts, axes=self.axes, sign=self.sign,
+                interp=self.domain.interp, op='divide', out=out)
+            preproc = out
 
         # The actual call to the FFT library. We store the plan for re-use.
         direction = 'forward' if self.sign == '-' else 'backward'
