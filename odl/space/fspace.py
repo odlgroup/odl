@@ -512,10 +512,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
             elif not is_complex_floating_dtype(dtype):
                 raise ValueError('{} is not a complex data type.'
                                  ''.format(dtype_in))
-        else:
-            if out_dtype is None:
-                raise ValueError('no default data type known for field {}.'
-                                 ''.format(field))
+
+        # Else: keep out_dtype=None, which results in lazy dtype determination
 
         LinearSpace.__init__(self, field)
         FunctionSet.__init__(self, domain, field, out_dtype)
