@@ -933,16 +933,16 @@ class CudaFn(FnBase, CudaNtuples):
         """s.__repr__() <==> repr(s)."""
         if self.is_rn:
             class_name = 'CudaRn'
-            if self.dtype == np.float32:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         elif self.is_cn:
-            raise NotImplementedError
+            class_name = 'CudaCn'
         else:
             class_name = 'CudaFn'
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
 
+        inner_str = '{}'.format(self.size)
+        if self.dtype != self.default_dtype(self.field):
+            inner_str += ', {}'.format(dtype_repr(self.dtype))
+
+        inner_str += _repr_space_funcs(self)
         return '{}({})'.format(class_name, inner_str)
 
     @property

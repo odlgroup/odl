@@ -1045,19 +1045,14 @@ class Fn(FnBase, Ntuples):
         """s.__repr__() <==> repr(s)."""
         if self.is_rn:
             class_name = 'Rn'
-            if self.dtype == np.float64:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         elif self.is_cn:
             class_name = 'Cn'
-            if self.dtype == np.complex128:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         else:
             class_name = 'Fn'
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+
+        inner_str = '{}'.format(self.size)
+        if self.dtype != self.default_dtype(self.field):
+            inner_str += ', {}'.format(dtype_repr(self.dtype))
 
         inner_str += _repr_space_funcs(self)
         return '{}({})'.format(class_name, inner_str)

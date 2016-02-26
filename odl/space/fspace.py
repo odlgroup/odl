@@ -33,7 +33,7 @@ from odl.set.sets import RealNumbers, ComplexNumbers, Set, Field
 from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.space.base_ntuples import _TYPE_MAP_R2C, _TYPE_MAP_C2R
 from odl.util.utility import (is_real_dtype, is_complex_floating_dtype,
-                              preload_call_with, dtype_repr)
+                              preload_first_arg, dtype_repr)
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
     out_shape_from_array, out_shape_from_meshgrid, vectorize)
@@ -241,7 +241,7 @@ class FunctionSetVector(Operator):
 
         if not call_has_out:
             # Out-of-place only
-            self._call_in_place = preload_call_with(self, 'in-place')(
+            self._call_in_place = preload_first_arg(self, 'in-place')(
                 _default_in_place)
             self._call_out_of_place = fcall
         elif call_out_optional:
@@ -252,7 +252,7 @@ class FunctionSetVector(Operator):
             self._call_in_place = fcall
             # The default out-of-place method needs to guess the data
             # type, so we need a separate decorator to help it.
-            self._call_out_of_place = preload_call_with(self, 'out-of-place')(
+            self._call_out_of_place = preload_first_arg(self, 'out-of-place')(
                 _default_out_of_place)
 
     @property

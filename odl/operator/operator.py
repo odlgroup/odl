@@ -33,7 +33,7 @@ import sys
 from odl.set.space import (LinearSpace, LinearSpaceVector,
                            UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
-from odl.util.utility import preload_call_with
+from odl.util.utility import preload_first_arg
 
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
@@ -434,7 +434,7 @@ class Operator(object):
         instance._call_out_optional = call_out_optional
         if not call_has_out:
             # Out-of-place _call
-            instance._call_in_place = preload_call_with(
+            instance._call_in_place = preload_first_arg(
                 instance, 'in-place')(_default_call_in_place)
             instance._call_out_of_place = instance._call
         elif call_out_optional:
@@ -444,7 +444,7 @@ class Operator(object):
         else:
             # In-place only _call
             instance._call_in_place = instance._call
-            instance._call_out_of_place = preload_call_with(
+            instance._call_out_of_place = preload_first_arg(
                 instance, 'out-of-place')(_default_call_out_of_place)
 
         return instance
