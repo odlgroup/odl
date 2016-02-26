@@ -54,7 +54,7 @@ from odl.util.utility import (
 __all__ = ('FourierTransform', 'FourierTransformInverse',
            'DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'pyfftw_call', 'dft_preprocess_data', 'dft_postprocess_data',
-           'PYFFTW_AVAILABLE')
+           'reciprocal_space', 'PYFFTW_AVAILABLE')
 
 
 def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
@@ -1316,18 +1316,74 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
     return out
 
 
-def _recip_space(space, shifts, halfcomplex, axes):
-    """Return the reciprocal space of ``space``."""
+def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
+                     **kwargs):
+    """Return the range of the Fourier transform on ``space``.
+
+    Parameters
+    ----------
+    space : `DiscreteLp`
+        Real space whose reciprocal is calculated. It must be
+        uniformly discretized.
+    axes : sequence of `int`, optional
+        Dimensions along which the Fourier transform is taken.
+        Default: all axes
+    halfcomplex : `bool`, optional
+        If `True`, take only the negative frequency part along the last
+        axis for. If `False`, use the full frequency space.
+        This option can only be used if ``space`` is a space of
+        real-valued functions.
+        Default: `False`
+    shift : `bool` or sequence of `bool`, optional
+        If `True`, the reciprocal grid is shifted by half a stride in
+        the negative direction. With a boolean sequence, this option
+        is applied separately to each axis.
+        If a sequence is provided, it must have the same length as
+        ``axes`` if supplied. Note that this must be set to `True`
+        in the halved axis in half-complex transforms.
+        Default: `True`
+    exponent : `float`, optional
+        Create a space with this exponent. By default, the conjugate
+        exponent ``q = p / (p - 1)`` of the exponent of ``space`` is
+        used, where ``q = inf`` for ``p = 1`` and vice versa.
+
+    Returns
+    -------
+    rspace : `DiscreteLp`
+        Reciprocal of the input ``space``. If ``halfcomplex=True``, the
+        upper end of the domain (where the half space ends) is chosen to
+        coincide with the grid node.
+    """
+    if not isinstance(space, DiscreteLp):
+        raise TypeError('space {!r} is not a `DiscreteLp` instance.'
+                        ''.format(space))
+    if not space.partition.is_regular:
+        raise ValueError('space is not uniformly discretized.')
+
+    if axes is None:
+        axes = list(range(space.ndim))
+    else:
+        axes = list(axes)
+
+    if halfcomplex and space.field != RealNumbers():
+        raise ValueError('halfcomplex option can only be used with real '
+                         'spaces.')
+
+    shift = _shift_list(shift, len(axes))
+
+    exponent = kwargs.pop('exponent', None)
+    if exponent is None:
+        exponent = conj_exponent(space.exponent)
+
     # Calculate range
-    recip_grid = reciprocal(space.grid, shift=shifts, halfcomplex=halfcomplex,
+    recip_grid = reciprocal(space.grid, shift=shift, halfcomplex=halfcomplex,
                             axes=axes)
 
-    # Make a partition with nodes on the boundary in the transform axes if
-    # halfcomplex = True, otherwise a standard partition.
+    # Make a partition with nodes on the boundary in the last transform axis
+    # if halfcomplex = True, otherwise a standard partition.
     if halfcomplex:
-        begin = {i: recip_grid.min_pt[i] for i in axes}
-        end = {i: recip_grid.max_pt[i] for i in axes}
-        part = uniform_partition_fromgrid(recip_grid, begin=begin, end=end)
+        end = {axes[-1]: recip_grid.max_pt[axes[-1]]}
+        part = uniform_partition_fromgrid(recip_grid, end=end)
     else:
         part = uniform_partition_fromgrid(recip_grid)
 
@@ -1337,13 +1393,11 @@ def _recip_space(space, shifts, halfcomplex, axes):
         ran_dtype = space.dtype
 
     ran_fspace = FunctionSpace(part.set, out_dtype=ran_dtype)
-    conj_exp = conj_exponent(space.exponent)
     ran_dspace_type = dspace_type(ran_fspace, impl='numpy', dtype=ran_dtype)
     ran_dspace = ran_dspace_type(part.size, dtype=ran_dtype,
-                                 weight=part.cell_volume, exponent=conj_exp)
+                                 weight=part.cell_volume, exponent=exponent)
 
-    recip_spc = DiscreteLp(ran_fspace, part, ran_dspace,
-                           exponent=conj_exp)
+    recip_spc = DiscreteLp(ran_fspace, part, ran_dspace, exponent=exponent)
 
     return recip_spc
 
@@ -1371,7 +1425,8 @@ class FourierTransform(Operator):
     """
 
     def __init__(self, dom, ran=None, impl='numpy', **kwargs):
-        """
+        """Initialize a new instance.
+
         Parameters
         ----------
         dom : `DiscreteLp`
@@ -1462,7 +1517,9 @@ class FourierTransform(Operator):
 
         if ran is None:
             # self._halfcomplex and self._axes need to be set for this
-            ran = _recip_space(dom, self.shifts, self.halfcomplex, self.axes)
+            ran = reciprocal_space(dom, axes=self.axes,
+                                   halfcomplex=self.halfcomplex,
+                                   shift=self.shifts)
 
         super().__init__(dom, ran, linear=True)
         self._fftw_plan = None
