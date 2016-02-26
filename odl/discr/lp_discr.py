@@ -48,7 +48,7 @@ from odl.util.utility import (
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
-           'uniform_discr', 'sequence_space')
+           'uniform_discr', 'discr_sequence_space')
 
 _SUPPORTED_INTERP = ('nearest', 'linear')
 
@@ -1083,7 +1083,7 @@ def uniform_discr(min_corner, max_corner, nsamples,
                                    **kwargs)
 
 
-def sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
+def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
     """Return an object mimicing the sequence space ``l^p(R^d)``.
 
     The returned object is a `DiscreteLp` without restriction and
@@ -1120,10 +1120,10 @@ def sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
 
     Examples
     --------
-    >>> seq_spc = sequence_space((3, 3))
+    >>> seq_spc = discr_sequence_space((3, 3))
     >>> seq_spc.one().norm() == 3.0
     True
-    >>> seq_spc = sequence_space((3, 3), exponent=1)
+    >>> seq_spc = discr_sequence_space((3, 3), exponent=1)
     >>> seq_spc.one().norm() == 9.0
     True
     """

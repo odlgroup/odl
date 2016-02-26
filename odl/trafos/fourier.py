@@ -37,7 +37,7 @@ except ImportError:
 # Internal
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import (
-    DiscreteLp, dspace_type, conj_exponent, sequence_space)
+    DiscreteLp, dspace_type, conj_exponent, discr_sequence_space)
 from odl.discr.partition import uniform_partition_fromgrid
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
@@ -561,7 +561,7 @@ class DiscreteFourierTransform(Operator):
         ran : `DiscreteLp`, optional
             Range of the Fourier transform. If not given, the range
             is determined from ``dom`` and the other parameters as
-            a `sequence_space` with exponent ``p / (p - 1)``
+            a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
         axes : sequence of `int`, optional
             Dimensions in which a transform is to be calculated. `None`
@@ -585,7 +585,7 @@ class DiscreteFourierTransform(Operator):
         Complex-to-complex (default) transforms have the same grids
         in domain and range:
 
-        >>> domain = sequence_space((2, 4))
+        >>> domain = discr_sequence_space((2, 4))
         >>> fft = DiscreteFourierTransform(domain)
         >>> fft.domain.shape
         (2, 4)
@@ -595,7 +595,7 @@ class DiscreteFourierTransform(Operator):
         Real-to-complex transforms have a range grid with shape
         ``n // 2 + 1`` in the last tranform axis:
 
-        >>> domain = sequence_space((2, 3, 4), dtype='float')
+        >>> domain = discr_sequence_space((2, 3, 4), dtype='float')
         >>> axes = (0, 1)
         >>> fft = DiscreteFourierTransform(
         ...     domain, halfcomplex=True, axes=axes)
@@ -651,8 +651,9 @@ class DiscreteFourierTransform(Operator):
 
         if ran is None:
             impl = 'cuda' if isinstance(dom.dspace, CudaNtuples) else 'numpy'
-            ran = sequence_space(ran_shape, conj_exponent(dom.exponent),
-                                 impl=impl, dtype=ran_dtype, order=dom.order)
+            ran = discr_sequence_space(
+                ran_shape, conj_exponent(dom.exponent), impl=impl,
+                dtype=ran_dtype, order=dom.order)
         else:
             if ran.shape != ran_shape:
                 raise ValueError('expected range shape {}, got {}.'
@@ -891,7 +892,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
         dom : `DiscreteLp`, optional
             Domain of the inverse Fourier transform. If not given, the
             domain is determined from ``ran`` and the other parameters
-            as a `sequence_space` with exponent ``p / (p - 1)``
+            as a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
         axes : sequence of `int`, optional
             Dimensions in which a transform is to be calculated. `None`
@@ -915,7 +916,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
         Complex-to-complex (default) transforms have the same grids
         in domain and range:
 
-        >>> range_ = sequence_space((2, 4))
+        >>> range_ = discr_sequence_space((2, 4))
         >>> ifft = DiscreteFourierTransformInverse(range_)
         >>> ifft.domain.shape
         (2, 4)
@@ -925,7 +926,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
         Complex-to-real transforms have a domain grid with shape
         ``n // 2 + 1`` in the last tranform axis:
 
-        >>> range_ = sequence_space((2, 3, 4), dtype='float')
+        >>> range_ = discr_sequence_space((2, 3, 4), dtype='float')
         >>> axes = (0, 1)
         >>> ifft = DiscreteFourierTransformInverse(
         ...     range_, halfcomplex=True, axes=axes)
