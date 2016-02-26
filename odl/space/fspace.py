@@ -321,26 +321,29 @@ class FunctionSetVector(Operator):
 
         ndim = getattr(self.domain, 'ndim', None)
         # Check for input type and determine output shape
-        if is_valid_input_array(x, ndim):
+        if is_valid_input_meshgrid(x, ndim):
+            out_shape = out_shape_from_meshgrid(x)
+            scalar_out = False
+        elif is_valid_input_array(x, ndim):
+            x = np.asarray(x)
             out_shape = out_shape_from_array(x)
             scalar_out = False
             # For 1d, squeeze the array
             if ndim == 1 and x.ndim == 2:
                 x = x.squeeze()
-        elif is_valid_input_meshgrid(x, ndim):
-            out_shape = out_shape_from_meshgrid(x)
-            scalar_out = False
         elif x in self.domain:
             x = np.atleast_2d(x).T  # make a (d, 1) array
             out_shape = (1,)
             scalar_out = (out is None)
         else:
             # Unknown input
+            txt_1d = ' or (n,)' if ndim == 1 else ''
             raise TypeError('argument {!r} not a valid vectorized '
                             'input. Expected an element of the domain '
-                            '{dom}, a ({dom.ndim}, n) array '
-                            'or a length-{dom.ndim} meshgrid sequence.'
-                            ''.format(x, dom=self.domain))
+                            '{dom}, an array-like with shape '
+                            '({dom.ndim}, n){} or a length-{dom.ndim} '
+                            'meshgrid tuple.'
+                            ''.format(x, txt_1d, dom=self.domain))
 
         # Check bounds if specified
         if bounds_check:
@@ -352,13 +355,31 @@ class FunctionSetVector(Operator):
         if out is None:
             try:
                 if ndim == 1:
-                    out = np.atleast_1d(np.squeeze(self._call(x, **kwargs)))
+                    out = self._call(x, **kwargs)
+                    if np.ndim(out) == 0 and not scalar_out:
+                        # Don't accept scalar result. A typical situation where
+                        # this occurs is with comparison operators, e.g.
+                        # "return x > 0" which simply gives 'True' for a
+                        # non-empty tuple (in Python 2). We raise TypeError
+                        # to trigger the call with x[0].
+                        raise TypeError
+                    out = np.atleast_1d(np.squeeze(out))
                 else:
                     out = self._call(x, **kwargs)
-            except TypeError as err:
-                # Second try for ndim = 1 with the first entry as input
+            except (TypeError, IndexError) as err:
+                # TypeError is raised if a meshgrid was used but the function
+                # expected an array (1d only). In this case we try again with
+                # the first meshgrid vector.
+                # IndexError is raised in expressions like x[x > 0] since
+                # "x > 0" evaluates to 'True', i.e. 1, and that index is
+                # out of range for a meshgrid tuple of length 1 :-). To get
+                # the real errors with indexing, we check again for the same
+                # scenario (scalar output when not valid) as in the first case.
                 if ndim == 1:
-                    out = np.atleast_1d(np.squeeze(self._call(x[0], **kwargs)))
+                    out = self._call(x[0], **kwargs)
+                    if np.ndim(out) == 0 and not scalar_out:
+                        raise ValueError('invalid scalar output.')
+                    out = np.atleast_1d(np.squeeze(out))
                 else:
                     raise err
 
@@ -377,7 +398,7 @@ class FunctionSetVector(Operator):
             try:
                 self._call(x, out=out, **kwargs)
             except TypeError as err:
-                # Second try for ndim = 1 with the first entry as input
+                # TypeError for meshgrid in 1d, but expected array (see above)
                 if ndim == 1:
                     self._call(x[0], out=out, **kwargs)
                 else:

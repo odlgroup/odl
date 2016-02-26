@@ -321,7 +321,7 @@ class IntervalProd(Set):
         ----------
         other :
             Can be a single point, a ``(d, N)`` array where ``d`` is the
-            number of dimensions or a length-``d`` meshgrid sequence
+            number of dimensions or a length-``d`` meshgrid tuple
 
         Returns
         -------

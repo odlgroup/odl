@@ -245,12 +245,12 @@ class DiscreteLp(Discretization):
                         ''.format(arr.shape, self.shape))
             arr = arr.ravel(order=self.order)
             return self.element_type(self, self.dspace.element(arr))
-        except TypeError as err:
+        except (TypeError, IndexError) as err:
             if str(err.args[0]).startswith('output contains points outside'):
                 raise err
             else:
                 raise_from(TypeError('unable to create an element of {} from '
-                                     '{!r}.'.format(self, inp)), err)
+                                     '{!r}: {}'.format(self, inp, err)), err)
 
     @property
     def interp(self):

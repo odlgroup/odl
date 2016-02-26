@@ -269,21 +269,12 @@ vectorization_guide.html>`_ for a detailed introduction.
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
-        try:
-            mesh = self.grid.meshgrid
-            if out is None:
-                out = func(mesh).ravel(order=self.order)
-            else:
-                func(mesh, out=out.asarray().reshape(self.grid.shape,
-                                                     order=self.order))
-        except (ValueError, TypeError) as err:
-            if str(err.args[0]).startswith('output contains points outside'):
-                raise err
-            points = self.grid.points()
-            if out is None:
-                out = func(points)
-            else:
-                func(points, out=out.asarray())
+        mesh = self.grid.meshgrid
+        if out is None:
+            out = func(mesh).ravel(order=self.order)
+        else:
+            func(mesh, out=out.asarray().reshape(self.grid.shape,
+                                                 order=self.order))
         return out
 
     def __repr__(self):
