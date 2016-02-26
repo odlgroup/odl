@@ -1322,18 +1322,21 @@ def _recip_space(space, shifts, halfcomplex, axes):
     recip_grid = reciprocal(space.grid, shift=shifts, halfcomplex=halfcomplex,
                             axes=axes)
 
-    # Make a partition with nodes on the boundary in the transform axes.
-    begin = {i: recip_grid.min_pt[i] for i in axes}
-    end = {i: recip_grid.max_pt[i] for i in axes}
-    part = uniform_partition_fromgrid(recip_grid, begin=begin, end=end)
-    # Always complex space
-    ran_fspace = FunctionSpace(part.set, field=ComplexNumbers())
+    # Make a partition with nodes on the boundary in the transform axes if
+    # halfcomplex = True, otherwise a standard partition.
+    if halfcomplex:
+        begin = {i: recip_grid.min_pt[i] for i in axes}
+        end = {i: recip_grid.max_pt[i] for i in axes}
+        part = uniform_partition_fromgrid(recip_grid, begin=begin, end=end)
+    else:
+        part = uniform_partition_fromgrid(recip_grid)
 
     if is_real_dtype(space.dtype):
         ran_dtype = _TYPE_MAP_R2C[space.dtype]
     else:
         ran_dtype = space.dtype
 
+    ran_fspace = FunctionSpace(part.set, out_dtype=ran_dtype)
     conj_exp = conj_exponent(space.exponent)
     ran_dspace_type = dspace_type(ran_fspace, impl='numpy', dtype=ran_dtype)
     ran_dspace = ran_dspace_type(part.size, dtype=ran_dtype,
