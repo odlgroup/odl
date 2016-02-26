@@ -214,11 +214,6 @@ class RawDiscretization(NtuplesBase):
         return self.uspace.domain
 
     @property
-    def dtype(self):
-        """The data type of the representation space."""
-        return self._dtype
-
-    @property
     def element_type(self):
         """ `RawDiscretizationVector` """
         return RawDiscretizationVector
@@ -516,25 +511,22 @@ def dspace_type(space, impl, dtype=None):
     Parameters
     ----------
     space :
-        The template space. If it has a ``field`` attribute,
-        ``dtype`` must be consistent with it
+        Template space from which to infer an adequate data space. If
+        it has a `LinearSpace.field` attribute, ``dtype`` must be
+        consistent with it.
     impl : {'numpy', 'cuda'}
-        The backend for the data space
+        Implementation backend for the data space
     dtype : `type`, optional
         Data type which the space is supposed to use. If `None`, the
         space type is purely determined from ``space`` and
         ``impl``. If given, it must be compatible with the
-        field of ``space``. Non-floating types result in basic
-        `Fn`-type spaces.
+        field of ``space``.
 
     Returns
     -------
     stype : `type`
         Space type selected after the space's field, the backend and
         the data type
-    dtype : `type` or `None`
-        If dtype was not provided, the default data type is inferred
-        from ``stype`` if possible. Otherwise, `None` is returned.
     """
     impl, impl_in = str(impl).lower(), impl
     if impl not in ('numpy', 'cuda'):
@@ -557,8 +549,6 @@ def dspace_type(space, impl, dtype=None):
 
     if dtype is None:
         stype = spacetype_map[impl][field_type]
-        if hasattr(stype, 'default_dtype') and field_type is not None:
-            dtype = stype.default_dtype(field_type())
 
     elif is_real_floating_dtype(dtype):
         if field_type is None or field_type == ComplexNumbers:
@@ -591,7 +581,7 @@ def dspace_type(space, impl, dtype=None):
         raise NotImplementedError('no corresponding data space available '
                                   'for space {!r} and implementation {!r}.'
                                   ''.format(space, impl))
-    return stype, dtype
+    return stype
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

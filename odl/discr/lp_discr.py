@@ -37,13 +37,14 @@ from odl.discr.discr_mappings import (
 from odl.discr.partition import RectPartition, uniform_partition_fromintv
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
+from odl.space.base_ntuples import _TYPE_MAP_R2C, _TYPE_MAP_C2R
 from odl.space.cu_ntuples import CUDA_AVAILABLE, CudaFn
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
-    is_real_dtype, is_complex_floating_dtype, dtype_repr, real_space)
+    is_real_dtype, is_complex_floating_dtype, dtype_repr)
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -256,6 +257,76 @@ class DiscreteLp(Discretization):
         """Interpolation type of this discretization."""
         return self._interp
 
+    def as_complex_space(self, dtype=None):
+        """Return a complex version of this space.
+
+        Parameters
+        ----------
+        dtype : optional
+            Data type of the returned space. Can be given in any way
+            `numpy.dtype` understands, e.g. as string ('complex64')
+            or data type (`complex`).
+            By default, the complex data type corresponding to
+            ``self.out_dtype`` is taken.
+
+        Returns
+        -------
+        cspace : `DiscreteLp`
+            The complex version of this space
+        """
+        dtype, dtype_in = np.dtype(dtype), dtype
+        if dtype_in is None:
+            if is_complex_floating_dtype(self.dtype):
+                dtype = self.dtype
+            else:
+                dtype = _TYPE_MAP_R2C[self.dtype]
+        else:
+            if not is_complex_floating_dtype(dtype):
+                raise ValueError('{} is not a complex data type.'
+                                 ''.format(dtype_in))
+
+        fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
+        dspace = self.dspace_type(self.size, dtype=dtype,
+                                  weight=self.dspace.weighting)
+        return type(self)(fspace, self.partition, dspace,
+                          exponent=self.exponent, interp=self.interp,
+                          order=self.order)
+
+    def as_real_space(self, dtype=None):
+        """Return a real version of this space.
+
+        Parameters
+        ----------
+        dtype : optional
+            Data type of the returned space. Can be given in any way
+            `numpy.dtype` understands, e.g. as string ('float128')
+            or data type (`float`).
+            By default, the real data type corresponding to
+            ``self.out_dtype`` is taken.
+
+        Returns
+        -------
+        rspace : `DiscreteLp`
+            The complex version of this space
+        """
+        dtype, dtype_in = np.dtype(dtype), dtype
+        if dtype_in is None:
+            if is_complex_floating_dtype(self.dtype):
+                dtype = _TYPE_MAP_C2R[self.dtype]
+            else:
+                dtype = self.dtype
+        else:
+            if not is_real_dtype(dtype):
+                raise ValueError('{} is not a real data type.'
+                                 ''.format(dtype_in))
+
+        fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
+        dspace = self.dspace_type(self.size, dtype=dtype,
+                                  weight=self.dspace.weighting)
+        return type(self)(fspace, self.partition, dspace,
+                          exponent=self.exponent, interp=self.interp,
+                          order=self.order)
+
     # Overrides for space functions depending on partition
     #
     # The inherited methods by default use a weighting by a constant
@@ -463,7 +534,7 @@ class DiscreteLpVector(DiscretizationVector):
 
     def real(self):
         """Real part of this element."""
-        return real_space(self.space).element(self.asarray().real)
+        return self.space.as_real_space().element(self.asarray().real)
 
     @real.setter
     def real(self, newreal):
@@ -475,7 +546,7 @@ class DiscreteLpVector(DiscretizationVector):
     @property
     def imag(self):
         """Imaginary part of this element."""
-        return real_space(self.space).element(self.asarray().imag)
+        return self.space.as_real_space().element(self.asarray().imag)
 
     @imag.setter
     def imag(self, newimag):
@@ -785,15 +856,8 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     else:
         raise ValueError("implementation '{}' not understood.".format(impl_in))
 
-    if is_real_dtype(dtype):
-        field = RealNumbers()
-    elif is_complex_floating_dtype(dtype):
-        field = ComplexNumbers()
-    else:
-        raise ValueError('cannot use non-scalar data type {}.'.format(dtype))
-
-    fspace = FunctionSpace(partition.set, field=field)
-    ds_type, _ = dspace_type(fspace, impl, dtype)
+    fspace = FunctionSpace(partition.set, out_dtype=dtype)
+    ds_type = dspace_type(fspace, impl, dtype)
 
     order = kwargs.pop('order', 'C')
 
@@ -843,7 +907,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Other Parameters
     ----------------
-    nodes_on_bdry : `bool` or boolean `array-like`
+    nodes_on_bdry : `bool` or boolean `array-like`, optional
         If `True`, place the outermost grid points at the boundary. For
         `False`, they are shifted by half a cell size to the 'inner'.
         If an array-like is given, it must have shape ``(ndim, 2)``,
@@ -854,12 +918,8 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     order : {'C', 'F'}, optional
         Axis ordering in the data storage. Default: 'C'
     dtype : dtype, optional
-        Data type for the discretized space
-
-            Default for 'numpy': 'float64' / 'complex128'
-
-            Default for 'cuda': 'float32'
-
+        Data type for the discretized space. If not specified, the
+        `FunctionSpace.out_dtype` of ``fspace`` is used.
     weighting : {'const', 'none'}, optional
         Weighting of the discretized space functions.
 
@@ -895,20 +955,26 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         raise TypeError('domain {!r} of the function space is not an '
                         '`IntervalProd` instance.'.format(fspace.domain))
 
-    field = fspace.field
-    dtype = kwargs.pop('dtype', None)
     impl, impl_in = str(impl).lower(), impl
-    if dtype is None:
-        # Try to find default data type
-        dspc_type, dtype = dspace_type(fspace, impl)
-    else:
-        dtype = np.dtype(dtype)
+    dtype = kwargs.pop('dtype', None)
 
-    if field == RealNumbers() and not is_real_dtype(dtype):
+    # Set data type. If given check consistency with fspace's field and
+    # out_dtype. If not given, take the latter.
+    if dtype is None:
+        dtype = fspace.out_dtype
+    else:
+        dtype, dtype_in = np.dtype(dtype), dtype
+        if not np.can_cast(fspace.out_dtype, dtype, casting='safe'):
+            raise ValueError('cannot safely cast from output data {} type of '
+                             'the function space to given data type {}.'
+                             ''.format(fspace.out, dtype_in))
+
+    if fspace.field == RealNumbers() and not is_real_dtype(dtype):
         raise ValueError('cannot discretize real space {} with '
                          'non-real data type {}.'
                          ''.format(fspace, dtype))
-    elif field == ComplexNumbers() and not is_complex_floating_dtype(dtype):
+    elif (fspace.field == ComplexNumbers() and
+          not is_complex_floating_dtype(dtype)):
         raise ValueError('cannot discretize complex space {} with '
                          'non-complex-floating data type {}.'
                          ''.format(fspace, dtype))
@@ -1004,14 +1070,15 @@ def uniform_discr(min_corner, max_corner, nsamples,
         function space
     """
     # Select field by dtype
-    dtype = kwargs.get('dtype', None)
-    if dtype is None or is_real_dtype(dtype):
-        field = RealNumbers()
-    else:
-        field = ComplexNumbers()
+    dtype = kwargs.pop('dtype', None)
+    if dtype is None:
+        if str(impl).lower() == 'cuda':
+            dtype = np.dtype('float32')
+        else:
+            dtype = np.dtype('float64')
 
-    fspace = FunctionSpace(IntervalProd(min_corner, max_corner), field)
-
+    fspace = FunctionSpace(IntervalProd(min_corner, max_corner),
+                           out_dtype=dtype)
     return uniform_discr_fromspace(fspace, nsamples, exponent, interp, impl,
                                    **kwargs)
 

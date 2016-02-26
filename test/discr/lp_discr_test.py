@@ -123,6 +123,7 @@ def test_factory(exponent):
     assert isinstance(discr.dspace, odl.Fn)
     assert discr.is_rn
     assert discr.dspace.exponent == exponent
+    assert discr.dtype == odl.Fn.default_dtype(odl.RealNumbers())
 
     # Complex
     discr = odl.uniform_discr(0, 1, 10, dtype='complex',
@@ -131,6 +132,7 @@ def test_factory(exponent):
     assert isinstance(discr.dspace, odl.Fn)
     assert discr.is_cn
     assert discr.dspace.exponent == exponent
+    assert discr.dtype == odl.Fn.default_dtype(odl.ComplexNumbers())
 
 
 @skip_if_no_cuda
@@ -139,6 +141,7 @@ def test_factory_cuda(exponent):
     assert isinstance(discr.dspace, odl.CudaFn)
     assert discr.is_rn
     assert discr.dspace.exponent == exponent
+    assert discr.dtype == odl.CudaFn.default_dtype(odl.RealNumbers())
 
     # Cuda currently does not support complex numbers, check error
     with pytest.raises(NotImplementedError):
@@ -553,6 +556,25 @@ def test_cell_volume():
     assert vec.cell_volume == 0.5
 
 
+def test_as_real_complex():
+
+    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
+    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex128')
+
+    assert rdiscr.as_complex_space() == cdiscr
+    assert rdiscr.as_complex_space().as_real_space() == rdiscr
+    assert rdiscr.as_real_space() == rdiscr
+    assert cdiscr.as_complex_space() == cdiscr
+
+    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float32')
+    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex64')
+
+    assert rdiscr.as_complex_space() == cdiscr
+    assert rdiscr.as_complex_space().as_real_space() == rdiscr
+    assert rdiscr.as_real_space() == rdiscr
+    assert cdiscr.as_complex_space() == cdiscr
+
+
 def _impl_test_ufuncs(fn, name, n_args, n_out):
     # Get the ufunc from numpy as reference
     ufunc = getattr(np, name)
@@ -687,7 +709,6 @@ def _impl_test_reduction(fn, name):
 
     # Create some data
     x_arr, x = _vectors(fn, 1)
-
     assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
 
 

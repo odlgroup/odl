@@ -34,15 +34,14 @@ from odl.util.testutils import skip_if_no_cuda
 def test_dspace_type_numpy():
     # Plain function set -> Ntuples-like
     fset = odl.FunctionSet(odl.Interval(0, 1), odl.Strings(2))
-    assert dspace_type(fset, 'numpy') == (odl.Ntuples, None)
-    assert dspace_type(fset, 'numpy', np.int) == (odl.Ntuples, np.dtype('int'))
+    assert dspace_type(fset, 'numpy') == odl.Ntuples, None
+    assert dspace_type(fset, 'numpy', np.int) == odl.Ntuples
 
     # Real space
     rspc = odl.FunctionSpace(odl.Interval(0, 1), field=odl.RealNumbers())
-    assert dspace_type(rspc, 'numpy') == (odl.Fn, np.dtype('float64'))
-    assert (dspace_type(rspc, 'numpy', np.float32) ==
-            (odl.Fn, np.dtype('float32')))
-    assert dspace_type(rspc, 'numpy', np.int) == (odl.Fn, np.dtype('int'))
+    assert dspace_type(rspc, 'numpy') == odl.Fn
+    assert dspace_type(rspc, 'numpy', np.float32) == odl.Fn
+    assert dspace_type(rspc, 'numpy', np.int) == odl.Fn
     with pytest.raises(TypeError):
         dspace_type(rspc, 'numpy', np.complex)
     with pytest.raises(TypeError):
@@ -50,9 +49,8 @@ def test_dspace_type_numpy():
 
     # Complex space
     cspc = odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
-    assert dspace_type(cspc, 'numpy') == (odl.Fn, np.dtype('complex128'))
-    assert (dspace_type(cspc, 'numpy', np.complex64) ==
-            (odl.Fn, np.dtype('complex64')))
+    assert dspace_type(cspc, 'numpy') == odl.Fn
+    assert dspace_type(cspc, 'numpy', np.complex64) == odl.Fn
     with pytest.raises(TypeError):
         dspace_type(cspc, 'numpy', np.float)
     with pytest.raises(TypeError):
@@ -65,16 +63,14 @@ def test_dspace_type_numpy():
 def test_dspace_type_cuda():
     # Plain function set -> Ntuples-like
     fset = odl.FunctionSet(odl.Interval(0, 1), odl.Strings(2))
-    assert dspace_type(fset, 'cuda') == (odl.CudaNtuples, None)
-    assert (dspace_type(fset, 'cuda', np.int) ==
-            (odl.CudaNtuples, np.dtype('int')))
+    assert dspace_type(fset, 'cuda') == odl.CudaNtuples
+    assert dspace_type(fset, 'cuda', np.int) == odl.CudaNtuples
 
     # Real space
     rspc = odl.FunctionSpace(odl.Interval(0, 1), field=odl.RealNumbers())
-    assert dspace_type(rspc, 'cuda') == (odl.CudaFn, np.dtype('float32'))
-    assert (dspace_type(rspc, 'cuda', np.float64) ==
-            (odl.CudaFn, np.dtype('float64')))
-    assert dspace_type(rspc, 'cuda', np.int) == (odl.CudaFn, np.dtype('int'))
+    assert dspace_type(rspc, 'cuda') == odl.CudaFn
+    assert dspace_type(rspc, 'cuda', np.float64) == odl.CudaFn
+    assert dspace_type(rspc, 'cuda', np.int) == odl.CudaFn
     with pytest.raises(TypeError):
         dspace_type(rspc, 'cuda', np.complex)
     with pytest.raises(TypeError):

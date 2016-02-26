@@ -242,125 +242,7 @@ def is_complex_floating_dtype(dtype):
     return np.issubsctype(dtype, np.complexfloating)
 
 
-def complex_space(space):
-    """Return the complex counterpart of a given space.
-
-    Parameters
-    ----------
-    space : `LinearSpace`
-        Template space to be converted into its complex counterpart.
-        If ``space`` is already a complex space, a copy of it is
-        returned. Supported types of spaces: `FunctionSpace`, `FnBase`,
-        `DiscreteLp`.
-
-    Returns
-    -------
-    cspace : `LinearSpace`
-        Space of the same type and all parameters equal except field
-        and data type (if applicable), which are mapped to their complex
-        counterparts.
-
-    Examples
-    --------
-    >>> from odl import uniform_discr
-    >>> rspace = uniform_discr(0, 1, 10, dtype='float32')
-    >>> cspace = complex_space(rspace)
-    >>> cspace
-    uniform_discr(0.0, 1.0, 10, dtype='complex64')
-    >>> rspace.one().norm() == cspace.one().norm()
-    True
-    >>> complex_space(cspace) == cspace
-    True
-    """
-    from odl.discr.lp_discr import DiscreteLp
-    from odl.set.sets import ComplexNumbers
-    from odl.space.base_ntuples import FnBase, _TYPE_MAP_R2C
-    from odl.space.fspace import FunctionSpace
-
-    if isinstance(space, FunctionSpace):
-        return FunctionSpace(space.domain, field=ComplexNumbers())
-    else:
-        if is_real_floating_dtype(space.dtype):
-            complex_dtype = _TYPE_MAP_R2C[space.dtype]
-        elif is_complex_floating_dtype(space.dtype):
-            complex_dtype = space.dtype
-        else:
-            raise ValueError('data type {} is not a floating point type.'
-                             ''.format(space.dtype))
-
-    # DiscreteLp needs to come first since it inherits from FnBase
-    if isinstance(space, DiscreteLp):
-        return type(space)(complex_space(space.uspace), space.partition,
-                           dspace=complex_space(space.dspace),
-                           exponent=space.exponent, interp=space.interp,
-                           order=space.order)
-    elif isinstance(space, FnBase):
-        return type(space)(space.size, dtype=complex_dtype,
-                           weight=space._space_funcs)
-    else:
-        raise TypeError('space type {} not supported.'.format(type(space)))
-
-
-def real_space(space):
-    """Return the real counterpart of a given space.
-
-    Parameters
-    ----------
-    space : `LinearSpace`
-        Template space to be converted into its real counterpart.
-        If ``space`` is already a real space, a copy of it is returned.
-        Supported types of spaces: `FunctionSpace`, `FnBase`,
-        `DiscreteLp`.
-
-    Returns
-    -------
-    rspace : `LinearSpace`
-        Space of the same type and all parameters equal except field
-        and data type (if applicable), which are mapped to their real
-        counterparts.
-
-    Examples
-    --------
-    >>> from odl import uniform_discr
-    >>> cspace = uniform_discr(0, 1, 10, dtype='complex64')
-    >>> rspace = real_space(cspace)
-    >>> rspace
-    uniform_discr(0.0, 1.0, 10, dtype='float32')
-    >>> cspace.one().norm() == rspace.one().norm()
-    True
-    >>> real_space(rspace) == rspace
-    True
-    """
-    from odl.discr.lp_discr import DiscreteLp
-    from odl.set.sets import RealNumbers
-    from odl.space.base_ntuples import FnBase, _TYPE_MAP_C2R
-    from odl.space.fspace import FunctionSpace
-
-    if isinstance(space, FunctionSpace):
-        return FunctionSpace(space.domain, field=RealNumbers())
-    else:
-        if is_real_floating_dtype(space.dtype):
-            real_dtype = space.dtype
-        elif is_complex_floating_dtype(space.dtype):
-            real_dtype = _TYPE_MAP_C2R[space.dtype]
-        else:
-            raise ValueError('data type {} is not a floating point type.'
-                             ''.format(space.dtype))
-
-    # DiscreteLp needs to come first since it inherits from FnBase
-    if isinstance(space, DiscreteLp):
-        return type(space)(real_space(space.uspace), space.partition,
-                           dspace=real_space(space.dspace),
-                           exponent=space.exponent, interp=space.interp,
-                           order=space.order)
-    elif isinstance(space, FnBase):
-        return type(space)(space.size, dtype=real_dtype,
-                           weight=space._space_funcs)
-    else:
-        raise TypeError('space type {} not supported.'.format(type(space)))
-
-
-def preload_call_with(instance, mode):
+def preload_first_arg(instance, mode):
     """Decorator to preload the first argument of a call method.
 
     Parameters
@@ -392,8 +274,8 @@ def preload_call_with(instance, mode):
     >>> def f_ip(inst, out, x):
     ...     print(inst.__doc__)
     ...
-    >>> f_oop_new = preload_call_with(a, 'out-of-place')(f_oop)
-    >>> f_ip_new = preload_call_with(a, 'in-place')(f_ip)
+    >>> f_oop_new = preload_first_arg(a, 'out-of-place')(f_oop)
+    >>> f_ip_new = preload_first_arg(a, 'in-place')(f_ip)
     ...
     >>> f_oop_new(0)
     My name is A.
@@ -402,7 +284,7 @@ def preload_call_with(instance, mode):
 
     Decorate upon definition:
 
-    >>> @preload_call_with(a, 'out-of-place')
+    >>> @preload_first_arg(a, 'out-of-place')
     ... def set_x(obj, x):
     ...     '''Function to set x in ``obj`` to a given value.'''
     ...     obj.x = x
