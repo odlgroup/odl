@@ -108,7 +108,7 @@ def test_fourier_trafo_forward_complex(domain, impl):
     if domain.field == odl.RealNumbers():
         return
 
-    ft = odl.trafos.FourierTransform(domain)
+    ft = odl.trafos.FourierTransform(domain, impl=impl)
 
     def charfun_ball(x):
         sum_sq = sum(xi ** 2 for xi in x)
@@ -119,7 +119,6 @@ def test_fourier_trafo_forward_complex(domain, impl):
         sum_sq = sum(xi ** 2 for xi in x)
         return np.where(sum_sq < rad ** 2, 1, 0)
 
-    ft = odl.trafos.FourierTransform(domain)
     ball_dom = ft.domain.element(charfun_ball)
     ball_ran = ft.range.element(charfun_freq_ball)
 
