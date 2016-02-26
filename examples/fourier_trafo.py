@@ -26,10 +26,8 @@ standard_library.install_aliases()
 import odl
 
 
-# Create a uniformly discretized space of functions on the rectangle
-# [-1, 1] x [-1, 1] with 512 samples per dimension. Using a complex data
-# type so one naturally gets the full Fourier transform (see below for real
-# data).
+# Discretized space: discretized functions on the rectangle [-1, 1] x [-1, 1]
+# with 512 samples per dimension and complex data type (for full FT).
 discr_space = odl.uniform_discr([-1, -1], [1, 1], (512, 512), dtype='complex')
 
 # Make the Fourier transform operator on this space. The range is calculated
