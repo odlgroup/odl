@@ -30,10 +30,10 @@ from numpy import ravel_multi_index, prod
 import sys
 from time import time
 
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
-           'skip_if_no_largescale', 'skip_if_no_benchmark',
-           'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
-           'skip_if_no_pywavelets')
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal',
+           'skip_if_no_cuda', 'skip_if_no_pywavelets', 'skip_if_no_pyfftw',
+           'skip_if_no_largescale',
+           'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
 
 def _places(a, b, default=None):
