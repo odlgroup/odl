@@ -330,9 +330,6 @@ class FunctionSetVector(Operator):
         elif is_valid_input_meshgrid(x, ndim):
             out_shape = out_shape_from_meshgrid(x)
             scalar_out = False
-            # For 1d, fish out the vector from the tuple
-            if ndim == 1:
-                x = x[0]
         elif x in self.domain:
             x = np.atleast_2d(x).T  # make a (d, 1) array
             out_shape = (1,)
@@ -353,7 +350,18 @@ class FunctionSetVector(Operator):
 
         # Call the function and check out shape, before or after
         if out is None:
-            out = self._call(x, **kwargs)
+            try:
+                if ndim == 1:
+                    out = np.atleast_1d(np.squeeze(self._call(x, **kwargs)))
+                else:
+                    out = self._call(x, **kwargs)
+            except TypeError as err:
+                # Second try for ndim = 1 with the first entry as input
+                if ndim == 1:
+                    out = np.atleast_1d(np.squeeze(self._call(x[0], **kwargs)))
+                else:
+                    raise err
+
             if out_shape != (1,) and out.shape != out_shape:
                 raise ValueError('output shape {} not equal to shape '
                                  '{} expected from input.'
@@ -366,7 +374,14 @@ class FunctionSetVector(Operator):
                 raise ValueError('output shape {} not equal to shape '
                                  '{} expected from input.'
                                  ''.format(out.shape, out_shape))
-            self._call(x, out=out, **kwargs)
+            try:
+                self._call(x, out=out, **kwargs)
+            except TypeError as err:
+                # Second try for ndim = 1 with the first entry as input
+                if ndim == 1:
+                    self._call(x[0], out=out, **kwargs)
+                else:
+                    raise err
 
         # Check output values
         if bounds_check:
