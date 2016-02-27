@@ -465,6 +465,16 @@ class Discretization(RawDiscretization, FnBase):
         """Create a vector of ones."""
         return self.element_type(self, self.dspace.one())
 
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return getattr(self.dspace, 'weighting', None)
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the ``dspace`` is weighted."""
+        return getattr(self.dspace, 'is_weighted', False)
+
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
         self.dspace._lincomb(a, x1.ntuple, b, x2.ntuple, out.ntuple)
