@@ -48,7 +48,7 @@ from odl.space.fspace import FunctionSpace
 from odl.util.numerics import fast_1d_tensor_mult
 from odl.util.utility import (
     is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype)
+    is_complex_floating_dtype, dtype_repr)
 
 
 __all__ = ('FourierTransform', 'FourierTransformInverse',
@@ -311,7 +311,8 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
 
         if arr_out.dtype != out_dtype:
             raise ValueError('Expected output dtype {}, got {}.'
-                             ''.format(out_dtype, arr_out.dtype))
+                             ''.format(dtype_repr(out_dtype),
+                                       dtype_repr(arr_out.dtype)))
 
     elif direction == 'backward':
         in_shape = list(arr_out.shape)
@@ -338,7 +339,8 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
 
         if arr_in.dtype != in_dtype:
             raise ValueError('Expected input dtype {}, got {}.'
-                             ''.format(in_dtype, arr_in.dtype))
+                             ''.format(dtype_repr(in_dtype),
+                                       dtype_repr(arr_in.dtype)))
 
     else:  # Shouldn't happen
         raise RuntimeError
@@ -661,7 +663,8 @@ class DiscreteFourierTransform(Operator):
                                  ''.format(ran_shape, ran.shape))
             if ran.dtype != ran_dtype:
                 raise ValueError('expected range data type {}, got {}.'
-                                 ''.format(ran_dtype, ran.dtype))
+                                 ''.format(dtype_repr(ran_dtype),
+                                           dtype_repr(ran.dtype)))
 
         super().__init__(dom, ran, linear=True)
         self._fftw_plan = None
@@ -1089,11 +1092,18 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     out : `numpy.ndarray`
         Result of the pre-processing. If ``out`` was given, the returned
         object is a reference to it.
+
+    Notes
+    -----
+    If ``out`` is not specified, the data type of the returned array
+    is the same as that of ``arr`` except when ``arr`` has real data
+    type and ``shift`` is not `True`. In this case, the return type
+    is the complex counterpart of ``arr.dtype``.
     """
     arr = np.asarray(arr)
     if not is_scalar_dtype(arr.dtype):
         raise ValueError('array has non-scalar data type {}.'
-                         ''.format(arr.dtype))
+                         ''.format(dtype_repr(arr.dtype)))
     elif is_real_dtype(arr.dtype) and not is_real_floating_dtype(arr.dtype):
         arr = arr.astype('float64')
 
@@ -1130,12 +1140,12 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     def _onedim_arr(length, shift):
         if shift:
             # (-1)^indices
-            indices = np.arange(length, dtype='int8')
+            indices = np.arange(length)
             arr = -2 * np.mod(indices, 2) + 1.0
         else:
-            indices = np.arange(length, dtype='float64')
+            indices = np.arange(length)
             arr = np.exp(-imag * pi * indices * (1 - 1.0 / length))
-        return arr
+        return arr.astype(out.dtype, copy=False)
 
     onedim_arrs = []
     for axis, shift in zip(axes, shift_list):
@@ -1211,8 +1221,8 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
     Parameters
     ----------
     arr : `array-like`
-        Array to be pre-processed. It is converted to data type
-        'complex128'.
+        Array to be pre-processed. An array with real data type is
+        converted to its complex counterpart.
     real_grid : `RegularGrid`
         Real space grid in the transform
     recip_grid : `RegularGrid`
@@ -1242,8 +1252,11 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
         object is a reference to it.
     """
     arr = np.asarray(arr)
-    if not is_complex_floating_dtype(arr.dtype):
-        arr = arr.astype('complex128')
+    if is_real_floating_dtype(arr.dtype):
+        arr = arr.astype(_TYPE_MAP_R2C[arr.dtype])
+    elif not is_complex_floating_dtype(arr.dtype):
+        raise ValueError('array data type {} is not a floating point data '
+                         'type.'.format(dtype_repr(arr.dtype)))
 
     if out is None:
         out = arr.copy()
@@ -1310,7 +1323,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
         else:
             onedim_arr /= stride * _interp_kernel_ft(freqs, interp)
 
-        onedim_arrs.append(onedim_arr)
+        onedim_arrs.append(onedim_arr.astype(out.dtype, copy=False))
 
     fast_1d_tensor_mult(out, onedim_arrs, axes=axes, out=out)
     return out
@@ -1346,6 +1359,9 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
         Create a space with this exponent. By default, the conjugate
         exponent ``q = p / (p - 1)`` of the exponent of ``space`` is
         used, where ``q = inf`` for ``p = 1`` and vice versa.
+    dtype : optional
+        Complex data type of the reciprocal space. By default, the
+        complex counterpart of ``space.dtype`` is used.
 
     Returns
     -------
@@ -1375,6 +1391,17 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     if exponent is None:
         exponent = conj_exponent(space.exponent)
 
+    dtype = kwargs.pop('dtype', None)
+    if dtype is None:
+        if is_real_dtype(space.dtype):
+            dtype = _TYPE_MAP_R2C[space.dtype]
+        else:
+            dtype = space.dtype
+    else:
+        if not is_complex_floating_dtype(dtype):
+            raise ValueError('{} is not a complex data type.'
+                             ''.format(dtype_repr(dtype)))
+
     # Calculate range
     recip_grid = reciprocal(space.grid, shift=shift, halfcomplex=halfcomplex,
                             axes=axes)
@@ -1387,14 +1414,9 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     else:
         part = uniform_partition_fromgrid(recip_grid)
 
-    if is_real_dtype(space.dtype):
-        ran_dtype = _TYPE_MAP_R2C[space.dtype]
-    else:
-        ran_dtype = space.dtype
-
-    ran_fspace = FunctionSpace(part.set, out_dtype=ran_dtype)
-    ran_dspace_type = dspace_type(ran_fspace, impl='numpy', dtype=ran_dtype)
-    ran_dspace = ran_dspace_type(part.size, dtype=ran_dtype,
+    ran_fspace = FunctionSpace(part.set, out_dtype=dtype)
+    ran_dspace_type = dspace_type(ran_fspace, impl='numpy', dtype=dtype)
+    ran_dspace = ran_dspace_type(part.size, dtype=dtype,
                                  weight=part.cell_volume, exponent=exponent)
 
     recip_spc = DiscreteLp(ran_fspace, part, ran_dspace, exponent=exponent)
