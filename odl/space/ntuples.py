@@ -1220,7 +1220,8 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> z_out is z
         True
 
-        It can also be used for inplace conj
+        It can also be used for in-place conj
+
         >>> x_out = x.conj(out=x); print(x)
         [(5-1j), (3-0j), (2+2j)]
         >>> x_out is x
