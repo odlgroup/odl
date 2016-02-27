@@ -231,7 +231,7 @@ class DiscreteLp(Discretization):
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
-        elif isinstance(inp, self.element_type) and inp not in self.dspace:
+        elif isinstance(inp, self.element_type) and inp not in self:
             # Same kind, but different space -> error
             raise TypeError('input {!r} not an element of {}.'
                             ''.format(inp, self))
