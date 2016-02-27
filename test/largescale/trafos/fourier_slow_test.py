@@ -99,7 +99,7 @@ def test_dft_forward(domain, impl):
     out = dft.range.element()
 
     dft(one, out=out)
-    assert out.ntuple[0] == domain.size
+    assert out[0] == domain.size
 
 
 def test_fourier_trafo_forward_complex(domain, impl):
