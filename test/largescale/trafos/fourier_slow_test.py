@@ -76,9 +76,8 @@ dom_params = [odl.uniform_discr(-2, 2, 10 ** 5),
 dom_ids = [' {!r} '.format(dom) for dom in dom_params]
 
 
-impl_params = ['numpy']
-if odl.trafos.PYFFTW_AVAILABLE:
-    impl_params += ['pyfftw']
+impl_params = ['numpy', 'pyfftw']
+assert odl.trafos.PYFFTW_AVAILABLE  # No largescale test without this
 impl_ids = [" impl = '{}' ".format(p) for p in impl_params]
 
 

@@ -36,7 +36,7 @@ from odl.trafos.fourier import (
     reciprocal, inverse_reciprocal, dft_preprocess_data, dft_postprocess_data,
     pyfftw_call, _interp_kernel_ft,
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
-    FourierTransform, PYFFTW_AVAILABLE)
+    FourierTransform)
 from odl.util.testutils import all_almost_equal, all_equal, skip_if_no_pyfftw
 from odl.util.utility import is_real_dtype
 
@@ -70,15 +70,8 @@ def planning(request):
     return request.param
 
 
-impl_params = ['numpy']
-if PYFFTW_AVAILABLE:
-    impl_params += ['pyfftw']
-impl_ids = [" impl = '{}' ".format(p) for p in impl_params]
-
-
-@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
-def impl(request):
-    return request.param
+impl_params = [('numpy',), skip_if_no_pyfftw(('pyfftw',))]
+parametrize_impl = pytest.mark.parametrize(('impl',), impl_params)
 
 
 @pytest.fixture(scope='module', ids=[' - ', ' + '], params=['-', '+'])
@@ -794,6 +787,7 @@ def test_pyfftw_call_backward_with_plan():
 # ---- DiscreteFourierTransform ---- #
 
 
+@parametrize_impl
 def test_dft_init(impl):
     # Just check if the code runs at all
     shape = (4, 5)
@@ -913,6 +907,7 @@ def test_dft_range():
 # ---- DiscreteFourierTransformInverse ---- #
 
 
+@parametrize_impl
 def test_idft_init(impl):
     # Just check if the code runs at all; this uses the init function of
     # DiscreteFourierTransform, so we don't need exhaustive tests here
@@ -931,6 +926,7 @@ def test_idft_init(impl):
                                     halfcomplex=True)
 
 
+@parametrize_impl
 def test_dft_call(impl):
 
     # 2d, complex, all ones and random back & forth
@@ -996,6 +992,7 @@ def test_dft_call(impl):
     assert (rand_arr_idft - rand_arr).norm() < 1e-6
 
 
+@parametrize_impl
 def test_dft_sign(impl):
     # Test if the FT sign behaves as expected, i.e. that the FT with sign
     # '+' and '-' have same real parts and opposite imaginary parts.
@@ -1042,6 +1039,7 @@ def test_dft_sign(impl):
             dom=dft_dom, impl=impl, halfcomplex=True, sign='+', axes=axes)
 
 
+@parametrize_impl
 def test_dft_init_plan(impl):
 
     # 2d, halfcomplex, first axis
@@ -1110,6 +1108,7 @@ def test_fourier_trafo_range(exponent, dtype):
         FourierTransform(dft.domain.partition)
 
 
+@parametrize_impl
 def test_fourier_trafo_init_plan(impl, dtype):
 
     # Not supported, skip
@@ -1178,6 +1177,7 @@ def test_fourier_trafo_create_temp():
     assert ft._tmp_f is None
 
 
+@parametrize_impl
 def test_fourier_trafo_call(impl, dtype):
     # Test if all variants can be called without error
 
@@ -1261,6 +1261,7 @@ def test_fourier_trafo_scaling():
         assert (func_dft - func_true_ft).norm() < 1e-6
 
 
+@parametrize_impl
 def test_fourier_trafo_sign(impl):
     # Test if the FT sign behaves as expected, i.e. that the FT with sign
     # '+' and '-' have same real parts and opposite imaginary parts.
@@ -1288,6 +1289,7 @@ def test_fourier_trafo_sign(impl):
         FourierTransform(discr, sign=-1, impl=impl)
 
 
+@parametrize_impl
 def test_fourier_trafo_inverse(impl):
     # Test if the inverse really is the inverse
 

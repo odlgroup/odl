@@ -24,9 +24,10 @@ standard_library.install_aliases()
 # External module imports
 import pytest
 import numpy as np
-from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
-if PYWAVELETS_AVAILABLE:
+try:
     import pywt
+except ImportError:
+    pass
 
 # ODL imports
 import odl

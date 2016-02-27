@@ -631,25 +631,24 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
             assert isinstance(odl_result[i], fn.element_type)
 
 
-def test_ufuncs():
-    # Cannot use fixture due to bug in pytest
-    spaces = [odl.uniform_discr([0, 0], [1, 1], [2, 2])]
+spaces = [(odl.uniform_discr([0, 0], [1, 1], [2, 2]),),
+          skip_if_no_cuda(
+              (odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='cuda'),))]
 
-    if odl.CUDA_AVAILABLE:
-        spaces += [odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='cuda')]
 
-    for fn in spaces:
-        for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
-            if (np.issubsctype(fn.dtype, np.floating) and
-                    name in ['bitwise_and',
-                             'bitwise_or',
-                             'bitwise_xor',
-                             'invert',
-                             'left_shift',
-                             'right_shift']):
-                # Skip integer only methods if floating point type
-                continue
-            yield _impl_test_ufuncs, fn, name, n_args, n_out
+@pytest.mark.parametrize(('space',), spaces)
+def test_ufuncs(space):
+    for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
+        if (np.issubsctype(space.dtype, np.floating) and
+                name in ['bitwise_and',
+                         'bitwise_or',
+                         'bitwise_xor',
+                         'invert',
+                         'left_shift',
+                         'right_shift']):
+            # Skip integer only methods if floating point type
+            continue
+        _impl_test_ufuncs(space, name, n_args, n_out)
 
 
 def test_real_imag():
