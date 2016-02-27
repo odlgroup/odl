@@ -629,7 +629,7 @@ class CudaFn(FnBase, CudaNtuples):
             This option cannot be combined with ``weight``,
             ``dist`` or ``norm``.
         """
-        super().__init__(size, dtype)
+        FnBase.__init__(self, size, dtype)
         CudaNtuples.__init__(self, size, dtype)
 
         dist = kwargs.pop('dist', None)
