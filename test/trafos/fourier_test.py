@@ -1110,22 +1110,96 @@ def test_fourier_trafo_range(exponent, dtype):
         FourierTransform(dft.domain.partition)
 
 
-def test_fourier_trafo_init_plan(impl):
+def test_fourier_trafo_init_plan(impl, dtype):
+
+    # Not supported, skip
+    if dtype == np.dtype('float16') and impl == 'pyfftw':
+        return
+
+    shape = 10
+    halfcomplex, _ = _params_from_dtype(dtype)
+
+    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype)
+
+    ft = FourierTransform(space_discr, impl=impl, halfcomplex=halfcomplex)
+    ft.init_fftw_plan()
+    if impl == 'numpy':
+        assert ft._fftw_plan is None
+    elif impl == 'pyfftw':
+        # Make sure plan can be used
+        ft._fftw_plan(ft.domain.element().asarray(),
+                      ft.range.element().asarray())
+
+    ft.clear_fftw_plan()
+    assert ft._fftw_plan is None
+
+    # With temporaries
+    ft.create_temporaries(r=True, f=False)
+    ft.init_fftw_plan()
+    if impl == 'numpy':
+        assert ft._fftw_plan is None
+    elif impl == 'pyfftw':
+        # Make sure plan can be used
+        ft._fftw_plan(ft.domain.element().asarray(),
+                      ft.range.element().asarray())
+
+    ft.clear_fftw_plan()
+    assert ft._fftw_plan is None
+
+    ft.create_temporaries(r=False, f=True)
+    ft.init_fftw_plan()
+    if impl == 'numpy':
+        assert ft._fftw_plan is None
+    elif impl == 'pyfftw':
+        # Make sure plan can be used
+        ft._fftw_plan(ft.domain.element().asarray(),
+                      ft.range.element().asarray())
+
+    ft.clear_fftw_plan()
+    assert ft._fftw_plan is None
+
+
+def test_fourier_trafo_create_temp():
 
     shape = 10
     space_discr = odl.uniform_discr(0, 1, shape, dtype='complex64')
 
-    dft = FourierTransform(space_discr, impl=impl)
-    dft.init_fftw_plan()
-    if impl == 'numpy':
-        assert dft._fftw_plan is None
-    elif impl == 'pyfftw':
-        # Make sure plan can be used
-        dft._fftw_plan(dft.domain.element().asarray(),
-                       dft.range.element().asarray())
+    ft = FourierTransform(space_discr)
+    ft.create_temporaries()
+    assert ft._tmp_r is not None
+    assert ft._tmp_f is not None
 
-    dft.clear_fftw_plan()
-    assert dft._fftw_plan is None
+    ift = ft.inverse
+    assert ift._tmp_r is not None
+    assert ift._tmp_f is not None
+
+    ft.clear_temporaries()
+    assert ft._tmp_r is None
+    assert ft._tmp_f is None
+
+
+def test_fourier_trafo_call(impl, dtype):
+    # Test if all variants can be called without error
+
+    # Not supported, skip
+    if dtype == np.dtype('float16') and impl == 'pyfftw':
+        return
+
+    shape = 10
+    halfcomplex, _ = _params_from_dtype(dtype)
+    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype)
+
+    ft = FourierTransform(space_discr, impl=impl, halfcomplex=halfcomplex)
+    ift = ft.inverse
+
+    one = space_discr.one()
+    assert np.allclose(ift(ft(one)), one)
+
+    # With temporaries
+    ft.create_temporaries()
+    ift = ft.inverse  # shares temporaries
+    one = space_discr.one()
+    assert np.allclose(ift(ft(one)), one)
 
 
 def sinc(x):

@@ -1484,12 +1484,39 @@ class FourierTransform(Operator):
             in the halved axis in half-complex transforms.
             Default: `True`
 
+        Other Parameters
+        ----------------
+        tmp_r : `DiscreteLpVector` or `numpy.ndarray`
+            Temporary for calculations in the real space (domain of
+            this transform). It is shared with the inverse.
+
+            Variants using this: R2C, R2HC, C2R (inverse)
+
+        tmp_f : `DiscreteLpVector` or `numpy.ndarray`
+            Temporary for calculations in the frequency (reciprocal)
+            space. It is shared with the inverse.
+
+            Variants using this: R2C, C2R (inverse), HC2R (inverse)
+
         Notes
         -----
-        The `Operator.range` of this operator always has the
-        `ComplexNumbers` as its `LinearSpace.field`, i.e. if the
-        field of ``dom`` is the `RealNumbers`, this operator has no
-        `Operator.adjoint`.
+        * The transform variants are:
+
+          - **C2C**: complex-to-complex.
+            The default variant, one-to-one and unitary.
+
+          - **R2C**: real-to-complex.
+            This variant has no adjoint, and the inverse may suffer
+            from information loss since the result is cast to real.
+
+          - **R2HC**: real-to-halfcomplex.
+            This variant stores only a half-space of frequencies and
+            is guaranteed to be one-to-one (invertible).
+
+        * The `Operator.range` of this operator always has the
+          `ComplexNumbers` as `LinearSpace.field`, i.e. if the
+          field of ``dom`` is the `RealNumbers`, this operator has no
+          `Operator.adjoint`.
         """
         # TODO: variants wrt placement of 2*pi
 
@@ -1546,6 +1573,18 @@ class FourierTransform(Operator):
         super().__init__(dom, ran, linear=True)
         self._fftw_plan = None
 
+        # Storing temporaries directly as arrays
+        tmp_r = kwargs.pop('tmp_r', None)
+        tmp_f = kwargs.pop('tmp_f', None)
+
+        if tmp_r is not None:
+            tmp_r = self.domain.element(tmp_r).asarray()
+        if tmp_f is not None:
+            tmp_f = self.range.element(tmp_f).asarray()
+
+        self._tmp_r = tmp_r
+        self._tmp_f = tmp_f
+
     def _call(self, x, out, **kwargs):
         """Implement ``self(x, out[, **kwargs])``.
 
@@ -1573,6 +1612,47 @@ class FourierTransform(Operator):
             # 0-overhead assignment if asarray() does not copy
             out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
 
+    def _preprocess(self, x, out=None):
+        """Return the pre-processed version of ``x``.
+
+        C2C: use ``tmp_r`` or ``tmp_f`` (C2C operation)
+        R2C: use ``tmp_f`` (R2C operation)
+        HALFC: use ``tmp_r`` (R2R operation)
+
+        The result is stored in ``out`` if given, otherwise in
+        a temporary or a new array.
+        """
+        if out is None:
+            if self.domain.field == ComplexNumbers():
+                out = self._tmp_r if self._tmp_r is not None else self._tmp_f
+            elif self.domain.field == RealNumbers() and not self.halfcomplex:
+                out = self._tmp_f
+            else:
+                out = self._tmp_r
+        return dft_preprocess_data(
+            x, shift=self.shifts, axes=self.axes, sign=self.sign,
+            out=out)
+
+    def _postprocess(self, x, out=None):
+        """Return the post-processed version of ``x``.
+
+        C2C: use ``tmp_f`` (C2C operation)
+        R2C: use ``tmp_f`` (C2C operation)
+        HALFC: use ``tmp_f`` (C2C operation)
+
+        The result is stored in ``out`` if given, otherwise in
+        a temporary or a new array.
+        """
+        if out is None:
+            if self.domain.field == ComplexNumbers():
+                out = self._tmp_r if self._tmp_r is not None else self._tmp_f
+            else:
+                out = self._tmp_f
+        return dft_postprocess_data(
+            out, real_grid=self.domain.grid, recip_grid=self.range.grid,
+            shifts=self.shifts, axes=self.axes, sign=self.sign,
+            interp=self.domain.interp, op='multiply', out=out)
+
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
 
@@ -1584,35 +1664,29 @@ class FourierTransform(Operator):
         Returns
         -------
         out : `numpy.ndarray`
-            Result of the transform. If ``out`` was given, the returned
-            object is a reference to it.
+            Result of the transform
         """
-        assert isinstance(x, np.ndarray)
+        # Pre-processing before calculating the DFT
+        # Note: since the FFT call is out of place, it does not matter if
+        # preprocess produces real or complex output in the R2C variant.
+        # There is no significant time difference between (full) R2C and
+        # C2C DFT in Numpy.
+        preproc = self._preprocess(x)
 
-        # Pre-processing before calculating the sums
-        preproc = dft_preprocess_data(
-            x, shift=self.shifts, axes=self.axes, sign=self.sign)
-
-        # The actual call to the FFT library
+        # The actual call to the FFT library, out-of-place unfortunately
         if self.halfcomplex:
             out = np.fft.rfftn(preproc, axes=self.axes)
         else:
             if self.sign == '-':
                 out = np.fft.fftn(preproc, axes=self.axes)
-            elif self.sign == '+':
+            else:
                 out = np.fft.ifftn(preproc, axes=self.axes)
                 # Numpy's FFT normalizes by 1 / prod(shape[axes]), we
                 # need to undo that
                 out *= np.prod(np.take(self.domain.shape, self.axes))
-            else:
-                raise RuntimeError('bad sign {}.'.format(self.sign))
 
         # Post-processing accounting for shift, scaling and interpolation
-        dft_postprocess_data(
-            out, real_grid=self.domain.grid, recip_grid=self.range.grid,
-            shifts=self.shifts, axes=self.axes, sign=self.sign,
-            interp=self.domain.interp, op='multiply', out=out)
-
+        self._postprocess(out, out=out)
         return out
 
     def _call_pyfftw(self, x, out, **kwargs):
@@ -1637,41 +1711,37 @@ class FourierTransform(Operator):
         Returns
         -------
         out : `numpy.ndarray`
-            Result of the transform. If ``out`` was given, the returned
-            object is a reference to it.
+            Result of the transform. The returned object is a reference
+            to the input parameter ``out``.
         """
-        assert isinstance(x, np.ndarray)
-        assert isinstance(out, np.ndarray)
-
         # We pop some kwargs options here so that we always use the ones
         # given during init or implicitly assumed.
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
         kwargs.pop('normalise_idft', None)  # We use 'False'
 
-        # Pre-processing before calculating the sums. In-place is possible
-        # only for C2C, not for halfcomplex (R2C).
+        # Pre-processing before calculating the sums, in-place for C2C and R2C
         if self.halfcomplex:
-            preproc = dft_preprocess_data(
-                x, shift=self.shifts, axes=self.axes, sign=self.sign)
+            preproc = self._preprocess(x)
+            assert is_real_dtype(preproc.dtype)
         else:
-            dft_preprocess_data(
-                x, shift=self.shifts, axes=self.axes, sign=self.sign, out=out)
-            preproc = out
+            # out is preproc in this case
+            preproc = self._preprocess(x, out=out)
+            assert is_complex_floating_dtype(preproc.dtype)
 
         # The actual call to the FFT library. We store the plan for re-use.
-        # The FFT is calculated in-place.
+        # The FFT is calculated in-place, except if the range is real and
+        # we don't use halfcomplex.
         direction = 'forward' if self.sign == '-' else 'backward'
         self._fftw_plan = pyfftw_call(
             preproc, out, direction=direction, halfcomplex=self.halfcomplex,
             axes=self.axes, normalise_idft=False, **kwargs)
 
-        # Post-processing accounting for shift, scaling and interpolation
-        dft_postprocess_data(
-            out, real_grid=self.domain.grid, recip_grid=self.range.grid,
-            shifts=self.shifts, axes=self.axes, sign=self.sign,
-            interp=self.domain.interp, op='multiply', out=out)
+        assert is_complex_floating_dtype(out.dtype)
 
+        # Post-processing accounting for shift, scaling and interpolation
+        out = self._postprocess(out, out=out)
+        assert is_complex_floating_dtype(out.dtype)
         return out
 
     @property
@@ -1718,7 +1788,49 @@ class FourierTransform(Operator):
         sign = '+' if self.sign == '-' else '-'
         return FourierTransformInverse(
             dom=self.range, ran=self.domain, impl=self.impl, axes=self.axes,
-            halfcomplex=self.halfcomplex, shift=self.shifts, sign=sign)
+            halfcomplex=self.halfcomplex, shift=self.shifts, sign=sign,
+            tmp_r=self._tmp_r, tmp_f=self._tmp_f)
+
+    def create_temporaries(self, r=True, f=True):
+        """Allocate and store reusable temporaries.
+
+        Existing temporaries are overwritten.
+
+        Parameters
+        ----------
+        r : `bool`, optional
+            Create temporary for the real space
+        f : `bool`, optional
+            Create temporary for the frequency space
+
+        Notes
+        -----
+        To save memory, clear the temporaries when the transform is
+        no longer used.
+
+        See also
+        --------
+        clear_temporaries
+        clear_fftw_plan : can also hold references to the temporaries
+        """
+        inverse = isinstance(self, FourierTransformInverse)
+
+        if inverse:
+            rspace = self.range
+            fspace = self.domain
+        else:
+            rspace = self.domain
+            fspace = self.range
+
+        if r:
+            self._tmp_r = rspace.element().asarray()
+        if f:
+            self._tmp_f = fspace.element().asarray()
+
+    def clear_temporaries(self):
+        """Set the temporaries to `None`."""
+        self._tmp_r = None
+        self._tmp_f = None
 
     def init_fftw_plan(self, planning_effort='measure', **kwargs):
         """Initialize the FFTW plan for this transform for later use.
@@ -1737,17 +1849,66 @@ class FourierTransform(Operator):
             Default: `None` (no limit)
         threads : `int`, optional
             Number of threads to use. Default: 1
+
+        Notes
+        -----
+        To save memory, clear the plan when the transform is no longer
+        used (the plan stores 2 arrays).
+
+        See also
+        --------
+        clear_fftw_plan
         """
         if self.impl != 'pyfftw':
             return
 
-        x = self.domain.element()
-        y = self.range.element()
+        # Using available temporaries if possible
+        inverse = isinstance(self, FourierTransformInverse)
+
+        if inverse:
+            rspace = self.range
+            fspace = self.domain
+        else:
+            rspace = self.domain
+            fspace = self.range
+
+        if rspace.field == ComplexNumbers():
+            # C2C: Use either one of 'r' or 'f' temporary if initialized
+            if self._tmp_r is not None:
+                arr_in = arr_out = self._tmp_r
+            elif self._tmp_f is not None:
+                arr_in = arr_out = self._tmp_f
+            else:
+                arr_in = arr_out = rspace.element().asarray()
+
+        elif self.halfcomplex:
+            # R2HC / HC2R: Use 'r' and 'f' temporary distinctly if initialized
+            if self._tmp_r is not None:
+                arr_r = self._tmp_r
+            else:
+                arr_r = rspace.element().asarray()
+            if self._tmp_f is not None:
+                arr_f = self._tmp_f
+            else:
+                arr_f = fspace.element().asarray()
+
+            if inverse:
+                arr_in, arr_out = arr_f, arr_r
+            else:
+                arr_in, arr_out = arr_r, arr_f
+
+        else:
+            # R2C / C2R: Use 'f' temporary for both sides if initialized
+            if self._tmp_f is not None:
+                arr_in = arr_out = self._tmp_f
+            else:
+                arr_in = arr_out = fspace.element().asarray()
+
         kwargs.pop('planning_timelimit', None)
 
         direction = 'forward' if self.sign == '-' else 'backward'
         self._fftw_plan = pyfftw_call(
-            x.asarray(), y.asarray(), direction=direction,
+            arr_in, arr_out, direction=direction,
             halfcomplex=self.halfcomplex, axes=self.axes,
             planning_effort=planning_effort, **kwargs)
 
@@ -1807,12 +1968,40 @@ class FourierTransformInverse(FourierTransform):
             in the halved axis in half-complex transforms.
             Default: `True`
 
+        Other Parameters
+        ----------------
+        tmp_r : `DiscreteLpVector` or `numpy.ndarray`
+            Temporary for calculations in the real space (range of
+            this transform). It is shared with the inverse.
+
+            Variants using this: C2R, R2C (forward), R2HC (forward)
+
+        tmp_f : `DiscreteLpVector` or `numpy.ndarray`
+            Temporary for calculations in the frequency (reciprocal)
+            space. It is shared with the inverse.
+
+            Variants using this: C2R, HC2R, R2C (forward)
+
         Notes
         -----
-        The `Operator.range` of this operator always has the
-        `ComplexNumbers` as its `LinearSpace.field`, i.e. if the
-        field of ``dom`` is the `RealNumbers`, this operator has no
-        `Operator.adjoint`.
+        * The transform variants are:
+
+          - **C2C**: complex-to-complex.
+            The default variant, one-to-one and unitary.
+
+          - **C2R**: complex-to-real.
+            This variant has no adjoint and may suffer from information
+            loss since the result is cast to real.
+
+          - **HC2R**: halfcomplex-to-real.
+            This variant interprets input as a signal on a half-space
+            of frequencies. It is guaranteed to be one-to-one
+            (invertible).
+
+        * The `Operator.domain` of this operator always has the
+          `ComplexNumbers` as `LinearSpace.field`, i.e. if the
+          field of ``ran`` is the `RealNumbers`, this operator has no
+          `Operator.adjoint`.
         """
         # TODO: variants wrt placement of 2*pi
 
@@ -1830,6 +2019,49 @@ class FourierTransformInverse(FourierTransform):
         self._domain, self._range = self._range, self._domain
         self._sign = bwd_sign
 
+    def _preprocess(self, x, out=None):
+        """Return the pre-processed version of ``x``.
+
+        Note that pre-processing in IFT is the same as post-processing
+        in FT with ``op='divide'``.
+
+        C2C: use ``tmp_r`` or``tmp_f`` (C2C operation)
+        R2C: use ``tmp_f`` (C2C operation)
+        HALFC: use ``tmp_f`` (C2C operation)
+
+        The result is stored in ``out`` if given, otherwise in
+        a temporary or a new array.
+        """
+        if out is None:
+            if self.range.field == ComplexNumbers():
+                out = self._tmp_r if self._tmp_r is not None else self._tmp_f
+            else:
+                out = self._tmp_f
+        return dft_postprocess_data(
+            x, real_grid=self.range.grid, recip_grid=self.domain.grid,
+            shifts=self.shifts, axes=self.axes, sign=self.sign,
+            interp=self.domain.interp, op='divide', out=out)
+
+    def _postprocess(self, x, out=None):
+        """Return the post-processed version of ``x``.
+
+        C2C: use ``tmp_r`` or ``tmp_f`` (C2C operation)
+        R2C: use ``tmp_f`` (C2C operation)
+        HALFC: use ``tmp_r`` (R2R operation)
+
+        The result is stored in ``out`` if given, otherwise in
+        a temporary or a new array.
+        """
+        if out is None:
+            if self.range.field == ComplexNumbers():
+                out = self._tmp_r if self._tmp_r is not None else self._tmp_f
+            elif self.range.field == RealNumbers() and not self.halfcomplex:
+                out = self._tmp_f
+            else:  # halfcomplex
+                out = self._tmp_r
+        return dft_preprocess_data(
+            x, shift=self.shifts, axes=self.axes, sign=self.sign, out=out)
+
     def _call_numpy(self, x):
         """Return ``self(x)`` for numpy back-end.
 
@@ -1841,16 +2073,10 @@ class FourierTransformInverse(FourierTransform):
         Returns
         -------
         out : `numpy.ndarray`
-            Result of the transform. If ``out`` was given, the returned
-            object is a reference to it.
+            Result of the transform
         """
-
-        # Pre-processing in IFT = post-processing in FT, but with division
-        # instead of multiplication and switched grids
-        preproc = dft_postprocess_data(
-            x, real_grid=self.range.grid, recip_grid=self.domain.grid,
-            shifts=self.shifts, axes=self.axes, sign=self.sign,
-            interp=self.domain.interp, op='divide')
+        # Pre-processing before calculating the DFT
+        preproc = self._preprocess(x)
 
         # The actual call to the FFT library
         # Normalization by 1 / prod(shape[axes]) is done by Numpy's FFT if
@@ -1862,16 +2088,18 @@ class FourierTransformInverse(FourierTransform):
             if self.sign == '-':
                 out = np.fft.fftn(preproc, axes=self.axes)
                 out /= np.prod(np.take(self.domain.shape, self.axes))
-            elif self.sign == '+':
-                out = np.fft.ifftn(preproc, axes=self.axes)
             else:
-                raise RuntimeError('bad sign {}.'.format(self.sign))
+                out = np.fft.ifftn(preproc, axes=self.axes)
 
-        # Post-processing in IFT = pre-processing in FT
-        preproc = dft_preprocess_data(
-            out, shift=self.shifts, axes=self.axes, sign=self.sign, out=out)
+        # Post-processing in IFT = pre-processing in FT (in-place)
+        self._postprocess(out, out=out)
+        if self.halfcomplex:
+            assert is_real_dtype(out.dtype)
 
-        return out
+        if self.range.field == RealNumbers():
+            return out.real
+        else:
+            return out
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` for pyfftw back-end.
@@ -1906,19 +2134,12 @@ class FourierTransformInverse(FourierTransform):
         kwargs.pop('normalise_idft', None)  # We use 'True'
 
         # Pre-processing in IFT = post-processing in FT, but with division
-        # instead of multiplication and switched grids. In-place is possible
-        # only for C2C, not for halfcomplex (C2R).
-        if self.halfcomplex:
-            preproc = dft_postprocess_data(
-                x, real_grid=self.range.grid, recip_grid=self.domain.grid,
-                shifts=self.shifts, axes=self.axes, sign=self.sign,
-                interp=self.domain.interp, op='divide')
+        # instead of multiplication and switched grids. In-place for C2C only.
+        if self.range.field == ComplexNumbers():
+            # preproc is out in this case
+            preproc = self._preprocess(x, out=out)
         else:
-            dft_postprocess_data(
-                x, real_grid=self.range.grid, recip_grid=self.domain.grid,
-                shifts=self.shifts, axes=self.axes, sign=self.sign,
-                interp=self.domain.interp, op='divide', out=out)
-            preproc = out
+            preproc = self._preprocess(x)
 
         # The actual call to the FFT library. We store the plan for re-use.
         direction = 'forward' if self.sign == '-' else 'backward'
@@ -1931,11 +2152,17 @@ class FourierTransformInverse(FourierTransform):
         if self.sign == '-':
             out /= np.prod(np.take(self.domain.shape, self.axes))
 
-        # Post-processing in IFT = pre-processing in FT
-        preproc = dft_preprocess_data(
-            out, shift=self.shifts, axes=self.axes, sign=self.sign, out=out)
-
-        return out
+        # Post-processing in IFT = pre-processing in FT. In-place for
+        # C2C and HC2R. Otherwise out of place, and the real part is
+        # returned.
+        if self.range.field == RealNumbers() and not self.halfcomplex:
+            postproc = self._postprocess(out)
+            return postproc.real
+        else:
+            self._postprocess(out, out=out)
+            if self.halfcomplex:
+                assert is_real_dtype(out.dtype)
+            return out
 
     @property
     def inverse(self):
@@ -1943,7 +2170,8 @@ class FourierTransformInverse(FourierTransform):
         sign = '+' if self.sign == '-' else '-'
         return FourierTransform(
             dom=self.range, ran=self.domain, impl=self.impl, axes=self.axes,
-            halfcomplex=self.halfcomplex, shift=self.shifts, sign=sign)
+            halfcomplex=self.halfcomplex, shift=self.shifts, sign=sign,
+            tmp_r=self._tmp_r, tmp_f=self._tmp_f)
 
 
 def _shift_list(shift, length):
