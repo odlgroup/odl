@@ -57,6 +57,11 @@ Glossary
         array. In 2 dimensions, for example, the arrays ``[1, 2]`` and ``[-1, 0, 1]`` define the grid
         points ``(1, -1), (1, 0), (1, 1), (2, -1), (2, 0), (2, 1)``.
 
+    order
+        Ordering of the axes in a multi-dimensional array with linear (one-dimensional) storage.
+        For C ordering (``'C'``), the last axis has smallest stride (varies fastest), and the first
+        axis has largest stride (varies slowest). Fortran ordering (``'F'``) is the exact opposite.
+
     out-of-place evaluation
         Operator evaluation method which creates a new data container to store
         the result. Usually less efficient than :term:`in-place evaluation`
