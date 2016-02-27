@@ -147,6 +147,16 @@ class DiscreteLp(Discretization):
             raise ValueError('exponent {} not equal to data space exponent '
                              '{}.'.format(self.exponent, dspace.exponent))
 
+        if self.field == RealNumbers():
+            self._real_space = self
+            self._complex_space = None
+        elif self.field == ComplexNumbers():
+            self._real_space = None
+            self._complex_space = self
+        else:
+            self._real_space = None
+            self._complex_space = None
+
     @property
     def order(self):
         """Axis ordering for array flattening."""
@@ -221,11 +231,12 @@ class DiscreteLp(Discretization):
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
-        elif inp in self.dspace:
-            return self.element_type(self, inp)
-        elif isinstance(inp, self.element_type):
+        elif isinstance(inp, self.element_type) and inp not in self.dspace:
+            # Same kind, but different space -> error
             raise TypeError('input {!r} not an element of {}.'
                             ''.format(inp, self))
+        elif inp in self.dspace:
+            return self.element_type(self, inp)
 
         # uspace element -> discretize
         try:
@@ -245,12 +256,9 @@ class DiscreteLp(Discretization):
                         ''.format(arr.shape, self.shape))
             arr = arr.ravel(order=self.order)
             return self.element_type(self, self.dspace.element(arr))
-        except (TypeError, IndexError) as err:
-            if str(err.args[0]).startswith('output contains points outside'):
-                raise err
-            else:
-                raise_from(TypeError('unable to create an element of {} from '
-                                     '{!r}: {}'.format(self, inp, err)), err)
+        except (TypeError, IndexError, ValueError) as err:
+            raise_from(ValueError('unable to create an element of {} from '
+                                  '{!r}: {}'.format(self, inp, err)), err)
 
     @property
     def interp(self):
@@ -274,23 +282,32 @@ class DiscreteLp(Discretization):
         cspace : `DiscreteLp`
             The complex version of this space
         """
-        dtype, dtype_in = np.dtype(dtype), dtype
-        if dtype_in is None:
-            if is_complex_floating_dtype(self.dtype):
-                dtype = self.dtype
-            else:
-                dtype = _TYPE_MAP_R2C[self.dtype]
-        else:
-            if not is_complex_floating_dtype(dtype):
-                raise ValueError('{} is not a complex data type.'
-                                 ''.format(dtype_in))
+        if self.field not in (RealNumbers(), ComplexNumbers()):
+            raise ValueError('cannot create complex space for field {}.'
+                             ''.format(self.field))
 
-        fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
-        dspace = self.dspace_type(self.size, dtype=dtype,
-                                  weight=self.dspace.weighting)
-        return type(self)(fspace, self.partition, dspace,
-                          exponent=self.exponent, interp=self.interp,
-                          order=self.order)
+        if dtype is None:
+            if self._complex_space is None:  # only for real spaces
+                dtype = _TYPE_MAP_R2C[self.dtype]
+                fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
+                dspace = self.dspace_type(self.size, dtype=dtype,
+                                          weight=self.dspace.weighting)
+                self._complex_space = type(self)(
+                    fspace, self.partition, dspace, exponent=self.exponent,
+                    interp=self.interp, order=self.order)
+
+            return self._complex_space
+
+        elif not is_complex_floating_dtype(np.dtype(dtype)):
+            raise ValueError('{} is not a complex data type.'.format(dtype))
+
+        else:
+            fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
+            dspace = self.dspace_type(self.size, dtype=dtype,
+                                      weight=self.dspace.weighting)
+            return type(self)(fspace, self.partition, dspace,
+                              exponent=self.exponent, interp=self.interp,
+                              order=self.order)
 
     def as_real_space(self, dtype=None):
         """Return a real version of this space.
@@ -309,23 +326,32 @@ class DiscreteLp(Discretization):
         rspace : `DiscreteLp`
             The complex version of this space
         """
-        dtype, dtype_in = np.dtype(dtype), dtype
-        if dtype_in is None:
-            if is_complex_floating_dtype(self.dtype):
-                dtype = _TYPE_MAP_C2R[self.dtype]
-            else:
-                dtype = self.dtype
-        else:
-            if not is_real_dtype(dtype):
-                raise ValueError('{} is not a real data type.'
-                                 ''.format(dtype_in))
+        if self.field not in (RealNumbers(), ComplexNumbers()):
+            raise ValueError('cannot create real space for field {}.'
+                             ''.format(self.field))
 
-        fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
-        dspace = self.dspace_type(self.size, dtype=dtype,
-                                  weight=self.dspace.weighting)
-        return type(self)(fspace, self.partition, dspace,
-                          exponent=self.exponent, interp=self.interp,
-                          order=self.order)
+        if dtype is None:
+            if self._real_space is None:  # only for complex spaces
+                dtype = _TYPE_MAP_C2R[self.dtype]
+                fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
+                dspace = self.dspace_type(self.size, dtype=dtype,
+                                          weight=self.dspace.weighting)
+                self._real_space = type(self)(
+                    fspace, self.partition, dspace, exponent=self.exponent,
+                    interp=self.interp, order=self.order)
+
+            return self._real_space
+
+        elif not is_real_dtype(np.dtype(dtype)):
+            raise ValueError('{} is not a real data type.'.format(dtype))
+
+        else:
+            fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
+            dspace = self.dspace_type(self.size, dtype=dtype,
+                                      weight=self.dspace.weighting)
+            return type(self)(fspace, self.partition, dspace,
+                              exponent=self.exponent, interp=self.interp,
+                              order=self.order)
 
     # Overrides for space functions depending on partition
     #

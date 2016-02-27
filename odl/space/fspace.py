@@ -554,6 +554,17 @@ class FunctionSpace(FunctionSet, LinearSpace):
         LinearSpace.__init__(self, field)
         FunctionSet.__init__(self, domain, field, out_dtype)
 
+        # Init cache attributes for real / complex variants
+        if self.field == RealNumbers():
+            self._real_space = self
+            self._complex_space = None
+        elif self.field == ComplexNumbers():
+            self._complex_space = self
+            self._real_space = None
+        else:
+            self._real_space = None
+            self._complex_space = None
+
     def element(self, fcall=None, vectorized=True):
         """Create a `FunctionSpace` element.
 
@@ -674,14 +685,23 @@ class FunctionSpace(FunctionSet, LinearSpace):
         cspace : `FunctionSpace`
             The complex version of this space
         """
+        if self.field not in (RealNumbers(), ComplexNumbers()):
+            raise ValueError('cannot create complex space for field {}.'
+                             ''.format(self.field))
         if out_dtype is None:
-            if is_complex_floating_dtype(self.out_dtype):
-                out_dtype = self.out_dtype
-            else:
-                out_dtype = _TYPE_MAP_R2C[self.out_dtype]
+            if self._complex_space is None:  # real space only
+                if self.out_dtype is None:
+                    out_dtype = None
+                else:
+                    out_dtype = _TYPE_MAP_R2C[self.out_dtype]
 
-        return FunctionSpace(self.domain, field=ComplexNumbers(),
-                             out_dtype=out_dtype)
+                self._complex_space = FunctionSpace(
+                    self.domain, field=ComplexNumbers(), out_dtype=out_dtype)
+            return self._complex_space
+
+        else:
+            return FunctionSpace(self.domain, field=ComplexNumbers(),
+                                 out_dtype=out_dtype)
 
     def as_real_space(self, out_dtype=None):
         """Return a real version of this space.
@@ -700,14 +720,24 @@ class FunctionSpace(FunctionSet, LinearSpace):
         rspace : `FunctionSpace`
             The real version of this space
         """
-        if out_dtype is None:
-            if is_complex_floating_dtype(self.out_dtype):
-                out_dtype = _TYPE_MAP_C2R[self.out_dtype]
-            else:
-                out_dtype = self.out_dtype
+        if self.field not in (RealNumbers(), ComplexNumbers()):
+            raise ValueError('cannot create real space for field {}.'
+                             ''.format(self.field))
 
-        return FunctionSpace(self.domain, field=RealNumbers(),
-                             out_dtype=out_dtype)
+        if out_dtype is None:
+            if self._real_space is None:  # complex space only
+                if self.out_dtype is None:
+                    out_dtype = self.out_dtype
+                else:
+                    out_dtype = _TYPE_MAP_C2R[self.out_dtype]
+
+                self._real_space = FunctionSpace(
+                    self.domain, field=RealNumbers(), out_dtype=out_dtype)
+            return self._real_space
+
+        else:
+            return FunctionSpace(self.domain, field=RealNumbers(),
+                                 out_dtype=out_dtype)
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination of ``x1`` and ``x2``.

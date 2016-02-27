@@ -412,15 +412,18 @@ class FnBase(NtuplesBase, LinearSpace):
 
         if is_real_dtype(self.dtype):
             field = RealNumbers()
-            self._real_dtype = self.dtype
             self._is_real = True
+            self._real_space = self
+            self._real_dtype = self.dtype
+            self._complex_space = None  # Set in first call of as_complex_space
         else:
             field = ComplexNumbers()
             self._real_dtype = _TYPE_MAP_C2R[self.dtype]
             self._is_real = False
+            self._complex_space = self
+            self._real_space = None  # Set in first call of as_real_space
 
         self._is_floating = is_floating_dtype(self.dtype)
-
         LinearSpace.__init__(self, field)
 
     @property
@@ -461,18 +464,18 @@ class FnBase(NtuplesBase, LinearSpace):
         cspace : `Fn`
             The complex version of this space
         """
-        dtype, dtype_in = np.dtype(dtype), dtype
-        if dtype_in is None:
-            if is_complex_floating_dtype(self.dtype):
-                dtype = self.dtype
-            else:
+        if dtype is None:
+            if self._complex_space is None:  # only for real spaces
                 dtype = _TYPE_MAP_R2C[self.dtype]
-        else:
-            if not is_complex_floating_dtype(dtype):
-                raise ValueError('{} is not a complex data type.'
-                                 ''.format(dtype_in))
+                self._complex_space = type(self)(self.size, dtype=dtype,
+                                                 weight=self.weighting)
+            return self._complex_space
 
-        return type(self)(self.size, dtype=dtype, weight=self.weighting)
+        elif not is_complex_floating_dtype(np.dtype(dtype)):
+            raise ValueError('{} is not a complex data type.'.format(dtype))
+
+        else:
+            return type(self)(self.size, dtype=dtype, weight=self.weighting)
 
     def as_real_space(self, dtype=None):
         """Return a real version of this space.
@@ -489,20 +492,20 @@ class FnBase(NtuplesBase, LinearSpace):
         Returns
         -------
         rspace : `Fn`
-            The complex version of this space
+            The real version of this space
         """
-        dtype, dtype_in = np.dtype(dtype), dtype
-        if dtype_in is None:
-            if is_complex_floating_dtype(self.dtype):
+        if dtype is None:
+            if self._real_space is None:  # only for complex spaces
                 dtype = _TYPE_MAP_C2R[self.dtype]
-            else:
-                dtype = self.dtype
-        else:
-            if not is_real_dtype(dtype):
-                raise ValueError('{} is not a real data type.'
-                                 ''.format(dtype_in))
+                self._real_space = type(self)(self.size, dtype=dtype,
+                                              weight=self.weighting)
+            return self._real_space
 
-        return type(self)(self.size, dtype=dtype, weight=self.weighting)
+        elif not is_real_dtype(np.dtype(dtype)):
+            raise ValueError('{} is not a real data type.'.format(dtype))
+
+        else:
+            return type(self)(self.size, dtype=dtype, weight=self.weighting)
 
     @abstractmethod
     def zero(self):
