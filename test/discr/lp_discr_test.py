@@ -631,7 +631,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
             assert isinstance(odl_result[i], fn.element_type)
 
 
-impl_params = [('numpy',), ('cuda',)]
+impl_params = [('numpy',), skip_if_no_cuda(('cuda',))]
 
 
 @pytest.mark.parametrize(('impl',), impl_params)
