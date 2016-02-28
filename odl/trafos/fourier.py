@@ -2143,26 +2143,32 @@ class FourierTransformInverse(FourierTransform):
 
         # The actual call to the FFT library. We store the plan for re-use.
         direction = 'forward' if self.sign == '-' else 'backward'
-        self._fftw_plan = pyfftw_call(
-            preproc, out, direction=direction, halfcomplex=self.halfcomplex,
-            axes=self.axes, normalise_idft=True, **kwargs)
+        if self.range.field == RealNumbers() and not self.halfcomplex:
+            # Need to use a complex array as out if we do C2R since the
+            # FFT has to be C2C
+            self._fftw_plan = pyfftw_call(
+                preproc, preproc, direction=direction,
+                halfcomplex=self.halfcomplex, axes=self.axes,
+                normalise_idft=True, **kwargs)
+            fft_arr = preproc
+        else:
+            # Only here we can use out directly
+            self._fftw_plan = pyfftw_call(
+                preproc, out, direction=direction,
+                halfcomplex=self.halfcomplex, axes=self.axes,
+                normalise_idft=True, **kwargs)
+            fft_arr = out
 
         # Normalization is only done for 'backward', we need it for 'forward',
         # too.
         if self.sign == '-':
-            out /= np.prod(np.take(self.domain.shape, self.axes))
+            fft_arr /= np.prod(np.take(self.domain.shape, self.axes))
 
         # Post-processing in IFT = pre-processing in FT. In-place for
-        # C2C and HC2R. Otherwise out of place, and the real part is
-        # returned.
-        if self.range.field == RealNumbers() and not self.halfcomplex:
-            postproc = self._postprocess(out)
-            return postproc.real
-        else:
-            self._postprocess(out, out=out)
-            if self.halfcomplex:
-                assert is_real_dtype(out.dtype)
-            return out
+        # C2C and HC2R. For C2R, this is out of place and discards the
+        # imaginary part.
+        self._postprocess(fft_arr, out=out)
+        return out
 
     @property
     def inverse(self):
