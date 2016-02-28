@@ -631,13 +631,12 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
             assert isinstance(odl_result[i], fn.element_type)
 
 
-spaces = [(odl.uniform_discr([0, 0], [1, 1], [2, 2]),),
-          skip_if_no_cuda(
-              (odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='cuda'),))]
+impl_params = [('numpy',), ('cuda',)]
 
 
-@pytest.mark.parametrize(('space',), spaces)
-def test_ufuncs(space):
+@pytest.mark.parametrize(('impl',), impl_params)
+def test_ufuncs(impl):
+    space = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl)
     for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
         if (np.issubsctype(space.dtype, np.floating) and
                 name in ['bitwise_and',
