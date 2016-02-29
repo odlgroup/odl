@@ -46,16 +46,16 @@ where `<repo>` is the clone link from the right navigation bar on the [ODL GitHu
 For installation in a local user folder, go to the ODL folder and run
 
 ```
-user$ pip install --user --editable .
+user$ pip install --user --E .
 ```
 
-in the root folder of the package. For system-wide installation, run (as root)
+in the top level folder of the package. For system-wide installation, run (as root)
 
 ```
-root# pip install --editable .
+root# pip install --E .
 ```
 
-We recommend to use the `--editable` option since it installs a link instead of copying the files to
+We recommend to use the `--E` option since it installs a link instead of copying the files to
 your Python packages location. This way local changes to the code (e.g. after a `git pull`) take
 immediate effect without reinstall.
 
@@ -64,6 +64,8 @@ After installing, you can check that everything was installed properly by runnin
 ```
 user$ py.test
 ```
+
+To do this, you need the [pytest](https://pypi.python.org/pypi/pytest) package installed.
 
 ##### CUDA
 
@@ -79,6 +81,7 @@ From here follow the instructions in [odlpp](https://github.com/odlgroup/odlpp) 
 Requirements
 ------------
 
+- [setuptools](https://pypi.python.org/pypi/setuptools) needed for installation.
 - [numpy](https://github.com/numpy/numpy) >= 1.9
 - [scipy](https://github.com/scipy/scipy) >= 0.14
 - [python-future](https://pypi.python.org/pypi/future/) >= 0.14
