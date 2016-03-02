@@ -46,16 +46,16 @@ where `<repo>` is the clone link from the right navigation bar on the [ODL GitHu
 For installation in a local user folder, go to the ODL folder and run
 
 ```
-user$ pip install --user --E .
+user$ pip install --user -e .
 ```
 
 in the top level folder of the package. For system-wide installation, run (as root)
 
 ```
-root# pip install --E .
+root# pip install -e .
 ```
 
-We recommend to use the `--E` option since it installs a link instead of copying the files to
+We recommend to use the `-e` option since it installs a link instead of copying the files to
 your Python packages location. This way local changes to the code (e.g. after a `git pull`) take
 immediate effect without reinstall.
 
@@ -65,7 +65,12 @@ After installing, you can check that everything was installed properly by runnin
 user$ py.test
 ```
 
-To do this, you need the [pytest](https://pypi.python.org/pypi/pytest) package installed.
+To do this, you need the [pytest](https://pypi.python.org/pypi/pytest) package installed. You can install ODL with the extra `testing` dependency, i.e. invoke
+
+```
+pip install --user -e .[testing]
+```
+to get `pytest` installed as a dependency.
 
 ##### CUDA
 
@@ -76,7 +81,7 @@ user$ git submodule update --init --recursive
 user$ cd odlpp
 ```
 
-From here follow the instructions in [odlpp](https://github.com/odlgroup/odlpp) and install it. You then need to re-install ODL.
+From here follow the instructions in [odlpp](https://github.com/odlgroup/odlpp) and install it.
 
 Requirements
 ------------
