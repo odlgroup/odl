@@ -38,6 +38,9 @@ from odl.util.testutils import all_equal, all_almost_equal, almost_equal
 
 pytestmark = pytest.mark.skipif("not odl.CUDA_AVAILABLE")
 
+# TODO:
+# * custom dist/norm/inner
+
 
 # Helpers to generate data
 

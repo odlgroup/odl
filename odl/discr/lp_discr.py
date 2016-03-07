@@ -45,7 +45,6 @@ from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr, default_dtype,
     equiv_views)
-from odl.util.utility import is_real_dtype, dtype_repr, real_space
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
@@ -436,30 +435,6 @@ class DiscreteLpVector(DiscretizationVector):
     def order(self):
         """Axis ordering for array flattening."""
         return self.space.order
-
-    @property
-    def real(self):
-        """Real part of this element."""
-        return real_space(self.space).element(self.asarray().real)
-
-    @real.setter
-    def real(self, newreal):
-        """Set the real part of this element to ``newreal``."""
-        newreal_flat = np.asarray(newreal, order=self.space.order).reshape(
-            -1, order=self.space.order)
-        self.ntuple.real = newreal_flat
-
-    @property
-    def imag(self):
-        """Imaginary part of this element."""
-        return real_space(self.space).element(self.asarray().imag)
-
-    @imag.setter
-    def imag(self, newimag):
-        """Set the imaginary part of this element to ``newimag``."""
-        newimag_flat = np.asarray(newimag, order=self.space.order).reshape(
-            -1, order=self.space.order)
-        self.ntuple.imag = newimag_flat
 
     def __setitem__(self, indices, values):
         """Set values of this vector.

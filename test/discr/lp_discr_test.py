@@ -600,58 +600,6 @@ def test_ufuncs():
             yield _impl_test_ufuncs, fn, name, n_args, n_out
 
 
-def test_real_imag():
-
-    # Get real and imag
-    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=complex)
-    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=float)
-
-    x = cdiscr.element([[1 - 1j, 2 - 2j], [3 - 3j, 4 - 4j]])
-    assert x.real in rdiscr
-    assert all_equal(x.real, [1, 2, 3, 4])
-    assert x.imag in rdiscr
-    assert all_equal(x.imag, [-1, -2, -3, -4])
-
-    # Set with different data types and shapes
-    newreal = rdiscr.element([[2, 3], [4, 5]])
-    x.real = newreal
-    assert all_equal(x.real, [2, 3, 4, 5])
-    newreal = [[3, 4], [5, 6]]
-    x.real = newreal
-    assert all_equal(x.real, [3, 4, 5, 6])
-    newreal = [4, 5, 6, 7]
-    x.real = newreal
-    assert all_equal(x.real, [4, 5, 6, 7])
-    newreal = 0
-    x.real = newreal
-    assert all_equal(x.real, [0, 0, 0, 0])
-
-    newimag = rdiscr.element([-2, -3, -4, -5])
-    x.imag = newimag
-    assert all_equal(x.imag, [-2, -3, -4, -5])
-    newimag = [[-3, -4], [-5, -6]]
-    x.imag = newimag
-    assert all_equal(x.imag, [-3, -4, -5, -6])
-    newimag = [-4, -5, -6, -7]
-    x.imag = newimag
-    assert all_equal(x.imag, [-4, -5, -6, -7])
-    newimag = -1
-    x.imag = newimag
-    assert all_equal(x.imag, [-1, -1, -1, -1])
-
-    # 'F' ordering
-    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype=complex,
-                               order='F')
-
-    x = cdiscr.element()
-    newreal = [[3, 4], [5, 6]]
-    x.real = newreal
-    assert all_equal(x.real, [3, 5, 4, 6])  # flattened in 'F' order
-    newreal = [4, 5, 6, 7]
-    x.real = newreal
-    assert all_equal(x.real, [4, 5, 6, 7])
-
-
 def _impl_test_reduction(fn, name):
     ufunc = getattr(np, name)
 

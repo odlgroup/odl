@@ -28,6 +28,7 @@ from builtins import int
 from abc import ABCMeta, abstractmethod
 from math import sqrt
 import numpy as np
+import platform
 
 # ODL imports
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
@@ -43,12 +44,18 @@ __all__ = ('NtuplesBase', 'NtuplesBaseVector',
            'FnWeightingBase')
 
 
-_TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
-                 for dtype in np.sctypes['float']}
+_TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
+                 np.dtype('float64'): np.dtype('float64'),
+                 np.dtype('complex64'): np.dtype('float32'),
+                 np.dtype('complex128'): np.dtype('float64')}
 
-_TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
-                 for rdt, cdt in _TYPE_MAP_R2C.items()}
-_TYPE_MAP_C2R.update({k: k for k in _TYPE_MAP_R2C.keys()})
+_TYPE_MAP_R2C = {np.dtype('float32'): np.dtype('complex64'),
+                 np.dtype('float64'): np.dtype('complex128')}
+
+if platform.system() == 'Linux':
+    _TYPE_MAP_C2R.update({np.dtype('float128'): np.dtype('float128'),
+                          np.dtype('complex256'): np.dtype('float128')})
+    _TYPE_MAP_R2C.update({np.dtype('float128'): np.dtype('complex256')})
 
 
 class NtuplesBase(Set):
