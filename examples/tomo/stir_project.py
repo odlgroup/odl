@@ -42,7 +42,7 @@ recon_sp = odl.uniform_discr([0, 0, 0], [1, 1, 1], (15, 64, 64))
 data_sp = odl.uniform_discr([0, 0, 0], [1, 1, 1], (37, 28, 56))
 
 # Make STIR projector
-proj = odl.tomo.stir_bindings.ForwardProjectorByBinWrapper(
+proj = odl.tomo.backends.stir_bindings.ForwardProjectorByBinWrapper(
     recon_sp, data_sp, volume, proj_data)
 
 # Create shepp-logan phantom
