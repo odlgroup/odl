@@ -348,7 +348,7 @@ class NtuplesVector(NtuplesBaseVector):
             return type(self.space)(len(arr), dtype=self.dtype).element(arr)
 
     def __setitem__(self, indices, values):
-        """Return ``self[indices] = values``.
+        """Set values of this vector.
 
         Parameters
         ----------
@@ -413,9 +413,6 @@ class NtuplesVector(NtuplesBaseVector):
         >>> x
         Ntuples(2, 'int8').element([0, 0])
         """
-        if ((values is self or values is self.data) and
-                indices in (slice(None), Ellipsis)):
-            return self
         if isinstance(values, NtuplesVector):
             return self.data.__setitem__(indices, values.data)
         else:

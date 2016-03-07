@@ -181,28 +181,6 @@ if __name__ == '__main__':
     doctest.testmod()
 
 
-def equiv_views(v1, v2):
-    """Return `True` if ``v1`` and ``v2`` are equivalent views.
-
-    Returns
-    -------
-    equiv : `bool`
-        `True` if ``v1`` and ``v2`` are `numpy.ndarray` instances
-        not owning their data buffer ("views") and have the same
-        ``base``, ``shape``, ``strides`` and ``dtype`` attributes;
-        `False` otherwise.
-    """
-    for v in (v1, v2):
-        if getattr(v, 'base', None) is None:
-            # base is None means own data, i.e. not a view
-            return False
-
-    return (v1.base is v2.base and
-            v1.shape == v2.shape and
-            v1.strides == v2.strides and
-            v1.dtype == v2.dtype)
-
-
 def with_metaclass(meta, *bases):
     """
     Function from jinja2/_compat.py. License: BSD.
