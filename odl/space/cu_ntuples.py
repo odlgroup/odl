@@ -536,10 +536,15 @@ class CudaFn(FnBase, CudaNtuples):
 
             Only scalar data types are allowed.
 
-        weight : `array-like`, `CudaFnVector` or `float`, optional
-            Use weighted inner product, norm, and dist.
+        weight : optional
+            Use weighted inner product, norm, and dist. The following
+            types are supported as ``weight``:
 
-            `float`:
+            `FnWeightingBase` :
+                Use this weighting as-is. Compatibility with this
+                space's elements is not checked during init.
+
+            float:
                 Weighting by a constant
 
             array-like:
@@ -633,12 +638,13 @@ class CudaFn(FnBase, CudaNtuples):
         exponent = kwargs.pop('exponent', 2.0)
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        from builtins import sum as py_sum
-        if py_sum(x is None for x in (dist, norm, inner, weight)) < 3:
+        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
-            if np.isscalar(weight):
+            if isinstance(weight, FnWeightingBase):
+                self._space_funcs = weight
+            elif np.isscalar(weight):
                 self._space_funcs = CudaFnConstWeighting(
                     weight, exponent=exponent)
             elif isinstance(weight, CudaFnVector):

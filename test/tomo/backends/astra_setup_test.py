@@ -286,7 +286,7 @@ def test_parallel_2d_projector():
 
 @skip_if_no_astra
 def test_parallel_3d_projector():
-    """Create ASTRA 2D projectors."""
+    """Create ASTRA 3D projectors."""
 
     odl.tomo.astra_projector('nearest', VOL_GEOM_3D, PROJ_GEOM_3D, ndim=3,
                              impl='cuda')
