@@ -20,6 +20,6 @@ from __future__ import absolute_import
 __all__ = ()
 
 
-from . import xray_trafo
-from .xray_trafo import *
-__all__ += xray_trafo.__all__
+from . import ray_trafo
+from .ray_trafo import *
+__all__ += ray_trafo.__all__

@@ -57,8 +57,8 @@ def projector(request):
         geom = tomo.Parallel2dGeometry(apart, dpart)
 
         # X-ray transform
-        return tomo.XrayTransform(discr_reco_space, geom,
-                                  impl='astra_' + variant)
+        return tomo.RayTransform(discr_reco_space, geom,
+                                 impl='astra_' + variant)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
@@ -71,8 +71,8 @@ def projector(request):
         geom = tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
 
         # X-ray transform
-        return tomo.XrayTransform(discr_reco_space, geom,
-                                  impl='astra_' + variant)
+        return tomo.RayTransform(discr_reco_space, geom,
+                                 impl='astra_' + variant)
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
@@ -86,8 +86,8 @@ def projector(request):
                                     src_radius=200, det_radius=100)
 
         # X-ray transform
-        return tomo.XrayTransform(discr_reco_space, geom,
-                                  impl='astra_' + variant)
+        return tomo.RayTransform(discr_reco_space, geom,
+                                 impl='astra_' + variant)
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
@@ -101,8 +101,8 @@ def projector(request):
             apart, dpart, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
         # X-ray transform
-        return tomo.XrayTransform(discr_reco_space, geom,
-                                  impl='astra_' + variant)
+        return tomo.RayTransform(discr_reco_space, geom,
+                                 impl='astra_' + variant)
 
     elif geom == 'helical':
         # Discrete reconstruction space
@@ -117,8 +117,8 @@ def projector(request):
                                             src_radius=200, det_radius=100)
 
         # X-ray transform
-        return tomo.XrayTransform(discr_reco_space, geom,
-                                  impl='astra_' + variant)
+        return tomo.RayTransform(discr_reco_space, geom,
+                                 impl='astra_' + variant)
     else:
         raise ValueError('param not valid')
 

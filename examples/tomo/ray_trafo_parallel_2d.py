@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example using the X-ray transform with 2d parallel beam geometry."""
+"""Example using the ray transform with 2d parallel beam geometry."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -39,19 +39,18 @@ angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
 detector_partition = odl.uniform_partition(-30, 30, 558)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
-# X-ray transform aka forward projection. We use ASTRA CUDA backend.
-xray_trafo = odl.tomo.XrayTransform(reco_space, geometry,
-                                    impl='astra_cuda')
+# ray transform aka forward projection. We use ASTRA CUDA backend.
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create a discrete Shepp-Logan phantom (modified version)
 phantom = odl.util.phantom.shepp_logan(reco_space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
-proj_data = xray_trafo(phantom)
+proj_data = ray_trafo(phantom)
 
 # Back-projection can be done by simply calling the adjoint operator on the
 # projection data (or any element in the projection space).
-backproj = xray_trafo.adjoint(proj_data)
+backproj = ray_trafo.adjoint(proj_data)
 
 # Shows a slice of the phantom, projections, and reconstruction
 phantom.show(title='Phantom')

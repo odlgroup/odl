@@ -39,12 +39,12 @@ from odl.tomo.backends import (
 
 _SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda')
 
-__all__ = ('XrayTransform', 'XrayBackProjection')
+__all__ = ('RayTransform', 'RayBackProjection')
 
 
 # TODO: DivergentBeamTransform
 
-class XrayTransform(Operator):
+class RayTransform(Operator):
 
     """The discrete X-ray transform between `L^p` spaces."""
 
@@ -168,11 +168,11 @@ class XrayTransform(Operator):
     @property
     def adjoint(self):
         """Return the adjoint operator."""
-        return XrayBackProjection(self.domain, self.geometry, self.impl,
-                                  **self.kwargs)
+        return RayBackProjection(self.domain, self.geometry, self.impl,
+                                 **self.kwargs)
 
 
-class XrayBackProjection(Operator):
+class RayBackProjection(Operator):
     """The adjoint of the discrete X-ray transform between `L^p` spaces."""
 
     def __init__(self, discr_range, geometry, impl='astra_cpu', **kwargs):
@@ -287,5 +287,5 @@ class XrayBackProjection(Operator):
     @property
     def adjoint(self):
         """Return the adjoint operator."""
-        return XrayTransform(self.range, self.geometry, self.backend,
-                             **self.kwargs)
+        return RayTransform(self.range, self.geometry, self.backend,
+                            **self.kwargs)
