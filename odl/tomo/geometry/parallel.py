@@ -33,7 +33,7 @@ from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
 from odl.tomo.util.utility import euler_matrix, perpendicular_vector
 
 __all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dGeometry',
-           'Parallel3dSingleAxisGeometry')
+           'Parallel3dAxisGeometry')
 
 
 class ParallelGeometry(Geometry):
@@ -324,7 +324,7 @@ class Parallel3dGeometry(ParallelGeometry):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class Parallel3dSingleAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
+class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
 
     """Parallel beam geometry in 3d with single rotation axis.
 

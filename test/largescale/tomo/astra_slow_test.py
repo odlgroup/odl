@@ -68,7 +68,7 @@ def projector(request):
         # Geometry
         apart = odl.uniform_partition(0, 2 * np.pi, 200)
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
-        geom = tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[1, 0, 0])
+        geom = tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
 
         # X-ray transform
         return tomo.XrayTransform(discr_reco_space, geom,

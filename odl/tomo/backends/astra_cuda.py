@@ -38,7 +38,7 @@ from odl.tomo.backends.astra_setup import (
     astra_data, astra_algorithm)
 from odl.tomo.geometry import Geometry
 from odl.tomo.geometry import (
-    Parallel2dGeometry, FanFlatGeometry, Parallel3dSingleAxisGeometry,
+    Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
     HelicalConeFlatGeometry)
 
 __all__ = ('astra_cuda_forward_projector', 'astra_cuda_back_projector',
@@ -232,7 +232,7 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         src_radius = geometry.src_radius
         det_radius = geometry.det_radius
         scaling_factor *= ((src_radius + det_radius) / src_radius)
-    elif isinstance(geometry, Parallel3dSingleAxisGeometry):
+    elif isinstance(geometry, Parallel3dAxisGeometry):
         # scales with voxel stride
         # currently only square voxels are supported
         extent = reco_space.partition.extent()

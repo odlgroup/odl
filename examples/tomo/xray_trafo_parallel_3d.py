@@ -43,8 +43,7 @@ detector_partition = odl.uniform_partition([-30, -30], [30, 30], [558, 558])
 # with the third coordinate axis. See issue #18 at ASTRA's github.
 # This is fixed in new versions of astra, with older versions, this could
 # give a zero result.
-geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition,
-                                           axis=[0, 1, 0])
+geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition)
 
 # X-ray transform aka forward projection. We use ASTRA CUDA backend.
 xray_trafo = odl.tomo.XrayTransform(reco_space, geometry, impl='astra_cuda')

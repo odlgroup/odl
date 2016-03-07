@@ -106,7 +106,7 @@ def test_astra_cuda_projector_parallel3d():
     # Create parallel geometry
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
     det_part = odl.uniform_partition([-7, -8], [7, 8], (7, 8))
-    geom = odl.tomo.Parallel3dSingleAxisGeometry(angle_part, det_part)
+    geom = odl.tomo.Parallel3dAxisGeometry(angle_part, det_part)
 
     # Make projection space
     proj_space = odl.uniform_discr_frompartition(geom.partition,

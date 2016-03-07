@@ -197,7 +197,7 @@ def test_astra_projection_geometry():
     dpart = odl.uniform_partition([-40, -3], [40, 3], (10, 5))
 
     # Parallel 3D geometry
-    geom_p3d = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart)
+    geom_p3d = odl.tomo.Parallel3dAxisGeometry(apart, dpart)
     odl.tomo.astra_projection_geometry(geom_p3d)
     astra_geom = odl.tomo.astra_projection_geometry(geom_p3d)
     assert astra_geom['type'] == 'parallel3d_vec'

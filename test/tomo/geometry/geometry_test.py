@@ -65,12 +65,12 @@ def test_parallel_3d_single_axis_geometry():
 
     # Bad init
     with pytest.raises(TypeError):
-        odl.tomo.Parallel3dSingleAxisGeometry([0, 1], dpart)
+        odl.tomo.Parallel3dAxisGeometry([0, 1], dpart)
     with pytest.raises(TypeError):
-        odl.tomo.Parallel3dSingleAxisGeometry(apart, [0, 1])
+        odl.tomo.Parallel3dAxisGeometry(apart, [0, 1])
 
     # Initialize
-    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 0, 1])
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 0, 1])
 
     with pytest.raises(ValueError):
         geom.rotation_matrix(2 * full_angle)
@@ -78,41 +78,41 @@ def test_parallel_3d_single_axis_geometry():
     # rotation of cartesian basis vectors about each other
     coords = np.eye(3)
 
-    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[1, 0, 0])
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_almost_equal(rot_mat.dot(coords), [[1, 0, 0],
                                                   [0, 0, -1],
                                                   [0, 1, 0]])
 
-    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 1, 0])
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 1, 0])
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_almost_equal(rot_mat.dot(coords), [[0, 0, 1],
                                                   [0, 1, 0],
                                                   [-1, 0, 0]])
 
-    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 0, 1])
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 0, 1])
     rot_mat = geom.rotation_matrix(np.pi / 2)
     assert all_almost_equal(rot_mat.dot(coords), [[0, -1, 0],
                                                   [1, 0, 0],
                                                   [0, 0, 1]])
 
     # rotation axis
-    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[1, 0, 0])
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
     assert all_equal(geom.axis, np.array([1, 0, 0]))
-    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 1, 0])
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 1, 0])
     assert all_equal(geom.axis, np.array([0, 1, 0]))
-    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[0, 0, 1])
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[0, 0, 1])
     assert all_equal(geom.axis, np.array([0, 0, 1]))
-    geom = odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=[1, 2, 3])
+    geom = odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 2, 3])
     assert all_equal(geom.axis,
                      np.array([1, 2, 3]) / np.linalg.norm([1, 2, 3]))
 
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=(1,))
+        odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=(1,))
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=(1, 2))
+        odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=(1, 2))
     with pytest.raises(ValueError):
-        odl.tomo.Parallel3dSingleAxisGeometry(apart, dpart, axis=(1, 2, 3, 4))
+        odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=(1, 2, 3, 4))
 
 
 def test_fanflat():
