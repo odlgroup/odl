@@ -345,7 +345,7 @@ def astra_projection_geometry(geometry):
         # Shortcut, reuse already computed value.
         return geometry.implementation_cache['astra']
 
-    if not geometry.partition.is_regular:
+    if not geometry.det_partition.is_regular:
         raise ValueError('irregular detector sampling is not supported.')
 
     # As of ASTRA version 1.7beta the volume width can be specified in the

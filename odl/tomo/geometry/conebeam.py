@@ -248,7 +248,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             arg_fstr += ',\n    src_to_det_init={src_to_det_init}'
 
         default_axes = [np.cross(self.axis, self._src_to_det_init), self.axis]
-        if not np.allclose(self.detector.detector_axes, default_axes):
+        if not np.allclose(self.detector.axes, default_axes):
             arg_fstr += ',\n    det_init_axes={det_init_axes!r}'
 
         arg_str = arg_fstr.format(

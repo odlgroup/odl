@@ -485,7 +485,8 @@ class TensorGrid(Set):
         ----------
         index : `int`
             The index of the dimension before which ``other`` is to
-            be inserted. Negative indices are added to `ndim`.
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
         other :  `TensorGrid`, `float` or `array-like`
             The grid to be inserted
 
@@ -990,7 +991,8 @@ class RegularGrid(TensorGrid):
         ----------
         index : `int`
             Index of the dimension before which ``other`` is to
-            be inserted. Negative indices are added to ``ndim``.
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
         other : `TensorGrid`
             Grid to be inserted. If a `RegularGrid` is given,
             the output will be a `RegularGrid`.

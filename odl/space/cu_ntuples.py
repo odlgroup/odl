@@ -438,7 +438,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
                     # Size checking is performed in c++
                     self.data.setslice(indices, value_array)
             else:
-                self.data.__setitem__(int(indices), values)
+                self.data[int(indices)] = values
 
     @property
     def ufunc(self):

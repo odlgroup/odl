@@ -49,7 +49,7 @@ geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition)
 xray_trafo = odl.tomo.XrayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.util.phantom.shepp_logan(reco_space, True)
+phantom = odl.util.phantom.shepp_logan(reco_space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = xray_trafo(phantom)

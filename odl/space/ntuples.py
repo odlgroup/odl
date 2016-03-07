@@ -414,9 +414,9 @@ class NtuplesVector(NtuplesBaseVector):
         Ntuples(2, 'int8').element([0, 0])
         """
         if isinstance(values, NtuplesVector):
-            return self.data.__setitem__(indices, values.data)
+            self.data[indices] = values.data
         else:
-            return self.data.__setitem__(indices, values)
+            self.data[indices] = values
 
     @property
     def ufunc(self):

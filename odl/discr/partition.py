@@ -369,7 +369,8 @@ class RectPartition(object):
         ----------
         index : `int`
             Index of the dimension before which ``other`` is to
-            be inserted. Negative indices are added to ``self.ndim``.
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
         other : `RectPartition`
             Partition to be inserted
 

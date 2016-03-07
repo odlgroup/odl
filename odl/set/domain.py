@@ -573,7 +573,7 @@ class IntervalProd(Set):
         index : `int`
             Index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``-ndim <= index <= ndim``.
-            Negative indices are added to ``ndim``.
+            Negative indices count backwards from ``self.ndim``.
         other : `IntervalProd`
             Interval product to be inserted
 
