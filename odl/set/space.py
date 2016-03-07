@@ -617,16 +617,25 @@ class LinearSpaceVector(object):
         """``n``-th power in-place.
 
         This is only defined for integer ``n``."""
-        if n == 1:
+        if n < 0:
+            self **= -n
+            self.space.divide(self.space.one(), self, out=self)
+            return self
+        elif n == 0:
+            self.assign(self.space.one())
+            return self
+        elif n == 1:
             return self
         elif n % 2 == 0:
             self.space.multiply(self, self, out=self)
-            return self.__ipow__(n // 2)
+            self **= n // 2
+            return self
         else:
             tmp = self.copy()
-            for _ in range(n - 1):
+            for _ in range(n - 2):
                 self.space.multiply(tmp, self, out=tmp)
-            return tmp
+            self.space.multiply(tmp, self, out=self)
+            return self
 
     def __pow__(self, n):
         """``n``-th power.

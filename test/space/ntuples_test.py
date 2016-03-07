@@ -324,6 +324,32 @@ def test_multiply_exceptions(fn):
         fn.multiply(x, y, otherx)
 
 
+def test_power(fn):
+
+    x_arr, y_arr, x, y = _vectors(fn, n=2)
+    y_pos = fn.element(np.abs(y) + 0.1)
+    y_pos_arr = np.abs(y_arr) + 0.1
+
+    # Testing standard positive integer power out-of-place and in-place
+    assert all_almost_equal(x ** 2, x_arr ** 2)
+    y **= 2
+    y_arr **= 2
+    assert all_almost_equal(y, y_arr)
+
+    # Real number and negative integer power
+    assert all_almost_equal(y_pos ** 1.3, y_pos_arr ** 1.3)
+    assert all_almost_equal(y_pos ** (-3), y_pos_arr ** (-3))
+    y_pos **= 2.5
+    y_pos_arr **= 2.5
+    assert all_almost_equal(y_pos, y_pos_arr)
+
+    # Array raised to the power of another array, entry-wise
+    assert all_almost_equal(y_pos ** x, y_pos_arr ** x_arr)
+    y_pos **= x.real
+    y_pos_arr **= x_arr.real
+    assert all_almost_equal(y_pos, y_pos_arr)
+
+
 def _test_unary_operator(fn, function):
     # Verify that the statement y=function(x) gives equivalent results
     # to NumPy
