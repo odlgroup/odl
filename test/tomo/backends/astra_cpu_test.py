@@ -24,6 +24,7 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
+import sys
 
 # Internal
 import odl
@@ -34,6 +35,8 @@ from odl.tomo.util.testutils import skip_if_no_astra
 
 # TODO: clean up and improve tests
 
+@pytest.mark.xfail(sys.platform == 'win32', run=False,
+                   reason="Crashes on windows")
 @skip_if_no_astra
 def test_astra_cpu_projector_parallel2d():
     """ASTRA CPU forward and back projection for 2d parallel geometry."""

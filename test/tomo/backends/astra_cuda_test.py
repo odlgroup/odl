@@ -25,6 +25,7 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
+import sys
 
 # Internal
 import odl
@@ -94,6 +95,8 @@ def test_astra_cuda_projector_fanflat():
     assert backproj.norm() > 0
 
 
+@pytest.mark.xfail(sys.platform == 'win32', strict=True,
+                   reason="Fails on windows")
 @skip_if_no_astra_cuda
 def test_astra_cuda_projector_parallel3d():
     """Test 3D forward and backward projection functions on the GPU."""
