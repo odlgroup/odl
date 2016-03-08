@@ -185,7 +185,7 @@ def ellipse_phantom_2d(space, ellipses):
 
     Returns
     -------
-    phantom : `DisceteLpVector`
+    phantom : `DiscreteLpVector`
         The phantom
     """
 
@@ -261,7 +261,7 @@ def ellipse_phantom_3d(space, ellipses):
 
     Returns
     -------
-    phantom : `DisceteLpVector`
+    phantom : `DiscreteLpVector`
         The phantom
     """
 
@@ -417,7 +417,7 @@ def shepp_logan(space, modified=False):
 def submarine_phantom(discr, smooth=True, taper=20.0):
     """Return a 'submarine' phantom consisting in an ellipsoid and a box.
 
-    This phantom is used in [1]_ for shape-based reconstruction.
+    This phantom is used in [Okt2015]_ for shape-based reconstruction.
 
     Parameters
     ----------
@@ -436,9 +436,9 @@ def submarine_phantom(discr, smooth=True, taper=20.0):
 
     References
     ----------
-    .. [1] Oktem, Ozan. Mathematics of electron tomography. In:
-       Handbook of Mathematical Methods in Imaging. Scherzer, Otmar,
-       Ed. Springer, 2015, pp 937--1031.
+    .. [Okt2015] Oktem, O. *Mathematics of electron tomography*. In:
+       Scherzer, O. Handbook of Mathematical Methods in Imaging.
+       Springer, 2015, pp 937--1031.
     """
     if discr.ndim == 2:
         if smooth:

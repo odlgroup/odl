@@ -44,10 +44,10 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
     :math:`f(x) = \infty` for :math:`x\\not\\in C`, or by providing a
     ``projection`` function that projects the iterates on :math:`C`.
 
-    The algorithm is described in [1]_, section 9.3--9.4
+    The algorithm is described in [BV2004]_, section 9.3--9.4
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
-    [2]_, Section 12.2, and wikipedia
+    [GNS2009]_, Section 12.2, and wikipedia
     `Gradient_descent
     <https://en.wikipedia.org/wiki/Gradient_descent>`_.
 
@@ -72,16 +72,18 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
 
     References
     ----------
-    .. [1] Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
-       Cambridge university press, 2004. Available at
+    .. [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
+       Cambridge university press, 2004.
 
     .. [2] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
        and nonlinear optimization. Siam, 2009
 
     See Also
     --------
-    landweber : Optimized solver for the case f(x) = ||Ax - b||_2^2
-    conjugate_gradient : Optimized solver for the case f(x) = x^T Ax - 2 x^T b
+    landweber :
+        Optimized solver for the case ``f(x) = ||Ax - b||_2^2``
+    conjugate_gradient :
+        Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``
     """
 
     if not callable(line_search):

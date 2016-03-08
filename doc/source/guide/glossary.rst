@@ -32,7 +32,7 @@ Glossary
         Any data structure which can be converted into an :term:`element` of a `Set` by
         the `Set.element` method. For example, an ``Rn(3) element-like`` is any :term:`array-like`
         object with 3 real entries.
-    
+
         Example: ```DiscreteLp` element-like`` means that
         `DiscreteLp.element` can create a `DiscreteLpVector` from the input.
 
@@ -63,7 +63,7 @@ Glossary
     restriction
         Operator in a :term:`discretization` mapping an abstract
         (infinite-dimensional) object to a concrete (finite-dimensional) one.
-        Example: `GridCollocation`.
+        Example: `PointCollocation`.
 
     vectorization
         Ability of a function to be evaluated on a grid in a single call rather

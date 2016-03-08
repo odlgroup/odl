@@ -191,10 +191,12 @@ class BackProjectorByBinWrapper(Operator):
         adjoint : `ForwardProjectorByBinWrapper`, optional
             A pre-initialized adjoint.
 
-        References
-        ----------
+        Notes
+        -----
         See `STIR doc`_ for info on the STIR classes.
 
+        References
+        ----------
         .. _STIR doc: http://stir.sourceforge.net/documentation/doxy/html/
         """
 

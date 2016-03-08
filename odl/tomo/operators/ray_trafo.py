@@ -53,7 +53,7 @@ class RayTransform(Operator):
 
         Parameters
         ----------
-        discr_domain : `odl.DiscreteLp`
+        discr_domain : `DiscreteLp`
             Discretized space, the domain of the forward projector
         geometry : `Geometry`
             Geometry of the transform, containing information about
