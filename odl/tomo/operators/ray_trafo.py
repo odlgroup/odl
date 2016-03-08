@@ -94,6 +94,9 @@ class RayTransform(Operator):
                 raise ValueError('ASTRA does not support different voxel '
                                  'sizes per axis, got {}.'
                                  ''.format(discr_domain.partition.cell_sides))
+            if geometry.ndim > 2 and impl.endswith('cpu'):
+                raise ValueError('impl: {}, only works for 2d geometries.'
+                                 ' got {}-d'.format(impl_in, geometry))
 
         # TODO: sanity checks between domain and geometry (ndim, ...)
         self._geometry = geometry
