@@ -655,9 +655,12 @@ class ProductSpaceVector(LinearSpaceVector):
 
         See Also
         --------
-        DiscreteLpVector.show : Show for discretized data
-        NtuplesBaseVector.show : Show for sequence type data
-        odl.util.graphics.show_discrete_data : Underlying implementation
+        odl.discr.lp_discr.DiscreteLpVector.show :
+            Display of a discretized function
+        odl.space.base_ntuples.NtuplesBaseVector.show :
+            Display of sequence type data
+        odl.util.graphics.show_discrete_data :
+            Underlying implementation
         """
         title = kwargs.pop('title', 'ProductSpaceVector')
 

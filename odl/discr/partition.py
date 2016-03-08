@@ -137,7 +137,7 @@ class RectPartition(object):
 
         See also
         --------
-        odl.IntervalProd.min
+        odl.set.domain.IntervalProd.min
         """
         return self.set.min()
 
@@ -146,7 +146,7 @@ class RectPartition(object):
 
         See also
         --------
-        odl.IntervalProd.max
+        odl.set.domain.IntervalProd.max
         """
         return self.set.max()
 

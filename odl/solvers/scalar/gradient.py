@@ -70,19 +70,11 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
-    References
-    ----------
-    .. [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
-       Cambridge university press, 2004.
-
-    .. [2] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
-       and nonlinear optimization. Siam, 2009
-
     See Also
     --------
-    landweber :
+    odl.solvers.iterative.iterative.landweber :
         Optimized solver for the case ``f(x) = ||Ax - b||_2^2``
-    conjugate_gradient :
+    odl.solvers.iterative.iterative.conjugate_gradient :
         Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``
     """
 

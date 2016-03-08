@@ -75,11 +75,6 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     Returns
     -------
     `None`
-
-    References
-    ----------
-    .. [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
-       optimization*. Siam, 2009.
     """
     hess = ident = IdentityOperator(grad.range)
     grad_x = grad(x)
@@ -149,15 +144,6 @@ def broydens_first_method(grad, x, line_search, niter=1, partial=None):
     Returns
     -------
     `None`
-
-    References
-    ----------
-    .. [Bro1965] Broyden, C G. *A class of methods for solving nonlinear
-       simultaneous equations*. Mathematics of computation, 33 (1965),
-       pp 577--593.
-
-    .. [Kva1991] Kvaalen, E. *A faster Broyden method*. BIT Numerical
-       Mathematics 31 (1991), pp 369--372.
     """
     hess = IdentityOperator(grad.range)
     grad_x = grad(x)

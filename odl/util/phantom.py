@@ -433,12 +433,6 @@ def submarine_phantom(discr, smooth=True, taper=20.0):
     Returns
     -------
     phantom : `DiscreteLpVector`
-
-    References
-    ----------
-    .. [Okt2015] Oktem, O. *Mathematics of electron tomography*. In:
-       Scherzer, O. Handbook of Mathematical Methods in Imaging.
-       Springer, 2015, pp 937--1031.
     """
     if discr.ndim == 2:
         if smooth:

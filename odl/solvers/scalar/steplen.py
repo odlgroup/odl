@@ -202,16 +202,6 @@ class BarzilaiBorweinStep(object):
     for gradient descent methods.
 
     The method is described in [BB1988]_ and [Ray1997]_.
-
-    References
-    ----------
-    .. [BB1988] Barzilai, J, and Borwein, J M. *Two-point step size
-       gradient methods*. IMA Journal of Numerical Analysis, 8 (1988),
-       pp 141--148,
-
-    .. [Ray1997] Raydan, M. *The Barzilai and Borwein method for the
-       large scale unconstrained minimization problem*. SIAM J. Optim.,
-       7 (1997), pp 26--33.
     """
 
     def __init__(self, gradf, step0=0.0005):

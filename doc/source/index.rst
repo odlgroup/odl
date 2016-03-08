@@ -29,6 +29,7 @@ Contents
     guide/faq
     guide/glossary
     math/math
+    refs
     odl
 
 

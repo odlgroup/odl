@@ -122,29 +122,6 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     resolvent operators see [Roc1970]_.
 
     For more on proximal operators and algorithms see [PB2014]_.
-
-    References
-    ----------
-    .. [CP2011a] Chambolle, Antonin and Pock, Thomas. *A First-Order
-       Primal-Dual Algorithm for Convex Problems with Applications to
-       Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011),
-       pp 120-145.
-
-    .. [CP2011b] Chambolle, Antonin and Pock, Thomas. *Diagonal
-       preconditioning for first order primal-dual algorithms in convex
-       optimization*. 2011 IEEE International Conference on Computer Vision
-       (ICCV), 2011, pp 1762-1769.
-
-    .. [Sid+2012] Sidky, Emil Y, Jorgensen, Jakob H, and Pan, Xiaochuan.
-       *Convex optimization problem prototyping for image reconstruction in
-       computed tomography with the Chambolle-Pock algorithm*. Physics in
-       Medicine and Biology, 57 (2012), pp 3065-3091.
-
-    .. [PB2014] Parikh, Neal and Boyd, Stephen. *Proximal Algorithms*.
-       Foundations and Trends in Optimization, 1 (2014), pp 127-239.
-
-    .. [Roc1970] Rockafellar, R. Tyrrell. *Convex analysis*. Princeton
-       University Press, 1970.
     """
     # Forward operator
     if not isinstance(op, Operator):
