@@ -352,20 +352,21 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """
         return NtuplesBaseUFuncs(self)
 
-    def show(self, method='scatter', title='', show=False, fig=None, **kwargs):
+    def show(self, title=None, method='scatter', show=False, fig=None,
+             **kwargs):
         """Display the function graphically.
 
         Parameters
         ----------
+        title : `str`, optional
+            Set the title of the figure
+
         method : `str`, optional
             1d methods:
 
             'plot' : graph plot
 
             'scatter' : point plot
-
-        title : `str`, optional
-            Set the title of the figure
 
         show : `bool`, optional
             If the plot should be showed now or deferred until later.
@@ -393,8 +394,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         from odl.util.graphics import show_discrete_data
         from odl.discr import RegularGrid
         grid = RegularGrid(0, self.size - 1, self.size)
-        return show_discrete_data(self.asarray(), grid, method=method,
-                                  title=title, show=show, fig=fig, **kwargs)
+        return show_discrete_data(self.asarray(), grid, title=title,
+                                  method=method, show=show, fig=fig, **kwargs)
 
 
 class FnBase(NtuplesBase, LinearSpace):

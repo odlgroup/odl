@@ -510,12 +510,15 @@ class DiscreteLpVector(DiscretizationVector):
         """
         return DiscreteLpUFuncs(self)
 
-    def show(self, method='', title=None, indices=None, show=False, fig=None,
+    def show(self, title=None, method='', indices=None, show=False, fig=None,
              **kwargs):
         """Display the function graphically.
 
         Parameters
         ----------
+        title : `str`, optional
+            Set the title of the figure
+
         method : `str`, optional
             1d methods:
 
@@ -540,9 +543,6 @@ class DiscreteLpVector(DiscretizationVector):
             For data with 3 or more dimensions, the 2d slice in the first
             two axes at the "middle" along the remaining axes is shown
             (semantically ``[:, :, shape[2:] // 2]``).
-
-        title : `str`, optional
-            Set the title of the figure
 
         show : `bool`, optional
             If the plot should be showed now or deferred until later.
@@ -608,7 +608,7 @@ class DiscreteLpVector(DiscretizationVector):
         grid = self.space.grid[indices].squeeze()
         values = self.asarray()[indices].squeeze()
 
-        return show_discrete_data(values, grid, method=method, title=title,
+        return show_discrete_data(values, grid, title=title, method=method
                                   show=show, fig=fig, axis_labels=axis_labels,
                                   **kwargs)
 
