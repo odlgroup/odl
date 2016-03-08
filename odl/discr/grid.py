@@ -179,6 +179,7 @@ class TensorGrid(Set):
         self._inondeg = np.array([i for i in range(len(vecs))
                                   if len(vecs[i]) != 1])
 
+    # Attributes
     @property
     def coord_vectors(self):
         """The coordinate vectors of the grid.
@@ -484,7 +485,8 @@ class TensorGrid(Set):
         ----------
         index : `int`
             The index of the dimension before which ``other`` is to
-            be inserted. Negative indices are added to `ndim`.
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
         other :  `TensorGrid`, `float` or `array-like`
             The grid to be inserted
 
@@ -921,7 +923,8 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-
+        other :
+            Check if this object is a subgrid
         atol : `float`
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
@@ -988,14 +991,15 @@ class RegularGrid(TensorGrid):
         ----------
         index : `int`
             Index of the dimension before which ``other`` is to
-            be inserted. Must fulfill ``0 <= index <= ndim``.
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
         other : `TensorGrid`
             Grid to be inserted. If a `RegularGrid` is given,
             the output will be a `RegularGrid`.
 
         Returns
         -------
-        newgrid : `TensorGrid`
+        newgrid : `TensorGrid` or `RegularGrid`
             The enlarged grid. If the inserted grid is a `RegularGrid`,
             so is the return value.
 
@@ -1005,6 +1009,12 @@ class RegularGrid(TensorGrid):
         >>> rg2 = RegularGrid(-3, 7, 6)
         >>> rg1.insert(1, rg2)
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], (2, 6, 3))
+
+        If other is a TensorGrid, so is the result:
+
+        >>> tg = TensorGrid([0, 1, 2])
+        >>> rg1.insert(2, tg)
+        TensorGrid([-1.5, -0.5], [-1.0, 1.0, 3.0], [0.0, 1.0, 2.0])
         """
         if isinstance(other, RegularGrid):
             idx = int(index)
@@ -1195,8 +1205,12 @@ def uniform_sampling_fromintv(intv_prod, num_nodes):
     >>> grid = uniform_sampling_fromintv(rbox, (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
+
+    See also
+    --------
+    uniform_sampling : Sample an implicitly created `IntervalProd`
     """
-    num_nodes = np.atleast_1d(num_nodes).astype('int64')
+    num_nodes = np.atleast_1d(num_nodes).astype('int64', casting='safe')
 
     if not isinstance(intv_prod, IntervalProd):
         raise TypeError('{!r} is not an `IntervalProd` instance.'

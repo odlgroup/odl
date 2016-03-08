@@ -515,7 +515,7 @@ def dspace_type(space, impl, dtype=None):
 
     Parameters
     ----------
-    space : `object`
+    space :
         The template space. If it has a ``field`` attribute,
         ``dtype`` must be consistent with it
     impl : {'numpy', 'cuda'}

@@ -33,50 +33,129 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr')
 
 
-def array1d_repr(array):
-    """Stringification of a 1D array, keeping byte / unicode."""
-    if len(array) < 7:
+def _indent_rows(string, indent=4):
+    out_string = '\n'.join((' ' * indent) + row for row in string.split('\n'))
+    return out_string
+
+
+def array1d_repr(array, nprint=6):
+    """Stringification of a 1D array, keeping byte / unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print
+    """
+    assert int(nprint) > 0
+
+    if len(array) <= nprint:
         return repr(list(array))
     else:
-        return (repr(list(array[:3])).rstrip(']') + ', ..., ' +
-                repr(list(array[-3:])).lstrip('['))
+        return (repr(list(array[:nprint // 2])).rstrip(']') + ', ..., ' +
+                repr(list(array[-(nprint // 2):])).lstrip('['))
 
 
-def array1d_str(array):
-    """Stringification of a 1D array, regardless of byte or unicode."""
-    if len(array) < 7:
+def array1d_str(array, nprint=6):
+    """Stringification of a 1D array, regardless of byte or unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print
+    """
+    assert int(nprint) > 0
+
+    if len(array) <= nprint:
         inner_str = ', '.join(str(a) for a in array)
         return '[{}]'.format(inner_str)
     else:
-        left_str = ', '.join(str(a) for a in array[:3])
-        right_str = ', '.join(str(a) for a in array[-3:])
+        left_str = ', '.join(str(a) for a in array[:nprint // 2])
+        right_str = ', '.join(str(a) for a in array[-(nprint // 2):])
         return '[{}, ..., {}]'.format(left_str, right_str)
 
 
-def arraynd_repr(array):
-    """Stringification of an nD array, keeping byte / unicode."""
+def arraynd_repr(array, nprint=None):
+    """Stringification of an nD array, keeping byte / unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print.
+        Default: 6 if array.ndim <= 2, else 2
+
+    Examples
+    --------
+    >>> print(arraynd_repr([[1, 2, 3], [4, 5, 6]]))
+    [[1, 2, 3],
+     [4, 5, 6]]
+    >>> print(arraynd_repr([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
+    [[1, 2, 3],
+     [4, 5, 6],
+     [7, 8, 9]]
+    """
+    array = np.asarray(array)
+    if nprint is None:
+        nprint = 6 if array.ndim <= 2 else 2
+    else:
+        assert nprint > 0
+
     if array.ndim > 1:
-        if len(array) < 7:
+        if len(array) <= nprint:
             inner_str = ',\n '.join(arraynd_repr(a) for a in array)
-            return '[\n{}\n]'.format(inner_str)
+            return '[{}]'.format(inner_str)
         else:
-            left_str = ',\n '.join(arraynd_repr(a) for a in array[:3])
-            right_str = ',\n '.join(arraynd_repr(a) for a in array[-3:])
-            return '[\n{},\n ...,\n{}\n]'.format(left_str, right_str)
+            left_str = ',\n '.join(arraynd_repr(a) for a in
+                                   array[:nprint // 2])
+            right_str = ',\n '.join(arraynd_repr(a) for a in
+                                    array[-(nprint // 2):])
+            return '[{},\n ...,\n {}]'.format(left_str, right_str)
     else:
         return array1d_repr(array)
 
 
-def arraynd_str(array):
-    """Stringification of a nD array, regardless of byte or unicode."""
+def arraynd_str(array, nprint=None):
+    """Stringification of an nD array, regardless of byte or unicode.
+
+    Parameters
+    ----------
+    array : `array-like`
+        The array to print
+    nprint : int
+        Maximum number of elements to print.
+        Default: 6 if array.ndim <= 2, else 2
+
+    Examples
+    --------
+    >>> print(arraynd_str([[1, 2, 3], [4, 5, 6]]))
+    [[1, 2, 3],
+     [4, 5, 6]]
+    >>> print(arraynd_str([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
+    [[1, 2, 3],
+     [4, 5, 6],
+     [7, 8, 9]]
+    """
+    array = np.asarray(array)
+    if nprint is None:
+        nprint = 6 if array.ndim <= 2 else 2
+    else:
+        assert nprint > 0
+
     if array.ndim > 1:
-        if len(array) < 7:
+        if len(array) <= nprint:
             inner_str = ',\n '.join(arraynd_str(a) for a in array)
             return '[{}]'.format(inner_str)
         else:
-            left_str = ',\n '.join(arraynd_str(a) for a in array[:3])
-            right_str = ',\n '.join(arraynd_str(a) for a in array[-3:])
-            return '[{},\n ...,\n{}]'.format(left_str, right_str)
+            left_str = ',\n'.join(arraynd_str(a) for a in
+                                  array[:nprint // 2])
+            right_str = ',\n'.join(arraynd_str(a) for a in
+                                   array[- (nprint // 2):])
+            return '[{},\n    ...,\n{}]'.format(left_str, right_str)
     else:
         return array1d_str(array)
 
@@ -161,6 +240,145 @@ def is_real_floating_dtype(dtype):
 def is_complex_floating_dtype(dtype):
     """`True` if ``dtype`` is complex floating-point, else `False`."""
     return np.issubsctype(dtype, np.complexfloating)
+
+
+def default_dtype(impl, field):
+    """Return the default data type of different implementations."""
+    from odl.set.sets import RealNumbers
+    if impl == 'numpy':
+        if field == RealNumbers():
+            dtype = np.dtype('float64')
+        else:
+            dtype = np.dtype('complex128')
+    elif impl == 'cuda':
+        if field == RealNumbers():
+            dtype = np.dtype('float32')
+        else:
+            raise NotImplementedError('complex data types not supported in '
+                                      'CUDA.')
+            # dtype = np.dtype('complex64')
+    else:
+        raise ValueError("'impl '{}' not understood.".format(impl))
+
+    return dtype
+
+
+def complex_space(space):
+    """Return the complex counterpart of a given space.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Template space to be converted into its complex counterpart.
+        If ``space`` is already a complex space, a copy of it is
+        returned. Supported types of spaces: `FunctionSpace`, `FnBase`,
+        `DiscreteLp`.
+
+    Returns
+    -------
+    cspace : `LinearSpace`
+        Space of the same type and all parameters equal except field
+        and data type (if applicable), which are mapped to their complex
+        counterparts.
+
+    Examples
+    --------
+    >>> from odl import uniform_discr
+    >>> rspace = uniform_discr(0, 1, 10, dtype='float32')
+    >>> cspace = complex_space(rspace)
+    >>> cspace
+    uniform_discr(0.0, 1.0, 10, dtype='complex64')
+    >>> rspace.one().norm() == cspace.one().norm()
+    True
+    >>> complex_space(cspace) == cspace
+    True
+    """
+    from odl.discr.lp_discr import DiscreteLp
+    from odl.set.sets import ComplexNumbers
+    from odl.space.base_ntuples import FnBase, _TYPE_MAP_R2C
+    from odl.space.fspace import FunctionSpace
+
+    if isinstance(space, FunctionSpace):
+        return FunctionSpace(space.domain, field=ComplexNumbers())
+    else:
+        if is_real_floating_dtype(space.dtype):
+            complex_dtype = _TYPE_MAP_R2C[space.dtype]
+        elif is_complex_floating_dtype(space.dtype):
+            complex_dtype = space.dtype
+        else:
+            raise ValueError('data type {} is not a floating point type.'
+                             ''.format(space.dtype))
+
+    # DiscreteLp needs to come first since it inherits from FnBase
+    if isinstance(space, DiscreteLp):
+        return type(space)(complex_space(space.uspace), space.partition,
+                           dspace=complex_space(space.dspace),
+                           exponent=space.exponent, interp=space.interp,
+                           order=space.order)
+    elif isinstance(space, FnBase):
+        return type(space)(space.size, dtype=complex_dtype,
+                           weight=space._space_funcs)
+    else:
+        raise TypeError('space type {} not supported.'.format(type(space)))
+
+
+def real_space(space):
+    """Return the real counterpart of a given space.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Template space to be converted into its real counterpart.
+        If ``space`` is already a real space, a copy of it is returned.
+        Supported types of spaces: `FunctionSpace`, `FnBase`,
+        `DiscreteLp`.
+
+    Returns
+    -------
+    rspace : `LinearSpace`
+        Space of the same type and all parameters equal except field
+        and data type (if applicable), which are mapped to their real
+        counterparts.
+
+    Examples
+    --------
+    >>> from odl import uniform_discr
+    >>> cspace = uniform_discr(0, 1, 10, dtype='complex64')
+    >>> rspace = real_space(cspace)
+    >>> rspace
+    uniform_discr(0.0, 1.0, 10, dtype='float32')
+    >>> cspace.one().norm() == rspace.one().norm()
+    True
+    >>> real_space(rspace) == rspace
+    True
+    """
+    from odl.discr.lp_discr import DiscreteLp
+    from odl.set.sets import RealNumbers
+    from odl.space.base_ntuples import FnBase, _TYPE_MAP_C2R
+    from odl.space.fspace import FunctionSpace
+
+    if isinstance(space, FunctionSpace):
+        return FunctionSpace(space.domain, field=RealNumbers())
+    else:
+        if is_real_floating_dtype(space.dtype):
+            real_dtype = space.dtype
+        elif is_complex_floating_dtype(space.dtype):
+            real_dtype = _TYPE_MAP_C2R[space.dtype]
+        else:
+            raise ValueError('data type {} is not a floating point type.'
+                             ''.format(space.dtype))
+
+    # DiscreteLp needs to come first since it inherits from FnBase
+    if isinstance(space, DiscreteLp):
+        return type(space)(real_space(space.uspace), space.partition,
+                           dspace=real_space(space.dspace),
+                           exponent=space.exponent, interp=space.interp,
+                           order=space.order)
+    elif isinstance(space, FnBase):
+        return type(space)(space.size, dtype=real_dtype,
+                           weight=space._space_funcs)
+    else:
+        raise TypeError('space type {} not supported.'.format(type(space)))
 
 
 def preload_call_with(instance, mode):

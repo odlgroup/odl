@@ -369,7 +369,8 @@ class RectPartition(object):
         ----------
         index : `int`
             Index of the dimension before which ``other`` is to
-            be inserted. Negative indices are added to ``self.ndim``.
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
         other : `RectPartition`
             Partition to be inserted
 
@@ -391,7 +392,7 @@ class RectPartition(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n {!r},\n {!r}'.format(self.set, self.grid)
+        inner_str = '\n    {!r},\n    {!r}'.format(self.set, self.grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 

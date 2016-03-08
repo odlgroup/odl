@@ -243,7 +243,7 @@ class ShowPartial(Partial):
     """Show the partial result."""
 
     def __init__(self, **kwargs):
-        """Create a show partial
+        """Initialize a new instance.
 
         Parameters are passed through to the vectors show method. Additional
         parameters included.
