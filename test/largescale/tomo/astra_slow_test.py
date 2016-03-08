@@ -56,7 +56,7 @@ def projector(request):
         dpart = odl.uniform_partition(-30, 30, 200)
         geom = tomo.Parallel2dGeometry(apart, dpart)
 
-        # X-ray transform
+        # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
                                  impl='astra_' + variant)
 
@@ -70,7 +70,7 @@ def projector(request):
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
         geom = tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
 
-        # X-ray transform
+        # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
                                  impl='astra_' + variant)
 
@@ -85,7 +85,7 @@ def projector(request):
         geom = tomo.FanFlatGeometry(apart, dpart,
                                     src_radius=200, det_radius=100)
 
-        # X-ray transform
+        # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
                                  impl='astra_' + variant)
 
@@ -100,7 +100,7 @@ def projector(request):
         geom = tomo.CircularConeFlatGeometry(
             apart, dpart, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
-        # X-ray transform
+        # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
                                  impl='astra_' + variant)
 
@@ -116,7 +116,7 @@ def projector(request):
         geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
                                             src_radius=200, det_radius=100)
 
-        # X-ray transform
+        # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
                                  impl='astra_' + variant)
     else:
@@ -124,7 +124,7 @@ def projector(request):
 
 
 def test_reconstruction(projector):
-    """Test discrete X-ray transform using ASTRA for reconstruction."""
+    """Test discrete Ray transform using ASTRA for reconstruction."""
 
     # Create shepp-logan phantom
     vol = odl.util.shepp_logan(projector.domain, modified=True)

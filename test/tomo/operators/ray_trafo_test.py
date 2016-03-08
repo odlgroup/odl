@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Tests for the X-ray transform."""
+"""Tests for the Ray transform."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -91,7 +91,7 @@ def projector(request):
         dpart = odl.uniform_partition([-30] * 2, [30] * 2, [n_pixels] * 2)
         geom = tomo.Parallel3dAxisGeometry(apart, dpart)
 
-        # X-ray transform
+        # Ray transform
         return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
 
     elif geom == 'cone2d':
@@ -104,7 +104,7 @@ def projector(request):
         geom = tomo.FanFlatGeometry(apart, dpart, src_radius=200,
                                     det_radius=100)
 
-        # X-ray transform
+        # Ray transform
         return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
 
     elif geom == 'cone3d':
@@ -118,7 +118,7 @@ def projector(request):
         geom = tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
                                              det_radius=100)
 
-        # X-ray transform
+        # Ray transform
         return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
 
     elif geom == 'helical':
@@ -132,14 +132,14 @@ def projector(request):
         geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
                                             src_radius=200, det_radius=100)
 
-        # X-ray transform
+        # Ray transform
         return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
     else:
         raise ValueError('geom not valid')
 
 
 def test_projector(projector):
-    """Test discrete X-ray transform using ASTRA for reconstruction."""
+    """Test discrete Ray transform using ASTRA for reconstruction."""
 
     # TODO: this needs to be improved
     # Accept 10% errors

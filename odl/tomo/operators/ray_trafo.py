@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""X-ray transforms."""
+"""Ray transforms."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -46,7 +46,7 @@ __all__ = ('RayTransform', 'RayBackProjection')
 
 class RayTransform(Operator):
 
-    """The discrete X-ray transform between `L^p` spaces."""
+    """The discrete Ray transform between L^p spaces."""
 
     def __init__(self, discr_domain, geometry, impl='astra_cpu', **kwargs):
         """Initialize a new instance.
@@ -176,7 +176,7 @@ class RayTransform(Operator):
 
 
 class RayBackProjection(Operator):
-    """The adjoint of the discrete X-ray transform between `L^p` spaces."""
+    """The adjoint of the discrete Ray transform between L^p spaces."""
 
     def __init__(self, discr_range, geometry, impl='astra_cpu', **kwargs):
         """Initialize a new instance.

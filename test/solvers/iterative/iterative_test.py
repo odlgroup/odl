@@ -63,7 +63,7 @@ def iterative_solver(request):
 
 
 def test_solver(iterative_solver):
-    """Test discrete X-ray transform using ASTRA for reconstruction."""
+    """Test discrete Ray transform using ASTRA for reconstruction."""
 
     # Solve within 1%
     places = 2
