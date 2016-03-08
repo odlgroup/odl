@@ -608,7 +608,7 @@ class DiscreteLpVector(DiscretizationVector):
         grid = self.space.grid[indices].squeeze()
         values = self.asarray()[indices].squeeze()
 
-        return show_discrete_data(values, grid, title=title, method=method
+        return show_discrete_data(values, grid, title=title, method=method,
                                   show=show, fig=fig, axis_labels=axis_labels,
                                   **kwargs)
 
