@@ -455,10 +455,8 @@ class PartialDerivative(Operator):
         >>> f = par_deriv.domain.element(data)
         >>> par_div_f = par_deriv(f)
         >>> print(par_div_f)
-        [
-            [0.0, 1.0, 2.0, 3.0, 4.0],
-            [0.0, 1.0, 2.0, 3.0, 4.0]
-        ]
+        [[0.0, 1.0, 2.0, 3.0, 4.0],
+         [0.0, 1.0, 2.0, 3.0, 4.0]]
         """
         if out is None:
             out = self.range.element()
@@ -537,25 +535,19 @@ class Gradient(Operator):
         >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
         >>> print(grad_f[0])
-        [
-            [0.0, 1.0, 2.0, 3.0, 4.0],
-            [0.0, -2.0, -4.0, -6.0, -8.0]
-        ]
+        [[0.0, 1.0, 2.0, 3.0, 4.0],
+         [0.0, -2.0, -4.0, -6.0, -8.0]]
         >>> print(grad_f[1])
-        [
-            [1.0, 1.0, 1.0, 1.0, -4.0],
-            [2.0, 2.0, 2.0, 2.0, -8.0]
-        ]
+        [[1.0, 1.0, 1.0, 1.0, -4.0],
+         [2.0, 2.0, 2.0, 2.0, -8.0]]
 
         Verify adjoint:
 
         >>> g = grad.range.element((data, data ** 2))
         >>> adj_g = grad.adjoint(g)
         >>> print(adj_g)
-        [
-            [0.0, -2.0, -5.0, -8.0, -11.0],
-            [0.0, -5.0, -14.0, -23.0, -32.0]
-        ]
+        [[0.0, -2.0, -5.0, -8.0, -11.0],
+         [0.0, -5.0, -14.0, -23.0, -32.0]]
         >>> g.inner(grad_f) / f.inner(adj_g)
         1.0
         """
@@ -655,11 +647,9 @@ class Divergence(Operator):
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
         >>> print(div_f)
-        [
-            [2.0, 2.0, 2.0, 2.0, -3.0],
-            [2.0, 2.0, 2.0, 2.0, -4.0],
-            [-1.0, -2.0, -3.0, -4.0, -12.0]
-        ]
+        [[2.0, 2.0, 2.0, 2.0, -3.0],
+         [2.0, 2.0, 2.0, 2.0, -4.0],
+         [-1.0, -2.0, -3.0, -4.0, -12.0]]
 
         Verify adjoint:
 
@@ -756,11 +746,9 @@ class Laplacian(Operator):
         >>> f = space.element(data)
         >>> lap = Laplacian(space)
         >>> print(lap(f))
-        [
-            [0.0, 1.0, 0.0],
-            [1.0, -4.0, 1.0],
-            [0.0, 1.0, 0.0]
-        ]
+        [[0.0, 1.0, 0.0],
+         [1.0, -4.0, 1.0],
+         [0.0, 1.0, 0.0]]
         """
         if out is None:
             out = self.range.zero()

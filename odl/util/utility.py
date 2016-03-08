@@ -133,16 +133,12 @@ def arraynd_str(array, nprint=None):
     Examples
     --------
     >>> print(arraynd_str([[1, 2, 3], [4, 5, 6]]))
-    [
-        [1, 2, 3],
-        [4, 5, 6]
-    ]
+    [[1, 2, 3],
+     [4, 5, 6]]
     >>> print(arraynd_str([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
-    [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9]
-    ]
+    [[1, 2, 3],
+     [4, 5, 6],
+     [7, 8, 9]]
     """
     array = np.asarray(array)
     if nprint is None:
@@ -152,15 +148,14 @@ def arraynd_str(array, nprint=None):
 
     if array.ndim > 1:
         if len(array) <= nprint:
-            inner_str = ',\n'.join(arraynd_str(a) for a in array)
-            return '[\n{}\n]'.format(_indent_rows(inner_str))
+            inner_str = ',\n '.join(arraynd_str(a) for a in array)
+            return '[{}]'.format(inner_str)
         else:
             left_str = ',\n'.join(arraynd_str(a) for a in
                                   array[:nprint // 2])
             right_str = ',\n'.join(arraynd_str(a) for a in
                                    array[- (nprint // 2):])
-            return '[\n{},\n    ...,\n{}\n]'.format(_indent_rows(left_str),
-                                                    _indent_rows(right_str))
+            return '[{},\n    ...,\n{}]'.format(left_str, right_str)
     else:
         return array1d_str(array)
 
