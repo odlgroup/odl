@@ -413,99 +413,69 @@ class FnBase(NtuplesBase, LinearSpace):
         if is_real_dtype(self.dtype):
             field = RealNumbers()
             self._is_real = True
-            self._real_space = self
             self._real_dtype = self.dtype
-            self._complex_space = None  # Set in first call of as_complex_space
+            self._real_space = self
+            self._complex_dtype = _TYPE_MAP_R2C.get(self.dtype, None)
+            self._complex_space = None  # Set in first call of astype
         else:
             field = ComplexNumbers()
-            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
             self._is_real = False
+            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
+            self._real_space = None  # Set in first call of astype
+            self._complex_dtype = self.dtype
             self._complex_space = self
-            self._real_space = None  # Set in first call of as_real_space
 
         self._is_floating = is_floating_dtype(self.dtype)
         LinearSpace.__init__(self, field)
 
     @property
-    def real_dtype(self):
-        """The corresponding real data type of this space."""
-        return self._real_dtype
-
-    @property
     def is_rn(self):
-        """If the space represents the set :math:`R^n`.
-
-        Tuples of real numbers.
-        """
+        """Return `True` if the space represents R^n, i.e. real tuples."""
         return self._is_real and self._is_floating
 
     @property
     def is_cn(self):
-        """If the space represents the set :math:`C^n`.
-
-        Tuples of complex numbers.
-        """
+        """Return `True` if the space represents C^n, i.e. complex tuples."""
         return (not self._is_real) and self._is_floating
 
-    def as_complex_space(self, dtype=None):
-        """Return a complex version of this space.
+    def _astype(self, dtype):
+        """Internal helper for ``astype``."""
+        return type(self)(self.size, dtype=dtype, weight=self.weighting)
+
+    def astype(self, dtype):
+        """Return a copy of this space with new ``dtype``.
 
         Parameters
         ----------
-        dtype : optional
+        dtype :
             Data type of the returned space. Can be given in any way
             `numpy.dtype` understands, e.g. as string ('complex64')
             or data type (`complex`).
-            By default, the complex data type corresponding to
-            ``self.out_dtype`` is taken.
 
         Returns
         -------
-        cspace : `Fn`
-            The complex version of this space
+        newspace : `FnBase`
+            The version of this space with given data type
         """
         if dtype is None:
-            if self._complex_space is None:  # only for real spaces
-                dtype = _TYPE_MAP_R2C[self.dtype]
-                self._complex_space = type(self)(self.size, dtype=dtype,
-                                                 weight=self.weighting)
-            return self._complex_space
+            # Need to filter this out since Numpy iterprets it as 'float'
+            raise ValueError("Unknown data type 'None'.")
 
-        elif not is_complex_floating_dtype(np.dtype(dtype)):
-            raise ValueError('{} is not a complex data type.'.format(dtype))
+        dtype = np.dtype(dtype)
+        if dtype == self.dtype:
+            return self
 
-        else:
-            return type(self)(self.size, dtype=dtype, weight=self.weighting)
-
-    def as_real_space(self, dtype=None):
-        """Return a real version of this space.
-
-        Parameters
-        ----------
-        dtype : optional
-            Data type of the returned space. Can be given in any way
-            `numpy.dtype` understands, e.g. as string ('float128')
-            or data type (`float`).
-            By default, the real data type corresponding to
-            ``self.out_dtype`` is taken.
-
-        Returns
-        -------
-        rspace : `Fn`
-            The real version of this space
-        """
-        if dtype is None:
-            if self._real_space is None:  # only for complex spaces
-                dtype = _TYPE_MAP_C2R[self.dtype]
-                self._real_space = type(self)(self.size, dtype=dtype,
-                                              weight=self.weighting)
+        # Caching for real and complex versions (exact dtyoe mappings)
+        if dtype == self._real_dtype:
+            if self._real_space is None:
+                self._real_space = self._astype(dtype)
             return self._real_space
-
-        elif not is_real_dtype(np.dtype(dtype)):
-            raise ValueError('{} is not a real data type.'.format(dtype))
-
+        elif dtype == self._complex_dtype:
+            if self._complex_space is None:
+                self._complex_space = self._astype(dtype)
+            return self._complex_space
         else:
-            return type(self)(self.size, dtype=dtype, weight=self.weighting)
+            return self._astype(dtype)
 
     @abstractmethod
     def zero(self):

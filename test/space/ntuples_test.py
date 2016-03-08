@@ -202,31 +202,27 @@ def test_init_space_funcs(exponent):
         assert spc._space_funcs == weight
 
 
-def test_as_real_complex():
+def test_astype():
     rn = Rn(3, weight=1.5)
     cn = Cn(3, weight=1.5)
+    rn_s = Rn(3, weight=1.5, dtype='float32')
+    cn_s = Cn(3, weight=1.5, dtype='complex64')
 
-    assert rn.as_complex_space() == cn
-    assert rn.as_complex_space().as_real_space() == rn
-    assert rn.as_real_space() == rn
+    # Real
+    assert rn.astype('float32') == rn_s
+    assert rn.astype('float64') is rn
+    assert rn._real_space is rn
+    assert rn.astype('complex64') == cn_s
+    assert rn.astype('complex128') == cn
+    assert rn._complex_space == cn
 
-    assert cn.as_real_space() == rn
-    assert cn.as_real_space().as_complex_space() == cn
-    assert cn.as_complex_space() == cn
-
-    rn_single = Rn(3, weight=1.5, dtype='float32')
-    cn_single = Cn(3, weight=1.5, dtype='complex64')
-
-    assert rn_single.as_complex_space() == cn_single
-    assert rn_single.as_complex_space().as_real_space() == rn_single
-    assert rn_single.as_real_space() == rn_single
-
-    assert cn_single.as_real_space() == rn_single
-    assert cn_single.as_real_space().as_complex_space() == cn_single
-    assert cn_single.as_complex_space() == cn_single
-
-    assert rn.as_complex_space(dtype='complex64') == cn_single
-    assert cn.as_real_space(dtype='float32') == rn_single
+    # Complex
+    assert cn.astype('complex64') == cn_s
+    assert cn.astype('complex128') is cn
+    assert cn._complex_space is cn
+    assert cn.astype('float32') == rn_s
+    assert cn.astype('float64') == rn
+    assert cn._complex_space is cn
 
 
 def test_vector_class_init(fn):

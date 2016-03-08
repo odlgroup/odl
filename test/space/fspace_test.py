@@ -179,6 +179,26 @@ def test_fspace_out_dtype():
     assert f_vec(mg).dtype == np.dtype('int')
 
 
+def test_fspace_astype():
+
+    rspace = FunctionSpace(odl.Interval(0, 1))
+    cspace = FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
+    rspace_s = FunctionSpace(odl.Interval(0, 1), out_dtype='float32')
+    cspace_s = FunctionSpace(odl.Interval(0, 1), out_dtype='complex64')
+
+    assert rspace.astype('complex64') == cspace_s
+    assert rspace.astype('complex128') == cspace
+    assert rspace.astype('complex128') is rspace._complex_space
+    assert rspace.astype('float32') == rspace_s
+    assert rspace.astype('float64') is rspace._real_space
+
+    assert cspace.astype('float32') == rspace_s
+    assert cspace.astype('float64') == rspace
+    assert cspace.astype('float64') is cspace._real_space
+    assert cspace.astype('complex64') == cspace_s
+    assert cspace.astype('complex128') is cspace._complex_space
+
+
 def test_fspace_vector_eval_real():
     rect, points, mg = _standard_setup_2d()
 
@@ -378,6 +398,24 @@ def test_fspace_vector_copy():
     assert f_out == f_vec_dual
 
 
+def test_fspace_vector_real_imag():
+    rect, _, mg = _standard_setup_2d()
+    cspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    f = cspace.element(cfunc_2d_vec_oop)
+    assert all_equal(f.real(mg), cfunc_2d_vec_oop(mg).real)
+    assert all_equal(f.imag(mg), cfunc_2d_vec_oop(mg).imag)
+    out_mg = np.empty((2, 3))
+    f.real(mg, out=out_mg)
+    assert all_equal(out_mg, cfunc_2d_vec_oop(mg).real)
+    f.imag(mg, out=out_mg)
+    assert all_equal(out_mg, cfunc_2d_vec_oop(mg).imag)
+
+    rspace = FunctionSpace(rect)
+    f = rspace.element(func_2d_vec_oop)
+    assert all_equal(f.real(mg), f(mg))
+    assert all_equal(f.imag(mg), rspace.zero()(mg))
+
+
 def test_fspace_zero():
     rect, points, mg = _standard_setup_2d()
 
@@ -416,33 +454,6 @@ def test_fspace_one():
     assert one_vec([0.5, 1.5]) == 1.0 + 1j * 0.0
     assert all_equal(one_vec(points), np.ones(5, dtype=complex))
     assert all_equal(one_vec(mg), np.ones((2, 3), dtype=complex))
-
-
-def test_fspace_as_real_complex():
-
-    rspace = odl.FunctionSpace(odl.Interval(0, 1))
-    cspace = odl.FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
-
-    assert rspace.as_complex_space() == cspace
-    assert (rspace.as_complex_space() !=
-            rspace.as_complex_space(out_dtype='complex64'))
-    assert rspace.as_complex_space().as_real_space() == rspace
-    assert rspace.as_real_space() == rspace
-
-    assert cspace.as_real_space() == rspace
-    assert cspace.as_real_space().as_complex_space() == cspace
-    assert rspace.as_complex_space() == cspace
-
-    rspace = odl.FunctionSpace(odl.Interval(0, 1), out_dtype='float32')
-    cspace = odl.FunctionSpace(odl.Interval(0, 1), out_dtype='complex64')
-
-    assert rspace.as_complex_space() == cspace
-    assert rspace.as_complex_space().as_real_space() == rspace
-    assert rspace.as_real_space() == rspace
-
-    assert cspace.as_real_space() == rspace
-    assert cspace.as_real_space().as_complex_space() == cspace
-    assert rspace.as_complex_space() == cspace
 
 
 scal_params = [2.0, 0.0, -1.0]

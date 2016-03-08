@@ -556,23 +556,28 @@ def test_cell_volume():
     assert vec.cell_volume == 0.5
 
 
-def test_as_real_complex():
+def test_astype():
 
-    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
+    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float64')
     cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex128')
+    rdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float32')
+    cdiscr_s = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex64')
 
-    assert rdiscr.as_complex_space() == cdiscr
-    assert rdiscr.as_complex_space().as_real_space() == rdiscr
-    assert rdiscr.as_real_space() == rdiscr
-    assert cdiscr.as_complex_space() == cdiscr
+    # Real
+    assert rdiscr.astype('float32') == rdiscr_s
+    assert rdiscr.astype('float64') is rdiscr
+    assert rdiscr._real_space is rdiscr
+    assert rdiscr.astype('complex64') == cdiscr_s
+    assert rdiscr.astype('complex128') == cdiscr
+    assert rdiscr._complex_space == cdiscr
 
-    rdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='float32')
-    cdiscr = odl.uniform_discr([0, 0], [1, 1], [2, 2], dtype='complex64')
-
-    assert rdiscr.as_complex_space() == cdiscr
-    assert rdiscr.as_complex_space().as_real_space() == rdiscr
-    assert rdiscr.as_real_space() == rdiscr
-    assert cdiscr.as_complex_space() == cdiscr
+    # Complex
+    assert cdiscr.astype('complex64') == cdiscr_s
+    assert cdiscr.astype('complex128') is cdiscr
+    assert cdiscr._complex_space is cdiscr
+    assert cdiscr.astype('float32') == rdiscr_s
+    assert cdiscr.astype('float64') == rdiscr
+    assert cdiscr._real_space == rdiscr
 
 
 def _impl_test_ufuncs(fn, name, n_args, n_out):

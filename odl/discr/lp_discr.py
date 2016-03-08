@@ -265,93 +265,13 @@ class DiscreteLp(Discretization):
         """Interpolation type of this discretization."""
         return self._interp
 
-    def as_complex_space(self, dtype=None):
-        """Return a complex version of this space.
-
-        Parameters
-        ----------
-        dtype : optional
-            Data type of the returned space. Can be given in any way
-            `numpy.dtype` understands, e.g. as string ('complex64')
-            or data type (`complex`).
-            By default, the complex data type corresponding to
-            ``self.out_dtype`` is taken.
-
-        Returns
-        -------
-        cspace : `DiscreteLp`
-            The complex version of this space
-        """
-        if self.field not in (RealNumbers(), ComplexNumbers()):
-            raise ValueError('cannot create complex space for field {}.'
-                             ''.format(self.field))
-
-        if dtype is None:
-            if self._complex_space is None:  # only for real spaces
-                dtype = _TYPE_MAP_R2C[self.dtype]
-                fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
-                dspace = self.dspace_type(self.size, dtype=dtype,
-                                          weight=self.dspace.weighting)
-                self._complex_space = type(self)(
-                    fspace, self.partition, dspace, exponent=self.exponent,
-                    interp=self.interp, order=self.order)
-
-            return self._complex_space
-
-        elif not is_complex_floating_dtype(np.dtype(dtype)):
-            raise ValueError('{} is not a complex data type.'.format(dtype))
-
-        else:
-            fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
-            dspace = self.dspace_type(self.size, dtype=dtype,
-                                      weight=self.dspace.weighting)
-            return type(self)(fspace, self.partition, dspace,
-                              exponent=self.exponent, interp=self.interp,
-                              order=self.order)
-
-    def as_real_space(self, dtype=None):
-        """Return a real version of this space.
-
-        Parameters
-        ----------
-        dtype : optional
-            Data type of the returned space. Can be given in any way
-            `numpy.dtype` understands, e.g. as string ('float128')
-            or data type (`float`).
-            By default, the real data type corresponding to
-            ``self.out_dtype`` is taken.
-
-        Returns
-        -------
-        rspace : `DiscreteLp`
-            The complex version of this space
-        """
-        if self.field not in (RealNumbers(), ComplexNumbers()):
-            raise ValueError('cannot create real space for field {}.'
-                             ''.format(self.field))
-
-        if dtype is None:
-            if self._real_space is None:  # only for complex spaces
-                dtype = _TYPE_MAP_C2R[self.dtype]
-                fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
-                dspace = self.dspace_type(self.size, dtype=dtype,
-                                          weight=self.dspace.weighting)
-                self._real_space = type(self)(
-                    fspace, self.partition, dspace, exponent=self.exponent,
-                    interp=self.interp, order=self.order)
-
-            return self._real_space
-
-        elif not is_real_dtype(np.dtype(dtype)):
-            raise ValueError('{} is not a real data type.'.format(dtype))
-
-        else:
-            fspace = type(self.uspace)(self.uspace.domain, out_dtype=dtype)
-            dspace = self.dspace_type(self.size, dtype=dtype,
-                                      weight=self.dspace.weighting)
-            return type(self)(fspace, self.partition, dspace,
-                              exponent=self.exponent, interp=self.interp,
-                              order=self.order)
+    def _astype(self, dtype):
+        """Internal helper for ``astype``."""
+        fspace = self.uspace.astype(dtype)
+        dspace = self.dspace.astype(dtype)
+        return type(self)(fspace, self.partition, dspace,
+                          exponent=self.exponent, interp=self.interp,
+                          order=self.order)
 
     # Overrides for space functions depending on partition
     #
@@ -560,11 +480,15 @@ class DiscreteLpVector(DiscretizationVector):
 
     def real(self):
         """Real part of this element."""
-        return self.space.as_real_space().element(self.asarray().real)
+        rspace = self.space.astype(self.space._real_dtype)
+        return rspace.element(self.asarray().real)
 
     @real.setter
     def real(self, newreal):
         """Set the real part of this element to ``newreal``."""
+        # rspace = self.space.astype(self.space._real_dtype)
+        # newreal = rspace.element(newreal)
+        # self.ntuple.real = newreal.ntuple
         newreal_flat = np.asarray(newreal, order=self.space.order).reshape(
             -1, order=self.space.order)
         self.ntuple.real = newreal_flat
@@ -572,7 +496,8 @@ class DiscreteLpVector(DiscretizationVector):
     @property
     def imag(self):
         """Imaginary part of this element."""
-        return self.space.as_real_space().element(self.asarray().imag)
+        rspace = self.space.astype(self.space._real_dtype)
+        return rspace.element(self.asarray().imag)
 
     @imag.setter
     def imag(self, newimag):

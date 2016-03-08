@@ -556,13 +556,20 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         # Init cache attributes for real / complex variants
         if self.field == RealNumbers():
+            self._real_out_dtype = self.out_dtype
             self._real_space = self
+            self._complex_out_dtype = _TYPE_MAP_R2C.get(self.out_dtype,
+                                                        np.dtype(object))
             self._complex_space = None
         elif self.field == ComplexNumbers():
+            self._real_out_dtype = _TYPE_MAP_C2R[self.out_dtype]
+            self._real_space = None
+            self._complex_out_dtype = self.out_dtype
             self._complex_space = self
-            self._real_space = None
         else:
+            self._real_out_dtype = None
             self._real_space = None
+            self._complex_out_dtype = None
             self._complex_space = None
 
     def element(self, fcall=None, vectorized=True):
@@ -668,76 +675,40 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return (isinstance(other, FunctionSpace) and
                 FunctionSet.__eq__(self, other))
 
-    def as_complex_space(self, out_dtype=None):
-        """Return a complex version of this space.
+    def _astype(self, out_dtype):
+        """Internal helper for ``astype``."""
+        return type(self)(self.domain, out_dtype=out_dtype)
+
+    def astype(self, out_dtype):
+        """Return a copy of this space with new ``out_dtype``.
 
         Parameters
         ----------
         out_dtype : optional
-            Data type of the return value of a function in this space.
-            Can be given in any way `numpy.dtype` understands, e.g. as
-            string ('complex64') or data type (`complex`).
-            By default, the complex data type corresponding to
-            ``self.out_dtype`` is taken.
+            Output data type of the returned space. Can be given in any
+            way `numpy.dtype` understands, e.g. as string ('complex64')
+            or data type (`complex`). `None` is interpreted as 'float64'.
 
         Returns
         -------
-        cspace : `FunctionSpace`
-            The complex version of this space
+        newspace : `FunctionSpace`
+            The version of this space with given data type
         """
-        if self.field not in (RealNumbers(), ComplexNumbers()):
-            raise ValueError('cannot create complex space for field {}.'
-                             ''.format(self.field))
-        if out_dtype is None:
-            if self._complex_space is None:  # real space only
-                if self.out_dtype is None:
-                    out_dtype = None
-                else:
-                    out_dtype = _TYPE_MAP_R2C[self.out_dtype]
+        out_dtype = np.dtype(out_dtype)
+        if out_dtype == self.out_dtype:
+            return self
 
-                self._complex_space = FunctionSpace(
-                    self.domain, field=ComplexNumbers(), out_dtype=out_dtype)
-            return self._complex_space
-
-        else:
-            return FunctionSpace(self.domain, field=ComplexNumbers(),
-                                 out_dtype=out_dtype)
-
-    def as_real_space(self, out_dtype=None):
-        """Return a real version of this space.
-
-        Parameters
-        ----------
-        out_dtype : optional
-            Data type of the return value of a function in this space.
-            Can be given in any way `numpy.dtype` understands, e.g. as
-            string ('float32') or data type (`float`).
-            By default, the real data type corresponding to
-            ``self.out_dtype`` is taken.
-
-        Returns
-        -------
-        rspace : `FunctionSpace`
-            The real version of this space
-        """
-        if self.field not in (RealNumbers(), ComplexNumbers()):
-            raise ValueError('cannot create real space for field {}.'
-                             ''.format(self.field))
-
-        if out_dtype is None:
-            if self._real_space is None:  # complex space only
-                if self.out_dtype is None:
-                    out_dtype = self.out_dtype
-                else:
-                    out_dtype = _TYPE_MAP_C2R[self.out_dtype]
-
-                self._real_space = FunctionSpace(
-                    self.domain, field=RealNumbers(), out_dtype=out_dtype)
+        # Caching for real and complex versions (exact dtyoe mappings)
+        if out_dtype == self._real_out_dtype:
+            if self._real_space is None:
+                self._real_space = self._astype(out_dtype)
             return self._real_space
-
+        elif out_dtype == self._complex_out_dtype:
+            if self._complex_space is None:
+                self._complex_space = self._astype(out_dtype)
+            return self._complex_space
         else:
-            return FunctionSpace(self.domain, field=RealNumbers(),
-                                 out_dtype=out_dtype)
+            return self._astype(out_dtype)
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination of ``x1`` and ``x2``.
@@ -896,7 +867,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def power_call_out_of_place(x):
             """The power out-of-place evaluation function."""
-            if p == int(p) and p >= 1:
+            if p == 0:
+                return self.one()
+            elif p == int(p) and p >= 1:
                 return np.asarray(pow_posint(x_call_oop(x), int(p)),
                                   dtype=self.out_dtype)
             else:
@@ -904,6 +877,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         def power_call_in_place(x, out):
             """The power in-place evaluation function."""
+            if p == 0:
+                out.assign(self.one())
+
             x_call_ip(x, out)
             if p == int(p) and p >= 1:
                 return ipow_posint(out, int(p))
@@ -915,6 +891,34 @@ class FunctionSpace(FunctionSet, LinearSpace):
         out._call_in_place = power_call_in_place
         out._call_has_out = out._call_out_optional = True
         return out
+
+    def _realpart(self, x):
+        """Function returning the real part of a result."""
+        x_call_oop = x._call_out_of_place
+
+        def realpart_oop(x):
+            return np.asarray(x_call_oop(x), dtype=self.out_dtype).real
+
+        if is_real_dtype(self.out_dtype):
+            return x
+        else:
+            rdtype = _TYPE_MAP_C2R.get(self.out_dtype, None)
+            rspace = self.astype(rdtype)
+            return rspace.element(realpart_oop)
+
+    def _imagpart(self, x):
+        """Function returning the imaginary part of a result."""
+        x_call_oop = x._call_out_of_place
+
+        def imagpart_oop(x):
+            return np.asarray(x_call_oop(x), dtype=self.out_dtype).imag
+
+        if is_real_dtype(self.out_dtype):
+            return self.zero()
+        else:
+            rdtype = _TYPE_MAP_C2R.get(self.out_dtype, None)
+            rspace = self.astype(rdtype)
+            return rspace.element(imagpart_oop)
 
     @property
     def element_type(self):
@@ -1011,6 +1015,15 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
     def __ipow__(self, p):
         """`f.__ipow__(p) <==> f **= p`."""
         return self.space._scalar_power(self, p, out=self)
+
+    @property
+    def real(self):
+        """Function returning the real part of a result."""
+        return self.space._realpart(self)
+
+    @property
+    def imag(self):
+        return self.space._imagpart(self)
 
 
 if __name__ == '__main__':

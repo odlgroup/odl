@@ -421,17 +421,15 @@ def test_dist(exponent):
         assert almost_equal(x.dist(y), correct_dist)
 
 
-def test_as_real_complex():
+def test_astype():
     # Complex not implemented
     rn = CudaRn(3, weight=1.5)
-    assert rn.as_real_space() == rn
+    rn_d = CudaRn(3, weight=1.5, dtype='float64')
+    assert rn.astype('float32') == rn
+    assert rn.astype('float64') == rn_d
 
     with pytest.raises(TypeError):
-        rn.as_complex_space()
-
-    rn_single = CudaRn(3, weight=1.5, dtype='float32')
-    assert rn_single.as_real_space() == rn_single
-    assert rn.as_real_space(dtype='float32') == rn_single
+        rn.astype(complex)
 
 
 def _test_lincomb(fn, a, b):

@@ -1103,7 +1103,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x
         Cn(3).element([(10+1j), (6+0j), (4-2j)])
         """
-        rn = Rn(self.space.size, self.space.real_dtype)
+        rn = Rn(self.space.size, self.space._real_dtype)
         return rn.element(self.data.real)
 
     @real.setter
@@ -1161,7 +1161,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x
         Cn(3).element([(5+2j), (3+0j), (2-4j)])
         """
-        rn = Rn(self.space.size, self.space.real_dtype)
+        rn = Rn(self.space.size, self.space._real_dtype)
         return rn.element(self.data.imag)
 
     @imag.setter
