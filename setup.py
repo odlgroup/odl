@@ -29,7 +29,7 @@ from setuptools.command.test import test as TestCommand
 import os
 import sys
 
-__version__ = '0.9b1'
+__version__ = '0.1.0'
 
 if os.environ.get('READTHEDOCS', None) == 'True':
     # Mock requires in conf.py
@@ -65,7 +65,7 @@ class PyTest(TestCommand):
 setup(name='odl',
       version=__version__,
       author='ODL development group',
-      author_email='kohr@kth.se, jonasadl@kth.se',
+      author_email='odl@math.kth.se',
       url='https://github.com/odlgroup/odl',
       description='Operator Discretization Library',
       license='GPLv3',
