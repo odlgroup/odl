@@ -249,12 +249,12 @@ class TensorGrid(Set):
         Parameters
         ----------
         kwargs
-            For duck-typing with `numpy.min`
+            For duck-typing with `numpy.amin`
 
         See also
         --------
         max
-        IntervalProd.min
+        odl.set.domain.IntervalProd.min
 
         Examples
         --------
@@ -281,12 +281,12 @@ class TensorGrid(Set):
         Parameters
         ----------
         kwargs
-            For duck-typing with `numpy.max`
+            For duck-typing with `numpy.amax`
 
         See also
         --------
         min
-        IntervalProd.max
+        odl.set.domain.IntervalProd.max
 
         Examples
         --------

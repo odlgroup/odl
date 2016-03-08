@@ -46,13 +46,14 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     First order primal-dual hybrid-gradient method for non-smooth convex
     optimization problems with known saddle-point structure. The
-    primal formulation of the general problem is
+    primal formulation of the general problem is::
 
         min_{x in X} F(K x) + G(x)
 
-    where X and Y are finite-dimensional Hilbert spaces, K is a linear
-    map K : X -> Y.  and G : X -> [0, +infinity] and F : Y -> [0,
-    +infinity] are proper, convex, lower-semicontinuous functionals.
+    where ``X`` and ``Y`` are finite-dimensional Hilbert spaces, ``K``
+    is a linear operator ``K : X -> Y``.  and ``G : X -> [0, +inf]``
+    and ``F : Y -> [0, +inf]`` are proper, convex, lower-semicontinuous
+    functionals.
 
     The Chambolle-Pock algorithm basically consists of alternating a
     gradient ascent in the dual variable y and a gradient descent in the
@@ -66,7 +67,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         A (product space) operator between Hilbert spaces with domain X
         and range Y
     x : element in the domain of ``op``
-        Starting point of the iteration with x in X
+        Starting point of the iteration
     tau : positive `float`
         Step size parameter for the update of the primal variable x.
         Controls the extent to which ``proximal_primal`` maps points
@@ -114,7 +115,8 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     For references on the Chambolle-Pock algorithm see [CP2011a]_ and
     [CP2011b]_.
 
-    This implementation of the CP algorithm is along the lines of [Sid+2012]_.
+    This implementation of the CP algorithm is along the lines of
+    [Sid+2012]_.
 
     For more on convex analysis including convex conjugates and
     resolvent operators see [Roc1970]_.
@@ -123,17 +125,17 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     References
     ----------
-    .. [CP2011a] `Chambolle, Antonin and Pock, Thomas. *A First-Order
+    .. [CP2011a] Chambolle, Antonin and Pock, Thomas. *A First-Order
        Primal-Dual Algorithm for Convex Problems with Applications to
        Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011),
        pp 120-145.
 
-    .. [CP2011b] `Chambolle, Antonin and Pock, Thomas. *Diagonal
+    .. [CP2011b] Chambolle, Antonin and Pock, Thomas. *Diagonal
        preconditioning for first order primal-dual algorithms in convex
        optimization*. 2011 IEEE International Conference on Computer Vision
        (ICCV), 2011, pp 1762-1769.
 
-    .. [Sid+2012] `Sidky, Emil Y, Jorgensen, Jakob H, and Pan, Xiaochuan.
+    .. [Sid+2012] Sidky, Emil Y, Jorgensen, Jakob H, and Pan, Xiaochuan.
        *Convex optimization problem prototyping for image reconstruction in
        computed tomography with the Chambolle-Pock algorithm*. Physics in
        Medicine and Biology, 57 (2012), pp 3065-3091.

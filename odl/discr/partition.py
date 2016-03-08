@@ -137,7 +137,7 @@ class RectPartition(object):
 
         See also
         --------
-        IntervalProd.min
+        odl.IntervalProd.min
         """
         return self.set.min()
 
@@ -146,7 +146,7 @@ class RectPartition(object):
 
         See also
         --------
-        IntervalProd.max
+        odl.IntervalProd.max
         """
         return self.set.max()
 
@@ -551,8 +551,6 @@ def uniform_partition(begin, end, num_nodes, nodes_on_bdry=False):
     uniform_partition_fromintv : partition an existing set
     uniform_partition_fromgrid : use an existing grid as basis
 
-    Examples
-    --------
     Examples
     --------
     By default, no grid points are placed on the boundary:

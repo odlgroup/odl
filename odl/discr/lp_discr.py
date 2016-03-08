@@ -669,7 +669,8 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_fromspace : uniform Lp discretization from an existing
         function space
-    uniform_partition : partition of the function domain
+    odl.discr.partition.uniform_partition :
+        partition of the function domain
     """
     if not isinstance(partition, RectPartition):
         raise TypeError('partition {!r} is not a RectPartition instance.'
