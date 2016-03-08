@@ -21,7 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from future.builtins import str, super
+from builtins import str, super
 
 # External
 import numpy as np
