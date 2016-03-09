@@ -32,7 +32,8 @@ from numbers import Integral
 from odl.discr.discretization import (
     Discretization, DiscretizationVector, dspace_type)
 from odl.discr.discr_mappings import (
-    PointCollocation, NearestInterpolation, LinearInterpolation)
+    PointCollocation, NearestInterpolation, LinearInterpolation,
+    PerAxisInterpolation)
 from odl.discr.partition import RectPartition, uniform_partition_fromintv
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
@@ -73,8 +74,10 @@ class DiscreteLp(Discretization):
             The parameter :math:`p` in :math:`L^p`. If the exponent is
             not equal to the default 2.0, the space has no inner
             product.
-        interp : `str`, optional
+        interp : `str` or `sequence` of `str`, optional
             The interpolation type to be used for discretization.
+            A sequence is interpreted as interpolation scheme per
+            axis.
 
             'nearest' : use nearest-neighbor interpolation (default)
 
@@ -99,10 +102,23 @@ class DiscreteLp(Discretization):
             raise ValueError('Partition {} is not a subset of the function '
                              'domain {}'.format(partition, fspace.domain))
 
-        self._interp = str(interp).lower()
-        if self.interp not in _SUPPORTED_INTERP:
-            raise ValueError("'{}' is not among the supported interpolation "
-                             "types {}.".format(interp, _SUPPORTED_INTERP))
+        try:
+            # Got single string
+            interp, interp_in = str(interp + '').lower(), interp
+            if interp not in _SUPPORTED_INTERP:
+                raise ValueError("interpolation type '{}' not understood."
+                                 "".format(interp_in))
+            self._interp = [interp] * partition.ndim
+        except TypeError:
+            # Got sequence of strings
+            if len(interp) != partition.ndim:
+                raise ValueError('expected {} (ndim) entries in interp, '
+                                 'got {}.'.format(partition.ndim, len(interp)))
+
+            self._interp = [str(s).lower() for s in interp]
+            if any(s not in _SUPPORTED_INTERP for s in self._interp):
+                raise ValueError('interp sequence {} contains illegal '
+                                 'values.'.format(interp))
 
         order = str(kwargs.pop('order', 'C'))
         if str(order).upper() not in ('C', 'F'):
@@ -113,15 +129,15 @@ class DiscreteLp(Discretization):
         self._partition = partition
         restriction = PointCollocation(fspace, self.partition, dspace,
                                        order=self.order)
-        if self.interp == 'nearest':
+        if all(s == 'nearest' for s in self.interp):
             extension = NearestInterpolation(fspace, self.partition, dspace,
                                              order=self.order)
-        elif self.interp == 'linear':
+        elif all(s == 'linear' for s in self.interp):
             extension = LinearInterpolation(fspace, self.partition, dspace,
                                             order=self.order)
         else:
-            # Should not happen
-            raise RuntimeError
+            extension = PerAxisInterpolation(
+                fspace, self.partition, dspace, self.interp, order=self.order)
 
         Discretization.__init__(self, fspace, dspace, restriction, extension)
         self._exponent = float(exponent)
@@ -313,7 +329,7 @@ class DiscreteLp(Discretization):
                 arg_fstr += ', exponent={exponent}'
             if self.dtype != default_dtype:
                 arg_fstr += ', dtype={dtype}'
-            if self.interp != 'nearest':
+            if not all(s == 'nearest' for s in self.interp):
                 arg_fstr += ', interp={interp!r}'
             if impl != 'numpy':
                 arg_fstr += ', impl={impl!r}'
@@ -624,12 +640,13 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     exponent : positive `float`, optional
         The parameter ``p`` in ``L^p``. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str`, optional
+    interp : `str` or `sequence` of `str`, optional
         Interpolation type to be used for discretization.
+        A sequence is interpreted as interpolation scheme per axis.
 
-            'nearest' : use nearest-neighbor interpolation (default)
+            'nearest' : use nearest-neighbor interpolation
 
-            'linear' : use linear interpolation (not implemented)
+            'linear' : use linear interpolation
 
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
@@ -731,12 +748,14 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     exponent : positive `float`, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str`, optional
+    interp : `str` or `sequence` of `str`, optional
         Interpolation type to be used for discretization.
+        A sequence is interpreted as interpolation scheme per axis.
 
-            'nearest' : use nearest-neighbor interpolation (default)
+            'nearest' : use nearest-neighbor interpolation
 
-            'linear' : use linear interpolation (not implemented)
+            'linear' : use linear interpolation
+
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays
 
@@ -825,12 +844,13 @@ def uniform_discr(min_corner, max_corner, nsamples,
     exponent : positive `float`, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str`, optional
+    interp : `str` or `sequence` of `str`, optional
         Interpolation type to be used for discretization.
+        A sequence is interpreted as interpolation scheme per axis.
 
-            'nearest' : use nearest-neighbor interpolation (default)
+            'nearest' : use nearest-neighbor interpolation
 
-            'linear' : use linear interpolation (not implemented)
+            'linear' : use linear interpolation
 
     impl : {'numpy', 'cuda'}
         Implementation of the data storage arrays

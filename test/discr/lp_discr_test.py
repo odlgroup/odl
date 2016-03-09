@@ -80,12 +80,19 @@ def test_init(exponent):
     part = odl.uniform_partition_fromintv(space.domain, 10)
     rn = odl.Rn(10, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent)
+    odl.DiscreteLp(space, part, rn, exponent=exponent, interp='linear')
 
     # Normal discretization of unit interval with complex
     complex_space = odl.FunctionSpace(odl.Interval(0, 1),
                                       field=odl.ComplexNumbers())
     cn = odl.Cn(10, exponent=exponent)
     odl.DiscreteLp(complex_space, part, cn, exponent=exponent)
+
+    space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    part = odl.uniform_partition_fromintv(space.domain, (10, 10))
+    rn = odl.Rn(100, exponent=exponent)
+    odl.DiscreteLp(space, part, rn, exponent=exponent,
+                   interp=['nearest', 'linear'])
 
     # Real space should not work with complex
     with pytest.raises(ValueError):
@@ -196,6 +203,8 @@ def test_factory_dtypes_cuda():
 def test_factory_nd(exponent):
     # 2d
     odl.uniform_discr([0, 0], [1, 1], [5, 5], exponent=exponent)
+    odl.uniform_discr([0, 0], [1, 1], [5, 5], exponent=exponent,
+                      interp=['linear', 'nearest'])
 
     # 3d
     odl.uniform_discr([0, 0, 0], [1, 1, 1], [5, 5, 5], exponent=exponent)
@@ -288,6 +297,27 @@ def test_zero():
     assert isinstance(vec, odl.DiscreteLpVector)
     assert isinstance(vec.ntuple, odl.FnVector)
     assert all_equal(vec, [0, 0, 0])
+
+
+def test_interp():
+    discr = odl.uniform_discr(0, 1, 3, interp='nearest')
+    assert isinstance(discr.extension, odl.NearestInterpolation)
+
+    discr = odl.uniform_discr(0, 1, 3, interp='linear')
+    assert isinstance(discr.extension, odl.LinearInterpolation)
+
+    discr = odl.uniform_discr([0, 0], [1, 1], (3, 3),
+                              interp=['nearest', 'linear'])
+    assert isinstance(discr.extension, odl.PerAxisInterpolation)
+
+    with pytest.raises(ValueError):
+        # Too many entries in interp
+        discr = odl.uniform_discr(0, 1, 3, interp=['nearest', 'linear'])
+
+    with pytest.raises(ValueError):
+        # Too few entries in interp
+        discr = odl.uniform_discr([0] * 3, [1] * 3, (3,) * 3,
+                                  interp=['nearest', 'linear'])
 
 
 def test_getitem():
