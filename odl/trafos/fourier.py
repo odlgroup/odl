@@ -1234,7 +1234,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
     axes : sequence of `int`
         Dimensions along which to take the transform. The sequence must
         have the same length as ``shifts``.
-    interp : `str`
+    interp : `str` or `sequence` of `str`
         Interpolation scheme used in the real-space
     sign : {'-', '+'}, optional
         Sign of the complex exponent
@@ -1277,8 +1277,14 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
     if op not in ('multiply', 'divide'):
         raise ValueError("kernel op '{}' not understood.".format(op_in))
 
+    # Make a list from interp if that's not the case already
+    try:
+        interp = [str(interp + '').lower()] * arr.ndim
+    except TypeError:
+        pass
+
     onedim_arrs = []
-    for ax, shift in zip(axes, shift_list):
+    for ax, shift, intp in zip(axes, shift_list, interp):
         x = real_grid.min_pt[ax]
         xi = recip_grid.coord_vectors[ax]
 
@@ -1319,9 +1325,9 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
         stride = real_grid.stride[ax]
 
         if op == 'multiply':
-            onedim_arr *= stride * _interp_kernel_ft(freqs, interp)
+            onedim_arr *= stride * _interp_kernel_ft(freqs, intp)
         else:
-            onedim_arr /= stride * _interp_kernel_ft(freqs, interp)
+            onedim_arr /= stride * _interp_kernel_ft(freqs, intp)
 
         onedim_arrs.append(onedim_arr.astype(out.dtype, copy=False))
 
