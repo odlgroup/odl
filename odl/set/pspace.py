@@ -123,6 +123,9 @@ class ProductSpace(LinearSpace):
 
             Default: ``np.linalg.norm(x, ord=ord)``.
 
+        field : `Field`, optional
+            The field that should be used. Default: spaces[0].field
+
         Returns
         -------
         prodspace : `ProductSpace`
@@ -199,7 +202,13 @@ class ProductSpace(LinearSpace):
 
         self._spaces = tuple(spaces)
         self._size = len(spaces)
-        super().__init__(spaces[0].field)
+        field = kwargs.pop('field', None)
+        if field is None:
+            if self.size == 0:
+                raise ValueError('No spaces provided, cannot deduce field')
+            field = self.spaces[0].field
+
+        super().__init__(field)
 
     @property
     def size(self):
@@ -422,20 +431,26 @@ class ProductSpace(LinearSpace):
         if isinstance(indices, Integral):
             return self.spaces[indices]
         elif isinstance(indices, slice):
-            return ProductSpace(*self.spaces[indices])
+            return ProductSpace(*self.spaces[indices],
+                                field=self.field)
         else:
-            return ProductSpace(*[self.spaces[i] for i in indices])
+            return ProductSpace(*[self.spaces[i] for i in indices],
+                                field=self.field)
 
     def __str__(self):
         """Return ``str(self)``."""
-        if all(self.spaces[0] == space for space in self.spaces):
+        if self.size == 0:
+            return '{}'
+        elif all(self.spaces[0] == space for space in self.spaces):
             return '{' + str(self.spaces[0]) + '}^' + str(self.size)
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if all(self.spaces[0] == space for space in self.spaces):
+        if self.size == 0:
+            return 'ProductSpace(field={})'.format(self.field)
+        elif all(self.spaces[0] == space for space in self.spaces):
             return 'ProductSpace({!r}, {})'.format(self.spaces[0],
                                                    self.size)
         else:
