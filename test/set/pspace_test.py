@@ -30,6 +30,19 @@ import odl
 from odl.util.testutils import all_equal, all_almost_equal, almost_equal
 
 
+def test_emptyproduct():
+    with pytest.raises(ValueError):
+        odl.ProductSpace()
+
+    reals = odl.RealNumbers()
+    spc = odl.ProductSpace(field=reals)
+    assert spc.field == reals
+    assert spc.size == 0
+
+    with pytest.raises(IndexError):
+        spc[0]
+
+
 def test_RxR():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, H)
@@ -266,6 +279,8 @@ def test_getitem_slice():
     assert H[:2] == odl.ProductSpace(r1, r2)
     assert H[:2][0] is r1
     assert H[:2][1] is r2
+
+    assert H[3:] == odl.ProductSpace(field=r1.field)
 
 
 def test_getitem_fancy():
