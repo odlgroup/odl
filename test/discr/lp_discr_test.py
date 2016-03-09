@@ -80,12 +80,19 @@ def test_init(exponent):
     part = odl.uniform_partition_fromintv(space.domain, 10)
     rn = odl.Rn(10, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent)
+    odl.DiscreteLp(space, part, rn, exponent=exponent, interp='linear')
 
     # Normal discretization of unit interval with complex
     complex_space = odl.FunctionSpace(odl.Interval(0, 1),
                                       field=odl.ComplexNumbers())
     cn = odl.Cn(10, exponent=exponent)
     odl.DiscreteLp(complex_space, part, cn, exponent=exponent)
+
+    space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    part = odl.uniform_partition_fromintv(space.domain, (10, 10))
+    rn = odl.Rn(100, exponent=exponent)
+    odl.DiscreteLp(space, part, rn, exponent=exponent,
+                   interp=['nearest', 'linear'])
 
     # Real space should not work with complex
     with pytest.raises(ValueError):
@@ -196,6 +203,8 @@ def test_factory_dtypes_cuda():
 def test_factory_nd(exponent):
     # 2d
     odl.uniform_discr([0, 0], [1, 1], [5, 5], exponent=exponent)
+    odl.uniform_discr([0, 0], [1, 1], [5, 5], exponent=exponent,
+                      interp=['linear', 'nearest'])
 
     # 3d
     odl.uniform_discr([0, 0, 0], [1, 1, 1], [5, 5, 5], exponent=exponent)
