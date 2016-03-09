@@ -623,11 +623,14 @@ class ProductSpaceVector(LinearSpaceVector):
 
         return '{!r}.element({})'.format(self.space, inner_str)
 
-    def show(self, indices=None, **kwargs):
+    def show(self, title=None, indices=None, **kwargs):
         """Display the parts of this vector graphically
 
         Parameters
         ----------
+        title : `str`
+            Title of the figures
+
         indices : index expression, optional
             Indices can refer to parts of a `ProductSpaceVector` and slices
             in the parts in the following way:
@@ -662,7 +665,8 @@ class ProductSpaceVector(LinearSpaceVector):
         odl.util.graphics.show_discrete_data :
             Underlying implementation
         """
-        title = kwargs.pop('title', 'ProductSpaceVector')
+        if title is None:
+            title = 'ProductSpaceVector'
 
         if indices is None:
             if len(self) < 5:
