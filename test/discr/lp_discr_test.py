@@ -299,6 +299,27 @@ def test_zero():
     assert all_equal(vec, [0, 0, 0])
 
 
+def test_interp():
+    discr = odl.uniform_discr(0, 1, 3, interp='nearest')
+    assert isinstance(discr.extension, odl.NearestInterpolation)
+
+    discr = odl.uniform_discr(0, 1, 3, interp='linear')
+    assert isinstance(discr.extension, odl.LinearInterpolation)
+
+    discr = odl.uniform_discr([0, 0], [1, 1], (3, 3),
+                              interp=['nearest', 'linear'])
+    assert isinstance(discr.extension, odl.PerAxisInterpolation)
+
+    with pytest.raises(ValueError):
+        # Too many entries in interp
+        discr = odl.uniform_discr(0, 1, 3, interp=['nearest', 'linear'])
+
+    with pytest.raises(ValueError):
+        # Too few entries in interp
+        discr = odl.uniform_discr([0] * 3, [1] * 3, (3,) * 3,
+                                  interp=['nearest', 'linear'])
+
+
 def test_getitem():
     discr = odl.uniform_discr(0, 1, 3)
     vec = discr.element([1, 2, 3])
