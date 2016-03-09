@@ -4,8 +4,8 @@
 Glossary
 ########
 
-.. _numpy vectorization: http://docs.scipy.org/doc/numpy-1.10.1/reference/generated/numpy.vectorize.html
-.. _numpy dtype: http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.dtype.html
+.. _numpy vectorization: http://docs.scipy.org/doc/numpy/reference/generated/numpy.vectorize.html
+.. _numpy dtype: http://docs.scipy.org/doc/numpy/reference/generated/numpy.dtype.html
 
 .. glossary::
 
