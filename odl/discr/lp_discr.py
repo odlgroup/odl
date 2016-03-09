@@ -478,6 +478,7 @@ class DiscreteLpVector(DiscretizationVector):
         """Axis ordering for array flattening."""
         return self.space.order
 
+    @property
     def real(self):
         """Real part of this element."""
         rspace = self.space.astype(self.space._real_dtype)
