@@ -39,3 +39,6 @@ __all__ += fanbeam.__all__
 from . import conebeam
 from .conebeam import *
 __all__ += conebeam.__all__
+
+from .spect import *
+__all__ += spect.__all__
