@@ -12,7 +12,7 @@ Glossary
     array-like
         Any data structure which can be converted into a `numpy.ndarray` by the
         `numpy.array` constructor. Includes all `NtuplesBaseVector` based classes.
-        
+
     dtype
         Short for data type, indicates the way data is represented internally.
         For example ``float32`` means 32-bit floating point numbers.
@@ -61,8 +61,8 @@ Glossary
         Mathematical notion for a mapping between arbitrary vector spaces. This includes the important
         special case of an operator taking a (discretized) function as an input and returning another
         function. For example, the Fourier Transform maps a function to its transformed version.
-        Operators of this type are the most prominent use case in ODL. See operators_in_depth_ for
-        details on their implementation.
+        Operators of this type are the most prominent use case in ODL. See
+        :ref:`the in-depth guide on operators <operators_in_depth>` for details on their implementation.
 
     order
         Ordering of the axes in a multi-dimensional array with linear (one-dimensional) storage.
