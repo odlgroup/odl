@@ -128,7 +128,7 @@ setup(
 
     ],
 
-    keywords='development mathematics prototyping',
+    keywords='development mathematics prototyping imaging tomography',
 
     packages=find_packages(exclude=['*test*']),
     package_dir={'odl': 'odl'},
@@ -137,9 +137,9 @@ setup(
     tests_require=['pytest'],
     extras_require={
         'testing': test_requires,
-        'wavelets': 'Pywavelets',
-        'fft': 'pyfftw',
         'show': 'matplotlib',
+        'fft': 'pyfftw',
+        'wavelets': 'Pywavelets',
         'all': ['Pywavelets', 'pyfftw', 'matplotlib']
     },
 
