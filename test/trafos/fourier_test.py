@@ -30,7 +30,6 @@ import pytest
 
 # ODL imports
 import odl
-from odl.discr.lp_discr import conj_exponent
 from odl.space.base_ntuples import _TYPE_MAP_R2C
 from odl.trafos.fourier import (
     reciprocal, inverse_reciprocal, dft_preprocess_data, dft_postprocess_data,
@@ -38,7 +37,7 @@ from odl.trafos.fourier import (
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
     FourierTransform)
 from odl.util.testutils import all_almost_equal, all_equal, skip_if_no_pyfftw
-from odl.util.utility import is_real_dtype
+from odl.util.utility import is_real_dtype, conj_exponent
 
 
 exp_params = [2.0, 1.0, float('inf'), 1.5]

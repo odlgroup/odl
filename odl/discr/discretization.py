@@ -29,11 +29,11 @@ from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space.ntuples import Ntuples, Fn, Rn, Cn
+from odl.space.ntuples import Ntuples, Fn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
-from odl.space.cu_ntuples import CudaNtuples, CudaFn, CudaRn
+from odl.space.cu_ntuples import CudaNtuples, CudaFn
 CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)

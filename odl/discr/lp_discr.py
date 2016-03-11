@@ -37,7 +37,6 @@ from odl.discr.discr_mappings import (
 from odl.discr.partition import RectPartition, uniform_partition_fromintv
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
-from odl.space.base_ntuples import _TYPE_MAP_R2C, _TYPE_MAP_C2R
 from odl.space.cu_ntuples import CUDA_AVAILABLE, CudaFn
 from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
@@ -1109,30 +1108,6 @@ def _scaling_func_list(bdry_fracs, exponent=1.0):
 
         func_list.append(func_list_entry)
     return func_list
-
-
-def conj_exponent(exp):
-    """The conjugate exponent p / (p-1).
-
-    Parameters
-    ----------
-    exp : positive `float` or inf
-        Exponent for which to calculate the conjugate. Must be
-        at least 1.0.
-
-    Returns
-    -------
-    conj : positive `float` or inf
-        Conjugate exponent. For ``exp=1``, return ``float('inf')``,
-        for ``exp=float('inf')`` return 1. In all other cases, return
-        ``exp / (exp - 1)``.
-    """
-    if exp == 1.0:
-        return float('inf')
-    elif exp == float('inf'):
-        return 1.0  # This is not strictly correct in math, but anyway
-    else:
-        return exp / (exp - 1.0)
 
 
 if __name__ == '__main__':

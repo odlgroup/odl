@@ -37,7 +37,7 @@ except ImportError:
 # Internal
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import (
-    DiscreteLp, dspace_type, conj_exponent, discr_sequence_space)
+    DiscreteLp, dspace_type, discr_sequence_space)
 from odl.discr.partition import uniform_partition_fromgrid
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
@@ -48,7 +48,7 @@ from odl.space.fspace import FunctionSpace
 from odl.util.numerics import fast_1d_tensor_mult
 from odl.util.utility import (
     is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype, dtype_repr)
+    is_complex_floating_dtype, dtype_repr, conj_exponent)
 
 
 __all__ = ('FourierTransform', 'FourierTransformInverse',

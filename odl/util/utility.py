@@ -242,6 +242,30 @@ def is_complex_floating_dtype(dtype):
     return np.issubsctype(dtype, np.complexfloating)
 
 
+def conj_exponent(exp):
+    """The conjugate exponent p / (p-1).
+
+    Parameters
+    ----------
+    exp : positive `float` or inf
+        Exponent for which to calculate the conjugate. Must be
+        at least 1.0.
+
+    Returns
+    -------
+    conj : positive `float` or inf
+        Conjugate exponent. For ``exp=1``, return ``float('inf')``,
+        for ``exp=float('inf')`` return 1. In all other cases, return
+        ``exp / (exp - 1)``.
+    """
+    if exp == 1.0:
+        return float('inf')
+    elif exp == float('inf'):
+        return 1.0  # This is not strictly correct in math, but anyway
+    else:
+        return exp / (exp - 1.0)
+
+
 def preload_first_arg(instance, mode):
     """Decorator to preload the first argument of a call method.
 
