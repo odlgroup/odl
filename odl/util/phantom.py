@@ -555,8 +555,8 @@ def cuboid(discr_space, begin, end):
     phantom : `LinearSpaceVector`
         Returns an element in ``discr_space``
 
-    Example
-    -------
+    Examples
+    --------
     >>> import odl
     >>> space = odl.uniform_discr(0, 1, 6, dtype='float32')
     >>> print(cuboid(space, 0.5, 1))
