@@ -115,10 +115,10 @@ Now you can check that everything was installed properly by running
     py.test
 
 Compiled extensions
-===================
+-------------------
 
-CUDA backend for linear arrays
-------------------------------
+#### CUDA backend for linear arrays
+
 If you also wish to use the (optional) CUDA extensions you need to run
 
     git submodule update --init --recursive
@@ -126,20 +126,20 @@ If you also wish to use the (optional) CUDA extensions you need to run
 
 From here follow the instructions in [odlpp](https://github.com/odlgroup/odlpp) to build and install it.
 
-ASTRA for X-ray tomography
---------------------------
+#### ASTRA for X-ray tomography
+
 To calculate forward and backward projections for image reconstruction in X-ray tomography, install the
 [ASTRA tomography toolbox](https://github.com/astra-toolbox/astra-toolbox). ASTRA projectors are fully supported
 in ODL.
 
-STIR for emission tomography
-----------------------------
+#### STIR for emission tomography
+
 For applications in emission tomography, i.e. PET or SPECT, install [STIR](https://github.com/UCL/STIR). Support
 for STIR is currently very limited.
 
 
 List of optional dependencies
-=============================
+-----------------------------
 
 - [matplotlib](http://matplotlib.org/) for plotting.
 - [pyFFTW](https://pypi.python.org/pypi/pyFFTW) for fast Fourier transforms via FFTW.
@@ -151,7 +151,7 @@ List of optional dependencies
 - [coverage](https://pypi.python.org/pypi/coverage/) >= 4.0.0 for test coverage report
 
 Compatibility
-=============
+-------------
 The code is compatible to Python 2 and 3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
 
 Current status (2016-03-11) is
@@ -168,13 +168,13 @@ Current status (2016-03-11) is
 (1) The GCC 5.x compiler is not compatible with current CUDA (7.5)
 
 License
-=======
+-------
 GPL Version 3 or later. See LICENSE file.
 
 If you would like to get the code under a different license, please contact the developers.
 
 ODL development group
-=====================
+---------------------
 
 ##### Main developers
 
@@ -190,6 +190,6 @@ ODL development group
 
 
 Funding
-=======
+-------
 
 Development of ODL is financially supported by the Swedish Foundation for Strategic Research as part of the project "Low complexity image reconstruction in medical imaging".
