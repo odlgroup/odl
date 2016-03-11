@@ -62,7 +62,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 long_description = """
-Operator Discretization Library (ODL) is a python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at [KTH, Royal Institute of Technology](https://www.kth.se/en/sci/institutioner/math).
+Operator Discretization Library (ODL) is a python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at KTH, Royal Institute of Technology (https://www.kth.se/en/sci/institutioner/math).
 
 The main intent of ODL is to enable mathematicians and applied scientists to use different numerical methods on real-world problems without having to implement all necessary parts from the bottom up.
 This is reached by an `Operator` structure which encapsulates all application-specific parts, and a high-level formulation of solvers which usually expect an operator, data and additional parameters.
@@ -70,23 +70,20 @@ The main advantages of this approach is that
 
 1. Different problems can be solved with the same method (e.g. TV regularization) by simply switching operator and data.
 2. The same problem can be solved with different methods by simply calling into different solvers.
-3. Solvers and application-specific code needs to be written only once, in one place, and can be tested individually.
+3. Solvers and application-specific code need to be written only once, in one place, and can be tested individually.
 4. Adding new applications or solution methods becomes a much easier task.
 
 
 
 Features
---------
+========
 
-- Efficient and well-tested data containers based on
-  [NumPy](https://github.com/numpy/numpy) (default) or CUDA (optional)
-- Objects to represent mathematical notions like vector spaces and operators including
-  properties as expected from mathematics (inner product, norm, operator composition, ...)
-- Standardized tests to validate implementations against expected behavior of the
-  corresponding mathematical object, e.g. if a user-defined norm satisfies
-  `norm(x + y) <= norm(x) + norm(y)` for a number of input vectors `x` and `y`
-- Convenience functionality for operators like arithmetic, composition, operator matrices etc.,
-  which satisfy the known mathematical rules
+- Efficient and well-tested data containers based on Numpy (default) or CUDA (optional)
+- Objects to represent mathematical notions like vector spaces and operators including properties as expected from mathematics (inner product, norm, operator composition, ...)
+- Convenience functionality for operators like arithmetic, composition, operator matrices etc., which satisfy the known mathematical rules.
+- Out-of-the-box support for frequently used operators like scaling, partial derivative, gradient, Fourier transform etc.
+- Support for tomographic imaging with a unified geometry representation and bindings to external libraries for efficient computation of projections and back-projections.
+- Standardized tests to validate implementations against expected behavior of the corresponding mathematical object, e.g. if a user-defined norm satisfies `norm(x + y) <= norm(x) + norm(y)` for a number of input vectors `x` and `y`.
 """
 
 setup(
@@ -128,7 +125,7 @@ setup(
 
     ],
 
-    keywords='development mathematics prototyping imaging tomography',
+    keywords='research development mathematics prototyping imaging tomography',
 
     packages=find_packages(exclude=['*test*']),
     package_dir={'odl': 'odl'},
