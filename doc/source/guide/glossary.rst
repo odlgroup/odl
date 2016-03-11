@@ -53,9 +53,21 @@ Glossary
         since no new memory is allocated and no data is copied.
 
     meshgrid
-        Sequence of arrays defining a tensor grid by all possible combinations of entries, one from each
+        Tuple of arrays defining a tensor grid by all possible combinations of entries, one from each
         array. In 2 dimensions, for example, the arrays ``[1, 2]`` and ``[-1, 0, 1]`` define the grid
         points ``(1, -1), (1, 0), (1, 1), (2, -1), (2, 0), (2, 1)``.
+
+    operator
+        Mathematical notion for a mapping between arbitrary vector spaces. This includes the important
+        special case of an operator taking a (discretized) function as an input and returning another
+        function. For example, the Fourier Transform maps a function to its transformed version.
+        Operators of this type are the most prominent use case in ODL. See operators_in_depth_ for
+        details on their implementation.
+
+    order
+        Ordering of the axes in a multi-dimensional array with linear (one-dimensional) storage.
+        For C ordering (``'C'``), the last axis has smallest stride (varies fastest), and the first
+        axis has largest stride (varies slowest). Fortran ordering (``'F'``) is the exact opposite.
 
     out-of-place evaluation
         Operator evaluation method which creates a new data container to store

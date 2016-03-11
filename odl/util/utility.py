@@ -242,146 +242,31 @@ def is_complex_floating_dtype(dtype):
     return np.issubsctype(dtype, np.complexfloating)
 
 
-def default_dtype(impl, field):
-    """Return the default data type of different implementations."""
-    from odl.set.sets import RealNumbers
-    if impl == 'numpy':
-        if field == RealNumbers():
-            dtype = np.dtype('float64')
-        else:
-            dtype = np.dtype('complex128')
-    elif impl == 'cuda':
-        if field == RealNumbers():
-            dtype = np.dtype('float32')
-        else:
-            raise NotImplementedError('complex data types not supported in '
-                                      'CUDA.')
-            # dtype = np.dtype('complex64')
-    else:
-        raise ValueError("'impl '{}' not understood.".format(impl))
-
-    return dtype
-
-
-def complex_space(space):
-    """Return the complex counterpart of a given space.
+def conj_exponent(exp):
+    """The conjugate exponent p / (p-1).
 
     Parameters
     ----------
-    space : `LinearSpace`
-        Template space to be converted into its complex counterpart.
-        If ``space`` is already a complex space, a copy of it is
-        returned. Supported types of spaces: `FunctionSpace`, `FnBase`,
-        `DiscreteLp`.
+    exp : positive `float` or inf
+        Exponent for which to calculate the conjugate. Must be
+        at least 1.0.
 
     Returns
     -------
-    cspace : `LinearSpace`
-        Space of the same type and all parameters equal except field
-        and data type (if applicable), which are mapped to their complex
-        counterparts.
-
-    Examples
-    --------
-    >>> from odl import uniform_discr
-    >>> rspace = uniform_discr(0, 1, 10, dtype='float32')
-    >>> cspace = complex_space(rspace)
-    >>> cspace
-    uniform_discr(0.0, 1.0, 10, dtype='complex64')
-    >>> rspace.one().norm() == cspace.one().norm()
-    True
-    >>> complex_space(cspace) == cspace
-    True
+    conj : positive `float` or inf
+        Conjugate exponent. For ``exp=1``, return ``float('inf')``,
+        for ``exp=float('inf')`` return 1. In all other cases, return
+        ``exp / (exp - 1)``.
     """
-    from odl.discr.lp_discr import DiscreteLp
-    from odl.set.sets import ComplexNumbers
-    from odl.space.base_ntuples import FnBase, _TYPE_MAP_R2C
-    from odl.space.fspace import FunctionSpace
-
-    if isinstance(space, FunctionSpace):
-        return FunctionSpace(space.domain, field=ComplexNumbers())
+    if exp == 1.0:
+        return float('inf')
+    elif exp == float('inf'):
+        return 1.0  # This is not strictly correct in math, but anyway
     else:
-        if is_real_floating_dtype(space.dtype):
-            complex_dtype = _TYPE_MAP_R2C[space.dtype]
-        elif is_complex_floating_dtype(space.dtype):
-            complex_dtype = space.dtype
-        else:
-            raise ValueError('data type {} is not a floating point type.'
-                             ''.format(space.dtype))
-
-    # DiscreteLp needs to come first since it inherits from FnBase
-    if isinstance(space, DiscreteLp):
-        return type(space)(complex_space(space.uspace), space.partition,
-                           dspace=complex_space(space.dspace),
-                           exponent=space.exponent, interp=space.interp,
-                           order=space.order)
-    elif isinstance(space, FnBase):
-        return type(space)(space.size, dtype=complex_dtype,
-                           weight=space._space_funcs)
-    else:
-        raise TypeError('space type {} not supported.'.format(type(space)))
+        return exp / (exp - 1.0)
 
 
-def real_space(space):
-    """Return the real counterpart of a given space.
-
-    Parameters
-    ----------
-    space : `LinearSpace`
-        Template space to be converted into its real counterpart.
-        If ``space`` is already a real space, a copy of it is returned.
-        Supported types of spaces: `FunctionSpace`, `FnBase`,
-        `DiscreteLp`.
-
-    Returns
-    -------
-    rspace : `LinearSpace`
-        Space of the same type and all parameters equal except field
-        and data type (if applicable), which are mapped to their real
-        counterparts.
-
-    Examples
-    --------
-    >>> from odl import uniform_discr
-    >>> cspace = uniform_discr(0, 1, 10, dtype='complex64')
-    >>> rspace = real_space(cspace)
-    >>> rspace
-    uniform_discr(0.0, 1.0, 10, dtype='float32')
-    >>> cspace.one().norm() == rspace.one().norm()
-    True
-    >>> real_space(rspace) == rspace
-    True
-    """
-    from odl.discr.lp_discr import DiscreteLp
-    from odl.set.sets import RealNumbers
-    from odl.space.base_ntuples import FnBase, _TYPE_MAP_C2R
-    from odl.space.fspace import FunctionSpace
-
-    if isinstance(space, FunctionSpace):
-        return FunctionSpace(space.domain, field=RealNumbers())
-    else:
-        if is_real_floating_dtype(space.dtype):
-            real_dtype = space.dtype
-        elif is_complex_floating_dtype(space.dtype):
-            real_dtype = _TYPE_MAP_C2R[space.dtype]
-        else:
-            raise ValueError('data type {} is not a floating point type.'
-                             ''.format(space.dtype))
-
-    # DiscreteLp needs to come first since it inherits from FnBase
-    if isinstance(space, DiscreteLp):
-        return type(space)(real_space(space.uspace), space.partition,
-                           dspace=real_space(space.dspace),
-                           exponent=space.exponent, interp=space.interp,
-                           order=space.order)
-    elif isinstance(space, FnBase):
-        return type(space)(space.size, dtype=real_dtype,
-                           weight=space._space_funcs)
-    else:
-        raise TypeError('space type {} not supported.'.format(type(space)))
-
-
-def preload_call_with(instance, mode):
+def preload_first_arg(instance, mode):
     """Decorator to preload the first argument of a call method.
 
     Parameters
@@ -413,8 +298,8 @@ def preload_call_with(instance, mode):
     >>> def f_ip(inst, out, x):
     ...     print(inst.__doc__)
     ...
-    >>> f_oop_new = preload_call_with(a, 'out-of-place')(f_oop)
-    >>> f_ip_new = preload_call_with(a, 'in-place')(f_ip)
+    >>> f_oop_new = preload_first_arg(a, 'out-of-place')(f_oop)
+    >>> f_ip_new = preload_first_arg(a, 'in-place')(f_ip)
     ...
     >>> f_oop_new(0)
     My name is A.
@@ -423,7 +308,7 @@ def preload_call_with(instance, mode):
 
     Decorate upon definition:
 
-    >>> @preload_call_with(a, 'out-of-place')
+    >>> @preload_first_arg(a, 'out-of-place')
     ... def set_x(obj, x):
     ...     '''Function to set x in ``obj`` to a given value.'''
     ...     obj.x = x
@@ -455,50 +340,6 @@ def preload_call_with(instance, mode):
             return ip_wrapper
         else:
             raise ValueError('bad mode {!r}.'.format(mode))
-
-    return decorator
-
-
-def preload_default_oop_call_with(vector):
-    """Decorator to bind the default out-of-place call to an instance.
-
-    Parameters
-    ----------
-    vector : `FunctionSetVector`
-        Vector with which the default call is preloaded. Its
-        `FunctionSetVector.space` determines the type of
-        implementation chosen for the vectorized evaluation. If
-        ``vector.space`` has a `LinearSpace.field` attribute, the
-        required output data type is inferred from it. Otherwise,
-        a "lazy" vectorization is performed (not implemented).
-
-    Notes
-    -----
-    Usually this decorator is used as as a function factory::
-
-        preload_default_oop_call_with(<vec>)(<call>)
-
-    """
-
-    def decorator(call):
-
-        from odl.set.sets import RealNumbers, ComplexNumbers
-
-        field = getattr(vector.space, 'field', None)
-        if field is None:
-            dtype = None
-        elif field == RealNumbers():
-            dtype = 'float64'
-        elif field == ComplexNumbers():
-            dtype = 'complex128'
-        else:
-            raise TypeError('cannot handle field {!r}.'.format(field))
-
-        @wraps(call)
-        def oop_wrapper(x, **kwargs):
-            return call(vector, dtype, x, **kwargs)
-
-        return oop_wrapper
 
     return decorator
 

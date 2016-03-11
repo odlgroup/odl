@@ -30,10 +30,10 @@ from numpy import ravel_multi_index, prod
 import sys
 from time import time
 
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'skip_if_no_cuda',
-           'skip_if_no_largescale', 'skip_if_no_benchmark',
-           'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
-           'skip_if_no_pywavelets')
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal',
+           'skip_if_no_cuda', 'skip_if_no_pywavelets', 'skip_if_no_pyfftw',
+           'skip_if_no_largescale',
+           'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
 
 
 def _places(a, b, default=None):
@@ -194,6 +194,10 @@ try:
         reason='Wavelet not available'
     )
 
+    skip_if_no_pyfftw = pytest.mark.skipif(
+        "not odl.trafos.PYFFTW_AVAILABLE",
+        reason='pyfftw not available')
+
     skip_if_no_largescale = pytest.mark.skipif(
         "not pytest.config.getoption('--largescale')",
         reason='Need --largescale option to run'
@@ -207,6 +211,7 @@ try:
 except ImportError:
     skip_if_no_cuda = _pass
     skip_if_no_pywavelets = _pass
+    skip_if_no_pyfftw = _pass
     skip_if_no_largescale = _pass
     skip_if_no_benchmark = _pass
 

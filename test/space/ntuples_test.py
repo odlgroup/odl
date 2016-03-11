@@ -39,11 +39,6 @@ from odl.space.ntuples import (
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 from odl.util.ufuncs import UFUNCS, REDUCTIONS
 
-# TODO: add tests for:
-# * inner, norm, dist as free functions
-# * Vector weighting
-# * Custom inner/norm/dist
-
 
 # Helpers to generate data
 
@@ -205,6 +200,29 @@ def test_init_space_funcs(exponent):
 
     for spc, weight in zip(spaces, weightings):
         assert spc._space_funcs == weight
+
+
+def test_astype():
+    rn = Rn(3, weight=1.5)
+    cn = Cn(3, weight=1.5)
+    rn_s = Rn(3, weight=1.5, dtype='float32')
+    cn_s = Cn(3, weight=1.5, dtype='complex64')
+
+    # Real
+    assert rn.astype('float32') == rn_s
+    assert rn.astype('float64') is rn
+    assert rn._real_space is rn
+    assert rn.astype('complex64') == cn_s
+    assert rn.astype('complex128') == cn
+    assert rn._complex_space == cn
+
+    # Complex
+    assert cn.astype('complex64') == cn_s
+    assert cn.astype('complex128') is cn
+    assert cn._complex_space is cn
+    assert cn.astype('float32') == rn_s
+    assert cn.astype('float64') == rn
+    assert cn._complex_space is cn
 
 
 def test_vector_class_init(fn):

@@ -62,7 +62,8 @@ def test_is_valid_input_array():
         assert not is_valid_input_array(arr, ndim=3)
 
     # Other input
-    invalid_input = [1, [[1, 2], [3, 4]], (5,)]
+    assert is_valid_input_array([[1, 2], [3, 4]], ndim=2)
+    invalid_input = [1, [[[1, 2], [3, 4]]], (5,)]
     for inp in invalid_input:
         assert not is_valid_input_array(inp, ndim=2)
 

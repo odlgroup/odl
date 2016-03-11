@@ -613,12 +613,9 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
         as::
 
             begin = x[0] - (x[1] - x[0]) / 2
-
-        or::
-
             end = x[-1] + (x[-1] - x[-2]) / 2
 
-        respectively. See ``Examples`` below.
+        See ``Examples`` below.
 
         In general, ``begin`` may not be larger than ``grid.min_pt``,
         and ``end`` not smaller than ``grid.max_pt`` in any component.
