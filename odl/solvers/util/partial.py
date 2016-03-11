@@ -65,7 +65,7 @@ class Partial(with_metaclass(ABCMeta, object)):
         Returns
         -------
         result : `Partial`
-            A partial whose `__call__` method calls both constituends
+            A partial whose `__call__` method calls both constituents
             partials.
 
         Examples
@@ -187,7 +187,7 @@ class PrintIterationPartial(Partial):
 
     """Print the iteration count."""
 
-    default_text = 'iter ='
+    _default_text = 'iter ='
 
     def __init__(self, text=None):
         """Initialize an instance.
@@ -197,7 +197,7 @@ class PrintIterationPartial(Partial):
         text : `str`
             Text to display before the iteration count. Default: 'iter ='
         """
-        self.text = text if text is not None else self.default_text
+        self.text = text if text is not None else self._default_text
         self.iter = 0
 
     def __call__(self, _):
@@ -206,7 +206,7 @@ class PrintIterationPartial(Partial):
         self.iter += 1
 
     def __repr__(self):
-        textstr = '' if self.text == self.default_text else self.text
+        textstr = '' if self.text == self._default_text else self.text
         return 'PrintIterationPartial({})'.format(textstr)
 
 
@@ -243,40 +243,41 @@ class ShowPartial(Partial):
 
     """Show the partial result."""
 
-    def __init__(self, *args, **kwargs):
-        """ Create a show partial
+    def __init__(self, **kwargs):
+        """Initialize a new instance.
 
-        parameters are passed through to the vectors show method. Additional
-        parameters include
+        Parameters are passed through to the vectors show method. Additional
+        parameters included.
 
         Parameters
         ----------
-        *args, **kwargs
-            passed ax ``x.show(*args, **kwargs)``
-        display_step : positive `int`
+        display_step : positive `int`, optional
             Number of iterations between plots. Default: 1
+
+        Other Parameters
+        ----------------
+        kwargs :
+            Optional arguments passed on to ``x.show``
         """
-        self.args = args
         self.kwargs = kwargs
-        self.fig = None
+        self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
         self.iter = 0
 
     def __call__(self, x):
-        """Show the current iteration."""
+        """Show the current iterate."""
         if (self.iter % self.display_step) == 0:
-            self.fig = x.show(fig=self.fig, show=True,
-                              *self.args, **self.kwargs)
+            self.fig = x.show(fig=self.fig, **self.kwargs)
 
         self.iter += 1
 
-    def __str__(self):
-        """Return ``str(self)``"""
-        return 'ShowPartial(*{}, **{})'.format(self.args, self.kwargs)
-
     def __repr__(self):
         """Return ``repr(self)``"""
-        return 'ShowPartial(*{!r}, **{!r})'.format(self.args, self.kwargs)
+        return '{}(display_step={}, fig={}, **{!r})'.format(
+            self.__class__.__name__,
+            self.display_step,
+            self.fig,
+            self.kwargs)
 
 
 if __name__ == '__main__':

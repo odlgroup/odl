@@ -107,13 +107,14 @@ class ProductSpace(LinearSpace):
 
             Note that ``0 <= ord < 1`` are not allowed since these
             pseudo-norms are very unstable numerically.
-        weights : array-like, optional, only usable with 'ord'
+        weights : `array-like`, optional
             Array of weights, same size as number of space
             components. All weights must be positive. It is
             multiplied with the tuple of distances before
             applying the Rn norm or ``prod_norm``.
-
             Default: ``(1.0,...,1.0)``
+
+            This option can only be used together with ``ord``.
 
         prod_norm : `callable`, optional
             Function that should be applied to the array of
@@ -121,6 +122,9 @@ class ProductSpace(LinearSpace):
             the space to NOT be a Hilbert space.
 
             Default: ``np.linalg.norm(x, ord=ord)``.
+
+        field : `Field`, optional
+            The field that should be used. Default: spaces[0].field
 
         Returns
         -------
@@ -198,7 +202,13 @@ class ProductSpace(LinearSpace):
 
         self._spaces = tuple(spaces)
         self._size = len(spaces)
-        super().__init__(spaces[0].field)
+        field = kwargs.pop('field', None)
+        if field is None:
+            if self.size == 0:
+                raise ValueError('No spaces provided, cannot deduce field')
+            field = self.spaces[0].field
+
+        super().__init__(field)
 
     @property
     def size(self):
@@ -210,18 +220,20 @@ class ProductSpace(LinearSpace):
         """A tuple containing all spaces."""
         return self._spaces
 
-    def element(self, inp=None):
+    def element(self, inp=None, cast=True):
         """Create an element in the product space.
 
         Parameters
         ----------
-        inp : `object`, optional
+        inp : optional
             If ``inp`` is `None`, a new element is created from
             scratch by allocation in the spaces. If ``inp`` is
-            already an element in this space, it is re-wrapped.
+            already an element of this space, it is re-wrapped.
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
+        cast : `bool`
+            True if casting should be allowed
 
         Returns
         -------
@@ -240,7 +252,7 @@ class ProductSpace(LinearSpace):
         >>> vec_3.space == vec_2x3[1].space
         True
 
-        Creates an element in the product space
+        Create an element of the product space
 
         >>> from odl import Rn
         >>> r2, r3 = Rn(2), Rn(3)
@@ -256,15 +268,16 @@ class ProductSpace(LinearSpace):
         if inp is None:
             inp = [space.element() for space in self.spaces]
 
-        # TODO: how does this differ from "if inp in self"?
-        if (all(isinstance(v, LinearSpaceVector) for v in inp) and
-                all(part.space == space
-                    for part, space in zip(inp, self.spaces))):
+        if (all(isinstance(v, LinearSpaceVector) and v.space == space
+                for v, space in zip(inp, self.spaces))):
             parts = list(inp)
-        else:
+        elif cast:
             # Delegate constructors
             parts = [space.element(arg)
                      for arg, space in zip(inp, self.spaces)]
+        else:
+            raise TypeError('input {!r} not a sequence of elements in the '
+                            'subspaces'.format(inp))
 
         return self.element_type(self, parts)
 
@@ -418,20 +431,26 @@ class ProductSpace(LinearSpace):
         if isinstance(indices, Integral):
             return self.spaces[indices]
         elif isinstance(indices, slice):
-            return ProductSpace(*self.spaces[indices])
+            return ProductSpace(*self.spaces[indices],
+                                field=self.field)
         else:
-            return ProductSpace(*[self.spaces[i] for i in indices])
+            return ProductSpace(*[self.spaces[i] for i in indices],
+                                field=self.field)
 
     def __str__(self):
         """Return ``str(self)``."""
-        if all(self.spaces[0] == space for space in self.spaces):
+        if self.size == 0:
+            return '{}'
+        elif all(self.spaces[0] == space for space in self.spaces):
             return '{' + str(self.spaces[0]) + '}^' + str(self.size)
         else:
             return ' x '.join(str(space) for space in self.spaces)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if all(self.spaces[0] == space for space in self.spaces):
+        if self.size == 0:
+            return 'ProductSpace(field={})'.format(self.field)
+        elif all(self.spaces[0] == space for space in self.spaces):
             return 'ProductSpace({!r}, {})'.format(self.spaces[0],
                                                    self.size)
         else:
@@ -619,10 +638,50 @@ class ProductSpaceVector(LinearSpaceVector):
 
         return '{!r}.element({})'.format(self.space, inner_str)
 
-    def show(self, *args, **kwargs):
-        """Display the parts of this vector."""
-        title = kwargs.pop('title', 'ProductSpaceVector')
-        indices = kwargs.pop('indices', None)
+    def show(self, title=None, indices=None, **kwargs):
+        """Display the parts of this vector graphically
+
+        Parameters
+        ----------
+        title : `str`
+            Title of the figures
+
+        indices : index expression, optional
+            Indices can refer to parts of a `ProductSpaceVector` and slices
+            in the parts in the following way:
+
+            Single index (``indices=0``)
+            => display that part
+
+            Single `slice` (``indices=slice(None)``), or
+            index `list` (``indices=[0, 1, 3]``)
+            => display those parts
+
+            Any `tuple`, for example:
+            Created by `numpy.s_` ``indices=np.s_[0, :, :]`` or
+            Using a raw `tuple` ``indices=([0, 3], slice(None))``
+            => take the first elements to select the parts and
+            pass the rest on to the underlying show methods.
+
+        kwargs
+            Additional arguments passed on to the underlying vectors
+
+        Returns
+        -------
+        fig : list of `matplotlib.figure.Figure`
+            The resulting figures. It is also shown to the user.
+
+        See Also
+        --------
+        odl.discr.lp_discr.DiscreteLpVector.show :
+            Display of a discretized function
+        odl.space.base_ntuples.NtuplesBaseVector.show :
+            Display of sequence type data
+        odl.util.graphics.show_discrete_data :
+            Underlying implementation
+        """
+        if title is None:
+            title = 'ProductSpaceVector'
 
         if indices is None:
             if len(self) < 5:
@@ -645,8 +704,7 @@ class ProductSpaceVector(LinearSpaceVector):
 
         figs = []
         for i, part, fig in zip(indices, self[indices], in_figs):
-            fig = part.show(*args,
-                            title='{}. Part {}'.format(title, i), fig=fig,
+            fig = part.show(title='{}. Part {}'.format(title, i), fig=fig,
                             **kwargs)
             figs += [fig]
 

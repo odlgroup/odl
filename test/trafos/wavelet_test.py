@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -24,16 +24,17 @@ standard_library.install_aliases()
 # External module imports
 import pytest
 import numpy as np
-from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
-if PYWAVELETS_AVAILABLE:
+try:
     import pywt
+except ImportError:
+    pass
 
 # ODL imports
 import odl
 from odl.trafos.wavelet import (
     coeff_size_list, pywt_coeff_to_array,
     array_to_pywt_coeff, wavelet_decomposition3d,
-    wavelet_reconstruction3d, DiscreteWaveletTransform)
+    wavelet_reconstruction3d, WaveletTransform)
 from odl.util.testutils import (all_almost_equal, all_equal,
                                 skip_if_no_pywavelets)
 
@@ -164,7 +165,7 @@ def test_dwt():
 
     # Create the discrete wavelet transform operator.
     # Only the domain of the operator needs to be defined
-    Wop = DiscreteWaveletTransform(disc_domain, nscales, wbasis, mode)
+    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode)
 
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
@@ -208,7 +209,7 @@ def test_dwt():
 
     # Create the discrete wavelet transform operator.
     # Only the domain of the operator needs to be defined
-    Wop = DiscreteWaveletTransform(disc_domain, nscales, wbasis, mode)
+    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode)
 
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
@@ -251,7 +252,7 @@ def test_dwt():
     disc_phantom = disc_domain.element(x)
 
     # Create the discrete wavelet transform operator related to 3D transform.
-    Wop = DiscreteWaveletTransform(disc_domain, nscales, wbasis, mode)
+    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode)
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
     # Determine the correct range for Wop and verify that coeffs

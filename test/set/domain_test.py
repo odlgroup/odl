@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -26,6 +26,7 @@ import pytest
 import numpy as np
 
 # ODL imports
+from odl.discr.grid import sparse_meshgrid
 from odl.set.domain import IntervalProd, Interval, Rectangle, Cuboid
 from odl.util.testutils import almost_equal, all_equal
 
@@ -126,22 +127,22 @@ def test_true_ndim():
 
 def test_extent():
     set_ = IntervalProd(1, 2)
-    assert set_.extent == 1
+    assert set_.extent() == 1
 
     set_ = IntervalProd(1, 1)
-    assert set_.extent == 0
+    assert set_.extent() == 0
 
     set_ = IntervalProd(0, np.inf)
-    assert set_.extent == np.inf
+    assert set_.extent() == np.inf
 
     set_ = IntervalProd(-np.inf, 0)
-    assert set_.extent == np.inf
+    assert set_.extent() == np.inf
 
     set_ = IntervalProd(-np.inf, np.inf)
-    assert set_.extent == np.inf
+    assert set_.extent() == np.inf
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert list(set_.extent) == [4, 4, 4]
+    assert list(set_.extent()) == [4, 4, 4]
 
 
 def test_volume():
@@ -219,10 +220,14 @@ def test_contains():
     assert 2 in set_
     assert 1.5 in set_
     assert 3 not in set_
+    assert 'string' not in set_
+    assert [1, 2] not in set_
+    assert np.nan not in set_
 
     positive_reals = IntervalProd(0, np.inf)
     assert 1 in positive_reals
     assert np.inf in positive_reals
+    assert -np.inf not in positive_reals
     assert -1 not in positive_reals
 
 
@@ -247,6 +252,84 @@ def test_contains_set():
                     {'hello': 1.0}]:
         with pytest.raises(AttributeError):
             set_.contains_set(non_set)
+
+
+def test_contains_all():
+    # 1d
+    intvp = IntervalProd(1, 2)
+
+    arr_in1 = np.array([1.0, 1.6, 1.3, 2.0])
+    arr_in2 = np.array([[1.0, 1.6, 1.3, 2.0]])
+    mesh_in = sparse_meshgrid([1.0, 1.7, 1.9])
+    arr_not_in1 = np.array([1.0, 1.6, 1.3, 2.0, 0.8])
+    arr_not_in2 = np.array([[1.0, 1.6, 2.0], [1.0, 1.5, 1.6]])
+    mesh_not_in = sparse_meshgrid([-1.0, 1.7, 1.9])
+
+    assert intvp.contains_all(arr_in1)
+    assert intvp.contains_all(arr_in2)
+    assert intvp.contains_all(mesh_in)
+    assert not intvp.contains_all(arr_not_in1)
+    assert not intvp.contains_all(arr_not_in2)
+    assert not intvp.contains_all(mesh_not_in)
+
+    # 2d
+    intvp = IntervalProd([0, 0], [1, 2])
+    arr_in = np.array([[0.5, 1.9],
+                       [0.0, 1.0],
+                       [1.0, 0.1]]).T
+    mesh_in = sparse_meshgrid([0, 0.1, 0.6, 0.7, 1.0], [0])
+    arr_not_in = np.array([[0.5, 1.9],
+                           [1.1, 1.0],
+                           [1.0, 0.1]]).T
+    mesh_not_in = sparse_meshgrid([0, 0.1, 0.6, 0.7, 1.0], [0, -1])
+
+    assert intvp.contains_all(arr_in)
+    assert intvp.contains_all(mesh_in)
+    assert not intvp.contains_all(arr_not_in)
+    assert not intvp.contains_all(mesh_not_in)
+
+
+def test_insert():
+    intvp1 = IntervalProd([0, 0], [1, 2])
+    intvp2 = IntervalProd(1, 3)
+
+    intvp = intvp1.insert(0, intvp2)
+    true_begin = [1, 0, 0]
+    true_end = [3, 1, 2]
+    assert intvp == IntervalProd(true_begin, true_end)
+
+    intvp = intvp1.insert(1, intvp2)
+    true_begin = [0, 1, 0]
+    true_end = [1, 3, 2]
+    assert intvp == IntervalProd(true_begin, true_end)
+
+    intvp = intvp1.insert(2, intvp2)
+    true_begin = [0, 0, 1]
+    true_end = [1, 2, 3]
+    assert intvp == IntervalProd(true_begin, true_end)
+
+    intvp = intvp1.insert(-1, intvp2)  # same as 1
+    true_begin = [0, 1, 0]
+    true_end = [1, 3, 2]
+    assert intvp == IntervalProd(true_begin, true_end)
+
+    with pytest.raises(IndexError):
+        intvp1.insert(3, intvp2)
+    with pytest.raises(IndexError):
+        intvp1.insert(-4, intvp2)
+
+
+def test_dist():
+    set_ = IntervalProd(1, 2)
+
+    for interior in [1.0, 1.1, 2.0]:
+        assert set_.dist(interior) == 0.0
+
+    for exterior in [0.0, 2.0, np.inf]:
+        assert set_.dist(exterior) == min(abs(set_.begin - exterior),
+                                          abs(exterior - set_.end))
+
+    assert set_.dist(np.NaN) == np.inf
 
 
 # Set arithmetic

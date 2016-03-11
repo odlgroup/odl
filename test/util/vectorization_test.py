@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -31,7 +31,6 @@ from odl.util.testutils import all_equal
 from odl.util.utility import is_int_dtype
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
-    meshgrid_input_order, vecs_from_meshgrid,
     out_shape_from_meshgrid, out_shape_from_array,
     vectorize)
 
@@ -63,7 +62,8 @@ def test_is_valid_input_array():
         assert not is_valid_input_array(arr, ndim=3)
 
     # Other input
-    invalid_input = [1, [[1, 2], [3, 4]], (5,)]
+    assert is_valid_input_array([[1, 2], [3, 4]], ndim=2)
+    invalid_input = [1, [[[1, 2], [3, 4]]], (5,)]
     for inp in invalid_input:
         assert not is_valid_input_array(inp, ndim=2)
 
@@ -89,9 +89,6 @@ def test_is_valid_input_meshgrid():
     valid_mg = sparse_meshgrid(x, y, z)
     assert is_valid_input_meshgrid(valid_mg, ndim=3)
 
-    valid_mg = sparse_meshgrid(x, y, z, order='F')
-    assert is_valid_input_meshgrid(valid_mg, ndim=3)
-
     invalid_mg = sparse_meshgrid(x, x, y, z)
     assert not is_valid_input_meshgrid(invalid_mg, ndim=3)
 
@@ -104,113 +101,6 @@ def test_is_valid_input_meshgrid():
     for inp in invalid_input:
         assert not is_valid_input_meshgrid(inp, ndim=1)
         assert not is_valid_input_meshgrid(inp, ndim=2)
-
-
-def test_meshgrid_input_order():
-
-    # 1d
-    x = np.zeros(2)
-
-    mg = sparse_meshgrid(x, order='C')
-    assert meshgrid_input_order(mg) == 'C'
-
-    # Both 'C' and 'F' contiguous, defaults to 'C'
-    mg = sparse_meshgrid(x, order='F')
-    assert meshgrid_input_order(mg) == 'C'
-
-    # 3d
-    x, y, z = np.zeros(2), np.zeros(3), np.zeros(4)
-
-    mg = sparse_meshgrid(x, y, z, order='C')
-    assert meshgrid_input_order(mg) == 'C'
-
-    mg = sparse_meshgrid(x, y, z, order='F')
-    assert meshgrid_input_order(mg) == 'F'
-
-    # 3d including a degenerate axis
-    mg = sparse_meshgrid(x, y, [0.0], order='C')
-    assert meshgrid_input_order(mg) == 'C'
-
-    mg = sparse_meshgrid(x, y, [0.0], order='F')
-    assert meshgrid_input_order(mg) == 'F'
-
-    # 3d, fleshed out meshgrids
-    x, y, z = np.zeros(2), np.zeros(3), np.zeros(4)
-    mg = np.meshgrid(x, y, z, sparse=False, indexing='ij', copy=True)
-    assert meshgrid_input_order(mg) == 'C'
-
-    mg = np.meshgrid(x, y, z, sparse=False, indexing='ij', copy=True)
-    mg = [np.asfortranarray(arr) for arr in mg]
-    assert meshgrid_input_order(mg) == 'F'
-
-    # non-contiguous --> error
-    mg = np.meshgrid(x, y, z, sparse=False, indexing='ij', copy=False)
-    with pytest.raises(ValueError):
-        meshgrid_input_order(mg)
-
-    # messed up tuple
-    mg = list(sparse_meshgrid(x, y, z, order='C'))
-    mg[1] = mg[0]
-    with pytest.raises(ValueError):
-        meshgrid_input_order(mg)
-
-
-def test_vecs_from_meshgrid():
-
-    # 1d
-    x = np.zeros(2)
-
-    mg = sparse_meshgrid(x, order='C')
-    vx = vecs_from_meshgrid(mg, order='C')[0]
-    assert x.shape == vx.shape
-    assert all_equal(x, vx)
-
-    mg = sparse_meshgrid(x, order='F')
-    vx = vecs_from_meshgrid(mg, order='F')[0]
-    assert x.shape == vx.shape
-    assert all_equal(x, vx)
-
-    # 3d
-    x, y, z = np.zeros(2), np.zeros(3), np.zeros(4)
-
-    mg = sparse_meshgrid(x, y, z, order='C')
-    vx, vy, vz = vecs_from_meshgrid(mg, order='C')
-    assert x.shape == vx.shape
-    assert all_equal(x, vx)
-    assert y.shape == vy.shape
-    assert all_equal(y, vy)
-    assert z.shape == vz.shape
-    assert all_equal(z, vz)
-
-    mg = sparse_meshgrid(x, y, z, order='F')
-    vx, vy, vz = vecs_from_meshgrid(mg, order='F')
-    assert x.shape == vx.shape
-    assert all_equal(x, vx)
-    assert y.shape == vy.shape
-    assert all_equal(y, vy)
-    assert z.shape == vz.shape
-    assert all_equal(z, vz)
-
-    # 3d, fleshed out meshgrids
-    x, y, z = np.zeros(2), np.zeros(3), np.zeros(4)
-    mg = np.meshgrid(x, y, z, sparse=False, indexing='ij', copy=True)
-    vx, vy, vz = vecs_from_meshgrid(mg, order='C')
-    assert x.shape == vx.shape
-    assert all_equal(x, vx)
-    assert y.shape == vy.shape
-    assert all_equal(y, vy)
-    assert z.shape == vz.shape
-    assert all_equal(z, vz)
-
-    mg = np.meshgrid(x, y, z, sparse=False, indexing='ij', copy=True)
-    mg = tuple(reversed([np.asfortranarray(arr) for arr in mg]))
-    vx, vy, vz = vecs_from_meshgrid(mg, order='F')
-    assert x.shape == vx.shape
-    assert all_equal(x, vx)
-    assert y.shape == vy.shape
-    assert all_equal(y, vy)
-    assert z.shape == vz.shape
-    assert all_equal(z, vz)
 
 
 def test_out_shape_from_array():
@@ -238,18 +128,12 @@ def test_out_shape_from_meshgrid():
 
     # 1d
     x = np.zeros(2)
-    mg = sparse_meshgrid(x, order='C')
-    assert out_shape_from_meshgrid(mg) == (2,)
-
-    mg = sparse_meshgrid(x, order='F')
+    mg = sparse_meshgrid(x)
     assert out_shape_from_meshgrid(mg) == (2,)
 
     # 3d
     x, y, z = np.zeros(2), np.zeros(3), np.zeros(4)
-    mg = sparse_meshgrid(x, y, z, order='C')
-    assert out_shape_from_meshgrid(mg) == (2, 3, 4)
-
-    mg = sparse_meshgrid(x, y, z, order='F')
+    mg = sparse_meshgrid(x, y, z)
     assert out_shape_from_meshgrid(mg) == (2, 3, 4)
 
     # 3d, fleshed out meshgrids

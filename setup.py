@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -19,7 +19,7 @@
 
 Installation command::
 
-    pip install [--user] [--editable] .
+    pip install [--user] [--E] .
 """
 
 from __future__ import print_function, absolute_import
@@ -29,7 +29,7 @@ from setuptools.command.test import test as TestCommand
 import os
 import sys
 
-__version__ = '0.9b1'
+__version__ = '0.1.0'
 
 if os.environ.get('READTHEDOCS', None) == 'True':
     # Mock requires in conf.py
@@ -65,7 +65,7 @@ class PyTest(TestCommand):
 setup(name='odl',
       version=__version__,
       author='ODL development group',
-      author_email='kohr@kth.se, jonasadl@kth.se',
+      author_email='odl@math.kth.se',
       url='https://github.com/odlgroup/odl',
       description='Operator Discretization Library',
       license='GPLv3',

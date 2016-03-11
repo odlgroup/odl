@@ -32,7 +32,7 @@ from odl.set.sets import Field
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator',
-           'InnerProductOperator', 'ConstantOperator')
+           'InnerProductOperator', 'ConstantOperator', 'ResidualOperator')
 
 
 class ScalingOperator(Operator):
@@ -46,8 +46,8 @@ class ScalingOperator(Operator):
         ----------
         space : `LinearSpace`
             The space of elements which the operator is acting on
-        scalar : field element
-            An element in the field of the space that the vectors are
+        scalar : `LinearSpace.field` `element`
+            An element of the field of the space which vectors are
             scaled with
         """
         if not isinstance(space, LinearSpace):
@@ -63,14 +63,14 @@ class ScalingOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             input vector to be scaled
-        out : ``range`` element, optional
+        out : ``range`` `element`, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element
+        out : ``range`` `element`
             Result of the scaling. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -207,15 +207,15 @@ class LinCombOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
-            An element in the operator domain (2-tuple of space
+        x : ``domain`` `element`
+            An element of the operator domain (2-tuple of space
             elements) whose linear combination is calculated
-        out : ```range`` element
+        out : ```range`` `element`
             Vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element
+        out : ``range`` `element`
             Result of the linear combination. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -286,15 +286,15 @@ class MultiplyOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        out : ``range`` element, optional
+        out : ``range`` `element`, optional
             Vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element
+        out : ``range`` `element`
             Result of the multiplication. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -394,12 +394,12 @@ class InnerProductOperator(Operator):
 
         Parameters
         ----------
-        x : ``vector.space`` element
+        x : ``vector.space`` `element`
             An element in the space of the vector
 
         Returns
         -------
-        out : ``field`` element
+        out : ``field`` `element`
             Result of the inner product calculation
 
         Examples
@@ -496,8 +496,8 @@ class ConstantOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
-            Any element in the domain
+        x : ``domain`` `element`
+            An element of the domain
         out : ``range`` element
             Vector that gets assigned to the constant vector
 
@@ -545,7 +545,7 @@ class ResidualOperator(Operator):
         op : `Operator`
             Operator to be used in the residual expression. Its
             `Operator.range` must be a `LinearSpace`.
-        vec : `Operator.range` element-like
+        vec : `Operator.range` `element-like`
             Vector to be subtracted from the operator result
         """
         if not isinstance(op, Operator):
@@ -565,14 +565,14 @@ class ResidualOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
-            Any element in the domain
-        out : ``range`` element
+        x : ``domain`` `element`
+            Any element of the domain
+        out : ``range`` `element`
             Vector that gets assigned to the constant vector
 
         Returns
         -------
-        out : ``range`` element
+        out : ``range`` `element`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -604,8 +604,18 @@ class ResidualOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : ``domain`` `element`
             Any element in the domain where the derivative should be taken
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> op = IdentityOperator(r3)
+        >>> res = ResidualOperator(op, r3.element([1, 2, 3]))
+        >>> x = r3.element([4, 5, 6])
+        >>> res.derivative(x)(x)
+        Rn(3).element([4.0, 5.0, 6.0])
         """
         return self.op.derivative(point)
 

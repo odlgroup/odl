@@ -41,6 +41,7 @@ from scipy.sparse.base import isspmatrix
 
 # ODL imports
 from odl.operator.operator import Operator
+from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
 from odl.util.utility import (
@@ -68,7 +69,7 @@ class Ntuples(NtuplesBase):
 
         Parameters
         ----------
-        inp : array-like, optional
+        inp : `array-like`, optional
             Input to initialize the new element.
 
             If ``inp`` is `None`, an empty element is created with no
@@ -132,6 +133,30 @@ class Ntuples(NtuplesBase):
             else:
                 raise ValueError('Cannot provide both `inp` and `data_ptr`')
 
+    def zero(self):
+        """Create a vector of zeros.
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.zero()
+        >>> x
+        Cn(3).element([0j, 0j, 0j])
+        """
+        return self.element(np.zeros(self.size, dtype=self.dtype))
+
+    def one(self):
+        """Create a vector of ones.
+
+        Examples
+        --------
+        >>> c3 = Cn(3)
+        >>> x = c3.one()
+        >>> x
+        Cn(3).element([(1+0j), (1+0j), (1+0j)])
+        """
+        return self.element(np.ones(self.size, dtype=self.dtype))
+
     @property
     def element_type(self):
         """ `NtuplesVector` """
@@ -155,7 +180,6 @@ class NtuplesVector(NtuplesBaseVector):
         if data.dtype != space.dtype:
             raise TypeError('data {!r} not of dtype {!r}.'
                             ''.format(data, space.dtype))
-
         self._data = data
 
         NtuplesBaseVector.__init__(self, space)
@@ -331,7 +355,7 @@ class NtuplesVector(NtuplesBaseVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, `NtuplesVector`}
+        values : scalar, `array-like` or `NtuplesVector`
             The value(s) that are to be assigned.
 
             If ``indices`` is an integer, ``value`` must be scalar.
@@ -391,9 +415,9 @@ class NtuplesVector(NtuplesBaseVector):
         Ntuples(2, 'int8').element([0, 0])
         """
         if isinstance(values, NtuplesVector):
-            return self.data.__setitem__(indices, values.data)
+            self.data[indices] = values.data
         else:
-            return self.data.__setitem__(indices, values)
+            self.data[indices] = values
 
     @property
     def ufunc(self):
@@ -564,13 +588,12 @@ def _repr_space_funcs(space):
 
 class Fn(FnBase, Ntuples):
 
-    """The vector space :math:`\mathbb{F}^n` with vector multiplication.
+    """The vector space F^n with vector multiplication.
 
-    This space implements n-tuples of elements from a field
-    :math:`\mathbb{F}`, which can be the real or the complex numbers.
+    This space implements n-tuples of elements from a `Field` ``F``,
+    which is usually the real or complex numbers.
 
-    Its elements are represented as instances of the
-    `FnVector` class.
+    Its elements are represented as instances of the `FnVector` class.
     """
 
     def __init__(self, size, dtype, **kwargs):
@@ -587,25 +610,27 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        weight : array-like, float or `None`
-            Use weighted inner product, norm, and dist.
+        weight : optional
+            Use weighted inner product, norm, and dist. The following
+            types are supported as ``weight``:
 
-            `None` (default):
-                No weighting, use standard functions
+            `FnWeightingBase`:
+            Use this weighting as-is. Compatibility with this
+            space's elements is not checked during init.
 
-            `float`:
-                Weighting by a constant
+            float: Weighting by a constant
 
-            array-like:
-                Weighting by a matrix (2-dim. array) or a vector
-                (1-dim. array, corresponds to a diagonal matrix).
-                A matrix can also be given as a sparse matrix
-                ( ``scipy.sparse.spmatrix``).
+            array-like: Weighting by a matrix (2-dim. array) or a vector
+            (1-dim. array, corresponds to a diagonal matrix). A matrix
+            can also be given as a sparse matrix
+            ( ``scipy.sparse.spmatrix``).
+
+            Default: no weighting
 
             This option cannot be combined with ``dist``,
             ``norm`` or ``inner``.
 
-        exponent : positive `float`
+        exponent : positive `float`, optional
             Exponent of the norm. For values other than 2.0, no
             inner product is defined.
             If ``weight`` is a sparse matrix, only 1.0, 2.0 and
@@ -703,7 +728,9 @@ class Fn(FnBase, Ntuples):
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
-            if np.isscalar(weight):
+            if isinstance(weight, FnWeightingBase):
+                self._space_funcs = weight
+            elif np.isscalar(weight):
                 self._space_funcs = FnConstWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner)
             elif weight is None:
@@ -740,6 +767,43 @@ class Fn(FnBase, Ntuples):
     def exponent(self):
         """Exponent of the norm and distance."""
         return self._space_funcs.exponent
+
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return self._space_funcs
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the weighting is not `FnNoWeighting`."""
+        return not isinstance(self.weighting, FnNoWeighting)
+
+    @staticmethod
+    def default_dtype(field):
+        """Return the default of `Fn` data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`
+            Set of numbers to be represented by a data type.
+            Currently supported : `RealNumbers`, `ComplexNumbers`
+
+        Returns
+        -------
+        dtype : `type`
+            Numpy data type specifier. The returned defaults are:
+
+            ``RealNumbers()`` : ``np.dtype('float64')``
+
+            ``ComplexNumbers()`` : ``np.dtype('complex128')``
+        """
+        if field == RealNumbers():
+            return np.dtype('float64')
+        elif field == ComplexNumbers():
+            return np.dtype('complex128')
+        else:
+            raise ValueError('no default data type defined for field {}.'
+                             ''.format(field))
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``.
@@ -842,7 +906,7 @@ class Fn(FnBase, Ntuples):
 
         Returns
         -------
-        inner : `field` element
+        inner : `field` `element`
             Inner product of the vectors
 
         Examples
@@ -922,30 +986,6 @@ class Fn(FnBase, Ntuples):
         """
         np.divide(x1.data, x2.data, out=out.data)
 
-    def zero(self):
-        """Create a vector of zeros.
-
-        Examples
-        --------
-        >>> c3 = Cn(3)
-        >>> x = c3.zero()
-        >>> x
-        Cn(3).element([0j, 0j, 0j])
-        """
-        return self.element(np.zeros(self.size, dtype=self.dtype))
-
-    def one(self):
-        """Create a vector of ones.
-
-        Examples
-        --------
-        >>> c3 = Cn(3)
-        >>> x = c3.one()
-        >>> x
-        Cn(3).element([(1+0j), (1+0j), (1+0j)])
-        """
-        return self.element(np.ones(self.size, dtype=self.dtype))
-
     def __eq__(self, other):
         """Return ``self == other``.
 
@@ -1005,22 +1045,21 @@ class Fn(FnBase, Ntuples):
         """s.__repr__() <==> repr(s)."""
         if self.is_rn:
             class_name = 'Rn'
-            if self.dtype == np.float64:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         elif self.is_cn:
             class_name = 'Cn'
-            if self.dtype == np.complex128:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         else:
             class_name = 'Fn'
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+
+        inner_str = '{}'.format(self.size)
+        if self.dtype != self.default_dtype(self.field):
+            inner_str += ', {}'.format(dtype_repr(self.dtype))
 
         inner_str += _repr_space_funcs(self)
         return '{}({})'.format(class_name, inner_str)
+
+    # Copy these to handle bug in ABCmeta
+    zero = Ntuples.zero
+    one = Ntuples.one
 
     @property
     def element_type(self):
@@ -1064,7 +1103,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x
         Cn(3).element([(10+1j), (6+0j), (4-2j)])
         """
-        rn = Rn(self.space.size, self.space.real_dtype)
+        rn = Rn(self.space.size, self.space._real_dtype)
         return rn.element(self.data.real)
 
     @real.setter
@@ -1075,7 +1114,7 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Parameters
         ----------
-        newreal : array-like or scalar
+        newreal : `array-like` or scalar
             The new real part for this vector.
 
         Examples
@@ -1122,7 +1161,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x
         Cn(3).element([(5+2j), (3+0j), (2-4j)])
         """
-        rn = Rn(self.space.size, self.space.real_dtype)
+        rn = Rn(self.space.size, self.space._real_dtype)
         return rn.element(self.data.imag)
 
     @imag.setter
@@ -1133,7 +1172,7 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Parameters
         ----------
-        newreal : array-like or scalar
+        newreal : `array-like` or scalar
             The new imaginary part for this vector.
 
         Examples
@@ -1181,7 +1220,8 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> z_out is z
         True
 
-        It can also be used for inplace conj
+        It can also be used for in-place conj
+
         >>> x_out = x.conj(out=x); print(x)
         [(5-1j), (3-0j), (2+2j)]
         >>> x_out is x
@@ -1192,6 +1232,17 @@ class FnVector(FnBaseVector, NtuplesVector):
         else:
             self.data.conj(out.data)
             return out
+
+    def __ipow__(self, other):
+        """Return ``self **= other``."""
+        try:
+            if other == int(other):
+                return super().__ipow__(other)
+        except TypeError:
+            pass
+
+        np.power(self.data, other, out=self.data)
+        return self
 
 
 def Cn(size, dtype='complex128', **kwargs):
@@ -1267,7 +1318,7 @@ class MatVecOperator(Operator):
 
         Parameters
         ----------
-        matrix : array-like or  ``scipy.sparse.spmatrix``
+        matrix : `array-like` or  ``scipy.sparse.spmatrix``
             Matrix representing the linear operator. Its shape must be
             ``(m, n)``, where ``n`` is the size of ``dom`` and ``m`` the
             size of ``ran``. Its dtype must be castable to the range
@@ -1396,7 +1447,7 @@ def weighted_inner(weight):
 
     Parameters
     ----------
-    weight : scalar or array-like
+    weight : scalar or `array-like`
         Weight of the inner product. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
@@ -1420,7 +1471,7 @@ def weighted_norm(weight, exponent=2.0):
 
     Parameters
     ----------
-    weight : scalar or array-like
+    weight : scalar or `array-like`
         Weight of the norm. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
@@ -1447,7 +1498,7 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
 
     Parameters
     ----------
-    weight : scalar or array-like
+    weight : scalar or `array-like`
         Weight of the distance. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
@@ -1562,7 +1613,7 @@ class FnMatrixWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        matrix :  ``scipy.sparse.spmatrix`` or array-like, 2-dim.
+        matrix :  ``scipy.sparse.spmatrix`` or `array-like`, 2-dim.
             Square weighting matrix of the inner product
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
@@ -1874,7 +1925,7 @@ class FnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        vector : array-like, one-dim.
+        vector : `array-like`, one-dim.
             Weighting vector of the inner product
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner

@@ -29,11 +29,11 @@ from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space.ntuples import Ntuples, Fn, Rn, Cn
+from odl.space.ntuples import Ntuples, Fn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.space import CUDA_AVAILABLE
-from odl.space.cu_ntuples import CudaNtuples, CudaFn, CudaRn
+from odl.space.cu_ntuples import CudaNtuples, CudaFn
 CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
@@ -183,7 +183,6 @@ class RawDiscretization(NtuplesBase):
         if inp is None:
             return self.element_type(self, self.dspace.element())
         try:
-            # pylint: disable=not-callable
             return self.element_type(self, self.restriction(inp))
         except TypeError:
             # Sequence-type input
@@ -197,8 +196,8 @@ class RawDiscretization(NtuplesBase):
         equals : `bool`
             `True` if ``other`` is a `RawDiscretization`
             instance and all attributes `uspace`, `dspace`,
-            `restriction` and `extension` of ``other``
-            and this discretization are equal, `False` otherwise.
+            `RawDiscretization.restriction` and `RawDiscretization.extension`
+            of ``other`` and this discretization are equal, `False` otherwise.
         """
         if other is self:
             return True
@@ -213,11 +212,6 @@ class RawDiscretization(NtuplesBase):
     def domain(self):
         """The domain of the continuous space."""
         return self.uspace.domain
-
-    @property
-    def dtype(self):
-        """The data type of the representation space."""
-        return self._dtype
 
     @property
     def element_type(self):
@@ -282,7 +276,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
                 self.ntuple == other.ntuple)
 
     def __getitem__(self, indices):
-        """Access values of this vector.
+        """Return ``self[indices]``.
 
         Parameters
         ----------
@@ -297,13 +291,13 @@ class RawDiscretizationVector(NtuplesBaseVector):
         return self.ntuple.__getitem__(indices)
 
     def __setitem__(self, indices, values):
-        """Set values of this vector.
+        """Implement ``self[indices] = values``.
 
         Parameters
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, `NtuplesBaseVector`}
+        values : scalar, `array-like` or `NtuplesBaseVector`
             The value(s) that are to be assigned.
 
             If ``index`` is an `int`, ``value`` must be single value.
@@ -316,6 +310,70 @@ class RawDiscretizationVector(NtuplesBaseVector):
             self.ntuple.__setitem__(indices, values.ntuple)
         else:
             self.ntuple.__setitem__(indices, values)
+
+    def restriction(self, ufunc):
+        """Restrict a continuous function and assign to this vector
+
+        Parameters
+        ----------
+        ufunc : ``self.space.uspace`` element
+            The continuous function that should be restricted.
+
+        Examples
+        --------
+        >>> import odl
+        >>> import numpy as np
+
+        Create discretization
+
+        >>> X = odl.uniform_discr(0, 1, 5)
+        >>> x = X.element()
+
+        Assign x according to continuous vector
+
+        >>> x.restriction(lambda x: x)
+        >>> print(x) # Print values at gridpoints (which are centered)
+        [0.1, 0.3, 0.5, 0.7, 0.9]
+
+        See Also
+        --------
+        RawDiscretization.restriction : For full description
+        """
+        self.space.restriction(ufunc, out=self.ntuple)
+
+    @property
+    def extension(self):
+        """The extension operator associated with this vector.
+
+        Returns
+        -------
+        extension_op : `FunctionSetMapping`
+            Operatior representing a continuous extension of this vector.
+
+        Examples
+        --------
+        >>> import odl
+        >>> import numpy as np
+
+        Create continuous extension of 1d function with nearest neighbour
+
+        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True)
+        >>> x = X.element([0, 1, 0])
+        >>> x.extension(np.array([0.24, 0.26]))
+        array([ 0.,  1.])
+
+        Create continuous extension of 1d function wiht linear interpolation
+
+        >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True, interp='linear')
+        >>> x = X.element([0, 1, 0])
+        >>> x.extension(np.array([0.24, 0.26]))
+        array([ 0.48,  0.52])
+
+        See Also
+        --------
+        RawDiscretization.extension : For full description
+        """
+        return self.space.extension(self.ntuple)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -341,7 +399,7 @@ class Discretization(RawDiscretization, FnBase):
     `Operator`'s.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None, **kwargs):
+    def __init__(self, uspace, dspace, restr=None, ext=None):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -364,7 +422,7 @@ class Discretization(RawDiscretization, FnBase):
             to a `RawDiscretization.uspace` element. Must satisfy
             ``ext.domain == dspace``, ``ext.range == uspace``.
         """
-        super().__init__(uspace, dspace, restr, ext, **kwargs)
+        RawDiscretization.__init__(self, uspace, dspace, restr, ext)
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
@@ -406,6 +464,16 @@ class Discretization(RawDiscretization, FnBase):
     def one(self):
         """Create a vector of ones."""
         return self.element_type(self, self.dspace.one())
+
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return getattr(self.dspace, 'weighting', None)
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the ``dspace`` is weighted."""
+        return getattr(self.dspace, 'is_weighted', False)
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
@@ -452,17 +520,17 @@ def dspace_type(space, impl, dtype=None):
 
     Parameters
     ----------
-    space : `object`
-        The template space. If it has a ``field`` attribute,
-        ``dtype`` must be consistent with it
+    space :
+        Template space from which to infer an adequate data space. If
+        it has a `LinearSpace.field` attribute, ``dtype`` must be
+        consistent with it.
     impl : {'numpy', 'cuda'}
-        The backend for the data space
+        Implementation backend for the data space
     dtype : `type`, optional
         Data type which the space is supposed to use. If `None`, the
         space type is purely determined from ``space`` and
         ``impl``. If given, it must be compatible with the
-        field of ``space``. Non-floating types result in basic
-        `Fn`-type spaces.
+        field of ``space``.
 
     Returns
     -------
@@ -470,53 +538,54 @@ def dspace_type(space, impl, dtype=None):
         Space type selected after the space's field, the backend and
         the data type
     """
-    impl_ = str(impl).lower()
-    if impl_ not in ('numpy', 'cuda'):
-        raise ValueError('implementation type {} not understood.'
-                         ''.format(impl))
+    impl, impl_in = str(impl).lower(), impl
+    if impl not in ('numpy', 'cuda'):
+        raise ValueError("implementation '{}' not understood."
+                         ''.format(impl_in))
 
-    if impl_ == 'cuda' and not CUDA_AVAILABLE:
+    if impl == 'cuda' and not CUDA_AVAILABLE:
         raise ValueError('CUDA implementation not available.')
 
     basic_map = {'numpy': Fn, 'cuda': CudaFn}
 
     spacetype_map = {
-        'numpy': {RealNumbers: Rn, ComplexNumbers: Cn,
+        'numpy': {RealNumbers: Fn, ComplexNumbers: Fn,
                   type(None): Ntuples},
-        'cuda': {RealNumbers: CudaRn, ComplexNumbers: None,
+        'cuda': {RealNumbers: CudaFn, ComplexNumbers: None,
                  type(None): CudaNtuples}
     }
 
     field_type = type(getattr(space, 'field', None))
 
     if dtype is None:
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
+
     elif is_real_floating_dtype(dtype):
         if field_type is None or field_type == ComplexNumbers:
             raise TypeError('real floating data type {!r} requires space '
-                            'field to be of type `RealNumbers`, got {}.'
+                            'field to be of type RealNumbers, got {}.'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
     elif is_complex_floating_dtype(dtype):
         if field_type is None or field_type == RealNumbers:
             raise TypeError('complex floating data type {!r} requires space '
-                            'field to be of type `ComplexNumbers`, got {!r}.'
+                            'field to be of type ComplexNumbers, got {!r}.'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
     elif is_scalar_dtype(dtype):
         if field_type == ComplexNumbers:
             raise TypeError('non-floating data type {!r} requires space field '
-                            'to be of type `RealNumbers`, got {!r}.'
+                            'to be of type RealNumbers, got {!r}.'
                             .format(dtype, field_type))
         elif field_type == RealNumbers:
-            stype = basic_map[impl_]
+            stype = basic_map[impl]
         else:
-            stype = spacetype_map[impl_][field_type]
+            stype = spacetype_map[impl][field_type]
     elif field_type is None:  # Only in this case are arbitrary types allowed
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
     else:
         raise TypeError('non-scalar data type {!r} cannot be combined with '
-                        'a `LinearSpace`.'.format(dtype))
+                        'a LinearSpace.'.format(dtype))
 
     if stype is None:
         raise NotImplementedError('no corresponding data space available '

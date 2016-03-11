@@ -15,18 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utilities for internal use."""
-
+"""Some useful phantoms, mostly for tomography tests."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 import numpy as np
 
-__all__ = ('derenzo_sources', 'shepp_logan', 'submarine_phantom')
+__all__ = ('ellipse_phantom_2d', 'ellipse_phantom_3d',
+           'cuboid', 'indicate_proj_axis',
+           'derenzo_sources', 'shepp_logan', 'submarine_phantom')
 
 
 def _shepp_logan_ellipse_2d():
@@ -161,8 +161,18 @@ def _derenzo_sources_2d():
             [1.0, 0.023968, 0.023968, 0.88528, -0.11791, 0.0]]
 
 
-def _phantom_2d(space, ellipses):
-    """Create a phantom in 2d space.
+def _make_3d_cylinders(ellipses2d):
+    """Create 3d cylinders from ellipses."""
+    ellipses2d = np.asarray(ellipses2d)
+    ellipses3d = np.zeros((ellipses2d.shape[0], 10))
+    ellipses3d[:, [0, 1, 2, 4, 5, 7]] = ellipses2d
+    ellipses3d[:, 3] = 100000.0
+
+    return ellipses3d
+
+
+def ellipse_phantom_2d(space, ellipses):
+    """Create an ellipse phantom in 2d space.
 
     Parameters
     ----------
@@ -175,7 +185,7 @@ def _phantom_2d(space, ellipses):
 
     Returns
     -------
-    phantom : `DisceteLpVector`
+    phantom : `DiscreteLpVector`
         The phantom
     """
 
@@ -234,8 +244,8 @@ def _getshapes(center, max_radius, shape):
     return idx, shapes
 
 
-def _phantom_3d(space, ellipses):
-    """Create a phantom in 3d space.
+def ellipse_phantom_3d(space, ellipses):
+    """Create an ellipse phantom in 3d space.
 
     Parameters
     ----------
@@ -251,7 +261,7 @@ def _phantom_3d(space, ellipses):
 
     Returns
     -------
-    phantom : `DisceteLpVector`
+    phantom : `DiscreteLpVector`
         The phantom
     """
 
@@ -269,7 +279,7 @@ def _phantom_3d(space, ellipses):
     p = np.zeros(space.shape)
 
     # Create the pixel grid
-    grid_in = space.grid.meshgrid()
+    grid_in = space.grid.meshgrid
     minp = space.grid.min()
     maxp = space.grid.max()
 
@@ -358,9 +368,9 @@ def phantom(space, ellipses):
     """Return a phantom given by ellipses."""
 
     if space.ndim == 2:
-        return _phantom_2d(space, ellipses)
+        return ellipse_phantom_2d(space, ellipses)
     elif space.ndim == 3:
-        return _phantom_3d(space, ellipses)
+        return ellipse_phantom_3d(space, ellipses)
     else:
         raise ValueError("Dimension not 2 or 3, no phantom available")
 
@@ -369,9 +379,15 @@ def derenzo_sources(space):
     """Create the PET/SPECT Derenzo sources phantom.
 
     The Derenzo phantom contains a series of circles of decreasing size.
+
+    In 3d the phantom is simply the 2d phantom extended in the z direction as
+    cylinders.
     """
     if space.ndim == 2:
-        return _phantom_2d(space, _derenzo_sources_2d())
+        return ellipse_phantom_2d(space, _derenzo_sources_2d())
+    if space.ndim == 3:
+        return ellipse_phantom_3d(
+            space, _make_3d_cylinders(_derenzo_sources_2d()))
     else:
         raise ValueError("Dimension not 2, no phantom available")
 
@@ -401,11 +417,11 @@ def shepp_logan(space, modified=False):
 def submarine_phantom(discr, smooth=True, taper=20.0):
     """Return a 'submarine' phantom consisting in an ellipsoid and a box.
 
-    This phantom is used in [1]_ for shape-based reconstruction.
+    This phantom is used in [Okt2015]_ for shape-based reconstruction.
 
     Parameters
     ----------
-    discr : `Discretization`
+    discr : `DiscreteLp`
         Discretized space in which the phantom is supposed to be created
     smooth : `bool`, optional
         If `True`, the boundaries are smoothed out. Otherwise, the
@@ -416,13 +432,7 @@ def submarine_phantom(discr, smooth=True, taper=20.0):
 
     Returns
     -------
-    phantom : `DiscretizationVector`
-
-    References
-    ----------
-    .. [1] Oktem, Ozan. Mathematics of electron tomography. In:
-       Handbook of Mathematical Methods in Imaging. Scherzer, Otmar,
-       Ed. Springer, 2015, pp 937--1031.
+    phantom : `DiscreteLpVector`
     """
     if discr.ndim == 2:
         if smooth:
@@ -449,8 +459,8 @@ def _submarine_phantom_2d_smooth(discr, taper):
         ``(0.8, 0.28)``. For other domains, the values are scaled
         accordingly.
         """
-        halfaxes = np.array([0.8, 0.28]) * discr.domain.extent / 2
-        center = np.array([0.2, -0.4]) * discr.domain.extent / 2
+        halfaxes = np.array([0.8, 0.28]) * discr.domain.extent() / 2
+        center = np.array([0.2, -0.4]) * discr.domain.extent() / 2
 
         # Efficiently calculate |z|^2, z = (x - center) / radii
         sq_ndist = np.zeros_like(x[0])
@@ -470,8 +480,8 @@ def _submarine_phantom_2d_smooth(discr, taper):
         ``(0.52, 0.2)``. For other domains, the values are scaled
         accordingly.
         """
-        xlower = np.array([0.12, -0.2]) * discr.domain.extent / 2
-        xupper = np.array([0.52, 0.2]) * discr.domain.extent / 2
+        xlower = np.array([0.12, -0.2]) * discr.domain.extent() / 2
+        xupper = np.array([0.52, 0.2]) * discr.domain.extent() / 2
 
         out = np.ones_like(x[0])
         for xi, low, upp in zip(x, xlower, xupper):
@@ -496,8 +506,8 @@ def _submarine_phantom_2d_nonsmooth(discr):
         ``(0.8, 0.28)``. For other domains, the values are scaled
         accordingly.
         """
-        halfaxes = np.array([0.8, 0.28]) * discr.domain.extent / 2
-        center = np.array([0.2, -0.4]) * discr.domain.extent / 2
+        halfaxes = np.array([0.8, 0.28]) * discr.domain.extent() / 2
+        center = np.array([0.2, -0.4]) * discr.domain.extent() / 2
 
         sq_ndist = np.zeros_like(x[0])
         for xi, rad, cen in zip(x, halfaxes, center):
@@ -513,8 +523,8 @@ def _submarine_phantom_2d_nonsmooth(discr):
         ``(0.52, 0.2)``. For other domains, the values are scaled
         accordingly.
         """
-        xlower = np.array([0.12, -0.2]) * discr.domain.extent / 2
-        xupper = np.array([0.52, 0.2]) * discr.domain.extent / 2
+        xlower = np.array([0.12, -0.2]) * discr.domain.extent() / 2
+        xupper = np.array([0.52, 0.2]) * discr.domain.extent() / 2
 
         out = np.ones_like(x[0])
         for xi, low, upp in zip(x, xlower, xupper):
@@ -524,6 +534,148 @@ def _submarine_phantom_2d_nonsmooth(discr):
     out = discr.element(ellipse)
     out += discr.element(rect)
     return out.ufunc.minimum(1, out=out)
+
+
+def cuboid(discr_space, begin, end):
+    """Rectangular cuboid.
+
+    Parameters
+    ----------
+    discr_space : `Discretization`
+        Discretized space in which the phantom is supposed to be created
+    begin : array-like or `float` in [0, 1]
+        The lower left corner of the cuboid within the space grid relative
+        to the extend of the grid
+    end : array-like or `float` in [0, 1]
+        The upper right corner of the cuboid within the space grid relative
+        to the extend of the grid
+
+    Returns
+    -------
+    phantom : `LinearSpaceVector`
+        Returns an element in ``discr_space``
+
+    Example
+    -------
+    >>> import odl
+    >>> space = odl.uniform_discr(0, 1, 6, dtype='float32')
+    >>> print(cuboid(space, 0.5, 1))
+    [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+    >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6], dtype='float32')
+    >>> print(cuboid(space, [0.25, 0], [0.75, 0.5]))
+    [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+     [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+     [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+    """
+    ndim = discr_space.ndim
+    shape = discr_space.shape
+
+    if np.isscalar(begin):
+        begin = (begin,) * ndim
+    if np.isscalar(end):
+        end = (end,) * ndim
+
+    # Create phantom
+    phan = np.zeros(shape)
+
+    slice1 = [slice(None)] * ndim
+
+    for nn in range(ndim):
+        start = np.floor(begin[nn] * shape[nn]).astype(int)
+        stop = np.ceil(end[nn] * shape[nn]).astype(int)
+
+        slice1[nn] = slice(start, stop)
+
+    phan[slice1] = 1
+
+    return discr_space.element(phan)
+
+
+def indicate_proj_axis(discr_space, scale_structures=0.5):
+    """Phantom indicating along which axis it is projected.
+
+    The number (n) of rectangles in a parallel-beam projection along a main
+    axis (0, 1, or 2) indicates the projection to be along the (n-1)the
+    dimension.
+
+    Parameters
+    ----------
+    discr_space : `Discretization`
+        Discretized space in which the phantom is supposed to be created
+    scale_structures : positive `float` in (0, 1]
+        Scales objects (cube, cuboids)
+
+    Returns
+    -------
+    phantom : `LinearSpaceVector`
+        Returns an element in ``discr_space``
+
+    Example
+    -------
+    >>> import odl
+    >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
+    >>> phan = indicate_proj_axis(space).asarray()
+    >>> print(np.sum(phan, 0))
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  3.  3.  0.  0.  0.]
+     [ 0.  0.  0.  3.  3.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    >>> print(np.sum(phan, 1))
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  1.  1.  0.  0.  0.]
+     [ 0.  0.  0.  1.  1.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    >>> print(np.sum(phan, 2))
+    [[ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  2.  2.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  2.  0.  0.  0.]
+     [ 0.  0.  0.  2.  0.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.]]
+    """
+    if not 0 < scale_structures <= 1:
+        raise ValueError('scale structure ({}) is not in (0, 1]'
+                         ''.format(scale_structures))
+
+    shape = discr_space.shape
+    phan = np.zeros(shape)
+    shape = np.array(shape) - 1
+    cen = np.round(0.5 * shape)
+    dx = np.floor(scale_structures * 0.25 * shape)
+    dx[dx == 0] = 1
+
+    # cube of size 2 * dx
+    x0 = (cen - 3 * dx)[0]
+    x, y, z = cen - 1 * dx
+    phan[x0:x, y:-y, z:-z] = 1
+
+    # 1st cuboid of size (dx[0], dx[1], 2 * dx[2])
+    x0 = (cen + 1 * dx)[1]
+    x1 = (cen + 2 * dx)[1]
+    y0 = cen[1]
+    z = (cen - dx)[2]
+    phan[x0:x1, y0:-y, z:-z] = 1
+
+    # 2nd cuboid of (dx[0], dx[1], 2 * dx[2]) touching the first diagonally
+    # at a long edge
+    x0 = (cen + 2 * dx)[1]
+    x1 = (cen + 3 * dx)[1]
+    y1 = cen[1]
+    z = (cen - dx)[2]
+    phan[x0:x1, y:y1, z:-z] = 1
+
+    return discr_space.element(phan)
 
 
 if __name__ == '__main__':

@@ -2,11 +2,11 @@
 In depth
 ########
 
-This is a more in depth guide to the different parts of odl.
+This is a more in depth guide to the different parts of ODL.
 
 .. toctree::
-    :maxdepth: 3
-    
+    :maxdepth: 2
+
     operator_guide
     linearspace_guide
-    discretization_guide
+    vectorization_guide

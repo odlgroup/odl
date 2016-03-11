@@ -22,8 +22,8 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib
+  # Install dependencies, use python 2.7 to test our lower requirements still hold, python3 does not work with scipy 0.14
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION libgfortran numpy scipy matplotlib
   - source activate test-environment
   - pip install -e .
 before_script:

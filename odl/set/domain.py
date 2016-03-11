@@ -30,11 +30,10 @@ standard_library.install_aliases()
 import numpy as np
 
 # ODL imports
-from odl.set.sets import Set, RealNumbers
-from odl.util.utility import array1d_repr
+from odl.set.sets import Set
+from odl.util.utility import array1d_repr, is_real_dtype
 from odl.util.vectorization import (
-    is_valid_input_array, is_valid_input_meshgrid, meshgrid_input_order,
-    vecs_from_meshgrid)
+    is_valid_input_array, is_valid_input_meshgrid)
 
 
 __all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cuboid')
@@ -47,6 +46,9 @@ class IntervalProd(Set):
     An interval product is a Cartesian product of n intervals, i.e. an
     n-dimensional rectangular box aligned with the coordinate axes
     as a subset of :math:`R^n`.
+
+    `IntervalProd` objects are immutable, all methods involving them return
+    a new `IntervalProd`.
     """
 
     def __init__(self, begin, end):
@@ -54,9 +56,9 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        begin : array-like or float
+        begin : `array-like` or `float`
             The lower ends of the intervals in the product
-        end : array-like or float
+        end : `array-like` or `float`
             The upper ends of the intervals in the product
 
         Examples
@@ -113,11 +115,6 @@ class IntervalProd(Set):
         return len(self._inondeg)
 
     @property
-    def extent(self):
-        """The interval length per axis."""
-        return self.end - self.begin
-
-    @property
     def volume(self):
         """The 'dim'-dimensional volume of this interval product."""
         return self.measure(ndim=self.ndim)
@@ -151,11 +148,42 @@ class IntervalProd(Set):
         """The maximum value in this interval product"""
         return self.end
 
-    def element(self):
-        """An arbitrary element, the midpoint."""
-        return self.midpoint
+    def extent(self):
+        """The interval length per axis."""
+        return self.max() - self.min()
 
-    # Overrides of the abstract base class methods
+    def element(self, inp=None):
+        """Create element in this set.
+
+        Parameters
+        ----------
+        inp : `float` or array-like, optional
+            Point to be cast to an element in self
+
+        Returns
+        -------
+        element
+            Returns ``inp`` if given, else ``self.midpoint``
+
+        Raises
+        ------
+        TypeError
+            If ``inp`` is not a valid element.
+
+        Examples
+        --------
+        >>> interv = IntervalProd(0, 1)
+        >>> interv.element(0.5)
+        0.5
+        """
+        if inp is None:
+            return self.midpoint
+        elif inp in self:
+            return inp
+        else:
+            raise TypeError('inp {!r} not a valid element in {!r}.'
+                            ''.format(inp, self))
+
     def approx_equals(self, other, tol):
         """Test if ``other`` is equal to this set up to ``tol``.
 
@@ -194,7 +222,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        point : array-like or `float`
+        point : `array-like` or `float`
             The point to be tested. Its length must be equal
             to the set's dimension. In the 1d case, 'point'
             can be given as a `float`.
@@ -215,23 +243,44 @@ class IntervalProd(Set):
         True
         """
         point = np.atleast_1d(point)
-        if point.dtype == object:
+        if point.shape != (self.ndim,):
             return False
-        if np.any(np.isnan(point)):
+        if not is_real_dtype(point.dtype):
             return False
-        if point.ndim > 1:
-            return False
-        if len(point) != self.ndim:
-            return False
-        if point[0] not in RealNumbers():
-            return False
-        if self.dist(point, ord=np.inf) > tol:
-            return False
-        return True
+        return self.dist(point, ord=np.inf) <= tol
 
     def __contains__(self, other):
-        """Return ``other in self``."""
-        return self.approx_contains(other, tol=0)
+        """Return ``other in self``.
+
+        Parameters
+        ----------
+        other
+            Arbitrary object to be tested.
+
+        Returns
+        -------
+        containts : `bool`
+            True if other is inside self.
+
+        Examples
+        --------
+        >>> interv = IntervalProd(0, 1)
+        >>> 0.5 in interv
+        True
+        >>> 2 in interv
+        False
+        >>> 'string' in interv
+        False
+        """
+        try:
+            # Duck-typed check of type
+            point = np.array(other, dtype=np.float, copy=False, ndmin=1)
+        except (ValueError, TypeError):
+            return False
+
+        if point.shape != (self.ndim,):
+            return False
+        return (self.begin <= point).all() and (point <= self.end).all()
 
     def contains_set(self, other, tol=0.0):
         """Test if another set is contained.
@@ -270,9 +319,9 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        other : object
+        other :
             Can be a single point, a ``(d, N)`` array where ``d`` is the
-            number of dimensions or a length-``d`` meshgrid sequence
+            number of dimensions or a length-``d`` meshgrid tuple
 
         Returns
         -------
@@ -281,15 +330,19 @@ class IntervalProd(Set):
 
         Examples
         --------
+        >>> import odl
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(b, e)
-        ...
-        ... # Arrays are expected in (ndim, npoints) shape
+
+        rrays are expected in (ndim, npoints) shape
+
         >>> arr = np.array([[-1, 0, 2],   # defining one point at a time
         ...                 [-0.5, 0, 2]])
         >>> rbox.contains_all(arr.T)
         True
-        >>> # Implicit meshgrids defined by coordinate vectors
+
+        Implicit meshgrids defined by coordinate vectors
+
         >>> from odl.discr.grid import sparse_meshgrid
         >>> vec1 = (-1, -0.9, -0.7)
         >>> vec2 = (0, 0, 0)
@@ -297,17 +350,36 @@ class IntervalProd(Set):
         >>> mg = sparse_meshgrid(vec1, vec2, vec3)
         >>> rbox.contains_all(mg)
         True
+
+        Also works with any iterable
+
+        >>> rbox.contains_all([[-1, -0.5], # define points by axis
+        ...                    [0, 0],
+        ...                    [2, 2]])
+        True
+
+        And with grids
+
+        >>> agrid = odl.uniform_sampling(rbox.begin, rbox.end, [3, 1, 3])
+        >>> rbox.contains_all(agrid)
+        True
         """
+        # First try optimized methods
         if other in self:
             return True
+        if hasattr(other, 'meshgrid'):
+            return self.contains_all(other.meshgrid)
         elif is_valid_input_meshgrid(other, self.ndim):
-            order = meshgrid_input_order(other)
-            vecs = vecs_from_meshgrid(other, order)
+            vecs = tuple(vec.squeeze() for vec in other)
             mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
             maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
             return np.all(mins >= self.begin) and np.all(maxs <= self.end)
-        elif is_valid_input_array(other, self.ndim):
+
+        # Convert to array and check each element
+        other = np.asarray(other)
+        if is_valid_input_array(other, self.ndim):
             if self.ndim == 1:
+
                 mins = np.min(other)
                 maxs = np.max(other)
             else:
@@ -360,12 +432,19 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        point : array-like or `float`
+        point : `array-like` or `float`
                 The point. Its length must be equal to the set's
                 dimension. Can be a `float` in the 1d case.
         ord : non-zero int or float('inf'), optional
               The order of the norm (see `numpy.linalg.norm`).
               Default: 2.0
+
+        Returns
+        -------
+        dist : `float`
+            Distance to the interior of the IntervalProd.
+            Points strictly inside have distance ``0.0``, points with ``NaN``
+            have distance ``infinity``.
 
         Examples
         --------
@@ -382,6 +461,9 @@ class IntervalProd(Set):
             raise ValueError('length {} of point {} does not match '
                              'the dimension {} of the set {}.'
                              ''.format(len(point), point, self.ndim, self))
+
+        if np.any(np.isnan(point)):
+            return np.inf
 
         i_larger = np.where(point > self.end)
         i_smaller = np.where(point < self.begin)
@@ -405,7 +487,7 @@ class IntervalProd(Set):
         ----------
         indices : `int` or `tuple` of `int`
             The indices of the dimensions along which to collapse
-        values : `float` or array-like
+        values : `array-like` or `float`
             The values to which to collapse. Must have the same
             length as ``indices``. Values must lie within the interval
             boundaries.
@@ -424,13 +506,8 @@ class IntervalProd(Set):
         Cuboid([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
         Cuboid([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
-        >>> rbox.collapse([1, 2], [0, 3.5])
-        Traceback (most recent call last):
-            ...
-        ValueError: values [ 0.   3.5] not below the upper interval
-        boundaries [ 1.  3.].
         """
-        indices = np.atleast_1d(indices)
+        indices = np.atleast_1d(indices).astype('int64', casting='safe')
         values = np.atleast_1d(values)
         if len(indices) != len(values):
             raise ValueError('lengths of indices {} and values {} do not '
@@ -484,59 +561,45 @@ class IntervalProd(Set):
         e_new = self.end[self._inondeg]
         return IntervalProd(b_new, e_new)
 
-    def insert(self, other, index=None):
-        """Insert another interval product before the given index.
+    def insert(self, index, other):
+        """Return a copy with ``other`` inserted before ``index``.
 
         The given interval product (``ndim=m``) is inserted into the
         current one (``ndim=n``) before the given index, resulting in a
         new interval product with ``n+m`` dimensions.
 
-        No changes are made in-place.
-
         Parameters
         ----------
-        other : `IntervalProd`, `float` or array-like
-            The set to be inserted. A `float` or array a is
-            treated as an ``IntervalProd(a, a)``.
-        index : `int`, optional
-            The index of the dimension before which ``other`` is to
-            be inserted. Must fulfill ``0 <= index <= ndim``.
-
-            Default: `ndim`
+        index : `int`
+            Index of the dimension before which ``other`` is to
+            be inserted. Must fulfill ``-ndim <= index <= ndim``.
+            Negative indices count backwards from ``self.ndim``.
+        other : `IntervalProd`
+            Interval product to be inserted
 
         Returns
         -------
-        larger_set : `IntervalProd`
-            The enlarged set
+        newintvp : `IntervalProd`
+            Interval product with ``other`` inserted
 
         Examples
         --------
 
         >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
         >>> rbox2 = IntervalProd([0, 0], [1, 0])
-        >>> rbox.insert(rbox2, 1)
+        >>> rbox.insert(1, rbox2)
         IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
-        >>> rbox.insert([-1.0, 0.0], 2)
-        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
-
-        Without index, inserts at the end
-
-        >>> rbox.insert([-1.0, 0.0])
-        IntervalProd([-1.0, 2.0, -1.0, 0.0], [-0.5, 3.0, -1.0, 0.0])
-
-        Can also insert by array
-
-        >>> rbox.insert(0, 1).squeeze() == rbox
-        True
+        >>> rbox.insert(-1, rbox2)
+        IntervalProd([-1.0, 0.0, 0.0, 2.0], [-0.5, 1.0, 0.0, 3.0])
         """
-        if index is None:
-            index = self.ndim
-        elif not 0 <= index <= self.ndim:
-            raise IndexError('Index ({}) out of range'.format(index))
+        if index < 0:
+            index = int(index) + self.ndim
+        else:
+            index = int(index)
 
-        # TODO: do we want this?
-        if not isinstance(other, IntervalProd):
-            other = IntervalProd(other, other)
+        if not 0 <= index <= self.ndim:
+            raise IndexError('index {} outside the valid range 0 ... {}.'
+                             ''.format(index, self.ndim))
 
         new_beg = np.empty(self.ndim + other.ndim)
         new_end = np.empty(self.ndim + other.ndim)
@@ -550,6 +613,27 @@ class IntervalProd(Set):
             new_end[index + other.ndim:] = self.end[index:]
 
         return IntervalProd(new_beg, new_end)
+
+    def append(self, other):
+        """Insert at the end.
+
+        Parameters
+        ----------
+        other : `IntervalProd`, `float` or array-like
+            The set to be inserted. A `float` or array a is
+            treated as an ``IntervalProd(a, a)``.
+
+        Examples
+        --------
+        >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
+        >>> rbox.append(Interval(-1.0, 0.0))
+        Cuboid([-1.0, 2.0, -1.0], [-0.5, 3.0, 0.0])
+
+        See Also
+        --------
+        insert
+        """
+        return self.insert(self.ndim, other)
 
     def corners(self, order='C'):
         """The corner points in a single array.
@@ -591,8 +675,6 @@ class IntervalProd(Set):
                [-0.5,  3. ,  0.5]])
         """
         from odl.discr.grid import TensorGrid
-        if order not in ('C', 'F'):
-            raise ValueError('order {} not understood.'.format(order))
 
         minmax_vecs = [0] * self.ndim
         for axis in self._ideg:
@@ -607,6 +689,42 @@ class IntervalProd(Set):
     def __len__(self):
         """Return ``len(self)``."""
         return self.ndim
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``
+
+        Parameters
+        ----------
+        indices : numpy style index
+            Any of: int, slice, list of ints
+
+        Returns
+        -------
+        subinterval : `IntervalProd`
+            Interval given by the indices
+
+        Examples
+        --------
+        >>> rbox = IntervalProd([-1, 2, 0], [-0.5, 3, 0.5])
+
+        By integer
+
+        >>> rbox[0]
+        Interval(-1.0, -0.5)
+
+        By slice
+
+        >>> rbox[:]
+        Cuboid([-1.0, 2.0, 0.0], [-0.5, 3.0, 0.5])
+        >>> rbox[::2]
+        Rectangle([-1.0, 0.0], [-0.5, 0.5])
+
+        By list of ints
+
+        >>> rbox[[0, 1]]
+        Rectangle([-1.0, 2.0], [-0.5, 3.0])
+        """
+        return IntervalProd(self.begin[indices], self.end[indices])
 
     def __pos__(self):
         """Return ``+self``."""
@@ -705,9 +823,9 @@ def Interval(begin, end):
 
     Parameters
     ----------
-    begin : array-like or float
+    begin : `array-like`, shape ``(1,)``, or `float`
         The lower ends of the intervals in the product
-    end : array-like or float
+    end : `array-like`, shape ``(1,)``, or `float`
         The upper ends of the intervals in the product
 
     """
@@ -723,9 +841,9 @@ def Rectangle(begin, end):
 
     Parameters
     ----------
-    begin : array-like with two elements convertible to float
+    begin : `array-like`, shape ``(2,)``
         The lower ends of the intervals in the product
-    end : array-like with two elements convertible to float
+    end : `array-like`, shape ``(2,)``
         The upper ends of the intervals in the product
     """
     rectangle = IntervalProd(begin, end)
@@ -740,9 +858,9 @@ def Cuboid(begin, end):
 
     Parameters
     ----------
-    begin : array-like with three elements convertible to float
+    begin : `array-like`, shape ``(3,)``
         The lower ends of the intervals in the product
-    end : array-like with three elements convertible to float
+    end : `array-like`, shape ``(3,)``
         The upper ends of the intervals in the product
     """
     cuboid = IntervalProd(begin, end)

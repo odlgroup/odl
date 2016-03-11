@@ -16,6 +16,10 @@ omit =
     # Omit until coveralls supports pywt.
     odl/trafos/wavelet.py
 
+    # Omit until coveralls supports astra.
+    odl/tomo/operators/xray_trafo.py
+    odl/tomo/backends/*
+
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =

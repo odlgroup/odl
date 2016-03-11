@@ -15,27 +15,60 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Deconvolution using Chambolle-Pock solver."""
+"""Total variation base image deconvolution using the Chambolle-Pock solver.
+
+Let X and Y be finite-dimensional Hilbert spaces and K a linear mapping from
+X to Y with induce norm ||K||. The (primal) minimization problem we want to
+solve is
+
+    min_{x in X} F(K x) + G(x)
+
+where the proper, convex, lower-semicontinuous functionals
+F : Y -> [0, +infinity] and G : X -> [0, +infinity] are given
+by an l2-data fitting term regularized by isotropic total variation
+
+    F(K x) = 1/2 ||conv(x) - g||_2^2 + lam || |grad(x)| ||_1
+
+and
+
+   G(x) = 0 ,
+
+respectively. Here, conv denotes the convolution operator, g the image to
+deconvolve, ||.||_2 the l2-norm, ||.||_1  the l1-semi-norm, grad the spatial
+gradient, lam the regularization parameter, |.| the point-wise magnitude
+across the vector components of grad(x), and K is a column vector of
+operators K = (conv, grad)^T.
+
+First we define a convolution operator and generate an image to be
+deconvolved by convolving a Shepp-Logan phantom with a Gaussian kernel.
+
+In order to use the Chambolle-Pock solver, we have to create the column
+operator K, choose a starting point x, create the proximal operator for G,
+create the proximal operator for the convex conjugate of F, choose the
+step sizes tau and sigma such that tau sigma ||K||_2^2 < 1, and set the
+total number of iterations.
+
+For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
+references therein.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-
 standard_library.install_aliases()
 from builtins import super
 
-# External
 import numpy as np
 import scipy
 import scipy.ndimage
 import matplotlib.pyplot as plt
 
-# Internal
 import odl
-from odl.solvers import (chambolle_pock_solver,
-                         proximal_convexconjugate_l2_l1, proximal_zero)
 
 
+# TODO: Use BroadCastOperator instead of ProductSpaceOperator
+
+# Define the forward operator of the inverse problem in question
 class Convolution(odl.Operator):
     def __init__(self, space, kernel, adjkernel):
         self.kernel = kernel
@@ -43,9 +76,7 @@ class Convolution(odl.Operator):
         super().__init__(space, space, linear=True)
 
     def _call(self, rhs, out):
-        scipy.ndimage.convolve(rhs,
-                               self.kernel,
-                               output=out.asarray(),
+        scipy.ndimage.convolve(rhs, self.kernel, output=out.asarray(),
                                mode='wrap')
         return out
 
@@ -54,19 +85,24 @@ class Convolution(odl.Operator):
         return Convolution(self.domain, self.adjkernel, self.kernel)
 
 
+# Gaussian kernel for the convolution operator
 def kernel(x):
-    mean = [0.0, 0.5]
-    std = [0.05, 0.05]
-    return np.exp(-(((x[0] - mean[0]) / std[0]) ** 2 + ((x[1] - mean[1]) /
-                                                        std[1]) ** 2))
+    mean = [0.1, 0.5]
+    std = [0.1, 0.1]
+    k = np.exp(-(((x[0] - mean[0]) / std[0]) ** 2 +
+                 ((x[1] - mean[1]) / std[1]) ** 2))
+    return k
 
 
+# Kernel for the adjoint of the convolution operator
 def adjkernel(x):
     return kernel((-x[0], -x[1]))
 
 
 # Continuous definition of problem
 cont_space = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
+
+# Create a kernel space which has twice the extent of the image space
 kernel_space = odl.FunctionSpace(cont_space.domain - cont_space.domain)
 
 # Discretization parameters
@@ -82,47 +118,71 @@ discr_kernel_space = odl.uniform_discr_fromspace(kernel_space, npoints_kernel)
 disc_kernel = discr_kernel_space.element(kernel)
 disc_adjkernel = discr_kernel_space.element(adjkernel)
 
-# Load phantom
+# Initialize convolution operator
+convolution = Convolution(discr_space, disc_kernel, disc_adjkernel)
+
+# Optional: Run diagnostics to assure the adjoint is properly implemented
+# odl.diagnostics.OperatorTest(conv_op).run_tests()
+
+# Create phantom
 discr_phantom = odl.util.phantom.shepp_logan(discr_space, modified=True)
 
-# Initialize convolution operator
-conv = Convolution(discr_space, disc_kernel, disc_adjkernel)
+# Create vector of convolved phantom
+data = convolution(discr_phantom)
 
-# Run diagnostics to test the adjoint
-# odl.diagnostics.OperatorTest(conv).run_tests()
+# Set up the Chambolle-Pock solver:
 
 # Initialize gradient operator
-grad = odl.DiscreteGradient(discr_space, method='forward')
+gradient = odl.Gradient(discr_space, method='forward')
 
-# Matrix of operators
-prod_op = odl.ProductSpaceOperator([[conv], [grad]])
+# Column vector of two operators
+op = odl.ProductSpaceOperator([[convolution],
+                               [gradient]])
 
-# Starting point
-x = prod_op.domain.zero()
+# Choose a starting point
+x = op.domain.one()
 
-# Operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-# prod_op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(prod_op, 50)
-# print(prod_op_norm)
-prod_op_norm = 77
+# Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
+op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 100)
+print('Norm of the product space operator: {}'.format(op_norm))
 
-# Create data: convoluted image
-g = discr_space.element()
-conv(discr_phantom, out=g)
+# Create the proximal operator for unconstrained primal variable
+proximal_primal = odl.solvers.proximal_zero(op.domain)
+
+# Create proximal operators for the dual variable
+
+# l2-data matching
+prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(discr_space, g=data)
+
+# TV-regularization i.e. the l1-norm
+prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(
+    gradient.range, lam=0.01)
+
+# Combine proximal operators, order must correspond to the operator K
+proximal_dual = odl.solvers.combine_proximals(
+    [prox_convconj_l2, prox_convconj_l1])
+
+# Number of iterations
+niter = 400
+
+# Step size for the proximal operator for the primal variable x
+tau = 1 / op_norm
+
+# Step size for the proximal operator for the dual variable y
+sigma = 1 / op_norm
 
 # Optionally pass partial to the solver to display intermediate results
-partial = (odl.solvers.util.ShowPartial(title='intermediate results') &
-           odl.solvers.util.PrintTimingPartial())
+partial = (odl.solvers.util.PrintIterationPartial() &
+           odl.solvers.util.PrintTimingPartial() &
+           odl.solvers.util.ShowPartial())
 
-# Run algorithms
-chambolle_pock_solver(prod_op, x, tau=1 / prod_op_norm, sigma=1 / prod_op_norm,
-                      proximal_primal=proximal_zero(prod_op.domain),
-                      proximal_dual=proximal_convexconjugate_l2_l1(
-                          prod_op.range, g, lam=0.0001),
-                      niter=100,
-                      partial=partial)
+# Run the algorithm
+odl.solvers.chambolle_pock_solver(
+    op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
+    proximal_dual=proximal_dual, niter=niter, partial=partial)
 
 # Display images
 discr_phantom.show(title='original image')
-g.show(title='convolved image')
+data.show(title='convolved image')
 x.show(title='deconvolved image')
 plt.show()

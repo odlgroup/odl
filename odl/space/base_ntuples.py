@@ -28,14 +28,14 @@ from builtins import int
 from abc import ABCMeta, abstractmethod
 from math import sqrt
 import numpy as np
-import platform
 
 # ODL imports
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
-    is_scalar_dtype, is_real_dtype, is_floating_dtype)
+    is_scalar_dtype, is_real_dtype, is_floating_dtype,
+    is_complex_floating_dtype)
 from odl.util.ufuncs import NtuplesBaseUFuncs
 
 
@@ -44,18 +44,12 @@ __all__ = ('NtuplesBase', 'NtuplesBaseVector',
            'FnWeightingBase')
 
 
-_TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
-                 np.dtype('float64'): np.dtype('float64'),
-                 np.dtype('complex64'): np.dtype('float32'),
-                 np.dtype('complex128'): np.dtype('float64')}
+_TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
+                 for dtype in np.sctypes['float']}
 
-_TYPE_MAP_R2C = {np.dtype('float32'): np.dtype('complex64'),
-                 np.dtype('float64'): np.dtype('complex128')}
-
-if platform.system() == 'Linux':
-    _TYPE_MAP_C2R.update({np.dtype('float128'): np.dtype('float128'),
-                          np.dtype('complex256'): np.dtype('float128')})
-    _TYPE_MAP_R2C.update({np.dtype('float128'): np.dtype('complex256')})
+_TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
+                 for rdt, cdt in _TYPE_MAP_R2C.items()}
+_TYPE_MAP_C2R.update({k: k for k in _TYPE_MAP_R2C.keys()})
 
 
 class NtuplesBase(Set):
@@ -89,6 +83,11 @@ class NtuplesBase(Set):
     def size(self):
         """The number of entries per tuple."""
         return self._size
+
+    @property
+    def shape(self):
+        """The shape of this space."""
+        return (self.size,)
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -153,11 +152,6 @@ class NtuplesBase(Set):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({}, {})'.format(self.__class__.__name__, self.size,
-                                   dtype_repr(self.dtype))
-
-    def __str__(self):
-        """Return ``str(self)``."""
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
@@ -228,7 +222,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, `NtuplesBaseVector`}
+        values : scalar, `array-like` or `NtuplesBaseVector`
             The value(s) that are to be assigned.
 
             If ``index`` is an integer, ``value`` must be single value.
@@ -271,8 +265,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
     @property
     def shape(self):
-        """Shape of this vector, equals ``(size,)``."""
-        return (self.size,)
+        """Number of entries per axis, equals (size,) for linear storage."""
+        return self.space.shape
 
     @property
     def itemsize(self):
@@ -347,6 +341,51 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """
         return NtuplesBaseUFuncs(self)
 
+    def show(self, title=None, method='scatter', show=False, fig=None,
+             **kwargs):
+        """Display the function graphically.
+
+        Parameters
+        ----------
+        title : `str`, optional
+            Set the title of the figure
+
+        method : `str`, optional
+            1d methods:
+
+            'plot' : graph plot
+
+            'scatter' : point plot
+
+        show : `bool`, optional
+            If the plot should be showed now or deferred until later.
+
+        fig : `matplotlib.figure.Figure`
+            The figure to show in. Expected to be of same "style", as
+            the figure given by this function. The most common use case
+            is that ``fig`` is the return value from an earlier call to
+            this function.
+
+        kwargs : {'figsize', 'saveto', ...}
+            Extra keyword arguments passed on to display method
+            See the Matplotlib functions for documentation of extra
+            options.
+
+        Returns
+        -------
+        fig : `matplotlib.figure.Figure`
+            The resulting figure. It is also shown to the user.
+
+        See Also
+        --------
+        odl.util.graphics.show_discrete_data : Underlying implementation
+        """
+        from odl.util.graphics import show_discrete_data
+        from odl.discr import RegularGrid
+        grid = RegularGrid(0, self.size - 1, self.size)
+        return show_discrete_data(self.asarray(), grid, title=title,
+                                  method=method, show=show, fig=fig, **kwargs)
+
 
 class FnBase(NtuplesBase, LinearSpace):
 
@@ -367,42 +406,76 @@ class FnBase(NtuplesBase, LinearSpace):
             Only scalar data types (numbers) are allowed.
         """
         NtuplesBase.__init__(self, size, dtype)
+
         if not is_scalar_dtype(self.dtype):
             raise TypeError('{!r} is not a scalar data type.'.format(dtype))
 
         if is_real_dtype(self.dtype):
             field = RealNumbers()
-            self._real_dtype = self.dtype
             self._is_real = True
+            self._real_dtype = self.dtype
+            self._real_space = self
+            self._complex_dtype = _TYPE_MAP_R2C.get(self.dtype, None)
+            self._complex_space = None  # Set in first call of astype
         else:
             field = ComplexNumbers()
-            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
             self._is_real = False
+            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
+            self._real_space = None  # Set in first call of astype
+            self._complex_dtype = self.dtype
+            self._complex_space = self
 
         self._is_floating = is_floating_dtype(self.dtype)
-
         LinearSpace.__init__(self, field)
 
     @property
-    def real_dtype(self):
-        """The corresponding real data type of this space."""
-        return self._real_dtype
-
-    @property
     def is_rn(self):
-        """If the space represents the set :math:`R^n`.
-
-        Tuples of real numbers.
-        """
+        """Return `True` if the space represents R^n, i.e. real tuples."""
         return self._is_real and self._is_floating
 
     @property
     def is_cn(self):
-        """If the space represents the set :math:`C^n`.
-
-        Tuples of complex numbers.
-        """
+        """Return `True` if the space represents C^n, i.e. complex tuples."""
         return (not self._is_real) and self._is_floating
+
+    def _astype(self, dtype):
+        """Internal helper for ``astype``."""
+        return type(self)(self.size, dtype=dtype, weight=self.weighting)
+
+    def astype(self, dtype):
+        """Return a copy of this space with new ``dtype``.
+
+        Parameters
+        ----------
+        dtype :
+            Data type of the returned space. Can be given in any way
+            `numpy.dtype` understands, e.g. as string ('complex64')
+            or data type (`complex`).
+
+        Returns
+        -------
+        newspace : `FnBase`
+            The version of this space with given data type
+        """
+        if dtype is None:
+            # Need to filter this out since Numpy iterprets it as 'float'
+            raise ValueError("Unknown data type 'None'.")
+
+        dtype = np.dtype(dtype)
+        if dtype == self.dtype:
+            return self
+
+        # Caching for real and complex versions (exact dtyoe mappings)
+        if dtype == self._real_dtype:
+            if self._real_space is None:
+                self._real_space = self._astype(dtype)
+            return self._real_space
+        elif dtype == self._complex_dtype:
+            if self._complex_space is None:
+                self._complex_space = self._astype(dtype)
+            return self._complex_space
+        else:
+            return self._astype(dtype)
 
     @abstractmethod
     def zero(self):

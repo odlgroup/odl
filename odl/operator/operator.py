@@ -33,7 +33,7 @@ import sys
 from odl.set.space import (LinearSpace, LinearSpaceVector,
                            UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
-from odl.util.utility import preload_call_with
+from odl.util.utility import preload_first_arg
 
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
@@ -50,13 +50,13 @@ def _default_call_out_of_place(op, x, **kwargs):
 
     Parameters
     ----------
-    x : ``domain`` element
+    x : ``domain`` `element`
         An object in the operator domain. The operator is applied
         to it.
 
     Returns
     -------
-    out : ``range`` element
+    out : ``range`` `element`
         An object in the operator range. The result of an operator
         evaluation.
     """
@@ -70,11 +70,11 @@ def _default_call_in_place(op, x, out, **kwargs):
 
     Parameters
     ----------
-    x : ``domain`` element
+    x : ``domain`` `element`
         An object in the operator domain. The operator is applied
         to it.
 
-    out : ``range`` element
+    out : ``range`` `element`
         An object in the operator range. The result of an operator
         evaluation.
 
@@ -82,7 +82,7 @@ def _default_call_in_place(op, x, out, **kwargs):
     -------
     `None`
     """
-    out.assign(op._call_out_of_place(x, **kwargs))
+    out.assign(op.range.element(op._call_out_of_place(x, **kwargs)))
 
 
 def _signature_from_spec(func):
@@ -359,11 +359,11 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element
+    x : `Operator.domain` `element`
         An object in the operator domain to which the operator is
         applied
 
-    out : `Operator.range` element
+    out : `Operator.range` `element`
         An object in the operator range to which the result of the
         operator evaluation is written.
 
@@ -382,13 +382,13 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element
+    x : `Operator.domain` `element`
         An object in the operator domain to which the operator is
         applied
 
     **Returns:**
 
-    out : `Operator.range` element-like
+    out : `Operator.range` `element-like`
         An object in the operator range holding the result of the
         operator evaluation
 
@@ -399,11 +399,11 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` element
+    x : `Operator.domain` `element`
         An object in the operator domain to which the operator is
         applied
 
-    out : `Operator.range` element, optional
+    out : `Operator.range` `element`, optional
         An object in the operator range to which the result of the
         operator evaluation is written
 
@@ -434,7 +434,7 @@ class Operator(object):
         instance._call_out_optional = call_out_optional
         if not call_has_out:
             # Out-of-place _call
-            instance._call_in_place = preload_call_with(
+            instance._call_in_place = preload_first_arg(
                 instance, 'in-place')(_default_call_in_place)
             instance._call_out_of_place = instance._call
         elif call_out_optional:
@@ -444,7 +444,7 @@ class Operator(object):
         else:
             # In-place only _call
             instance._call_in_place = instance._call
-            instance._call_out_of_place = preload_call_with(
+            instance._call_out_of_place = preload_first_arg(
                 instance, 'out-of-place')(_default_call_out_of_place)
 
         return instance
@@ -545,14 +545,14 @@ class Operator(object):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Element to which the operator is applied
-        out : `Operator.range` element, optional
+        out : `Operator.range` `element`, optional
             Element to which the result is written
 
         Returns
         -------
-        out : `Operator.range` element-like
+        out : `Operator.range` `element-like`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -563,18 +563,19 @@ class Operator(object):
         out-of-place call even if you choose the respective other
         pattern.
         """
-        raise NotImplementedError('This operator does not implement `_call`. '
-                                  'See `Operator._call` for instructions on '
-                                  'how to do this.')
+        raise NotImplementedError('This operator {!r} does not implement '
+                                  '`_call`. See `Operator._call` for '
+                                  'instructions on how to do this.'
+                                  ''.format(self))
 
     @property
     def domain(self):
-        """The domain of this operator."""
+        """Set of objects on which this operator can be evaluated."""
         return self._domain
 
     @property
     def range(self):
-        """The range of this operator."""
+        """Set in which the result of an evaluation of this operator lies."""
         return self._range
 
     @property
@@ -629,26 +630,28 @@ class Operator(object):
                                     ''.format(self))
 
     def __call__(self, x, out=None, **kwargs):
-        """Return ``self(x)``.
+        """Return ``self(x[, out, **kwargs])``.
 
         Implementation of the call pattern ``op(x)`` with the private
         ``_call()`` method and added error checking.
 
         Parameters
         ----------
-        x : `Operator.domain` element
-            An object in the operator domain to which the operator is
-            applied. The object is treated as immutable, hence it is
-            not modified during evaluation.
-        out : `Operator.range` element, optional
+        x : `Operator.domain` `element-like`
+            An object which can be converted into an element of this
+            operator's domain with the ``self.domain.element`` method.
+            The operator is applied to this object, which is treated
+            as immutable, hence it is not modified during evaluation.
+        out : `Operator.range` `element`, optional
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
-        **kwargs : Further arguments to the function, optional
+        kwargs : Further arguments to the function, optional
+            Passed on to the underlying implementation in `_call`
 
         Returns
         -------
-        out : `Operator.range` element
+        out : `Operator.range` `element`
             Result of the operator evaluation. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -671,6 +674,10 @@ class Operator(object):
         Rn(3).element([2.0, 4.0, 6.0])
         >>> y
         Rn(3).element([2.0, 4.0, 6.0])
+
+        See Also
+        --------
+        _call : Implementation of the method
         """
         if x not in self.domain:
             try:
@@ -678,11 +685,11 @@ class Operator(object):
             except (TypeError, ValueError) as err:
                 raise_from(OpDomainError(
                     'unable to cast {!r} to an element of '
-                    'the domain {}.'.format(x, self.domain)), err)
+                    'the domain {!r}.'.format(x, self.domain)), err)
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
-                raise OpRangeError('output {!r} not an element of the range'
+                raise OpRangeError('output {!r} not an element of the range '
                                    '{!r} of {!r}.'
                                    ''.format(out, self.range, self))
 
@@ -701,7 +708,7 @@ class Operator(object):
                 except (TypeError, ValueError) as err:
                     new_exc = OpRangeError(
                         'unable to cast {!r} to an element of '
-                        'the range {}.'.format(out, self.range))
+                        'the range {!r}.'.format(out, self.range))
                     raise_from(new_exc, err)
         return out
 
@@ -935,9 +942,8 @@ class Operator(object):
         Parameters
         ----------
         other : scalar
-            If `Operator.range` is a `LinearSpace`,
-            ``scalar`` must be an element of this operator's
-            ``field``.
+            If `Operator.range` is a `LinearSpace`, ``scalar`` must be
+            an element of the ``field`` of this operator's range.
 
         Returns
         -------
@@ -957,7 +963,7 @@ class Operator(object):
         Rn(3).element([1.0, 2.0, 3.0])
         """
         if isinstance(other, Number):
-            return OperatorRightScalarMult(self, 1.0 / other)
+            return self * (1.0 / other)
         else:
             return NotImplemented
 
@@ -1020,10 +1026,10 @@ class OperatorSum(Operator):
             The second summand. Must have the same
             `Operator.domain` and `Operator.range` as
             ``op1``.
-        tmp_ran : `Operator.range` element, optional
+        tmp_ran : `Operator.range` `element`, optional
             Used to avoid the creation of a temporary when applying the
             operator.
-        tmp_dom : `Operator.domain` element, optional
+        tmp_dom : `Operator.domain` `element`, optional
             Used to avoid the creation of a temporary when applying the
             operator adjoint.
         """
@@ -1085,7 +1091,7 @@ class OperatorSum(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Evaluation point of the derivative
         """
         return OperatorSum(self._op1.derivative(x), self._op2.derivative(x))
@@ -1141,7 +1147,7 @@ class OperatorComp(Operator):
         right : `Operator`
             The right ("inner") operator. Its range must coincide with the
             domain of ``left``.
-        tmp : element of the range of ``right``, optional
+        tmp : `element` of the range of ``right``, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
@@ -1194,7 +1200,7 @@ class OperatorComp(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Evaluation point of the derivative. Needs to be usable as
             input for the ``right`` operator.
         """
@@ -1304,7 +1310,7 @@ class OperatorLeftScalarMult(Operator):
         op : `Operator`
             The range of ``op`` must be a `LinearSpace`
             or `Field`.
-        scalar : ``op.range.field`` element
+        scalar : ``op.range.field`` `element`
             A real or complex number, depending on the field of
             the range.
         """
@@ -1354,7 +1360,7 @@ class OperatorLeftScalarMult(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Evaluation point of the derivative
 
         See also
@@ -1413,10 +1419,10 @@ class OperatorRightScalarMult(Operator):
         op : `Operator`
             The domain of ``op`` must be a `LinearSpace` or
             `Field`.
-        scalar : ``op.range.field`` element
+        scalar : ``op.range.field`` `element`
             A real or complex number, depending on the field of
             the operator domain.
-        tmp : domain element, optional
+        tmp : domain `element`, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
@@ -1474,7 +1480,7 @@ class OperatorRightScalarMult(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` element-like
+        x : `Operator.domain` `element-like`
             Evaluation point of the derivative
         """
         return OperatorLeftScalarMult(self._op.derivative(self._scalar * x),

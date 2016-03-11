@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -102,13 +102,13 @@ def numba_example():
     # (2000*2000, 2). Since the function expects points[i] to be the
     # array of i-th components of all points, we need to transpose.
     points = grid.points().T
-    # The meshgrid() method only returns a sparse representation of the
+    # The meshgrid property only returns a sparse representation of the
     # grid, a tuple whose i-th entry is the vector of all possible i-th
     # components in the grid (2000). Extra dimensions are added to the
     # vector in order to support automatic broadcasting. This is both
     # faster and more memory-friendly than creating the full point array.
     # See the numpy.meshgrid function for more information.
-    mesh = grid.meshgrid()  # Creates a sparse meshgrid (2000 * 2)
+    mesh = grid.meshgrid  # Returns a sparse meshgrid (2000 * 2)
 
     print('Non-Vectorized runtime (points):      {:5f}'
           ''.format(timeit.timeit(lambda: f_default(points), number=1)))

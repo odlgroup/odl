@@ -35,7 +35,7 @@ except ImportError:
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
 
-__all__ = ('DiscreteWaveletTransform', 'DiscreteWaveletTransformInverse',
+__all__ = ('WaveletTransform', 'WaveletTransformInverse',
            'PYWAVELETS_AVAILABLE')
 
 
@@ -508,7 +508,7 @@ signal-extension-modes.html>`_
     return x
 
 
-class DiscreteWaveletTransform(Operator):
+class WaveletTransform(Operator):
 
     """Discrete wavelet trafo between discrete L2 spaces."""
 
@@ -578,7 +578,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         >>> import odl, pywt
         >>> wbasis = pywt.Wavelet('db1')
         >>> discr_domain = odl.uniform_discr([0, 0], [1, 1], (16, 16))
-        >>> op = DiscreteWaveletTransform(discr_domain, nscales=1,
+        >>> op = WaveletTransform(discr_domain, nscales=1,
         ...                               wbasis=wbasis, mode='per')
         >>> op.is_biorthogonal
         True
@@ -599,7 +599,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             raise ValueError('domain Lp exponent is {} instead of 2.0.'
                              ''.format(dom.exponent))
 
-        max_level = pywt.dwt_max_level(dom.grid.shape[0],
+        max_level = pywt.dwt_max_level(dom.shape[0],
                                        filter_len=self.wbasis.dec_len)
         # TODO: maybe the error message could tell how to calculate the
         # max number of levels
@@ -607,7 +607,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             raise ValueError('Cannot use more than {} scaling levels, '
                              'got {}.'.format(max_level, self.nscales))
 
-        self.size_list = coeff_size_list(dom.grid.shape, self.nscales,
+        self.size_list = coeff_size_list(dom.shape, self.nscales,
                                          self.wbasis, self.mode)
 
         ran_size = np.prod(self.size_list[0])
@@ -682,12 +682,12 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     @property
     def inverse(self):
         """The inverse wavelet transform."""
-        return DiscreteWaveletTransformInverse(
+        return WaveletTransformInverse(
             ran=self.domain, nscales=self.nscales, wbasis=self.wbasis,
             mode=self.mode)
 
 
-class DiscreteWaveletTransformInverse(Operator):
+class WaveletTransformInverse(Operator):
 
     """Discrete inverse wavelet trafo between discrete L2 spaces."""
 
@@ -763,7 +763,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             raise ValueError('range Lp exponent is {} instead of 2.0.'
                              ''.format(ran.exponent))
 
-        max_level = pywt.dwt_max_level(ran.grid.shape[0],
+        max_level = pywt.dwt_max_level(ran.shape[0],
                                        filter_len=self.wbasis.dec_len)
         # TODO: maybe the error message could tell how to calculate the
         # max number of levels
@@ -771,7 +771,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             raise ValueError('Cannot use more than {} scaling levels, '
                              'got {}.'.format(max_level, self.nscales))
 
-        self.size_list = coeff_size_list(ran.grid.shape, self.nscales,
+        self.size_list = coeff_size_list(ran.shape, self.nscales,
                                          self.wbasis, self.mode)
 
         dom_size = np.prod(self.size_list[0])
@@ -814,15 +814,15 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         arr : `DiscreteLpVector`
 
         """
-        if len(self.range.grid.shape) == 1:
+        if len(self.range.shape) == 1:
             coeff_list = array_to_pywt_coeff(coeff, self.size_list)
             x = pywt.waverec(coeff_list, self.wbasis, self.mode)
             return self.range.element(x)
-        elif len(self.range.grid.shape) == 2:
+        elif len(self.range.shape) == 2:
             coeff_list = array_to_pywt_coeff(coeff, self.size_list)
             x = pywt.waverec2(coeff_list, self.wbasis, self.mode)
             return self.range.element(x)
-        elif len(self.range.grid.shape) == 3:
+        elif len(self.range.shape) == 3:
             coeff_dict = array_to_pywt_coeff(coeff, self.size_list)
             x = wavelet_reconstruction3d(coeff_dict, self.wbasis, self.mode,
                                          self.nscales)
@@ -840,8 +840,8 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     @property
     def inverse(self):
         """The inverse wavelet transform."""
-        return DiscreteWaveletTransform(dom=self.range, nscales=self.nscales,
-                                        wbasis=self.wbasis, mode=self.mode)
+        return WaveletTransform(dom=self.range, nscales=self.nscales,
+                                wbasis=self.wbasis, mode=self.mode)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

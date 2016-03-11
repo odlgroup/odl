@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -31,15 +31,19 @@ from odl.util.utility import (
     is_scalar_dtype, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
 
-real_float_dtypes = [np.float32, np.float64]
-complex_float_dtypes = [np.complex64, np.complex128]
-nonfloat_scalar_dtypes = [np.int8, np.int16, np.int32, np.int64,
-                          np.uint8, np.uint16, np.uint32, np.uint64]
-nonscalar_dtypes = [np.dtype('S1'), np.dtype('<U2'), np.dtype(object)]
 
+real_float_dtypes = np.sctypes['float']
+complex_float_dtypes = np.sctypes['complex']
+nonfloat_scalar_dtypes = np.sctypes['uint'] + np.sctypes['int']
 scalar_dtypes = (real_float_dtypes + complex_float_dtypes +
                  nonfloat_scalar_dtypes)
 real_dtypes = real_float_dtypes + nonfloat_scalar_dtypes
+# Need to make concrete instances here (with string lengths)
+nonscalar_dtypes = [np.dtype('S1'), np.dtype('<U2'), np.dtype(object),
+                    np.dtype(bool), np.void]
+
+
+# ---- Data type helpers ---- #
 
 
 def test_is_scalar_dtype():

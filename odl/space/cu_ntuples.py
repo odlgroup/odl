@@ -27,6 +27,7 @@ from builtins import int, super
 import numpy as np
 
 # ODL imports
+from odl.set.sets import RealNumbers
 from odl.set.space import LinearSpaceVector
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
@@ -118,7 +119,7 @@ class CudaNtuples(NtuplesBase):
 
         Parameters
         ----------
-        inp : array-like or scalar, optional
+        inp : `array-like` or scalar, optional
             Input to initialize the new element.
 
             If ``inp`` is a `numpy.ndarray` of shape ``(size,)``
@@ -392,7 +393,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : {scalar, array-like, `CudaNtuplesVector`}
+        values : scalar, `array-like` or `CudaNtuplesVector`
             The value(s) that are to be assigned.
 
             If ``index`` is an `int`, ``value`` must be single value.
@@ -438,7 +439,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
                     # Size checking is performed in c++
                     self.data.setslice(indices, value_array)
             else:
-                self.data.__setitem__(int(indices), values)
+                self.data[int(indices)] = values
 
     @property
     def ufunc(self):
@@ -536,30 +537,34 @@ class CudaFn(FnBase, CudaNtuples):
 
             Only scalar data types are allowed.
 
-        weight : {array-like, `CudaFnVector`, `float`, `None`}
-            Use weighted inner product, norm, and dist.
+        weight : optional
+            Use weighted inner product, norm, and dist. The following
+            types are supported as ``weight``:
 
-            `None`:
-                No weighting, use standard functions (default)
+            `FnWeightingBase` :
+            Use this weighting as-is. Compatibility with this
+            space's elements is not checked during init.
 
-            `float`:
-                Weighting by a constant
+            `float` :
+            Weighting by a constant
 
-            array-like:
-                Weighting by a vector (1-dim. array, corresponds to
-                a diagonal matrix). Note that the array is stored in
-                main memory, which results in slower space functions
-                due to a copy during evaluation.
+            `array-like` :
+            Weighting by a vector (1-dim. array, corresponds to
+            a diagonal matrix). Note that the array is stored in
+            main memory, which results in slower space functions
+            due to a copy during evaluation.
 
-            `CudaFnVector`:
-                same as 1-dim. array-like, except that copying is
-                avoided if the ``dtype`` of the vector is the
-                same as this space's ``dtype``.
+            `CudaFnVector` :
+            same as 1-dim. array-like, except that copying is
+            avoided if the ``dtype`` of the vector is the
+            same as this space's ``dtype``.
+
+            Default: no weighting
 
             This option cannot be combined with ``dist``, ``norm``
             or ``inner``.
 
-        exponent : positive `float`
+        exponent : positive `float`, optional
             Exponent of the norm. For values other than 2.0, no
             inner product is defined.
 
@@ -569,12 +574,10 @@ class CudaFn(FnBase, CudaNtuples):
             Default: 2.0
 
         dist : `callable`, optional
-            The distance function defining a metric on
-            :math:`\mathbb{F}^n`.
-            It must accept two `CudaFnVector` arguments,
-            return a `float` and
-            fulfill the following mathematical conditions for any
-            three vectors :math:`x, y, z`:
+            The distance function defining a metric on `CudaFn`.
+            It must accept two `CudaFnVector` arguments, return a
+            `float` and fulfill the following mathematical conditions
+            for any three vectors ``x, y, z``:
 
             - :math:`d(x, y) = d(y, x)`
             - :math:`d(x, y) \geq 0`
@@ -611,7 +614,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         inner : `callable`, optional
             The inner product implementation. It must accept two
-            `CudaFnVector` arguments, return a element from
+            `CudaFnVector` arguments, return an element from
             the field of the space (real or complex number) and
             satisfy the following conditions for all vectors
             :math:`x, y, z` and scalars :math:`s`:
@@ -626,7 +629,7 @@ class CudaFn(FnBase, CudaNtuples):
             This option cannot be combined with ``weight``,
             ``dist`` or ``norm``.
         """
-        super().__init__(size, dtype)
+        FnBase.__init__(self, size, dtype)
         CudaNtuples.__init__(self, size, dtype)
 
         dist = kwargs.pop('dist', None)
@@ -636,12 +639,13 @@ class CudaFn(FnBase, CudaNtuples):
         exponent = kwargs.pop('exponent', 2.0)
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        from builtins import sum as py_sum
-        if py_sum(x is None for x in (dist, norm, inner, weight)) < 3:
+        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
-            if np.isscalar(weight):
+            if isinstance(weight, FnWeightingBase):
+                self._space_funcs = weight
+            elif np.isscalar(weight):
                 self._space_funcs = CudaFnConstWeighting(
                     weight, exponent=exponent)
             elif isinstance(weight, CudaFnVector):
@@ -671,6 +675,39 @@ class CudaFn(FnBase, CudaNtuples):
         """Exponent of the norm and distance."""
         return self._space_funcs.exponent
 
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return self._space_funcs
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the weighting is not `CudaFnNoWeighting`."""
+        return not isinstance(self.weighting, CudaFnNoWeighting)
+
+    @staticmethod
+    def default_dtype(field):
+        """Return the default of `CudaFn` data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`
+            Set of numbers to be represented by a data type.
+            Currently supported: `RealNumbers`.
+
+        Returns
+        -------
+        dtype : `type`
+            Numpy data type specifier. The returned defaults are:
+
+            ``RealNumbers()`` : , ``np.dtype('float32')``
+        """
+        if field == RealNumbers():
+            return np.dtype('float32')
+        else:
+            raise ValueError('no default data type defined for field {}.'
+                             ''.format(field))
+
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``, assigned to ``out``.
 
@@ -678,7 +715,7 @@ class CudaFn(FnBase, CudaNtuples):
 
         Parameters
         ----------
-        a, b : `LinearSpace.field` element
+        a, b : `LinearSpace.field` `element`
             Scalar to multiply ``x`` and ``y`` with.
         x, y : `CudaFnVector`
             The summands
@@ -896,16 +933,16 @@ class CudaFn(FnBase, CudaNtuples):
         """s.__repr__() <==> repr(s)."""
         if self.is_rn:
             class_name = 'CudaRn'
-            if self.dtype == np.float32:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         elif self.is_cn:
-            raise NotImplementedError
+            class_name = 'CudaCn'
         else:
             class_name = 'CudaFn'
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
 
+        inner_str = '{}'.format(self.size)
+        if self.dtype != self.default_dtype(self.field):
+            inner_str += ', {}'.format(dtype_repr(self.dtype))
+
+        inner_str += _repr_space_funcs(self)
         return '{}({})'.format(class_name, inner_str)
 
     @property
@@ -923,7 +960,7 @@ class CudaFnVector(FnBaseVector, CudaNtuplesVector):
         super().__init__(space, data)
 
 
-def CudaRn(size, dtype=np.float32, **kwargs):
+def CudaRn(size, dtype='float32', **kwargs):
 
     """The real space :math:`R^n`, implemented in CUDA.
 
@@ -933,7 +970,7 @@ def CudaRn(size, dtype=np.float32, **kwargs):
     ----------
     size : positive `int`
         The number of dimensions of the space
-    dtype : `object`
+    dtype : optional
         The data type of the storage array. Can be provided in any
         way the `numpy.dtype` function understands, most notably
         as built-in type, as one of NumPy's internal datatype
@@ -944,13 +981,11 @@ def CudaRn(size, dtype=np.float32, **kwargs):
     kwargs : {'weight', 'exponent', 'dist', 'norm', 'inner'}
         See `CudaFn`
     """
-
     rn = CudaFn(size, dtype, **kwargs)
 
     if not rn.is_rn:
         raise TypeError('data type {!r} not a real floating-point type.'
                         ''.format(dtype))
-
     return rn
 
 
@@ -986,7 +1021,7 @@ def cu_weighted_inner(weight):
 
     Parameters
     ----------
-    weight : scalar, array-like or `CudaFnVector`
+    weight : scalar, `array-like` or `CudaFnVector`
         Weight of the inner product. A scalar is interpreted as a
         constant weight and a 1-dim. array or a `CudaFnVector`
         as a weighting vector.
@@ -1010,7 +1045,7 @@ def cu_weighted_norm(weight, exponent=2.0):
 
     Parameters
     ----------
-    weight : scalar, array-like or `CudaFnVector`
+    weight : scalar, `array-like` or `CudaFnVector`
         Weight of the inner product. A scalar is interpreted as a
         constant weight and a 1-dim. array or a `CudaFnVector`
         as a weighting vector.
@@ -1037,7 +1072,7 @@ def cu_weighted_dist(weight, exponent=2.0):
 
     Parameters
     ----------
-    weight : scalar, array-like or `CudaFnVector`
+    weight : scalar, `array-like` or `CudaFnVector`
         Weight of the inner product. A scalar is interpreted as a
         constant weight and a 1-dim. array or a `CudaFnVector`
         as a weighting vector.
@@ -1142,7 +1177,7 @@ class CudaFnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        vector : array-like, one-dim.
+        vector : `array-like`, one-dim.
             Weighting vector of the inner product
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
