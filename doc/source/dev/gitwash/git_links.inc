@@ -55,13 +55,7 @@
 
 .. other stuff
 .. _python: http://www.python.org
-.. _acronym: http://docs.scipy.org/doc/numpy-dev/dev/gitwash/development_workflow.html#writing-the-commit-message
 
 .. |emdash| unicode:: U+02014
 
 .. vim: ft=rst
-
-.. odl
-.. _odl: http://github.com/odlgroup/odl
-.. _`odl github`: http://github.com/odlgroup/odl
-.. _`odl mailing list`: jonasadl@kth.se

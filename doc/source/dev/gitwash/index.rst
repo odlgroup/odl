@@ -1,6 +1,6 @@
 .. _using-git:
 
-Working with *odl* source code
+Working with *ODL* source code
 ================================================
 
 Contents:

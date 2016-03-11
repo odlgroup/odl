@@ -21,6 +21,11 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(S
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
 GENERATE        = cd $(SOURCEDIR) && python generate_doc.py && cd ..
 
+REPO_NAME       = odl
+PROJECT_NAME    = ODL
+PROJECT_URL     = 'https\://github.com/odlgroup/odl'
+PROJECT_ML_URL  = 'https\://github.com/odlgroup/odl/issues'
+
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest coverage gettext
 
 help:
@@ -49,6 +54,7 @@ help:
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
+	@echo "  gitwash    to update the Gitwash standard intro into the Git workflow"
 
 clean:
 	rm -rf $(BUILDDIR)/*
@@ -195,3 +201,10 @@ pseudoxml:
 	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+gitwash:
+	python ./gitwash_dumper.py source/dev ODL \
+	--project-url=https\://github.com/odlgroup/odl \
+	--repo-name=odl \
+	--project-ml-url=https\://github.com/odlgroup/odl/issues \
+	--github-user=odlgroup

@@ -3,7 +3,7 @@
 ================
 
 You've discovered a bug or something else you want to change
-in `odl`_ .. |emdash| excellent!
+in `ODL`_ .. |emdash| excellent!
 
 You've worked out a way to fix it |emdash| even better!
 
@@ -44,7 +44,7 @@ Overview
    # make the patch files
    git format-patch -M -C master
 
-Then, send the generated patch files to the `odl
+Then, send the generated patch files to the `ODL
 mailing list`_ |emdash| where we will thank you warmly.
 
 In detail
@@ -57,7 +57,7 @@ In detail
       git config --global user.name "Your Name Comes Here"
 
 #. If you don't already have one, clone a copy of the
-   `odl`_ repository::
+   `ODL`_ repository::
 
       git clone git://github.com/odlgroup/odl.git
       cd odl
@@ -100,7 +100,7 @@ In detail
       0001-BF-added-tests-for-Funny-bug.patch
       0002-BF-added-fix-for-Funny-bug.patch
 
-   Send these files to the `odl mailing list`_.
+   Send these files to the `ODL mailing list`_.
 
 When you are done, to switch back to the main copy of the
 code, just return to the ``master`` branch::
@@ -115,7 +115,7 @@ more feature branches, you will probably want to switch to
 development mode.  You can do this with the repository you
 have.
 
-Fork the `odl`_ repository on github |emdash| :ref:`forking`.
+Fork the `ODL`_ repository on github |emdash| :ref:`forking`.
 Then::
 
    # checkout and refresh master branch from main repo
