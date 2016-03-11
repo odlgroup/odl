@@ -1,0 +1,6 @@
+include CONTRIBUTING.md
+include LICENSE
+include README.md
+include requirements.txt
+include setup.cfg
+include setup.py
