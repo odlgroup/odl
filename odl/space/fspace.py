@@ -83,7 +83,7 @@ class FunctionSet(Set):
             The range of the functions.
         out_dtype : optional
             Data type of the return value of a function in this space.
-            Can be given in any way `np.dtype` understands, e.g. as
+            Can be given in any way `numpy.dtype` understands, e.g. as
             string ('bool') or data type (`bool`).
             If no data type is given, a "lazy" evaluation is applied,
             i.e. an adequate data type is inferred during function
@@ -505,7 +505,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             to ``RealNumbers()``.
         out_dtype : optional
             Data type of the return value of a function in this space.
-            Can be given in any way `np.dtype` understands, e.g. as
+            Can be given in any way `numpy.dtype` understands, e.g. as
             string ('float64') or data type (`float`).
             By default, 'float64' is used for real and 'complex128'
             for complex spaces.
