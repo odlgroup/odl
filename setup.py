@@ -29,7 +29,7 @@ from setuptools.command.test import test as TestCommand
 import os
 import sys
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 if os.environ.get('READTHEDOCS', None) == 'True':
     # Mock requires in conf.py
