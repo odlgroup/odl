@@ -402,6 +402,8 @@ def test_fspace_vector_real_imag():
     rect, _, mg = _standard_setup_2d()
     cspace = FunctionSpace(rect, field=odl.ComplexNumbers())
     f = cspace.element(cfunc_2d_vec_oop)
+
+    # real / imag on complex functions
     assert all_equal(f.real(mg), cfunc_2d_vec_oop(mg).real)
     assert all_equal(f.imag(mg), cfunc_2d_vec_oop(mg).imag)
     out_mg = np.empty((2, 3))
@@ -410,10 +412,19 @@ def test_fspace_vector_real_imag():
     f.imag(mg, out=out_mg)
     assert all_equal(out_mg, cfunc_2d_vec_oop(mg).imag)
 
+    # real / imag on real functions, should be the function itself / zero
     rspace = FunctionSpace(rect)
     f = rspace.element(func_2d_vec_oop)
     assert all_equal(f.real(mg), f(mg))
     assert all_equal(f.imag(mg), rspace.zero()(mg))
+
+    # Complex conjugate
+    f = cspace.element(cfunc_2d_vec_oop)
+    fbar = f.conj()
+    assert all_equal(fbar(mg), cfunc_2d_vec_oop(mg).conj())
+    out_mg = np.empty((2, 3), dtype='complex128')
+    fbar(mg, out=out_mg)
+    assert all_equal(out_mg, cfunc_2d_vec_oop(mg).conj())
 
 
 def test_fspace_zero():

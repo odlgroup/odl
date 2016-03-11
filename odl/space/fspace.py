@@ -920,6 +920,18 @@ class FunctionSpace(FunctionSet, LinearSpace):
             rspace = self.astype(rdtype)
             return rspace.element(imagpart_oop)
 
+    def _conj(self, x):
+        """Function returning the complex conjugate of a result."""
+        x_call_oop = x._call_out_of_place
+
+        def conj_oop(x):
+            return np.asarray(x_call_oop(x), dtype=self.out_dtype).conj()
+
+        if is_real_dtype(self.out_dtype):
+            return x
+        else:
+            return self.element(conj_oop)
+
     @property
     def element_type(self):
         """`FunctionSpaceVector`"""
@@ -1018,13 +1030,17 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
 
     @property
     def real(self):
-        """Function returning the real part of a result."""
+        """Pointwise real part of this function."""
         return self.space._realpart(self)
 
     @property
     def imag(self):
+        """Pointwise imaginary part of this function."""
         return self.space._imagpart(self)
 
+    def conj(self):
+        """Pointwise complex conjugate of this function."""
+        return self.space._conj(self)
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE
