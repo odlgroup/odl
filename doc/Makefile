@@ -206,5 +206,5 @@ gitwash:
 	python ./gitwash_dumper.py source/dev ODL \
 	--project-url=https\://github.com/odlgroup/odl \
 	--repo-name=odl \
-	--project-ml-url=https\://github.com/odlgroup/odl/issues \
+	--project-ml-url=odl@math.kth.se \
 	--github-user=odlgroup

@@ -55,6 +55,7 @@
 
 .. other stuff
 .. _python: http://www.python.org
+.. _acronym: http://docs.scipy.org/doc/numpy-dev/dev/gitwash/development_workflow.html#writing-the-commit-message
 
 .. |emdash| unicode:: U+02014
 
