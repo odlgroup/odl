@@ -15,51 +15,60 @@ General errors
 
         ImportError: cannot import diagnostics
 
-  **P:** When you for the first time import (=execute) a module or execute a
-  script, a `bytecode <https://en.wikipedia.org/wiki/Bytecode>`_ file is created,
-  basically to speed up execution next time. If you installed ``odl`` with
-  ``pip -e`` (``--editable``), these files can interfere with changes to your
-  codebase.
+   **P:** When you for the first time import (=execute) a module or execute a
+   script, a `bytecode <https://en.wikipedia.org/wiki/Bytecode>`_ file is created,
+   basically to speed up execution next time. If you installed ``odl`` with
+   ``pip -e`` (``--editable``), these files can interfere with changes to your
+   codebase.
 
-  **S:** Delete the bytecode files. In a standard GNU/Linux shell, you can
-  simply invoke (in your ``odl`` working directory)
-  ::
+   **S:** Delete the bytecode files. In a standard GNU/Linux shell, you can
+   simply invoke (in your ``odl`` working directory)
+   ::
 
-    find . -name *.pyc | xargs rm
+     find . -name *.pyc | xargs rm
 
 #. **Q:** When adding two vectors, the following error is shown::
 
       TypeError: unsupported operand type(s) for -: 'DiscreteLpVector' and 'DiscreteLpVector'
 
-  **P:** The vectors you are trying to add are not in the same space,
-  for example the following code gives the error
+   **P:** The vectors you are trying to add are not in the same space,
+   for example the following code gives the error
 
       >>> x = odl.uniform_discr(0, 1, 10).one()
       >>> y = odl.uniform_discr(0, 1, 11).one()
       >>> x - y
 
-  In this case, the problem is that the vectors have a different number of elements.
-  Other possible issues include that they are discretizations of different sets,
-  have different data types (:term:`dtype`), or implementation (for example cuda/cpu).
+   In this case, the problem is that the vectors have a different number of elements.
+   Other possible issues include that they are discretizations of different sets,
+   have different data types (:term:`dtype`), or implementation (for example cuda/cpu).
 
-  **S:** The vectors need to somehow be cast to the same space.
-  How to do this depends on the problem at hand. To find what the issue is,
-  inspect the ``space`` properties of both vectors. For example in the above
-  we see that the issue lies in the number of discretization points
+   **S:** The vectors need to somehow be cast to the same space.
+   How to do this depends on the problem at hand. To find what the issue is,
+   inspect the ``space`` properties of both vectors. For example in the above
+   we see that the issue lies in the number of discretization points
 
       >>> x.space
       odl.uniform_discr(0, 1, 10)
       >>> y.space
       odl.uniform_discr(0, 1, 11)
 
-  * In the case of spaces being discretizations of different underlying spaces,
-    a transformation of some kind has to be applied (for example by using an operator).
-    In general, errors like this indicates a conceptual issue with the code,
-    for example a "we identify X with Y" step has been omitted.
+   * In the case of spaces being discretizations of different underlying spaces,
+     a transformation of some kind has to be applied (for example by using an operator).
+     In general, errors like this indicates a conceptual issue with the code,
+     for example a "we identify X with Y" step has been omitted.
 
-  * If the ``dtype`` or ``impl`` do not match, they need to be cast to each one of the others.
-    The most simple way to do this is by using the `DiscreteLpVector.astype` method.
+   * If the ``dtype`` or ``impl`` do not match, they need to be cast to each one of the others.
+     The most simple way to do this is by using the `DiscreteLpVector.astype` method.
 
+#. **Q:** I have installed ODL with the ``pip install --editable`` option, but I still get an
+   ``AttributeError`` when I try to use a function/class I just implemented. The use-without-reinstall
+   thing does not seem to work. What am I doing wrong?
+
+   **P:** You probably use an IDE like `Spyder`_ with integrated editor, console, etc. While your
+   installation of the ODL *package* sees the changes immediately, the console still sees the
+   version of the package *before the changes since it was opened*.
+
+   **S:** Simply close the current console and open a new one.
 
 Errors related to Python 2/3
 ----------------------------
@@ -116,3 +125,6 @@ Usage
 
    Of course, a number of input arguments larger than 2 can be treated
    analogously.
+
+
+.. _Spyder: https://github.com/spyder-ide/spyder
