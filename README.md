@@ -36,7 +36,7 @@ Requirements
 
 First, you need to [install pip](https://pip.pypa.io/en/stable/installing/#installation) to be able to install Python packages from the [Python package index](https://pypi.python.org/pypi). Usually, `pip` is bundled with Python, so there is no action required. Check if simply running `pip` shows a help message or an error.
 
-**General remark:** Try to install as many dependencies as possible through your distribution package manager (on Linux) or with a complete scientific python distribution like [Anaconda](https://www.continuum.io/anaconda). Packages installed through `pip` can cause conflicts with identical packages installed by a different mechanism (out basic dependencies are largely unproblematic, though).
+**General remark:** Try to install as many dependencies as possible through your distribution package manager (on Linux) or with a complete scientific python distribution like [Anaconda](https://www.continuum.io/anaconda). Packages installed through `pip` can cause conflicts with identical packages installed by a different mechanism (our basic dependencies are largely unproblematic, though).
 
 #### Minimal dependencies
 
