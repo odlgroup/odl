@@ -1,9 +1,11 @@
+.. tocdepth: 0
+
 #############
 Release Notes
 #############
 
 ODL 0.2.2 Release Notes (2016-03-11)
-==================================
+====================================
 
 From this release on, ODL can be installed through ``pip`` directly from the Python package index.
 
