@@ -248,7 +248,7 @@ summing over :math:`j`, the coefficients :math:`f_k` can be recovered:
 Hence, the inversion formula for the discretized FT reads as
 
 .. math::
-    f_k = e^{i k \bar\xi_0}\, \frac{1}{N} \sum_{j=0}^{N-1} \hat f_j
+    f_k = e^{i k s\xi_0}\, \frac{1}{N} \sum_{j=0}^{N-1} \hat f_j
     \, \frac{1}{s\widehat{\psi}(s\xi_j)}\, e^{i x_0\xi_j}\, e^{i 2\pi \frac{kj}{N}},
     :label: discr_fourier_inverse
 
