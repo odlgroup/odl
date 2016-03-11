@@ -14,7 +14,9 @@ problems with known saddle-point structure
 .. math::
     \max_{y \in Y} \min_{x \in X}\;\langle K x, y\rangle_Y + G(x) - F^*(y) ,
 
-where :math:`X` and :math:`Y` are finite-dimensional Hilbert spaces with inner product :math:`\langle\cdot,\cdot\rangle` and norm :math:`\|.\|_2 = \langle\cdot,\cdot\rangle^{1/2}`, :math:`K` is a continuous linear operator :math:`K:X\mapsto Y`.
+where :math:`X` and :math:`Y` are finite-dimensional Hilbert spaces with inner product
+:math:`\langle\cdot,\cdot\rangle` and norm :math:`\|.\|_2 = \langle\cdot,\cdot\rangle^{1/2}`,
+:math:`K` is a continuous linear operator :math:`K:X\mapsto Y`.
 :math:`G:X\mapsto[0,+\infty]` and :math:`F^*:Y\mapsto[0,+\infty]`
 are proper, convex, lower-semicontinuous functionals, and :math:`F^*` is the
 convex (or Fenchel) conjugate of F, see below.
@@ -70,10 +72,11 @@ follows
 
 **Proximal operator**
 
-The proximal operator, :math:`prox_\tau[H](x)`, of the functional :math:`H` with step size parameter tau is defined as
+The proximal operator, :math:`prox_\tau[H](x)`, of the functional :math:`H` with step size parameter
+:math:`tau` is defined as
 
 .. math::
- prox_\tau[H](x) = \arg\;\min_{y\in Y}\; H(y) + \frac{1}{2 \tau} \|x - y\|_2^2
+    prox_\tau[H](x) = \arg\;\min_{y\in Y}\; H(y) + \frac{1}{2 \tau} \|x - y\|_2^2
 
 **Step sizes**
 

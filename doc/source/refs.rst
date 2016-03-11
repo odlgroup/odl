@@ -35,6 +35,10 @@ References
 .. [PB2014] Parikh, Neal and Boyd, Stephen. *Proximal Algorithms*.
    Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 
+.. [Pre+2007] Press, W H, Teukolsky, S A, Vetterling, W T, and Flannery, B P.
+   *Numerical Recipes in C - The Art of Scientific Computing* (Volume 3).
+   Cambridge University Press, 2007.
+
 .. [Ray1997] Raydan, M. *The Barzilai and Borwein method for the
    large scale unconstrained minimization problem*. SIAM J. Optim.,
    7 (1997), pp 26--33.
@@ -47,5 +51,8 @@ References
    computed tomography with the Chambolle-Pock algorithm*. Physics in
    Medicine and Biology, 57 (2012), pp 3065-3091.
 
+.. [SW1971] Stein, E and Weiss, G.
+   *Introduction to Fourier Analysis on Euclidean Spaces*.
+   Princeton University Press, 1971.
 
 
