@@ -1217,6 +1217,13 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
 
+    To have the nodes in the "middle", use nodes_on_bdry=False
+
+    >>> grid = uniform_sampling_fromintv(rbox, (2, 2), nodes_on_bdry=False)
+    >>> grid.coord_vectors
+    (array([-1.25, -0.75]), array([ 2.25,  2.75]))
+
+
     See also
     --------
     uniform_sampling : Sample an implicitly created `IntervalProd`
@@ -1323,8 +1330,16 @@ def uniform_sampling(begin, end, num_nodes, nodes_on_bdry=True):
     >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
+
+    To have the nodes in the "middle", use nodes_on_bdry=False
+
+    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], (2, 2),
+    ...                         nodes_on_bdry=False)
+    >>> grid.coord_vectors
+    (array([-1.25, -0.75]), array([ 2.25,  2.75]))
     """
-    return uniform_sampling_fromintv(IntervalProd(begin, end), num_nodes)
+    return uniform_sampling_fromintv(IntervalProd(begin, end), num_nodes,
+                                     nodes_on_bdry=nodes_on_bdry)
 
 
 if __name__ == '__main__':
