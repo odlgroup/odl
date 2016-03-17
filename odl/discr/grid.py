@@ -1169,7 +1169,7 @@ class RegularGrid(TensorGrid):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-def uniform_sampling_fromintv(intv_prod, num_nodes):
+def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     """Sample an interval product uniformly.
 
     The resulting grid will include ``begin`` and ``end`` of
@@ -1185,6 +1185,17 @@ def uniform_sampling_fromintv(intv_prod, num_nodes):
         Number of nodes per axis. For dimension >= 2, a `tuple`
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
+    nodes_on_bdry : `bool` or `sequence`, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (True) or shift it
+        by half a cell size into the interior (False). In each axis,
+        an entry may consist in a single `bool` or a 2-tuple of
+        `bool`. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
 
     Returns
     -------
@@ -1216,10 +1227,65 @@ def uniform_sampling_fromintv(intv_prod, num_nodes):
         raise TypeError('{!r} is not an `IntervalProd` instance.'
                         ''.format(intv_prod))
 
-    return RegularGrid(intv_prod.begin, intv_prod.end, num_nodes)
+    if np.shape(nodes_on_bdry) == ():
+        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
+                         intv_prod.ndim)
+    elif len(nodes_on_bdry) != intv_prod.ndim:
+        raise ValueError('nodes_on_bdry has length {}, expected {}.'
+                         ''.format(len(nodes_on_bdry), intv_prod.ndim, 2))
+    else:
+        num_nodes = tuple(int(n) for n in num_nodes)
+
+    # We need to determine the placement of the grid minimum and maximum
+    # points based on the choices in nodes_on_bdry. If in a given axis,
+    # and for a given side (left or right), the entry is True, the node lies
+    # on the boundary, so this coordinate can simply be taken as-is.
+    #
+    # Otherwise, the following conditionsmust be met:
+    #
+    # 1. The node should be half a stride s away from the boundary
+    # 2. Adding or subtracting (n-1)*s should give the other extremal node.
+    #
+    # If both nodes are to be shifted half a stride inside,
+    # the second condition yields
+    # a + s/2 + (n-1)*s = b - s/2 => s = (b - a) / n,
+    # hence the extremal grid points are
+    # gmin = a + s/2 = a + (b - a) / (2 * n),
+    # gmax = b - s/2 = b - (b - a) / (2 * n).
+    #
+    # In the case where one node, say the rightmost, lies on the boundary,
+    # the condition 2. reads as
+    # a + s/2 + (n-1)*s = b => s = (b - a) / (n - 1/2),
+    # thus
+    # gmin = a + (b - a) / (2 * n - 1).
+
+    gmin, gmax = [], []
+    for n, beg, end, on_bdry in zip(num_nodes, intv_prod.begin, intv_prod.end,
+                                    nodes_on_bdry):
+
+        # Unpack the tuple if possible, else use bool globally for this axis
+        try:
+            bdry_l, bdry_r = on_bdry
+        except TypeError:
+            bdry_l = bdry_r = on_bdry
+
+        if bdry_l and bdry_r:
+            gmin.append(beg)
+            gmax.append(end)
+        elif bdry_l and not bdry_r:
+            gmin.append(beg)
+            gmax.append(end - (end - beg) / (2 * n - 1))
+        elif not bdry_l and bdry_r:
+            gmin.append(beg + (end - beg) / (2 * n - 1))
+            gmax.append(end)
+        else:
+            gmin.append(beg + (end - beg) / (2 * n))
+            gmax.append(end - (end - beg) / (2 * n))
+
+    return RegularGrid(gmin, gmax, num_nodes)
 
 
-def uniform_sampling(begin, end, num_nodes):
+def uniform_sampling(begin, end, num_nodes, nodes_on_bdry=True):
     """Sample an implicitly defined interval product uniformly.
 
     Parameters
@@ -1232,6 +1298,17 @@ def uniform_sampling(begin, end, num_nodes):
         Number of nodes per axis. For dimension >= 2, a `tuple`
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
+    nodes_on_bdry : `bool` or `sequence`, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (True) or shift it
+        by half a cell size into the interior (False). In each axis,
+        an entry may consist in a single `bool` or a 2-tuple of
+        `bool`. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
 
     See also
     --------

@@ -34,7 +34,7 @@ from builtins import object, range, super, zip
 import numpy as np
 
 # ODL imports
-from odl.discr.grid import TensorGrid, RegularGrid
+from odl.discr.grid import TensorGrid, RegularGrid, uniform_sampling_fromintv
 from odl.set.domain import IntervalProd
 
 
@@ -457,69 +457,10 @@ def uniform_partition_fromintv(intv_prod, num_nodes, nodes_on_bdry=False):
     >>> part.grid.coord_vectors[1]
     array([ 0.2,  0.6,  1. ])
     """
-    # Sanity checks
-    if np.shape(num_nodes) == ():
-        num_nodes = (int(num_nodes),)
-    elif len(num_nodes) != intv_prod.ndim:
-        raise ValueError('num_nodes has length {}, expected {}.'
-                         ''.format(len(num_nodes), (intv_prod.ndim)))
-    else:
-        num_nodes = tuple(int(n) for n in num_nodes)
 
-    if np.shape(nodes_on_bdry) == ():
-        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
-                         intv_prod.ndim)
-    elif len(nodes_on_bdry) != intv_prod.ndim:
-        raise ValueError('nodes_on_bdry has length {}, expected {}.'
-                         ''.format(len(nodes_on_bdry), intv_prod.ndim, 2))
+    grid = uniform_sampling_fromintv(intv_prod, num_nodes,
+                                     nodes_on_bdry=nodes_on_bdry)
 
-    # We need to determine the placement of the grid minimum and maximum
-    # points based on the choices in nodes_on_bdry. If in a given axis,
-    # and for a given side (left or right), the entry is True, the node lies
-    # on the boundary, so this coordinate can simply be taken as-is.
-    #
-    # Otherwise, the following conditionsmust be met:
-    #
-    # 1. The node should be half a stride s away from the boundary
-    # 2. Adding or subtracting (n-1)*s should give the other extremal node.
-    #
-    # If both nodes are to be shifted half a stride inside,
-    # the second condition yields
-    # a + s/2 + (n-1)*s = b - s/2 => s = (b - a) / n,
-    # hence the extremal grid points are
-    # gmin = a + s/2 = a + (b - a) / (2 * n),
-    # gmax = b - s/2 = b - (b - a) / (2 * n).
-    #
-    # In the case where one node, say the rightmost, lies on the boundary,
-    # the condition 2. reads as
-    # a + s/2 + (n-1)*s = b => s = (b - a) / (n - 1/2),
-    # thus
-    # gmin = a + (b - a) / (2 * n - 1).
-
-    gmin, gmax = [], []
-    for n, beg, end, on_bdry in zip(num_nodes, intv_prod.begin, intv_prod.end,
-                                    nodes_on_bdry):
-
-        # Unpack the tuple if possible, else use bool globally for this axis
-        try:
-            bdry_l, bdry_r = on_bdry
-        except TypeError:
-            bdry_l = bdry_r = on_bdry
-
-        if bdry_l and bdry_r:
-            gmin.append(beg)
-            gmax.append(end)
-        elif bdry_l and not bdry_r:
-            gmin.append(beg)
-            gmax.append(end - (end - beg) / (2 * n - 1))
-        elif not bdry_l and bdry_r:
-            gmin.append(beg + (end - beg) / (2 * n - 1))
-            gmax.append(end)
-        else:
-            gmin.append(beg + (end - beg) / (2 * n))
-            gmax.append(end - (end - beg) / (2 * n))
-
-    grid = RegularGrid(gmin, gmax, num_nodes)
     return RectPartition(intv_prod, grid)
 
 
