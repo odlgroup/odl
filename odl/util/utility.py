@@ -30,7 +30,7 @@ import numpy as np
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr', 'pspace_squared_sum')
+           'dtype_repr')
 
 
 def _indent_rows(string, indent=4):

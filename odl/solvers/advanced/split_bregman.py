@@ -131,7 +131,8 @@ def split_bregman_solver(H_grad, Phi, x, lam,
             s = Phi(x) + b
             if isotropic:
                 sn = pspace_squared_sum(s)
-                sn.ufunc.add(0.0001, out=sn)  # avoid 0/0 issues
+                sn.ufunc.add(1e-7, out=sn)  # avoid 0/0 issues
+                print(sn.ufunc.absolute().ufunc.max(), 1.0 / lam)
                 sn = sn.ufunc.add(-1.0 / lam).ufunc.maximum(0.0) / sn
                 for j in range(len(d)):
                     d[j].multiply(sn, s[j])
