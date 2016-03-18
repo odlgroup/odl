@@ -628,8 +628,8 @@ class DiscreteLpVector(DiscretizationVector):
         """
         return DiscreteLpUFuncs(self)
 
-    def show(self, title=None, method='', indices=None, show=False, fig=None,
-             **kwargs):
+    def show(self, title=None, method='', coords=None, indices=None,
+             show=False, fig=None, **kwargs):
         """Display the function graphically.
 
         Parameters
@@ -653,6 +653,14 @@ class DiscreteLpVector(DiscretizationVector):
             'scatter' : cloud of scattered 3d points
             (3rd axis <-> value)
 
+        coords : array-like, optional
+            Display a slice of the array instead of the full array. The values
+            are shown accordinging to the given values, `None` represent all
+            values along that dimension. For example [None, None, 0.5] shows
+            all values in the first two dimensions, with third coordinate equal
+            to 0.5.
+            This option is mutually exclusive to indices.
+
         indices : index expression, optional
             Display a slice of the array instead of the full array. The
             index expression is most easily created with the `numpy.s_`
@@ -661,6 +669,7 @@ class DiscreteLpVector(DiscretizationVector):
             For data with 3 or more dimensions, the 2d slice in the first
             two axes at the "middle" along the remaining axes is shown
             (semantically ``[:, :, shape[2:] // 2]``).
+            This option is mutually exclusive to coords.
 
         show : `bool`, optional
             If the plot should be showed now or deferred until later.
@@ -687,6 +696,28 @@ class DiscreteLpVector(DiscretizationVector):
         """
 
         from odl.util.graphics import show_discrete_data
+
+        if coords is not None:
+            if indices is not None:
+                raise ValueError('Cannot provide both coords and indices')
+
+            interv = self.space.uspace.domain
+            shape = self.shape
+            indices = []
+            for begin, end, n, coord in zip(interv.begin, interv.end,
+                                            shape, coords):
+                if coord is None:
+                    indices += [slice(None)]
+                else:
+                    if not begin <= coord <= end:
+                        raise ValueError('coord {} not in range {}'
+                                         ''.format(coord, [begin, end]))
+
+                    if begin == end:
+                        indices += [0]
+                    else:
+                        normalized_pos = (float(coord) - begin) / (end - begin)
+                        indices += [int(n * normalized_pos)]
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
