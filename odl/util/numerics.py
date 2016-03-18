@@ -301,17 +301,22 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
 def pspace_squared_sum(x, out=None):
     """ Compute the pointwise squared sum of a `ProductSpaceVector`.
+
+    Equivalent to ``sum(x)``
+
     Parameters
     ----------
     x : `ProductSpaceVector`
         The vector to compute the sum of, has to be a powerspace
     out : `LinearSpaceVector`, optional
         Vector to store the result to
+
     Returns
     -------
     sum : `LinearSpaceVector`
         The sum of ``x``, element in ``x.space[0]``.
         If out was given as a parameter, this is a reference to it.
+
     Examples
     --------
     >>> import odl
@@ -322,11 +327,17 @@ def pspace_squared_sum(x, out=None):
     """
     if out is None:
         out = x.space[0].element()
+    else:
+        assert out in x.space[0]
 
-    sq_tmp = x.space[0].element()
-    for xi in x:
-        sq_tmp.multiply(xi, xi)
-        out += sq_tmp
+    out.multiply(x[0], x[0])
+
+    if len(x) > 1:
+        sq_tmp = x.space[0].element()
+        for xi in x[1:]:
+            sq_tmp.multiply(xi, xi)
+            out += sq_tmp
+
     return out
 
 
