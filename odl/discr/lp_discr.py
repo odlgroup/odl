@@ -710,12 +710,14 @@ class DiscreteLpVector(DiscretizationVector):
                     indices += [slice(None)]
                 else:
                     if not begin <= coord <= end:
-                        raise ValueError('Coord {} not in range {}'
+                        raise ValueError('coord {} not in range {}'
                                          ''.format(coord, [begin, end]))
 
-                    # Todo: handle end = begin
-                    normalized_pos = (float(coord) - begin) / (end - begin)
-                    indices += [int(n * normalized_pos)]
+                    if begin == end:
+                        indices += [0]
+                    else:
+                        normalized_pos = (float(coord) - begin) / (end - begin)
+                        indices += [int(n * normalized_pos)]
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:
