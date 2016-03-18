@@ -1,3 +1,5 @@
+.. _mathematical_background:
+
 #######################
 Mathematical Background
 #######################
