@@ -91,7 +91,7 @@ conv = Convolution(discr_space, disc_kernel, disc_adjkernel)
 # odl.diagnostics.OperatorTest(conv).run_tests()
 
 # Initialize gradient operator
-grad = odl.DiscreteGradient(discr_space, method='forward')
+grad = odl.Gradient(discr_space, method='forward')
 
 # Create data: convoluted image
 rhs = conv(discr_phantom)
@@ -105,12 +105,11 @@ partial = (odl.solvers.ShowPartial(title='intermediate results') &
 x = discr_space.zero()
 
 # Run algorithms
-la = 0.05  # Relaxation
-mu = 50.  # Data fidelity
+la = 1.  # Relaxation
+mu = 500.  # Data fidelity
 H_grad = l2_gradient(conv, rhs)
 split_bregman_solver(mu * H_grad, grad, x, la, 1000, 1,
-                     isotropic=True,
-                     partial=partial)
+                     isotropic=True, partial=partial)
 
 # Display images
 discr_phantom.show(title='original image')
