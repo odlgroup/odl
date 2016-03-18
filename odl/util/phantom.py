@@ -555,8 +555,8 @@ def cuboid(discr_space, begin, end):
     phantom : `LinearSpaceVector`
         Returns an element in ``discr_space``
 
-    Example
-    -------
+    Examples
+    --------
     >>> import odl
     >>> space = odl.uniform_discr(0, 1, 6, dtype='float32')
     >>> print(cuboid(space, 0.5, 1))
@@ -611,8 +611,8 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
     phantom : `LinearSpaceVector`
         Returns an element in ``discr_space``
 
-    Example
-    -------
+    Examples
+    --------
     >>> import odl
     >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
     >>> phan = indicate_proj_axis(space).asarray()

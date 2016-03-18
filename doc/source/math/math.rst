@@ -1,6 +1,6 @@
-######################
-Mathematics behind ODL
-######################
+#######################
+Mathematical Background
+#######################
 
 This section explains the mathematical concepts on which ODL is built.
 

@@ -100,7 +100,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
 
     Parameters
     ----------
-    grid : `odl.RegularGrid`
+    grid : `RegularGrid`
         Original sampling grid
     shift : `bool` or sequence of `bool`, optional
         If `True`, the grid is shifted by half a stride in the negative
@@ -211,7 +211,7 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
 
     Parameters
     ----------
-    grid : `odl.RegularGrid`
+    grid : `RegularGrid`
         Original sampling grid
     x0 : array-like
         Minimal point of the inverse reciprocal grid
@@ -537,8 +537,8 @@ class DiscreteFourierTransform(Operator):
 
     See also
     --------
-    numpy.fftn : n-dimensional FFT routine
-    numpy.rfftn : n-dimensional half-complex FFT
+    numpy.fft.fftn : n-dimensional FFT routine
+    numpy.fft.rfftn : n-dimensional half-complex FFT
     pyfftw_call : apply an FFTW transform
 
     References
@@ -870,8 +870,8 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
 
     See also
     --------
-    numpy.ifftn : n-dimensional inverse FFT routine
-    numpy.irfftn : n-dimensional half-complex inverse FFT
+    numpy.fft.ifftn : n-dimensional inverse FFT routine
+    numpy.fft.irfftn : n-dimensional half-complex inverse FFT
     pyfftw_call : apply an FFTW transform
 
     References

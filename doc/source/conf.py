@@ -126,6 +126,9 @@ def setup(app):
 # Autosummary
 autosummary_generate = glob.glob("./*.rst")
 
+# Default role for ambiguous ':any:' targets
+default_role = 'py:class'
+
 # Stops WARNING: toctree contains reference to nonexisting document
 numpydoc_show_class_members = True
 numpydoc_show_inherited_class_members = True

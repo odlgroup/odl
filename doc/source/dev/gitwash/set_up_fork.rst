@@ -35,7 +35,7 @@ Clone your fork
    What remote repository is ``remote/origin``? Try ``git remote -v`` to
    see the URLs for the remote.  They will point to your github fork.
 
-   Now you want to connect to the upstream `odl github`_ repository, so
+   Now you want to connect to the upstream `ODL github`_ repository, so
    you can merge in changes from trunk.
 
 .. _linking-to-upstream:
@@ -49,7 +49,7 @@ Linking your repository to the upstream repo
    git remote add upstream git://github.com/odlgroup/odl.git
 
 ``upstream`` here is just the arbitrary name we're using to refer to the
-main `odl`_ repository at `odl github`_.
+main `ODL`_ repository at `ODL github`_.
 
 Note that we've used ``git://`` for the URL rather than ``git@``.  The
 ``git://`` URL is read only.  This means we that we can't accidentally

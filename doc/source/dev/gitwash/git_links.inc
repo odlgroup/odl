@@ -60,8 +60,3 @@
 .. |emdash| unicode:: U+02014
 
 .. vim: ft=rst
-
-.. odl
-.. _odl: http://github.com/odlgroup/odl
-.. _`odl github`: http://github.com/odlgroup/odl
-.. _`odl mailing list`: jonasadl@kth.se

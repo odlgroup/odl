@@ -271,11 +271,3 @@ Useful Wikipedia articles
 .. _NFFT: https://github.com/NFFT/nfft
 .. _computed in FFTW: http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
 .. _in Numpy: http://docs.scipy.org/doc/numpy/reference/routines.fft.html#implementation-details
-
-.. [SW1971] Stein, E and Weiss, G.
-   *Introduction to Fourier Analysis on Euclidean Spaces*.
-   Princeton University Press, 1971.
-
-.. [Pre+2007] Press, W H, Teukolsky, S A, Vetterling, W T, and Flannery, B P.
-   *Numerical Recipes in C - The Art of Scientific Computing* (Volume 3).
-   Cambridge University Press, 2007.
