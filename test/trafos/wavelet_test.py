@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -24,9 +24,10 @@ standard_library.install_aliases()
 # External module imports
 import pytest
 import numpy as np
-from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
-if PYWAVELETS_AVAILABLE:
+try:
     import pywt
+except ImportError:
+    pass
 
 # ODL imports
 import odl

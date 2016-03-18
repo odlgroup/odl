@@ -27,7 +27,7 @@ standard_library.install_aliases()
 import numpy as np
 
 
-__all__ = ('apply_on_boundary',)
+__all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'pspace_squared_sum')
 
 
 def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
@@ -94,7 +94,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
            [ 0.5,  1. ,  0.5],
            [ 0.5,  1. ,  0.5]])
 
-    Also accepts out parameter
+    Also accepts out parameter:
 
     >>> out = np.empty_like(arr)
     >>> result = apply_on_boundary(arr, lambda x: x / 2, out=out)
@@ -177,6 +177,156 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         # Start and end include the boundary if it was processed.
         slices[ax] = slice(start, end)
 
+    return out
+
+
+def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
+    """Fast multiplication of an n-dim array with an outer product.
+
+    This method implements the multiplication of an n-dimensional array
+    with an outer product of one-dimensional arrays, e.g.::
+
+        a = np.ones((10, 10, 10))
+        x = np.random.rand(10)
+        a *= x[:, None, None] * x[None, :, None] * x[None, None, :]
+
+    Basically, there are two ways to do such an operation:
+
+    1. First calculate the factor on the right-hand side and do one
+       "big" multiplication; or
+    2. Multiply by one factor at a time.
+
+    The procedure of building up the large factor in the first method
+    is relatively cheap if the number of 1d arrays is smaller than the
+    number of dimensions. For exactly n vectors, the second method is
+    faster, although it loops of the array ``a`` n times.
+
+    This implementation combines the two ideas into a hybrid scheme:
+
+    - If there are less 1d arrays than dimensions, choose 1.
+    - Otherwise, calculate the factor array for n-1 arrays
+      and multiply it to the large array. Finally, multiply with the
+      last 1d array.
+
+    The advantage of this approach is that it is memory-friendly and
+    loops over the big array only twice.
+
+    Parameters
+    ----------
+    ndarr : `array-like`
+        Array to multiply to
+    onedim_arrs : sequence of array-like
+        One-dimensional arrays to be multiplied with ``ndarr``. The
+        sequence may not be longer than ``ndarr.ndim``.
+    axes : sequence of `int`, optional
+        Take the 1d transform along these axes. `None` corresponds to
+        the last ``len(onedim_arrs)`` axes, in ascending order.
+    out : `numpy.ndarray`, optional
+        Array in which the result is stored
+
+    Returns
+    -------
+    out : `numpy.ndarray`
+        Result of the modification. If ``out`` was given, the returned
+        object is a reference to it.
+    """
+    if out is None:
+        out = np.array(ndarr, copy=True)
+    else:
+        out[:] = ndarr  # Self-assignment is free if out is ndarr
+
+    if not onedim_arrs:
+        raise ValueError('No 1d arrays given.')
+
+    if axes is None:
+        axes = list(range(out.ndim - len(onedim_arrs), out.ndim))
+        axes_in = None
+    elif len(axes) != len(onedim_arrs):
+        raise ValueError('There are {} 1d arrays, but {} axes entries.'
+                         ''.format(len(onedim_arrs), len(axes)))
+    else:
+        # Make axes positive
+        axes, axes_in = np.array(axes, dtype=int), axes
+        axes[axes < 0] += out.ndim
+        axes = list(axes)
+
+    if np.any(np.array(axes) >= out.ndim) or np.any(np.array(axes) < 0):
+        raise ValueError('axes {} out of bounds for {} dimensions.'
+                         ''.format(axes_in, out.ndim))
+
+    # Make scalars 1d arrays and squeezable arrays 1d
+    alist = [np.atleast_1d(np.asarray(a).squeeze()) for a in onedim_arrs]
+    if any(a.ndim != 1 for a in alist):
+        raise ValueError('Only 1d arrays allowed.')
+
+    if len(axes) < out.ndim:
+        # Make big factor array (start with 0d)
+        factor = np.array(1.0)
+        for ax, arr in zip(axes, alist):
+            # Meshgrid-style slice
+            slc = [None] * out.ndim
+            slc[ax] = slice(None)
+            factor = factor * arr[slc]
+
+        out *= factor
+
+    else:
+        # Hybrid approach
+
+        # Get the axis to spare for the final multiplication, the one
+        # with the largest stride.
+        axis_order = np.argsort(out.strides)
+        last_ax = axis_order[-1]
+        last_arr = alist[axes.index(last_ax)]
+
+        # Build the semi-big array and multiply
+        factor = np.array(1.0)
+        for ax, arr in zip(axes, alist):
+            if ax == last_ax:
+                continue
+
+            slc = [None] * out.ndim
+            slc[ax] = np.s_[:]
+            factor = factor * arr[slc]
+
+        out *= factor
+
+        # Finally multiply by the remaining 1d array
+        slc = [None] * out.ndim
+        slc[last_ax] = np.s_[:]
+        out *= last_arr[slc]
+
+    return out
+
+
+def pspace_squared_sum(x, out=None):
+    """ Compute the pointwise squared sum of a `ProductSpaceVector`.
+    Parameters
+    ----------
+    x : `ProductSpaceVector`
+        The vector to compute the sum of, has to be a powerspace
+    out : `LinearSpaceVector`, optional
+        Vector to store the result to
+    Returns
+    -------
+    sum : `LinearSpaceVector`
+        The sum of ``x``, element in ``x.space[0]``.
+        If out was given as a parameter, this is a reference to it.
+    Examples
+    --------
+    >>> import odl
+    >>> X = odl.ProductSpace(odl.Rn(3), 2)
+    >>> x = X.element([[1, 2, 3], [4, 5, 6]])
+    >>> pspace_squared_sum(x)
+    Rn(3).element([17.0, 29.0, 45.0])
+    """
+    if out is None:
+        out = x.space[0].element()
+
+    sq_tmp = x.space[0].element()
+    for xi in x:
+        sq_tmp.multiply(xi, xi)
+        out += sq_tmp
     return out
 
 

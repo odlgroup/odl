@@ -41,6 +41,7 @@ from scipy.sparse.base import isspmatrix
 
 # ODL imports
 from odl.operator.operator import Operator
+from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
 from odl.util.utility import (
@@ -414,9 +415,9 @@ class NtuplesVector(NtuplesBaseVector):
         Ntuples(2, 'int8').element([0, 0])
         """
         if isinstance(values, NtuplesVector):
-            return self.data.__setitem__(indices, values.data)
+            self.data[indices] = values.data
         else:
-            return self.data.__setitem__(indices, values)
+            self.data[indices] = values
 
     @property
     def ufunc(self):
@@ -609,8 +610,13 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        weight : `array-like` or `float`, optional
-            Use weighted inner product, norm, and dist.
+        weight : optional
+            Use weighted inner product, norm, and dist. The following
+            types are supported as ``weight``:
+
+            `FnWeightingBase`:
+            Use this weighting as-is. Compatibility with this
+            space's elements is not checked during init.
 
             float: Weighting by a constant
 
@@ -722,7 +728,9 @@ class Fn(FnBase, Ntuples):
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
-            if np.isscalar(weight):
+            if isinstance(weight, FnWeightingBase):
+                self._space_funcs = weight
+            elif np.isscalar(weight):
                 self._space_funcs = FnConstWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner)
             elif weight is None:
@@ -759,6 +767,43 @@ class Fn(FnBase, Ntuples):
     def exponent(self):
         """Exponent of the norm and distance."""
         return self._space_funcs.exponent
+
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return self._space_funcs
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the weighting is not `FnNoWeighting`."""
+        return not isinstance(self.weighting, FnNoWeighting)
+
+    @staticmethod
+    def default_dtype(field):
+        """Return the default of `Fn` data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`
+            Set of numbers to be represented by a data type.
+            Currently supported : `RealNumbers`, `ComplexNumbers`
+
+        Returns
+        -------
+        dtype : `type`
+            Numpy data type specifier. The returned defaults are:
+
+            ``RealNumbers()`` : ``np.dtype('float64')``
+
+            ``ComplexNumbers()`` : ``np.dtype('complex128')``
+        """
+        if field == RealNumbers():
+            return np.dtype('float64')
+        elif field == ComplexNumbers():
+            return np.dtype('complex128')
+        else:
+            raise ValueError('no default data type defined for field {}.'
+                             ''.format(field))
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``.
@@ -1000,19 +1045,14 @@ class Fn(FnBase, Ntuples):
         """s.__repr__() <==> repr(s)."""
         if self.is_rn:
             class_name = 'Rn'
-            if self.dtype == np.float64:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         elif self.is_cn:
             class_name = 'Cn'
-            if self.dtype == np.complex128:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         else:
             class_name = 'Fn'
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+
+        inner_str = '{}'.format(self.size)
+        if self.dtype != self.default_dtype(self.field):
+            inner_str += ', {}'.format(dtype_repr(self.dtype))
 
         inner_str += _repr_space_funcs(self)
         return '{}({})'.format(class_name, inner_str)
@@ -1063,7 +1103,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x
         Cn(3).element([(10+1j), (6+0j), (4-2j)])
         """
-        rn = Rn(self.space.size, self.space.real_dtype)
+        rn = Rn(self.space.size, self.space._real_dtype)
         return rn.element(self.data.real)
 
     @real.setter
@@ -1121,7 +1161,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x
         Cn(3).element([(5+2j), (3+0j), (2-4j)])
         """
-        rn = Rn(self.space.size, self.space.real_dtype)
+        rn = Rn(self.space.size, self.space._real_dtype)
         return rn.element(self.data.imag)
 
     @imag.setter
@@ -1180,7 +1220,8 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> z_out is z
         True
 
-        It can also be used for inplace conj
+        It can also be used for in-place conj
+
         >>> x_out = x.conj(out=x); print(x)
         [(5-1j), (3-0j), (2+2j)]
         >>> x_out is x
@@ -1191,6 +1232,17 @@ class FnVector(FnBaseVector, NtuplesVector):
         else:
             self.data.conj(out.data)
             return out
+
+    def __ipow__(self, other):
+        """Return ``self **= other``."""
+        try:
+            if other == int(other):
+                return super().__ipow__(other)
+        except TypeError:
+            pass
+
+        np.power(self.data, other, out=self.data)
+        return self
 
 
 def Cn(size, dtype='complex128', **kwargs):

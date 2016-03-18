@@ -27,6 +27,39 @@ General errors
 
     find . -name *.pyc | xargs rm
 
+#. **Q:** When adding two vectors, the following error is shown::
+
+      TypeError: unsupported operand type(s) for -: 'DiscreteLpVector' and 'DiscreteLpVector'
+
+  **P:** The vectors you are trying to add are not in the same space,
+  for example the following code gives the error
+
+      >>> x = odl.uniform_discr(0, 1, 10).one()
+      >>> y = odl.uniform_discr(0, 1, 11).one()
+      >>> x - y
+
+  In this case, the problem is that the vectors have a different number of elements.
+  Other possible issues include that they are discretizations of different sets,
+  have different data types (:term:`dtype`), or implementation (for example cuda/cpu).
+
+  **S:** The vectors need to somehow be cast to the same space.
+  How to do this depends on the problem at hand. To find what the issue is,
+  inspect the ``space`` properties of both vectors. For example in the above
+  we see that the issue lies in the number of discretization points
+
+      >>> x.space
+      odl.uniform_discr(0, 1, 10)
+      >>> y.space
+      odl.uniform_discr(0, 1, 11)
+
+  * In the case of spaces being discretizations of different underlying spaces,
+    a transformation of some kind has to be applied (for example by using an operator).
+    In general, errors like this indicates a conceptual issue with the code,
+    for example a "we identify X with Y" step has been omitted.
+
+  * If the ``dtype`` or ``impl`` do not match, they need to be cast to each one of the others.
+    The most simple way to do this is by using the `DiscreteLpVector.astype` method.
+
 
 Errors related to Python 2/3
 ----------------------------
@@ -34,7 +67,7 @@ Errors related to Python 2/3
 #. **Q:** I follow your recommendation to call ``super().__init__(dom, ran)``
    in the ``__init__()`` method of ``MyOperator``, but I get the following
    error::
-   
+
 	File <...>, line ..., in __init__
 		super().__init__(dom, ran)
 
@@ -50,24 +83,24 @@ Errors related to Python 2/3
    **S:** We recommend to include ``from builtins import super`` in your
    module to backport the new Py3 ``super()`` function. This way, your code
    will run in both Python 2 and 3.
-   
-   
+
+
 Usage
 -----
 
 #. **Q:** I want to write an `Operator` with two input arguments, for example
-   
+
    .. math::
       op(x, y) := x + y
-    
-   However, ODL only supports single arguments. How do I do this? 
+
+   However, ODL only supports single arguments. How do I do this?
 
    **P:** Mathematically, such an operator is defined as
-   
+
    .. math::
       \mathcal{A}: \mathcal{X}_1 \times \mathcal{X}_2
       \rightarrow \mathcal{Z}
-      
+
    ODL adhers to the strict definition of this and hence only takes one parameter
    :math:`x \in \mathcal{X}_1 \times \mathcal{X}_2`. This product space element
    :math:`x` is then a tuple of elements :math:`x = (x_1, x_2),
@@ -77,7 +110,7 @@ Usage
    :math:`\mathcal{X}_1` and :math:`\mathcal{X}_2` are `LinearSpace`'s, or a
    `CartesianProduct` if they are mere `Set`'s. Mathematically, this
    corresponds to
-   
+
    .. math::
       op([x, y]) := x + y
 

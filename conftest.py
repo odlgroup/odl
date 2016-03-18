@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -30,3 +30,11 @@ if not CUDA_AVAILABLE:
     collect_ignore.append('odl/space/cu_ntuples.py')
 if not PYWAVELETS_AVAILABLE:
     collect_ignore.append('odl/trafos/wavelet.py')
+
+
+def pytest_addoption(parser):
+    parser.addoption('--largescale', action='store_true',
+                     help='Run large and slow tests')
+
+    parser.addoption('--benchmark', action='store_true',
+                     help='Run benchmarks')

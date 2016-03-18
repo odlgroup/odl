@@ -146,7 +146,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'odl'
-copyright = u'2015, odl group, KTH'
+copyright = u'2015-2016, ODL development group, KTH'
 author = u'Jonas Adler, Holger Kohr, Ozan Öktem'
 
 # The version info for the project you're documenting, acts as replacement for

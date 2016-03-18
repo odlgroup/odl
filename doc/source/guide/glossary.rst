@@ -4,13 +4,19 @@
 Glossary
 ########
 
-.. _numpy vectorization: http://docs.scipy.org/doc/numpy-1.10.1/reference/generated/numpy.vectorize.html
+.. _numpy vectorization: http://docs.scipy.org/doc/numpy/reference/generated/numpy.vectorize.html
+.. _numpy dtype: http://docs.scipy.org/doc/numpy/reference/generated/numpy.dtype.html
 
 .. glossary::
 
     array-like
         Any data structure which can be converted into a `numpy.ndarray` by the
         `numpy.array` constructor. Includes all `NtuplesBaseVector` based classes.
+        
+    dtype
+        Short for data type, indicates the way data is represented internally.
+        For example ``float32`` means 32-bit floating point numbers.
+        See `numpy dtype`_ for more details.
 
     discretization
         Structure to handle the mapping between abstract objects (e.g. functions) and
@@ -32,7 +38,7 @@ Glossary
         Any data structure which can be converted into an :term:`element` of a `Set` by
         the `Set.element` method. For example, an ``Rn(3) element-like`` is any :term:`array-like`
         object with 3 real entries.
-    
+
         Example: ```DiscreteLp` element-like`` means that
         `DiscreteLp.element` can create a `DiscreteLpVector` from the input.
 
@@ -47,9 +53,21 @@ Glossary
         since no new memory is allocated and no data is copied.
 
     meshgrid
-        Sequence of arrays defining a tensor grid by all possible combinations of entries, one from each
+        Tuple of arrays defining a tensor grid by all possible combinations of entries, one from each
         array. In 2 dimensions, for example, the arrays ``[1, 2]`` and ``[-1, 0, 1]`` define the grid
         points ``(1, -1), (1, 0), (1, 1), (2, -1), (2, 0), (2, 1)``.
+
+    operator
+        Mathematical notion for a mapping between arbitrary vector spaces. This includes the important
+        special case of an operator taking a (discretized) function as an input and returning another
+        function. For example, the Fourier Transform maps a function to its transformed version.
+        Operators of this type are the most prominent use case in ODL. See operators_in_depth_ for
+        details on their implementation.
+
+    order
+        Ordering of the axes in a multi-dimensional array with linear (one-dimensional) storage.
+        For C ordering (``'C'``), the last axis has smallest stride (varies fastest), and the first
+        axis has largest stride (varies slowest). Fortran ordering (``'F'``) is the exact opposite.
 
     out-of-place evaluation
         Operator evaluation method which creates a new data container to store
@@ -63,7 +81,7 @@ Glossary
     restriction
         Operator in a :term:`discretization` mapping an abstract
         (infinite-dimensional) object to a concrete (finite-dimensional) one.
-        Example: `GridCollocation`.
+        Example: `PointCollocation`.
 
     vectorization
         Ability of a function to be evaluated on a grid in a single call rather

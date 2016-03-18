@@ -24,10 +24,11 @@ standard_library.install_aliases()
 
 # External
 from abc import ABCMeta, abstractmethod
+import time
 
 # Internal
 from odl.util.utility import with_metaclass
-import time
+
 
 __all__ = ('Partial', 'StorePartial', 'ForEachPartial', 'PrintTimingPartial',
            'PrintIterationPartial', 'PrintNormPartial', 'ShowPartial')
@@ -35,7 +36,7 @@ __all__ = ('Partial', 'StorePartial', 'ForEachPartial', 'PrintTimingPartial',
 
 class Partial(with_metaclass(ABCMeta, object)):
 
-    """Abstract base class for sending partial results of iterations."""
+    """Abstract base class for handling partial results of iterations."""
 
     @abstractmethod
     def __call__(self, result):
@@ -243,7 +244,7 @@ class ShowPartial(Partial):
     """Show the partial result."""
 
     def __init__(self, **kwargs):
-        """Create a show partial
+        """Initialize a new instance.
 
         Parameters are passed through to the vectors show method. Additional
         parameters included.

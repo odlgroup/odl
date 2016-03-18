@@ -33,7 +33,7 @@ from odl.util.utility import is_real_dtype
 __all__ = ('show_discrete_data',)
 
 
-def show_discrete_data(values, grid, method='', title=None,
+def show_discrete_data(values, grid, title=None, method='',
                        show=False, fig=None, **kwargs):
     """Display a discrete 1d or 2d function.
 
@@ -43,6 +43,10 @@ def show_discrete_data(values, grid, method='', title=None,
         The values to visualize
     grid : `RegularGrid`
         Grid of the values
+
+    title : `str`, optional
+        Set the title of the figure
+
     method : `str`, optional
         1d methods:
 
@@ -61,8 +65,6 @@ def show_discrete_data(values, grid, method='', title=None,
 
         'wireframe', 'plot_wireframe' : surface plot
 
-    title : `str`, optional
-        Set the title of the figure
 
     show : `bool`, optional
         If the plot should be showed now or deferred until later
@@ -100,7 +102,6 @@ def show_discrete_data(values, grid, method='', title=None,
     """
     # Importing pyplot takes ~2 sec, only import when needed.
     import matplotlib.pyplot as plt
-
     args_re = []
     args_im = []
     dsp_kwargs = {}

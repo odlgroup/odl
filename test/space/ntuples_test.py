@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -38,11 +38,6 @@ from odl.space.ntuples import (
     MatVecOperator)
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 from odl.util.ufuncs import UFUNCS, REDUCTIONS
-
-# TODO: add tests for:
-# * inner, norm, dist as free functions
-# * Vector weighting
-# * Custom inner/norm/dist
 
 
 # Helpers to generate data
@@ -207,6 +202,29 @@ def test_init_space_funcs(exponent):
         assert spc._space_funcs == weight
 
 
+def test_astype():
+    rn = Rn(3, weight=1.5)
+    cn = Cn(3, weight=1.5)
+    rn_s = Rn(3, weight=1.5, dtype='float32')
+    cn_s = Cn(3, weight=1.5, dtype='complex64')
+
+    # Real
+    assert rn.astype('float32') == rn_s
+    assert rn.astype('float64') is rn
+    assert rn._real_space is rn
+    assert rn.astype('complex64') == cn_s
+    assert rn.astype('complex128') == cn
+    assert rn._complex_space == cn
+
+    # Complex
+    assert cn.astype('complex64') == cn_s
+    assert cn.astype('complex128') is cn
+    assert cn._complex_space is cn
+    assert cn.astype('float32') == rn_s
+    assert cn.astype('float64') == rn
+    assert cn._complex_space is cn
+
+
 def test_vector_class_init(fn):
     # Test that code runs
     arr = _array(fn)
@@ -322,6 +340,32 @@ def test_multiply_exceptions(fn):
 
     with pytest.raises(LinearSpaceTypeError):
         fn.multiply(x, y, otherx)
+
+
+def test_power(fn):
+
+    x_arr, y_arr, x, y = _vectors(fn, n=2)
+    y_pos = fn.element(np.abs(y) + 0.1)
+    y_pos_arr = np.abs(y_arr) + 0.1
+
+    # Testing standard positive integer power out-of-place and in-place
+    assert all_almost_equal(x ** 2, x_arr ** 2)
+    y **= 2
+    y_arr **= 2
+    assert all_almost_equal(y, y_arr)
+
+    # Real number and negative integer power
+    assert all_almost_equal(y_pos ** 1.3, y_pos_arr ** 1.3)
+    assert all_almost_equal(y_pos ** (-3), y_pos_arr ** (-3))
+    y_pos **= 2.5
+    y_pos_arr **= 2.5
+    assert all_almost_equal(y_pos, y_pos_arr)
+
+    # Array raised to the power of another array, entry-wise
+    assert all_almost_equal(y_pos ** x, y_pos_arr ** x_arr)
+    y_pos **= x.real
+    y_pos_arr **= x_arr.real
+    assert all_almost_equal(y_pos, y_pos_arr)
 
 
 def _test_unary_operator(fn, function):

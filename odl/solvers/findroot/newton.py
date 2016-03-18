@@ -53,7 +53,7 @@ def bfgs_method(grad, x, line_search, niter=1, partial=None):
     implementation uses the rank-one BFGS update schema where the
     inverse of the Hessian is recalculated in each iteration.
 
-    The algorithm is described in [1]_, Section 12.3 and in the
+    The algorithm is described in [GNS2009]_, Section 12.3 and in the
     `BFGS Wikipedia article
     <https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93\
 Goldfarb%E2%80%93Shanno_algorithm>`_
@@ -75,11 +75,6 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     Returns
     -------
     `None`
-
-    References
-    ----------
-    .. [1] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
-       and nonlinear optimization. Siam, 2009
     """
     hess = ident = IdentityOperator(grad.range)
     grad_x = grad(x)
@@ -128,7 +123,7 @@ def broydens_first_method(grad, x, line_search, niter=1, partial=None):
 
     using a Newton-type update scheme with approximate Hessian.
 
-    The algorithm is described in [1]_ and [2]_, and in a
+    The algorithm is described in [Bro1965]_ and [Kva1991]_, and in a
     `Wikipedia article
     <https://en.wikipedia.org/wiki/Broyden's_method>`_.
 
@@ -149,15 +144,6 @@ def broydens_first_method(grad, x, line_search, niter=1, partial=None):
     Returns
     -------
     `None`
-
-    References
-    ----------
-    .. [1] Broyden, Charles G. "A class of methods for solving nonlinear
-       simultaneous equations." Mathematics of computation (1965):
-       577-593.
-
-    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical
-       Mathematics 31.2 (1991): 369-372.
     """
     hess = IdentityOperator(grad.range)
     grad_x = grad(x)
@@ -209,7 +195,7 @@ def broydens_second_method(grad, x, line_search, niter=1, partial=None):
 
     using a Newton-type update scheme with approximate Hessian.
 
-    The algorithm is described in [1]_ and [2]_, and in a
+    The algorithm is described in [Bro1965]_ and [Kva1991]_, and in a
     `Wikipedia article
     <https://en.wikipedia.org/wiki/Broyden's_method>`_
 
@@ -226,17 +212,7 @@ def broydens_second_method(grad, x, line_search, niter=1, partial=None):
         Number of iterations
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
-
-    References
-    ----------
-    .. [1] Broyden, Charles G. "A class of methods for solving nonlinear
-       simultaneous equations." Mathematics of computation (1965):
-       577-593.
-
-    .. [2] Kvaalen, Eric. "A faster Broyden method." BIT Numerical
-       Mathematics 31.2 (1991): 369-372.
     """
-
     # TODO: potentially make the implementation faster by considering
     # performance optimization according to Kvaalen.
 

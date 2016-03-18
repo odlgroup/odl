@@ -33,7 +33,7 @@ The following abstract diagram visualizes a discretization:
    :scale: 40 %
 
 Example
--------
+=======
 
 Let :math:`\mathcal{X} = C([0, 1])` be the space of real-valued
 continuous functions on the interval :math:`[0, 1]`, and let :math:`x_1 < \dots < x_n`

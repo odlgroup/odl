@@ -137,7 +137,7 @@ class RectPartition(object):
 
         See also
         --------
-        IntervalProd.min
+        odl.set.domain.IntervalProd.min
         """
         return self.set.min()
 
@@ -146,7 +146,7 @@ class RectPartition(object):
 
         See also
         --------
-        IntervalProd.max
+        odl.set.domain.IntervalProd.max
         """
         return self.set.max()
 
@@ -369,7 +369,8 @@ class RectPartition(object):
         ----------
         index : `int`
             Index of the dimension before which ``other`` is to
-            be inserted. Negative indices are added to ``self.ndim``.
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
         other : `RectPartition`
             Partition to be inserted
 
@@ -391,7 +392,7 @@ class RectPartition(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n {!r},\n {!r}'.format(self.set, self.grid)
+        inner_str = '\n    {!r},\n    {!r}'.format(self.set, self.grid)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
@@ -552,8 +553,6 @@ def uniform_partition(begin, end, num_nodes, nodes_on_bdry=False):
 
     Examples
     --------
-    Examples
-    --------
     By default, no grid points are placed on the boundary:
 
     >>> part = uniform_partition(0, 1, 4)
@@ -614,12 +613,9 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
         as::
 
             begin = x[0] - (x[1] - x[0]) / 2
-
-        or::
-
             end = x[-1] + (x[-1] - x[-2]) / 2
 
-        respectively. See ``Examples`` below.
+        See ``Examples`` below.
 
         In general, ``begin`` may not be larger than ``grid.min_pt``,
         and ``end`` not smaller than ``grid.max_pt`` in any component.

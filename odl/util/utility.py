@@ -33,50 +33,129 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr')
 
 
-def array1d_repr(array):
-    """Stringification of a 1D array, keeping byte / unicode."""
-    if len(array) < 7:
+def _indent_rows(string, indent=4):
+    out_string = '\n'.join((' ' * indent) + row for row in string.split('\n'))
+    return out_string
+
+
+def array1d_repr(array, nprint=6):
+    """Stringification of a 1D array, keeping byte / unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print
+    """
+    assert int(nprint) > 0
+
+    if len(array) <= nprint:
         return repr(list(array))
     else:
-        return (repr(list(array[:3])).rstrip(']') + ', ..., ' +
-                repr(list(array[-3:])).lstrip('['))
+        return (repr(list(array[:nprint // 2])).rstrip(']') + ', ..., ' +
+                repr(list(array[-(nprint // 2):])).lstrip('['))
 
 
-def array1d_str(array):
-    """Stringification of a 1D array, regardless of byte or unicode."""
-    if len(array) < 7:
+def array1d_str(array, nprint=6):
+    """Stringification of a 1D array, regardless of byte or unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print
+    """
+    assert int(nprint) > 0
+
+    if len(array) <= nprint:
         inner_str = ', '.join(str(a) for a in array)
         return '[{}]'.format(inner_str)
     else:
-        left_str = ', '.join(str(a) for a in array[:3])
-        right_str = ', '.join(str(a) for a in array[-3:])
+        left_str = ', '.join(str(a) for a in array[:nprint // 2])
+        right_str = ', '.join(str(a) for a in array[-(nprint // 2):])
         return '[{}, ..., {}]'.format(left_str, right_str)
 
 
-def arraynd_repr(array):
-    """Stringification of an nD array, keeping byte / unicode."""
+def arraynd_repr(array, nprint=None):
+    """Stringification of an nD array, keeping byte / unicode.
+
+    Parameters
+    ----------
+    array : array-like
+        The array to print
+    nprint : int
+        Maximum number of elements to print.
+        Default: 6 if array.ndim <= 2, else 2
+
+    Examples
+    --------
+    >>> print(arraynd_repr([[1, 2, 3], [4, 5, 6]]))
+    [[1, 2, 3],
+     [4, 5, 6]]
+    >>> print(arraynd_repr([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
+    [[1, 2, 3],
+     [4, 5, 6],
+     [7, 8, 9]]
+    """
+    array = np.asarray(array)
+    if nprint is None:
+        nprint = 6 if array.ndim <= 2 else 2
+    else:
+        assert nprint > 0
+
     if array.ndim > 1:
-        if len(array) < 7:
+        if len(array) <= nprint:
             inner_str = ',\n '.join(arraynd_repr(a) for a in array)
-            return '[\n{}\n]'.format(inner_str)
+            return '[{}]'.format(inner_str)
         else:
-            left_str = ',\n '.join(arraynd_repr(a) for a in array[:3])
-            right_str = ',\n '.join(arraynd_repr(a) for a in array[-3:])
-            return '[\n{},\n ...,\n{}\n]'.format(left_str, right_str)
+            left_str = ',\n '.join(arraynd_repr(a) for a in
+                                   array[:nprint // 2])
+            right_str = ',\n '.join(arraynd_repr(a) for a in
+                                    array[-(nprint // 2):])
+            return '[{},\n ...,\n {}]'.format(left_str, right_str)
     else:
         return array1d_repr(array)
 
 
-def arraynd_str(array):
-    """Stringification of a nD array, regardless of byte or unicode."""
+def arraynd_str(array, nprint=None):
+    """Stringification of an nD array, regardless of byte or unicode.
+
+    Parameters
+    ----------
+    array : `array-like`
+        The array to print
+    nprint : int
+        Maximum number of elements to print.
+        Default: 6 if array.ndim <= 2, else 2
+
+    Examples
+    --------
+    >>> print(arraynd_str([[1, 2, 3], [4, 5, 6]]))
+    [[1, 2, 3],
+     [4, 5, 6]]
+    >>> print(arraynd_str([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
+    [[1, 2, 3],
+     [4, 5, 6],
+     [7, 8, 9]]
+    """
+    array = np.asarray(array)
+    if nprint is None:
+        nprint = 6 if array.ndim <= 2 else 2
+    else:
+        assert nprint > 0
+
     if array.ndim > 1:
-        if len(array) < 7:
+        if len(array) <= nprint:
             inner_str = ',\n '.join(arraynd_str(a) for a in array)
             return '[{}]'.format(inner_str)
         else:
-            left_str = ',\n '.join(arraynd_str(a) for a in array[:3])
-            right_str = ',\n '.join(arraynd_str(a) for a in array[-3:])
-            return '[{},\n ...,\n{}]'.format(left_str, right_str)
+            left_str = ',\n'.join(arraynd_str(a) for a in
+                                  array[:nprint // 2])
+            right_str = ',\n'.join(arraynd_str(a) for a in
+                                   array[- (nprint // 2):])
+            return '[{},\n    ...,\n{}]'.format(left_str, right_str)
     else:
         return array1d_str(array)
 
@@ -163,7 +242,31 @@ def is_complex_floating_dtype(dtype):
     return np.issubsctype(dtype, np.complexfloating)
 
 
-def preload_call_with(instance, mode):
+def conj_exponent(exp):
+    """The conjugate exponent p / (p-1).
+
+    Parameters
+    ----------
+    exp : positive `float` or inf
+        Exponent for which to calculate the conjugate. Must be
+        at least 1.0.
+
+    Returns
+    -------
+    conj : positive `float` or inf
+        Conjugate exponent. For ``exp=1``, return ``float('inf')``,
+        for ``exp=float('inf')`` return 1. In all other cases, return
+        ``exp / (exp - 1)``.
+    """
+    if exp == 1.0:
+        return float('inf')
+    elif exp == float('inf'):
+        return 1.0  # This is not strictly correct in math, but anyway
+    else:
+        return exp / (exp - 1.0)
+
+
+def preload_first_arg(instance, mode):
     """Decorator to preload the first argument of a call method.
 
     Parameters
@@ -195,8 +298,8 @@ def preload_call_with(instance, mode):
     >>> def f_ip(inst, out, x):
     ...     print(inst.__doc__)
     ...
-    >>> f_oop_new = preload_call_with(a, 'out-of-place')(f_oop)
-    >>> f_ip_new = preload_call_with(a, 'in-place')(f_ip)
+    >>> f_oop_new = preload_first_arg(a, 'out-of-place')(f_oop)
+    >>> f_ip_new = preload_first_arg(a, 'in-place')(f_ip)
     ...
     >>> f_oop_new(0)
     My name is A.
@@ -205,7 +308,7 @@ def preload_call_with(instance, mode):
 
     Decorate upon definition:
 
-    >>> @preload_call_with(a, 'out-of-place')
+    >>> @preload_first_arg(a, 'out-of-place')
     ... def set_x(obj, x):
     ...     '''Function to set x in ``obj`` to a given value.'''
     ...     obj.x = x
@@ -237,50 +340,6 @@ def preload_call_with(instance, mode):
             return ip_wrapper
         else:
             raise ValueError('bad mode {!r}.'.format(mode))
-
-    return decorator
-
-
-def preload_default_oop_call_with(vector):
-    """Decorator to bind the default out-of-place call to an instance.
-
-    Parameters
-    ----------
-    vector : `FunctionSetVector`
-        Vector with which the default call is preloaded. Its
-        `FunctionSetVector.space` determines the type of
-        implementation chosen for the vectorized evaluation. If
-        ``vector.space`` has a `LinearSpace.field` attribute, the
-        required output data type is inferred from it. Otherwise,
-        a "lazy" vectorization is performed (not implemented).
-
-    Notes
-    -----
-    Usually this decorator is used as as a function factory::
-
-        preload_default_oop_call_with(<vec>)(<call>)
-
-    """
-
-    def decorator(call):
-
-        from odl.set.sets import RealNumbers, ComplexNumbers
-
-        field = getattr(vector.space, 'field', None)
-        if field is None:
-            dtype = None
-        elif field == RealNumbers():
-            dtype = 'float64'
-        elif field == ComplexNumbers():
-            dtype = 'complex128'
-        else:
-            raise TypeError('cannot handle field {!r}.'.format(field))
-
-        @wraps(call)
-        def oop_wrapper(x, **kwargs):
-            return call(vector, dtype, x, **kwargs)
-
-        return oop_wrapper
 
     return decorator
 

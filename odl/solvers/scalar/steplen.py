@@ -91,20 +91,12 @@ class BacktrackingLineSearch(LineSearch):
     This methods approximately finds the longest step length fulfilling
     the Armijo-Goldstein condition.
 
-    The line search algorithm is described in [1]_, page 464
+    The line search algorithm is described in [BV2004]_, page 464
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_) and
-    [2]_, pages 378--379. See also
+    [GNS2009]_, pages 378--379. See also
     `Backtracking_line_search
     <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
-
-    References
-    ----------
-    .. [1] Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
-       Cambridge university press, 2004. Available at
-
-    .. [2] Pages 378-379 in Griva, Igor, Stephen G. Nash, and
-       Ariela Sofer. Linear and nonlinear optimization. Siam, 2009.
     """
 
     def __init__(self, function, tau=0.5, c=0.01, max_num_iter=None):
@@ -209,16 +201,7 @@ class BarzilaiBorweinStep(object):
     Barzilai-Borwein method to compute a step length
     for gradient descent methods.
 
-    TODO
-
-    References
-    ----------
-    .. [1] J. Barzilai and J. M. Borwein. Two-point step size gradient
-       methods. IMA Journal of Numerical Analysis, vol. 8, pp. 141--148,
-       1988.
-    .. [2] M. Raydan. The Barzilai and Borwein method for the large scale
-       unconstrained minimization problem. SIAM J. Optim., vol. 7,
-       pp. 26--33, 1997.
+    The method is described in [BB1988]_ and [Ray1997]_.
     """
 
     def __init__(self, gradf, step0=0.0005):

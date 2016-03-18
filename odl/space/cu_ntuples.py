@@ -27,6 +27,7 @@ from builtins import int, super
 import numpy as np
 
 # ODL imports
+from odl.set.sets import RealNumbers
 from odl.set.space import LinearSpaceVector
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
@@ -438,7 +439,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
                     # Size checking is performed in c++
                     self.data.setslice(indices, value_array)
             else:
-                self.data.__setitem__(int(indices), values)
+                self.data[int(indices)] = values
 
     @property
     def ufunc(self):
@@ -536,22 +537,27 @@ class CudaFn(FnBase, CudaNtuples):
 
             Only scalar data types are allowed.
 
-        weight : `array-like`, `CudaFnVector` or `float`, optional
-            Use weighted inner product, norm, and dist.
+        weight : optional
+            Use weighted inner product, norm, and dist. The following
+            types are supported as ``weight``:
 
-            `float`:
-                Weighting by a constant
+            `FnWeightingBase` :
+            Use this weighting as-is. Compatibility with this
+            space's elements is not checked during init.
 
-            array-like:
-                Weighting by a vector (1-dim. array, corresponds to
-                a diagonal matrix). Note that the array is stored in
-                main memory, which results in slower space functions
-                due to a copy during evaluation.
+            `float` :
+            Weighting by a constant
 
-            `CudaFnVector`:
-                same as 1-dim. array-like, except that copying is
-                avoided if the ``dtype`` of the vector is the
-                same as this space's ``dtype``.
+            `array-like` :
+            Weighting by a vector (1-dim. array, corresponds to
+            a diagonal matrix). Note that the array is stored in
+            main memory, which results in slower space functions
+            due to a copy during evaluation.
+
+            `CudaFnVector` :
+            same as 1-dim. array-like, except that copying is
+            avoided if the ``dtype`` of the vector is the
+            same as this space's ``dtype``.
 
             Default: no weighting
 
@@ -623,7 +629,7 @@ class CudaFn(FnBase, CudaNtuples):
             This option cannot be combined with ``weight``,
             ``dist`` or ``norm``.
         """
-        super().__init__(size, dtype)
+        FnBase.__init__(self, size, dtype)
         CudaNtuples.__init__(self, size, dtype)
 
         dist = kwargs.pop('dist', None)
@@ -633,12 +639,13 @@ class CudaFn(FnBase, CudaNtuples):
         exponent = kwargs.pop('exponent', 2.0)
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        from builtins import sum as py_sum
-        if py_sum(x is None for x in (dist, norm, inner, weight)) < 3:
+        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
-            if np.isscalar(weight):
+            if isinstance(weight, FnWeightingBase):
+                self._space_funcs = weight
+            elif np.isscalar(weight):
                 self._space_funcs = CudaFnConstWeighting(
                     weight, exponent=exponent)
             elif isinstance(weight, CudaFnVector):
@@ -667,6 +674,39 @@ class CudaFn(FnBase, CudaNtuples):
     def exponent(self):
         """Exponent of the norm and distance."""
         return self._space_funcs.exponent
+
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return self._space_funcs
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the weighting is not `CudaFnNoWeighting`."""
+        return not isinstance(self.weighting, CudaFnNoWeighting)
+
+    @staticmethod
+    def default_dtype(field):
+        """Return the default of `CudaFn` data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`
+            Set of numbers to be represented by a data type.
+            Currently supported: `RealNumbers`.
+
+        Returns
+        -------
+        dtype : `type`
+            Numpy data type specifier. The returned defaults are:
+
+            ``RealNumbers()`` : , ``np.dtype('float32')``
+        """
+        if field == RealNumbers():
+            return np.dtype('float32')
+        else:
+            raise ValueError('no default data type defined for field {}.'
+                             ''.format(field))
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``, assigned to ``out``.
@@ -893,16 +933,16 @@ class CudaFn(FnBase, CudaNtuples):
         """s.__repr__() <==> repr(s)."""
         if self.is_rn:
             class_name = 'CudaRn'
-            if self.dtype == np.float32:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         elif self.is_cn:
-            raise NotImplementedError
+            class_name = 'CudaCn'
         else:
             class_name = 'CudaFn'
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
 
+        inner_str = '{}'.format(self.size)
+        if self.dtype != self.default_dtype(self.field):
+            inner_str += ', {}'.format(dtype_repr(self.dtype))
+
+        inner_str += _repr_space_funcs(self)
         return '{}({})'.format(class_name, inner_str)
 
     @property
