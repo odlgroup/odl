@@ -32,6 +32,8 @@ The following abstract diagram visualizes a discretization:
 .. image:: images/discr.png
    :scale: 40 %
 
+TODO: write up in more detail
+
 Example
 =======
 

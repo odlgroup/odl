@@ -496,7 +496,7 @@ class Operator(object):
     def _call(self, x, out=None, **kwargs):
         """Implementation of the operator evaluation.
 
-        This method is private backend for the evaluation of this
+        This method is the private backend for the evaluation of an
         operator. It needs to match certain signature conventions,
         and its implementation type is inferred from its signature.
 
@@ -539,6 +539,11 @@ class Operator(object):
         - If your evaluation code does not support in-place evaluation,
           use the out-of-place pattern.
 
+        Note that the public call pattern ``op()`` using ``op.__call__``
+        provides a default implementation of the underlying in-place or
+        out-of-place call even if you choose the respective other
+        pattern.
+
         See the `documentation
         <https://odl.readthedocs.org/guide/in_depth/operator_guide.html>`_
         for more info on in-place vs. out-of-place evaluation.
@@ -555,13 +560,6 @@ class Operator(object):
         out : `Operator.range` `element-like`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
-
-        Notes
-        -----
-        The public call pattern ``op()`` using ``op.__call__`` provides
-        a default implementation of the underlying in-place or
-        out-of-place call even if you choose the respective other
-        pattern.
         """
         raise NotImplementedError('This operator {!r} does not implement '
                                   '`_call`. See `Operator._call` for '

@@ -33,7 +33,6 @@ for a matrix :math:`A\in \mathbb{R}^{n\times m}` as follows::
 
     class MatVecOperator(odl.Operator):
         def __init__(self, matrix):
-            assert isinstance(matrix, np.ndarray)
             self.matrix = matrix
             dom = odl.Rn(matrix.shape[1])
             ran = odl.Rn(matrix.shape[0])
@@ -47,13 +46,13 @@ In place evaluation
 In-place evaluation means that the operator is evaluated on a
 `Operator.domain` element, and the result is written to an
 *already existing* `Operator.range` element. To implement
-this behavior, create the (private) ``Operator._apply``
+this behavior, create the (private) `Operator._call`
 method with the following signature, here given for the above
 example::
 
   class MatVecOperator(odl.Operator):
       ...
-      def _apply(self, x, out):
+      def _call(self, x, out):
           self.matrix.dot(x, out=out.asarray())
 
 In-place evaluation is usually more efficient and should be used
@@ -61,12 +60,9 @@ In-place evaluation is usually more efficient and should be used
 
 Out-of-place evaluation
 -----------------------
-Out-of-place evaluation means that the
-operator is evaluated on a ``domain`` element, and
-the result is written to a *newly allocated*
-``range`` element. To implement this
-behavior, create the (private) ``Operator._call`` method
-with the following signature, here given for the above example::
+Out-of-place evaluation means that the operator is evaluated on a ``domain`` element, and
+the result is written to a *newly allocated* ``range`` element. To implement this
+behavior, use the following signature for `Operator._call` (again given for the above example)::
 
   class MatVecOperator(odl.Operator):
       ...
@@ -91,8 +87,8 @@ avoided*.
     # In-place evaluation
     operator(x, out=y)
 
-This public calling interface is type-checked, so the private methods
-do not need to implement type checks.
+This public calling interface is (duck-)type-checked, so the private methods
+can safely assume that their input data is of the operator domain element type.
 
 Operator arithmetic
 -------------------
