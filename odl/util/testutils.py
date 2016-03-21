@@ -223,7 +223,7 @@ try:
 
     skip_if_no_pyfftw = pytest.mark.skipif(
         "not odl.trafos.PYFFTW_AVAILABLE",
-        reason='pyfftw not available')
+        reason='pyFFTW not available')
 
     skip_if_no_largescale = pytest.mark.skipif(
         "not pytest.config.getoption('--largescale')",
