@@ -1146,7 +1146,7 @@ def uniform_discr(min_corner, max_corner, nsamples,
     """
     interval = IntervalProd(min_corner, max_corner)
     return uniform_discr_fromintv(interval, nsamples, exponent, interp, impl,
-                                   **kwargs)
+                                  **kwargs)
 
 
 def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
