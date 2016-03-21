@@ -47,7 +47,7 @@ from odl.util.utility import (
 
 __all__ = ('DiscreteLp', 'DiscreteLpVector',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
-           'uniform_discr', 'discr_sequence_space')
+           'uniform_discr_fromintv', 'uniform_discr', 'discr_sequence_space')
 
 _SUPPORTED_INTERP = ('nearest', 'linear')
 
@@ -925,6 +925,8 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_frompartition : uniform Lp discretization using a given
         uniform partition of a function domain
+    uniform_discr_fromintv : uniform discretization from an existing
+        interval product
     odl.discr.partition.uniform_partition :
         partition of the function domain
     """
@@ -965,6 +967,97 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     return uniform_discr_frompartition(partition, exponent, interp, impl_in,
                                        dtype=dtype, **kwargs)
+
+
+def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
+                           impl='numpy', **kwargs):
+    """Discretize an Lp function space by uniform sampling.
+
+    Parameters
+    ----------
+    domain : `IntervalProd`
+        The domain of the uniformly discretized space.
+    nsamples : `float` or `tuple` of `float`
+        Minimum corner of the result.
+    nsamples : `int` or `tuple` of `int`
+        Number of samples per axis. For dimension >= 2, a tuple is
+        required.
+    exponent : positive `float`, optional
+        The parameter :math:`p` in :math:`L^p`. If the exponent is not
+        equal to the default 2.0, the space has no inner product.
+    interp : `str` or `sequence` of `str`, optional
+        Interpolation type to be used for discretization.
+        A sequence is interpreted as interpolation scheme per axis.
+
+            'nearest' : use nearest-neighbor interpolation
+
+            'linear' : use linear interpolation
+
+    impl : {'numpy', 'cuda'}, optional
+        Implementation of the data storage arrays
+    nodes_on_bdry : `bool` or `sequence`, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (True) or shift it
+        by half a cell size into the interior (False). In each axis,
+        an entry may consist in a single `bool` or a 2-tuple of
+        `bool`. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
+        Default: `False`
+
+    dtype : dtype, optional
+        Data type for the discretized space
+
+            Default for 'numpy': 'float64' / 'complex128'
+
+            Default for 'cuda': 'float32'
+
+    order : {'C', 'F'}, optional
+        Ordering of the axes in the data storage. 'C' means the
+        first axis varies slowest, the last axis fastest;
+        vice versa for 'F'.
+        Default: 'C'
+    weighting : {'const', 'none'}, optional
+        Weighting of the discretized space functions.
+
+            'const' : weight is a constant, the cell volume (default)
+
+            'none' : no weighting
+
+    Returns
+    -------
+    discr : `DiscreteLp`
+        The uniformly discretized function space
+
+    Examples
+    --------
+    >>> from odl import Interval
+    >>> intv = Interval(0, 1)
+    >>> uniform_discr_fromintv(intv, 10)
+    uniform_discr(0.0, 1.0, 10)
+
+    See also
+    --------
+    uniform_discr : implicit uniform Lp discretization
+    uniform_discr_frompartition : uniform Lp discretization using a given
+        uniform partition of a function domain
+    uniform_discr_fromspace : uniform discretization from an existing
+        function space
+    """
+    # Select field by dtype
+    dtype = kwargs.pop('dtype', None)
+    if dtype is None:
+        if str(impl).lower() == 'cuda':
+            dtype = np.dtype('float32')
+        else:
+            dtype = np.dtype('float64')
+
+    fspace = FunctionSpace(interval, out_dtype=dtype)
+    return uniform_discr_fromspace(fspace, nsamples, exponent, interp, impl,
+                                   **kwargs)
 
 
 def uniform_discr(min_corner, max_corner, nsamples,
@@ -1048,18 +1141,11 @@ def uniform_discr(min_corner, max_corner, nsamples,
         uniform partition of a function domain
     uniform_discr_fromspace : uniform discretization from an existing
         function space
+    uniform_discr_fromintv : uniform discretization from an existing
+        interval product
     """
-    # Select field by dtype
-    dtype = kwargs.pop('dtype', None)
-    if dtype is None:
-        if str(impl).lower() == 'cuda':
-            dtype = np.dtype('float32')
-        else:
-            dtype = np.dtype('float64')
-
-    fspace = FunctionSpace(IntervalProd(min_corner, max_corner),
-                           out_dtype=dtype)
-    return uniform_discr_fromspace(fspace, nsamples, exponent, interp, impl,
+    interval = IntervalProd(min_corner, max_corner)
+    return uniform_discr_fromintv(interval, nsamples, exponent, interp, impl,
                                    **kwargs)
 
 
