@@ -78,6 +78,9 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             traverses when increasing the angle parameter by ``2 * pi``
         axis : `array-like`, shape ``(3,)``, optional
             Fixed rotation axis, the symmetry axis of the helix
+
+        Other Parameters
+        ----------------
         src_to_det_init : `array-like`, shape ``(2,)``, optional
             Initial state of the vector pointing from source to  detector
             reference point. The zero vector is not allowed.
@@ -92,8 +95,6 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         """
         AxisOrientedGeometry.__init__(self, axis)
 
-        # TODO: the case when this vector points out of the azimuthal plane
-        # is not properly handled
         src_to_det_init = kwargs.pop('src_to_det_init',
                                      perpendicular_vector(self.axis))
 
@@ -141,6 +142,17 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     def pitch(self):
         """Constant vertical distance traversed in a full rotation."""
         return self._pitch
+
+    @property
+    def src_to_det_init(self):
+        """Initial state of the vector pointing from source to detector
+        reference point."""
+        return self._src_to_det_init
+
+    @property
+    def det_init_axes(self):
+        """Initial axes defining the detector orientation."""
+        return self.detector.axes
 
     @property
     def pitch_offset(self):
@@ -257,8 +269,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             pitch=self.pitch,
             pitch_offset=self.pitch_offset,
             axis=list(self.axis),
-            src_to_det_init=list(self._src_to_det_init),
-            det_init_axes=[list(a) for a in self.detector.axes])
+            src_to_det_init=list(self.src_to_det_init),
+            det_init_axes=[list(a) for a in self.det_init_axes])
         return '{}({})'.format(self.__class__.__name__, arg_str)
 
     # Fix for bug in ABC thinking this is abstract
