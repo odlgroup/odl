@@ -57,6 +57,15 @@ def test_RxR():
     assert all_equal([v1, v2], u)
 
 
+def test_is_power_space():
+    r2 = odl.Rn(2)
+    r2x3 = odl.ProductSpace(r2, 3)
+    assert r2x3.is_power_space
+
+    r2r2r2 = odl.ProductSpace(r2, r2, r2)
+    assert r2x3 == r2r2r2
+
+
 def test_lincomb():
     H = odl.Rn(2)
     HxH = odl.ProductSpace(H, H)

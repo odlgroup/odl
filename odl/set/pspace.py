@@ -222,6 +222,11 @@ class ProductSpace(LinearSpace):
         return self._spaces
 
     @property
+    def is_power_space(self):
+        """`True` if all member spaces are equal."""
+        return all(spc == self.spaces[0] for spc in self.spaces[1:])
+
+    @property
     def exponent(self):
         """Exponent of the product space norm/dist, `None` for custom."""
         return self._exponent
