@@ -75,54 +75,56 @@ class ProductSpace(LinearSpace):
             Can be specified either as a space and an integer, in which
             case the power space ``space**n`` is created, or
             an arbitrary number of spaces.
-        ord : `float`, optional
+        exponent : non-zero `float` or ``float('inf')``, optional
             Order of the product distance/norm, i.e.
 
-            ``dist(x, y) = np.linalg.norm(x-y, ord=ord)``
+            ``dist(x, y) = np.linalg.norm(x-y, ord=exponent)``
 
-            ``norm(x) = np.linalg.norm(x, ord=ord)``
+            ``norm(x) = np.linalg.norm(x, ord=exponent)``
+
+            Values ``0 <= exponent < 1`` are currently unsupported
+            due to numerical instability.
 
             Default: 2.0
 
-            The following `float` values for ``ord`` can be specified.
-            Note that any value of ``ord < 1`` only gives a pseudo-norm.
+            The following `float` values for ``exponent`` can be
+            specified. Note that ``ord < 1`` only gives a pseudo-norm.
 
-            +-------------+------------------------------+
-            | 'prod_norm' | Distance Definition          |
-            +=============+==============================+
-            | 'inf'       | ``max(w * z)``               |
-            +-------------+------------------------------+
-            | '-inf'      | ``min(w * z)``               |
-            +-------------+------------------------------+
-            | other       | ``sum(w * z**ord)**(1/ord)`` |
-            +-------------+------------------------------+
+            +-------------+----------------------------------------+
+            | 'exponent'  | Distance Definition                    |
+            +=============+========================================+
+            | 'inf'       | ``max(w * z)``                         |
+            +-------------+----------------------------------------+
+            | '-inf'      | ``min(w * z)``                         |
+            +-------------+----------------------------------------+
+            | other       | ``sum(w * z**exponent)**(1/exponent)`` |
+            +-------------+----------------------------------------+
 
             Here,
 
-            ``z = (x[0].dist(y[0]),..., x[n-1].dist(y[n-1]))``
+            ``z = (dist(x[0], y[0]),..., dist(x[n-1], y[n-1]))``
 
             and ``w = weights``.
 
-            Note that ``0 <= ord < 1`` are not allowed since these
-            pseudo-norms are very unstable numerically.
         weights : `array-like`, optional
             Array of weights, same size as number of space
             components. All weights must be positive. It is
             multiplied with the tuple of distances before
-            applying the Rn norm or ``prod_norm``.
+            applying the ``prod_norm``.
             Default: ``(1.0,...,1.0)``
 
-            This option can only be used together with ``ord``.
+            This option can only be used together with ``exponent``.
 
         prod_norm : `callable`, optional
-            Function that should be applied to the array of
-            distances/norms. Specifying a product norm causes
-            the space to NOT be a Hilbert space.
+            Function applied to the array of distances/norms.
+            Specifying this parameter causes the space **not** to be
+            a Hilbert space.
 
-            Default: ``np.linalg.norm(x, ord=ord)``.
+            Default: ``np.linalg.norm(x, ord=exponent)``.
 
         field : `Field`, optional
-            The field that should be used. Default: spaces[0].field
+            Scalar field of the resulting space.
+            Default: ``spaces[0].field``
 
         Returns
         -------
@@ -156,11 +158,12 @@ class ProductSpace(LinearSpace):
 
             self._prod_norm = prod_norm
             self._prod_inner_sum = _prod_inner_sum_not_defined
+            self._exponent = None
         else:
-            order = float(kwargs.get('ord', 2.0))
-            if 0 <= order < 1:
+            self._exponent = float(kwargs.get('exponent', 2.0))
+            if 0 <= self.exponent < 1:
                 raise ValueError('Cannot use {:.2}-norm due to numerical '
-                                 'instability.'.format(order))
+                                 'instability.'.format(self.exponent))
 
             # TODO: handle weights more elegantly
             weights = kwargs.get('weights', None)
@@ -174,11 +177,11 @@ class ProductSpace(LinearSpace):
                                      ''.format(len(spaces), len(weights)))
 
                 def w_norm(x):
-                    return np.linalg.norm(x * self._weights, ord=order)
+                    return np.linalg.norm(x * self._weights, ord=self.exponent)
 
                 self._prod_norm = w_norm
 
-                if order == 2.0:
+                if self.exponent == 2.0:
                     def w_inner_sum(x):
                         return np.linalg.dot(x, self._weights)
 
@@ -189,11 +192,11 @@ class ProductSpace(LinearSpace):
                 self._weights = None
 
                 def norm(x):
-                    return np.linalg.norm(x, ord=order)
+                    return np.linalg.norm(x, ord=self.exponent)
 
                 self._prod_norm = norm
 
-                if order == 2.0:
+                if self.exponent == 2.0:
                     self._prod_inner_sum = np.sum
                 else:
                     self._prod_inner_sum = _prod_inner_sum_not_defined
@@ -217,6 +220,11 @@ class ProductSpace(LinearSpace):
     def spaces(self):
         """A tuple containing all spaces."""
         return self._spaces
+
+    @property
+    def exponent(self):
+        """Exponent of the product space norm/dist, `None` for custom."""
+        return self._exponent
 
     def element(self, inp=None, cast=True):
         """Create an element in the product space.
@@ -519,9 +527,10 @@ class ProductSpaceVector(LinearSpaceVector):
 
     @property
     def ufunc(self):
-        """`ProductSpaceUFuncs`, access to numpy style ufuncs.
+        """`ProductSpaceUFuncs`, access to Numpy style ufuncs.
 
-        These are always available if the underlying spaces are `NtuplesBase`.
+        These are always available if the underlying spaces are
+        `NtuplesBase`.
 
         Examples
         --------
@@ -534,8 +543,8 @@ class ProductSpaceVector(LinearSpaceVector):
             [3.0, 4.0]
         ])
 
-        These functions can also be used with non-vector arguments and support
-        broadcasting, both by element
+        These functions can also be used with non-vector arguments and
+        support broadcasting, both by element
 
         >>> x.ufunc.add([1, 1])
         ProductSpace(Rn(2), 2).element([

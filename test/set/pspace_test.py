@@ -107,14 +107,14 @@ def test_metric():
     v22 = H.element([8, 9])
 
     # 1-norm
-    HxH = odl.ProductSpace(H, H, ord=1.0)
+    HxH = odl.ProductSpace(H, H, exponent=1.0)
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
     assert almost_equal(HxH.dist(w1, w2),
                         H.dist(v11, v21) + H.dist(v12, v22))
 
     # 2-norm
-    HxH = odl.ProductSpace(H, H, ord=2.0)
+    HxH = odl.ProductSpace(H, H, exponent=2.0)
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
     assert almost_equal(
@@ -122,7 +122,7 @@ def test_metric():
         (H.dist(v11, v21) ** 2 + H.dist(v12, v22) ** 2) ** (1 / 2.0))
 
     # -inf norm
-    HxH = odl.ProductSpace(H, H, ord=-float('inf'))
+    HxH = odl.ProductSpace(H, H, exponent=-float('inf'))
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
     assert almost_equal(
@@ -130,7 +130,7 @@ def test_metric():
         min(H.dist(v11, v21), H.dist(v12, v22)))
 
     # inf norm
-    HxH = odl.ProductSpace(H, H, ord=float('inf'))
+    HxH = odl.ProductSpace(H, H, exponent=float('inf'))
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
     assert almost_equal(
@@ -154,23 +154,23 @@ def test_norm():
     v2 = H.element([5, 3])
 
     # 1-norm
-    HxH = odl.ProductSpace(H, H, ord=1.0)
+    HxH = odl.ProductSpace(H, H, exponent=1.0)
     w = HxH.element([v1, v2])
     assert almost_equal(HxH.norm(w), H.norm(v1) + H.norm(v2))
 
     # 2-norm
-    HxH = odl.ProductSpace(H, H, ord=2.0)
+    HxH = odl.ProductSpace(H, H, exponent=2.0)
     w = HxH.element([v1, v2])
     assert almost_equal(
         HxH.norm(w), (H.norm(v1) ** 2 + H.norm(v2) ** 2) ** (1 / 2.0))
 
     # -inf norm
-    HxH = odl.ProductSpace(H, H, ord=-float('inf'))
+    HxH = odl.ProductSpace(H, H, exponent=-float('inf'))
     w = HxH.element([v1, v2])
     assert almost_equal(HxH.norm(w), min(H.norm(v1), H.norm(v2)))
 
     # inf norm
-    HxH = odl.ProductSpace(H, H, ord=float('inf'))
+    HxH = odl.ProductSpace(H, H, exponent=float('inf'))
     w = HxH.element([v1, v2])
     assert almost_equal(HxH.norm(w), max(H.norm(v1), H.norm(v2)))
 

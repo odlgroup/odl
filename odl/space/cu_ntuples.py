@@ -895,11 +895,11 @@ class CudaFn(FnBase, CudaNtuples):
         Examples
         --------
         >>> from numpy.linalg import norm
-        >>> def dist(x, y, ord):
-        ...     return norm(x - y, ord)
+        >>> def dist(x, y, p):
+        ...     return norm(x - y, ord=p)
 
         >>> from functools import partial
-        >>> dist2 = partial(dist, ord=2)
+        >>> dist2 = partial(dist, p=2)
         >>> r3 = CudaRn(3, dist=dist2)
         >>> r3_same = CudaRn(3, dist=dist2)
         >>> r3  == r3_same
@@ -908,7 +908,7 @@ class CudaFn(FnBase, CudaNtuples):
         Different ``dist`` functions result in different spaces - the
         same applies for ``norm`` and ``inner``:
 
-        >>> dist1 = partial(dist, ord=1)
+        >>> dist1 = partial(dist, p=1)
         >>> r3_1 = CudaRn(3, dist=dist1)
         >>> r3_2 = CudaRn(3, dist=dist2)
         >>> r3_1 == r3_2
@@ -917,8 +917,8 @@ class CudaFn(FnBase, CudaNtuples):
         Be careful with Lambdas - they result in non-identical function
         objects:
 
-        >>> r3_lambda1 = CudaRn(3, dist=lambda x, y: norm(x-y, ord=1))
-        >>> r3_lambda2 = CudaRn(3, dist=lambda x, y: norm(x-y, ord=1))
+        >>> r3_lambda1 = CudaRn(3, dist=lambda x, y: norm(x-y, p=1))
+        >>> r3_lambda2 = CudaRn(3, dist=lambda x, y: norm(x-y, p=1))
         >>> r3_lambda1 == r3_lambda2
         False
         """
