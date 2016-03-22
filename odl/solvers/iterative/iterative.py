@@ -177,7 +177,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         return
 
     for _ in range(niter):
-        op(p, out=d)  # d = A p
+        op.derivative(x)(p, out=d)  # d = A p
 
         inner_p_d = p.inner(d)
 
@@ -249,6 +249,9 @@ Conjugate_gradient_on_the_normal_equations>`_.
     """
     # TODO: add a book reference
     # TODO: update doc
+
+    assert x in op.domain
+    assert rhs in op.range
 
     d = op(x)
     d.lincomb(1, rhs, -1, d)               # d = rhs - A x

@@ -27,7 +27,7 @@ standard_library.install_aliases()
 import numpy as np
 
 
-__all__ = ('apply_on_boundary', 'fast_1d_tensor_mult')
+__all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'pspace_squared_sum')
 
 
 def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
@@ -297,6 +297,49 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         out *= last_arr[slc]
 
     return out
+
+
+def pspace_squared_sum(x, out=None):
+    """ Compute the pointwise squared sum of a `ProductSpaceVector`.
+
+    Equivalent to ``sum(x)``
+
+    Parameters
+    ----------
+    x : `ProductSpaceVector`
+        The vector to compute the sum of, has to be a powerspace
+    out : `LinearSpaceVector`, optional
+        Vector to store the result to
+
+    Returns
+    -------
+    sum : `LinearSpaceVector`
+        The sum of ``x``, element in ``x.space[0]``.
+        If out was given as a parameter, this is a reference to it.
+
+    Examples
+    --------
+    >>> import odl
+    >>> X = odl.ProductSpace(odl.Rn(3), 2)
+    >>> x = X.element([[1, 2, 3], [4, 5, 6]])
+    >>> pspace_squared_sum(x)
+    Rn(3).element([17.0, 29.0, 45.0])
+    """
+    if out is None:
+        out = x.space[0].element()
+    else:
+        assert out in x.space[0]
+
+    out.multiply(x[0], x[0])
+
+    if len(x) > 1:
+        sq_tmp = x.space[0].element()
+        for xi in x[1:]:
+            sq_tmp.multiply(xi, xi)
+            out += sq_tmp
+
+    return out
+
 
 if __name__ == '__main__':
     from doctest import testmod, NORMALIZE_WHITESPACE

@@ -102,7 +102,6 @@ def show_discrete_data(values, grid, title=None, method='',
     """
     # Importing pyplot takes ~2 sec, only import when needed.
     import matplotlib.pyplot as plt
-
     args_re = []
     args_im = []
     dsp_kwargs = {}

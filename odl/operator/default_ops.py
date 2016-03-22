@@ -556,6 +556,10 @@ class ResidualOperator(Operator):
             raise TypeError('operator range {!r} not a LinearSpace instance.'
                             ''.format(op.range))
 
+        if vec not in op.range:
+            raise TypeError('vec.space {!r} != op.range {!r}.'
+                            ''.format(vec.space, op.range))
+
         self.op = op
         self.vector = op.range.element(vec)
         super().__init__(op.domain, op.range)
