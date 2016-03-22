@@ -24,7 +24,7 @@ standard_library.install_aliases()
 from builtins import super
 
 from odl.operator.operator import Operator
-from odl.set.pspace import ProductSpace
+from odl.space.pspace import ProductSpace
 from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.set.sets import Field
 

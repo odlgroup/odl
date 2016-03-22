@@ -27,7 +27,7 @@ import numpy as np
 
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
-from odl.set.pspace import ProductSpace
+from odl.space.pspace import ProductSpace
 
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')

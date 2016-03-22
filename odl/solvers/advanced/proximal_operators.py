@@ -32,7 +32,7 @@ import scipy as sp
 from odl.operator.operator import Operator
 from odl.operator.default_ops import IdentityOperator
 from odl.operator.pspace_ops import ProductSpaceOperator
-from odl.set.pspace import ProductSpace
+from odl.space.pspace import ProductSpace
 
 
 __all__ = ('combine_proximals', 'proximal_zero', 'proximal_nonnegativity',

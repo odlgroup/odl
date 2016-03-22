@@ -186,7 +186,7 @@ def test_init():
         Cn(3, exponent=exponent)
 
 
-def test_init_space_funcs(exponent):
+def test_init_weighting(exponent):
     const = 1.5
     weight_vec = _pos_array(Rn(3, float))
     weight_mat = _dense_matrix(Rn(3, float))
@@ -199,7 +199,7 @@ def test_init_space_funcs(exponent):
                   FnMatrixWeighting(weight_mat, exponent=exponent)]
 
     for spc, weight in zip(spaces, weightings):
-        assert spc._space_funcs == weight
+        assert spc.weighting == weight
 
 
 def test_astype():

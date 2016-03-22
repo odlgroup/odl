@@ -141,7 +141,7 @@ def test_init_cudantuples_bad_dtype():
         odl.CudaNtuples(3, dtype=np.matrix)
 
 
-def test_init_spacefuncs(exponent):
+def test_init_weighting(exponent):
     const = 1.5
     weight_vec = _pos_vector(CudaRn(3))
     weight_elem = CudaFn(3, dtype='float32').element(weight_vec)
@@ -156,10 +156,10 @@ def test_init_spacefuncs(exponent):
     weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
     weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
 
-    assert f3_none._space_funcs == weighting_none
-    assert f3_const._space_funcs == weighting_const
-    assert f3_vec._space_funcs == weighting_vec
-    assert f3_elem._space_funcs == weighting_elem
+    assert f3_none.weighting == weighting_none
+    assert f3_const.weighting == weighting_const
+    assert f3_vec.weighting == weighting_vec
+    assert f3_elem.weighting == weighting_elem
 
 
 def test_element(fn):

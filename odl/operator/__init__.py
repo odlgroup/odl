@@ -15,20 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Mathematical operators in ODL.
-"""
+"""Representation of mathematical operators."""
 
 from __future__ import absolute_import
 
 __all__ = ()
 
-from . import default_ops
-from .default_ops import *
-__all__ += default_ops.__all__
-
 from . import operator
 from .operator import *
 __all__ += operator.__all__
+
+from . import default_ops
+from .default_ops import *
+__all__ += default_ops.__all__
 
 from . import pspace_ops
 from .pspace_ops import *
