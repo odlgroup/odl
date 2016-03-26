@@ -16,15 +16,12 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 # Imports for common Python 2/3 codebase
-from __future__ import (print_function, division, absolute_import,
-                        unicode_literals)
-from math import sin, cos, atan2, acos, pi
+from __future__ import print_function, division, absolute_import
 from future import standard_library
-
 standard_library.install_aliases()
 from builtins import int
 
-# External
+from math import sin, cos, atan2, acos, pi
 import numpy as np
 
 
@@ -293,3 +290,9 @@ def perpendicular_vector(vec):
         result[0] = 1
 
     return result / np.linalg.norm(result)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

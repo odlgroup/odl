@@ -22,12 +22,11 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 from abc import ABCMeta, abstractmethod
 from math import ceil, log
 
-# Internal
 from odl.util.utility import with_metaclass
+
 
 __all__ = ('StepLength', 'LineSearch',
            'BacktrackingLineSearch', 'ConstantLineSearch')
@@ -244,3 +243,9 @@ class BarzilaiBorweinStep(object):
         grad_diff = gradx - self.gradf(x0)
         recip_step = grad_diff.inner(errx) / errx.norm() ** 2
         return 1.0 / recip_step
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

@@ -23,16 +23,13 @@ space with a certain structure which is exploited to minimize storage.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import range, str, zip
 
-# External module imports
 from numbers import Integral
 import numpy as np
 
-# ODL imports
 from odl.set.domain import IntervalProd
 from odl.set.sets import Set
 from odl.util.utility import array1d_repr, array1d_str
@@ -1343,5 +1340,6 @@ def uniform_sampling(begin, end, num_nodes, nodes_on_bdry=True):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

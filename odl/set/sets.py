@@ -24,14 +24,12 @@ from future import standard_library
 from past.builtins import basestring
 standard_library.install_aliases()
 
-# External
 from abc import ABCMeta, abstractmethod
 from numbers import Integral, Real, Complex
 import numpy as np
 
-# ODL
-from odl.util.utility import (is_int_dtype, is_real_dtype, is_scalar_dtype,
-                              with_metaclass)
+from odl.util.utility import (
+    is_int_dtype, is_real_dtype, is_scalar_dtype, with_metaclass)
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
@@ -571,5 +569,6 @@ class CartesianProduct(Set):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

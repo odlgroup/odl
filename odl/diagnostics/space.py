@@ -23,13 +23,12 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 
-# External
 from copy import copy, deepcopy
 
-# Internal
 from odl.set.sets import Field
 from odl.diagnostics.examples import samples
 from odl.util.testutils import FailCounter
+
 
 __all__ = ('SpaceTest',)
 

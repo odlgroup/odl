@@ -24,11 +24,9 @@ from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import super, str
 
-# External
 import numpy as np
 from numbers import Integral
 
-# ODL
 from odl.discr.discretization import (
     Discretization, DiscretizationVector, dspace_type)
 from odl.discr.discr_mappings import (
@@ -38,8 +36,8 @@ from odl.discr.partition import RectPartition, uniform_partition_fromintv
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
 from odl.space.cu_ntuples import CUDA_AVAILABLE, CudaFn
-from odl.space.ntuples import Fn
 from odl.space.fspace import FunctionSpace
+from odl.space.ntuples import Fn
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
@@ -1228,5 +1226,6 @@ def _scaling_func_list(bdry_fracs, exponent=1.0):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

@@ -23,7 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import range, str, super
 
-# External
 import numpy as np
 try:
     import pywt
@@ -31,9 +30,9 @@ try:
 except ImportError:
     PYWAVELETS_AVAILABLE = False
 
-# Internal
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
+
 
 __all__ = ('WaveletTransform', 'WaveletTransformInverse',
            'PYWAVELETS_AVAILABLE')
@@ -844,5 +843,6 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                                 wbasis=self.wbasis, mode=self.mode)
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

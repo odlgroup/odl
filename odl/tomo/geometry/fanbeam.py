@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Fanbeam geometries."""
+"""Fan beam geometries in 2 dimensions."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -23,10 +23,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# External
 import numpy as np
 
-# Internal
 from odl.tomo.geometry.detector import Flat1dDetector
 from odl.tomo.geometry.geometry import DivergentBeamGeometry
 from odl.tomo.util.utility import euler_matrix, perpendicular_vector
@@ -228,3 +226,9 @@ class FanFlatGeometry(DivergentBeamGeometry):
                                   det_init_axis=self.detector.axis)
 
         return '{}({})'.format(self.__class__.__name__, arg_str)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

@@ -19,24 +19,20 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import int
 
-# External module imports
 from abc import ABCMeta, abstractmethod
 from math import sqrt
 import numpy as np
 
-# ODL imports
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.util.ufuncs import NtuplesBaseUFuncs
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
-    is_scalar_dtype, is_real_dtype, is_floating_dtype,
-    is_complex_floating_dtype)
-from odl.util.ufuncs import NtuplesBaseUFuncs
+    is_scalar_dtype, is_real_dtype, is_floating_dtype)
 
 
 __all__ = ('NtuplesBase', 'NtuplesBaseVector',
@@ -666,5 +662,6 @@ class FnWeightingBase(object):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

@@ -15,21 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Domains for continuous functions. """
+
 # Imports for common Python 2/3 codebase
-
-"""Typical domains for inverse problems. """
-
 from __future__ import print_function, division, absolute_import
-
 from builtins import super, zip
 from future import standard_library
 from future.utils import raise_from
 standard_library.install_aliases()
 
-# External imports
 import numpy as np
 
-# ODL imports
 from odl.set.sets import Set
 from odl.util.utility import array1d_repr, is_real_dtype
 from odl.util.vectorization import (
@@ -871,5 +867,6 @@ def Cuboid(begin, end):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

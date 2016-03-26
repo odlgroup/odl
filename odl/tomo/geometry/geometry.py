@@ -15,22 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Geometry base class."""
+"""Geometry base and mixin classes."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from abc import ABCMeta, abstractmethod
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 
-# External
+from abc import ABCMeta, abstractmethod
 import numpy as np
 
-# Internal
-from odl.util.utility import with_metaclass
 from odl.discr.partition import RectPartition
 from odl.tomo.geometry.detector import Detector
+from odl.util.utility import with_metaclass
+
 
 __all__ = ('Geometry', 'DivergentBeamGeometry', 'AxisOrientedGeometry')
 
@@ -369,3 +368,9 @@ class AxisOrientedGeometry(object):
         sin_ang = np.sin(angle)
 
         return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

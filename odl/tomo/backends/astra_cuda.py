@@ -15,31 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Backend for ASTRA using CUDA"""
+"""Backend for ASTRA using CUDA."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 import numpy as np
-
 try:
     import astra
     ASTRA_CUDA_AVAILABLE = astra.astra.use_cuda()
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
-# Internal
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_projector,
     astra_data, astra_algorithm)
-from odl.tomo.geometry import Geometry
 from odl.tomo.geometry import (
-    Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
+    Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
     HelicalConeFlatGeometry)
+
 
 __all__ = ('astra_cuda_forward_projector', 'astra_cuda_back_projector',
            'ASTRA_CUDA_AVAILABLE')
@@ -260,3 +257,9 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         astra.projector3d.delete(proj_id)
 
     return out
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

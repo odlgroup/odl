@@ -20,22 +20,20 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-
 standard_library.install_aliases()
 
-# External
 try:
     import astra
 except ImportError:
     pass
 
-# Internal
-from odl.discr import DiscreteLp, DiscreteLpVector
+from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.space.ntuples import Ntuples
 from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_data,
     astra_projector, astra_algorithm)
 from odl.tomo.geometry import Geometry
+
 
 __all__ = ('astra_cpu_forward_projector', 'astra_cpu_back_projector')
 
@@ -216,3 +214,9 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     astra.projector.delete(proj_id)
 
     return out
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

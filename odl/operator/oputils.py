@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Usefull utility functions on discrete spaces (i.e., either Rn/Cn or
-discretized function spaces), for example obtaining a matrix representation of
-an operator. """
+"""Convenience functions for operators."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -25,11 +23,9 @@ from future import standard_library
 from future.utils import raise_from
 standard_library.install_aliases()
 
-# External
 from math import ceil, sqrt
 import numpy as np
 
-# Internal
 from odl.space.base_ntuples import FnBase
 from odl.set.pspace import ProductSpace
 
@@ -181,3 +177,8 @@ def power_method_opnorm(op, niter, xstart=None):
 
         op(x, out=tmp)
         return tmp.norm()
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

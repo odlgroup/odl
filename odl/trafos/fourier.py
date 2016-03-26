@@ -24,7 +24,6 @@ standard_library.install_aliases()
 from builtins import range, super
 from future.utils import raise_from
 
-# External
 from math import pi
 from multiprocessing import cpu_count
 import numpy as np
@@ -34,7 +33,6 @@ try:
 except ImportError:
     PYFFTW_AVAILABLE = False
 
-# Internal
 from odl.discr.grid import RegularGrid
 from odl.discr.lp_discr import (
     DiscreteLp, dspace_type, discr_sequence_space)
@@ -43,8 +41,8 @@ from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import _TYPE_MAP_R2C
 from odl.space.cu_ntuples import CudaNtuples
-from odl.space.ntuples import Ntuples
 from odl.space.fspace import FunctionSpace
+from odl.space.ntuples import Ntuples
 from odl.util.numerics import fast_1d_tensor_mult
 from odl.util.utility import (
     is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
@@ -2200,5 +2198,6 @@ def _shift_list(shift, length):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

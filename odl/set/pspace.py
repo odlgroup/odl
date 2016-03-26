@@ -26,10 +26,8 @@ standard_library.install_aliases()
 
 from numbers import Integral
 
-# External
 import numpy as np
 
-# ODL imports
 from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.ufuncs import ProductSpaceUFuncs
 
@@ -712,5 +710,6 @@ class ProductSpaceVector(LinearSpaceVector):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

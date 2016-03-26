@@ -24,14 +24,12 @@ from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import object, super
 
-# External module imports
 import inspect
 from numbers import Number, Integral
 import sys
 
-# ODL imports
-from odl.set.space import (LinearSpace, LinearSpaceVector,
-                           UniversalSpace)
+from odl.set.space import (
+    LinearSpace, LinearSpaceVector, UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
 from odl.util.utility import preload_first_arg
 
@@ -1891,5 +1889,6 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

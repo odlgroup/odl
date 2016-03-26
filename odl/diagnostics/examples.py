@@ -23,15 +23,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import range, zip
 
-import warnings
-import numpy as np
 from itertools import product
+import numpy as np
+import warnings
 
+from odl.discr.lp_discr import DiscreteLp
+from odl.space.base_ntuples import FnBase
+from odl.set.pspace import ProductSpace
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-from odl.set.pspace import ProductSpace
-from odl.space.base_ntuples import FnBase
-from odl.discr.lp_discr import DiscreteLp
 
 
 __all__ = ('scalar_examples', 'vector_examples', 'samples')
@@ -208,5 +208,6 @@ def samples(*sets):
             yield examples
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

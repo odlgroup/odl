@@ -15,33 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Abstract linear vector spaces.
-
-The classes in this module represent abstract mathematical concepts
-of vector spaces. They cannot be used directly but are rather intended
-to be sub-classed by concrete space implementations. The spaces
-provide default implementations of the most important vector space
-operations. See the documentation of the respective classes for more
-details.
-
-The abstract `LinearSpace` class is intended for quick prototyping.
-It has a number of abstract methods which must be overridden by a
-subclass. On the other hand, it provides automatic error checking
-and numerous attributes and methods for convenience.
-"""
+"""Abstract linear vector spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from builtins import object, range, str
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
 from abc import abstractmethod
 import math as m
 
-# ODL imports
 from odl.set.sets import Set, UniversalSet
 
 
@@ -893,5 +877,6 @@ class LinearSpaceNotImplementedError(NotImplementedError):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

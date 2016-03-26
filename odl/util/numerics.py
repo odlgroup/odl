@@ -17,10 +17,8 @@
 
 """Numerical helper functions for convenience or speed."""
 
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 
@@ -298,6 +296,8 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
     return out
 
+
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

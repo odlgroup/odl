@@ -16,13 +16,12 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 # Imports for common Python 2/3 codebase
-from __future__ import (print_function, division, absolute_import,
-                        unicode_literals)
+from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 import pytest
+
 
 skip_if_no_astra = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE",
                                       reason='ASTRA not available')

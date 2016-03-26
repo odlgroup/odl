@@ -16,7 +16,7 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""Back-end for STIR: Software for Tomographic Reconstruction
+"""Back-end for STIR: Software for Tomographic Reconstruction.
 
 Back and forward projectors for PET.
 
@@ -42,14 +42,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from odl.discr.lp_discr import uniform_discr
-from odl.operator.operator import Operator
-
 try:
     import stir
     STIR_AVAILABLE = True
 except ImportError:
     STIR_AVAILABLE = False
+
+from odl.discr.lp_discr import uniform_discr
+from odl.operator.operator import Operator
+
 
 __all__ = ('ForwardProjectorByBinWrapper',
            'BackProjectorByBinWrapper',
@@ -304,3 +305,9 @@ def stir_projector_from_file(volume_file, projection_file):
     data_sp = uniform_discr([0, 0, 0], proj_shape, proj_shape, dtype='float32')
 
     return ForwardProjectorByBinWrapper(recon_sp, data_sp, volume, proj_data)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()
