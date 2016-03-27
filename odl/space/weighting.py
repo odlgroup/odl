@@ -37,7 +37,7 @@ from scipy.sparse.base import isspmatrix
 
 # ODL imports
 from odl.space.base_ntuples import FnBaseVector
-from odl.util.utility import run_doctests, array1d_repr, arraynd_repr
+from odl.util.utility import array1d_repr, arraynd_repr
 
 
 __all__ = ('MatrixWeighting', 'VectorWeighting', 'ConstWeighting',
@@ -1042,4 +1042,6 @@ class CustomDist(WeightingBase):
 
 
 if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
     run_doctests()
