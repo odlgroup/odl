@@ -22,10 +22,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
-
-# Internal
 from odl.operator.default_ops import IdentityOperator
+
 
 __all__ = ('bfgs_method', 'broydens_first_method', 'broydens_second_method')
 
@@ -242,5 +240,6 @@ def broydens_second_method(grad, x, line_search, niter=1, partial=None):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

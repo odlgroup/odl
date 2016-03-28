@@ -19,12 +19,10 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# ODL
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
@@ -32,11 +30,10 @@ from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
 from odl.space.ntuples import Ntuples, Fn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-from odl.space import CUDA_AVAILABLE
-from odl.space.cu_ntuples import CudaNtuples, CudaFn
-CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
+from odl.space.cu_ntuples import CudaNtuples, CudaFn, CUDA_AVAILABLE
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
+CudaCn = type(None)
 
 
 __all__ = ('RawDiscretization', 'RawDiscretizationVector',
@@ -594,5 +591,6 @@ def dspace_type(space, impl, dtype=None):
     return stype
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

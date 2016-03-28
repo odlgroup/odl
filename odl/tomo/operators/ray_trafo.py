@@ -23,26 +23,24 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str, super
 
-# External
 import numpy as np
 
-# Internal
 from odl.discr.lp_discr import DiscreteLp
-from odl.space import FunctionSpace
 from odl.operator.operator import Operator
+from odl.space.fspace import FunctionSpace
 from odl.tomo.geometry.geometry import Geometry
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
     astra_cuda_forward_projector, astra_cuda_back_projector)
 
-
 _SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda')
+
 
 __all__ = ('RayTransform', 'RayBackProjection')
 
 
-# TODO: DivergentBeamTransform
+# TODO: DivergentBeamTransform?
 
 class RayTransform(Operator):
 
@@ -292,3 +290,9 @@ class RayBackProjection(Operator):
         """Return the adjoint operator."""
         return RayTransform(self.range, self.geometry, impl=self.impl,
                             **self.kwargs)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

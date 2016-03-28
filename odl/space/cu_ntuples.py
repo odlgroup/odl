@@ -23,16 +23,14 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import int, super
 
-# External module imports
 import numpy as np
 
-# ODL imports
 from odl.set.sets import RealNumbers
 from odl.set.space import LinearSpaceVector
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
-from odl.util.utility import dtype_repr
 from odl.util.ufuncs import CudaNtuplesUFuncs
+from odl.util.utility import dtype_repr
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -40,6 +38,7 @@ try:
 except ImportError:
     cuda = None
     CUDA_AVAILABLE = False
+
 
 __all__ = ('CudaNtuples', 'CudaNtuplesVector',
            'CudaFn', 'CudaFnVector', 'CudaRn',
@@ -1736,5 +1735,6 @@ class CudaFnCustomDist(FnWeightingBase):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

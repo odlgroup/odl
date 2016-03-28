@@ -23,17 +23,18 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import int, object
 
-# External
 from itertools import zip_longest
 import numpy as np
 from numpy import ravel_multi_index, prod
 import sys
 from time import time
 
+
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal',
            'skip_if_no_cuda', 'skip_if_no_pywavelets', 'skip_if_no_pyfftw',
            'skip_if_no_largescale',
-           'Timer', 'timeit', 'ProgressBar', 'ProgressRange')
+           'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
+           'run_doctests')
 
 
 def _places(a, b, default=None):
@@ -407,6 +408,11 @@ class ProgressRange(object):
             raise StopIteration()
 
 
-if __name__ == '__main__':
+def run_doctests():
+    """Avoid all the copy and paste in the last 3 module lines."""
     from doctest import testmod, NORMALIZE_WHITESPACE
     testmod(optionflags=NORMALIZE_WHITESPACE)
+
+
+if __name__ == '__main__':
+    run_doctests()

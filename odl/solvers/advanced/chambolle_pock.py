@@ -27,12 +27,11 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 import numpy as np
 
-# Internal
 from odl.operator.operator import Operator
 from odl.solvers.util import Partial
+
 
 __all__ = ('chambolle_pock_solver',)
 
@@ -221,5 +220,6 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

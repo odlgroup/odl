@@ -15,22 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Detectors."""
+"""Detectors for tomographic imaging."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-from abc import ABCMeta, abstractmethod
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object, super
 
-# External
+from abc import ABCMeta, abstractmethod
 import numpy as np
 
-# Internal
-from odl.util.utility import with_metaclass
 from odl.discr.partition import RectPartition
 from odl.tomo.util.utility import perpendicular_vector
+from odl.util.utility import with_metaclass
+
 
 __all__ = ('Detector', 'FlatDetector', 'Flat1dDetector', 'Flat2dDetector',
            'CircleSectionDetector')
@@ -486,3 +485,9 @@ class CircleSectionDetector(Detector):
         inner_fstr = '\n    {},\n    {}'
         inner_str = inner_fstr.format(self.partition, self.circ_rad)
         return '{}({})'.format(self.__class__.__name__, inner_str)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

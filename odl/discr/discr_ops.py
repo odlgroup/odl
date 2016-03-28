@@ -25,9 +25,9 @@ from builtins import super
 
 import numpy as np
 
+from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
-from odl.discr.lp_discr import DiscreteLp
 
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
@@ -793,5 +793,6 @@ class Laplacian(Operator):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

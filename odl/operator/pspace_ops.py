@@ -26,7 +26,6 @@ from builtins import super
 import numpy as np
 import scipy as sp
 
-# ODL imports
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 
@@ -909,5 +908,6 @@ def diagonal_operator(operators, dom=None, ran=None):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

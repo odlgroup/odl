@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Parallel beam geometries."""
+"""Parallel beam geometries in 2 and 3 dimensions."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -23,14 +23,12 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-
-# External
 import numpy as np
 
-# Internal
 from odl.tomo.geometry.detector import Flat1dDetector, Flat2dDetector
 from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
 from odl.tomo.util.utility import euler_matrix, perpendicular_vector
+
 
 __all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dGeometry',
            'Parallel3dAxisGeometry')
@@ -404,3 +402,9 @@ class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
 
     # Fix for bug in ABC thinking this is abstract
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

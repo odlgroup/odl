@@ -23,14 +23,11 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# External
 import numpy as np
 
-# Internal
-
 from odl.tomo.geometry.detector import Flat2dDetector
-from odl.tomo.geometry.geometry import (DivergentBeamGeometry,
-                                        AxisOrientedGeometry)
+from odl.tomo.geometry.geometry import (
+    DivergentBeamGeometry, AxisOrientedGeometry)
 from odl.tomo.util.utility import perpendicular_vector
 
 
@@ -329,3 +326,9 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
         kwargs.pop('pitch_offset', None)
         super().__init__(apart, dpart, src_radius, det_radius, pitch=0,
                          axis=axis, **kwargs)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

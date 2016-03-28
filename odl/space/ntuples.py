@@ -15,39 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""CPU implementations of ``n``-dimensional Cartesian spaces.
-
-This is a default implementation of :math:`A^n` for an arbitrary set
-:math:`A` as well as the real and complex spaces :math:`R^n` and
-:math:`C^n`. The data is represented by NumPy arrays.
-"""
+"""CPU implementations of ``n``-dimensional Cartesian spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 from future.utils import native
 standard_library.install_aliases()
 from builtins import super
 
-# External module imports
 import ctypes
-from numbers import Integral
 from functools import partial
 from math import sqrt
+from numbers import Integral
 import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
-# ODL imports
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
+from odl.util.ufuncs import NtuplesUFuncs
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
-from odl.util.ufuncs import NtuplesUFuncs
 
 
 __all__ = ('Ntuples', 'NtuplesVector', 'Fn', 'FnVector', 'Cn', 'Rn',
@@ -2554,5 +2546,6 @@ class FnCustomDist(FnWeightingBase):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

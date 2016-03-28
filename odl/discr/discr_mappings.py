@@ -23,16 +23,13 @@ operators.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import str, super, zip
 
-# External imports
 from itertools import product
 import numpy as np
 
-# ODL imports
 from odl.operator.operator import Operator
 from odl.discr.partition import RectPartition
 from odl.space.base_ntuples import NtuplesBase, FnBase
@@ -1019,5 +1016,6 @@ class _LinearInterpolator(_PerAxisInterpolator):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

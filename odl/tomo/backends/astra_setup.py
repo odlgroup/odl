@@ -27,10 +27,10 @@ ODL geometry representation to ASTRA's data structures, including:
 * projectors
 * algorithm configuration dictionaries
 
-`ASTRA documentation on sourceforge
+`ASTRA documentation on Sourceforge
 <https://sourceforge.net/p/astra-toolbox/wiki>`_.
 
-`ASTRA on github
+`ASTRA on GitHub
 <https://github.com/astra-toolbox/>`_.
 """
 
@@ -39,7 +39,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 try:
     import astra
     ASTRA_AVAILABLE = True
@@ -47,13 +46,12 @@ except ImportError:
     ASTRA_AVAILABLE = False
 import numpy as np
 
-# Internal
-from odl.space.ntuples import FnVector
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
-from odl.tomo.geometry import (Geometry, Parallel2dGeometry,
-                               DivergentBeamGeometry,
-                               ParallelGeometry,
-                               FlatDetector)
+from odl.space.ntuples import FnVector
+from odl.tomo.geometry import (
+    Geometry, Parallel2dGeometry, DivergentBeamGeometry, ParallelGeometry,
+    FlatDetector)
+
 
 __all__ = ('ASTRA_AVAILABLE', 'astra_volume_geometry',
            'astra_projection_geometry', 'astra_data', 'astra_projector',
@@ -598,3 +596,9 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
 
     # Create ASTRA algorithm object
     return astra.algorithm.create(algo_cfg)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

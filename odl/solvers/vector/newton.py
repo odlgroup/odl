@@ -22,9 +22,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
-
-# Internal
 from odl.solvers.iterative.iterative import conjugate_gradient
 
 
@@ -110,3 +107,8 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
 
         if partial is not None:
             partial(x)
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

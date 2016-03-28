@@ -23,10 +23,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import object
 
-# External
 import numpy as np
 
-# Internal
 from odl.diagnostics.examples import vector_examples, samples
 from odl.util.testutils import FailCounter
 
@@ -347,5 +345,6 @@ class OperatorTest(object):
         return '{}({!r})'.format(self.__class__.__name__, self.operator)
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

@@ -24,6 +24,7 @@ standard_library.install_aliases()
 
 import numpy as np
 
+
 __all__ = ('ellipse_phantom_2d', 'ellipse_phantom_3d',
            'cuboid', 'indicate_proj_axis',
            'derenzo_sources', 'shepp_logan', 'submarine_phantom')
@@ -698,3 +699,8 @@ if __name__ == '__main__':
     with odl.util.Timer():
         shepp_logan_3d = shepp_logan(discr)
     shepp_logan_3d.show()
+
+    # Run also the doctests
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

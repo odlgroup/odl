@@ -24,10 +24,8 @@ standard_library.install_aliases()
 
 __all__ = ('vector',)
 
-# External
 import numpy as np
 
-# Internal
 from odl.space.ntuples import Rn, Cn, Fn, Ntuples
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
@@ -125,3 +123,9 @@ def vector(array, dtype=None, impl='numpy'):
         raise ValueError("implementation '{}' not understood.".format(impl_in))
 
     return space_type(len(arr), dtype=space_dtype).element(arr)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

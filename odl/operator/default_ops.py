@@ -23,7 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# ODL imports
 from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 from odl.set.space import LinearSpace, LinearSpaceVector
@@ -629,5 +628,6 @@ class ResidualOperator(Operator):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

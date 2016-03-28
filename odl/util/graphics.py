@@ -17,16 +17,14 @@
 
 """Functions for graphical output."""
 
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 import numpy as np
 
-# ODL
+from odl.util.testutils import run_doctests
 from odl.util.utility import is_real_dtype
 
 
@@ -318,3 +316,7 @@ def show_discrete_data(values, grid, title=None, method='',
     if saveto is not None:
         fig.savefig(saveto)
     return fig
+
+
+if __name__ == '__main__':
+    run_doctests()
