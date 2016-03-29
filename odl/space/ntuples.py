@@ -37,8 +37,9 @@ from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector)
 from odl.space.weighting import (
-    WeightingBase, MatrixWeighting, VectorWeighting, ConstWeighting,
-    NoWeighting, CustomInnerProduct, CustomNorm, CustomDist)
+    WeightingBase, MatrixWeightingBase, VectorWeightingBase,
+    ConstWeightingBase, NoWeightingBase,
+    CustomInnerProductBase, CustomNormBase, CustomDistBase)
 from odl.util.ufuncs import NtuplesUFuncs
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
@@ -660,9 +661,9 @@ class Fn(FnBase, Ntuples):
             ``dist`` or ``norm``.
 
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -1497,13 +1498,11 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
     use_inner : `bool`, optional
         Calculate ``dist`` using the formula
 
-        :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-        \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+            ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
         This avoids the creation of new arrays and is thus faster
         for large arrays. On the downside, it will not evaluate to
-        exactly zero for equal (but not identical) :math:`x` and
-        :math:`y`.
+        exactly zero for equal (but not identical) ``x`` and ``y``.
 
         Can only be used if ``exponent`` is 2.0.
 
@@ -1564,7 +1563,7 @@ def _inner_default(x1, x2):
     return dot(x2.data, x1.data)
 
 
-class FnMatrixWeighting(MatrixWeighting):
+class FnMatrixWeighting(MatrixWeightingBase):
 
     """Matrix weighting for `Fn`.
 
@@ -1609,9 +1608,9 @@ class FnMatrixWeighting(MatrixWeighting):
             If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
             are allowed.
         dist_using_inner : `bool`, optional
-            Calculate `dist` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -1726,7 +1725,7 @@ class FnMatrixWeighting(MatrixWeighting):
                                     self.exponent))
 
 
-class FnVectorWeighting(VectorWeighting):
+class FnVectorWeighting(VectorWeightingBase):
 
     """Vector weighting for `Fn`.
 
@@ -1770,9 +1769,9 @@ class FnVectorWeighting(VectorWeighting):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional
-            Calculate `dist` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -1829,7 +1828,7 @@ class FnVectorWeighting(VectorWeighting):
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
 
-class FnConstWeighting(ConstWeighting):
+class FnConstWeighting(ConstWeightingBase):
 
     """Weighting of `Fn` by a constant.
 
@@ -1871,9 +1870,9 @@ class FnConstWeighting(ConstWeighting):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional
-            Calculate `dist` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -1954,7 +1953,7 @@ class FnConstWeighting(ConstWeighting):
                     float(_pnorm_default(x1 - x2, self.exponent)))
 
 
-class FnNoWeighting(NoWeighting, FnConstWeighting):
+class FnNoWeighting(NoWeightingBase, FnConstWeighting):
 
     """Weighting of `Fn` with constant 1.
 
@@ -2000,9 +1999,9 @@ class FnNoWeighting(NoWeighting, FnConstWeighting):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional
-            Calculate `dist` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -2014,7 +2013,7 @@ class FnNoWeighting(NoWeighting, FnConstWeighting):
                          dist_using_inner=dist_using_inner)
 
 
-class FnCustomInnerProduct(CustomInnerProduct):
+class FnCustomInnerProduct(CustomInnerProductBase):
 
     """Class for handling a user-specified inner product in `Fn`."""
 
@@ -2034,9 +2033,9 @@ class FnCustomInnerProduct(CustomInnerProduct):
             - ``<x, x> = 0``  if and only if  ``x = 0``
 
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -2046,7 +2045,7 @@ class FnCustomInnerProduct(CustomInnerProduct):
                          dist_using_inner=dist_using_inner)
 
 
-class FnCustomNorm(CustomNorm):
+class FnCustomNorm(CustomNormBase):
 
     """Class for handling a user-specified norm in `Fn`.
 
@@ -2071,7 +2070,7 @@ class FnCustomNorm(CustomNorm):
         super().__init__(norm, impl='numpy')
 
 
-class FnCustomDist(CustomDist):
+class FnCustomDist(CustomDistBase):
 
     """Class for handling a user-specified distance in `Fn`.
 

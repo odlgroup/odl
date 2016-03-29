@@ -30,8 +30,8 @@ from odl.set.space import LinearSpaceVector
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector)
 from odl.space.weighting import (
-    WeightingBase, VectorWeighting, ConstWeighting, NoWeighting,
-    CustomInnerProduct, CustomNorm, CustomDist)
+    WeightingBase, VectorWeightingBase, ConstWeightingBase, NoWeightingBase,
+    CustomInnerProductBase, CustomNormBase, CustomDistBase)
 from odl.util.ufuncs import CudaNtuplesUFuncs
 from odl.util.utility import dtype_repr
 
@@ -551,57 +551,45 @@ class CudaFn(FnBase, CudaNtuples):
             Default: 2.0
 
         dist : `callable`, optional
-            The distance function defining a metric on `CudaFn`.
-            It must accept two `CudaFnVector` arguments, return a
-            `float` and fulfill the following mathematical conditions
-            for any three vectors ``x, y, z``:
+            The distance function defining a metric on the space.
+            It must accept two `FnVector` arguments and
+            fulfill the following mathematical conditions for any
+            three vectors ``x, y, z``:
 
-            - :math:`d(x, y) = d(y, x)`
-            - :math:`d(x, y) \geq 0`
-            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
-            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
-
-            By default, ``dist(x, y)`` is calculated as
-            ``norm(x - y)``. This creates an intermediate array
-            ``x-y``, which can be
-            avoided by choosing ``dist_using_inner=True``.
+            - ``dist(x, y) >= 0``
+            - ``dist(x, y) = 0``  if and only if  ``x = y``
+            - ``dist(x, y) = dist(y, x)``
+            - ``dist(x, y) <= dist(x, z) + dist(z, y)``
 
             This option cannot be combined with ``weight``,
             ``norm`` or ``inner``.
 
         norm : `callable`, optional
             The norm implementation. It must accept an
-            `CudaFnVector` argument, return a
-            `float` and satisfy the following
-            conditions for all vectors :math:`x, y` and scalars
-            :math:`s`:
+            `FnVector` argument, return a `float` and satisfy the
+            following conditions for all vectors ``x, y`` and scalars
+            ``s``:
 
-            - :math:`\lVert x\\rVert \geq 0`
-            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
-            - :math:`\lVert s x\\rVert = \lvert s \\rvert
-              \lVert x\\rVert`
-            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
-              \lVert y\\rVert`.
+            - ``||x|| >= 0``
+            - ``||x|| = 0``  if and only if  ``x = 0``
+            - ``||s * x|| = |s| * ||x||``
+            - ``||x + y|| <= ||x|| + ||y||``
 
-            By default, ``norm(x)`` is calculated as
-            ``inner(x, x)``.
+            By default, ``norm(x)`` is calculated as ``inner(x, x)``.
 
             This option cannot be combined with ``weight``,
             ``dist`` or ``inner``.
 
         inner : `callable`, optional
             The inner product implementation. It must accept two
-            `CudaFnVector` arguments, return an element from
+            `FnVector` arguments, return a element from
             the field of the space (real or complex number) and
             satisfy the following conditions for all vectors
-            :math:`x, y, z` and scalars :math:`s`:
+            ``x, y, z`` and scalars ``s``:
 
-            - :math:`\langle x,y\\rangle =
-              \overline{\langle y,x\\rangle}`
-            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
-            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
-              \langle z,y\\rangle`
-            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
+            - ``<x, y> = conj(<y, x>)``
+            - ``<s*x + y, z> = s * <x, z> + <y, z>``
+            - ``<x, x> = 0``  if and only if  ``x = 0``
 
             This option cannot be combined with ``weight``,
             ``dist`` or ``norm``.
@@ -1118,7 +1106,7 @@ def _inner_diagweight(x1, x2, w):
     return x1.data.inner_weight(x2.data, w.data)
 
 
-class CudaFnVectorWeighting(VectorWeighting):
+class CudaFnVectorWeighting(VectorWeightingBase):
 
     """Vector weighting for `CudaFn`.
 
@@ -1226,7 +1214,7 @@ class CudaFnVectorWeighting(VectorWeighting):
             return _pdist_diagweight(x1, x2, self.exponent, self.vector)
 
 
-class CudaFnConstWeighting(ConstWeighting):
+class CudaFnConstWeighting(ConstWeightingBase):
 
     """Weighting of `CudaFn` by a constant.
 
@@ -1332,7 +1320,7 @@ class CudaFnConstWeighting(ConstWeighting):
                     _pdist_default(x1, x2, self.exponent))
 
 
-class CudaFnNoWeighting(NoWeighting, CudaFnConstWeighting):
+class CudaFnNoWeighting(NoWeightingBase, CudaFnConstWeighting):
 
     """Weighting of `CudaFn` with constant 1.
 
@@ -1376,7 +1364,7 @@ class CudaFnNoWeighting(NoWeighting, CudaFnConstWeighting):
                          dist_using_inner=False)
 
 
-class CudaFnCustomInnerProduct(CustomInnerProduct):
+class CudaFnCustomInnerProduct(CustomInnerProductBase):
 
     """Class for handling a user-specified inner product on `CudaFn`."""
 
@@ -1408,7 +1396,7 @@ class CudaFnCustomInnerProduct(CustomInnerProduct):
                          dist_using_inner=dist_using_inner)
 
 
-class CudaFnCustomNorm(CustomNorm):
+class CudaFnCustomNorm(CustomNormBase):
 
     """Class for handling a user-specified norm in `CudaFn`.
 
@@ -1433,7 +1421,7 @@ class CudaFnCustomNorm(CustomNorm):
         super().__init__(norm, impl='cuda')
 
 
-class CudaFnCustomDist(CustomDist):
+class CudaFnCustomDist(CustomDistBase):
 
     """Class for handling a user-specified distance in `CudaFn`.
 

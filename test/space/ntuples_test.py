@@ -940,7 +940,7 @@ def test_matrix_matrix():
     assert isinstance(w_dense.matrix, np.ndarray)
 
 
-def test_matrix_isvalid():
+def test_matrix_is_valid():
     fn = Rn(5)
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
@@ -952,10 +952,10 @@ def test_matrix_isvalid():
     w_bad = FnMatrixWeighting(bad_mat)
 
     with pytest.raises(NotImplementedError):
-        w_sparse.matrix_isvalid()
+        w_sparse.is_valid()
 
-    assert w_dense.matrix_isvalid()
-    assert not w_bad.matrix_isvalid()
+    assert w_dense.is_valid()
+    assert not w_bad.is_valid()
 
 
 def test_matrix_equals(fn, exponent):
@@ -1206,17 +1206,17 @@ def test_vector_vector():
     assert isinstance(weighting_elem.vector, FnVector)
 
 
-def test_vector_isvalid():
+def test_vector_is_valid():
     rn = Rn(5)
     weight_vec = _pos_array(rn)
     weighting_vec = FnVectorWeighting(weight_vec)
 
-    assert weighting_vec.vector_is_valid()
+    assert weighting_vec.is_valid()
 
     # Invalid
     weight_vec[0] = 0
     weighting_vec = FnVectorWeighting(weight_vec)
-    assert not weighting_vec.vector_is_valid()
+    assert not weighting_vec.is_valid()
 
 
 def test_vector_equals():

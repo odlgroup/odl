@@ -29,8 +29,8 @@ import numpy as np
 
 from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.space.weighting import (
-    WeightingBase, VectorWeighting, ConstWeighting, NoWeighting,
-    CustomInnerProduct, CustomNorm, CustomDist)
+    WeightingBase, VectorWeightingBase, ConstWeightingBase, NoWeightingBase,
+    CustomInnerProductBase, CustomNormBase, CustomDistBase)
 from odl.util.ufuncs import ProductSpaceUFuncs
 from odl.util.utility import is_real_dtype
 
@@ -139,9 +139,9 @@ class ProductSpace(LinearSpace):
             Cannot be combined with: ``weight, dist, norm``
 
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -804,7 +804,7 @@ class ProductSpaceVector(LinearSpaceVector):
         return figs
 
 
-class ProductSpaceVectorWeighting(VectorWeighting):
+class ProductSpaceVectorWeighting(VectorWeightingBase):
 
     """Vector weighting for `ProductSpace`.
 
@@ -846,9 +846,9 @@ class ProductSpaceVectorWeighting(VectorWeighting):
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -914,7 +914,7 @@ class ProductSpaceVectorWeighting(VectorWeighting):
             return float(np.linalg.norm(norms, ord=self.exponent))
 
 
-class ProductSpaceConstWeighting(ConstWeighting):
+class ProductSpaceConstWeighting(ConstWeightingBase):
 
     """Constant weighting for `ProductSpace`.
 
@@ -954,9 +954,9 @@ class ProductSpaceConstWeighting(ConstWeighting):
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -1067,7 +1067,7 @@ class ProductSpaceConstWeighting(ConstWeighting):
                         np.linalg.norm(dnorms, ord=self.exponent))
 
 
-class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
+class ProductSpaceNoWeighting(NoWeightingBase, ProductSpaceConstWeighting):
 
     """Weighting of `ProductSpace` with constant 1."""
 
@@ -1104,9 +1104,9 @@ class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -1118,7 +1118,7 @@ class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
                          dist_using_inner=dist_using_inner)
 
 
-class ProductSpaceCustomInnerProduct(CustomInnerProduct):
+class ProductSpaceCustomInnerProduct(CustomInnerProductBase):
 
     """Class for handling a user-specified inner product on `ProductSpace`."""
 
@@ -1139,9 +1139,9 @@ class ProductSpaceCustomInnerProduct(CustomInnerProduct):
             - ``<x, x> = 0``  if and only if  ``x = 0``
 
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the following formula::
+            Calculate ``dist`` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -1153,7 +1153,7 @@ class ProductSpaceCustomInnerProduct(CustomInnerProduct):
                          dist_using_inner=dist_using_inner)
 
 
-class ProductSpaceCustomNorm(CustomNorm):
+class ProductSpaceCustomNorm(CustomNormBase):
 
     """Class for handling a user-specified norm on `ProductSpace`.
 
@@ -1179,7 +1179,7 @@ class ProductSpaceCustomNorm(CustomNorm):
         super().__init__(norm, impl='numpy')
 
 
-class ProductSpaceCustomDist(CustomDist):
+class ProductSpaceCustomDist(CustomDistBase):
 
     """Class for handling a user-specified distance on `ProductSpace`.
 

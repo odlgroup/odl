@@ -841,20 +841,20 @@ def test_vector_init():
     CudaFnVectorWeighting(rn.element(weight_vec))
 
 
-def test_vector_isvalid():
+def test_vector_is_valid():
     rn = CudaRn(5)
     weight = _pos_vector(rn)
 
     weighting = CudaFnVectorWeighting(weight)
 
-    assert weighting.vector_is_valid()
+    assert weighting.is_valid()
 
     # Invalid
     weight[0] = 0
 
     weighting = CudaFnVectorWeighting(weight)
 
-    assert not weighting.vector_is_valid()
+    assert not weighting.is_valid()
 
 
 def test_vector_equals():

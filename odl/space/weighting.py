@@ -30,7 +30,6 @@ standard_library.install_aliases()
 from builtins import super
 
 # External module imports
-from math import sqrt
 import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
@@ -40,9 +39,9 @@ from odl.space.base_ntuples import FnBaseVector
 from odl.util.utility import array1d_repr, arraynd_repr
 
 
-__all__ = ('MatrixWeighting', 'VectorWeighting', 'ConstWeighting',
-           'NoWeighting',
-           'CustomInnerProduct', 'CustomNorm', 'CustomDist')
+__all__ = ('MatrixWeightingBase', 'VectorWeightingBase', 'ConstWeightingBase',
+           'NoWeightingBase',
+           'CustomInnerProductBase', 'CustomNormBase', 'CustomDistBase')
 
 
 class WeightingBase(object):
@@ -70,9 +69,9 @@ class WeightingBase(object):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional
-            Calculate `dist` using the following formula::
+            Calculate `dist` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -167,7 +166,7 @@ class WeightingBase(object):
         norm : `float`
             The norm of the vector
         """
-        return float(sqrt(self.inner(x, x).real))
+        return float(np.sqrt(self.inner(x, x).real))
 
     def dist(self, x1, x2):
         """Calculate the distance between two vectors.
@@ -190,12 +189,12 @@ class WeightingBase(object):
                             2 * self.inner(x1, x2).real)
             if dist_squared < 0:  # Compensate for numerical error
                 dist_squared = 0.0
-            return float(sqrt(dist_squared))
+            return float(np.sqrt(dist_squared))
         else:
             return self.norm(x1 - x2)
 
 
-class MatrixWeighting(WeightingBase):
+class MatrixWeightingBase(WeightingBase):
 
     """Weighting of a space by a matrix.
 
@@ -257,7 +256,7 @@ class MatrixWeighting(WeightingBase):
 
         Notes
         -----
-        The matrix power ``W ** (1/p)`` is computed with by eigenbasis
+        The matrix power ``W ** (1/p)`` is computed by eigenbasis
         decomposition::
 
             eigval, eigvec = scipy.linalg.eigh(matrix)
@@ -318,7 +317,7 @@ class MatrixWeighting(WeightingBase):
         """Whether the representing matrix is sparse or not."""
         return isspmatrix(self.matrix)
 
-    def matrix_isvalid(self):
+    def is_valid(self):
         """Test if the matrix is positive definite Hermitian.
 
         If the matrix decomposition is available, this test checks
@@ -390,7 +389,7 @@ class MatrixWeighting(WeightingBase):
         Returns
         -------
         equals : `bool`
-            `True` if other is a `MatrixWeighting` instance
+            `True` if other is a `MatrixWeightingBase` instance
             with **identical** matrix, `False` otherwise.
 
         See also
@@ -421,7 +420,7 @@ class MatrixWeighting(WeightingBase):
         elif self.exponent != getattr(other, 'exponent', -1):
             return False
 
-        elif isinstance(other, MatrixWeighting):
+        elif isinstance(other, MatrixWeightingBase):
             if self.matrix.shape != other.matrix.shape:
                 return False
 
@@ -442,7 +441,7 @@ class MatrixWeighting(WeightingBase):
                 else:
                     return np.array_equal(self.matrix, other.matrix)
 
-        elif isinstance(other, VectorWeighting):
+        elif isinstance(other, VectorWeightingBase):
             if self.matrix_issparse:
                 return (np.array_equiv(self.matrix.diagonal(),
                                        other.vector) and
@@ -452,7 +451,7 @@ class MatrixWeighting(WeightingBase):
                 return np.array_equal(
                     self.matrix, other.vector * np.eye(self.matrix.shape[0]))
 
-        elif isinstance(other, ConstWeighting):
+        elif isinstance(other, ConstWeightingBase):
             if self.matrix_issparse:
                 return (np.array_equiv(self.matrix.diagonal(), other.const) and
                         np.array_equal(self.matrix.asformat('dia').offsets,
@@ -512,7 +511,7 @@ class MatrixWeighting(WeightingBase):
                                                             self.matrix)
 
 
-class VectorWeighting(WeightingBase):
+class VectorWeightingBase(WeightingBase):
 
     """Weighting of a space by a vector.
 
@@ -539,9 +538,9 @@ class VectorWeighting(WeightingBase):
             If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
             are allowed.
         dist_using_inner : `bool`, optional
-            Calculate `dist` using the following formula::
+            Calculate `dist` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -569,7 +568,7 @@ class VectorWeighting(WeightingBase):
         """Weighting vector of this inner product."""
         return self._vector
 
-    def vector_is_valid(self):
+    def is_valid(self):
         """Test if the vector is a valid weight, i.e. positive."""
         return np.all(np.greater(self.vector, 0))
 
@@ -579,7 +578,7 @@ class VectorWeighting(WeightingBase):
         Returns
         -------
         equals : `bool`
-            `True` if other is a `VectorWeighting` instance with
+            `True` if other is a `VectorWeightingBase` instance with
             **identical** vector, `False` otherwise.
 
         See also
@@ -609,9 +608,9 @@ class VectorWeighting(WeightingBase):
         elif (not isinstance(other, WeightingBase) or
               self.exponent != other.exponent):
             return False
-        elif isinstance(other, MatrixWeighting):
+        elif isinstance(other, MatrixWeightingBase):
             return other.equiv(self)
-        elif isinstance(other, ConstWeighting):
+        elif isinstance(other, ConstWeightingBase):
             return np.array_equiv(self.vector, other.const)
         else:
             return np.array_equal(self.vector, other.vector)
@@ -646,7 +645,7 @@ class VectorWeighting(WeightingBase):
                                                             self.vector)
 
 
-class ConstWeighting(WeightingBase):
+class ConstWeightingBase(WeightingBase):
 
     """Weighting of a space by a constant.
 
@@ -665,9 +664,9 @@ class ConstWeighting(WeightingBase):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : `bool`, optional
-            Calculate `dist` using the following formula::
+            Calculate `dist` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -695,7 +694,7 @@ class ConstWeighting(WeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is a `ConstWeighting` instance with the
+            `True` if other is a `ConstWeightingBase` instance with the
             same constant, `False` otherwise.
         """
         if other is self:
@@ -715,9 +714,9 @@ class ConstWeighting(WeightingBase):
             weighting for any input, `False` otherwise. This is checked
             by entry-wise comparison of matrices/vectors/constants.
         """
-        if isinstance(other, ConstWeighting):
+        if isinstance(other, ConstWeightingBase):
             return self == other
-        elif isinstance(other, (VectorWeighting, MatrixWeighting)):
+        elif isinstance(other, (VectorWeightingBase, MatrixWeightingBase)):
             return other.equiv(self)
         else:
             return False
@@ -759,7 +758,7 @@ class ConstWeighting(WeightingBase):
                 self.exponent, self.const)
 
 
-class NoWeighting(ConstWeighting):
+class NoWeightingBase(ConstWeightingBase):
 
     """Weighting with constant 1."""
 
@@ -774,9 +773,9 @@ class NoWeighting(ConstWeighting):
         impl : `str`
             Specifier for the implementation backend
         dist_using_inner : `bool`, optional
-            Calculate `dist` using the following formula::
+            Calculate `dist` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -786,7 +785,7 @@ class NoWeighting(ConstWeighting):
         """
         # Support singleton pattern for subclasses
         if not hasattr(self, '_initialized'):
-            ConstWeighting.__init__(
+            ConstWeightingBase.__init__(
                 self, constant=1.0, impl=impl, exponent=exponent,
                 dist_using_inner=dist_using_inner)
             self._initialized = True
@@ -810,7 +809,7 @@ class NoWeighting(ConstWeighting):
             return 'NoWeighting: p = {}'.format(self.exponent)
 
 
-class CustomInnerProduct(WeightingBase):
+class CustomInnerProductBase(WeightingBase):
 
     """Class for handling a user-specified inner product."""
 
@@ -833,9 +832,9 @@ class CustomInnerProduct(WeightingBase):
         impl : `str`
             Specifier for the implementation backend
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the following formula::
+            Calculate `dist` using the formula
 
-                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -862,7 +861,7 @@ class CustomInnerProduct(WeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is a `CustomInnerProduct`
+            `True` if other is a `CustomInnerProductBase`
             instance with the same inner product, `False` otherwise.
         """
         return super().__eq__(other) and self.inner == other.inner
@@ -886,12 +885,8 @@ class CustomInnerProduct(WeightingBase):
         inner_str = inner_fstr.format(self.inner)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return 'CustomInnerProduct'  # TODO: prettify?
 
-
-class CustomNorm(WeightingBase):
+class CustomNormBase(WeightingBase):
 
     """Class for handling a user-specified norm.
 
@@ -938,7 +933,7 @@ class CustomNorm(WeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is a `CustomNorm` instance with the same
+            `True` if other is a `CustomNormBase` instance with the same
             norm, `False` otherwise.
         """
         return super().__eq__(other) and self.norm == other.norm
@@ -959,12 +954,8 @@ class CustomNorm(WeightingBase):
         inner_str = inner_fstr.format(self.norm)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return 'CustomNorm'
 
-
-class CustomDist(WeightingBase):
+class CustomDistBase(WeightingBase):
 
     """Class for handling a user-specified distance.
 
@@ -1015,7 +1006,7 @@ class CustomDist(WeightingBase):
         Returns
         -------
         equal : `bool`
-            `True` if other is a `CustomDist` instance with the same
+            `True` if other is a `CustomDistBase` instance with the same
             dist, `False` otherwise.
         """
         return super().__eq__(other) and self.dist == other.dist
@@ -1035,10 +1026,6 @@ class CustomDist(WeightingBase):
         inner_fstr = '{!r}'
         inner_str = inner_fstr.format(self.dist)
         return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return 'CustomDist'
 
 
 if __name__ == '__main__':
