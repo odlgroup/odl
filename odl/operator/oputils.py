@@ -193,7 +193,7 @@ def as_scipy_operator(op):
 
     Returns
     -------
-    `scipy.sparse.linalg.LinearOperator` : linear_op
+    ``scipy.sparse.linalg.LinearOperator`` : linear_op
         The wrapped operator, has attributes ``matvec`` which calls ``op``, and
         ``rmatvec`` which calls ``op.adjoint``.
 

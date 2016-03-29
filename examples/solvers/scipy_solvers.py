@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Example of interfacing with scipy solvers
+"""Example of interfacing with scipy solvers.
 
 This example solves the problem
 
     -Laplacian(x) = b
 
-Where b is a dirac delta impulse
+where b is a gaussian peak at the origin.
 """
 
 # Imports for common Python 2/3 codebase
@@ -40,7 +40,7 @@ space = odl.uniform_discr([-1, -1], [1, 1], [11, 11])
 laplacian = -odl.Laplacian(space)
 
 # Create right hand side, a gaussian around the point (0, 0)
-rhs = space.element(lambda x: np.exp(-(x[0]**2 + x[1]**2)/0.1**2))
+rhs = space.element(lambda x: np.exp(-(x[0]**2 + x[1]**2) / 0.1**2))
 
 # Convert laplacian to scipy operator
 scipy_laplacian = odl.operator.oputils.as_scipy_operator(laplacian)
@@ -49,9 +49,10 @@ scipy_laplacian = odl.operator.oputils.as_scipy_operator(laplacian)
 rhs_arr = rhs.asarray().ravel(space.order)
 
 # Solve using scipy
-result, info = sl.cgs(scipy_laplacian, rhs_arr)
+result, info = sl.cg(scipy_laplacian, rhs_arr)
 
 # Other options include
+# result, info = sl.cgs(scipy_laplacian, rhs_arr)
 # result, info = sl.gmres(scipy_op, rhs_arr)
 # result, info = sl.lgmres(scipy_op, rhs_arr)
 # result, info = sl.bicg(scipy_op, rhs_arr)
