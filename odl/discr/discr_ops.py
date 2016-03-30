@@ -30,7 +30,8 @@ from odl.operator.operator import Operator
 from odl.set.pspace import ProductSpace
 
 
-__all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
+__all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian',
+           'Resampling')
 
 
 # TODO: make helper function to set edge slices
@@ -791,6 +792,126 @@ class Laplacian(Operator):
         """
         return self
 
+
+class Resampling(Operator):
+    """A operator that resamples a vector on another grid.
+
+    The operator uses the underlying `Discretization.restriction` and
+    `Discretization.extension` operators to achieve this.
+
+    The spaces need to have the same `Discretization.uspace` in order for this
+    to work. The dspace types may however be different, although performance
+    may vary drastically.
+    """
+
+    def __init__(self, domain, range):
+        """Initialize a Resampling.
+
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            The space that should be cast from
+        range : `LinearSpace`
+            The space that should be cast to
+
+        Examples
+        --------
+        Create two spaces with different number of points and create resampling
+        operator.
+
+        >>> import odl
+        >>> X = odl.uniform_discr(0, 1, 3)
+        >>> Y = odl.uniform_discr(0, 1, 6)
+        >>> resampling = Resampling(X, Y)
+        """
+        if domain.uspace != range.uspace:
+            raise ValueError('domain.uspace ({}) does not match range.uspace '
+                             '({})'.format(domain.uspace, range.uspace))
+
+        super().__init__(domain=domain, range=range, linear=True)
+
+    def _call(self, x, out=None):
+        """Apply resampling operator.
+
+        The vector ``x`` is resampled using the restriction and extension
+        operators of the underlying spaces.
+
+        Examples
+        --------
+        Create two spaces with different number of points and create resampling
+        operator. Apply operator to vector.
+
+        >>> import odl
+        >>> X = odl.uniform_discr(0, 1, 3)
+        >>> Y = odl.uniform_discr(0, 1, 6)
+        >>> resampling = Resampling(X, Y)
+        >>> print(resampling([0, 1, 0]))
+        [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+
+        The result depends on the interpolation chosen for the underlying
+        spaces
+
+        >>> Z = odl.uniform_discr(0, 1, 3, interp='linear')
+        >>> linear_resampling = Resampling(Z, Y)
+        >>> print(linear_resampling([0, 1, 0]))
+        [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
+        """
+        if out is None:
+            return x.extension
+        else:
+            out.restriction(x.extension)
+
+    @property
+    def inverse(self):
+        """Return an (approximate) inverse.
+
+        Returns
+        -------
+        inverse : Resampling
+            The resampling operator defined in the inverse direction.
+
+        See Also
+        --------
+        adjoint : resampling is unitary, so adjoint is inverse.
+        """
+        return Resampling(self.range, self.domain)
+
+    @property
+    def adjoint(self):
+        """Return an (approximate) adjoint.
+
+        The result is only exact if the extension and restriction operators
+        of the underlying spaces match exactly.
+
+        Returns
+        -------
+        adjoint : Resampling
+            The resampling operator defined in the inverse direction.
+
+        Examples
+        --------
+        Create resampling operator and inverse
+
+        >>> import odl
+        >>> X = odl.uniform_discr(0, 1, 3)
+        >>> Y = odl.uniform_discr(0, 1, 6)
+        >>> resampling = Resampling(X, Y)
+        >>> resampling_inv = resampling.inverse
+
+        The inverse is proper left inverse if the resampling goes from a
+        lower sampling to a higher sampling
+
+        >>> x = [0.0, 1.0, 0.0]
+        >>> print(resampling_inv(resampling(x)))
+        [0.0, 1.0, 0.0]
+
+        But can fail in the other direction
+
+        >>> y = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        >>> print(resampling(resampling_inv(y)))
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        """
+        return self.inverse
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
