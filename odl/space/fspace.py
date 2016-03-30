@@ -109,7 +109,10 @@ class FunctionSet(Set):
 
     @property
     def out_dtype(self):
-        """Output data type of functions in this space."""
+        """Output data type of this function.
+
+        If None, dtype is not uniquely pre-defined.
+        """
         return self._out_dtype
 
     def element(self, fcall=None, vectorized=True):
@@ -258,6 +261,14 @@ class FunctionSetVector(Operator):
         """The space or set this function belongs to."""
         return self._space
 
+    @property
+    def out_dtype(self):
+        """Output data type of this function.
+
+        If None, dtype is not uniquely pre-defined.
+        """
+        return self.space.out_dtype
+
     def _call(self, x, out=None, **kwargs):
         """Raw evaluation method."""
         if out is None:
@@ -288,6 +299,8 @@ class FunctionSetVector(Operator):
             functions. Its shape must be equal to
             ``np.broadcast(*x).shape``.
 
+        Other Parameters
+        ----------------
         bounds_check : `bool`
             If `True`, check if all input points lie in the function
             domain in the case of vectorized evaluation. This requires
@@ -316,6 +329,11 @@ class FunctionSetVector(Operator):
             raise AttributeError('bounds check not possible for '
                                  'domain {}, missing `contains_all()` '
                                  'method.'.format(self.domain))
+
+        if bounds_check and not hasattr(self.range, 'contains_all'):
+            raise AttributeError('bounds check not possible for '
+                                 'range {}, missing `contains_all()` '
+                                 'method.'.format(self.range))
 
         ndim = getattr(self.domain, 'ndim', None)
         # Check for input type and determine output shape
@@ -381,6 +399,10 @@ class FunctionSetVector(Operator):
                 else:
                     raise err
 
+            if self.out_dtype is not None:
+                # Cast to proper dtype if needed
+                out = out.astype(self.out_dtype)
+
             if out_shape != (1,) and out.shape != out_shape:
                 raise ValueError('output shape {} not equal to shape '
                                  '{} expected from input.'
@@ -393,6 +415,9 @@ class FunctionSetVector(Operator):
                 raise ValueError('output shape {} not equal to shape '
                                  '{} expected from input.'
                                  ''.format(out.shape, out_shape))
+            if self.out_dtype is not None and out.dtype != self.out_dtype:
+                raise ValueError('out.dtype ({}) does not match out_dtype ({})'
+                                 ''.format(out.dtype, self.out_dtype))
             try:
                 self._call(x, out=out, **kwargs)
             except TypeError as err:
