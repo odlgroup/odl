@@ -28,10 +28,10 @@ import numpy as np
 import warnings
 
 from odl.discr.lp_discr import DiscreteLp
-from odl.space.base_ntuples import FnBase
-from odl.set.pspace import ProductSpace
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
+from odl.space.pspace import ProductSpace
+from odl.space.base_ntuples import FnBase
 
 
 __all__ = ('scalar_examples', 'vector_examples', 'samples')
@@ -206,6 +206,7 @@ def samples(*sets):
                       else scalar_examples(set_) for set_ in sets]
         for examples in product(*generators):
             yield examples
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

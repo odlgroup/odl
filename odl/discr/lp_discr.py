@@ -842,13 +842,13 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     order = kwargs.pop('order', 'C')
 
     weighting = kwargs.pop('weighting', 'const')
-    weighting_ = str(weighting).lower()
-    if weighting_ == 'none' or float(exponent) == float('inf'):
+    weighting, weighting_in = str(weighting).lower(), weighting
+    if weighting == 'none' or float(exponent) == float('inf'):
         weight = None
-    elif weighting_ == 'const':
+    elif weighting == 'const':
         weight = partition.cell_volume
     else:
-        raise ValueError("weighting '{}' not understood.".format(weighting))
+        raise ValueError("weighting '{}' not understood.".format(weighting_in))
 
     if dtype is not None:
         dspace = ds_type(partition.size, dtype=dtype, weight=weight,

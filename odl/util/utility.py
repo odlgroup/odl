@@ -22,7 +22,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
 from functools import wraps
 import numpy as np
 

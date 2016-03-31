@@ -141,7 +141,7 @@ def test_init_cudantuples_bad_dtype():
         odl.CudaNtuples(3, dtype=np.matrix)
 
 
-def test_init_spacefuncs(exponent):
+def test_init_weighting(exponent):
     const = 1.5
     weight_vec = _pos_vector(CudaRn(3))
     weight_elem = CudaFn(3, dtype='float32').element(weight_vec)
@@ -156,10 +156,10 @@ def test_init_spacefuncs(exponent):
     weighting_vec = CudaFnVectorWeighting(weight_vec, exponent=exponent)
     weighting_elem = CudaFnVectorWeighting(weight_elem, exponent=exponent)
 
-    assert f3_none._space_funcs == weighting_none
-    assert f3_const._space_funcs == weighting_const
-    assert f3_vec._space_funcs == weighting_vec
-    assert f3_elem._space_funcs == weighting_elem
+    assert f3_none.weighting == weighting_none
+    assert f3_const.weighting == weighting_const
+    assert f3_vec.weighting == weighting_vec
+    assert f3_elem.weighting == weighting_elem
 
 
 def test_element(fn):
@@ -841,20 +841,20 @@ def test_vector_init():
     CudaFnVectorWeighting(rn.element(weight_vec))
 
 
-def test_vector_isvalid():
+def test_vector_is_valid():
     rn = CudaRn(5)
     weight = _pos_vector(rn)
 
     weighting = CudaFnVectorWeighting(weight)
 
-    assert weighting.vector_is_valid()
+    assert weighting.is_valid()
 
     # Invalid
     weight[0] = 0
 
     weighting = CudaFnVectorWeighting(weight)
 
-    assert not weighting.vector_is_valid()
+    assert not weighting.is_valid()
 
 
 def test_vector_equals():
@@ -977,8 +977,10 @@ def test_custom_inner(fn):
     assert almost_equal(w.norm(x), true_norm)
 
     true_dist = np.linalg.norm(xarr - yarr)
-    assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
+    assert almost_equal(w.dist(x, x), 0, places=3)
     assert almost_equal(w_d.dist(x, y), true_dist)
     assert almost_equal(w_d.dist(x, x), 0)
 

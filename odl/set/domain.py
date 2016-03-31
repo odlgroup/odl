@@ -243,7 +243,7 @@ class IntervalProd(Set):
             return False
         if not is_real_dtype(point.dtype):
             return False
-        return self.dist(point, ord=np.inf) <= tol
+        return self.dist(point, exponent=np.inf) <= tol
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -423,7 +423,7 @@ class IntervalProd(Set):
         else:
             return np.prod((self.end - self.begin)[self._inondeg])
 
-    def dist(self, point, ord=2.0):
+    def dist(self, point, exponent=2.0):
         """Calculate the distance to a point.
 
         Parameters
@@ -431,16 +431,15 @@ class IntervalProd(Set):
         point : `array-like` or `float`
                 The point. Its length must be equal to the set's
                 dimension. Can be a `float` in the 1d case.
-        ord : non-zero int or float('inf'), optional
-              The order of the norm (see `numpy.linalg.norm`).
-              Default: 2.0
+        exponent : non-zero `float` or ``float('inf')``, optional
+              The order of the norm (see `numpy.linalg.norm`)
 
         Returns
         -------
         dist : `float`
             Distance to the interior of the IntervalProd.
-            Points strictly inside have distance ``0.0``, points with ``NaN``
-            have distance ``infinity``.
+            Points strictly inside have distance ``0.0``, points with
+            ``NaN`` have distance ``infinity``.
 
         Examples
         --------
@@ -449,7 +448,7 @@ class IntervalProd(Set):
         >>> rbox = IntervalProd(b, e)
         >>> rbox.dist([-5, 3, 2])
         5.0
-        >>> rbox.dist([-5, 3, 2], ord=float('inf'))
+        >>> rbox.dist([-5, 3, 2], exponent=float('inf'))
         4.0
         """
         point = np.atleast_1d(point)
@@ -471,7 +470,7 @@ class IntervalProd(Set):
             proj = np.concatenate((point[i_larger], point[i_smaller]))
             border = np.concatenate((self.end[i_larger],
                                      self.begin[i_smaller]))
-            return np.linalg.norm(proj - border, ord=ord)
+            return np.linalg.norm(proj - border, ord=exponent)
 
     # Manipulation
     def collapse(self, indices, values):

@@ -27,7 +27,7 @@ import numpy as np
 import scipy as sp
 
 from odl.operator.operator import Operator
-from odl.set.pspace import ProductSpace
+from odl.space.pspace import ProductSpace
 
 
 __all__ = ('ProductSpaceOperator',
@@ -137,14 +137,14 @@ class ProductSpaceOperator(Operator):
             if not isinstance(dom, ProductSpace):
                 raise TypeError('space {!r} not a ProductSpace instance.'
                                 ''.format(dom))
-            if dom.weights is not None:
+            if dom.is_weighted:
                 raise NotImplementedError('weighted spaces not supported.')
 
         if ran is not None:
             if not isinstance(ran, ProductSpace):
                 raise TypeError('space {!r} not a ProductSpace instance.'
                                 ''.format(ran))
-            if ran.weights is not None:
+            if ran.is_weighted:
                 raise NotImplementedError('weighted spaces not supported.')
 
         # Convert ops to sparse representation

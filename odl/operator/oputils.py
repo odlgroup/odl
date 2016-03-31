@@ -27,7 +27,7 @@ from math import ceil, sqrt
 import numpy as np
 
 from odl.space.base_ntuples import FnBase
-from odl.set.pspace import ProductSpace
+from odl.space.pspace import ProductSpace
 
 __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator')
 

@@ -24,7 +24,6 @@ standard_library.install_aliases()
 from builtins import int
 
 from abc import ABCMeta, abstractmethod
-from math import sqrt
 import numpy as np
 
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
@@ -35,9 +34,7 @@ from odl.util.utility import (
     is_scalar_dtype, is_real_dtype, is_floating_dtype)
 
 
-__all__ = ('NtuplesBase', 'NtuplesBaseVector',
-           'FnBase', 'FnBaseVector',
-           'FnWeightingBase')
+__all__ = ('NtuplesBase', 'NtuplesBaseVector', 'FnBase', 'FnBaseVector')
 
 
 _TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
@@ -508,157 +505,6 @@ class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
 
     def copy(self):
         return LinearSpaceVector.copy(self)
-
-
-class FnWeightingBase(object):
-
-    """Abstract base class for weighting of `FnBase` spaces.
-
-    This class and its subclasses serve as a simple means to evaluate
-    and compare weighted inner products, norms and metrics semantically
-    rather than by identity on a pure function level.
-
-    The functions are implemented similarly to `Operator`,
-    but without extra type checks of input parameters - this is done in
-    the callers of the `LinearSpace` instance where these
-    functions used.
-    """
-
-    def __init__(self, impl, exponent=2.0, dist_using_inner=False):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        impl : `str`
-            Specifier for the implementation backend
-        exponent : positive `float`
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
-        dist_using_inner : `bool`, optional
-            Calculate `dist` using the formula
-
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
-
-            This option can only be used if ``exponent`` is 2.0.
-
-            Default: `False`.
-        """
-        self._dist_using_inner = bool(dist_using_inner)
-        self._exponent = float(exponent)
-        self._impl = str(impl).lower()
-        if self._exponent <= 0:
-            raise ValueError('only positive exponents or inf supported, '
-                             'got {}.'.format(exponent))
-        elif self._exponent != 2.0 and self._dist_using_inner:
-            raise ValueError('`dist_using_inner` can only be used if the '
-                             'exponent is 2.0.')
-
-    @property
-    def impl(self):
-        """Implementation backend of this weighting."""
-        return self._impl
-
-    @property
-    def exponent(self):
-        """Exponent of this weighting."""
-        return self._exponent
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equal : `bool`
-            `True` if ``other`` is a the same weighting, `False`
-            otherwise.
-
-        Notes
-        -----
-        This operation must be computationally cheap, i.e. no large
-        arrays may be compared element-wise. That is the task of the
-        `equiv` method.
-        """
-        return (self.exponent == other.exponent and
-                self._dist_using_inner == other._dist_using_inner and
-                self.impl == other.impl)
-
-    def equiv(self, other):
-        """Test if ``other`` is an equivalent inner product.
-
-        Should be overwritten, default tests for equality.
-
-        Returns
-        -------
-        equivalent : `bool`
-            `True` if ``other`` is a `FnWeightingBase` instance which
-            yields the same result as this inner product for any
-            input, `False` otherwise.
-        """
-        return self == other
-
-    def inner(self, x1, x2):
-        """Calculate the inner product of two vectors.
-
-        Parameters
-        ----------
-        x1, x2 : `FnBaseVector`
-            Vectors whose inner product is calculated
-
-        Returns
-        -------
-        inner : `float` or `complex`
-            The inner product of the two provided vectors
-        """
-        raise NotImplementedError
-
-    def norm(self, x):
-        """Calculate the norm of a vector.
-
-        This is the standard implementation using `inner`.
-        Subclasses should override it for optimization purposes.
-
-        Parameters
-        ----------
-        x1 : `FnBaseVector`
-            Vector whose norm is calculated
-
-        Returns
-        -------
-        norm : `float`
-            The norm of the vector
-        """
-        return float(sqrt(self.inner(x, x).real))
-
-    def dist(self, x1, x2):
-        """Calculate the distance between two vectors.
-
-        This is the standard implementation using `norm`.
-        Subclasses should override it for optimization purposes.
-
-        Parameters
-        ----------
-        x1, x2 : `FnBaseVector`
-            Vectors whose mutual distance is calculated
-
-        Returns
-        -------
-        dist : `float`
-            The distance between the vectors
-        """
-        if self._dist_using_inner:
-            dist_squared = (self.norm(x1) ** 2 + self.norm(x2) ** 2 -
-                            2 * self.inner(x1, x2).real)
-            if dist_squared < 0:  # Compensate for numerical error
-                dist_squared = 0.0
-            return float(sqrt(dist_squared))
-        else:
-            return self.norm(x1 - x2)
 
 
 if __name__ == '__main__':
