@@ -2017,7 +2017,7 @@ class FnCustomInnerProduct(CustomInnerProductBase):
 
     """Class for handling a user-specified inner product in `Fn`."""
 
-    def __init__(self, inner, dist_using_inner=False):
+    def __init__(self, inner, dist_using_inner=True):
         """Initialize a new instance.
 
         Parameters

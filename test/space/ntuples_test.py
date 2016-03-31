@@ -1174,7 +1174,9 @@ def test_matrix_dist_using_inner(fn):
     w = FnMatrixWeighting(mat, dist_using_inner=True)
 
     true_dist = np.sqrt(np.vdot(xarr - yarr, np.dot(mat, xarr - yarr)))
-    assert almost_equal(w.dist(x, y), true_dist)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
@@ -1183,7 +1185,7 @@ def test_matrix_dist_using_inner(fn):
     # With free function
     w_dist = weighted_dist(mat, use_inner=True)
     assert almost_equal(w_dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
+    assert almost_equal(w.dist(x, x), 0, places=3)
 
 
 def test_vector_init(exponent):
@@ -1343,7 +1345,9 @@ def test_vector_dist_using_inner(fn):
 
     true_dist = np.linalg.norm(np.sqrt(weight_vec) * (xarr - yarr))
     assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, x), 0, places=3)
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
@@ -1351,7 +1355,7 @@ def test_vector_dist_using_inner(fn):
 
     # With free function
     w_dist = weighted_dist(weight_vec, use_inner=True)
-    assert almost_equal(w_dist(x, y), true_dist)
+    assert almost_equal(w_dist(x, y), true_dist, places=3)
 
 
 def test_constant_init(exponent):
@@ -1482,7 +1486,9 @@ def test_const_dist_using_inner(fn):
     w = FnConstWeighting(constant)
 
     true_dist = np.sqrt(constant) * np.linalg.norm(xarr - yarr)
-    assert almost_equal(w.dist(x, y), true_dist)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
     assert almost_equal(w.dist(x, x), 0)
 
     # Only possible for exponent=2
@@ -1491,7 +1497,7 @@ def test_const_dist_using_inner(fn):
 
     # With free function
     w_dist = weighted_dist(constant, use_inner=True)
-    assert almost_equal(w_dist(x, y), true_dist)
+    assert almost_equal(w_dist(x, y), true_dist, places=3)
 
 
 def test_noweight():
@@ -1524,7 +1530,7 @@ def test_custom_inner(fn):
     w = FnCustomInnerProduct(inner)
     w_same = FnCustomInnerProduct(inner)
     w_other = FnCustomInnerProduct(np.dot)
-    w_d = FnCustomInnerProduct(inner, dist_using_inner=True)
+    w_d = FnCustomInnerProduct(inner, dist_using_inner=False)
 
     assert w == w
     assert w == w_same
@@ -1538,8 +1544,10 @@ def test_custom_inner(fn):
     assert almost_equal(w.norm(x), true_norm)
 
     true_dist = np.linalg.norm(xarr - yarr)
-    assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
+    assert almost_equal(w.dist(x, x), 0, places=3)
     assert almost_equal(w_d.dist(x, y), true_dist)
     assert almost_equal(w_d.dist(x, x), 0)
 

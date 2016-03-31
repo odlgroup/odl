@@ -977,8 +977,10 @@ def test_custom_inner(fn):
     assert almost_equal(w.norm(x), true_norm)
 
     true_dist = np.linalg.norm(xarr - yarr)
-    assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
+    assert almost_equal(w.dist(x, x), 0, places=3)
     assert almost_equal(w_d.dist(x, y), true_dist)
     assert almost_equal(w_d.dist(x, x), 0)
 
