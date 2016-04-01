@@ -704,58 +704,71 @@ class LinearSpaceVector(object):
         return repr(self.space) + "Vector"
 
     def __copy__(self):
-        """Copy of vector
+        """Return a copy of this vector.
 
-        `LinearSpaceVector.copy`
+        See also
+        --------
+        LinearSpace.copy
         """
         return self.copy()
 
     def __deepcopy__(self, memo):
-        """Copy of vector
+        """Return a copy of this vector.
 
-        `LinearSpaceVector.copy`
+        See also
+        --------
+        LinearSpace.copy
         """
         return self.copy()
 
-    # TODO: DOCUMENT
     def norm(self):
-        """Norm of vector
+        """Norm of this vector.
 
-        `LinearSpace.norm`
+        See also
+        --------
+        LinearSpace.norm
         """
         return self.space.norm(self)
 
     def dist(self, other):
         """Distance to ``other``.
 
-        `LinearSpace.dist`
+        See also
+        --------
+        LinearSpace.dist
         """
         return self.space.dist(self, other)
 
     def inner(self, other):
         """Inner product with ``other``.
 
-        `LinearSpace.inner`
+        See also
+        --------
+        LinearSpace.inner
         """
         return self.space.inner(self, other)
 
     def multiply(self, x, y):
-        """Multiply by ``other`` inplace.
+        """Implement ``self = x * y`` without creating new vectors.
 
-        `LinearSpace.multiply`
+        See also
+        --------
+        LinearSpace.multiply
         """
         return self.space.multiply(x, y, out=self)
 
     def divide(self, x, y):
-        """Divide by ``other`` inplace.
+        """Implement ``self = x / y`` without creating new vectors.
 
-        `LinearSpace.divide`
+        See also
+        --------
+        LinearSpace.divide
         """
         return self.space.divide(x, y, out=self)
 
     @property
     def T(self):
-        """The transpose of a vector, the functional given by (. , self)
+        """This vector's transpose, i.e. the functional ``(. , self)``.
 
         Returns
         -------
@@ -794,7 +807,7 @@ class UniversalSpace(LinearSpace):
     """
 
     def __init__(self):
-        """Initialize a universal space"""
+        """Initialize a universal space."""
         LinearSpace.__init__(self, field=UniversalSet())
 
     def element(self, inp=None):
@@ -871,8 +884,8 @@ class LinearSpaceTypeError(TypeError):
 class LinearSpaceNotImplementedError(NotImplementedError):
     """Exception for not implemented errors in `LinearSpace`'s.
 
-    These are raised when a method in `LinearSpace` that has not been
-    defined in a specific space is called.
+    These are raised when a method is called in `LinearSpace` that
+    has not been defined in a specific space.
     """
 
 
