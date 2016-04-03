@@ -19,7 +19,7 @@ each component lies in :math:`\mathbb{F}`. We define two mappings
 
     \mathcal{E}_\mathcal{X}: \mathbb{F}^n \to \mathcal{X},
 
-which we call :term:`restriction` and :term:`extension`, respectively. Then, the discretization of
+which we call :term:`sampling` and :term:`interpolation`, respectively. Then, the discretization of
 :math:`\mathcal{X}` with respect to :math:`\mathbb{F}^n` and the above operators is defined as the
 tuple
 

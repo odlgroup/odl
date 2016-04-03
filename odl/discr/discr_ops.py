@@ -796,8 +796,8 @@ class Laplacian(Operator):
 class Resampling(Operator):
     """A operator that resamples a vector on another grid.
 
-    The operator uses the underlying `Discretization.restriction` and
-    `Discretization.extension` operators to achieve this.
+    The operator uses the underlying `Discretization.sampling` and
+    `Discretization.interpolation` operators to achieve this.
 
     The spaces need to have the same `Discretization.uspace` in order for this
     to work. The dspace types may however be different, although performance
@@ -833,7 +833,7 @@ class Resampling(Operator):
     def _call(self, x, out=None):
         """Apply resampling operator.
 
-        The vector ``x`` is resampled using the restriction and extension
+        The vector ``x`` is resampled using the sampling and interpolation
         operators of the underlying spaces.
 
         Examples
@@ -849,7 +849,7 @@ class Resampling(Operator):
         [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
 
         The result depends on the interpolation chosen for the underlying
-        spaces
+        spaces.
 
         >>> Z = odl.uniform_discr(0, 1, 3, interp='linear')
         >>> linear_resampling = Resampling(Z, Y)
@@ -857,9 +857,9 @@ class Resampling(Operator):
         [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
         """
         if out is None:
-            return x.extension
+            return x.interpolation
         else:
-            out.restriction(x.extension)
+            out.sampling(x.interpolation)
 
     @property
     def inverse(self):
@@ -880,7 +880,7 @@ class Resampling(Operator):
     def adjoint(self):
         """Return an (approximate) adjoint.
 
-        The result is only exact if the extension and restriction operators
+        The result is only exact if the interpolation and sampling operators
         of the underlying spaces match exactly.
 
         Returns

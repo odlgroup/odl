@@ -13,19 +13,19 @@ Glossary
         Any data structure which can be converted into a `numpy.ndarray` by the
         `numpy.array` constructor. Includes all `NtuplesBaseVector` based classes.
 
-    dtype
-        Short for data type, indicates the way data is represented internally.
-        For example ``float32`` means 32-bit floating point numbers.
-        See `numpy dtype`_ for more details.
-
     discretization
         Structure to handle the mapping between abstract objects (e.g. functions) and
         concrete, finite realization. It encompasses an abstract `Set`, a finite data
         container (`NtuplesBaseVector` in general) and the mappings between them,
-        :term:`restriction` and :term:`extension`.
+        :term:`sampling` and :term:`interpolation`.
 
     domain
         Set of elements to which an operator can be applied.
+
+    dtype
+        Short for data type, indicates the way data is represented internally.
+        For example ``float32`` means 32-bit floating point numbers.
+        See `numpy dtype`_ for more details.
 
     element
         Saying that ``x`` is an element of a given `Set` ``my_set`` means that ``x in my_set``
@@ -42,15 +42,15 @@ Glossary
         Example: ```DiscreteLp` element-like`` means that
         `DiscreteLp.element` can create a `DiscreteLpVector` from the input.
 
-    extension
-        Operator in a :term:`discretization` mapping a concrete
-        (finite-dimensional) object to an abstract (infinite-dimensional) one.
-        Example: `LinearInterpolation`.
-
     in-place evaluation
         Operator evaluation method which uses an existing data container to store
         the result. Usually more efficient than :term:`out-of-place evaluation`
         since no new memory is allocated and no data is copied.
+
+    interpolation
+        Operator in a :term:`discretization` mapping a concrete
+        (finite-dimensional) object to an abstract (infinite-dimensional) one.
+        Example: `LinearInterpolation`.
 
     meshgrid
         Tuple of arrays defining a tensor grid by all possible combinations of entries, one from each
@@ -78,7 +78,7 @@ Glossary
         Set of elements to which an operator maps, i.e. in which the result of
         an operator evaluation lies.
 
-    restriction
+    sampling
         Operator in a :term:`discretization` mapping an abstract
         (infinite-dimensional) object to a concrete (finite-dimensional) one.
         Example: `PointCollocation`.

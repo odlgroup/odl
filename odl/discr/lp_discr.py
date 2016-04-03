@@ -125,19 +125,19 @@ class DiscreteLp(Discretization):
             self._order = str(order).upper()
 
         self._partition = partition
-        restriction = PointCollocation(fspace, self.partition, dspace,
-                                       order=self.order)
+        sampling = PointCollocation(fspace, self.partition, dspace,
+                                    order=self.order)
         if all(s == 'nearest' for s in self.interp):
-            extension = NearestInterpolation(fspace, self.partition, dspace,
-                                             order=self.order)
-        elif all(s == 'linear' for s in self.interp):
-            extension = LinearInterpolation(fspace, self.partition, dspace,
+            interpol = NearestInterpolation(fspace, self.partition, dspace,
                                             order=self.order)
+        elif all(s == 'linear' for s in self.interp):
+            interpol = LinearInterpolation(fspace, self.partition, dspace,
+                                           order=self.order)
         else:
-            extension = PerAxisInterpolation(
+            interpol = PerAxisInterpolation(
                 fspace, self.partition, dspace, self.interp, order=self.order)
 
-        Discretization.__init__(self, fspace, dspace, restriction, extension)
+        Discretization.__init__(self, fspace, dspace, sampling, interpol)
         self._exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
                 self.exponent != dspace.exponent):
@@ -224,7 +224,7 @@ class DiscreteLp(Discretization):
         element : `DiscreteLpVector`
             The discretized element, calculated as
             ``dspace.element(inp)`` or
-            ``restriction(uspace.element(inp))``, tried in this order.
+            ``sampling(uspace.element(inp))``, tried in this order.
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
@@ -238,7 +238,7 @@ class DiscreteLp(Discretization):
         # uspace element -> discretize
         try:
             inp_elem = self.uspace.element(inp)
-            return self.element_type(self, self.restriction(inp_elem))
+            return self.element_type(self, self.sampling(inp_elem))
         except TypeError:
             pass
 
@@ -1152,8 +1152,8 @@ def uniform_discr(min_corner, max_corner, nsamples,
 def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
     """Return an object mimicing the sequence space ``l^p(R^d)``.
 
-    The returned object is a `DiscreteLp` without restriction and
-    extension operators. It uses a grid with stride 1 and no
+    The returned object is a `DiscreteLp` without sampling and
+    interpolation operators. It uses a grid with stride 1 and no
     weighting.
 
     Parameters

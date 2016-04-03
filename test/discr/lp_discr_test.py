@@ -304,14 +304,14 @@ def test_zero():
 
 def test_interp():
     discr = odl.uniform_discr(0, 1, 3, interp='nearest')
-    assert isinstance(discr.extension, odl.NearestInterpolation)
+    assert isinstance(discr.interpolation, odl.NearestInterpolation)
 
     discr = odl.uniform_discr(0, 1, 3, interp='linear')
-    assert isinstance(discr.extension, odl.LinearInterpolation)
+    assert isinstance(discr.interpolation, odl.LinearInterpolation)
 
     discr = odl.uniform_discr([0, 0], [1, 1], (3, 3),
                               interp=['nearest', 'linear'])
-    assert isinstance(discr.extension, odl.PerAxisInterpolation)
+    assert isinstance(discr.interpolation, odl.PerAxisInterpolation)
 
     with pytest.raises(ValueError):
         # Too many entries in interp
