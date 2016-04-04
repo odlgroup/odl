@@ -58,13 +58,13 @@ class RawDiscretization(NtuplesBase):
     As additional information, two mappings can be provided.
     The first one is an explicit way to map an (abstract) element from
     the source set to an ``n``-tuple. This mapping is called
-    **restriction** in ODL.
+    **sampling** in ODL.
     The second one encodes the converse way of mapping an ``n``-tuple to
     an element of the original set. This mapping is called
-    **extension**.
+    **interpolation**.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None):
+    def __init__(self, uspace, dspace, sampling=None, interpol=None):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -77,14 +77,14 @@ class RawDiscretization(NtuplesBase):
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object
-        restr : `Operator`, optional
+        sampling : `Operator`, optional
             Operator mapping a `uspace` element to a `dspace` element.
-            Must satisfy ``restr.domain == uspace``,
-            ``restr.range == dspace``.
-        ext : `Operator`, optional
+            Must satisfy ``sampling.domain == uspace``,
+            ``sampling.range == dspace``.
+        interpol : `Operator`, optional
             Operator mapping a `dspace` element to a `uspace` element.
-            Must satisfy ``ext.domain == dspace``,
-            ``ext.range == uspace``.
+            Must satisfy ``interpol.domain == dspace``,
+            ``interpol.range == uspace``.
             """
         if not isinstance(uspace, Set):
             raise TypeError('undiscretized space {!r} not a `Set` instance.'
@@ -93,41 +93,41 @@ class RawDiscretization(NtuplesBase):
             raise TypeError('data space {!r} not an `NtuplesBase` instance.'
                             ''.format(dspace))
 
-        if restr is not None:
-            if not isinstance(restr, Operator):
-                raise TypeError('restriction operator {!r} not an `Operator` '
-                                'instance.'.format(restr))
+        if sampling is not None:
+            if not isinstance(sampling, Operator):
+                raise TypeError('sampling operator {!r} not an `Operator` '
+                                'instance.'.format(sampling))
 
-            if restr.domain != uspace:
-                raise ValueError('restriction operator domain {} not equal to '
+            if sampling.domain != uspace:
+                raise ValueError('sampling operator domain {} not equal to '
                                  'the undiscretized space {}.'
-                                 ''.format(restr.domain, dspace))
+                                 ''.format(sampling.domain, dspace))
 
-            if restr.range != dspace:
-                raise ValueError('restriction operator range {} not equal to'
+            if sampling.range != dspace:
+                raise ValueError('sampling operator range {} not equal to'
                                  'the data space {}.'
-                                 ''.format(restr.range, dspace))
+                                 ''.format(sampling.range, dspace))
 
-        if ext is not None:
-            if not isinstance(ext, Operator):
-                raise TypeError('extension operator {!r} not an `Operator` '
-                                'instance.'.format(ext))
+        if interpol is not None:
+            if not isinstance(interpol, Operator):
+                raise TypeError('interpolation operator {!r} not an Operator '
+                                'instance.'.format(interpol))
 
-            if ext.domain != dspace:
-                raise ValueError('extension operator domain {} not equal to'
-                                 'the data space {}.'
-                                 ''.format(ext.domain, dspace))
+            if interpol.domain != dspace:
+                raise ValueError('interpolation operator domain {} not equal '
+                                 'to the data space {}.'
+                                 ''.format(interpol.domain, dspace))
 
-            if ext.range != uspace:
-                raise ValueError('extension operator range {} not equal to'
+            if interpol.range != uspace:
+                raise ValueError('interpolation operator range {} not equal to'
                                  'the undiscretized space {}.'
-                                 ''.format(ext.range, uspace))
+                                 ''.format(interpol.range, uspace))
 
         super().__init__(dspace.size, dspace.dtype)
         self._uspace = uspace
         self._dspace = dspace
-        self._restriction = restr
-        self._extension = ext
+        self._sampling = sampling
+        self._interpolation = interpol
 
     @property
     def uspace(self):
@@ -145,20 +145,20 @@ class RawDiscretization(NtuplesBase):
         return type(self.dspace)
 
     @property
-    def restriction(self):
+    def sampling(self):
         """The operator mapping a `uspace` element to an n-tuple."""
-        if self._restriction is not None:
-            return self._restriction
+        if self._sampling is not None:
+            return self._sampling
         else:
-            raise NotImplementedError('no restriction operator provided.')
+            raise NotImplementedError('no sampling operator provided.')
 
     @property
-    def extension(self):
+    def interpolation(self):
         """The operator mapping an n-tuple to a `uspace` element."""
-        if self._extension is not None:
-            return self._extension
+        if self._interpolation is not None:
+            return self._interpolation
         else:
-            raise NotImplementedError('no extension operator provided.')
+            raise NotImplementedError('no interpolation operator provided.')
 
     def element(self, inp=None):
         """Create an element from ``inp`` or from scratch.
@@ -175,12 +175,12 @@ class RawDiscretization(NtuplesBase):
         element : `RawDiscretizationVector`
             The discretized element, calculated as
             ``dspace.element(inp)`` or
-            ``restriction(uspace.element(inp))``, tried in this order.
+            ``sampling(uspace.element(inp))``, tried in this order.
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
         try:
-            return self.element_type(self, self.restriction(inp))
+            return self.element_type(self, self.sampling(inp))
         except TypeError:
             # Sequence-type input
             return self.element_type(self, self.dspace.element(inp))
@@ -193,7 +193,7 @@ class RawDiscretization(NtuplesBase):
         equals : `bool`
             `True` if ``other`` is a `RawDiscretization`
             instance and all attributes `uspace`, `dspace`,
-            `RawDiscretization.restriction` and `RawDiscretization.extension`
+            `RawDiscretization.sampling` and `RawDiscretization.interpolation`
             of ``other`` and this discretization are equal, `False` otherwise.
         """
         if other is self:
@@ -202,8 +202,8 @@ class RawDiscretization(NtuplesBase):
         return (super().__eq__(other) and
                 other.uspace == self.uspace and
                 other.dspace == self.dspace and
-                other.restriction == self.restriction and
-                other.extension == self.extension)
+                other.sampling == self.sampling and
+                other.interpolation == self.interpolation)
 
     @property
     def domain(self):
@@ -308,13 +308,13 @@ class RawDiscretizationVector(NtuplesBaseVector):
         else:
             self.ntuple.__setitem__(indices, values)
 
-    def restriction(self, ufunc):
+    def sampling(self, ufunc):
         """Restrict a continuous function and assign to this vector
 
         Parameters
         ----------
         ufunc : ``self.space.uspace`` element
-            The continuous function that should be restricted.
+            The continuous function that should be samplingicted.
 
         Examples
         --------
@@ -328,49 +328,51 @@ class RawDiscretizationVector(NtuplesBaseVector):
 
         Assign x according to continuous vector
 
-        >>> x.restriction(lambda x: x)
+        >>> x.sampling(lambda x: x)
         >>> print(x) # Print values at gridpoints (which are centered)
         [0.1, 0.3, 0.5, 0.7, 0.9]
 
         See Also
         --------
-        RawDiscretization.restriction : For full description
+        RawDiscretization.sampling : For full description
         """
-        self.space.restriction(ufunc, out=self.ntuple)
+        self.space.sampling(ufunc, out=self.ntuple)
 
     @property
-    def extension(self):
-        """The extension operator associated with this vector.
+    def interpolation(self):
+        """The interpolation operator associated with this vector.
 
         Returns
         -------
-        extension_op : `FunctionSetMapping`
-            Operatior representing a continuous extension of this vector.
+        interpolation_op : `FunctionSetMapping`
+            Operatior representing a continuous interpolation of this
+            vector
 
         Examples
         --------
         >>> import odl
         >>> import numpy as np
 
-        Create continuous extension of 1d function with nearest neighbour
+        Create continuous version of a discrete 1d function with nearest
+        neighbour interpolation:
 
         >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True)
         >>> x = X.element([0, 1, 0])
-        >>> x.extension(np.array([0.24, 0.26]))
+        >>> x.interpolation(np.array([0.24, 0.26]))
         array([ 0.,  1.])
 
-        Create continuous extension of 1d function wiht linear interpolation
+        Linear interpolation:
 
         >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True, interp='linear')
         >>> x = X.element([0, 1, 0])
-        >>> x.extension(np.array([0.24, 0.26]))
+        >>> x.interpolation(np.array([0.24, 0.26]))
         array([ 0.48,  0.52])
 
         See Also
         --------
-        RawDiscretization.extension : For full description
+        RawDiscretization.interpolation : For full description
         """
-        return self.space.extension(self.ntuple)
+        return self.space.interpolation(self.ntuple)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -391,12 +393,12 @@ class Discretization(RawDiscretization, FnBase):
     `LinearSpace`, the `RawDiscretization.dspace`
     for the data representation is an implementation of
     :math:`\mathbb{F}^n`, where :math:`\mathbb{F}` is some
-    `Field`, and both `RawDiscretization.restriction`
-    and `RawDiscretization.extension` are linear
+    `Field`, and both `RawDiscretization.sampling`
+    and `RawDiscretization.interpolation` are linear
     `Operator`'s.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None):
+    def __init__(self, uspace, dspace, sampling=None, interpol=None):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -410,24 +412,24 @@ class Discretization(RawDiscretization, FnBase):
             Data space providing containers for the values of a
             discretized object. Its `FnBase.field` attribute
             must be the same as ``uspace.field``.
-        restr : `Operator`, linear, optional
+        sampling : `Operator`, linear, optional
             Operator mapping a `RawDiscretization.uspace` element
             to a `RawDiscretization.dspace` element. Must satisfy
-            ``restr.domain == uspace``, ``restr.range == dspace``
-        ext : `Operator`, linear, optional
+            ``sampling.domain == uspace``, ``sampling.range == dspace``
+        interpol : `Operator`, linear, optional
             Operator mapping a `RawDiscretization.dspace` element
             to a `RawDiscretization.uspace` element. Must satisfy
-            ``ext.domain == dspace``, ``ext.range == uspace``.
+            ``interpol.domain == dspace``, ``interpol.range == uspace``.
         """
-        RawDiscretization.__init__(self, uspace, dspace, restr, ext)
+        RawDiscretization.__init__(self, uspace, dspace, sampling, interpol)
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
-            raise TypeError('undiscretized space {!r} not a `LinearSpace` '
+            raise TypeError('undiscretized space {!r} not a LinearSpace '
                             'instance.'.format(uspace))
 
         if not isinstance(dspace, FnBase):
-            raise TypeError('data space {!r} not an `FnBase` instance.'
+            raise TypeError('data space {!r} not an FnBase instance.'
                             ''.format(dspace))
 
         if uspace.field != dspace.field:
@@ -435,23 +437,23 @@ class Discretization(RawDiscretization, FnBase):
                              'data spaces, resp., are not equal.'
                              ''.format(uspace.field, dspace.field))
 
-        if restr is not None:
-            if not isinstance(restr, Operator):
-                raise TypeError('restriction operator {!r} is not a '
-                                '`Operator` instance.'.format(restr))
+        if sampling is not None:
+            if not isinstance(sampling, Operator):
+                raise TypeError('sampling operator {!r} is not an '
+                                'Operator instance.'.format(sampling))
 
-            if not restr.is_linear:
-                raise TypeError('restriction operator {!r} is not '
-                                'linear'.format(restr))
+            if not sampling.is_linear:
+                raise TypeError('sampling operator {!r} is not '
+                                'linear'.format(sampling))
 
-        if ext is not None:
-            if not isinstance(ext, Operator):
-                raise TypeError('extension operator {!r} is not a '
-                                '`Operator` instance.'.format(ext))
+        if interpol is not None:
+            if not isinstance(interpol, Operator):
+                raise TypeError('interpolation operator {!r} is not an '
+                                'Operator instance.'.format(interpol))
 
-            if not ext.is_linear:
-                raise TypeError('extension operator {!r} is not '
-                                'linear'.format(ext))
+            if not interpol.is_linear:
+                raise TypeError('interpolation operator {!r} is not '
+                                'linear'.format(interpol))
 
     # Pass-through attributes of the wrapped ``dspace``
     def zero(self):

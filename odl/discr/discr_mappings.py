@@ -55,7 +55,7 @@ class FunctionSetMapping(Operator):
 
         Parameters
         ----------
-        map_type : {'restriction', 'extension'}
+        map_type : {'sampling', 'interpolation'}
             The type of operator
         fset : `FunctionSet`
             The non-discretized (abstract) set of functions to be
@@ -77,7 +77,7 @@ class FunctionSetMapping(Operator):
             Default: 'C'
         """
         map_type_ = str(map_type).lower()
-        if map_type_ not in ('restriction', 'extension'):
+        if map_type_ not in ('sampling', 'interpolation'):
             raise ValueError('mapping type {!r} not understood.'
                              ''.format(map_type))
         if not isinstance(fset, FunctionSet):
@@ -101,8 +101,8 @@ class FunctionSetMapping(Operator):
                              'to the size {} of the partition.'
                              ''.format(dspace.size, dspace, partition.size))
 
-        dom = fset if map_type_ == 'restriction' else dspace
-        ran = dspace if map_type_ == 'restriction' else fset
+        dom = fset if map_type_ == 'sampling' else dspace
+        ran = dspace if map_type_ == 'sampling' else fset
         Operator.__init__(self, dom, ran, linear=linear)
         self._partition = partition
 
@@ -167,7 +167,7 @@ class PointCollocation(FunctionSetMapping):
     only difference being the additional information about the ordering
     of the axes in the flat storage array (C- vs. Fortran ordering).
 
-    This operator is the default 'restriction' used by all core
+    This operator is the default 'sampling' used by all core
     discretization classes.
     """
 
@@ -194,7 +194,7 @@ class PointCollocation(FunctionSetMapping):
             Default: 'C'
         """
         linear = isinstance(ip_fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'restriction', ip_fset, partition,
+        FunctionSetMapping.__init__(self, 'sampling', ip_fset, partition,
                                     dspace, linear, **kwargs)
 
     def _call(self, func, out=None):
@@ -340,7 +340,7 @@ class NearestInterpolation(FunctionSetMapping):
         may not be noticable in some situations due to rounding errors.
         """
         linear = isinstance(fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'extension', fset, partition,
+        FunctionSetMapping.__init__(self, 'interpolation', fset, partition,
                                     dspace, linear, **kwargs)
 
         variant = kwargs.pop('variant', 'left')
@@ -479,7 +479,7 @@ class LinearInterpolation(FunctionSetMapping):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
                             'instance.'.format(fspace))
 
-        FunctionSetMapping.__init__(self, 'extension', fspace, partition,
+        FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
                                     dspace, linear=True, **kwargs)
 
     def _call(self, x, out=None):
@@ -570,7 +570,7 @@ class PerAxisInterpolation(FunctionSetMapping):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
                             'instance.'.format(fspace))
 
-        FunctionSetMapping.__init__(self, 'extension', fspace, partition,
+        FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
                                     dspace, linear=True, **kwargs)
 
         try:
