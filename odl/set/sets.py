@@ -135,7 +135,8 @@ class Set(with_metaclass(ABCMeta, object)):
         Can return a finite set of examples or an infinite set.
 
         Optional to implement, intended to be used for diagnostics.
-        Default yields ``('element()', self.element())``."""
+        By default, the generator yields ``('element()', self.element())``.
+        """
         yield ('element()', self.element())
 
 

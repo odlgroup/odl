@@ -384,20 +384,20 @@ class PowerOperator(Operator):
     a `Field`.
     """
 
-    def __init__(self, domain, n):
+    def __init__(self, domain, exponent):
         """Initialize a MultiplyOperator instance.
 
         Parameters
         ----------
-        n : Number
+        exponent : Number
             The power to take
         domain : `LinearSpace` or `Field`, optional
-            The set to take values in.
+            The set to take values in
         """
 
-        self.n = n
+        self.exponent = float(exponent)
         self._domain_is_field = isinstance(domain, Field)
-        super().__init__(domain, domain, linear=(n == 1))
+        super().__init__(domain, domain, linear=(exponent == 1))
 
     def _call(self, x, out=None):
         """Multiply the input and write to output.
@@ -421,23 +421,23 @@ class PowerOperator(Operator):
         Use with vectors
 
         >>> from odl import Rn, RealNumbers
-        >>> op = PowerOperator(Rn(3), 2)
+        >>> op = PowerOperator(Rn(3), exponent=2)
         >>> op([1, 2, 3])
         Rn(3).element([1.0, 4.0, 9.0])
 
         or scalars
 
-        >>> op = PowerOperator(RealNumbers(), 2)
+        >>> op = PowerOperator(RealNumbers(), exponent=2)
         >>> op(2.0)
         4.0
         """
         if out is None:
-            return x ** self.n
+            return x ** self.exponent
         elif self._domain_is_field:
             raise ValueError('Cannot use `out` with field')
         else:
             out.assign(x)
-            out **= self.n
+            out **= self.exponent
 
     def derivative(self, point):
         """The derivative operator.
@@ -445,12 +445,12 @@ class PowerOperator(Operator):
         Parameters
         ----------
         point : domain element
-            The point in which to take the derivative.
+            The point in which to take the derivative
 
         Returns
         -------
         derivative : `MultiplyOperator`
-            The derivative in ``point``.
+            The derivative in ``point``
 
         Examples
         --------
@@ -458,29 +458,29 @@ class PowerOperator(Operator):
 
         Use with vectors
 
-        >>> op = PowerOperator(Rn(3), 2)
+        >>> op = PowerOperator(Rn(3), exponent=2)
         >>> dop = op.derivative(op.domain.element([1, 2, 3]))
         >>> dop([1, 1, 1])
         Rn(3).element([2.0, 4.0, 6.0])
 
         Use with scalars:
 
-        >>> op = PowerOperator(RealNumbers(), 2)
+        >>> op = PowerOperator(RealNumbers(), exponent=2)
         >>> dop = op.derivative(2.0)
         >>> dop(2.0)
         8.0
         """
-        return self.n * MultiplyOperator(point**(self.n-1),
-                                         domain=self.domain,
-                                         range=self.range)
+        return self.exponent * MultiplyOperator(point ** (self.exponent - 1),
+                                                domain=self.domain,
+                                                range=self.range)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'PowerOperator({!r})'.format(self.n)
+        return 'PowerOperator({!r}, {!r})'.format(self.domain, self.exponent)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return "x ** {}".format(self.n)
+        return "x ** {}".format(self.exponent)
 
 
 class InnerProductOperator(Operator):

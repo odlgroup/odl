@@ -99,6 +99,9 @@ class DiscreteLp(Discretization):
         if not fspace.domain.contains_set(partition.set):
             raise ValueError('Partition {} is not a subset of the function '
                              'domain {}'.format(partition, fspace.domain))
+        if fspace.out_dtype != dspace.dtype:
+            raise ValueError('fspace.out_dtyp {} does not match dspace.dtype '
+                             '{}'.format(fspace.out_dtype, dspace.dtype))
 
         try:
             # Got single string
@@ -256,97 +259,6 @@ class DiscreteLp(Discretization):
         except (TypeError, IndexError, ValueError) as err:
             raise_from(ValueError('unable to create an element of {} from '
                                   '{!r}: {}'.format(self, inp, err)), err)
-
-    @property
-    def examples(self):
-        """Return example functions in the space.
-
-        Example functions include:
-
-        Zero
-        One
-        Heaviside function
-        Hypercube
-        Hypersphere
-        Gaussian
-        Gradients
-        """
-        # Get the points and calculate some statistics on them
-        points = self.points()
-        mins = self.grid.min()
-        maxs = self.grid.max()
-        means = (maxs + mins) / 2.0
-        stds = np.apply_along_axis(np.std, axis=0, arr=points)
-
-        # Zero and One
-        yield ('Zero', self.zero())
-        try:
-            yield ('One', self.one())
-        except NotImplementedError:
-            pass
-
-        # Indicator function in first dimension
-        def _step_fun(x):
-            z = np.zeros(self.shape, dtype=self.dtype)
-            z[:self.shape[0] // 2, ...] = 1
-            return z
-
-        yield ('Step', self.element(_step_fun))
-
-        # Indicator function on hypercube
-        def _cube_fun(x):
-            inside = np.ones(self.shape, dtype=bool)
-            for points, mean, std in zip(x, means, stds):
-                inside = np.logical_and(inside, points < mean + std)
-                inside = np.logical_and(inside, mean - std < points)
-
-            return inside.astype(self.dtype, copy=False)
-
-        yield ('Cube', self.element(_cube_fun))
-
-        # Indicator function on hypersphere
-        if self.ndim > 1:  # Only if ndim > 1, don't duplicate cube
-            def _sphere_fun(x):
-                r = np.zeros(self.shape)
-
-                for points, mean, std in zip(x, means, stds):
-                    r += (points - mean) ** 2 / std ** 2
-                return (r < 1.0).astype(self.dtype, copy=False)
-
-            yield ('Sphere', self.element(_sphere_fun))
-
-        # Gaussian function
-        def _gaussian_fun(x):
-            r2 = np.zeros(self.shape)
-
-            for points, mean, std in zip(x, means, stds):
-                r2 += (points - mean) ** 2 / ((std / 2) ** 2)
-
-            return np.exp(-r2)
-
-        yield ('Gaussian', self.element(_gaussian_fun))
-
-        # Gradient in each dimensions
-        for dim in range(self.ndim):
-            def _gradient_fun(x):
-                s = np.zeros(self.shape)
-                s += (x[dim] - mins[dim]) / (maxs[dim] - mins[dim])
-
-                return s
-
-            yield ('grad {}'.format(dim), self.element(_gradient_fun))
-
-        # Gradient in all dimensions
-        if self.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
-            def _all_gradient_fun(x):
-                s = np.zeros(self.shape)
-
-                for points, minv, maxv in zip(x, mins, maxs):
-                    s += (points - minv) / (maxv - minv)
-
-                return s
-
-            yield ('Grad all', self.element(_all_gradient_fun))
 
     @property
     def interp(self):

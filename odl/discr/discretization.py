@@ -308,13 +308,15 @@ class RawDiscretizationVector(NtuplesBaseVector):
         else:
             self.ntuple.__setitem__(indices, values)
 
-    def sampling(self, ufunc):
+    def sampling(self, ufunc, **kwargs):
         """Restrict a continuous function and assign to this vector
 
         Parameters
         ----------
         ufunc : ``self.space.uspace`` element
             The continuous function that should be samplingicted.
+        kwargs : keyword arguments, optional
+            Additional arugments for the sampling operator implementation
 
         Examples
         --------
@@ -336,7 +338,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
         --------
         RawDiscretization.sampling : For full description
         """
-        self.space.sampling(ufunc, out=self.ntuple)
+        self.space.sampling(ufunc, out=self.ntuple, **kwargs)
 
     @property
     def interpolation(self):
@@ -497,6 +499,19 @@ class Discretization(RawDiscretization, FnBase):
     def _divide(self, x1, x2, out):
         """Raw pointwise multiplication of two vectors."""
         self.dspace._divide(x1.ntuple, x2.ntuple, out.ntuple)
+
+    @property
+    def examples(self):
+        """Return example functions in the space.
+
+        These are created by discretizing the examples in the underlying uspace
+
+        See Also
+        --------
+        FunctionSpace.examples
+        """
+        for name, vector in self.uspace.examples:
+            yield (name, self.element(vector))
 
     @property
     def element_type(self):

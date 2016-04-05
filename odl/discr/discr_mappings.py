@@ -197,7 +197,7 @@ class PointCollocation(FunctionSetMapping):
         FunctionSetMapping.__init__(self, 'sampling', ip_fset, partition,
                                     dspace, linear, **kwargs)
 
-    def _call(self, func, out=None):
+    def _call(self, func, out=None, **kwargs):
         """Evaluate ``func`` at the grid of this operator.
 
         Parameters
@@ -209,6 +209,7 @@ class PointCollocation(FunctionSetMapping):
             ``(N,)``, where N is the total number of grid points. The
             data type must be the same as in the ``dspace`` of this
             mapping.
+        kwargs : Additional keyword arguments, optional
 
         Returns
         -------
@@ -268,10 +269,12 @@ vectorization_guide.html>`_ for a detailed introduction.
         """
         mesh = self.grid.meshgrid
         if out is None:
-            out = func(mesh).ravel(order=self.order)
+            out = func(mesh, **kwargs).ravel(order=self.order)
         else:
-            func(mesh, out=out.asarray().reshape(self.grid.shape,
-                                                 order=self.order))
+            # Todo: this assumes asarray is writable!
+            func(mesh,
+                 out=out.asarray().reshape(self.grid.shape, order=self.order),
+                 **kwargs)
         return out
 
     def __repr__(self):
