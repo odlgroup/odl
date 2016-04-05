@@ -25,6 +25,7 @@ standard_library.install_aliases()
 
 from math import sqrt
 from numbers import Integral
+from itertools import product
 import numpy as np
 
 from odl.set.space import LinearSpace, LinearSpaceVector
@@ -389,6 +390,14 @@ class ProductSpace(LinearSpace):
                             'component spaces.'.format(inp))
 
         return self.element_type(self, parts)
+
+    @property
+    def examples(self):
+        """Return examples from all sub-spaces."""
+        for examples in product(*[spc.examples for spc in self.spaces]):
+            name = ', '.join(name for name, _ in examples)
+            vector = self.element([vec for _, vec in examples])
+            yield (name, vector)
 
     def zero(self):
         """Create the zero vector of the product space.
