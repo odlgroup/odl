@@ -91,12 +91,12 @@ class OperatorTest(object):
 
     def self_adjoint(self):
         """Verify (Ax, y) = (x, Ay)"""
-        print('\nVerifying the identity (Ax, y) = (x, Ay)')
+        name = 'Verifying the identity (Ax, y) = (x, Ay)'
 
         left_inner_vals = []
         right_inner_vals = []
 
-        with FailCounter('error = ||(Ax, y) - (x, Ay)|| / '
+        with FailCounter(name, 'error = ||(Ax, y) - (x, Ay)|| / '
                          '||A|| ||x|| ||y||') as counter:
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.range):
@@ -122,12 +122,12 @@ class OperatorTest(object):
 
     def _adjoint_definition(self):
         """Verify (Ax, y) = (x, A^T y)"""
-        print('\nVerifying the identity (Ax, y) = (x, A^T y)')
+        name = 'Verifying the identity (Ax, y) = (x, A^T y)'
 
         left_inner_vals = []
         right_inner_vals = []
 
-        with FailCounter('error = ||(Ax, y) - (x, A^T y)|| / '
+        with FailCounter(name, 'error = ||(Ax, y) - (x, A^T y)|| / '
                          '||A|| ||x|| ||y||') as counter:
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.range):
@@ -163,9 +163,9 @@ class OperatorTest(object):
             print('(A^*)^* == A')
             return
 
-        print('\nVerifying the identity Ax = (A^T)^T x')
+        name = '\nVerifying the identity Ax = (A^T)^T x'
 
-        with FailCounter('error = ||Ax - (A^T)^T x|| / '
+        with FailCounter(name, 'error = ||Ax - (A^T)^T x|| /'
                          '||A|| ||x||') as counter:
             for [name_x, x] in self.operator.domain.examples:
                 opx = self.operator(x)
@@ -215,9 +215,9 @@ class OperatorTest(object):
         self._adjoint_of_adjoint()
 
     def _derivative_convergence(self, step):
-        print('\nTesting derivative is linear approximation')
+        name = 'Testing derivative is linear approximation'
 
-        with FailCounter("error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / "
+        with FailCounter(name, "error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / "
                          "|c| ||dx|| ||A||") as counter:
             for [name_x, x], [name_dx, dx] in samples(self.operator.domain,
                                                       self.operator.domain):
@@ -263,10 +263,10 @@ class OperatorTest(object):
         self._derivative_convergence(step)
 
     def _scale_invariance(self):
-        print("\nCalculating invariance under scaling")
+        name = "Calculating invariance under scaling"
 
         # Test scaling
-        with FailCounter('error = ||A(c*x)-c*A(x)|| / '
+        with FailCounter(name, 'error = ||A(c*x)-c*A(x)|| / '
                          '|c| ||A|| ||x||') as counter:
             for [name_x, x], [_, scale] in samples(self.operator.domain,
                                                    self.operator.domain.field):
@@ -282,10 +282,10 @@ class OperatorTest(object):
                                  ''.format(name_x, scale, error))
 
     def _addition_invariance(self):
-        print("\nCalculating invariance under addition")
+        name = "Calculating invariance under addition"
 
         # Test addition
-        with FailCounter('error = ||A(x+y) - A(x) - A(y)|| / '
+        with FailCounter(name, 'error = ||A(x+y) - A(x) - A(y)|| / '
                          '||A||(||x|| + ||y||)') as counter:
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.domain):
@@ -323,7 +323,7 @@ class OperatorTest(object):
 
     def run_tests(self):
         """Run all tests on this operator."""
-        print('\n== RUNNING ALL TESTS ==\n')
+        print('\n== RUNNING ALL TESTS ==')
         print('Operator = {}'.format(self.operator))
 
         self.norm()

@@ -233,9 +233,11 @@ class FailCounter(object):
     ``*** FAILED 1 TEST CASE(S) ***``
     """
 
-    def __init__(self, err_msg=None):
+    def __init__(self, test_name, err_msg=None):
         self.num_failed = 0
+        self.test_name = test_name
         self.err_msg = err_msg
+        self.fail_strings = []
 
     def __enter__(self):
         return self
@@ -246,12 +248,17 @@ class FailCounter(object):
 
         # Todo: possibly limit number of printed strings
         if string is not None:
-            print(string)
+            self.fail_strings += [str(string)]
 
     def __exit__(self, type, value, traceback):
         if self.num_failed == 0:
-            print('Completed all test cases')
+            print('{:<70}: Completed all test cases'.format(self.test_name))
         else:
+            print(self.test_name)
+
+            for fail_string in self.fail_strings:
+                print(fail_string)
+
             if self.err_msg is not None:
                 print(self.err_msg)
             print('*** FAILED {} TEST CASE(S) ***'.format(self.num_failed))
