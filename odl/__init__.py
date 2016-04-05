@@ -29,10 +29,8 @@ __version__ = '0.2.2'
 __all__ = ('diagnostics', 'discr', 'operator', 'set', 'space', 'solvers',
            'tomo', 'trafos', 'util')
 
-
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
-
 from . import diagnostics
 
 from . import discr

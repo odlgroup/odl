@@ -87,6 +87,17 @@ class LinearSpace(Set):
             A vector in this space
         """
 
+    @property
+    def examples(self):
+        """Return the two default examples, `zero` and `one` (if available)."""
+        # All spaces should yield the zero element
+        yield ('Zero', self.zero())
+
+        try:
+            yield ('One', self.one())
+        except NotImplementedError:
+            pass
+
     @abstractmethod
     def _lincomb(self, a, x1, b, x2, out):
         """Calculate ``out = a*x1 + b*x2``.

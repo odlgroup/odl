@@ -25,7 +25,7 @@ from builtins import object
 
 import numpy as np
 
-from odl.diagnostics.examples import vector_examples, samples
+from odl.diagnostics.examples import samples
 from odl.util.testutils import FailCounter
 
 
@@ -41,7 +41,7 @@ class OperatorTest(object):
     adjoint definition.
     """
 
-    def __init__(self, operator, operator_norm=None):
+    def __init__(self, operator, operator_norm=None, verbose=True):
         """Create a new instance
 
         Parameters
@@ -54,6 +54,7 @@ class OperatorTest(object):
         """
         self.operator = operator
         self.operator_norm = operator_norm
+        self.verbose = True
 
     def norm(self):
         """Estimate the operator norm of the operator.
@@ -166,7 +167,7 @@ class OperatorTest(object):
 
         with FailCounter('error = ||Ax - (A^T)^T x|| / '
                          '||A|| ||x||') as counter:
-            for [name_x, x] in vector_examples(self.operator.domain):
+            for [name_x, x] in self.operator.domain.examples:
                 opx = self.operator(x)
                 op_adj_adj_x = self.operator.adjoint.adjoint(x)
 
@@ -201,7 +202,7 @@ class OperatorTest(object):
             domain_range_ok = False
 
         if self.operator.range != self.operator.adjoint.domain:
-            print('*** ERROR: A.domain != A.adjoint.range ***')
+            print('*** ERROR: A.range != A.adjoint.domain ***')
             domain_range_ok = False
 
         if domain_range_ok:
@@ -255,12 +256,7 @@ class OperatorTest(object):
             print('Operator has no derivative')
             return
 
-        if self.operator_norm is None:
-            print('Cannot do tests before norm is calculated, run test.norm() '
-                  'or give norm as a parameter')
-            return
-
-        if deriv == self:
+        if self.operator.is_linear and deriv is self.operator:
             print('A is linear and A.derivative == A')
             return
 
@@ -272,8 +268,8 @@ class OperatorTest(object):
         # Test scaling
         with FailCounter('error = ||A(c*x)-c*A(x)|| / '
                          '|c| ||A|| ||x||') as counter:
-            for [name_x, x], scale in samples(self.operator.domain,
-                                              self.operator.domain.field):
+            for [name_x, x], [_, scale] in samples(self.operator.domain,
+                                                   self.operator.domain.field):
                 opx = self.operator(x)
                 scaled_opx = self.operator(scale * x)
 
@@ -346,5 +342,13 @@ class OperatorTest(object):
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
-    run_doctests()
+
+    import odl
+    X = odl.uniform_discr([0, 0], [1, 1], [3, 3])
+    # Linear operator
+    I = odl.IdentityOperator(X)
+    OperatorTest(I).run_tests()
+
+    # Nonlinear operator op(x) = x - 1
+    op = odl.ResidualOperator(I, X.one())
+    OperatorTest(op).run_tests()

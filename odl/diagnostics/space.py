@@ -201,9 +201,9 @@ class SpaceTest(object):
               'a * (b * x) = (a * b) * x')
 
         with FailCounter() as counter:
-            for [n_x, x], a, b in samples(self.space,
-                                          self.space.field,
-                                          self.space.field):
+            for [n_x, x], [_, a], [_, b] in samples(self.space,
+                                                    self.space.field,
+                                                    self.space.field):
                 correct = _approx_equal(a * (b * x), (a * b) * x, self.eps)
                 if not correct:
                     counter.fail('failed with x={:25s}, a={}, b={}'
@@ -225,9 +225,9 @@ class SpaceTest(object):
               'a * (x + y) = a * x + a * y')
 
         with FailCounter() as counter:
-            for [n_x, x], [n_y, y], a in samples(self.space,
-                                                 self.space,
-                                                 self.space.field):
+            for [n_x, x], [n_y, y], [_, a] in samples(self.space,
+                                                      self.space,
+                                                      self.space.field):
                 correct = _approx_equal(a * (x + y), a * x + a * y, self.eps)
                 if not correct:
                     counter.fail('failed with x={:25s}, y={:25s}, a={}'
@@ -239,9 +239,9 @@ class SpaceTest(object):
               '(a + b) * x = a * x + b * x')
 
         with FailCounter() as counter:
-            for [n_x, x], a, b in samples(self.space,
-                                          self.space.field,
-                                          self.space.field):
+            for [n_x, x], [_, a], [_, b] in samples(self.space,
+                                                    self.space.field,
+                                                    self.space.field):
                 correct = _approx_equal((a + b) * x, a * x + b * x, self.eps)
                 if not correct:
                     counter.fail('failed with x={:25s}, a={}, b={}'
@@ -265,8 +265,8 @@ class SpaceTest(object):
         print('\nDivision, x / a = x * (1/a)')
 
         with FailCounter() as counter:
-            for [n_x, x], a in samples(self.space,
-                                       self.space.field):
+            for [n_x, x], [_, a] in samples(self.space,
+                                            self.space.field):
                 if a != 0:
                     correct = _approx_equal(x / a, x * (1.0 / a), self.eps)
                     if not correct:
@@ -337,9 +337,9 @@ class SpaceTest(object):
         print('\nLinearity scalar, (a*x, y) = a*(x, y)')
 
         with FailCounter('error = |(a*x, y) - a*(x, y)|') as counter:
-            for [n_x, x], [n_y, y], a in samples(self.space,
-                                                 self.space,
-                                                 self.space.field):
+            for [n_x, x], [n_y, y], [_, a] in samples(self.space,
+                                                      self.space,
+                                                      self.space.field):
                 error = abs((a * x).inner(y) - a * x.inner(y))
                 if error > self.eps:
                     counter.fail('x={:25s}, y={:25s}, a={}: error={}'
@@ -463,12 +463,12 @@ class SpaceTest(object):
         print('\nHomogeneity, ||a*x|| = |a| ||x||')
 
         with FailCounter('error = abs(||a*x|| - |a| ||x||)') as counter:
-            for [name, vec], scalar in samples(self.space,
+            for [name, vec], [_, a] in samples(self.space,
                                                self.space.field):
-                error = abs((scalar * vec).norm() - abs(scalar) * vec.norm())
+                error = abs((a * vec).norm() - abs(a) * vec.norm())
                 if error > self.eps:
                     counter.fail('x={:25s} a={}: ||x||={}'
-                                 ''.format(name, scalar, error))
+                                 ''.format(name, a, error))
 
     def _norm_inner_compatible(self):
         """Check compatibility of norm and inner product."""
@@ -675,9 +675,9 @@ class SpaceTest(object):
               'a * x + a * y')
 
         with FailCounter() as counter:
-            for [n_x, x], [n_y, y], a in samples(self.space,
-                                                 self.space,
-                                                 self.space.field):
+            for [n_x, x], [n_y, y], [_, a] in samples(self.space,
+                                                      self.space,
+                                                      self.space.field):
                 correct = _approx_equal(a * (x + y), a * x + a * y, self.eps)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s} a={}'
@@ -912,5 +912,6 @@ class SpaceTest(object):
 
 
 if __name__ == '__main__':
-    from odl.space.ntuples import Rn
+    from odl import Rn, uniform_discr
     SpaceTest(Rn(10)).run_tests()
+    SpaceTest(uniform_discr([0, 0], [1, 1], [5, 5])).run_tests()
