@@ -470,7 +470,7 @@ class PowerOperator(Operator):
         >>> dop(2.0)
         8.0
         """
-        return self.n * MultiplyOperator(point**(self.n-1),
+        return self.n * MultiplyOperator(point ** (self.n - 1),
                                          domain=self.domain,
                                          range=self.range)
 

@@ -214,27 +214,40 @@ class OperatorTest(object):
         self._adjoint_definition()
         self._adjoint_of_adjoint()
 
-    def _derivative_convergence(self, step):
+    def _derivative_convergence(self):
         name = 'Testing derivative is linear approximation'
 
-        with FailCounter(name, "error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / "
-                         "|c| ||dx|| ||A||") as counter:
+        with FailCounter(name, "error = "
+                         "inf_c ||A(x+cp)-A(x)-A'(x)(cp)|| / c") as counter:
             for [name_x, x], [name_dx, dx] in samples(self.operator.domain,
                                                       self.operator.domain):
+                # Precompute some values
                 deriv = self.operator.derivative(x)
+                derivdx = deriv(dx)
                 opx = self.operator(x)
 
-                exact_step = self.operator(x + dx * step) - opx
-                expected_step = deriv(dx * step)
-                denom = step * dx.norm() * self.operator_norm
-                error = (0 if denom == 0
-                         else (exact_step - expected_step).norm() / denom)
+                c = 1e-4  # initial step
+                derivative_ok = False
 
-                if error > 0.00001:
-                    counter.fail('x={:15s} dx={:15s} c={}: error={:6.5f}'
-                                 ''.format(name_x, name_dx, step, error))
+                minerror = float('inf')
+                while c > 1e-14:
+                    exact_step = self.operator(x + dx * c) - opx
+                    expected_step = c * derivdx
+                    err = (exact_step - expected_step).norm() / c
 
-    def derivative(self, step=0.0001):
+                    if err < 1e-4:
+                        derivative_ok = True
+                        break
+                    else:
+                        minerror = min(minerror, err)
+
+                    c /= 2.0
+
+                if not derivative_ok:
+                    counter.fail('x={:15s} dx={:15s}, error={}'
+                                 ''.format(name_x, name_dx, minerror))
+
+    def derivative(self):
         """Verify that `Operator.derivative` works appropriately.
 
         References
@@ -260,7 +273,7 @@ class OperatorTest(object):
             print('A is linear and A.derivative == A')
             return
 
-        self._derivative_convergence(step)
+        self._derivative_convergence()
 
     def _scale_invariance(self):
         name = "Calculating invariance under scaling"
@@ -349,6 +362,6 @@ if __name__ == '__main__':
     I = odl.IdentityOperator(X)
     OperatorTest(I).run_tests()
 
-    # Nonlinear operator op(x) = x - 1
-    op = odl.ResidualOperator(I, X.one())
+    # Nonlinear operator op(x) = x**4
+    op = odl.PowerOperator(X, 4)
     OperatorTest(op).run_tests()
