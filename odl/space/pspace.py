@@ -519,6 +519,7 @@ class ProductSpace(LinearSpace):
         else:
             return (isinstance(other, ProductSpace) and
                     len(self) == len(other) and
+                    self.weighting == other.weighting and
                     all(x == y for x, y in zip(self.spaces,
                                                other.spaces)))
 
