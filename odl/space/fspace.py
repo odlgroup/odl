@@ -956,6 +956,103 @@ class FunctionSpace(FunctionSet, LinearSpace):
             return self.element(conj_oop)
 
     @property
+    def examples(self):
+        """Return example functions in the space.
+
+        Example functions include:
+
+        Zero
+        One
+        Heaviside function
+        Hypercube characteristic function
+        Hypersphere characteristic function
+        Gaussian
+        Linear gradients
+        """
+        # Get the points and calculate some statistics on them
+        mins = self.domain.min()
+        maxs = self.domain.max()
+        means = (maxs + mins) / 2.0
+        stds = (maxs - mins) / 4.0
+
+        # Zero and One
+        yield ('Zero', self.zero())
+        try:
+            yield ('One', self.one())
+        except NotImplementedError:
+            pass
+
+        # Indicator function in first dimension
+        def _step_fun(x):
+            if self.domain.ndim == 1:
+                return x > means[0]
+            else:
+                return (x[0] > means[0]) + 0 * sum(x[1:])  # fix size
+
+        yield ('Step', self.element(_step_fun))
+
+        # Indicator function on hypercube
+        def _cube_fun(x):
+            if getattr(self.domain, 'ndim', None) == 2:
+                result = True
+                for points, mean, std in zip(x, means, stds):
+                    result = np.logical_and(result, points < mean + std)
+                    result = np.logical_and(result, points > mean - std)
+            else:
+                result = np.logical_and(x < means + stds,
+                                        x > means - stds)
+            return result
+
+        yield ('Cube', self.element(_cube_fun))
+
+        # Indicator function on hypersphere
+        if self.domain.ndim > 1:  # Only if ndim > 1, don't duplicate cube
+            def _sphere_fun(x):
+                r = 0
+
+                for points, mean, std in zip(x, means, stds):
+                    r = r + (points - mean) ** 2 / std ** 2
+                return r < 1.0
+
+            yield ('Sphere', self.element(_sphere_fun))
+
+        # Gaussian function
+        def _gaussian_fun(x):
+            x = np.atleast_1d(x)
+            r2 = 0
+            for points, mean, std in zip(x, means, stds):
+                r2 = r2 + (points - mean) ** 2 / ((std / 2) ** 2)
+
+            return np.exp(-r2)
+
+        yield ('Gaussian', self.element(_gaussian_fun))
+
+        # Gradient in each dimensions
+        for dim in range(self.domain.ndim):
+            def _gradient_fun(x):
+                s = 0
+                for ind in range(len(x)):
+                    if ind == dim:
+                        s = s + (x[ind] - mins[ind]) / (maxs[ind] - mins[ind])
+                    else:
+                        s = s + x[ind] * 0  # Correct broadcast size
+
+                return s
+
+            yield ('grad {}'.format(dim), self.element(_gradient_fun))
+
+        # Gradient in all dimensions
+        if self.domain.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
+            def _all_gradient_fun(x):
+                s = 0
+                for ind in range(len(x)):
+                    s = s + (x[ind] - mins[ind]) / (maxs[ind] - mins[ind])
+
+                return s
+
+            yield ('Grad all', self.element(_all_gradient_fun))
+
+    @property
     def element_type(self):
         """`FunctionSpaceVector`"""
         return FunctionSpaceVector

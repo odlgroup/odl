@@ -175,7 +175,10 @@ class IntervalProd(Set):
         if inp is None:
             return self.midpoint
         elif inp in self:
-            return inp
+            if self.ndim == 1:
+                return float(inp)
+            else:
+                return np.asarray(inp)
         else:
             raise TypeError('inp {!r} not a valid element in {!r}.'
                             ''.format(inp, self))

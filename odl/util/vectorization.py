@@ -36,7 +36,7 @@ def is_valid_input_array(x, ndim=None):
     x = np.asarray(x)
 
     if ndim is None or ndim == 1:
-        return x.ndim == 1 or x.ndim == 2 and x.shape[0] == 1
+        return x.ndim == 1 and x.size > 1 or x.ndim == 2 and x.shape[0] == 1
     else:
         return x.ndim == 2 and x.shape[0] == ndim
 

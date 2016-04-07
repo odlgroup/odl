@@ -37,8 +37,8 @@ class OperatorTest(object):
     """Automated tests for `Operator` implementations.
 
     This class allows users to automatically test various
-    features of an Operator such as linearity and the
-    adjoint definition.
+    features of an Operator such as linearity, the adjoint definition and
+    definition of the derivative.
     """
 
     def __init__(self, operator, operator_norm=None, verbose=True):
@@ -218,7 +218,7 @@ class OperatorTest(object):
         name = 'Testing derivative is linear approximation'
 
         with FailCounter(name, "error = "
-                         "inf_c ||A(x+cp)-A(x)-A'(x)(cp)|| / c") as counter:
+                         "inf_c ||A(x+c*p)-A(x)-A'(x)(c*p)|| / c") as counter:
             for [name_x, x], [name_dx, dx] in samples(self.operator.domain,
                                                       self.operator.domain):
                 # Precompute some values
@@ -241,10 +241,10 @@ class OperatorTest(object):
                     else:
                         minerror = min(minerror, err)
 
-                    c /= 2.0
+                    c /= 10.0
 
                 if not derivative_ok:
-                    counter.fail('x={:15s} dx={:15s}, error={}'
+                    counter.fail('x={:15s} p={:15s}, error={}'
                                  ''.format(name_x, name_dx, minerror))
 
     def derivative(self):
@@ -270,7 +270,7 @@ class OperatorTest(object):
             return
 
         if self.operator.is_linear and deriv is self.operator:
-            print('A is linear and A.derivative == A')
+            print('A is linear and A.derivative is A')
             return
 
         self._derivative_convergence()
