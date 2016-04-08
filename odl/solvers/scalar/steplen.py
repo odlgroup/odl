@@ -148,6 +148,21 @@ class BacktrackingLineSearch(LineSearch):
             The computed step length
         """
         alpha = 1.0
+
+        # Since all comparisons with nan returns False, in order to not get a
+        # problem with nan-values we throw an error.
+        if self.function(x) == float('nan'):
+            raise NameError('ObjFunIsNanError')
+
+        # Next step is done in order to get a step length that does not give
+        # cost nan or infinite. Note that for convex functions, if the current
+        # point and the current point + alpha * direction does not give nan or
+        # inf this guarantees that any point along the line combinding these
+        # will not be inf either.
+        while (self.function(x + alpha * direction) == float('nan') or
+                self.function(x + alpha * direction) == float('inf')):
+            alpha *= self.tau
+
         fx = self.function(x)
         num_iter = 0
         while ((self.function(x + alpha * direction) >=
