@@ -470,6 +470,26 @@ class FnBase(NtuplesBase, LinearSpace):
         else:
             return self._astype(dtype)
 
+    @property
+    def examples(self):
+        """Return example random vectors."""
+        # Always return the same numbers
+        rand_state = np.random.get_state()
+        np.random.seed(1337)
+
+        yield ('Linspaced', self.element(np.linspace(0, 1, self.size)))
+
+        if self.is_rn:
+            yield ('Random noise', self.element(np.random.rand(self.size)))
+        elif self.is_cn:
+            rnd = np.random.rand(self.size) + np.random.rand(self.size) * 1j
+            yield ('Random noise', self.element(rnd))
+
+        yield ('Normally distributed random noise',
+               self.element(np.random.randn(self.size)))
+
+        np.random.set_state(rand_state)
+
     @abstractmethod
     def zero(self):
         """Create a vector of zeros."""

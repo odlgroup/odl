@@ -25,7 +25,7 @@ from builtins import object
 
 import numpy as np
 
-from odl.diagnostics.examples import vector_examples, samples
+from odl.diagnostics.examples import samples
 from odl.util.testutils import FailCounter
 
 
@@ -37,11 +37,11 @@ class OperatorTest(object):
     """Automated tests for `Operator` implementations.
 
     This class allows users to automatically test various
-    features of an Operator such as linearity and the
-    adjoint definition.
+    features of an Operator such as linearity, the adjoint definition and
+    definition of the derivative.
     """
 
-    def __init__(self, operator, operator_norm=None):
+    def __init__(self, operator, operator_norm=None, verbose=True):
         """Create a new instance
 
         Parameters
@@ -54,6 +54,7 @@ class OperatorTest(object):
         """
         self.operator = operator
         self.operator_norm = operator_norm
+        self.verbose = True
 
     def norm(self):
         """Estimate the operator norm of the operator.
@@ -90,12 +91,12 @@ class OperatorTest(object):
 
     def self_adjoint(self):
         """Verify (Ax, y) = (x, Ay)"""
-        print('\nVerifying the identity (Ax, y) = (x, Ay)')
+        name = 'Verifying the identity (Ax, y) = (x, Ay)'
 
         left_inner_vals = []
         right_inner_vals = []
 
-        with FailCounter('error = ||(Ax, y) - (x, Ay)|| / '
+        with FailCounter(name, 'error = ||(Ax, y) - (x, Ay)|| / '
                          '||A|| ||x|| ||y||') as counter:
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.range):
@@ -121,12 +122,12 @@ class OperatorTest(object):
 
     def _adjoint_definition(self):
         """Verify (Ax, y) = (x, A^T y)"""
-        print('\nVerifying the identity (Ax, y) = (x, A^T y)')
+        name = 'Verifying the identity (Ax, y) = (x, A^T y)'
 
         left_inner_vals = []
         right_inner_vals = []
 
-        with FailCounter('error = ||(Ax, y) - (x, A^T y)|| / '
+        with FailCounter(name, 'error = ||(Ax, y) - (x, A^T y)|| / '
                          '||A|| ||x|| ||y||') as counter:
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.range):
@@ -162,11 +163,11 @@ class OperatorTest(object):
             print('(A^*)^* == A')
             return
 
-        print('\nVerifying the identity Ax = (A^T)^T x')
+        name = '\nVerifying the identity Ax = (A^T)^T x'
 
-        with FailCounter('error = ||Ax - (A^T)^T x|| / '
+        with FailCounter(name, 'error = ||Ax - (A^T)^T x|| /'
                          '||A|| ||x||') as counter:
-            for [name_x, x] in vector_examples(self.operator.domain):
+            for [name_x, x] in self.operator.domain.examples:
                 opx = self.operator(x)
                 op_adj_adj_x = self.operator.adjoint.adjoint(x)
 
@@ -201,7 +202,7 @@ class OperatorTest(object):
             domain_range_ok = False
 
         if self.operator.range != self.operator.adjoint.domain:
-            print('*** ERROR: A.domain != A.adjoint.range ***')
+            print('*** ERROR: A.range != A.adjoint.domain ***')
             domain_range_ok = False
 
         if domain_range_ok:
@@ -213,27 +214,40 @@ class OperatorTest(object):
         self._adjoint_definition()
         self._adjoint_of_adjoint()
 
-    def _derivative_convergence(self, step):
-        print('\nTesting derivative is linear approximation')
+    def _derivative_convergence(self):
+        name = 'Testing derivative is linear approximation'
 
-        with FailCounter("error = ||A(x+c*dx)-A(x)-c*A'(x)(dx)|| / "
-                         "|c| ||dx|| ||A||") as counter:
+        with FailCounter(name, "error = "
+                         "inf_c ||A(x+c*p)-A(x)-A'(x)(c*p)|| / c") as counter:
             for [name_x, x], [name_dx, dx] in samples(self.operator.domain,
                                                       self.operator.domain):
+                # Precompute some values
                 deriv = self.operator.derivative(x)
+                derivdx = deriv(dx)
                 opx = self.operator(x)
 
-                exact_step = self.operator(x + dx * step) - opx
-                expected_step = deriv(dx * step)
-                denom = step * dx.norm() * self.operator_norm
-                error = (0 if denom == 0
-                         else (exact_step - expected_step).norm() / denom)
+                c = 1e-4  # initial step
+                derivative_ok = False
 
-                if error > 0.00001:
-                    counter.fail('x={:15s} dx={:15s} c={}: error={:6.5f}'
-                                 ''.format(name_x, name_dx, step, error))
+                minerror = float('inf')
+                while c > 1e-14:
+                    exact_step = self.operator(x + dx * c) - opx
+                    expected_step = c * derivdx
+                    err = (exact_step - expected_step).norm() / c
 
-    def derivative(self, step=0.0001):
+                    if err < 1e-4:
+                        derivative_ok = True
+                        break
+                    else:
+                        minerror = min(minerror, err)
+
+                    c /= 10.0
+
+                if not derivative_ok:
+                    counter.fail('x={:15s} p={:15s}, error={}'
+                                 ''.format(name_x, name_dx, minerror))
+
+    def derivative(self):
         """Verify that `Operator.derivative` works appropriately.
 
         References
@@ -255,25 +269,20 @@ class OperatorTest(object):
             print('Operator has no derivative')
             return
 
-        if self.operator_norm is None:
-            print('Cannot do tests before norm is calculated, run test.norm() '
-                  'or give norm as a parameter')
+        if self.operator.is_linear and deriv is self.operator:
+            print('A is linear and A.derivative is A')
             return
 
-        if deriv == self:
-            print('A is linear and A.derivative == A')
-            return
-
-        self._derivative_convergence(step)
+        self._derivative_convergence()
 
     def _scale_invariance(self):
-        print("\nCalculating invariance under scaling")
+        name = "Calculating invariance under scaling"
 
         # Test scaling
-        with FailCounter('error = ||A(c*x)-c*A(x)|| / '
+        with FailCounter(name, 'error = ||A(c*x)-c*A(x)|| / '
                          '|c| ||A|| ||x||') as counter:
-            for [name_x, x], scale in samples(self.operator.domain,
-                                              self.operator.domain.field):
+            for [name_x, x], [_, scale] in samples(self.operator.domain,
+                                                   self.operator.domain.field):
                 opx = self.operator(x)
                 scaled_opx = self.operator(scale * x)
 
@@ -286,10 +295,10 @@ class OperatorTest(object):
                                  ''.format(name_x, scale, error))
 
     def _addition_invariance(self):
-        print("\nCalculating invariance under addition")
+        name = "Calculating invariance under addition"
 
         # Test addition
-        with FailCounter('error = ||A(x+y) - A(x) - A(y)|| / '
+        with FailCounter(name, 'error = ||A(x+y) - A(x) - A(y)|| / '
                          '||A||(||x|| + ||y||)') as counter:
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.domain):
@@ -327,7 +336,7 @@ class OperatorTest(object):
 
     def run_tests(self):
         """Run all tests on this operator."""
-        print('\n== RUNNING ALL TESTS ==\n')
+        print('\n== RUNNING ALL TESTS ==')
         print('Operator = {}'.format(self.operator))
 
         self.norm()
@@ -346,5 +355,13 @@ class OperatorTest(object):
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
-    from odl.util.testutils import run_doctests
-    run_doctests()
+
+    import odl
+    X = odl.uniform_discr([0, 0], [1, 1], [3, 3])
+    # Linear operator
+    I = odl.IdentityOperator(X)
+    OperatorTest(I).run_tests()
+
+    # Nonlinear operator op(x) = x**4
+    op = odl.PowerOperator(X, 4)
+    OperatorTest(op).run_tests()

@@ -499,6 +499,19 @@ class Discretization(RawDiscretization, FnBase):
         self.dspace._divide(x1.ntuple, x2.ntuple, out.ntuple)
 
     @property
+    def examples(self):
+        """Return example functions in the space.
+
+        These are created by discretizing the examples in the underlying uspace
+
+        See Also
+        --------
+        FunctionSpace.examples
+        """
+        for name, vector in self.uspace.examples:
+            yield (name, self.element(vector))
+
+    @property
     def element_type(self):
         """ `DiscretizationVector` """
         return DiscretizationVector

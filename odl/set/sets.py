@@ -128,6 +128,17 @@ class Set(with_metaclass(ABCMeta, object)):
         """
         raise NotImplementedError("'element' method not implemented.")
 
+    @property
+    def examples(self):
+        """Returns a `generator` with elements in the set as name-value pairs.
+
+        Can return a finite set of examples or an infinite set.
+
+        Optional to implement, intended to be used for diagnostics.
+        By default, the generator yields ``('element()', self.element())``.
+        """
+        yield ('element()', self.element())
+
 
 class EmptySet(Set):
 
@@ -246,6 +257,11 @@ class Strings(Set):
         else:
             return ' ' * self.length
 
+    @property
+    def examples(self):
+        """Return example strings 'hello', 'world'."""
+        return [('hello', 'hello'), ('world', 'world')]
+
     def __str__(self):
         """Return ``str(self)``."""
         return 'Strings({})'.format(self.length)
@@ -325,6 +341,12 @@ class ComplexNumbers(Field):
         else:
             return complex(0.0, 0.0)
 
+    @property
+    def examples(self):
+        """Return examples of complex numbers."""
+        numbers = [-1.0, 0.5, 0.0 + 2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0]
+        return [(str(x), x) for x in numbers]
+
     def __str__(self):
         """Return ``str(self)``."""
         return "ComplexNumbers"
@@ -384,6 +406,12 @@ class RealNumbers(Field):
         else:
             return 0.0
 
+    @property
+    def examples(self):
+        """Return examples of real numbers."""
+        numbers = [-1.0, 0.5, 0.0, 0.01, 1.0]
+        return [(str(x), x) for x in numbers]
+
     def __str__(self):
         """Return ``str(self)``."""
         return "RealNumbers"
@@ -440,6 +468,12 @@ class Integers(Set):
             return int(inp)
         else:
             return 0
+
+    @property
+    def examples(self):
+        """Return examples of integers."""
+        numbers = [-1, 0, 1]
+        return [(str(x), x) for x in numbers]
 
     def __str__(self):
         """Return ``str(self)``."""
