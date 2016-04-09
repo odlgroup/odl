@@ -27,7 +27,7 @@ from future.utils import raise_from
 import numpy as np
 
 from odl.operator.operator import Operator
-from odl.set.sets import RealNumbers
+from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.fspace import FunctionSpace
 from odl.space.pspace import ProductSpace
 
@@ -56,52 +56,56 @@ class PointwiseOperator(Operator):
     ProductSpace
     """
 
-    def __init__(self, domain, ran_size, linear=False):
+    def __init__(self, domain, range, linear=False):
         """Initialize a new instance.
 
         Parameters
         ----------
-        domain : `ProductSpace` of `Discretization`
-            Space of vector fields on which the operator acts.
-            It has to be a product space of identical discretized
-            function spaces, i.e. a power space.
-        ran_size : positive `int`
-            Number of components of the range
+        domain, range : {`ProductSpace`, `Discretization`}
+            Spaces of vector fields between which the operator maps.
+            They have to be either power spaces of the same base space
+            ``X`` or the base space itself (only one of them).
         linear : `bool`, optional
             If `True`, assume that the operator is linear.
         """
-        if not isinstance(domain, ProductSpace):
-            raise TypeError('domain {!r} is not a ProductSpace instance.'
-                            ''.format(domain))
-        if not domain.is_power_space:
-            raise TypeError('domain {!r} is not a power space.'.format(domain))
+        if isinstance(domain, ProductSpace):
+            if not domain.is_power_space:
+                raise TypeError('domain {!r} is not a power space.'
+                                ''.format(domain))
 
-        if not isinstance(domain[0].uspace, FunctionSpace):
-            raise TypeError('domain component {!r} is not a function space '
-                            'discretization.'.format(domain[0]))
+            if not isinstance(domain[0].uspace, FunctionSpace):
+                raise TypeError('domain base space {!r} is not a function '
+                                'space discretization.'.format(domain[0]))
 
-        ran_size, ran_size_in = int(ran_size), ran_size
-        if ran_size <= 0:
-            raise ValueError('number of range components must be positive, '
-                             'got {}.'.format(ran_size_in))
-        self._ran_size = ran_size
-
-        # Range will be just 'X' if there is only one component
-        if self.ran_size == 1:
-            ran = domain[0]
+            dom_base = domain[0]
         else:
-            ran = ProductSpace(domain[0], self.ran_size)
-        super().__init__(domain=domain, range=ran, linear=linear)
+            dom_base = domain
+
+        if isinstance(range, ProductSpace):
+            if not range.is_power_space:
+                raise TypeError('range {!r} is not a power space.'
+                                ''.format(range))
+
+            if not isinstance(range[0].uspace, FunctionSpace):
+                raise TypeError('range base space {!r} is not a function '
+                                'space discretization.'.format(range[0]))
+
+            ran_base = range[0]
+        else:
+            ran_base = range
+
+        if dom_base != ran_base:
+            raise ValueError('domain and range have different base spaces '
+                             '({!r} != {!r}).'
+                             ''.format(domain[0], range[0]))
+
+        super().__init__(domain=domain, range=range, linear=linear)
+        self._base_space = dom_base
 
     @property
-    def discr_fspace(self):
+    def base_space(self):
         """The base space ``X`` of this operator's domain and range."""
-        return self.domain[0]
-
-    @property
-    def ran_size(self):
-        """Number of component spaces in the range."""
-        return self._ran_size
+        return self._base_space
 
 
 class PointwiseNorm(PointwiseOperator):
@@ -126,12 +130,12 @@ class PointwiseNorm(PointwiseOperator):
     shape, are supported.
     """
 
-    def __init__(self, domain, exponent=None, weight=None):
+    def __init__(self, vfspace, exponent=None, weight=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        domain : `ProductSpace`
+        vfspace : `ProductSpace` of `Discretization`
             Space of vector fields on which the operator acts.
             It has to be a product space of identical discretized
             function spaces, i.e. a power space. Its
@@ -150,12 +154,16 @@ class PointwiseNorm(PointwiseOperator):
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
         """
-        super().__init__(domain, ran_size=1, linear=False)
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('vector field space {!r} is not a ProductSpace '
+                            'instance.'.format(vfspace))
+        super().__init__(domain=vfspace, range=vfspace[0], linear=False)
+
         if len(self.domain.shape) != 1:
             raise NotImplementedError
 
         if exponent is None:
-            if domain.exponent is None:
+            if self.domain.exponent is None:
                 raise ValueError('cannot determine exponent from {}.'
                                  ''.format(self.domain))
             self._exponent = self.domain.exponent
@@ -273,7 +281,7 @@ class PointwiseNorm(PointwiseOperator):
     def _abs_pow_ufunc(self, fi, out):
         """Compute |F_i(x)|^p point-wise and write to ``out``."""
         # Optimization for a very common case
-        if self.exponent == 2.0 and self.discr_fspace.field == RealNumbers():
+        if self.exponent == 2.0 and self.base_space.field == RealNumbers():
             out.multiply(fi, fi)
         else:
             fi.ufunc.absolute(out=out)
@@ -297,12 +305,12 @@ class PointwiseInner(PointwiseOperator):
     positive integer ``d``.
     """
 
-    def __init__(self, domain, vecfield, weight=None):
+    def __init__(self, vfspace, vecfield, weight=None, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        domain : `ProductSpace`
+        vfspace : `ProductSpace`
             Space of vector fields on which the operator acts.
             It has to be a product space of identical discretized
             function spaces, i.e. a power space.
@@ -318,26 +326,25 @@ class PointwiseInner(PointwiseOperator):
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
         """
-        super().__init__(domain, ran_size=1, linear=False)
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('vector field space {!r} is not a ProductSpace '
+                            'instance.'.format(vfspace))
+        super().__init__(domain=vfspace, range=vfspace[0], linear=True)
+
         if len(self.domain.shape) != 1:
             raise NotImplementedError
 
-        if self.domain.field == RealNumbers():
-            self._vecfield_conj = self.domain.element(vecfield)
-        else:
-            if not hasattr(self.discr_fspace.element_type, 'conj'):
-                raise NotImplementedError(
-                    'base space element type {!r} does not implement conj() '
-                    'method required for complex inner products.'
-                    ''.format(self.discr_fspace.element_type))
-            try:
-                self._vecfield_conj = self.domain.element(
-                    [self.discr_fspace.element(vfi).conj()
-                     for vfi in vecfield])
-            except TypeError as err:
-                raise_from(TypeError(
-                    'unable to create an element of {!r} from {!r}.'
-                    ''.format(self.domain, vecfield)), err)
+        # Bail out if the space is complex but we cannot take the complex
+        # conjugate.
+        if (self.domain.field == ComplexNumbers() and
+                not hasattr(self.base_space.element_type, 'conj')):
+            raise NotImplementedError(
+                'base space element type {!r} does not implement conj() '
+                'method required for complex inner products.'
+                ''.format(self.base_space.element_type))
+
+        # Store vector field and complex conjugate if desired
+        self._vecfield = self.domain.element(vecfield)
 
         # Handle weighting, including sanity checks
         if weight is None:
@@ -363,17 +370,11 @@ class PointwiseInner(PointwiseOperator):
                                  'entries.'.format(weight))
         self._is_weighted = (not np.all(np.array_equiv(self.weights, 1.0)))
 
+    @property
     def vecfield(self):
         """Fixed vector field ``G`` of this inner product.
-
-        Internally, the complex conjugate of the vector field is
-        stored for efficiency reasons, so for a complex domain, this
-        method does not run in constant time.
         """
-        if self.domain.field == RealNumbers():
-            return self._vecfield_conj
-        else:
-            return self._vecfield_conj.conj()
+        return self._vecfield
 
     @property
     def weights(self):
@@ -387,7 +388,11 @@ class PointwiseInner(PointwiseOperator):
 
     def _call(self, vf, out):
         """Implement ``self(vf, out)``."""
-        out.multiply(vf[0], self._vecfield_conj[0])
+        if self.domain.field == ComplexNumbers():
+            out.multiply(vf[0], self._vecfield[0].conj())
+        else:
+            out.multiply(vf[0], self._vecfield[0])
+
         if self.is_weighted:
             out *= self.weights[0]
 
@@ -395,13 +400,109 @@ class PointwiseInner(PointwiseOperator):
             return
 
         tmp = self.range.element()
-        for fi, gi_conj, w in zip(vf[1:], self._vecfield_conj[1:],
-                                  self.weights[1:]):
-            tmp.multiply(fi, gi_conj)
+        for fi, gi, w in zip(vf[1:], self._vecfield[1:],
+                             self.weights[1:]):
+
+            if self.domain.field == ComplexNumbers():
+                tmp.multiply(fi, gi.conj())
+            else:
+                tmp.multiply(fi, gi)
+
             if self.is_weighted:
                 tmp *= w
             out += tmp
 
+    @property
+    def adjoint(self):
+        """Adjoint of the pointwise inner product operator."""
+        return PointwiseInnerAdjoint(
+            sspace=self.base_space, vecfield=self.vecfield,
+            vfspace=self.domain, weight=self.weights)
+
+
+class PointwiseInnerAdjoint(PointwiseInner):
+
+    """Adjoint of the point-wise inner product operator.
+
+    The adjoint of the inner product operator is a mapping
+
+        ``A^* : X --> X^d``.
+
+    If the vector field space ``X^d`` is weighted by a vector ``v``,
+    the adjoint, applied to a function ``h`` from ``X`` is the vector
+    field
+
+        ``x --> h(x) * (w / v) * G(x)``,
+
+    where ``G`` and ``w`` are the vector field and weighting from the
+    inner product operator, resp., and all multiplications are understood
+    component-wise.
+    """
+
+    def __init__(self, sspace, vecfield, vfspace=None, weight=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        sspace : `Discretization`
+            Space of discretized scalar-valued functions on which the
+            operator acts
+        vecfield : domain `element-like`
+            Vector field of the point-wise inner product operator
+        vfspace : `ProductSpace` of `Discretization`, optional
+            Space of vector fields to which the operator maps. It must
+            be a power space with ``sspace`` as base space.
+            This option is intended to enforce an operator range
+            with a certain weighting.
+            Default: ``ProductSpace(space, len(vecfield), weight=weight)``
+        weight : `array-like` or `float`, optional
+            Weighting array or constant of the inner product operator.
+            If an array is given, its length must be equal to
+            ``len(vecfield)``, and all entries must be positive. A
+            provided constant must be positive.
+            By default, the weights are is taken from
+            ``range.weighting`` if applicable. Note that this excludes
+            unusual weightings with custom inner product, norm or dist.
+        """
+        if vfspace is None:
+            vfspace = ProductSpace(sspace, len(vecfield), weight=weight)
+        else:
+            if not isinstance(vfspace, ProductSpace):
+                raise TypeError('vector field space {!r} is not a '
+                                'ProductSpace instance.'.format(vfspace))
+            if vfspace[0] != sspace:
+                raise ValueError('base space of the range is different from '
+                                 'the given scalar space ({!r} != {!r}).'
+                                 ''.format(vfspace[0], sspace))
+        super().__init__(vfspace, vecfield, weight=weight)
+
+        # Switch domain and range
+        self._domain, self._range = self._range, self._domain
+
+        # Get weighting from range
+        if hasattr(self.range.weighting, 'vector'):
+            self._ran_weights = self.range.weighting.vector
+        elif hasattr(self.range.weighting, 'const'):
+            self._ran_weights = (self.range.weighting.const *
+                                 np.ones(len(self.range)))
+        else:
+            raise ValueError('weighting scheme {!r} of the range does '
+                             'not define a weighting vector or constant.'
+                             ''.format(self.range.weighting))
+
+    def _call(self, f, out):
+        """Implement ``self(vf, out)``."""
+        for vfi, oi, vi, wi in zip(self.vecfield, out,
+                                   self._ran_weights, self.weights):
+            oi.multiply(vfi, f)
+            if vi != wi:
+                oi *= wi / vi
+
+    @property
+    def adjoint(self):
+        """Adjoint of the adjoint, the original operator."""
+        return PointwiseInner(vfspace=self.range, vecfield=self.vecfield,
+                              weight=self.weights)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

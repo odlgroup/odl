@@ -26,7 +26,8 @@ import pytest
 import numpy as np
 
 import odl
-from odl.discr.tensor_ops import PointwiseNorm, PointwiseInner
+from odl.discr.tensor_ops import (
+    PointwiseNorm, PointwiseInner, PointwiseInnerAdjoint)
 from odl.space.pspace import ProductSpace
 from odl.util.testutils import all_almost_equal, all_equal, almost_equal
 
@@ -50,8 +51,7 @@ def test_pointwise_norm_init_properties():
 
     # Make sure the code runs and test the properties
     pwnorm = PointwiseNorm(vfspace)
-    assert pwnorm.discr_fspace == fspace
-    assert pwnorm.ran_size == 1
+    assert pwnorm.base_space == fspace
     assert all_equal(pwnorm.weights, [1])
     assert not pwnorm.is_weighted
     assert pwnorm.exponent == 1.0
@@ -70,8 +70,7 @@ def test_pointwise_norm_init_properties():
 
     # Make sure the code runs and test the properties
     pwnorm = PointwiseNorm(vfspace)
-    assert pwnorm.discr_fspace == fspace
-    assert pwnorm.ran_size == 1
+    assert pwnorm.base_space == fspace
     assert all_equal(pwnorm.weights, [1, 1, 1])
     assert not pwnorm.is_weighted
     assert pwnorm.exponent == 1.0
@@ -202,8 +201,7 @@ def test_pointwise_inner_init_properties():
 
     # Make sure the code runs and test the properties
     pwinner = PointwiseInner(vfspace, vfspace.one())
-    assert pwinner.discr_fspace == fspace
-    assert pwinner.ran_size == 1
+    assert pwinner.base_space == fspace
     assert all_equal(pwinner.weights, [1, 1, 1])
     assert not pwinner.is_weighted
     repr(pwinner)
@@ -309,7 +307,7 @@ def test_pointwise_inner_complex():
     assert all_almost_equal(out, true_inner.reshape(-1))
 
 
-def test_pointwise_inner_weighted(exponent):
+def test_pointwise_inner_weighted():
     fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2))
     vfspace = ProductSpace(fspace, 3)
     array = np.array([[[-1, -3],
@@ -338,6 +336,98 @@ def test_pointwise_inner_weighted(exponent):
     out = fspace.element()
     pwinner(func, out=out)
     assert all_almost_equal(out, true_inner.reshape(-1))
+
+
+def test_pointwise_inner_adjoint():
+    # 1d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
+    vfspace = ProductSpace(fspace, 1)
+    array = np.array([[[-1, -3],
+                       [2, 0]]])
+    pwinner = PointwiseInner(vfspace, vecfield=array)
+
+    testarr = np.array([[1 + 1j, 2],
+                        [3, 4 - 2j]])
+
+    true_inner_adj = testarr[None, :, :] * array
+
+    testfunc = fspace.element(testarr)
+    testfunc_pwinner_adj = pwinner.adjoint(testfunc)
+    assert all_almost_equal(testfunc_pwinner_adj,
+                            true_inner_adj.reshape([1, -1]))
+
+    out = vfspace.element()
+    pwinner.adjoint(testfunc, out=out)
+    assert all_almost_equal(out, true_inner_adj.reshape([1, -1]))
+
+    # 3d
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
+    vfspace = ProductSpace(fspace, 3)
+    array = np.array([[[-1 - 1j, -3],
+                       [2, 2j]],
+                      [[-1j, 0],
+                       [0, 1]],
+                      [[-1, 1 + 2j],
+                       [1, 1]]])
+    pwinner = PointwiseInner(vfspace, vecfield=array)
+
+    testarr = np.array([[1 + 1j, 2],
+                        [3, 4 - 2j]])
+
+    true_inner_adj = testarr[None, :, :] * array
+
+    testfunc = fspace.element(testarr)
+    testfunc_pwinner_adj = pwinner.adjoint(testfunc)
+    assert all_almost_equal(testfunc_pwinner_adj,
+                            true_inner_adj.reshape([3, -1]))
+
+    out = vfspace.element()
+    pwinner.adjoint(testfunc, out=out)
+    assert all_almost_equal(out, true_inner_adj.reshape([3, -1]))
+
+
+def test_pointwise_inner_adjoint_weighted():
+    # Weighted product space only
+    fspace = odl.uniform_discr([0, 0], [1, 1], (2, 2), dtype=complex)
+    vfspace = ProductSpace(fspace, 3, weight=[2, 4, 6])
+    array = np.array([[[-1 - 1j, -3],
+                       [2, 2j]],
+                      [[-1j, 0],
+                       [0, 1]],
+                      [[-1, 1 + 2j],
+                       [1, 1]]])
+    pwinner = PointwiseInner(vfspace, vecfield=array)
+
+    testarr = np.array([[1 + 1j, 2],
+                        [3, 4 - 2j]])
+
+    true_inner_adj = testarr[None, :, :] * array  # same as unweighted case
+
+    testfunc = fspace.element(testarr)
+    testfunc_pwinner_adj = pwinner.adjoint(testfunc)
+    assert all_almost_equal(testfunc_pwinner_adj,
+                            true_inner_adj.reshape([3, -1]))
+
+    out = vfspace.element()
+    pwinner.adjoint(testfunc, out=out)
+    assert all_almost_equal(out, true_inner_adj.reshape([3, -1]))
+
+    # Using different weighting in the inner product
+    pwinner = PointwiseInner(vfspace, vecfield=array, weight=[4, 8, 12])
+
+    testarr = np.array([[1 + 1j, 2],
+                        [3, 4 - 2j]])
+
+    true_inner_adj = 2 * testarr[None, :, :] * array  # w / v = (2, 2, 2)
+
+    testfunc = fspace.element(testarr)
+    testfunc_pwinner_adj = pwinner.adjoint(testfunc)
+    assert all_almost_equal(testfunc_pwinner_adj,
+                            true_inner_adj.reshape([3, -1]))
+
+    out = vfspace.element()
+    pwinner.adjoint(testfunc, out=out)
+    assert all_almost_equal(out, true_inner_adj.reshape([3, -1]))
 
 
 if __name__ == '__main__':
