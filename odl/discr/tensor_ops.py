@@ -22,7 +22,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
-from future.utils import raise_from
 
 import numpy as np
 
@@ -287,6 +286,38 @@ class PointwiseNorm(PointwiseOperator):
             fi.ufunc.absolute(out=out)
             out.ufunc.power(self.exponent, out=out)
 
+    def derivative(self, vf):
+        """Derivative of the point-wise norm operator at ``vf``.
+
+        The derivative at ``F`` of the point-wise norm operator ``N``
+        with finite exponent ``p`` and weights ``w`` is the pointwise
+        inner product with the vector field
+
+            ``x --> N(F)(x)^(1-p) * [ F_j(x) * |F_j(x)|^(p-2) ]_j``.
+
+        Note that this is not well-defined for ``F = 0``. If ``p < 2``,
+        any zero component will result in a singularity.
+
+        Parameters
+        ----------
+        vf : domain `element-like`
+            Vector field ``F`` at which to evaluate the derivative
+
+        Returns
+        -------
+        deriv : `PointwiseInner`
+            Derivative operator at the given point ``vf``
+        """
+        vf = self.domain.element(vf)
+        vf_pwnorm_fac = self(vf) ** (self.exponent - 1)
+
+        inner_vf = vf.copy()
+
+        for gi in inner_vf:
+            gi /= vf_pwnorm_fac * gi ** (self.exponent - 2)
+
+        return PointwiseInner(self.domain, inner_vf, weight=self.weights)
+
 
 class PointwiseInner(PointwiseOperator):
 
@@ -305,7 +336,7 @@ class PointwiseInner(PointwiseOperator):
     positive integer ``d``.
     """
 
-    def __init__(self, vfspace, vecfield, weight=None, **kwargs):
+    def __init__(self, vfspace, vecfield, weight=None):
         """Initialize a new instance.
 
         Parameters
