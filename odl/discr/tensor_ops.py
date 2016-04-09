@@ -307,7 +307,22 @@ class PointwiseNorm(PointwiseOperator):
         -------
         deriv : `PointwiseInner`
             Derivative operator at the given point ``vf``
+
+        Raises
+        ------
+        NotImplementedError
+            * if the vector field space is complex, since the derivative
+              is not linear in that case
+            * if the exponent is ``inf``
         """
+        if self.domain.field == ComplexNumbers():
+            raise NotImplementedError('operator not Frechet-differentiable '
+                                      'on a complex space.')
+
+        if self.exponent == float('inf'):
+            raise NotImplementedError('operator not Frechet-differentiable '
+                                      'for exponent = inf.')
+
         vf = self.domain.element(vf)
         vf_pwnorm_fac = self(vf) ** (self.exponent - 1)
 
