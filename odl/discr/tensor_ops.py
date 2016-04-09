@@ -31,7 +31,7 @@ from odl.space.fspace import FunctionSpace
 from odl.space.pspace import ProductSpace
 
 
-__all__ = ('PointwiseOperator', 'PointwiseNorm')
+__all__ = ('PointwiseOperator', 'PointwiseNorm', 'PointwiseInner')
 
 
 class PointwiseOperator(Operator):
