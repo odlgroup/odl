@@ -980,9 +980,7 @@ def test_custom_inner(fn):
     # Using 3 places (single precision default) since the result is always
     # double even if the underlying computation was only single precision
     assert almost_equal(w.dist(x, y), true_dist, places=3)
-    assert almost_equal(w.dist(x, x), 0, places=3)
     assert almost_equal(w_d.dist(x, y), true_dist)
-    assert almost_equal(w_d.dist(x, x), 0)
 
     with pytest.raises(TypeError):
         CudaFnCustomInnerProduct(1)
@@ -1012,7 +1010,6 @@ def test_custom_norm(fn):
 
     true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
 
     with pytest.raises(TypeError):
         CudaFnCustomNorm(1)
@@ -1043,7 +1040,6 @@ def test_custom_dist(fn):
 
     true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
 
     with pytest.raises(TypeError):
         CudaFnCustomDist(1)
