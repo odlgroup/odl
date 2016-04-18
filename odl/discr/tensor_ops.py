@@ -109,7 +109,7 @@ class PointwiseOperator(Operator):
 
 class PointwiseNorm(PointwiseOperator):
 
-    """Take the point-wise norm of a tensor field.
+    """Take the point-wise norm of a vector field.
 
     This operator takes the (weighted) ``p``-norm
 
@@ -119,14 +119,11 @@ class PointwiseNorm(PointwiseOperator):
 
         ``||F(x)|| = max_j( w_j * |F_j(x)| )``
 
-    for ``p = inf``, where ``F`` is a tensor field. This implies that
+    for ``p = inf``, where ``F`` is a vector field. This implies that
     the `Operator.domain` is a power space of a discretized function
     space. For example, if ``X`` is a `DiscreteLp` space, then
     ``ProductSpace(X, d)`` is a valid domain for any positive integer
     ``d``.
-
-    Currently only vector fields, i.e. product spaces with lenght-1
-    shape, are supported.
     """
 
     def __init__(self, vfspace, exponent=None, weight=None):
@@ -324,7 +321,8 @@ class PointwiseNorm(PointwiseOperator):
                                       'for exponent = inf.')
 
         vf = self.domain.element(vf)
-        vf_pwnorm_fac = self(vf) ** (self.exponent - 1)
+        vf_pwnorm_fac = self(vf)
+        vf_pwnorm_fac **= (self.exponent - 1)
 
         inner_vf = vf.copy()
 
@@ -389,7 +387,6 @@ class PointwiseInner(PointwiseOperator):
                 'method required for complex inner products.'
                 ''.format(self.base_space.element_type))
 
-        # Store vector field and complex conjugate if desired
         self._vecfield = self.domain.element(vecfield)
 
         # Handle weighting, including sanity checks
@@ -418,8 +415,7 @@ class PointwiseInner(PointwiseOperator):
 
     @property
     def vecfield(self):
-        """Fixed vector field ``G`` of this inner product.
-        """
+        """Fixed vector field ``G`` of this inner product."""
         return self._vecfield
 
     @property
