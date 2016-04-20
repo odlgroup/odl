@@ -34,7 +34,7 @@ from odl.tomo.backends import (
     astra_cpu_forward_projector, astra_cpu_back_projector,
     astra_cuda_forward_projector, astra_cuda_back_projector)
 
-_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda')
+_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'scikit')
 
 
 __all__ = ('RayTransform', 'RayBackProjection')
@@ -56,10 +56,11 @@ class RayTransform(Operator):
         geometry : `Geometry`
             Geometry of the transform, containing information about
             the operator range
-        impl : {'astra_cpu', 'astra_cuda'}, optional
+        impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
             Implementation back-end for the transform. Supported back-ends:
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
+            'scikit': scikit-image, only 2D parallel
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator
             range.
@@ -186,10 +187,11 @@ class RayBackProjection(Operator):
         geometry : `Geometry`
             The geometry of the transform, contains information about
             the operator domain
-        impl : {'astra_cpu', 'astra_cuda'}, optional
+                    impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
             Implementation back-end for the transform. Supported back-ends:
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
+            'scikit': scikit-image, only 2D parallel
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator range.
             Default: 'nearest'
