@@ -56,89 +56,55 @@ references therein.
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
 
 import numpy as np
-import scipy
-import scipy.ndimage
 import odl
 
+# Discrete reconstruction space: discretized functions on the rectangle
+# [-20, 20]^2 with 300 samples per dimension.
+reco_space = odl.uniform_discr(
+    min_corner=[-20, -20], max_corner=[20, 20], nsamples=[300, 300],
+    dtype='float32')
 
-# Define the forward operator of the inverse problem in question
-class Convolution(odl.Operator):
-    def __init__(self, space, kernel, adjkernel):
-        self.kernel = kernel
-        self.adjkernel = adjkernel
-        super().__init__(space, space, linear=True)
+# Make a parallel beam geometry with flat detector
+# Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
+angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
+# Detector: uniformly sampled, n = 558, min = -30, max = 30
+detector_partition = odl.uniform_partition(-30, 30, 558)
+geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
-    def _call(self, rhs, out):
-        scipy.ndimage.convolve(rhs, self.kernel, output=out.asarray(),
-                               mode='wrap')
-        return out
+# The implementation of the ray transform to use, options:
+# 'astra_cpu', 'astra_cuda'.  Require astra tomography to be installed.
+# 'scikit'.                   Requires scikit-image (can be installed by
+#                             running ``pip install scikit-image``).
+impl = 'scikit'
 
-    @property
-    def adjoint(self):
-        return Convolution(self.domain, self.adjkernel, self.kernel)
-
-
-# Gaussian kernel for the convolution operator
-def kernel(x):
-    mean = [0.1, 0.5]
-    std = [0.1, 0.1]
-    k = np.exp(-(((x[0] - mean[0]) / std[0]) ** 2 +
-                 ((x[1] - mean[1]) / std[1]) ** 2))
-    return k
-
-
-# Kernel for the adjoint of the convolution operator
-def adjkernel(x):
-    return kernel((-x[0], -x[1]))
-
-
-# Continuous definition of problem
-cont_space = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
-
-# Create a kernel space which has twice the extent of the image space
-kernel_space = odl.FunctionSpace(cont_space.domain - cont_space.domain)
-
-# Discretization parameters
-n = 50
-npoints = np.array([n + 1, n + 1])
-npoints_kernel = np.array([2 * n + 1, 2 * n + 1])
-
-# Discretized spaces
-discr_space = odl.uniform_discr_fromspace(cont_space, npoints)
-discr_kernel_space = odl.uniform_discr_fromspace(kernel_space, npoints_kernel)
-
-# Discretize the functions
-disc_kernel = discr_kernel_space.element(kernel)
-disc_adjkernel = discr_kernel_space.element(adjkernel)
-
-# Initialize convolution operator
-convolution = Convolution(discr_space, disc_kernel, disc_adjkernel)
+# ray transform aka forward projection.
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 
 # Optional: Run diagnostics to assure the adjoint is properly implemented
 # odl.diagnostics.OperatorTest(conv_op).run_tests()
 
 # Create phantom
-discr_phantom = odl.util.phantom.shepp_logan(discr_space, modified=True)
+discr_phantom = odl.util.shepp_logan(reco_space, modified=True)
 
 # Create vector of convolved phantom
-data = convolution(discr_phantom)
+data = ray_trafo(discr_phantom)
+data += odl.util.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
 # Set up the Chambolle-Pock solver:
 
 # Initialize gradient operator
-gradient = odl.Gradient(discr_space, method='forward')
+gradient = odl.Gradient(reco_space, method='forward')
 
 # Column vector of two operators
-op = odl.BroadcastOperator(convolution, gradient)
+op = odl.BroadcastOperator(ray_trafo, gradient)
 
 # Choose a starting point
 x = op.domain.one()
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 100)
+op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 5)
 print('Norm of the product space operator: {}'.format(op_norm))
 
 # Create the proximal operator for unconstrained primal variable
@@ -147,7 +113,8 @@ proximal_primal = odl.solvers.proximal_zero(op.domain)
 # Create proximal operators for the dual variable
 
 # l2-data matching
-prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(discr_space, g=data)
+prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(ray_trafo.range,
+                                                           g=data)
 
 # TV-regularization i.e. the l1-norm
 prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(
