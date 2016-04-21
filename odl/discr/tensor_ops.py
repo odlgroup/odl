@@ -149,6 +149,41 @@ class PointwiseNorm(PointwiseOperator):
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
+
+        Examples
+        --------
+        We make a tiny vector field space in 2D and create the
+        standard point-wise norm operator on that space. The operator
+        maps a vector field to a scalar function:
+
+        >>> import odl
+        >>> spc = odl.uniform_discr([-1, -1], [1, 1], (2, 2))
+        >>> vfspace = odl.ProductSpace(spc, 2)
+        >>> pw_norm = PointwiseNorm(vfspace)
+        >>> pw_norm.range == spc
+        True
+
+        Now we can calculate the 2-norm in each point:
+
+        >>> x = vfspace.element([[[1, 2], [0, 3]],
+        ...                      [[0, 0], [2, 4]]])
+        >>> print(pw_norm(x))
+        [[1.0, 2.0],
+         [2.0, 5.0]]
+
+        We can change the exponent either in the vector field space
+        or in the operator directly:
+
+        >>> vfspace = odl.ProductSpace(spc, 2, exponent=1)
+        >>> pw_norm = PointwiseNorm(vfspace)
+        >>> print(pw_norm(x))
+        [[1.0, 2.0],
+         [2.0, 7.0]]
+        >>> vfspace = odl.ProductSpace(spc, 2)
+        >>> pw_norm = PointwiseNorm(vfspace, exponent=1)
+        >>> print(pw_norm(x))
+        [[1.0, 2.0],
+         [2.0, 7.0]]
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('vector field space {!r} is not a ProductSpace '
@@ -369,6 +404,29 @@ class PointwiseInner(PointwiseOperator):
             By default, the weights are is taken from
             ``domain.weighting``. Note that this excludes unusual
             weightings with custom inner product, norm or dist.
+
+        Examples
+        --------
+        We make a tiny vector field space in 2D and create the
+        point-wise inner product operator with a fixed vector field.
+        The operator maps a vector field to a scalar function:
+
+        >>> import odl
+        >>> spc = odl.uniform_discr([-1, -1], [1, 1], (2, 2))
+        >>> vfspace = odl.ProductSpace(spc, 2)
+        >>> fixed_vf = np.array([[[0, 1], [-1, 1]],
+        ...                      [[1, -1], [1, -1]]])
+        >>> pw_inner = PointwiseInner(vfspace, fixed_vf)
+        >>> pw_inner.range == spc
+        True
+
+        Now we can calculate the inner product in each point:
+
+        >>> x = vfspace.element([[[1, 2], [0, 3]],
+        ...                      [[0, 0], [2, 4]]])
+        >>> print(pw_inner(x))
+        [[0.0, 2.0],
+         [2.0, -1.0]]
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('vector field space {!r} is not a ProductSpace '
