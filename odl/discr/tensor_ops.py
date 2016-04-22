@@ -27,14 +27,14 @@ import numpy as np
 
 from odl.operator.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
-from odl.space.fspace import FunctionSpace
+from odl.set.space import LinearSpace
 from odl.space.pspace import ProductSpace
 
 
-__all__ = ('PointwiseOperator', 'PointwiseNorm', 'PointwiseInner')
+__all__ = ('PointwiseTensorFieldOperator', 'PointwiseNorm', 'PointwiseInner')
 
 
-class PointwiseOperator(Operator):
+class PointwiseTensorFieldOperator(Operator):
 
     """Abstract operator for point-wise tensor field manipulations.
 
@@ -60,7 +60,7 @@ class PointwiseOperator(Operator):
 
         Parameters
         ----------
-        domain, range : {`ProductSpace`, `Discretization`}
+        domain, range : {`ProductSpace`, `LinearSpace`}
             Spaces of vector fields between which the operator maps.
             They have to be either power spaces of the same base space
             ``X`` or the base space itself (only one of them).
@@ -72,31 +72,35 @@ class PointwiseOperator(Operator):
                 raise TypeError('domain {!r} is not a power space.'
                                 ''.format(domain))
 
-            if not isinstance(domain[0].uspace, FunctionSpace):
-                raise TypeError('domain base space {!r} is not a function '
-                                'space discretization.'.format(domain[0]))
+            if domain.size == 0:
+                raise ValueError('domain is a product space of size 0.')
 
             dom_base = domain[0]
-        else:
+        elif isinstance(domain, LinearSpace):
             dom_base = domain
+        else:
+            raise TypeError('domain {!r} is not a ProductSpace or LinearSpace '
+                            'instance.'.format(domain))
 
         if isinstance(range, ProductSpace):
             if not range.is_power_space:
                 raise TypeError('range {!r} is not a power space.'
                                 ''.format(range))
 
-            if not isinstance(range[0].uspace, FunctionSpace):
-                raise TypeError('range base space {!r} is not a function '
-                                'space discretization.'.format(range[0]))
+            if range.size == 0:
+                raise ValueError('range is a product space of size 0.')
 
             ran_base = range[0]
-        else:
+        elif isinstance(range, LinearSpace):
             ran_base = range
+        else:
+            raise TypeError('range {!r} is not a ProductSpace or LinearSpace '
+                            'instance.'.format(range))
 
         if dom_base != ran_base:
             raise ValueError('domain and range have different base spaces '
                              '({!r} != {!r}).'
-                             ''.format(domain[0], range[0]))
+                             ''.format(dom_base, ran_base))
 
         super().__init__(domain=domain, range=range, linear=linear)
         self._base_space = dom_base
@@ -107,7 +111,7 @@ class PointwiseOperator(Operator):
         return self._base_space
 
 
-class PointwiseNorm(PointwiseOperator):
+class PointwiseNorm(PointwiseTensorFieldOperator):
 
     """Take the point-wise norm of a vector field.
 
@@ -131,16 +135,15 @@ class PointwiseNorm(PointwiseOperator):
 
         Parameters
         ----------
-        vfspace : `ProductSpace` of `Discretization`
+        vfspace : `ProductSpace`
             Space of vector fields on which the operator acts.
-            It has to be a product space of identical discretized
-            function spaces, i.e. a power space. Its
-            `ProductSpace.shape` must have length 1.
+            It has to be a product space of identical spaces, i.e. a
+            power space.
         exponent : non-zero `float`, optional
             Exponent of the norm in each point. Values between
             0 and 1 are currently not supported due to numerical
             instability.
-            Default: ``domain.exponent``
+            Default: ``vfspace.exponent``
         weight : `array-like` or `float`, optional
             Weighting array or constant for the norm. If an array is
             given, its length must be equal to ``domain.size``, and
@@ -190,16 +193,16 @@ class PointwiseNorm(PointwiseOperator):
                             'instance.'.format(vfspace))
         super().__init__(domain=vfspace, range=vfspace[0], linear=False)
 
-        if len(self.domain.shape) != 1:
-            raise NotImplementedError
+        # Need to check for product space shape once higher order tensors
+        # are implemented
 
         if exponent is None:
             if self.domain.exponent is None:
                 raise ValueError('cannot determine exponent from {}.'
                                  ''.format(self.domain))
             self._exponent = self.domain.exponent
-        elif 0 <= exponent < 1:
-            raise ValueError('exponent between 0 and 1 not allowed.')
+        elif exponent < 1:
+            raise ValueError('exponent smaller than 1 not allowed.')
         else:
             self._exponent = float(exponent)
 
@@ -225,7 +228,7 @@ class PointwiseNorm(PointwiseOperator):
                     not np.all(np.isfinite(self.weights))):
                 raise ValueError('weighting array {} contains invalid '
                                  'entries.'.format(weight))
-        self._is_weighted = (not np.all(np.array_equiv(self.weights, 1.0)))
+        self._is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
     def exponent(self):
@@ -244,9 +247,6 @@ class PointwiseNorm(PointwiseOperator):
 
     def _call(self, f, out):
         """Implement ``self(f, out)``."""
-        if len(self.domain.shape) > 1:
-            raise NotImplementedError
-
         if self.exponent == 1.0:
             self._call_vecfield_1(f, out)
         elif self.exponent == float('inf'):
@@ -367,7 +367,7 @@ class PointwiseNorm(PointwiseOperator):
         return PointwiseInner(self.domain, inner_vf, weight=self.weights)
 
 
-class PointwiseInner(PointwiseOperator):
+class PointwiseInner(PointwiseTensorFieldOperator):
 
     """Take the point-wise norm of a vector field.
 
@@ -391,8 +391,8 @@ class PointwiseInner(PointwiseOperator):
         ----------
         vfspace : `ProductSpace`
             Space of vector fields on which the operator acts.
-            It has to be a product space of identical discretized
-            function spaces, i.e. a power space.
+            It has to be a product space of identical spaces, i.e. a
+            power space.
         vecfield : domain `element-like`
             Vector field with which to calculate the point-wise inner
             product of an input vector field
@@ -433,9 +433,6 @@ class PointwiseInner(PointwiseOperator):
                             'instance.'.format(vfspace))
         super().__init__(domain=vfspace, range=vfspace[0], linear=True)
 
-        if len(self.domain.shape) != 1:
-            raise NotImplementedError
-
         # Bail out if the space is complex but we cannot take the complex
         # conjugate.
         if (self.domain.field == ComplexNumbers() and
@@ -469,7 +466,7 @@ class PointwiseInner(PointwiseOperator):
                     not np.all(np.isfinite(self.weights))):
                 raise ValueError('weighting array {} contains invalid '
                                  'entries.'.format(weight))
-        self._is_weighted = (not np.all(np.array_equiv(self.weights, 1.0)))
+        self._is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
     def vecfield(self):
@@ -544,12 +541,11 @@ class PointwiseInnerAdjoint(PointwiseInner):
 
         Parameters
         ----------
-        sspace : `Discretization`
-            Space of discretized scalar-valued functions on which the
-            operator acts
+        sspace : `LinearSpace`
+            "Scalar" space on which the operator acts
         vecfield : domain `element-like`
             Vector field of the point-wise inner product operator
-        vfspace : `ProductSpace` of `Discretization`, optional
+        vfspace : `ProductSpace`, optional
             Space of vector fields to which the operator maps. It must
             be a power space with ``sspace`` as base space.
             This option is intended to enforce an operator range
