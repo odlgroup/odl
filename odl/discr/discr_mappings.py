@@ -270,8 +270,9 @@ vectorization_guide.html>`_ for a detailed introduction.
         if out is None:
             out = func(mesh).ravel(order=self.order)
         else:
-            func(mesh, out=out.asarray().reshape(self.grid.shape,
-                                                 order=self.order))
+            out[:] = np.ravel(
+                func(mesh, out=out.asarray().reshape(self.grid.shape,
+                                                     order=self.order)))
         return out
 
     def __repr__(self):
