@@ -32,7 +32,8 @@ from odl.discr.grid import sparse_meshgrid
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
-from odl.util.testutils import all_almost_equal, all_equal, almost_equal
+from odl.util.testutils import (
+    all_almost_equal, all_equal, almost_equal, skip_if_no_cuda)
 
 
 def test_nearest_interpolation_1d_complex():
@@ -344,6 +345,20 @@ def test_collocation_interpolation_identity():
         ident_values = coll_op_f(interp_op_f(values))
         assert all_almost_equal(ident_values, values)
 
+
+@skip_if_no_cuda
+def test_collocation_cuda():
+    rect = odl.Rectangle([0, 0], [1, 1])
+    part = odl.uniform_partition_fromintv(rect, [4, 2])
+    space = odl.FunctionSpace(rect)
+    dspace = odl.CudaRn(part.size)
+
+    coll_op = PointCollocation(space, part, dspace)
+    interp_op = LinearInterpolation(space, part, dspace)
+
+    values = np.arange(1, 9, dtype='float64')
+    ident_values = coll_op(interp_op(values))
+    assert all_almost_equal(ident_values, values)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

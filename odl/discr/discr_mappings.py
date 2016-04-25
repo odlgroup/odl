@@ -270,8 +270,9 @@ vectorization_guide.html>`_ for a detailed introduction.
         if out is None:
             out = func(mesh).ravel(order=self.order)
         else:
-            func(mesh, out=out.asarray().reshape(self.grid.shape,
-                                                 order=self.order))
+            out[:] = np.ravel(
+                func(mesh, out=out.asarray().reshape(self.grid.shape,
+                                                     order=self.order)))
         return out
 
     def __repr__(self):
@@ -425,7 +426,7 @@ class NearestInterpolation(FunctionSetMapping):
 
             interpolator = _NearestInterpolator(
                 self.grid.coord_vectors,
-                x.data.reshape(self.grid.shape, order=self.order),
+                x.asarray().reshape(self.grid.shape, order=self.order),
                 variant=self._variant,
                 input_type=input_type)
 
@@ -509,7 +510,7 @@ class LinearInterpolation(FunctionSetMapping):
 
             interpolator = _LinearInterpolator(
                 self.grid.coord_vectors,
-                x.data.reshape(self.grid.shape, order=self.order),
+                x.asarray().reshape(self.grid.shape, order=self.order),
                 input_type=input_type)
 
             return interpolator(arg, out=out)
@@ -643,7 +644,7 @@ class PerAxisInterpolation(FunctionSetMapping):
 
             interpolator = _PerAxisInterpolator(
                 self.grid.coord_vectors,
-                x.data.reshape(self.grid.shape, order=self.order),
+                x.asarray().reshape(self.grid.shape, order=self.order),
                 schemes=self.schemes, nn_variants=self.nn_variants,
                 input_type=input_type)
 
