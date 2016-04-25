@@ -206,6 +206,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         # Handle weighting, including sanity checks
         if weight is None:
+            # TODO: find a more robust way of getting the weighs as a vector
             if hasattr(self.domain.weighting, 'vector'):
                 self._weights = self.domain.weighting.vector
             elif hasattr(self.domain.weighting, 'const'):
@@ -262,10 +263,10 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             return
 
         tmp = self.range.element()
-        for fi, w in zip(vf[1:], self.weights[1:]):
+        for fi, wi in zip(vf[1:], self.weights[1:]):
             fi.ufunc.absolute(out=tmp)
             if self.is_weighted:
-                tmp *= w
+                tmp *= wi
             out += tmp
 
     def _call_vecfield_inf(self, vf, out):
@@ -278,10 +279,10 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             return
 
         tmp = self.range.element()
-        for fi, w in zip(vf[1:], self.weights[1:]):
-            fi.ufunc.absolute(out=tmp)
+        for vfi, wi in zip(vf[1:], self.weights[1:]):
+            vfi.ufunc.absolute(out=tmp)
             if self.is_weighted:
-                tmp *= w
+                tmp *= wi
             out.ufunc.maximum(tmp, out=out)
 
     def _call_vecfield_p(self, vf, out):
@@ -299,10 +300,10 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
             out *= self.weights[0]
 
         tmp = self.range.element()
-        for fi, w in zip(vf[1:], self.weights[1:]):
+        for fi, wi in zip(vf[1:], self.weights[1:]):
             self._abs_pow_ufunc(fi, out=tmp)
             if self.is_weighted:
-                tmp *= w
+                tmp *= wi
             out += tmp
 
         out.ufunc.power(1 / self.exponent, out=out)
@@ -494,16 +495,16 @@ class PointwiseInner(PointwiseTensorFieldOperator):
             return
 
         tmp = self.range.element()
-        for fi, gi, w in zip(vf[1:], self._vecfield[1:],
-                             self.weights[1:]):
+        for vfi, gi, wi in zip(vf[1:], self.vecfield[1:],
+                               self.weights[1:]):
 
             if self.domain.field == ComplexNumbers():
-                tmp.multiply(fi, gi.conj())
+                tmp.multiply(vfi, gi.conj())
             else:
-                tmp.multiply(fi, gi)
+                tmp.multiply(vfi, gi)
 
             if self.is_weighted:
-                tmp *= w
+                tmp *= wi
             out += tmp
 
     @property
@@ -585,11 +586,11 @@ class PointwiseInnerAdjoint(PointwiseInner):
 
     def _call(self, f, out):
         """Implement ``self(vf, out)``."""
-        for vfi, oi, vi, wi in zip(self.vecfield, out,
-                                   self._ran_weights, self.weights):
+        for vfi, oi, ran_wi, dom_wi in zip(self.vecfield, out,
+                                           self._ran_weights, self.weights):
             oi.multiply(vfi, f)
-            if vi != wi:
-                oi *= wi / vi
+            if not np.isclose(ran_wi, dom_wi):
+                oi *= dom_wi / ran_wi
 
     @property
     def adjoint(self):
