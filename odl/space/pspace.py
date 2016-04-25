@@ -306,6 +306,12 @@ class ProductSpace(LinearSpace):
         return self._size
 
     @property
+    def shape(self):
+        """Number of spaces per axis."""
+        # Currently supporting only 1d product spaces
+        return (self.size,)
+
+    @property
     def spaces(self):
         """A tuple containing all spaces."""
         return self._spaces
@@ -518,7 +524,8 @@ class ProductSpace(LinearSpace):
             return True
         else:
             return (isinstance(other, ProductSpace) and
-                    len(self) == len(other) and
+                    self.shape == other.shape and
+                    self.weighting == other.weighting and
                     all(x == y for x, y in zip(self.spaces,
                                                other.spaces)))
 
