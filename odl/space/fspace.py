@@ -342,7 +342,7 @@ class FunctionSetVector(Operator):
             scalar_out = False
             # Avoid operations on tuples like x * 2 by casting to array
             if ndim == 1:
-                x = np.asarray(x)
+                x = x[0][None, ...]
         elif is_valid_input_array(x, ndim):
             x = np.asarray(x)
             out_shape = out_shape_from_array(x)
