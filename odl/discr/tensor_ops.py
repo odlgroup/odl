@@ -31,7 +31,7 @@ from odl.set.space import LinearSpace
 from odl.space.pspace import ProductSpace
 
 
-__all__ = ('PointwiseTensorFieldOperator', 'PointwiseNorm', 'PointwiseInner')
+__all__ = ('PointwiseNorm', 'PointwiseInner')
 
 
 class PointwiseTensorFieldOperator(Operator):
