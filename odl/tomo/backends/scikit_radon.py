@@ -1,9 +1,21 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Apr 20 10:48:55 2016
+# Copyright 2014-2016 The ODL development group
+#
+# This file is part of ODL.
+#
+# ODL is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ODL is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-@author: jonasadler
-"""
+"""Radon transform (ray transform) in 2d using skimage.transform"""
 
 from odl.discr import uniform_discr_frompartition, uniform_partition
 import numpy as np
@@ -62,18 +74,18 @@ def scikit_radon_forward(volume, geometry, range, out=None):
 
     Parameters
     ----------
-    volume : DiscreteLpVector
+    volume : `DiscreteLpVector`
         The volume to project
-    geometry : Geometry
+    geometry : `Geometry`
         The projection geometry to use
-    range : DiscreteLp
+    range : `DiscreteLp`
         range of this projection (sinogram space)
-    out : range element, optional
+    out : ``range`` element, optional
         An element in range that the result should be written to
 
     Returns
     -------
-    sinogram : range element
+    sinogram : ``range`` element
         The sinogram given by the projection
     """
 
@@ -102,18 +114,18 @@ def scikit_radon_back_projector(sinogram, geometry, range, out=None):
 
     Parameters
     ----------
-    sinogram : DiscreteLpVector
+    sinogram : `DiscreteLpVector`
         The sinogram (projections) to backproject
-    geometry : Geometry
+    geometry : `Geometry`
         The projection geometry to use
-    range : DiscreteLp
+    range : `DiscreteLp`
         range of this projection (volume space)
-    out : range element, optional
+    out : ``range`` element, optional
         An element in range that the result should be written to
 
     Returns
     -------
-    sinogram : range element
+    sinogram : ``range`` element
         The sinogram given by the projection
     """
     theta = scikit_theta(geometry)
@@ -131,7 +143,7 @@ def scikit_radon_back_projector(sinogram, geometry, range, out=None):
     out[:] = iradon(scikit_sinogram.asarray().T, theta,
                     output_size=range.shape[0], filter=None)
 
-    # Empirical value, gives correct scaling
+    # Empirically determined value, gives correct scaling
     scale = 4.0
     out *= scale
 

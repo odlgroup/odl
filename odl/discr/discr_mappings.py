@@ -209,7 +209,8 @@ class PointCollocation(FunctionSetMapping):
             ``(N,)``, where N is the total number of grid points. The
             data type must be the same as in the ``dspace`` of this
             mapping.
-        kwargs : Additional keyword arguments, optional
+        kwargs :
+            Additional keyword arguments, optional
 
         Returns
         -------

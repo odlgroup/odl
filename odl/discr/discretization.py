@@ -315,7 +315,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
         ----------
         ufunc : ``self.space.uspace`` element
             The continuous function that should be samplingicted.
-        kwargs : keyword arguments, optional
+        kwargs :
             Additional arugments for the sampling operator implementation
 
         Examples

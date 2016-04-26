@@ -100,8 +100,9 @@ class DiscreteLp(Discretization):
             raise ValueError('Partition {} is not a subset of the function '
                              'domain {}'.format(partition, fspace.domain))
         if fspace.out_dtype != dspace.dtype:
-            raise ValueError('fspace.out_dtyp {} does not match dspace.dtype '
-                             '{}'.format(fspace.out_dtype, dspace.dtype))
+            raise ValueError('out_dtype of Function Space {} does not match '
+                             'dspace dtype {}.'
+                             ''.format(fspace.out_dtype, dspace.dtype))
 
         try:
             # Got single string

@@ -17,14 +17,8 @@
 
 """Example using the ray transform with 2d parallel beam geometry."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
 import odl
-
 
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
@@ -39,7 +33,7 @@ angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
 detector_partition = odl.uniform_partition(-30, 30, 558)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
-# ray transform aka forward projection. We use ASTRA CUDA backend.
+# ray transform aka forward projection. We use 'scikit' backend.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='scikit')
 
 # Create a discrete Shepp-Logan phantom (modified version)

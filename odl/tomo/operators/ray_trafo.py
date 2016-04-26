@@ -28,7 +28,7 @@ import numpy as np
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
 from odl.space.fspace import FunctionSpace
-from odl.tomo.geometry import Geometry, Parallel2dGeometry, Flat1dDetector
+from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
@@ -61,7 +61,7 @@ class RayTransform(Operator):
             Implementation back-end for the transform. Supported back-ends:
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
-            'scikit': scikit-image, only 2D parallel
+            'scikit': scikit-image, only 2D parallel with square domain
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator
             range.
@@ -82,7 +82,7 @@ class RayTransform(Operator):
 
         # TODO: sanity checks between impl and discretization impl
         if impl.startswith('astra'):
-            # Todo, these should be moved somewhere else
+            # TODO: these should be moved somewhere else
             if not ASTRA_AVAILABLE:
                 raise ValueError('ASTRA back-end not available.')
             if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
@@ -216,7 +216,7 @@ class RayBackProjection(Operator):
             Implementation back-end for the transform. Supported back-ends:
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
-            'scikit': scikit-image, only 2D parallel
+            'scikit': scikit-image, only 2D parallel with square domain
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator range.
             Default: 'nearest'

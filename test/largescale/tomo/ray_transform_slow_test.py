@@ -29,36 +29,40 @@ import numpy as np
 # Internal
 import odl
 import odl.tomo as tomo
+from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
+                                     skip_if_no_scikit)
 
 
 pytestmark = odl.util.skip_if_no_largescale
 
 
 # Find the valid projectors
-projectors = []
-if tomo.ASTRA_AVAILABLE:
-    projectors += ['par2d astra_cpu uniform',
-                   'par2d astra_cpu random',
-                   'cone2d astra_cpu uniform',
-                   'cone2d astra_cpu random'
-                   ]
-if tomo.ASTRA_CUDA_AVAILABLE:
-    projectors += ['par2d astra_cuda uniform',
-                   'par2d astra_cuda random',
-                   'cone2d astra_cuda uniform',
-                   'cone2d astra_cuda random',
-                   'par3d astra_cuda uniform',
-                   'par3d astra_cuda random',
-                   'cone3d astra_cuda uniform',
-                   'cone3d astra_cuda random',
-                   'helical astra_cuda uniform',
-                   'helical astra_cuda random',
-                   ]
-if tomo.SCIKIT_IMAGE_AVAILABLE:
-    projectors += ['par2d scikit uniform']
+projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
+              skip_if_no_astra('par2d astra_cpu nonuniform'),
+              skip_if_no_astra('par2d astra_cpu random'),
+              skip_if_no_astra('cone2d astra_cpu uniform'),
+              skip_if_no_astra('cone2d astra_cpu nonuniform'),
+              skip_if_no_astra('cone2d astra_cpu random'),
+              skip_if_no_astra_cuda('par2d astra_cuda uniform'),
+              skip_if_no_astra_cuda('par2d astra_cuda nonuniform'),
+              skip_if_no_astra_cuda('par2d astra_cuda random'),
+              skip_if_no_astra_cuda('cone2d astra_cuda uniform'),
+              skip_if_no_astra_cuda('cone2d astra_cuda nonuniform'),
+              skip_if_no_astra_cuda('cone2d astra_cuda random'),
+              skip_if_no_astra_cuda('par3d astra_cuda uniform'),
+              skip_if_no_astra_cuda('par3d astra_cuda nonuniform'),
+              skip_if_no_astra_cuda('par3d astra_cuda random'),
+              skip_if_no_astra_cuda('cone3d astra_cuda uniform'),
+              skip_if_no_astra_cuda('cone3d astra_cuda nonuniform'),
+              skip_if_no_astra_cuda('cone3d astra_cuda random'),
+              skip_if_no_astra_cuda('helical astra_cuda uniform'),
+              skip_if_no_scikit('par2d scikit uniform')]
+
+projector_ids = ['geom={}, impl={}, angles={}'
+                 ''.format(*p.args[1].split()) for p in projectors]
 
 
-@pytest.fixture(scope="module", params=projectors)
+@pytest.fixture(scope="module", params=projectors, ids=projector_ids)
 def projector(request):
 
     n_angles = 200
@@ -68,11 +72,20 @@ def projector(request):
     if angle == 'uniform':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
     elif angle == 'random':
+        # Linearly spaced with random noise
         min_pt = 2 * (2.0 * np.pi) / n_angles
         max_pt = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
-        points = np.sort(np.random.rand(n_angles)) * (max_pt - min_pt) + min_pt
+        points = np.linspace(min_pt, max_pt, n_angles)
+        points += np.random.rand(n_angles) * (max_pt - min_pt) / (5 * n_angles)
         agrid = odl.TensorGrid(points)
-        apart = odl.RectPartition(odl.Interval(min_pt, max_pt), agrid)
+        apart = odl.RectPartition(odl.Interval(0, 2 * np.pi), agrid)
+    elif angle == 'nonuniform':
+        # Angles spaced quadratically
+        min_pt = 2 * (2.0 * np.pi) / n_angles
+        max_pt = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
+        points = np.linspace(min_pt ** 0.5, max_pt ** 0.5, n_angles) ** 2
+        agrid = odl.TensorGrid(points)
+        apart = odl.RectPartition(odl.Interval(0, 2 * np.pi), agrid)
     else:
         raise ValueError('angle not valid')
 
