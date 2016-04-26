@@ -27,7 +27,7 @@ import numpy as np
 import odl
 
 
-# --- Set-up of geometry of problem --- #
+# --- Set-up geometry of the problem --- #
 
 
 # Discrete reconstruction space: discretized functions on the rectangle
@@ -49,10 +49,10 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # --- Create FilteredBackProjection (FBP) operator --- #
 
 
-# ray transform aka forward projection. We use ASTRA CUDA backend.
+# Ray transform aka forward projection. We use the ASTRA CUDA backend.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
-# fourier transform in detector direction
+# Fourier transform in detector direction
 fourier = odl.trafos.FourierTransform(ray_trafo.range, axes=[1])
 
 # Create ramp in the detector direction
