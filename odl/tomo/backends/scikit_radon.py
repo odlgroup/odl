@@ -27,8 +27,8 @@ def scikit_sinogram_space(geometry, volume_space, sinogram_space):
 
     padded_size = int(np.ceil(volume_space.shape[0] * np.sqrt(2)))
     det_width = volume_space.domain.extent()[0] * np.sqrt(2)
-    scikit_detector_part = uniform_partition(-det_width/2.0 - 0.142,
-                                             det_width/2.0,
+    scikit_detector_part = uniform_partition(-det_width / 2.0,
+                                             det_width / 2.0,
                                              padded_size)
 
     scikit_range_part = geometry.motion_partition.insert(1,

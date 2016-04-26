@@ -384,14 +384,15 @@ class FunctionSetVector(Operator):
                         raise TypeError
                     out = np.atleast_1d(np.squeeze(out))
                 except (TypeError, IndexError):
-                    # TypeError is raised if a meshgrid was used but the function
-                    # expected an array (1d only). In this case we try again with
-                    # the first meshgrid vector.
+                    # TypeError is raised if a meshgrid was used but the
+                    # function expected an array (1d only). In this case we try
+                    # again with the first meshgrid vector.
                     # IndexError is raised in expressions like x[x > 0] since
                     # "x > 0" evaluates to 'True', i.e. 1, and that index is
                     # out of range for a meshgrid tuple of length 1 :-). To get
-                    # the real errors with indexing, we check again for the same
-                    # scenario (scalar output when not valid) as in the first case.
+                    # the real errors with indexing, we check again for the
+                    # same scenario (scalar output when not valid) as in the
+                    # first case.
                     out = self._call(x[0], **kwargs)
                     if np.ndim(out) == 0 and not scalar_out:
                         raise ValueError('invalid scalar output.')
