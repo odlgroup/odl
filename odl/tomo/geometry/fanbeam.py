@@ -113,6 +113,11 @@ class FanFlatGeometry(DivergentBeamGeometry):
         """Detector circle radius of this geometry."""
         return self._det_radius
 
+    @property
+    def angles(self):
+        """The discrete angles given in this geometry"""
+        return self.motion_grid.coord_vectors[0]
+
     def src_position(self, angle):
         """Return the source position at ``angle``.
 

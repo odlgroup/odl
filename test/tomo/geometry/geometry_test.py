@@ -137,6 +137,8 @@ def test_fanflat():
     # Initialize
     geom = odl.tomo.FanFlatGeometry(apart, dpart, src_rad, det_rad)
 
+    assert all_almost_equal(geom.angles, apart.points().ravel())
+
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
 
@@ -177,6 +179,8 @@ def test_circular_cone_flat():
     # Initialize
     geom = odl.tomo.CircularConeFlatGeometry(apart, dpart, src_rad, det_rad)
 
+    assert all_almost_equal(geom.angles, apart.points().ravel())
+
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)
 
@@ -211,6 +215,8 @@ def test_helical_cone_flat():
     # Initialize
     geom = odl.tomo.HelicalConeFlatGeometry(apart, dpart,
                                             src_rad, det_rad, pitch)
+
+    assert all_almost_equal(geom.angles, apart.points().ravel())
 
     with pytest.raises(ValueError):
         geom.det_refpoint(2 * full_angle)

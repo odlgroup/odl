@@ -72,6 +72,11 @@ class ParallelGeometry(Geometry):
                              'expected ({},).'
                              ''.format(self._det_init_pos.shape, self.ndim))
 
+    @property
+    def angles(self):
+        """The discrete angles given in this geometry"""
+        return self.motion_grid.coord_vectors[0]
+
     def det_refpoint(self, angles):
         """Return the position of the detector ref. point at ``angles``.
 
