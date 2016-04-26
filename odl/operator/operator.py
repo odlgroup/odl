@@ -963,6 +963,8 @@ class Operator(object):
         else:
             return NotImplemented
 
+    __div__ = __truediv__
+
     def __neg__(self):
         """Return ``-self``."""
         return -1 * self
