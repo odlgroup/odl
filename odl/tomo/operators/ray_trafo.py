@@ -212,7 +212,7 @@ class RayBackProjection(Operator):
         geometry : `Geometry`
             The geometry of the transform, contains information about
             the operator domain
-                    impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
+        impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
             Implementation back-end for the transform. Supported back-ends:
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
