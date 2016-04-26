@@ -23,7 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 from abc import ABCMeta, abstractmethod
-from math import ceil, log
+import numpy as np
 
 from odl.util.utility import with_metaclass
 
@@ -126,7 +126,7 @@ class BacktrackingLineSearch(LineSearch):
         # Use a default value that allows the shortest step to be < 0.0001
         # times the original step length
         if max_num_iter is None:
-            self.max_num_iter = ceil(log(0.0001 / self.tau))
+            self.max_num_iter = np.ceil(np.log(0.0001 / self.tau))
         else:
             self.max_num_iter = max_num_iter
 
@@ -149,12 +149,34 @@ class BacktrackingLineSearch(LineSearch):
         """
         alpha = 1.0
         fx = self.function(x)
+
+        if np.isnan(fx) or np.isinf(fx):
+            raise ValueError('function returned invalid value {} in starting '
+                             'point ({}).'.format(fx, x))
+
         num_iter = 0
-        while ((self.function(x + alpha * direction) >=
-                fx + alpha * dir_derivative * self.discount) and
-               num_iter <= self.max_num_iter):
+        while True:
+            if num_iter > self.max_num_iter:
+                raise ValueError('number of iterations exceeded maximum: {} '
+                                 'without finding a sufficient decrease.'
+                                 ''.format(self.max_num_iter))
+
+            fval = self.function(x + alpha * direction)
+
+            if np.isnan(fval):
+                # We do not want to compare against NaN below, and NaN should
+                # indicate a user error.
+                raise ValueError('function returned NaN in point '
+                                 ' point ({})'.format(x + alpha * direction))
+
+            if (not np.isinf(fval) and  # short circuit if fval is infite
+                    fval <= fx + alpha * dir_derivative * self.discount):
+                # Stop iterating if the value decreases sufficiently.
+                break
+
             num_iter += 1
             alpha *= self.tau
+
         self.total_num_iter += num_iter
         return alpha
 

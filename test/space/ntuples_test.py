@@ -1185,7 +1185,6 @@ def test_matrix_dist_using_inner(fn):
     # With free function
     w_dist = weighted_dist(mat, use_inner=True)
     assert almost_equal(w_dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0, places=3)
 
 
 def test_vector_init(exponent):
@@ -1344,10 +1343,9 @@ def test_vector_dist_using_inner(fn):
     w = FnVectorWeighting(weight_vec)
 
     true_dist = np.linalg.norm(np.sqrt(weight_vec) * (xarr - yarr))
-    assert almost_equal(w.dist(x, y), true_dist)
     # Using 3 places (single precision default) since the result is always
     # double even if the underlying computation was only single precision
-    assert almost_equal(w.dist(x, x), 0, places=3)
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
@@ -1489,7 +1487,6 @@ def test_const_dist_using_inner(fn):
     # Using 3 places (single precision default) since the result is always
     # double even if the underlying computation was only single precision
     assert almost_equal(w.dist(x, y), true_dist, places=3)
-    assert almost_equal(w.dist(x, x), 0)
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
@@ -1547,9 +1544,7 @@ def test_custom_inner(fn):
     # Using 3 places (single precision default) since the result is always
     # double even if the underlying computation was only single precision
     assert almost_equal(w.dist(x, y), true_dist, places=3)
-    assert almost_equal(w.dist(x, x), 0, places=3)
     assert almost_equal(w_d.dist(x, y), true_dist)
-    assert almost_equal(w_d.dist(x, x), 0)
 
     with pytest.raises(TypeError):
         FnCustomInnerProduct(1)
@@ -1579,7 +1574,6 @@ def test_custom_norm(fn):
 
     true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
 
     with pytest.raises(TypeError):
         FnCustomNorm(1)
@@ -1610,7 +1604,6 @@ def test_custom_dist(fn):
 
     true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
 
     with pytest.raises(TypeError):
         FnCustomDist(1)

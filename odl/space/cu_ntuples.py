@@ -187,9 +187,8 @@ class CudaNtuples(NtuplesBase):
                     # Array-like input. Need to go through a NumPy array
                     arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
                     if arr.shape != (self.size,):
-                        raise ValueError('input shape {} not broadcastable to '
-                                         'shape ({},).'.format(arr.shape,
-                                                               self.size))
+                        raise ValueError('expected input shape {}, got {}.'
+                                         ''.format((self.size,), arr.shape))
                     elem = self.element()
                     elem[:] = arr
                     return elem
