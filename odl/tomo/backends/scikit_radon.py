@@ -53,8 +53,6 @@ def clamped_interpolation(scikit_range, sinogram):
     def interpolation_wrapper(x):
         x = (x[0], np.maximum(min_x, np.minimum(max_x, x[1])))
 
-        print(x[0].min(), x[0].max(), x[1].min(), x[1].max())
-        print(min_x, max_x)
         return sinogram.interpolation(x)
     return interpolation_wrapper
 
