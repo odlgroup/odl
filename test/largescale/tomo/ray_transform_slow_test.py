@@ -35,30 +35,59 @@ pytestmark = odl.util.skip_if_no_largescale
 
 
 # Find the valid projectors
-projectors = ['helical cuda']
+projectors = []
 if tomo.ASTRA_AVAILABLE:
-    projectors += ['par2d cpu', 'cone2d cpu']
+    projectors += ['par2d astra_cpu uniform',
+                   'par2d astra_cpu random',
+                   'cone2d astra_cpu uniform',
+                   'cone2d astra_cpu random'
+                   ]
 if tomo.ASTRA_CUDA_AVAILABLE:
-    projectors += ['par2d cuda', 'cone2d cuda',
-                   'par3d cuda', 'cone3d cuda']
+    projectors += ['par2d astra_cuda uniform',
+                   'par2d astra_cuda random',
+                   'cone2d astra_cuda uniform',
+                   'cone2d astra_cuda random',
+                   'par3d astra_cuda uniform',
+                   'par3d astra_cuda random',
+                   'cone3d astra_cuda uniform',
+                   'cone3d astra_cuda random',
+                   'helical astra_cuda uniform',
+                   'helical astra_cuda random',
+                   ]
+if tomo.SCIKIT_IMAGE_AVAILABLE:
+    projectors += ['par2d scikit uniform']
 
 
 @pytest.fixture(scope="module", params=projectors)
 def projector(request):
-    geom, variant = request.param.split()
+
+    n_angles = 200
+
+    geom, impl, angle = request.param.split()
+
+    if angle == 'uniform':
+        apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
+    elif angle == 'random':
+        min_pt = 2 * (2.0 * np.pi) / n_angles
+        max_pt = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
+        points = np.sort(np.random.rand(n_angles)) * (max_pt - min_pt) + min_pt
+        agrid = odl.TensorGrid(points)
+        apart = odl.RectPartition(odl.Interval(min_pt, max_pt), agrid)
+    else:
+        raise ValueError('angle not valid')
+
     if geom == 'par2d':
         # Discrete reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
                                              [100, 100], dtype='float32')
 
         # Geometry
-        apart = odl.uniform_partition(0, 2 * np.pi, 200)
         dpart = odl.uniform_partition(-30, 30, 200)
         geom = tomo.Parallel2dGeometry(apart, dpart)
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
-                                 impl='astra_' + variant)
+                                 impl=impl)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
@@ -66,13 +95,12 @@ def projector(request):
                                              [100, 100, 100], dtype='float32')
 
         # Geometry
-        apart = odl.uniform_partition(0, 2 * np.pi, 200)
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
         geom = tomo.Parallel3dAxisGeometry(apart, dpart, axis=[1, 0, 0])
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
-                                 impl='astra_' + variant)
+                                 impl=impl)
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
@@ -80,14 +108,13 @@ def projector(request):
                                              [100, 100], dtype='float32')
 
         # Geometry
-        apart = odl.uniform_partition(0, 2 * np.pi, 200)
         dpart = odl.uniform_partition(-30, 30, 200)
         geom = tomo.FanFlatGeometry(apart, dpart,
                                     src_radius=200, det_radius=100)
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
-                                 impl='astra_' + variant)
+                                 impl=impl)
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
@@ -95,14 +122,13 @@ def projector(request):
                                              [100, 100, 100], dtype='float32')
 
         # Geometry
-        apart = odl.uniform_partition(0, 2 * np.pi, 200)
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
         geom = tomo.CircularConeFlatGeometry(
             apart, dpart, src_radius=200, det_radius=100, axis=[1, 0, 0])
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
-                                 impl='astra_' + variant)
+                                 impl=impl)
 
     elif geom == 'helical':
         # Discrete reconstruction space
@@ -110,6 +136,7 @@ def projector(request):
                                              [100, 100, 100], dtype='float32')
 
         # Geometry
+        # TODO: angles
         n_angle = 700
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angle)
         dpart = odl.uniform_partition([-30, -3], [30, 3], [200, 20])
@@ -118,7 +145,7 @@ def projector(request):
 
         # Ray transform
         return tomo.RayTransform(discr_reco_space, geom,
-                                 impl='astra_' + variant)
+                                 impl=impl)
     else:
         raise ValueError('param not valid')
 
