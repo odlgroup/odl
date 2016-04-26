@@ -156,6 +156,10 @@ def test_fanflat():
     assert all_almost_equal(rot_mat.dot([1, 0]), [0, 1])
     assert all_almost_equal(rot_mat.dot([0, 1]), [-1, 0])
 
+    # check str and repr works without crashing and return something
+    assert str(geom)
+    assert repr(geom)
+
 
 def test_circular_cone_flat():
     """Conebeam geometry with circular acquisition and a flat 2D detector."""
@@ -188,6 +192,10 @@ def test_circular_cone_flat():
     assert np.linalg.norm(geom.det_refpoint(0)) == det_rad
     assert np.linalg.norm(geom.src_position(np.pi)) == src_rad
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
+
+    # check str and repr works without crashing and return something
+    assert str(geom)
+    assert repr(geom)
 
 
 def test_helical_cone_flat():
@@ -253,6 +261,10 @@ def test_helical_cone_flat():
         val1 = np.linalg.norm(det[0:2]) / det_rad
         assert almost_equal(val0, val1)
         assert almost_equal(src[2], det[2])
+
+    # check str and repr works without crashing and return something
+    assert str(geom)
+    assert repr(geom)
 
 
 if __name__ == '__main__':
