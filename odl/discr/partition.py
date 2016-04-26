@@ -378,10 +378,39 @@ class RectPartition(object):
 
         Examples
         --------
+        >>> part1 = uniform_partition([0, -1], [1, 2], (3, 3))
+        >>> part2 = uniform_partition(0, 1, 5)
+        >>> part1.insert(2, part2)
+        uniform_partition([0.0, -1.0, 0.0], [1.0, 2.0, 1.0], [3, 3, 5])
+
+        See Also
+        --------
+        append
         """
         newgrid = self.grid.insert(index, other.grid)
         newset = self.set.insert(index, other.set)
         return RectPartition(newset, newgrid)
+
+    def append(self, other):
+        """Insert at the end.
+
+        Parameters
+        ----------
+        other : `RectPartition`,
+            The set to be inserted.
+
+        Examples
+        --------
+        >>> part1 = uniform_partition([0, -1], [1, 2], (3, 3))
+        >>> part2 = uniform_partition(0, 1, 5)
+        >>> part1.insert(2, part2)
+        uniform_partition([0.0, -1.0, 0.0], [1.0, 2.0, 1.0], [3, 3, 5])
+
+        See Also
+        --------
+        insert
+        """
+        return self.insert(self.ndim, other)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -389,8 +418,20 @@ class RectPartition(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n    {!r},\n    {!r}'.format(self.set, self.grid)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        if uniform_partition_fromintv(self.set, self.shape) == self:
+
+            if self.ndim == 1:
+                inner_str = '{}, {}, {}'.format(float(self.set.begin),
+                                                float(self.set.end),
+                                                self.size)
+            else:
+                inner_str = '{}, {}, {}'.format(list(self.set.begin),
+                                                list(self.set.end),
+                                                list(self.shape))
+            return 'uniform_partition({})'.format(inner_str)
+        else:
+            inner_str = '\n    {!r},\n    {!r}'.format(self.set, self.grid)
+            return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 def uniform_partition_fromintv(intv_prod, num_nodes, nodes_on_bdry=False):

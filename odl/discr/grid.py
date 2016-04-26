@@ -484,7 +484,7 @@ class TensorGrid(Set):
             The index of the dimension before which ``other`` is to
             be inserted. Negative indices count backwards from
             ``self.ndim``.
-        other :  `TensorGrid`, `float` or `array-like`
+        other :  `TensorGrid`
             The grid to be inserted
 
         Returns
@@ -520,9 +520,8 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other : `IntervalProd`, `float` or `array-like`
-            The set to be inserted. A `float` or array a is
-            treated as an ``IntervalProd(a, a)``.
+        other : `TensorGrid`, `float` or `array-like`
+            The set to be inserted.
 
         Examples
         --------
