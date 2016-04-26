@@ -35,19 +35,21 @@ from odl.util.testutils import almost_equal
 # Find the valid projectors
 projectors = []
 if tomo.ASTRA_AVAILABLE:
-    projectors += ['par2d cpu uniform',
-                   'cone2d cpu uniform'
-                   # 'par2d cpu random',
-                   # 'cone2d cpu random'
+    projectors += ['par2d astra_cpu uniform',
+                   'cone2d astra_cpu uniform'
+                   # 'par2d astra_cpu random',
+                   # 'cone2d astra_cpu random'
                    ]
 if tomo.ASTRA_CUDA_AVAILABLE:
-    projectors += ['par2d cuda uniform',
-                   'cone2d cuda uniform',
-                   'par3d cuda uniform',
-                   'cone3d cuda uniform',
+    projectors += ['par2d astra_cuda uniform',
+                   'cone2d astra_cuda uniform',
+                   'par3d astra_cuda uniform',
+                   'cone3d astra_cuda uniform',
                    # 'cone3d cuda random',  # TODO: expected fail, fix issue!
-                   'helical cuda uniform'
+                   'helical astra_cuda uniform'
                    ]
+if tomo.SCIKIT_IMAGE_AVAILABLE:
+    projectors += ['par2d scikit uniform']
 
 projector_ids = [' {} '.format(p) for p in projectors]
 
@@ -58,7 +60,7 @@ def projector(request):
     n_angles = 100
     n_pixels = 100
 
-    geom, variant, angle = request.param.split()
+    geom, impl, angle = request.param.split()
 
     if angle == 'uniform':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
@@ -80,7 +82,7 @@ def projector(request):
         dpart = odl.uniform_partition(-30, 30, n_pixels)
         geom = tomo.Parallel2dGeometry(apart, dpart)
 
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
@@ -92,7 +94,7 @@ def projector(request):
         geom = tomo.Parallel3dAxisGeometry(apart, dpart)
 
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
@@ -105,7 +107,7 @@ def projector(request):
                                     det_radius=100)
 
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
@@ -119,7 +121,7 @@ def projector(request):
                                              det_radius=100)
 
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'helical':
         # Discrete reconstruction space
@@ -133,7 +135,7 @@ def projector(request):
                                             src_radius=200, det_radius=100)
 
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
     else:
         raise ValueError('geom not valid')
 

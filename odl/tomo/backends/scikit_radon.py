@@ -7,9 +7,14 @@ Created on Wed Apr 20 10:48:55 2016
 
 from odl.discr import uniform_discr_frompartition, uniform_partition
 import numpy as np
-from skimage.transform import radon, iradon
+try:
+    from skimage.transform import radon, iradon
+    SCIKIT_IMAGE_AVAILABLE = True
+except ImportError:
+    SCIKIT_IMAGE_AVAILABLE = False
 
-__all__ = ('scikit_radon_forward', 'scikit_radon_back_projector')
+__all__ = ('scikit_radon_forward', 'scikit_radon_back_projector',
+           'SCIKIT_IMAGE_AVAILABLE')
 
 
 def scikit_theta(geometry):
@@ -48,6 +53,8 @@ def clamped_interpolation(scikit_range, sinogram):
     def interpolation_wrapper(x):
         x = (x[0], np.maximum(min_x, np.minimum(max_x, x[1])))
 
+        print(x[0].min(), x[0].max(), x[1].min(), x[1].max())
+        print(min_x, max_x)
         return sinogram.interpolation(x)
     return interpolation_wrapper
 
@@ -71,6 +78,10 @@ def scikit_radon_forward(volume, geometry, range, out=None):
     sinogram : range element
         The sinogram given by the projection
     """
+
+    # Check basic requirements. Fully checking should be in wrapper
+    assert volume.shape[0] == volume.shape[1]
+
     theta = scikit_theta(geometry)
     scikit_range = scikit_sinogram_space(geometry, volume.space, range)
 
@@ -111,10 +122,13 @@ def scikit_radon_back_projector(sinogram, geometry, range, out=None):
     scikit_range = scikit_sinogram_space(geometry, range, sinogram.space)
 
     scikit_sinogram = scikit_range.element()
-    scikit_sinogram.sampling(clamped_interpolation(scikit_range, sinogram))
+    scikit_sinogram.sampling(clamped_interpolation(range, sinogram))
 
     if out is None:
         out = range.element()
+    else:
+        # Only do asserts here since these are backend functions
+        assert out in range
 
     out[:] = iradon(scikit_sinogram.asarray().T, theta,
                     output_size=range.shape[0], filter=None)
