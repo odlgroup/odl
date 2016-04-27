@@ -23,8 +23,14 @@ standard_library.install_aliases()
 import pytest
 
 
+__all__ = ('skip_if_no_astra', 'skip_if_no_astra_cuda', 'skip_if_no_scikit')
+
+
 skip_if_no_astra = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE",
                                       reason='ASTRA not available')
 
 skip_if_no_astra_cuda = pytest.mark.skipif("not odl.tomo.ASTRA_CUDA_AVAILABLE",
                                            reason='ASTRA CUDA not available')
+
+skip_if_no_scikit = pytest.mark.skipif("not odl.tomo.SCIKIT_IMAGE_AVAILABLE",
+                                       reason='scikit not available')

@@ -111,7 +111,7 @@ def test_init(exponent):
 @skip_if_no_cuda
 def test_init_cuda(exponent):
     # Normal discretization of unit interval
-    space = odl.FunctionSpace(odl.Interval(0, 1))
+    space = odl.FunctionSpace(odl.Interval(0, 1), out_dtype='float32')
     part = odl.uniform_partition_fromintv(space.domain, 10)
     rn = odl.CudaRn(10, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent)

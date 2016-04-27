@@ -372,8 +372,8 @@ class FunctionSetVector(Operator):
 
         # Call the function and check out shape, before or after
         if out is None:
-            try:
-                if ndim == 1:
+            if ndim == 1:
+                try:
                     out = self._call(x, **kwargs)
                     if np.ndim(out) == 0 and not scalar_out:
                         # Don't accept scalar result. A typical situation where
@@ -383,24 +383,22 @@ class FunctionSetVector(Operator):
                         # to trigger the call with x[0].
                         raise TypeError
                     out = np.atleast_1d(np.squeeze(out))
-                else:
-                    out = self._call(x, **kwargs)
-            except (TypeError, IndexError) as err:
-                # TypeError is raised if a meshgrid was used but the function
-                # expected an array (1d only). In this case we try again with
-                # the first meshgrid vector.
-                # IndexError is raised in expressions like x[x > 0] since
-                # "x > 0" evaluates to 'True', i.e. 1, and that index is
-                # out of range for a meshgrid tuple of length 1 :-). To get
-                # the real errors with indexing, we check again for the same
-                # scenario (scalar output when not valid) as in the first case.
-                if ndim == 1:
+                except (TypeError, IndexError):
+                    # TypeError is raised if a meshgrid was used but the
+                    # function expected an array (1d only). In this case we try
+                    # again with the first meshgrid vector.
+                    # IndexError is raised in expressions like x[x > 0] since
+                    # "x > 0" evaluates to 'True', i.e. 1, and that index is
+                    # out of range for a meshgrid tuple of length 1 :-). To get
+                    # the real errors with indexing, we check again for the
+                    # same scenario (scalar output when not valid) as in the
+                    # first case.
                     out = self._call(x[0], **kwargs)
                     if np.ndim(out) == 0 and not scalar_out:
                         raise ValueError('invalid scalar output.')
                     out = np.atleast_1d(np.squeeze(out))
-                else:
-                    raise err
+            else:
+                out = self._call(x, **kwargs)
 
             if self.out_dtype is not None:
                 # Cast to proper dtype if needed
@@ -421,14 +419,15 @@ class FunctionSetVector(Operator):
             if self.out_dtype is not None and out.dtype != self.out_dtype:
                 raise ValueError('out.dtype ({}) does not match out_dtype ({})'
                                  ''.format(out.dtype, self.out_dtype))
-            try:
-                self._call(x, out=out, **kwargs)
-            except TypeError as err:
+
+            if ndim == 1:
                 # TypeError for meshgrid in 1d, but expected array (see above)
-                if ndim == 1:
+                try:
+                    self._call(x, out=out, **kwargs)
+                except TypeError:
                     self._call(x[0], out=out, **kwargs)
-                else:
-                    raise err
+            else:
+                self._call(x, out=out, **kwargs)
 
         # Check output values
         if bounds_check:

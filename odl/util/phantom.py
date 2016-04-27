@@ -27,7 +27,8 @@ import numpy as np
 
 __all__ = ('ellipse_phantom_2d', 'ellipse_phantom_3d',
            'cuboid', 'indicate_proj_axis',
-           'derenzo_sources', 'shepp_logan', 'submarine_phantom')
+           'derenzo_sources', 'shepp_logan', 'submarine_phantom',
+           'white_noise')
 
 
 def _shepp_logan_ellipse_2d():
@@ -35,6 +36,7 @@ def _shepp_logan_ellipse_2d():
 
     This is the standard phantom in 2d medical imaging.
     """
+    #       value  axisx  axisy     x       y  rotation
     return [[2.00, .6900, .9200, 0.0000, 0.0000, 0],
             [-.98, .6624, .8740, 0.0000, -.0184, 0],
             [-.02, .1100, .3100, 0.2200, 0.0000, -18],
@@ -52,13 +54,14 @@ def _shepp_logan_ellipse_3d():
 
     This is the standard phantom in 3d medical imaging.
     """
+    #       value  axisx  axisy  axisz,  x        y      z    rotation
     return [[2.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
             [-.98, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
-            [-.02, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 10],
-            [-.02, .1600, .4100, .280, -.2200, 0.0000, 0.00, 18., 0, 10],
-            [0.01, .2100, .2500, .410, 0.0000, 0.3500, -.15, 0.0, 0, 0],
-            [0.01, .0460, .0460, .050, 0.0000, 0.1000, 0.25, 0.0, 0, 0],
-            [0.01, .0460, .0460, .050, 0.0000, -.1000, 0.25, 0.0, 0, 0],
+            [-.02, .1100, .3100, .220, 0.2200, 0.0000, 0.00, -18, 0, 0],
+            [-.02, .1600, .4100, .280, -.2200, 0.0000, 0.00, 18., 0, 0],
+            [0.01, .2100, .2500, .410, 0.0000, 0.3500, 0.00, 0.0, 0, 0],
+            [0.01, .0460, .0460, .050, 0.0000, 0.1000, 0.00, 0.0, 0, 0],
+            [0.01, .0460, .0460, .050, 0.0000, -.1000, 0.00, 0.0, 0, 0],
             [0.01, .0460, .0230, .050, -.0800, -.6050, 0.00, 0.0, 0, 0],
             [0.01, .0230, .0230, .020, 0.0000, -.6060, 0.00, 0.0, 0, 0],
             [0.01, .0230, .0460, .020, 0.0600, -.6050, 0.00, 0.0, 0, 0]]
@@ -679,6 +682,12 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
     return discr_space.element(phan)
 
 
+def white_noise(space):
+    """Standard gaussian noise in space, pointwise N(0, 1)"""
+    values = np.random.randn(*space.shape)
+    return space.element(values)
+
+
 if __name__ == '__main__':
     # Show the phantoms
     import odl
@@ -697,7 +706,7 @@ if __name__ == '__main__':
     # Shepp-logan 3d
     discr = odl.uniform_discr([-1, -1, -1], [1, 1, 1], [n, n, n])
     with odl.util.Timer():
-        shepp_logan_3d = shepp_logan(discr)
+        shepp_logan_3d = shepp_logan(discr, modified=True)
     shepp_logan_3d.show()
 
     # Run also the doctests

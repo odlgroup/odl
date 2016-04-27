@@ -28,13 +28,14 @@ import numpy as np
 from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
 from odl.space.fspace import FunctionSpace
-from odl.tomo.geometry.geometry import Geometry
+from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,
     astra_cpu_forward_projector, astra_cpu_back_projector,
-    astra_cuda_forward_projector, astra_cuda_back_projector)
+    astra_cuda_forward_projector, astra_cuda_back_projector,
+    scikit_radon_forward, scikit_radon_back_projector)
 
-_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda')
+_SUPPORTED_IMPL = ('astra_cpu', 'astra_cuda', 'scikit')
 
 
 __all__ = ('RayTransform', 'RayBackProjection')
@@ -56,10 +57,11 @@ class RayTransform(Operator):
         geometry : `Geometry`
             Geometry of the transform, containing information about
             the operator range
-        impl : {'astra_cpu', 'astra_cuda'}, optional
+        impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
             Implementation back-end for the transform. Supported back-ends:
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
+            'scikit': scikit-image, only 2D parallel with square domain
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator
             range.
@@ -80,6 +82,7 @@ class RayTransform(Operator):
 
         # TODO: sanity checks between impl and discretization impl
         if impl.startswith('astra'):
+            # TODO: these should be moved somewhere else
             if not ASTRA_AVAILABLE:
                 raise ValueError('ASTRA back-end not available.')
             if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
@@ -95,17 +98,39 @@ class RayTransform(Operator):
             if geometry.ndim > 2 and impl.endswith('cpu'):
                 raise ValueError('impl: {}, only works for 2d geometries.'
                                  ' got {}-d'.format(impl_in, geometry))
+        elif impl == 'scikit':
+            if not isinstance(geometry, Parallel2dGeometry):
+                raise TypeError('scikit backend only supports 2d parallel '
+                                'geometries.')
+
+            midp = discr_domain.domain.midpoint
+            if not all(midp == [0, 0]):
+                raise ValueError('discr_domain.domain needs to be '
+                                 'centered on [0, 0], got {}'.format(midp))
+
+            shape = discr_domain.shape
+            if shape[0] != shape[1]:
+                raise ValueError('discr_domain.shape needs to be square '
+                                 'got {}'.format(shape))
+
+            extent = discr_domain.domain.extent()
+            if extent[0] != extent[1]:
+                raise ValueError('discr_domain.extent needs to be square '
+                                 'got {}'.format(extent))
 
         # TODO: sanity checks between domain and geometry (ndim, ...)
         self._geometry = geometry
         self._impl = impl
         self.kwargs = kwargs
 
+        dtype = discr_domain.dspace.dtype
+
         # Create a discretized space (operator range) with the same data-space
         # type as the domain.
         # TODO: use a ProductSpace structure or find a way to treat different
         # dimensions differently in DiscreteLp (i.e. in partitions).
-        range_uspace = FunctionSpace(geometry.params)
+        range_uspace = FunctionSpace(geometry.params,
+                                     out_dtype=dtype)
 
         # Approximate cell volume
         # TODO: angles and detector must be handled separately. While the
@@ -115,9 +140,8 @@ class RayTransform(Operator):
         size = float(geometry.partition.size)
         weight = extent / size
 
-        range_dspace = discr_domain.dspace_type(
-            geometry.partition.size, weight=weight,
-            dtype=discr_domain.dspace.dtype)
+        range_dspace = discr_domain.dspace_type(geometry.partition.size,
+                                                weight=weight, dtype=dtype)
 
         range_interp = kwargs.get('interp', 'nearest')
         discr_range = DiscreteLp(
@@ -152,8 +176,8 @@ class RayTransform(Operator):
         out : `DiscreteLpVector`
             Returns an element in the projection space
         """
-        backend, data_impl = self.impl.split('_')
-        if backend == 'astra':
+        if self.impl.startswith('astra'):
+            backend, data_impl = self.impl.split('_')
             if data_impl == 'cpu':
                 return astra_cpu_forward_projector(x, self.geometry,
                                                    self.range, out)
@@ -163,6 +187,8 @@ class RayTransform(Operator):
             else:
                 # Should never happen
                 raise RuntimeError('implementation info is inconsistent.')
+        elif self.impl == 'scikit':
+            return scikit_radon_forward(x, self.geometry, self.range, out)
         else:  # Should never happen
             raise RuntimeError('implementation info is inconsistent.')
 
@@ -186,10 +212,11 @@ class RayBackProjection(Operator):
         geometry : `Geometry`
             The geometry of the transform, contains information about
             the operator domain
-        impl : {'astra_cpu', 'astra_cuda'}, optional
+        impl : {'astra_cpu', 'astra_cuda', 'scikit'}, optional
             Implementation back-end for the transform. Supported back-ends:
             'astra_cpu': ASTRA toolbox using CPU, only 2D
             'astra_cuda': ASTRA toolbox, using CUDA, 2D or 3D
+            'scikit': scikit-image, only 2D parallel with square domain
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator range.
             Default: 'nearest'
@@ -225,18 +252,19 @@ class RayBackProjection(Operator):
         self._impl = impl
         self.kwargs = kwargs
 
+        dtype = discr_range.dspace.dtype
+
         # Create a discretized space (operator domain) with the same data-space
         # type as the range.
-        domain_uspace = FunctionSpace(geometry.params)
+        domain_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
         # Approximate cell volume
         extent = float(geometry.partition.extent().prod())
         size = float(geometry.partition.size)
         weight = extent / size
 
-        domain_dspace = discr_range.dspace_type(
-            geometry.partition.size, weight=weight,
-            dtype=discr_range.dspace.dtype)
+        domain_dspace = discr_range.dspace_type(geometry.partition.size,
+                                                weight=weight, dtype=dtype)
 
         domain_interp = kwargs.get('interp', 'nearest')
         disc_domain = DiscreteLp(
@@ -271,8 +299,9 @@ class RayBackProjection(Operator):
         out : `DiscreteLpVector`
             Returns an element in the projection space
         """
-        backend, data_impl = self.impl.split('_')
-        if backend == 'astra':
+
+        if self.impl.startswith('astra'):
+            backend, data_impl = self.impl.split('_')
             if data_impl == 'cpu':
                 return astra_cpu_back_projector(x, self.geometry,
                                                 self.range, out)
@@ -282,6 +311,9 @@ class RayBackProjection(Operator):
             else:
                 # Should never happen
                 raise RuntimeError('implementation info is inconsistent.')
+        elif self.impl == 'scikit':
+            return scikit_radon_back_projector(x, self.geometry,
+                                               self.range, out)
         else:  # Should never happen
             raise RuntimeError('implementation info is inconsistent.')
 

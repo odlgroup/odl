@@ -29,27 +29,35 @@ import numpy as np
 # Internal
 import odl
 import odl.tomo as tomo
+from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
+                                     skip_if_no_scikit)
 from odl.util.testutils import almost_equal
 
 
 # Find the valid projectors
-projectors = []
-if tomo.ASTRA_AVAILABLE:
-    projectors += ['par2d cpu uniform',
-                   'cone2d cpu uniform'
-                   # 'par2d cpu random',
-                   # 'cone2d cpu random'
-                   ]
-if tomo.ASTRA_CUDA_AVAILABLE:
-    projectors += ['par2d cuda uniform',
-                   'cone2d cuda uniform',
-                   'par3d cuda uniform',
-                   'cone3d cuda uniform',
-                   # 'cone3d cuda random',  # TODO: expected fail, fix issue!
-                   'helical cuda uniform'
-                   ]
+projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
+              skip_if_no_astra('par2d astra_cpu nonuniform'),
+              skip_if_no_astra('par2d astra_cpu random'),
+              skip_if_no_astra('cone2d astra_cpu uniform'),
+              skip_if_no_astra('cone2d astra_cpu nonuniform'),
+              skip_if_no_astra('cone2d astra_cpu random'),
+              skip_if_no_astra_cuda('par2d astra_cuda uniform'),
+              skip_if_no_astra_cuda('par2d astra_cuda nonuniform'),
+              skip_if_no_astra_cuda('par2d astra_cuda random'),
+              skip_if_no_astra_cuda('cone2d astra_cuda uniform'),
+              skip_if_no_astra_cuda('cone2d astra_cuda nonuniform'),
+              skip_if_no_astra_cuda('cone2d astra_cuda random'),
+              skip_if_no_astra_cuda('par3d astra_cuda uniform'),
+              skip_if_no_astra_cuda('par3d astra_cuda nonuniform'),
+              skip_if_no_astra_cuda('par3d astra_cuda random'),
+              skip_if_no_astra_cuda('cone3d astra_cuda uniform'),
+              skip_if_no_astra_cuda('cone3d astra_cuda nonuniform'),
+              skip_if_no_astra_cuda('cone3d astra_cuda random'),
+              skip_if_no_astra_cuda('helical astra_cuda uniform'),
+              skip_if_no_scikit('par2d scikit uniform')]
 
-projector_ids = [' {} '.format(p) for p in projectors]
+projector_ids = ['geom={}, impl={}, angles={}'
+                 ''.format(*p.args[1].split()) for p in projectors]
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
@@ -58,16 +66,25 @@ def projector(request):
     n_angles = 100
     n_pixels = 100
 
-    geom, variant, angle = request.param.split()
+    geom, impl, angle = request.param.split()
 
     if angle == 'uniform':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
     elif angle == 'random':
+        # Linearly spaced with random noise
         min_pt = 2 * (2.0 * np.pi) / n_angles
         max_pt = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
-        points = np.sort(np.random.rand(n_angles)) * (max_pt - min_pt) + min_pt
+        points = np.linspace(min_pt, max_pt, n_angles)
+        points += np.random.rand(n_angles) * (max_pt - min_pt) / (5 * n_angles)
         agrid = odl.TensorGrid(points)
-        apart = odl.RectPartition(odl.Interval(min_pt, max_pt), agrid)
+        apart = odl.RectPartition(odl.Interval(0, 2 * np.pi), agrid)
+    elif angle == 'nonuniform':
+        # Angles spaced quadratically
+        min_pt = 2 * (2.0 * np.pi) / n_angles
+        max_pt = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
+        points = np.linspace(min_pt ** 0.5, max_pt ** 0.5, n_angles) ** 2
+        agrid = odl.TensorGrid(points)
+        apart = odl.RectPartition(odl.Interval(0, 2 * np.pi), agrid)
     else:
         raise ValueError('angle not valid')
 
@@ -80,7 +97,7 @@ def projector(request):
         dpart = odl.uniform_partition(-30, 30, n_pixels)
         geom = tomo.Parallel2dGeometry(apart, dpart)
 
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
@@ -92,7 +109,7 @@ def projector(request):
         geom = tomo.Parallel3dAxisGeometry(apart, dpart)
 
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
@@ -105,7 +122,7 @@ def projector(request):
                                     det_radius=100)
 
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
@@ -113,13 +130,13 @@ def projector(request):
                                        dtype='float32')
 
         # Geometry
-        dpart = odl.uniform_partition([-30] * 2, [30] * 2, [n_pixels] * 2)
+        dpart = odl.uniform_partition([-60] * 2, [60] * 2, [n_pixels] * 2)
 
         geom = tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
                                              det_radius=100)
 
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'helical':
         # Discrete reconstruction space
@@ -133,13 +150,13 @@ def projector(request):
                                             src_radius=200, det_radius=100)
 
         # Ray transform
-        return tomo.RayTransform(reco_space, geom, impl='astra_' + variant)
+        return tomo.RayTransform(reco_space, geom, impl=impl)
     else:
         raise ValueError('geom not valid')
 
 
 def test_projector(projector):
-    """Test discrete Ray transform using ASTRA for reconstruction."""
+    """Test discrete Ray transform forward projection."""
 
     # TODO: this needs to be improved
     # Accept 10% errors
@@ -155,9 +172,24 @@ def test_projector(projector):
     expected_max = projector.domain.partition.extent()[0] * np.sqrt(2)
     assert almost_equal(proj.ufunc.max(), expected_max, places=places)
 
-    # Adjoint definition <Ax, Ax> = <x, A*A x>
+
+def test_adjoint(projector):
+    """Test discrete Ray transform backward projection."""
+
+    # TODO: this needs to be improved
+    # Accept 10% errors
+    places = 1
+
+    # Create shepp-logan phantom
+    vol = odl.util.shepp_logan(projector.domain, modified=True)
+
+    # Calculate projection
+    proj = projector(vol)
+    backproj = projector.adjoint(proj)
+
+    # Verified the identity <Ax, Ax> = <A^* A x, x>
     result_AxAx = proj.inner(proj)
-    result_xAtAx = vol.inner(projector.adjoint(proj))
+    result_xAtAx = backproj.inner(vol)
     assert almost_equal(result_AxAx, result_xAtAx, places=places)
 
 

@@ -106,7 +106,7 @@ class ForwardProjectorByBinWrapper(Operator):
         if dom.shape != volume.shape():
             raise ValueError('dom.shape {} does not equal volume shape {}'
                              ''.format(dom.shape, volume.shape()))
-        # Todo: improve
+        # TODO: improve
         proj_shape = proj_data.to_array().shape()
         if ran.shape != proj_shape:
             raise ValueError('ran.shape {} does not equal proj shape {}'
@@ -205,7 +205,7 @@ class BackProjectorByBinWrapper(Operator):
         if ran.shape != volume.shape():
             raise ValueError('ran.shape {} does not equal volume shape {}'
                              ''.format(ran.shape, volume.shape()))
-        # Todo: improve
+        # TODO: improve
         proj_shape = proj_data.to_array().shape()
         if dom.shape != proj_shape:
             raise ValueError('dom.shape {} does not equal proj shape {}'

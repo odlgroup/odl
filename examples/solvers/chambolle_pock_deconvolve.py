@@ -61,12 +61,8 @@ from builtins import super
 import numpy as np
 import scipy
 import scipy.ndimage
-import matplotlib.pyplot as plt
-
 import odl
 
-
-# TODO: Use BroadCastOperator instead of ProductSpaceOperator
 
 # Define the forward operator of the inverse problem in question
 class Convolution(odl.Operator):
@@ -136,8 +132,7 @@ data = convolution(discr_phantom)
 gradient = odl.Gradient(discr_space, method='forward')
 
 # Column vector of two operators
-op = odl.ProductSpaceOperator([[convolution],
-                               [gradient]])
+op = odl.BroadcastOperator(convolution, gradient)
 
 # Choose a starting point
 x = op.domain.one()
@@ -184,5 +179,4 @@ odl.solvers.chambolle_pock_solver(
 # Display images
 discr_phantom.show(title='original image')
 data.show(title='convolved image')
-x.show(title='deconvolved image')
-plt.show()
+x.show(title='deconvolved image', show=True)

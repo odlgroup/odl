@@ -246,7 +246,7 @@ class FailCounter(object):
         """Add failure with reason as string."""
         self.num_failed += 1
 
-        # Todo: possibly limit number of printed strings
+        # TODO: possibly limit number of printed strings
         if string is not None:
             self.fail_strings += [str(string)]
 
