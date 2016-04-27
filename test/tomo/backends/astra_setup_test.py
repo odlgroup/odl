@@ -31,8 +31,10 @@ if ASTRA_AVAILABLE:
 
 # Internal
 import odl
-from odl.tomo.util.testutils import skip_if_no_astra
 from odl.util.testutils import is_subdict
+
+
+pytestmark = pytest.mark.skipif("not odl.tomo.ASTRA_AVAILABLE")
 
 
 def _discrete_domain(ndim, interp):
@@ -81,7 +83,6 @@ def _discrete_domain_anisotropic(ndim, interp):
                              dtype='float32')
 
 
-@skip_if_no_astra
 def test_vol_geom_2d():
     """Create ASTRA 2D volume geometry."""
 
@@ -110,7 +111,6 @@ def test_vol_geom_2d():
     print('\n', vol_geom)
 
 
-@skip_if_no_astra
 def test_vol_geom_3d():
     """Create ASTRA 2D volume geometry."""
 
@@ -144,7 +144,6 @@ def test_vol_geom_3d():
     print('\n', vol_geom)
 
 
-@skip_if_no_astra
 def test_proj_geom_parallel_2d():
     """Create ASTRA 2D projection geometry."""
 
@@ -162,7 +161,6 @@ def test_proj_geom_parallel_2d():
     assert 'ProjectionAngles' in proj_geom
 
 
-@skip_if_no_astra
 def test_astra_projection_geometry():
     """Create ASTRA projection geometry from geometry objects."""
 
@@ -222,7 +220,6 @@ VOL_GEOM_2D = {
                'WindowMinY': -1.0, 'WindowMaxY': 1.0}}
 
 
-@skip_if_no_astra
 def test_volume_data_2d():
     """Create ASTRA data structure in 2D."""
 
@@ -244,7 +241,6 @@ VOL_GEOM_3D = {
     'option': {}}
 
 
-@skip_if_no_astra
 def test_volume_data_3d():
     """Create ASTRA data structure in 2D."""
 
@@ -273,7 +269,6 @@ PROJ_GEOM_3D = {
     'ProjectionAngles': np.linspace(0, 2, 5)}
 
 
-@skip_if_no_astra
 def test_parallel_2d_projector():
     """Create ASTRA 2D projectors."""
 
@@ -284,7 +279,6 @@ def test_parallel_2d_projector():
                              ndim=2, impl='cpu')
 
 
-@skip_if_no_astra
 def test_parallel_3d_projector():
     """Create ASTRA 3D projectors."""
 
@@ -301,7 +295,6 @@ def test_parallel_3d_projector():
                                  ndim=3, impl='cpu')
 
 
-@skip_if_no_astra
 def test_astra_algorithm():
     """Create ASTRA algorithm object."""
 
@@ -366,7 +359,6 @@ def test_astra_algorithm():
                                  proj_id=proj_id, impl='cuda')
 
 
-@skip_if_no_astra
 def test_geom_to_vec():
     """Create ASTRA projection geometries vectors using ODL geometries."""
 

@@ -29,7 +29,7 @@ import numpy as np
 import odl
 from odl.discr.lp_discr import DiscreteLp
 from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
-                                skip_if_no_cuda)
+                                never_skip, skip_if_no_cuda)
 
 
 def _array(fn):
@@ -66,11 +66,20 @@ def _vectors(fn, n=1):
 # Simply modify exp_params to modify the fixture
 exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
 exp_ids = [' p = {} '.format(p) for p in exp_params]
-exp_fixture = pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
 
 
-@exp_fixture
+@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
 def exponent(request):
+    return request.param
+
+
+impl_params = [never_skip('numpy'),
+               skip_if_no_cuda('cuda')]
+impl_ids = [' impl = {} '.format(p.args[1]) for p in impl_params]
+
+
+@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
+def impl(request):
     return request.param
 
 
@@ -580,12 +589,24 @@ def test_astype():
     assert cdiscr._real_space == rdiscr
 
 
-def _impl_test_ufuncs(fn, name, n_args, n_out):
+def test_ufunc(impl, ufunc):
+    space = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl)
+    name, n_args, n_out, _ = ufunc
+    if (np.issubsctype(space.dtype, np.floating) and
+            name in ['bitwise_and',
+                     'bitwise_or',
+                     'bitwise_xor',
+                     'invert',
+                     'left_shift',
+                     'right_shift']):
+        # Skip integer only methods if floating point type
+        return
+
     # Get the ufunc from numpy as reference
     ufunc = getattr(np, name)
 
     # Create some data
-    data = _vectors(fn, n_args + n_out)
+    data = _vectors(space, n_args + n_out)
     in_arrays = data[:n_args]
     out_arrays = data[n_args:n_args + n_out]
     data_vector = data[n_args + n_out]
@@ -604,10 +625,10 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
 
     # Test type of output
     if n_out == 1:
-        assert isinstance(odl_result, fn.element_type)
+        assert isinstance(odl_result, space.element_type)
     elif n_out > 1:
         for i in range(n_out):
-            assert isinstance(odl_result[i], fn.element_type)
+            assert isinstance(odl_result[i], space.element_type)
 
     # In place:
     np_result = ufunc(*(in_arrays + out_arrays))
@@ -630,29 +651,10 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
 
     # Test type of output
     if n_out == 1:
-        assert isinstance(odl_result, fn.element_type)
+        assert isinstance(odl_result, space.element_type)
     elif n_out > 1:
         for i in range(n_out):
-            assert isinstance(odl_result[i], fn.element_type)
-
-
-impl_params = [('numpy',), skip_if_no_cuda(('cuda',))]
-
-
-@pytest.mark.parametrize(('impl',), impl_params)
-def test_ufuncs(impl):
-    space = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl=impl)
-    for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
-        if (np.issubsctype(space.dtype, np.floating) and
-                name in ['bitwise_and',
-                         'bitwise_or',
-                         'bitwise_xor',
-                         'invert',
-                         'left_shift',
-                         'right_shift']):
-            # Skip integer only methods if floating point type
-            continue
-        _impl_test_ufuncs(space, name, n_args, n_out)
+            assert isinstance(odl_result[i], space.element_type)
 
 
 def test_real_imag():
@@ -707,23 +709,16 @@ def test_real_imag():
     assert all_equal(x.real, [4, 5, 6, 7])
 
 
-def _impl_test_reduction(fn, name):
+def test_reduction(impl, reduction):
+    space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=impl)
+
+    name, _ = reduction
+
     ufunc = getattr(np, name)
 
     # Create some data
-    x_arr, x = _vectors(fn, 1)
+    x_arr, x = _vectors(space, 1)
     assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
-
-
-def test_reductions():
-    spaces = [odl.uniform_discr([0, 0], [1, 1], [2, 2])]
-
-    if odl.CUDA_AVAILABLE:
-        spaces += [odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='cuda')]
-
-    for fn in spaces:
-        for name, _ in odl.util.ufuncs.REDUCTIONS:
-            yield _impl_test_reduction, fn, name
 
 
 def test_norm_interval(exponent):
@@ -761,79 +756,18 @@ def test_norm_rectangle(exponent):
         assert almost_equal(discr_testfunc.norm(), true_norm, places=2)
 
 
-def test_norm_rectangle_boundary(exponent):
+def test_norm_rectangle_boundary(impl, exponent):
     # Check the constant function 1 in different situations regarding the
     # placement of the outermost grid points.
-    rect = odl.Rectangle([-1, -2], [1, 2])
-
-    # Standard case
-    discr = odl.uniform_discr_fromspace(odl.FunctionSpace(rect), (4, 8),
-                                        exponent=exponent)
-    if exponent == float('inf'):
-        assert discr.one().norm() == 1
-    else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
-
-    # Nodes on the boundary (everywhere)
-    discr = odl.uniform_discr_fromspace(
-        odl.FunctionSpace(rect), (4, 8), exponent=exponent,
-        nodes_on_bdry=True)
-
-    if exponent == float('inf'):
-        assert discr.one().norm() == 1
-    else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
-
-    # Nodes on the boundary (selective)
-    discr = odl.uniform_discr_fromspace(
-        odl.FunctionSpace(rect), (4, 8), exponent=exponent,
-        nodes_on_bdry=((False, True), False))
-
-    if exponent == float('inf'):
-        assert discr.one().norm() == 1
-    else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
-
-    discr = odl.uniform_discr_fromspace(
-        odl.FunctionSpace(rect), (4, 8), exponent=exponent,
-        nodes_on_bdry=(False, (True, False)))
-
-    if exponent == float('inf'):
-        assert discr.one().norm() == 1
-    else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
-
-    # Completely arbitrary boundary
-    grid = odl.RegularGrid([0, 0], [1, 1], (4, 4))
-    part = odl.RectPartition(rect, grid)
-    weight = 1.0 if exponent == float('inf') else part.cell_volume
-    dspace = odl.Rn(part.size, exponent=exponent, weight=weight)
-    discr = DiscreteLp(odl.FunctionSpace(rect), part, dspace,
-                       exponent=exponent)
-
-    if exponent == float('inf'):
-        assert discr.one().norm() == 1
-    else:
-        assert almost_equal(discr.one().norm(),
-                            (rect.volume) ** (1 / exponent))
-
-
-@skip_if_no_cuda
-def test_norm_rectangle_boundary_cuda(exponent):
-    # Check the constant function 1 in different situations regarding the
-    # placement of the outermost grid points.
-    rect = odl.Rectangle([-1, -2], [1, 2])
 
     if exponent == float('inf'):
         pytest.xfail('inf-norm not implemented in CUDA')
 
+    rect = odl.Rectangle([-1, -2], [1, 2])
+
     # Standard case
     discr = odl.uniform_discr_fromspace(odl.FunctionSpace(rect), (4, 8),
-                                        exponent=exponent, impl='cuda')
+                                        impl=impl, exponent=exponent)
     if exponent == float('inf'):
         assert discr.one().norm() == 1
     else:
@@ -843,7 +777,7 @@ def test_norm_rectangle_boundary_cuda(exponent):
     # Nodes on the boundary (everywhere)
     discr = odl.uniform_discr_fromspace(
         odl.FunctionSpace(rect), (4, 8), exponent=exponent,
-        nodes_on_bdry=True, impl='cuda')
+        impl=impl, nodes_on_bdry=True)
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1
@@ -854,7 +788,7 @@ def test_norm_rectangle_boundary_cuda(exponent):
     # Nodes on the boundary (selective)
     discr = odl.uniform_discr_fromspace(
         odl.FunctionSpace(rect), (4, 8), exponent=exponent,
-        nodes_on_bdry=((False, True), False), impl='cuda')
+        impl=impl, nodes_on_bdry=((False, True), False))
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1
@@ -864,7 +798,7 @@ def test_norm_rectangle_boundary_cuda(exponent):
 
     discr = odl.uniform_discr_fromspace(
         odl.FunctionSpace(rect), (4, 8), exponent=exponent,
-        nodes_on_bdry=(False, (True, False)), impl='cuda')
+        impl=impl, nodes_on_bdry=(False, (True, False)))
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1
@@ -878,7 +812,7 @@ def test_norm_rectangle_boundary_cuda(exponent):
     weight = 1.0 if exponent == float('inf') else part.cell_volume
     dspace = odl.Rn(part.size, exponent=exponent, weight=weight)
     discr = DiscreteLp(odl.FunctionSpace(rect), part, dspace,
-                       exponent=exponent, impl='cuda')
+                       impl=impl, exponent=exponent)
 
     if exponent == float('inf'):
         assert discr.one().norm() == 1

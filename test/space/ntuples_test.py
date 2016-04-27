@@ -1609,9 +1609,43 @@ def test_custom_dist(fn):
         FnCustomDist(1)
 
 
-def _impl_test_ufuncs(fn, name, n_args, n_out):
+def test_ufuncs(fn, ufunc):
+    name, n_args, n_out, _ = ufunc
+    if (np.issubsctype(fn.dtype, np.floating) or
+            np.issubsctype(fn.dtype, np.complexfloating)and
+            name in ['bitwise_and',
+                     'bitwise_or',
+                     'bitwise_xor',
+                     'invert',
+                     'left_shift',
+                     'right_shift']):
+        # Skip integer only methods if floating point type
+        return
+
+    if (np.issubsctype(fn.dtype, np.complexfloating) and
+            name in ['remainder',
+                     'trunc',
+                     'signbit',
+                     'invert',
+                     'left_shift',
+                     'right_shift',
+                     'rad2deg',
+                     'deg2rad',
+                     'copysign',
+                     'mod',
+                     'modf',
+                     'fmod',
+                     'logaddexp2',
+                     'logaddexp',
+                     'hypot',
+                     'arctan2',
+                     'floor',
+                     'ceil']):
+        # Skip real only methods for complex
+        return
+
     # Get the ufunc from numpy as reference
-    ufunc = getattr(np, name)
+    npufunc = getattr(np, name)
 
     # Create some data
     data = _vectors(fn, n_args + n_out)
@@ -1622,7 +1656,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     out_vectors = data[2 * n_args + n_out:]
 
     # Out of place:
-    np_result = ufunc(*in_arrays)
+    np_result = npufunc(*in_arrays)
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*in_vectors)
     assert all_almost_equal(np_result, odl_result)
@@ -1635,7 +1669,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
             assert isinstance(odl_result[i], fn.element_type)
 
     # In place:
-    np_result = ufunc(*(in_arrays + out_arrays))
+    np_result = npufunc(*(in_arrays + out_arrays))
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*(in_vectors + out_vectors))
     assert all_almost_equal(np_result, odl_result)
@@ -1646,19 +1680,6 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     elif n_out > 1:
         for i in range(n_out):
             assert odl_result[i] is out_vectors[i]
-
-
-def test_ufuncs():
-    # Cannot use fixture due to bug in pytest
-    fn = Rn(3)
-
-    for name, n_args, n_out, _ in UFUNCS:
-        if (np.issubsctype(fn.dtype, np.floating) and
-            name in ['bitwise_and', 'bitwise_or', 'bitwise_xor', 'invert',
-                     'left_shift', 'right_shift']):
-            # Skip integer only methods if floating point type
-            continue
-        yield _impl_test_ufuncs, fn, name, n_args, n_out
 
 
 def _impl_test_reduction(fn, name):

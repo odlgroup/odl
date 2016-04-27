@@ -33,9 +33,8 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.util.testutils import almost_equal
+from odl.util.testutils import almost_equal, never_skip
 
-never_skip = pytest.mark.skipif("False", reason='dummy skip')
 skip_if_no_pyfftw = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE",
                                        reason='pyfftw not available')
 pytestmark = odl.util.skip_if_no_largescale
@@ -69,6 +68,21 @@ def _vectors(discr, num=1):
 
 
 # Pytest fixtures
+impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
+impl_ids = [" impl = '{}'".format(p.args[1]) for p in impl_params]
+
+
+# bug in pytest (ignores pytestmark) forces us to do this this
+largescale = " or not pytest.config.getoption('--largescale')"
+impl_params = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
+               for p in impl_params]
+
+
+@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
+def impl(request):
+    return request.param
+
+
 dom_params = [odl.uniform_discr(-2, 2, 10 ** 5),
               odl.uniform_discr([-2, -2, -2], [2, 2, 2], [200, 200, 200]),
               odl.uniform_discr(-2, 2, 10 ** 5, dtype='complex'),
@@ -76,15 +90,6 @@ dom_params = [odl.uniform_discr(-2, 2, 10 ** 5),
                                 dtype='complex')]
 
 dom_ids = [' {!r} '.format(dom) for dom in dom_params]
-
-
-impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
-impl_ids = [" impl = '{}'".format(p.args[1]) for p in impl_params]
-
-
-@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
-def impl(request):
-    return request.param
 
 
 @pytest.fixture(scope="module", ids=dom_ids, params=dom_params)

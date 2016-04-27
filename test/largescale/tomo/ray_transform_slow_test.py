@@ -29,12 +29,9 @@ import numpy as np
 # Internal
 import odl
 import odl.tomo as tomo
+from odl.util.testutils import skip_if_no_largescale
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_scikit)
-
-
-pytestmark = odl.util.skip_if_no_largescale
-
 
 # Find the valid projectors
 projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
@@ -60,6 +57,12 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
 
 projector_ids = ['geom={}, impl={}, angles={}'
                  ''.format(*p.args[1].split()) for p in projectors]
+
+
+# bug in pytest (ignores pytestmark) forces us to do this this
+largescale = " or not pytest.config.getoption('--largescale')"
+projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
+              for p in projectors]
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
@@ -163,6 +166,7 @@ def projector(request):
         raise ValueError('param not valid')
 
 
+@skip_if_no_largescale
 def test_reconstruction(projector):
     """Test discrete Ray transform using ASTRA for reconstruction."""
 

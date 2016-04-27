@@ -29,8 +29,8 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.util.testutils import all_almost_equal, almost_equal
-
+from odl.util.testutils import (all_almost_equal, almost_equal,
+                                never_skip, skip_if_no_cuda)
 
 pytestmark = odl.util.skip_if_no_largescale
 
@@ -65,22 +65,38 @@ def _vectors(fn, n=1):
 
 
 # Pytest fixtures
-spc_params = [odl.Rn(10 ** 5),
-              odl.uniform_discr(0, 1, 10 ** 5),
-              odl.uniform_discr([0, 0, 0], [1, 1, 1], [100, 100, 100])]
+spc_params = [never_skip('rn numpy'),
+              never_skip('1d numpy'),
+              never_skip('3d numpy'),
+              skip_if_no_cuda('rn cuda'),
+              skip_if_no_cuda('1d cuda'),
+              skip_if_no_cuda('3d cuda')]
 
-if odl.CUDA_AVAILABLE:
-    # Simply modify spc_params to modify the fixture
-    spc_params += [odl.CudaRn(10 ** 5),
-                   odl.uniform_discr(0, 1, 10 ** 5, impl='cuda'),
-                   odl.uniform_discr([0, 0, 0], [1, 1, 1],
-                                     [100, 100, 100], impl='cuda')]
-spc_ids = [' {!r} '.format(spc) for spc in spc_params]
+
+spc_ids = [' type={} impl={}'
+           ''.format(*p.args[1].split()) for p in spc_params]
+
+
+# bug in pytest (ignores pytestmark) forces us to do this this
+largescale = " or not pytest.config.getoption('--largescale')"
+spc_params = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
+              for p in spc_params]
 
 
 @pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
 def fn(request):
-    return request.param
+    spc, impl = request.param.split()
+
+    if spc == 'rn':
+        if impl == 'numpy':
+            return odl.Rn(10 ** 5)
+        elif impl == 'cuda':
+            return odl.CudaRn(10 ** 5)
+    elif spc == '1d':
+        return odl.uniform_discr(0, 1, 10 ** 5, impl=impl)
+    elif spc == '3d':
+        return odl.uniform_discr([0, 0, 0], [1, 1, 1],
+                                 [100, 100, 100], impl=impl)
 
 
 def test_element(fn):
@@ -134,31 +150,45 @@ def test_setitem(fn):
         assert x[index] == -index
 
 
-@pytest.mark.xfail(reason='Expected to fail since inner scaling is not public')
+def fn_weighting(fn):
+    """ Get the weighting of a fn space """
+
+    # TODO: use actual weighting
+
+    if isinstance(fn, odl.DiscreteLp):
+        return fn.domain.volume / fn.size
+    else:
+        return 1.0
+
+
 def test_inner(fn):
+    weighting = fn_weighting(fn)
+
     xarr, yarr, x, y = _vectors(fn, 2)
 
-    correct_inner = np.vdot(xarr, yarr)
+    correct_inner = np.vdot(xarr, yarr) * weighting
 
     assert almost_equal(fn.inner(x, y), correct_inner, places=2)
     assert almost_equal(x.inner(y), correct_inner, places=2)
 
 
-@pytest.mark.xfail(reason='Expected to fail since inner scaling is not public')
 def test_norm(fn):
+    weighting = np.sqrt(fn_weighting(fn))
+
     xarr, x = _vectors(fn)
 
-    correct_norm = np.linalg.norm(xarr)
+    correct_norm = np.linalg.norm(xarr) * weighting
 
     assert almost_equal(fn.norm(x), correct_norm, places=2)
     assert almost_equal(x.norm(), correct_norm, places=2)
 
 
-@pytest.mark.xfail(reason='Expected to fail since inner scaling is not public')
 def test_dist(fn):
+    weighting = np.sqrt(fn_weighting(fn))
+
     xarr, yarr, x, y = _vectors(fn, 2)
 
-    correct_dist = np.linalg.norm(xarr - yarr)
+    correct_dist = np.linalg.norm(xarr - yarr) * weighting
 
     assert almost_equal(fn.dist(x, y), correct_dist, places=2)
     assert almost_equal(x.dist(y), correct_dist, places=2)
