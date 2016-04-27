@@ -17,35 +17,9 @@
 
 """Total variation tomography using the Chambolle-Pock solver.
 
-Let X and Y be finite-dimensional Hilbert spaces and K a linear mapping from
-X to Y with induce norm ||K||. The (primal) minimization problem we want to
-solve is
+Solves the optimization problem
 
-    min_{x in X} F(K x) + G(x)
-
-where the proper, convex, lower-semicontinuous functionals
-F : Y -> [0, +infinity] and G : X -> [0, +infinity] are given
-by an l2-data fitting term regularized by isotropic total variation
-
-    F(K x) = 1/2 ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
-
-and
-
-   G(x) = 0 ,
-
-respectively. Here, A denotes the ray transform operator, g the projection
-data, ||.||_2 the l2-norm, ||.||_1  the l1-semi-norm, grad the spatial
-gradient, lam the regularization parameter, |.| the point-wise magnitude
-across the vector components of grad(x), and K is a column vector of
-operators K = (A, grad)^T.
-
-First we define a ray transform operator and generate projections.
-
-In order to use the Chambolle-Pock solver, we have to create the column
-operator K, choose a starting point x, create the proximal operator for G,
-create the proximal operator for the convex conjugate of F, choose the
-step sizes tau and sigma such that tau sigma ||K||_2^2 < 1, and set the
-total number of iterations.
+    min_x  1/2 ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
 
 For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
 references therein.
@@ -79,7 +53,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 #                             https://github.com/astra-toolbox/astra-toolbox
 impl = 'scikit'
 
-# ray transform aka forward projection.
+# Ray transform aka forward projection.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 
 
@@ -89,7 +63,7 @@ ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 # Create phantom
 discr_phantom = odl.util.shepp_logan(reco_space, modified=True)
 
-# Create vector of forward projected phantom with noise
+# Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
 data += odl.util.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
