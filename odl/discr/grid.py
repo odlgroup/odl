@@ -520,8 +520,8 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other : `TensorGrid`, `float` or `array-like`
-            The set to be inserted.
+        other : `TensorGrid`
+            The set to be inserted
 
         Examples
         --------

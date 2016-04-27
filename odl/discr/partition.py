@@ -380,8 +380,8 @@ class RectPartition(object):
         --------
         >>> part1 = uniform_partition([0, -1], [1, 2], (3, 3))
         >>> part2 = uniform_partition(0, 1, 5)
-        >>> part1.insert(2, part2)
-        uniform_partition([0.0, -1.0, 0.0], [1.0, 2.0, 1.0], [3, 3, 5])
+        >>> part1.insert(1, part2)
+        uniform_partition([0.0, 0.0, -1.0], [1.0, 1.0, 2.0], [3, 5, 3])
 
         See Also
         --------
@@ -403,7 +403,7 @@ class RectPartition(object):
         --------
         >>> part1 = uniform_partition([0, -1], [1, 2], (3, 3))
         >>> part2 = uniform_partition(0, 1, 5)
-        >>> part1.insert(2, part2)
+        >>> part1.append(part2)
         uniform_partition([0.0, -1.0, 0.0], [1.0, 2.0, 1.0], [3, 3, 5])
 
         See Also
