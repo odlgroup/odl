@@ -72,6 +72,11 @@ class ParallelGeometry(Geometry):
                              'expected ({},).'
                              ''.format(self._det_init_pos.shape, self.ndim))
 
+    @property
+    def angles(self):
+        """The discrete angles given in this geometry."""
+        return self.motion_grid.coord_vectors[0]
+
     def det_refpoint(self, angles):
         """Return the position of the detector ref. point at ``angles``.
 
@@ -173,24 +178,35 @@ class Parallel2dGeometry(ParallelGeometry):
             ``det_init_pos`` is used, which is only valid if
             ``det_init_axis`` is not zero.
         """
-        det_init_pos = kwargs.pop('det_init_pos', (1.0, 0.0))
-        det_init_axis = kwargs.pop('det_init_axis', None)
+        self._det_init_pos = kwargs.pop('det_init_pos', (1.0, 0.0))
+        self._det_init_axis = kwargs.pop('det_init_axis', None)
 
-        if det_init_axis is None:
-            if np.linalg.norm(det_init_pos) <= 1e-10:
+        if self.det_init_axis is None:
+            if np.linalg.norm(self.det_init_pos) <= 1e-10:
                 raise ValueError('initial detector position {} is close to '
                                  'zero. This is only allowed for explicit '
-                                 'det_init_axis.'.format(det_init_pos))
+                                 'det_init_axis.'
+                                 ''.format(self.det_init_pos))
 
-            det_init_axis = perpendicular_vector(det_init_pos)
+            det_init_axis = perpendicular_vector(self.det_init_pos)
 
         detector = Flat1dDetector(part=dpart, axis=det_init_axis)
         super().__init__(ndim=2, apart=apart, detector=detector,
-                         det_init_pos=det_init_pos)
+                         det_init_pos=self.det_init_pos)
 
         if self.motion_partition.ndim != 1:
             raise ValueError('angle partition has dimension {}, expected 1.'
                              ''.format(self.motion_partition.ndim))
+
+    @property
+    def det_init_pos(self):
+        """The position of the detector reference point at angle=0."""
+        return self._det_init_pos
+
+    @property
+    def det_init_axis(self):
+        """The direction of the detector extent at angle=0."""
+        return self._det_init_axis
 
     def rotation_matrix(self, angle):
         """Return the rotation matrix for ``angle``.
@@ -221,15 +237,20 @@ class Parallel2dGeometry(ParallelGeometry):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        # TODO: det_init_axis
+
         inner_fstr = '\n    {!r},\n    {!r}'
 
-        if not np.allclose(self._det_init_pos, [1, 0]):
+        if not np.allclose(self.det_init_pos, [1, 0]):
             inner_fstr += ',\n    det_init_pos={det_init_pos!r}'
+
+        if not np.allclose(self.det_init_pos,
+                           perpendicular_vector(self.det_init_pos)):
+            inner_fstr += ',\n    det_init_axis={det_init_axis!r}'
 
         inner_str = inner_fstr.format(self.motion_partition,
                                       self.det_partition,
-                                      det_init_pos=self._det_init_pos)
+                                      det_init_pos=self._det_init_pos,
+                                      det_init_axis=self.det_init_axis)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 

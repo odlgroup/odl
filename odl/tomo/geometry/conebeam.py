@@ -156,6 +156,11 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         """Vertical offset at ``angle=0``"""
         return self._pitch_offset
 
+    @property
+    def angles(self):
+        """The discrete angles given in this geometry."""
+        return self.motion_grid.coord_vectors[0]
+
     def det_refpoint(self, angle):
         """Return the detector reference point position at ``angle``.
 
