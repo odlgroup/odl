@@ -27,7 +27,8 @@ import numpy as np
 
 __all__ = ('ellipse_phantom_2d', 'ellipse_phantom_3d',
            'cuboid', 'indicate_proj_axis',
-           'derenzo_sources', 'shepp_logan', 'submarine_phantom')
+           'derenzo_sources', 'shepp_logan', 'submarine_phantom',
+           'white_noise')
 
 
 def _shepp_logan_ellipse_2d():
@@ -679,6 +680,12 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
     phan[x0:x1, y:y1, z:-z] = 1
 
     return discr_space.element(phan)
+
+
+def white_noise(space):
+    """Standard gaussian noise in space, pointwise N(0, 1)"""
+    values = np.random.randn(*space.shape)
+    return space.element(values)
 
 
 if __name__ == '__main__':

@@ -34,3 +34,7 @@ __all__ += astra_cpu.__all__
 from . import astra_cuda
 from .astra_cuda import *
 __all__ += astra_cuda.__all__
+
+from .import scikit_radon
+from .scikit_radon import *
+__all__ += scikit_radon.__all__

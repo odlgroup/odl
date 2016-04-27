@@ -35,7 +35,9 @@ import numpy as np
 import odl
 from odl.util.testutils import almost_equal
 
-
+never_skip = pytest.mark.skipif("False", reason='dummy skip')
+skip_if_no_pyfftw = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE",
+                                       reason='pyfftw not available')
 pytestmark = odl.util.skip_if_no_largescale
 
 
@@ -76,8 +78,8 @@ dom_params = [odl.uniform_discr(-2, 2, 10 ** 5),
 dom_ids = [' {!r} '.format(dom) for dom in dom_params]
 
 
-impl_params = ['numpy', 'pyfftw']
-impl_ids = [" impl = '{}' ".format(p) for p in impl_params]
+impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
+impl_ids = [" impl = '{}'".format(p.args[1]) for p in impl_params]
 
 
 @pytest.fixture(scope="module", ids=impl_ids, params=impl_params)

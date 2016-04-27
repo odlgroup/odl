@@ -239,7 +239,7 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
         g = space.zero()
     else:
         if g not in space:
-            raise TypeError('{} is not an element of {}'.format(g, space))
+            raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
     class _ProximalConvConjL2(Operator):
 
@@ -315,7 +315,7 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
         g = space.zero()
     else:
         if g not in space:
-            raise TypeError('{} is not an element of {}'.format(g, space))
+            raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
     class _ProximalConvConjL1(Operator):
 

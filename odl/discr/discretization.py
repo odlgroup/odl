@@ -308,13 +308,15 @@ class RawDiscretizationVector(NtuplesBaseVector):
         else:
             self.ntuple.__setitem__(indices, values)
 
-    def sampling(self, ufunc):
+    def sampling(self, ufunc, **kwargs):
         """Restrict a continuous function and assign to this vector
 
         Parameters
         ----------
         ufunc : ``self.space.uspace`` element
             The continuous function that should be samplingicted.
+        kwargs :
+            Additional arugments for the sampling operator implementation
 
         Examples
         --------
@@ -336,7 +338,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
         --------
         RawDiscretization.sampling : For full description
         """
-        self.space.sampling(ufunc, out=self.ntuple)
+        self.space.sampling(ufunc, out=self.ntuple, **kwargs)
 
     @property
     def interpolation(self):

@@ -224,12 +224,12 @@ class Parallel2dGeometry(ParallelGeometry):
         # TODO: det_init_axis
         inner_fstr = '\n    {!r},\n    {!r}'
 
-        if not np.allclose(self.origin_to_det, [1, 0]):
+        if not np.allclose(self._det_init_pos, [1, 0]):
             inner_fstr += ',\n    det_init_pos={det_init_pos!r}'
 
         inner_str = inner_fstr.format(self.motion_partition,
                                       self.det_partition,
-                                      det_init_pos=self._det_det_init_pos)
+                                      det_init_pos=self._det_init_pos)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 

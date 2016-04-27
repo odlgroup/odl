@@ -374,7 +374,7 @@ class MultiplyOperator(Operator):
 
 class PowerOperator(Operator):
 
-    """Take power of vector or scalar.
+    """The power of a vector or scalar.
 
     ``MultiplyOperator(n)(x) <==> x ** n``
 
@@ -385,7 +385,7 @@ class PowerOperator(Operator):
     """
 
     def __init__(self, domain, exponent):
-        """Initialize a MultiplyOperator instance.
+        """Initialize a PowerOperator instance.
 
         Parameters
         ----------
@@ -442,14 +442,16 @@ class PowerOperator(Operator):
     def derivative(self, point):
         """The derivative operator.
 
+        ``MultiplyOperator(n).derivative(x)(y) <==> n * x ** (n - 1) * y``
+
         Parameters
         ----------
-        point : domain element
+        point : ``domain`` `element`
             The point in which to take the derivative
 
         Returns
         -------
-        derivative : `MultiplyOperator`
+        derivative : `Operator`
             The derivative in ``point``
 
         Examples
@@ -476,7 +478,8 @@ class PowerOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'PowerOperator({!r}, {!r})'.format(self.domain, self.exponent)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.exponent)
 
     def __str__(self):
         """Return ``str(self)``."""
