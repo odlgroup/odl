@@ -54,6 +54,10 @@ def test_parallel_2d_geometry():
     assert all_almost_equal(rot_mat.dot([1, 0]), [0, 1])
     assert all_almost_equal(rot_mat.dot([0, 1]), [-1, 0])
 
+    # check str and repr work without crashing and return something
+    assert str(geom)
+    assert repr(geom)
+
 
 def test_parallel_3d_single_axis_geometry():
     """General parallel 3D geometries."""
@@ -114,6 +118,10 @@ def test_parallel_3d_single_axis_geometry():
     with pytest.raises(ValueError):
         odl.tomo.Parallel3dAxisGeometry(apart, dpart, axis=(1, 2, 3, 4))
 
+    # check str and repr work without crashing and return something
+    assert str(geom)
+    assert repr(geom)
+
 
 def test_fanflat():
     """2D fanbeam geometry with 1D line detector."""
@@ -156,7 +164,7 @@ def test_fanflat():
     assert all_almost_equal(rot_mat.dot([1, 0]), [0, 1])
     assert all_almost_equal(rot_mat.dot([0, 1]), [-1, 0])
 
-    # check str and repr works without crashing and return something
+    # check str and repr work without crashing and return something
     assert str(geom)
     assert repr(geom)
 
@@ -193,7 +201,7 @@ def test_circular_cone_flat():
     assert np.linalg.norm(geom.src_position(np.pi)) == src_rad
     assert isinstance(geom.detector, odl.tomo.Flat2dDetector)
 
-    # check str and repr works without crashing and return something
+    # check str and repr work without crashing and return something
     assert str(geom)
     assert repr(geom)
 
@@ -239,15 +247,15 @@ def test_helical_cone_flat():
     det_refpoint = geom.det_refpoint(2 * np.pi)
     assert almost_equal(np.linalg.norm(det_refpoint[0:2]), det_rad)
 
-    angles = geom.motion_grid
-    num_angles = geom.motion_grid.size
+    angles = geom.angles
+    num_angles = geom.angles.size
 
     src_rad = geom.src_radius
     det_rad = geom.det_radius
     pitch = geom.pitch
 
     for ang_ind in range(num_angles):
-        angle = angles[ang_ind][0]
+        angle = angles[ang_ind]
         z = pitch * angle / (2 * np.pi)
 
         # source
@@ -262,7 +270,7 @@ def test_helical_cone_flat():
         assert almost_equal(val0, val1)
         assert almost_equal(src[2], det[2])
 
-    # check str and repr works without crashing and return something
+    # check str and repr work without crashing and return something
     assert str(geom)
     assert repr(geom)
 

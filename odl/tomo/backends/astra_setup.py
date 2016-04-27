@@ -178,10 +178,10 @@ def astra_conebeam_3d_geom_to_vec(geometry):
         Numpy array of shape ``(number of angles, 12)``
     """
 
-    angles = geometry.motion_grid
+    angles = geometry.angles
     vectors = np.zeros((angles.size, 12))
 
-    for ang_idx, angle in enumerate(angles.points()):
+    for ang_idx, angle in enumerate(angles):
         rot_matrix = geometry.rotation_matrix(angle)
 
         # source position
@@ -233,10 +233,10 @@ def astra_conebeam_2d_geom_to_vec(geometry):
         Numpy array of shape ``(number of angles, 6)``
     """
 
-    angles = geometry.motion_grid
+    angles = geometry.angles
     vectors = np.zeros((angles.size, 6))
 
-    for ang_idx, angle in enumerate(angles.points()):
+    for ang_idx, angle in enumerate(angles):
         rot_matrix = geometry.rotation_matrix(angle)
 
         # source position
@@ -288,10 +288,10 @@ def astra_parallel_3d_geom_to_vec(geometry):
         Numpy array of shape ``(number of angles, 12)``
     """
 
-    angles = geometry.motion_grid
+    angles = geometry.angles
     vectors = np.zeros((angles.size, 12))
 
-    for ang_idx, angle in enumerate(angles.points()):
+    for ang_idx, angle in enumerate(angles):
         rot_matrix = geometry.rotation_matrix(angle)
 
         midp = geometry.det_params.midpoint
@@ -356,7 +356,7 @@ def astra_projection_geometry(geometry):
         det_width = geometry.det_partition.cell_sides[0]
         det_count = geometry.detector.size
         # convention in 'astra_conebeam_2d_geom_to_vec' differs from ASTRA's
-        angles = geometry.motion_grid.coord_vectors[0] - np.pi / 2
+        angles = geometry.angles - np.pi / 2
         proj_geom = astra.create_proj_geom('parallel', det_width, det_count,
                                            angles)
 
