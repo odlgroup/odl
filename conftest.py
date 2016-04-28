@@ -21,6 +21,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+import pytest
+import odl
 from odl.space.cu_ntuples import CUDA_AVAILABLE
 from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
 
@@ -38,3 +40,22 @@ def pytest_addoption(parser):
 
     parser.addoption('--benchmark', action='store_true',
                      help='Run benchmarks')
+
+
+# reusable fixtures
+ufunc_params = [ufunc for ufunc in odl.util.ufuncs.UFUNCS]
+ufunc_ids = [' ufunc={} '.format(p[0]) for p in ufunc_params]
+
+
+@pytest.fixture(scope="module", ids=ufunc_ids, params=ufunc_params)
+def ufunc(request):
+    return request.param
+
+
+reduction_params = [reduction for reduction in odl.util.ufuncs.REDUCTIONS]
+reduction_ids = [' reduction={} '.format(p[0]) for p in reduction_params]
+
+
+@pytest.fixture(scope="module", ids=reduction_ids, params=reduction_params)
+def reduction(request):
+    return request.param

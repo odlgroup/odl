@@ -82,19 +82,15 @@ def _pos_vector(fn):
 # Pytest fixtures
 
 
-if odl.CUDA_AVAILABLE:
-    # Simply modify spc_params to modify the fixture
-    spc_params = [CudaRn(100)]
-else:
-    spc_params = []
-spc_ids = [' {!r} '.format(spc) for spc in spc_params]
-spc_fixture = pytest.fixture(scope="module", ids=spc_ids,
-                             params=spc_params)
+spc_params = ['100 float32']
+spc_ids = [' size={} dtype={} '
+           ''.format(*p.split()) for p in spc_params]
 
 
-@spc_fixture
+@pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
 def fn(request):
-    return request.param
+    size, dtype = request.param.split()
+    return odl.CudaRn(int(size), dtype=dtype)
 
 
 # Simply modify exp_params to modify the fixture
@@ -1045,8 +1041,18 @@ def test_custom_dist(fn):
         CudaFnCustomDist(1)
 
 
-@pytest.mark.skipif("not odl.CUDA_AVAILABLE")
-def _impl_test_ufuncs(fn, name, n_args, n_out):
+def test_ufuncs(fn, ufunc):
+    name, n_args, n_out, _ = ufunc
+    if (np.issubsctype(fn.dtype, np.floating) and
+            name in ['bitwise_and',
+                     'bitwise_or',
+                     'bitwise_xor',
+                     'invert',
+                     'left_shift',
+                     'right_shift']):
+        # Skip integer only methods if floating point type
+        return
+
     # Get the ufunc from numpy as reference
     ufunc = getattr(np, name)
 
@@ -1085,35 +1091,15 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
             assert odl_result[i] is out_vectors[i]
 
 
-def test_ufuncs():
-    # Cannot use fixture due to bug in pytest
-    for fn in spc_params:
-        for name, n_args, n_out, _ in odl.util.ufuncs.UFUNCS:
-            if (np.issubsctype(fn.dtype, np.floating) and
-                    name in ['bitwise_and',
-                             'bitwise_or',
-                             'bitwise_xor',
-                             'invert',
-                             'left_shift',
-                             'right_shift']):
-                # Skip integer only methods if floating point type
-                continue
-            yield _impl_test_ufuncs, fn, name, n_args, n_out
+def test_reductions(fn, reduction):
+    name, _ = reduction
 
-
-def _impl_test_reduction(fn, name):
     ufunc = getattr(np, name)
 
     # Create some data
     x_arr, x = _vectors(fn, 1)
 
     assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
-
-
-def test_reductions():
-    for fn in spc_params:
-        for name, _ in odl.util.ufuncs.REDUCTIONS:
-            yield _impl_test_reduction, fn, name
 
 
 if __name__ == '__main__':

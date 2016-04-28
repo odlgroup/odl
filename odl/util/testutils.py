@@ -30,7 +30,7 @@ import sys
 from time import time
 
 
-__all__ = ('almost_equal', 'all_equal', 'all_almost_equal',
+__all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
            'skip_if_no_cuda', 'skip_if_no_pywavelets', 'skip_if_no_pyfftw',
            'skip_if_no_largescale',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
@@ -184,6 +184,12 @@ def _pass(function):
 try:
     # Try catch in case user does not have pytest
     import pytest
+
+    # Used in lists where the elements should all be skipifs
+    never_skip = pytest.mark.skipif(
+        "False",
+        reason='Fill in, never skips'
+    )
 
     skip_if_no_cuda = pytest.mark.skipif(
         "not odl.CUDA_AVAILABLE",
