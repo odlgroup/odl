@@ -27,6 +27,7 @@ from itertools import zip_longest
 import numpy as np
 from numpy import ravel_multi_index, prod
 import sys
+import os
 from time import time
 
 
@@ -34,7 +35,7 @@ __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
            'skip_if_no_cuda', 'skip_if_no_pywavelets', 'skip_if_no_pyfftw',
            'skip_if_no_largescale',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
-           'run_doctests')
+           'test', 'run_doctests')
 
 
 def _places(a, b, default=None):
@@ -419,6 +420,15 @@ class ProgressRange(object):
             return val
         else:
             raise StopIteration()
+
+
+def test(arguments=''):
+    """Run odl tests given by arguments"""
+    import pytest
+    this_dir = os.path.dirname(__file__)
+    odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
+    base_args = '-x {odl_root}/odl {odl_root}/test '.format(odl_root=odl_root)
+    pytest.main(base_args + arguments)
 
 
 def run_doctests():
