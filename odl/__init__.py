@@ -53,3 +53,6 @@ from . import solvers
 from . import trafos
 from . import tomo
 from . import util
+
+from .util import test
+__all__ += ('test',)

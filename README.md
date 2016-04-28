@@ -35,7 +35,7 @@ For basic installation without extra dependencies, run
 
 You can check that everything was installed properly by running
 
-    py.test
+    python -c "import odl; odl.test()"
 
 This requires [pytest](http://pytest.org/latest/). See the [installation](http://odl.readthedocs.org/guide/introduction/installing.html) documentation for further information.
 
