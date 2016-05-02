@@ -1564,7 +1564,7 @@ class FourierTransform(Operator):
         # Need to filter out this situation since the pre-processing step
         # casts to complex otherwise, and then no half-complex transform
         # is possible.
-        if dom.field == RealNumbers() and not self.shifts[-1]:
+        if self.halfcomplex and not self.shifts[-1]:
             raise ValueError('shift must be True in the halved (last) axis '
                              'in half-complex transforms.')
 
