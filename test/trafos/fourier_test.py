@@ -538,7 +538,12 @@ def test_pyfftw_call_bad_input(direction):
     # Bad dtype
     dtype_in = 'complex128'
     arr_in = np.empty(3, dtype=dtype_in)
-    bad_dtypes_out = ['complex64', 'float64', 'float128']
+    bad_dtypes_out = np.sctypes['float'] + np.sctypes['complex']
+    try:
+        # This one is correct, so we remove it
+        bad_dtypes_out.remove(np.dtype('complex128'))
+    except ValueError:
+        pass
     for bad_dtype in bad_dtypes_out:
         arr_out = np.empty(3, dtype=bad_dtype)
         with pytest.raises(ValueError):
@@ -591,7 +596,12 @@ def test_pyfftw_call_bad_input(direction):
     # Bad dtype
     dtype_in = 'float64'
     arr_in = np.empty(10, dtype=dtype_in)
-    bad_dtypes_out = ['complex64', 'float64', 'float128', 'complex256']
+    bad_dtypes_out = np.sctypes['float'] + np.sctypes['complex']
+    try:
+        # This one is correct, so we remove it
+        bad_dtypes_out.remove(np.dtype('complex128'))
+    except ValueError:
+        pass
     for bad_dtype in bad_dtypes_out:
         arr_out = np.empty(6, dtype=bad_dtype)
         with pytest.raises(ValueError):
