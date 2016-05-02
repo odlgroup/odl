@@ -217,6 +217,7 @@ try:
     )
 
 except ImportError:
+    never_skip = _pass
     skip_if_no_cuda = _pass
     skip_if_no_pywavelets = _pass
     skip_if_no_pyfftw = _pass
