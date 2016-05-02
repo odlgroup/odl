@@ -2087,7 +2087,8 @@ class FourierTransformInverse(FourierTransform):
         # one of the "i" functions is used. For sign='-' we need to do it
         # ourselves.
         if self.halfcomplex:
-            out = np.fft.irfftn(preproc, axes=self.axes)
+            s = np.asarray(self.range.shape)[self.axes]
+            out = np.fft.irfftn(preproc, axes=self.axes, s=s)
         else:
             if self.sign == '-':
                 out = np.fft.fftn(preproc, axes=self.axes)
