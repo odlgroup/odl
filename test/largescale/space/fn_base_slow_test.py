@@ -21,7 +21,6 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range
 
 # External module imports
 import pytest
@@ -30,38 +29,9 @@ import numpy as np
 # ODL imports
 import odl
 from odl.util.testutils import (all_almost_equal, almost_equal,
-                                never_skip, skip_if_no_cuda)
+                                never_skip, skip_if_no_cuda, example_vectors)
 
 pytestmark = odl.util.skip_if_no_largescale
-
-
-# Helpers to generate data
-def _array(fn):
-    # Generate numpy vectors, real or complex or int
-    if np.issubdtype(fn.dtype, np.floating):
-        arr = np.random.rand(fn.size)
-    elif np.issubdtype(fn.dtype, np.integer):
-        arr = np.random.randint(0, 10, fn.size)
-    else:
-        arr = np.random.rand(fn.size) + 1j * np.random.rand(fn.size)
-
-    return arr.astype(fn.dtype, copy=False)
-
-
-def _element(fn):
-    return fn.element(_array(fn))
-
-
-def _vectors(fn, n=1):
-    """Create a list of arrays and vectors in `fn`.
-
-    First arrays, then vectors.
-    """
-    arrs = [_array(fn) for _ in range(n)]
-
-    # Make Fn vectors
-    vecs = [fn.element(arr) for arr in arrs]
-    return arrs + vecs
 
 
 # Pytest fixtures
@@ -164,7 +134,7 @@ def fn_weighting(fn):
 def test_inner(fn):
     weighting = fn_weighting(fn)
 
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     correct_inner = np.vdot(xarr, yarr) * weighting
 
@@ -175,7 +145,7 @@ def test_inner(fn):
 def test_norm(fn):
     weighting = np.sqrt(fn_weighting(fn))
 
-    xarr, x = _vectors(fn)
+    xarr, x = example_vectors(fn)
 
     correct_norm = np.linalg.norm(xarr) * weighting
 
@@ -186,7 +156,7 @@ def test_norm(fn):
 def test_dist(fn):
     weighting = np.sqrt(fn_weighting(fn))
 
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     correct_dist = np.linalg.norm(xarr - yarr) * weighting
 
@@ -199,7 +169,7 @@ def _test_lincomb(fn, a, b):
     # data and given a,b
 
     # Unaliased arguments
-    x_arr, y_arr, z_arr, x, y, z = _vectors(fn, 3)
+    [x_arr, y_arr, z_arr], [x, y, z] = example_vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * y_arr
     z.lincomb(a, x, b, y)
@@ -219,7 +189,7 @@ def _test_member_lincomb(spc, a):
     # Validates vector member lincomb against the result on host
 
     # Generate vectors
-    x_host, y_host, x_device, y_device = _vectors(spc, 2)
+    [x_host, y_host], [x_device, y_device] = example_vectors(spc, 2)
 
     # Host side calculation
     y_host[:] = a * x_host
@@ -240,7 +210,7 @@ def test_member_lincomb(fn):
 def _test_unary_operator(spc, function):
     # Verify that the statement y=function(x) gives equivalent
     # results to Numpy.
-    x_arr, x = _vectors(spc)
+    x_arr, x = example_vectors(spc)
 
     y_arr = function(x_arr)
     y = function(x)
@@ -252,7 +222,7 @@ def _test_unary_operator(spc, function):
 def _test_binary_operator(spc, function):
     # Verify that the statement z=function(x,y) gives equivalent
     # results to Numpy.
-    x_arr, y_arr, x, y = _vectors(spc, 2)
+    [x_arr, y_arr], [x, y] = example_vectors(spc, 2)
 
     z_arr = function(x_arr, y_arr)
     z = function(x, y)

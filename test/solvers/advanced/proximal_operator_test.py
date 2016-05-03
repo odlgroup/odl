@@ -304,8 +304,7 @@ def test_proximal_factory_convconj_l1_product_space():
     x1_verify = lam * (x1_arr - sigma * g1_arr) / denom
 
     # Compare components
-    assert all_almost_equal(x0_verify, x_opt[0])
-    assert all_almost_equal(x1_verify, x_opt[1])
+    assert all_almost_equal([x0_verify, x1_verify], x_opt)
 
 
 def test_proximal_factory_convconj_kl_simple_space():
@@ -337,7 +336,6 @@ def test_proximal_factory_convconj_kl_simple_space():
     prox(x, x_opt)
 
     # Explicit computation:
-    # 1 / 2 * (lam_X + x - sqrt((x - lam_X)^2 + 4 * lam * sigma * g)
     x_verify = (lam + x - np.sqrt((x - lam) ** 2 + 4 * lam * sigma * g)) / 2
 
     assert all_almost_equal(x_opt, x_verify, PLACES)
@@ -378,14 +376,11 @@ def test_proximal_factory_convconj_kl_product_space():
 
     # Explicit computation:
     # 1 / 2 * (lam_X + x - sqrt((x - lam_X)^2 + 4 * lam * sigma * g)
-    x0_verify = (lam + x0_arr - np.sqrt((x0_arr - lam) ** 2 + 4 * lam *
-                                        sigma * g0_arr)) / 2
-    x1_verify = (lam + x1_arr - np.sqrt((x1_arr - lam) ** 2 + 4 * lam *
-                                        sigma * g1_arr)) / 2
+    x_verify = (lam + x - np.sqrt((x - lam) ** 2 + 4 * lam *
+                                        sigma * g)) / 2
 
     # Compare components
-    assert all_almost_equal(x0_verify, x_opt[0])
-    assert all_almost_equal(x1_verify, x_opt[1])
+    assert all_almost_equal(x_verify, x_opt)
 
 
 if __name__ == '__main__':

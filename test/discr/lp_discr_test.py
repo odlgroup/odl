@@ -29,36 +29,7 @@ import numpy as np
 import odl
 from odl.discr.lp_discr import DiscreteLp
 from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
-                                never_skip, skip_if_no_cuda)
-
-
-def _array(fn):
-    # Generate numpy vectors, real or complex or int
-    if np.issubdtype(fn.dtype, np.floating):
-        arr = np.random.rand(fn.size)
-    elif np.issubdtype(fn.dtype, np.integer):
-        arr = np.random.randint(0, 10, fn.size)
-    elif np.issubdtype(fn.dtype, np.complexfloating):
-        arr = np.random.rand(fn.size) + 1j * np.random.rand(fn.size)
-    else:
-        raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
-    return arr.astype(fn.dtype, copy=False)
-
-
-def _element(fn):
-    return fn.element(_array(fn))
-
-
-def _vectors(fn, n=1):
-    """Create a list of arrays and vectors in `fn`.
-
-    First arrays, then vectors.
-    """
-    arrs = [_array(fn) for _ in range(n)]
-
-    # Make Fn vectors
-    vecs = [fn.element(arr) for arr in arrs]
-    return arrs + vecs
+                                never_skip, skip_if_no_cuda, example_vectors)
 
 # Pytest fixture
 
@@ -314,7 +285,7 @@ def test_zero():
 def _test_unary_operator(discr, function):
     # Verify that the statement y=function(x) gives equivalent results
     # to NumPy
-    x_arr, x = _vectors(discr)
+    x_arr, x = example_vectors(discr)
 
     y_arr = function(x_arr)
 
@@ -326,7 +297,7 @@ def _test_unary_operator(discr, function):
 def _test_binary_operator(discr, function):
     # Verify that the statement z=function(x,y) gives equivalent results
     # to NumPy
-    x_arr, y_arr, x, y = _vectors(discr, 2)
+    [x_arr, y_arr], [x, y] = example_vectors(discr, 2)
 
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
@@ -716,12 +687,12 @@ def test_ufunc(impl, ufunc):
     ufunc = getattr(np, name)
 
     # Create some data
-    data = _vectors(space, n_args + n_out)
-    in_arrays = data[:n_args]
-    out_arrays = data[n_args:n_args + n_out]
-    data_vector = data[n_args + n_out]
-    in_vectors = data[1 + n_args + n_out:2 * n_args + n_out]
-    out_vectors = data[2 * n_args + n_out:]
+    arrays, vectors = example_vectors(space, n_args + n_out)
+    in_arrays = arrays[:n_args]
+    out_arrays = arrays[n_args:]
+    data_vector = vectors[0]
+    in_vectors = vectors[1:n_args]
+    out_vectors = vectors[n_args:]
 
     # Verify type
     assert isinstance(data_vector.ufunc,
@@ -827,7 +798,7 @@ def test_reduction(impl, reduction):
     ufunc = getattr(np, name)
 
     # Create some data
-    x_arr, x = _vectors(space, 1)
+    x_arr, x = example_vectors(space, 1)
     assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
 
 

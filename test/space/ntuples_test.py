@@ -36,44 +36,16 @@ from odl.space.ntuples import (
     FnCustomInnerProduct, FnCustomNorm, FnCustomDist,
     weighted_inner, weighted_norm, weighted_dist,
     MatVecOperator)
-from odl.util.testutils import almost_equal, all_almost_equal, all_equal
+from odl.util.testutils import (almost_equal, all_almost_equal, all_equal,
+                                example_array, example_element,
+                                example_vectors)
 from odl.util.ufuncs import UFUNCS, REDUCTIONS
 
 
 # Helpers to generate data
-
-def _array(fn):
-    # Generate numpy vectors, real or complex or int
-    if np.issubdtype(fn.dtype, np.floating):
-        return np.random.rand(fn.size).astype(fn.dtype, copy=False)
-    elif np.issubdtype(fn.dtype, np.integer):
-        return np.random.randint(0, 10, fn.size).astype(fn.dtype, copy=False)
-    elif np.issubdtype(fn.dtype, np.complexfloating):
-        return (np.random.rand(fn.size) +
-                1j * np.random.rand(fn.size)).astype(fn.dtype, copy=False)
-    else:
-        raise TypeError('unable to handle data type {!r}'.format(fn.dtype))
-
-
-def _element(fn):
-    return fn.element(_array(fn))
-
-
-def _vectors(fn, n=1):
-    """Create a list of arrays and vectors in `fn`.
-
-    First arrays, then vectors.
-    """
-    arrs = [_array(fn) for _ in range(n)]
-
-    # Make Fn vectors
-    vecs = [fn.element(arr) for arr in arrs]
-    return arrs + vecs
-
-
 def _pos_array(fn):
     """Create an array with positive real entries as weight in `fn`."""
-    return np.abs(_array(fn)) + 0.1
+    return np.abs(example_array(fn)) + 0.1
 
 
 def _dense_matrix(fn):
@@ -227,7 +199,7 @@ def test_astype():
 
 def test_vector_class_init(fn):
     # Test that code runs
-    arr = _array(fn)
+    arr = example_array(fn)
 
     FnVector(fn, arr)
     # Space has to be an actual space
@@ -249,31 +221,31 @@ def _test_lincomb(fn, a, b):
     # data and given a,b, contiguous and non-contiguous
 
     # Unaliased arguments
-    xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
+    [xarr, yarr, zarr], [x, y, z] = example_vectors(fn, 3)
     zarr[:] = a * xarr + b * yarr
     fn.lincomb(a, x, b, y, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # First argument aliased with output
-    xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
+    [xarr, yarr, zarr], [x, y, z] = example_vectors(fn, 3)
     zarr[:] = a * zarr + b * yarr
     fn.lincomb(a, z, b, y, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # Second argument aliased with output
-    xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
+    [xarr, yarr, zarr], [x, y, z] = example_vectors(fn, 3)
     zarr[:] = a * xarr + b * zarr
     fn.lincomb(a, x, b, z, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # Both arguments aliased with each other
-    xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
+    [xarr, yarr, zarr], [x, y, z] = example_vectors(fn, 3)
     zarr[:] = a * xarr + b * xarr
     fn.lincomb(a, x, b, x, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
 
     # All aliased
-    xarr, yarr, zarr, x, y, z = _vectors(fn, 3)
+    [xarr, yarr, zarr], [x, y, z] = example_vectors(fn, 3)
     zarr[:] = a * zarr + b * zarr
     fn.lincomb(a, z, b, z, out=z)
     assert all_almost_equal([x, y, z], [xarr, yarr, zarr])
@@ -311,14 +283,14 @@ def test_lincomb_exceptions(fn):
 
 def test_multiply(fn):
     # space method
-    x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
+    [x_arr, y_arr, out_arr], [x, y, out] = example_vectors(fn, 3)
     out_arr = x_arr * y_arr
 
     fn.multiply(x, y, out)
     assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
 
     # member method
-    x_arr, y_arr, out_arr, x, y, out = _vectors(fn, 3)
+    [x_arr, y_arr, out_arr], [x, y, out] = example_vectors(fn, 3)
     out_arr = x_arr * y_arr
 
     out.multiply(x, y)
@@ -344,7 +316,7 @@ def test_multiply_exceptions(fn):
 
 def test_power(fn):
 
-    x_arr, y_arr, x, y = _vectors(fn, n=2)
+    [x_arr, y_arr], [x, y] = example_vectors(fn, n=2)
     y_pos = fn.element(np.abs(y) + 0.1)
     y_pos_arr = np.abs(y_arr) + 0.1
 
@@ -371,7 +343,7 @@ def test_power(fn):
 def _test_unary_operator(fn, function):
     # Verify that the statement y=function(x) gives equivalent results
     # to NumPy
-    x_arr, x = _vectors(fn)
+    x_arr, x = example_vectors(fn)
 
     y_arr = function(x_arr)
 
@@ -383,7 +355,7 @@ def _test_unary_operator(fn, function):
 def _test_binary_operator(fn, function):
     # Verify that the statement z=function(x,y) gives equivalent results
     # to NumPy
-    x_arr, y_arr, x, y = _vectors(fn, 2)
+    [x_arr, y_arr], [x, y] = example_vectors(fn, 2)
 
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
@@ -477,8 +449,8 @@ def test_operators(fn):
 
 
 def test_assign(fn):
-    x = _element(fn)
-    y = _element(fn)
+    x = example_element(fn)
+    y = example_element(fn)
 
     y.assign(x)
 
@@ -491,8 +463,8 @@ def test_assign(fn):
 
 
 def test_inner(fn):
-    xd = _element(fn)
-    yd = _element(fn)
+    xd = example_element(fn)
+    yd = example_element(fn)
 
     correct_inner = np.vdot(yd, xd)
     assert almost_equal(fn.inner(xd, yd), correct_inner)
@@ -514,7 +486,7 @@ def test_inner_exceptions(fn):
 
 
 def test_norm(fn):
-    xarr, x = _vectors(fn)
+    xarr, x = example_vectors(fn)
 
     correct_norm = np.linalg.norm(xarr)
 
@@ -534,7 +506,7 @@ def test_norm_exceptions(fn):
 
 def test_pnorm(exponent):
     for fn in (Rn(3, exponent=exponent), Cn(3, exponent=exponent)):
-        xarr, x = _vectors(fn)
+        xarr, x = example_vectors(fn)
         correct_norm = np.linalg.norm(xarr, ord=exponent)
 
         assert almost_equal(fn.norm(x), correct_norm)
@@ -542,7 +514,7 @@ def test_pnorm(exponent):
 
 
 def test_dist(fn):
-    xarr, yarr, x, y = _vectors(fn, n=2)
+    [xarr, yarr], [x, y] = example_vectors(fn, n=2)
 
     correct_dist = np.linalg.norm(xarr - yarr)
 
@@ -566,7 +538,7 @@ def test_dist_exceptions(fn):
 
 def test_pdist(exponent):
     for fn in (Rn(3, exponent=exponent), Cn(3, exponent=exponent)):
-        xarr, yarr, x, y = _vectors(fn, n=2)
+        [xarr, yarr], [x, y] = example_vectors(fn, n=2)
 
         correct_dist = np.linalg.norm(xarr - yarr, ord=exponent)
 
@@ -575,7 +547,7 @@ def test_pdist(exponent):
 
 
 def test_setitem(fn):
-    x = _element(fn)
+    x = example_element(fn)
 
     for index in [0, 1, 2, -1, -2, -3]:
         x[index] = index
@@ -583,7 +555,7 @@ def test_setitem(fn):
 
 
 def test_setitem_index_error(fn):
-    x = _element(fn)
+    x = example_element(fn)
 
     with pytest.raises(IndexError):
         x[-fn.size - 1] = 0
@@ -638,8 +610,8 @@ def test_setslice():
 
 
 def test_transpose(fn):
-    x = _element(fn)
-    y = _element(fn)
+    x = example_element(fn)
+    y = example_element(fn)
 
     # Assert linear operator
     assert isinstance(x.T, Operator)
@@ -683,7 +655,7 @@ def test_multiply_by_scalar(fn):
 
 
 def test_member_copy(fn):
-    x = _element(fn)
+    x = example_element(fn)
 
     y = x.copy()
 
@@ -698,7 +670,7 @@ def test_member_copy(fn):
 def test_python_copy(fn):
     import copy
 
-    x = _element(fn)
+    x = example_element(fn)
 
     y = copy.copy(x)
 
@@ -771,7 +743,7 @@ def test_array_method(fn):
 def test_array_wrap_method(fn):
     # Verify that the __array_wrap__ method works. This enables numpy ufuncs
     # on vectors
-    x_h, x = _vectors(fn)
+    x_h, x = example_vectors(fn)
     y_h = np.sin(x_h)
     y = np.sin(x)
 
@@ -780,7 +752,7 @@ def test_array_wrap_method(fn):
 
 
 def test_conj(fn):
-    xarr, x = _vectors(fn)
+    xarr, x = example_vectors(fn)
     xconj = x.conj()
     assert all_equal(xconj, xarr.conj())
     y = x.copy()
@@ -914,7 +886,7 @@ def test_matvec_call(fn):
     # Square cases
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
-    xarr, x = _vectors(fn)
+    xarr, x = example_vectors(fn)
 
     op_sparse = MatVecOperator(sparse_mat, fn, fn)
     op_dense = MatVecOperator(dense_mat, fn, fn)
@@ -1100,7 +1072,7 @@ def test_matrix_equiv():
 
 
 def test_matrix_inner(fn):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
     sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = np.asarray(sparse_mat.todense())
     dense_mat = _dense_matrix(fn)
@@ -1126,7 +1098,7 @@ def test_matrix_inner(fn):
 
 
 def test_matrix_norm(fn, exponent):
-    xarr, x = _vectors(fn)
+    xarr, x = example_vectors(fn)
     sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = np.asarray(sparse_mat.todense())
     dense_mat = _dense_matrix(fn)
@@ -1173,7 +1145,7 @@ def test_matrix_norm(fn, exponent):
 
 
 def test_matrix_dist(fn, exponent):
-    xarr, yarr, x, y = _vectors(fn, n=2)
+    [xarr, yarr], [x, y] = example_vectors(fn, n=2)
     sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = np.asarray(sparse_mat.todense())
     dense_mat = _dense_matrix(fn)
@@ -1218,7 +1190,7 @@ def test_matrix_dist(fn, exponent):
 
 
 def test_matrix_dist_using_inner(fn):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
     mat = _dense_matrix(fn)
 
     w = FnMatrixWeighting(mat, dist_using_inner=True)
@@ -1328,7 +1300,7 @@ def test_vector_equiv():
 
 
 def test_vector_inner(fn):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     weight_vec = _pos_array(fn)
     weighting_vec = FnVectorWeighting(weight_vec)
@@ -1348,7 +1320,7 @@ def test_vector_inner(fn):
 
 
 def test_vector_norm(fn, exponent):
-    xarr, x = _vectors(fn)
+    xarr, x = example_vectors(fn)
 
     weight_vec = _pos_array(fn)
     weighting_vec = FnVectorWeighting(weight_vec, exponent=exponent)
@@ -1367,7 +1339,7 @@ def test_vector_norm(fn, exponent):
 
 
 def test_vector_dist(fn, exponent):
-    xarr, yarr, x, y = _vectors(fn, n=2)
+    [xarr, yarr], [x, y] = example_vectors(fn, n=2)
 
     weight_vec = _pos_array(fn)
     weighting_vec = FnVectorWeighting(weight_vec, exponent=exponent)
@@ -1387,7 +1359,7 @@ def test_vector_dist(fn, exponent):
 
 
 def test_vector_dist_using_inner(fn):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     weight_vec = _pos_array(fn)
     w = FnVectorWeighting(weight_vec)
@@ -1477,7 +1449,7 @@ def test_constant_equiv():
 
 
 def test_constant_inner(fn):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     constant = 1.5
     true_result_const = constant * np.vdot(yarr, xarr)
@@ -1492,7 +1464,7 @@ def test_constant_inner(fn):
 
 
 def test_constant_norm(fn, exponent):
-    xarr, x = _vectors(fn)
+    xarr, x = example_vectors(fn)
 
     constant = 1.5
     if exponent == float('inf'):
@@ -1510,7 +1482,7 @@ def test_constant_norm(fn, exponent):
 
 
 def test_constant_dist(fn, exponent):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     constant = 1.5
     if exponent == float('inf'):
@@ -1528,7 +1500,7 @@ def test_constant_dist(fn, exponent):
 
 
 def test_const_dist_using_inner(fn):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     constant = 1.5
     w = FnConstWeighting(constant)
@@ -1569,7 +1541,7 @@ def test_noweight():
 
 
 def test_custom_inner(fn):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     def inner(x, y):
         return np.vdot(y, x)
@@ -1601,7 +1573,7 @@ def test_custom_inner(fn):
 
 
 def test_custom_norm(fn):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     norm = np.linalg.norm
 
@@ -1630,7 +1602,7 @@ def test_custom_norm(fn):
 
 
 def test_custom_dist(fn):
-    xarr, yarr, x, y = _vectors(fn, 2)
+    [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     def dist(x, y):
         return np.linalg.norm(x - y)
@@ -1698,12 +1670,12 @@ def test_ufuncs(fn, ufunc):
     npufunc = getattr(np, name)
 
     # Create some data
-    data = _vectors(fn, n_args + n_out)
-    in_arrays = data[:n_args]
-    out_arrays = data[n_args:n_args + n_out]
-    data_vector = data[n_args + n_out]
-    in_vectors = data[1 + n_args + n_out:2 * n_args + n_out]
-    out_vectors = data[2 * n_args + n_out:]
+    arrays, vectors = example_vectors(fn, n_args + n_out)
+    in_arrays = arrays[:n_args]
+    out_arrays = arrays[n_args:]
+    data_vector = vectors[0]
+    in_vectors = vectors[1:n_args]
+    out_vectors = vectors[n_args:]
 
     # Out of place:
     np_result = npufunc(*in_arrays)
@@ -1736,7 +1708,7 @@ def _impl_test_reduction(fn, name):
     ufunc = getattr(np, name)
 
     # Create some data
-    x_arr, x = _vectors(fn, 1)
+    x_arr, x = example_vectors(fn, 1)
 
     assert ufunc(x_arr) == getattr(x.ufunc, name)()
 
