@@ -70,7 +70,7 @@ shape = image.shape
 image /= image.max()
 
 # Discretized spaces
-discr_space = odl.uniform_discr([0, 0], shape, shape)
+discr_space = odl.uniform_discr([0, 0], [1, 1], shape)
 
 # Original image
 orig = discr_space.element(image)
@@ -113,19 +113,21 @@ proximal_dual = odl.solvers.combine_proximals([prox_convconj_l2,
 # Non-negativity constraint
 proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
 
+
+# --- Select solver parameters and solve using Chambolle-Pock --- #
+
+
+# Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
+op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 100)
+
+niter = 400  # Number of iterations
+tau = 1.0 / op_norm  # Step size for the primal variable
+sigma = 1.0 / op_norm  # Step size for the dual variable
+
 # Optional: pass partial objects to solver
 partial = (odl.solvers.PrintIterationPartial() &
            odl.solvers.util.PrintTimingPartial() &
            odl.solvers.util.ShowPartial())
-
-# Number of iterations
-niter = 100
-
-# Step size for the proximal operator for the primal variable x
-tau = 1 / prod_op_norm
-
-# Step size for the proximal operator for the dual variable y
-sigma = 1 / prod_op_norm
 
 # Run algorithms (and display intermediates)
 odl.solvers.chambolle_pock_solver(

@@ -17,38 +17,9 @@
 
 """Denoising using the Chambolle-Pock solver with TV & entropy-type data term.
 
-Let X and Y be finite-dimensional Hilbert spaces and K a linear mapping
-from X to Y with induce norm ||K||. The (primal) minimization problem we
-want to solve is
+Solves the optimization problem with the Kullback-Leibler data divergence
 
-    min_{x in X} F(K x) + G(x)
-
-where F : Y -> [0, +infinity] and G : X -> [0, +infinity] are the proper,
-convex, lower-semicontinuous functional. The primal objective is given by
-the indicator function for the set fo non-negative components of x
-
-    G(x) = ind_P(x) {0 if x >=0, infinity if x < 0}.
-
-The dual objective reads F(y,z) = F_KL(y) + F_TV(z) with the Kullback-Leibler
-data divergence
-
-    F_KL(y) = sum_i (y - g + g ln(g) - g ln(pos(y)))_i + ind_P(y)
-
-and the isotropic total variation regularization
-
-    F_TV(z) = lam || |z| ||_1
-
-Here, g denotes the image to denoise, ln the point-wise logarithm, pos the
-non-negativity thresholding,  ||.||_1 the l1-semi-norm, grad the spatial
-gradient, lam the regularization parameter, |.| the point-wise magnitude
-across the vector components of z = grad(x), and K is a column vector of
-operators K = (id, grad)^T with identity mapping id.
-
-In order to use the Chambolle-Pock solver, we have to create the column
-operator K, choose a starting point x, create the proximal operator for G,
-create the proximal operator for the convex conjugate of F, choose the
-step sizes tau and sigma such that tau sigma ||K||_2^2 < 1, and set the
-total number of iterations.
+    min_{x > 0}  sum(A(x) - g ln(A(x)) + lam || |grad(x)| ||_1
 
 For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
 references therein.
@@ -62,12 +33,9 @@ standard_library.install_aliases()
 import numpy as np
 import scipy
 import scipy.ndimage
-import matplotlib.pyplot as plt
 
 import odl
 
-
-# TODO: Use BroadCastOperator instead of ProductSpaceOperator
 
 # Read test image:
 # convert integer values to float, and rotate to get the image upright
@@ -77,31 +45,24 @@ shape = image.shape
 # Rescale
 image *= 100 / image.max()
 
-# Discretized spaces
-discr_space = odl.uniform_discr([0, 0], shape, shape)
-
-# Original image
-orig = discr_space.element(image)
-
 # Add noise
-image = np.random.poisson(1 + image)
+noisy_image = np.random.poisson(1 + image)
 
-# Data of noisy image
-noisy = discr_space.element(image)
+# Discretized spaces and vectors
+discr_space = odl.uniform_discr([0, 0], shape, shape)
+orig = discr_space.element(image)
+noisy = discr_space.element(noisy_image)
+
+
+# --- Set up the inverse problem --- #
+
 
 # Gradient operator
 gradient = odl.Gradient(discr_space, method='forward')
 
 # Matrix of operators
-op = odl.ProductSpaceOperator([[odl.IdentityOperator(discr_space)],
-                               [gradient]])
+op = odl.BroadcastOperator(odl.IdentityOperator(discr_space), gradient)
 
-# Starting point
-x = op.domain.zero()
-
-# Operator norm
-prod_op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 100)
-print('Norm of the product space operator: {}'.format(prod_op_norm))
 
 # Proximal operator related to the primal variable
 
@@ -112,11 +73,11 @@ proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
 
 # l2-data matching
 prox_convconj_kl = odl.solvers.proximal_convexconjugate_kl(discr_space,
-                                                           lam=1, g=noisy)
+                                                           lam=1.0, g=noisy)
 
 # TV-regularization: l1-semi norm of grad(x)
 prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(gradient.range,
-                                                           lam=1/5)
+                                                           lam=0.1)
 
 # Combine proximal operators: the order must match the order of operators in K
 proximal_dual = odl.solvers.combine_proximals([prox_convconj_kl,
@@ -124,17 +85,21 @@ proximal_dual = odl.solvers.combine_proximals([prox_convconj_kl,
 
 # Optional: pass partial objects to solver
 partial = (odl.solvers.PrintIterationPartial() &
-           odl.solvers.util.PrintTimingPartial() &
-           odl.solvers.util.ShowPartial())
+           odl.solvers.ShowPartial())
 
-# Number of iterations
-niter = 100
 
-# Step size for the proximal operator for the primal variable x
-tau = 1 / prod_op_norm
+# --- Select solver parameters and solve using Chambolle-Pock --- #
 
-# Step size for the proximal operator for the dual variable y
-sigma = 1 / prod_op_norm
+
+# Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
+op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 100)
+
+niter = 100  # Number of iterations
+tau = 10.0 / op_norm  # Step size for the primal variable
+sigma = 0.1 / op_norm  # Step size for the dual variable
+
+# Starting point
+x = op.domain.zero()
 
 # Run algorithms (and display intermediates)
 odl.solvers.chambolle_pock_solver(
@@ -144,5 +109,4 @@ odl.solvers.chambolle_pock_solver(
 # Display images
 orig.show(title='original image')
 noisy.show(title='noisy image')
-x.show(title='reconstruction')
-plt.show()
+x.show(title='denoised', show=True)  # show and hold

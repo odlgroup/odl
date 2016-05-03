@@ -455,19 +455,18 @@ def proximal_convexconjugate_kl(space, lam=1, g=None):
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``."""
-            sig = self.sigma
 
             # 1 / 2 (lam_X + x - sqrt((x - lam_X) ^ 2 + 4; lam sigma g)
 
-            # TODO: optimize
             # out = x - lam_X
-            out.lincomb(1, x, -lam, space.one())
+            out.assign(x)
+            out -= lam
 
             # (out)^2
             out.ufunc.square(out=out)
 
             # out = out + 4 lam sigma g
-            out.lincomb(1, out, 4 * lam * sig, g)
+            out.lincomb(1, out, 4.0 * lam * self.sigma, g)
 
             # out = sqrt(out)
             out.ufunc.sqrt(out=out)
