@@ -466,6 +466,13 @@ class LinearSpaceVector(object):
         """Implement ``self += other``."""
         if other in self.space:
             return self.space.lincomb(1, self, 1, other, out=self)
+        elif other in self.space.field:
+            one = getattr(self.space, 'one', None)
+            if one is None:
+                return NotImplemented
+            else:
+                # other --> other * space.one()
+                return self.space.lincomb(1, self, other, one(), out=self)
         else:
             return NotImplemented
 
@@ -480,32 +487,23 @@ class LinearSpaceVector(object):
             if one is None:
                 return NotImplemented
             else:
-                # other --> other * space.one()
                 tmp = one()
-                self.space.lincomb(other, tmp, out=tmp)
-                return self.space.lincomb(1, self, 1, tmp, out=tmp)
+                return self.space.lincomb(1, self, other, tmp, out=tmp)
         else:
             return NotImplemented
 
-    def __radd__(self, other):
-        """Return ``other + self``."""
-        if other in self.space.field:
-            one = getattr(self.space, 'one', None)
-            if one is None:
-                return NotImplemented
-            else:
-                # other --> other * space.one()
-                tmp = one()
-                self.space.lincomb(other, tmp, out=tmp)
-                return self.space.lincomb(1, tmp, 1, self, out=tmp)
-        else:
-            # Case `other in self.space` handled by `other`
-            return NotImplemented
+    __radd__ = __add__
 
     def __isub__(self, other):
         """Implement ``self -= other``."""
         if other in self.space:
             return self.space.lincomb(1, self, -1, other, out=self)
+        elif other in self.space.field:
+            one = getattr(self.space, 'one', None)
+            if one is None:
+                return NotImplemented
+            else:
+                return self.space.lincomb(1, self, -other, one(), out=self)
         else:
             return NotImplemented
 
@@ -520,10 +518,8 @@ class LinearSpaceVector(object):
             if one is None:
                 return NotImplemented
             else:
-                # other --> other * space.one()
                 tmp = one()
-                self.space.lincomb(other, tmp, out=tmp)
-                return self.space.lincomb(1, self, -1, tmp, out=tmp)
+                return self.space.lincomb(1, self, -other, tmp, out=tmp)
         else:
             return NotImplemented
 

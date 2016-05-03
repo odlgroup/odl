@@ -311,6 +311,116 @@ def test_zero():
     assert all_equal(vec, [0, 0, 0])
 
 
+def _test_unary_operator(discr, function):
+    # Verify that the statement y=function(x) gives equivalent results
+    # to NumPy
+    x_arr, x = _vectors(discr)
+
+    y_arr = function(x_arr)
+
+    y = function(x)
+
+    assert all_almost_equal([x, y], [x_arr, y_arr])
+
+
+def _test_binary_operator(discr, function):
+    # Verify that the statement z=function(x,y) gives equivalent results
+    # to NumPy
+    x_arr, y_arr, x, y = _vectors(discr, 2)
+
+    z_arr = function(x_arr, y_arr)
+    z = function(x, y)
+
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+
+
+def test_operators(impl):
+    # Test of all operator overloads against the corresponding NumPy
+    # implementation
+
+    discr = odl.uniform_discr(0, 1, 10, impl=impl)
+
+    # Unary operators
+    _test_unary_operator(discr, lambda x: +x)
+    _test_unary_operator(discr, lambda x: -x)
+
+    # Scalar addition
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
+        def iadd(x):
+            x += scalar
+        _test_unary_operator(discr, iadd)
+        _test_unary_operator(discr, lambda x: x + scalar)
+
+    # Scalar subtraction
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
+        def isub(x):
+            x -= scalar
+        _test_unary_operator(discr, isub)
+        _test_unary_operator(discr, lambda x: x - scalar)
+
+    # Scalar multiplication
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
+        def imul(x):
+            x *= scalar
+        _test_unary_operator(discr, imul)
+        _test_unary_operator(discr, lambda x: x * scalar)
+
+    # Scalar division
+    for scalar in [-31.2, -1, 1, 2.13]:
+        def idiv(x):
+            x /= scalar
+        _test_unary_operator(discr, idiv)
+        _test_unary_operator(discr, lambda x: x / scalar)
+
+    # Incremental operations
+    def iadd(x, y):
+        x += y
+
+    def isub(x, y):
+        x -= y
+
+    def imul(x, y):
+        x *= y
+
+    def idiv(x, y):
+        x /= y
+
+    _test_binary_operator(discr, iadd)
+    _test_binary_operator(discr, isub)
+    _test_binary_operator(discr, imul)
+    _test_binary_operator(discr, idiv)
+
+    # Incremental operators with aliased inputs
+    def iadd_aliased(x):
+        x += x
+
+    def isub_aliased(x):
+        x -= x
+
+    def imul_aliased(x):
+        x *= x
+
+    def idiv_aliased(x):
+        x /= x
+
+    _test_unary_operator(discr, iadd_aliased)
+    _test_unary_operator(discr, isub_aliased)
+    _test_unary_operator(discr, imul_aliased)
+    _test_unary_operator(discr, idiv_aliased)
+
+    # Binary operators
+    _test_binary_operator(discr, lambda x, y: x + y)
+    _test_binary_operator(discr, lambda x, y: x - y)
+    _test_binary_operator(discr, lambda x, y: x * y)
+    _test_binary_operator(discr, lambda x, y: x / y)
+
+    # Binary with aliased inputs
+    _test_unary_operator(discr, lambda x: x + x)
+    _test_unary_operator(discr, lambda x: x - x)
+    _test_unary_operator(discr, lambda x: x * x)
+    _test_unary_operator(discr, lambda x: x / x)
+
+
 def test_interp():
     discr = odl.uniform_discr(0, 1, 3, interp='nearest')
     assert isinstance(discr.interpolation, odl.NearestInterpolation)

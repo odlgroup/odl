@@ -374,6 +374,7 @@ def _test_unary_operator(fn, function):
     x_arr, x = _vectors(fn)
 
     y_arr = function(x_arr)
+
     y = function(x)
 
     assert all_almost_equal([x, y], [x_arr, y_arr])
@@ -397,6 +398,20 @@ def test_operators(fn):
     # Unary operators
     _test_unary_operator(fn, lambda x: +x)
     _test_unary_operator(fn, lambda x: -x)
+
+    # Scalar addition
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
+        def iadd(x):
+            x += scalar
+        _test_unary_operator(fn, iadd)
+        _test_unary_operator(fn, lambda x: x + scalar)
+
+    # Scalar subtraction
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
+        def isub(x):
+            x -= scalar
+        _test_unary_operator(fn, isub)
+        _test_unary_operator(fn, lambda x: x - scalar)
 
     # Scalar multiplication
     for scalar in [-31.2, -1, 0, 1, 2.13]:
