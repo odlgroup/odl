@@ -33,6 +33,8 @@ from odl.space.pspace import ProductSpace
 
 __all__ = ('PointwiseNorm', 'PointwiseInner')
 
+_SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
+
 
 class PointwiseTensorFieldOperator(Operator):
 
@@ -41,7 +43,8 @@ class PointwiseTensorFieldOperator(Operator):
     A point-wise operator acts on a space of vector or tensor fields,
     i.e. a power space ``X^d`` of a discretized function space ``X``.
     Its range is the power space ``X^k`` with a possibly different
-    number ``k`` of components.
+    number ``k`` of components. For ``k == 1``, the base space
+    ``X`` can be used instead.
 
     For example, if ``X`` is a `DiscreteLp` space, then
     ``ProductSpace(X, d)`` is a valid domain for any positive integer
@@ -597,6 +600,7 @@ class PointwiseInnerAdjoint(PointwiseInner):
         """Adjoint of the adjoint, the original operator."""
         return PointwiseInner(vfspace=self.range, vecfield=self.vecfield,
                               weight=self.weights)
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
