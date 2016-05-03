@@ -103,10 +103,10 @@ def combine_proximals(factory_list):
 
 
 def proximal_zero(space):
-    """Function to create the proximal operator of G(x) = 0.
+    """Function to create the proximal operator of zero functional.
 
-    Function to initialize the proximal operator of G(x) = 0 where x is an
-    element in ``space``. The proximal operator of this functional is the
+    Function to initialize the proximal operator of zero functional
+    defined on ``space``. The proximal operator of this functional is the
     identity operator
 
         prox_tau[G](x) = x
