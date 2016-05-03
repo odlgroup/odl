@@ -461,6 +461,20 @@ def test_operators(fn):
     _test_unary_operator(fn, lambda x: x / x)
 
 
+def test_assign(fn):
+    x = _element(fn)
+    y = _element(fn)
+
+    y.assign(x)
+
+    assert y == x
+    assert y is not x
+
+    # test alignment
+    x *= 2
+    assert y != x
+
+
 def test_inner(fn):
     xd = _element(fn)
     yd = _element(fn)
@@ -653,7 +667,20 @@ def test_multiply_by_scalar(fn):
     assert np.float32(1.0) * x in fn
 
 
-def test_copy(fn):
+def test_member_copy(fn):
+    x = _element(fn)
+
+    y = x.copy()
+
+    assert x == y
+    assert y is not x
+
+    # test not aliased
+    x *= 2
+    assert x != y
+
+
+def test_python_copy(fn):
     import copy
 
     x = _element(fn)
@@ -663,10 +690,18 @@ def test_copy(fn):
     assert x == y
     assert y is not x
 
+    # test not aliased
+    x *= 2
+    assert x != y
+
     z = copy.deepcopy(x)
 
     assert x == z
     assert z is not x
+
+    # test not aliased
+    x *= 2
+    assert x != z
 
 
 # Vector property tests
