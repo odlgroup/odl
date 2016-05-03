@@ -79,7 +79,7 @@ def test_proximal_nonnegativity():
     # Factory function returning the proximal operator
     make_prox = proximal_nonnegativity(space)
 
-    # Initialize proximal operator of G with sigma
+    # Initialize proximal operator of G (with an unused parameter)
     prox = make_prox(None)
 
     # Optimal point returned by the proximal operator
