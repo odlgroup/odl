@@ -225,6 +225,40 @@ except ImportError:
     skip_if_no_benchmark = _pass
 
 
+# Helpers to generate data
+def example_array(space):
+    """Generate an example array that is compatible with ``space``"""
+    # Generate numpy vectors, real or complex or int
+    if np.issubdtype(space.dtype, np.floating):
+        arr = np.random.rand(space.size)
+    elif np.issubdtype(space.dtype, np.integer):
+        arr = np.random.randint(0, 10, space.size)
+    else:
+        arr = np.random.rand(space.size) + 1j * np.random.rand(space.size)
+
+    return arr.astype(space.dtype, copy=False)
+
+
+def example_element(space):
+    return space.element(example_array(space))
+
+
+def example_vectors(space, n=1):
+    """Create a list of ``n`` arrays and vectors in ``space``.
+
+    First arrays, then vectors.
+    """
+    arrs = [example_array(space) for _ in range(n)]
+
+    # Make Fn vectors
+    vecs = [space.element(arr) for arr in arrs]
+
+    if n == 1:
+        return arrs + vecs
+    else:
+        return (arrs, vecs)
+
+
 class FailCounter(object):
 
     """Used to count the number of failures of something

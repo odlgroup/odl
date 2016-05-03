@@ -25,7 +25,6 @@ speed regressions.
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range
 
 # External module imports
 import pytest
@@ -38,33 +37,6 @@ from odl.util.testutils import almost_equal, never_skip
 skip_if_no_pyfftw = pytest.mark.skipif("not odl.trafos.PYFFTW_AVAILABLE",
                                        reason='pyfftw not available')
 pytestmark = odl.util.skip_if_no_largescale
-
-
-# Helpers to generate data
-def _array(discr):
-    # Generate numpy vectors, real or complex or int
-    if np.issubdtype(discr.dtype, np.floating):
-        arr = np.random.rand(discr.size)
-    else:
-        arr = np.random.rand(discr.size) + 1j * np.random.rand(discr.size)
-
-    return arr.astype(discr.dtype, copy=False)
-
-
-def _element(discr):
-    return discr.element(_array(discr))
-
-
-def _vectors(discr, num=1):
-    """Create a list of arrays and elements in ``discr``.
-
-    First arrays, then vectors.
-    """
-    arrs = [_array(discr) for _ in range(num)]
-
-    # Make Discretization vectors
-    vecs = [discr.element(arr) for arr in arrs]
-    return arrs + vecs
 
 
 # Pytest fixtures
