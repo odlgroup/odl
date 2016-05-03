@@ -26,10 +26,9 @@ import pytest
 import numpy as np
 
 import odl
-from odl.discr.tensor_ops import (
-    PointwiseNorm, PointwiseInner, PointwiseInnerAdjoint)
+from odl.discr.tensor_ops import PointwiseNorm, PointwiseInner
 from odl.space.pspace import ProductSpace
-from odl.util.testutils import all_almost_equal, all_equal, almost_equal
+from odl.util.testutils import all_almost_equal, all_equal
 
 
 exp_params = [2.0, 1.0, float('inf'), 3.5, 1.5]
@@ -41,7 +40,7 @@ def exponent(request):
     return request.param
 
 
-# ---- PointwiseNorm ---- #
+# ---- PointwiseNorm ----
 
 
 def test_pointwise_norm_init_properties():
@@ -192,7 +191,7 @@ def test_pointwise_norm_weighted(exponent):
     assert all_almost_equal(out, true_norm.reshape(-1))
 
 
-# ---- PointwiseInner ---- #
+# ---- PointwiseInner ----
 
 
 def test_pointwise_inner_init_properties():

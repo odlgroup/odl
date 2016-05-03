@@ -15,27 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Tests for operators defined on `DiscreteLp`."""
+"""Unit tests for `tensor_ops`."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import numpy as np
 import pytest
+import numpy as np
 
 import odl
-from odl.discr.discr_ops import (finite_diff, PartialDerivative,
-                                 Gradient, Divergence)
-from odl.util.testutils import almost_equal, all_equal, skip_if_no_cuda
+from odl.discr.diff_ops import (
+    finite_diff, PartialDerivative, Gradient, Divergence)
+from odl.util.testutils import (
+    all_equal, almost_equal, skip_if_no_cuda)
 
 
-# Phantom data
+# Test data
 DATA_1D = np.array([0.5, 1, 3.5, 2, -.5, 3, -1, -1, 0, 3])
 DATA_2D = np.array([[0., 1., 2., 3., 4.],
                     [1., 2., 3., 4., 5.],
                     [2., 3., 4., 5., 6.]]) ** 1
+
+
+# --- finite_diff --- #
 
 
 def test_finite_diff_invalid_args():
@@ -176,6 +180,9 @@ def test_backward_diff():
     assert all_equal(findiff_op, [0., 3., 2., 1.])
 
 
+# --- PartialDerivative --- #
+
+
 def test_part_deriv_cpu():
     """Discretized partial derivative."""
 
@@ -225,9 +232,13 @@ def test_part_deriv_cpu():
     assert all_equal(partial_vec_0.asarray(), diff_0)
     assert all_equal(partial_vec_1.asarray(), diff_1)
 
-    # adjoint not implemented
-    with pytest.raises(NotImplementedError):
-        PartialDerivative(space).adjoint
+    # adjoint operator
+    vec1 = space.element(DATA_2D)
+    vec2 = space.element(DATA_2D + np.random.rand(*DATA_2D.shape))
+    assert almost_equal(partial_0(vec1).inner(vec2),
+                        vec1.inner(partial_0.adjoint(vec2)))
+    assert almost_equal(partial_1(vec1).inner(vec2),
+                        vec1.inner(partial_1.adjoint(vec2)))
 
 
 @skip_if_no_cuda
@@ -257,6 +268,9 @@ def test_discr_deriv_cuda():
     partial_vec = partial(vec)
 
     assert all_equal(partial_vec, partial_vec_explicit)
+
+
+# --- Gradient --- #
 
 
 def ndvolume(lin_size, ndim, dtype=np.float64):
@@ -360,19 +374,22 @@ def test_gradient_cuda():
     assert lhs == rhs
 
 
+# --- Divergence --- #
+
+
 def test_divergence_cpu():
     """Discretized spatial divergence operator."""
 
     # Invalid space
     with pytest.raises(TypeError):
-        Divergence(odl.Rn(1))
+        Divergence(range=odl.Rn(1))
 
     # DiscreteLp
     # space = odl.uniform_discr([0, 0], [6, 2.5], DATA.shape)
     space = odl.uniform_discr([0, 0], [3, 5], DATA_2D.shape)
 
     # Operator instance
-    div = Divergence(space, method='forward')
+    div = Divergence(range=space, method='forward')
 
     # Apply operator
     # dom_vec = div.domain.element([DATA / 2, DATA ** 3])
@@ -409,7 +426,7 @@ def test_divergence_cpu():
                                   [lin_size] * ndim)
 
         # Divergence
-        div = Divergence(space)
+        div = Divergence(range=space)
         dom_vec = div.domain.element([ndvolume(lin_size, ndim)] * ndim)
         div(dom_vec)
 
@@ -424,7 +441,7 @@ def test_discrete_divergence_cuda():
     space = odl.uniform_discr([0, 0], [1.5, 10], DATA_2D.shape, impl='cuda')
 
     # operator instance
-    div = Divergence(space)
+    div = Divergence(range=space)
 
     # apply operator
     dom_vec = div.domain.element([DATA_2D, DATA_2D])
