@@ -103,20 +103,20 @@ def combine_proximals(factory_list):
 
 
 def proximal_zero(space):
-    """Function to create the proximal operator of zero functional.
+    """Function to create the proximal operator of the zero functional.
 
-    Function to initialize the proximal operator of zero functional
+    Function to initialize the proximal operator of the zero functional
     defined on ``space``. The proximal operator of this functional is the
     identity operator
 
-        prox_tau[G](x) = x
+        prox_tau[G](x) = x  where G=0
 
     It is independent of tau.
 
     Parameters
     ----------
     space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
-        Domain of the functional G
+        Domain of the functional G=0
 
     Returns
     -------
@@ -136,7 +136,7 @@ def proximal_zero(space):
         Returns
         -------
         id : `IdentityOperator`
-            The proximal operator instance of G(x) = 0 which is the
+            The proximal operator instance of G = 0 which is the
             identity operator
         """
 
