@@ -1,4 +1,4 @@
-﻿# Copyright 2014, 2015 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -158,6 +158,45 @@ def _standard_setup_2d():
     points = _points(rect, num=5)
     mg = _meshgrid(rect, shape=(2, 3))
     return rect, points, mg
+
+
+def test_fspace_out_dtype():
+    rect = odl.Rectangle([0, 0], [3, 5])
+    points = np.array([[0, 1], [0, 3], [3, 4], [2, 5]], dtype='int').T
+    vec1 = np.array([0, 1, 3])[:, None]
+    vec2 = np.array([1, 2, 4, 5])[None, :]
+    mg = (vec1, vec2)
+
+    true_arr = func_2d_vec_oop(points)
+    true_mg = func_2d_vec_oop(mg)
+
+    fspace = FunctionSpace(rect, out_dtype='int')
+    f_vec = fspace.element(func_2d_vec_oop)
+
+    assert all_equal(f_vec(points), true_arr)
+    assert all_equal(f_vec(mg), true_mg)
+    assert f_vec(points).dtype == np.dtype('int')
+    assert f_vec(mg).dtype == np.dtype('int')
+
+
+def test_fspace_astype():
+
+    rspace = FunctionSpace(odl.Interval(0, 1))
+    cspace = FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
+    rspace_s = FunctionSpace(odl.Interval(0, 1), out_dtype='float32')
+    cspace_s = FunctionSpace(odl.Interval(0, 1), out_dtype='complex64')
+
+    assert rspace.astype('complex64') == cspace_s
+    assert rspace.astype('complex128') == cspace
+    assert rspace.astype('complex128') is rspace._complex_space
+    assert rspace.astype('float32') == rspace_s
+    assert rspace.astype('float64') is rspace._real_space
+
+    assert cspace.astype('float32') == rspace_s
+    assert cspace.astype('float64') == rspace
+    assert cspace.astype('float64') is cspace._real_space
+    assert cspace.astype('complex64') == cspace_s
+    assert cspace.astype('complex128') is cspace._complex_space
 
 
 def test_fspace_vector_eval_real():
@@ -357,6 +396,35 @@ def test_fspace_vector_copy():
 
     f_out = f_vec_dual.copy()
     assert f_out == f_vec_dual
+
+
+def test_fspace_vector_real_imag():
+    rect, _, mg = _standard_setup_2d()
+    cspace = FunctionSpace(rect, field=odl.ComplexNumbers())
+    f = cspace.element(cfunc_2d_vec_oop)
+
+    # real / imag on complex functions
+    assert all_equal(f.real(mg), cfunc_2d_vec_oop(mg).real)
+    assert all_equal(f.imag(mg), cfunc_2d_vec_oop(mg).imag)
+    out_mg = np.empty((2, 3))
+    f.real(mg, out=out_mg)
+    assert all_equal(out_mg, cfunc_2d_vec_oop(mg).real)
+    f.imag(mg, out=out_mg)
+    assert all_equal(out_mg, cfunc_2d_vec_oop(mg).imag)
+
+    # real / imag on real functions, should be the function itself / zero
+    rspace = FunctionSpace(rect)
+    f = rspace.element(func_2d_vec_oop)
+    assert all_equal(f.real(mg), f(mg))
+    assert all_equal(f.imag(mg), rspace.zero()(mg))
+
+    # Complex conjugate
+    f = cspace.element(cfunc_2d_vec_oop)
+    fbar = f.conj()
+    assert all_equal(fbar(mg), cfunc_2d_vec_oop(mg).conj())
+    out_mg = np.empty((2, 3), dtype='complex128')
+    fbar(mg, out=out_mg)
+    assert all_equal(out_mg, cfunc_2d_vec_oop(mg).conj())
 
 
 def test_fspace_zero():

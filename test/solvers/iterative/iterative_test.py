@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -63,7 +63,7 @@ def iterative_solver(request):
 
 
 def test_solver(iterative_solver):
-    """Test discrete X-ray transform using ASTRA for reconstruction."""
+    """Test discrete Ray transform using ASTRA for reconstruction."""
 
     # Solve within 1%
     places = 2

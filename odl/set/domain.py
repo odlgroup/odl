@@ -15,23 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Domains for continuous functions. """
+
 # Imports for common Python 2/3 codebase
-
-"""Typical domains for inverse problems. """
-
 from __future__ import print_function, division, absolute_import
-
 from builtins import super, zip
 from future import standard_library
 from future.utils import raise_from
 standard_library.install_aliases()
 
-# External imports
 import numpy as np
 
-# ODL imports
-from odl.set.sets import Set, RealNumbers
-from odl.util.utility import array1d_repr
+from odl.set.sets import Set
+from odl.util.utility import array1d_repr, is_real_dtype
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid)
 
@@ -152,9 +148,40 @@ class IntervalProd(Set):
         """The interval length per axis."""
         return self.max() - self.min()
 
-    def element(self):
-        """An arbitrary element, the midpoint."""
-        return self.midpoint
+    def element(self, inp=None):
+        """Create element in this set.
+
+        Parameters
+        ----------
+        inp : `float` or array-like, optional
+            Point to be cast to an element in self
+
+        Returns
+        -------
+        element
+            Returns ``inp`` if given, else ``self.midpoint``
+
+        Raises
+        ------
+        TypeError
+            If ``inp`` is not a valid element.
+
+        Examples
+        --------
+        >>> interv = IntervalProd(0, 1)
+        >>> interv.element(0.5)
+        0.5
+        """
+        if inp is None:
+            return self.midpoint
+        elif inp in self:
+            if self.ndim == 1:
+                return float(inp)
+            else:
+                return np.asarray(inp)
+        else:
+            raise TypeError('inp {!r} not a valid element in {!r}.'
+                            ''.format(inp, self))
 
     def approx_equals(self, other, tol):
         """Test if ``other`` is equal to this set up to ``tol``.
@@ -215,23 +242,44 @@ class IntervalProd(Set):
         True
         """
         point = np.atleast_1d(point)
-        if point.dtype == object:
+        if point.shape != (self.ndim,):
             return False
-        if np.any(np.isnan(point)):
+        if not is_real_dtype(point.dtype):
             return False
-        if point.ndim > 1:
-            return False
-        if len(point) != self.ndim:
-            return False
-        if point[0] not in RealNumbers():
-            return False
-        if self.dist(point, ord=np.inf) > tol:
-            return False
-        return True
+        return self.dist(point, exponent=np.inf) <= tol
 
     def __contains__(self, other):
-        """Return ``other in self``."""
-        return self.approx_contains(other, tol=0)
+        """Return ``other in self``.
+
+        Parameters
+        ----------
+        other
+            Arbitrary object to be tested.
+
+        Returns
+        -------
+        containts : `bool`
+            True if other is inside self.
+
+        Examples
+        --------
+        >>> interv = IntervalProd(0, 1)
+        >>> 0.5 in interv
+        True
+        >>> 2 in interv
+        False
+        >>> 'string' in interv
+        False
+        """
+        try:
+            # Duck-typed check of type
+            point = np.array(other, dtype=np.float, copy=False, ndmin=1)
+        except (ValueError, TypeError):
+            return False
+
+        if point.shape != (self.ndim,):
+            return False
+        return (self.begin <= point).all() and (point <= self.end).all()
 
     def contains_set(self, other, tol=0.0):
         """Test if another set is contained.
@@ -272,7 +320,7 @@ class IntervalProd(Set):
         ----------
         other :
             Can be a single point, a ``(d, N)`` array where ``d`` is the
-            number of dimensions or a length-``d`` meshgrid sequence
+            number of dimensions or a length-``d`` meshgrid tuple
 
         Returns
         -------
@@ -378,7 +426,7 @@ class IntervalProd(Set):
         else:
             return np.prod((self.end - self.begin)[self._inondeg])
 
-    def dist(self, point, ord=2.0):
+    def dist(self, point, exponent=2.0):
         """Calculate the distance to a point.
 
         Parameters
@@ -386,9 +434,15 @@ class IntervalProd(Set):
         point : `array-like` or `float`
                 The point. Its length must be equal to the set's
                 dimension. Can be a `float` in the 1d case.
-        ord : non-zero int or float('inf'), optional
-              The order of the norm (see `numpy.linalg.norm`).
-              Default: 2.0
+        exponent : non-zero `float` or ``float('inf')``, optional
+              The order of the norm (see `numpy.linalg.norm`)
+
+        Returns
+        -------
+        dist : `float`
+            Distance to the interior of the IntervalProd.
+            Points strictly inside have distance ``0.0``, points with
+            ``NaN`` have distance ``infinity``.
 
         Examples
         --------
@@ -397,7 +451,7 @@ class IntervalProd(Set):
         >>> rbox = IntervalProd(b, e)
         >>> rbox.dist([-5, 3, 2])
         5.0
-        >>> rbox.dist([-5, 3, 2], ord=float('inf'))
+        >>> rbox.dist([-5, 3, 2], exponent=float('inf'))
         4.0
         """
         point = np.atleast_1d(point)
@@ -405,6 +459,9 @@ class IntervalProd(Set):
             raise ValueError('length {} of point {} does not match '
                              'the dimension {} of the set {}.'
                              ''.format(len(point), point, self.ndim, self))
+
+        if np.any(np.isnan(point)):
+            return np.inf
 
         i_larger = np.where(point > self.end)
         i_smaller = np.where(point < self.begin)
@@ -416,7 +473,7 @@ class IntervalProd(Set):
             proj = np.concatenate((point[i_larger], point[i_smaller]))
             border = np.concatenate((self.end[i_larger],
                                      self.begin[i_smaller]))
-            return np.linalg.norm(proj - border, ord=ord)
+            return np.linalg.norm(proj - border, ord=exponent)
 
     # Manipulation
     def collapse(self, indices, values):
@@ -514,7 +571,7 @@ class IntervalProd(Set):
         index : `int`
             Index of the dimension before which ``other`` is to
             be inserted. Must fulfill ``-ndim <= index <= ndim``.
-            Negative indices are added to ``ndim``.
+            Negative indices count backwards from ``self.ndim``.
         other : `IntervalProd`
             Interval product to be inserted
 
@@ -812,5 +869,6 @@ def Cuboid(begin, end):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

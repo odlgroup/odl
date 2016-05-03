@@ -24,16 +24,14 @@ from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import object, super
 
-# External module imports
 import inspect
 from numbers import Number, Integral
 import sys
 
-# ODL imports
-from odl.set.space import (LinearSpace, LinearSpaceVector,
-                           UniversalSpace)
+from odl.set.space import (
+    LinearSpace, LinearSpaceVector, UniversalSpace)
 from odl.set.sets import Set, UniversalSet, Field
-from odl.util.utility import preload_call_with
+from odl.util.utility import preload_first_arg
 
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
@@ -82,7 +80,7 @@ def _default_call_in_place(op, x, out, **kwargs):
     -------
     `None`
     """
-    out.assign(op._call_out_of_place(x, **kwargs))
+    out.assign(op.range.element(op._call_out_of_place(x, **kwargs)))
 
 
 def _signature_from_spec(func):
@@ -434,7 +432,7 @@ class Operator(object):
         instance._call_out_optional = call_out_optional
         if not call_has_out:
             # Out-of-place _call
-            instance._call_in_place = preload_call_with(
+            instance._call_in_place = preload_first_arg(
                 instance, 'in-place')(_default_call_in_place)
             instance._call_out_of_place = instance._call
         elif call_out_optional:
@@ -444,7 +442,7 @@ class Operator(object):
         else:
             # In-place only _call
             instance._call_in_place = instance._call
-            instance._call_out_of_place = preload_call_with(
+            instance._call_out_of_place = preload_first_arg(
                 instance, 'out-of-place')(_default_call_out_of_place)
 
         return instance
@@ -496,7 +494,7 @@ class Operator(object):
     def _call(self, x, out=None, **kwargs):
         """Implementation of the operator evaluation.
 
-        This method is private backend for the evaluation of this
+        This method is the private backend for the evaluation of an
         operator. It needs to match certain signature conventions,
         and its implementation type is inferred from its signature.
 
@@ -539,6 +537,11 @@ class Operator(object):
         - If your evaluation code does not support in-place evaluation,
           use the out-of-place pattern.
 
+        Note that the public call pattern ``op()`` using ``op.__call__``
+        provides a default implementation of the underlying in-place or
+        out-of-place call even if you choose the respective other
+        pattern.
+
         See the `documentation
         <https://odl.readthedocs.org/guide/in_depth/operator_guide.html>`_
         for more info on in-place vs. out-of-place evaluation.
@@ -555,13 +558,6 @@ class Operator(object):
         out : `Operator.range` `element-like`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
-
-        Notes
-        -----
-        The public call pattern ``op()`` using ``op.__call__`` provides
-        a default implementation of the underlying in-place or
-        out-of-place call even if you choose the respective other
-        pattern.
         """
         raise NotImplementedError('This operator {!r} does not implement '
                                   '`_call`. See `Operator._call` for '
@@ -685,7 +681,7 @@ class Operator(object):
             except (TypeError, ValueError) as err:
                 raise_from(OpDomainError(
                     'unable to cast {!r} to an element of '
-                    'the domain {}.'.format(x, self.domain)), err)
+                    'the domain {!r}.'.format(x, self.domain)), err)
 
         if out is not None:  # In-place evaluation
             if out not in self.range:
@@ -708,7 +704,7 @@ class Operator(object):
                 except (TypeError, ValueError) as err:
                     new_exc = OpRangeError(
                         'unable to cast {!r} to an element of '
-                        'the range {}.'.format(out, self.range))
+                        'the range {!r}.'.format(out, self.range))
                     raise_from(new_exc, err)
         return out
 
@@ -966,6 +962,8 @@ class Operator(object):
             return self * (1.0 / other)
         else:
             return NotImplemented
+
+    __div__ = __truediv__
 
     def __neg__(self):
         """Return ``-self``."""
@@ -1893,5 +1891,6 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

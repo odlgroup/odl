@@ -15,12 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-
-"""Backends for other libraries
-"""
+"""Back-ends for other libraries."""
 
 from __future__ import absolute_import
 
 __all__ = ()
 
 from . import stir_bindings
+
+from . import astra_setup
+from .astra_setup import *
+__all__ += astra_setup.__all__
+
+from . import astra_cpu
+from .astra_cpu import *
+__all__ += astra_cpu.__all__
+
+from . import astra_cuda
+from .astra_cuda import *
+__all__ += astra_cuda.__all__
+
+from .import scikit_radon
+from .scikit_radon import *
+__all__ += scikit_radon.__all__

@@ -22,9 +22,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
-
-# Internal
 from odl.solvers.iterative.iterative import conjugate_gradient
 
 
@@ -36,24 +33,24 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
     """Newton's method for solving a system of equations.
 
     This is a general and optimized implementation of Newton's method
-    for solving the problem
+    for solving the problem::
 
-        :math:`f(x) = 0`.
+        f(x) = 0
 
-    of finding a root of a function :math:`f`.
+    of finding a root of a function.
 
     The algorithm is well-known and there is a vast literature about it.
-    Among others, the method is described in [1]_, Sections 9.5 and 10.2
-    (`book available online
+    Among others, the method is described in [BV2004]_, Sections 9.5
+    and 10.2 (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
-    [2]_,  Section 2.7 for solving nonlinear equations and Section 11.3 for
-    it's use in minimization, and wikipedia on  `Newton's_method
+    [GNS2009]_,  Section 2.7 for solving nonlinear equations and Section
+    11.3 for its use in minimization, and wikipedia on `Newton's_method
     <https://en.wikipedia.org/wiki/Newton's_method>`_.
 
     Parameters
     ----------
     op : `Operator`
-        Gradient of the objective function, :math:`x \mapsto grad f(x)`
+        Gradient of the objective function, ``x --> grad f(x)``
     x : element in the domain of ``op``
         Starting point of the iteration
     line_search : `LineSearch`
@@ -79,14 +76,6 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
     where :math:`\\alpha` is a suitable step length (see the
     references). In this implementation the system of equations are
     solved using the conjugate gradient method.
-
-    References
-    ----------
-    .. [1] Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
-       Cambridge university press, 2004.
-
-    .. [2] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
-       and nonlinear optimization. Siam, 2009
     """
     # TODO: update doc
     if cg_iter is None:
@@ -118,3 +107,8 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
 
         if partial is not None:
             partial(x)
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

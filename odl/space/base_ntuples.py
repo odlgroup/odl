@@ -19,43 +19,30 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import int
 
-# External module imports
 from abc import ABCMeta, abstractmethod
-from math import sqrt
 import numpy as np
-import platform
 
-# ODL imports
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.util.ufuncs import NtuplesBaseUFuncs
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
     is_scalar_dtype, is_real_dtype, is_floating_dtype)
-from odl.util.ufuncs import NtuplesBaseUFuncs
 
 
-__all__ = ('NtuplesBase', 'NtuplesBaseVector',
-           'FnBase', 'FnBaseVector',
-           'FnWeightingBase')
+__all__ = ('NtuplesBase', 'NtuplesBaseVector', 'FnBase', 'FnBaseVector')
 
 
-_TYPE_MAP_C2R = {np.dtype('float32'): np.dtype('float32'),
-                 np.dtype('float64'): np.dtype('float64'),
-                 np.dtype('complex64'): np.dtype('float32'),
-                 np.dtype('complex128'): np.dtype('float64')}
+_TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
+                 for dtype in np.sctypes['float']}
 
-_TYPE_MAP_R2C = {np.dtype('float32'): np.dtype('complex64'),
-                 np.dtype('float64'): np.dtype('complex128')}
-
-if platform.system() == 'Linux':
-    _TYPE_MAP_C2R.update({np.dtype('float128'): np.dtype('float128'),
-                          np.dtype('complex256'): np.dtype('float128')})
-    _TYPE_MAP_R2C.update({np.dtype('float128'): np.dtype('complex256')})
+_TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
+                 for rdt, cdt in _TYPE_MAP_R2C.items()}
+_TYPE_MAP_C2R.update({k: k for k in _TYPE_MAP_R2C.keys()})
 
 
 class NtuplesBase(Set):
@@ -158,11 +145,6 @@ class NtuplesBase(Set):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({}, {})'.format(self.__class__.__name__, self.size,
-                                   dtype_repr(self.dtype))
-
-    def __str__(self):
-        """Return ``str(self)``."""
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
@@ -352,20 +334,21 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """
         return NtuplesBaseUFuncs(self)
 
-    def show(self, method='scatter', title='', show=False, fig=None, **kwargs):
+    def show(self, title=None, method='scatter', show=False, fig=None,
+             **kwargs):
         """Display the function graphically.
 
         Parameters
         ----------
+        title : `str`, optional
+            Set the title of the figure
+
         method : `str`, optional
             1d methods:
 
             'plot' : graph plot
 
             'scatter' : point plot
-
-        title : `str`, optional
-            Set the title of the figure
 
         show : `bool`, optional
             If the plot should be showed now or deferred until later.
@@ -393,8 +376,8 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         from odl.util.graphics import show_discrete_data
         from odl.discr import RegularGrid
         grid = RegularGrid(0, self.size - 1, self.size)
-        return show_discrete_data(self.asarray(), grid, method=method,
-                                  title=title, show=show, fig=fig, **kwargs)
+        return show_discrete_data(self.asarray(), grid, title=title,
+                                  method=method, show=show, fig=fig, **kwargs)
 
 
 class FnBase(NtuplesBase, LinearSpace):
@@ -422,37 +405,90 @@ class FnBase(NtuplesBase, LinearSpace):
 
         if is_real_dtype(self.dtype):
             field = RealNumbers()
-            self._real_dtype = self.dtype
             self._is_real = True
+            self._real_dtype = self.dtype
+            self._real_space = self
+            self._complex_dtype = _TYPE_MAP_R2C.get(self.dtype, None)
+            self._complex_space = None  # Set in first call of astype
         else:
             field = ComplexNumbers()
-            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
             self._is_real = False
+            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
+            self._real_space = None  # Set in first call of astype
+            self._complex_dtype = self.dtype
+            self._complex_space = self
 
         self._is_floating = is_floating_dtype(self.dtype)
-
         LinearSpace.__init__(self, field)
 
     @property
-    def real_dtype(self):
-        """The corresponding real data type of this space."""
-        return self._real_dtype
-
-    @property
     def is_rn(self):
-        """If the space represents the set :math:`R^n`.
-
-        Tuples of real numbers.
-        """
+        """Return `True` if the space represents R^n, i.e. real tuples."""
         return self._is_real and self._is_floating
 
     @property
     def is_cn(self):
-        """If the space represents the set :math:`C^n`.
-
-        Tuples of complex numbers.
-        """
+        """Return `True` if the space represents C^n, i.e. complex tuples."""
         return (not self._is_real) and self._is_floating
+
+    def _astype(self, dtype):
+        """Internal helper for ``astype``."""
+        return type(self)(self.size, dtype=dtype, weight=self.weighting)
+
+    def astype(self, dtype):
+        """Return a copy of this space with new ``dtype``.
+
+        Parameters
+        ----------
+        dtype :
+            Data type of the returned space. Can be given in any way
+            `numpy.dtype` understands, e.g. as string ('complex64')
+            or data type (`complex`).
+
+        Returns
+        -------
+        newspace : `FnBase`
+            The version of this space with given data type
+        """
+        if dtype is None:
+            # Need to filter this out since Numpy iterprets it as 'float'
+            raise ValueError("Unknown data type 'None'.")
+
+        dtype = np.dtype(dtype)
+        if dtype == self.dtype:
+            return self
+
+        # Caching for real and complex versions (exact dtyoe mappings)
+        if dtype == self._real_dtype:
+            if self._real_space is None:
+                self._real_space = self._astype(dtype)
+            return self._real_space
+        elif dtype == self._complex_dtype:
+            if self._complex_space is None:
+                self._complex_space = self._astype(dtype)
+            return self._complex_space
+        else:
+            return self._astype(dtype)
+
+    @property
+    def examples(self):
+        """Return example random vectors."""
+        # Always return the same numbers
+        rand_state = np.random.get_state()
+        np.random.seed(1337)
+
+        yield ('Linspaced', self.element(np.linspace(0, 1, self.size)))
+
+        if self.is_rn:
+            yield ('Random noise', self.element(np.random.rand(self.size)))
+        elif self.is_cn:
+            rnd = np.random.rand(self.size) + np.random.rand(self.size) * 1j
+            yield ('Random noise', self.element(rnd))
+
+        yield ('Normally distributed random noise',
+               self.element(np.random.randn(self.size)))
+
+        np.random.set_state(rand_state)
 
     @abstractmethod
     def zero(self):
@@ -491,157 +527,7 @@ class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
         return LinearSpaceVector.copy(self)
 
 
-class FnWeightingBase(object):
-
-    """Abstract base class for weighting of `FnBase` spaces.
-
-    This class and its subclasses serve as a simple means to evaluate
-    and compare weighted inner products, norms and metrics semantically
-    rather than by identity on a pure function level.
-
-    The functions are implemented similarly to `Operator`,
-    but without extra type checks of input parameters - this is done in
-    the callers of the `LinearSpace` instance where these
-    functions used.
-    """
-
-    def __init__(self, impl, exponent=2.0, dist_using_inner=False):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        impl : `str`
-            Specifier for the implementation backend
-        exponent : positive `float`
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
-        dist_using_inner : `bool`, optional
-            Calculate `dist` using the formula
-
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
-
-            This avoids the creation of new arrays and is thus faster
-            for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
-
-            This option can only be used if ``exponent`` is 2.0.
-
-            Default: `False`.
-        """
-        self._dist_using_inner = bool(dist_using_inner)
-        self._exponent = float(exponent)
-        self._impl = str(impl).lower()
-        if self._exponent <= 0:
-            raise ValueError('only positive exponents or inf supported, '
-                             'got {}.'.format(exponent))
-        elif self._exponent != 2.0 and self._dist_using_inner:
-            raise ValueError('`dist_using_inner` can only be used if the '
-                             'exponent is 2.0.')
-
-    @property
-    def impl(self):
-        """Implementation backend of this weighting."""
-        return self._impl
-
-    @property
-    def exponent(self):
-        """Exponent of this weighting."""
-        return self._exponent
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equal : `bool`
-            `True` if ``other`` is a the same weighting, `False`
-            otherwise.
-
-        Notes
-        -----
-        This operation must be computationally cheap, i.e. no large
-        arrays may be compared element-wise. That is the task of the
-        `equiv` method.
-        """
-        return (self.exponent == other.exponent and
-                self._dist_using_inner == other._dist_using_inner and
-                self.impl == other.impl)
-
-    def equiv(self, other):
-        """Test if ``other`` is an equivalent inner product.
-
-        Should be overwritten, default tests for equality.
-
-        Returns
-        -------
-        equivalent : `bool`
-            `True` if ``other`` is a `FnWeightingBase` instance which
-            yields the same result as this inner product for any
-            input, `False` otherwise.
-        """
-        return self == other
-
-    def inner(self, x1, x2):
-        """Calculate the inner product of two vectors.
-
-        Parameters
-        ----------
-        x1, x2 : `FnBaseVector`
-            Vectors whose inner product is calculated
-
-        Returns
-        -------
-        inner : `float` or `complex`
-            The inner product of the two provided vectors
-        """
-        raise NotImplementedError
-
-    def norm(self, x):
-        """Calculate the norm of a vector.
-
-        This is the standard implementation using `inner`.
-        Subclasses should override it for optimization purposes.
-
-        Parameters
-        ----------
-        x1 : `FnBaseVector`
-            Vector whose norm is calculated
-
-        Returns
-        -------
-        norm : `float`
-            The norm of the vector
-        """
-        return float(sqrt(self.inner(x, x).real))
-
-    def dist(self, x1, x2):
-        """Calculate the distance between two vectors.
-
-        This is the standard implementation using `norm`.
-        Subclasses should override it for optimization purposes.
-
-        Parameters
-        ----------
-        x1, x2 : `FnBaseVector`
-            Vectors whose mutual distance is calculated
-
-        Returns
-        -------
-        dist : `float`
-            The distance between the vectors
-        """
-        if self._dist_using_inner:
-            dist_squared = (self.norm(x1) ** 2 + self.norm(x2) ** 2 -
-                            2 * self.inner(x1, x2).real)
-            if dist_squared < 0:  # Compensate for numerical error
-                dist_squared = 0.0
-            return float(sqrt(dist_squared))
-        else:
-            return self.norm(x1 - x2)
-
-
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

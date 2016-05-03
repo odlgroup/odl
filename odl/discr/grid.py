@@ -23,16 +23,13 @@ space with a certain structure which is exploited to minimize storage.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import range, str, zip
 
-# External module imports
 from numbers import Integral
 import numpy as np
 
-# ODL imports
 from odl.set.domain import IntervalProd
 from odl.set.sets import Set
 from odl.util.utility import array1d_repr, array1d_str
@@ -179,6 +176,7 @@ class TensorGrid(Set):
         self._inondeg = np.array([i for i in range(len(vecs))
                                   if len(vecs[i]) != 1])
 
+    # Attributes
     @property
     def coord_vectors(self):
         """The coordinate vectors of the grid.
@@ -248,12 +246,12 @@ class TensorGrid(Set):
         Parameters
         ----------
         kwargs
-            For duck-typing with `numpy.min`
+            For duck-typing with `numpy.amin`
 
         See also
         --------
         max
-        IntervalProd.min
+        odl.set.domain.IntervalProd.min
 
         Examples
         --------
@@ -280,12 +278,12 @@ class TensorGrid(Set):
         Parameters
         ----------
         kwargs
-            For duck-typing with `numpy.max`
+            For duck-typing with `numpy.amax`
 
         See also
         --------
         min
-        IntervalProd.max
+        odl.set.domain.IntervalProd.max
 
         Examples
         --------
@@ -484,8 +482,9 @@ class TensorGrid(Set):
         ----------
         index : `int`
             The index of the dimension before which ``other`` is to
-            be inserted. Negative indices are added to `ndim`.
-        other :  `TensorGrid`, `float` or `array-like`
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
+        other :  `TensorGrid`
             The grid to be inserted
 
         Returns
@@ -521,9 +520,8 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other : `IntervalProd`, `float` or `array-like`
-            The set to be inserted. A `float` or array a is
-            treated as an ``IntervalProd(a, a)``.
+        other : `TensorGrid`
+            The set to be inserted
 
         Examples
         --------
@@ -921,7 +919,8 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-
+        other :
+            Check if this object is a subgrid
         atol : `float`
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
@@ -988,14 +987,15 @@ class RegularGrid(TensorGrid):
         ----------
         index : `int`
             Index of the dimension before which ``other`` is to
-            be inserted. Must fulfill ``0 <= index <= ndim``.
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
         other : `TensorGrid`
             Grid to be inserted. If a `RegularGrid` is given,
             the output will be a `RegularGrid`.
 
         Returns
         -------
-        newgrid : `TensorGrid`
+        newgrid : `TensorGrid` or `RegularGrid`
             The enlarged grid. If the inserted grid is a `RegularGrid`,
             so is the return value.
 
@@ -1005,6 +1005,12 @@ class RegularGrid(TensorGrid):
         >>> rg2 = RegularGrid(-3, 7, 6)
         >>> rg1.insert(1, rg2)
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 3.0], (2, 6, 3))
+
+        If other is a TensorGrid, so is the result:
+
+        >>> tg = TensorGrid([0, 1, 2])
+        >>> rg1.insert(2, tg)
+        TensorGrid([-1.5, -0.5], [-1.0, 1.0, 3.0], [0.0, 1.0, 2.0])
         """
         if isinstance(other, RegularGrid):
             idx = int(index)
@@ -1159,7 +1165,7 @@ class RegularGrid(TensorGrid):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-def uniform_sampling_fromintv(intv_prod, num_nodes):
+def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     """Sample an interval product uniformly.
 
     The resulting grid will include ``begin`` and ``end`` of
@@ -1175,6 +1181,17 @@ def uniform_sampling_fromintv(intv_prod, num_nodes):
         Number of nodes per axis. For dimension >= 2, a `tuple`
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
+    nodes_on_bdry : `bool` or `sequence`, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (True) or shift it
+        by half a cell size into the interior (False). In each axis,
+        an entry may consist in a single `bool` or a 2-tuple of
+        `bool`. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
 
     Returns
     -------
@@ -1195,17 +1212,83 @@ def uniform_sampling_fromintv(intv_prod, num_nodes):
     >>> grid = uniform_sampling_fromintv(rbox, (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
+
+    To have the nodes in the "middle", use nodes_on_bdry=False
+
+    >>> grid = uniform_sampling_fromintv(rbox, (2, 2), nodes_on_bdry=False)
+    >>> grid.coord_vectors
+    (array([-1.25, -0.75]), array([ 2.25,  2.75]))
+
+
+    See also
+    --------
+    uniform_sampling : Sample an implicitly created `IntervalProd`
     """
-    num_nodes = np.atleast_1d(num_nodes).astype('int64')
+    num_nodes = np.atleast_1d(num_nodes).astype('int64', casting='safe')
 
     if not isinstance(intv_prod, IntervalProd):
         raise TypeError('{!r} is not an `IntervalProd` instance.'
                         ''.format(intv_prod))
 
-    return RegularGrid(intv_prod.begin, intv_prod.end, num_nodes)
+    if np.shape(nodes_on_bdry) == ():
+        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
+                         intv_prod.ndim)
+    elif len(nodes_on_bdry) != intv_prod.ndim:
+        raise ValueError('nodes_on_bdry has length {}, expected {}.'
+                         ''.format(len(nodes_on_bdry), intv_prod.ndim, 2))
+    else:
+        num_nodes = tuple(int(n) for n in num_nodes)
+
+    # We need to determine the placement of the grid minimum and maximum
+    # points based on the choices in nodes_on_bdry. If in a given axis,
+    # and for a given side (left or right), the entry is True, the node lies
+    # on the boundary, so this coordinate can simply be taken as-is.
+    #
+    # Otherwise, the following conditionsmust be met:
+    #
+    # 1. The node should be half a stride s away from the boundary
+    # 2. Adding or subtracting (n-1)*s should give the other extremal node.
+    #
+    # If both nodes are to be shifted half a stride inside,
+    # the second condition yields
+    # a + s/2 + (n-1)*s = b - s/2 => s = (b - a) / n,
+    # hence the extremal grid points are
+    # gmin = a + s/2 = a + (b - a) / (2 * n),
+    # gmax = b - s/2 = b - (b - a) / (2 * n).
+    #
+    # In the case where one node, say the rightmost, lies on the boundary,
+    # the condition 2. reads as
+    # a + s/2 + (n-1)*s = b => s = (b - a) / (n - 1/2),
+    # thus
+    # gmin = a + (b - a) / (2 * n - 1).
+
+    gmin, gmax = [], []
+    for n, beg, end, on_bdry in zip(num_nodes, intv_prod.begin, intv_prod.end,
+                                    nodes_on_bdry):
+
+        # Unpack the tuple if possible, else use bool globally for this axis
+        try:
+            bdry_l, bdry_r = on_bdry
+        except TypeError:
+            bdry_l = bdry_r = on_bdry
+
+        if bdry_l and bdry_r:
+            gmin.append(beg)
+            gmax.append(end)
+        elif bdry_l and not bdry_r:
+            gmin.append(beg)
+            gmax.append(end - (end - beg) / (2 * n - 1))
+        elif not bdry_l and bdry_r:
+            gmin.append(beg + (end - beg) / (2 * n - 1))
+            gmax.append(end)
+        else:
+            gmin.append(beg + (end - beg) / (2 * n))
+            gmax.append(end - (end - beg) / (2 * n))
+
+    return RegularGrid(gmin, gmax, num_nodes)
 
 
-def uniform_sampling(begin, end, num_nodes):
+def uniform_sampling(begin, end, num_nodes, nodes_on_bdry=True):
     """Sample an implicitly defined interval product uniformly.
 
     Parameters
@@ -1218,6 +1301,17 @@ def uniform_sampling(begin, end, num_nodes):
         Number of nodes per axis. For dimension >= 2, a `tuple`
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
+    nodes_on_bdry : `bool` or `sequence`, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (True) or shift it
+        by half a cell size into the interior (False). In each axis,
+        an entry may consist in a single `bool` or a 2-tuple of
+        `bool`. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
 
     See also
     --------
@@ -1232,10 +1326,19 @@ def uniform_sampling(begin, end, num_nodes):
     >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
+
+    To have the nodes in the "middle", use nodes_on_bdry=False
+
+    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], (2, 2),
+    ...                         nodes_on_bdry=False)
+    >>> grid.coord_vectors
+    (array([-1.25, -0.75]), array([ 2.25,  2.75]))
     """
-    return uniform_sampling_fromintv(IntervalProd(begin, end), num_nodes)
+    return uniform_sampling_fromintv(IntervalProd(begin, end), num_nodes,
+                                     nodes_on_bdry=nodes_on_bdry)
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

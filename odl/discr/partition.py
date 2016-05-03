@@ -25,16 +25,13 @@ of partitions of intervals.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object, range, super, zip
 
-# External module imports
 import numpy as np
 
-# ODL imports
-from odl.discr.grid import TensorGrid, RegularGrid
+from odl.discr.grid import TensorGrid, RegularGrid, uniform_sampling_fromintv
 from odl.set.domain import IntervalProd
 
 
@@ -137,7 +134,7 @@ class RectPartition(object):
 
         See also
         --------
-        IntervalProd.min
+        odl.set.domain.IntervalProd.min
         """
         return self.set.min()
 
@@ -146,7 +143,7 @@ class RectPartition(object):
 
         See also
         --------
-        IntervalProd.max
+        odl.set.domain.IntervalProd.max
         """
         return self.set.max()
 
@@ -369,7 +366,8 @@ class RectPartition(object):
         ----------
         index : `int`
             Index of the dimension before which ``other`` is to
-            be inserted. Negative indices are added to ``self.ndim``.
+            be inserted. Negative indices count backwards from
+            ``self.ndim``.
         other : `RectPartition`
             Partition to be inserted
 
@@ -380,10 +378,39 @@ class RectPartition(object):
 
         Examples
         --------
+        >>> part1 = uniform_partition([0, -1], [1, 2], (3, 3))
+        >>> part2 = uniform_partition(0, 1, 5)
+        >>> part1.insert(1, part2)
+        uniform_partition([0.0, 0.0, -1.0], [1.0, 1.0, 2.0], [3, 5, 3])
+
+        See Also
+        --------
+        append
         """
         newgrid = self.grid.insert(index, other.grid)
         newset = self.set.insert(index, other.set)
         return RectPartition(newset, newgrid)
+
+    def append(self, other):
+        """Insert at the end.
+
+        Parameters
+        ----------
+        other : `RectPartition`,
+            The set to be inserted.
+
+        Examples
+        --------
+        >>> part1 = uniform_partition([0, -1], [1, 2], (3, 3))
+        >>> part2 = uniform_partition(0, 1, 5)
+        >>> part1.append(part2)
+        uniform_partition([0.0, -1.0, 0.0], [1.0, 2.0, 1.0], [3, 3, 5])
+
+        See Also
+        --------
+        insert
+        """
+        return self.insert(self.ndim, other)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -391,8 +418,20 @@ class RectPartition(object):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_str = '\n {!r},\n {!r}'.format(self.set, self.grid)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        if uniform_partition_fromintv(self.set, self.shape) == self:
+
+            if self.ndim == 1:
+                inner_str = '{}, {}, {}'.format(float(self.set.begin),
+                                                float(self.set.end),
+                                                self.size)
+            else:
+                inner_str = '{}, {}, {}'.format(list(self.set.begin),
+                                                list(self.set.end),
+                                                list(self.shape))
+            return 'uniform_partition({})'.format(inner_str)
+        else:
+            inner_str = '\n    {!r},\n    {!r}'.format(self.set, self.grid)
+            return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 def uniform_partition_fromintv(intv_prod, num_nodes, nodes_on_bdry=False):
@@ -456,69 +495,10 @@ def uniform_partition_fromintv(intv_prod, num_nodes, nodes_on_bdry=False):
     >>> part.grid.coord_vectors[1]
     array([ 0.2,  0.6,  1. ])
     """
-    # Sanity checks
-    if np.shape(num_nodes) == ():
-        num_nodes = (int(num_nodes),)
-    elif len(num_nodes) != intv_prod.ndim:
-        raise ValueError('num_nodes has length {}, expected {}.'
-                         ''.format(len(num_nodes), (intv_prod.ndim)))
-    else:
-        num_nodes = tuple(int(n) for n in num_nodes)
 
-    if np.shape(nodes_on_bdry) == ():
-        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
-                         intv_prod.ndim)
-    elif len(nodes_on_bdry) != intv_prod.ndim:
-        raise ValueError('nodes_on_bdry has length {}, expected {}.'
-                         ''.format(len(nodes_on_bdry), intv_prod.ndim, 2))
+    grid = uniform_sampling_fromintv(intv_prod, num_nodes,
+                                     nodes_on_bdry=nodes_on_bdry)
 
-    # We need to determine the placement of the grid minimum and maximum
-    # points based on the choices in nodes_on_bdry. If in a given axis,
-    # and for a given side (left or right), the entry is True, the node lies
-    # on the boundary, so this coordinate can simply be taken as-is.
-    #
-    # Otherwise, the following conditionsmust be met:
-    #
-    # 1. The node should be half a stride s away from the boundary
-    # 2. Adding or subtracting (n-1)*s should give the other extremal node.
-    #
-    # If both nodes are to be shifted half a stride inside,
-    # the second condition yields
-    # a + s/2 + (n-1)*s = b - s/2 => s = (b - a) / n,
-    # hence the extremal grid points are
-    # gmin = a + s/2 = a + (b - a) / (2 * n),
-    # gmax = b - s/2 = b - (b - a) / (2 * n).
-    #
-    # In the case where one node, say the rightmost, lies on the boundary,
-    # the condition 2. reads as
-    # a + s/2 + (n-1)*s = b => s = (b - a) / (n - 1/2),
-    # thus
-    # gmin = a + (b - a) / (2 * n - 1).
-
-    gmin, gmax = [], []
-    for n, beg, end, on_bdry in zip(num_nodes, intv_prod.begin, intv_prod.end,
-                                    nodes_on_bdry):
-
-        # Unpack the tuple if possible, else use bool globally for this axis
-        try:
-            bdry_l, bdry_r = on_bdry
-        except TypeError:
-            bdry_l = bdry_r = on_bdry
-
-        if bdry_l and bdry_r:
-            gmin.append(beg)
-            gmax.append(end)
-        elif bdry_l and not bdry_r:
-            gmin.append(beg)
-            gmax.append(end - (end - beg) / (2 * n - 1))
-        elif not bdry_l and bdry_r:
-            gmin.append(beg + (end - beg) / (2 * n - 1))
-            gmax.append(end)
-        else:
-            gmin.append(beg + (end - beg) / (2 * n))
-            gmax.append(end - (end - beg) / (2 * n))
-
-    grid = RegularGrid(gmin, gmax, num_nodes)
     return RectPartition(intv_prod, grid)
 
 
@@ -550,8 +530,6 @@ def uniform_partition(begin, end, num_nodes, nodes_on_bdry=False):
     uniform_partition_fromintv : partition an existing set
     uniform_partition_fromgrid : use an existing grid as basis
 
-    Examples
-    --------
     Examples
     --------
     By default, no grid points are placed on the boundary:
@@ -614,12 +592,9 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
         as::
 
             begin = x[0] - (x[1] - x[0]) / 2
-
-        or::
-
             end = x[-1] + (x[-1] - x[-2]) / 2
 
-        respectively. See ``Examples`` below.
+        See ``Examples`` below.
 
         In general, ``begin`` may not be larger than ``grid.min_pt``,
         and ``end`` not smaller than ``grid.max_pt`` in any component.
@@ -703,5 +678,6 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

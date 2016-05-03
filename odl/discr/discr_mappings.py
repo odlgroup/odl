@@ -23,16 +23,13 @@ operators.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import str, super, zip
 
-# External imports
 from itertools import product
 import numpy as np
 
-# ODL imports
 from odl.operator.operator import Operator
 from odl.discr.partition import RectPartition
 from odl.space.base_ntuples import NtuplesBase, FnBase
@@ -58,7 +55,7 @@ class FunctionSetMapping(Operator):
 
         Parameters
         ----------
-        map_type : {'restriction', 'extension'}
+        map_type : {'sampling', 'interpolation'}
             The type of operator
         fset : `FunctionSet`
             The non-discretized (abstract) set of functions to be
@@ -80,7 +77,7 @@ class FunctionSetMapping(Operator):
             Default: 'C'
         """
         map_type_ = str(map_type).lower()
-        if map_type_ not in ('restriction', 'extension'):
+        if map_type_ not in ('sampling', 'interpolation'):
             raise ValueError('mapping type {!r} not understood.'
                              ''.format(map_type))
         if not isinstance(fset, FunctionSet):
@@ -104,8 +101,8 @@ class FunctionSetMapping(Operator):
                              'to the size {} of the partition.'
                              ''.format(dspace.size, dspace, partition.size))
 
-        dom = fset if map_type_ == 'restriction' else dspace
-        ran = dspace if map_type_ == 'restriction' else fset
+        dom = fset if map_type_ == 'sampling' else dspace
+        ran = dspace if map_type_ == 'sampling' else fset
         Operator.__init__(self, dom, ran, linear=linear)
         self._partition = partition
 
@@ -170,7 +167,7 @@ class PointCollocation(FunctionSetMapping):
     only difference being the additional information about the ordering
     of the axes in the flat storage array (C- vs. Fortran ordering).
 
-    This operator is the default 'restriction' used by all core
+    This operator is the default 'sampling' used by all core
     discretization classes.
     """
 
@@ -197,10 +194,10 @@ class PointCollocation(FunctionSetMapping):
             Default: 'C'
         """
         linear = isinstance(ip_fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'restriction', ip_fset, partition,
+        FunctionSetMapping.__init__(self, 'sampling', ip_fset, partition,
                                     dspace, linear, **kwargs)
 
-    def _call(self, func, out=None):
+    def _call(self, func, out=None, **kwargs):
         """Evaluate ``func`` at the grid of this operator.
 
         Parameters
@@ -212,6 +209,8 @@ class PointCollocation(FunctionSetMapping):
             ``(N,)``, where N is the total number of grid points. The
             data type must be the same as in the ``dspace`` of this
             mapping.
+        kwargs :
+            Additional keyword arguments, optional
 
         Returns
         -------
@@ -269,21 +268,16 @@ vectorization_guide.html>`_ for a detailed introduction.
         >>> coll_op(func_elem)
         Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
-        try:
-            mesh = self.grid.meshgrid
-            if out is None:
-                out = func(mesh).ravel(order=self.order)
-            else:
+        mesh = self.grid.meshgrid
+        if out is None:
+            out = func(mesh, **kwargs).ravel(order=self.order)
+        else:
+            out[:] = np.ravel(
                 func(mesh, out=out.asarray().reshape(self.grid.shape,
-                                                     order=self.order))
-        except (ValueError, TypeError) as err:
-            if str(err.args[0]).startswith('output contains points outside'):
-                raise err
-            points = self.grid.points()
-            if out is None:
-                out = func(points)
-            else:
-                func(points, out=out.asarray())
+                                                     order=self.order),
+                     **kwargs),
+                order=self.order)
+
         return out
 
     def __repr__(self):
@@ -352,7 +346,7 @@ class NearestInterpolation(FunctionSetMapping):
         may not be noticable in some situations due to rounding errors.
         """
         linear = isinstance(fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'extension', fset, partition,
+        FunctionSetMapping.__init__(self, 'interpolation', fset, partition,
                                     dspace, linear, **kwargs)
 
         variant = kwargs.pop('variant', 'left')
@@ -437,7 +431,7 @@ class NearestInterpolation(FunctionSetMapping):
 
             interpolator = _NearestInterpolator(
                 self.grid.coord_vectors,
-                x.data.reshape(self.grid.shape, order=self.order),
+                x.asarray().reshape(self.grid.shape, order=self.order),
                 variant=self._variant,
                 input_type=input_type)
 
@@ -491,7 +485,7 @@ class LinearInterpolation(FunctionSetMapping):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
                             'instance.'.format(fspace))
 
-        FunctionSetMapping.__init__(self, 'extension', fspace, partition,
+        FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
                                     dspace, linear=True, **kwargs)
 
     def _call(self, x, out=None):
@@ -521,7 +515,7 @@ class LinearInterpolation(FunctionSetMapping):
 
             interpolator = _LinearInterpolator(
                 self.grid.coord_vectors,
-                x.data.reshape(self.grid.shape, order=self.order),
+                x.asarray().reshape(self.grid.shape, order=self.order),
                 input_type=input_type)
 
             return interpolator(arg, out=out)
@@ -582,7 +576,7 @@ class PerAxisInterpolation(FunctionSetMapping):
             raise TypeError('function space {!r} is not a `FunctionSpace` '
                             'instance.'.format(fspace))
 
-        FunctionSetMapping.__init__(self, 'extension', fspace, partition,
+        FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
                                     dspace, linear=True, **kwargs)
 
         try:
@@ -655,7 +649,7 @@ class PerAxisInterpolation(FunctionSetMapping):
 
             interpolator = _PerAxisInterpolator(
                 self.grid.coord_vectors,
-                x.data.reshape(self.grid.shape, order=self.order),
+                x.asarray().reshape(self.grid.shape, order=self.order),
                 schemes=self.schemes, nn_variants=self.nn_variants,
                 input_type=input_type)
 
@@ -1028,5 +1022,6 @@ class _LinearInterpolator(_PerAxisInterpolator):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

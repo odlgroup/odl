@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -29,7 +29,7 @@ import numpy as np
 # ODL imports
 import odl
 from odl.operator.oputils import matrix_representation, power_method_opnorm
-from odl.set.pspace import ProductSpace
+from odl.space.pspace import ProductSpace
 from odl.operator.pspace_ops import ProductSpaceOperator
 
 from odl.space.ntuples import MatVecOperator

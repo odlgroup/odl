@@ -23,15 +23,14 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# ODL imports
 from odl.operator.operator import Operator
-from odl.set.pspace import ProductSpace
+from odl.space.pspace import ProductSpace
 from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.set.sets import Field
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
-           'LinCombOperator', 'MultiplyOperator',
+           'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
            'InnerProductOperator', 'ConstantOperator', 'ResidualOperator')
 
 
@@ -260,7 +259,7 @@ class MultiplyOperator(Operator):
     in the second the scalar multiplication.
     """
 
-    def __init__(self, y, domain=None):
+    def __init__(self, y, domain=None, range=None):
         """Initialize a MultiplyOperator instance.
 
         Parameters
@@ -270,16 +269,16 @@ class MultiplyOperator(Operator):
         domain : `LinearSpace` or `Field`, optional
             The set to take values in. Default: ``x.space``
         """
-        if not isinstance(y, LinearSpaceVector):
-            raise TypeError('y {!r} needs to be a LinearSpaceVector'
-                            ''.format(y))
-
         if domain is None:
             domain = y.space
 
+        if range is None:
+            range = y.space
+
         self.y = y
         self._domain_is_field = isinstance(domain, Field)
-        super().__init__(domain, y.space, linear=True)
+        self._range_is_field = isinstance(range, Field)
+        super().__init__(domain, range, linear=True)
 
     def _call(self, x, out=None):
         """Multiply the input and write to output.
@@ -287,8 +286,8 @@ class MultiplyOperator(Operator):
         Parameters
         ----------
         x : ``domain`` `element`
-            An element in the operator domain (2-tuple of space
-            elements) whose elementwise product is calculated
+            An element in the operator domain whose elementwise product is
+            calculated.
         out : ``range`` `element`, optional
             Vector to which the result is written
 
@@ -320,10 +319,13 @@ class MultiplyOperator(Operator):
         """
         if out is None:
             return x * self.y
-        elif self._domain_is_field:
-            out.lincomb(x, self.y)
+        elif not self._range_is_field:
+            if self._domain_is_field:
+                out.lincomb(x, self.y)
+            else:
+                out.multiply(x, self.y)
         else:
-            out.multiply(x, self.y)
+            raise ValueError('Can only use `out` with `LinearSpace` range')
 
     @property
     def adjoint(self):
@@ -367,7 +369,121 @@ class MultiplyOperator(Operator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return "x * y"
+        return "x * {}".format(self.y)
+
+
+class PowerOperator(Operator):
+
+    """The power of a vector or scalar.
+
+    ``MultiplyOperator(n)(x) <==> x ** n``
+
+    Here, ``x`` is a `LinearSpaceVector` or `Field` element and
+    ``y`` is a number.
+    Hence, this operator can be defined either on a `LinearSpace` or on
+    a `Field`.
+    """
+
+    def __init__(self, domain, exponent):
+        """Initialize a PowerOperator instance.
+
+        Parameters
+        ----------
+        exponent : Number
+            The power to take
+        domain : `LinearSpace` or `Field`, optional
+            The set to take values in
+        """
+
+        self.exponent = float(exponent)
+        self._domain_is_field = isinstance(domain, Field)
+        super().__init__(domain, domain, linear=(exponent == 1))
+
+    def _call(self, x, out=None):
+        """Multiply the input and write to output.
+
+        Parameters
+        ----------
+        x : ``domain`` `element`
+            An element in the operator domain (2-tuple of space
+            elements) whose elementwise product is calculated
+        out : ``range`` `element`, optional
+            Vector to which the result is written
+
+        Returns
+        -------
+        out : ``range`` `element`
+            Result of the multiplication. If ``out`` was provided, the
+            returned object is a reference to it.
+
+        Examples
+        --------
+        Use with vectors
+
+        >>> from odl import Rn, RealNumbers
+        >>> op = PowerOperator(Rn(3), exponent=2)
+        >>> op([1, 2, 3])
+        Rn(3).element([1.0, 4.0, 9.0])
+
+        or scalars
+
+        >>> op = PowerOperator(RealNumbers(), exponent=2)
+        >>> op(2.0)
+        4.0
+        """
+        if out is None:
+            return x ** self.exponent
+        elif self._domain_is_field:
+            raise ValueError('Cannot use `out` with field')
+        else:
+            out.assign(x)
+            out **= self.exponent
+
+    def derivative(self, point):
+        """The derivative operator.
+
+        ``MultiplyOperator(n).derivative(x)(y) <==> n * x ** (n - 1) * y``
+
+        Parameters
+        ----------
+        point : ``domain`` `element`
+            The point in which to take the derivative
+
+        Returns
+        -------
+        derivative : `Operator`
+            The derivative in ``point``
+
+        Examples
+        --------
+        >>> from odl import Rn, RealNumbers
+
+        Use with vectors
+
+        >>> op = PowerOperator(Rn(3), exponent=2)
+        >>> dop = op.derivative(op.domain.element([1, 2, 3]))
+        >>> dop([1, 1, 1])
+        Rn(3).element([2.0, 4.0, 6.0])
+
+        Use with scalars:
+
+        >>> op = PowerOperator(RealNumbers(), exponent=2)
+        >>> dop = op.derivative(2.0)
+        >>> dop(2.0)
+        8.0
+        """
+        return self.exponent * MultiplyOperator(point ** (self.exponent - 1),
+                                                domain=self.domain,
+                                                range=self.range)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.exponent)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return "x ** {}".format(self.exponent)
 
 
 class InnerProductOperator(Operator):
@@ -606,6 +722,16 @@ class ResidualOperator(Operator):
         ----------
         x : ``domain`` `element`
             Any element in the domain where the derivative should be taken
+
+        Examples
+        --------
+        >>> from odl import Rn
+        >>> r3 = Rn(3)
+        >>> op = IdentityOperator(r3)
+        >>> res = ResidualOperator(op, r3.element([1, 2, 3]))
+        >>> x = r3.element([4, 5, 6])
+        >>> res.derivative(x)(x)
+        Rn(3).element([4.0, 5.0, 6.0])
         """
         return self.op.derivative(point)
 
@@ -619,5 +745,6 @@ class ResidualOperator(Operator):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

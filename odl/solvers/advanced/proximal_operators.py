@@ -32,7 +32,7 @@ import scipy as sp
 from odl.operator.operator import Operator
 from odl.operator.default_ops import IdentityOperator
 from odl.operator.pspace_ops import ProductSpaceOperator
-from odl.set.pspace import ProductSpace
+from odl.space.pspace import ProductSpace
 
 
 __all__ = ('combine_proximals', 'proximal_zero', 'proximal_nonnegativity',
@@ -240,7 +240,7 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
         g = space.zero()
     else:
         if g not in space:
-            raise TypeError('{} is not an element of {}'.format(g, space))
+            raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
     class _ProximalConvConjL2(Operator):
 
@@ -317,7 +317,7 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
         g = space.zero()
     else:
         if g not in space:
-            raise TypeError('{} is not an element of {}'.format(g, space))
+            raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
     class _ProximalConvConjL1(Operator):
 
@@ -485,5 +485,6 @@ def proximal_convexconjugate_kl(space, lam=1, g=None):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

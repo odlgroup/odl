@@ -15,33 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Abstract linear vector spaces.
-
-The classes in this module represent abstract mathematical concepts
-of vector spaces. They cannot be used directly but are rather intended
-to be sub-classed by concrete space implementations. The spaces
-provide default implementations of the most important vector space
-operations. See the documentation of the respective classes for more
-details.
-
-The abstract `LinearSpace` class is intended for quick prototyping.
-It has a number of abstract methods which must be overridden by a
-subclass. On the other hand, it provides automatic error checking
-and numerous attributes and methods for convenience.
-"""
+"""Abstract linear vector spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from builtins import object, range, str
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
 from abc import abstractmethod
 import math as m
 
-# ODL imports
 from odl.set.sets import Set, UniversalSet
 
 
@@ -102,6 +86,17 @@ class LinearSpace(Set):
         element : `LinearSpaceVector`
             A vector in this space
         """
+
+    @property
+    def examples(self):
+        """Return the two default examples, `zero` and `one` (if available)."""
+        # All spaces should yield the zero element
+        yield ('Zero', self.zero())
+
+        try:
+            yield ('One', self.one())
+        except NotImplementedError:
+            pass
 
     @abstractmethod
     def _lincomb(self, a, x1, b, x2, out):
@@ -244,12 +239,12 @@ class LinearSpace(Set):
                                        ''.format(out, self))
 
         if a not in self.field:
-            raise LinearSpaceTypeError('first scalar {!r} not in the field'
+            raise LinearSpaceTypeError('first scalar {!r} not in the field '
                                        '{!r} of the space {!r}.'
                                        ''.format(a, self.field, self))
 
         if x1 not in self:
-            raise LinearSpaceTypeError('first input vector {!r}'
+            raise LinearSpaceTypeError('first input vector {!r} '
                                        'not in space {!r}.'
                                        ''.format(x1, self))
 
@@ -262,12 +257,12 @@ class LinearSpace(Set):
 
         else:  # Two arguments
             if b not in self.field:
-                raise LinearSpaceTypeError('second scalar {!r} not in the'
+                raise LinearSpaceTypeError('second scalar {!r} not in the '
                                            'field {!r} of the space {!r}.'
                                            ''.format(b, self.field, self))
 
             if x2 not in self:
-                raise LinearSpaceTypeError('second input vector {!r} not'
+                raise LinearSpaceTypeError('second input vector {!r} not '
                                            'in space {!r}.'.format(x2, self))
 
             # Call method
@@ -617,16 +612,25 @@ class LinearSpaceVector(object):
         """``n``-th power in-place.
 
         This is only defined for integer ``n``."""
-        if n == 1:
+        if n < 0:
+            self **= -n
+            self.space.divide(self.space.one(), self, out=self)
+            return self
+        elif n == 0:
+            self.assign(self.space.one())
+            return self
+        elif n == 1:
             return self
         elif n % 2 == 0:
             self.space.multiply(self, self, out=self)
-            return self.__ipow__(n // 2)
+            self **= n // 2
+            return self
         else:
             tmp = self.copy()
-            for _ in range(n - 1):
+            for _ in range(n - 2):
                 self.space.multiply(tmp, self, out=tmp)
-            return tmp
+            self.space.multiply(tmp, self, out=self)
+            return self
 
     def __pow__(self, n):
         """``n``-th power.
@@ -711,58 +715,71 @@ class LinearSpaceVector(object):
         return repr(self.space) + "Vector"
 
     def __copy__(self):
-        """Copy of vector
+        """Return a copy of this vector.
 
-        `LinearSpaceVector.copy`
+        See also
+        --------
+        LinearSpace.copy
         """
         return self.copy()
 
     def __deepcopy__(self, memo):
-        """Copy of vector
+        """Return a copy of this vector.
 
-        `LinearSpaceVector.copy`
+        See also
+        --------
+        LinearSpace.copy
         """
         return self.copy()
 
-    # TODO: DOCUMENT
     def norm(self):
-        """Norm of vector
+        """Norm of this vector.
 
-        `LinearSpace.norm`
+        See also
+        --------
+        LinearSpace.norm
         """
         return self.space.norm(self)
 
     def dist(self, other):
         """Distance to ``other``.
 
-        `LinearSpace.dist`
+        See also
+        --------
+        LinearSpace.dist
         """
         return self.space.dist(self, other)
 
     def inner(self, other):
         """Inner product with ``other``.
 
-        `LinearSpace.inner`
+        See also
+        --------
+        LinearSpace.inner
         """
         return self.space.inner(self, other)
 
     def multiply(self, x, y):
-        """Multiply by ``other`` inplace.
+        """Implement ``self = x * y`` without creating new vectors.
 
-        `LinearSpace.multiply`
+        See also
+        --------
+        LinearSpace.multiply
         """
         return self.space.multiply(x, y, out=self)
 
     def divide(self, x, y):
-        """Divide by ``other`` inplace.
+        """Implement ``self = x / y`` without creating new vectors.
 
-        `LinearSpace.divide`
+        See also
+        --------
+        LinearSpace.divide
         """
         return self.space.divide(x, y, out=self)
 
     @property
     def T(self):
-        """The transpose of a vector, the functional given by (. , self)
+        """This vector's transpose, i.e. the functional ``(. , self)``.
 
         Returns
         -------
@@ -801,7 +818,7 @@ class UniversalSpace(LinearSpace):
     """
 
     def __init__(self):
-        """Initialize a universal space"""
+        """Initialize a universal space."""
         LinearSpace.__init__(self, field=UniversalSet())
 
     def element(self, inp=None):
@@ -878,11 +895,12 @@ class LinearSpaceTypeError(TypeError):
 class LinearSpaceNotImplementedError(NotImplementedError):
     """Exception for not implemented errors in `LinearSpace`'s.
 
-    These are raised when a method in `LinearSpace` that has not been
-    defined in a specific space is called.
+    These are raised when a method is called in `LinearSpace` that
+    has not been defined in a specific space.
     """
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

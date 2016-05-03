@@ -16,7 +16,7 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 
-"""Backend for STIR: Software for Tomographic Reconstruction
+"""Back-end for STIR: Software for Tomographic Reconstruction.
 
 Back and forward projectors for PET.
 
@@ -42,16 +42,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from odl.discr.lp_discr import uniform_discr
-from odl.operator.operator import Operator
-from odl.set.domain import Cuboid
-from odl.space.fspace import FunctionSpace
-
 try:
     import stir
     STIR_AVAILABLE = True
 except ImportError:
     STIR_AVAILABLE = False
+
+from odl.discr.lp_discr import uniform_discr
+from odl.operator.operator import Operator
+
 
 __all__ = ('ForwardProjectorByBinWrapper',
            'BackProjectorByBinWrapper',
@@ -107,7 +106,7 @@ class ForwardProjectorByBinWrapper(Operator):
         if dom.shape != volume.shape():
             raise ValueError('dom.shape {} does not equal volume shape {}'
                              ''.format(dom.shape, volume.shape()))
-        # Todo: improve
+        # TODO: improve
         proj_shape = proj_data.to_array().shape()
         if ran.shape != proj_shape:
             raise ValueError('ran.shape {} does not equal proj shape {}'
@@ -170,7 +169,7 @@ class ForwardProjectorByBinWrapper(Operator):
 
 class BackProjectorByBinWrapper(Operator):
 
-    """A backprojector using STIR."""
+    """A back projector using STIR."""
 
     def __init__(self, dom, ran, volume, proj_data,
                  back_projector=None, adjoint=None):
@@ -186,17 +185,19 @@ class BackProjectorByBinWrapper(Operator):
             ``volume.shape()``.
         volume : ``stir.FloatVoxelsOnCartesianGrid``
             The stir volume to use in the forward projection
-        projection_data : ``stir.ProjData``
+        proj_data : ``stir.ProjData``
             The stir description of the projection.
         back_projector : ``stir.BackProjectorByBin``, optional
             A pre-initialized back-projector.
         adjoint : `ForwardProjectorByBinWrapper`, optional
             A pre-initialized adjoint.
 
-        References
-        ----------
+        Notes
+        -----
         See `STIR doc`_ for info on the STIR classes.
 
+        References
+        ----------
         .. _STIR doc: http://stir.sourceforge.net/documentation/doxy/html/
         """
 
@@ -204,7 +205,7 @@ class BackProjectorByBinWrapper(Operator):
         if ran.shape != volume.shape():
             raise ValueError('ran.shape {} does not equal volume shape {}'
                              ''.format(ran.shape, volume.shape()))
-        # Todo: improve
+        # TODO: improve
         proj_shape = proj_data.to_array().shape()
         if dom.shape != proj_shape:
             raise ValueError('dom.shape {} does not equal proj shape {}'
@@ -304,3 +305,9 @@ def stir_projector_from_file(volume_file, projection_file):
     data_sp = uniform_discr([0, 0, 0], proj_shape, proj_shape, dtype='float32')
 
     return ForwardProjectorByBinWrapper(recon_sp, data_sp, volume, proj_data)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

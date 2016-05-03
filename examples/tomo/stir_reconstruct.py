@@ -26,13 +26,13 @@ import os.path as pth
 import odl
 
 # Set path to input files
-base = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'stir')
+base = pth.join(pth.dirname(pth.abspath(__file__)), 'data', 'stir')
 volume_file = str(pth.join(base, 'initial.hv'))
 projection_file = str(pth.join(base, 'small.hs'))
 
 # Create a STIR projector from file data.
-proj = odl.tomo.stir_bindings.stir_projector_from_file(volume_file,
-                                                       projection_file)
+proj = odl.tomo.backends.stir_bindings.stir_projector_from_file(
+    volume_file, projection_file)
 
 # Create shepp-logan phantom
 vol = odl.util.shepp_logan(proj.domain, modified=True)

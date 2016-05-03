@@ -23,15 +23,17 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import int, super
 
-# External module imports
 import numpy as np
 
-# ODL imports
+from odl.set.sets import RealNumbers
 from odl.set.space import LinearSpaceVector
 from odl.space.base_ntuples import (
-    NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
-from odl.util.utility import dtype_repr
+    NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector)
+from odl.space.weighting import (
+    WeightingBase, VectorWeightingBase, ConstWeightingBase, NoWeightingBase,
+    CustomInnerProductBase, CustomNormBase, CustomDistBase)
 from odl.util.ufuncs import CudaNtuplesUFuncs
+from odl.util.utility import dtype_repr
 
 try:
     import odlpp.odlpp_cuda as cuda
@@ -39,6 +41,7 @@ try:
 except ImportError:
     cuda = None
     CUDA_AVAILABLE = False
+
 
 __all__ = ('CudaNtuples', 'CudaNtuplesVector',
            'CudaFn', 'CudaFnVector', 'CudaRn',
@@ -184,9 +187,8 @@ class CudaNtuples(NtuplesBase):
                     # Array-like input. Need to go through a NumPy array
                     arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
                     if arr.shape != (self.size,):
-                        raise ValueError('input shape {} not broadcastable to '
-                                         'shape ({},).'.format(arr.shape,
-                                                               self.size))
+                        raise ValueError('expected input shape {}, got {}.'
+                                         ''.format((self.size,), arr.shape))
                     elem = self.element()
                     elem[:] = arr
                     return elem
@@ -438,7 +440,7 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
                     # Size checking is performed in c++
                     self.data.setslice(indices, value_array)
             else:
-                self.data.__setitem__(int(indices), values)
+                self.data[int(indices)] = values
 
     @property
     def ufunc(self):
@@ -489,31 +491,6 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
         return CudaNtuplesUFuncs(self)
 
 
-def _repr_space_funcs(space):
-    """Return the string in the parentheses of repr for space funcs."""
-    inner_str = ''
-
-    weight = 1.0
-    if space._space_funcs._dist_using_inner:
-        inner_str += ', dist_using_inner=True'
-    if isinstance(space._space_funcs, CudaFnCustomInnerProduct):
-        inner_str += ', inner=<custom inner>'
-    elif isinstance(space._space_funcs, CudaFnCustomNorm):
-        inner_str += ', norm=<custom norm>'
-    elif isinstance(space._space_funcs, CudaFnCustomDist):
-        inner_str += ', norm=<custom dist>'
-    elif isinstance(space._space_funcs, CudaFnConstWeighting):
-        weight = space._space_funcs.const
-        if weight != 1.0:
-            inner_str += ', weight={}'.format(weight)
-
-    exponent = space._space_funcs.exponent
-    if exponent != 2.0:
-        inner_str += ', exponent={}'.format(exponent)
-
-    return inner_str
-
-
 class CudaFn(FnBase, CudaNtuples):
 
     """The space `FnBase`, implemented in CUDA.
@@ -536,22 +513,27 @@ class CudaFn(FnBase, CudaNtuples):
 
             Only scalar data types are allowed.
 
-        weight : `array-like`, `CudaFnVector` or `float`, optional
-            Use weighted inner product, norm, and dist.
+        weight : optional
+            Use weighted inner product, norm, and dist. The following
+            types are supported as ``weight``:
 
-            `float`:
-                Weighting by a constant
+            `FnWeightingBase` :
+            Use this weighting as-is. Compatibility with this
+            space's elements is not checked during init.
 
-            array-like:
-                Weighting by a vector (1-dim. array, corresponds to
-                a diagonal matrix). Note that the array is stored in
-                main memory, which results in slower space functions
-                due to a copy during evaluation.
+            `float` :
+            Weighting by a constant
 
-            `CudaFnVector`:
-                same as 1-dim. array-like, except that copying is
-                avoided if the ``dtype`` of the vector is the
-                same as this space's ``dtype``.
+            `array-like` :
+            Weighting by a vector (1-dim. array, corresponds to
+            a diagonal matrix). Note that the array is stored in
+            main memory, which results in slower space functions
+            due to a copy during evaluation.
+
+            `CudaFnVector` :
+            same as 1-dim. array-like, except that copying is
+            avoided if the ``dtype`` of the vector is the
+            same as this space's ``dtype``.
 
             Default: no weighting
 
@@ -568,62 +550,50 @@ class CudaFn(FnBase, CudaNtuples):
             Default: 2.0
 
         dist : `callable`, optional
-            The distance function defining a metric on `CudaFn`.
-            It must accept two `CudaFnVector` arguments, return a
-            `float` and fulfill the following mathematical conditions
-            for any three vectors ``x, y, z``:
+            The distance function defining a metric on the space.
+            It must accept two `FnVector` arguments and
+            fulfill the following mathematical conditions for any
+            three vectors ``x, y, z``:
 
-            - :math:`d(x, y) = d(y, x)`
-            - :math:`d(x, y) \geq 0`
-            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
-            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
-
-            By default, ``dist(x, y)`` is calculated as
-            ``norm(x - y)``. This creates an intermediate array
-            ``x-y``, which can be
-            avoided by choosing ``dist_using_inner=True``.
+            - ``dist(x, y) >= 0``
+            - ``dist(x, y) = 0``  if and only if  ``x = y``
+            - ``dist(x, y) = dist(y, x)``
+            - ``dist(x, y) <= dist(x, z) + dist(z, y)``
 
             This option cannot be combined with ``weight``,
             ``norm`` or ``inner``.
 
         norm : `callable`, optional
             The norm implementation. It must accept an
-            `CudaFnVector` argument, return a
-            `float` and satisfy the following
-            conditions for all vectors :math:`x, y` and scalars
-            :math:`s`:
+            `FnVector` argument, return a `float` and satisfy the
+            following conditions for all vectors ``x, y`` and scalars
+            ``s``:
 
-            - :math:`\lVert x\\rVert \geq 0`
-            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
-            - :math:`\lVert s x\\rVert = \lvert s \\rvert
-              \lVert x\\rVert`
-            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
-              \lVert y\\rVert`.
+            - ``||x|| >= 0``
+            - ``||x|| = 0``  if and only if  ``x = 0``
+            - ``||s * x|| = |s| * ||x||``
+            - ``||x + y|| <= ||x|| + ||y||``
 
-            By default, ``norm(x)`` is calculated as
-            ``inner(x, x)``.
+            By default, ``norm(x)`` is calculated as ``inner(x, x)``.
 
             This option cannot be combined with ``weight``,
             ``dist`` or ``inner``.
 
         inner : `callable`, optional
             The inner product implementation. It must accept two
-            `CudaFnVector` arguments, return an element from
+            `FnVector` arguments, return a element from
             the field of the space (real or complex number) and
             satisfy the following conditions for all vectors
-            :math:`x, y, z` and scalars :math:`s`:
+            ``x, y, z`` and scalars ``s``:
 
-            - :math:`\langle x,y\\rangle =
-              \overline{\langle y,x\\rangle}`
-            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
-            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
-              \langle z,y\\rangle`
-            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
+            - ``<x, y> = conj(<y, x>)``
+            - ``<s*x + y, z> = s * <x, z> + <y, z>``
+            - ``<x, x> = 0``  if and only if  ``x = 0``
 
             This option cannot be combined with ``weight``,
             ``dist`` or ``norm``.
         """
-        super().__init__(size, dtype)
+        FnBase.__init__(self, size, dtype)
         CudaNtuples.__init__(self, size, dtype)
 
         dist = kwargs.pop('dist', None)
@@ -633,40 +603,75 @@ class CudaFn(FnBase, CudaNtuples):
         exponent = kwargs.pop('exponent', 2.0)
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        from builtins import sum as py_sum
-        if py_sum(x is None for x in (dist, norm, inner, weight)) < 3:
+        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
         if weight is not None:
-            if np.isscalar(weight):
-                self._space_funcs = CudaFnConstWeighting(
+            if isinstance(weight, WeightingBase):
+                self._weighting = weight
+            elif np.isscalar(weight):
+                self._weighting = CudaFnConstWeighting(
                     weight, exponent=exponent)
             elif isinstance(weight, CudaFnVector):
-                self._space_funcs = CudaFnVectorWeighting(
+                self._weighting = CudaFnVectorWeighting(
                     weight, exponent=exponent)
             else:
-                weight_ = np.asarray(weight)
-                if weight_.ndim == 1:
-                    self._space_funcs = CudaFnVectorWeighting(
-                        weight_, exponent=exponent)
+                # Must make a CudaFnVector from the array
+                weight = self.element(np.asarray(weight))
+                if weight.ndim == 1:
+                    self._weighting = CudaFnVectorWeighting(
+                        weight, exponent=exponent)
                 else:
                     raise ValueError('invalid weight argument {!r}.'
                                      ''.format(weight))
         elif dist is not None:
-            self._space_funcs = CudaFnCustomDist(dist)
+            self._weighting = CudaFnCustomDist(dist)
         elif norm is not None:
-            self._space_funcs = CudaFnCustomNorm(norm)
+            self._weighting = CudaFnCustomNorm(norm)
         elif inner is not None:
             # Use fast dist implementation
-            self._space_funcs = CudaFnCustomInnerProduct(
+            self._weighting = CudaFnCustomInnerProduct(
                 inner, dist_using_inner=True)
         else:  # all None -> no weighing
-            self._space_funcs = CudaFnNoWeighting(exponent)
+            self._weighting = CudaFnNoWeighting(exponent)
 
     @property
     def exponent(self):
         """Exponent of the norm and distance."""
-        return self._space_funcs.exponent
+        return self.weighting.exponent
+
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return self._weighting
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the weighting is not `CudaFnNoWeighting`."""
+        return not isinstance(self.weighting, CudaFnNoWeighting)
+
+    @staticmethod
+    def default_dtype(field):
+        """Return the default of `CudaFn` data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`
+            Set of numbers to be represented by a data type.
+            Currently supported: `RealNumbers`.
+
+        Returns
+        -------
+        dtype : `type`
+            Numpy data type specifier. The returned defaults are:
+
+            ``RealNumbers()`` : , ``np.dtype('float32')``
+        """
+        if field == RealNumbers():
+            return np.dtype('float32')
+        else:
+            raise ValueError('no default data type defined for field {}.'
+                             ''.format(field))
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``, assigned to ``out``.
@@ -720,7 +725,7 @@ class CudaFn(FnBase, CudaNtuples):
         >>> uc3.inner(x, y)
         20.0
         """
-        return self._space_funcs.inner(x1, x2)
+        return self.weighting.inner(x1, x2)
 
     def _dist(self, x1, x2):
         """Calculate the distance between two vectors.
@@ -743,7 +748,7 @@ class CudaFn(FnBase, CudaNtuples):
         >>> r2.dist(x, y)
         5.0
         """
-        return self._space_funcs.dist(x1, x2)
+        return self.weighting.dist(x1, x2)
 
     def _norm(self, x):
         """Calculate the norm of ``x``.
@@ -767,7 +772,7 @@ class CudaFn(FnBase, CudaNtuples):
         >>> uc3.norm(x)
         7.0
         """
-        return self._space_funcs.norm(x)
+        return self.weighting.norm(x)
 
     def _multiply(self, x1, x2, out):
         """The pointwise product of two vectors, assigned to ``out``.
@@ -856,11 +861,11 @@ class CudaFn(FnBase, CudaNtuples):
         Examples
         --------
         >>> from numpy.linalg import norm
-        >>> def dist(x, y, ord):
-        ...     return norm(x - y, ord)
+        >>> def dist(x, y, p):
+        ...     return norm(x - y, ord=p)
 
         >>> from functools import partial
-        >>> dist2 = partial(dist, ord=2)
+        >>> dist2 = partial(dist, p=2)
         >>> r3 = CudaRn(3, dist=dist2)
         >>> r3_same = CudaRn(3, dist=dist2)
         >>> r3  == r3_same
@@ -869,7 +874,7 @@ class CudaFn(FnBase, CudaNtuples):
         Different ``dist`` functions result in different spaces - the
         same applies for ``norm`` and ``inner``:
 
-        >>> dist1 = partial(dist, ord=1)
+        >>> dist1 = partial(dist, p=1)
         >>> r3_1 = CudaRn(3, dist=dist1)
         >>> r3_2 = CudaRn(3, dist=dist2)
         >>> r3_1 == r3_2
@@ -878,8 +883,8 @@ class CudaFn(FnBase, CudaNtuples):
         Be careful with Lambdas - they result in non-identical function
         objects:
 
-        >>> r3_lambda1 = CudaRn(3, dist=lambda x, y: norm(x-y, ord=1))
-        >>> r3_lambda2 = CudaRn(3, dist=lambda x, y: norm(x-y, ord=1))
+        >>> r3_lambda1 = CudaRn(3, dist=lambda x, y: norm(x-y, p=1))
+        >>> r3_lambda2 = CudaRn(3, dist=lambda x, y: norm(x-y, p=1))
         >>> r3_lambda1 == r3_lambda2
         False
         """
@@ -887,22 +892,24 @@ class CudaFn(FnBase, CudaNtuples):
             return True
 
         return (CudaNtuples.__eq__(self, other) and
-                self._space_funcs == other._space_funcs)
+                self.weighting == other.weighting)
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
         if self.is_rn:
             class_name = 'CudaRn'
-            if self.dtype == np.float32:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         elif self.is_cn:
-            raise NotImplementedError
+            class_name = 'CudaCn'
         else:
-            class_name = 'CudaFn'
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+            class_name = self.__class__.__name__
 
+        inner_str = '{}'.format(self.size)
+        if self.dtype != self.default_dtype(self.field):
+            inner_str += ', {}'.format(dtype_repr(self.dtype))
+
+        weight_str = self.weighting.repr_part
+        if weight_str:
+            inner_str += ', ' + weight_str
         return '{}({})'.format(class_name, inner_str)
 
     @property
@@ -1098,34 +1105,33 @@ def _inner_diagweight(x1, x2, w):
     return x1.data.inner_weight(x2.data, w.data)
 
 
-class CudaFnVectorWeighting(FnWeightingBase):
+class CudaFnVectorWeighting(VectorWeightingBase):
 
     """Vector weighting for `CudaFn`.
 
-    For exponent 2.0, a new weighted inner product with vector :math:`w`
-    is defined as
+    For exponent 2.0, a new weighted inner product with vector ``w``
+    is defined as::
 
-    :math:`\langle a, b\\rangle_w := b^H (w \odot a)`
+        <a, b>_w := <w * a, b> = b^H (w * a)
 
-    with :math:`b^H` standing for transposed complex conjugate, and
-    :math:`w \odot a` being element-wise multiplication.
+    with ``b^H`` standing for transposed complex conjugate and
+    ``w * a`` for element-wise multiplication.
 
     For other exponents, only norm and dist are defined. In the case of
     exponent ``inf``, the weighted norm is
 
-    :math:`\lVert a\\rVert_{w,\infty}:=\lVert w\odot a\\rVert_\infty`,
+        ||a||_{w, inf} := ||w * a||_inf
 
-    otherwise it is
+    otherwise it is::
 
-    :math:`\lVert a\\rVert_{w, p} := \lVert w^{1/p}\odot a\\rVert_p`.
+        ||a||_{w, p} := ||w^{1/p} * a||
 
-    Not that this definition does **not** fulfill the limit property
-    in :math:`p`, i.e.
+    Note that this definition does **not** fulfill the limit property
+    in ``p``, i.e.::
 
-    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{w,p} =
-    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{w,\infty}`
+        ||x||_{w, p} --/-> ||x||_{w, inf}  for p --> inf
 
-    unless :math:`w = (1,\dots,1)`.
+    unless ``w = (1,...,1)``.
 
     The vector may only have positive entries, otherwise it does not
     define an inner product or norm, respectively. This is not checked
@@ -1137,85 +1143,18 @@ class CudaFnVectorWeighting(FnWeightingBase):
 
         Parameters
         ----------
-        vector : `array-like`, one-dim.
-            Weighting vector of the inner product
+        vector : `CudaFnVector`
+            Weighting vector of the inner product, norm and distance
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super().__init__(impl='cuda', exponent=exponent,
-                         dist_using_inner=False)
         if not isinstance(vector, CudaFnVector):
-            raise TypeError('vector {!r} not a CudaFnVector'
+            raise TypeError('vector {!r} is not a CudaFnVector instance.'
                             ''.format(vector))
 
-        self._vector = vector
-
-        if self.vector.dtype == object:
-            raise ValueError('invalid vector {}.'.format(vector))
-        elif self.vector.ndim != 1:
-            raise ValueError('vector {} is {}-dimensional instead of '
-                             '1-dimensional.'
-                             ''.format(vector, self._vector.ndim))
-
-    @property
-    def vector(self):
-        """Weighting vector of this inner product."""
-        return self._vector
-
-    def vector_is_valid(self):
-        """Test if the vector is a valid weight, i.e. positive.
-
-        Notes
-        -----
-        This operation copies the vector to the CPU memory if necessary
-        and uses `numpy.all`, which can be very time-consuming in total.
-        """
-        return np.all(np.greater(self.vector, 0))
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : `bool`
-            `True` if ``other`` is a `CudaFnVectorWeighting`
-            instance with **identical** vector, `False` otherwise.
-
-        See also
-        --------
-        equiv : test for equivalent inner products
-        """
-        if other is self:
-            return True
-
-        return (isinstance(other, CudaFnVectorWeighting) and
-                self.vector is other.vector and
-                super().__eq__(other))
-
-    def equiv(self, other):
-        """Test if ``other`` is an equivalent weighting.
-
-        Returns
-        -------
-        equivalent : `bool`
-            `True` if ``other`` is a
-            `FnWeightingBase` instance
-            which yields the same result as this inner product for any
-            input, `False` otherwise. This is checked by entry-wise
-            comparison of matrices/vectors/constant of this inner
-            product and ``other``.
-        """
-        # Optimization for equality
-        if self == other:
-            return True
-        elif (not isinstance(other, FnWeightingBase) or
-              self.exponent != other.exponent):
-            return False
-        elif isinstance(other, CudaFnConstWeighting):
-            return np.array_equiv(self.vector, other.const)
-        else:
-            return False
+        super().__init__(vector, impl='cuda', exponent=exponent,
+                         dist_using_inner=False)
 
     def inner(self, x1, x2):
         """Calculate the vector weighted inner product of two vectors.
@@ -1273,55 +1212,36 @@ class CudaFnVectorWeighting(FnWeightingBase):
         else:
             return _pdist_diagweight(x1, x2, self.exponent, self.vector)
 
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{vector!r}'
-        if self.exponent != 2.0:
-            inner_fstr += ', exponent={ex}'
-        if self._dist_using_inner:
-            inner_fstr += ', dist_using_inner=True'
 
-        inner_str = inner_fstr.format(vector=self.vector, ex=self.exponent)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``repr(self)``."""
-        if self.exponent == 2.0:
-            return 'Weighting: vector =\n{}'.format(self.vector)
-        else:
-            return 'Weighting: p = {}, vector =\n{}'.format(self.exponent,
-                                                            self.vector)
-
-
-class CudaFnConstWeighting(FnWeightingBase):
+class CudaFnConstWeighting(ConstWeightingBase):
 
     """Weighting of `CudaFn` by a constant.
 
     For exponent 2.0, a new weighted inner product with constant
-    :math:`c` is defined as
+    ``c`` is defined as::
 
-    :math:`\langle a, b\\rangle_c := c\ b^H a`
+        <a, b>_c = c * <a, b> = c * b^H a
 
-    with :math:`b^H` standing for transposed complex conjugate.
+    with ``b^H`` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the weighted norm is defined as
+    exponent ``inf``, the weighted norm is defined as::
 
-    :math:`\lVert a\\rVert_{c, \infty} := c \lVert a\\rVert_\infty`,
+        ||a||_{c, inf} := c ||a||_inf
 
-    otherwise it is
+    otherwise it is::
 
-    :math:`\lVert a\\rVert_{c, p} := c^{1/p}  \lVert a\\rVert_p`.
+        ||a||_{c, p} := c^{1/p}  ||a||_p
 
-    Not that this definition does **not** fulfill the limit property
-    in :math:`p`, i.e.
+    Note that this definition does **not** fulfill the limit property
+    in ``p``, i.e.::
 
-    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{c,p} =
-    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{c,\infty}`
+        ||a||_{c,p} --/-> ||a||_{c,inf}  for p --> inf
 
-    unless :math:`c = 1`.
+    unless ``c = 1``.
 
-    The constant :math:`c` must be positive.
+    The constant must be positive, otherwise it does not define an
+    inner product or norm, respectively.
     """
 
     def __init__(self, constant, exponent=2.0):
@@ -1335,58 +1255,8 @@ class CudaFnConstWeighting(FnWeightingBase):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         """
-        super().__init__(impl='cuda', exponent=exponent)
-        self._const = float(constant)
-        if self.const <= 0:
-            raise ValueError('constant {} is not positive.'.format(constant))
-        if not np.isfinite(self.const):
-            raise ValueError('constant {} is invalid.'.format(constant))
-
-    @property
-    def const(self):
-        """Weighting constant of this inner product."""
-        return self._const
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equal : `bool`
-            `True` if ``other`` is a `CudaFnConstWeighting`
-            instance with the same constant, `False` otherwise.
-        """
-        if other is self:
-            return True
-        else:
-            return (isinstance(other, CudaFnConstWeighting) and
-                    self.const == other.const and
-                    super().__eq__(other))
-
-    def equiv(self, other):
-        """Test if ``other`` is an equivalent weighting.
-
-        Returns
-        -------
-        equivalent : `bool`
-            `True` if ``other`` is a
-            `FnWeightingBase` instance
-            with the same
-            `FnWeightingBase.impl`,
-            which yields the same result as this inner product for any
-            input, `False` otherwise. This is the same as equality
-            if ``other`` is a `CudaFnConstWeighting` instance,
-            otherwise by entry-wise comparison of this inner product's
-            constant with the matrix of ``other``.
-        """
-        if other is self:
-            return True
-        elif isinstance(other, CudaFnConstWeighting):
-            return self == other
-        elif isinstance(other, FnWeightingBase):
-            return other.equiv(self)
-        else:
-            return False
+        super().__init__(constant, impl='cuda', exponent=exponent,
+                         dist_using_inner=False)
 
     def inner(self, x1, x2):
         """Calculate the constant-weighted inner product of two vectors.
@@ -1448,59 +1318,54 @@ class CudaFnConstWeighting(FnWeightingBase):
             return (self.const ** (1 / self.exponent) *
                     _pdist_default(x1, x2, self.exponent))
 
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{}'
-        if self.exponent != 2.0:
-            inner_fstr += ', exponent={ex}'
-        inner_str = inner_fstr.format(self.const, ex=self.exponent)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        if self.exponent == 2.0:
-            return 'Weighting: const = {:.4}'.format(self.const)
-        else:
-            return 'Weighting: p = {}, const = {:.4}'.format(
-                self.exponent, self.const)
-
-
-class CudaFnNoWeighting(CudaFnConstWeighting):
+class CudaFnNoWeighting(NoWeightingBase, CudaFnConstWeighting):
 
     """Weighting of `CudaFn` with constant 1.
 
-    For exponent 2.0, the unweighted inner product is defined as
+    For exponent 2.0, the unweighted inner product is defined as::
 
-    :math:`\langle a, b\\rangle := b^H a`
+        <a, b> := b^H a
 
-    with :math:`b^H` standing for transposed complex conjugate.
+    with ``b^H`` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined.
     """
 
-    def __init__(self, exponent=2.0):
-        """Initialize a new instance."""
-        super().__init__(1.0, exponent=exponent)
+    # Implement singleton pattern for efficiency in the default case
+    _instance = None
 
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = ''
-        if self.exponent != 2.0:
-            inner_fstr += ', exponent={ex}'
-        inner_str = inner_fstr.format(ex=self.exponent).lstrip(', ')
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        if self.exponent == 2.0:
-            return 'NoWeighting'
+    def __new__(cls, *args, **kwargs):
+        """Implement singleton pattern if ``exponent==2.0``."""
+        if len(args) == 0:
+            exponent = kwargs.pop('exponent', 2.0)
         else:
-            return 'NoWeighting: p = {}'.format(self.exponent)
+            exponent = args[0]
+            args = args[1:]
+
+        if exponent == 2.0:
+            if not cls._instance:
+                cls._instance = super().__new__(cls, *args, **kwargs)
+            return cls._instance
+        else:
+            return super().__new__(cls, *args, **kwargs)
+
+    def __init__(self, exponent=2.0):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        exponent : positive `float`
+            Exponent of the norm. For values other than 2.0, the inner
+            product is not defined.
+        """
+        super().__init__(exponent=exponent, impl='cuda',
+                         dist_using_inner=False)
 
 
-class CudaFnCustomInnerProduct(FnWeightingBase):
+class CudaFnCustomInnerProduct(CustomInnerProductBase):
 
-    """Custom inner product on `CudaFn`."""
+    """Class for handling a user-specified inner product on `CudaFn`."""
 
     def __init__(self, inner, dist_using_inner=True):
         """Initialize a new instance.
@@ -1509,71 +1374,33 @@ class CudaFnCustomInnerProduct(FnWeightingBase):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            `CudaFnVector` arguments, return a complex number
-            and satisfy the following conditions for all vectors
-            :math:`x, y, z` and scalars :math:`s`:
+            `FnVector` arguments, return an element from their space's
+            field (real or complex number) and satisfy the following
+            conditions for all vectors ``x, y, z`` and scalars ``s``:
 
-            - :math:`\langle x,y\\rangle =
-              \overline{\langle y,x\\rangle}`
-            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
-            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
-              \langle z,y\\rangle`
-            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
+            - ``<x, y> = conj(<y, x>)``
+            - ``<s*x + y, z> = s * <x, z> + <y, z>``
+            - ``<x, x> = 0``  if and only if  ``x = 0``
 
         dist_using_inner : `bool`, optional
-            Calculate ``dist`` using the formula
+            Calculate ``dist`` using the following formula::
 
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+                ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
+            exactly zero for equal (but not identical) ``x`` and ``y``.
         """
-        super().__init__(impl='cuda', exponent=2.0,
+        super().__init__(inner, impl='cuda',
                          dist_using_inner=dist_using_inner)
 
-        if not callable(inner):
-            raise TypeError('inner product function {!r} not callable.'
-                            ''.format(inner))
-        self._inner_impl = inner
 
-    def inner(self, x1, x2):
-        """Custom inner product of this instance.."""
-        return self._inner_impl(x1, x2)
+class CudaFnCustomNorm(CustomNormBase):
 
-    def __eq__(self, other):
-        """Return ``self == other``.
+    """Class for handling a user-specified norm in `CudaFn`.
 
-        Returns
-        -------
-        equal : `bool`
-            `True` if ``other`` is a `CudaFnCustomInnerProduct`
-            instance with the same inner product, `False` otherwise.
-        """
-        return (isinstance(other, CudaFnCustomInnerProduct) and
-                self._inner_impl == other._inner_impl and
-                FnWeightingBase.__eq__(self, other))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{!r}'
-        if self._dist_using_inner:
-            inner_fstr += ',dist_using_inner={dist_u_i}'
-
-        inner_str = inner_fstr.format(self._inner_impl,
-                                      dist_u_i=self._dist_using_inner)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return self.__repr__()  # TODO: prettify?
-
-
-class CudaFnCustomNorm(FnWeightingBase):
-
-    """Custom norm on `CudaFn`, removes ``inner``."""
+    Note that this removes ``inner``.
+    """
 
     def __init__(self, norm):
         """Initialize a new instance.
@@ -1581,60 +1408,24 @@ class CudaFnCustomNorm(FnWeightingBase):
         Parameters
         ----------
         norm : `callable`
-            The norm implementation. It must accept an
-            `CudaFnVector` argument, return a `float` and
-            satisfy the following conditions for all vectors
-            :math:`x, y` and scalars :math:`s`:
+            The norm implementation. It must accept a `CudaFnVector`
+            argument, return a `float` and satisfy the following
+            conditions for all vectors ``x, y`` and scalars ``s``:
 
-            - :math:`\lVert x\\rVert \geq 0`
-            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
-            - :math:`\lVert s x\\rVert = \lvert s \\rvert
-              \lVert x\\rVert`
-            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
-              \lVert y\\rVert`.
+            - ``||x|| >= 0``
+            - ``||x|| = 0``  if and only if  ``x = 0``
+            - ``||s * x|| = |s| * ||x||``
+            - ``||x + y|| <= ||x|| + ||y||``
         """
-        super().__init__(impl='cuda', exponent=1.0, dist_using_inner=False)
-
-        if not callable(norm):
-            raise TypeError('norm function {!r} not callable.'
-                            ''.format(norm))
-        self._norm_impl = norm
-
-    def inner(self, x1, x2):
-        """Inner product is not defined for custom distance."""
-        raise NotImplementedError
-
-    def norm(self, x):
-        """Custom norm of this instance.."""
-        return self._norm_impl(x)
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equal : `bool`
-            `True` if ``other`` is a `CudaFnCustomNorm`
-            instance with the same norm, `False` otherwise.
-        """
-        return (isinstance(other, CudaFnCustomNorm) and
-                self._norm_impl == other._norm_impl and
-                super().__eq__(other))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{!r}'
-        inner_str = inner_fstr.format(self.norm)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return self.__repr__()  # TODO: prettify?
+        super().__init__(norm, impl='cuda')
 
 
-class CudaFnCustomDist(FnWeightingBase):
+class CudaFnCustomDist(CustomDistBase):
 
-    """Custom distance on `CudaFn`, removes ``norm`` and ``inner``."""
+    """Class for handling a user-specified distance in `CudaFn`.
+
+    Note that this removes ``inner`` and ``norm``.
+    """
 
     def __init__(self, dist):
         """Initialize a new instance.
@@ -1642,59 +1433,20 @@ class CudaFnCustomDist(FnWeightingBase):
         Parameters
         ----------
         dist : `callable`
-            The distance function defining a metric on
-            :math:`\mathbb{F}^n`.
-            It must accept two `CudaFnVector` arguments and
-            fulfill the following mathematical conditions for any
-            three vectors :math:`x, y, z`:
+            The distance function defining a metric on `Fn`. It must
+            accept two `FnVector` arguments, return a `float` and and
+            fulfill the following mathematical conditions for any three
+            vectors ``x, y, z``:
 
-            - :math:`d(x, y) = d(y, x)`
-            - :math:`d(x, y) \geq 0`
-            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
-            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
+            - ``dist(x, y) >= 0``
+            - ``dist(x, y) = 0``  if and only if  ``x = y``
+            - ``dist(x, y) = dist(y, x)``
+            - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
-        super().__init__(impl='cuda', exponent=1.0, dist_using_inner=False)
-
-        if not callable(dist):
-            raise TypeError('distance function {!r} not callable.'
-                            ''.format(dist))
-        self._dist_impl = dist
-
-    def dist(self, x1, x2):
-        """Custom distance of this instance.."""
-        return self._dist_impl(x1, x2)
-
-    def inner(self, x1, x2):
-        """Inner product is not defined for custom distance."""
-        raise NotImplementedError
-
-    def norm(self, x):
-        """Norm is not defined for custom distance."""
-        raise NotImplementedError
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equal : `bool`
-            `True` if ``other`` is a `CudaFnCustomDist`
-            instance with the same norm, `False` otherwise.
-        """
-        return (isinstance(other, CudaFnCustomDist) and
-                self._dist_impl == other._dist_impl)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{!r}'
-        inner_str = inner_fstr.format(self.dist)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return self.__repr__()  # TODO: prettify?
+        super().__init__(dist, impl='cuda')
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

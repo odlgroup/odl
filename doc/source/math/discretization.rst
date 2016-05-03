@@ -19,7 +19,7 @@ each component lies in :math:`\mathbb{F}`. We define two mappings
 
     \mathcal{E}_\mathcal{X}: \mathbb{F}^n \to \mathcal{X},
 
-which we call :term:`restriction` and :term:`extension`, respectively. Then, the discretization of
+which we call :term:`sampling` and :term:`interpolation`, respectively. Then, the discretization of
 :math:`\mathcal{X}` with respect to :math:`\mathbb{F}^n` and the above operators is defined as the
 tuple
 
@@ -32,8 +32,10 @@ The following abstract diagram visualizes a discretization:
 .. image:: images/discr.png
    :scale: 40 %
 
+TODO: write up in more detail
+
 Example
--------
+=======
 
 Let :math:`\mathcal{X} = C([0, 1])` be the space of real-valued
 continuous functions on the interval :math:`[0, 1]`, and let :math:`x_1 < \dots < x_n`

@@ -17,14 +17,12 @@
 
 """Utilities for internal functionality connected to vectorization."""
 
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# External module imports
 from functools import wraps
 import numpy as np
 
@@ -35,10 +33,10 @@ __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
 
 def is_valid_input_array(x, ndim=None):
     """Test if ``x`` is a correctly shaped point array in R^d."""
-    if not isinstance(x, np.ndarray):
-        return False
+    x = np.asarray(x)
+
     if ndim is None or ndim == 1:
-        return x.ndim == 1 or x.ndim == 2 and x.shape[0] == 1
+        return x.ndim == 1 and x.size > 1 or x.ndim == 2 and x.shape[0] == 1
     else:
         return x.ndim == 2 and x.shape[0] == ndim
 
@@ -50,12 +48,8 @@ def is_valid_input_meshgrid(x, ndim):
     # continue.
     if ndim is None:
         return False
-    try:
-        len(x)
-    except TypeError:
-        return False
 
-    if isinstance(x, np.ndarray):
+    if not isinstance(x, tuple):
         return False
 
     if ndim > 1:
@@ -79,6 +73,7 @@ def out_shape_from_meshgrid(mesh):
 
 def out_shape_from_array(arr):
     """Get the output shape from an array."""
+    arr = np.asarray(arr)
     if arr.ndim == 1:
         return arr.shape
     else:
@@ -298,5 +293,6 @@ class _NumpyVectorizeWrapper(object):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

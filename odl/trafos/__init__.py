@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-
 """Function transformations based on ODL."""
 
 from __future__ import absolute_import
@@ -26,6 +25,10 @@ __all__ = ()
 
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
+
+from . import fourier
+from .fourier import *
+__all__ += fourier.__all__
 
 from . import wavelet
 from .wavelet import *

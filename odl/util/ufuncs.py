@@ -21,8 +21,7 @@ These functions are internal and should only be used as methods on
 `NtuplesBaseVector` type spaces.
 
 See `numpy.ufuncs
-<http://docs.scipy.org/doc/numpy-1.10.0/reference/ufuncs.html#\
-universal-functions-ufunc>`_
+<http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_
 for more information.
 
 Notes
@@ -35,11 +34,9 @@ is used to re-wrap the data into the appropriate space.
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
 import numpy as np
 import re
 
@@ -335,10 +332,15 @@ def wrap_ufunc_discretelp(name, n_in, n_out, doc):
     elif n_in == 2:
         if n_out == 1:
             def wrapper(self, x2, out=None):
-                try:
+                if x2 in self.vector.space:
                     x2 = x2.ntuple
+
+                try:
+                    # Try to reshape to linear data
+                    x2 = x2.reshape(self.vector.size,
+                                    order=self.vector.space.order)
                 except AttributeError:
-                    x2 = x2
+                    pass
 
                 method = getattr(self.vector.ntuple.ufunc, name)
                 if out is None:

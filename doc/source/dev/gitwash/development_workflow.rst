@@ -4,14 +4,14 @@
 Development workflow
 ####################
 
-You already have your own forked copy of the `odl`_ repository, by
+You already have your own forked copy of the `ODL`_ repository, by
 following :ref:`forking`. You have :ref:`set-up-fork`. You have configured
 git by following :ref:`configure-git`.  Now you are ready for some real work.
 
 Workflow summary
 ================
 
-In what follows we'll refer to the upstream odl ``master`` branch, as
+In what follows we'll refer to the upstream ODL ``master`` branch, as
 "trunk".
 
 * Don't use your ``master`` branch for anything.  Consider deleting it.
@@ -24,7 +24,7 @@ In what follows we'll refer to the upstream odl ``master`` branch, as
 * If you can possibly avoid it, avoid merging trunk or any other branches into
   your feature branch while you are working.  
 * If you do find yourself merging from trunk, consider :ref:`rebase-on-trunk`
-* Ask on the `odl mailing list`_ if you get stuck.
+* Ask on the `ODL mailing list`_ if you get stuck.
 * Ask for code review!
 
 This way of working helps to keep work well organized, with readable history.
@@ -81,7 +81,7 @@ what the changes in the branch are for.  For example ``add-ability-to-fly``, or
     git checkout my-new-feature
 
 Generally, you will want to keep your feature branches on your public github_
-fork of `odl`_.  To do this, you `git push`_ this new branch up to your
+fork of `ODL`_.  To do this, you `git push`_ this new branch up to your
 github repo.  Generally (if you followed the instructions in these pages, and by
 default), git will have a link to your github repo, called ``origin``.  You push
 up to your own repo on github with::
@@ -134,7 +134,7 @@ In more detail
 #. Check what the actual changes are with ``git diff`` (`git diff`_).
 #. Add any new files to version control ``git add new_file_name`` (see
    `git add`_).
-#. To commit all modified files into the local copy of your repo, do
+#. To commit all modified files into the local copy of your repo,, do
    ``git commit -am 'A commit message'``.  Note the ``-am`` options to
    ``commit``. The ``m`` flag just signals that you're going to type a
    message on the command line.  The ``a`` flag |emdash| you can just take on
@@ -216,7 +216,7 @@ If you want to work on some stuff with other people, where you are all
 committing into the same repository, or even the same branch, then just
 share it via github.
 
-First fork odl into your account, as from :ref:`forking`.
+First fork ODL into your account, as from :ref:`forking`.
 
 Then, go to your forked repository github page, say
 ``http://github.com/your-user-name/odl``

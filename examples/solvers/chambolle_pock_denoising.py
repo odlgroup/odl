@@ -61,9 +61,6 @@ import matplotlib.pyplot as plt
 
 import odl
 
-
-# TODO: Use BroadCastOperator instead of ProductSpaceOperator
-
 # Read test image: use only every second pixel, convert integer to float,
 # and rotate to get the image upright
 image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
@@ -88,8 +85,7 @@ noisy = discr_space.element(image)
 gradient = odl.Gradient(discr_space, method='forward')
 
 # Matrix of operators
-op = odl.ProductSpaceOperator([[odl.IdentityOperator(discr_space)],
-                               [gradient]])
+op = odl.BroadcastOperator(odl.IdentityOperator(discr_space), gradient)
 
 # Starting point
 x = op.domain.zero()

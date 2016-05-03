@@ -15,14 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Tomography related operators and geometries."""
 
-"""Tomography specific features
-"""
 
 from __future__ import absolute_import
 
 __all__ = ()
 
+from . import geometry
+from .geometry import *
+__all__ += geometry.__all__
+
 from . import backends
 from .backends import *
 __all__ += backends.__all__
+
+from . import operators
+from .operators import *
+__all__ += operators.__all__

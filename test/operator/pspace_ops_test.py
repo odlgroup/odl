@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -61,7 +61,7 @@ def test_pspace_op_init():
 def test_pspace_op_weighted_init():
 
     r3 = odl.Rn(3)
-    ran = odl.ProductSpace(r3, 2, weights=[1, 2])
+    ran = odl.ProductSpace(r3, 2, weight=[1, 2])
     I = odl.IdentityOperator(r3)
 
     with pytest.raises(NotImplementedError):

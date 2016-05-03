@@ -22,12 +22,11 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 from abc import ABCMeta, abstractmethod
-from math import ceil, log
+import numpy as np
 
-# Internal
 from odl.util.utility import with_metaclass
+
 
 __all__ = ('StepLength', 'LineSearch',
            'BacktrackingLineSearch', 'ConstantLineSearch')
@@ -91,20 +90,12 @@ class BacktrackingLineSearch(LineSearch):
     This methods approximately finds the longest step length fulfilling
     the Armijo-Goldstein condition.
 
-    The line search algorithm is described in [1]_, page 464
+    The line search algorithm is described in [BV2004]_, page 464
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_) and
-    [2]_, pages 378--379. See also
+    [GNS2009]_, pages 378--379. See also
     `Backtracking_line_search
     <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
-
-    References
-    ----------
-    .. [1] Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
-       Cambridge university press, 2004. Available at
-
-    .. [2] Pages 378-379 in Griva, Igor, Stephen G. Nash, and
-       Ariela Sofer. Linear and nonlinear optimization. Siam, 2009.
     """
 
     def __init__(self, function, tau=0.5, c=0.01, max_num_iter=None):
@@ -135,7 +126,7 @@ class BacktrackingLineSearch(LineSearch):
         # Use a default value that allows the shortest step to be < 0.0001
         # times the original step length
         if max_num_iter is None:
-            self.max_num_iter = ceil(log(0.0001 / self.tau))
+            self.max_num_iter = np.ceil(np.log(0.0001 / self.tau))
         else:
             self.max_num_iter = max_num_iter
 
@@ -158,12 +149,34 @@ class BacktrackingLineSearch(LineSearch):
         """
         alpha = 1.0
         fx = self.function(x)
+
+        if np.isnan(fx) or np.isinf(fx):
+            raise ValueError('function returned invalid value {} in starting '
+                             'point ({}).'.format(fx, x))
+
         num_iter = 0
-        while ((self.function(x + alpha * direction) >=
-                fx + alpha * dir_derivative * self.discount) and
-               num_iter <= self.max_num_iter):
+        while True:
+            if num_iter > self.max_num_iter:
+                raise ValueError('number of iterations exceeded maximum: {} '
+                                 'without finding a sufficient decrease.'
+                                 ''.format(self.max_num_iter))
+
+            fval = self.function(x + alpha * direction)
+
+            if np.isnan(fval):
+                # We do not want to compare against NaN below, and NaN should
+                # indicate a user error.
+                raise ValueError('function returned NaN in point '
+                                 ' point ({})'.format(x + alpha * direction))
+
+            if (not np.isinf(fval) and  # short circuit if fval is infite
+                    fval <= fx + alpha * dir_derivative * self.discount):
+                # Stop iterating if the value decreases sufficiently.
+                break
+
             num_iter += 1
             alpha *= self.tau
+
         self.total_num_iter += num_iter
         return alpha
 
@@ -209,16 +222,7 @@ class BarzilaiBorweinStep(object):
     Barzilai-Borwein method to compute a step length
     for gradient descent methods.
 
-    TODO
-
-    References
-    ----------
-    .. [1] J. Barzilai and J. M. Borwein. Two-point step size gradient
-       methods. IMA Journal of Numerical Analysis, vol. 8, pp. 141--148,
-       1988.
-    .. [2] M. Raydan. The Barzilai and Borwein method for the large scale
-       unconstrained minimization problem. SIAM J. Optim., vol. 7,
-       pp. 26--33, 1997.
+    The method is described in [BB1988]_ and [Ray1997]_.
     """
 
     def __init__(self, gradf, step0=0.0005):
@@ -261,3 +265,9 @@ class BarzilaiBorweinStep(object):
         grad_diff = gradx - self.gradf(x0)
         recip_step = grad_diff.inner(errx) / errx.norm() ** 2
         return 1.0 / recip_step
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

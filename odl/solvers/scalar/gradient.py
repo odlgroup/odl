@@ -22,6 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+
 __all__ = ('steepest_descent',)
 
 
@@ -44,10 +45,10 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
     :math:`f(x) = \infty` for :math:`x\\not\\in C`, or by providing a
     ``projection`` function that projects the iterates on :math:`C`.
 
-    The algorithm is described in [1]_, section 9.3--9.4
+    The algorithm is described in [BV2004]_, section 9.3--9.4
     (`book available online
     <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
-    [2]_, Section 12.2, and wikipedia
+    [GNS2009]_, Section 12.2, and wikipedia
     `Gradient_descent
     <https://en.wikipedia.org/wiki/Gradient_descent>`_.
 
@@ -70,18 +71,12 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
     partial : `Partial`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
-    References
-    ----------
-    .. [1] Boyd, Stephen, and Lieven Vandenberghe. Convex optimization.
-       Cambridge university press, 2004. Available at
-
-    .. [2] Griva, Igor, Stephen G. Nash, and Ariela Sofer. Linear
-       and nonlinear optimization. Siam, 2009
-
     See Also
     --------
-    landweber : Optimized solver for the case f(x) = ||Ax - b||_2^2
-    conjugate_gradient : Optimized solver for the case f(x) = x^T Ax - 2 x^T b
+    odl.solvers.iterative.iterative.landweber :
+        Optimized solver for the case ``f(x) = ||Ax - b||_2^2``
+    odl.solvers.iterative.iterative.conjugate_gradient :
+        Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``
     """
 
     if not callable(line_search):
@@ -108,5 +103,6 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

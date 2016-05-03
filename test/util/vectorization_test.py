@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -38,8 +38,8 @@ from odl.util.vectorization import (
 def test_is_valid_input_array():
 
     # 1d
-    valid_shapes = [(1, 1), (1, 2), (1, 20), (1,), (20,)]
-    invalid_shapes = [(2, 1), (1, 1, 1), ()]
+    valid_shapes = [(1, 1), (1, 2), (1, 20), (20,)]
+    invalid_shapes = [(2, 1), (1, 1, 1), (1,), ()]
 
     for shp in valid_shapes:
         arr = np.zeros(shp)
@@ -62,7 +62,8 @@ def test_is_valid_input_array():
         assert not is_valid_input_array(arr, ndim=3)
 
     # Other input
-    invalid_input = [1, [[1, 2], [3, 4]], (5,)]
+    assert is_valid_input_array([[1, 2], [3, 4]], ndim=2)
+    invalid_input = [1, [[[1, 2], [3, 4]]], (5,)]
     for inp in invalid_input:
         assert not is_valid_input_array(inp, ndim=2)
 

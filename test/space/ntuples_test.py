@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -38,11 +38,6 @@ from odl.space.ntuples import (
     MatVecOperator)
 from odl.util.testutils import almost_equal, all_almost_equal, all_equal
 from odl.util.ufuncs import UFUNCS, REDUCTIONS
-
-# TODO: add tests for:
-# * inner, norm, dist as free functions
-# * Vector weighting
-# * Custom inner/norm/dist
 
 
 # Helpers to generate data
@@ -191,7 +186,7 @@ def test_init():
         Cn(3, exponent=exponent)
 
 
-def test_init_space_funcs(exponent):
+def test_init_weighting(exponent):
     const = 1.5
     weight_vec = _pos_array(Rn(3, float))
     weight_mat = _dense_matrix(Rn(3, float))
@@ -204,7 +199,30 @@ def test_init_space_funcs(exponent):
                   FnMatrixWeighting(weight_mat, exponent=exponent)]
 
     for spc, weight in zip(spaces, weightings):
-        assert spc._space_funcs == weight
+        assert spc.weighting == weight
+
+
+def test_astype():
+    rn = Rn(3, weight=1.5)
+    cn = Cn(3, weight=1.5)
+    rn_s = Rn(3, weight=1.5, dtype='float32')
+    cn_s = Cn(3, weight=1.5, dtype='complex64')
+
+    # Real
+    assert rn.astype('float32') == rn_s
+    assert rn.astype('float64') is rn
+    assert rn._real_space is rn
+    assert rn.astype('complex64') == cn_s
+    assert rn.astype('complex128') == cn
+    assert rn._complex_space == cn
+
+    # Complex
+    assert cn.astype('complex64') == cn_s
+    assert cn.astype('complex128') is cn
+    assert cn._complex_space is cn
+    assert cn.astype('float32') == rn_s
+    assert cn.astype('float64') == rn
+    assert cn._complex_space is cn
 
 
 def test_vector_class_init(fn):
@@ -322,6 +340,32 @@ def test_multiply_exceptions(fn):
 
     with pytest.raises(LinearSpaceTypeError):
         fn.multiply(x, y, otherx)
+
+
+def test_power(fn):
+
+    x_arr, y_arr, x, y = _vectors(fn, n=2)
+    y_pos = fn.element(np.abs(y) + 0.1)
+    y_pos_arr = np.abs(y_arr) + 0.1
+
+    # Testing standard positive integer power out-of-place and in-place
+    assert all_almost_equal(x ** 2, x_arr ** 2)
+    y **= 2
+    y_arr **= 2
+    assert all_almost_equal(y, y_arr)
+
+    # Real number and negative integer power
+    assert all_almost_equal(y_pos ** 1.3, y_pos_arr ** 1.3)
+    assert all_almost_equal(y_pos ** (-3), y_pos_arr ** (-3))
+    y_pos **= 2.5
+    y_pos_arr **= 2.5
+    assert all_almost_equal(y_pos, y_pos_arr)
+
+    # Array raised to the power of another array, entry-wise
+    assert all_almost_equal(y_pos ** x, y_pos_arr ** x_arr)
+    y_pos **= x.real
+    y_pos_arr **= x_arr.real
+    assert all_almost_equal(y_pos, y_pos_arr)
 
 
 def _test_unary_operator(fn, function):
@@ -896,7 +940,7 @@ def test_matrix_matrix():
     assert isinstance(w_dense.matrix, np.ndarray)
 
 
-def test_matrix_isvalid():
+def test_matrix_is_valid():
     fn = Rn(5)
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
@@ -908,10 +952,10 @@ def test_matrix_isvalid():
     w_bad = FnMatrixWeighting(bad_mat)
 
     with pytest.raises(NotImplementedError):
-        w_sparse.matrix_isvalid()
+        w_sparse.is_valid()
 
-    assert w_dense.matrix_isvalid()
-    assert not w_bad.matrix_isvalid()
+    assert w_dense.is_valid()
+    assert not w_bad.is_valid()
 
 
 def test_matrix_equals(fn, exponent):
@@ -1130,7 +1174,9 @@ def test_matrix_dist_using_inner(fn):
     w = FnMatrixWeighting(mat, dist_using_inner=True)
 
     true_dist = np.sqrt(np.vdot(xarr - yarr, np.dot(mat, xarr - yarr)))
-    assert almost_equal(w.dist(x, y), true_dist)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
@@ -1139,7 +1185,6 @@ def test_matrix_dist_using_inner(fn):
     # With free function
     w_dist = weighted_dist(mat, use_inner=True)
     assert almost_equal(w_dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
 
 
 def test_vector_init(exponent):
@@ -1162,17 +1207,17 @@ def test_vector_vector():
     assert isinstance(weighting_elem.vector, FnVector)
 
 
-def test_vector_isvalid():
+def test_vector_is_valid():
     rn = Rn(5)
     weight_vec = _pos_array(rn)
     weighting_vec = FnVectorWeighting(weight_vec)
 
-    assert weighting_vec.vector_is_valid()
+    assert weighting_vec.is_valid()
 
     # Invalid
     weight_vec[0] = 0
     weighting_vec = FnVectorWeighting(weight_vec)
-    assert not weighting_vec.vector_is_valid()
+    assert not weighting_vec.is_valid()
 
 
 def test_vector_equals():
@@ -1298,8 +1343,9 @@ def test_vector_dist_using_inner(fn):
     w = FnVectorWeighting(weight_vec)
 
     true_dist = np.linalg.norm(np.sqrt(weight_vec) * (xarr - yarr))
-    assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
@@ -1307,7 +1353,7 @@ def test_vector_dist_using_inner(fn):
 
     # With free function
     w_dist = weighted_dist(weight_vec, use_inner=True)
-    assert almost_equal(w_dist(x, y), true_dist)
+    assert almost_equal(w_dist(x, y), true_dist, places=3)
 
 
 def test_constant_init(exponent):
@@ -1438,8 +1484,9 @@ def test_const_dist_using_inner(fn):
     w = FnConstWeighting(constant)
 
     true_dist = np.sqrt(constant) * np.linalg.norm(xarr - yarr)
-    assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
@@ -1447,7 +1494,7 @@ def test_const_dist_using_inner(fn):
 
     # With free function
     w_dist = weighted_dist(constant, use_inner=True)
-    assert almost_equal(w_dist(x, y), true_dist)
+    assert almost_equal(w_dist(x, y), true_dist, places=3)
 
 
 def test_noweight():
@@ -1480,7 +1527,7 @@ def test_custom_inner(fn):
     w = FnCustomInnerProduct(inner)
     w_same = FnCustomInnerProduct(inner)
     w_other = FnCustomInnerProduct(np.dot)
-    w_d = FnCustomInnerProduct(inner, dist_using_inner=True)
+    w_d = FnCustomInnerProduct(inner, dist_using_inner=False)
 
     assert w == w
     assert w == w_same
@@ -1494,10 +1541,10 @@ def test_custom_inner(fn):
     assert almost_equal(w.norm(x), true_norm)
 
     true_dist = np.linalg.norm(xarr - yarr)
-    assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
+    # Using 3 places (single precision default) since the result is always
+    # double even if the underlying computation was only single precision
+    assert almost_equal(w.dist(x, y), true_dist, places=3)
     assert almost_equal(w_d.dist(x, y), true_dist)
-    assert almost_equal(w_d.dist(x, x), 0)
 
     with pytest.raises(TypeError):
         FnCustomInnerProduct(1)
@@ -1527,7 +1574,6 @@ def test_custom_norm(fn):
 
     true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
 
     with pytest.raises(TypeError):
         FnCustomNorm(1)
@@ -1558,15 +1604,48 @@ def test_custom_dist(fn):
 
     true_dist = np.linalg.norm(xarr - yarr)
     assert almost_equal(w.dist(x, y), true_dist)
-    assert almost_equal(w.dist(x, x), 0)
 
     with pytest.raises(TypeError):
         FnCustomDist(1)
 
 
-def _impl_test_ufuncs(fn, name, n_args, n_out):
+def test_ufuncs(fn, ufunc):
+    name, n_args, n_out, _ = ufunc
+    if (np.issubsctype(fn.dtype, np.floating) or
+            np.issubsctype(fn.dtype, np.complexfloating)and
+            name in ['bitwise_and',
+                     'bitwise_or',
+                     'bitwise_xor',
+                     'invert',
+                     'left_shift',
+                     'right_shift']):
+        # Skip integer only methods if floating point type
+        return
+
+    if (np.issubsctype(fn.dtype, np.complexfloating) and
+            name in ['remainder',
+                     'trunc',
+                     'signbit',
+                     'invert',
+                     'left_shift',
+                     'right_shift',
+                     'rad2deg',
+                     'deg2rad',
+                     'copysign',
+                     'mod',
+                     'modf',
+                     'fmod',
+                     'logaddexp2',
+                     'logaddexp',
+                     'hypot',
+                     'arctan2',
+                     'floor',
+                     'ceil']):
+        # Skip real only methods for complex
+        return
+
     # Get the ufunc from numpy as reference
-    ufunc = getattr(np, name)
+    npufunc = getattr(np, name)
 
     # Create some data
     data = _vectors(fn, n_args + n_out)
@@ -1577,7 +1656,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     out_vectors = data[2 * n_args + n_out:]
 
     # Out of place:
-    np_result = ufunc(*in_arrays)
+    np_result = npufunc(*in_arrays)
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*in_vectors)
     assert all_almost_equal(np_result, odl_result)
@@ -1590,7 +1669,7 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
             assert isinstance(odl_result[i], fn.element_type)
 
     # In place:
-    np_result = ufunc(*(in_arrays + out_arrays))
+    np_result = npufunc(*(in_arrays + out_arrays))
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*(in_vectors + out_vectors))
     assert all_almost_equal(np_result, odl_result)
@@ -1601,19 +1680,6 @@ def _impl_test_ufuncs(fn, name, n_args, n_out):
     elif n_out > 1:
         for i in range(n_out):
             assert odl_result[i] is out_vectors[i]
-
-
-def test_ufuncs():
-    # Cannot use fixture due to bug in pytest
-    fn = Rn(3)
-
-    for name, n_args, n_out, _ in UFUNCS:
-        if (np.issubsctype(fn.dtype, np.floating) and
-            name in ['bitwise_and', 'bitwise_or', 'bitwise_xor', 'invert',
-                     'left_shift', 'right_shift']):
-            # Skip integer only methods if floating point type
-            continue
-        yield _impl_test_ufuncs, fn, name, n_args, n_out
 
 
 def _impl_test_reduction(fn, name):

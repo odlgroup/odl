@@ -24,10 +24,8 @@ standard_library.install_aliases()
 
 __all__ = ('vector',)
 
-# External
 import numpy as np
 
-# Internal
 from odl.space.ntuples import Rn, Cn, Fn, Ntuples
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
@@ -71,8 +69,8 @@ def vector(array, dtype=None, impl='numpy'):
 
     Non-scalar types are also supported:
 
-    >>> vector([u'Hello,', u' world!'])
-    Ntuples(2, '<U7').element([u'Hello,', u' world!'])
+    >>> vector([True, False])
+    Ntuples(2, 'bool').element([True, False])
 
     Scalars become a one-element vector:
 
@@ -81,7 +79,7 @@ def vector(array, dtype=None, impl='numpy'):
     """
     # Sanitize input
     arr = np.array(array, copy=False, ndmin=1)
-    impl = str(impl).lower()
+    impl, impl_in = str(impl).lower(), impl
 
     # Validate input
     if arr.ndim > 1:
@@ -91,7 +89,7 @@ def vector(array, dtype=None, impl='numpy'):
     # Set dtype
     if dtype is not None:
         space_dtype = dtype
-    elif arr.dtype == float and impl == 'cuda':
+    elif arr.dtype == np.dtype('float64') and impl == 'cuda':
         # Special case, default float is float32 on cuda
         space_dtype = 'float32'
     else:
@@ -122,6 +120,12 @@ def vector(array, dtype=None, impl='numpy'):
             space_type = CudaNtuples
 
     else:
-        raise ValueError("implementation '{}' not understood.".format(impl))
+        raise ValueError("implementation '{}' not understood.".format(impl_in))
 
     return space_type(len(arr), dtype=space_dtype).element(arr)
+
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

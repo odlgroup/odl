@@ -22,12 +22,11 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External
 from abc import ABCMeta, abstractmethod
-
-# Internal
-from odl.util.utility import with_metaclass
 import time
+
+from odl.util.utility import with_metaclass
+
 
 __all__ = ('Partial', 'StorePartial', 'ForEachPartial', 'PrintTimingPartial',
            'PrintIterationPartial', 'PrintNormPartial', 'ShowPartial')
@@ -243,7 +242,7 @@ class ShowPartial(Partial):
     """Show the partial result."""
 
     def __init__(self, **kwargs):
-        """Create a show partial
+        """Initialize a new instance.
 
         Parameters are passed through to the vectors show method. Additional
         parameters included.
@@ -280,5 +279,6 @@ class ShowPartial(Partial):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

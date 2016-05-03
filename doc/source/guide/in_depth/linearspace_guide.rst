@@ -1,13 +1,13 @@
 .. _linearspace_in_depth:
 
-###########
-LinearSpace
-###########
+#############
+Linear spaces
+#############
 
-The `LinearSpace` represent abstract mathematical concepts
+The `LinearSpace` class represent abstract mathematical concepts
 of vector spaces. It cannot be used directly but are rather intended
 to be subclassed by concrete space implementations. The space
-provide default implementations of the most important vector space
+provides default implementations of the most important vector space
 operations. See the documentation of the respective classes for more
 details.
 

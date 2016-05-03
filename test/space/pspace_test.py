@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -21,13 +21,33 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
 import numpy as np
 import pytest
 
-# ODL imports
 import odl
 from odl.util.testutils import all_equal, all_almost_equal, almost_equal
+
+
+exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
+exp_ids = [' p = {} '.format(p) for p in exp_params]
+
+
+@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
+def exponent(request):
+    return request.param
+
+
+def test_emptyproduct():
+    with pytest.raises(ValueError):
+        odl.ProductSpace()
+
+    reals = odl.RealNumbers()
+    spc = odl.ProductSpace(field=reals)
+    assert spc.field == reals
+    assert spc.size == 0
+
+    with pytest.raises(IndexError):
+        spc[0]
 
 
 def test_RxR():
@@ -42,6 +62,15 @@ def test_RxR():
 
     assert all_equal([v1, v2], v)
     assert all_equal([v1, v2], u)
+
+
+def test_is_power_space():
+    r2 = odl.Rn(2)
+    r2x3 = odl.ProductSpace(r2, 3)
+    assert r2x3.is_power_space
+
+    r2r2r2 = odl.ProductSpace(r2, r2, r2)
+    assert r2x3 == r2r2r2
 
 
 def test_lincomb():
@@ -94,45 +123,27 @@ def test_metric():
     v22 = H.element([8, 9])
 
     # 1-norm
-    HxH = odl.ProductSpace(H, H, ord=1.0)
+    HxH = odl.ProductSpace(H, H, exponent=1.0)
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
     assert almost_equal(HxH.dist(w1, w2),
                         H.dist(v11, v21) + H.dist(v12, v22))
 
     # 2-norm
-    HxH = odl.ProductSpace(H, H, ord=2.0)
+    HxH = odl.ProductSpace(H, H, exponent=2.0)
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
     assert almost_equal(
         HxH.dist(w1, w2),
         (H.dist(v11, v21) ** 2 + H.dist(v12, v22) ** 2) ** (1 / 2.0))
 
-    # -inf norm
-    HxH = odl.ProductSpace(H, H, ord=-float('inf'))
-    w1 = HxH.element([v11, v12])
-    w2 = HxH.element([v21, v22])
-    assert almost_equal(
-        HxH.dist(w1, w2),
-        min(H.dist(v11, v21), H.dist(v12, v22)))
-
     # inf norm
-    HxH = odl.ProductSpace(H, H, ord=float('inf'))
+    HxH = odl.ProductSpace(H, H, exponent=float('inf'))
     w1 = HxH.element([v11, v12])
     w2 = HxH.element([v21, v22])
     assert almost_equal(
         HxH.dist(w1, w2),
         max(H.dist(v11, v21), H.dist(v12, v22)))
-
-    # Custom norm
-    def my_norm(x):
-        return np.sum(x)  # Same as 1-norm
-    HxH = odl.ProductSpace(H, H, prod_dist=my_norm)
-    w1 = HxH.element([v11, v12])
-    w2 = HxH.element([v21, v22])
-    assert almost_equal(
-        HxH.dist(w1, w2),
-        H.dist(v11, v21) + H.dist(v12, v22))
 
 
 def test_norm():
@@ -141,32 +152,20 @@ def test_norm():
     v2 = H.element([5, 3])
 
     # 1-norm
-    HxH = odl.ProductSpace(H, H, ord=1.0)
+    HxH = odl.ProductSpace(H, H, exponent=1.0)
     w = HxH.element([v1, v2])
     assert almost_equal(HxH.norm(w), H.norm(v1) + H.norm(v2))
 
     # 2-norm
-    HxH = odl.ProductSpace(H, H, ord=2.0)
+    HxH = odl.ProductSpace(H, H, exponent=2.0)
     w = HxH.element([v1, v2])
     assert almost_equal(
         HxH.norm(w), (H.norm(v1) ** 2 + H.norm(v2) ** 2) ** (1 / 2.0))
 
-    # -inf norm
-    HxH = odl.ProductSpace(H, H, ord=-float('inf'))
-    w = HxH.element([v1, v2])
-    assert almost_equal(HxH.norm(w), min(H.norm(v1), H.norm(v2)))
-
     # inf norm
-    HxH = odl.ProductSpace(H, H, ord=float('inf'))
+    HxH = odl.ProductSpace(H, H, exponent=float('inf'))
     w = HxH.element([v1, v2])
     assert almost_equal(HxH.norm(w), max(H.norm(v1), H.norm(v2)))
-
-    # Custom norm
-    def my_norm(x):
-        return np.sum(x)  # Same as 1-norm
-    HxH = odl.ProductSpace(H, H, prod_norm=my_norm)
-    w = HxH.element([v1, v2])
-    assert almost_equal(HxH.norm(w), H.norm(v1) + H.norm(v2))
 
 
 def test_inner():
@@ -181,6 +180,176 @@ def test_inner():
     v = HxH.element([v1, v2])
     u = HxH.element([u1, u2])
     assert almost_equal(HxH.inner(v, u), H.inner(v1, u1) + H.inner(v2, u2))
+
+
+def test_vector_weighting(exponent):
+    r2 = odl.Rn(2)
+    r2x = r2.element([1, -1])
+    r2y = r2.element([-2, 3])
+    # inner = -5, dist = 5, norms = (sqrt(2), sqrt(13))
+
+    r3 = odl.Rn(3)
+    r3x = r3.element([3, 4, 4])
+    r3y = r3.element([1, -2, 1])
+    # inner = -1, dist = 7, norms = (sqrt(41), sqrt(6))
+
+    inners = [-5, -1]
+    norms_x = [np.sqrt(2), np.sqrt(41)]
+    dists = [5, 7]
+
+    weight = [0.5, 1.5]
+    pspace = odl.ProductSpace(r2, r3, weight=weight, exponent=exponent)
+    x = pspace.element((r2x, r3x))
+    y = pspace.element((r2y, r3y))
+
+    if exponent == 2.0:
+        true_inner = np.sum(np.multiply(inners, weight))
+        assert all_almost_equal(x.inner(y), true_inner)
+
+    if exponent == float('inf'):
+        true_norm_x = np.linalg.norm(
+            np.multiply(norms_x, weight), ord=exponent)
+    else:
+        true_norm_x = np.linalg.norm(
+            np.multiply(norms_x, np.power(weight, 1 / exponent)),
+            ord=exponent)
+
+    assert all_almost_equal(x.norm(), true_norm_x)
+
+    if exponent == float('inf'):
+        true_dist = np.linalg.norm(
+            np.multiply(dists, weight), ord=exponent)
+    else:
+        true_dist = np.linalg.norm(
+            np.multiply(dists, np.power(weight, 1 / exponent)),
+            ord=exponent)
+    assert all_almost_equal(x.dist(y), true_dist)
+
+
+def test_const_weighting(exponent):
+    r2 = odl.Rn(2)
+    r2x = r2.element([1, -1])
+    r2y = r2.element([-2, 3])
+    # inner = -5, dist = 5, norms = (sqrt(2), sqrt(13))
+
+    r3 = odl.Rn(3)
+    r3x = r3.element([3, 4, 4])
+    r3y = r3.element([1, -2, 1])
+    # inner = -1, dist = 7, norms = (sqrt(41), sqrt(6))
+
+    inners = [-5, -1]
+    norms_x = [np.sqrt(2), np.sqrt(41)]
+    dists = [5, 7]
+
+    weight = 2.0
+    pspace = odl.ProductSpace(r2, r3, weight=weight, exponent=exponent)
+    x = pspace.element((r2x, r3x))
+    y = pspace.element((r2y, r3y))
+
+    if exponent == 2.0:
+        true_inner = weight * np.sum(inners)
+        assert all_almost_equal(x.inner(y), true_inner)
+
+    if exponent == float('inf'):
+        true_norm_x = weight * np.linalg.norm(norms_x, ord=exponent)
+    else:
+        true_norm_x = (weight ** (1 / exponent) *
+                       np.linalg.norm(norms_x, ord=exponent))
+
+    assert all_almost_equal(x.norm(), true_norm_x)
+
+    if exponent == float('inf'):
+        true_dist = weight * np.linalg.norm(dists, ord=exponent)
+    else:
+        true_dist = (weight ** (1 / exponent) *
+                     np.linalg.norm(dists, ord=exponent))
+
+    assert all_almost_equal(x.dist(y), true_dist)
+
+
+def custom_inner(x1, x2):
+    inners = np.fromiter(
+        (x1p.inner(x2p) for x1p, x2p in zip(x1.parts, x2.parts)),
+        dtype=x1.space[0].dtype, count=len(x1))
+
+    return x1.space.field.element(np.sum(inners))
+
+
+def custom_norm(x):
+    norms = np.fromiter(
+        (xp.norm() for xp in x.parts),
+        dtype=x.space[0].dtype, count=len(x))
+
+    return float(np.linalg.norm(norms, ord=1))
+
+
+def custom_dist(x1, x2):
+    dists = np.fromiter(
+        (x1p.dist(x2p) for x1p, x2p in zip(x1.parts, x2.parts)),
+        dtype=x1.space[0].dtype, count=len(x1))
+
+    return float(np.linalg.norm(dists, ord=1))
+
+
+def test_custom_funcs():
+    # Checking the standard 1-norm and standard inner product, just to
+    # see that the functions are handled correctly.
+
+    r2 = odl.Rn(2)
+    r2x = r2.element([1, -1])
+    r2y = r2.element([-2, 3])
+    # inner = -5, dist = 5, norms = (sqrt(2), sqrt(13))
+
+    r3 = odl.Rn(3)
+    r3x = r3.element([3, 4, 4])
+    r3y = r3.element([1, -2, 1])
+    # inner = -1, dist = 7, norms = (sqrt(41), sqrt(6))
+
+    pspace_2 = odl.ProductSpace(r2, r3, exponent=2.0)
+    x = pspace_2.element((r2x, r3x))
+    y = pspace_2.element((r2y, r3y))
+
+    pspace_custom = odl.ProductSpace(r2, r3, inner=custom_inner)
+    xc = pspace_custom.element((r2x, r3x))
+    yc = pspace_custom.element((r2y, r3y))
+    assert almost_equal(x.inner(y), xc.inner(yc))
+
+    pspace_1 = odl.ProductSpace(r2, r3, exponent=1.0)
+    x = pspace_1.element((r2x, r3x))
+    y = pspace_1.element((r2y, r3y))
+
+    pspace_custom = odl.ProductSpace(r2, r3, norm=custom_norm)
+    xc = pspace_custom.element((r2x, r3x))
+    assert almost_equal(x.norm(), xc.norm())
+
+    pspace_custom = odl.ProductSpace(r2, r3, dist=custom_dist)
+    xc = pspace_custom.element((r2x, r3x))
+    yc = pspace_custom.element((r2y, r3y))
+    assert almost_equal(x.dist(y), xc.dist(yc))
+
+    with pytest.raises(TypeError):
+        odl.ProductSpace(r2, r3, a=1)  # extra keyword argument
+
+    with pytest.raises(ValueError):
+        odl.ProductSpace(r2, r3, norm=custom_norm, inner=custom_inner)
+
+    with pytest.raises(ValueError):
+        odl.ProductSpace(r2, r3, dist=custom_dist, inner=custom_inner)
+
+    with pytest.raises(ValueError):
+        odl.ProductSpace(r2, r3, norm=custom_norm, dist=custom_dist)
+
+    with pytest.raises(ValueError):
+        odl.ProductSpace(r2, r3, norm=custom_norm, exponent=1.0)
+
+    with pytest.raises(ValueError):
+        odl.ProductSpace(r2, r3, norm=custom_norm, weight=2.0)
+
+    with pytest.raises(ValueError):
+        odl.ProductSpace(r2, r3, dist=custom_dist, weight=2.0)
+
+    with pytest.raises(ValueError):
+        odl.ProductSpace(r2, r3, inner=custom_inner, weight=2.0)
 
 
 def test_power_RxR():
@@ -266,6 +435,8 @@ def test_getitem_slice():
     assert H[:2] == odl.ProductSpace(r1, r2)
     assert H[:2][0] is r1
     assert H[:2][1] is r2
+
+    assert H[3:] == odl.ProductSpace(field=r1.field)
 
 
 def test_getitem_fancy():

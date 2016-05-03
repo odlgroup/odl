@@ -28,5 +28,11 @@ import odl
 spc = odl.uniform_discr([0, 0], [1, 1], [100, 100])
 vec = odl.util.shepp_logan(spc, modified=True)
 
-# Can also force "instant" plotting
+# Show all data
 vec.show(show=True)
+
+# We can show subsets by index:
+vec.show(indices=[slice(None), 50])
+
+# Or we can show by coordinate
+vec.show(coords=[None, 0.5])

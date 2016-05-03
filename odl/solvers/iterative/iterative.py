@@ -22,8 +22,9 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# Internal
-from odl.operator import IdentityOperator, OperatorComp, OperatorSum
+from odl.operator.default_ops import IdentityOperator
+from odl.operator.operator import OperatorComp, OperatorSum
+
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
            'gauss_newton')
@@ -163,8 +164,8 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
     # TODO: add a book reference
     # TODO: update doc
 
-    if op.domain != op.range or not op.is_linear:
-        raise ValueError('Operator needs to be linear and self-adjoint')
+    if op.domain != op.range:
+        raise ValueError('Operator needs to be self-adjoint')
 
     r = op(x)
     r.lincomb(1, rhs, -1, r)       # r = rhs - A x
@@ -389,5 +390,6 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
             partial(x)
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

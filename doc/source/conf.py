@@ -126,6 +126,9 @@ def setup(app):
 # Autosummary
 autosummary_generate = glob.glob("./*.rst")
 
+# Default role for ambiguous ':any:' targets
+default_role = 'py:class'
+
 # Stops WARNING: toctree contains reference to nonexisting document
 numpydoc_show_class_members = True
 numpydoc_show_inherited_class_members = True
@@ -146,7 +149,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'odl'
-copyright = u'2015, odl group, KTH'
+copyright = u'2015-2016, ODL development group, KTH'
 author = u'Jonas Adler, Holger Kohr, Ozan Öktem'
 
 # The version info for the project you're documenting, acts as replacement for

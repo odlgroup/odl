@@ -15,38 +15,35 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""CPU implementations of ``n``-dimensional Cartesian spaces.
-
-This is a default implementation of :math:`A^n` for an arbitrary set
-:math:`A` as well as the real and complex spaces :math:`R^n` and
-:math:`C^n`. The data is represented by NumPy arrays.
-"""
+"""CPU implementations of ``n``-dimensional Cartesian spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 from future.utils import native
 standard_library.install_aliases()
 from builtins import super
 
-# External module imports
 import ctypes
-from numbers import Integral
 from functools import partial
 from math import sqrt
+from numbers import Integral
 import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
-# ODL imports
 from odl.operator.operator import Operator
+from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import (
-    NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector, FnWeightingBase)
+    NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector)
+from odl.space.weighting import (
+    WeightingBase, MatrixWeightingBase, VectorWeightingBase,
+    ConstWeightingBase, NoWeightingBase,
+    CustomInnerProductBase, CustomNormBase, CustomDistBase)
+from odl.util.ufuncs import NtuplesUFuncs
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
-from odl.util.ufuncs import NtuplesUFuncs
 
 
 __all__ = ('Ntuples', 'NtuplesVector', 'Fn', 'FnVector', 'Cn', 'Rn',
@@ -124,9 +121,8 @@ class Ntuples(NtuplesBase):
             if data_ptr is None:
                 arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
                 if arr.shape != (self.size,):
-                    raise ValueError('input shape {} not broadcastable to '
-                                     'shape ({},).'.format(arr.shape,
-                                                           self.size))
+                    raise ValueError('expected input shape {}, got {}.'
+                                     ''.format((self.size,), arr.shape))
 
                 return self.element_type(self, arr)
             else:
@@ -414,9 +410,9 @@ class NtuplesVector(NtuplesBaseVector):
         Ntuples(2, 'int8').element([0, 0])
         """
         if isinstance(values, NtuplesVector):
-            return self.data.__setitem__(indices, values.data)
+            self.data[indices] = values.data
         else:
-            return self.data.__setitem__(indices, values)
+            self.data[indices] = values
 
     @property
     def ufunc(self):
@@ -557,34 +553,6 @@ def _lincomb(a, x1, b, x2, out, dtype):
                 axpy(x1.data, out.data, native(out.size), a)
 
 
-def _repr_space_funcs(space):
-    """Return the string in the parentheses of repr for space funcs."""
-    inner_str = ''
-
-    weight = 1.0
-    if space._space_funcs._dist_using_inner:
-        inner_str += ', dist_using_inner=True'
-    if isinstance(space._space_funcs, FnCustomInnerProduct):
-        inner_str += ', inner=<custom inner>'
-    elif isinstance(space._space_funcs, FnCustomNorm):
-        inner_str += ', norm=<custom norm>'
-    elif isinstance(space._space_funcs, FnCustomDist):
-        inner_str += ', norm=<custom dist>'
-    elif isinstance(space._space_funcs, FnConstWeighting):
-        weight = space._space_funcs.const
-        if weight != 1.0:
-            inner_str += ', weight={}'.format(weight)
-    elif isinstance(space._space_funcs, FnMatrixWeighting):
-        weight = space._space_funcs.matrix
-        inner_str += ', weight={!r}'.format(weight)
-
-    exponent = space._space_funcs.exponent
-    if exponent != 2.0:
-        inner_str += ', exponent={}'.format(exponent)
-
-    return inner_str
-
-
 class Fn(FnBase, Ntuples):
 
     """The vector space F^n with vector multiplication.
@@ -609,8 +577,13 @@ class Fn(FnBase, Ntuples):
 
             Only scalar data types are allowed.
 
-        weight : `array-like` or `float`, optional
-            Use weighted inner product, norm, and dist.
+        weight : optional
+            Use weighted inner product, norm, and dist. The following
+            types are supported as ``weight``:
+
+            `FnWeightingBase`:
+            Use this weighting as-is. Compatibility with this
+            space's elements is not checked during init.
 
             float: Weighting by a constant
 
@@ -635,21 +608,22 @@ class Fn(FnBase, Ntuples):
 
             Default: 2.0
 
+        Other Parameters
+        ----------------
+
         dist : `callable`, optional
-            The distance function defining a metric on
-            :math:`\mathbb{F}^n`.
+            The distance function defining a metric on the space.
             It must accept two `FnVector` arguments and
             fulfill the following mathematical conditions for any
-            three vectors :math:`x, y, z`:
+            three vectors ``x, y, z``:
 
-            - :math:`d(x, y) = d(y, x)`
-            - :math:`d(x, y) \geq 0`
-            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
-            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
+            - ``dist(x, y) >= 0``
+            - ``dist(x, y) = 0``  if and only if  ``x = y``
+            - ``dist(x, y) = dist(y, x)``
+            - ``dist(x, y) <= dist(x, z) + dist(z, y)``
 
-            By default, ``dist(x, y)`` is calculated as
-            ``norm(x - y)``. This creates an intermediate array
-            ``x-y``, which can be
+            By default, ``dist(x, y)`` is calculated as ``norm(x - y)``.
+            This creates an intermediate array ``x - y``, which can be
             avoided by choosing ``dist_using_inner=True``.
 
             This option cannot be combined with ``weight``,
@@ -657,20 +631,16 @@ class Fn(FnBase, Ntuples):
 
         norm : `callable`, optional
             The norm implementation. It must accept an
-            `FnVector` argument, return a
-            `float` and satisfy the following
-            conditions for all vectors :math:`x, y` and scalars
-            :math:`s`:
+            `FnVector` argument, return a `float` and satisfy the
+            following conditions for all vectors ``x, y`` and scalars
+            ``s``:
 
-            - :math:`\lVert x\\rVert \geq 0`
-            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
-            - :math:`\lVert s x\\rVert = \lvert s \\rvert
-              \lVert x\\rVert`
-            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
-              \lVert y\\rVert`.
+            - ``||x|| >= 0``
+            - ``||x|| = 0``  if and only if  ``x = 0``
+            - ``||s * x|| = |s| * ||x||``
+            - ``||x + y|| <= ||x|| + ||y||``
 
-            By default, ``norm(x)`` is calculated as
-            ``inner(x, x)``.
+            By default, ``norm(x)`` is calculated as ``inner(x, x)``.
 
             This option cannot be combined with ``weight``,
             ``dist`` or ``inner``.
@@ -680,14 +650,11 @@ class Fn(FnBase, Ntuples):
             `FnVector` arguments, return a element from
             the field of the space (real or complex number) and
             satisfy the following conditions for all vectors
-            :math:`x, y, z` and scalars :math:`s`:
+            ``x, y, z`` and scalars ``s``:
 
-            - :math:`\langle x,y\\rangle =
-              \overline{\langle y,x\\rangle}`
-            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
-            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
-              \langle z,y\\rangle`
-            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
+            - ``<x, y> = conj(<y, x>)``
+            - ``<s*x + y, z> = s * <x, z> + <y, z>``
+            - ``<x, x> = 0``  if and only if  ``x = 0``
 
             This option cannot be combined with ``weight``,
             ``dist`` or ``norm``.
@@ -695,17 +662,34 @@ class Fn(FnBase, Ntuples):
         dist_using_inner : `bool`, optional
             Calculate ``dist`` using the formula
 
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
+            exactly zero for equal (but not identical) ``x`` and ``y``.
 
             This option can only be used if ``exponent`` is 2.0.
 
             Default: `False`.
+
+        kwargs :
+            Further keyword arguments are passed to the weighting
+            classes.
+
+        See also
+        --------
+        FnMatrixWeighting
+        FnVectorWeighting
+        FnConstWeighting
+
+        Examples
+        --------
+        >>> space = Fn(3, 'float')
+        >>> space
+        Rn(3)
+        >>> space = Fn(3, 'float', weight=[1, 2, 3])
+        >>> space
+        Rn(3, weight=[1, 2, 3])
         """
         Ntuples.__init__(self, size, dtype)
         FnBase.__init__(self, size, dtype)
@@ -721,44 +705,92 @@ class Fn(FnBase, Ntuples):
         if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
                              '`dist`, `norm` and `inner`.')
+
+        if any(x is not None for x in (dist, norm, inner)) and exponent != 2.0:
+            raise ValueError('exponent cannot be used together with '
+                             'inner, norm or dist.')
+
+        # Set the weighting
         if weight is not None:
-            if np.isscalar(weight):
-                self._space_funcs = FnConstWeighting(
+            if isinstance(weight, WeightingBase):
+                self._weighting = weight
+            elif np.isscalar(weight):
+                self._weighting = FnConstWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner)
             elif weight is None:
+                # Need to wait until dist, norm and inner are handled
                 pass
             elif isspmatrix(weight):
-                self._space_funcs = FnMatrixWeighting(
-                    weight, exponent, dist_using_inner=dist_using_inner)
+                self._weighting = FnMatrixWeighting(
+                    weight, exponent, dist_using_inner=dist_using_inner,
+                    **kwargs)
             else:  # last possibility: make a matrix
                 arr = np.asarray(weight)
                 if arr.dtype == object:
                     raise ValueError('invalid weight argument {}.'
                                      ''.format(weight))
                 if arr.ndim == 1:
-                    self._space_funcs = FnVectorWeighting(
+                    self._weighting = FnVectorWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner)
                 elif arr.ndim == 2:
-                    self._space_funcs = FnMatrixWeighting(
-                        arr, exponent, dist_using_inner=dist_using_inner)
+                    self._weighting = FnMatrixWeighting(
+                        arr, exponent, dist_using_inner=dist_using_inner,
+                        **kwargs)
                 else:
                     raise ValueError('array-like input {} is not 1- or '
                                      '2-dimensional.'.format(weight))
 
         elif dist is not None:
-            self._space_funcs = FnCustomDist(dist)
+            self._weighting = FnCustomDist(dist)
         elif norm is not None:
-            self._space_funcs = FnCustomNorm(norm)
+            self._weighting = FnCustomNorm(norm)
         elif inner is not None:
-            self._space_funcs = FnCustomInnerProduct(inner)
+            self._weighting = FnCustomInnerProduct(inner)
         else:  # all None -> no weighing
-            self._space_funcs = FnNoWeighting(
+            self._weighting = FnNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
 
     @property
     def exponent(self):
         """Exponent of the norm and distance."""
-        return self._space_funcs.exponent
+        return self._weighting.exponent
+
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return self._weighting
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the weighting is not `FnNoWeighting`."""
+        return not isinstance(self.weighting, FnNoWeighting)
+
+    @staticmethod
+    def default_dtype(field):
+        """Return the default of `Fn` data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`
+            Set of numbers to be represented by a data type.
+            Currently supported : `RealNumbers`, `ComplexNumbers`
+
+        Returns
+        -------
+        dtype : `type`
+            Numpy data type specifier. The returned defaults are:
+
+            ``RealNumbers()`` : ``np.dtype('float64')``
+
+            ``ComplexNumbers()`` : ``np.dtype('complex128')``
+        """
+        if field == RealNumbers():
+            return np.dtype('float64')
+        elif field == ComplexNumbers():
+            return np.dtype('complex128')
+        else:
+            raise ValueError('no default data type defined for field {}.'
+                             ''.format(field))
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``.
@@ -820,7 +852,7 @@ class Fn(FnBase, Ntuples):
         >>> c2_2.dist(x, y)
         7.0
         """
-        return self._space_funcs.dist(x1, x2)
+        return self.weighting.dist(x1, x2)
 
     def _norm(self, x):
         """Calculate the norm of a vector.
@@ -849,7 +881,7 @@ class Fn(FnBase, Ntuples):
         >>> c2_1.norm(x)
         18.0
         """
-        return self._space_funcs.norm(x)
+        return self.weighting.norm(x)
 
     def _inner(self, x1, x2):
         """Raw inner product of two vectors.
@@ -885,7 +917,7 @@ class Fn(FnBase, Ntuples):
         >>> c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)
         True
         """
-        return self._space_funcs.inner(x1, x2)
+        return self.weighting.inner(x1, x2)
 
     def _multiply(self, x1, x2, out):
         """The entry-wise product of two vectors, assigned to out.
@@ -994,27 +1026,24 @@ class Fn(FnBase, Ntuples):
             return True
 
         return (Ntuples.__eq__(self, other) and
-                self._space_funcs == other._space_funcs)
+                self.weighting == other.weighting)
 
     def __repr__(self):
         """s.__repr__() <==> repr(s)."""
         if self.is_rn:
             class_name = 'Rn'
-            if self.dtype == np.float64:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         elif self.is_cn:
             class_name = 'Cn'
-            if self.dtype == np.complex128:
-                inner_str = '{}'.format(self.size)
-            else:
-                inner_str = '{}, {}'.format(self.size, self.dtype)
         else:
-            class_name = 'Fn'
-            inner_str = '{}, {}'.format(self.size, dtype_repr(self.dtype))
+            class_name = self.__class__.__name__
 
-        inner_str += _repr_space_funcs(self)
+        inner_str = '{}'.format(self.size)
+        if self.dtype != self.default_dtype(self.field):
+            inner_str += ', {}'.format(dtype_repr(self.dtype))
+
+        weight_str = self.weighting.repr_part
+        if weight_str:
+            inner_str += ', ' + weight_str
         return '{}({})'.format(class_name, inner_str)
 
     # Copy these to handle bug in ABCmeta
@@ -1063,7 +1092,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x
         Cn(3).element([(10+1j), (6+0j), (4-2j)])
         """
-        rn = Rn(self.space.size, self.space.real_dtype)
+        rn = Rn(self.space.size, self.space._real_dtype)
         return rn.element(self.data.real)
 
     @real.setter
@@ -1121,7 +1150,7 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> x
         Cn(3).element([(5+2j), (3+0j), (2-4j)])
         """
-        rn = Rn(self.space.size, self.space.real_dtype)
+        rn = Rn(self.space.size, self.space._real_dtype)
         return rn.element(self.data.imag)
 
     @imag.setter
@@ -1180,7 +1209,8 @@ class FnVector(FnBaseVector, NtuplesVector):
         >>> z_out is z
         True
 
-        It can also be used for inplace conj
+        It can also be used for in-place conj
+
         >>> x_out = x.conj(out=x); print(x)
         [(5-1j), (3-0j), (2+2j)]
         >>> x_out is x
@@ -1191,6 +1221,17 @@ class FnVector(FnBaseVector, NtuplesVector):
         else:
             self.data.conj(out.data)
             return out
+
+    def __ipow__(self, other):
+        """Return ``self **= other``."""
+        try:
+            if other == int(other):
+                return super().__ipow__(other)
+        except TypeError:
+            pass
+
+        np.power(self.data, other, out=self.data)
+        return self
 
 
 def Cn(size, dtype='complex128', **kwargs):
@@ -1456,13 +1497,11 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
     use_inner : `bool`, optional
         Calculate ``dist`` using the formula
 
-        :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-        \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+            ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
         This avoids the creation of new arrays and is thus faster
         for large arrays. On the downside, it will not evaluate to
-        exactly zero for equal (but not identical) :math:`x` and
-        :math:`y`.
+        exactly zero for equal (but not identical) ``x`` and ``y``.
 
         Can only be used if ``exponent`` is 2.0.
 
@@ -1523,33 +1562,32 @@ def _inner_default(x1, x2):
     return dot(x2.data, x1.data)
 
 
-class FnMatrixWeighting(FnWeightingBase):
+class FnMatrixWeighting(MatrixWeightingBase):
 
     """Matrix weighting for `Fn`.
 
-    For exponent 2.0, a new weighted inner product with matrix :math:`W`
-    is defined as
+    For exponent 2.0, a new weighted inner product with matrix ``W``
+    is defined as::
 
-    :math:`\langle a, b\\rangle_W := b^H W a`
+        <a, b>_W := <W * a, b> = b^H * W * a
 
-    with :math:`b^H` standing for transposed complex conjugate.
+    with ``b^H`` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the weighted norm is
+    exponent ``inf``, the weighted norm is::
 
-    :math:`\lVert a\\rVert_{W, \infty} := \lVert W a\\rVert_\infty`,
+        ||a||_{W, inf} := ||W * a||_inf
 
-    otherwise it is
+    otherwise it is::
 
-    :math:`\lVert a\\rVert_{W, p} := \lVert W^{1/p} a\\rVert_p`.
+        ||a||_{W, p} := ||W^{1/p} * a||_p
 
-    Not that this definition does **not** fulfill the limit property
-    in :math:`p`, i.e.
+    Note that this definition does **not** fulfill the limit property
+    in ``p``, i.e.::
 
-    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{W,p} =
-    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{W,\infty}`
+        ||x||_{W, p} --/-> ||x||_{W, inf}  for p --> inf
 
-    unless :math:`W` is the identity matrix.
+    unless ``W`` is the identity matrix.
 
     The matrix must be Hermitian and posivive definite, otherwise it
     does not define an inner product or norm, respectively. This is not
@@ -1571,172 +1609,48 @@ class FnMatrixWeighting(FnWeightingBase):
         dist_using_inner : `bool`, optional
             Calculate ``dist`` using the formula
 
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
+            exactly zero for equal (but not identical) ``x`` and ``y``.
 
-            Can only be used if ``exponent`` is 2.0.
-        precomp_mat_pow : `bool`
-            If `True`, precompute the matrix power :math:`W^{1/p}`
-            during initialization. This has no effect if
-            ``exponent`` is 1.0, 2.0 or ``inf``.
+            This option can only be used if ``exponent`` is 2.0.
+        precomp_mat_pow : `bool`, optional
+            If `True`, precompute the matrix power ``W ** (1/p)``
+            during initialization. This has no effect if ``exponent``
+            is 1.0, 2.0 or ``inf``.
 
             Default: `False`
 
-        cache_mat_pow : `bool`
-            If `True`, cache the matrix power :math:`W^{1/p}` during
-            the first call to ``norm`` or ``dist``. This has no
+        cache_mat_pow : `bool`, optional
+            If `True`, cache the matrix power ``W ** (1/p)``. This can
+            happen either during initialization or in the first call to
+            ``norm`` or ``dist``, resp. This has no effect if
+            ``exponent`` is 1.0, 2.0 or ``inf``.
+
+            Default: `True`
+
+        cache_mat_decomp : `bool`, optional
+            If `True`, cache the eigenbasis decomposition of the
+            matrix. This can happen either during initialization or in
+            the first call to ``norm`` or ``dist``, resp. This has no
             effect if ``exponent`` is 1.0, 2.0 or ``inf``.
 
             Default: `False`
+
+        Notes
+        -----
+        The matrix power ``W ** (1/p)`` is computed with by eigenbasis
+        decomposition::
+
+            eigval, eigvec = scipy.linalg.eigh(matrix)
+            mat_pow = (eigval ** p * eigvec).dot(eigvec.conj().T)
+
+        Depending on the matrix size, this can be rather expensive.
         """
-        precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
-        cache_mat_pow = kwargs.pop('cache_mat_pow', True)
-        FnWeightingBase.__init__(self, impl='numpy', exponent=exponent,
-                                 dist_using_inner=dist_using_inner)
-
-        if isspmatrix(matrix):
-            self._matrix = matrix
-        else:
-            self._matrix = np.asarray(matrix)
-            if self._matrix.dtype == object:
-                raise ValueError('invalid matrix {}.'.format(matrix))
-            elif self._matrix.ndim != 2:
-                raise ValueError('matrix {} is {}-dimensional instead of '
-                                 '2-dimensional.'
-                                 ''.format(matrix, self._matrix.ndim))
-
-        if self._matrix.shape[0] != self._matrix.shape[1]:
-            raise ValueError('matrix with shape {} not square.'
-                             ''.format(self._matrix.shape))
-
-        if (self.matrix_issparse and
-                self.exponent not in (1.0, 2.0, float('inf'))):
-            raise NotImplementedError('sparse matrices only supported for '
-                                      'exponent 1.0, 2.0 or `inf`.')
-
-        if self.exponent in (1.0, float('inf')):
-            self._mat_pow = self.matrix
-        elif precomp_mat_pow and self.exponent != 2.0:
-            eigval, eigvec = linalg.eigh(self.matrix)
-            eigval **= 1.0 / self.exponent
-            self._mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
-        else:
-            self._mat_pow = None
-
-        self._cache_mat_pow = bool(cache_mat_pow)
-
-    @property
-    def matrix(self):
-        """Weighting matrix of this inner product."""
-        return self._matrix
-
-    @property
-    def matrix_issparse(self):
-        """Whether the representing matrix is sparse or not."""
-        return isspmatrix(self.matrix)
-
-    def matrix_isvalid(self):
-        """Test if the matrix is positive definite Hermitian.
-
-        This test tries to calculate a Cholesky decomposition and can
-        be very time-consuming for large matrices. Sparse matrices are
-        not supported.
-        """
-        if self.matrix_issparse:
-            raise NotImplementedError('validation not supported for sparse '
-                                      'matrices.')
-        try:
-            np.linalg.cholesky(self.matrix)
-            return np.array_equal(self.matrix, self.matrix.conj().T)
-        except np.linalg.LinAlgError:
-            return False
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : `bool`
-            `True` if other is an `FnMatrixWeighting` instance
-            with **identical** matrix, `False` otherwise.
-
-        See also
-        --------
-        equiv : test for equivalent inner products
-        """
-        if other is self:
-            return True
-
-        return (isinstance(other, FnMatrixWeighting) and
-                self.matrix is other.matrix and
-                super().__eq__(other))
-
-    def equiv(self, other):
-        """Test if other is an equivalent weighting.
-
-        Returns
-        -------
-        equivalent : `bool`
-            `True` if other is an
-            `FnWeightingBase` instance with the same `FnWeightingBase.impl`,
-            which yields the same result as this inner product for any
-            input, `False` otherwise. This is checked by entry-wise
-            comparison of this inner product's matrix with the matrix
-            or constant of other.
-        """
-        # Optimization for equality
-        if self == other:
-            return True
-
-        elif self.exponent != getattr(other, 'exponent', -1):
-            return False
-
-        elif isinstance(other, FnMatrixWeighting):
-            if self.matrix.shape != other.matrix.shape:
-                return False
-
-            if self.matrix_issparse:
-                if other.matrix_issparse:
-                    # Optimization for different number of nonzero elements
-                    if self.matrix.nnz != other.matrix.nnz:
-                        return False
-                    else:
-                        # Most efficient out-of-the-box comparison
-                        return (self.matrix != other.matrix).nnz == 0
-                else:  # Worst case: compare against dense matrix
-                    return np.array_equal(self.matrix.todense(), other.matrix)
-
-            else:  # matrix of `self` is dense
-                if other.matrix_issparse:
-                    return np.array_equal(self.matrix, other.matrix.todense())
-                else:
-                    return np.array_equal(self.matrix, other.matrix)
-
-        elif isinstance(other, FnVectorWeighting):
-            if self.matrix_issparse:
-                return (np.array_equiv(self.matrix.diagonal(),
-                                       other.vector) and
-                        np.array_equal(self.matrix.asformat('dia').offsets,
-                                       np.array([0])))
-            else:
-                return np.array_equal(
-                    self.matrix, other.vector * np.eye(self.matrix.shape[0]))
-
-        elif isinstance(other, FnConstWeighting):
-            if self.matrix_issparse:
-                return (np.array_equiv(self.matrix.diagonal(), other.const) and
-                        np.array_equal(self.matrix.asformat('dia').offsets,
-                                       np.array([0])))
-            else:
-                return np.array_equal(
-                    self.matrix, other.const * np.eye(self.matrix.shape[0]))
-        else:
-            return False
+        super().__init__(matrix, impl='numpy', exponent=exponent,
+                         dist_using_inner=dist_using_inner, **kwargs)
 
     def inner(self, x1, x2):
         """Calculate the matrix-weighted inner product of two vectors.
@@ -1777,91 +1691,66 @@ class FnMatrixWeighting(FnWeightingBase):
         """
         if self.exponent == 2.0:
             norm_squared = self.inner(x, x).real  # TODO: optimize?
-            if norm_squared < 0:
-                norm_squared = 0.0  # Compensate for numerical error
             return sqrt(norm_squared)
-        else:
-            if self._mat_pow is None:
-                # This case can only be reached if p != 1,2,inf
-                if self.matrix_issparse:
-                    raise NotImplementedError('sparse matrix powers not '
-                                              'suppoerted.')
+
+        if self._mat_pow is None:
+            # This case can only be reached if p != 1,2,inf
+            if self.matrix_issparse:
+                raise NotImplementedError('sparse matrix powers not '
+                                          'suppoerted.')
+
+            if self._eigval is None or self._eigvec is None:
+                # No cached decomposition, computing new one
+                eigval, eigvec = linalg.eigh(self.matrix)
+                if self._cache_mat_decomp:
+                    self._eigval, self._eigvec = eigval, eigvec
+                    eigval_pow = eigval ** (1.0 / self.exponent)
                 else:
-                    eigval, eigvec = linalg.eigh(self.matrix)
-                    eigval **= 1.0 / self.exponent
-                    mat_pow = (eigval * eigvec).dot(eigvec.conj().T)
-                    if self._cache_mat_pow:
-                        self._mat_pow = mat_pow
+                    # Not storing eigenvalues, so we can destroy them
+                    eigval_pow = eigval
+                    eigval_pow **= 1.0 / self.exponent
             else:
-                mat_pow = self._mat_pow
+                # Using cached, cannot destroy
+                eigval, eigvec = self._eigval, self._eigvec
+                eigval_pow = eigval ** (1.0 / self.exponent)
 
-            return float(_pnorm_default(x.space.element(mat_pow.dot(x)),
-                                        self.exponent))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        if self.matrix_issparse:
-            inner_fstr = ('<{shape} sparse matrix, format {fmt!r}, {nnz} '
-                          'stored entries>')
-            fmt = self.matrix.format
-            nnz = self.matrix.nnz
-            if self.exponent != 2.0:
-                inner_fstr += ', exponent={ex}'
-            if self._dist_using_inner:
-                inner_fstr += ', dist_using_inner=True'
+            mat_pow = (eigval_pow * eigvec).dot(eigvec.conj().T)
+            if self._cache_mat_pow:
+                self._mat_pow = mat_pow
         else:
-            inner_fstr = '\n{matrix!r}'
-            fmt = ''
-            nnz = 0
-            if self.exponent != 2.0:
-                inner_fstr += ',\nexponent={ex}'
-            if self._dist_using_inner:
-                inner_fstr += ',\ndist_using_inner=True'
-            else:
-                inner_fstr += '\n'
+            mat_pow = self._mat_pow
 
-        inner_str = inner_fstr.format(shape=self.matrix.shape, fmt=fmt,
-                                      nnz=nnz, ex=self.exponent,
-                                      matrix=self.matrix)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        if self.exponent == 2.0:
-            return 'Weighting: matrix =\n{}'.format(self.matrix)
-        else:
-            return 'Weighting: p = {}, matrix =\n{}'.format(self.exponent,
-                                                            self.matrix)
+        return float(_pnorm_default(x.space.element(mat_pow.dot(x)),
+                                    self.exponent))
 
 
-class FnVectorWeighting(FnWeightingBase):
+class FnVectorWeighting(VectorWeightingBase):
 
     """Vector weighting for `Fn`.
 
-    For exponent 2.0, a new weighted inner product with vector :math:`w`
-    is defined as
+    For exponent 2.0, a new weighted inner product with vector ``w``
+    is defined as::
 
-    :math:`\langle a, b\\rangle_w := b^H (w \odot a)`
+        <a, b>_w := <w * a, b> = b^H (w * a)
 
-    with :math:`b^H` standing for transposed complex conjugate and
-    :math:`w \odot a` for element-wise multiplication.
+    with ``b^H`` standing for transposed complex conjugate and
+    ``w * a`` for element-wise multiplication.
 
     For other exponents, only norm and dist are defined. In the case of
     exponent ``inf``, the weighted norm is
 
-    :math:`\lVert a\\rVert_{w,\infty}:=\lVert w\odot a\\rVert_\infty`,
+        ||a||_{w, inf} := ||w * a||_inf
 
-    otherwise it is
+    otherwise it is::
 
-    :math:`\lVert a\\rVert_{w, p} := \lVert w^{1/p}\odot a\\rVert_p`.
+        ||a||_{w, p} := ||w^{1/p} * a||
 
-    Not that this definition does **not** fulfill the limit property
-    in :math:`p`, i.e.
+    Note that this definition does **not** fulfill the limit property
+    in ``p``, i.e.::
 
-    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{w,p} =
-    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{w,\infty}`
+        ||x||_{w, p} --/-> ||x||_{w, inf}  for p --> inf
 
-    unless :math:`w = (1,\dots,1)`.
+    unless ``w = (1,...,1)``.
 
     The vector may only have positive entries, otherwise it does not
     define an inner product or norm, respectively. This is not checked
@@ -1874,92 +1763,23 @@ class FnVectorWeighting(FnWeightingBase):
         Parameters
         ----------
         vector : `array-like`, one-dim.
-            Weighting vector of the inner product
+            Weighting vector of the inner product, norm and distance
         exponent : positive `float`
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-            If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
-            are allowed.
         dist_using_inner : `bool`, optional
             Calculate ``dist`` using the formula
 
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
+            exactly zero for equal (but not identical) ``x`` and ``y``.
 
-            Can only be used if ``exponent`` is 2.0.
+            This option can only be used if ``exponent`` is 2.0.
         """
-        super().__init__(impl='numpy', exponent=exponent,
+        super().__init__(vector, impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner)
-        if not isinstance(vector, FnVector):
-            self._vector = np.asarray(vector)
-        else:
-            self._vector = vector
-        if self.vector.dtype == object:
-            raise ValueError('invalid vector {}.'.format(vector))
-        elif self.vector.ndim != 1:
-            raise ValueError('vector {} is {}-dimensional instead of '
-                             '1-dimensional.'
-                             ''.format(vector, self._vector.ndim))
-
-    @property
-    def vector(self):
-        """Weighting vector of this inner product."""
-        return self._vector
-
-    def vector_is_valid(self):
-        """Test if the vector is a valid weight, i.e. positive."""
-        return np.all(self.vector > 0)
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equals : `bool`
-            `True` if other is an `FnVectorWeighting` instance
-            with **identical** vector, `False` otherwise.
-
-        See also
-        --------
-        equiv : test for equivalent inner products
-        """
-        if other is self:
-            return True
-
-        return (isinstance(other, FnVectorWeighting) and
-                self.vector is other.vector and
-                super().__eq__(other))
-
-    def equiv(self, other):
-        """Test if other is an equivalent weighting.
-
-        Returns
-        -------
-        equivalent : `bool`
-            `True` if ``other`` is an
-            `FnWeightingBase` instance with the same `FnWeightingBase.impl`,
-            which yields the same result as this inner product for any
-            input, `False` otherwise. This is checked by entry-wise
-            comparison of matrices/vectors/constant of this inner
-            product and ``other``.
-        """
-        # Optimization for equality
-        if self == other:
-            return True
-        elif (not isinstance(other, FnWeightingBase) or
-              self.exponent != other.exponent):
-            return False
-        elif isinstance(other, FnMatrixWeighting):
-            return other.equiv(self)
-        elif isinstance(other, FnConstWeighting):
-            return np.array_equiv(self.vector, other.const)
-        else:
-            return np.array_equal(self.vector, other.vector)
 
     def inner(self, x1, x2):
         """Calculate the vector weighted inner product of two vectors.
@@ -2006,55 +1826,36 @@ class FnVectorWeighting(FnWeightingBase):
         else:
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{vector!r}'
-        if self.exponent != 2.0:
-            inner_fstr += ', exponent={ex}'
-        if self._dist_using_inner:
-            inner_fstr += ', dist_using_inner=True'
 
-        inner_str = inner_fstr.format(vector=self.vector, ex=self.exponent)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        if self.exponent == 2.0:
-            return 'Weighting: vector =\n{}'.format(self.vector)
-        else:
-            return 'Weighting: p = {}, vector =\n{}'.format(self.exponent,
-                                                            self.vector)
-
-
-class FnConstWeighting(FnWeightingBase):
+class FnConstWeighting(ConstWeightingBase):
 
     """Weighting of `Fn` by a constant.
 
     For exponent 2.0, a new weighted inner product with constant
-    :math:`c` is defined as
+    ``c`` is defined as::
 
-    :math:`\langle a, b\\rangle_c := c\ b^H a`
+        <a, b>_c = c * <a, b> = c * b^H a
 
-    with :math:`b^H` standing for transposed complex conjugate.
+    with ``b^H`` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the weighted norm is defined as
+    exponent ``inf``, the weighted norm is defined as::
 
-    :math:`\lVert a\\rVert_{c, \infty} := c \lVert a\\rVert_\infty`,
+        ||a||_{c, inf} := c ||a||_inf
 
-    otherwise it is
+    otherwise it is::
 
-    :math:`\lVert a\\rVert_{c, p} := c^{1/p}  \lVert a\\rVert_p`.
+        ||a||_{c, p} := c^{1/p}  ||a||_p
 
-    Not that this definition does **not** fulfill the limit property
-    in :math:`p`, i.e.
+    Note that this definition does **not** fulfill the limit property
+    in ``p``, i.e.::
 
-    :math:`\lim_{p\\to\\infty} \lVert a\\rVert_{c,p} =
-    \lVert a\\rVert_\infty \\neq \lVert a\\rVert_{c,\infty}`
+        ||a||_{c,p} --/-> ||a||_{c,inf}  for p --> inf
 
-    unless :math:`c = 1`.
+    unless ``c = 1``.
 
-    The constant :math:`c` must be positive.
+    The constant must be positive, otherwise it does not define an
+    inner product or norm, respectively.
     """
 
     def __init__(self, constant, exponent=2.0, dist_using_inner=False):
@@ -2070,64 +1871,16 @@ class FnConstWeighting(FnWeightingBase):
         dist_using_inner : `bool`, optional
             Calculate ``dist`` using the formula
 
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
+            exactly zero for equal (but not identical) ``x`` and ``y``.
 
-            Can only be used if ``exponent`` is 2.0.
+            This option can only be used if ``exponent`` is 2.0.
         """
-        FnWeightingBase.__init__(self, impl='numpy', exponent=exponent,
-                                 dist_using_inner=dist_using_inner)
-        self._const = float(constant)
-        if self.const <= 0:
-            raise ValueError('constant {} is not positive.'.format(constant))
-        if not np.isfinite(self.const):
-            raise ValueError('constant {} is invalid.'.format(constant))
-
-    @property
-    def const(self):
-        """Weighting constant of this inner product."""
-        return self._const
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equal : `bool`
-            `True` if other is an `FnConstWeighting`
-            instance with the same constant, `False` otherwise.
-        """
-        if other is self:
-            return True
-
-        return (isinstance(other, FnConstWeighting) and
-                self.const == other.const and
-                super().__eq__(other))
-
-    def equiv(self, other):
-        """Test if other is an equivalent weighting.
-
-        Returns
-        -------
-        equivalent : `bool`
-            `True` if other is an
-            `FnWeightingBase` instance with the same `FnWeightingBase.impl`,
-            which yields the same result as this inner product for any
-            input, `False` otherwise. This is the same as equality
-            if ``other`` is an `FnConstWeighting` instance,
-            otherwise the `equiv` method of ``other`` is called.
-        """
-        if isinstance(other, FnConstWeighting):
-            return self == other
-        elif isinstance(other, FnWeightingBase):
-            return other.equiv(self)
-        else:
-            return False
+        super().__init__(constant, impl='numpy', exponent=exponent,
+                         dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
         """Calculate the constant-weighted inner product of two vectors.
@@ -2198,35 +1951,16 @@ class FnConstWeighting(FnWeightingBase):
             return (self.const ** (1 / self.exponent) *
                     float(_pnorm_default(x1 - x2, self.exponent)))
 
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{}'
-        if self.exponent != 2.0:
-            inner_fstr += ', exponent={ex}'
-        if self._dist_using_inner:
-            inner_fstr += ', dist_using_inner=True'
 
-        inner_str = inner_fstr.format(self.const, ex=self.exponent)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        if self.exponent == 2.0:
-            return 'Weighting: const = {:.4}'.format(self.const)
-        else:
-            return 'Weighting: p = {}, const = {:.4}'.format(
-                self.exponent, self.const)
-
-
-class FnNoWeighting(FnConstWeighting):
+class FnNoWeighting(NoWeightingBase, FnConstWeighting):
 
     """Weighting of `Fn` with constant 1.
 
-    For exponent 2.0, the unweighted inner product is defined as
+    For exponent 2.0, the unweighted inner product is defined as::
 
-    :math:`\langle a, b\\rangle := b^H a`
+        <a, b> := b^H a
 
-    with :math:`b^H` standing for transposed complex conjugate.
+    with ``b^H`` standing for transposed complex conjugate.
 
     For other exponents, only norm and dist are defined.
     """
@@ -2266,117 +2000,56 @@ class FnNoWeighting(FnConstWeighting):
         dist_using_inner : `bool`, optional
             Calculate ``dist`` using the formula
 
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
+            exactly zero for equal (but not identical) ``x`` and ``y``.
 
-            Can only be used if ``exponent`` is 2.0.
+            This option can only be used if ``exponent`` is 2.0.
         """
-        if not hasattr(self, '_initialized'):
-            FnConstWeighting.__init__(self, constant=1.0, exponent=exponent,
-                                      dist_using_inner=dist_using_inner)
-            self._initialized = True
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = ''
-        if self.exponent != 2.0:
-            inner_fstr += ', exponent={ex}'
-        if self._dist_using_inner:
-            inner_fstr += ', dist_using_inner=True'
-        inner_str = inner_fstr.format(ex=self.exponent).lstrip(', ')
-
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        if self.exponent == 2.0:
-            return 'NoWeighting'
-        else:
-            return 'NoWeighting: p = {}'.format(self.exponent)
+        super().__init__(impl='numpy', exponent=exponent,
+                         dist_using_inner=dist_using_inner)
 
 
-class FnCustomInnerProduct(FnWeightingBase):
+class FnCustomInnerProduct(CustomInnerProductBase):
 
-    """Custom inner product on `Fn`."""
+    """Class for handling a user-specified inner product in `Fn`."""
 
-    def __init__(self, inner, dist_using_inner=False):
+    def __init__(self, inner, dist_using_inner=True):
         """Initialize a new instance.
 
         Parameters
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            `FnVector` arguments, return a element from
-            the field of the space (real or complex number) and
-            satisfy the following conditions for all vectors
-            :math:`x, y, z` and scalars :math:`s`:
+            `FnVector` arguments, return an element from their space's
+            field (real or complex number) and satisfy the following
+            conditions for all vectors ``x, y, z`` and scalars ``s``:
 
-            - :math:`\langle x,y\\rangle =
-              \overline{\langle y,x\\rangle}`
-            - :math:`\langle sx, y\\rangle = s \langle x, y\\rangle`
-            - :math:`\langle x+z, y\\rangle = \langle x,y\\rangle +
-              \langle z,y\\rangle`
-            - :math:`\langle x,x\\rangle = 0 \Leftrightarrow x = 0`
+            - ``<x, y> = conj(<y, x>)``
+            - ``<s*x + y, z> = s * <x, z> + <y, z>``
+            - ``<x, x> = 0``  if and only if  ``x = 0``
 
         dist_using_inner : `bool`, optional
             Calculate ``dist`` using the formula
 
-            :math:`\lVert x-y \\rVert^2 = \lVert x \\rVert^2 +
-            \lVert y \\rVert^2 - 2\Re \langle x, y \\rangle`.
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
-            exactly zero for equal (but not identical) :math:`x` and
-            :math:`y`.
+            exactly zero for equal (but not identical) ``x`` and ``y``.
         """
-        super().__init__(impl='numpy', exponent=2.0,
+        super().__init__(inner, impl='numpy',
                          dist_using_inner=dist_using_inner)
 
-        if not callable(inner):
-            raise TypeError('inner product function {!r} not callable.'
-                            ''.format(inner))
-        self._inner_impl = inner
 
-    @property
-    def inner(self):
-        """Custom inner product of this instance.."""
-        return self._inner_impl
+class FnCustomNorm(CustomNormBase):
 
-    def __eq__(self, other):
-        """Return ``self == other``.
+    """Class for handling a user-specified norm in `Fn`.
 
-        Returns
-        -------
-        equal : `bool`
-            `True` if other is an `FnCustomInnerProduct`
-            instance with the same inner product, `False` otherwise.
-        """
-        return (isinstance(other, FnCustomInnerProduct) and
-                self.inner == other.inner and
-                super().__eq__(other))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{!r}'
-        if self._dist_using_inner:
-            inner_fstr += ', dist_using_inner=True'
-
-        inner_str = inner_fstr.format(self.inner)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return self.__repr__()  # TODO: prettify?
-
-
-class FnCustomNorm(FnWeightingBase):
-
-    """Custom norm on `Fn`, removes ``inner``."""
+    Note that this removes ``inner``.
+    """
 
     def __init__(self, norm):
         """Initialize a new instance.
@@ -2384,61 +2057,24 @@ class FnCustomNorm(FnWeightingBase):
         Parameters
         ----------
         norm : `callable`
-            The norm implementation. It must accept an
-            `FnVector` argument, return a `float` and satisfy
-            the following conditions for all vectors
-            :math:`x, y` and scalars :math:`s`:
+            The norm implementation. It must accept an `FnVector`
+            argument, return a `float` and satisfy the following
+            conditions for all vectors ``x, y`` and scalars ``s``:
 
-            - :math:`\lVert x\\rVert \geq 0`
-            - :math:`\lVert x\\rVert = 0 \Leftrightarrow x = 0`
-            - :math:`\lVert s x\\rVert = \lvert s \\rvert
-              \lVert x\\rVert`
-            - :math:`\lVert x + y\\rVert \leq \lVert x\\rVert +
-              \lVert y\\rVert`.
+            - ``||x|| >= 0``
+            - ``||x|| = 0``  if and only if  ``x = 0``
+            - ``||s * x|| = |s| * ||x||``
+            - ``||x + y|| <= ||x|| + ||y||``
         """
-        super().__init__(impl='numpy', exponent=1.0, dist_using_inner=False)
-
-        if not callable(norm):
-            raise TypeError('norm function {!r} not callable.'
-                            ''.format(norm))
-        self._norm_impl = norm
-
-    def inner(self, x1, x2):
-        """Inner product is not defined for custom distance."""
-        raise NotImplementedError
-
-    @property
-    def norm(self):
-        """Custom norm of this instance.."""
-        return self._norm_impl
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equal : `bool`
-            `True` if other is an `FnCustomNorm`
-            instance with the same norm, `False` otherwise.
-        """
-        return (isinstance(other, FnCustomNorm) and
-                self.norm == other.norm and
-                super().__eq__(other))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{!r}'
-        inner_str = inner_fstr.format(self.norm)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return self.__repr__()  # TODO: prettify?
+        super().__init__(norm, impl='numpy')
 
 
-class FnCustomDist(FnWeightingBase):
+class FnCustomDist(CustomDistBase):
 
-    """Custom distance on `Fn`, removes ``norm`` and ``inner``."""
+    """Class for handling a user-specified distance in `Fn`.
+
+    Note that this removes ``inner`` and ``norm``.
+    """
 
     def __init__(self, dist):
         """Initialize a new instance.
@@ -2446,61 +2082,20 @@ class FnCustomDist(FnWeightingBase):
         Parameters
         ----------
         dist : `callable`
-            The distance function defining a metric on
-            :math:`\mathbb{F}^n`.
-            It must accept two `FnVector` arguments and
-            fulfill the following mathematical conditions for any
-            three vectors :math:`x, y, z`:
+            The distance function defining a metric on `Fn`. It must
+            accept two `FnVector` arguments, return a `float` and and
+            fulfill the following mathematical conditions for any three
+            vectors ``x, y, z``:
 
-            - :math:`d(x, y) = d(y, x)`
-            - :math:`d(x, y) \geq 0`
-            - :math:`d(x, y) = 0 \Leftrightarrow x = y`
-            - :math:`d(x, y) \geq d(x, z) + d(z, y)`
+            - ``dist(x, y) >= 0``
+            - ``dist(x, y) = 0``  if and only if  ``x = y``
+            - ``dist(x, y) = dist(y, x)``
+            - ``dist(x, y) <= dist(x, z) + dist(z, y)``
         """
-        super().__init__(impl='numpy', exponent=1.0, dist_using_inner=False)
-
-        if not callable(dist):
-            raise TypeError('distance function {!r} not callable.'
-                            ''.format(dist))
-        self._dist_impl = dist
-
-    @property
-    def dist(self):
-        """Custom distance of this instance.."""
-        return self._dist_impl
-
-    def inner(self, x1, x2):
-        """Inner product is not defined for custom distance."""
-        raise NotImplementedError
-
-    def norm(self, x):
-        """Norm is not defined for custom distance."""
-        raise NotImplementedError
-
-    def __eq__(self, other):
-        """Return ``self == other``.
-
-        Returns
-        -------
-        equal : `bool`
-            `True` if other is an `FnCustomDist`
-            instance with the same norm, `False` otherwise.
-        """
-        return (isinstance(other, FnCustomDist) and
-                self.dist == other.dist and
-                super().__eq__(other))
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        inner_fstr = '{!r}'
-        inner_str = inner_fstr.format(self.dist)
-        return '{}({})'.format(self.__class__.__name__, inner_str)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return self.__repr__()  # TODO: prettify?
+        super().__init__(dist, impl='numpy')
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

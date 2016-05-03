@@ -19,24 +19,21 @@
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# ODL
 from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space.ntuples import Ntuples, Fn, Rn, Cn
+from odl.space.ntuples import Ntuples, Fn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-from odl.space import CUDA_AVAILABLE
-from odl.space.cu_ntuples import CudaNtuples, CudaFn, CudaRn
-CudaCn = type(None)  # TODO: add CudaCn to imports once it is implemented
+from odl.space.cu_ntuples import CudaNtuples, CudaFn, CUDA_AVAILABLE
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
+CudaCn = type(None)
 
 
 __all__ = ('RawDiscretization', 'RawDiscretizationVector',
@@ -61,13 +58,13 @@ class RawDiscretization(NtuplesBase):
     As additional information, two mappings can be provided.
     The first one is an explicit way to map an (abstract) element from
     the source set to an ``n``-tuple. This mapping is called
-    **restriction** in ODL.
+    **sampling** in ODL.
     The second one encodes the converse way of mapping an ``n``-tuple to
     an element of the original set. This mapping is called
-    **extension**.
+    **interpolation**.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None):
+    def __init__(self, uspace, dspace, sampling=None, interpol=None):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -80,14 +77,14 @@ class RawDiscretization(NtuplesBase):
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
             discretized object
-        restr : `Operator`, optional
+        sampling : `Operator`, optional
             Operator mapping a `uspace` element to a `dspace` element.
-            Must satisfy ``restr.domain == uspace``,
-            ``restr.range == dspace``.
-        ext : `Operator`, optional
+            Must satisfy ``sampling.domain == uspace``,
+            ``sampling.range == dspace``.
+        interpol : `Operator`, optional
             Operator mapping a `dspace` element to a `uspace` element.
-            Must satisfy ``ext.domain == dspace``,
-            ``ext.range == uspace``.
+            Must satisfy ``interpol.domain == dspace``,
+            ``interpol.range == uspace``.
             """
         if not isinstance(uspace, Set):
             raise TypeError('undiscretized space {!r} not a `Set` instance.'
@@ -96,41 +93,41 @@ class RawDiscretization(NtuplesBase):
             raise TypeError('data space {!r} not an `NtuplesBase` instance.'
                             ''.format(dspace))
 
-        if restr is not None:
-            if not isinstance(restr, Operator):
-                raise TypeError('restriction operator {!r} not an `Operator` '
-                                'instance.'.format(restr))
+        if sampling is not None:
+            if not isinstance(sampling, Operator):
+                raise TypeError('sampling operator {!r} not an `Operator` '
+                                'instance.'.format(sampling))
 
-            if restr.domain != uspace:
-                raise ValueError('restriction operator domain {} not equal to '
+            if sampling.domain != uspace:
+                raise ValueError('sampling operator domain {} not equal to '
                                  'the undiscretized space {}.'
-                                 ''.format(restr.domain, dspace))
+                                 ''.format(sampling.domain, dspace))
 
-            if restr.range != dspace:
-                raise ValueError('restriction operator range {} not equal to'
+            if sampling.range != dspace:
+                raise ValueError('sampling operator range {} not equal to'
                                  'the data space {}.'
-                                 ''.format(restr.range, dspace))
+                                 ''.format(sampling.range, dspace))
 
-        if ext is not None:
-            if not isinstance(ext, Operator):
-                raise TypeError('extension operator {!r} not an `Operator` '
-                                'instance.'.format(ext))
+        if interpol is not None:
+            if not isinstance(interpol, Operator):
+                raise TypeError('interpolation operator {!r} not an Operator '
+                                'instance.'.format(interpol))
 
-            if ext.domain != dspace:
-                raise ValueError('extension operator domain {} not equal to'
-                                 'the data space {}.'
-                                 ''.format(ext.domain, dspace))
+            if interpol.domain != dspace:
+                raise ValueError('interpolation operator domain {} not equal '
+                                 'to the data space {}.'
+                                 ''.format(interpol.domain, dspace))
 
-            if ext.range != uspace:
-                raise ValueError('extension operator range {} not equal to'
+            if interpol.range != uspace:
+                raise ValueError('interpolation operator range {} not equal to'
                                  'the undiscretized space {}.'
-                                 ''.format(ext.range, uspace))
+                                 ''.format(interpol.range, uspace))
 
         super().__init__(dspace.size, dspace.dtype)
         self._uspace = uspace
         self._dspace = dspace
-        self._restriction = restr
-        self._extension = ext
+        self._sampling = sampling
+        self._interpolation = interpol
 
     @property
     def uspace(self):
@@ -148,20 +145,20 @@ class RawDiscretization(NtuplesBase):
         return type(self.dspace)
 
     @property
-    def restriction(self):
+    def sampling(self):
         """The operator mapping a `uspace` element to an n-tuple."""
-        if self._restriction is not None:
-            return self._restriction
+        if self._sampling is not None:
+            return self._sampling
         else:
-            raise NotImplementedError('no restriction operator provided.')
+            raise NotImplementedError('no sampling operator provided.')
 
     @property
-    def extension(self):
+    def interpolation(self):
         """The operator mapping an n-tuple to a `uspace` element."""
-        if self._extension is not None:
-            return self._extension
+        if self._interpolation is not None:
+            return self._interpolation
         else:
-            raise NotImplementedError('no extension operator provided.')
+            raise NotImplementedError('no interpolation operator provided.')
 
     def element(self, inp=None):
         """Create an element from ``inp`` or from scratch.
@@ -178,12 +175,12 @@ class RawDiscretization(NtuplesBase):
         element : `RawDiscretizationVector`
             The discretized element, calculated as
             ``dspace.element(inp)`` or
-            ``restriction(uspace.element(inp))``, tried in this order.
+            ``sampling(uspace.element(inp))``, tried in this order.
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
         try:
-            return self.element_type(self, self.restriction(inp))
+            return self.element_type(self, self.sampling(inp))
         except TypeError:
             # Sequence-type input
             return self.element_type(self, self.dspace.element(inp))
@@ -196,7 +193,7 @@ class RawDiscretization(NtuplesBase):
         equals : `bool`
             `True` if ``other`` is a `RawDiscretization`
             instance and all attributes `uspace`, `dspace`,
-            `RawDiscretization.restriction` and `RawDiscretization.extension`
+            `RawDiscretization.sampling` and `RawDiscretization.interpolation`
             of ``other`` and this discretization are equal, `False` otherwise.
         """
         if other is self:
@@ -205,18 +202,13 @@ class RawDiscretization(NtuplesBase):
         return (super().__eq__(other) and
                 other.uspace == self.uspace and
                 other.dspace == self.dspace and
-                other.restriction == self.restriction and
-                other.extension == self.extension)
+                other.sampling == self.sampling and
+                other.interpolation == self.interpolation)
 
     @property
     def domain(self):
         """The domain of the continuous space."""
         return self.uspace.domain
-
-    @property
-    def dtype(self):
-        """The data type of the representation space."""
-        return self._dtype
 
     @property
     def element_type(self):
@@ -316,13 +308,15 @@ class RawDiscretizationVector(NtuplesBaseVector):
         else:
             self.ntuple.__setitem__(indices, values)
 
-    def restriction(self, ufunc):
+    def sampling(self, ufunc, **kwargs):
         """Restrict a continuous function and assign to this vector
 
         Parameters
         ----------
         ufunc : ``self.space.uspace`` element
-            The continuous function that should be restricted.
+            The continuous function that should be samplingicted.
+        kwargs :
+            Additional arugments for the sampling operator implementation
 
         Examples
         --------
@@ -336,49 +330,51 @@ class RawDiscretizationVector(NtuplesBaseVector):
 
         Assign x according to continuous vector
 
-        >>> x.restriction(lambda x: x)
+        >>> x.sampling(lambda x: x)
         >>> print(x) # Print values at gridpoints (which are centered)
         [0.1, 0.3, 0.5, 0.7, 0.9]
 
         See Also
         --------
-        RawDiscretization.restriction : For full description
+        RawDiscretization.sampling : For full description
         """
-        self.space.restriction(ufunc, out=self.ntuple)
+        self.space.sampling(ufunc, out=self.ntuple, **kwargs)
 
     @property
-    def extension(self):
-        """The extension operator associated with this vector.
+    def interpolation(self):
+        """The interpolation operator associated with this vector.
 
         Returns
         -------
-        extension_op : `FunctionSetMapping`
-            Operatior representing a continuous extension of this vector.
+        interpolation_op : `FunctionSetMapping`
+            Operatior representing a continuous interpolation of this
+            vector
 
         Examples
         --------
         >>> import odl
         >>> import numpy as np
 
-        Create continuous extension of 1d function with nearest neighbour
+        Create continuous version of a discrete 1d function with nearest
+        neighbour interpolation:
 
         >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True)
         >>> x = X.element([0, 1, 0])
-        >>> x.extension(np.array([0.24, 0.26]))
+        >>> x.interpolation(np.array([0.24, 0.26]))
         array([ 0.,  1.])
 
-        Create continuous extension of 1d function wiht linear interpolation
+        Linear interpolation:
 
         >>> X = odl.uniform_discr(0, 1, 3, nodes_on_bdry=True, interp='linear')
         >>> x = X.element([0, 1, 0])
-        >>> x.extension(np.array([0.24, 0.26]))
+        >>> x.interpolation(np.array([0.24, 0.26]))
         array([ 0.48,  0.52])
 
         See Also
         --------
-        RawDiscretization.extension : For full description
+        RawDiscretization.interpolation : For full description
         """
-        return self.space.extension(self.ntuple)
+        return self.space.interpolation(self.ntuple)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -399,12 +395,12 @@ class Discretization(RawDiscretization, FnBase):
     `LinearSpace`, the `RawDiscretization.dspace`
     for the data representation is an implementation of
     :math:`\mathbb{F}^n`, where :math:`\mathbb{F}` is some
-    `Field`, and both `RawDiscretization.restriction`
-    and `RawDiscretization.extension` are linear
+    `Field`, and both `RawDiscretization.sampling`
+    and `RawDiscretization.interpolation` are linear
     `Operator`'s.
     """
 
-    def __init__(self, uspace, dspace, restr=None, ext=None):
+    def __init__(self, uspace, dspace, sampling=None, interpol=None):
         """Abstract initialization method.
 
         Intended to be called by subclasses for proper type checking
@@ -418,24 +414,24 @@ class Discretization(RawDiscretization, FnBase):
             Data space providing containers for the values of a
             discretized object. Its `FnBase.field` attribute
             must be the same as ``uspace.field``.
-        restr : `Operator`, linear, optional
+        sampling : `Operator`, linear, optional
             Operator mapping a `RawDiscretization.uspace` element
             to a `RawDiscretization.dspace` element. Must satisfy
-            ``restr.domain == uspace``, ``restr.range == dspace``
-        ext : `Operator`, linear, optional
+            ``sampling.domain == uspace``, ``sampling.range == dspace``
+        interpol : `Operator`, linear, optional
             Operator mapping a `RawDiscretization.dspace` element
             to a `RawDiscretization.uspace` element. Must satisfy
-            ``ext.domain == dspace``, ``ext.range == uspace``.
+            ``interpol.domain == dspace``, ``interpol.range == uspace``.
         """
-        RawDiscretization.__init__(self, uspace, dspace, restr, ext)
+        RawDiscretization.__init__(self, uspace, dspace, sampling, interpol)
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
-            raise TypeError('undiscretized space {!r} not a `LinearSpace` '
+            raise TypeError('undiscretized space {!r} not a LinearSpace '
                             'instance.'.format(uspace))
 
         if not isinstance(dspace, FnBase):
-            raise TypeError('data space {!r} not an `FnBase` instance.'
+            raise TypeError('data space {!r} not an FnBase instance.'
                             ''.format(dspace))
 
         if uspace.field != dspace.field:
@@ -443,23 +439,23 @@ class Discretization(RawDiscretization, FnBase):
                              'data spaces, resp., are not equal.'
                              ''.format(uspace.field, dspace.field))
 
-        if restr is not None:
-            if not isinstance(restr, Operator):
-                raise TypeError('restriction operator {!r} is not a '
-                                '`Operator` instance.'.format(restr))
+        if sampling is not None:
+            if not isinstance(sampling, Operator):
+                raise TypeError('sampling operator {!r} is not an '
+                                'Operator instance.'.format(sampling))
 
-            if not restr.is_linear:
-                raise TypeError('restriction operator {!r} is not '
-                                'linear'.format(restr))
+            if not sampling.is_linear:
+                raise TypeError('sampling operator {!r} is not '
+                                'linear'.format(sampling))
 
-        if ext is not None:
-            if not isinstance(ext, Operator):
-                raise TypeError('extension operator {!r} is not a '
-                                '`Operator` instance.'.format(ext))
+        if interpol is not None:
+            if not isinstance(interpol, Operator):
+                raise TypeError('interpolation operator {!r} is not an '
+                                'Operator instance.'.format(interpol))
 
-            if not ext.is_linear:
-                raise TypeError('extension operator {!r} is not '
-                                'linear'.format(ext))
+            if not interpol.is_linear:
+                raise TypeError('interpolation operator {!r} is not '
+                                'linear'.format(interpol))
 
     # Pass-through attributes of the wrapped ``dspace``
     def zero(self):
@@ -469,6 +465,16 @@ class Discretization(RawDiscretization, FnBase):
     def one(self):
         """Create a vector of ones."""
         return self.element_type(self, self.dspace.one())
+
+    @property
+    def weighting(self):
+        """This space's weighting scheme."""
+        return getattr(self.dspace, 'weighting', None)
+
+    @property
+    def is_weighted(self):
+        """Return `True` if the ``dspace`` is weighted."""
+        return getattr(self.dspace, 'is_weighted', False)
 
     def _lincomb(self, a, x1, b, x2, out):
         """Raw linear combination."""
@@ -495,6 +501,19 @@ class Discretization(RawDiscretization, FnBase):
         self.dspace._divide(x1.ntuple, x2.ntuple, out.ntuple)
 
     @property
+    def examples(self):
+        """Return example functions in the space.
+
+        These are created by discretizing the examples in the underlying uspace
+
+        See Also
+        --------
+        FunctionSpace.examples
+        """
+        for name, vector in self.uspace.examples:
+            yield (name, self.element(vector))
+
+    @property
     def element_type(self):
         """ `DiscretizationVector` """
         return DiscretizationVector
@@ -515,17 +534,17 @@ def dspace_type(space, impl, dtype=None):
 
     Parameters
     ----------
-    space : `object`
-        The template space. If it has a ``field`` attribute,
-        ``dtype`` must be consistent with it
+    space :
+        Template space from which to infer an adequate data space. If
+        it has a `LinearSpace.field` attribute, ``dtype`` must be
+        consistent with it.
     impl : {'numpy', 'cuda'}
-        The backend for the data space
+        Implementation backend for the data space
     dtype : `type`, optional
         Data type which the space is supposed to use. If `None`, the
         space type is purely determined from ``space`` and
         ``impl``. If given, it must be compatible with the
-        field of ``space``. Non-floating types result in basic
-        `Fn`-type spaces.
+        field of ``space``.
 
     Returns
     -------
@@ -533,53 +552,54 @@ def dspace_type(space, impl, dtype=None):
         Space type selected after the space's field, the backend and
         the data type
     """
-    impl_ = str(impl).lower()
-    if impl_ not in ('numpy', 'cuda'):
-        raise ValueError('implementation type {} not understood.'
-                         ''.format(impl))
+    impl, impl_in = str(impl).lower(), impl
+    if impl not in ('numpy', 'cuda'):
+        raise ValueError("implementation '{}' not understood."
+                         ''.format(impl_in))
 
-    if impl_ == 'cuda' and not CUDA_AVAILABLE:
+    if impl == 'cuda' and not CUDA_AVAILABLE:
         raise ValueError('CUDA implementation not available.')
 
     basic_map = {'numpy': Fn, 'cuda': CudaFn}
 
     spacetype_map = {
-        'numpy': {RealNumbers: Rn, ComplexNumbers: Cn,
+        'numpy': {RealNumbers: Fn, ComplexNumbers: Fn,
                   type(None): Ntuples},
-        'cuda': {RealNumbers: CudaRn, ComplexNumbers: None,
+        'cuda': {RealNumbers: CudaFn, ComplexNumbers: None,
                  type(None): CudaNtuples}
     }
 
     field_type = type(getattr(space, 'field', None))
 
     if dtype is None:
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
+
     elif is_real_floating_dtype(dtype):
         if field_type is None or field_type == ComplexNumbers:
             raise TypeError('real floating data type {!r} requires space '
-                            'field to be of type `RealNumbers`, got {}.'
+                            'field to be of type RealNumbers, got {}.'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
     elif is_complex_floating_dtype(dtype):
         if field_type is None or field_type == RealNumbers:
             raise TypeError('complex floating data type {!r} requires space '
-                            'field to be of type `ComplexNumbers`, got {!r}.'
+                            'field to be of type ComplexNumbers, got {!r}.'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
     elif is_scalar_dtype(dtype):
         if field_type == ComplexNumbers:
             raise TypeError('non-floating data type {!r} requires space field '
-                            'to be of type `RealNumbers`, got {!r}.'
+                            'to be of type RealNumbers, got {!r}.'
                             .format(dtype, field_type))
         elif field_type == RealNumbers:
-            stype = basic_map[impl_]
+            stype = basic_map[impl]
         else:
-            stype = spacetype_map[impl_][field_type]
+            stype = spacetype_map[impl][field_type]
     elif field_type is None:  # Only in this case are arbitrary types allowed
-        stype = spacetype_map[impl_][field_type]
+        stype = spacetype_map[impl][field_type]
     else:
         raise TypeError('non-scalar data type {!r} cannot be combined with '
-                        'a `LinearSpace`.'.format(dtype))
+                        'a LinearSpace.'.format(dtype))
 
     if stype is None:
         raise NotImplementedError('no corresponding data space available '
@@ -587,6 +607,8 @@ def dspace_type(space, impl, dtype=None):
                                   ''.format(space, impl))
     return stype
 
+
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

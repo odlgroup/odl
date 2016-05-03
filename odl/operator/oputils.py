@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Usefull utility functions on discrete spaces (i.e., either Rn/Cn or
-discretized function spaces), for example obtaining a matrix representation of
-an operator. """
+"""Convenience functions for operators."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -25,13 +23,13 @@ from future import standard_library
 from future.utils import raise_from
 standard_library.install_aliases()
 
-# External
 from math import ceil, sqrt
 import numpy as np
 
-# Internal
 from odl.space.base_ntuples import FnBase
-from odl.set.pspace import ProductSpace
+from odl.space.pspace import ProductSpace
+
+__all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator')
 
 
 def matrix_representation(op):
@@ -181,3 +179,71 @@ def power_method_opnorm(op, niter, xstart=None):
 
         op(x, out=tmp)
         return tmp.norm()
+
+
+def as_scipy_operator(op):
+    """ Wrap ``op`` as a ``scipy.sparse.linalg.LinearOperator``
+
+    This is intended to be used with the scipy sparse linear solvers.
+
+    Parameters
+    ----------
+    op : `Operator`
+        A linear operator that should be wrapped
+
+    Returns
+    -------
+    ``scipy.sparse.linalg.LinearOperator`` : linear_op
+        The wrapped operator, has attributes ``matvec`` which calls ``op``, and
+        ``rmatvec`` which calls ``op.adjoint``.
+
+    Examples
+    --------
+    Wrap operator and solve simple problem (here toy problem ``Ix = b``)
+
+    >>> import odl
+    >>> op = op = odl.IdentityOperator(odl.Rn(3))
+    >>> scipy_op = as_scipy_operator(op)
+    >>> import scipy.sparse.linalg as sl
+    >>> result, status = sl.cg(scipy_op, [0, 1, 0])
+    >>> result
+    array([ 0.,  1.,  0.])
+
+    Notes
+    -----
+    If the data representation of ``op``'s domain and range is of type `Fn`
+    this incurs no significant overhead. If the data type is `CudaFn` or other
+    nonlocal type, the overhead is significant.
+    """
+    if not op.is_linear:
+        raise ValueError('``op`` needs to be linear.')
+
+    dtype = op.domain.dtype
+    if op.range.dtype != dtype:
+        raise ValueError('dtypes of ``op.domain`` and ``op.range`` needs to '
+                         'match')
+
+    def as_flat_array(arr):
+        if hasattr(arr, 'order'):
+            return arr.asarray().ravel(arr.order)
+        else:
+            return arr.asarray()
+
+    shape = (op.range.size, op.domain.size)
+
+    def matvec(v):
+        return as_flat_array(op(v))
+
+    def rmatvec(v):
+        return as_flat_array(op.adjoint(v))
+
+    import scipy.sparse.linalg
+    return scipy.sparse.linalg.LinearOperator(shape=shape,
+                                              matvec=matvec,
+                                              rmatvec=rmatvec,
+                                              dtype=dtype)
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

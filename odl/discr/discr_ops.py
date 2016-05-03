@@ -25,18 +25,18 @@ from builtins import super
 
 import numpy as np
 
-from odl.operator.operator import Operator
-from odl.set.pspace import ProductSpace
 from odl.discr.lp_discr import DiscreteLp
+from odl.operator.operator import Operator
+from odl.space.pspace import ProductSpace
 
 
-__all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
+__all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian',
+           'Resampling')
 
 
 # TODO: make helper function to set edge slices
 
-def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
-                padding_value=0, **kwargs):
+def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     """Calculate the partial derivative of ``f`` along a given ``axis``.
 
     In the interior of the domain of f, the partial derivative is computed
@@ -68,18 +68,19 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
         Finite difference method which is used in the interior of the domain
          of ``f``.
     padding_method : {'constant', 'symmetric'}, optional
+
         'constant' : Pads values outside the domain of ``f`` with a constant
-            value given by ``padding_value``
+        value given by ``padding_value``
+
         'symmetric' : Pads with the reflection of the vector mirrored
-            along the edge of the array
-        If `None` one-sided forward or backward differences are used at the
-        boundary.
+        along the edge of the array
+
+        If `None` is given, one-sided forward or backward differences
+        are used at the boundary.
+
     padding_value : `float`, optional
         If ``padding_method`` is 'constant' ``f`` assumes ``padding_value``
         for indices outside the domain of ``f``
-
-    Other Parameters
-    ----------------
     edge_order : {1, 2}, optional
         Edge-order accuracy at the boundaries if no padding is used. If
         `None` the edge-order accuracy at endpoints corresponds to the
@@ -140,7 +141,6 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
     True
     """
     # TODO: implement alternative boundary conditions
-
     f_arr = np.asarray(f)
     ndim = f_arr.ndim
 
@@ -163,10 +163,11 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
     if method not in ('central', 'forward', 'backward'):
         raise ValueError('method {} is not understood'.format(method_in))
 
+    padding_method = kwargs.pop('padding_method', None)
     if padding_method not in ('constant', 'symmetric', None):
         raise ValueError('padding value {} not valid'.format(padding_method))
-    if padding_method is 'constant':
-        padding_value = float(padding_value)
+    if padding_method == 'constant':
+        padding_value = float(kwargs.pop('padding_value', 0))
 
     edge_order = kwargs.pop('edge_order', None)
     if edge_order is None:
@@ -178,7 +179,6 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
         if edge_order not in (1, 2):
             raise ValueError('edge order {} not valid'.format(edge_order))
 
-    out = kwargs.pop('out', None)
     if out is None:
         out = np.empty_like(f_arr)
     else:
@@ -381,6 +381,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', padding_method=None,
 
 
 class PartialDerivative(Operator):
+
     """Calculate the discrete partial derivative along a given axis.
 
     Calls helper function `finite_diff` to calculate finite difference.
@@ -402,12 +403,16 @@ class PartialDerivative(Operator):
             Finite difference method which is used in the interior of the
             domain of ``f``
         padding_method : {'constant', 'symmetric'}, optional
+
             'constant' : Pads values outside the domain of ``f`` with a
-                constant value given by ``padding_value``
+            constant value given by ``padding_value``
+
             'symmetric' : Pads with the reflection of the vector mirrored
-                along the edge of the array
-            If `None` one-sided forward or backward differences are used at
-            the boundary
+            along the edge of the array
+
+            If `None` is given, one-sided forward or backward differences
+            are used at the boundary
+
         padding_value : `float`, optional
             If ``padding_method`` is 'constant' ``f`` assumes
             ``padding_value`` for indices outside the domain of ``f``
@@ -416,9 +421,8 @@ class PartialDerivative(Operator):
             `None` the edge-order accuracy at endpoints corresponds to the
             accuracy in the interior.
         """
-
         if not isinstance(space, DiscreteLp):
-            raise TypeError('space {!r} is not a `DiscreteLp` '
+            raise TypeError('space {!r} is not a DiscreteLp '
                             'instance.'.format(space))
 
         super().__init__(domain=space, range=space, linear=True)
@@ -789,6 +793,127 @@ class Laplacian(Operator):
         return self
 
 
+class Resampling(Operator):
+    """A operator that resamples a vector on another grid.
+
+    The operator uses the underlying `Discretization.sampling` and
+    `Discretization.interpolation` operators to achieve this.
+
+    The spaces need to have the same `Discretization.uspace` in order for this
+    to work. The dspace types may however be different, although performance
+    may vary drastically.
+    """
+
+    def __init__(self, domain, range):
+        """Initialize a Resampling.
+
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            The space that should be cast from
+        range : `LinearSpace`
+            The space that should be cast to
+
+        Examples
+        --------
+        Create two spaces with different number of points and create resampling
+        operator.
+
+        >>> import odl
+        >>> X = odl.uniform_discr(0, 1, 3)
+        >>> Y = odl.uniform_discr(0, 1, 6)
+        >>> resampling = Resampling(X, Y)
+        """
+        if domain.uspace != range.uspace:
+            raise ValueError('domain.uspace ({}) does not match range.uspace '
+                             '({})'.format(domain.uspace, range.uspace))
+
+        super().__init__(domain=domain, range=range, linear=True)
+
+    def _call(self, x, out=None):
+        """Apply resampling operator.
+
+        The vector ``x`` is resampled using the sampling and interpolation
+        operators of the underlying spaces.
+
+        Examples
+        --------
+        Create two spaces with different number of points and create resampling
+        operator. Apply operator to vector.
+
+        >>> import odl
+        >>> X = odl.uniform_discr(0, 1, 3)
+        >>> Y = odl.uniform_discr(0, 1, 6)
+        >>> resampling = Resampling(X, Y)
+        >>> print(resampling([0, 1, 0]))
+        [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+
+        The result depends on the interpolation chosen for the underlying
+        spaces.
+
+        >>> Z = odl.uniform_discr(0, 1, 3, interp='linear')
+        >>> linear_resampling = Resampling(Z, Y)
+        >>> print(linear_resampling([0, 1, 0]))
+        [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
+        """
+        if out is None:
+            return x.interpolation
+        else:
+            out.sampling(x.interpolation)
+
+    @property
+    def inverse(self):
+        """Return an (approximate) inverse.
+
+        Returns
+        -------
+        inverse : Resampling
+            The resampling operator defined in the inverse direction.
+
+        See Also
+        --------
+        adjoint : resampling is unitary, so adjoint is inverse.
+        """
+        return Resampling(self.range, self.domain)
+
+    @property
+    def adjoint(self):
+        """Return an (approximate) adjoint.
+
+        The result is only exact if the interpolation and sampling operators
+        of the underlying spaces match exactly.
+
+        Returns
+        -------
+        adjoint : Resampling
+            The resampling operator defined in the inverse direction.
+
+        Examples
+        --------
+        Create resampling operator and inverse
+
+        >>> import odl
+        >>> X = odl.uniform_discr(0, 1, 3)
+        >>> Y = odl.uniform_discr(0, 1, 6)
+        >>> resampling = Resampling(X, Y)
+        >>> resampling_inv = resampling.inverse
+
+        The inverse is proper left inverse if the resampling goes from a
+        lower sampling to a higher sampling
+
+        >>> x = [0.0, 1.0, 0.0]
+        >>> print(resampling_inv(resampling(x)))
+        [0.0, 1.0, 0.0]
+
+        But can fail in the other direction
+
+        >>> y = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        >>> print(resampling(resampling_inv(y)))
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        """
+        return self.inverse
+
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

@@ -1,5 +1,7 @@
+.. _contributing:
+
 ###################
-Contributing to odl
+Contributing to ODL
 ###################
 
 .. toctree::
