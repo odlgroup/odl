@@ -375,9 +375,7 @@ def test_proximal_factory_convconj_kl_product_space():
     prox(x, x_opt)
 
     # Explicit computation:
-    # 1 / 2 * (lam_X + x - sqrt((x - lam_X)^2 + 4 * lam * sigma * g)
-    x_verify = (lam + x - np.sqrt((x - lam) ** 2 + 4 * lam *
-                                        sigma * g)) / 2
+    x_verify = (lam + x - np.sqrt((x - lam) ** 2 + 4 * lam * sigma * g)) / 2
 
     # Compare components
     assert all_almost_equal(x_verify, x_opt)
