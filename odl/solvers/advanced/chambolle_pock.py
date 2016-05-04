@@ -224,7 +224,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         if preconditioner_primal is None:
             primal_tmp = x + (- tau) * op_adjoint(y)
         else:
-            x + (- tau) * preconditioner_primal(op_adjoint(y))
+            primal_tmp = x + (- tau) * preconditioner_primal(op_adjoint(y))
         proximal_primal(tau)(primal_tmp, out=x)
 
         # Acceleration

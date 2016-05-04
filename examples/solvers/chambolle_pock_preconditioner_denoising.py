@@ -55,49 +55,36 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-import scipy
-import scipy.ndimage
 import matplotlib.pyplot as plt
 
 import odl
 
-# Read test image: use only every second pixel, convert integer to float,
-# and rotate to get the image upright
-image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
-shape = image.shape
-
-# Rescale max to 1
-image /= image.max()
 
 # Discretized spaces
-discr_space = odl.uniform_discr([0, 0], [1, 1], shape)
+space = odl.uniform_discr([0, 0], [100, 100], [256, 256])
 
 # Original image
-orig = discr_space.element(image)
+orig = odl.util.shepp_logan(space, modified=True)
 orig.show('Original image')
 
-# Add noise
-image += np.random.normal(0, 0.1, shape)
-
 # Data of noisy image
-noisy = discr_space.element(image)
+noisy = orig + odl.util.white_noise(space) * 0.1
 noisy.show('Nosy image')
 
 # Gradient operator
-gradient = odl.Gradient(discr_space, method='forward')
+gradient = odl.Gradient(space, method='forward')
 
 # Matrix of operators
-op = odl.BroadcastOperator(odl.IdentityOperator(discr_space), gradient)
+op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 
 # Proximal operators related to the dual variable
 
 # l2-data matching
-prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(discr_space,
-                                                           lam=1, g=noisy)
+prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(space, g=noisy)
 
 # TV-regularization: l1-semi norm of grad(x)
 prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(gradient.range,
-                                                           lam=1/4000.0)
+                                                           lam=1/30.0)
 
 # Combine proximal operators: the order must match the order of operators in K
 proximal_dual = odl.solvers.combine_proximals([prox_convconj_l2,
@@ -106,7 +93,7 @@ proximal_dual = odl.solvers.combine_proximals([prox_convconj_l2,
 # Proximal operator related to the primal variable
 
 # Non-negativity constraint
-proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
+proximal_primal = odl.solvers.proximal_nonnegativity(space)
 
 
 # --- Run algorithms without preconditioner
@@ -117,12 +104,10 @@ op_norm_gradient = 1.5 * odl.power_method_opnorm(gradient, 100, noisy)
 print('Operator norms, I: {}, gradient: {}'.format(op_norm_identity,
                                                    op_norm_gradient))
 
-# --- Run algorithms without preconditioner
-
-niter = 50
+niter = 100
 
 # Create a function to save the partial errors
-differences = []
+differences = [(noisy-orig).norm()]
 
 
 def print_diff(x):
@@ -147,7 +132,7 @@ odl.solvers.chambolle_pock_solver(
 # --- Run algorithm with preconditoner
 
 # Create a function to save the partial errors
-differences_precondtioned = []
+differences_precondtioned = [(noisy-orig).norm()]
 
 
 def print_diff(x):
@@ -176,5 +161,7 @@ odl.solvers.chambolle_pock_solver(
 
 # results
 plt.figure()
-plt.loglog(np.arange(niter), differences)
-plt.loglog(np.arange(niter), differences_precondtioned)
+plt.loglog(np.arange(niter + 1), differences, label='standard')
+plt.loglog(np.arange(niter + 1), differences_precondtioned,
+           label='with preconditioner')
+plt.legend()
