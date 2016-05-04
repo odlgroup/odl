@@ -243,7 +243,7 @@ class ShowPartial(Partial):
 
     """Show the partial result."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Initialize a new instance.
 
         Parameters are passed through to the vectors show method. Additional
@@ -259,6 +259,7 @@ class ShowPartial(Partial):
         kwargs :
             Optional arguments passed on to ``x.show``
         """
+        self.args = args
         self.kwargs = kwargs
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
@@ -267,16 +268,18 @@ class ShowPartial(Partial):
     def __call__(self, x):
         """Show the current iterate."""
         if (self.iter % self.display_step) == 0:
-            self.fig = x.show(fig=self.fig, **self.kwargs)
+            self.fig = x.show(*self.args, fig=self.fig, **self.kwargs)
 
         self.iter += 1
 
     def __repr__(self):
         """Return ``repr(self)``"""
-        return '{}(display_step={}, fig={}, **{!r})'.format(
+
+        return '{}(display_step={}, fig={}, *{!r}, **{!r})'.format(
             self.__class__.__name__,
             self.display_step,
             self.fig,
+            self.args,
             self.kwargs)
 
 
