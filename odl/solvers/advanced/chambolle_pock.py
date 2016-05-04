@@ -100,6 +100,14 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     partial : `Partial`, optional
         If not `None` the `Partial` instance(s) are executed in each
         iteration, e.g. plotting each iterate. Default: `None`
+    preconditioner_primal : `Operator`, optional
+        Preconditioning operator for the primal variable, needs an
+        `Operator.inverse` method. The operator needs to be symmetric and
+        positive definite. Default: No preconditioning
+    preconditioner_dual : `Operator`, optional
+        Preconditioning operator for the dual variable, needs an
+        `Operator.inverse` method. The operator needs to be symmetric and
+        positive definite. Default: No preconditioning
     x_relax : element in the domain of ``op``, optional
         Required to resume iteration. If `None` it is a copy of the primal
         variable x. Default: `None`
@@ -168,9 +176,14 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     # Partial object
     partial = kwargs.pop('partial', None)
-    if not (partial is None or isinstance(partial, Partial)):
+    if not (partial is None or callable(partial)):
         raise TypeError('partial {} is not an instance of {}'
                         ''.format(op, Partial))
+
+    # preconditioners
+    preconditioner_primal = kwargs.pop('preconditioner_primal', None)
+    preconditioner_dual = kwargs.pop('preconditioner_dual', None)
+    # TODO: add tests
 
     # Initialize the relaxation variable
     x_relax = kwargs.pop('x_relax', None)
@@ -201,10 +214,18 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_old.assign(x)
 
         # Gradient ascent in the dual variable y
-        proximal_dual(sigma)(y + sigma * op(x_relax), out=y)
+        if preconditioner_dual is None:
+            dual_tmp = y + sigma * op(x_relax)
+        else:
+            dual_tmp = y + sigma * preconditioner_dual(op(x_relax))
+        proximal_dual(sigma)(dual_tmp, out=y)
 
         # Gradient descent in the primal variable x
-        proximal_primal(tau)(x + (- tau) * op_adjoint(y), out=x)
+        if preconditioner_primal is None:
+            primal_tmp = x + (- tau) * op_adjoint(y)
+        else:
+            x + (- tau) * preconditioner_primal(op_adjoint(y))
+        proximal_primal(tau)(primal_tmp, out=x)
 
         # Acceleration
         if gamma is not None:

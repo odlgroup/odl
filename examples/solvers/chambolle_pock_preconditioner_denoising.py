@@ -70,16 +70,18 @@ shape = image.shape
 image /= image.max()
 
 # Discretized spaces
-discr_space = odl.uniform_discr([0, 0], shape, shape)
+discr_space = odl.uniform_discr([0, 0], [1, 1], shape)
 
 # Original image
 orig = discr_space.element(image)
+orig.show('Original image')
 
 # Add noise
 image += np.random.normal(0, 0.1, shape)
 
 # Data of noisy image
 noisy = discr_space.element(image)
+noisy.show('Nosy image')
 
 # Gradient operator
 gradient = odl.Gradient(discr_space, method='forward')
@@ -95,7 +97,7 @@ prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(discr_space,
 
 # TV-regularization: l1-semi norm of grad(x)
 prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(gradient.range,
-                                                           lam=1/16.0)
+                                                           lam=1/4000.0)
 
 # Combine proximal operators: the order must match the order of operators in K
 proximal_dual = odl.solvers.combine_proximals([prox_convconj_l2,
@@ -107,31 +109,73 @@ proximal_dual = odl.solvers.combine_proximals([prox_convconj_l2,
 proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
 
 
-# --- Select solver parameters and solve using Chambolle-Pock --- #
+# --- Run algorithms without preconditioner
 
 
-# Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 100, noisy)
+op_norm_identity = 1.0
+op_norm_gradient = 1.5 * odl.operator.oputils.power_method_opnorm(gradient, 100,
+                                                                  noisy)
+print('Operator norms, I: {}, gradient: {}'.format(op_norm_identity,
+                                                   op_norm_gradient))
 
-niter = 400  # Number of iterations
+# --- Run algorithms without preconditioner
+
+niter = 50
+
+# Create a function to save the partial errors
+differences = []
+
+
+def print_diff(x):
+    error = (x-orig).norm()
+    differences.append(error)
+
+# Optional: pass partial objects to solver
+partial = (odl.solvers.util.ShowPartial() &
+           odl.solvers.PrintIterationPartial() &
+           print_diff)
+
+op_norm = op_norm_identity + op_norm_gradient
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 
-# Optional: pass partial objects to solver
-partial = (odl.solvers.PrintIterationPartial() &
-           odl.solvers.PrintTimingPartial() &
-           odl.solvers.ShowPartial())
-
-# Starting point
-x = op.domain.zero()
-
-# Run algorithms (and display intermediates)
+x = op.domain.zero()  # Starting point
 odl.solvers.chambolle_pock_solver(
     op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
     proximal_dual=proximal_dual, niter=niter, partial=partial)
 
-# Display images
-orig.show(title='original image')
-noisy.show(title='noisy image')
-x.show(title='reconstruction')
-plt.show()
+
+# --- Run algorithm with preconditoner
+
+# Create a function to save the partial errors
+differences_precondtioned = []
+
+
+def print_diff(x):
+    error = (x-orig).norm()
+    differences_precondtioned.append(error)
+
+# Optional: pass partial objects to solver
+partial = (odl.solvers.util.ShowPartial() &
+           odl.solvers.PrintIterationPartial() &
+           print_diff)
+
+# Create preconditioning operator
+preconditioner_iden = odl.IdentityOperator(op[0].range)
+preconditioner_grad = odl.ScalingOperator(op[1].range, 1/op_norm_gradient**2)
+preconditioner_dual = odl.DiagonalOperator(preconditioner_iden,
+                                           preconditioner_grad)
+# Step sizes, we need ||K * preconditioner_dual ** 0.5||_2^2 * sigma * tau < 1
+tau = 1.0
+sigma = 1.0
+
+x = op.domain.zero()  # Starting point
+odl.solvers.chambolle_pock_solver(
+    op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
+    proximal_dual=proximal_dual, niter=niter, partial=partial,
+    preconditioner_dual=preconditioner_dual)
+
+# results
+plt.figure()
+plt.loglog(np.arange(niter), differences)
+plt.loglog(np.arange(niter), differences_precondtioned)

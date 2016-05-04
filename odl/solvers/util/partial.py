@@ -85,15 +85,17 @@ class AndPartial(Partial):
 
     """Partial used for combining several partials"""
 
-    def __init__(self, *partials):
+    def __init__(self, *callbacks):
         """Initialize an instance.
 
         Parameters
         ----------
-        *partials : `Partial`'s
+        *callbacks : `callable` or `Partial`'s
             Partials to be called in sequence as listed.
         """
-        assert all(isinstance(p, Partial) for p in partials)
+        partials = [c if isinstance(c, Partial) else ForEachPartial(c)
+                    for c in callbacks]
+
         self.partials = partials
 
     def __call__(self, result):
