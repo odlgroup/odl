@@ -155,7 +155,7 @@ proximal_dual = odl.solvers.combine_proximals(
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 5)
+op_norm = 1.1 * odl.power_method_opnorm(op, 5)
 
 niter = 400  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
@@ -163,9 +163,9 @@ sigma = 1.0 / op_norm  # Step size for the dual variable
 
 
 # Optionally pass partial to the solver to display intermediate results
-partial = (odl.solvers.util.PrintIterationPartial() &
-           odl.solvers.util.PrintTimingPartial() &
-           odl.solvers.util.ShowPartial())
+partial = (odl.solvers.PrintIterationPartial() &
+           odl.solvers.PrintTimingPartial() &
+           odl.solvers.ShowPartial())
 
 # Choose a starting point
 x = op.domain.one()

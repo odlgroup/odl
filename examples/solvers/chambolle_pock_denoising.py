@@ -111,7 +111,7 @@ proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 100, noisy)
+op_norm = 1.1 * odl.power_method_opnorm(op, 100, noisy)
 
 niter = 400  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable

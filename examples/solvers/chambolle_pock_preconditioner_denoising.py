@@ -113,8 +113,7 @@ proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
 
 
 op_norm_identity = 1.0
-op_norm_gradient = 1.5 * odl.operator.oputils.power_method_opnorm(gradient, 100,
-                                                                  noisy)
+op_norm_gradient = 1.5 * odl.power_method_opnorm(gradient, 100, noisy)
 print('Operator norms, I: {}, gradient: {}'.format(op_norm_identity,
                                                    op_norm_gradient))
 
@@ -131,7 +130,7 @@ def print_diff(x):
     differences.append(error)
 
 # Optional: pass partial objects to solver
-partial = (odl.solvers.util.ShowPartial() &
+partial = (odl.solvers.ShowPartial() &
            odl.solvers.PrintIterationPartial() &
            print_diff)
 
@@ -156,7 +155,7 @@ def print_diff(x):
     differences_precondtioned.append(error)
 
 # Optional: pass partial objects to solver
-partial = (odl.solvers.util.ShowPartial() &
+partial = (odl.solvers.ShowPartial() &
            odl.solvers.PrintIterationPartial() &
            print_diff)
 

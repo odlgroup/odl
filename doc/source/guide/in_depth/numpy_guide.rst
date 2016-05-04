@@ -25,7 +25,7 @@ To cast a NumPy array to an ODL vector, you simply need to call the `LinearSpace
 
 If the data type and storage methods allow it, the vector simply wraps the underlying array using a `view
 <http://docs.scipy.org/doc/numpy/glossary.html#term-view>`_::
-   
+
    >>> float_arr = np.array([1.0, 2.0, 3.0])
    >>> x = r3.element(float_arr)
    >>> x.data is float_arr
@@ -122,6 +122,6 @@ SciPy includes `a series of very competent solvers
    >>> space = odl.uniform_discr(0, 1, 5)
    >>> op = -odl.Laplacian(space)
    >>> rhs = space.element(lambda x: (x>0.4) & (x<0.6))  # indicator function on [0.4, 0.6]
-   >>> result, status = scipy.sparse.linalg.cg(odl.util.as_scipy_operator(op), rhs)
+   >>> result, status = scipy.sparse.linalg.cg(odl.as_scipy_operator(op), rhs)
    >>> result
    array([ 0.02,  0.04,  0.06,  0.04,  0.02])
