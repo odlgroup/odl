@@ -126,7 +126,7 @@ class BacktrackingLineSearch(LineSearch):
         # Use a default value that allows the shortest step to be < 0.0001
         # times the original step length
         if max_num_iter is None:
-            self.max_num_iter = np.ceil(np.log(0.0001 / self.tau))
+            self.max_num_iter = np.ceil(np.log(0.0001) / np.log(self.tau))
         else:
             self.max_num_iter = max_num_iter
 
