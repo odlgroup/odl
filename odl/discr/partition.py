@@ -361,46 +361,56 @@ class RectPartition(object):
 
     def __getitem__(self, indices):
         """Return ``self[indices]``."""
-        if isinstance(indices, slice) or np.isscalar(indices):
-            indices = (indices,)
+        # Support indexing with fewer indices as indexing along the first
+        # corresponding axes. In the other cases, normalize the input.
+        if np.isscalar(indices):
+            indices = [indices, Ellipsis]
+        elif isinstance(indices, slice) or indices == Ellipsis:
+            indices = [indices]
 
-        if len(indices) < self.ndim:
-            raise ValueError('too few indices: {} < {}.'
-                             ''.format(len(indices), self.ndim))
-        elif len(indices) > self.ndim:
-            raise ValueError('too may indices: {} > {}.'
-                             ''.format(len(indices), self.ndim))
+        indices = list(indices)
+        if len(indices) < self.ndim and Ellipsis not in indices:
+            indices.append(Ellipsis)
 
+        # Turn Ellipsis into the correct number of slice(None)
+        if Ellipsis in indices:
+            if indices.count(Ellipsis) > 1:
+                raise ValueError('cannot use more than one Ellipsis.')
+
+            eidx = indices.index(Ellipsis)
+            extra_dims = self.ndim - len(indices) + 1
+            indices = (indices[:eidx] + [slice(None)] * extra_dims +
+                       indices[eidx + 1:])
+
+        # Turn single indices into length-1 slices such that
+        # TensorGrid.__getitem__ returns a grid, not a single point.
+        for i, idx in enumerate(indices):
+            if np.isscalar(idx):
+                indices[i] = slice(idx, idx + 1)
+
+        # Catch most common errors
+        if any(s.start == s.stop and s.start is not None or
+               s.start == n
+               for s, n in zip(indices, self.shape) if isinstance(s, slice)):
+            raise ValueError('Slices with empty axes not allowed.')
         if None in indices:
             raise ValueError('creating new axes is not supported.')
+        if len(indices) > self.ndim:
+            raise IndexError('too may indices: {} > {}.'
+                             ''.format(len(indices), self.ndim))
 
+        # Build the new partition
         new_begin, new_end = [], []
-        new_grid_vecs = []
-        new_minpt, new_maxpt, new_shape = [], [], []
-        for cell_vec, coord_vec, idx in zip(self.cell_boundary_vecs,
-                                            self.grid.coord_vectors,
-                                            indices):
+        for cvec, idx in zip(self.cell_boundary_vecs, indices):
             # Determine the subinterval begin and end vectors. Take the
             # first begin as new begin and the last end as new end.
-            sub_begin = cell_vec[:-1][idx]
-            sub_end = cell_vec[1:][idx]
+            sub_begin = cvec[:-1][idx]
+            sub_end = cvec[1:][idx]
             new_begin.append(np.take(sub_begin, 0))
             new_end.append(np.take(sub_end, -1))
 
-            # Slice into the grid to get the new grid points. For regular
-            # grids, get the new min, max and shape entries, for irregular
-            # ones, use the coordinate vector directly.
-            new_coo_vec = np.atleast_1d(coord_vec[idx])
-            new_minpt.append(new_coo_vec[0])
-            new_maxpt.append(new_coo_vec[-1])
-            new_shape.append(len(new_coo_vec))
-            new_grid_vecs.append(new_coo_vec)
-
+        new_grid = self.grid[indices]
         new_intvp = IntervalProd(new_begin, new_end)
-        if self.is_regular:
-            new_grid = RegularGrid(new_minpt, new_maxpt, new_shape)
-        else:
-            new_grid = TensorGrid(*new_grid_vecs)
         return RectPartition(new_intvp, new_grid)
 
     def insert(self, index, other):
