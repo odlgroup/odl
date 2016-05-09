@@ -455,9 +455,6 @@ def test_tensorgrid_getitem():
     assert all_equal(grid[1, 0, 1, 0], (1.0, -1.0, 3.0, 1.0))
 
     with pytest.raises(IndexError):
-        grid[1, 0, 1]
-
-    with pytest.raises(IndexError):
         grid[1, 0, 1, 0, 0]
 
     # Slices return new TensorGrid's
@@ -471,6 +468,7 @@ def test_tensorgrid_getitem():
     sub_grid = TensorGrid(vec1_sub, vec2, vec3, vec4)
     assert grid[1, :, :, :] == sub_grid
     assert grid[1, ...] == sub_grid
+    assert grid[1] == sub_grid
 
     sub_grid = TensorGrid(vec1, vec2, vec3, vec4_sub)
     assert grid[:, :, :, 0] == sub_grid
@@ -481,20 +479,21 @@ def test_tensorgrid_getitem():
     assert grid[1, ..., 0] == sub_grid
     assert grid[1, :, :, ..., 0] == sub_grid
 
-    # Two ellipses not allowed
-    with pytest.raises(IndexError):
-        grid[1, ..., ..., 0]
+    # Fewer indices
+    assert grid[0] == grid[0, :, :, :]
+    assert grid[0, 1:] == grid[0, 1:, :, :]
+    assert grid[0, 1:, :-1] == grid[0, 1:, :-1, :]
 
-    # Too few indices
-    with pytest.raises(IndexError):
-        grid[1, :, 1]
+    # Two ellipses not allowed
+    with pytest.raises(ValueError):
+        grid[1, ..., ..., 0]
 
     # Too many indices
     with pytest.raises(IndexError):
         grid[1, 0, 1:2, 0, :]
 
     # Empty axes not allowed
-    with pytest.raises(IndexError):
+    with pytest.raises(ValueError):
         grid[1, 0, None, 0]
 
     # One-dimensional grid
@@ -788,9 +787,6 @@ def test_regulargrid_getitem():
     assert all_equal(grid[0, 0, 4, 3], values)
 
     with pytest.raises(IndexError):
-        grid[1, 0, 1]
-
-    with pytest.raises(IndexError):
         grid[1, 0, 1, 2, 0]
 
     with pytest.raises(IndexError):
@@ -843,25 +839,28 @@ def test_regulargrid_getitem():
     assert all_equal(grid[:, :, 1, :].coord_vectors,
                      tensor_grid[test_slice].coord_vectors)
 
-    # Two ellipses not allowed
-    with pytest.raises(IndexError):
-        grid[1, ..., ..., 0]
+    # Fewer indices
+    assert grid[1:] == grid[1:, :, :, :]
+    assert grid[1:, 0] == grid[1:, 0, :, :]
+    assert grid[1:, 0, :-1] == grid[1:, 0, :-1, :]
 
-    # Too few axes
-    with pytest.raises(IndexError):
-        grid[1, :, 1]
+    # Two ellipses not allowed
+    with pytest.raises(ValueError):
+        grid[1, ..., ..., 0]
 
     # Too many axes
     with pytest.raises(IndexError):
         grid[1, 0, 1:2, 0, :]
 
     # New axes not supported
-    with pytest.raises(IndexError):
+    with pytest.raises(ValueError):
         grid[1, 0, None, 1, 0]
 
     # Empty axes not allowed
-    with pytest.raises(IndexError):
+    with pytest.raises(ValueError):
         grid[1, 0, 0:0, 1]
+    with pytest.raises(ValueError):
+        grid[1, 1:, 0, 1]
 
     # One-dimensional grid
     grid = RegularGrid(1, 5, 5)

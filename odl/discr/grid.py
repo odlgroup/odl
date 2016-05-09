@@ -689,80 +689,80 @@ class TensorGrid(Set):
         """
         return sparse_meshgrid(*self.coord_vectors)
 
-    def __getitem__(self, slc):
-        """Return ``self[slc]``.
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
 
         Parameters
         ----------
-        slc : `int` or slice
-            Negative indices and `None` (new axis) are not supported.
+        indices : `int` or slice
+            `None` (new axis) is not supported
 
         Examples
         --------
+        Indexing with integers along all axes produces an array (a point):
+
         >>> g = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
         >>> g[0, 0, 0, 0]
         array([-1.,  2.,  5.,  2.])
+
+        Otherwise, a new TensorGrid is returned:
+
         >>> g[:, 0, 0, 0]
         TensorGrid([-1.0, 0.0, 3.0], [2.0], [5.0], [2.0])
         >>> g[0, ..., 1:]
         TensorGrid([-1.0], [2.0, 4.0], [5.0], [4.0, 7.0])
         >>> g[::2, ..., ::2]
         TensorGrid([-1.0, 3.0], [2.0, 4.0], [5.0], [2.0, 7.0])
+
+        Too few indices are filled up with an ellipsis from the right:
+
+        >>> g[0]
+        TensorGrid([-1.0], [2.0, 4.0], [5.0], [2.0, 4.0, 7.0])
+        >>> g[0] == g[0, :, :, :] == g[0, ...]
+        True
         """
-        slc_list = list(np.atleast_1d(np.s_[slc]))
-        if None in slc_list:
-            raise IndexError('Creation of new axes not supported.')
+        # Support indexing with fewer indices as indexing along the first
+        # corresponding axes. In the other cases, normalize the input.
+        if np.isscalar(indices):
+            indices = [indices, Ellipsis]
+        elif isinstance(indices, slice) or indices == Ellipsis:
+            indices = [indices]
 
-        try:
-            # All single indices
-            idx = np.array(slc_list).astype('int64', casting='safe')
-            if len(idx) < self.ndim:
-                raise IndexError('too few indices ({} < {}).'
-                                 ''.format(len(idx), self.ndim))
-            elif len(idx) > self.ndim:
-                raise IndexError('too many indices ({} > {}).'
-                                 ''.format(len(idx), self.ndim))
+        indices = list(indices)
+        if len(indices) < self.ndim and Ellipsis not in indices:
+            indices.append(Ellipsis)
 
-            return np.array([v[i] for i, v in zip(idx, self.coord_vectors)])
+        # Turn Ellipsis into the correct number of slice(None)
+        if Ellipsis in indices:
+            if indices.count(Ellipsis) > 1:
+                raise ValueError('cannot use more than one Ellipsis.')
 
-        except TypeError:
-            pass
+            eidx = indices.index(Ellipsis)
+            extra_dims = self.ndim - len(indices) + 1
+            indices = (indices[:eidx] + [slice(None)] * extra_dims +
+                       indices[eidx + 1:])
 
-        if Ellipsis in slc_list:
-            if slc_list.count(Ellipsis) > 1:
-                raise IndexError("Cannot use more than one ellipsis.")
-            if len(slc_list) == self.ndim + 1:  # Ellipsis without effect
-                ellipsis_idx = self.ndim
-                num_after_ellipsis = 0
-            else:
-                ellipsis_idx = slc_list.index(Ellipsis)
-                num_after_ellipsis = len(slc_list) - ellipsis_idx - 1
-            slc_list.remove(Ellipsis)
+        # Catch most common errors
+        if any(s.start == s.stop and s.start is not None or
+               s.start == n
+               for s, n in zip(indices, self.shape) if isinstance(s, slice)):
+            raise ValueError('Slices with empty axes not allowed.')
+        if None in indices:
+            raise ValueError('creating new axes is not supported.')
+        if len(indices) > self.ndim:
+            raise IndexError('too may indices: {} > {}.'
+                             ''.format(len(indices), self.ndim))
 
+        # If all indices are integers, return an array (a point). Otherwise,
+        # create a new grid.
+        if all(np.isscalar(idx) for idx in indices):
+            return np.fromiter(
+                (v[int(idx)] for idx, v in zip(indices, self.coord_vectors)),
+                dtype=float)
         else:
-            if len(slc_list) < self.ndim:
-                raise IndexError('too few axes ({} < {}).'
-                                 ''.format(len(slc_list), self.ndim))
-            ellipsis_idx = self.ndim
-            num_after_ellipsis = 0
-
-        if any(s.start == s.stop and s.start is not None
-               for s in slc_list if isinstance(s, slice)):
-            raise IndexError('Slices with empty axes not allowed.')
-
-        if len(slc_list) > self.ndim:
-            raise IndexError('too many axes ({} > {}).'
-                             ''.format(len(slc_list), self.ndim))
-
-        new_vecs = []
-        for i in range(ellipsis_idx):
-            new_vecs.append(self.coord_vectors[i][slc_list[i]])
-        for i in range(ellipsis_idx, self.ndim - num_after_ellipsis):
-            new_vecs.append(self.coord_vectors[i])
-        for i in reversed(list(range(1, num_after_ellipsis + 1))):
-            new_vecs.append(self.coord_vectors[-i][slc_list[-i]])
-
-        return TensorGrid(*new_vecs)
+            new_coord_vecs = [vec[idx]
+                              for idx, vec in zip(indices, self.coord_vectors)]
+            return TensorGrid(*new_coord_vecs)
 
     def __array__(self, dtype=None):
         """Used with ``numpy``. Returns `points`.
@@ -1055,13 +1055,13 @@ class RegularGrid(TensorGrid):
         sq_shape = [self.shape[axis] for axis in self._inondeg]
         return RegularGrid(sq_minpt, sq_maxpt, sq_shape)
 
-    def __getitem__(self, slc):
+    def __getitem__(self, indices):
         """self[slc] implementation.
 
         Parameters
         ----------
-        slc : `int` or slice
-            Negative indices and `None` (new axis) are not supported.
+        indices : `int` or slice
+            `None` (new axis) and empty axes are not supported.
 
         Examples
         --------
@@ -1076,82 +1076,74 @@ class RegularGrid(TensorGrid):
         >>> g[..., ::3]
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 2.0], (2, 3, 2))
         """
-        from math import ceil
+        # Support indexing with fewer indices as indexing along the first
+        # corresponding axes. In the other cases, normalize the input.
+        if np.isscalar(indices):
+            indices = [indices, Ellipsis]
+        elif isinstance(indices, slice) or indices == Ellipsis:
+            indices = [indices]
 
-        slc_list = list(np.atleast_1d(np.s_[slc]))
-        if None in slc_list:
-            raise IndexError('Creation of new axes not supported.')
-        if slc_list == [slice(None)] or slc_list == [Ellipsis]:
-            slc_list = [slice(None)] * self.ndim
+        indices = list(indices)
+        if len(indices) < self.ndim and Ellipsis not in indices:
+            indices.append(Ellipsis)
 
-        if any(s.start == s.stop and s.start is not None
-               for s in slc_list if isinstance(s, slice)):
-            raise IndexError('Slices with empty axes not allowed.')
+        # Turn Ellipsis into the correct number of slice(None)
+        if Ellipsis in indices:
+            if indices.count(Ellipsis) > 1:
+                raise ValueError('cannot use more than one Ellipsis.')
 
-        try:
-            # All single indices
-            idx = np.array(slc_list).astype('int64', casting='safe')
-            if len(idx) < self.ndim:
-                raise IndexError('too few indices ({} < {}).'
-                                 ''.format(len(idx), self.ndim))
-            elif len(idx) > self.ndim:
-                raise IndexError('too many indices ({} > {}).'
-                                 ''.format(len(idx), self.ndim))
+            eidx = indices.index(Ellipsis)
+            extra_dims = self.ndim - len(indices) + 1
+            indices = (indices[:eidx] + [slice(None)] * extra_dims +
+                       indices[eidx + 1:])
 
-            return np.array([v[i] for i, v in zip(idx, self.coord_vectors)])
-        except TypeError:
-            pass
+        # Catch most common errors
+        if any(s.start == s.stop and s.start is not None or
+               s.start == n
+               for s, n in zip(indices, self.shape) if isinstance(s, slice)):
+            raise ValueError('Slices with empty axes not allowed.')
+        if None in indices:
+            raise ValueError('creating new axes is not supported.')
+        if len(indices) > self.ndim:
+            raise IndexError('too may indices: {} > {}.'
+                             ''.format(len(indices), self.ndim))
 
-        if Ellipsis in slc_list:
-            if slc_list.count(Ellipsis) > 1:
-                raise IndexError('Cannot use more than one ellipsis.')
-            if len(slc_list) == self.ndim + 1:
-                # Ellipsis without effect, just remove from list
-                slc_list.remove(Ellipsis)
-            else:
-                # Replace Ellipsis with right number of [:] expressions
-                eidx = slc_list.index(Ellipsis)
-                slc_list = (slc_list[:eidx] +
-                            [np.s_[:]] * (self.ndim - len(slc_list) + 1) +
-                            slc_list[eidx + 1:])
+        # If all indices are integers, return an array (a point). Otherwise,
+        # create a new grid.
+        if all(np.isscalar(idx) for idx in indices):
+            return np.fromiter(
+                (v[int(idx)] for idx, v in zip(indices, self.coord_vectors)),
+                dtype=float)
         else:
-            if len(slc_list) < self.ndim:
-                raise IndexError('too few axes ({} < {}).'
-                                 ''.format(len(slc_list), self.ndim))
-        if len(slc_list) > self.ndim:
-            raise IndexError('too many axes ({} > {}).'
-                             ''.format(len(slc_list), self.ndim))
+            new_minpt = []
+            new_maxpt = []
+            new_shape = []
 
-        new_minpt = []
-        new_maxpt = []
-        new_shape = []
+            for idx, minval, maxval, n, cvec in zip(
+                    indices, self.min_pt, self.max_pt, self.shape,
+                    self.coord_vectors):
+                if np.isscalar(idx):
+                    idx = slice(idx, idx + 1)
 
-        for slc, min_, max_, shp, cvec in zip(
-                slc_list, self.min_pt, self.max_pt, self.shape,
-                self.coord_vectors):
-            if slc == np.s_[:]:  # Take all along this axis
-                new_minpt.append(min_)
-                new_maxpt.append(max_)
-                new_shape.append(shp)
-            elif isinstance(slc, Integral):  # Single index
-                new_minpt.append(cvec[slc])
-                new_maxpt.append(cvec[slc])
-                new_shape.append(1)
-            else:  # Slice
-                istart, istop, istep = slc.indices(shp)
+                if idx == slice(None):  # Take all along this axis
+                    new_minpt.append(minval)
+                    new_maxpt.append(maxval)
+                    new_shape.append(n)
+                else:  # Slice
+                    istart, istop, istep = idx.indices(n)
 
-                if istart == istop:
-                    num = 1
-                    last = istart
-                else:
-                    num = ceil((istop - istart) / istep)
-                    last = istart + (num - 1) * istep
+                    if istart == istop:
+                        num = 1
+                        last = istart
+                    else:
+                        num = int(np.ceil((istop - istart) / istep))
+                        last = istart + (num - 1) * istep
 
-                new_minpt.append(cvec[istart])
-                new_maxpt.append(cvec[last])
-                new_shape.append(num)
+                    new_minpt.append(cvec[istart])
+                    new_maxpt.append(cvec[last])
+                    new_shape.append(num)
 
-        return RegularGrid(new_minpt, new_maxpt, new_shape)
+            return RegularGrid(new_minpt, new_maxpt, new_shape)
 
     def __str__(self):
         """Return ``str(self)``."""
