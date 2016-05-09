@@ -48,9 +48,9 @@ class RectPartition(object):
     In 1d, a partition of an interval is implicitly defined by a
     collection of points x[0], ..., x[N-1] (a grid) which are chosen to
     lie in the center of the subintervals. The i-th subinterval is thus
-    given by::
+    given by
 
-        I[i] = [(x[i-1]+x[i])/2, (x[i]+x[i+1])/2]
+        ``I[i] = [(x[i-1]+x[i])/2, (x[i]+x[i+1])/2]``
 
     """
 
@@ -358,6 +358,50 @@ class RectPartition(object):
         """Return ``self == other``."""
         # Optimized version for exact equality
         return self.set == other.set and self.grid == other.grid
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``."""
+        if isinstance(indices, slice) or np.isscalar(indices):
+            indices = (indices,)
+
+        if len(indices) < self.ndim:
+            raise ValueError('too few indices: {} < {}.'
+                             ''.format(len(indices), self.ndim))
+        elif len(indices) > self.ndim:
+            raise ValueError('too may indices: {} > {}.'
+                             ''.format(len(indices), self.ndim))
+
+        if None in indices:
+            raise ValueError('creating new axes is not supported.')
+
+        new_begin, new_end = [], []
+        new_grid_vecs = []
+        new_minpt, new_maxpt, new_shape = [], [], []
+        for cell_vec, coord_vec, idx in zip(self.cell_boundary_vecs,
+                                            self.grid.coord_vectors,
+                                            indices):
+            # Determine the subinterval begin and end vectors. Take the
+            # first begin as new begin and the last end as new end.
+            sub_begin = cell_vec[:-1][idx]
+            sub_end = cell_vec[1:][idx]
+            new_begin.append(np.take(sub_begin, 0))
+            new_end.append(np.take(sub_end, -1))
+
+            # Slice into the grid to get the new grid points. For regular
+            # grids, get the new min, max and shape entries, for irregular
+            # ones, use the coordinate vector directly.
+            new_coo_vec = np.atleast_1d(coord_vec[idx])
+            new_minpt.append(new_coo_vec[0])
+            new_maxpt.append(new_coo_vec[-1])
+            new_shape.append(len(new_coo_vec))
+            new_grid_vecs.append(new_coo_vec)
+
+        new_intvp = IntervalProd(new_begin, new_end)
+        if self.is_regular:
+            new_grid = RegularGrid(new_minpt, new_maxpt, new_shape)
+        else:
+            new_grid = TensorGrid(*new_grid_vecs)
+        return RectPartition(new_intvp, new_grid)
 
     def insert(self, index, other):
         """Return a copy with ``other`` inserted before ``index``.
