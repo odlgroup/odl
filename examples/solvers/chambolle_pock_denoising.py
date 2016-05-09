@@ -70,7 +70,7 @@ shape = image.shape
 image /= image.max()
 
 # Discretized spaces
-discr_space = odl.uniform_discr([0, 0], [1, 1], shape)
+discr_space = odl.uniform_discr([0, 0], shape, shape)
 
 # Original image
 orig = discr_space.element(image)
