@@ -184,6 +184,41 @@ def test_partition_insert():
     assert all_equal(part.grid.max_pt, [7, 3, 0, 4])
 
 
+def test_partition_getitem():
+    vec1 = [2, 4, 5, 7]
+    vec2 = [-4, -3, 0, 1, 4]
+    vec3 = [-2, 0, 3]
+    vec4 = [0]
+    vecs = [vec1, vec2, vec3, vec4]
+    begin = [1, -4, -2, -2]
+    end = [7, 5, 4, 0]
+    grid = odl.TensorGrid(*vecs)
+    intv = odl.IntervalProd(begin, end)
+    part = RectPartition(intv, grid)
+
+    # Test a couple of slices
+    slc = (1, -2, 2, 0)
+    slc_vecs = [v[i] for i, v in zip(slc, vecs)]
+    slc_part = part[slc]
+    assert slc_part.grid == odl.TensorGrid(*slc_vecs)
+    slc_beg = [3, 0.5, 1.5, -2]
+    slc_end = [4.5, 2.5, 4, 0]
+    assert slc_part.set == odl.IntervalProd(slc_beg, slc_end)
+
+    slc = (slice(None), slice(None, None, 2), slice(None, 2), 0)
+    slc_vecs = [v[i] for i, v in zip(slc, vecs)]
+    slc_part = part[slc]
+    assert slc_part.grid == odl.TensorGrid(*slc_vecs)
+    slc_beg = [1, -4, -2, -2]
+    slc_end = [7, 5, 1.5, 0]
+    assert slc_part.set == odl.IntervalProd(slc_beg, slc_end)
+
+    # Fewer indices
+    assert part[1] == part[1, :, :, :] == part[1, ...]
+    assert part[1, 2:] == part[1, 2:, :, :] == part[1, 2:, ...]
+    assert part[1, 2:, ::2] == part[1, 2:, ::2, :] == part[1, 2:, ::2, ...]
+
+
 # ---- Functions ---- #
 
 
@@ -290,6 +325,9 @@ def test_uniform_partition():
         assert np.allclose(np.diff(cs[1:-1]), 0)
         assert all_almost_equal(cs[0], cs[1] / 2)
         assert all_almost_equal(cs[-1], cs[-2] / 2)
+
+    assert part[1:, 2:5].is_regular
+    assert part[1:, ::3].is_regular
 
 
 if __name__ == '__main__':
