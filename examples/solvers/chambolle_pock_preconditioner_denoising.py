@@ -15,38 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Total variation base image denoising using the Chambolle-Pock solver.
+"""Total variation denoising using the Chambolle-Pock solver.
 
-Let X and Y be finite-dimensional Hilbert spaces and K a linear mapping
-from X to Y with induce norm ||K||. The (primal) minimization problem we
-want to solve is
+Solves the optimization problem
 
-    min_{x in X} F(K x) + G(x)
+    min_{x >= 0}  1/2 ||x - g||_2^2 + lam || |grad(x)| ||_1
 
-where the proper, convex, lower-semicontinuous functionals
-F : Y -> [0, +infinity] and G : X -> [0, +infinity] are given
-by an l2-data fitting term regularized by isotropic total variation
+Where ``grad`` the spatial gradient and ``g`` is given noisy data.
 
-    F(K x) = 1/2 ||x - g||_2^2 + lam || |grad(x)| ||_1
-
-and by the indicator function for the set fo non-negative components of x
-
-   G(x) = {0 if x >=0, infinity if x < 0} ,
-
-respectively. Here, g denotes the image to denoise, ||.||_2 the l2-norm,
-||.||_1 the l1-semi-norm, grad the spatial gradient, lam the regularization
-parameter, |.| the point-wise magnitude across the vector components of
-grad(x), and K is a column vector of operators K = (id, grad)^T with
-identity mapping id.
-
-In order to use the Chambolle-Pock solver, we have to create the column
-operator K, choose a starting point x, create the proximal operator for G,
-create the proximal operator for the convex conjugate of F, choose the
-step sizes tau and sigma such that tau sigma ||K||_2^2 < 1, and set the
-total number of iterations.
-
-For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
-references therein.
+For further details and a description of the solution method used, see
+:ref:`chambolle_pock` in the ODL documentation.
 """
 
 # Imports for common Python 2/3 codebase
@@ -98,7 +76,7 @@ proximal_primal = odl.solvers.proximal_nonnegativity(space)
 # Set some general parameters
 
 op_norm_identity = 1.0
-op_norm_gradient = 1.5 * odl.power_method_opnorm(gradient, 100, noisy)
+op_norm_gradient = 1.0 * odl.power_method_opnorm(gradient, 100, noisy)
 print('Operator norms, I: {}, gradient: {}'.format(op_norm_identity,
                                                    op_norm_gradient))
 
@@ -111,7 +89,7 @@ niter = 400
 partial = odl.solvers.StorePartial(function=lambda x: (x-orig).norm())
 
 # Step sizes
-op_norm = op_norm_identity + op_norm_gradient
+op_norm = max(op_norm_identity, op_norm_gradient)
 tau = sigma = 1.0 / op_norm
 
 x = op.domain.zero()  # Starting point
@@ -133,7 +111,7 @@ preconditioner_dual = odl.DiagonalOperator(preconditioner_iden,
                                            preconditioner_grad)
 
 # Step sizes, we need ||K * preconditioner_dual ** 0.5||_2^2 * sigma * tau < 1
-tau = sigma = 1.0
+tau = sigma = 0.8
 
 x_precon = op.domain.zero()  # Starting point
 odl.solvers.chambolle_pock_solver(
@@ -149,4 +127,6 @@ plt.figure()
 plt.loglog(np.arange(niter), partial, label='Standard')
 plt.loglog(np.arange(niter), partial_precon, label='With preconditioner')
 plt.legend()
+plt.xlabel('Iteration')
+plt.ylabel('Error norm')
 plt.title('Convergence')

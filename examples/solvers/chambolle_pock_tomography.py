@@ -21,8 +21,11 @@ Solves the optimization problem
 
     min_x  1/2 ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
 
-For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
-references therein.
+Where ``A`` is a parallel beam forward projector, ``grad`` the spatial
+gradient and ``g`` is given noisy data.
+
+For further details and a description of the solution method used, see
+:ref:`chambolle_pock` in the ODL documentation.
 """
 
 import numpy as np
