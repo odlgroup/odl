@@ -117,7 +117,7 @@ x_precon = op.domain.zero()  # Starting point
 odl.solvers.chambolle_pock_solver(
     op, x_precon, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
     proximal_dual=proximal_dual, niter=niter, partial=partial_precon,
-    preconditioner_dual=preconditioner_dual)
+    precond_dual=preconditioner_dual)
 
 # results
 x.show('Standard')

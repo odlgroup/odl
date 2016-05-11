@@ -902,7 +902,7 @@ class DiagonalOperator(ProductSpaceOperator):
     """
 
     def __init__(self, *operators, **kwargs):
-        """Initialize a DiagonalOperator
+        """Initialize a DiagonalOperator.
 
         Parameters
         ----------
@@ -932,7 +932,7 @@ class DiagonalOperator(ProductSpaceOperator):
         return self.operators[index]
 
     def derivative(self, point):
-        """The derivative operator
+        """The derivative operator.
 
         For example, if A and B are operators
 
@@ -967,7 +967,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def adjoint(self):
-        """The adjoint operator
+        """The adjoint operator.
 
         For example, if A and B are operators
 
@@ -976,8 +976,8 @@ class DiagonalOperator(ProductSpaceOperator):
 
         The adjoint is given by:
 
-            [[A^T, 0],
-             [0, B^T]]
+            [[A^*, 0],
+             [0, B^*]]
 
         This is only well defined if each sub-operator has an adjoint
 
