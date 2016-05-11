@@ -32,7 +32,7 @@ from odl.space.pspace import ProductSpace
 
 __all__ = ('ProductSpaceOperator',
            'ComponentProjection', 'ComponentProjectionAdjoint',
-           'BroadcastOperator', 'ReductionOperator', 'diagonal_operator')
+           'BroadcastOperator', 'ReductionOperator', 'DiagonalOperator')
 
 
 class ProductSpaceOperator(Operator):
@@ -655,6 +655,10 @@ class BroadcastOperator(Operator):
         """A tuple of sub-operators"""
         return self._operators
 
+    def __getitem__(self, index):
+        """Return an operator by index"""
+        return self.operators[index]
+
     def _call(self, x, out=None):
         """Apply operators to ``x``.
 
@@ -776,6 +780,10 @@ class ReductionOperator(Operator):
         """A tuple of sub-operators"""
         return self._operators
 
+    def __getitem__(self, index):
+        """Return an operator by index"""
+        return self.operators[index]
+
     def _call(self, x, out=None):
         """Apply operators to ``x`` and sum.
 
@@ -883,28 +891,135 @@ class ReductionOperator(Operator):
         return BroadcastOperator(*[op.adjoint for op in self.operators])
 
 
-def diagonal_operator(operators, dom=None, ran=None):
-    """Broadcast argument to set of operators.
+class DiagonalOperator(ProductSpaceOperator):
+    """Diagonal 'matrix' of operators
 
-    Parameters
-    ----------
-    operators : array-like
-        An array of `Operator`'s
-    dom : `ProductSpace`, optional
-        Domain of the operator. If not provided, it is tried to be
-        inferred from the operators. This requires each **column**
-        to contain at least one operator.
-    ran : `ProductSpace`, optional
-        Range of the operator. If not provided, it is tried to be
-        inferred from the operators. This requires each **row**
-        to contain at least one operator.
+    For example, if A and B are operators
+
+        [[A, 0],
+         [0, B]]
+
     """
 
-    indices = [range(len(operators)), range(len(operators))]
-    shape = (len(operators), len(operators))
-    op_matrix = sp.sparse.coo_matrix((operators, indices), shape)
+    def __init__(self, *operators, **kwargs):
+        """Initialize a DiagonalOperator.
 
-    return ProductSpaceOperator(op_matrix, dom=dom, ran=ran)
+        Parameters
+        ----------
+        operators : sequence of `Operator`'s
+            The operators along the diagonal.
+
+
+        See Also
+        --------
+        ProductSpaceOperator.__init__
+        """
+        indices = [range(len(operators)), range(len(operators))]
+        shape = (len(operators), len(operators))
+        op_matrix = sp.sparse.coo_matrix((operators, indices), shape)
+
+        self._operators = operators
+
+        super().__init__(op_matrix, **kwargs)
+
+    @property
+    def operators(self):
+        """A tuple of sub-operators"""
+        return self._operators
+
+    def __getitem__(self, index):
+        """Return an operator by index"""
+        return self.operators[index]
+
+    def derivative(self, point):
+        """The derivative operator.
+
+        For example, if A and B are operators
+
+            [[A, 0],
+             [0, B]]
+
+        The derivative is given by:
+
+            [[A', 0],
+             [0, B']]
+
+        This is only well defined if each sub-operator has a derivative
+
+        Parameters
+        ----------
+        point : `element-like` in ``domain``
+            The point in which the derivative should be taken.
+
+        Returns
+        -------
+        derivative : `DiagonalOperator`
+            The derivative operator
+
+        See Also
+        --------
+        ProductSpaceOperator.derivative
+        """
+        point = self.domain.element(point)
+
+        derivs = [op.derivative(p) for op, p in zip(self.operators, point)]
+        return DiagonalOperator(derivs, self.domain, self.range)
+
+    @property
+    def adjoint(self):
+        """The adjoint operator.
+
+        For example, if A and B are operators
+
+            [[A, 0],
+             [0, B]]
+
+        The adjoint is given by:
+
+            [[A^*, 0],
+             [0, B^*]]
+
+        This is only well defined if each sub-operator has an adjoint
+
+        Returns
+        -------
+        adjoint : `DiagonalOperator`
+            The adjoint operator
+
+        See Also
+        --------
+        ProductSpaceOperator.adjoint
+        """
+        adjoints = [op.adjoint for op in self.operators]
+        return DiagonalOperator(adjoints, self.range, self.domain)
+
+    @property
+    def inverse(self):
+        """The inverse operator
+
+        For example, if A and B are operators
+
+            [[A, 0],
+             [0, B]]
+
+        The inverse is given by:
+
+            [[A^-1, 0],
+             [0, B^-1]]
+
+        This is only well defined if each sub-operator has an inverse
+
+        Returns
+        -------
+        inverse : `DiagonalOperator`
+            The inverse operator
+
+        See Also
+        --------
+        ProductSpaceOperator.inverse
+        """
+        inverses = [op.inverse for op in self.operators]
+        return DiagonalOperator(inverses, self.range, self.domain)
 
 
 if __name__ == '__main__':
