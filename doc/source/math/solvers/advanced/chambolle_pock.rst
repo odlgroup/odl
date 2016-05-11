@@ -4,7 +4,7 @@
 Chambolle-Pock algorithm
 ########################
 
-This page introduces the mathematics behind the chambolle pock algorithm, for an applied point of view, please see :ref:`chambolle_pock_in_depth`.
+This page introduces the mathematics behind the Chambolle-Pock algorithm, for an applied point of view, please see :ref:`chambolle_pock_in_depth`.
 
 The general problem
 ===================
