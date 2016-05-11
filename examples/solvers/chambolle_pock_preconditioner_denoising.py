@@ -56,12 +56,11 @@ standard_library.install_aliases()
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 import odl
 
 
 # Discretized spaces
-space = odl.uniform_discr([0, 0], [100, 100], [256, 256])
+space = odl.uniform_discr([0, 0], [50, 50], [256, 256])
 
 # Original image
 orig = odl.util.shepp_logan(space, modified=True)
@@ -84,7 +83,7 @@ prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(space, g=noisy)
 
 # TV-regularization: l1-semi norm of grad(x)
 prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(gradient.range,
-                                                           lam=1/30.0)
+                                                           lam=1/50.0)
 
 # Combine proximal operators: the order must match the order of operators in K
 proximal_dual = odl.solvers.combine_proximals([prox_convconj_l2,
@@ -96,32 +95,24 @@ proximal_dual = odl.solvers.combine_proximals([prox_convconj_l2,
 proximal_primal = odl.solvers.proximal_nonnegativity(space)
 
 
-# --- Run algorithms without preconditioner
-
+# Set some general parameters
 
 op_norm_identity = 1.0
 op_norm_gradient = 1.5 * odl.power_method_opnorm(gradient, 100, noisy)
 print('Operator norms, I: {}, gradient: {}'.format(op_norm_identity,
                                                    op_norm_gradient))
 
-niter = 100
+niter = 400
+
+# --- Run algorithms without preconditioner
+
 
 # Create a function to save the partial errors
-differences = [(noisy-orig).norm()]
+partial = odl.solvers.StorePartial(function=lambda x: (x-orig).norm())
 
-
-def print_diff(x):
-    error = (x-orig).norm()
-    differences.append(error)
-
-# Optional: pass partial objects to solver
-partial = (odl.solvers.ShowPartial() &
-           odl.solvers.PrintIterationPartial() &
-           print_diff)
-
+# Step sizes
 op_norm = op_norm_identity + op_norm_gradient
-tau = 1.0 / op_norm  # Step size for the primal variable
-sigma = 1.0 / op_norm  # Step size for the dual variable
+tau = sigma = 1.0 / op_norm
 
 x = op.domain.zero()  # Starting point
 odl.solvers.chambolle_pock_solver(
@@ -132,36 +123,30 @@ odl.solvers.chambolle_pock_solver(
 # --- Run algorithm with preconditoner
 
 # Create a function to save the partial errors
-differences_precondtioned = [(noisy-orig).norm()]
+partial_precon = odl.solvers.StorePartial(function=lambda x: (x-orig).norm())
 
-
-def print_diff(x):
-    error = (x-orig).norm()
-    differences_precondtioned.append(error)
-
-# Optional: pass partial objects to solver
-partial = (odl.solvers.ShowPartial() &
-           odl.solvers.PrintIterationPartial() &
-           print_diff)
-
-# Create preconditioning operator
+# Create preconditioning operator. We precondition by scaling by the squared
+# operator norms.
 preconditioner_iden = odl.IdentityOperator(op[0].range)
-preconditioner_grad = odl.ScalingOperator(op[1].range, 1/op_norm_gradient**2)
+preconditioner_grad = 1/op_norm_gradient**2 * odl.IdentityOperator(op[1].range)
 preconditioner_dual = odl.DiagonalOperator(preconditioner_iden,
                                            preconditioner_grad)
-# Step sizes, we need ||K * preconditioner_dual ** 0.5||_2^2 * sigma * tau < 1
-tau = 1.0
-sigma = 1.0
 
-x = op.domain.zero()  # Starting point
+# Step sizes, we need ||K * preconditioner_dual ** 0.5||_2^2 * sigma * tau < 1
+tau = sigma = 1.0
+
+x_precon = op.domain.zero()  # Starting point
 odl.solvers.chambolle_pock_solver(
-    op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
-    proximal_dual=proximal_dual, niter=niter, partial=partial,
+    op, x_precon, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
+    proximal_dual=proximal_dual, niter=niter, partial=partial_precon,
     preconditioner_dual=preconditioner_dual)
 
 # results
+x.show('Standard')
+x_precon.show('With preconditioner')
+
 plt.figure()
-plt.loglog(np.arange(niter + 1), differences, label='standard')
-plt.loglog(np.arange(niter + 1), differences_precondtioned,
-           label='with preconditioner')
+plt.loglog(np.arange(niter), partial, label='Standard')
+plt.loglog(np.arange(niter), partial_precon, label='With preconditioner')
 plt.legend()
+plt.title('Convergence')

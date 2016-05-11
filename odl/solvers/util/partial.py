@@ -110,18 +110,42 @@ class AndPartial(Partial):
 
 class StorePartial(Partial):
 
-    """Simple object for storing all partial results of the solvers."""
+    """Simple object for storing all partial results of the solvers.
 
-    def __init__(self, results=None):
+    Can optionally apply a function, for example the norm or calculating the
+    residual.
+    """
+
+    def __init__(self, results=None, function=None):
         """Initialize an instance.
 
         Parameters
         ----------
-        results : `list`
+        results : `list`, optional
             List in which to store the partial results.
             Default: new list (``[]``)
+        results : `callable`, optional
+            Function to be called on all incomming results before storage.
+            Default: copy
+
+        Examples
+        --------
+        Store results as is
+
+        >>> partial = StorePartial()
+
+        Provide list to store partial results in.
+
+        >>> results = []
+        >>> partial = StorePartial(results=results)
+
+        Store the norm of the results
+
+        >>> norm_function = lambda x: x.norm()
+        >>> partial = StorePartial(function=norm_function)
         """
         self._results = [] if results is None else results
+        self._function = function
 
     @property
     def results(self):
@@ -130,7 +154,10 @@ class StorePartial(Partial):
 
     def __call__(self, result):
         """Append result to results list."""
-        self._results.append(result.copy())
+        if self._function:
+            self._results.append(self._function(result))
+        else:
+            self._results.append(result.copy())
 
     def __iter__(self):
         """Allow iteration over the results"""
