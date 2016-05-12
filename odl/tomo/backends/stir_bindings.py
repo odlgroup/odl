@@ -44,6 +44,12 @@ from builtins import super
 
 try:
     import stir
+    # Fix for stirextra being moved around in various stir versions
+    try:
+        stirextra = stir.stirextra
+    except AttributeError:
+        import stirextra
+
     STIR_AVAILABLE = True
 except ImportError:
     STIR_AVAILABLE = False
@@ -159,7 +165,7 @@ class ForwardProjectorByBinWrapper(Operator):
             self.projector.forward_project(self.proj_data, self.volume)
 
         # make odl data
-        out[:] = stir.stirextra.to_numpy(self.proj_data)
+        out[:] = stirextra.to_numpy(self.proj_data)
 
     @property
     def adjoint(self):
@@ -256,7 +262,7 @@ class BackProjectorByBinWrapper(Operator):
             self.back_projector.back_project(self.volume, self.proj_data)
 
         # make odl data
-        out[:] = stir.stirextra.to_numpy(self.volume)
+        out[:] = stirextra.to_numpy(self.volume)
 
 
 def stir_projector_from_file(volume_file, projection_file):
