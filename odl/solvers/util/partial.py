@@ -85,17 +85,15 @@ class AndPartial(Partial):
 
     """Partial used for combining several partials"""
 
-    def __init__(self, *callbacks):
+    def __init__(self, *partials):
         """Initialize an instance.
 
         Parameters
         ----------
-        *callbacks : `callable` or `Partial`'s
+        *partials : `Partial`'s
             Partials to be called in sequence as listed.
         """
-        partials = [c if isinstance(c, Partial) else ForEachPartial(c)
-                    for c in callbacks]
-
+        assert all(isinstance(p, Partial) for p in partials)
         self.partials = partials
 
     def __call__(self, result):
@@ -110,42 +108,18 @@ class AndPartial(Partial):
 
 class StorePartial(Partial):
 
-    """Simple object for storing all partial results of the solvers.
+    """Simple object for storing all partial results of the solvers."""
 
-    Can optionally apply a function, for example the norm or calculating the
-    residual.
-    """
-
-    def __init__(self, results=None, function=None):
+    def __init__(self, results=None):
         """Initialize an instance.
 
         Parameters
         ----------
-        results : `list`, optional
+        results : `list`
             List in which to store the partial results.
             Default: new list (``[]``)
-        results : `callable`, optional
-            Function to be called on all incomming results before storage.
-            Default: copy
-
-        Examples
-        --------
-        Store results as is
-
-        >>> partial = StorePartial()
-
-        Provide list to store partial results in.
-
-        >>> results = []
-        >>> partial = StorePartial(results=results)
-
-        Store the norm of the results
-
-        >>> norm_function = lambda x: x.norm()
-        >>> partial = StorePartial(function=norm_function)
         """
         self._results = [] if results is None else results
-        self._function = function
 
     @property
     def results(self):
@@ -154,10 +128,7 @@ class StorePartial(Partial):
 
     def __call__(self, result):
         """Append result to results list."""
-        if self._function:
-            self._results.append(self._function(result))
-        else:
-            self._results.append(result.copy())
+        self._results.append(result.copy())
 
     def __iter__(self):
         """Allow iteration over the results"""
@@ -270,7 +241,7 @@ class ShowPartial(Partial):
 
     """Show the partial result."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         """Initialize a new instance.
 
         Parameters are passed through to the vectors show method. Additional
@@ -286,7 +257,6 @@ class ShowPartial(Partial):
         kwargs :
             Optional arguments passed on to ``x.show``
         """
-        self.args = args
         self.kwargs = kwargs
         self.fig = kwargs.pop('fig', None)
         self.display_step = kwargs.pop('display_step', 1)
@@ -295,18 +265,16 @@ class ShowPartial(Partial):
     def __call__(self, x):
         """Show the current iterate."""
         if (self.iter % self.display_step) == 0:
-            self.fig = x.show(*self.args, fig=self.fig, **self.kwargs)
+            self.fig = x.show(fig=self.fig, **self.kwargs)
 
         self.iter += 1
 
     def __repr__(self):
         """Return ``repr(self)``"""
-
-        return '{}(display_step={}, fig={}, *{!r}, **{!r})'.format(
+        return '{}(display_step={}, fig={}, **{!r})'.format(
             self.__class__.__name__,
             self.display_step,
             self.fig,
-            self.args,
             self.kwargs)
 
 

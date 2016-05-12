@@ -34,5 +34,3 @@ from .pspace_ops import *
 __all__ += pspace_ops.__all__
 
 from . import oputils
-from .oputils import *
-__all__ += oputils.__all__

@@ -10,4 +10,3 @@ This section explains the mathematical concepts on which ODL is built.
     linear_spaces
     discretization
     trafos/index
-    solvers/solvers

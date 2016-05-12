@@ -2,7 +2,7 @@
 Installing
 ##########
 
-Installing ODL is intended to be straightforward, and this guide is meant for new users. For a minimal installation you should do the following steps:
+Installing odl is intended to be straightforward, and this guide is meant for new users. For a minimal installation you should do the following steps:
 
 1. `Install Python`_
 2. `Install ODL`_
