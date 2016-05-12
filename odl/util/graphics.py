@@ -31,6 +31,31 @@ from odl.util.utility import is_real_dtype
 __all__ = ('show_discrete_data',)
 
 
+def _safe_minmax(values):
+    """Calculate min and max of array with guards for nan and inf."""
+
+    # Nan and inf guarded min and max
+    minval = np.min(values[np.isfinite(values)])
+    maxval = np.max(values[np.isfinite(values)])
+
+    return minval, maxval
+
+
+def _colorbar_ticks(minval, maxval):
+    """Return the ticks (values show) in the colorbar."""
+    return [minval, (maxval + minval) / 2., maxval]
+
+
+def _colorbar_format(minval, maxval):
+    """Return the format string for the colorbar."""
+    if minval == maxval:
+        decimals = 5
+    else:
+        decimals = min(10, max(4, int(1 + abs(np.log10(maxval - minval)))))
+
+    return '%.{}f'.format(decimals)
+
+
 def show_discrete_data(values, grid, title=None, method='',
                        show=False, fig=None, **kwargs):
     """Display a discrete 1d or 2d function.
@@ -221,12 +246,18 @@ def show_discrete_data(values, grid, title=None, method='',
 
         if method == 'imshow' and len(fig.axes) < 2:
             # Create colorbar if none seems to exist
-            minval_re = np.min(values.real)
-            maxval_re = np.max(values.real)
-            ticks_re = [minval_re, (maxval_re + minval_re) / 2., maxval_re]
+
+            # Use clim from kwargs if given
+            if 'clim' not in kwargs:
+                minval_re, maxval_re = _safe_minmax(values.real)
+            else:
+                minval_re, maxval_re = kwargs['clim']
+
+            ticks_re = _colorbar_ticks(minval_re, maxval_re)
+            format_re = _colorbar_format(minval_re, maxval_re)
 
             plt.colorbar(csub_re, orientation='horizontal',
-                         ticks=ticks_re, format='%.4g')
+                         ticks=ticks_re, format=format_re)
 
         # Imaginary
         if len(fig.axes) < 3:
@@ -245,12 +276,18 @@ def show_discrete_data(values, grid, title=None, method='',
 
         if method == 'imshow' and len(fig.axes) < 4:
             # Create colorbar if none seems to exist
-            minval_im = np.min(values.imag)
-            maxval_im = np.max(values.imag)
-            ticks_im = [minval_im, (maxval_im + minval_im) / 2., maxval_im]
+
+            # Use clim from kwargs if given
+            if 'clim' not in kwargs:
+                minval_im, maxval_im = _safe_minmax(values.imag)
+            else:
+                minval_im, maxval_im = kwargs['clim']
+
+            ticks_im = _colorbar_ticks(minval_im, maxval_im)
+            format_im = _colorbar_format(minval_im, maxval_im)
 
             plt.colorbar(csub_im, orientation='horizontal',
-                         ticks=ticks_im, format='%.4g')
+                         ticks=ticks_im, format=format_im)
 
     else:
         if len(fig.axes) == 0:
@@ -277,19 +314,12 @@ def show_discrete_data(values, grid, title=None, method='',
 
             # Use clim from kwargs if given
             if 'clim' not in kwargs:
-                minval = np.min(values)
-                maxval = np.max(values)
+                minval, maxval = _safe_minmax(values)
             else:
                 minval, maxval = kwargs['clim']
 
-            ticks = [minval, (maxval + minval) / 2., maxval]
-            if minval == maxval:
-                decimals = 5
-            else:
-                decimals = max(4, int(1 + abs(np.log10(maxval - minval))))
-            format = '%.{}f'.format(decimals)
-
-            decimals = min(10, decimals)
+            ticks = _colorbar_ticks(minval, maxval)
+            format = _colorbar_format(minval, maxval)
 
             plt.colorbar(mappable=csub, ticks=ticks, format=format)
 
