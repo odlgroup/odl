@@ -1346,7 +1346,8 @@ class OperatorLeftScalarMult(Operator):
         """
         if self._scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
-        return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
+
+        return self._op.inverse * (1.0 / self._scalar)
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1365,7 +1366,7 @@ class OperatorLeftScalarMult(Operator):
         --------
         OperatorLeftScalarMult : the result
         """
-        return OperatorLeftScalarMult(self._op.derivative(x), self._scalar)
+        return self._scalar * self._op.derivative(x)
 
     @property
     def adjoint(self):
@@ -1386,8 +1387,7 @@ class OperatorLeftScalarMult(Operator):
         if not self.is_linear:
             raise OpNotImplementedError('Nonlinear operators have no adjoint')
 
-        return OperatorRightScalarMult(self._op.adjoint,
-                                       self._scalar.conjugate())
+        return self._scalar.conjugate() * self._op.adjoint
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1465,7 +1465,7 @@ class OperatorRightScalarMult(Operator):
         if self._scalar == 0.0:
             raise ZeroDivisionError('{} not invertible.'.format(self))
 
-        return OperatorLeftScalarMult(self._op.inverse, 1.0 / self._scalar)
+        return (1.0 / self._scalar) * self._op.inverse
 
     def derivative(self, x):
         """Return the derivative at ``x``.
@@ -1481,8 +1481,7 @@ class OperatorRightScalarMult(Operator):
         x : `Operator.domain` `element-like`
             Evaluation point of the derivative
         """
-        return OperatorLeftScalarMult(self._op.derivative(self._scalar * x),
-                                      self._scalar)
+        return self._scalar * self._op.derivative(self._scalar * x)
 
     @property
     def adjoint(self):
@@ -1503,8 +1502,7 @@ class OperatorRightScalarMult(Operator):
         if not self.is_linear:
             raise OpNotImplementedError('Nonlinear operators have no adjoint')
 
-        return OperatorRightScalarMult(self._op.adjoint,
-                                       self._scalar.conjugate())
+        return self._op.adjoint * self._scalar.conjugate()
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1642,6 +1640,19 @@ class OperatorLeftVectorMult(Operator):
             self._op(x, out=out)
             out *= self._vector
 
+    @property
+    def inverse(self):
+        """The inverse operator.
+
+        The inverse of ``vector * op`` is given by
+        ``op.inverse / vector``.
+
+        ``OperatorLeftVectorMult(op, vector).inverse <==>``
+        ``OperatorRightVectorMult(op.inverse, 1.0/vector)``
+        """
+
+        return self._op.inverse * (1.0 / self._vector)
+
     def derivative(self, x):
         """Return the derivative at ``x``.
 
@@ -1725,6 +1736,19 @@ class OperatorRightVectorMult(Operator):
             tmp = self.domain.element()
             tmp.multiply(self._vector, x)
             self._op(tmp, out=out)
+
+    @property
+    def inverse(self):
+        """The inverse operator.
+
+        The inverse of ``op * vector`` is given by
+        ``(1.0 / vector) * op.inverse``.
+
+        ``OperatorRightVectorMult(op, vector).inverse <==>``
+        ``OperatorLeftVectorMult(op.inverse, 1.0/vector)``
+        """
+
+        return (1.0 / self._vector) * self._op.inverse
 
     def derivative(self, x):
         """Return the derivative at ``x``.
