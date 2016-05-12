@@ -57,8 +57,7 @@ class ParallelGeometry(Geometry):
         detector : `Detector`
             The detector to use in this geometry
         det_init_pos : `array-like`
-            Initial position of the detector reference point. The zero
-            vector is not allowed.
+            Initial position of the detector reference point
         """
         super().__init__(ndim, apart, detector)
 
