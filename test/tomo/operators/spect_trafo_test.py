@@ -33,7 +33,7 @@ from odl.tomo.operators.spect_trafo import (SpectProject, NIFTYREC_AVAILABLE)
 
 
 def test_spect_projector():
-    """Test discrete SPECT transform using OCCIPUT for reconstruction."""
+    """Test discrete SPECT transform."""
 
     # Geometry
     det_nx_pix = 16
@@ -59,7 +59,7 @@ def test_spect_projector():
     if NIFTYREC_AVAILABLE:
         # Create a SPECT projector
         projector = SpectProject(domain, geometry, attenuation=None, psf=None,
-                                 use_gpu=False)
+                                 impl='niftyrec')
 
         # Calculate projection and back-projection
         proj = projector(vol)

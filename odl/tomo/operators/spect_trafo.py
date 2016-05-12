@@ -22,7 +22,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# External
 try:
     from NiftyPy.NiftyRec import (SPECT_project_parallelholes,
                                   SPECT_backproject_parallelholes)
@@ -32,67 +31,81 @@ except ImportError:
 
 import numpy as np
 
-# Internal
-import odl
-from odl.operator.operator import Operator
 
+from odl.operator import Operator
+from odl import uniform_discr_frompartition
 
-_SUPPORTED_IMPL = ('niftyrec')
 __all__ = ('SpectProject', 'SpectBackproject')
+_SUPPORTED_IMPL = ('niftyrec', 'niftyrec_gpu')
 
 
 class SpectProject(Operator):
-    """Spect projector using backend NiftyRec"""
-    def __init__(self, dom, geometry, attenuation, psf, use_gpu=False,
-                 impl='niftyrec', **kwargs):
+    """Discrete SPECT projector"""
+    def __init__(self, dom, geometry, attenuation=None, psf=None,
+                 impl='niftyrec'):
         """Initialize a new instance.
 
         Parameters
         ----------
         dom : `DiscreteLp`
-            Discretized space, the domain of the forward projector
-        geometry : `Geometry`
+            Discretized space, a 3 dimensional domain of the forward projector
+        geometry : geometry from :class:`~odl.tomo.geometry.spect`
             The geometry of the transform. An ODL geometry instance
             that contains information about the operator domain
-        attenuation : `DiscreteLpVector`
+        attenuation : `element-like` structure of the shape
+            `dom.shape`, optional
             Linear attenuation map for SPECT.
-        psf : `DiscreteLpVector`
+        psf : `element-like` structure, optional
             Point Spread Functions for the correction of the
             collimator-detector response
-        use_gpu : `bool`, optional
-            'False' if not using GPU
-            `True` if using GPU provided that `impl` supports it
-        impl='niftyrec', optional
+        impl={'niftyrec', 'niftyrec_gpu'}, optional
             Implementation back-end for the transform. Supported back-ends:
-            NiftyRec Tomography Toolbox through NiftyPy a Python wrapper
-            for NiftyRec
+
+            'niftyrec' : `NiftyRec <http://niftyrec.scienceontheweb.net/\
+wordpress/>`_ tomography toolbox using the `niftypy <https://github.com/\
+spedemon/niftypy>`_ Python wrapper and CPU
+
+            'niftyrec_gpu' : `NiftyRec <http://niftyrec.scienceontheweb.net/\
+wordpress/>`_ tomography toolbox using the `NiftyPy <https://github.com/\
+spedemon/niftypy>`_ Python wrapper and GPU
         """
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_IMPL:
             raise ValueError('implementation {!r} not supported.'
                              ''.format(impl_in))
 
-        self.geometry = geometry
-        det_nx = geometry.det_grid.shape[0]
-        det_ny = geometry.det_grid.shape[1]
-        startAngle = float(geometry.motion_grid.points()[0])
-        stopAngle = float(geometry.motion_grid.points()[-1]) * (180 / np.pi)
-        N_proj = len(geometry.motion_grid.points())
+        if impl.startswith('niftyrec'):
+            if not NIFTYREC_AVAILABLE:
+                raise ValueError('NiftyRec back-end not available.')
+            if impl == 'niftyrec_gpu' and dom.shape != (128, 128, 128):
+                raise NotImplementedError('NiftyRec GPU back-end only '
+                                          'supports volume size '
+                                          '(128, 128, 128), got {}'
+                                          ''.format(dom.shape))
+            if impl == 'niftyrec_gpu':
+                self._use_gpu = True
+            elif impl == 'niftyrec':
+                self._use_gpu = False
 
-        self._cameras = np.float32(np.linspace(startAngle, stopAngle, N_proj,
-                                   dtype=np.float32).reshape((N_proj, 1)))
-        self._use_gpu = use_gpu
-        self._attenuation = attenuation
-        self._psf = psf
+        self._geometry = geometry
+        det_nx, det_ny = geometry.det_grid.shape
+        startAngle = geometry.angles[0]
+        stopAngle = geometry.angles[-1]
+        N_proj = geometry.motion_grid.size
 
-        lowleft_x = geometry.detector.params.corners()[0][0]
-        lowleft_y = geometry.detector.params.corners()[0][1]
-        upright_x = geometry.detector.params.corners()[-1][0]
-        upright_y = geometry.detector.params.corners()[-1][1]
-        ran = odl.uniform_discr([lowleft_x, lowleft_y, startAngle],
-                                [upright_x, upright_y, stopAngle],
-                                [det_nx, det_ny, N_proj])
+        self._cameras = np.linspace(startAngle, stopAngle, N_proj,
+                                    dtype=np.float32).reshape((N_proj, 1))
+        if psf is not None:
+            self._psf = np.asarray(psf)
+        else:
+            self._psf = psf
+        if attenuation is not None:
+            self._attenuation = self.domain.element(attenuation)
+        else:
+            self._attenuation = attenuation
+        self._impl = impl
 
+        ran = uniform_discr_frompartition(geometry.partition)
         super().__init__(dom, ran, linear=True)
 
     def _call(self, x):
@@ -117,27 +130,28 @@ class SpectProject(Operator):
         if self._psf is None:
             psf = None
         else:
-            psf = np.float32(self._psf.asarray())
+            psf = np.float32(self._psf)
 
         x = np.float32(np.asfortranarray(x.asarray()))
         projection = SPECT_project_parallelholes(x, self._cameras,
                                                  attenuation, psf,
                                                  use_gpu=self._use_gpu)
-        return self.range.element(projection)
+        projection = np.transpose(projection, (2, 0, 1))
+        return projection
 
     @property
     def adjoint(self):
         """The back-projector associated with this array."""
         return SpectBackproject(ran=self.domain,
-                                geometry=self.geometry,
+                                geometry=self._geometry,
                                 attenuation=self._attenuation, psf=self._psf,
-                                use_gpu=self._use_gpu)
+                                impl=self._impl)
 
 
 class SpectBackproject(Operator):
 
-    def __init__(self, ran, geometry, attenuation, psf, use_gpu=False,
-                 impl='niftyrec', **kwargs):
+    def __init__(self, ran, geometry, attenuation=None, psf=None,
+                 impl='niftyrec'):
         """Initialize a new instance.
 
         Parameters
@@ -147,44 +161,59 @@ class SpectBackproject(Operator):
         geometry : `Geometry`
             The geometry of the transform. An ODL geometry instance
             that contains information about the operator domain
-        attenuation : element in :class:`~odl.discr.lp_discr.DiscreteLp`
+        attenuation : `element-like` structure, optional
             Linear attenuation map for SPECT.
-        psf : element in :class:`~odl.discr.lp_discr.DiscreteLp`
-            Point Spread Functions  for the correction of the
+            Has to be of the shape `dom.shape`
+        psf : `element-like` structure, optional
+            Point Spread Functions for the correction of the
             collimator-detector response
-        use_gpu : `bool`, optional
-            'False' if not using GPU
-            `True` if using GPU provided that `impl` supports it
-        impl='niftyrec', optional
+        impl={'niftyrec', 'niftyrec_gpu'}, optional
             Implementation back-end for the transform. Supported back-ends:
-            NiftyRec Tomography Toolbox through NiftyPy a Python wrapper
-            for NiftyRec
+
+            'niftyrec' : `NiftyRec <http://niftyrec.scienceontheweb.net/\
+wordpress/>`_ tomography toolbox using the `niftypy <https://github.com/\
+spedemon/niftypy>`_ Python wrapper and CPU
+x.asarray()
+            'niftyrec_gpu' : `NiftyRec <http://niftyrec.scienceontheweb.net/\
+wordpress/>`_ tomography toolbox using the `NiftyPy <https://github.com/\
+spedemon/niftypy>`_ Python wrapper and GPU
         """
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_IMPL:
             raise ValueError('implementation {!r} not supported.'
                              ''.format(impl_in))
 
-        self.geometry = geometry
-        det_nx = geometry.det_grid.shape[0]
-        det_ny = geometry.det_grid.shape[1]
-        startAngle = float(geometry.motion_grid.points()[0])
-        stopAngle = float(geometry.motion_grid.points()[-1]) * (180 / np.pi)
-        N_proj = len(geometry.motion_grid.points())
+        if impl.startswith('niftyrec'):
+            if not NIFTYREC_AVAILABLE:
+                raise ValueError('NiftyRec back-end not available.')
+            if impl == 'niftyrec_gpu' and ran.shape != (128, 128, 128):
+                raise NotImplementedError('NiftyRec GPU back-end only '
+                                          'supports volume size '
+                                          '(128, 128, 128), got {}'
+                                          ''.format(ran.shape))
+            if impl == 'niftyrec_gpu':
+                self._use_gpu = True
+            elif impl == 'niftyrec':
+                self._use_gpu = False
+
+        self._geometry = geometry
+        det_nx, det_ny = geometry.det_grid.shape
+        startAngle = geometry.angles[0]
+        stopAngle = geometry.angles[-1]
+        N_proj = geometry.motion_grid.size
 
         self._cameras = np.linspace(startAngle, stopAngle, N_proj,
                                     dtype=np.float32).reshape((N_proj, 1))
-        self._use_gpu = use_gpu
-        self._attenuation = attenuation
-        self._psf = psf
-
-        lowleft_x = geometry.detector.params.corners()[0][0]
-        lowleft_y = geometry.detector.params.corners()[0][1]
-        upright_x = geometry.detector.params.corners()[-1][0]
-        upright_y = geometry.detector.params.corners()[-1][1]
-        dom = odl.uniform_discr([lowleft_x, lowleft_y, startAngle],
-                                [upright_x, upright_y, stopAngle],
-                                [det_nx, det_ny, N_proj])
+        if psf is not None:
+            self._psf = np.asarray(psf)
+        else:
+            self._psf = psf
+        if attenuation is not None:
+            self._attenuation = self.domain.element(attenuation)
+        else:
+            self._attenuation = attenuation
+        self._impl = impl
+        dom = uniform_discr_frompartition(geometry.partition)
 
         super().__init__(dom, ran, linear=True)
 
@@ -209,18 +238,17 @@ class SpectBackproject(Operator):
         if self._psf is None:
             psf = None
         else:
-            psf = np.float32(self._psf.asarray())
-
-        x = np.float32(np.asfortranarray(x.asarray()))
+            psf = np.float32(self._psf)
+        x = np.transpose(x.asarray(), (1, 2, 0))
+        x = np.float32(np.asfortranarray(x))
         activity = SPECT_backproject_parallelholes(x, self._cameras,
                                                    attenuation, psf,
                                                    use_gpu=self._use_gpu)
-        return self.range.element(activity)
+        return activity
 
     @property
     def adjoint(self):
         return SpectProject(dom=self.range,
-                            geometry=self.geometry,
+                            geometry=self._geometry,
                             attenuation=self._attenuation,
-                            psf=self._psf,
-                            use_gpu=self._use_gpu)
+                            psf=self._psf, impl=self._imlp)
