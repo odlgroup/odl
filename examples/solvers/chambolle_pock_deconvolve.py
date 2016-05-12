@@ -15,17 +15,41 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Total variation deconvolution using the Chambolle-Pock solver.
+"""Total variation base image deconvolution using the Chambolle-Pock solver.
 
-Solves the optimization problem
+Let X and Y be finite-dimensional Hilbert spaces and K a linear mapping from
+X to Y with induce norm ||K||. The (primal) minimization problem we want to
+solve is
 
-    min_x  1/2 ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
+    min_{x in X} F(K x) + G(x)
 
-Where ``A`` is a convolution operator, ``grad`` the spatial gradient and ``g``
-is given noisy data.
+where the proper, convex, lower-semicontinuous functionals
+F : Y -> [0, +infinity] and G : X -> [0, +infinity] are given
+by an l2-data fitting term regularized by isotropic total variation
 
-For further details and a description of the solution method used, see
-:ref:`chambolle_pock` in the ODL documentation.
+    F(K x) = 1/2 ||conv(x) - g||_2^2 + lam || |grad(x)| ||_1
+
+and
+
+   G(x) = 0 ,
+
+respectively. Here, conv denotes the convolution operator, g the image to
+deconvolve, ||.||_2 the l2-norm, ||.||_1  the l1-semi-norm, grad the spatial
+gradient, lam the regularization parameter, |.| the point-wise magnitude
+across the vector components of grad(x), and K is a column vector of
+operators K = (conv, grad)^T.
+
+First we define a convolution operator and generate an image to be
+deconvolved by convolving a Shepp-Logan phantom with a Gaussian kernel.
+
+In order to use the Chambolle-Pock solver, we have to create the column
+operator K, choose a starting point x, create the proximal operator for G,
+create the proximal operator for the convex conjugate of F, choose the
+step sizes tau and sigma such that tau sigma ||K||_2^2 < 1, and set the
+total number of iterations.
+
+For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
+references therein.
 """
 
 # Imports for common Python 2/3 codebase
@@ -131,7 +155,7 @@ proximal_dual = odl.solvers.combine_proximals(
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op, 5)
+op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 5)
 
 niter = 400  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
@@ -139,9 +163,9 @@ sigma = 1.0 / op_norm  # Step size for the dual variable
 
 
 # Optionally pass partial to the solver to display intermediate results
-partial = (odl.solvers.PrintIterationPartial() &
-           odl.solvers.PrintTimingPartial() &
-           odl.solvers.ShowPartial())
+partial = (odl.solvers.util.PrintIterationPartial() &
+           odl.solvers.util.PrintTimingPartial() &
+           odl.solvers.util.ShowPartial())
 
 # Choose a starting point
 x = op.domain.one()
