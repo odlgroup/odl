@@ -27,12 +27,12 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import range, str, zip
 
-from numbers import Integral
 import numpy as np
 
 from odl.set.domain import IntervalProd
 from odl.set.sets import Set
-from odl.util.utility import array1d_repr, array1d_str
+from odl.util.utility import (
+    array1d_repr, array1d_str, normalized_index_expression)
 
 
 __all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling_fromintv',
@@ -694,8 +694,9 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        indices : `int` or slice
-            `None` (new axis) is not supported
+        indices : index expression
+            Object determining which parts of the grid to extract.
+            `None` (new axis) and empty axes are not supported.
 
         Examples
         --------
@@ -721,37 +722,8 @@ class TensorGrid(Set):
         >>> g[0] == g[0, :, :, :] == g[0, ...]
         True
         """
-        # Support indexing with fewer indices as indexing along the first
-        # corresponding axes. In the other cases, normalize the input.
-        if np.isscalar(indices):
-            indices = [indices, Ellipsis]
-        elif isinstance(indices, slice) or indices == Ellipsis:
-            indices = [indices]
-
-        indices = list(indices)
-        if len(indices) < self.ndim and Ellipsis not in indices:
-            indices.append(Ellipsis)
-
-        # Turn Ellipsis into the correct number of slice(None)
-        if Ellipsis in indices:
-            if indices.count(Ellipsis) > 1:
-                raise ValueError('cannot use more than one Ellipsis.')
-
-            eidx = indices.index(Ellipsis)
-            extra_dims = self.ndim - len(indices) + 1
-            indices = (indices[:eidx] + [slice(None)] * extra_dims +
-                       indices[eidx + 1:])
-
-        # Catch most common errors
-        if any(s.start == s.stop and s.start is not None or
-               s.start == n
-               for s, n in zip(indices, self.shape) if isinstance(s, slice)):
-            raise ValueError('Slices with empty axes not allowed.')
-        if None in indices:
-            raise ValueError('creating new axes is not supported.')
-        if len(indices) > self.ndim:
-            raise IndexError('too may indices: {} > {}.'
-                             ''.format(len(indices), self.ndim))
+        indices = normalized_index_expression(indices, self.shape,
+                                              int_to_slice=False)
 
         # If all indices are integers, return an array (a point). Otherwise,
         # create a new grid.
@@ -1056,18 +1028,24 @@ class RegularGrid(TensorGrid):
         return RegularGrid(sq_minpt, sq_maxpt, sq_shape)
 
     def __getitem__(self, indices):
-        """self[slc] implementation.
+        """Return ``self[indices]``.
 
         Parameters
         ----------
-        indices : `int` or slice
+        indices : index expression
+            Object determining which parts of the grid to extract.
             `None` (new axis) and empty axes are not supported.
 
         Examples
         --------
+        Indexing with integers along all axes produces an array (a point):
+
         >>> g = RegularGrid([-1.5, -3, -1], [-0.5, 7, 4], (2, 3, 6))
         >>> g[0, 0, 0]
         array([-1.5, -3. , -1. ])
+
+        Otherwise, a new RegularGrid is returned:
+
         >>> g[:, 0, 0]
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, -3.0, -1.0], (2, 1, 1))
 
@@ -1076,37 +1054,8 @@ class RegularGrid(TensorGrid):
         >>> g[..., ::3]
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 2.0], (2, 3, 2))
         """
-        # Support indexing with fewer indices as indexing along the first
-        # corresponding axes. In the other cases, normalize the input.
-        if np.isscalar(indices):
-            indices = [indices, Ellipsis]
-        elif isinstance(indices, slice) or indices == Ellipsis:
-            indices = [indices]
-
-        indices = list(indices)
-        if len(indices) < self.ndim and Ellipsis not in indices:
-            indices.append(Ellipsis)
-
-        # Turn Ellipsis into the correct number of slice(None)
-        if Ellipsis in indices:
-            if indices.count(Ellipsis) > 1:
-                raise ValueError('cannot use more than one Ellipsis.')
-
-            eidx = indices.index(Ellipsis)
-            extra_dims = self.ndim - len(indices) + 1
-            indices = (indices[:eidx] + [slice(None)] * extra_dims +
-                       indices[eidx + 1:])
-
-        # Catch most common errors
-        if any(s.start == s.stop and s.start is not None or
-               s.start == n
-               for s, n in zip(indices, self.shape) if isinstance(s, slice)):
-            raise ValueError('Slices with empty axes not allowed.')
-        if None in indices:
-            raise ValueError('creating new axes is not supported.')
-        if len(indices) > self.ndim:
-            raise IndexError('too may indices: {} > {}.'
-                             ''.format(len(indices), self.ndim))
+        indices = normalized_index_expression(indices, self.shape,
+                                              int_to_slice=False)
 
         # If all indices are integers, return an array (a point). Otherwise,
         # create a new grid.

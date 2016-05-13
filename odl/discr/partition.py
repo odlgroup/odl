@@ -33,6 +33,7 @@ import numpy as np
 
 from odl.discr.grid import TensorGrid, RegularGrid, uniform_sampling_fromintv
 from odl.set.domain import IntervalProd
+from odl.util.utility import normalized_index_expression
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -360,45 +361,50 @@ class RectPartition(object):
         return self.set == other.set and self.grid == other.grid
 
     def __getitem__(self, indices):
-        """Return ``self[indices]``."""
-        # Support indexing with fewer indices as indexing along the first
-        # corresponding axes. In the other cases, normalize the input.
-        if np.isscalar(indices):
-            indices = [indices, Ellipsis]
-        elif isinstance(indices, slice) or indices == Ellipsis:
-            indices = [indices]
+        """Return ``self[indices]``.
 
-        indices = list(indices)
-        if len(indices) < self.ndim and Ellipsis not in indices:
-            indices.append(Ellipsis)
+        Parameters
+        ----------
+        indices : index expression
+            Object determining which parts of the partition to extract.
+            `None` (new axis) and empty axes are not supported.
 
-        # Turn Ellipsis into the correct number of slice(None)
-        if Ellipsis in indices:
-            if indices.count(Ellipsis) > 1:
-                raise ValueError('cannot use more than one Ellipsis.')
+        Examples
+        --------
+        >>> intvp = IntervalProd([-1, 1, 4, 2], [3, 6, 5, 7])
+        >>> grid = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
+        >>> part = RectPartition(intvp, grid)
+        >>> part.cell_boundary_vecs
+        (array([-1. , -0.5,  1.5,  3. ]),
+         array([ 1.,  3.,  6.]),
+         array([ 4.,  5.]),
+         array([ 2. ,  3. ,  5.5,  7. ]))
 
-            eidx = indices.index(Ellipsis)
-            extra_dims = self.ndim - len(indices) + 1
-            indices = (indices[:eidx] + [slice(None)] * extra_dims +
-                       indices[eidx + 1:])
+        Indexing picks out sub-intervals (compare with the boundary
+        vectors):
 
-        # Turn single indices into length-1 slices such that
-        # TensorGrid.__getitem__ returns a grid, not a single point.
-        for i, idx in enumerate(indices):
-            if np.isscalar(idx):
-                indices[i] = slice(idx, idx + 1)
+        >>> part[0, 0, 0, 0]
+        RectPartition(
+            IntervalProd([-1.0, 1.0, 4.0, 2.0], [-0.5, 3.0, 5.0, 3.0]),
+            TensorGrid([-1.0], [2.0], [5.0], [2.0]))
 
-        # Catch most common errors
-        if any(s.start == s.stop and s.start is not None or
-               s.start == n
-               for s, n in zip(indices, self.shape) if isinstance(s, slice)):
-            raise ValueError('Slices with empty axes not allowed.')
-        if None in indices:
-            raise ValueError('creating new axes is not supported.')
-        if len(indices) > self.ndim:
-            raise IndexError('too may indices: {} > {}.'
-                             ''.format(len(indices), self.ndim))
+        Taking an advanced slice (every second along the first axis,
+        the last in the last axis and everything in between):
 
+        >>> part[::2, ..., -1]
+        RectPartition(
+            IntervalProd([-1.0, 1.0, 4.0, 5.5], [3.0, 6.0, 5.0, 7.0]),
+            TensorGrid([-1.0, 3.0], [2.0, 4.0], [5.0], [7.0]))
+
+        Too few indices are filled up with an ellipsis from the right:
+
+        >>> part[1]
+        RectPartition(
+            IntervalProd([-0.5, 1.0, 4.0, 2.0], [1.5, 6.0, 5.0, 7.0]),
+            TensorGrid([0.0], [2.0, 4.0], [5.0], [2.0, 4.0, 7.0]))
+        """
+        indices = normalized_index_expression(indices, self.shape,
+                                              int_to_slice=True)
         # Build the new partition
         new_begin, new_end = [], []
         for cvec, idx in zip(self.cell_boundary_vecs, indices):
@@ -406,11 +412,11 @@ class RectPartition(object):
             # first begin as new begin and the last end as new end.
             sub_begin = cvec[:-1][idx]
             sub_end = cvec[1:][idx]
-            new_begin.append(np.take(sub_begin, 0))
-            new_end.append(np.take(sub_end, -1))
+            new_begin.append(sub_begin[0])
+            new_end.append(sub_end[-1])
 
-        new_grid = self.grid[indices]
         new_intvp = IntervalProd(new_begin, new_end)
+        new_grid = self.grid[indices]
         return RectPartition(new_intvp, new_grid)
 
     def insert(self, index, other):
