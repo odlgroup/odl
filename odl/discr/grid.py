@@ -722,6 +722,11 @@ class TensorGrid(Set):
         >>> g[0] == g[0, :, :, :] == g[0, ...]
         True
         """
+        if isinstance(indices, list):
+            new_coord_vecs = [self.coord_vectors[0][indices]]
+            new_coord_vecs += self.coord_vectors[1:]
+            return TensorGrid(*new_coord_vecs)
+
         indices = normalized_index_expression(indices, self.shape,
                                               int_to_slice=False)
 
@@ -937,7 +942,7 @@ class RegularGrid(TensorGrid):
                 other.approx_contains(self.max_pt, atol=atol))
             check_idx = np.zeros(self.ndim, dtype=int)
             check_idx[np.array(self.shape) >= 3] = 1
-            checkpt_contained = other.approx_contains(self[check_idx.tolist()],
+            checkpt_contained = other.approx_contains(self[tuple(check_idx)],
                                                       atol=atol)
 
             return minmax_contained and checkpt_contained
@@ -1054,6 +1059,10 @@ class RegularGrid(TensorGrid):
         >>> g[..., ::3]
         RegularGrid([-1.5, -3.0, -1.0], [-0.5, 7.0, 2.0], (2, 3, 2))
         """
+        # Index list results in a tensor grid
+        if isinstance(indices, list):
+            return super().__getitem__(indices)
+
         indices = normalized_index_expression(indices, self.shape,
                                               int_to_slice=False)
 

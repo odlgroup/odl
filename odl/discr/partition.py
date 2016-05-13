@@ -403,6 +403,18 @@ class RectPartition(object):
             IntervalProd([-0.5, 1.0, 4.0, 2.0], [1.5, 6.0, 5.0, 7.0]),
             TensorGrid([0.0], [2.0, 4.0], [5.0], [2.0, 4.0, 7.0]))
         """
+        # Special case of index list: slice along first axis
+        if isinstance(indices, list):
+            new_begin = [self.cell_boundary_vecs[0][:-1][indices][0]]
+            new_end = [self.cell_boundary_vecs[0][1:][indices][-1]]
+            for cvec in self.cell_boundary_vecs[1:]:
+                new_begin.append(cvec[0])
+                new_end.append(cvec[-1])
+
+            new_intvp = IntervalProd(new_begin, new_end)
+            new_grid = self.grid[indices]
+            return RectPartition(new_intvp, new_grid)
+
         indices = normalized_index_expression(indices, self.shape,
                                               int_to_slice=True)
         # Build the new partition
