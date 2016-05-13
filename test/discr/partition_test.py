@@ -218,6 +218,15 @@ def test_partition_getitem():
     assert part[1, 2:] == part[1, 2:, :, :] == part[1, 2:, ...]
     assert part[1, 2:, ::2] == part[1, 2:, ::2, :] == part[1, 2:, ::2, ...]
 
+    # Index list using indices 0 and 2
+    lst_beg = [1, -4, -2, -2]
+    lst_end = [6, 5, 4, 0]
+    lst_intv = odl.IntervalProd(lst_beg, lst_end)
+    lst_vec1 = [2, 5]
+    lst_grid = odl.TensorGrid(lst_vec1, vec2, vec3, vec4)
+    lst_part = RectPartition(lst_intv, lst_grid)
+    assert part[[0, 2]] == lst_part
+
 
 # ---- Functions ---- #
 

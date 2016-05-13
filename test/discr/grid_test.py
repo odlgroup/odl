@@ -440,7 +440,7 @@ def test_tensorgrid_meshgrid():
 
 
 def test_tensorgrid_getitem():
-    vec1 = (0, 1)
+    vec1 = (0, 1, 2)
     vec2 = (-1, 0, 1)
     vec3 = (2, 3, 4, 5)
     vec4 = (1, 3)
@@ -457,12 +457,15 @@ def test_tensorgrid_getitem():
     with pytest.raises(IndexError):
         grid[1, 0, 1, 0, 0]
 
+    with pytest.raises(IndexError):
+        grid[0, 3, 0, 0]
+
     # Slices return new TensorGrid's
     assert grid == grid[...]
 
     sub_grid = TensorGrid(vec1_sub, vec2_sub, vec3_sub, vec4_sub)
     assert grid[1, 0, 1:3, 0] == sub_grid
-    assert grid[-1, :1, 1:3, :1] == sub_grid
+    assert grid[-2, :1, 1:3, :1] == sub_grid
     assert grid[1, 0, ..., 1:3, 0] == sub_grid
 
     sub_grid = TensorGrid(vec1_sub, vec2, vec3, vec4)
@@ -483,6 +486,11 @@ def test_tensorgrid_getitem():
     assert grid[0] == grid[0, :, :, :]
     assert grid[0, 1:] == grid[0, 1:, :, :]
     assert grid[0, 1:, :-1] == grid[0, 1:, :-1, :]
+
+    # Indexing with lists
+    sub_grid = TensorGrid([0, 2], vec2, vec3, vec4)
+    assert grid[[0, 2]] == sub_grid
+    assert grid[[0, 1]] == grid[0:2, ...]
 
     # Two ellipses not allowed
     with pytest.raises(ValueError):
