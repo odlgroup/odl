@@ -39,6 +39,25 @@ You can check that everything was installed properly by running
 
 This requires [pytest](http://pytest.org/latest/). See the [installation](http://odl.readthedocs.org/guide/introduction/installing.html) documentation for further information.
 
+
+Optional Dependencies
+---------------------
+Several ODL features work better with external packages installed. This is a list of optional dependencies and links for further information. Some of the packages can be installed along ODL through pip by calling
+
+    pip install odl[FOO, BAR, ...]
+
+where FOO, BAR, etc are the dependencies. Others require more complicated installation procedures, in that case, consult the respective package for instructions.
+
+| Package | Purpose | Dependency |
+|---------|---------|------------|
+| [ASTRA](https://github.com/astra-toolbox/astra-toolbox)    | Tomographic forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html). |  |
+| [scikit-image](http://scikit-image.org/)    | 2D parallel beam forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html). | scikit |
+| [FFTW](https://github.com/pyFFTW/pyFFTW)   | Accelerated [FourierTransform](http://odl.readthedocs.io/generated/odl.trafos.fourier.FourierTransform.html). | fftw |
+| [PyWavelets](https://github.com/PyWavelets/pywt)   | Computation of the  [WaveletTransform](http://odl.readthedocs.io/generated/odl.trafos.wavelet.WaveletTransform.html). | pywavelets |
+| [matplotlib](http://matplotlib.org/)   | Visualization through the [show](http://odl.readthedocs.io/generated/odl.discr.lp_discr.DiscreteLpVector.show.html) command. | show |
+| [pytest](http://pytest.org/latest/)   | Automatic tests for ODL. | testing |
+
+
 Compatibility
 -------------
 ODL is compatible to Python 2 and 3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
@@ -55,6 +74,7 @@ Current status (2016-03-11) is
 | Mac OSX      | 3.5    | ✔     | ??    |
 
 (1) The GCC 5.x compiler is not compatible with current CUDA (7.5)
+
 
 License
 -------
