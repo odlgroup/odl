@@ -36,7 +36,8 @@ from odl.trafos.fourier import (
     pyfftw_call, _interp_kernel_ft,
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
     FourierTransform)
-from odl.util.testutils import all_almost_equal, all_equal, skip_if_no_pyfftw
+from odl.util.testutils import (all_almost_equal, all_equal,
+                                never_skip, skip_if_no_pyfftw)
 from odl.util.utility import is_real_dtype, conj_exponent
 
 
@@ -69,8 +70,13 @@ def planning(request):
     return request.param
 
 
-impl_params = [('numpy',), skip_if_no_pyfftw(('pyfftw',))]
-parametrize_impl = pytest.mark.parametrize(('impl',), impl_params)
+impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
+impl_ids = ['impl={}'.format(impl.args[1]) for impl in impl_params]
+
+
+@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
+def impl(request):
+    return request.param
 
 
 @pytest.fixture(scope='module', ids=[' - ', ' + '], params=['-', '+'])
@@ -796,7 +802,6 @@ def test_pyfftw_call_backward_with_plan():
 # ---- DiscreteFourierTransform ---- #
 
 
-@parametrize_impl
 def test_dft_init(impl):
     # Just check if the code runs at all
     shape = (4, 5)
@@ -916,7 +921,6 @@ def test_dft_range():
 # ---- DiscreteFourierTransformInverse ---- #
 
 
-@parametrize_impl
 def test_idft_init(impl):
     # Just check if the code runs at all; this uses the init function of
     # DiscreteFourierTransform, so we don't need exhaustive tests here
@@ -935,7 +939,6 @@ def test_idft_init(impl):
                                     halfcomplex=True)
 
 
-@parametrize_impl
 def test_dft_call(impl):
 
     # 2d, complex, all ones and random back & forth
@@ -1001,7 +1004,6 @@ def test_dft_call(impl):
     assert (rand_arr_idft - rand_arr).norm() < 1e-6
 
 
-@parametrize_impl
 def test_dft_sign(impl):
     # Test if the FT sign behaves as expected, i.e. that the FT with sign
     # '+' and '-' have same real parts and opposite imaginary parts.
@@ -1048,7 +1050,6 @@ def test_dft_sign(impl):
             dom=dft_dom, impl=impl, halfcomplex=True, sign='+', axes=axes)
 
 
-@parametrize_impl
 def test_dft_init_plan(impl):
 
     # 2d, halfcomplex, first axis
@@ -1058,16 +1059,20 @@ def test_dft_init_plan(impl):
 
     dft = DiscreteFourierTransform(dft_dom, impl=impl, axes=axes,
                                    halfcomplex=True)
-    dft.init_fftw_plan()
-    if impl == 'numpy':
-        assert dft._fftw_plan is None
-    elif impl == 'pyfftw':
+
+    if impl != 'pyfftw':
+        with pytest.raises(ValueError):
+            dft.init_fftw_plan()
+        with pytest.raises(ValueError):
+            dft.clear_fftw_plan()
+    else:
+        dft.init_fftw_plan()
+
         # Make sure plan can be used
         dft._fftw_plan(dft.domain.element().asarray(),
                        dft.range.element().asarray())
-
-    dft.clear_fftw_plan()
-    assert dft._fftw_plan is None
+        dft.clear_fftw_plan()
+        assert dft._fftw_plan is None
 
 
 # ---- FourierTransform ---- #
@@ -1117,7 +1122,6 @@ def test_fourier_trafo_range(exponent, dtype):
         FourierTransform(dft.domain.partition)
 
 
-@parametrize_impl
 def test_fourier_trafo_init_plan(impl, dtype):
 
     # Not supported, skip
@@ -1130,41 +1134,50 @@ def test_fourier_trafo_init_plan(impl, dtype):
     space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype)
 
     ft = FourierTransform(space_discr, impl=impl, halfcomplex=halfcomplex)
-    ft.init_fftw_plan()
-    if impl == 'numpy':
-        assert ft._fftw_plan is None
-    elif impl == 'pyfftw':
+    if impl != 'pyfftw':
+        with pytest.raises(ValueError):
+            ft.init_fftw_plan()
+        with pytest.raises(ValueError):
+            ft.clear_fftw_plan()
+    else:
+        ft.init_fftw_plan()
+
         # Make sure plan can be used
         ft._fftw_plan(ft.domain.element().asarray(),
                       ft.range.element().asarray())
-
-    ft.clear_fftw_plan()
-    assert ft._fftw_plan is None
+        ft.clear_fftw_plan()
+        assert ft._fftw_plan is None
 
     # With temporaries
     ft.create_temporaries(r=True, f=False)
-    ft.init_fftw_plan()
-    if impl == 'numpy':
-        assert ft._fftw_plan is None
-    elif impl == 'pyfftw':
+    if impl != 'pyfftw':
+        with pytest.raises(ValueError):
+            ft.init_fftw_plan()
+        with pytest.raises(ValueError):
+            ft.clear_fftw_plan()
+    else:
+        ft.init_fftw_plan()
+
         # Make sure plan can be used
         ft._fftw_plan(ft.domain.element().asarray(),
                       ft.range.element().asarray())
-
-    ft.clear_fftw_plan()
-    assert ft._fftw_plan is None
+        ft.clear_fftw_plan()
+        assert ft._fftw_plan is None
 
     ft.create_temporaries(r=False, f=True)
-    ft.init_fftw_plan()
-    if impl == 'numpy':
-        assert ft._fftw_plan is None
-    elif impl == 'pyfftw':
+    if impl != 'pyfftw':
+        with pytest.raises(ValueError):
+            ft.init_fftw_plan()
+        with pytest.raises(ValueError):
+            ft.clear_fftw_plan()
+    else:
+        ft.init_fftw_plan()
+
         # Make sure plan can be used
         ft._fftw_plan(ft.domain.element().asarray(),
                       ft.range.element().asarray())
-
-    ft.clear_fftw_plan()
-    assert ft._fftw_plan is None
+        ft.clear_fftw_plan()
+        assert ft._fftw_plan is None
 
 
 def test_fourier_trafo_create_temp():
@@ -1186,7 +1199,6 @@ def test_fourier_trafo_create_temp():
     assert ft._tmp_f is None
 
 
-@parametrize_impl
 def test_fourier_trafo_call(impl, dtype):
     # Test if all variants can be called without error
 
@@ -1220,33 +1232,27 @@ def test_fourier_trafo_charfun_1d():
     # Characteristic function of [0, 1], its Fourier transform is
     # given by exp(-1j * y / 2) * sinc(y/2)
     def char_interval(x):
-        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
+        return (x >= 0) & (x <= 1)
 
     def char_interval_ft(x):
         return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
 
+    # Base version
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy')
-    dft = FourierTransform(discr)
-
-    func_true_ft = dft.range.element(char_interval_ft)
-    func_dft = dft(char_interval)
-    assert (func_dft - func_true_ft).norm() < 1e-6
+    dft_base = FourierTransform(discr)
 
     # Complex version, should be as good
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
-    dft = FourierTransform(discr)
-
-    func_true_ft = dft.range.element(char_interval_ft)
-    func_dft = dft(char_interval)
-    assert (func_dft - func_true_ft).norm() < 1e-6
+    dft_complex = FourierTransform(discr)
 
     # Without shift
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
-    dft = FourierTransform(discr, shift=False)
+    dft_complex_shift = FourierTransform(discr, shift=False)
 
-    func_true_ft = dft.range.element(char_interval_ft)
-    func_dft = dft(char_interval)
-    assert (func_dft - func_true_ft).norm() < 1e-6
+    for dft in [dft_base, dft_complex, dft_complex_shift]:
+        func_true_ft = dft.range.element(char_interval_ft)
+        func_dft = dft(char_interval)
+        assert (func_dft - func_true_ft).norm() < 1e-6
 
 
 def test_fourier_trafo_scaling():
@@ -1255,7 +1261,7 @@ def test_fourier_trafo_scaling():
     # Characteristic function of [0, 1], its Fourier transform is
     # given by exp(-1j * y / 2) * sinc(y/2)
     def char_interval(x):
-        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
+        return (x >= 0) & (x <= 1)
 
     def char_interval_ft(x):
         return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
@@ -1270,13 +1276,12 @@ def test_fourier_trafo_scaling():
         assert (func_dft - func_true_ft).norm() < 1e-6
 
 
-@parametrize_impl
 def test_fourier_trafo_sign(impl):
     # Test if the FT sign behaves as expected, i.e. that the FT with sign
     # '+' and '-' have same real parts and opposite imaginary parts.
 
     def char_interval(x):
-        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
+        return (x >= 0) & (x <= 1)
 
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
     ft_minus = FourierTransform(discr, sign='-', impl=impl)
@@ -1298,27 +1303,19 @@ def test_fourier_trafo_sign(impl):
         FourierTransform(discr, sign=-1, impl=impl)
 
 
-@parametrize_impl
-def test_fourier_trafo_inverse(impl):
+def test_fourier_trafo_inverse(impl, sign):
     # Test if the inverse really is the inverse
 
     def char_interval(x):
-        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
+        return (x >= 0) & (x <= 1)
 
     # Complex-to-complex
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='complex64')
     discr_char = discr.element(char_interval)
-    ft_minus = FourierTransform(discr, sign='-', impl=impl)
-    ft_plus = FourierTransform(discr, sign='+', impl=impl)
 
-    assert all_almost_equal(ft_minus.inverse(ft_minus(char_interval)),
-                            discr_char)
-    assert all_almost_equal(ft_plus.inverse(ft_plus(char_interval)),
-                            discr_char)
-    assert all_almost_equal(ft_minus.adjoint(ft_minus(char_interval)),
-                            discr_char)
-    assert all_almost_equal(ft_plus.adjoint(ft_plus(char_interval)),
-                            discr_char)
+    ft = FourierTransform(discr, sign=sign, impl=impl)
+    assert all_almost_equal(ft.inverse(ft(char_interval)), discr_char)
+    assert all_almost_equal(ft.adjoint(ft(char_interval)), discr_char)
 
     # Half-complex
     discr = odl.uniform_discr(-2, 2, 40, impl='numpy', dtype='float32')
@@ -1326,36 +1323,32 @@ def test_fourier_trafo_inverse(impl):
     assert all_almost_equal(ft.inverse(ft(char_interval)), discr_char)
 
     def char_rect(x):
-        return np.where((x[0] >= 0) & (x[0] <= 1) & (x[1] >= 0) & (x[1] <= 1),
-                        1.0, 0.0)
+        return (x[0] >= 0) & (x[0] <= 1) & (x[1] >= 0) & (x[1] <= 1)
 
     # 2D with axes, C2C
     discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
                               dtype='complex64')
     discr_rect = discr.element(char_rect)
-    ft_minus_0 = FourierTransform(discr, sign='-', impl=impl, axes=(0,))
-    ft_minus_1 = FourierTransform(discr, sign='-', impl=impl, axes=(1,))
-    ft_plus_0 = FourierTransform(discr, sign='+', impl=impl, axes=(0,))
-    ft_plus_1 = FourierTransform(discr, sign='+', impl=impl, axes=(1,))
 
-    assert all_almost_equal(ft_minus_0.inverse(ft_minus_0(char_rect)),
-                            discr_rect)
-    assert all_almost_equal(ft_minus_1.inverse(ft_minus_1(char_rect)),
-                            discr_rect)
-    assert all_almost_equal(ft_plus_0.inverse(ft_plus_0(char_rect)),
-                            discr_rect)
-    assert all_almost_equal(ft_plus_1.inverse(ft_plus_1(char_rect)),
-                            discr_rect)
+    for axes in [(0,), (1,)]:
+        ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes)
+        assert all_almost_equal(ft.inverse(ft(char_rect)), discr_rect)
+        assert all_almost_equal(ft.adjoint(ft(char_rect)), discr_rect)
 
     # 2D with axes, halfcomplex
     discr = odl.uniform_discr([-2, -2], [2, 2], (20, 10), impl='numpy',
                               dtype='float32')
     discr_rect = discr.element(char_rect)
-    ft_0 = FourierTransform(discr, impl=impl, axes=(0,))
-    ft_1 = FourierTransform(discr, impl=impl, axes=(1,))
 
-    assert all_almost_equal(ft_0.inverse(ft_0(char_rect)), discr_rect)
-    assert all_almost_equal(ft_1.inverse(ft_1(char_rect)), discr_rect)
+    for halfcomplex in [False, True]:
+        if halfcomplex and sign == '+':
+            continue  # cannot mix halfcomplex with sign
+
+        for axes in [(0,), (1,)]:
+            ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes,
+                                  halfcomplex=halfcomplex)
+            assert all_almost_equal(ft.inverse(ft(char_rect)), discr_rect)
+            assert all_almost_equal(ft.adjoint(ft(char_rect)), discr_rect)
 
 
 def test_fourier_trafo_hat_1d():
@@ -1372,19 +1365,14 @@ def test_fourier_trafo_hat_1d():
         return sinc(x / 2) ** 2 / np.sqrt(2 * np.pi)
 
     # Using a single-precision implementation, should be as good
-    discr = odl.uniform_discr(-2, 2, 101, impl='numpy', dtype='float32')
-    dft = FourierTransform(discr)
-    func_true_ft = dft.range.element(hat_func_ft)
-    func_dft = dft(hat_func)
-    assert (func_dft - func_true_ft).norm() < 0.001
-
     # With linear interpolation in the discretization, should be better?
-    discr = odl.uniform_discr(-2, 2, 101, impl='numpy', dtype='float32',
-                              interp='linear')
-    dft = FourierTransform(discr)
-    func_true_ft = dft.range.element(hat_func_ft)
-    func_dft = dft(hat_func)
-    assert (func_dft - func_true_ft).norm() < 0.001
+    for interp in ['nearest', 'linear']:
+        discr = odl.uniform_discr(-2, 2, 101, impl='numpy', dtype='float32',
+                                  interp=interp)
+        dft = FourierTransform(discr)
+        func_true_ft = dft.range.element(hat_func_ft)
+        func_dft = dft(hat_func)
+        assert (func_dft - func_true_ft).norm() < 0.001
 
 
 def test_fourier_trafo_complex_sum():
@@ -1400,7 +1388,7 @@ def test_fourier_trafo_complex_sum():
         return sinc(x / 2) ** 2 / np.sqrt(2 * np.pi)
 
     def char_interval(x):
-        return np.where((x >= 0) & (x <= 1), 1.0, 0.0)
+        return (x >= 0) & (x <= 1)
 
     def char_interval_ft(x):
         return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
@@ -1432,8 +1420,7 @@ def test_fourier_trafo_freq_shifted_charfun_1d():
     # Frequency-shifted characteristic function: mult. with
     # exp(-1j * b * x) corresponds to shifting the FT by b.
     def fshift_char_interval(x):
-        return (np.exp(-1j * x * np.pi) *
-                np.where((x >= -0.5) & (x <= 0.5), 1.0, 0.0))
+        return np.exp(-1j * x * np.pi) * ((x >= -0.5) & (x <= 0.5))
 
     def fshift_char_interval_ft(x):
         return sinc((x + np.pi) / 2) / np.sqrt(2 * np.pi)
@@ -1453,8 +1440,7 @@ def test_dft_with_known_pairs_2d():
     def fshift_char_rect(x):
         # Characteristic function of the cuboid
         # [-1, 1] x [1, 2]
-        return (np.where((x[0] >= -1) & (x[0] <= 1), 1, 0) *
-                np.where((x[1] >= 1) & (x[1] <= 2), 1, 0))
+        return (x[0] >= -1) & (x[0] <= 1) & (x[1] >= 1) & (x[1] <= 2)
 
     def fshift_char_rect_ft(x):
         # FT is a product of shifted and frequency-shifted sinc functions
@@ -1488,7 +1474,7 @@ def test_fourier_trafo_completely():
     # First test function, symmetric. Can be represented exactly in the
     # discretization.
     def f(x):
-        return np.where((x >= -1) & (x <= 1), 1, 0)
+        return (x >= -1) & (x <= 1)
 
     def fhat(x):
         return np.sqrt(2 / np.pi) * sinc(x)
@@ -1573,7 +1559,7 @@ def test_fourier_trafo_completely():
     # Second test function, asymmetric. Can also be represented exactly in the
     # discretization.
     def f(x):
-        return np.where((x >= 0) & (x <= 1), 1, 0)
+        return (x >= 0) & (x <= 1)
 
     def fhat(x):
         return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)

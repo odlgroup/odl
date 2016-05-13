@@ -51,8 +51,7 @@ from odl.util.utility import (
 
 __all__ = ('FourierTransform', 'FourierTransformInverse',
            'DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
-           'pyfftw_call', 'dft_preprocess_data', 'dft_postprocess_data',
-           'reciprocal_space', 'PYFFTW_AVAILABLE')
+           'PYFFTW_AVAILABLE')
 
 
 def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
@@ -799,10 +798,12 @@ class DiscreteFourierTransform(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint transform, equal to the inverse."""
-        if self.domain.field == RealNumbers():
-            raise NotImplementedError(
-                'Fourier transform from real to complex space has no adjoint.')
+        """Adjoint transform, equal to the inverse.
+
+        See Also
+        --------
+        inverse
+        """
         if self.domain.exponent == 2.0 and self.range.exponent == 2.0:
             return self.inverse
         else:
@@ -822,7 +823,7 @@ class DiscreteFourierTransform(Operator):
         """Initialize the FFTW plan for this transform for later use.
 
         If the implementation of this operator is not 'pyfftw', this
-        method has no effect.
+        method should not be called.
 
         Parameters
         ----------
@@ -835,9 +836,23 @@ class DiscreteFourierTransform(Operator):
             Default: `None` (no limit)
         threads : `int`, optional
             Number of threads to use. Default: 1
+
+        Raises
+        ------
+        ValueError
+            If `impl` is not 'pyfftw'
+
+        Notes
+        -----
+        To save memory, clear the plan when the transform is no longer
+        used (the plan stores 2 arrays).
+
+        See also
+        --------
+        clear_fftw_plan
         """
         if self.impl != 'pyfftw':
-            return
+            raise ValueError('Cannot create fftw plan without fftw backend.')
 
         x = self.domain.element()
         y = self.range.element()
@@ -850,7 +865,21 @@ class DiscreteFourierTransform(Operator):
             planning_effort=planning_effort, **kwargs)
 
     def clear_fftw_plan(self):
-        """Delete the FFTW plan of this transform."""
+        """Delete the FFTW plan of this transform.
+
+        Raises
+        ------
+        ValueError
+            If `impl` is not 'pyfftw'
+
+        Notes
+        -----
+        If no plan exists, this is a no-op.
+        """
+
+        if self.impl != 'pyfftw':
+            raise ValueError('Cannot create fftw plan without fftw backend.')
+
         self._fftw_plan = None
 
 
@@ -868,6 +897,8 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
 
     See also
     --------
+    DiscreteFourierTransform
+    FourierTransformInverse
     numpy.fft.ifftn : n-dimensional inverse FFT routine
     numpy.fft.irfftn : n-dimensional half-complex inverse FFT
     pyfftw_call : apply an FFTW transform
@@ -1445,6 +1476,8 @@ class FourierTransform(Operator):
 
     See also
     --------
+    DiscreteFourierTransform
+    FourierTransformInverse
     dft_preprocess_data
     pyfftw_call
     dft_postprocess_data
@@ -1510,7 +1543,7 @@ class FourierTransform(Operator):
             The default variant, one-to-one and unitary.
 
           - **R2C**: real-to-complex.
-            This variant has no adjoint, and the inverse may suffer
+            This variants adjoint and inverse may suffer
             from information loss since the result is cast to real.
 
           - **R2HC**: real-to-halfcomplex.
@@ -1519,8 +1552,12 @@ class FourierTransform(Operator):
 
         * The `Operator.range` of this operator always has the
           `ComplexNumbers` as `LinearSpace.field`, i.e. if the
-          field of ``dom`` is the `RealNumbers`, this operator has no
-          `Operator.adjoint`.
+          field of ``dom`` is the `RealNumbers`, this operator's adjoint
+          is defined by identifying real and imaginary parts with
+          the components of a real product space element.
+          See the `mathematical background documentation
+          <odl.readthedocs.io/math/trafos/fourier_transform.html#adjoint>`_
+          for details.
         """
         # TODO: variants wrt placement of 2*pi
 
@@ -1775,11 +1812,13 @@ class FourierTransform(Operator):
 
     @property
     def adjoint(self):
-        """The adjoint Fourier transform."""
-        if self.domain.field == RealNumbers():
-            raise NotImplementedError(
-                'Fourier transform from real to complex space has no adjoint.')
-        elif self.domain.exponent == 2.0 and self.range.exponent == 2.0:
+        """Adjoint transform, equal to the inverse.
+
+        See Also
+        --------
+        inverse
+        """
+        if self.domain.exponent == 2.0 and self.range.exponent == 2.0:
             return self.inverse
         else:
             raise NotImplementedError(
@@ -1840,7 +1879,7 @@ class FourierTransform(Operator):
         """Initialize the FFTW plan for this transform for later use.
 
         If the implementation of this operator is not 'pyfftw', this
-        method has no effect.
+        method should not be called.
 
         Parameters
         ----------
@@ -1854,6 +1893,11 @@ class FourierTransform(Operator):
         threads : `int`, optional
             Number of threads to use. Default: 1
 
+        Raises
+        ------
+        ValueError
+            If `impl` is not 'pyfftw'
+
         Notes
         -----
         To save memory, clear the plan when the transform is no longer
@@ -1864,7 +1908,7 @@ class FourierTransform(Operator):
         clear_fftw_plan
         """
         if self.impl != 'pyfftw':
-            return
+            raise ValueError('Cannot create fftw plan without fftw backend.')
 
         # Using available temporaries if possible
         inverse = isinstance(self, FourierTransformInverse)
@@ -1917,7 +1961,21 @@ class FourierTransform(Operator):
             planning_effort=planning_effort, **kwargs)
 
     def clear_fftw_plan(self):
-        """Delete the FFTW plan of this transform."""
+        """Delete the FFTW plan of this transform.
+
+        Raises
+        ------
+        ValueError
+            If `impl` is not 'pyfftw'
+
+        Notes
+        -----
+        If no plan exists, this is a no-op.
+        """
+
+        if self.impl != 'pyfftw':
+            raise ValueError('Cannot create fftw plan without fftw backend.')
+
         self._fftw_plan = None
 
 
@@ -1933,6 +1991,7 @@ class FourierTransformInverse(FourierTransform):
     See also
     --------
     FourierTransform
+    DiscreteFourierTransformInverse
     """
 
     def __init__(self, ran, dom=None, impl='numpy', **kwargs):
@@ -1994,18 +2053,22 @@ class FourierTransformInverse(FourierTransform):
             The default variant, one-to-one and unitary.
 
           - **C2R**: complex-to-real.
-            This variant has no adjoint and may suffer from information
-            loss since the result is cast to real.
+            This variants adjoint and inverse may suffer
+            from information loss since the result is cast to real.
 
           - **HC2R**: halfcomplex-to-real.
             This variant interprets input as a signal on a half-space
             of frequencies. It is guaranteed to be one-to-one
             (invertible).
 
-        * The `Operator.domain` of this operator always has the
+        * The `Operator.range` of this operator always has the
           `ComplexNumbers` as `LinearSpace.field`, i.e. if the
-          field of ``ran`` is the `RealNumbers`, this operator has no
-          `Operator.adjoint`.
+          field of ``dom`` is the `RealNumbers`, this operator's adjoint
+          is defined by identifying real and imaginary parts with
+          the components of a real product space element.
+          See the `mathematical background documentation
+          <odl.readthedocs.io/math/trafos/fourier_transform.html#adjoint>`_
+          for details.
         """
         # TODO: variants wrt placement of 2*pi
 
