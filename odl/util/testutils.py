@@ -34,6 +34,7 @@ from time import time
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
            'skip_if_no_cuda', 'skip_if_no_stir', 'skip_if_no_pywavelets',
            'skip_if_no_pyfftw', 'skip_if_no_largescale',
+           'skip_if_no_niftyrec',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
            'test', 'run_doctests')
 
@@ -214,6 +215,11 @@ try:
     skip_if_no_benchmark = pytest.mark.skipif(
         "not pytest.config.getoption('--benchmark')",
         reason='Need --benchmark option to run'
+    )
+
+    skip_if_no_niftyrec = pytest.mark.skipif(
+        "not odl.tomo.operators.spect_trafo.NIFTYREC_AVAILABLE",
+        reason='NiftyRec not available'
     )
 
 except ImportError:
