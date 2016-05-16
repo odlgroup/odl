@@ -135,9 +135,10 @@ setup(
     extras_require={
         'testing': test_requires,
         'show': 'matplotlib',
-        'fft': 'pyfftw',
-        'wavelets': 'Pywavelets',
-        'all': ['Pywavelets', 'pyfftw', 'matplotlib']
+        'fftw': 'pyfftw',
+        'pywavelets': 'Pywavelets',
+        'scikit' : 'scikit-image',
+        'all': test_requires + ['matplotlib', 'pyfftw', 'Pywavelets', 'scikit-image']
     },
 
     cmdclass={'test': PyTest},
