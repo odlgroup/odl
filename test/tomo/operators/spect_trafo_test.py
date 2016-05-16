@@ -28,10 +28,11 @@ import numpy as np
 
 # Internal
 import odl
-from odl.tomo.geometry.spect import ParallelHoleCollimatorGeometry
-from odl.tomo.operators.spect_trafo import (SpectProject, NIFTYREC_AVAILABLE)
+from odl.tomo.operators.spect_trafo import AttenuatedRayTransform
+from odl.util.testutils import skip_if_no_niftyrec
 
 
+@skip_if_no_niftyrec
 def test_spect_projector():
     """Test discrete SPECT transform."""
 
@@ -47,26 +48,23 @@ def test_spect_projector():
                                   [det_nx_pix, det_ny_pix])
 
     apart = odl.uniform_partition(0, 2 * np.pi, n_proj)
-    geometry = ParallelHoleCollimatorGeometry(apart, dpart,
-                                              det_rad=det_radius)
+    geometry = odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry(
+        apart, dpart, det_rad=det_radius)
 
     # Create a discrete domain and a phantom as an element of the domain
-    domain = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                               [det_nx_pix, det_nx_pix, det_nx_pix])
-    vol = domain.one()
+    domain = odl.uniform_discr([-20] * 3, [20] * 3, [det_nx_pix] * 3)
+
     vol = odl.util.phantom.shepp_logan(domain, True)
+    # Create a SPECT projector
+    projector = AttenuatedRayTransform(
+        domain, geometry, attenuation=None, psf=None, impl='niftyrec')
 
-    if NIFTYREC_AVAILABLE:
-        # Create a SPECT projector
-        projector = SpectProject(domain, geometry, attenuation=None, psf=None,
-                                 impl='niftyrec')
+    # Calculate projection and back-projection
+    proj = projector(vol)
+    backproj = projector.adjoint(proj)
 
-        # Calculate projection and back-projection
-        proj = projector(vol)
-        backproj = projector.adjoint(proj)
-
-        assert proj in projector.range
-        assert backproj in projector.domain
+    assert proj in projector.range
+    assert backproj in projector.domain
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
