@@ -11,20 +11,22 @@ Background
 Definition and basic properties
 -------------------------------
 
-The Fourier Transform (FT) of a function :math:`f` belonging to the `Lebesgue Space`_
-:math:`L^1(\mathbb{R})` is defined as
+The `Fourier Transform`_ (FT) of a function :math:`f` belonging to the `Lebesgue Space`_
+:math:`L^1(\mathbb{R}, \mathbb{C})` is defined as
 
 .. math::
     \widehat{f}(\xi) = \mathcal{F}(f)(\xi) = (2\pi)^{-\frac{1}{2}}
     \int_{\mathbb{R}} f(x)\ e^{-i x \xi} \, \mathrm{d}x.
     :label: def_fourier     
 
-By unique continuation, the bounded FT operator can be
+(Note that this definition differs from the one in the linked article by the placement of the
+factor :math:`2\pi`.) By unique continuation, the bounded FT operator can be
 `extended <https://en.wikipedia.org/wiki/Fourier_transform#On_Lp_spaces>`_ to
-:math:`L^p(\mathbb{R})` for :math:`p \in [1, 2]`, yielding a mapping
+:math:`L^p(\mathbb{R}, \mathbb{C})` for :math:`p \in [1, 2]`, yielding a mapping
 
 .. math::
-    \mathcal{F}: L^p(\mathbb{R}) \longrightarrow L^q(\mathbb{R}), \quad q = \frac{p}{p-1},
+    \mathcal{F}: L^p(\mathbb{R}, \mathbb{C}) \longrightarrow L^q(\mathbb{R}, \mathbb{C}),
+    \quad q = \frac{p}{p-1},
 
 where :math:`q` is the conjugate exponent of :math:`p` (for :math:`p=1` one sets :math:`q=\infty`).
 Finite exponents larger than 2 also allow the extension of the operator but require the notion of
@@ -254,7 +256,60 @@ Hence, the inversion formula for the discretized FT reads as
 
 which can be calculated in the same manner as the forward FT, basically by switching the roles of
 pre- and post-processing steps and flipping the sign in the complex exponentials.
+
+
+Adjoint operator
+----------------
+
+If the FT is defined between the complex Hilbert spaces :math:`L^2(\mathbb{R}, \mathbb{C})`,
+one can easily show that the operator is unitary, and therefore its adjoint is equal to its
+inverse.
+
+However, if the domain is a real space, :math:`L^2(\mathbb{R}, \mathbb{C})`, one cannot even
+speak of a linear operator since the property
+
+.. math::
+    \mathcal{F}(\alpha f) = \alpha \mathcal{F}(f)
+
+cannot be tested for all :math:`\alpha \in \mathbb{C}` as required by the right-hand side, since
+on the left-hand side, :math:`\alpha f` needs to be real. This issue can be remedied by identifying
+the real and imaginary parts in the range with components of a product space element:
+
+.. math::
+    \widetilde{\mathcal{F}}: L^2(\mathbb{R}, \mathbb{R}) \longrightarrow
+    \big[L^2(\mathbb{R}, \mathbb{R})\big]^2,
     
+    \widetilde{\mathcal{F}} = \big(\Re \big(\mathcal{F}(f)\big), \Im \big(\mathcal{F}(f)\big)\big) =
+    \big( \mathcal{F}_{\mathrm{c}}(f), -\mathcal{F}_{\mathrm{s}}(f) \big),
+
+where :math:`\mathcal{F}_{\mathrm{c}}` and :math:`\mathcal{F}_{\mathrm{s}}` are the
+`sine and cosine transforms`_, respectively. Those two operators are self-adjoint between real
+Hilbert spaces, and thus the adjoint of the above defined transform is given by
+
+.. math::
+    \widetilde{\mathcal{F}}^*: \big[L^2(\mathbb{R}, \mathbb{R})\big]^2 \longrightarrow
+    L^2(\mathbb{R}, \mathbb{R})
+    
+    \widetilde{\mathcal{F}}^*(g_1, g_2) = \mathcal{F}_{\mathrm{c}}(g_1) -
+    \mathcal{F}_{\mathrm{s}}(g_2).
+
+If we compare this result to the "naive" approach of taking the real part of the inverse of the
+complex inverse transform, we get
+
+.. math::
+    :nowrap:
+
+    \begin{align*}
+        \Re\big( \mathcal{F}^*(g) \big)
+        &= \Re\big( \mathcal{F}_{\mathrm{c}}(g) + i \mathcal{F}_{\mathrm{s}}(g) \big)\\
+        &= \Re\big( \mathcal{F}_{\mathrm{c}}(\Re g) + i \mathcal{F}_{\mathrm{c}}(\Im g)
+        + i \mathcal{F}_{\mathrm{c}}(\Re g) - \mathcal{F}_{\mathrm{c}}(\Im g) \big)\\
+        &= \mathcal{F}_{\mathrm{c}}(\Re g) - \mathcal{F}_{\mathrm{c}}(\Im g).
+    \end{align*}
+
+Hence, by identifying :math:`g_1 = \Re g` and :math:`g_2 = \Im g`, we see that the result is the
+same. Therefore, using the naive approach for the adjoint operator is justified by this argument.
+
 
 Useful Wikipedia articles
 =========================
@@ -271,3 +326,4 @@ Useful Wikipedia articles
 .. _NFFT: https://github.com/NFFT/nfft
 .. _computed in FFTW: http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
 .. _in Numpy: http://docs.scipy.org/doc/numpy/reference/routines.fft.html#implementation-details
+.. _sine and cosine transforms: https://en.wikipedia.org/wiki/Sine_and_cosine_transforms
