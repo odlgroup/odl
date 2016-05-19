@@ -40,6 +40,7 @@ __all__ = ('combine_proximals', 'proximal_convexconjugate',
            'proximal_clamp', 'proximal_nonnegativity',
            'proximal_l1', 'proximal_convexconjugate_l1',
            'proximal_l2', 'proximal_convexconjugate_l2',
+           'proximal_l2_squared', 'proximal_convexconjugate_l2_squared',
            'proximal_convexconjugate_kl')
 
 
@@ -119,6 +120,9 @@ def proximal_convexconjugate(proximal):
 
         prox[a * F^*](x) = x - a * prox[F / a](x / a)
 
+    Note that since ``(F^*)^* = F``, this can be used to get the primal from
+    the dual.
+
     Parameters
     ----------
     proximal : `callable`
@@ -144,7 +148,7 @@ def proximal_convexconjugate(proximal):
         proximal : `Operator`
             The proximal operator of ``prox[a * f^*](x)``
         """
-        prox_other = step_size * proximal(1 / step_size) * (1 / step_size)
+        prox_other = step_size * proximal(1.0 / step_size) * (1.0 / step_size)
         return IdentityOperator(prox_other.domain) - prox_other
 
     return make_convexconjugate_proximal
@@ -381,6 +385,137 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
     Function for the proximal operator of the convex conjugate of the
     functional F where F is the l2-norm
 
+        F(x) =  lam ||x - g||_2
+
+    with x and g elements in ``space``, scaling factor lam, and given data g.
+
+    The convex conjugate, F^*, of F is given by
+
+        F^*(y) = {0 if ||x-g|| < lam, infty else}
+
+    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
+    is given by
+
+        prox[sigma * F^*](y) = (y - sigma g) / (1 + sigma/lam)
+
+    Parameters
+    ----------
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
+        Domain of F(x)
+    g : `DiscreteLpVector`
+        An element in ``space``
+    lam : positive `float`
+        Scaling factor or regularization parameter
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    Most problems are forumlated for the norm squared, in that case use that
+    proximal operator instead.
+
+    See Also
+    --------
+    proximal_l2 : proximal without convex conjugate
+    proximal_convexconjugate_l2 : proximal without square
+    """
+
+    prox_l2 = proximal_l2(space, lam=lam, g=g)
+    return proximal_convexconjugate(prox_l2)
+
+
+def proximal_l2(space, lam=1, g=None):
+    """Proximal operator factory of the l2-norm.
+
+    Function for the proximal operator of the convex conjugate of the
+    functional F where F is the l2-norm
+
+        F(x) =  lam ||x - g||_2
+
+    The proximal operator of ``sigma * F`` where ``sigma`` is a step size
+    is given by
+
+        prox[sigma * F^*](y) = (y - sigma g) / (1 + sigma/lam)
+
+    Parameters
+    ----------
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
+        Domain of F(x)
+    g : `DiscreteLpVector`
+        An element in ``space``
+    lam : positive `float`
+        Scaling factor or regularization parameter
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    Most problems are forumlated for the norm squared, in that case use that
+    proximal operator instead.
+
+    See Also
+    --------
+    proximal_l2_squared : proximal for norm squared
+    proximal_convexconjugate_l2 : proximal for convex conjugate
+    """
+
+    lam = float(lam)
+
+    if g is not None and g not in space:
+        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+
+    class _ProximalL2(Operator):
+
+        """The proximal operator."""
+
+        def __init__(self, sigma):
+            """Initialize the proximal operator.
+
+            Parameters
+            ----------
+            sigma : positive `float`
+                Step size parameter
+            """
+            self.sigma = float(sigma)
+            super().__init__(domain=space, range=space, linear=False)
+
+        def _call(self, x, out):
+            """Apply the operator to ``x`` and stores the result in ``out``."""
+
+            step = self.sigma * lam
+
+            if g is None:
+                x_norm = x.norm()
+
+                if x_norm >= step:
+                    out.lincomb(1.0 - step / x_norm, x)
+                else:
+                    out.set_zero()
+
+            else:
+                diff_norm = (x - g).norm()
+
+                if diff_norm >= step:
+                    out.lincomb(1.0 - step / diff_norm, x,
+                                step / diff_norm, g)
+                else:
+                    out.assign(g)
+
+    return _ProximalL2
+
+
+def proximal_convexconjugate_l2_squared(space, lam=1, g=None):
+    """Proximal operator factory of the convex conjugate of the l2-norm square.
+
+    Function for the proximal operator of the convex conjugate of the
+    functional F where F is the l2-norm
+
         F(x) =  lam 1/2 ||x - g||_2^2
 
     with x and g elements in ``space``, scaling factor lam, and given data g.
@@ -410,14 +545,15 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_l2 : proximal without convex conjugate
+    proximal_convexconjugate_l2 : proximal without square
+    proximal_l2_squared : proximal without convex conjugate
     """
     lam = float(lam)
 
     if g is not None and g not in space:
         raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
-    class _ProximalConvConjL2(Operator):
+    class _ProximalConvConjL2Squared(Operator):
 
         """The proximal operator."""
 
@@ -444,11 +580,11 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
             else:
                 out.lincomb(1 / (1 + sig / lam), x, -sig / (1 + sig / lam), g)
 
-    return _ProximalConvConjL2
+    return _ProximalConvConjL2Squared
 
 
-def proximal_l2(space, lam=1, g=None):
-    """Proximal operator factory of the convex conjugate of the l2-norm.
+def proximal_l2_squared(space, lam=1, g=None):
+    """Proximal operator factory of the l2-norm square.
 
     Function for the proximal operator of the convex conjugate of the
     functional F where F is the l2-norm
@@ -478,12 +614,14 @@ def proximal_l2(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_convexconjugate_l2 : proximal for convex conjugate
+    proximal_l2 : proximal without square
+    proximal_convexconjugate_l2_squared : proximal for convex conjugate
     """
 
     # TODO: optimize
-    prox_cc_l2 = proximal_convexconjugate_l2(space, lam=lam, g=g)
-    return proximal_convexconjugate(prox_cc_l2)
+    prox_cc_l2_squared = proximal_convexconjugate_l2_squared(space,
+                                                             lam=lam, g=g)
+    return proximal_convexconjugate(prox_cc_l2_squared)
 
 
 def proximal_convexconjugate_l1(space, lam=1, g=None):

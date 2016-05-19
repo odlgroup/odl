@@ -32,7 +32,9 @@ from odl.solvers.advanced.proximal_operators import (
     combine_proximals, proximal_zero, proximal_nonnegativity,
     proximal_l1, proximal_convexconjugate_l1,
     proximal_l2, proximal_convexconjugate_l2,
+    proximal_l2_squared, proximal_convexconjugate_l2_squared,
     proximal_convexconjugate_kl)
+from odl.util.testutils import example_element
 
 
 pytestmark = odl.util.skip_if_no_largescale
@@ -47,17 +49,27 @@ def stepsize(request):
     return request.param
 
 
-prox_params = ['l1', 'l1_dual',
-               'l2', 'l2_dual']
-prox_ids = [' f = {} '.format(p) for p in prox_params]
+offset_params = [False, True]
+offset_ids = [' offset = {} '.format(str(p).ljust(5)) for p in offset_params]
+
+
+@pytest.fixture(scope="module", ids=offset_ids, params=offset_params)
+def offset(request):
+    return request.param
+
+
+prox_params = ['l1 ', 'l1_dual',
+               'l2', 'l2_dual',
+               'l2^2', 'l2^2_dual']
+prox_ids = [' f = {}'.format(p.ljust(10)) for p in prox_params]
 
 
 @pytest.fixture(scope="module", ids=prox_ids, params=prox_params)
 def proximal_and_function(request):
     """Return a proximal factory and the corresponding function."""
-    name = request.param
+    name = request.param.strip()
 
-    space = odl.uniform_discr(0, 1, 10)
+    space = odl.uniform_discr(0, 1, 2)
 
     if name == 'l1':
         def l1_norm(x):
@@ -81,19 +93,39 @@ def proximal_and_function(request):
 
     elif name == 'l2':
         def l2_norm(x):
-            return 0.5 * x.norm() ** 2
+            return x.norm()
 
         prox = proximal_l2(space)
 
         return prox, l2_norm
 
     elif name == 'l2_dual':
-        def l2_norm(x):
-            return 0.5 * x.norm() ** 2
+        def l2_norm_dual(x):
+            if x.norm() <= 1.00001:  # numerical margin
+                return 0.0
+            else:
+                return np.Infinity
 
         prox = proximal_convexconjugate_l2(space)
 
-        return prox, l2_norm
+        return prox, l2_norm_dual
+
+    elif name == 'l2^2':
+        def l2_norm_squared(x):
+            return 0.5 * x.norm() ** 2
+
+        prox = proximal_l2_squared(space)
+
+        return prox, l2_norm_squared
+
+    elif name == 'l2^2_dual':
+        def l2_norm_squared(x):
+            return 0.5 * x.norm() ** 2
+
+        prox = proximal_convexconjugate_l2_squared(space)
+
+        return prox, l2_norm_squared
+
     else:
         assert False
 
@@ -103,7 +135,7 @@ def proximal_objective(function, step_size, x, y):
     return function(y) + 1.0/(2.0 * step_size) * (x - y).norm() ** 2
 
 
-def test_proximal_defintion(stepsize, proximal_and_function):
+def test_proximal_defintion(proximal_and_function, stepsize):
     """Test the defintion of the proximal:
 
         prox[lam * f](x) = argmin_y {f(y) + 1/(2 lam) ||x-y||}
@@ -120,17 +152,22 @@ def test_proximal_defintion(stepsize, proximal_and_function):
 
     assert proximal.domain == proximal.range
 
-    x = odl.util.testutils.example_element(proximal.domain)
+    x = example_element(proximal.domain) * 10
     f_x = proximal_objective(function, stepsize, x, x)
     prox_x = proximal(x)
     f_prox_x = proximal_objective(function, stepsize, x, prox_x)
 
+    print(prox_x, x)
+    print(prox_x.norm(), x.norm())
+    print(f_prox_x, f_x)
     assert f_prox_x <= f_x
 
     for i in range(100):
-        y = odl.util.testutils.example_element(proximal.domain)
+        y = example_element(proximal.domain)
         f_y = proximal_objective(function, stepsize, x, y)
 
+        print(prox_x, y)
+        print(f_prox_x, f_y)
         assert f_prox_x <= f_y
 
 if __name__ == '__main__':

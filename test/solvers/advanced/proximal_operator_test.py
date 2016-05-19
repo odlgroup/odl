@@ -31,41 +31,13 @@ import odl
 from odl.solvers.advanced.proximal_operators import (
     combine_proximals, proximal_zero, proximal_nonnegativity,
     proximal_l1, proximal_convexconjugate_l1,
-    proximal_l2, proximal_convexconjugate_l2,
+    proximal_l2_squared, proximal_convexconjugate_l2_squared,
     proximal_convexconjugate_kl)
 from odl.util.testutils import all_almost_equal
 
 
 # Places for the accepted error when comparing results
 PLACES = 8
-
-
-prox_params = ['l1', 'l2']
-prox_ids = [' f = {} '.format(p) for p in prox_params]
-
-
-@pytest.fixture(scope="module", ids=prox_ids, params=prox_params)
-def proximal_and_function(request):
-    """Return a proximal factory and the corresponding function."""
-    name = request.param
-
-    space = odl.uniform_discr(0, 1, 2)
-
-    if name == 'l1':
-        def l1_norm(x):
-            return np.abs(x).inner(x.space.one())
-
-        prox = proximal_l1(space)
-
-        return prox, l1_norm
-
-    if name == 'l2':
-        def l2_norm(x):
-            return x.norm() ** 2
-
-        prox = proximal_l2(space)
-
-        return prox, l2_norm
 
 
 def test_proximal_zero():
@@ -160,7 +132,7 @@ def test_combine_proximal():
     assert out == x
 
 
-def test_proximal_factory_convconj_l2_wo_data():
+def test_proximal_factory_convconj_l2_sq_wo_data():
     """Proximal factory for the convex conjugate of the L2-norm."""
 
     # Image space
@@ -171,7 +143,7 @@ def test_proximal_factory_convconj_l2_wo_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l2(space, lam=lam)
+    make_prox = proximal_convexconjugate_l2_squared(space, lam=lam)
 
     # Initialize the proximal operator
     sigma = 0.5
@@ -191,7 +163,7 @@ def test_proximal_factory_convconj_l2_wo_data():
     assert all_almost_equal(x_opt, x_verify, PLACES)
 
 
-def test_proximal_factory_convconj_l2_with_data():
+def test_proximal_factory_convconj_l2_sq_with_data():
     """Proximal factory for the convex conjugate of the L2-norm."""
 
     # Image space
@@ -206,7 +178,7 @@ def test_proximal_factory_convconj_l2_with_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l2(space, lam=lam, g=g)
+    make_prox = proximal_convexconjugate_l2_squared(space, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.5
@@ -409,40 +381,6 @@ def test_proximal_factory_convconj_kl_product_space():
     # Compare components
     assert all_almost_equal(x_verify, x_opt)
 
-
-def proximal_objective(function, step_size, x_0, y):
-    return function(y) + 1/(2.0 * step_size) * (x_0 - y).norm() ** 2
-
-
-def test_proximal_defintion(proximal_and_function):
-    """Test the defintion of the proximal:
-
-        prox[lam * f](x) = argmin_y {f(y) + 1/(2 lam) ||x-y||}
-
-    Hence we expect for all x in the domain of the proximal
-
-        x* = prox[lam * f](x)
-        f(x*) + 1/(2 lam) ||x*-y|| < f(y) + 1/(2 lam) ||x-y||
-    """
-
-    proximal_factory, function = proximal_and_function
-
-    step_size = 0.1
-
-    proximal = proximal_factory(step_size)
-
-    assert proximal.domain == proximal.range
-
-    x_0 = odl.util.testutils.example_element(proximal.domain)
-    f_x = proximal_objective(function, step_size, x_0, x_0)
-    prox_x = proximal(x_0)
-    f_prox_x = proximal_objective(function, step_size, x_0, prox_x)
-
-    assert f_prox_x < f_x
-
-    for i in range(1000):
-        y = odl.util.testutils.example_element(proximal.domain)
-        assert f_prox_x < proximal_objective(function, step_size, x_0, y)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
