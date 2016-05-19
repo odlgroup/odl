@@ -132,7 +132,7 @@ def proximal_and_function(request):
 
 def proximal_objective(function, step_size, x, y):
     """Calculate the objective function of the proximal optimization problem"""
-    return function(y) + 1.0/(2.0 * step_size) * (x - y).norm() ** 2
+    return function(y) + 1.0 / (2.0 * step_size) * (x - y).norm() ** 2
 
 
 def test_proximal_defintion(proximal_and_function, stepsize):

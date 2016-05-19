@@ -83,8 +83,8 @@ proximal_primal = odl.solvers.proximal_zero(op.domain)
 # Create proximal operators for the dual variable
 
 # l2-data matching
-prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(ray_trafo.range,
-                                                           g=data)
+prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2_squared(ray_trafo.range,
+                                                                   g=data)
 
 # TV-regularization i.e. the l1-norm
 prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(
