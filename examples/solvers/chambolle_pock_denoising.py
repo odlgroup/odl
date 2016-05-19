@@ -102,7 +102,7 @@ prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(discr_space,
 
 # TV-regularization: l1-semi norm of grad(x)
 prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(gradient.range,
-                                                           lam=1/16)
+                                                           lam=1/16.0)
 
 # Combine proximal operators: the order must match the order of operators in K
 proximal_dual = odl.solvers.combine_proximals([prox_convconj_l2,

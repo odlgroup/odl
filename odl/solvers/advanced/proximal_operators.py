@@ -35,8 +35,11 @@ from odl.operator.pspace_ops import ProductSpaceOperator
 from odl.space.pspace import ProductSpace
 
 
-__all__ = ('combine_proximals', 'proximal_zero', 'proximal_nonnegativity',
-           'proximal_convexconjugate_l1', 'proximal_convexconjugate_l2',
+__all__ = ('combine_proximals', 'proximal_convexconjugate',
+           'proximal_composition', 'proximal_zero',
+           'proximal_clamp', 'proximal_nonnegativity',
+           'proximal_l1', 'proximal_convexconjugate_l1',
+           'proximal_l2', 'proximal_convexconjugate_l2',
            'proximal_convexconjugate_kl')
 
 
@@ -47,19 +50,19 @@ def combine_proximals(factory_list):
     This assumes the functional to be separable across variables in order to
     make use of the separable sum property of proximal operators.
 
-        prox_tau[f(x) + g(y)](x, y) = (prox_tau[f](x), prox_tau[g](y))
+        prox[tau * (f(x) + g(y))](x, y) =
+            (prox[tau * f](x), prox[tau * g](y))
 
     Parameters
     ----------
-    factory_list : list of `Operator`
-        A list containing proximal operators which are created by the
-        corresponding factory functions
+    factory_list : list of `callable`
+        A list containing proximal operator factories
 
     Returns
     -------
-    diag_op : `Operator`
-        Returns a diagonal product space operator to be initialized with
-        the same step size parameter
+    diag_op : `callable`
+        Returns a diagonal product space operator factory to be initialized
+        with the same step size parameter
     """
 
     def diagonal_operator(operators, dom=None, ran=None):
@@ -103,6 +106,107 @@ def combine_proximals(factory_list):
     return make_diag
 
 
+def proximal_convexconjugate(proximal):
+    """ Calculate the proximal of the dual using Moreau decomposition
+
+    The Moreau identity states that for any convex function ``F`` with
+    convex conjugate ``F^*``, the proximals satisfy
+
+        prox[a * F^*](x) + a * prox[F / a](x / a) = x
+
+    where ``a`` is a scalar step size. Using this, we find the proximal of the
+    convex conjugate
+
+        prox[a * F^*](x) = x - a * prox[F / a](x / a)
+
+    Parameters
+    ----------
+    proximal : `callable`
+        A factory function that when called with a stepsize returns the
+        proximal operator of ``F``.
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+    """
+
+    def make_convexconjugate_proximal(step_size):
+        """Create proximal for the dual with a given step_size
+
+        Parameters
+        ----------
+        step_size : positive `float`
+            Step size parameter
+
+        Returns
+        -------
+        proximal : `Operator`
+            The proximal operator of ``prox[a * f^*](x)``
+        """
+        prox_other = step_size * proximal(1 / step_size) * (1 / step_size)
+        return IdentityOperator(prox_other.domain) - prox_other
+
+    return make_convexconjugate_proximal
+
+
+def proximal_composition(proximal, operator, mu):
+    """ Calculate the proximal of functional a composed with unitary operator
+
+    Given an linear `Operator` ``L`` with the property that for a scalar ``mu``
+
+        L^*(L(x)) = mu * x
+
+    And a convex function ``f``, The following identity holds
+
+        prox[f * L](x) = x + 1/mu L^*(prox[mu * f](Lx) - Lx)
+
+    This factory function implements this functionality.
+
+    There is no simple formula for more general operators.
+
+    Parameters
+    ----------
+    proximal : `callable`
+        A factory function that when called with a stepsize returns the
+        proximal operator of ``F``.
+    operator : `Operator`
+        The operator to compose the functional with
+    mu : `Operator.field` element
+        Scalar such that ``operator.adjoint * operator = mu``
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    The function cannot verify that the identity holds, the user needs to
+    verify this.
+    """
+
+    def make_proximal_composition(step_size):
+        """Create proximal for the dual with a given step_size
+
+        Parameters
+        ----------
+        step_size : positive `float`
+            Step size parameter
+
+        Returns
+        -------
+        proximal : `Operator`
+            The proximal operator of ``prox[step_size * f * L](x)``
+        """
+        Id = IdentityOperator(operator.domain)
+        Ir = IdentityOperator(operator.range)
+        prox_muf = proximal(step_size)
+        return Id + (1.0 / mu) * operator.adjoint((prox_muf - Ir) * operator)
+
+    return make_proximal_composition
+
+
 def proximal_zero(space):
     """Function to create the proximal operator of the zero functional.
 
@@ -110,7 +214,7 @@ def proximal_zero(space):
     defined on ``space``. The proximal operator of this functional is the
     identity operator
 
-        prox_tau[G](x) = x  where G=0
+        prox[tau * G](x) = x  where G=0
 
     It is independent of tau.
 
@@ -121,11 +225,11 @@ def proximal_zero(space):
 
     Returns
     -------
-    prox : `Operator`
-        Returns the proximal operator to be initialized
+    prox : `callable`
+        Factory for the proximal operator to be initialized
     """
 
-    def make_prox(tau):
+    def make_identity(tau):
         """Return an instance of the proximal operator.
 
         Parameters
@@ -143,26 +247,112 @@ def proximal_zero(space):
 
         return IdentityOperator(space)
 
-    return make_prox
+    return make_identity
+
+
+def proximal_clamp(space, lower=None, upper=None):
+    """Function to create the proximal operator of G(x) = ind(a <= x <= b).
+
+    Function for the proximal operator of the functional G(x) = ind(a<=x<=b)
+    to be initialized.
+
+    If P is the set of elements with a < x < b, the indicator function of
+    which is defined as
+
+        ind(a < x < b) = {0 if x in P, infinity if x is not in P}
+
+    with x being an element in ``space``.
+
+    The proximal operator of ``tau * G^*`` where ``tau`` is a step size
+    is the point-wise non-negativity thresholding of x
+
+                              a if x < a,
+         prox[tau * G](x) = { x if a <= x <= b
+                              b if x > b
+
+    It is independent of tau and invariant under a positive rescaling of G
+    which leaves the indicator function as it stands.
+
+    Parameters
+    ----------
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
+        Domain of the functional G(x)
+    lower : ``space.field`` element or ``space`` element-like, optional
+        The lower bound. Default: `None`, interpreted as -infinity
+    upper : ``space.field`` element or ``space`` element-like, optional
+        The upper bound. Default: `None`, interpreted as infinity
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    See Also
+    --------
+    proximal_nonnegativity : Special case with ``lower=0, upper=infty``
+    """
+
+    # Convert element-likes if needed, also does some space checking
+    if lower is not None and lower not in space and lower not in space.field:
+        lower = space.element(lower)
+    if upper is not None and upper not in space and upper not in space.field:
+        upper = space.element(upper)
+
+    if lower in space.field and upper in space.field:
+        if lower > upper:
+            raise ValueError('Invalid values, `lower` ({}) > `upper` ({}).'
+                             ''.format(lower, upper))
+        assert lower < upper
+
+    class _ProxOpClamp(Operator):
+
+        """The proximal operator."""
+
+        def __init__(self, tau):
+            """Initialize the proximal operator.
+
+            Parameters
+            ----------
+            tau : positive `float`
+                Step size parameter. Not used.
+            """
+            self.tau = float(tau)
+            super().__init__(domain=space, range=space, linear=False)
+
+        def _call(self, x, out):
+            """Apply the operator to ``x`` and store the result in ``out``."""
+
+            # Point-wise non-negativity thresholding: x if x > 0, else 0
+            if lower is not None and upper is None:
+                x.ufunc.maximum(lower, out=out)
+            elif lower is None and upper is not None:
+                x.ufunc.minimum(upper, out=out)
+            elif lower is not None and upper is not None:
+                x.ufunc.maximum(lower, out=out)
+                out.ufunc.minimum(upper, out=out)
+            else:
+                out.assign(x)
+
+    return _ProxOpClamp
 
 
 def proximal_nonnegativity(space):
-    """Function to create the proximal operator of G(x) = ind(x > 0).
+    """Function to create the proximal operator of G(x) = ind(x >= 0).
 
-    Function for the proximal operator of the functional G(x)=ind(x > 0) to be
+    Function for the proximal operator of the functional G(x)=ind(x >= 0) to be
     initialized.
 
     If P is the set of non-negative elements, the indicator function of
     which is defined as
 
-        ind(x > 0) = {0 if x in P, infinity if x is not in P}
+        ind(x >= 0) = {0 if x in P, infinity if x is not in P}
 
     with x being an element in ``space``.
 
-    The proximal operator of G is the point-wise non-negativity thresholding
-    of x
+    The proximal operator of ``tau * F^*`` where ``tau`` is a step size
+    is the point-wise non-negativity thresholding of x
 
-         prox_tau[G](x) = {x if x > 0, 0 if <= 0}
+         prox[tau * G](x) = {x if x >= 0, 0 if < 0}
 
     It is independent of tau and invariant under a positive rescaling of G
     which leaves the indicator function as it stands.
@@ -174,32 +364,15 @@ def proximal_nonnegativity(space):
 
     Returns
     -------
-    prox : `Operator`
-        Returns the proximal operator to be initialized
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    See Also
+    --------
+    proximal_clamp : The underlying implementation
     """
 
-    class _ProxOpNonNegative(Operator):
-
-        """The proximal operator."""
-
-        def __init__(self, tau):
-            """Initialize the proximal operator.
-
-            Parameters
-            ----------
-            tau : positive `float`
-                Unused step size parameter. Introduced to provide a unified
-                interface
-            """
-            super().__init__(domain=space, range=space, linear=False)
-
-        def _call(self, x, out):
-            """Apply the operator to ``x`` and store the result in ``out``."""
-
-            # Point-wise non-negativity thresholding: x if x > 0, else 0
-            x.ufunc.maximum(0.0, out=out)
-
-    return _ProxOpNonNegative
+    return proximal_clamp(space, lower=0)
 
 
 def proximal_convexconjugate_l2(space, lam=1, g=None):
@@ -212,13 +385,14 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
 
     with x and g elements in ``space``, scaling factor lam, and given data g.
 
-    The convex conjugate, F_cc, of F is given by
+    The convex conjugate, F^*, of F is given by
 
-        F_cc(y) = 1/lam (1/2 ||y/lam||_2^2 + <y/lam,g>)
+        F^*(y) = 1/lam (1/2 ||y/lam||_2^2 + <y/lam,g>)
 
-    The proximal operator of F_cc is given by
+    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
+    is given by
 
-        prox_sigma[F_cc](y) = (y - sigma g) / (1 + sigma/lam)
+        prox[sigma * F^*](y) = (y - sigma g) / (1 + sigma/lam)
 
     Parameters
     ----------
@@ -231,16 +405,17 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `Operator`
-        Returns the proximal operator to be initialized
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    See Also
+    --------
+    proximal_l2 : proximal without convex conjugate
     """
     lam = float(lam)
 
-    if g is None:
-        g = space.zero()
-    else:
-        if g not in space:
-            raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+    if g is not None and g not in space:
+        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
     class _ProximalConvConjL2(Operator):
 
@@ -255,7 +430,7 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
                 Step size parameter
             """
             self.sigma = float(sigma)
-            super().__init__(domain=space, range=space, linear=False)
+            super().__init__(domain=space, range=space, linear=g is None)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in
@@ -264,9 +439,51 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
             # (x - sig*g) / (1 + sig/lam)
 
             sig = self.sigma
-            out.lincomb(1 / (1 + sig / lam), x, -sig / (1 + sig / lam), g)
+            if g is None:
+                out.lincomb(1 / (1 + sig / lam), x)
+            else:
+                out.lincomb(1 / (1 + sig / lam), x, -sig / (1 + sig / lam), g)
 
     return _ProximalConvConjL2
+
+
+def proximal_l2(space, lam=1, g=None):
+    """Proximal operator factory of the convex conjugate of the l2-norm.
+
+    Function for the proximal operator of the convex conjugate of the
+    functional F where F is the l2-norm
+
+        F(x) =  lam 1/2 ||x - g||_2^2
+
+    with x and g elements in ``space``, scaling factor lam, and given data g.
+
+    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
+    is given by
+
+        prox[sigma * F^*](y) = (y - sigma g) / (1 + sigma/lam)
+
+    Parameters
+    ----------
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
+        Domain of F(x)
+    g : `DiscreteLpVector`
+        An element in ``space``
+    lam : positive `float`
+        Scaling factor or regularization parameter
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    See Also
+    --------
+    proximal_convexconjugate_l2 : proximal for convex conjugate
+    """
+
+    # TODO: optimize
+    prox_cc_l2 = proximal_convexconjugate_l2(space, lam=lam, g=g)
+    return proximal_convexconjugate(prox_cc_l2)
 
 
 def proximal_convexconjugate_l1(space, lam=1, g=None):
@@ -281,17 +498,18 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
     magnitude ||x||_p of x. If x is vector-valued, ||x||_p is the point-wise
     l2-norm across the vector components.
 
-    The convex conjugate, F_cc, of F is given by the indicator function of
+    The convex conjugate, F^*, of F is given by the indicator function of
     the set box(lam)
 
-        F_cc(y) = lam ind_{box(lam)}(||y / lam||_p + <y / lam, g>)
+        F^*(y) = lam ind_{box(lam)}(||y / lam||_p + <y / lam, g>)
 
     where box(lam) is a hypercube centered at the origin with width 2 lam.
 
-    The proximal operator of F_cc is
+    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
+    is given by
 
-        prox_sigma[F_cc](y) = lam (y - sigma g) / (max(lam 1_{||y||_p},
-        ||y - sigma g||_p)
+        prox[sigma * F^*](y) =
+            lam (y - sigma g) / (max(lam 1_{||y||_p}, ||y - sigma g||_p)
 
     where max(.,.) thresholds the lower bound of ||y||_p point-wise and
     1_{||y||_p} is a vector in the space of ||y||_p with all components set
@@ -308,16 +526,17 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `Operator`
-        Returns the proximal operator to be initialized
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    See Also
+    --------
+    proximal_l1 : proximal without convex conjugate conjugate
     """
     lam = float(lam)
 
-    if g is None:
-        g = space.zero()
-    else:
-        if g not in space:
-            raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+    if g is not None and g not in space:
+        raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
     class _ProximalConvConjL1(Operator):
 
@@ -329,17 +548,21 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
             Parameters
             ----------
             sigma : positive `float`
+                Stepsize parameter
             """
+            # sigma is not used
             self.sigma = float(sigma)
             super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``."""
-            sig = self.sigma
 
-            # lam * (x - sig * g) / max(lam, |x - sig * g|)
+            # lam * (x - sigma * g) / max(lam, |x - sigma * g|)
 
-            diff = x - sig * g
+            if g is not None:
+                diff = x - self.sigma * g
+            else:
+                diff = x
 
             if isinstance(x.space, ProductSpace):
                 # Calculate |x| = pointwise 2-norm of x
@@ -355,7 +578,7 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
                 tmp.ufunc.maximum(lam, out=tmp)
 
                 # Global scaling
-                tmp /= lam
+                tmp /= (lam)
 
                 # Pointwise division
                 for out_i, x_i in zip(out, diff):
@@ -369,7 +592,7 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
                 out.ufunc.maximum(lam, out=out)
 
                 # Global scaling
-                out /= lam
+                out /= (lam)
 
                 # Pointwise division
                 out.divide(diff, out)
@@ -377,7 +600,49 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
     return _ProximalConvConjL1
 
 
-# TODO: move notes to ODL doc
+def proximal_l1(space, lam=1, g=None):
+    """Proximal operator factory of the l1-semi-norm.
+
+    Function for the proximal operator of the functional F where F is an
+    l1-semi-norm
+
+        F(x) = lam || ||x-g||_p ||_1
+
+    with x and g elements in ``space``, scaling factor lam, and point-wise
+    magnitude ||x||_p of x. If x is vector-valued, ||x||_p is the point-wise
+    l2-norm across the vector components.
+
+    The proximal operator of F is
+
+                              y - lam   if y > lam,
+         prox[lam * F](y) = { 0         if -lam <= y <= lam
+                              y + lam   if y < -lam
+
+
+    Parameters
+    ----------
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
+        Domain of the functional F
+    g : `DiscreteLpVector`
+        An element in ``space``
+    lam : positive `float`
+        Scaling factor or regularization parameter
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    See Also
+    --------
+    proximal_convexconjugate_l1 : proximal for convex conjugate
+    """
+
+    # TODO: optimize
+    prox_cc_l1 = proximal_convexconjugate_l1(space, lam=lam, g=g)
+    return proximal_convexconjugate(prox_cc_l1)
+
+
 def proximal_convexconjugate_kl(space, lam=1, g=None):
     """Proximal operator factory of the convex conjugate of the KL divergence.
 
@@ -391,17 +656,17 @@ def proximal_convexconjugate_kl(space, lam=1, g=None):
     that F is defined over whole X. The non-negativity thresholding pos is
     used to define F in the real numbers.
 
-    The proximal operator of the convex conjugate, F_cc, of F is
+    The proximal operator of the convex conjugate, F^*, of F is
 
-        F_cc(p) = sum_i (-g ln(pos(1_X - p))_i + ind_P(1_X - p)
+        F^*(p) = sum_i (-g ln(pos(1_X - p))_i + ind_P(1_X - p)
 
     where p is the variable dual to x, and 1_X is a vector in the space X with
     all components set to 1.
 
     The proximal operator of the convex conjugate of F is
 
-        prox_sigma[F_cc](x) = 1/2 (lam_X + x - sqrt((x - lam_X)^2 + 4 lam
-        sigma g)
+        prox[sigma * F^*](x) =
+            1/2 (lam + x - sqrt((x - lam)^2 + 4 lam sigma g)
 
     with the step size parameter sigma and lam_X is a vector in the space X
     with all components set to lam.
@@ -417,8 +682,8 @@ def proximal_convexconjugate_kl(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `Operator`
-        Returns the proximal operator to be initialized
+    prox : `callable`
+        Factory for the proximal operator to be initialized
 
     Notes
     -----
@@ -433,11 +698,8 @@ def proximal_convexconjugate_kl(space, lam=1, g=None):
     """
     lam = float(lam)
 
-    if g is None:
-        g = space.zero()
-    else:
-        if g not in space:
-            raise TypeError('{} is not an element of {}'.format(g, space))
+    if g is not None and g not in space:
+        raise TypeError('{} is not an element of {}'.format(g, space))
 
     class _ProximalConvConjKL(Operator):
 
@@ -466,7 +728,8 @@ def proximal_convexconjugate_kl(space, lam=1, g=None):
             out.ufunc.square(out=out)
 
             # out = out + 4 lam sigma g
-            out.lincomb(1, out, 4.0 * lam * self.sigma, g)
+            if g is not None:
+                out.lincomb(1, out, 4.0 * lam * self.sigma, g)
 
             # out = sqrt(out)
             out.ufunc.sqrt(out=out)

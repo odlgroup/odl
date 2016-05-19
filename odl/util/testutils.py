@@ -230,11 +230,11 @@ def example_array(space):
     """Generate an example array that is compatible with ``space``"""
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(space.dtype, np.floating):
-        arr = np.random.rand(space.size)
+        arr = np.random.randn(space.size)
     elif np.issubdtype(space.dtype, np.integer):
-        arr = np.random.randint(0, 10, space.size)
+        arr = np.random.randint(-10, 10, space.size)
     else:
-        arr = np.random.rand(space.size) + 1j * np.random.rand(space.size)
+        arr = np.random.randn(space.size) + 1j * np.random.randn(space.size)
 
     return arr.astype(space.dtype, copy=False)
 

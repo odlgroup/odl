@@ -74,16 +74,16 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     sigma : positive `float`
         Step size parameter for the update of the dual variable y. Controls
         the extent to which ``proximal_dual`` maps points towards the
-        minimum of F_cc.
+        minimum of F^*.
     proximal_primal : `callable`
         Evaluated at ``tau``, the function returns the proximal operator,
-        prox_tau[G](x), of the functional G. The domain of G and its
+        prox[tau * G](x), of the functional G. The domain of G and its
         proximal operator instance are the space, X, of the primal variable
         x  i.e. the domain of ``op``.
     proximal_dual : `callable`
         Evaluated at ``sigma``, the function returns the proximal operator,
-        prox_sigma[F_cc](x), of the convex conjugate, F_cc, of the function
-        F. The domain of F_cc and its proximal operator instance are the
+        prox[sigma * F^*](x), of the convex conjugate, F^*, of the function
+        F. The domain of F^* and its proximal operator instance are the
         space, Y, of the dual variable y i.e. the range of ``op``.
     niter : non-negative `int`, optional
         Number of iterations
@@ -95,7 +95,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     gamma : non-negative `float`, optional
         Acceleration parameter. If not `None` overwrites ``theta`` and uses
         variable relaxation parameter and step sizes with ``tau`` and
-        ``sigma`` as initial values. Requires G or F_cc to be uniformly
+        ``sigma`` as initial values. Requires G or F^* to be uniformly
         convex. Default: `None`
     partial : `Partial`, optional
         If not `None` the `Partial` instance(s) are executed in each
