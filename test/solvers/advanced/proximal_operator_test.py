@@ -29,7 +29,8 @@ import pytest
 # Internal
 import odl
 from odl.solvers.advanced.proximal_operators import (
-    combine_proximals, proximal_zero, proximal_clamp, proximal_nonnegativity,
+    combine_proximals, proximal_zero,
+    proximal_box_constraint, proximal_nonnegativity,
     proximal_l1, proximal_convexconjugate_l1,
     proximal_l2,
     proximal_l2_squared, proximal_convexconjugate_l2_squared,
@@ -66,7 +67,7 @@ def test_proximal_zero():
     assert x == x_opt
 
 
-def test_proximal_clamp():
+def test_proximal_box_constraint():
     """Proximal factory for indicator function for non-negativity ."""
 
     # Image space
@@ -75,13 +76,12 @@ def test_proximal_clamp():
     # Element in the image space where the proximal operator is evaluated
     x = space.element(np.arange(-5, 5))
 
-    lower_vector = -2.0 * space.one()
-    upper_vector = 2.0 * space.one()
-
-    for lower in [None, -2, lower_vector]:
-        for upper in [None, 2, upper_vector]:
+    for lower in [None, -2, -2.0 * space.one()]:
+        for upper in [None, 2, 2.0 * space.one()]:
             # Factory function returning the proximal operator
-            prox = proximal_clamp(space, lower=lower, upper=upper)(1.0)
+            prox_factory = proximal_box_constraint(space,
+                                                   lower=lower, upper=upper)
+            prox = prox_factory(1.0)
             result = prox(x).asarray()
 
             # Create reference

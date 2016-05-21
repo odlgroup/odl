@@ -37,7 +37,7 @@ from odl.space.pspace import ProductSpace
 
 __all__ = ('combine_proximals', 'proximal_convexconjugate',
            'proximal_composition', 'proximal_zero',
-           'proximal_clamp', 'proximal_nonnegativity',
+           'proximal_box_constraint', 'proximal_nonnegativity',
            'proximal_l1', 'proximal_convexconjugate_l1',
            'proximal_l2', 'proximal_convexconjugate_l2',
            'proximal_l2_squared', 'proximal_convexconjugate_l2_squared',
@@ -601,7 +601,7 @@ def proximal_l2_squared(space, lam=1, g=None):
     ----------
     space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
         Domain of F(x)
-    g : `DiscreteLpVector`
+    g : ``space`` element
         An element in ``space``
     lam : positive `float`
         Scaling factor or regularization parameter
