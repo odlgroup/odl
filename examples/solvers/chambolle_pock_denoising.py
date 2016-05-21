@@ -104,8 +104,8 @@ prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=1/16.0,
                                                  isotropic=True)
 
 # Combine proximal operators: the order must match the order of operators in K
-proximal_dual = odl.solvers.combine_proximals(
-    [prox_convconj_l2, prox_convconj_l1])
+proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
+                                              prox_convconj_l1)
 
 # Proximal operator related to the primal variable
 

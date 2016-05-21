@@ -48,7 +48,7 @@ __all__ = ('combine_proximals', 'proximal_cconj',
 
 
 # TODO: remove diagonal op once available on master
-def combine_proximals(factory_list):
+def combine_proximals(*factory_list):
     """Combine proximal operators into a diagonal product space operator.
 
     This assumes the functional to be separable across variables in order to
@@ -69,29 +69,6 @@ def combine_proximals(factory_list):
         with the same step size parameter
     """
 
-    def diagonal_operator(operators, dom=None, ran=None):
-        """Broadcast argument to set of operators.
-
-        Parameters
-        ----------
-        operators : array-like
-            An array of `Operator`s
-        dom : `ProductSpace`, optional
-            Domain of the operator. If not provided, it is tried to be
-            inferred from the operators. This requires each **column**
-            to contain at least one operator.
-        ran : `ProductSpace`, optional
-            Range of the operator. If not provided, it is tried to be
-            inferred from the operators. This requires each **row**
-            to contain at least one operator.
-        """
-
-        indices = [range(len(operators)), range(len(operators))]
-        shape = (len(operators), len(operators))
-        op_matrix = sp.sparse.coo_matrix((operators, indices), shape)
-
-        return ProductSpaceOperator(op_matrix, dom=dom, ran=ran)
-
     def make_diag(step_size):
         """Diagonal matrix of operators
 
@@ -104,8 +81,13 @@ def combine_proximals(factory_list):
         -------
         diag_op : `Operator`
         """
-        return diagonal_operator(
-            [factory(step_size) for factory in factory_list])
+        operators = [factory(step_size) for factory in factory_list]
+
+        indices = [range(len(operators)), range(len(operators))]
+        shape = (len(operators), len(operators))
+        op_matrix = sp.sparse.coo_matrix((operators, indices), shape)
+
+        return ProductSpaceOperator(op_matrix)
 
     return make_diag
 

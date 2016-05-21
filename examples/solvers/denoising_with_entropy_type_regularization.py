@@ -79,8 +79,8 @@ prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.1,
                                                  isotropic=True)
 
 # Combine proximal operators: the order must match the order of operators in K
-proximal_dual = odl.solvers.combine_proximals([prox_convconj_kl,
-                                               prox_convconj_l1])
+proximal_dual = odl.solvers.combine_proximals(prox_convconj_kl,
+                                              prox_convconj_l1)
 
 # Optional: pass partial objects to solver
 partial = (odl.solvers.PrintIterationPartial() &

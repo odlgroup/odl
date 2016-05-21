@@ -128,7 +128,7 @@ def test_combine_proximal():
     make_prox = proximal_zero(space)
 
     # Combine factory function of proximal operators
-    combined_make_prox = combine_proximals([make_prox, make_prox])
+    combined_make_prox = combine_proximals(make_prox, make_prox)
 
     # Initialize combine proximal operator
     prox = combined_make_prox(1)

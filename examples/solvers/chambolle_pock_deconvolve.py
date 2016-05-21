@@ -108,8 +108,8 @@ prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.0005,
                                                  isotropic=True)
 
 # Combine proximal operators, order must correspond to the operator K
-proximal_dual = odl.solvers.combine_proximals(
-    [prox_convconj_l2, prox_convconj_l1])
+proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
+                                              prox_convconj_l1)
 
 
 # --- Select solver parameters and solve using Chambolle-Pock --- #
