@@ -17,6 +17,9 @@
 
 """Factory functions for creating proximal operators.
 
+Functions with ``cconj`` mean the proximal of the convex conjugate and are
+provided for convenience.
+
 For more details see :ref:`proximal_operators` and references therein. For
 more details on proximal operators including how to evaluate the proximal
 operator of a variety of functions see [PB2014]_. """
@@ -35,13 +38,13 @@ from odl.operator.pspace_ops import ProductSpaceOperator
 from odl.space.pspace import ProductSpace
 
 
-__all__ = ('combine_proximals', 'proximal_convexconjugate',
+__all__ = ('combine_proximals', 'proximal_cconj',
            'proximal_composition', 'proximal_zero',
            'proximal_box_constraint', 'proximal_nonnegativity',
-           'proximal_l1', 'proximal_convexconjugate_l1',
-           'proximal_l2', 'proximal_convexconjugate_l2',
-           'proximal_l2_squared', 'proximal_convexconjugate_l2_squared',
-           'proximal_convexconjugate_kl')
+           'proximal_l1', 'proximal_cconj_l1',
+           'proximal_l2', 'proximal_cconj_l2',
+           'proximal_l2_squared', 'proximal_cconj_l2_squared',
+           'proximal_cconj_kl')
 
 
 # TODO: remove diagonal op once available on master
@@ -107,7 +110,7 @@ def combine_proximals(factory_list):
     return make_diag
 
 
-def proximal_convexconjugate(proximal):
+def proximal_cconj(proximal):
     """Calculate the proximal of the dual using Moreau decomposition.
 
     The Moreau identity states that for any convex function ``F`` with
@@ -375,7 +378,7 @@ def proximal_nonnegativity(space):
     return proximal_box_constraint(space, lower=0)
 
 
-def proximal_convexconjugate_l2(space, lam=1, g=None):
+def proximal_cconj_l2(space, lam=1, g=None):
     """Proximal operator factory of the convex conjugate of the l2-norm.
 
     Function for the proximal operator of the convex conjugate of the
@@ -392,7 +395,7 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
     The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
     is given by
 
-        prox[sigma * F^*](y) = (y - sigma g) / (1 + sigma/lam)
+        prox[sigma * F^*](y) = (x - g) / ||x - g||
 
     Parameters
     ----------
@@ -411,16 +414,16 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
     Notes
     -----
     Most problems are forumlated for the squared norm, in that case use the
-    `proximal_convexconjugate_l2_squared` instead.
+    `proximal_cconj_l2_squared` instead.
 
     See Also
     --------
     proximal_l2 : proximal without convex conjugate
-    proximal_convexconjugate_l2_squared : proximal for norm squared square
+    proximal_cconj_l2_squared : proximal for norm squared square
     """
 
     prox_l2 = proximal_l2(space, lam=lam, g=g)
-    return proximal_convexconjugate(prox_l2)
+    return proximal_cconj(prox_l2)
 
 
 def proximal_l2(space, lam=1, g=None):
@@ -434,10 +437,10 @@ def proximal_l2(space, lam=1, g=None):
     The proximal operator of ``sigma * F`` where ``sigma`` is a step size
     is given by
 
-        prox[sigma * F^*](y) = { (1.0 - c / ||x-g||) * x  + c * g    if c < 1
-                                 g                                   else
+        prox[sigma * F](y) = { (1.0 - c / ||x-g||) * x  + c * g    if c < 1
+                               g                                   else
 
-    where ``c = step * lam / ||x - g||_2``.
+    where ``c = sigma * lam / ||x - g||_2``.
 
     Parameters
     ----------
@@ -461,7 +464,7 @@ def proximal_l2(space, lam=1, g=None):
     See Also
     --------
     proximal_l2_squared : proximal for norm squared
-    proximal_convexconjugate_l2 : proximal for convex conjugate
+    proximal_cconj_l2 : proximal for convex conjugate
     """
 
     lam = float(lam)
@@ -487,29 +490,26 @@ def proximal_l2(space, lam=1, g=None):
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``."""
 
-            step = self.sigma * lam
-
             if g is None:
-                x_norm = x.norm()
+                step = self.sigma * lam / x.norm()
 
-                if x_norm >= step:
-                    out.lincomb(1.0 - step / x_norm, x)
+                if step < 1.0:
+                    out.lincomb(1.0 - step, x)
                 else:
                     out.set_zero()
 
             else:
-                diff_norm = (x - g).norm()
+                step = self.sigma * lam / (x - g).norm()
 
-                if diff_norm >= step:
-                    out.lincomb(1.0 - step / diff_norm, x,
-                                step / diff_norm, g)
+                if step < 1.0:
+                    out.lincomb(1.0 - step, x, step, g)
                 else:
                     out.assign(g)
 
     return ProximalL2
 
 
-def proximal_convexconjugate_l2_squared(space, lam=1, g=None):
+def proximal_cconj_l2_squared(space, lam=1, g=None):
     """Proximal operator factory of the convex conj of the squared l2-norm.
 
     Function for the proximal operator of the convex conjugate of the
@@ -526,7 +526,7 @@ def proximal_convexconjugate_l2_squared(space, lam=1, g=None):
     The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
     is given by
 
-        prox[sigma * F^*](y) = (y - sigma g) / (1 + sigma/lam)
+        prox[sigma * F^*](y) = (y - g) / (1 + 1/lam)
 
     Parameters
     ----------
@@ -544,7 +544,7 @@ def proximal_convexconjugate_l2_squared(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_convexconjugate_l2 : proximal without square
+    proximal_cconj_l2 : proximal without square
     proximal_l2_squared : proximal without convex conjugate
     """
     lam = float(lam)
@@ -614,16 +614,15 @@ def proximal_l2_squared(space, lam=1, g=None):
     See Also
     --------
     proximal_l2 : proximal without square
-    proximal_convexconjugate_l2_squared : proximal for convex conjugate
+    proximal_cconj_l2_squared : proximal for convex conjugate
     """
 
     # TODO: optimize
-    prox_cc_l2_squared = proximal_convexconjugate_l2_squared(space,
-                                                             lam=lam, g=g)
-    return proximal_convexconjugate(prox_cc_l2_squared)
+    prox_cc_l2_squared = proximal_cconj_l2_squared(space, lam=lam, g=g)
+    return proximal_cconj(prox_cc_l2_squared)
 
 
-def proximal_convexconjugate_l1(space, lam=1, g=None):
+def proximal_cconj_l1(space, lam=1, g=None):
     """Proximal operator factory of the convex conjugate of the l1-norm.
 
     Function for the proximal operator of the convex conjugate of the
@@ -715,7 +714,7 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
                 tmp.ufunc.maximum(lam, out=tmp)
 
                 # Global scaling
-                tmp /= (lam)
+                tmp /= lam
 
                 # Pointwise division
                 for out_i, x_i in zip(out, diff):
@@ -772,15 +771,15 @@ def proximal_l1(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_convexconjugate_l1 : proximal for convex conjugate
+    proximal_cconj_l1 : proximal for convex conjugate
     """
 
     # TODO: optimize
-    prox_cc_l1 = proximal_convexconjugate_l1(space, lam=lam, g=g)
-    return proximal_convexconjugate(prox_cc_l1)
+    prox_cc_l1 = proximal_cconj_l1(space, lam=lam, g=g)
+    return proximal_cconj(prox_cc_l1)
 
 
-def proximal_convexconjugate_kl(space, lam=1, g=None):
+def proximal_cconj_kl(space, lam=1, g=None):
     """Proximal operator factory of the convex conjugate of the KL divergence.
 
     Function returning the proximal operator of the convex conjugate of the

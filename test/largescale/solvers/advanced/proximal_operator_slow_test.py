@@ -30,10 +30,10 @@ import pytest
 import odl
 from odl.solvers.advanced.proximal_operators import (
     combine_proximals, proximal_zero, proximal_nonnegativity,
-    proximal_l1, proximal_convexconjugate_l1,
-    proximal_l2, proximal_convexconjugate_l2,
-    proximal_l2_squared, proximal_convexconjugate_l2_squared,
-    proximal_convexconjugate_kl)
+    proximal_l1, proximal_cconj_l1,
+    proximal_l2, proximal_cconj_l2,
+    proximal_l2_squared, proximal_cconj_l2_squared,
+    proximal_cconj_kl)
 from odl.util.testutils import example_element
 
 
@@ -87,7 +87,7 @@ def proximal_and_function(request):
             else:
                 return np.Infinity
 
-        prox = proximal_convexconjugate_l1(space)
+        prox = proximal_cconj_l1(space)
 
         return prox, l1_cc_norm
 
@@ -106,7 +106,7 @@ def proximal_and_function(request):
             else:
                 return np.Infinity
 
-        prox = proximal_convexconjugate_l2(space)
+        prox = proximal_cconj_l2(space)
 
         return prox, l2_norm_dual
 
@@ -122,7 +122,7 @@ def proximal_and_function(request):
         def l2_norm_squared(x):
             return 0.5 * x.norm() ** 2
 
-        prox = proximal_convexconjugate_l2_squared(space)
+        prox = proximal_cconj_l2_squared(space)
 
         return prox, l2_norm_squared
 
@@ -157,17 +157,12 @@ def test_proximal_defintion(proximal_and_function, stepsize):
     prox_x = proximal(x)
     f_prox_x = proximal_objective(function, stepsize, x, prox_x)
 
-    print(prox_x, x)
-    print(prox_x.norm(), x.norm())
-    print(f_prox_x, f_x)
     assert f_prox_x <= f_x
 
     for i in range(100):
         y = example_element(proximal.domain)
         f_y = proximal_objective(function, stepsize, x, y)
 
-        print(prox_x, y)
-        print(f_prox_x, f_y)
         assert f_prox_x <= f_y
 
 if __name__ == '__main__':

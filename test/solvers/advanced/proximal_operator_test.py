@@ -31,10 +31,10 @@ import odl
 from odl.solvers.advanced.proximal_operators import (
     combine_proximals, proximal_zero,
     proximal_box_constraint, proximal_nonnegativity,
-    proximal_l1, proximal_convexconjugate_l1,
+    proximal_l1, proximal_cconj_l1,
     proximal_l2,
-    proximal_l2_squared, proximal_convexconjugate_l2_squared,
-    proximal_convexconjugate_kl)
+    proximal_l2_squared, proximal_cconj_l2_squared,
+    proximal_cconj_kl)
 from odl.util.testutils import all_almost_equal
 
 
@@ -234,7 +234,7 @@ def test_proximal_factory_convconj_l2_sq_wo_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l2_squared(space, lam=lam, g=g)
+    make_prox = proximal_cconj_l2_squared(space, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.5
@@ -269,7 +269,7 @@ def test_proximal_factory_convconj_l2_sq_with_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l2_squared(space, lam=lam, g=g)
+    make_prox = proximal_cconj_l2_squared(space, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.5
@@ -301,7 +301,7 @@ def test_proximal_factory_convconj_l1_simple_space_without_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l1(space, lam=lam)
+    make_prox = proximal_cconj_l1(space, lam=lam)
 
     # Initialize the proximal operator of F^*
     sigma = 0.5
@@ -334,7 +334,7 @@ def test_proximal_factory_convconj_l1_simple_space_with_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l1(space, lam=lam, g=g)
+    make_prox = proximal_cconj_l1(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
     sigma = 0.5
@@ -373,7 +373,7 @@ def test_proximal_factory_convconj_l1_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l1(op_domain, lam=lam, g=g)
+    make_prox = proximal_cconj_l1(op_domain, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.5
@@ -413,7 +413,7 @@ def test_proximal_factory_convconj_kl_simple_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_kl(space, lam=lam, g=g)
+    make_prox = proximal_cconj_kl(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
     sigma = 0.5
@@ -452,7 +452,7 @@ def test_proximal_factory_convconj_kl_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_kl(op_domain, lam=lam, g=g)
+    make_prox = proximal_cconj_kl(op_domain, lam=lam, g=g)
 
     # Initialize the proximal operator
     sigma = 0.5
