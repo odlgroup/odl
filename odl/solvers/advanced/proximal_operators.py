@@ -108,7 +108,7 @@ def combine_proximals(factory_list):
 
 
 def proximal_convexconjugate(proximal):
-    """ Calculate the proximal of the dual using Moreau decomposition
+    """Calculate the proximal of the dual using Moreau decomposition.
 
     The Moreau identity states that for any convex function ``F`` with
     convex conjugate ``F^*``, the proximals satisfy
@@ -120,14 +120,14 @@ def proximal_convexconjugate(proximal):
 
         prox[a * F^*](x) = x - a * prox[F / a](x / a)
 
-    Note that since ``(F^*)^* = F``, this can be used to get the primal from
-    the dual.
+    Note that since ``(F^*)^* = F``, this can be used to get the proximal of
+    the original function from the proximal of the convex conjugate.
 
     Parameters
     ----------
-    proximal : `callable`
-        A factory function that when called with a stepsize returns the
-        proximal operator of ``F``.
+    prox_factory : `callable`
+        A factory function that, when called with a stepsize, returns the
+        proximal operator of ``F``
 
     Returns
     -------
@@ -135,8 +135,8 @@ def proximal_convexconjugate(proximal):
         Factory for the proximal operator to be initialized
     """
 
-    def make_convexconjugate_proximal(step_size):
-        """Create proximal for the dual with a given step_size
+    def cconj_prox_factory(step_size):
+        """Create proximal for the dual with a given step_size.
 
         Parameters
         ----------
@@ -151,11 +151,11 @@ def proximal_convexconjugate(proximal):
         prox_other = step_size * proximal(1.0 / step_size) * (1.0 / step_size)
         return IdentityOperator(prox_other.domain) - prox_other
 
-    return make_convexconjugate_proximal
+    return cconj_prox_factory
 
 
 def proximal_composition(proximal, operator, mu):
-    """ Calculate the proximal of functional a composed with unitary operator
+    """Proximal operator factory of functional composed with unitary operator.
 
     Given an linear `Operator` ``L`` with the property that for a scalar ``mu``
 
@@ -171,7 +171,7 @@ def proximal_composition(proximal, operator, mu):
 
     Parameters
     ----------
-    proximal : `callable`
+    prox_factory : `callable`
         A factory function that when called with a stepsize returns the
         proximal operator of ``F``.
     operator : `Operator`
@@ -181,7 +181,7 @@ def proximal_composition(proximal, operator, mu):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     Notes
@@ -190,7 +190,7 @@ def proximal_composition(proximal, operator, mu):
     verify this.
     """
 
-    def make_proximal_composition(step_size):
+    def proximal_composition_factory(step_size):
         """Create proximal for the dual with a given step_size
 
         Parameters
@@ -208,11 +208,11 @@ def proximal_composition(proximal, operator, mu):
         prox_muf = proximal(step_size)
         return Id + (1.0 / mu) * operator.adjoint((prox_muf - Ir) * operator)
 
-    return make_proximal_composition
+    return proximal_composition_factory
 
 
 def proximal_zero(space):
-    """Function to create the proximal operator of the zero functional.
+    """Proximal operator factory of the zero functional.
 
     Function to initialize the proximal operator of the zero functional
     defined on ``space``. The proximal operator of this functional is the
@@ -229,11 +229,11 @@ def proximal_zero(space):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
     """
 
-    def make_identity(tau):
+    def identity_factory(tau):
         """Return an instance of the proximal operator.
 
         Parameters
@@ -251,19 +251,16 @@ def proximal_zero(space):
 
         return IdentityOperator(space)
 
-    return make_identity
+    return identity_factory
 
 
-def proximal_clamp(space, lower=None, upper=None):
-    """Function to create the proximal operator of G(x) = ind(a <= x <= b).
+def proximal_box_constraint(space, lower=None, upper=None):
+    """Proximal operator factory for G(x) = ind(a <= x <= b).
 
-    Function for the proximal operator of the functional G(x) = ind(a<=x<=b)
-    to be initialized.
-
-    If P is the set of elements with a < x < b, the indicator function of
+    If P is the set of elements with a <= x <= b, the indicator function of
     which is defined as
 
-        ind(a < x < b) = {0 if x in P, infinity if x is not in P}
+        ind(a <= x <= b) = {0 if x in P, infinity if x is not in P}
 
     with x being an element in ``space``.
 
@@ -284,11 +281,11 @@ def proximal_clamp(space, lower=None, upper=None):
     lower : ``space.field`` element or ``space`` element-like, optional
         The lower bound. Default: `None`, interpreted as -infinity
     upper : ``space.field`` element or ``space`` element-like, optional
-        The upper bound. Default: `None`, interpreted as infinity
+        The upper bound. Default: `None`, interpreted as +infinity
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     See Also
@@ -306,11 +303,10 @@ def proximal_clamp(space, lower=None, upper=None):
         if lower > upper:
             raise ValueError('Invalid values, `lower` ({}) > `upper` ({}).'
                              ''.format(lower, upper))
-        assert lower < upper
 
-    class _ProxOpClamp(Operator):
+    class ProxOpClamp(Operator):
 
-        """The proximal operator."""
+        """Proximal operator for G(x) = ind(a <= x <= b)."""
 
         def __init__(self, tau):
             """Initialize the proximal operator.
@@ -337,7 +333,7 @@ def proximal_clamp(space, lower=None, upper=None):
             else:
                 out.assign(x)
 
-    return _ProxOpClamp
+    return ProxOpClamp
 
 
 def proximal_nonnegativity(space):
@@ -368,15 +364,15 @@ def proximal_nonnegativity(space):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     See Also
     --------
-    proximal_clamp : The underlying implementation
+    proximal_clamp
     """
 
-    return proximal_clamp(space, lower=0)
+    return proximal_box_constraint(space, lower=0)
 
 
 def proximal_convexconjugate_l2(space, lam=1, g=None):
@@ -409,18 +405,18 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     Notes
     -----
-    Most problems are forumlated for the norm squared, in that case use that
-    proximal operator instead.
+    Most problems are forumlated for the squared norm, in that case use the
+    `proximal_convexconjugate_l2_squared` instead.
 
     See Also
     --------
     proximal_l2 : proximal without convex conjugate
-    proximal_convexconjugate_l2 : proximal without square
+    proximal_convexconjugate_l2_squared : proximal for norm squared square
     """
 
     prox_l2 = proximal_l2(space, lam=lam, g=g)
@@ -430,15 +426,18 @@ def proximal_convexconjugate_l2(space, lam=1, g=None):
 def proximal_l2(space, lam=1, g=None):
     """Proximal operator factory of the l2-norm.
 
-    Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm
+    Function for the proximal operator of the  functional ``F`` where ``F``
+    is the l2-norm
 
         F(x) =  lam ||x - g||_2
 
     The proximal operator of ``sigma * F`` where ``sigma`` is a step size
     is given by
 
-        prox[sigma * F^*](y) = (y - sigma g) / (1 + sigma/lam)
+        prox[sigma * F^*](y) = { (1.0 - c / ||x-g||) * x  + c * g    if c < 1
+                                 g                                   else
+
+    where ``c = step * lam / ||x - g||_2``.
 
     Parameters
     ----------
@@ -451,7 +450,7 @@ def proximal_l2(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     Notes
@@ -470,9 +469,9 @@ def proximal_l2(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
-    class _ProximalL2(Operator):
+    class ProximalL2(Operator):
 
-        """The proximal operator."""
+        """Proximal operator of the l2-norm."""
 
         def __init__(self, sigma):
             """Initialize the proximal operator.
@@ -507,11 +506,11 @@ def proximal_l2(space, lam=1, g=None):
                 else:
                     out.assign(g)
 
-    return _ProximalL2
+    return ProximalL2
 
 
 def proximal_convexconjugate_l2_squared(space, lam=1, g=None):
-    """Proximal operator factory of the convex conjugate of the l2-norm square.
+    """Proximal operator factory of the convex conj of the squared l2-norm.
 
     Function for the proximal operator of the convex conjugate of the
     functional F where F is the l2-norm
@@ -540,7 +539,7 @@ def proximal_convexconjugate_l2_squared(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     See Also
@@ -553,9 +552,9 @@ def proximal_convexconjugate_l2_squared(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
-    class _ProximalConvConjL2Squared(Operator):
+    class ProximalConvConjL2Squared(Operator):
 
-        """The proximal operator."""
+        """Proximal operator of the convex conjugate of the squared l2-norm."""
 
         def __init__(self, sigma):
             """Initialize the proximal operator.
@@ -580,11 +579,11 @@ def proximal_convexconjugate_l2_squared(space, lam=1, g=None):
             else:
                 out.lincomb(1 / (1 + sig / lam), x, -sig / (1 + sig / lam), g)
 
-    return _ProximalConvConjL2Squared
+    return ProximalConvConjL2Squared
 
 
 def proximal_l2_squared(space, lam=1, g=None):
-    """Proximal operator factory of the l2-norm square.
+    """Proximal operator factory of the squared l2-norm.
 
     Function for the proximal operator of the convex conjugate of the
     functional F where F is the l2-norm
@@ -609,7 +608,7 @@ def proximal_l2_squared(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     See Also
@@ -625,10 +624,10 @@ def proximal_l2_squared(space, lam=1, g=None):
 
 
 def proximal_convexconjugate_l1(space, lam=1, g=None):
-    """Proximal operator factory of the convex conjugate of the l1-semi-norm.
+    """Proximal operator factory of the convex conjugate of the l1-norm.
 
     Function for the proximal operator of the convex conjugate of the
-    functional F where F is an l1-semi-norm
+    functional F where F is an l1-norm
 
         F(x) = lam || ||x-g||_p ||_1
 
@@ -664,7 +663,7 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     See Also
@@ -676,9 +675,9 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
-    class _ProximalConvConjL1(Operator):
+    class ProximalConvConjL1(Operator):
 
-        """The proximal operator."""
+        """Proximal operator of the convex conjugate of the l1-norm."""
 
         def __init__(self, sigma):
             """Initialize the proximal operator.
@@ -730,19 +729,19 @@ def proximal_convexconjugate_l1(space, lam=1, g=None):
                 out.ufunc.maximum(lam, out=out)
 
                 # Global scaling
-                out /= (lam)
+                out /= lam
 
                 # Pointwise division
                 out.divide(diff, out)
 
-    return _ProximalConvConjL1
+    return ProximalConvConjL1
 
 
 def proximal_l1(space, lam=1, g=None):
-    """Proximal operator factory of the l1-semi-norm.
+    """Proximal operator factory of the l1-norm.
 
     Function for the proximal operator of the functional F where F is an
-    l1-semi-norm
+    l1-norm
 
         F(x) = lam || ||x-g||_p ||_1
 
@@ -768,7 +767,7 @@ def proximal_l1(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     See Also
@@ -820,7 +819,7 @@ def proximal_convexconjugate_kl(space, lam=1, g=None):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : `callable`
         Factory for the proximal operator to be initialized
 
     Notes
@@ -839,9 +838,9 @@ def proximal_convexconjugate_kl(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{} is not an element of {}'.format(g, space))
 
-    class _ProximalConvConjKL(Operator):
+    class ProximalConvConjKL(Operator):
 
-        """The proximal operator."""
+        """Proximal operator of the convex conjugate of the KL divergence."""
 
         def __init__(self, sigma):
             """Initialize the proximal operator.
@@ -881,7 +880,7 @@ def proximal_convexconjugate_kl(space, lam=1, g=None):
             # out = 1/2 * out
             out /= 2
 
-    return _ProximalConvConjKL
+    return ProximalConvConjKL
 
 
 if __name__ == '__main__':

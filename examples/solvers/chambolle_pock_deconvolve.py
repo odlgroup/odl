@@ -66,21 +66,25 @@ n = 50
 # Discretized spaces
 space = odl.uniform_discr([0, 0], [n, n], [n, n])
 
-# Initialize convolution operator by fourier formula
-filter_width = 0.03 * n
+# Initialize convolution operator by Fourier formula
+#     conv(f, g) = F^{-1}[F[f] * F[g]]
+# Where F[.] is the Fourier transform and the fourier transform of a guassian
+# with standard deviation filter_width is another gaussian with width
+# 1 / filter_width
+filter_width = 2.0  # standard deviation of the Gaussian filter
 ft = odl.trafos.FourierTransform(space)
-C = filter_width**2 / 4.0**2  # by fourier transform of gaussian function
-gaussian = ft.range.element(lambda x: np.exp(-(x[0]**2 + x[1]**2) * C))
+c = filter_width**2 / 4.0**2
+gaussian = ft.range.element(lambda x: np.exp(-(x[0]**2 + x[1]**2) * c))
 convolution = ft.inverse * gaussian * ft
 
 # Optional: Run diagnostics to assure the adjoint is properly implemented
 # odl.diagnostics.OperatorTest(conv_op).run_tests()
 
 # Create phantom
-discr_phantom = odl.util.shepp_logan(space, modified=True)
+phantom = odl.util.shepp_logan(space, modified=True)
 
 # Create vector of convolved phantom
-data = convolution(discr_phantom)
+data = convolution(phantom)
 data.show('Convolved data')
 
 # Set up the Chambolle-Pock solver:
@@ -102,7 +106,7 @@ prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2_squared(space,
 
 # TV-regularization i.e. the l1-norm
 prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(
-    gradient.range, lam=0.0003)
+    gradient.range, lam=0.0005)
 
 # Combine proximal operators, order must correspond to the operator K
 proximal_dual = odl.solvers.combine_proximals(
@@ -122,7 +126,6 @@ sigma = 1.0 / op_norm  # Step size for the dual variable
 
 # Optionally pass partial to the solver to display intermediate results
 partial = (odl.solvers.util.PrintIterationPartial() &
-           odl.solvers.util.PrintTimingPartial() &
            odl.solvers.util.ShowPartial(display_step=20))
 
 # Choose a starting point
@@ -134,6 +137,6 @@ odl.solvers.chambolle_pock_solver(
     proximal_dual=proximal_dual, niter=niter, partial=partial)
 
 # Display images
-discr_phantom.show(title='original image')
+phantom.show(title='original image')
 data.show(title='convolved image')
 x.show(title='deconvolved image', show=True)
