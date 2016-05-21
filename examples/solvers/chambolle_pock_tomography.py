@@ -86,8 +86,9 @@ proximal_primal = odl.solvers.proximal_zero(op.domain)
 prox_convconj_l2 = odl.solvers.proximal_cconj_l2_squared(ray_trafo.range,
                                                          g=data)
 
-# TV-regularization i.e. the l1-norm
-prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.01)
+# Isotropic TV-regularization i.e. the l1-norm
+prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.01,
+                                                 isotropic=True)
 
 # Combine proximal operators, order must correspond to the operator K
 proximal_dual = odl.solvers.combine_proximals(

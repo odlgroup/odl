@@ -237,7 +237,7 @@ def test_proximal_factory_convconj_l2_sq_wo_data():
     make_prox = proximal_cconj_l2_squared(space, lam=lam, g=g)
 
     # Initialize the proximal operator
-    sigma = 0.5
+    sigma = 0.25
     prox = make_prox(sigma)
 
     assert isinstance(prox, odl.Operator)
@@ -272,7 +272,7 @@ def test_proximal_factory_convconj_l2_sq_with_data():
     make_prox = proximal_cconj_l2_squared(space, lam=lam, g=g)
 
     # Initialize the proximal operator
-    sigma = 0.5
+    sigma = 0.25
     prox = make_prox(sigma)
 
     assert isinstance(prox, odl.Operator)
@@ -290,7 +290,7 @@ def test_proximal_factory_convconj_l2_sq_with_data():
 
 
 def test_proximal_factory_convconj_l1_simple_space_without_data():
-    """Proximal factory for the convex conjugate of the L1-semi-norm."""
+    """Proximal factory for the convex conjugate of the L1-norm."""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
@@ -304,7 +304,7 @@ def test_proximal_factory_convconj_l1_simple_space_without_data():
     make_prox = proximal_cconj_l1(space, lam=lam)
 
     # Initialize the proximal operator of F^*
-    sigma = 0.5
+    sigma = 0.25
     prox = make_prox(sigma)
 
     assert isinstance(prox, odl.Operator)
@@ -314,14 +314,14 @@ def test_proximal_factory_convconj_l1_simple_space_without_data():
     prox(x, x_opt)
 
     # Explicit computation: x / max(lam, |x|)
-    denom = np.maximum(lam * np.ones(x_arr.shape), np.sqrt(x_arr ** 2))
+    denom = np.maximum(lam, np.sqrt(x_arr ** 2))
     x_verify = lam * x_arr / denom
 
     assert all_almost_equal(x_opt, x_verify, PLACES)
 
 
 def test_proximal_factory_convconj_l1_simple_space_with_data():
-    """Proximal factory for the convex conjugate of the L1-semi-norm."""
+    """Proximal factory for the convex conjugate of the L1-norm."""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
@@ -337,7 +337,7 @@ def test_proximal_factory_convconj_l1_simple_space_with_data():
     make_prox = proximal_cconj_l1(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
-    sigma = 0.5
+    sigma = 0.25
     prox = make_prox(sigma)
 
     assert isinstance(prox, odl.Operator)
@@ -347,15 +347,14 @@ def test_proximal_factory_convconj_l1_simple_space_with_data():
     prox(x, x_opt)
 
     # Explicit computation: (x - sigma * g) / max(lam, |x - sigma * g|)
-    denom = np.maximum(lam * np.ones(x_arr.shape),
-                       np.sqrt((x_arr - sigma * g_arr) ** 2))
+    denom = np.maximum(lam, np.abs(x_arr - sigma * g_arr))
     x0_verify = lam * (x_arr - sigma * g_arr) / denom
 
     assert all_almost_equal(x_opt, x0_verify, PLACES)
 
 
 def test_proximal_factory_convconj_l1_product_space():
-    """Proximal factory for the convex conjugate of the L1-semi-norm using
+    """Proximal factory for the convex conjugate of the L1-norm using
     product spaces."""
 
     # Product space for matrix of operators
@@ -373,30 +372,25 @@ def test_proximal_factory_convconj_l1_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_cconj_l1(op_domain, lam=lam, g=g)
+    make_prox = proximal_cconj_l1(op_domain, lam=lam, g=g, isotropic=True)
 
     # Initialize the proximal operator
-    sigma = 0.5
+    sigma = 0.25
     prox = make_prox(sigma)
 
     assert isinstance(prox, odl.Operator)
 
-    # Allocate output vector
-    x_opt = op_domain.element()
-
     # Apply the proximal operator returning its optimal point
-    prox(x, x_opt)
+    x_opt = prox(x)
 
     # Explicit computation: (x - sigma * g) / max(lam, |x - sigma * g|)
-    denom = np.maximum(
-        lam * np.ones(x0_arr.shape),
-        np.sqrt((x0_arr - sigma * g0_arr) ** 2 +
-                (x1_arr - sigma * g1_arr) ** 2))
-    x0_verify = lam * (x0_arr - sigma * g0_arr) / denom
-    x1_verify = lam * (x1_arr - sigma * g1_arr) / denom
+    denom = np.maximum(lam,
+                       np.sqrt((x0_arr - sigma * g0_arr) ** 2 +
+                               (x1_arr - sigma * g1_arr) ** 2))
+    x_verify = lam * (x - sigma * g) / denom
 
     # Compare components
-    assert all_almost_equal([x0_verify, x1_verify], x_opt)
+    assert all_almost_equal(x_verify, x_opt)
 
 
 def test_proximal_factory_convconj_kl_simple_space():
@@ -416,7 +410,7 @@ def test_proximal_factory_convconj_kl_simple_space():
     make_prox = proximal_cconj_kl(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
-    sigma = 0.5
+    sigma = 0.25
     prox = make_prox(sigma)
 
     assert isinstance(prox, odl.Operator)
@@ -455,7 +449,7 @@ def test_proximal_factory_convconj_kl_product_space():
     make_prox = proximal_cconj_kl(op_domain, lam=lam, g=g)
 
     # Initialize the proximal operator
-    sigma = 0.5
+    sigma = 0.25
     prox = make_prox(sigma)
 
     assert isinstance(prox, odl.Operator)

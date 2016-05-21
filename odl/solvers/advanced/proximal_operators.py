@@ -622,24 +622,36 @@ def proximal_l2_squared(space, lam=1, g=None):
     return proximal_cconj(prox_cc_l2_squared)
 
 
-def proximal_cconj_l1(space, lam=1, g=None):
+def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     """Proximal operator factory of the convex conjugate of the l1-norm.
 
     Function for the proximal operator of the convex conjugate of the
     functional F where F is an l1-norm
 
-        F(x) = lam || ||x-g||_p ||_1
+        F(x) = lam ||x - g||_1
 
-    with x and g elements in ``space``, scaling factor lam, and point-wise
-    magnitude ||x||_p of x. If x is vector-valued, ||x||_p is the point-wise
-    l2-norm across the vector components.
+    with x and g elements in ``space`` and scaling factor lam.
 
     The convex conjugate, F^*, of F is given by the indicator function of
     the set box(lam)
 
-        F^*(y) = lam ind_{box(lam)}(||y / lam||_p + <y / lam, g>)
+        F^*(y) = lam ind_{box(lam)}(|y / lam| + <y / lam, g>)
 
     where box(lam) is a hypercube centered at the origin with width 2 lam.
+
+    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
+    is given by
+
+        prox[sigma * F^*](y) = lam (y - sigma g) / (max(lam, |y - sigma g|)
+
+    An alternative formulation is available for `ProductSpace`'s, in that case
+    the ``isotropic`` parameter can be used, giving
+
+        F(x) = lam || ||x - g||_2 ||_1
+
+    In this case, the dual is
+
+        F^*(y) = lam ind_{box(lam)}(||y / lam||_p + <y / lam, g>)
 
     The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
     is given by
@@ -655,10 +667,13 @@ def proximal_cconj_l1(space, lam=1, g=None):
     ----------
     space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
         Domain of the functional F
-    g : `DiscreteLpVector`
+    g : ``space`` element
         An element in ``space``
     lam : positive `float`
         Scaling factor or regularization parameter
+    isotropic : `bool`
+        True if the norm should first be taken pointwise. Only available if
+        ``space`` is a `ProductSpace`.
 
     Returns
     -------
@@ -673,6 +688,14 @@ def proximal_cconj_l1(space, lam=1, g=None):
 
     if g is not None and g not in space:
         raise TypeError('{!r} is not an element of {!r}'.format(g, space))
+
+    if isotropic and not isinstance(space, ProductSpace):
+        raise TypeError('`isotropic` given without productspace `space`({})'
+                        ''.format(space))
+    if (isotropic and isinstance(space, ProductSpace) and
+            not space.is_power_space):
+        raise TypeError('`isotropic` given with non-powerspace `space`({})'
+                        ''.format(space))
 
     class ProximalConvConjL1(Operator):
 
@@ -700,7 +723,7 @@ def proximal_cconj_l1(space, lam=1, g=None):
             else:
                 diff = x
 
-            if isinstance(x.space, ProductSpace):
+            if isotropic:
                 # Calculate |x| = pointwise 2-norm of x
 
                 tmp = diff[0] ** 2

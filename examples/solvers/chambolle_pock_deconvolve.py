@@ -34,7 +34,7 @@ and
    G(x) = 0 ,
 
 respectively. Here, conv denotes the convolution operator, g the image to
-deconvolve, ||.||_2 the l2-norm, ||.||_1  the l1-semi-norm, grad the spatial
+deconvolve, ||.||_2 the l2-norm, ||.||_1  the l1-norm, grad the spatial
 gradient, lam the regularization parameter, |.| the point-wise magnitude
 across the vector components of grad(x), and K is a column vector of
 operators K = (conv, grad)^T.
@@ -103,8 +103,9 @@ proximal_primal = odl.solvers.proximal_zero(op.domain)
 # l2-data matching
 prox_convconj_l2 = odl.solvers.proximal_cconj_l2_squared(space, g=data)
 
-# TV-regularization i.e. the l1-norm
-prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.0005)
+# Isotropic TV-regularization i.e. the l1-norm
+prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.0005,
+                                                 isotropic=True)
 
 # Combine proximal operators, order must correspond to the operator K
 proximal_dual = odl.solvers.combine_proximals(
