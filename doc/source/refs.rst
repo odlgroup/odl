@@ -5,6 +5,15 @@ References
    gradient methods*. IMA Journal of Numerical Analysis, 8 (1988),
    pp 141--148.
 
+.. [BC2015] Bot, R.I, and Csetnek, E.R. *On the convergence rate of
+   a forward-backward type primal-dual splitting algorithm for convex
+   optimization problems*. Optimization, 64.1 (2015), pp 5--23.
+
+.. [BH2013] Bot, R.I, and Hendrich, C. *A Douglas-Rachford type
+   primal-dual method for solving inclusions with mixtures of
+   composite and parallel-sum type monotone operators*. SIAM Journal
+   on Optimization, 23.4 (2013), pp 2541--2565.
+
 .. [Bro1965] Broyden, C G. *A class of methods for solving nonlinear
    simultaneous equations*. Mathematics of computation, 33 (1965),
    pp 577--593.
