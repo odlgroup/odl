@@ -21,7 +21,13 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import stir_bindings
+# from . import stir_bindings
+# from .pystir_bindings import *
+# __all__+= pystir_bindings.__all__
+
+from . import stir_setup
+from .stir_setup import *
+__all__ += stir_setup.__all__
 
 from . import astra_setup
 from .astra_setup import *
