@@ -209,7 +209,7 @@ def proximal_zero(space):
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
+    space : `LinearSpace`
         Domain of the functional G=0
 
     Returns
@@ -261,7 +261,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
+    space : `LinearSpace`
         Domain of the functional G(x)
     lower : ``space.field`` element or ``space`` element-like, optional
         The lower bound. Default: `None`, interpreted as -infinity
@@ -344,7 +344,7 @@ def proximal_nonnegativity(space):
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
+    space : `LinearSpace`
         Domain of the functional G(x)
 
     Returns
@@ -381,9 +381,9 @@ def proximal_cconj_l2(space, lam=1, g=None):
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
-        Domain of F(x)
-    g : `DiscreteLpVector`
+    space : `LinearSpace`
+        Domain of F(x). Needs to be a hilbert space (have an inner product)
+    g : ``space`` element
         An element in ``space``
     lam : positive `float`
         Scaling factor or regularization parameter
@@ -401,7 +401,7 @@ def proximal_cconj_l2(space, lam=1, g=None):
     See Also
     --------
     proximal_l2 : proximal without convex conjugate
-    proximal_cconj_l2_squared : proximal for norm squared square
+    proximal_cconj_l2_squared : proximal for squared norm
     """
 
     prox_l2 = proximal_l2(space, lam=lam, g=g)
@@ -426,9 +426,9 @@ def proximal_l2(space, lam=1, g=None):
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
-        Domain of F(x)
-    g : `DiscreteLpVector`
+    space : `LinearSpace`
+        Domain of F(x). Needs to be a hilbert space (have an inner product)
+    g : ``space`` element
         An element in ``space``
     lam : positive `float`
         Scaling factor or regularization parameter
@@ -440,12 +440,12 @@ def proximal_l2(space, lam=1, g=None):
 
     Notes
     -----
-    Most problems are forumlated for the norm squared, in that case use that
-    proximal operator instead.
+    Most problems are forumlated for the squared norm, in that case use
+    `proximal_l2_squared` instead.
 
     See Also
     --------
-    proximal_l2_squared : proximal for norm squared
+    proximal_l2_squared : proximal for squared norm
     proximal_cconj_l2 : proximal for convex conjugate
     """
 
@@ -512,9 +512,9 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
-        Domain of F(x)
-    g : `DiscreteLpVector`
+    space : `LinearSpace`
+        Domain of F(x). Needs to be a hilbert space (have an inner product)
+    g : ``space`` element
         An element in ``space``
     lam : positive `float`
         Scaling factor or regularization parameter
@@ -581,8 +581,8 @@ def proximal_l2_squared(space, lam=1, g=None):
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp`
-        Domain of F(x)
+    space : `LinearSpace`
+        Domain of F(x). Needs to be a hilbert space (have an inner product)
     g : ``space`` element
         An element in ``space``
     lam : positive `float`
@@ -633,21 +633,21 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
     In this case, the dual is
 
-        F^*(y) = lam ind_{box(lam)}(||y / lam||_p + <y / lam, g>)
+        F^*(y) = lam ind_{box(lam)}(||y / lam||_2 + <y / lam, g>)
 
     The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
     is given by
 
         prox[sigma * F^*](y) =
-            lam (y - sigma g) / (max(lam 1_{||y||_p}, ||y - sigma g||_p)
+            lam (y - sigma g) / (max(lam, ||y - sigma g||_2)
 
-    where max(.,.) thresholds the lower bound of ||y||_p point-wise and
-    1_{||y||_p} is a vector in the space of ||y||_p with all components set
+    where max(.,.) thresholds the lower bound of ||y||_2 point-wise and
+    1 is a vector in the space of ||y||_2 with all components set
     to 1.
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
+    space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces
         Domain of the functional F
     g : ``space`` element
         An element in ``space``
@@ -741,33 +741,40 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     return ProximalConvConjL1
 
 
-def proximal_l1(space, lam=1, g=None):
+def proximal_l1(space, lam=1, g=None, isotropic=False):
     """Proximal operator factory of the l1-norm.
 
     Function for the proximal operator of the functional F where F is an
     l1-norm
 
-        F(x) = lam || ||x-g||_p ||_1
+        F(x) = lam ||x - g||_1
 
-    with x and g elements in ``space``, scaling factor lam, and point-wise
-    magnitude ||x||_p of x. If x is vector-valued, ||x||_p is the point-wise
-    l2-norm across the vector components.
+    with x and g elements in ``space``, and scaling factor lam.
 
-    The proximal operator of F is
+    The proximal operator of ``tau * F`` where ``tau`` is a step size is
 
-                              y - lam   if y > lam,
-         prox[lam * F](y) = { 0         if -lam <= y <= lam
-                              y + lam   if y < -lam
+                              y - tau * lam   if y > tau * lam,
+         prox[tau * F](y) = { 0               if -tau * lam <= y <= tau * lam
+                              y + tau * lam   if y < -tau * lam
 
+    An alternative formulation is available for `ProductSpace`'s, in that case
+    the ``isotropic`` parameter can be used, giving
+
+        F(x) = lam || ||x - g||_2 ||_1
+
+    Where the proximal can be calculated using the Moreau equality.
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
+    space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces
         Domain of the functional F
-    g : `DiscreteLpVector`
+    g : ``space`` element
         An element in ``space``
     lam : positive `float`
         Scaling factor or regularization parameter
+    isotropic : `bool`
+        True if the norm should first be taken pointwise. Only available if
+        ``space`` is a `ProductSpace`.
 
     Returns
     -------
@@ -780,7 +787,7 @@ def proximal_l1(space, lam=1, g=None):
     """
 
     # TODO: optimize
-    prox_cc_l1 = proximal_cconj_l1(space, lam=lam, g=g)
+    prox_cc_l1 = proximal_cconj_l1(space, lam=lam, g=g, isotripic=isotropic)
     return proximal_cconj(prox_cc_l1)
 
 
@@ -816,8 +823,8 @@ def proximal_cconj_kl(space, lam=1, g=None):
     ----------
     space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
         The space X which is the domain of the functional F
-    g : `DiscreteLpVector`
-        An element in ``space``
+    g : ``space`` element
+        The data term
     lam : positive `float`
         Scaling factor
 
