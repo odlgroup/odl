@@ -31,7 +31,6 @@ except ImportError:
 
 import numpy as np
 
-
 from odl.operator import Operator
 from odl import uniform_discr_frompartition
 from odl.discr.lp_discr import DiscreteLp
@@ -57,7 +56,7 @@ class AttenuatedRayTransform(Operator):
             Discretized space, a 3 dimensional domain of the forward projector
         geometry : `ParallelHoleCollimatorGeometry`
             The geometry of the transform. An ODL geometry instance
-            that contains information about the operator domain
+            that contains information about the operator range
         attenuation : domain `element-like` structure of the shape
             `dom.shape`, optional
             Linear attenuation map for SPECT.
@@ -130,7 +129,7 @@ class AttenuatedRayTransform(Operator):
         Parameters
         ----------
         x : `DiscreteLpVector`
-           The volume that is back-projected. The volume is an element
+           The volume that is forward projected. The volume is an element
            in the domain of the operator.
 
         Returns
@@ -149,7 +148,7 @@ class AttenuatedRayTransform(Operator):
         Parameters
         ----------
         x :  `numpy.ndarray`
-           The volume that is back-projected. The volume is an element
+           The volume that is forward projected. The volume is an element
            in the domain of the operator.
 
 
@@ -201,10 +200,10 @@ class AttenuatedRayBackprojection(Operator):
             Reconstruction space, the range of the back-projector
         geometry : `ParallelHoleCollimatorGeometry`
             The geometry of the transform. An ODL geometry instance
-            that contains information about the operator domain
-        attenuation : domain `element-like` structure, optional
+            that contains information about the operator range
+        attenuation : domain `element-like` structure of the shape
+            `dom.shape`, optional
             Linear attenuation map for SPECT.
-            Has to be of the shape `dom.shape`
         psf : `element-like` structure, optional
             Point Spread Functions for the correction of the
             collimator-detector response
@@ -274,11 +273,11 @@ class AttenuatedRayBackprojection(Operator):
         ----------
         x : `DiscreteLpVector`
            The volume that is back-projected. The volume is an element
-           in the domain of the operator.
+           in the range of the operator.
 
         Returns
         -------
-        out : ``range`` element
+        out : element in the ``domain`` of the operator
         """
         if self._impl.startswith('niftyrec'):
             return self._call_niftyrec(x.asarray())
@@ -293,11 +292,11 @@ class AttenuatedRayBackprojection(Operator):
         ----------
         x :  `numpy.ndarray`
            The volume that is back-projected. The volume is an element
-           in the domain of the operator.
+           in the range of the operator.
 
         Returns
         -------
-        out : ``range`` element
+        out : element in the ``domain`` of the operator
         """
         if self._attenuation is None:
             attenuation = None
@@ -315,6 +314,12 @@ class AttenuatedRayBackprojection(Operator):
         activity = SPECT_backproject_parallelholes(x, cameras,
                                                    attenuation, psf,
                                                    use_gpu=self._use_gpu)
+        scale = self._geometry.det_partition.cell_sides.prod()
+        scale *= self._geometry.motion_partition.cell_volume
+        scale /= self.range.partition.cell_sides.prod()
+
+        activity *= scale
+
         return activity
 
     @property
