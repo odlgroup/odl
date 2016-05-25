@@ -16,21 +16,33 @@ from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
 from odl.space.ntuples import FnVector
 from odl.tomo.geometry import (\
     Geometry, Parallel2dGeometry, DivergentBeamGeometry, ParallelGeometry,\
-    FlatDetector)
+    FlatDetector, Flat2dDetector)
+from odl.tomo.util.utility import perpendicular_vector
+
 
 # These are the local paths were pSTIR and cSTIR exist.
 sys.path.append("/home/lcrguest/dev/CCPPETMR/xSTIR/pSTIR")
 sys.path.append("/home/lcrguest/dev/CCPPETMR/xSTIR/cSTIR")
+sys.path.append("/home/lcrguest/dev/CCPPETMR/STIR_build/src/swig")
+sys.path.append("/home/lcrguest/dev/CCPPETMR/STIR/src/swig")
 
 try:
-    # Since there is a global stir.py I renamed the local version to _pstir
-    import _pstir as stir
+    import stir
+    import _pstir
+    # Fix for stirextra being moved around in various stir versions
+    try:
+        stirextra = stir.stirextra
+    except AttributeError:
+        import stirextra
+
     STIR_AVAILABLE = True
 except ImportError:
     STIR_AVAILABLE = False
 
 
 __all__ = ('STIR_AVAILABLE',
+        'pstir_transform_DiscreteLPVector_to_STIR_compatible_Image',\
+        'pstir_get_ODL_geoemtry_which_honours_STIR_restrictions',\
         'pstir_get_STIR_domain_from_ODL', 'pstir_get_ODL_domain_from_STIR',\
         'pstir_get_STIR_empty_array_from_ODL',
         'pstir_get_ODL_domain_which_honours_STIR_restrictions',
@@ -68,9 +80,56 @@ def pstir_get_ODL_domain_which_honours_STIR_restrictions(_vox_num, _vox_size):
             dtype='float32')
 
 
+def pstir_get_ODL_geoemtry_which_honours_STIR_restrictions(_det_y_size_mm, _det_z_size_mm,\
+                                                           _num_rings, _num_dets_per_ring,\
+                                                           _det_radius):
+    if _det_radius <= 0:
+        raise ValueError('ring circle radius {} is not positive.'
+                             ''.format(_det_radius))
+
+    axis=[0, 0, 1]
+
+    first_tmpl_det_point = [-_det_y_size_mm/2, -_det_z_size_mm/2]
+    last_tmpl_det_point = [_det_y_size_mm/2, _det_z_size_mm/2]
+
+    # Template of detectors
+    tmpl_det = odl.uniform_partition(first_tmpl_det_point,\
+                                         last_tmpl_det_point,\
+                                         [1, 1])
+
+    # Perpendicular vector from the ring center to
+    # the first detector of the same ring
+    ring_center_to_tmpl_det = perpendicular_vector(axis)
+
+    ring_center_to_det = (np.array(ring_center_to_tmpl_det) /
+                                     np.linalg.norm(ring_center_to_tmpl_det))
+
+    det_init_axis_0 = np.cross(axis, ring_center_to_det)
+    det_init_axes = (det_init_axis_0, axis)
+
+    apart = odl.uniform_partition(0, 2 * np.pi, _num_dets_per_ring,
+                                      nodes_on_bdry=True)
+
+    detector = Flat2dDetector(tmpl_det, det_init_axes)
+
+    # Axial (z-axis) movement parameters.
+    # The middle of the first ring should be on (r,r,0.0)
+    axialpart = odl.uniform_partition(0, _num_rings*_det_z_size_mm, _num_rings)
+
+
+    return odl.tomo.geometry.CylindricalPetGeom(_det_radius,
+                                                tmpl_det,
+                                                ring_center_to_det,
+                                                apart,
+                                                detector,
+                                                axialpart)
+
+
+
 def pstir_get_STIR_domain_from_ODL(_discreteLP):
     """
-    Interface function to get a STIR domain.
+    Interface function to get a STIR domain without caring about the classes names.
+
     Parameters
     ----------
     _discreteLP
@@ -85,6 +144,7 @@ def pstir_get_STIR_domain_from_ODL(_discreteLP):
 
 def pstir_get_ODL_domain_from_STIR(_voxels):
     """
+    Interface function to get an ODL domain without caring about the classes names.
 
     Parameters
     ----------
@@ -113,6 +173,41 @@ def pstir_get_STIR_empty_array_from_ODL(_discreteLP):
     """
     return pstir_create_empty_Image_array_from_DiscreteLP(_discreteLP)
 
+def pstir_transform_DiscreteLPVector_to_STIR_compatible_Image(_domain, _data):
+    """
+    This function groups the complete process.
+    Parameters
+    ----------
+    _domain
+    _data
+
+    Returns
+    -------
+
+    """
+    data_array = _data.asarray()
+
+    trans_data_array = pstir_transform_array_to_STIR_compatible_array(data_array)
+
+    stir_phantom = pstir_get_STIR_empty_array_from_ODL(_domain)
+    stir_phantom.cSTIR_addVector(trans_data_array)
+
+    return stir_phantom
+
+
+def pstir_get_STIR_scanner_from_ODL_geometry(_geometry):
+
+    scanner = stir.Scanner()
+
+    stir.Scanner.set_average_depth_of_interaction(_geometry.stir_average_depth_of_inter)
+    stir.Scanner.set_default_bin_size(_geometry.stir_bin_size)
+    stir.Scanner.set_default_intrinsic_tilt(_geometry.stir_intrinsic_tilt)
+    stir.Scanner.set_default_bin_size(_geometry.stir_max_num_non_arccorrected_bins_v)
+    stir.Scanner.set_inner_ring_radius(_geometry.stir_inner_ring_rad)
+    stir.Scanner.set_max_num_non_arccorrected_bins(_geometry.stir_max_num_non_arccorrected_bins)
+    stir.Scanner.set_num_axial_blocks_per_bucket(_geometry.stir_num_axial_crystals_per_block)
+    stir.Scanner.set_num_axial_crystals_per_block(_geometry.stir_num_axial_crystals_per_singles_unit)
+    stir.Scanner.set_num_detector_layers(_geometry.stir_num_detector_layers)
 
 #
 #
@@ -214,7 +309,7 @@ def pstir_create_VoxelsOnCartesianGrid_from_DiscreteLP(_discr):
 
     im_dim, vox_size = pstir_get_volume_geometry(_discr)
 
-    return stir.Voxels(im_dim, vox_size)
+    return _pstir.Voxels(im_dim, vox_size)
 
 
 def pstir_create_empty_Image_array_from_DiscreteLP(_discr):
@@ -244,7 +339,7 @@ def pstir_create_empty_Image_array_from_DiscreteLP(_discr):
 
     im_dim, vox_size = pstir_get_volume_geometry(_discr)
 
-    image = stir.Image()
+    image = _pstir.Image()
     image.initialise(im_dim, vox_size)
 
     return image

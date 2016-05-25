@@ -284,9 +284,12 @@ def stir_projector_from_file(volume_file, projection_file):
     projector : `ForwardProjectorByBinWrapper`
         A STIR forward projector.
     """
-    volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
+    # volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
 
     proj_data_in = stir.ProjData.read_from_file(projection_file)
+
+    # stir.ProjDataInfoCylindricalNoArcCorr.
+
     proj_data = stir.ProjDataInMemory(proj_data_in.get_exam_info(),
                                       proj_data_in.get_proj_data_info())
 
