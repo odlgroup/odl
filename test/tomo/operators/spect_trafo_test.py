@@ -30,6 +30,7 @@ import numpy as np
 import odl
 from odl.tomo.operators.spect_trafo import AttenuatedRayTransform
 from odl.util.testutils import skip_if_no_niftyrec
+from odl.util.testutils import almost_equal
 
 
 @skip_if_no_niftyrec
@@ -41,7 +42,7 @@ def test_spect_projector():
     det_ny_pix = 16
     det_nx_mm = 4
     det_radius = 200
-    n_proj = 90
+    n_proj = 16
     det_param = det_nx_mm * det_nx_pix
     dpart = odl.uniform_partition([-det_param, -det_param],
                                   [det_param, det_param],
@@ -65,6 +66,13 @@ def test_spect_projector():
 
     assert proj in projector.range
     assert backproj in projector.domain
+
+    # Adjoint test:  Verified the identity <Ax, Ax> = <A^* A x, x>
+    result_AxAx = proj.inner(proj)
+    result_xAtAx = backproj.inner(vol)
+    # Accept 1% errors
+    places = 2
+    assert almost_equal(result_AxAx, result_xAtAx, places=places)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
