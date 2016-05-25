@@ -59,17 +59,37 @@ det_ny_mm = 4.16 # in mm
 num_rings = 52
 num_dets_per_ring = 624
 det_radius = 42.4 # in mm
-# Things that STIR would like to know
+
+# Additional things that STIR would like to know
 average_depth_of_inter = 1.2 # in mm
 voxel_size_xy = 2.0 # in mm
+axial_crystals_per_block = 13
+trans_crystals_per_block = 13
+axials_blocks_per_bucket = 4
+trans_blocks_per_bucket_v = 1
+axial_crystals_per_singles_unit = 13
+trans_crystals_per_singles_unit = 13
+num_detector_layers = 1
+intrinsic_tilt = 0.0
+
+# geom = odl.tomo.pstir_get_ODL_geoemtry_which_honours_STIR_restrictions(det_nx_mm, det_ny_mm,
+#                                                                        num_rings, num_dets_per_ring,
+#                                                                        det_radius)
+
+stir_scanner = odl.tomo.pstir_get_STIR_geometry(num_rings, num_dets_per_ring,
+                                          det_radius,
+                                          average_depth_of_inter,
+                                          voxel_size_xy,
+                                          axial_crystals_per_block, trans_crystals_per_block,
+                                          axials_blocks_per_bucket, trans_blocks_per_bucket_v,
+                                          axial_crystals_per_singles_unit, trans_crystals_per_singles_unit,
+                                          num_detector_layers, intrinsic_tilt)
 
 
-# It doesn't honour anything right now,
-# So the STIR geometry will be in a different location
-geom = odl.tomo.pstir_get_ODL_geoemtry_which_honours_STIR_restrictions(det_nx_mm, det_ny_mm,
-                                                                       num_rings, num_dets_per_ring,
-                                                                       det_radius,
-                                                                       average_depth_of_inter)
+#Stop
+here = 0
+
+
 
 # Create a STIR projector from file data.
 proj = odl.tomo.backends.stir_bindings.stir_projector_from_file(
