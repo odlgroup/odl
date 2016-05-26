@@ -264,62 +264,48 @@ def test_finite_diff_periodic_padding():
 # --- PartialDerivative --- #
 
 
-def test_part_deriv(impl):
+def test_part_deriv(impl, method, padding):
     """Discretized partial derivative."""
 
     with pytest.raises(TypeError):
         PartialDerivative(odl.Rn(1))
 
+    if isinstance(padding, tuple):
+        padding_method, padding_value = padding
+    else:
+        padding_method, padding_value = padding, None
+
     # discretized space
     space = odl.uniform_discr([0, 0], [2, 1], DATA_2D.shape, impl=impl)
+    dom_vec = space.element(DATA_2D)
 
     # operator
-    partial_0 = PartialDerivative(space, axis=0, method='central',
-                                  padding_method='constant')
-    partial_1 = PartialDerivative(space, axis=1, method='central',
-                                  padding_method='constant')
+    for axis in range(space.ndim):
+        partial = PartialDerivative(space, axis=axis, method=method,
+                                    padding_method=padding_method,
+                                    padding_value=padding_value)
 
-    # discretized space vector
-    vec = partial_0.domain.element(DATA_2D)
+        # Compare to helper function
+        dx = space.cell_sides[axis]
+        diff = finite_diff(DATA_2D, axis=axis, dx=dx, method=method,
+                           padding_method=padding_method,
+                           padding_value=padding_value)
 
-    # partial derivative
-    partial_vec_0 = partial_0(vec)
-    partial_vec_1 = partial_1(vec)
+        partial_vec = partial(dom_vec)
+        assert all_almost_equal(partial_vec.asarray(), diff)
 
-    # explicit calculation of finite difference
+        # Test adjoint operator
+        derivative = partial.derivative()
+        ran_vec = derivative.range.element(DATA_2D ** 2)
+        deriv_vec = derivative(dom_vec)
+        adj_vec = derivative.adjoint(ran_vec)
+        lhs = ran_vec.inner(deriv_vec)
+        rhs = dom_vec.inner(adj_vec)
 
-    # axis: 0
-    diff_0 = np.zeros_like(DATA_2D)
-    # interior: second-order accurate differences
-    diff_0[1:-1, :] = (DATA_2D[2:, :] - DATA_2D[:-2, :]) / 2.0
-    # boundary: second-order accurate central differences with zero padding
-    diff_0[0, :] = DATA_2D[1, :] / 2.0
-    diff_0[-1, :] = -DATA_2D[-2, :] / 2.0
-    diff_0 /= space.cell_sides[0]
-
-    # axis: 1
-    diff_1 = np.zeros_like(DATA_2D)
-    # interior: second-order accurate differences
-    diff_1[:, 1:-1] = (DATA_2D[:, 2:] - DATA_2D[:, :-2]) / 2.0
-    # boundary: second-order accurate central differences with zero padding
-    diff_1[:, 0] = DATA_2D[:, 1] / 2.0
-    diff_1[:, -1] = -DATA_2D[:, -2] / 2.0
-    diff_1 /= space.cell_sides[1]
-
-    # assert `dfe0` and `dfe1` do differ
-    assert (diff_0 != diff_1).any()
-
-    assert partial_vec_0 != partial_vec_1
-    assert all_almost_equal(partial_vec_0.asarray(), diff_0)
-    assert all_almost_equal(partial_vec_1.asarray(), diff_1)
-
-    # adjoint operator
-    vec1 = space.element(DATA_2D)
-    vec2 = space.element(DATA_2D + np.random.rand(*DATA_2D.shape))
-    assert almost_equal(partial_0(vec1).inner(vec2),
-                        vec1.inner(partial_0.adjoint(vec2)))
-    assert almost_equal(partial_1(vec1).inner(vec2),
-                        vec1.inner(partial_1.adjoint(vec2)))
+        # Check not to use trivial data
+        assert lhs != 0
+        assert rhs != 0
+        assert almost_equal(lhs, rhs)
 
 
 # --- Gradient --- #
@@ -359,7 +345,7 @@ def test_gradient(method, impl, padding):
     assert all_almost_equal(grad_vec[1].asarray(), diff_1)
 
     # Test adjoint operator
-    derivative = grad.derivative(grad.domain.zero())
+    derivative = grad.derivative()
     ran_vec = derivative.range.element([DATA_2D, DATA_2D ** 2])
     deriv_grad_vec = derivative(dom_vec)
     adj_grad_vec = derivative.adjoint(ran_vec)
@@ -425,7 +411,7 @@ def test_divergence(method, impl, padding):
     assert all_almost_equal(diff_0 + diff_1, div_dom_vec.asarray())
 
     # Adjoint operator
-    derivative = div.derivative(div.domain.zero())
+    derivative = div.derivative()
     deriv_div_dom_vec = derivative(dom_vec)
     ran_vec = div.range.element(DATA_2D ** 2)
     adj_div_ran_vec = derivative.adjoint(ran_vec)

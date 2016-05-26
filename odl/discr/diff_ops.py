@@ -143,12 +143,18 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         out[:] = out_arr
         return out
 
-    def derivative(self, point):
+    def derivative(self, point=None):
         """Return the derivative operator.
 
         The partial derivative is usually linear, but in case the 'constant'
         ``padding_method`` is used with nonzero ``padding_value``, the
         derivative is given by the derivative with 0 ``padding_value``.
+
+        Parameters
+        ----------
+        point : ``domain`` element, optional
+            The point to take the derivative in. Does not change the result
+            since the operator is affine.
         """
         if self.padding_method == 'constant' and self.padding_value != 0:
             return PartialDerivative(self.domain, self.axis, self.method,
@@ -310,12 +316,18 @@ class Gradient(PointwiseTensorFieldOperator):
 
         return out
 
-    def derivative(self, point):
+    def derivative(self, point=None):
         """Return the derivative operator.
 
         The gradient is usually linear, but in case the 'constant'
         ``padding_method`` is used with nonzero ``padding_value``, the
         derivative is given by the Gradient with ``padding_value=0``.
+
+        Parameters
+        ----------
+        point : ``domain`` element, optional
+            The point to take the derivative in. Does not change the result
+            since the operator is affine.
         """
         if self.padding_method == 'constant' and self.padding_value != 0:
             return Gradient(self.domain, self.range, self.method,
@@ -485,12 +497,18 @@ class Divergence(PointwiseTensorFieldOperator):
         out[:] = out_arr
         return out
 
-    def derivative(self, point):
+    def derivative(self, point=None):
         """Return the derivative operator.
 
         The Divergence is usually linear, but in case the 'constant'
         ``padding_method`` is used with nonzero ``padding_value``, the
         derivative is given by the Divergence with ``padding_value=0``.
+
+        Parameters
+        ----------
+        point : ``domain`` element, optional
+            The point to take the derivative in. Does not change the result
+            since the operator is affine.
         """
         if self.padding_method == 'constant' and self.padding_value != 0:
             return Divergence(self.domain, self.range, self.method,
@@ -617,12 +635,18 @@ class Laplacian(PointwiseTensorFieldOperator):
         out[:] = out_arr
         return out
 
-    def derivative(self, point):
+    def derivative(self, point=None):
         """Return the derivative operator.
 
         The Laplacian is usually linear, but in case the 'constant'
         ``padding_method`` is used with nonzero ``padding_value``, the
         derivative is given by the derivative with 0 ``padding_value``.
+
+        Parameters
+        ----------
+        point : ``domain`` element
+            The point to take the derivative in. Does not change the result
+            since the operator is affine.
         """
         if self.padding_method == 'constant' and self.padding_value != 0:
             return Laplacian(self.domain,
