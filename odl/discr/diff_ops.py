@@ -33,6 +33,10 @@ from odl.space.pspace import ProductSpace
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
 _SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
+_SUPPORTED_PADDING_METHODS = ('constant', 'symmetric', 'periodic', None)
+_ADJOINT_METHOD = {'central': 'central',
+                   'forward': 'backward',
+                   'backward': 'forward'}
 
 
 class PartialDerivative(PointwiseTensorFieldOperator):
@@ -56,16 +60,18 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method which is used in the interior of the
             domain of ``f``
-        padding_method : {'constant', 'symmetric'}, optional
+        padding_method : {'constant', 'symmetric', 'periodic', None}, optional
 
             'constant' : Pads values outside the domain of ``f`` with a
-            constant value given by ``padding_value``
+            constant value given by ``padding_value``.
 
             'symmetric' : Pads with the reflection of the vector mirrored
-            along the edge of the array
+            along the edge of the array.
+
+            'periodic' : Pads with the values from the other side of the array.
 
             If `None` is given, one-sided forward or backward differences
-            are used at the boundary
+            are used at the boundary.
 
         padding_value : `float`, optional
             If ``padding_method`` is 'constant' ``f`` assumes
@@ -78,7 +84,10 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         if not isinstance(space, DiscreteLp):
             raise TypeError('space {!r} is not a DiscreteLp instance.'
                             ''.format(space))
-        super().__init__(domain=space, range=space, linear=True)
+
+        # Method is affine if nonzero padding is given.
+        linear = not (padding_method == 'constant' and padding_value != 0)
+        super().__init__(domain=space, range=space, linear=linear)
         self.axis = axis
         self.dx = space.cell_sides[axis]
         self.method = method
@@ -129,10 +138,31 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         out[:] = out_arr
         return out
 
+    def derivative(self, point):
+        """Return the derivative operator.
+
+        The partial derivative is usually linear, but in case the 'constant'
+        ``padding_method`` is used with nonzero ``padding_value``, the
+        derivative is given by the derivative with 0 ``padding_value``.
+        """
+        if self.padding_method == 'constant' and self.padding_value != 0:
+            return PartialDerivative(self.domain, self.axis, self.method,
+                                     self.padding_method, 0, self.edge_order)
+        else:
+            return self
+
     @property
     def adjoint(self):
         """Return the adjoint operator."""
-        return -self
+        if not self.is_linear:
+            raise ValueError('Operator with nonzero padding_value ({}) is not'
+                             ' linear and has no adjoint'
+                             ''.format(self.padding_value))
+
+        return -PartialDerivative(self.domain, self.axis,
+                                  _ADJOINT_METHOD[self.method],
+                                  self.padding_method, self.padding_value,
+                                  self.edge_order)
 
 
 class Gradient(PointwiseTensorFieldOperator):
@@ -268,14 +298,9 @@ class Gradient(PointwiseTensorFieldOperator):
         operator ``space^n --> space``, hence we need to provide the domain of
         this operator.
         """
-        if self.method == 'central':
-            return - Divergence(self.range, self.domain, 'central')
-        elif self.method == 'forward':
-            return - Divergence(self.range, self.domain, 'backward')
-        elif self.method == 'backward':
-            return - Divergence(self.range, self.domain, 'forward')
-        else:
-            return super().adjoint
+
+        return - Divergence(domain=self.range, range=self.domain,
+                            method=_ADJOINT_METHOD[self.method])
 
 
 class Divergence(PointwiseTensorFieldOperator):
@@ -405,14 +430,9 @@ class Divergence(PointwiseTensorFieldOperator):
         Assuming implicit zero padding, the adjoint operator is given by the
         negative of the `Gradient` operator.
         """
-        if self.method == 'central':
-            return - Gradient(self.range, self.domain, 'central')
-        elif self.method == 'forward':
-            return - Gradient(self.range, self.domain, 'backward')
-        elif self.method == 'backward':
-            return - Gradient(self.range, self.domain, 'forward')
-        else:
-            return super().adjoint
+
+        return - Gradient(domain=self.range, range=self.domain,
+                          method=_ADJOINT_METHOD[self.method])
 
 
 class Laplacian(PointwiseTensorFieldOperator):
@@ -508,7 +528,6 @@ class Laplacian(PointwiseTensorFieldOperator):
         return self
 
 
-# TODO: make helper function to set edge slices
 def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     """Calculate the partial derivative of ``f`` along a given ``axis``.
 
@@ -532,28 +551,30 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     Parameters
     ----------
     f : `array-like`
-         An N-dimensional array
+         An N-dimensional array.
     axis : `int`, optional
-        The axis along which the partial derivative is evaluated
+        The axis along which the partial derivative is evaluated.
     dx : `float`, optional
-        Scalar specifying the distance between sampling points along ``axis``
+        Scalar specifying the distance between sampling points along ``axis``.
     method : {'central', 'forward', 'backward'}, optional
         Finite difference method which is used in the interior of the domain
          of ``f``.
-    padding_method : {'constant', 'symmetric'}, optional
+    padding_method : {'constant', 'symmetric', 'periodic', None}, optional
 
         'constant' : Pads values outside the domain of ``f`` with a constant
-        value given by ``padding_value``
+        value given by ``padding_value``.
 
         'symmetric' : Pads with the reflection of the vector mirrored
-        along the edge of the array
+        along the edge of the array.
+
+        'periodic' : Pads with the values from the other side of the array.
 
         If `None` is given, one-sided forward or backward differences
         are used at the boundary.
 
     padding_value : `float`, optional
         If ``padding_method`` is 'constant' ``f`` assumes ``padding_value``
-        for indices outside the domain of ``f``
+        for indices outside the domain of ``f``.
     edge_order : {1, 2}, optional
         Edge-order accuracy at the boundaries if no padding is used. If
         `None` the edge-order accuracy at endpoints corresponds to the
@@ -613,7 +634,6 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     >>> out is finite_diff(f, out=out)
     True
     """
-    # TODO: implement alternative boundary conditions
     f_arr = np.asarray(f)
     ndim = f_arr.ndim
 
@@ -623,21 +643,20 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
 
     if axis < 0:
         axis += ndim
-    if axis >= ndim:
+    if not (0 <= axis < ndim):
         raise IndexError('axis {} outside the valid range 0 ... {}'
                          ''.format(axis, ndim - 1))
 
-    if dx <= 0:
-        raise ValueError("step length {} not positive.".format(dx))
-    else:
-        dx = float(dx)
+    dx, dx_in = float(dx), dx
+    if dx <= 0 or not np.isfinite(dx):
+        raise ValueError("step length {} not positive.".format(dx_in))
 
     method, method_in = str(method).lower(), method
     if method not in _SUPPORTED_DIFF_METHODS:
         raise ValueError('method {} is not understood'.format(method_in))
 
     padding_method = kwargs.pop('padding_method', None)
-    if padding_method not in ('constant', 'symmetric', None):
+    if padding_method not in _SUPPORTED_PADDING_METHODS:
         raise ValueError('padding value {} not valid'.format(padding_method))
     if padding_method == 'constant':
         padding_value = float(kwargs.pop('padding_value', 0))
@@ -648,8 +667,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
             edge_order = 2
         else:
             edge_order = 1
-    else:
-        if edge_order not in (1, 2):
+    elif edge_order not in (1, 2):
             raise ValueError('edge order {} not valid'.format(edge_order))
 
     if out is None:
@@ -799,6 +817,55 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
             out[slice_out] = 0
 
             # 1st-oder upper edge
+            slice_out[axis] = -1
+            slice_node1[axis] = -1
+            slice_node2[axis] = -2
+            # 1D equivalent: out[-1] = f[-1] - f[-2]
+            out[slice_out] = f_arr[slice_node1] - f_arr[slice_node2]
+
+    elif padding_method == 'periodic':
+        # Values of f for indices outside the domain of f are replicates of
+        # the edge values on the other side
+
+        if method == 'central':
+            # 2nd-order lower edge
+            slice_out[axis] = 0
+            slice_node1[axis] = 1
+            slice_node2[axis] = -1
+            # 1D equivalent: out[0] = (f[1] - f[-1])/2.0
+            out[slice_out] = (f_arr[slice_node1] - f_arr[slice_node2]) / 2.0
+
+            # 2nd-order upper edge
+            slice_out[axis] = -1
+            slice_node1[axis] = 0
+            slice_node2[axis] = -2
+            # 1D equivalent: out[-1] = (f[0] - f[-2])/2.0
+            out[slice_out] = (f_arr[slice_node1] - f_arr[slice_node2]) / 2.0
+
+        elif method == 'forward':
+            # 1st-order lower edge
+            slice_out[axis] = 0
+            slice_node1[axis] = 1
+            slice_node2[axis] = 0
+            # 1D equivalent: out[0] = f[1] - f[0]
+            out[slice_out] = f_arr[slice_node1] - f_arr[slice_node2]
+
+            # 1st-order upper edge
+            slice_out[axis] = -1
+            slice_node1[axis] = 0
+            slice_node2[axis] = -1
+            # 1D equivalent: out[-1] = f[0] - f[-1]
+            out[slice_out] = f_arr[slice_node1] - f_arr[slice_node2]
+
+        elif method == 'backward':
+            # 1st-order lower edge
+            slice_out[axis] = 0
+            slice_node1[axis] = 0
+            slice_node2[axis] = -1
+            # 1D equivalent: out[0] = f[0] - f[-1]
+            out[slice_out] = f_arr[slice_node1] - f_arr[slice_node2]
+
+            # 1st-order upper edge
             slice_out[axis] = -1
             slice_node1[axis] = -1
             slice_node2[axis] = -2
