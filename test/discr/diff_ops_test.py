@@ -27,9 +27,9 @@ import numpy as np
 
 import odl
 from odl.discr.diff_ops import (
-    finite_diff, PartialDerivative, Gradient, Divergence)
+    finite_diff, PartialDerivative, Gradient, Divergence, Laplacian)
 from odl.util.testutils import (
-    all_equal, almost_equal, skip_if_no_cuda, never_skip)
+    all_equal, all_almost_equal, almost_equal, skip_if_no_cuda, never_skip)
 
 
 methods = ['central', 'forward', 'backward']
@@ -310,8 +310,8 @@ def test_part_deriv(impl):
     assert (diff_0 != diff_1).any()
 
     assert partial_vec_0 != partial_vec_1
-    assert all_equal(partial_vec_0.asarray(), diff_0)
-    assert all_equal(partial_vec_1.asarray(), diff_1)
+    assert all_almost_equal(partial_vec_0.asarray(), diff_0)
+    assert all_almost_equal(partial_vec_1.asarray(), diff_1)
 
     # adjoint operator
     vec1 = space.element(DATA_2D)
@@ -337,7 +337,7 @@ def test_gradient(method, impl, padding):
         padding_method, padding_value = padding, None
 
     # DiscreteLp Vector
-    discr_space = odl.uniform_discr([0, 0], [6, 2.5], DATA_2D.shape, impl=impl)
+    discr_space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=impl)
     dom_vec = discr_space.element(DATA_2D)
 
     # computation of gradient components with helper function
@@ -355,8 +355,8 @@ def test_gradient(method, impl, padding):
                     padding_value=padding_value)
     grad_vec = grad(dom_vec)
     assert len(grad_vec) == DATA_2D.ndim
-    assert all_equal(grad_vec[0].asarray(), diff_0)
-    assert all_equal(grad_vec[1].asarray(), diff_1)
+    assert all_almost_equal(grad_vec[0].asarray(), diff_0)
+    assert all_almost_equal(grad_vec[1].asarray(), diff_1)
 
     # Test adjoint operator
     derivative = grad.derivative(grad.domain.zero())
@@ -368,7 +368,7 @@ def test_gradient(method, impl, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert lhs == rhs
+    assert almost_equal(lhs, rhs)
 
     # higher dimensional arrays
     lin_size = 3
@@ -389,18 +389,25 @@ def test_gradient(method, impl, padding):
 # --- Divergence --- #
 
 
-def test_divergence(method, impl):
+def test_divergence(method, impl, padding):
     """Discretized spatial divergence operator."""
 
     # Invalid space
     with pytest.raises(TypeError):
         Divergence(range=odl.Rn(1), method=method)
 
+    if isinstance(padding, tuple):
+        padding_method, padding_value = padding
+    else:
+        padding_method, padding_value = padding, None
+
     # DiscreteLp
-    space = odl.uniform_discr([0, 0], [3, 5], DATA_2D.shape, impl=impl)
+    space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=impl)
 
     # Operator instance
-    div = Divergence(range=space, method=method)
+    div = Divergence(range=space, method=method,
+                     padding_method=padding_method,
+                     padding_value=padding_value)
 
     # Apply operator
     dom_vec = div.domain.element([DATA_2D, DATA_2D])
@@ -409,11 +416,13 @@ def test_divergence(method, impl):
     # computation of divergence with helper function
     dx0, dx1 = space.cell_sides
     diff_0 = finite_diff(dom_vec[0].asarray(), axis=0, dx=dx0, method=method,
-                         padding_method='constant')
+                         padding_method=padding_method,
+                         padding_value=padding_value)
     diff_1 = finite_diff(dom_vec[1].asarray(), axis=1, dx=dx1, method=method,
-                         padding_method='constant')
+                         padding_method=padding_method,
+                         padding_value=padding_value)
 
-    assert all_equal(diff_0 + diff_1, div_dom_vec.asarray())
+    assert all_almost_equal(diff_0 + diff_1, div_dom_vec.asarray())
 
     # Adjoint operator
     derivative = div.derivative(div.domain.zero())
@@ -437,9 +446,68 @@ def test_divergence(method, impl):
                                   [lin_size] * ndim)
 
         # Divergence
-        div = Divergence(range=space, method=method)
+        div = Divergence(range=space, method=method,
+                         padding_method=padding_method,
+                         padding_value=padding_value)
         dom_vec = div.domain.element([ndvolume(lin_size, ndim)] * ndim)
         div(dom_vec)
+
+
+def test_laplacian(impl, padding):
+    """Discretized spatial laplacian operator."""
+
+    # Invalid space
+    with pytest.raises(TypeError):
+        Divergence(range=odl.Rn(1))
+
+    if isinstance(padding, tuple):
+        padding_method, padding_value = padding
+    else:
+        padding_method, padding_value = padding, None
+
+    # DiscreteLp
+    space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=impl)
+
+    # Operator instance
+    lap = Laplacian(space,
+                    padding_method=padding_method,
+                    padding_value=padding_value)
+
+    # Apply operator
+    dom_vec = lap.domain.element(DATA_2D)
+    div_dom_vec = lap(dom_vec)
+
+    # computation of divergence with helper function
+    dx0, dx1 = space.cell_sides
+
+    expected_result = np.zeros(space.shape)
+    for axis, dx in enumerate(space.cell_sides):
+        diff_f = finite_diff(dom_vec.asarray(), axis=axis, dx=dx ** 2,
+                             method='forward',
+                             padding_method=padding_method,
+                             padding_value=padding_value)
+        diff_b = finite_diff(dom_vec.asarray(), axis=axis, dx=dx ** 2,
+                             method='backward',
+                             padding_method=padding_method,
+                             padding_value=padding_value)
+        expected_result += diff_f - diff_b
+
+    assert all_almost_equal(expected_result, div_dom_vec.asarray())
+
+    # Adjoint operator
+    derivative = lap.derivative(lap.domain.zero())
+    deriv_lap_dom_vec = derivative(dom_vec)
+    ran_vec = lap.range.element(DATA_2D ** 2)
+    adj_lap_ran_vec = derivative.adjoint(ran_vec)
+
+    # Adjoint condition
+    lhs = ran_vec.inner(deriv_lap_dom_vec)
+    rhs = dom_vec.inner(adj_lap_ran_vec)
+
+    # Check not to use trivial data
+    assert lhs != 0
+    assert rhs != 0
+    assert almost_equal(lhs, rhs)
 
 
 if __name__ == '__main__':
