@@ -5,9 +5,10 @@ import odl
 
 standard_library.install_aliases()
 
-import sys
+import os,sys
 import numpy as np
 import matplotlib.pyplot as plt
+import operator
 
 from odl.util.graphics import show_discrete_data
 from odl.discr.grid import RegularGrid
@@ -18,17 +19,17 @@ from odl.tomo.geometry import (\
     Geometry, Parallel2dGeometry, DivergentBeamGeometry, ParallelGeometry,\
     FlatDetector, Flat2dDetector)
 from odl.tomo.util.utility import perpendicular_vector
-
+from odl.tomo.geometry.pet import CylindricalPetGeom
 
 # These are the local paths were pSTIR and cSTIR exist.
-sys.path.append("/home/lcrguest/dev/CCPPETMR/xSTIR/pSTIR")
-sys.path.append("/home/lcrguest/dev/CCPPETMR/xSTIR/cSTIR")
-sys.path.append("/home/lcrguest/dev/CCPPETMR/STIR_build/src/swig")
-sys.path.append("/home/lcrguest/dev/CCPPETMR/STIR/src/swig")
+os.environ['LD_LIBRARY_PATH'] = '/home/lcrguest/dev/CCPPETMR/STIR_install/lib:/usr/local/lib:/usr/local/cuda/lib64'
+os.environ['PYTHONPATH']= '/home/lcrguest/dev/CCPPETMR/STIR_install/python:/usr/local/python/'
+
+sys.path.append("/home/lcrguest/dev/CCPPETMR/STIR_install")
+sys.path.append("/home/lcrguest/dev/CCPPETMR/STIR_install/python")
 
 try:
     import stir
-    import _pstir
     # Fix for stirextra being moved around in various stir versions
     try:
         stirextra = stir.stirextra
@@ -39,23 +40,23 @@ try:
 except ImportError:
     STIR_AVAILABLE = False
 
-
 __all__ = ('STIR_AVAILABLE',
-        'pstir_transform_DiscreteLPVector_to_STIR_compatible_Image',\
-        'pstir_get_ODL_geoemtry_which_honours_STIR_restrictions',\
-        'pstir_get_STIR_domain_from_ODL', 'pstir_get_ODL_domain_from_STIR',\
-        'pstir_get_STIR_empty_array_from_ODL',
-        'pstir_get_ODL_domain_which_honours_STIR_restrictions',
-        'pstir_transform_array_to_STIR_compatible_array',
-        'pstir_unified_display_function' )
-
+           'pstir_get_projection_data_info',\
+           'stir_operate_STIR_and_ODL_vectors',\
+           'stir_get_ODL_domain_which_honours_STIR_restrictions',
+           'stir_get_ODL_geometry_which_honours_STIR_restrictions',\
+           'stir_get_STIR_geometry',\
+           'stir_get_STIR_domain_from_ODL',\
+           'stir_get_ODL_domain_from_STIR',\
+           'stir_get_STIR_data_as_array',\
+           'stir_unified_display_function' )
 
 #
 #
 # INTERFACE FUNCTIONS FROM ODL TO STIR
 #
 
-def pstir_get_ODL_domain_which_honours_STIR_restrictions(_vox_num, _vox_size):
+def stir_get_ODL_domain_which_honours_STIR_restrictions(_vox_num, _vox_size):
     """
     In the future a geometry should be imported to handle scanner alignment restrictions.
     Returns
@@ -80,14 +81,36 @@ def pstir_get_ODL_domain_which_honours_STIR_restrictions(_vox_num, _vox_size):
             dtype='float32')
 
 
-def pstir_get_ODL_geoemtry_which_honours_STIR_restrictions(_det_y_size_mm, _det_z_size_mm,\
+def stir_get_ODL_geometry_which_honours_STIR_restrictions(_det_y_size_mm, _det_z_size_mm,\
                                                            _num_rings, _num_dets_per_ring,\
                                                            _det_radius):
+    """
+    This function will return a CylindricalPETGeom which will match with a
+    STIR Scanner object.
+
+    .The first ring [0] of the scanner should be the one furthest from the bed.
+    .The y axis should be pointing downwards.
+    .The z axis should be the longitude.
+    .The crystal with the first transverse ID should be the one with the most
+     negative y [x=0, y = -r , z= 0].
+
+    Parameters
+    ----------
+    _det_y_size_mm
+    _det_z_size_mm
+    _num_rings
+    _num_dets_per_ring
+    _det_radius
+
+    Returns
+    -------
+
+    """
     if _det_radius <= 0:
         raise ValueError('ring circle radius {} is not positive.'
                              ''.format(_det_radius))
 
-    axis=[0, 0, 1]
+    axis = [0, 0, 1]
 
     first_tmpl_det_point = [-_det_y_size_mm/2, -_det_z_size_mm/2]
     last_tmpl_det_point = [_det_y_size_mm/2, _det_z_size_mm/2]
@@ -101,10 +124,7 @@ def pstir_get_ODL_geoemtry_which_honours_STIR_restrictions(_det_y_size_mm, _det_
     # the first detector of the same ring
     ring_center_to_tmpl_det = perpendicular_vector(axis)
 
-    ring_center_to_det = (np.array(ring_center_to_tmpl_det) /
-                                     np.linalg.norm(ring_center_to_tmpl_det))
-
-    det_init_axis_0 = np.cross(axis, ring_center_to_det)
+    det_init_axis_0 = np.cross(axis, ring_center_to_tmpl_det)
     det_init_axes = (det_init_axis_0, axis)
 
     apart = odl.uniform_partition(0, 2 * np.pi, _num_dets_per_ring,
@@ -116,17 +136,60 @@ def pstir_get_ODL_geoemtry_which_honours_STIR_restrictions(_det_y_size_mm, _det_
     # The middle of the first ring should be on (r,r,0.0)
     axialpart = odl.uniform_partition(0, _num_rings*_det_z_size_mm, _num_rings)
 
-
-    return odl.tomo.geometry.CylindricalPetGeom(_det_radius,
-                                                tmpl_det,
-                                                ring_center_to_det,
+    return odl.tomo.geometry.pet.CylindricalPetGeom(_det_radius,
+                                                ring_center_to_tmpl_det,
                                                 apart,
                                                 detector,
                                                 axialpart)
 
 
+def stir_get_STIR_geometry(_num_rings, _num_dets_per_ring,
+                           _det_radius,
+                           _average_depth_of_inter,
+                           _voxel_size_xy,
+                           _axial_crystals_per_block = 1, _trans_crystals_per_block= 1,
+                           _axials_blocks_per_bucket = 1, _trans_blocks_per_bucket = 1,
+                           _axial_crystals_per_singles_unit = 1, _trans_crystals_per_singles_unit = 1,
+                           _num_detector_layers = 1, _intrinsic_tilt = 0):
 
-def pstir_get_STIR_domain_from_ODL(_discreteLP):
+    # Roughly speaking number of detectors on the diameter
+    # bin_size = (_det_radius*2) / (_num_dets_per_ring/2)
+    max_num_non_arc_cor_bins = int(_num_dets_per_ring/2)
+
+    scanner = stir.Scanner.get_scanner_from_name('Unknown_scanner')
+
+    scanner.set_num_rings(_num_rings)
+
+    scanner.set_default_bin_size(_voxel_size_xy)
+    scanner.set_default_intrinsic_tilt(_intrinsic_tilt)
+    scanner.set_inner_ring_radius(_det_radius)
+    scanner.set_average_depth_of_interaction(_average_depth_of_inter)
+    scanner.set_max_num_non_arccorrected_bins(max_num_non_arc_cor_bins)
+    scanner.set_num_axial_blocks_per_bucket(_axials_blocks_per_bucket)
+    scanner.set_num_transaxial_blocks_per_bucket(_trans_blocks_per_bucket)
+    scanner.set_num_axial_crystals_per_block(_axial_crystals_per_block)
+    scanner.set_num_transaxial_crystals_per_block(_trans_crystals_per_block)
+    scanner.set_num_axial_crystals_per_singles_unit(_axial_crystals_per_singles_unit)
+    scanner.set_num_transaxial_crystals_per_singles_unit(_trans_crystals_per_singles_unit)
+    scanner.set_num_detector_layers(_num_detector_layers)
+
+    return scanner
+
+
+def pstir_get_projection_data_info(domain, stir_scanner, span_num,
+                                     max_num_segments, num_of_views,
+                                     num_non_arccor_bins, data_arc_corrected):
+
+    # if (domain.)
+
+    return stit.ProjDataInfo.ProjDataInfoCTI(stir_scanner, span_num,
+                                     max_num_segments, num_of_views,
+                                     num_non_arccor_bins, data_arc_corrected)
+
+
+
+
+def stir_get_STIR_domain_from_ODL(_discreteLP):
     """
     Interface function to get a STIR domain without caring about the classes names.
 
@@ -139,10 +202,10 @@ def pstir_get_STIR_domain_from_ODL(_discreteLP):
 
     """
 
-    return pstir_create_VoxelsOnCartesianGrid_from_DiscreteLP(_discreteLP)
+    return create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discreteLP)
 
 
-def pstir_get_ODL_domain_from_STIR(_voxels):
+def stir_get_ODL_domain_from_STIR(_voxels):
     """
     Interface function to get an ODL domain without caring about the classes names.
 
@@ -154,60 +217,91 @@ def pstir_get_ODL_domain_from_STIR(_voxels):
     -------
 
     """
-    return pstir_create_DiscreteLP_from_STIR_voxels(_voxels)
+    return create_DiscreteLP_from_STIR_VoxelsOnCartesianGrid(_voxels)
 
 
-def pstir_get_STIR_empty_array_from_ODL(_discreteLP):
+def stir_operate_STIR_and_ODL_vectors(_stir_data, _odl_data, _operator):
     """
-    An array of data in STIR represented by Array<int,size_t>. It can store data but
-    not physical sizes. In pySTIR the array class is interfaced by the Image class (which can
-      actually be a volume).
+    This function can perform some simple operations, Only addition and
+    multiplication are currently available.
 
     Parameters
     ----------
-    _discreteLP
+    _stir_data
+    _odl_data
+    _operator
 
     Returns
     -------
 
     """
-    return pstir_create_empty_Image_array_from_DiscreteLP(_discreteLP)
+    if not isinstance( _odl_data, DiscreteLpVector) or not\
+            isinstance( _stir_data, stir.FloatVoxelsOnCartesianGrid):
+            raise TypeError('The first input should be the STIR data'
+                            'and the second value should be ODL Vector')
 
-def pstir_transform_DiscreteLPVector_to_STIR_compatible_Image(_domain, _data):
+    stir_ind = _stir_data.get_max_indices()
+    stir_max_ind = (stir_ind[1]+1, stir_ind[2]+1, stir_ind[3]+1)
+
+    odl_max_ind = _odl_data.shape
+
+    if not stir_max_ind == odl_max_ind:
+        raise ValueError('The arrays must have the same dimentions! stir array:{}, odl array{}'
+                             .format(stir_max_ind, odl_max_ind))
+
+    odl_array = _odl_data.asarray().astype(np.float32)
+    trans_phantom_array = transform_array_to_STIR_orientation(odl_array)
+
+    stir_array = stirextra.to_numpy(_stir_data)
+
+    if _operator is '+':
+        res = np.add(stir_array, trans_phantom_array)
+    elif _operator is '*':
+        res = np.multiply(stir_array, trans_phantom_array)
+
+    for i in range(0, odl_max_ind[0],1):
+        for j in range(0, odl_max_ind[1],1):
+            for k in range(0, odl_max_ind[2], 1):
+                _stir_data[i, j, k] = res[i,j,k]
+
+def stir_get_STIR_data_as_array(_stir_data):
     """
-    This function groups the complete process.
+    A wrapper to the stir.extra function
     Parameters
     ----------
-    _domain
-    _data
+    _stir_data
 
     Returns
     -------
 
     """
-    data_array = _data.asarray()
-
-    trans_data_array = pstir_transform_array_to_STIR_compatible_array(data_array)
-
-    stir_phantom = pstir_get_STIR_empty_array_from_ODL(_domain)
-    stir_phantom.cSTIR_addVector(trans_data_array)
-
-    return stir_phantom
+    return stirextra.to_numpy(_stir_data)
 
 
-def pstir_get_STIR_scanner_from_ODL_geometry(_geometry):
+def stir_unified_display_function(_display_me, _in_this_grid, _title=""):
+    """
+    This is a helper function. STIR, ODL and NumPy used different functions to display images.
+    I created this function, in order to avoid flips and rotates.
+    It which calls odl.utils.graphics.show_discrete_data.
 
-    scanner = stir.Scanner()
+    Parameters
+    ----------
+    _display_me: A NumPy array.
 
-    stir.Scanner.set_average_depth_of_interaction(_geometry.stir_average_depth_of_inter)
-    stir.Scanner.set_default_bin_size(_geometry.stir_bin_size)
-    stir.Scanner.set_default_intrinsic_tilt(_geometry.stir_intrinsic_tilt)
-    stir.Scanner.set_default_bin_size(_geometry.stir_max_num_non_arccorrected_bins_v)
-    stir.Scanner.set_inner_ring_radius(_geometry.stir_inner_ring_rad)
-    stir.Scanner.set_max_num_non_arccorrected_bins(_geometry.stir_max_num_non_arccorrected_bins)
-    stir.Scanner.set_num_axial_blocks_per_bucket(_geometry.stir_num_axial_crystals_per_block)
-    stir.Scanner.set_num_axial_crystals_per_block(_geometry.stir_num_axial_crystals_per_singles_unit)
-    stir.Scanner.set_num_detector_layers(_geometry.stir_num_detector_layers)
+    _in_this_grid: A suitable grid
+
+    _title: A title for the figure
+
+    Returns
+    -------
+    A matplotlib.pyplot figure
+    """
+
+    grid = get_2D_grid_from_domain(_in_this_grid)
+
+    fig = plt.figure()
+    show_discrete_data(_display_me, grid, fig = fig)
+    fig.canvas.set_window_title(_title)
 
 #
 #
@@ -219,7 +313,7 @@ def pstir_get_STIR_scanner_from_ODL_geometry(_geometry):
 # TRANSFORM FUNCTIONS
 #
 
-def pstir_transform_array_to_STIR_compatible_array(_this_array):
+def transform_array_to_STIR_orientation(_this_array):
     """
     This is transformation function. The input is a numpy array from a DiscreteLPVector and returns
     an array which can be used to fill a STIR image and maintain structure.
@@ -244,25 +338,10 @@ def pstir_transform_array_to_STIR_compatible_array(_this_array):
 
 #
 #
-# INFO / DISPLAY FUNCTIONS
-#
-
-
-def pstir_display_STIR_image(_this_image, _this_grid):
-    pass
-
-
-
-def pstir_display_array():
-    pass
-
-
-#
-#
 # HELPERS
 #
 
-def pstir_get_volume_geometry(discr_reco):
+def get_volume_geometry(discr_reco):
     """
     This is a helper function which returns the total size and voxel number of a
     discretised object.
@@ -274,45 +353,14 @@ def pstir_get_volume_geometry(discr_reco):
     Returns
     -------
 
-
-
     """
     vol_shp = discr_reco.partition.shape
     voxel_size = discr_reco.cell_sides
 
-    return vol_shp, tuple(voxel_size)
+    return np.asarray(vol_shp, dtype=np.int32), np.asarray(voxel_size, dtype=np.float32)
 
 
-def pstir_create_VoxelsOnCartesianGrid_from_DiscreteLP(_discr):
-    """
-    This class is used to represent voxelised densities on a cuboid grid (3D).
-    This class represents 'normal' data. Basisfunctions are just voxels.
-    ----------
-    _discr: DiscreteLP
-
-    Returns
-    -------
-    An empty STIR image object
-
-    """
-
-    if not isinstance(_discr, DiscreteLp):
-        raise TypeError('discretized domain {!r} is not a DiscreteLp '
-                        'instance.'.format(discr_reco))
-
-    if _discr.ndim == 2:
-        raise Exception('The STIR (domain) image should be a 3D object')
-
-    if _discr.partition.begin[2] < 0.0:
-        raise Exception('STIR z axis first index must be on 0.0 mm, got {!r} mm'
-                        .format(_discr.partition.begin[2]))
-
-    im_dim, vox_size = pstir_get_volume_geometry(_discr)
-
-    return _pstir.Voxels(im_dim, vox_size)
-
-
-def pstir_create_empty_Image_array_from_DiscreteLP(_discr):
+def create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discr):
     """
     This class defines multi-dimensional (numeric) arrays.
     This class implements multi-dimensional arrays which can have 'irregular' ranges.
@@ -331,21 +379,41 @@ def pstir_create_empty_Image_array_from_DiscreteLP(_discr):
 
     Returns
     -------
-
-    .. warning: Currently the python support of this class is quite limited and
-     underlying assumptions could be made.
-
+        A stir.FloatVoxelsOnCartesianGrid object of the aforementioned dimensions, filled with zeros
     """
 
-    im_dim, vox_size = pstir_get_volume_geometry(_discr)
+    im_dim, vox_size = get_volume_geometry(_discr)
 
-    image = _pstir.Image()
-    image.initialise(im_dim, vox_size)
+    # Number of voxels
+    # This function returns [ x, y, z]
+    range_size = stir.Int3BasicCoordinate()
+    range_size[1] = im_dim[0] #: x
+    range_size[2] = im_dim[1] #: y
+    range_size[3] = im_dim[2] #: z
 
-    return image
+    ind_range = stir.IndexRange3D(range_size)
+
+    # Voxel size
+    # This function returns [ x, y, z]
+    voxel_size = stir.Float3BasicCoordinate()
+    voxel_size[1] = vox_size[0] #: z
+    voxel_size[2] = vox_size[1] #: y
+    voxel_size[3] = vox_size[2] #: x
+
+    # Shift initial point relatively to 0,0,0
+    # This function returns [ x, y, z]
+    im_origin = stir.FloatCartesianCoordinate3D()
+    im_origin[1] = - (im_dim[0] * vox_size[0]) / 2.0
+    im_origin[2] = - (im_dim[1] * vox_size[1]) / 2.0
+    im_origin[3] = 0.0
+
+    domain = stir.FloatVoxelsOnCartesianGrid( ind_range, im_origin, voxel_size)
+    domain.fill(0.0)
+
+    return domain
 
 
-def pstir_create_DiscreteLP_from_STIR_voxels(_voxels):
+def create_DiscreteLP_from_STIR_VoxelsOnCartesianGrid(_voxels):
     """
     This function tries to transform the VoxelsOnCartesianGrid to
     DicreteLP.
@@ -356,51 +424,27 @@ def pstir_create_DiscreteLP_from_STIR_voxels(_voxels):
 
     Returns
     -------
-
-    .. warning:: Still there problems with the node location in each pixel.
-    .. todo:: I must work in the domain size misalignment.
+    An ODL DiscreteLP object with characteristics of the VoxelsOnCartesianGrid
     """
-    idims, fdims = _voxels.get_physical_dimensions()
 
-    vol_shp = [idims[2], idims[1], idims[0]]
+    # This function returns the coordinates as x - y - z
+    stir_vox_num = _voxels.get_max_indices()
+    vox_num = [stir_vox_num[1]+1, stir_vox_num[2]+1,stir_vox_num[3]+1]
 
-    # Trying the avoid the mesh from the different precisions.
-    strings = np.array(["{:10.6f}".format(number)  for number in fdims])
-    fdims2 = strings.astype(np.float64)
+    # This function returns the coordinates as x - y - z
+    stir_vol_max = _voxels.get_physical_coordinates_for_indices(_voxels.get_max_indices())
+    stir_vol_min = _voxels.get_physical_coordinates_for_indices(_voxels.get_min_indices())
 
-    # STIR arrays : [z][y][x]
-    vol_min = [fdims2[2], fdims2[1], fdims2[0]]
-    vol_max = [fdims2[5], fdims2[4], fdims2[3]]
+    # This function returns the coordinates as x - y - z
+    stir_vox_size = _voxels.get_voxel_size()
+
+    # An one voxel size to get to most righ-most boundary
+    vol_max = [stir_vol_max[1]+stir_vox_size[1], stir_vol_max[2]+stir_vox_size[2],stir_vol_max[3]+stir_vox_size[3]]
+    vol_min = [stir_vol_min[1], stir_vol_min[2],stir_vol_min[3]]
 
     return odl.uniform_discr(
-            min_corner=vol_min, max_corner=vol_max, nsamples=vol_shp,
+            min_corner=vol_min, max_corner=vol_max, nsamples=vox_num,
             dtype='float32')
-
-
-def pstir_unified_display_function(_display_me, _in_this_grid, _title=""):
-    """
-    This is a helper function. STIR, ODL and NumPy used different functions to display images.
-    I created this function, in order to avoid flips and rotates.
-    It which calls odl.utils.graphics.show_discrete_data.
-
-    Parameters
-    ----------
-    _display_me: A NumPy array.
-
-    _in_this_grid: A suitable grid
-
-    _title: A title for the figure
-
-    Returns
-    -------
-    A matplotlib.pyplot figure
-    """
-
-    grid = get_2D_grid_from_domain(_in_this_grid)
-
-    fig = plt.figure()
-    show_discrete_data(_display_me, grid, fig = fig)
-    fig.canvas.set_window_title(_title)
 
 
 def get_2D_grid_from_domain(_this_domain):

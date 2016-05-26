@@ -32,73 +32,33 @@ from odl.tomo.geometry.geometry import (Geometry,
                                         AxisOrientedGeometry)
 from odl.tomo.util.utility import perpendicular_vector
 
+__all__ = ('CylindricalPetGeom')
 
 class CylindricalPetGeom(AxisOrientedGeometry, Geometry):
     """Cylindrical PET scanner geometry."""
 
-    def __init__(self, num_rings, num_blocks, dpart, axialpart, det_rad,
-                 axis=[0, 0, 1], detector_axes=None):
-        """Initialize a new instance.
+    def __init__(self, det_radius,
+                 ring_center_to_det,
+                 apart,
+                 detector,
+                 axialpart,
+                 axis=[0, 0, 1]):
 
-        Parameters
-        ----------
-        num_rings : `int`
-            number of rings
-        num_blocks : `int`
-            number of detector blocks in a ring
-        dpart: 2-dim. `RectPartition`
-            Partition of the detector parameter rectangle
-        axialpart: 2-dim. `RectPartition`
-            Partition of the axial parameter
-        det_rad : gantry crystal radius
-        axis : 3-element array, optional
-            Fixed rotation axis defined by a 3-element vector
-        detector_axes : sequence of two 3-element arrays, optional
-            Unit directions along each detector parameter of the detector.
-            Default: (normalized) [np.cross(axis, source_to_detector), axis]
-        """
         AxisOrientedGeometry.__init__(self, axis)
 
-        self._det_radius = float(det_rad)
+        self._det_radius = float(det_radius)
+
         if self.det_radius <= 0:
             raise ValueError('ring circle radius {} is not positive.'
-                             ''.format(det_rad))
+                             ''.format(det_radius))
 
-        # Perpendicular vector from the ring center to the detector
-        ring_center_to_det = perpendicular_vector(axis)
-        self._ring_center_to_det = (np.array(ring_center_to_det) /
-                                    np.linalg.norm(ring_center_to_det))
-
-        apart = odl.uniform_partition(0, 2 * np.pi, num_blocks,
-                                      nodes_on_bdry=True)
-
-        det_init_axis_0 = np.cross(self.axis, self._ring_center_to_det)
-        det_init_axes = (det_init_axis_0, axis)
-
-        detector = Flat2dDetector(dpart, det_init_axes)
-
-        self._num_blocks = num_blocks
-        self._num_rings = num_rings
-        self._ax_motion_part = axialpart
-        self._motion_part = apart
+        self._apart = apart
+        self._ring_center_to_det = ring_center_to_det
         self._detector = detector
+        self._axialpart = axialpart
 
         Geometry.__init__(self, 3, apart, detector)
 
-    @property
-    def transax_motion_partition(self):
-        """Partition of the transaxial motion parameter set into subsets."""
-        return self.motion_partition
-
-    @property
-    def transax_motion_params(self):
-        """Continuous transaxial motion parameter range, an `IntervalProd`."""
-        return self.transax_motion_partition.set
-
-    @property
-    def transax_motion_grid(self):
-        """Sampling grid of `transax_motion_params."""
-        return self.transax_motion_partition.grid
 
     @property
     def ax_motion_partition(self):
@@ -177,3 +137,5 @@ class CylindricalPetGeom(AxisOrientedGeometry, Geometry):
         z_axis_shift = self.axis * z_shift
 
         return circle_component + z_axis_shift
+
+
