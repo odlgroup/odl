@@ -116,3 +116,50 @@ class IntensityOperator(PointwiseTensorFieldOperator):
                    for fi in f]
         return ReductionOperator(*mul_ops)
 
+
+wavenum = 1
+prop_dist = 1
+
+
+def propagation_kernel_ft_cos(x):
+    """Modified Fresnel propagation kernel for the real part.
+
+    Notes
+    -----
+    The kernel is defined as
+
+        :math:`k(\\xi) = -\\frac{\kappa}{4\pi}
+        \cos\\left(\kappa d + \\frac{d}{2\kappa} \\lvert \\xi \\rvert^2
+        \\right)`,
+
+    where :math:`\kappa` is the wave number of the incoming wave and
+    :math:`d` the propagation distance.
+    """
+    scaled = [np.sqrt(prop_dist / (2 * wavenum)) * xi for xi in x]
+    kernel = sum(sxi ** 2 for sxi in scaled)
+    kernel += wavenum * prop_dist
+    np.cos(kernel, out=kernel)
+    kernel *= -wavenum / (4 * np.pi)
+    return kernel
+
+
+def propagation_kernel_ft_sin(x):
+    """Modified Fresnel propagation kernel for the imaginary part.
+
+    Notes
+    -----
+    The kernel is defined as
+
+        :math:`k(\\xi) = -\\frac{\kappa}{4\pi}
+        \sin\\left(\kappa d + \\frac{d}{2\kappa} \\lvert \\xi \\rvert^2
+        \\right)`,
+
+    where :math:`\kappa` is the wave number of the incoming wave and
+    :math:`d` the propagation distance.
+    """
+    scaled = [np.sqrt(prop_dist / (2 * wavenum)) * xi for xi in x]
+    kernel = sum(sxi ** 2 for sxi in scaled)
+    kernel += wavenum * prop_dist
+    np.sin(kernel, out=kernel)
+    kernel *= -wavenum / (4 * np.pi)
+    return kernel
