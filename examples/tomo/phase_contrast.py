@@ -21,27 +21,20 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
+from builtins import super
 
-# Internal
-import odl
+import numpy as np
+
 from odl.discr.lp_discr import DiscreteLp
 from odl.discr.tensor_ops import PointwiseTensorFieldOperator
+from odl.operator.default_ops import MultiplyOperator
+from odl.operator.pspace_ops import ReductionOperator
 from odl.space.pspace import ProductSpace
 
 
 class IntensityOperator(PointwiseTensorFieldOperator):
 
-    """Intensity mapping of a complex wave function.
-
-    A complex wave function is interpreted as a product space
-    element ``x in X^2``, where ``X`` is a discretized function
-    space. It maps a pair ``(f1, f2)`` to
-
-        ``I(f1, f2) = |1 + i/2*(f1 + i*f2)|^2 = 1 - f2 + (f1^2 + f2^2)/4``
-
-    where ``k`` is the wave number of the incoming plane wave and
-    ``d`` the propagation distance.
-    """
+    """Intensity mapping of a vectorial function."""
 
     def __init__(self, domain=None, range=None):
         """Initialize a new instance.
@@ -50,12 +43,20 @@ class IntensityOperator(PointwiseTensorFieldOperator):
         ----------
         domain : power space of `DiscreteLp`, optional
             The space of elements which the operator acts on. If
-            ``range`` is given, ``domain`` must fulfill
-            ``domain == ProductSpace(range, 2)``.
-            This is required if ``range`` is not given.
+            ``range`` is given, ``domain`` must be a power space
+            of ``range``.
         range : `DiscreteLp`, optional
             The space of elements to which the operator maps.
             This is required if ``domain`` is not given.
+
+        Notes
+        -----
+        This operator maps a real vector field :math:`f = (f_1, \dots, f_d)`
+        to its pointwise intensity
+
+            :math:`\mathcal{I}(f) = \\lvert f\\rvert^2 :
+            x \mapsto \sum_{j=1}^d f_i(x)^2`.
+
         """
         if domain is None and range is None:
             raise ValueError('either domain or range must be specified.')
@@ -70,63 +71,48 @@ class IntensityOperator(PointwiseTensorFieldOperator):
             if not isinstance(domain, ProductSpace):
                 raise TypeError('domain {!r} is not a `ProductSpace` '
                                 'instance.'.format(domain))
-            if domain.shape != (2,):
-                raise ValueError('domain must be a power space of shape (2,), '
-                                 'got {}.'.format(domain.shape))
             range = domain[0]
 
         super().__init__(domain, range, linear=False)
 
     def _call(self, x, out):
         """Implement ``self(x, out)``."""
-        out[:] = 1.0
-        out -= x[1]
-        tmp = x[0].copy()
-        tmp *= tmp
-        tmp /= 4
-        out += tmp
-        tmp = x[1].copy()
-        tmp *= tmp
-        tmp /= 4
-        out += tmp
+        out[:] = x[0]
+        out *= out
+
+        tmp = self.base_space.element()
+        for xi in x[1:]:
+            tmp.assign(xi)
+            tmp *= tmp
+            out += tmp
 
     def derivative(self, f):
         """Return the derivative operator in ``f``.
 
+        Parameters
+        ----------
+        f : domain element
+            Point at which the derivative is taken
+
+        Returns
+        -------
+        deriv : `Operator`
+            Derivative operator at the specified point
+
+        Notes
+        -----
         The derivative of the intensity operator is given by
 
-            ``DI(f1, f2)(h1, h2) = -h2 + 1/2*(f1*h1 + f2*h2)``.
+            :math:`\partial \mathcal{I}(f_1, f_2)(h_1, h_2) =
+            2 (f_1 h_1 + f_2 h_2)`.
 
-        Its adjoint maps a function ``g`` to the product space element
+        Its adjoint maps a function :math:`g` to the product space
+        element
 
-            ``DI(f1, f2)^*(g) = (f1/2 * g, (-1+f2/2) * g)``.
+            :math:`\\left[\partial\mathcal{I}(f_1, f_2)\\right]^*(g) =
+            2 (f_1 g, f_2 g)`.
         """
-        intens_op = self
+        mul_ops = [2 * MultiplyOperator(fi, domain=self.base_space)
+                   for fi in f]
+        return ReductionOperator(*mul_ops)
 
-        class Deriv(PointwiseTensorFieldOperator):
-            def __init__(self):
-                super().__init__(intens_op.domain, intens_op.range,
-                                 linear=True)
-
-            def _call(self, h, out):
-                tmp = self.range.element()
-                out.multiply(f[0], h[0])
-                tmp.multiply(f[1], h[1])
-                out.lincomb(0.5, out, 0.5, tmp)
-                out -= h[1]
-
-            @property
-            def adjoint(self):
-                return DerivAdjoint()
-
-        class DerivAdjoint(PointwiseTensorFieldOperator):
-            def __init__(self):
-                super().__init__(intens_op.range, intens_op.domain,
-                                 linear=True)
-
-            def _call(self, g, out):
-                out[0].multiply(f[0] / 2, g)
-                out[1].assign(-g)
-                out[1].lincomb(1, out[1], 0.5, f[1])
-
-        return Deriv()
