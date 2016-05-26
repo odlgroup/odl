@@ -33,10 +33,15 @@ from odl.space.pspace import ProductSpace
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
 _SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
-_SUPPORTED_PADDING_METHODS = ('constant', 'symmetric', 'periodic', None)
+_SUPPORTED_PADDING_METHODS = ('constant', 'symmetric', 'symmetric_adjoint',
+                              'periodic', None)
 _ADJOINT_METHOD = {'central': 'central',
                    'forward': 'backward',
                    'backward': 'forward'}
+_ADJ_PADDING = {'constant': 'constant',
+                'symmetric': 'symmetric_adjoint',
+                'symmetric_adjoint': 'symmetric',
+                'periodic': 'periodic'}
 
 
 class PartialDerivative(PointwiseTensorFieldOperator):
@@ -161,8 +166,8 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         return -PartialDerivative(self.domain, self.axis,
                                   _ADJOINT_METHOD[self.method],
-                                  self.padding_method, self.padding_value,
-                                  self.edge_order)
+                                  _ADJ_PADDING[self.padding_method],
+                                  self.padding_value, self.edge_order)
 
 
 class Gradient(PointwiseTensorFieldOperator):
@@ -175,7 +180,8 @@ class Gradient(PointwiseTensorFieldOperator):
     operator
     """
 
-    def __init__(self, domain=None, range=None, method='forward'):
+    def __init__(self, domain=None, range=None, method='forward',
+                 padding_method='constant', padding_value=0):
         """Initialize a `Gradient` operator instance.
 
         Zero padding is assumed for the adjoint of the `Gradient`
@@ -191,6 +197,19 @@ class Gradient(PointwiseTensorFieldOperator):
             This is required if ``domain`` is not given.
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method to be used
+        padding_method : {'constant', 'symmetric', 'periodic'}, optional
+
+            'constant' : Pads values outside the domain of ``f`` with a
+            constant value given by ``padding_value``.
+
+            'symmetric' : Pads with the reflection of the vector mirrored
+            along the edge of the array.
+
+            'periodic' : Pads with the values from the other side of the array.
+
+        padding_value : `float`, optional
+            If ``padding_method`` is 'constant' ``f`` assumes ``padding_value``
+            for indices outside the domain of ``f``.
 
         Examples
         --------
@@ -224,8 +243,11 @@ class Gradient(PointwiseTensorFieldOperator):
                                 'instance.'.format(domain))
             range = ProductSpace(domain, domain.ndim)
 
-        super().__init__(domain, range, linear=True)
+        linear = not (padding_method == 'constant' and padding_value != 0)
+        super().__init__(domain, range, linear=linear)
         self.method = method
+        self.padding_method = padding_method
+        self.padding_value = padding_value
 
     def _call(self, x, out=None):
         """Calculate the spatial gradient of ``x``.
@@ -280,12 +302,27 @@ class Gradient(PointwiseTensorFieldOperator):
             out_arr = out[axis].asarray()
 
             finite_diff(x_arr, axis=axis, dx=dx[axis], method=self.method,
-                        padding_method='constant', padding_value=0,
-                        out=out_arr, )
+                        padding_method=self.padding_method,
+                        padding_value=self.padding_value,
+                        out=out_arr)
 
             out[axis][:] = out_arr
 
         return out
+
+    def derivative(self, point):
+        """Return the derivative operator.
+
+        The gradient is usually linear, but in case the 'constant'
+        ``padding_method`` is used with nonzero ``padding_value``, the
+        derivative is given by the derivative with 0 ``padding_value``.
+        """
+        if self.padding_method == 'constant' and self.padding_value != 0:
+            return Gradient(self.domain, self.range, self.method,
+                            padding_method=self.padding_method,
+                            padding_value=0)
+        else:
+            return self
 
     @property
     def adjoint(self):
@@ -298,9 +335,15 @@ class Gradient(PointwiseTensorFieldOperator):
         operator ``space^n --> space``, hence we need to provide the domain of
         this operator.
         """
+        if not self.is_linear:
+            raise ValueError('Operator with nonzero padding_value ({}) is not'
+                             ' linear and has no adjoint'
+                             ''.format(self.padding_value))
 
         return - Divergence(domain=self.range, range=self.domain,
-                            method=_ADJOINT_METHOD[self.method])
+                            method=_ADJOINT_METHOD[self.method],
+                            padding_method=_ADJ_PADDING[self.padding_method],
+                            padding_value=self.padding_value)
 
 
 class Divergence(PointwiseTensorFieldOperator):
@@ -312,7 +355,8 @@ class Divergence(PointwiseTensorFieldOperator):
     match the negative `Gradient` operator implicit zero is assumed.
     """
 
-    def __init__(self, domain=None, range=None, method='forward'):
+    def __init__(self, domain=None, range=None, method='forward',
+                 padding_method='constant', padding_value=0):
         """Initialize a `Divergence` operator instance.
 
         Zero padding is assumed for the adjoint of the `Divergence`
@@ -328,6 +372,19 @@ class Divergence(PointwiseTensorFieldOperator):
             This is required if ``domain`` is not given.
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method to be used
+        padding_method : {'constant', 'symmetric', 'periodic'}, optional
+
+            'constant' : Pads values outside the domain of ``f`` with a
+            constant value given by ``padding_value``.
+
+            'symmetric' : Pads with the reflection of the vector mirrored
+            along the edge of the array.
+
+            'periodic' : Pads with the values from the other side of the array.
+
+        padding_value : `float`, optional
+            If ``padding_method`` is 'constant' ``f`` assumes ``padding_value``
+            for indices outside the domain of ``f``.
 
         Examples
         --------
@@ -361,8 +418,11 @@ class Divergence(PointwiseTensorFieldOperator):
                                 ''.format(domain))
             range = domain[0]
 
-        super().__init__(domain, range, linear=True)
+        linear = not (padding_method == 'constant' and padding_value != 0)
+        super().__init__(domain, range, linear=linear)
         self.method = method
+        self.padding_method = padding_method
+        self.padding_value = padding_value
 
     def _call(self, x, out=None):
         """Calculate the divergence of ``x``.
@@ -413,7 +473,9 @@ class Divergence(PointwiseTensorFieldOperator):
         tmp = np.empty(out.shape, out.dtype, order=out.space.order)
         for axis in range(ndim):
             finite_diff(x[axis], axis=axis, dx=dx[axis], method=self.method,
-                        padding_method='constant', padding_value=0, out=tmp)
+                        padding_method=self.padding_method,
+                        padding_value=self.padding_value,
+                        out=tmp)
             if axis == 0:
                 out_arr[:] = tmp
             else:
@@ -423,6 +485,20 @@ class Divergence(PointwiseTensorFieldOperator):
         out[:] = out_arr
         return out
 
+    def derivative(self, point):
+        """Return the derivative operator.
+
+        The Divergence is usually linear, but in case the 'constant'
+        ``padding_method`` is used with nonzero ``padding_value``, the
+        derivative is given by the derivative with 0 ``padding_value``.
+        """
+        if self.padding_method == 'constant' and self.padding_value != 0:
+            return Divergence(self.domain, self.range, self.method,
+                              padding_method=_ADJ_PADDING[self.padding_method],
+                              padding_value=0)
+        else:
+            return self
+
     @property
     def adjoint(self):
         """The adjoint operator.
@@ -430,9 +506,15 @@ class Divergence(PointwiseTensorFieldOperator):
         Assuming implicit zero padding, the adjoint operator is given by the
         negative of the `Gradient` operator.
         """
+        if not self.is_linear:
+            raise ValueError('Operator with nonzero padding_value ({}) is not'
+                             ' linear and has no adjoint'
+                             ''.format(self.padding_value))
 
         return - Gradient(domain=self.range, range=self.domain,
-                          method=_ADJOINT_METHOD[self.method])
+                          method=_ADJOINT_METHOD[self.method],
+                          padding_method=self.padding_method,
+                          padding_value=self.padding_value)
 
 
 class Laplacian(PointwiseTensorFieldOperator):
@@ -822,6 +904,50 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
             slice_node2[axis] = -2
             # 1D equivalent: out[-1] = f[-1] - f[-2]
             out[slice_out] = f_arr[slice_node1] - f_arr[slice_node2]
+
+    elif padding_method == 'symmetric_adjoint':
+        # The adjoint case of symmetric
+
+        if method == 'central':
+            # 2nd-order lower edge
+            slice_out[axis] = 0
+            slice_node1[axis] = 1
+            slice_node2[axis] = 0
+            # 1D equivalent: out[0] = (f[1] - f[0])/2.0
+            out[slice_out] = (f_arr[slice_node1] + f_arr[slice_node2]) / 2.0
+
+            # 2nd-order upper edge
+            slice_out[axis] = -1
+            slice_node1[axis] = -1
+            slice_node2[axis] = -2
+            # 1D equivalent: out[-1] = (f[-1] - f[-2])/2.0
+            out[slice_out] = (-f_arr[slice_node1] - f_arr[slice_node2]) / 2.0
+
+        elif method == 'forward':
+            # 1st-oder lower edge
+            slice_out[axis] = 0
+            slice_node1[axis] = 1
+            # 1D equivalent: out[0] = - f[1]
+            out[slice_out] = f_arr[slice_node1]
+
+            # 1st-oder upper edge
+            slice_out[axis] = -1
+            slice_node1[axis] = -1
+            # 1D equivalent: out[-1] = - f[-1]
+            out[slice_out] = -f_arr[slice_node1]
+
+        elif method == 'backward':
+            # 1st-oder lower edge
+            slice_out[axis] = 0
+            slice_node1[axis] = 0
+            # 1D equivalent: out[0] = - f[0]
+            out[slice_out] = f_arr[slice_node1]
+
+            # 1st-oder upper edge
+            slice_out[axis] = -1
+            slice_node1[axis] = -2
+            # 1D equivalent: out[-1] = f[-2]
+            out[slice_out] = -f_arr[slice_node1]
 
     elif padding_method == 'periodic':
         # Values of f for indices outside the domain of f are replicates of

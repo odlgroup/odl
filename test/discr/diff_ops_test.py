@@ -29,14 +29,64 @@ import odl
 from odl.discr.diff_ops import (
     finite_diff, PartialDerivative, Gradient, Divergence)
 from odl.util.testutils import (
-    all_equal, almost_equal, skip_if_no_cuda)
+    all_equal, almost_equal, skip_if_no_cuda, never_skip)
+
+
+methods = ['central', 'forward', 'backward']
+method_ids = [' method={} '.format(p) for p in methods]
+
+
+@pytest.fixture(scope="module", params=methods, ids=method_ids)
+def method(request):
+    return request.param
+
+
+paddings = [('constant', 0), ('constant', 1), 'symmetric', 'periodic']
+padding_ids = [' constant=0 ', ' constant=1 ', ' symmetric ', ' periodic ']
+
+
+@pytest.fixture(scope="module", params=paddings, ids=padding_ids)
+def padding(request):
+    return request.param
+
+
+# Find the valid projectors
+impls = [never_skip('numpy'),
+         skip_if_no_cuda('cuda')]
+impl_ids = [' impl={} '.format(p.args[1]) for p in impls]
+
+
+@pytest.fixture(scope="module", params=impls, ids=impl_ids)
+def impl(request):
+    return request.param
 
 
 # Test data
 DATA_1D = np.array([0.5, 1, 3.5, 2, -.5, 3, -1, -1, 0, 3])
 DATA_2D = np.array([[0., 1., 2., 3., 4.],
                     [1., 2., 3., 4., 5.],
-                    [2., 3., 4., 5., 6.]]) ** 1
+                    [2., 3., 4., 5., 6.]])
+
+
+def ndvolume(lin_size, ndim, dtype=np.float64):
+    """Hypercube phantom.
+
+    Parameters
+    ----------
+    lin_size : `int`
+       Size of array in each dimension
+    ndim : `int`
+        Number of dimensions
+    dtype : dtype
+        The type of the output array
+
+    """
+    vec = [1]
+    vol = np.arange(lin_size, dtype=dtype)
+    for _ in range(ndim - 1):
+        vec.insert(0, lin_size)
+        vol = vol * vol.reshape(vec)
+    return vol
 
 
 # --- finite_diff --- #
@@ -163,34 +213,65 @@ def test_finite_diff_symmetric_padding():
     assert diff[-1] == (DATA_1D[-1] - DATA_1D[-2]) / 2
 
 
-def test_forward_diff():
-    """Forward finite differences."""
+def test_finite_diff_constant_padding():
+    """Finite difference using constant padding."""
 
-    arr = np.array([0., 3., 5., 6.])
+    for padding_value in [-1, 0, 1]:
+        diff_forward = finite_diff(DATA_1D, method='forward',
+                                   padding_method='constant',
+                                   padding_value=padding_value)
 
-    findiff_op = finite_diff(arr, padding_method='constant', method='forward')
-    assert all_equal(findiff_op, [3., 2., 1., -6.])
+        assert diff_forward[0] == DATA_1D[1] - DATA_1D[0]
+        assert diff_forward[-1] == padding_value - DATA_1D[-1]
+
+        diff_backward = finite_diff(DATA_1D, method='backward',
+                                    padding_method='constant',
+                                    padding_value=padding_value)
+
+        assert diff_backward[0] == DATA_1D[0] - padding_value
+        assert diff_backward[-1] == DATA_1D[-1] - DATA_1D[-2]
+
+        diff_central = finite_diff(DATA_1D, method='central',
+                                   padding_method='constant',
+                                   padding_value=padding_value)
+
+        assert diff_central[0] == (DATA_1D[1] - padding_value) / 2
+        assert diff_central[-1] == (padding_value - DATA_1D[-2]) / 2
 
 
-def test_backward_diff():
-    """Backward finite differences."""
-    arr = np.array([0., 3., 5., 6.])
+def test_finite_diff_periodic_padding():
+    """Finite difference using periodic padding."""
 
-    findiff_op = finite_diff(arr, padding_method='constant', method='backward')
-    assert all_equal(findiff_op, [0., 3., 2., 1.])
+    diff_forward = finite_diff(DATA_1D, method='forward',
+                               padding_method='periodic')
+
+    assert diff_forward[0] == DATA_1D[1] - DATA_1D[0]
+    assert diff_forward[-1] == DATA_1D[0] - DATA_1D[-1]
+
+    diff_backward = finite_diff(DATA_1D, method='backward',
+                                padding_method='periodic')
+
+    assert diff_backward[0] == DATA_1D[0] - DATA_1D[-1]
+    assert diff_backward[-1] == DATA_1D[-1] - DATA_1D[-2]
+
+    diff_central = finite_diff(DATA_1D, method='central',
+                               padding_method='periodic')
+
+    assert diff_central[0] == (DATA_1D[1] - DATA_1D[-1]) / 2
+    assert diff_central[-1] == (DATA_1D[0] - DATA_1D[-2]) / 2
 
 
 # --- PartialDerivative --- #
 
 
-def test_part_deriv_cpu():
+def test_part_deriv(impl):
     """Discretized partial derivative."""
 
     with pytest.raises(TypeError):
         PartialDerivative(odl.Rn(1))
 
     # discretized space
-    space = odl.uniform_discr([0, 0], [2, 1], DATA_2D.shape)
+    space = odl.uniform_discr([0, 0], [2, 1], DATA_2D.shape, impl=impl)
 
     # operator
     partial_0 = PartialDerivative(space, axis=0, method='central',
@@ -241,89 +322,49 @@ def test_part_deriv_cpu():
                         vec1.inner(partial_1.adjoint(vec2)))
 
 
-@skip_if_no_cuda
-def test_discr_deriv_cuda():
-    """Discretized partial derivative using CUDA."""
-
-    # explicit calculation of finite difference
-    partial_vec_explicit = np.zeros_like(DATA_1D)
-    # interior: second-order accurate differences
-    partial_vec_explicit[1:-1] = (DATA_1D[2:] - DATA_1D[:-2]) / 2.0
-    # boundary: second-order accurate central differences with zero padding
-    partial_vec_explicit[0] = DATA_1D[1] / 2.0
-    partial_vec_explicit[-1] = -DATA_1D[-2] / 2.0
-
-    # discretized space using CUDA
-    discr_space = odl.uniform_discr(0, DATA_1D.size, DATA_1D.shape,
-                                    impl='cuda')
-
-    # operator
-    partial = PartialDerivative(discr_space, method='central',
-                                padding_method='constant')
-
-    # discretized space vector
-    vec = partial.domain.element(DATA_1D)
-
-    # apply operator
-    partial_vec = partial(vec)
-
-    assert all_equal(partial_vec, partial_vec_explicit)
-
-
 # --- Gradient --- #
 
 
-def ndvolume(lin_size, ndim, dtype=np.float64):
-    """Hypercube phantom.
-
-    Parameters
-    ----------
-    lin_size : `int`
-       Size of array in each dimension
-    ndim : `int`
-        Number of dimensions
-    dtype : dtype
-        The type of the output array
-
-    """
-    vec = [1]
-    vol = np.arange(lin_size, dtype=dtype)
-    for _ in range(ndim - 1):
-        vec.insert(0, lin_size)
-        vol = vol * vol.reshape(vec)
-    return vol
-
-
-def test_gradient_cpu():
+def test_gradient(method, impl, padding):
     """Discretized spatial gradient operator."""
 
     with pytest.raises(TypeError):
-        Gradient(odl.Rn(1))
+        Gradient(odl.Rn(1), method=method)
+
+    if isinstance(padding, tuple):
+        padding_method, padding_value = padding
+    else:
+        padding_method, padding_value = padding, None
 
     # DiscreteLp Vector
-    discr_space = odl.uniform_discr([0, 0], [6, 2.5], DATA_2D.shape)
+    discr_space = odl.uniform_discr([0, 0], [6, 2.5], DATA_2D.shape, impl=impl)
     dom_vec = discr_space.element(DATA_2D)
 
     # computation of gradient components with helper function
     dx0, dx1 = discr_space.cell_sides
-    diff_0 = finite_diff(DATA_2D, axis=0, dx=dx0, method='forward',
-                         padding_method='constant')
-    diff_1 = finite_diff(DATA_2D, axis=1, dx=dx1, method='forward',
-                         padding_method='constant')
+    diff_0 = finite_diff(DATA_2D, axis=0, dx=dx0, method=method,
+                         padding_method=padding_method,
+                         padding_value=padding_value)
+    diff_1 = finite_diff(DATA_2D, axis=1, dx=dx1, method=method,
+                         padding_method=padding_method,
+                         padding_value=padding_value)
 
     # gradient
-    grad = Gradient(discr_space)
+    grad = Gradient(discr_space, method=method,
+                    padding_method=padding_method,
+                    padding_value=padding_value)
     grad_vec = grad(dom_vec)
     assert len(grad_vec) == DATA_2D.ndim
     assert all_equal(grad_vec[0].asarray(), diff_0)
     assert all_equal(grad_vec[1].asarray(), diff_1)
 
     # Test adjoint operator
-
-    ran_vec = grad.range.element([DATA_2D, DATA_2D ** 2])
-    adj_vec = grad.adjoint(ran_vec)
-    lhs = ran_vec.inner(grad_vec)
-    rhs = dom_vec.inner(adj_vec)
+    derivative = grad.derivative(grad.domain.zero())
+    ran_vec = derivative.range.element([DATA_2D, DATA_2D ** 2])
+    deriv_grad_vec = derivative(dom_vec)
+    adj_grad_vec = derivative.adjoint(ran_vec)
+    lhs = ran_vec.inner(deriv_grad_vec)
+    rhs = dom_vec.inner(adj_grad_vec)
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
@@ -331,87 +372,57 @@ def test_gradient_cpu():
 
     # higher dimensional arrays
     lin_size = 3
-    for ndim in range(1, 6):
+    for ndim in [1, 3, 6]:
 
         # DiscreteLp Vector
-        discr_space = odl.uniform_discr([0.] * ndim, [lin_size] * ndim,
+        discr_space = odl.uniform_discr([0.] * ndim, [1.] * ndim,
                                         [lin_size] * ndim)
         dom_vec = discr_space.element(ndvolume(lin_size, ndim))
 
         # gradient
-        grad = Gradient(discr_space)
+        grad = Gradient(discr_space, method=method,
+                        padding_method=padding_method,
+                        padding_value=padding_value)
         grad(dom_vec)
-
-
-@skip_if_no_cuda
-def test_gradient_cuda():
-    """Discretized spatial gradient operator using CUDA."""
-
-    # DiscreteLp Vector
-    discr_space = odl.uniform_discr([0, 0], [6, 2.5], DATA_2D.shape,
-                                    impl='cuda')
-    dom_vec = discr_space.element(DATA_2D)
-
-    # computation of gradient components with helper function
-    dx0, dx1 = discr_space.cell_sides
-    diff_0 = finite_diff(DATA_2D, axis=0, dx=dx0, padding_method='constant')
-    diff_1 = finite_diff(DATA_2D, axis=1, dx=dx1, padding_method='constant')
-
-    # gradient
-    grad = Gradient(discr_space)
-    grad_vec = grad(dom_vec)
-    assert len(grad_vec) == DATA_2D.ndim
-    assert all_equal(grad_vec[0].asarray(), diff_0)
-    assert all_equal(grad_vec[1].asarray(), diff_1)
-
-    # adjoint operator
-    ran_vec = grad.range.element([DATA_2D, DATA_2D ** 2])
-    adj_vec = grad.adjoint(ran_vec)
-    lhs = ran_vec.inner(grad_vec)
-    rhs = dom_vec.inner(adj_vec)
-    assert lhs != 0
-    assert rhs != 0
-    assert lhs == rhs
 
 
 # --- Divergence --- #
 
 
-def test_divergence_cpu():
+def test_divergence(method, impl):
     """Discretized spatial divergence operator."""
 
     # Invalid space
     with pytest.raises(TypeError):
-        Divergence(range=odl.Rn(1))
+        Divergence(range=odl.Rn(1), method=method)
 
     # DiscreteLp
-    # space = odl.uniform_discr([0, 0], [6, 2.5], DATA.shape)
-    space = odl.uniform_discr([0, 0], [3, 5], DATA_2D.shape)
+    space = odl.uniform_discr([0, 0], [3, 5], DATA_2D.shape, impl=impl)
 
     # Operator instance
-    div = Divergence(range=space, method='forward')
+    div = Divergence(range=space, method=method)
 
     # Apply operator
-    # dom_vec = div.domain.element([DATA / 2, DATA ** 3])
     dom_vec = div.domain.element([DATA_2D, DATA_2D])
     div_dom_vec = div(dom_vec)
 
     # computation of divergence with helper function
     dx0, dx1 = space.cell_sides
-    diff_0 = finite_diff(dom_vec[0].asarray(), axis=0, dx=dx0,
+    diff_0 = finite_diff(dom_vec[0].asarray(), axis=0, dx=dx0, method=method,
                          padding_method='constant')
-    diff_1 = finite_diff(dom_vec[1].asarray(), axis=1, dx=dx1,
+    diff_1 = finite_diff(dom_vec[1].asarray(), axis=1, dx=dx1, method=method,
                          padding_method='constant')
 
     assert all_equal(diff_0 + diff_1, div_dom_vec.asarray())
 
     # Adjoint operator
-    adj_div = div.adjoint
+    derivative = div.derivative(div.domain.zero())
+    deriv_div_dom_vec = derivative(dom_vec)
     ran_vec = div.range.element(DATA_2D ** 2)
-    adj_div_ran_vec = adj_div(ran_vec)
+    adj_div_ran_vec = derivative.adjoint(ran_vec)
 
     # Adjoint condition
-    lhs = ran_vec.inner(div_dom_vec)
+    lhs = ran_vec.inner(deriv_div_dom_vec)
     rhs = dom_vec.inner(adj_div_ran_vec)
     # Check not to use trivial data
     assert lhs != 0
@@ -426,47 +437,9 @@ def test_divergence_cpu():
                                   [lin_size] * ndim)
 
         # Divergence
-        div = Divergence(range=space)
+        div = Divergence(range=space, method=method)
         dom_vec = div.domain.element([ndvolume(lin_size, ndim)] * ndim)
         div(dom_vec)
-
-
-@skip_if_no_cuda
-def test_discrete_divergence_cuda():
-    """Discretized spatial divergence operator using CUDA."""
-
-    # Check result of operator with explicit summation
-
-    # DiscreteLp
-    space = odl.uniform_discr([0, 0], [1.5, 10], DATA_2D.shape, impl='cuda')
-
-    # operator instance
-    div = Divergence(range=space)
-
-    # apply operator
-    dom_vec = div.domain.element([DATA_2D, DATA_2D])
-    div_dom_vec = div(dom_vec)
-
-    # computation of divergence with helper function
-    dx0, dx1 = space.cell_sides
-    diff_0 = finite_diff(dom_vec[0].asarray(), axis=0, dx=dx0,
-                         padding_method='constant')
-    diff_1 = finite_diff(dom_vec[1].asarray(), axis=1, dx=dx1,
-                         padding_method='constant')
-
-    assert all_equal(diff_0 + diff_1, div_dom_vec.asarray())
-
-    # Adjoint operator
-    adj_div = div.adjoint
-    ran_vec = div.range.element(DATA_2D ** 2)
-    adj_div_ran_vec = adj_div(ran_vec)
-
-    # Adjoint condition
-    lhs = ran_vec.inner(div_dom_vec)
-    rhs = dom_vec.inner(adj_div_ran_vec)
-    assert lhs != 0
-    assert rhs != 0
-    assert almost_equal(lhs, rhs)
 
 
 if __name__ == '__main__':
