@@ -61,6 +61,7 @@ from odl.operator.operator import Operator
 __all__ = ('ForwardProjectorByBinWrapper',
            'BackProjectorByBinWrapper',
            'stir_projector_from_file',
+           'stir_projector_from_memory'
            'STIR_AVAILABLE')
 
 
@@ -265,6 +266,7 @@ class BackProjectorByBinWrapper(Operator):
         out[:] = stirextra.to_numpy(self.volume)
 
 
+
 def stir_projector_from_file(volume_file, projection_file):
     """Create a STIR projector from given template files.
 
@@ -284,12 +286,9 @@ def stir_projector_from_file(volume_file, projection_file):
     projector : `ForwardProjectorByBinWrapper`
         A STIR forward projector.
     """
-    # volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
+    volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
 
     proj_data_in = stir.ProjData.read_from_file(projection_file)
-
-    # stir.ProjDataInfoCylindricalNoArcCorr.
-
     proj_data = stir.ProjDataInMemory(proj_data_in.get_exam_info(),
                                       proj_data_in.get_proj_data_info())
 
@@ -314,6 +313,31 @@ def stir_projector_from_file(volume_file, projection_file):
     data_sp = uniform_discr([0, 0, 0], proj_shape, proj_shape, dtype='float32')
 
     return ForwardProjectorByBinWrapper(recon_sp, data_sp, volume, proj_data)
+
+
+def stir_projector_from_memory(_recon_sp,\
+                               _volume,\
+                               _proj_data):
+    """
+
+    Parameters
+    ----------
+    _recon_sp : A discreteLP object
+    _volume : A STIR VoxelsOnCatesianGrid object
+    _proj_data: A ProjData object
+
+    Returns
+    -------
+    projector : `ForwardProjectorByBinWrapper`
+        A STIR forward projector.
+    """
+
+    # TODO: set correct projection space. Currently, a default grid with
+    # stride (1, 1, 1) is used.
+    proj_shape = _proj_data.to_array().shape()
+    data_sp = uniform_discr([0, 0, 0], proj_shape, proj_shape, dtype='float32')
+
+    return ForwardProjectorByBinWrapper(_recon_sp, data_sp, _volume, _proj_data)
 
 
 if __name__ == '__main__':

@@ -40,15 +40,11 @@ base = pth.join(pth.dirname(pth.abspath(__file__)), 'data', 'stir')
 # transform it to STIR domain.
 #
 # New ODL domain
-discr_dom_odl = odl.tomo.pstir_get_ODL_domain_which_honours_STIR_restrictions([151, 151, 151], [2.5, 2.5, 2.5])
+# N.E. At a later point we are going to define a scanner with ring spacing 4.16
+# therefore the z voxel size must be a divisor of that size.
+discr_dom_odl = odl.tomo.stir_get_ODL_domain_which_honours_STIR_restrictions([151, 151, 151], [2.5, 2.5, 2.08])
 
-# A sample phantom in odl domain
-odl_phantom = odl.util.shepp_logan(discr_dom_odl, modified=True)
-
-# A sample phantom to project
-stir_phantom = odl.tomo.pstir_transform_DiscreteLPVector_to_STIR_compatible_Image(discr_dom_odl, odl_phantom)
-
-
+stir_domain = odl.tomo.stir_get_STIR_domain_from_ODL(discr_dom_odl, 0.0)
 
 #
 #
@@ -75,7 +71,8 @@ det_radius = 42.4 # in mm
 # Additional things that STIR would like to know
 #
 average_depth_of_inter = 1.2 # in mm
-voxel_size_xy = 2.0 # in mm
+ring_spacing = det_ny_mm
+voxel_size_xy = 2.5 # in mm
 axial_crystals_per_block = 13
 trans_crystals_per_block = 13
 axials_blocks_per_bucket = 4
@@ -85,19 +82,21 @@ trans_crystals_per_singles_unit = 13
 num_detector_layers = 1
 intrinsic_tilt = 0.0
 
-# Almost there...
-geom = odl.tomo.pstir_get_ODL_geoemtry_which_honours_STIR_restrictions(det_nx_mm, det_ny_mm,
-                                                                        num_rings, num_dets_per_ring,
-                                                                        det_radius)
+# Create a PET geometry (ODL object) which is similar
+# to the one that STIR will create using these values
+geom = odl.tomo.stir_get_ODL_geometry_which_honours_STIR_restrictions(det_nx_mm, det_ny_mm,\
+                                                                      num_rings, num_dets_per_ring,\
+                                                                      det_radius)
 
-stir_scanner = odl.tomo.pstir_get_STIR_geometry(num_rings, num_dets_per_ring,
-                                          det_radius,
-                                          average_depth_of_inter,
-                                          voxel_size_xy,
-                                          axial_crystals_per_block, trans_crystals_per_block,
-                                          axials_blocks_per_bucket, trans_blocks_per_bucket_v,
-                                          axial_crystals_per_singles_unit, trans_crystals_per_singles_unit,
-                                          num_detector_layers, intrinsic_tilt)
+# Now create the STIR geometry
+stir_scanner = odl.tomo.stir_get_STIR_geometry(num_rings, num_dets_per_ring,\
+                                               det_radius, ring_spacing,\
+                                               average_depth_of_inter,\
+                                               voxel_size_xy,\
+                                               axial_crystals_per_block, trans_crystals_per_block,\
+                                               axials_blocks_per_bucket, trans_blocks_per_bucket_v,\
+                                               axial_crystals_per_singles_unit, trans_crystals_per_singles_unit,\
+                                               num_detector_layers, intrinsic_tilt)
 
 
 
@@ -129,13 +128,12 @@ max_num_segments = -1
 # If the views is less than half the number of detectors defined in
 #  the Scanner then we subsample the scanner angular positions.
 # If it is larger we are going to have empty cells in the sinogram
-num_of_views = stir_scanner.get_num_detectors_per_ring() / 2
-#     , 10, 312, max_num_non_arc_cor_bins, False
+num_of_views = num_dets_per_ring / 2
 
 # The number of tangestial positions refers to the last sinogram
 # coordinate which is going to be the LOS's distance from the center
 # of the FOV. Normally this would be the number of default_non_arc_bins
-num_non_arccor_bins = stir_scanner.get_max_num_non_arccorrected_bins()
+num_non_arccor_bins = num_dets_per_ring / 2
 
 # A boolean if the data have been arccorrected during acquisition
 # or in preprocessing. Anyways, STIR will not do that for you, but needs
@@ -144,22 +142,35 @@ data_arc_corrected = False
 
 
 # Now lets create the proper projector info
-proj_info = pstir_get_STIR_proj_info(stir_scanner, span_num,
-                                     max_num_segments, num_of_views,
-                                     num_non_arccor_bins, data_arc_corrected)
-# proj_arc_cor  = stir.ProjDataInfo.ProjDataInfoCTI(scanner, 1, 10, 312, max_num_non_arc_cor_bins, False)
-#Stop
-here = 0
+proj_info = odl.tomo.stir_get_projection_data_info(stir_domain,
+                                                   stir_scanner, span_num,
+                                                   max_num_segments, num_of_views,
+                                                   num_non_arccor_bins, data_arc_corrected)
+
+#
+#Now lets create the projector data space (range)
+#
+initialize_to_zero = True
+
+proj_data = odl.tomo.stir_get_projection_data(proj_info, initialize_to_zero)
 
 
-# Create shepp-logan phantom - Transfered on the top
-# vol = odl.util.shepp_logan(proj.domain, modified=True)
+proj = odl.tomo.backends.stir_bindings.stir_projector_from_memory(discr_dom_odl,\
+                                                                  stir_domain,\
+                                                                  proj_data)
+
+
+# A sample phantom in odl domain
+odl_phantom = odl.util.shepp_logan(discr_dom_odl, modified=True)
+
+# A sample phantom to project
+stir_phantom = odl.tomo.stir_get_STIR_image_from_ODL_Vector(discr_dom_odl, odl_phantom)
 
 # Project data
-projections = proj(vol)
+projections = proj(odl_phantom)
 
 # Calculate operator norm for landweber
-op_norm_est_squared = proj.adjoint(projections).norm() / vol.norm()
+op_norm_est_squared = proj.adjoint(projections).norm() / odl_phantom.norm()
 omega = 0.5 / op_norm_est_squared
 
 # Reconstruct using ODL

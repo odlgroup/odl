@@ -21,13 +21,6 @@ from odl.tomo.geometry import (\
 from odl.tomo.util.utility import perpendicular_vector
 from odl.tomo.geometry.pet import CylindricalPetGeom
 
-# These are the local paths were pSTIR and cSTIR exist.
-os.environ['LD_LIBRARY_PATH'] = '/home/lcrguest/dev/CCPPETMR/STIR_install/lib:/usr/local/lib:/usr/local/cuda/lib64'
-os.environ['PYTHONPATH']= '/home/lcrguest/dev/CCPPETMR/STIR_install/python:/usr/local/python/'
-
-sys.path.append("/home/lcrguest/dev/CCPPETMR/STIR_install")
-sys.path.append("/home/lcrguest/dev/CCPPETMR/STIR_install/python")
-
 try:
     import stir
     # Fix for stirextra being moved around in various stir versions
@@ -41,13 +34,15 @@ except ImportError:
     STIR_AVAILABLE = False
 
 __all__ = ('STIR_AVAILABLE',
-           'pstir_get_projection_data_info',\
+           'stir_get_projection_data_info',\
+           'stir_get_projection_data',\
            'stir_operate_STIR_and_ODL_vectors',\
            'stir_get_ODL_domain_which_honours_STIR_restrictions',
            'stir_get_ODL_geometry_which_honours_STIR_restrictions',\
            'stir_get_STIR_geometry',\
            'stir_get_STIR_domain_from_ODL',\
            'stir_get_ODL_domain_from_STIR',\
+           'stir_get_STIR_image_from_ODL_Vector',\
            'stir_get_STIR_data_as_array',\
            'stir_unified_display_function' )
 
@@ -144,7 +139,7 @@ def stir_get_ODL_geometry_which_honours_STIR_restrictions(_det_y_size_mm, _det_z
 
 
 def stir_get_STIR_geometry(_num_rings, _num_dets_per_ring,
-                           _det_radius,
+                           _det_radius, _ring_spacing,
                            _average_depth_of_inter,
                            _voxel_size_xy,
                            _axial_crystals_per_block = 1, _trans_crystals_per_block= 1,
@@ -160,36 +155,94 @@ def stir_get_STIR_geometry(_num_rings, _num_dets_per_ring,
 
     scanner.set_num_rings(_num_rings)
 
-    scanner.set_default_bin_size(_voxel_size_xy)
-    scanner.set_default_intrinsic_tilt(_intrinsic_tilt)
-    scanner.set_inner_ring_radius(_det_radius)
-    scanner.set_average_depth_of_interaction(_average_depth_of_inter)
-    scanner.set_max_num_non_arccorrected_bins(max_num_non_arc_cor_bins)
-    scanner.set_num_axial_blocks_per_bucket(_axials_blocks_per_bucket)
-    scanner.set_num_transaxial_blocks_per_bucket(_trans_blocks_per_bucket)
-    scanner.set_num_axial_crystals_per_block(_axial_crystals_per_block)
-    scanner.set_num_transaxial_crystals_per_block(_trans_crystals_per_block)
-    scanner.set_num_axial_crystals_per_singles_unit(_axial_crystals_per_singles_unit)
-    scanner.set_num_transaxial_crystals_per_singles_unit(_trans_crystals_per_singles_unit)
-    scanner.set_num_detector_layers(_num_detector_layers)
+    scanner.set_default_bin_size(np.float32(_voxel_size_xy))
+    scanner.set_default_num_arccorrected_bins(np.int32(max_num_non_arc_cor_bins))
+    scanner.set_default_intrinsic_tilt(np.float32(_intrinsic_tilt))
+    scanner.set_inner_ring_radius(np.float32(_det_radius))
+    scanner.set_ring_spacing(np.float32(_ring_spacing))
+    scanner.set_average_depth_of_interaction(np.float32(_average_depth_of_inter))
+    scanner.set_max_num_non_arccorrected_bins(np.int32(max_num_non_arc_cor_bins))
+    scanner.set_num_axial_blocks_per_bucket(np.int32(_axials_blocks_per_bucket))
+    scanner.set_num_transaxial_blocks_per_bucket(np.int32(_trans_blocks_per_bucket))
+    scanner.set_num_axial_crystals_per_block(np.int32(_axial_crystals_per_block))
+    scanner.set_num_transaxial_crystals_per_block(np.int32(_trans_crystals_per_block))
+    scanner.set_num_axial_crystals_per_singles_unit(np.int32(_axial_crystals_per_singles_unit))
+    scanner.set_num_transaxial_crystals_per_singles_unit(np.int32(_trans_crystals_per_singles_unit))
+    scanner.set_num_detector_layers(np.int32(_num_detector_layers))
 
     return scanner
 
 
-def pstir_get_projection_data_info(domain, stir_scanner, span_num,
-                                     max_num_segments, num_of_views,
-                                     num_non_arccor_bins, data_arc_corrected):
+def stir_get_projection_data_info(_domain,\
+                                  _stir_scanner, _span_num,\
+                                  _max_num_segments, _num_of_views,\
+                                  _num_non_arccor_bins, _data_arc_corrected):
+    """
+    ... more documentation needed ...
+    Parameters
+    ----------
+    _domain
+    _stir_scanner
+    _span_num
+    _max_num_segments
+    _num_of_views
+    _num_non_arccor_bins
+    _data_arc_corrected
 
-    # if (domain.)
+    Returns
+    -------
 
-    return stit.ProjDataInfo.ProjDataInfoCTI(stir_scanner, span_num,
-                                     max_num_segments, num_of_views,
-                                     num_non_arccor_bins, data_arc_corrected)
+    """
+
+    if not isinstance( _domain, stir.FloatVoxelsOnCartesianGrid):
+        raise TypeError('The domain must be a STIR FloatVoxelsOnCartesianGrid'
+                        'object')
+
+    scanner_vox_size = _stir_scanner.get_ring_spacing()
+    domain_vox_size = _domain.get_voxel_size()
+
+    if not np.fmod( np.float32(scanner_vox_size), np.float32(domain_vox_size[3])) == 0.0:
+        raise ValueError('The domain voxel size should divide the scanner\'s ring spacing')
+
+    num_rings = _stir_scanner.get_num_rings()
+
+    span_num = np.int32(_span_num)
+    if _max_num_segments == -1:
+        max_ring_diff = np.int32(num_rings -1)
+    else:
+        max_ring_diff = np.int32(_max_num_segments)
+
+    num_of_views = np.int32(_num_of_views)
+    num_non_arccor_bins = np.int32(_stir_scanner.get_default_num_arccorrected_bins())
+
+    return stir.ProjDataInfo.ProjDataInfoCTI(_stir_scanner, span_num,\
+                                             max_ring_diff, num_of_views,\
+                                             num_non_arccor_bins, _data_arc_corrected)
 
 
 
 
-def stir_get_STIR_domain_from_ODL(_discreteLP):
+
+def stir_get_projection_data(_projdata_info,
+                             _zeros):
+    """
+    Initialize a ProjData object based on the ProjDataInfo
+    Parameters
+    ----------
+    _projdata_info
+    _zeros
+
+    Returns
+    -------
+
+    """
+
+    exam_info = get_examination_info()
+
+    return stir.ProjDataInMemory(exam_info, _projdata_info, _zeros)
+
+
+def stir_get_STIR_domain_from_ODL(_discreteLP, _fill_value=0.0):
     """
     Interface function to get a STIR domain without caring about the classes names.
 
@@ -202,7 +255,7 @@ def stir_get_STIR_domain_from_ODL(_discreteLP):
 
     """
 
-    return create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discreteLP)
+    return create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discreteLP, _fill_value)
 
 
 def stir_get_ODL_domain_from_STIR(_voxels):
@@ -218,6 +271,31 @@ def stir_get_ODL_domain_from_STIR(_voxels):
 
     """
     return create_DiscreteLP_from_STIR_VoxelsOnCartesianGrid(_voxels)
+
+def stir_get_STIR_image_from_ODL_Vector(_domain, _data):
+    """
+    This function can be used to get a STIR phantom (emmition or attenuation
+    data) from an ODL vector.
+
+    Parameters
+    ----------
+    _data
+
+    Returns
+    -------
+
+    """
+    if not isinstance( _domain, DiscreteLp):
+            raise TypeError('An ODL DiscreteLP is required as first input')
+
+    if not isinstance( _data, DiscreteLpVector):
+            raise TypeError('An ODL DiscreteLPVector is required as second input')
+
+    stir_image = stir_get_STIR_domain_from_ODL(_domain)
+
+    stir_operate_STIR_and_ODL_vectors(stir_image, _data, '+')
+
+    return stir_image
 
 
 def stir_operate_STIR_and_ODL_vectors(_stir_data, _odl_data, _operator):
@@ -360,7 +438,7 @@ def get_volume_geometry(discr_reco):
     return np.asarray(vol_shp, dtype=np.int32), np.asarray(voxel_size, dtype=np.float32)
 
 
-def create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discr):
+def create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discr, _fill_vale = 0.0):
     """
     This class defines multi-dimensional (numeric) arrays.
     This class implements multi-dimensional arrays which can have 'irregular' ranges.
@@ -387,28 +465,28 @@ def create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discr):
     # Number of voxels
     # This function returns [ x, y, z]
     range_size = stir.Int3BasicCoordinate()
-    range_size[1] = im_dim[0] #: x
-    range_size[2] = im_dim[1] #: y
-    range_size[3] = im_dim[2] #: z
+    range_size[1] = np.int32(im_dim[0]) #: x
+    range_size[2] = np.int32(im_dim[1]) #: y
+    range_size[3] = np.int32(im_dim[2]) #: z
 
     ind_range = stir.IndexRange3D(range_size)
 
     # Voxel size
     # This function returns [ x, y, z]
     voxel_size = stir.Float3BasicCoordinate()
-    voxel_size[1] = vox_size[0] #: z
-    voxel_size[2] = vox_size[1] #: y
-    voxel_size[3] = vox_size[2] #: x
+    voxel_size[1] = np.float32(vox_size[0]) #: z
+    voxel_size[2] = np.float32(vox_size[1]) #: y
+    voxel_size[3] = np.float32(vox_size[2]) #: x
 
     # Shift initial point relatively to 0,0,0
     # This function returns [ x, y, z]
     im_origin = stir.FloatCartesianCoordinate3D()
-    im_origin[1] = - (im_dim[0] * vox_size[0]) / 2.0
-    im_origin[2] = - (im_dim[1] * vox_size[1]) / 2.0
-    im_origin[3] = 0.0
+    im_origin[1] = np.float32(- (im_dim[0] * vox_size[0]) / 2.0)
+    im_origin[2] = np.float32(- (im_dim[1] * vox_size[1]) / 2.0)
+    im_origin[3] = np.float32(0.0)
 
     domain = stir.FloatVoxelsOnCartesianGrid( ind_range, im_origin, voxel_size)
-    domain.fill(0.0)
+    domain.fill(np.float32(_fill_vale))
 
     return domain
 
@@ -460,3 +538,31 @@ def get_2D_grid_from_domain(_this_domain):
     """
     return  RegularGrid([_this_domain.space.partition.begin[0], _this_domain.space.partition.begin[1]],
                         [_this_domain.space.partition.end[0], _this_domain.space.partition.end[1]], (2, 3))
+
+
+def get_examination_info():
+    """
+    Unless you do motion correction or list-mode reconstruction, default it to [0,1]
+    And don't bother more.
+    In think that a time frame [0, 1] - corresponds to one bed position
+    in a generic way and STIR will ignore it,
+
+    Parameters
+    ----------
+    _time_frame
+
+    Returns
+    -------
+
+    """
+    _time_frame = [0.0, 1.0]
+
+    time_starts = np.array([_time_frame[0]], dtype=np.float64)
+    time_ends = np.array([_time_frame[1]], dtype=np.float64)
+
+    time_frame_def = stir.TimeFrameDefinitions(time_starts, time_ends)
+
+    exam_info = stir.ExamInfo()
+    exam_info.set_time_frame_definitions(time_frame_def)
+
+    return exam_info
