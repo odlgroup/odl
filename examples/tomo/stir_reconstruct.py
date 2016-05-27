@@ -42,7 +42,7 @@ base = pth.join(pth.dirname(pth.abspath(__file__)), 'data', 'stir')
 # New ODL domain
 # N.E. At a later point we are going to define a scanner with ring spacing 4.16
 # therefore the z voxel size must be a divisor of that size.
-discr_dom_odl = odl.tomo.stir_get_ODL_domain_which_honours_STIR_restrictions([71, 71, 103], [5, 5, 2.08])
+discr_dom_odl = odl.tomo.stir_get_ODL_domain_which_honours_STIR_restrictions([64, 64, 15], [2.05941, 2.05941, 3.125])
 odl_phantom = odl.util.shepp_logan(discr_dom_odl, modified=True)
 
 stir_domain = odl.tomo.stir_get_STIR_domain_from_ODL(discr_dom_odl, 0.0)
@@ -58,28 +58,28 @@ stir_domain = odl.tomo.stir_get_STIR_domain_from_ODL(discr_dom_odl, 0.0)
 # This would correspond to the mCT scanner
 #
 # Detector x size in mm - plus the ring difference
-det_nx_mm = 4.16
+det_nx_mm = 6.25
 # Detector y size in mm - plus the ring difference
-det_ny_mm = 4.16
+det_ny_mm = 6.25
 # Total number of rings
-num_rings = 52
+num_rings = 8
 # Total number of detectors per ring
-num_dets_per_ring = 624
+num_dets_per_ring = 112
 # Inner radius of the scanner (crystal surface)
-det_radius = 42.4 # in mm
+det_radius = 57.5 # in mm
 
 #
 # Additional things that STIR would like to know
 #
-average_depth_of_inter = 1.2 # in mm
+average_depth_of_inter = 7.0 # in mm
 ring_spacing = det_ny_mm
-voxel_size_xy = 2.5 # in mm
-axial_crystals_per_block = 13
-trans_crystals_per_block = 13
-axials_blocks_per_bucket = 4
-trans_blocks_per_bucket_v = 1
-axial_crystals_per_singles_unit = 13
-trans_crystals_per_singles_unit = 13
+voxel_size_xy = 1.65 # in mm
+axial_crystals_per_block = 8
+trans_crystals_per_block = 7
+axials_blocks_per_bucket = 1
+trans_blocks_per_bucket_v = 16
+axial_crystals_per_singles_unit = 8
+trans_crystals_per_singles_unit = 0
 num_detector_layers = 1
 intrinsic_tilt = 0.0
 
@@ -117,7 +117,7 @@ stir_scanner = odl.tomo.stir_get_STIR_geometry(num_rings, num_dets_per_ring,\
 # compression has been used.  It is always an odd number.
 # Higher span, more axial compression.  Span 1 means no axial
 # compression.
-span_num = 7
+span_num = 1
 
 # The segment is an index of the ring difference.
 # In 2D PET there is only one segment = 0
