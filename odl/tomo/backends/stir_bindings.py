@@ -58,6 +58,7 @@ from odl.discr.lp_discr import uniform_discr
 from odl.operator.operator import Operator
 from odl.tomo.backends import stir_setup
 
+import numpy as np
 
 __all__ = ('ForwardProjectorByBinWrapper',
            'BackProjectorByBinWrapper',
@@ -133,9 +134,18 @@ class ForwardProjectorByBinWrapper(Operator):
         # Create forward projection by matrix
         if projector is None:
             proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
+            proj_matrix.set_do_symmetry_90degrees_min_phi(True)
+            proj_matrix.set_do_symmetry_180degrees_min_phi(True)
+            proj_matrix.set_do_symmetry_swap_s(True)
+            proj_matrix.set_do_symmetry_swap_segment(True)
+            proj_matrix.set_num_tangential_LORs(np.int32(1))
+
+            proj_matrix.set_up(self.proj_data_info, self.volume)
+
 
             self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin (proj_matrix)
 
+            stir.Float3DDiscretisedDensity()
             self.projector.set_up(self.proj_data_info, self.volume)
 
             # If no adjoint was given, we initialize a projector here to
@@ -232,7 +242,6 @@ class BackProjectorByBinWrapper(Operator):
         # Create forward projection by matrix
         if back_projector is None:
             proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
-            proj_matrix.set_up(self.proj_data_info, self.volume)
 
             self.back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(
                 proj_matrix)
