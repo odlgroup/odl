@@ -23,7 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from odl.discr.lp_discr import DiscreteLp
 from odl.operator.operator import Operator
 
 

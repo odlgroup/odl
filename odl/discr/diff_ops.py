@@ -79,7 +79,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             are used at the boundary.
 
         padding_value : `float`, optional
-            If ``padding_method`` is 'constant' ``f`` assumes
+            If ``padding_method`` is 'constant', ``f`` assumes
             ``padding_value`` for indices outside the domain of ``f``
         edge_order : {1, 2}, optional
             Edge-order accuracy at the boundaries if no padding is used. If
@@ -167,7 +167,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         """Return the adjoint operator."""
         if not self.is_linear:
             raise ValueError('Operator with nonzero padding_value ({}) is not'
-                             ' linear and has no adjoint'
+                             ' linear and has no adjoint.'
                              ''.format(self.padding_value))
 
         return -PartialDerivative(self.domain, self.axis,
@@ -214,8 +214,8 @@ class Gradient(PointwiseTensorFieldOperator):
             'periodic' : Pads with the values from the other side of the array.
 
         padding_value : `float`, optional
-            If ``padding_method`` is 'constant' ``f`` assumes ``padding_value``
-            for indices outside the domain of ``f``.
+            If ``padding_method`` is 'constant', ``f`` assumes
+            ``padding_value`` for indices outside the domain of ``f``.
 
         Examples
         --------
@@ -349,7 +349,7 @@ class Gradient(PointwiseTensorFieldOperator):
         """
         if not self.is_linear:
             raise ValueError('Operator with nonzero padding_value ({}) is not'
-                             ' linear and has no adjoint'
+                             ' linear and has no adjoint.'
                              ''.format(self.padding_value))
 
         return - Divergence(domain=self.range, range=self.domain,
@@ -395,8 +395,8 @@ class Divergence(PointwiseTensorFieldOperator):
             'periodic' : Pads with the values from the other side of the array.
 
         padding_value : `float`, optional
-            If ``padding_method`` is 'constant' ``f`` assumes ``padding_value``
-            for indices outside the domain of ``f``.
+            If ``padding_method`` is 'constant', ``f`` assumes
+            ``padding_value`` for indices outside the domain of ``f``.
 
         Examples
         --------
@@ -526,7 +526,7 @@ class Divergence(PointwiseTensorFieldOperator):
         """
         if not self.is_linear:
             raise ValueError('Operator with nonzero padding_value ({}) is not'
-                             ' linear and has no adjoint'
+                             ' linear and has no adjoint.'
                              ''.format(self.padding_value))
 
         return - Gradient(domain=self.range, range=self.domain,
@@ -562,8 +562,8 @@ class Laplacian(PointwiseTensorFieldOperator):
             'periodic' : Pads with the values from the other side of the array.
 
         padding_value : `float`, optional
-            If ``padding_method`` is 'constant' ``f`` assumes ``padding_value``
-            for indices outside the domain of ``f``.
+            If ``padding_method`` is 'constant', ``f`` assumes
+            ``padding_value`` for indices outside the domain of ``f``.
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('space {!r} is not a DiscreteLp instance.'
@@ -709,7 +709,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
         are used at the boundary.
 
     padding_value : `float`, optional
-        If ``padding_method`` is 'constant' ``f`` assumes ``padding_value``
+        If ``padding_method`` is 'constant', ``f`` assumes ``padding_value``
         for indices outside the domain of ``f``.
     edge_order : {1, 2}, optional
         Edge-order accuracy at the boundaries if no padding is used. If
