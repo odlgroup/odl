@@ -56,6 +56,7 @@ except ImportError:
 
 from odl.discr.lp_discr import uniform_discr
 from odl.operator.operator import Operator
+from odl.tomo.backends import stir_setup
 
 
 __all__ = ('ForwardProjectorByBinWrapper',
@@ -89,6 +90,7 @@ class ForwardProjectorByBinWrapper(Operator):
     """
 
     def __init__(self, dom, ran, volume, proj_data,
+                 _proj_info,
                  projector=None, adjoint=None):
         """Initialize a new instance.
 
@@ -124,15 +126,16 @@ class ForwardProjectorByBinWrapper(Operator):
 
         # Read template of the projection
         self.proj_data = proj_data
-        self.proj_data_info = proj_data.get_proj_data_info()
+        # self.proj_data_info = proj_data.get_proj_data_info()
+        self.proj_data_info = _proj_info
         self.volume = volume
 
         # Create forward projection by matrix
         if projector is None:
             proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
-            proj_matrix.set_up(self.proj_data_info, self.volume)
-            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(
-                proj_matrix)
+
+            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin (proj_matrix)
+
             self.projector.set_up(self.proj_data_info, self.volume)
 
             # If no adjoint was given, we initialize a projector here to
@@ -140,7 +143,7 @@ class ForwardProjectorByBinWrapper(Operator):
             if adjoint is None:
                 back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(
                     proj_matrix)
-                back_projector.set_up(self.proj_data.get_proj_data_info(),
+                back_projector.set_up(self.proj_data_info,
                                       self.volume)
         else:
             # If user wants to provide both a projector and a back-projector,
@@ -162,7 +165,7 @@ class ForwardProjectorByBinWrapper(Operator):
         self.volume.fill(volume.asarray().flat)
 
         # project
-        with StirVerbosity(0):
+        with StirVerbosity(1):
             self.projector.forward_project(self.proj_data, self.volume)
 
         # make odl data
@@ -317,7 +320,8 @@ def stir_projector_from_file(volume_file, projection_file):
 
 def stir_projector_from_memory(_recon_sp,\
                                _volume,\
-                               _proj_data):
+                               _proj_data,\
+                               _proj_info):
     """
 
     Parameters
@@ -337,7 +341,8 @@ def stir_projector_from_memory(_recon_sp,\
     proj_shape = _proj_data.to_array().shape()
     data_sp = uniform_discr([0, 0, 0], proj_shape, proj_shape, dtype='float32')
 
-    return ForwardProjectorByBinWrapper(_recon_sp, data_sp, _volume, _proj_data)
+    return ForwardProjectorByBinWrapper(_recon_sp, data_sp, _volume,
+                                        _proj_data, _proj_info)
 
 
 if __name__ == '__main__':
