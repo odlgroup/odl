@@ -33,6 +33,7 @@ import numpy as np
 
 from odl.discr.grid import TensorGrid, RegularGrid, uniform_sampling_fromintv
 from odl.set.domain import IntervalProd
+from odl.util.utility import normalized_index_expression
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -48,9 +49,9 @@ class RectPartition(object):
     In 1d, a partition of an interval is implicitly defined by a
     collection of points x[0], ..., x[N-1] (a grid) which are chosen to
     lie in the center of the subintervals. The i-th subinterval is thus
-    given by::
+    given by
 
-        I[i] = [(x[i-1]+x[i])/2, (x[i]+x[i+1])/2]
+        ``I[i] = [(x[i-1]+x[i])/2, (x[i]+x[i+1])/2]``
 
     """
 
@@ -358,6 +359,77 @@ class RectPartition(object):
         """Return ``self == other``."""
         # Optimized version for exact equality
         return self.set == other.set and self.grid == other.grid
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
+
+        Parameters
+        ----------
+        indices : index expression
+            Object determining which parts of the partition to extract.
+            `None` (new axis) and empty axes are not supported.
+
+        Examples
+        --------
+        >>> intvp = IntervalProd([-1, 1, 4, 2], [3, 6, 5, 7])
+        >>> grid = TensorGrid([-1, 0, 3], [2, 4], [5], [2, 4, 7])
+        >>> part = RectPartition(intvp, grid)
+        >>> part.cell_boundary_vecs
+        (array([-1. , -0.5,  1.5,  3. ]),
+         array([ 1.,  3.,  6.]),
+         array([ 4.,  5.]),
+         array([ 2. ,  3. ,  5.5,  7. ]))
+
+        Indexing picks out sub-intervals (compare with the boundary
+        vectors):
+
+        >>> part[0, 0, 0, 0]
+        RectPartition(
+            IntervalProd([-1.0, 1.0, 4.0, 2.0], [-0.5, 3.0, 5.0, 3.0]),
+            TensorGrid([-1.0], [2.0], [5.0], [2.0]))
+
+        Taking an advanced slice (every second along the first axis,
+        the last in the last axis and everything in between):
+
+        >>> part[::2, ..., -1]
+        RectPartition(
+            IntervalProd([-1.0, 1.0, 4.0, 5.5], [3.0, 6.0, 5.0, 7.0]),
+            TensorGrid([-1.0, 3.0], [2.0, 4.0], [5.0], [7.0]))
+
+        Too few indices are filled up with an ellipsis from the right:
+
+        >>> part[1]
+        RectPartition(
+            IntervalProd([-0.5, 1.0, 4.0, 2.0], [1.5, 6.0, 5.0, 7.0]),
+            TensorGrid([0.0], [2.0, 4.0], [5.0], [2.0, 4.0, 7.0]))
+        """
+        # Special case of index list: slice along first axis
+        if isinstance(indices, list):
+            new_begin = [self.cell_boundary_vecs[0][:-1][indices][0]]
+            new_end = [self.cell_boundary_vecs[0][1:][indices][-1]]
+            for cvec in self.cell_boundary_vecs[1:]:
+                new_begin.append(cvec[0])
+                new_end.append(cvec[-1])
+
+            new_intvp = IntervalProd(new_begin, new_end)
+            new_grid = self.grid[indices]
+            return RectPartition(new_intvp, new_grid)
+
+        indices = normalized_index_expression(indices, self.shape,
+                                              int_to_slice=True)
+        # Build the new partition
+        new_begin, new_end = [], []
+        for cvec, idx in zip(self.cell_boundary_vecs, indices):
+            # Determine the subinterval begin and end vectors. Take the
+            # first begin as new begin and the last end as new end.
+            sub_begin = cvec[:-1][idx]
+            sub_end = cvec[1:][idx]
+            new_begin.append(sub_begin[0])
+            new_end.append(sub_end[-1])
+
+        new_intvp = IntervalProd(new_begin, new_end)
+        new_grid = self.grid[indices]
+        return RectPartition(new_intvp, new_grid)
 
     def insert(self, index, other):
         """Return a copy with ``other`` inserted before ``index``.
