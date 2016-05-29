@@ -100,6 +100,14 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     partial : `Partial`, optional
         If not `None` the `Partial` instance(s) are executed in each
         iteration, e.g. plotting each iterate. Default: `None`
+    precond_primal : `Operator`, optional
+        Preconditioning operator for the primal variable, needs an
+        `Operator.inverse` method. The operator needs to be symmetric and
+        positive definite. Default: No preconditioning
+    precond_dual : `Operator`, optional
+        Preconditioning operator for the dual variable, needs an
+        `Operator.inverse` method. The operator needs to be symmetric and
+        positive definite. Default: No preconditioning
     x_relax : element in the domain of ``op``, optional
         Required to resume iteration. If `None` it is a copy of the primal
         variable x. Default: `None`
@@ -168,9 +176,40 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     # Partial object
     partial = kwargs.pop('partial', None)
-    if not (partial is None or isinstance(partial, Partial)):
+    if partial is not None and not callable(partial):
         raise TypeError('partial {} is not an instance of {}'
                         ''.format(op, Partial))
+
+    # preconditioners
+    precond_primal = kwargs.pop('precond_primal', None)
+    if precond_primal is not None:
+        if not isinstance(precond_primal, Operator):
+            raise TypeError('precond_primal {} is not a `Operator`'
+                            ''.format(precond_primal))
+        if not precond_primal.is_linear:
+            raise TypeError('precond_primal {} is not linear'
+                            ''.format(precond_primal))
+        if not precond_primal.domain == op.range:
+            raise TypeError('precond_primal.domain {} is op.range {}'
+                            ''.format(precond_primal.domain, op.range))
+        if not precond_primal.range == op.range:
+            raise TypeError('precond_primal.range {} is op.range {}'
+                            ''.format(precond_primal.range, op.range))
+
+    precond_dual = kwargs.pop('precond_dual', None)
+    if precond_dual is not None:
+        if not isinstance(precond_dual, Operator):
+            raise TypeError('precond_dual {} is not a `Operator`'
+                            ''.format(precond_dual))
+        if not precond_dual.is_linear:
+            raise TypeError('precond_dual {} is not linear'
+                            ''.format(precond_dual))
+        if not precond_dual.domain == op.range:
+            raise TypeError('precond_dual.domain {} is op.range {}'
+                            ''.format(precond_dual.domain, op.domain))
+        if not precond_dual.range == op.range:
+            raise TypeError('precond_dual.range {} is op.range {}'
+                            ''.format(precond_dual.range, op.domain))
 
     # Initialize the relaxation variable
     x_relax = kwargs.pop('x_relax', None)
@@ -201,10 +240,18 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_old.assign(x)
 
         # Gradient ascent in the dual variable y
-        proximal_dual(sigma)(y + sigma * op(x_relax), out=y)
+        if precond_dual is None:
+            dual_tmp = y + sigma * op(x_relax)
+        else:
+            dual_tmp = y + sigma * precond_dual(op(x_relax))
+        proximal_dual(sigma)(dual_tmp, out=y)
 
         # Gradient descent in the primal variable x
-        proximal_primal(tau)(x + (- tau) * op_adjoint(y), out=x)
+        if precond_primal is None:
+            primal_tmp = x + (- tau) * op_adjoint(y)
+        else:
+            primal_tmp = x + (- tau) * precond_primal(op_adjoint(y))
+        proximal_primal(tau)(primal_tmp, out=x)
 
         # Acceleration
         if gamma is not None:

@@ -21,8 +21,11 @@ Solves the optimization problem
 
     min_x  1/2 ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
 
-For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
-references therein.
+Where ``A`` is a parallel beam forward projector, ``grad`` the spatial
+gradient and ``g`` is given noisy data.
+
+For further details and a description of the solution method used, see
+:ref:`chambolle_pock` in the ODL documentation.
 """
 
 import numpy as np
@@ -99,15 +102,15 @@ proximal_dual = odl.solvers.combine_proximals(
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 5)
+op_norm = 1.1 * odl.power_method_opnorm(op, 5)
 
 niter = 400  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 
 # Optionally pass partial to the solver to display intermediate results
-partial = (odl.solvers.util.PrintIterationPartial() &
-           odl.solvers.util.ShowPartial())
+partial = (odl.solvers.PrintIterationPartial() &
+           odl.solvers.ShowPartial())
 
 # Choose a starting point
 x = op.domain.zero()
