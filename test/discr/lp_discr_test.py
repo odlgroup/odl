@@ -273,6 +273,78 @@ def test_element_from_array_2d_shape():
                        [3, 4]])
 
 
+def test_element_from_function_1d():
+
+    space = odl.uniform_discr(-1, 1, 4)
+    points = space.points().squeeze()
+
+    # Without parameter
+    def f(x):
+        return x * 2 + np.maximum(x, 0)
+
+    elem_f = space.element(f)
+    true_elem = [x * 2 + max(x, 0) for x in points]
+    assert all_equal(elem_f, true_elem)
+
+    # Without parameter, using same syntax as in higher dimensions
+    def f(x):
+        return x[0] * 2 + np.maximum(x[0], 0)
+
+    elem_f = space.element(f)
+    true_elem = [x * 2 + max(x, 0) for x in points]
+    assert all_equal(elem_f, true_elem)
+
+    # With parameter
+    def f(x, **kwargs):
+        c = kwargs.pop('c', 0)
+        return x * c + np.maximum(x, 0)
+
+    elem_f_default = space.element(f)
+    true_elem = [x * 0 + max(x, 0) for x in points]
+    assert all_equal(elem_f_default, true_elem)
+
+    elem_f_2 = space.element(f, c=2)
+    true_elem = [x * 2 + max(x, 0) for x in points]
+    assert all_equal(elem_f_2, true_elem)
+
+    # Using a lambda
+    elem_lam = space.element(lambda x: -x ** 2)
+    true_elem = [-x ** 2 for x in points]
+    assert all_equal(elem_lam, true_elem)
+
+
+def test_element_from_function_2d():
+
+    space = odl.uniform_discr([-1, -1], [1, 1], (2, 3))
+    points = space.points()
+
+    # Without parameter
+    def f(x):
+        return x[0] ** 2 + np.maximum(x[1], 0)
+
+    elem_f = space.element(f)
+    true_elem = [x[0] ** 2 + max(x[1], 0) for x in points]
+    assert all_equal(elem_f, true_elem)
+
+    # With parameter
+    def f(x, **kwargs):
+        c = kwargs.pop('c', 0)
+        return x[0] ** 2 + np.maximum(x[1], c)
+
+    elem_f_default = space.element(f)
+    true_elem = [x[0] ** 2 + max(x[1], 0) for x in points]
+    assert all_equal(elem_f_default, true_elem)
+
+    elem_f_2 = space.element(f, c=1)
+    true_elem = [x[0] ** 2 + max(x[1], 1) for x in points]
+    assert all_equal(elem_f_2, true_elem)
+
+    # Using a lambda
+    elem_lam = space.element(lambda x: x[0] - x[1])
+    true_elem = [x[0] - x[1] for x in points]
+    assert all_equal(elem_lam, true_elem)
+
+
 def test_zero():
     discr = odl.uniform_discr(0, 1, 3)
     vec = discr.zero()

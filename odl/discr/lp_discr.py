@@ -28,7 +28,7 @@ import numpy as np
 from numbers import Integral
 
 from odl.discr.discretization import (
-    Discretization, DiscretizationVector, dspace_type)
+    DiscretizedSpace, DiscretizedSpaceVector, dspace_type)
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
@@ -50,7 +50,7 @@ __all__ = ('DiscreteLp', 'DiscreteLpVector',
 _SUPPORTED_INTERP = ('nearest', 'linear')
 
 
-class DiscreteLp(Discretization):
+class DiscreteLp(DiscretizedSpace):
 
     """Discretization of a Lebesgue :math:`L^p` space."""
 
@@ -141,7 +141,7 @@ class DiscreteLp(Discretization):
             interpol = PerAxisInterpolation(
                 fspace, self.partition, dspace, self.interp, order=self.order)
 
-        Discretization.__init__(self, fspace, dspace, sampling, interpol)
+        DiscretizedSpace.__init__(self, fspace, dspace, sampling, interpol)
         self._exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
                 self.exponent != dspace.exponent):
@@ -212,23 +212,63 @@ class DiscreteLp(Discretization):
         """The exponent ``p`` in ``L^p``."""
         return self._exponent
 
-    def element(self, inp=None):
+    def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
         Parameters
         ----------
-        inp : `object`, optional
-            The input data to create an element from. Must be
-            recognizable by the `LinearSpace.element` method
-            of either `RawDiscretization.dspace` or
-            `RawDiscretization.uspace`.
+        inp : optional
+            The input data to create an element from. It needs to be
+            understood by either the `sampling` operator of this
+            instance or by its ``dspace.element`` method.
+        kwargs :
+            Additional arguments passed on to `sampling` when called
+            on ``inp``, in the form ``sampling(inp, **kwargs)``.
+            This can be used e.g. for functions with parameters.
 
         Returns
         -------
-        element : `DiscreteLpVector`
-            The discretized element, calculated as
-            ``dspace.element(inp)`` or
-            ``sampling(uspace.element(inp))``, tried in this order.
+        element : `DiscretizedSetVector`
+            The discretized element, calculated as ``sampling(inp)`` or
+            ``dspace.element(inp)``, tried in this order.
+
+        Examples
+        --------
+        Elements can be created from array-like objects that represent
+        an already discretized function:
+
+        >>> import odl
+        >>> space = odl.uniform_discr(-1, 1, 4)
+        >>> space.element([1, 2, 3, 4])
+        uniform_discr(-1.0, 1.0, 4).element([1.0, 2.0, 3.0, 4.0])
+        >>> vector = odl.Rn(4).element([0, 1, 2, 3])
+        >>> space.element(vector)
+        uniform_discr(-1.0, 1.0, 4).element([0.0, 1.0, 2.0, 3.0])
+
+        On the other hand, non-discretized objects like Python functions
+        can be discretized "on the fly":
+
+        >>> def f(x):
+        ...     return x * 2
+        ...
+        >>> space.element(f)
+        uniform_discr(-1.0, 1.0, 4).element([-1.5, -0.5, 0.5, 1.5])
+
+        This works also with parameterized functions, however only
+        through keyword arguments (not positional arguments with
+        defaults):
+
+        >>> def f(x, **kwargs):
+        ...     c = kwargs.pop('c', 0.0)
+        ...     return np.maximum(x, c)
+        ...
+        >>> space = odl.uniform_discr(-1, 1, 4)
+        >>> space.element(f, c=0.5)
+        uniform_discr(-1.0, 1.0, 4).element([0.5, 0.5, 0.5, 0.75])
+
+        See also
+        --------
+        sampling : create a discrete element from an undiscretized one
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
@@ -242,7 +282,7 @@ class DiscreteLp(Discretization):
         # uspace element -> discretize
         try:
             inp_elem = self.uspace.element(inp)
-            return self.element_type(self, self.sampling(inp_elem))
+            return self.element_type(self, self.sampling(inp_elem, **kwargs))
         except TypeError:
             pass
 
@@ -413,7 +453,7 @@ class DiscreteLp(Discretization):
         return DiscreteLpVector
 
 
-class DiscreteLpVector(DiscretizationVector):
+class DiscreteLpVector(DiscretizedSpaceVector):
 
     """Representation of a `DiscreteLp` element."""
 
@@ -570,7 +610,7 @@ class DiscreteLpVector(DiscretizationVector):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            # For RawDiscretizationVector of the same type, use ntuple directly
+            # For DiscretizedSetVector of the same type, use ntuple directly
             self.ntuple[indices] = values.ntuple
         else:
             # Other sequence types are piped through a Numpy array. Equivalent

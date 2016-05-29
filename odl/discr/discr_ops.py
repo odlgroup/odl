@@ -30,14 +30,15 @@ __all__ = ('Resampling',)
 
 
 class Resampling(Operator):
-    """A operator that resamples a vector on another grid.
 
-    The operator uses the underlying `Discretization.sampling` and
-    `Discretization.interpolation` operators to achieve this.
+    """An operator that resamples a vector on another grid.
 
-    The spaces need to have the same `Discretization.uspace` in order for this
-    to work. The dspace types may however be different, although performance
-    may vary drastically.
+    The operator uses the underlying `DiscretizedSet.sampling` and
+    `DiscretizedSet.interpolation` operators to achieve this.
+
+    The spaces need to have the same `DiscretizedSet.uspace` in order
+    for this to work. The data space types may be different, although
+    performance may vary drastically.
     """
 
     def __init__(self, domain, range):
@@ -52,7 +53,7 @@ class Resampling(Operator):
 
         Examples
         --------
-        Create two spaces with different number of points and create resampling
+        Create two spaces with different number of points and a resampling
         operator.
 
         >>> import odl
