@@ -498,7 +498,7 @@ def test_fspace_lincomb(a, b):
     g_novec = fspace.element(other_func_2d_novec, vectorized=False)
     out_novec = fspace.element(vectorized=False)
     fspace.lincomb(a, f_novec, b, g_novec, out_novec)
-    assert out_novec(point) == true_novec
+    assert almost_equal(out_novec(point), true_novec)
 
     # Vectorized
     true_arr = (a * func_2d_vec_oop(points) +
@@ -513,7 +513,7 @@ def test_fspace_lincomb(a, b):
 
     assert all_equal(out_vec(points), true_arr)
     assert all_equal(out_vec(mg), true_mg)
-    assert out_vec(point) == true_novec
+    assert almost_equal(out_vec(point), true_novec)
     out_arr = np.empty((5,), dtype=float)
     out_mg = np.empty((2, 3), dtype=float)
     out_vec(points, out=out_arr)
@@ -529,7 +529,7 @@ def test_fspace_lincomb(a, b):
 
     assert all_equal(out_vec(points), true_arr)
     assert all_equal(out_vec(mg), true_mg)
-    assert out_vec(point) == true_novec
+    assert almost_equal(out_vec(point), true_novec)
     out_arr = np.empty((5,), dtype=float)
     out_mg = np.empty((2, 3), dtype=float)
     out_vec(points, out=out_arr)
@@ -545,7 +545,7 @@ def test_fspace_lincomb(a, b):
 
     assert all_equal(out_vec(points), true_arr)
     assert all_equal(out_vec(mg), true_mg)
-    assert out_vec(point) == true_novec
+    assert almost_equal(out_vec(point), true_novec)
     out_arr = np.empty((5,), dtype=float)
     out_mg = np.empty((2, 3), dtype=float)
     out_vec(points, out=out_arr)
@@ -710,7 +710,7 @@ def test_fspace_vector_arithmetic(variant, op):
     out_novec = _op(test_l_novec, op, test_r_novec)
     out_vec = _op(test_l_vec, op, test_r_vec)
 
-    assert out_novec(point) == true_novec
+    assert almost_equal(out_novec(point), true_novec)
     assert all_equal(out_vec(points), true_arr)
     out_vec(points, out=array_out)
     assert all_equal(array_out, true_arr)

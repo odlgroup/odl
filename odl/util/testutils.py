@@ -32,8 +32,8 @@ from time import time
 
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
-           'skip_if_no_cuda', 'skip_if_no_pywavelets', 'skip_if_no_pyfftw',
-           'skip_if_no_largescale',
+           'skip_if_no_cuda', 'skip_if_no_stir', 'skip_if_no_pywavelets',
+           'skip_if_no_pyfftw', 'skip_if_no_largescale',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
            'test', 'run_doctests')
 
@@ -177,11 +177,6 @@ def is_subdict(subdict, dictionary):
     return all(item in dictionary.items() for item in subdict.items())
 
 
-def _pass(function):
-    """Trivial decorator used if pytest marks are not available."""
-    return function
-
-
 try:
     # Try catch in case user does not have pytest
     import pytest
@@ -195,6 +190,11 @@ try:
     skip_if_no_cuda = pytest.mark.skipif(
         "not odl.CUDA_AVAILABLE",
         reason='CUDA not available'
+    )
+
+    skip_if_no_stir = pytest.mark.skipif(
+        "not odl.tomo.backends.stir_bindings.STIR_AVAILABLE",
+        reason='STIR not available'
     )
 
     skip_if_no_pywavelets = pytest.mark.skipif(
@@ -217,8 +217,13 @@ try:
     )
 
 except ImportError:
+    def _pass(function):
+        """Trivial decorator used if pytest marks are not available."""
+        return function
+
     never_skip = _pass
     skip_if_no_cuda = _pass
+    skip_if_no_stir = _pass
     skip_if_no_pywavelets = _pass
     skip_if_no_pyfftw = _pass
     skip_if_no_largescale = _pass
@@ -230,11 +235,11 @@ def example_array(space):
     """Generate an example array that is compatible with ``space``"""
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(space.dtype, np.floating):
-        arr = np.random.rand(space.size)
+        arr = np.random.randn(space.size)
     elif np.issubdtype(space.dtype, np.integer):
-        arr = np.random.randint(0, 10, space.size)
+        arr = np.random.randint(-10, 10, space.size)
     else:
-        arr = np.random.rand(space.size) + 1j * np.random.rand(space.size)
+        arr = np.random.randn(space.size) + 1j * np.random.randn(space.size)
 
     return arr.astype(space.dtype, copy=False)
 

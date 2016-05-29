@@ -34,7 +34,7 @@ and by the indicator function for the set fo non-negative components of x
    G(x) = {0 if x >=0, infinity if x < 0} ,
 
 respectively. Here, g denotes the image to denoise, ||.||_2 the l2-norm,
-||.||_1 the l1-semi-norm, grad the spatial gradient, lam the regularization
+||.||_1 the l1-norm, grad the spatial gradient, lam the regularization
 parameter, |.| the point-wise magnitude across the vector components of
 grad(x), and K is a column vector of operators K = (id, grad)^T with
 identity mapping id.
@@ -70,22 +70,22 @@ shape = image.shape
 image /= image.max()
 
 # Discretized spaces
-discr_space = odl.uniform_discr([0, 0], shape, shape)
+space = odl.uniform_discr([0, 0], shape, shape)
 
 # Original image
-orig = discr_space.element(image)
+orig = space.element(image)
 
 # Add noise
 image += np.random.normal(0, 0.1, shape)
 
 # Data of noisy image
-noisy = discr_space.element(image)
+noisy = space.element(image)
 
 # Gradient operator
-gradient = odl.Gradient(discr_space, method='forward')
+gradient = odl.Gradient(space, method='forward')
 
 # Matrix of operators
-op = odl.BroadcastOperator(odl.IdentityOperator(discr_space), gradient)
+op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 
 # Starting point
 x = op.domain.zero()
@@ -97,16 +97,15 @@ print('Norm of the product space operator: {}'.format(prod_op_norm))
 # Proximal operators related to the dual variable
 
 # l2-data matching
-prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(discr_space,
-                                                           lam=1, g=noisy)
+prox_convconj_l2 = odl.solvers.proximal_cconj_l2_squared(space, lam=1, g=noisy)
 
-# TV-regularization: l1-semi norm of grad(x)
-prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(gradient.range,
-                                                           lam=1/16)
+# Isotropic TV-regularization: l1-norm of grad(x)
+prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=1/16.0,
+                                                 isotropic=True)
 
 # Combine proximal operators: the order must match the order of operators in K
-proximal_dual = odl.solvers.combine_proximals([prox_convconj_l2,
-                                               prox_convconj_l1])
+proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
+                                              prox_convconj_l1)
 
 # Proximal operator related to the primal variable
 

@@ -72,16 +72,15 @@ proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
 # Proximal operators related to the dual variable
 
 # l2-data matching
-prox_convconj_kl = odl.solvers.proximal_convexconjugate_kl(discr_space,
-                                                           lam=1.0, g=noisy)
+prox_convconj_kl = odl.solvers.proximal_cconj_kl(discr_space, lam=1.0, g=noisy)
 
-# TV-regularization: l1-semi norm of grad(x)
-prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(gradient.range,
-                                                           lam=0.1)
+# Isotropic TV-regularization: l1-norm of grad(x)
+prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.1,
+                                                 isotropic=True)
 
 # Combine proximal operators: the order must match the order of operators in K
-proximal_dual = odl.solvers.combine_proximals([prox_convconj_kl,
-                                               prox_convconj_l1])
+proximal_dual = odl.solvers.combine_proximals(prox_convconj_kl,
+                                              prox_convconj_l1)
 
 # Optional: pass partial objects to solver
 partial = (odl.solvers.PrintIterationPartial() &
