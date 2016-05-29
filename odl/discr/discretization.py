@@ -170,8 +170,9 @@ class DiscretizedSet(NtuplesBase):
             understood by either the `sampling` operator of this
             instance or by its ``dspace.element`` method.
         kwargs :
-            Additional arguments passed on to `sampling`. This can be
-            used e.g. for functions with parameters.
+            Additional arguments passed on to `sampling` when called
+            on ``inp``, in the form ``sampling(inp, **kwargs)``.
+            This can be used e.g. for functions with parameters.
 
         Returns
         -------

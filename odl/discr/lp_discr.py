@@ -217,19 +217,54 @@ class DiscreteLp(DiscretizedSpace):
 
         Parameters
         ----------
-        inp : `object`, optional
+        inp : optional
             The input data to create an element from. It needs to be
             understood by either the `sampling` operator of this
             instance or by its ``dspace.element`` method.
         kwargs :
-            Additional arguments passed on to `sampling`. This can be
-            used e.g. for functions with parameters.
+            Additional arguments passed on to `sampling` when called
+            on ``inp``, in the form ``sampling(inp, **kwargs)``.
+            This can be used e.g. for functions with parameters.
 
         Returns
         -------
         element : `DiscretizedSetVector`
             The discretized element, calculated as ``sampling(inp)`` or
             ``dspace.element(inp)``, tried in this order.
+
+        Examples
+        --------
+        Elements can be created from array-like objects that represent
+        an already discretized function:
+
+        >>> import odl
+        >>> space = odl.uniform_discr(-1, 1, 4)
+        >>> space.element([1, 2, 3, 4])
+        uniform_discr(-1.0, 1.0, 4).element([1.0, 2.0, 3.0, 4.0])
+        >>> vector = odl.Rn(4).element([0, 1, 2, 3])
+        >>> space.element(vector)
+        uniform_discr(-1.0, 1.0, 4).element([0.0, 1.0, 2.0, 3.0])
+
+        On the other hand, non-discretized objects like Python functions
+        can be discretized "on the fly":
+
+        >>> def f(x):
+        ...     return x * 2
+        ...
+        >>> space.element(f)
+        uniform_discr(-1.0, 1.0, 4).element([-1.5, -0.5, 0.5, 1.5])
+
+        This works also with parameterized functions, however only
+        through keyword arguments (not positional arguments with
+        defaults):
+
+        >>> def f(x, **kwargs):
+        ...     c = kwargs.pop('c', 0.0)
+        ...     return np.maximum(x, c)
+        ...
+        >>> space = odl.uniform_discr(-1, 1, 4)
+        >>> space.element(f, c=0.5)
+        uniform_discr(-1.0, 1.0, 4).element([0.5, 0.5, 0.5, 0.75])
 
         See also
         --------
