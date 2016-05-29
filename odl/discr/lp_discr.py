@@ -212,23 +212,28 @@ class DiscreteLp(DiscretizedSpace):
         """The exponent ``p`` in ``L^p``."""
         return self._exponent
 
-    def element(self, inp=None):
+    def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
         Parameters
         ----------
         inp : `object`, optional
-            The input data to create an element from. Must be
-            recognizable by the `LinearSpace.element` method
-            of either `DiscretizedSet.dspace` or
-            `DiscretizedSet.uspace`.
+            The input data to create an element from. It needs to be
+            understood by either the `sampling` operator of this
+            instance or by its ``dspace.element`` method.
+        kwargs :
+            Additional arguments passed on to `sampling`. This can be
+            used e.g. for functions with parameters.
 
         Returns
         -------
-        element : `DiscreteLpVector`
-            The discretized element, calculated as
-            ``dspace.element(inp)`` or
-            ``sampling(uspace.element(inp))``, tried in this order.
+        element : `DiscretizedSetVector`
+            The discretized element, calculated as ``sampling(inp)`` or
+            ``dspace.element(inp)``, tried in this order.
+
+        See also
+        --------
+        sampling : create a discrete element from an undiscretized one
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
@@ -242,7 +247,7 @@ class DiscreteLp(DiscretizedSpace):
         # uspace element -> discretize
         try:
             inp_elem = self.uspace.element(inp)
-            return self.element_type(self, self.sampling(inp_elem))
+            return self.element_type(self, self.sampling(inp_elem, **kwargs))
         except TypeError:
             pass
 

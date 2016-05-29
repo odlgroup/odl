@@ -160,27 +160,33 @@ class DiscretizedSet(NtuplesBase):
         else:
             raise NotImplementedError('no interpolation operator provided.')
 
-    def element(self, inp=None):
+    def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
 
         Parameters
         ----------
-        inp : `object`, optional
-            The input data to create an element from. Must be
-            recognizable by the `LinearSpace.element`
-            method of either `dspace` or `uspace`.
+        inp : optional
+            The input data to create an element from. It needs to be
+            understood by either the `sampling` operator of this
+            instance or by its ``dspace.element`` method.
+        kwargs :
+            Additional arguments passed on to `sampling`. This can be
+            used e.g. for functions with parameters.
 
         Returns
         -------
         element : `DiscretizedSetVector`
-            The discretized element, calculated as
-            ``dspace.element(inp)`` or
-            ``sampling(uspace.element(inp))``, tried in this order.
+            The discretized element, calculated as ``sampling(inp)`` or
+            ``dspace.element(inp)``, tried in this order.
+
+        See also
+        --------
+        sampling : create a discrete element from an undiscretized one
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
         try:
-            return self.element_type(self, self.sampling(inp))
+            return self.element_type(self, self.sampling(inp, **kwargs))
         except TypeError:
             # Sequence-type input
             return self.element_type(self, self.dspace.element(inp))
