@@ -310,10 +310,8 @@ class DiscretizedSetVector(NtuplesBaseVector):
             to the size of the slice (same size, shape (1,)
             or single value).
         """
-        if isinstance(values, DiscretizedSetVector):
-            self.ntuple.__setitem__(indices, values.ntuple)
-        else:
-            self.ntuple.__setitem__(indices, values)
+        input_data = getattr(values, 'ntuple', values)
+        self.ntuple.__setitem__(indices, input_data)
 
     def sampling(self, ufunc, **kwargs):
         """Restrict a continuous function and assign to this vector
