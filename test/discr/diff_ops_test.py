@@ -30,6 +30,7 @@ from odl.discr.diff_ops import (
     finite_diff, PartialDerivative, Gradient, Divergence, Laplacian)
 from odl.util.testutils import (
     all_equal, all_almost_equal, almost_equal, skip_if_no_cuda, never_skip)
+from odl.util import cuboid
 
 
 methods = ['central', 'forward', 'backward']
@@ -66,27 +67,6 @@ DATA_1D = np.array([0.5, 1, 3.5, 2, -.5, 3, -1, -1, 0, 3])
 DATA_2D = np.array([[0., 1., 2., 3., 4.],
                     [1., 2., 3., 4., 5.],
                     [2., 3., 4., 5., 6.]])
-
-
-def ndvolume(lin_size, ndim, dtype=np.float64):
-    """Hypercube phantom.
-
-    Parameters
-    ----------
-    lin_size : `int`
-       Size of array in each dimension
-    ndim : `int`
-        Number of dimensions
-    dtype : dtype
-        The type of the output array
-
-    """
-    vec = [1]
-    vol = np.arange(lin_size, dtype=dtype)
-    for _ in range(ndim - 1):
-        vec.insert(0, lin_size)
-        vol = vol * vol.reshape(vec)
-    return vol
 
 
 # --- finite_diff --- #
@@ -361,12 +341,11 @@ def test_gradient(method, impl, padding):
     for ndim in [1, 3, 6]:
 
         # DiscreteLp Vector
-        discr_space = odl.uniform_discr([0.] * ndim, [1.] * ndim,
-                                        [lin_size] * ndim)
-        dom_vec = discr_space.element(ndvolume(lin_size, ndim))
+        space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
+        dom_vec = cuboid(space, [0.2] * ndim, [0.8] * ndim)
 
         # gradient
-        grad = Gradient(discr_space, method=method,
+        grad = Gradient(space, method=method,
                         padding_method=padding_method,
                         padding_value=padding_value)
         grad(dom_vec)
@@ -428,15 +407,14 @@ def test_divergence(method, impl, padding):
     for ndim in range(1, 6):
         # DiscreteLp Vector
         lin_size = 3
-        space = odl.uniform_discr([0.] * ndim, [lin_size] * ndim,
-                                  [lin_size] * ndim)
+        space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
 
         # Divergence
         div = Divergence(range=space, method=method,
                          padding_method=padding_method,
                          padding_value=padding_value)
-        dom_vec = div.domain.element([ndvolume(lin_size, ndim)] * ndim)
-        div(dom_vec)
+        dom_vec = cuboid(space, [0.2] * ndim, [0.8] * ndim)
+        div([dom_vec] * ndim)
 
 
 def test_laplacian(impl, padding):
@@ -481,7 +459,7 @@ def test_laplacian(impl, padding):
     assert all_almost_equal(expected_result, div_dom_vec.asarray())
 
     # Adjoint operator
-    derivative = lap.derivative(lap.domain.zero())
+    derivative = lap.derivative()
     deriv_lap_dom_vec = derivative(dom_vec)
     ran_vec = lap.range.element(DATA_2D ** 2)
     adj_lap_ran_vec = derivative.adjoint(ran_vec)
