@@ -545,7 +545,7 @@ def cuboid(discr_space, begin, end):
 
     Parameters
     ----------
-    discr_space : `Discretization`
+    discr_space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created
     begin : array-like or `float` in [0, 1]
         The lower left corner of the cuboid within the space grid relative
@@ -605,7 +605,7 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
 
     Parameters
     ----------
-    discr_space : `Discretization`
+    discr_space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created
     scale_structures : positive `float` in (0, 1]
         Scales objects (cube, cuboids)

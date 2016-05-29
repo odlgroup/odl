@@ -36,13 +36,13 @@ from odl.util.utility import (
 CudaCn = type(None)
 
 
-__all__ = ('RawDiscretization', 'RawDiscretizationVector',
-           'Discretization', 'DiscretizationVector')
+__all__ = ('DiscretizedSet', 'DiscretizedSetVector',
+           'DiscretizedSpace', 'DiscretizedSpaceVector')
 
 
-class RawDiscretization(NtuplesBase):
+class DiscretizedSet(NtuplesBase):
 
-    """Abstract raw discretization class.
+    """Abstract discretization class for general sets.
 
     A discretization in ODL is a way to encode the transition from
     an arbitrary set to a set of n-tuples explicitly representable
@@ -172,7 +172,7 @@ class RawDiscretization(NtuplesBase):
 
         Returns
         -------
-        element : `RawDiscretizationVector`
+        element : `DiscretizedSetVector`
             The discretized element, calculated as
             ``dspace.element(inp)`` or
             ``sampling(uspace.element(inp))``, tried in this order.
@@ -191,9 +191,9 @@ class RawDiscretization(NtuplesBase):
         Returns
         -------
         equals : `bool`
-            `True` if ``other`` is a `RawDiscretization`
+            `True` if ``other`` is a `DiscretizedSet`
             instance and all attributes `uspace`, `dspace`,
-            `RawDiscretization.sampling` and `RawDiscretization.interpolation`
+            `DiscretizedSet.sampling` and `DiscretizedSet.interpolation`
             of ``other`` and this discretization are equal, `False` otherwise.
         """
         if other is self:
@@ -212,19 +212,19 @@ class RawDiscretization(NtuplesBase):
 
     @property
     def element_type(self):
-        """ `RawDiscretizationVector` """
-        return RawDiscretizationVector
+        """ `DiscretizedSetVector` """
+        return DiscretizedSetVector
 
 
-class RawDiscretizationVector(NtuplesBaseVector):
+class DiscretizedSetVector(NtuplesBaseVector):
 
-    """Representation of a `RawDiscretization` element.
+    """Representation of a `DiscretizedSet` element.
 
     Basically only a wrapper class for dspace's vector class."""
 
     def __init__(self, space, ntuple):
         """Initialize a new instance."""
-        assert isinstance(space, RawDiscretization)
+        assert isinstance(space, DiscretizedSet)
         assert ntuple in space.dspace
 
         NtuplesBaseVector.__init__(self, space)
@@ -303,7 +303,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
             to the size of the slice (same size, shape (1,)
             or single value).
         """
-        if isinstance(values, RawDiscretizationVector):
+        if isinstance(values, DiscretizedSetVector):
             self.ntuple.__setitem__(indices, values.ntuple)
         else:
             self.ntuple.__setitem__(indices, values)
@@ -336,7 +336,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
 
         See Also
         --------
-        RawDiscretization.sampling : For full description
+        DiscretizedSet.sampling : For full description
         """
         self.space.sampling(ufunc, out=self.ntuple, **kwargs)
 
@@ -372,7 +372,7 @@ class RawDiscretizationVector(NtuplesBaseVector):
 
         See Also
         --------
-        RawDiscretization.interpolation : For full description
+        DiscretizedSet.interpolation : For full description
         """
         return self.space.interpolation(self.ntuple)
 
@@ -386,17 +386,17 @@ class RawDiscretizationVector(NtuplesBaseVector):
                                          arraynd_repr(self.asarray()))
 
 
-class Discretization(RawDiscretization, FnBase):
+class DiscretizedSpace(DiscretizedSet, FnBase):
 
     """Abstract class for discretizations of linear vector spaces.
 
-    This variant of `RawDiscretization` adds linear structure
-    to all its members. The `RawDiscretization.uspace` is a
-    `LinearSpace`, the `RawDiscretization.dspace`
+    This variant of `DiscretizedSet` adds linear structure
+    to all its members. The `DiscretizedSet.uspace` is a
+    `LinearSpace`, the `DiscretizedSet.dspace`
     for the data representation is an implementation of
     :math:`\mathbb{F}^n`, where :math:`\mathbb{F}` is some
-    `Field`, and both `RawDiscretization.sampling`
-    and `RawDiscretization.interpolation` are linear
+    `Field`, and both `DiscretizedSet.sampling`
+    and `DiscretizedSet.interpolation` are linear
     `Operator`'s.
     """
 
@@ -415,15 +415,15 @@ class Discretization(RawDiscretization, FnBase):
             discretized object. Its `FnBase.field` attribute
             must be the same as ``uspace.field``.
         sampling : `Operator`, linear, optional
-            Operator mapping a `RawDiscretization.uspace` element
-            to a `RawDiscretization.dspace` element. Must satisfy
+            Operator mapping a `DiscretizedSet.uspace` element
+            to a `DiscretizedSet.dspace` element. Must satisfy
             ``sampling.domain == uspace``, ``sampling.range == dspace``
         interpol : `Operator`, linear, optional
-            Operator mapping a `RawDiscretization.dspace` element
-            to a `RawDiscretization.uspace` element. Must satisfy
+            Operator mapping a `DiscretizedSet.dspace` element
+            to a `DiscretizedSet.uspace` element. Must satisfy
             ``interpol.domain == dspace``, ``interpol.range == uspace``.
         """
-        RawDiscretization.__init__(self, uspace, dspace, sampling, interpol)
+        DiscretizedSet.__init__(self, uspace, dspace, sampling, interpol)
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
@@ -515,18 +515,18 @@ class Discretization(RawDiscretization, FnBase):
 
     @property
     def element_type(self):
-        """ `DiscretizationVector` """
-        return DiscretizationVector
+        """ `DiscretizedSpaceVector` """
+        return DiscretizedSpaceVector
 
 
-class DiscretizationVector(RawDiscretizationVector, FnBaseVector):
+class DiscretizedSpaceVector(DiscretizedSetVector, FnBaseVector):
 
-    """Representation of a `Discretization` element."""
+    """Representation of a `DiscretizedSpace` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        assert isinstance(space, Discretization)
-        RawDiscretizationVector.__init__(self, space, data)
+        assert isinstance(space, DiscretizedSpace)
+        DiscretizedSetVector.__init__(self, space, data)
 
 
 def dspace_type(space, impl, dtype=None):

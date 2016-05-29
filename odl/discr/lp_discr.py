@@ -28,7 +28,7 @@ import numpy as np
 from numbers import Integral
 
 from odl.discr.discretization import (
-    Discretization, DiscretizationVector, dspace_type)
+    DiscretizedSpace, DiscretizedSpaceVector, dspace_type)
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
@@ -50,7 +50,7 @@ __all__ = ('DiscreteLp', 'DiscreteLpVector',
 _SUPPORTED_INTERP = ('nearest', 'linear')
 
 
-class DiscreteLp(Discretization):
+class DiscreteLp(DiscretizedSpace):
 
     """Discretization of a Lebesgue :math:`L^p` space."""
 
@@ -141,7 +141,7 @@ class DiscreteLp(Discretization):
             interpol = PerAxisInterpolation(
                 fspace, self.partition, dspace, self.interp, order=self.order)
 
-        Discretization.__init__(self, fspace, dspace, sampling, interpol)
+        DiscretizedSpace.__init__(self, fspace, dspace, sampling, interpol)
         self._exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
                 self.exponent != dspace.exponent):
@@ -220,8 +220,8 @@ class DiscreteLp(Discretization):
         inp : `object`, optional
             The input data to create an element from. Must be
             recognizable by the `LinearSpace.element` method
-            of either `RawDiscretization.dspace` or
-            `RawDiscretization.uspace`.
+            of either `DiscretizedSet.dspace` or
+            `DiscretizedSet.uspace`.
 
         Returns
         -------
@@ -413,7 +413,7 @@ class DiscreteLp(Discretization):
         return DiscreteLpVector
 
 
-class DiscreteLpVector(DiscretizationVector):
+class DiscreteLpVector(DiscretizedSpaceVector):
 
     """Representation of a `DiscreteLp` element."""
 
@@ -570,7 +570,7 @@ class DiscreteLpVector(DiscretizationVector):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            # For RawDiscretizationVector of the same type, use ntuple directly
+            # For DiscretizedSetVector of the same type, use ntuple directly
             self.ntuple[indices] = values.ntuple
         else:
             # Other sequence types are piped through a Numpy array. Equivalent
