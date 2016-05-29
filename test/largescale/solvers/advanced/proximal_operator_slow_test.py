@@ -58,6 +58,22 @@ def offset(request):
     return request.param
 
 
+def make_offset(g, stepsize, convex_conjugate):
+    """Decorator that adds an optional offset with stepsize."""
+    def offset_function(function):
+        if g is None and not convex_conjugate:
+            return lambda x: stepsize * function(x)
+        elif g is None and convex_conjugate:
+            return lambda x: stepsize * function(x)
+        elif g is not None and not convex_conjugate:
+            return lambda x: stepsize * function(x - g)
+        elif g is not None and convex_conjugate:
+            return lambda x: stepsize * (function(x) + x.inner(g))
+        else:
+            assert False
+    return offset_function
+
+
 prox_params = ['l1 ', 'l1_dual',
                'l2', 'l2_dual',
                'l2^2', 'l2^2_dual']
@@ -65,103 +81,107 @@ prox_ids = [' f = {}'.format(p.ljust(10)) for p in prox_params]
 
 
 @pytest.fixture(scope="module", ids=prox_ids, params=prox_params)
-def proximal_and_function(request):
+def proximal_and_function(request, stepsize, offset):
     """Return a proximal factory and the corresponding function."""
     name = request.param.strip()
 
     space = odl.uniform_discr(0, 1, 2)
 
+    if offset:
+        g = example_element(space)
+    else:
+        g = None
+
     if name == 'l1':
+        @make_offset(g, stepsize=stepsize, convex_conjugate=False)
         def l1_norm(x):
             return np.abs(x).inner(x.space.one())
 
-        prox = proximal_l1(space)
+        prox = proximal_l1(space, g=g)
 
-        return prox, l1_norm
+        return prox(stepsize), l1_norm
 
     if name == 'l1_dual':
-        def l1_cc_norm(x):
-            sup_norm = np.max(np.abs(x))
-            if sup_norm <= 1.0:
-                return 0.0
-            else:
-                return np.Infinity
+        @make_offset(g, stepsize=stepsize, convex_conjugate=True)
+        def l1_norm_dual(x):
+            return 0.0 if np.max(np.abs(x)) <= 1.0 else np.Infinity
 
-        prox = proximal_cconj_l1(space)
+        prox = proximal_cconj_l1(space, g=g)
 
-        return prox, l1_cc_norm
+        return prox(stepsize), l1_norm_dual
 
     elif name == 'l2':
+        @make_offset(g, stepsize=stepsize, convex_conjugate=False)
         def l2_norm(x):
             return x.norm()
 
-        prox = proximal_l2(space)
+        prox = proximal_l2(space, g=g)
 
-        return prox, l2_norm
+        return prox(stepsize), l2_norm
 
     elif name == 'l2_dual':
+        @make_offset(g, stepsize=stepsize, convex_conjugate=True)
         def l2_norm_dual(x):
-            if x.norm() <= 1.00001:  # numerical margin
-                return 0.0
-            else:
-                return np.Infinity
+            # numerical margin
+            return 0.0 if x.norm() < 1.00001 else np.Infinity
 
-        prox = proximal_cconj_l2(space)
+        prox = proximal_cconj_l2(space, g=g)
 
-        return prox, l2_norm_dual
+        return prox(stepsize), l2_norm_dual
 
     elif name == 'l2^2':
+        @make_offset(g, stepsize=stepsize, convex_conjugate=False)
         def l2_norm_squared(x):
-            return 0.5 * x.norm() ** 2
+            return x.norm() ** 2
 
-        prox = proximal_l2_squared(space)
+        prox = proximal_l2_squared(space, g=g)
 
-        return prox, l2_norm_squared
+        return prox(stepsize), l2_norm_squared
 
     elif name == 'l2^2_dual':
-        def l2_norm_squared(x):
-            return 0.5 * x.norm() ** 2
+        @make_offset(g, stepsize=stepsize, convex_conjugate=True)
+        def l2_norm_squared_dual(x):
+            return (1.0 / 4.0) * x.norm() ** 2
 
-        prox = proximal_cconj_l2_squared(space)
+        prox = proximal_cconj_l2_squared(space, g=g)
 
-        return prox, l2_norm_squared
+        return prox(stepsize), l2_norm_squared_dual
 
     else:
         assert False
 
 
-def proximal_objective(function, step_size, x, y):
+def proximal_objective(function, x, y):
     """Calculate the objective function of the proximal optimization problem"""
-    return function(y) + 1.0 / (2.0 * step_size) * (x - y).norm() ** 2
+    return function(y) + (1.0 / 2.0) * (x - y).norm() ** 2
 
 
-def test_proximal_defintion(proximal_and_function, stepsize):
+def test_proximal_defintion(proximal_and_function):
     """Test the defintion of the proximal:
 
-        prox[lam * f](x) = argmin_y {f(y) + 1/(2 lam) ||x-y||}
+        prox[f](x) = argmin_y {f(y) + 1/2 ||x-y||^2}
 
     Hence we expect for all x in the domain of the proximal
 
-        x* = prox[lam * f](x)
-        f(x*) + 1/(2 lam) ||x*-y|| < f(y) + 1/(2 lam) ||x-y||
+        x* = prox[f](x)
+
+        f(x*) + 1/2 ||x*-y||^2 < f(y) + 1/2 ||x-y||^2
     """
 
-    proximal_factory, function = proximal_and_function
-
-    proximal = proximal_factory(stepsize)
+    proximal, function = proximal_and_function
 
     assert proximal.domain == proximal.range
 
     x = example_element(proximal.domain) * 10
-    f_x = proximal_objective(function, stepsize, x, x)
+    f_x = proximal_objective(function, x, x)
     prox_x = proximal(x)
-    f_prox_x = proximal_objective(function, stepsize, x, prox_x)
+    f_prox_x = proximal_objective(function, x, prox_x)
 
     assert f_prox_x <= f_x
 
     for i in range(100):
         y = example_element(proximal.domain)
-        f_y = proximal_objective(function, stepsize, x, y)
+        f_y = proximal_objective(function, x, y)
 
         assert f_prox_x <= f_y
 

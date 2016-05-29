@@ -74,7 +74,7 @@ space = odl.uniform_discr([0, 0], [n, n], [n, n])
 filter_width = 2.0  # standard deviation of the Gaussian filter
 ft = odl.trafos.FourierTransform(space)
 c = filter_width**2 / 4.0**2
-gaussian = ft.range.element(lambda x: np.exp(-(x[0]**2 + x[1]**2) * c))
+gaussian = ft.range.element(lambda x: np.exp(-(x[0] ** 2 + x[1] ** 2) * c))
 convolution = ft.inverse * gaussian * ft
 
 # Optional: Run diagnostics to assure the adjoint is properly implemented

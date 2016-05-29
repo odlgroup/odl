@@ -111,7 +111,7 @@ def proximal_cconj(proximal):
     Parameters
     ----------
     prox_factory : `callable`
-        A factory function that, when called with a stepsize, returns the
+        A factory function that, when called with a step size, returns the
         proximal operator of ``F``
 
     Returns
@@ -142,13 +142,13 @@ def proximal_cconj(proximal):
 def proximal_composition(proximal, operator, mu):
     """Proximal operator factory of functional composed with unitary operator.
 
-    Given an linear `Operator` ``L`` with the property that for a scalar ``mu``
+    Given a linear `Operator` ``L`` with the property that for a scalar ``mu``
 
         L^*(L(x)) = mu * x
 
-    And a convex function ``f``, The following identity holds
+    and a convex function ``F``, the following identity holds
 
-        prox[f * L](x) = x + 1/mu L^*(prox[mu * f](Lx) - Lx)
+        prox[F * L](x) = x + 1/mu L^*(prox[mu * F](Lx) - Lx)
 
     This factory function implements this functionality.
 
@@ -157,12 +157,12 @@ def proximal_composition(proximal, operator, mu):
     Parameters
     ----------
     prox_factory : `callable`
-        A factory function that when called with a stepsize returns the
-        proximal operator of ``F``.
+        A factory function that, when called with a step size returns the
+        proximal operator of ``F``
     operator : `Operator`
         The operator to compose the functional with
     mu : `Operator.field` element
-        Scalar such that ``operator.adjoint * operator = mu``
+        Scalar such that ``(operator.adjoint * operator)(x) = mu * x``
 
     Returns
     -------
@@ -186,7 +186,7 @@ def proximal_composition(proximal, operator, mu):
         Returns
         -------
         proximal : `Operator`
-            The proximal operator of ``prox[step_size * f * L](x)``
+            The proximal operator of ``prox[step_size * F * L](x)``
         """
         Id = IdentityOperator(operator.domain)
         Ir = IdentityOperator(operator.range)
@@ -249,8 +249,8 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
     with x being an element in ``space``.
 
-    The proximal operator of ``tau * G^*`` where ``tau`` is a step size
-    is the point-wise non-negativity thresholding of x
+    For a step size ``tau``, the proximal operator of ``tau * G^*`` is the
+    point-wise non-negativity thresholding of x
 
                               a if x < a,
          prox[tau * G](x) = { x if a <= x <= b
@@ -289,7 +289,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
             raise ValueError('Invalid values, `lower` ({}) > `upper` ({}).'
                              ''.format(lower, upper))
 
-    class ProxOpClamp(Operator):
+    class ProxOpBoxConstraint(Operator):
 
         """Proximal operator for G(x) = ind(a <= x <= b)."""
 
@@ -301,7 +301,6 @@ def proximal_box_constraint(space, lower=None, upper=None):
             tau : positive `float`
                 Step size parameter. Not used.
             """
-            self.tau = float(tau)
             super().__init__(domain=space, range=space, linear=False)
 
         def _call(self, x, out):
@@ -318,7 +317,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
             else:
                 out.assign(x)
 
-    return ProxOpClamp
+    return ProxOpBoxConstraint
 
 
 def proximal_nonnegativity(space):
@@ -334,8 +333,8 @@ def proximal_nonnegativity(space):
 
     with x being an element in ``space``.
 
-    The proximal operator of ``tau * F^*`` where ``tau`` is a step size
-    is the point-wise non-negativity thresholding of x
+    For a step size ``tau``, The proximal operator of ``tau * F^*`` is the
+    point-wise non-negativity thresholding of x
 
          prox[tau * G](x) = {x if x >= 0, 0 if < 0}
 
@@ -361,28 +360,29 @@ def proximal_nonnegativity(space):
 
 
 def proximal_cconj_l2(space, lam=1, g=None):
-    """Proximal operator factory of the convex conjugate of the l2-norm.
+    """Proximal operator factory of the convex conj of the l2-norm/distance.
 
     Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm
+    functional F where F is the l2-norm (or distance to g, if given)
 
         F(x) =  lam ||x - g||_2
 
     with x and g elements in ``space``, scaling factor lam, and given data g.
 
-    The convex conjugate, F^*, of F is given by
+    The convex conjugate F^* of F is given by
 
         F^*(y) = {0 if ||x-g|| < lam, infty else}
 
-    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
-    is given by
+    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
+    given by
 
         prox[sigma * F^*](y) = (x - g) / ||x - g||
 
     Parameters
     ----------
     space : `LinearSpace`
-        Domain of F(x). Needs to be a hilbert space (have an inner product)
+        Domain of F(x). Needs to be a Hilbert space.
+        That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
     lam : positive `float`
@@ -401,23 +401,22 @@ def proximal_cconj_l2(space, lam=1, g=None):
     See Also
     --------
     proximal_l2 : proximal without convex conjugate
-    proximal_cconj_l2_squared : proximal for squared norm
+    proximal_cconj_l2_squared : proximal for squared norm/distance
     """
-
     prox_l2 = proximal_l2(space, lam=lam, g=g)
     return proximal_cconj(prox_l2)
 
 
 def proximal_l2(space, lam=1, g=None):
-    """Proximal operator factory of the l2-norm.
+    """Proximal operator factory of the l2-norm/distance.
 
     Function for the proximal operator of the  functional ``F`` where ``F``
-    is the l2-norm
+    is the l2-norm (or distance to g, if given)
 
         F(x) =  lam ||x - g||_2
 
-    The proximal operator of ``sigma * F`` where ``sigma`` is a step size
-    is given by
+    For a step size ``sigma``, the proximal operator of ``sigma * F``is given
+    by
 
         prox[sigma * F](y) = { (1.0 - c / ||x-g||) * x  + c * g    if c < 1
                                g                                   else
@@ -427,7 +426,8 @@ def proximal_l2(space, lam=1, g=None):
     Parameters
     ----------
     space : `LinearSpace`
-        Domain of F(x). Needs to be a hilbert space (have an inner product)
+        Domain of F(x). Needs to be a Hilbert space.
+        That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
     lam : positive `float`
@@ -440,12 +440,12 @@ def proximal_l2(space, lam=1, g=None):
 
     Notes
     -----
-    Most problems are forumlated for the squared norm, in that case use
-    `proximal_l2_squared` instead.
+    Most problems are forumlated for the squared norm/distance, in that case
+    use `proximal_l2_squared` instead.
 
     See Also
     --------
-    proximal_l2_squared : proximal for squared norm
+    proximal_l2_squared : proximal for squared norm/distance
     proximal_cconj_l2 : proximal for convex conjugate
     """
 
@@ -456,7 +456,7 @@ def proximal_l2(space, lam=1, g=None):
 
     class ProximalL2(Operator):
 
-        """Proximal operator of the l2-norm."""
+        """Proximal operator of the l2-norm/distance."""
 
         def __init__(self, sigma):
             """Initialize the proximal operator.
@@ -492,28 +492,29 @@ def proximal_l2(space, lam=1, g=None):
 
 
 def proximal_cconj_l2_squared(space, lam=1, g=None):
-    """Proximal operator factory of the convex conj of the squared l2-norm.
+    """Proximal operator factory of the convex conj of the squared l2-norm/dist
 
     Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm
+    functional F where F is the l2-norm (or distance to g, if given)
 
-        F(x) =  lam 1/2 ||x - g||_2^2
+        F(x) =  lam ||x - g||_2^2
 
     with x and g elements in ``space``, scaling factor lam, and given data g.
 
-    The convex conjugate, F^*, of F is given by
+    The convex conjugate F^* of F is given by
 
-        F^*(y) = 1/lam (1/2 ||y/lam||_2^2 + <y/lam,g>)
+        F^*(y) = 1/lam (||y/lam||_2^2 + <y/lam,g>)
 
-    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
-    is given by
+    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
+    given by
 
-        prox[sigma * F^*](y) = (y - g) / (1 + 1/lam)
+        prox[sigma * F^*](y) = (y - sigma * g) / (1 + sigma/(2 * lam))
 
     Parameters
     ----------
     space : `LinearSpace`
-        Domain of F(x). Needs to be a hilbert space (have an inner product)
+        Domain of F(x). Needs to be a Hilbert space.
+        That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
     lam : positive `float`
@@ -534,9 +535,9 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{!r} is not an element of {!r}'.format(g, space))
 
-    class ProximalConvConjL2Squared(Operator):
+    class ProximalCConjL2Squared(Operator):
 
-        """Proximal operator of the convex conjugate of the squared l2-norm."""
+        """Proximal operator of the convex conj of the squared l2-norm/dist."""
 
         def __init__(self, sigma):
             """Initialize the proximal operator.
@@ -553,36 +554,38 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
             """Apply the operator to ``x`` and stores the result in
             ``out``"""
 
-            # (x - sig*g) / (1 + sig/lam)
+            # (x - sig*g) / (1 + sig/(2 lam))
 
             sig = self.sigma
             if g is None:
-                out.lincomb(1 / (1 + sig / lam), x)
+                out.lincomb(1.0 / (1 + 0.5 * sig / lam), x)
             else:
-                out.lincomb(1 / (1 + sig / lam), x, -sig / (1 + sig / lam), g)
+                out.lincomb(1.0 / (1 + 0.5 * sig / lam), x,
+                            -sig / (1 + 0.5 * sig / lam), g)
 
-    return ProximalConvConjL2Squared
+    return ProximalCConjL2Squared
 
 
 def proximal_l2_squared(space, lam=1, g=None):
-    """Proximal operator factory of the squared l2-norm.
+    """Proximal operator factory of the squared l2-norm/distance.
 
     Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm
+    functional F where F is the l2-norm (or distance to g, if given)
 
-        F(x) =  lam 1/2 ||x - g||_2^2
+        F(x) =  lam ||x - g||_2^2
 
     with x and g elements in ``space``, scaling factor lam, and given data g.
 
-    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
-    is given by
+    For a step size ``tau``, the proximal operator of ``tau * F`` is
+    given by
 
-        prox[sigma * F^*](y) = (y - sigma g) / (1 + sigma/lam)
+        prox[tau * F](x) = (x + 2 * tau * lam * g) / (2 * tau * lam)
 
     Parameters
     ----------
     space : `LinearSpace`
-        Domain of F(x). Needs to be a hilbert space (have an inner product)
+        Domain of F(x). Needs to be a Hilbert space.
+        That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
     lam : positive `float`
@@ -605,24 +608,24 @@ def proximal_l2_squared(space, lam=1, g=None):
 
 
 def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
-    """Proximal operator factory of the convex conjugate of the l1-norm.
+    """Proximal operator factory of the convex conj of the l1-norm/distance.
 
     Function for the proximal operator of the convex conjugate of the
-    functional F where F is an l1-norm
+    functional F where F is an l1-norm (or distance to g, if given)
 
         F(x) = lam ||x - g||_1
 
     with x and g elements in ``space`` and scaling factor lam.
 
-    The convex conjugate, F^*, of F is given by the indicator function of
+    The convex conjugate F^* of F is given by the indicator function of
     the set box(lam)
 
         F^*(y) = lam ind_{box(lam)}(|y / lam| + <y / lam, g>)
 
     where box(lam) is a hypercube centered at the origin with width 2 lam.
 
-    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
-    is given by
+    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
+    given by
 
         prox[sigma * F^*](y) = lam (y - sigma g) / (max(lam, |y - sigma g|)
 
@@ -635,8 +638,8 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
         F^*(y) = lam ind_{box(lam)}(||y / lam||_2 + <y / lam, g>)
 
-    The proximal operator of ``sigma * F^*`` where ``sigma`` is a step size
-    is given by
+    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
+    given by
 
         prox[sigma * F^*](y) =
             lam (y - sigma g) / (max(lam, ||y - sigma g||_2)
@@ -679,9 +682,9 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
         raise TypeError('`isotropic` given with non-powerspace `space`({})'
                         ''.format(space))
 
-    class ProximalConvConjL1(Operator):
+    class ProximalCConjL1(Operator):
 
-        """Proximal operator of the convex conjugate of the l1-norm."""
+        """Proximal operator of the convex conj of the l1-norm/distance."""
 
         def __init__(self, sigma):
             """Initialize the proximal operator.
@@ -689,7 +692,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
             Parameters
             ----------
             sigma : positive `float`
-                Stepsize parameter
+                Step size parameter
             """
             # sigma is not used
             self.sigma = float(sigma)
@@ -738,26 +741,26 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
                 # Pointwise division
                 out.divide(diff, out)
 
-    return ProximalConvConjL1
+    return ProximalCConjL1
 
 
 def proximal_l1(space, lam=1, g=None, isotropic=False):
-    """Proximal operator factory of the l1-norm.
+    """Proximal operator factory of the l1-norm/distance.
 
     Function for the proximal operator of the functional F where F is an
-    l1-norm
+    l1-norm (or distance to g, if given)
 
         F(x) = lam ||x - g||_1
 
     with x and g elements in ``space``, and scaling factor lam.
 
-    The proximal operator of ``tau * F`` where ``tau`` is a step size is
+    For a step size ``tau``, the proximal operator of ``tau * F`` is
 
                               y - tau * lam   if y > tau * lam,
          prox[tau * F](y) = { 0               if -tau * lam <= y <= tau * lam
                               y + tau * lam   if y < -tau * lam
 
-    An alternative formulation is available for `ProductSpace`'s, in that case
+    An alternative formulation is available for `ProductSpace`'s, where the
     the ``isotropic`` parameter can be used, giving
 
         F(x) = lam || ||x - g||_2 ||_1
@@ -787,7 +790,7 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     """
 
     # TODO: optimize
-    prox_cc_l1 = proximal_cconj_l1(space, lam=lam, g=g, isotripic=isotropic)
+    prox_cc_l1 = proximal_cconj_l1(space, lam=lam, g=g, isotropic=isotropic)
     return proximal_cconj(prox_cc_l1)
 
 
@@ -804,7 +807,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
     that F is defined over whole X. The non-negativity thresholding pos is
     used to define F in the real numbers.
 
-    The proximal operator of the convex conjugate, F^*, of F is
+    The proximal operator of the convex conjugate F^* of F is
 
         F^*(p) = sum_i (-g ln(pos(1_X - p))_i + ind_P(1_X - p)
 
@@ -849,7 +852,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{} is not an element of {}'.format(g, space))
 
-    class ProximalConvConjKL(Operator):
+    class ProximalCConjKL(Operator):
 
         """Proximal operator of the convex conjugate of the KL divergence."""
 
@@ -891,7 +894,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
             # out = 1/2 * out
             out /= 2
 
-    return ProximalConvConjKL
+    return ProximalCConjKL
 
 
 if __name__ == '__main__':
