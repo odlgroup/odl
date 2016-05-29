@@ -108,7 +108,6 @@ def test_vol_geom_2d():
     discr_dom = _discrete_domain_anisotropic(2, 'nearest')
     with pytest.raises(NotImplementedError):
         odl.tomo.astra_volume_geometry(discr_dom)
-    print('\n', vol_geom)
 
 
 def test_vol_geom_3d():
@@ -141,7 +140,6 @@ def test_vol_geom_3d():
     discr_dom = _discrete_domain_anisotropic(3, 'nearest')
     with pytest.raises(NotImplementedError):
         odl.tomo.astra_volume_geometry(discr_dom)
-    print('\n', vol_geom)
 
 
 def test_proj_geom_parallel_2d():

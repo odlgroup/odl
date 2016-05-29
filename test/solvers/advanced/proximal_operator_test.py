@@ -29,9 +29,12 @@ import pytest
 # Internal
 import odl
 from odl.solvers.advanced.proximal_operators import (
-    combine_proximals, proximal_zero, proximal_nonnegativity,
-    proximal_convexconjugate_l1, proximal_convexconjugate_l2,
-    proximal_convexconjugate_kl)
+    combine_proximals, proximal_zero,
+    proximal_box_constraint, proximal_nonnegativity,
+    proximal_l1, proximal_cconj_l1,
+    proximal_l2,
+    proximal_l2_squared, proximal_cconj_l2_squared,
+    proximal_cconj_kl)
 from odl.util.testutils import all_almost_equal
 
 
@@ -43,16 +46,16 @@ def test_proximal_zero():
     """Proximal factory for the zero mapping G(x) = 0."""
 
     # Image space
-    space = odl.uniform_discr(0, 10, 10)
+    space = odl.uniform_discr(0, 1, 10)
 
     # Element in the image space where the proximal operator is evaluated
     x = space.element(np.arange(-5, 5))
 
     # Factory function returning the proximal operator
-    make_prox = proximal_zero(space)
+    prox_factory = proximal_zero(space)
 
     # Initialize proximal operator of G (with an unused parameter)
-    prox = make_prox(None)
+    prox = prox_factory(None)
 
     # prox_tau[G](x) = x = identity operator
     assert isinstance(prox, odl.IdentityOperator)
@@ -64,29 +67,52 @@ def test_proximal_zero():
     assert x == x_opt
 
 
-def test_proximal_nonnegativity():
+def test_proximal_box_constraint():
     """Proximal factory for indicator function for non-negativity ."""
 
     # Image space
-    space = odl.uniform_discr(0, 10, 10)
+    space = odl.uniform_discr(0, 1, 10)
 
     # Element in the image space where the proximal operator is evaluated
     x = space.element(np.arange(-5, 5))
 
-    # Allocate output vector
-    out = space.element()
+    for lower in [None, -2, -2.0 * space.one()]:
+        for upper in [None, 2, 2.0 * space.one()]:
+            # Factory function returning the proximal operator
+            prox_factory = proximal_box_constraint(space,
+                                                   lower=lower, upper=upper)
+            prox = prox_factory(1.0)
+            result = prox(x).asarray()
+
+            # Create reference
+            lower_np = -np.inf if lower is None else lower
+            upper_np = np.inf if upper is None else upper
+            result_np = np.minimum(np.maximum(x, lower_np), upper_np).asarray()
+
+            # Verify equal result
+            assert all_almost_equal(result_np, result)
+
+
+def test_proximal_nonnegativity():
+    """Proximal factory for indicator function for non-negativity ."""
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # Element in the image space where the proximal operator is evaluated
+    x = space.element(np.arange(-5, 5))
 
     # Factory function returning the proximal operator
-    make_prox = proximal_nonnegativity(space)
+    prox_factory = proximal_nonnegativity(space)
 
     # Initialize proximal operator of G (with an unused parameter)
-    prox = make_prox(None)
+    prox = prox_factory(1.0)
 
     # Optimal point returned by the proximal operator
-    prox(x, out)
+    result = prox(x)
 
     # prox_tau[G](x) = non-negativity thresholding
-    assert all(out.asarray() >= 0)
+    assert all(result.asarray() >= 0)
 
 
 def test_combine_proximal():
@@ -96,16 +122,16 @@ def test_combine_proximal():
     operators."""
 
     # Image space
-    space = odl.uniform_discr(0, 10, 10)
+    space = odl.uniform_discr(0, 1, 10)
 
     # Factory function returning the proximal operator
-    make_prox = proximal_zero(space)
+    prox_factory = proximal_zero(space)
 
     # Combine factory function of proximal operators
-    combined_make_prox = combine_proximals([make_prox, make_prox])
+    combined_prox_factory = combine_proximals(prox_factory, prox_factory)
 
     # Initialize combine proximal operator
-    prox = combined_make_prox(1)
+    prox = combined_prox_factory(1)
 
     assert isinstance(prox, odl.Operator)
 
@@ -131,38 +157,69 @@ def test_combine_proximal():
     assert out == x
 
 
-def test_proximal_factory_convconj_l2_wo_data():
-    """Proximal factory for the convex conjugate of the L2-norm."""
+def test_proximal_l2_wo_data():
+    """Proximal factory for the L2-norm."""
 
     # Image space
-    space = odl.uniform_discr(0, 10, 10)
-
-    # Element in the image space where the proximal operator is evaluated
-    x = space.element(np.arange(-5, 5))
+    space = odl.uniform_discr(0, 1, 10)
 
     # Factory function returning the proximal operator
-    lam = 2
-    make_prox = proximal_convexconjugate_l2(space, lam=lam)
+    lam = 2.0
+    prox_factory = proximal_l2(space, lam=lam)
 
     # Initialize the proximal operator
-    sigma = 0.5
-    prox = make_prox(sigma)
+    sigma = 3.0
+    prox = prox_factory(sigma)
 
     assert isinstance(prox, odl.Operator)
 
-    # Allocate output vector
-    x_opt = space.element()
+    # Elements
+    x = space.element(np.arange(-5, 5))
+    x_small = x * 0.5 * lam * sigma / x.norm()
+    x_big = x * 2.0 * lam * sigma / x.norm()
 
-    # Optimal point returned by the proximal operator
-    prox(x, x_opt)
+    # Explicit computation:
+    x_small_opt = x_small * 0
+    x_big_opt = (1 - lam * sigma / x_big.norm()) * x_big
 
-    # Explicit computation: (x - sigma * g) / (1 + sigma / lambda)
-    x_verify = x / (1 + sigma / lam)
-
-    assert all_almost_equal(x_opt, x_verify, PLACES)
+    assert all_almost_equal(prox(x_small), x_small_opt, PLACES)
+    assert all_almost_equal(prox(x_big), x_big_opt, PLACES)
 
 
-def test_proximal_factory_convconj_l2_with_data():
+def test_proximal_l2_with_data():
+    """Proximal factory for the L2-norm with data term."""
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # Create data
+    g = space.element(np.arange(-5, 5))
+
+    # Factory function returning the proximal operator
+    lam = 2.0
+    prox_factory = proximal_l2(space, lam=lam, g=g)
+
+    # Initialize the proximal operator
+    sigma = 3.0
+    prox = prox_factory(sigma)
+
+    assert isinstance(prox, odl.Operator)
+
+    # Elements
+    x = space.element(np.arange(-5, 5))
+    x_small = g + x * 0.5 * lam * sigma / x.norm()
+    x_big = g + x * 2.0 * lam * sigma / x.norm()
+
+    # Explicit computation:
+    x_small_opt = g
+    const = lam * sigma / (x_big - g).norm()
+    x_big_opt = (1 - const) * x_big + const * g
+
+    assert all_almost_equal(prox(x_small), x_small_opt, PLACES)
+    assert all_almost_equal(prox(x_big), x_big_opt, PLACES)
+
+
+def test_proximal_convconj_l2_sq_wo_data():
     """Proximal factory for the convex conjugate of the L2-norm."""
 
     # Image space
@@ -177,11 +234,11 @@ def test_proximal_factory_convconj_l2_with_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l2(space, lam=lam, g=g)
+    prox_factory = proximal_cconj_l2_squared(space, lam=lam, g=g)
 
     # Initialize the proximal operator
-    sigma = 0.5
-    prox = make_prox(sigma)
+    sigma = 0.25
+    prox = prox_factory(sigma)
 
     assert isinstance(prox, odl.Operator)
 
@@ -191,17 +248,52 @@ def test_proximal_factory_convconj_l2_with_data():
     # Optimal point returned by the proximal operator
     prox(x, x_out)
 
-    # Explicit computation: (x - sigma * g) / (1 + sigma / lambda)
-    x_verify = (x - sigma * g) / (1 + sigma / lam)
+    # Explicit computation: (x - sigma * g) / (1 + sigma / (2 * lambda))
+    x_verify = (x - sigma * g) / (1 + sigma / (2 * lam))
 
     assert all_almost_equal(x_out, x_verify, PLACES)
 
 
-def test_proximal_factory_convconj_l1_simple_space_without_data():
-    """Proximal factory for the convex conjugate of the L1-semi-norm."""
+def test_proximal_convconj_l2_sq_with_data():
+    """Proximal factory for the convex conjugate of the L2-norm."""
 
     # Image space
-    space = odl.uniform_discr(0, 10, 10)
+    space = odl.uniform_discr(0, 1, 10)
+
+    # Create an element in the image space
+    x_arr = np.arange(-5, 5)
+    x = space.element(x_arr)
+
+    # Create data
+    g = space.element(-2 * x_arr)
+
+    # Factory function returning the proximal operator
+    lam = 2
+    prox_factory = proximal_cconj_l2_squared(space, lam=lam, g=g)
+
+    # Initialize the proximal operator
+    sigma = 0.25
+    prox = prox_factory(sigma)
+
+    assert isinstance(prox, odl.Operator)
+
+    # Allocate output vector
+    x_out = space.element()
+
+    # Optimal point returned by the proximal operator
+    prox(x, x_out)
+
+    # Explicit computation: (x - sigma * g) / (1 + sigma / (2 * lambda))
+    x_verify = (x - sigma * g) / (1 + sigma / (2 * lam))
+
+    assert all_almost_equal(x_out, x_verify, PLACES)
+
+
+def test_proximal_convconj_l1_simple_space_without_data():
+    """Proximal factory for the convex conjugate of the L1-norm."""
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
 
     # Image vector
     x_arr = np.arange(-5, 5)
@@ -209,11 +301,11 @@ def test_proximal_factory_convconj_l1_simple_space_without_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l1(space, lam=lam)
+    prox_factory = proximal_cconj_l1(space, lam=lam)
 
     # Initialize the proximal operator of F^*
-    sigma = 0.5
-    prox = make_prox(sigma)
+    sigma = 0.25
+    prox = prox_factory(sigma)
 
     assert isinstance(prox, odl.Operator)
 
@@ -222,17 +314,17 @@ def test_proximal_factory_convconj_l1_simple_space_without_data():
     prox(x, x_opt)
 
     # Explicit computation: x / max(lam, |x|)
-    denom = np.maximum(lam * np.ones(x_arr.shape), np.sqrt(x_arr ** 2))
+    denom = np.maximum(lam, np.sqrt(x_arr ** 2))
     x_verify = lam * x_arr / denom
 
     assert all_almost_equal(x_opt, x_verify, PLACES)
 
 
-def test_proximal_factory_convconj_l1_simple_space_with_data():
-    """Proximal factory for the convex conjugate of the L1-semi-norm."""
+def test_proximal_convconj_l1_simple_space_with_data():
+    """Proximal factory for the convex conjugate of the L1-norm."""
 
     # Image space
-    space = odl.uniform_discr(0, 10, 10)
+    space = odl.uniform_discr(0, 1, 10)
     x_arr = np.arange(-5, 5)
     x = space.element(x_arr)
 
@@ -242,11 +334,11 @@ def test_proximal_factory_convconj_l1_simple_space_with_data():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l1(space, lam=lam, g=g)
+    prox_factory = proximal_cconj_l1(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
-    sigma = 0.5
-    prox = make_prox(sigma)
+    sigma = 0.25
+    prox = prox_factory(sigma)
 
     assert isinstance(prox, odl.Operator)
 
@@ -255,19 +347,18 @@ def test_proximal_factory_convconj_l1_simple_space_with_data():
     prox(x, x_opt)
 
     # Explicit computation: (x - sigma * g) / max(lam, |x - sigma * g|)
-    denom = np.maximum(lam * np.ones(x_arr.shape),
-                       np.sqrt((x_arr - sigma * g_arr) ** 2))
+    denom = np.maximum(lam, np.abs(x_arr - sigma * g_arr))
     x0_verify = lam * (x_arr - sigma * g_arr) / denom
 
     assert all_almost_equal(x_opt, x0_verify, PLACES)
 
 
-def test_proximal_factory_convconj_l1_product_space():
-    """Proximal factory for the convex conjugate of the L1-semi-norm using
+def test_proximal_convconj_l1_product_space():
+    """Proximal factory for the convex conjugate of the L1-norm using
     product spaces."""
 
     # Product space for matrix of operators
-    op_domain = odl.ProductSpace(odl.uniform_discr(0, 10, 10), 2)
+    op_domain = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
 
     # Element in the product space where the proximal operator is evaluated
     x0_arr = np.arange(-5, 5)
@@ -281,37 +372,32 @@ def test_proximal_factory_convconj_l1_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_l1(op_domain, lam=lam, g=g)
+    prox_factory = proximal_cconj_l1(op_domain, lam=lam, g=g, isotropic=True)
 
     # Initialize the proximal operator
-    sigma = 0.5
-    prox = make_prox(sigma)
+    sigma = 0.25
+    prox = prox_factory(sigma)
 
     assert isinstance(prox, odl.Operator)
 
-    # Allocate output vector
-    x_opt = op_domain.element()
-
     # Apply the proximal operator returning its optimal point
-    prox(x, x_opt)
+    x_opt = prox(x)
 
     # Explicit computation: (x - sigma * g) / max(lam, |x - sigma * g|)
-    denom = np.maximum(
-        lam * np.ones(x0_arr.shape),
-        np.sqrt((x0_arr - sigma * g0_arr) ** 2 +
-                (x1_arr - sigma * g1_arr) ** 2))
-    x0_verify = lam * (x0_arr - sigma * g0_arr) / denom
-    x1_verify = lam * (x1_arr - sigma * g1_arr) / denom
+    denom = np.maximum(lam,
+                       np.sqrt((x0_arr - sigma * g0_arr) ** 2 +
+                               (x1_arr - sigma * g1_arr) ** 2))
+    x_verify = lam * (x - sigma * g) / denom
 
     # Compare components
-    assert all_almost_equal([x0_verify, x1_verify], x_opt)
+    assert all_almost_equal(x_verify, x_opt)
 
 
-def test_proximal_factory_convconj_kl_simple_space():
+def test_proximal_convconj_kl_simple_space():
     """Proximal factory for the convex conjugate of KL divergence."""
 
     # Image space
-    space = odl.uniform_discr(0, 10, 10)
+    space = odl.uniform_discr(0, 1, 10)
 
     # Element in image space where the proximal operator is evaluated
     x = space.element(np.arange(-5, 5))
@@ -321,11 +407,11 @@ def test_proximal_factory_convconj_kl_simple_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_kl(space, lam=lam, g=g)
+    prox_factory = proximal_cconj_kl(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
-    sigma = 0.5
-    prox = make_prox(sigma)
+    sigma = 0.25
+    prox = prox_factory(sigma)
 
     assert isinstance(prox, odl.Operator)
 
@@ -341,12 +427,12 @@ def test_proximal_factory_convconj_kl_simple_space():
     assert all_almost_equal(x_opt, x_verify, PLACES)
 
 
-def test_proximal_factory_convconj_kl_product_space():
+def test_proximal_convconj_kl_product_space():
     """Proximal factory for the convex conjugate of the KL divergence using
     product spaces."""
 
     # Product space for matrix of operators
-    op_domain = odl.ProductSpace(odl.uniform_discr(0, 10, 10), 2)
+    op_domain = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
 
     # Element in the product space where the proximal operator is evaluated
     x0_arr = np.arange(-5, 5)
@@ -360,11 +446,11 @@ def test_proximal_factory_convconj_kl_product_space():
 
     # Factory function returning the proximal operator
     lam = 2
-    make_prox = proximal_convexconjugate_kl(op_domain, lam=lam, g=g)
+    prox_factory = proximal_cconj_kl(op_domain, lam=lam, g=g)
 
     # Initialize the proximal operator
-    sigma = 0.5
-    prox = make_prox(sigma)
+    sigma = 0.25
+    prox = prox_factory(sigma)
 
     assert isinstance(prox, odl.Operator)
 

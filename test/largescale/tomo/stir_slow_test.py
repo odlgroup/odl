@@ -31,6 +31,7 @@ from odl.tomo.backends.stir_bindings import stir_projector_from_file
 pytestmark = odl.util.skip_if_no_largescale
 
 
+@odl.util.skip_if_no_stir
 def test_from_file():
     # Set path to input files
     base = pth.join(pth.dirname(pth.abspath(__file__)), 'data', 'stir')
