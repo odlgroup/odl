@@ -30,11 +30,9 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-import scipy as sp
-
 from odl.operator.operator import Operator
 from odl.operator.default_ops import IdentityOperator
-from odl.operator.pspace_ops import ProductSpaceOperator
+from odl.operator.pspace_ops import DiagonalOperator
 from odl.space.pspace import ProductSpace
 
 
@@ -81,13 +79,8 @@ def combine_proximals(*factory_list):
         -------
         diag_op : `Operator`
         """
-        operators = [factory(step_size) for factory in factory_list]
-
-        indices = [range(len(operators)), range(len(operators))]
-        shape = (len(operators), len(operators))
-        op_matrix = sp.sparse.coo_matrix((operators, indices), shape)
-
-        return ProductSpaceOperator(op_matrix)
+        return DiagonalOperator(
+            *[factory(step_size) for factory in factory_list])
 
     return make_diag
 

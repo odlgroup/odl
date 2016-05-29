@@ -168,7 +168,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     # Partial object
     partial = kwargs.pop('partial', None)
-    if not (partial is None or isinstance(partial, Partial)):
+    if partial is not None and not callable(partial):
         raise TypeError('partial {} is not an instance of {}'
                         ''.format(op, Partial))
 
@@ -201,10 +201,12 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_old.assign(x)
 
         # Gradient ascent in the dual variable y
-        proximal_dual(sigma)(y + sigma * op(x_relax), out=y)
+        dual_tmp = y + sigma * op(x_relax)
+        proximal_dual(sigma)(dual_tmp, out=y)
 
         # Gradient descent in the primal variable x
-        proximal_primal(tau)(x + (- tau) * op_adjoint(y), out=x)
+        primal_tmp = x + (- tau) * op_adjoint(y)
+        proximal_primal(tau)(primal_tmp, out=x)
 
         # Acceleration
         if gamma is not None:

@@ -21,8 +21,11 @@ Solves the optimization problem
 
     min_x  1/2 ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
 
-For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
-references therein.
+Where ``A`` is a parallel beam forward projector, ``grad`` the spatial
+gradient and ``g`` is given noisy data.
+
+For further details and a description of the solution method used, see
+:ref:`chambolle_pock` in the ODL documentation.
 """
 
 import numpy as np
@@ -87,7 +90,7 @@ prox_convconj_l2 = odl.solvers.proximal_cconj_l2_squared(ray_trafo.range,
                                                          g=data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.01,
+prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.005,
                                                  isotropic=True)
 
 # Combine proximal operators, order must correspond to the operator K
@@ -99,15 +102,15 @@ proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.operator.oputils.power_method_opnorm(op, 5)
+op_norm = 1.1 * odl.power_method_opnorm(op, 5)
 
 niter = 400  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 
 # Optionally pass partial to the solver to display intermediate results
-partial = (odl.solvers.util.PrintIterationPartial() &
-           odl.solvers.util.ShowPartial())
+partial = (odl.solvers.PrintIterationPartial() &
+           odl.solvers.ShowPartial())
 
 # Choose a starting point
 x = op.domain.zero()
