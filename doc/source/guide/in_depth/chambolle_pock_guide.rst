@@ -64,9 +64,9 @@ We now need to define the forward operator :math:`K`. We begin by its constituen
 .. code-block:: python
 
    I = odl.IdentityOperator(space)
-   gradient = odl.Gradient(space, method='forward')
+   gradient = odl.Gradient(space)
 
-where we chose the 'forward' method for the gradient for numerical stability reasons. To create :math:`K`, we note that :math:`K` is a special case of a `BroadcastOperator`, an operator that broadcasts its argument to several sub-operators. Hence we may create :math:`K` by
+To create :math:`K`, we note that :math:`K` is a special case of a `BroadcastOperator`, an operator that broadcasts its argument to several sub-operators. Hence we may create :math:`K` by
 
 .. code-block:: python
 
@@ -78,15 +78,15 @@ In this case, we first create the l2 and l1 discreptancy terms
 
 .. code-block:: python
    
-   prox_convconj_l2 = odl.solvers.proximal_convexconjugate_l2(space, g=noisy)
-   prox_convconj_l1 = odl.solvers.proximal_convexconjugate_l1(gradient.range, lam=1/30.0)
+   prox_cconj_l2 = odl.solvers.proximal_cconj_l2_squared(space, g=noisy)
+   prox_cconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=1/15.0, 
+                                                 isotropic=True)
 
 Note that :math:`\lambda` is actually part of the proximal operator. Finally, we need to combine these, similarly to how we combined operators to form :math:`K`
 
 .. code-block:: python
 
-   proximal_F = odl.solvers.combine_proximals([prox_convconj_l2,
-                                               prox_convconj_l1])
+   proximal_F = odl.solvers.combine_proximals(prox_cconj_l2, prox_cconj_l1)
 
 We also select the proximal operator corresponding the positivity constraint
 
