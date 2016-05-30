@@ -25,7 +25,7 @@ space with a certain structure which is exploited to minimize storage.
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range, str, zip
+from builtins import super, range, str, zip
 
 import numpy as np
 

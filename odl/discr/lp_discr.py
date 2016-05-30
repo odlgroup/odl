@@ -767,17 +767,17 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             indices += [n // 2 for n in self.space.shape[2:]]
 
         if isinstance(indices, (Integral, slice)):
-            indices = [indices]
+            indices = (indices,)
         elif indices is None or indices == Ellipsis:
-            indices = [np.s_[:]] * self.ndim
+            indices = (np.s_[:],) * self.ndim
         else:
-            indices = list(indices)
+            indices = tuple(indices)
 
         if Ellipsis in indices:
             # Replace Ellipsis with the correct number of [:] expressions
             pos = indices.index(Ellipsis)
             indices = (indices[:pos] +
-                       [np.s_[:]] * (self.ndim - len(indices) + 1) +
+                       (np.s_[:], ) * (self.ndim - len(indices) + 1) +
                        indices[pos + 1:])
 
         if len(indices) < self.ndim:
