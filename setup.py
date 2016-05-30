@@ -19,7 +19,7 @@
 
 Installation command::
 
-    pip install [--user] [--E] .
+    pip install [--user] [-e] .
 """
 
 from __future__ import print_function, absolute_import
