@@ -77,7 +77,7 @@ voxel_size_xy = 1.65 # in mm
 axial_crystals_per_block = 8
 trans_crystals_per_block = 7
 axials_blocks_per_bucket = 1
-trans_blocks_per_bucket_v = 16
+trans_blocks_per_bucket = 16
 axial_crystals_per_singles_unit = 8
 trans_crystals_per_singles_unit = 0
 num_detector_layers = 1
@@ -95,7 +95,7 @@ stir_scanner = odl.tomo.stir_get_STIR_geometry(num_rings, num_dets_per_ring,\
                                                average_depth_of_inter,\
                                                voxel_size_xy,\
                                                axial_crystals_per_block, trans_crystals_per_block,\
-                                               axials_blocks_per_bucket, trans_blocks_per_bucket_v,\
+                                               axials_blocks_per_bucket, trans_blocks_per_bucket,\
                                                axial_crystals_per_singles_unit, trans_crystals_per_singles_unit,\
                                                num_detector_layers, intrinsic_tilt)
 
