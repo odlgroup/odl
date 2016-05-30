@@ -963,7 +963,7 @@ class DiagonalOperator(ProductSpaceOperator):
         point = self.domain.element(point)
 
         derivs = [op.derivative(p) for op, p in zip(self.operators, point)]
-        return DiagonalOperator(derivs, self.domain, self.range)
+        return DiagonalOperator(*derivs, dom=self.domain, ran=self.range)
 
     @property
     def adjoint(self):
@@ -991,7 +991,7 @@ class DiagonalOperator(ProductSpaceOperator):
         ProductSpaceOperator.adjoint
         """
         adjoints = [op.adjoint for op in self.operators]
-        return DiagonalOperator(adjoints, self.range, self.domain)
+        return DiagonalOperator(*adjoints, dom=self.range, ran=self.domain)
 
     @property
     def inverse(self):
@@ -1019,7 +1019,7 @@ class DiagonalOperator(ProductSpaceOperator):
         ProductSpaceOperator.inverse
         """
         inverses = [op.inverse for op in self.operators]
-        return DiagonalOperator(inverses, self.range, self.domain)
+        return DiagonalOperator(*inverses, dom=self.range, ran=self.domain)
 
 
 if __name__ == '__main__':
