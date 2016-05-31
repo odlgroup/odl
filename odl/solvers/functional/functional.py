@@ -21,6 +21,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
+import numpy as np
 from numbers import Number
 
 from odl.operator.operator import (
@@ -36,16 +37,36 @@ class Functional(Operator):
 
     """Quick hack for a functional class."""
 
-    def __init__(self, domain, linear=False):
+    def __init__(self, domain, linear=False, smooth=False, concave=False, convex=False, lipschitz=np.inf):
         """Initialize a new instance.
 
         Parameters
         ----------
+        domain : `Set`
+            The domain of this operator, i.e., the set of elements to
+            which this operator can be applied
+        linear : `bool`
+            If `True`, the operator is considered as linear. In this
+            case, ``domain`` and ``range`` have to be instances of
+            `LinearSpace`, or `Field`.
         domain : `LinearSpace`
             Set of elements on which the functional can be evaluated
-        linear : `bool`, optional
-            If `True`, assume that the functional is linear
+        smooth : `bool`, optional
+            If `True`, assume that the functional is continuously differentiable
+        convex : `bool`, optional
+            If `True`, assume that the functional is convex
+        concave : `bool`, optional
+            If `True`, assume that the functional is concave
         """
+
+        self._is_smooth = bool(smooth)
+        
+        self._is_convex = bool(convex)
+        
+        self._is_concave = bool(concave)
+
+        self._lipschitz = float(lipschitz)
+
         super().__init__(domain=domain, range=domain.field, linear=linear)
 
     def gradient(self, x, out=None):
@@ -65,6 +86,37 @@ class Functional(Operator):
             the returned object is a reference to it.
         """
         raise NotImplementedError
+
+    def proximal(self, sigma=1.0):
+        """Return the proximal operator of the functional.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator  
+
+        Returns
+        -------
+        out : Operator 
+            Domain and range equal to domain of functional 
+        """
+        raise NotImplementedError
+
+
+    def conjugate_functional(self):
+        """Return the conjugate functional of the functional.
+
+        Parameters
+        ----------
+        none
+        
+        Returns
+        -------
+        out : Functional 
+            Domain equal to domain of functional 
+        """
+        raise NotImplementedError
+
 
     def __mul__(self, other):
         """Return ``self * other``.
@@ -135,6 +187,25 @@ class Functional(Operator):
         else:
             return NotImplemented
 
+    @property
+    def is_smooth(self):
+        """`True` if this operator is continuously differentiable."""
+        return self._is_smooth        
+
+    @property
+    def is_concave(self):
+        """`True` if this operator is concave."""
+        return self._is_concave    
+
+    @property
+    def is_convex(self):
+        """`True` if this operator is convex."""
+        return self._is_convex   
+
+    @property
+    def lipschitz(self):
+        """A Lipschitz constant for the functional"""
+        return self._lipschitz   
 
 class FunctionalComp(Functional, OperatorComp):
 
