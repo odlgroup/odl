@@ -89,6 +89,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             second.
         pitch_offset : float, optional
             Offset along the ``axis`` at ``angle=0``
+        source_offsets : ...
+            Offsets ...
         """
         AxisOrientedGeometry.__init__(self, axis)
 
@@ -125,6 +127,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             raise ValueError('source and detector circle radii cannot both be '
                              '0')
 
+        self._source_offsets = kwargs.pop('source_offsets', None)
+
     @property
     def src_radius(self):
         """Source circle radius of this geometry."""
@@ -155,6 +159,11 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     def pitch_offset(self):
         """Vertical offset at ``angle=0``."""
         return self._pitch_offset
+
+    @property
+    def source_offsets(self):
+        """THE SOURCE OFFSETS."""
+        return self._source_offsets
 
     @property
     def angles(self):
@@ -245,7 +254,12 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         pitch_component = self.axis * (self.pitch_offset +
                                        self.pitch * angle / (np.pi * 2))
 
-        return circle_component + pitch_component
+        if self.source_offsets is None:
+            return circle_component + pitch_component
+        else:
+            closest_angle_id = np.abs(self.angles - angle).argmin()
+            offset_component = self.source_offsets[closest_angle_id]
+            return circle_component + pitch_component + offset_component
 
     def __repr__(self):
         """Return ``repr(self)``."""

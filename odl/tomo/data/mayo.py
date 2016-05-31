@@ -79,18 +79,20 @@ def mayo_projector_from_folder(reco_space, folder, nr_start=1, nr_end=-1):
     data_array = np.empty((len(projections),) + projections[0].shape,
                           dtype='float32')
 
+    # Move data to a big array, change order
     for i, proj in enumerate(projections):
         data_array[i] = proj[::-1, ::-1]
 
+    # Get the angles
+    # TODO: handle not uniformly spaced
     angles = [d.DetectorFocalCenterAngularPosition for d in datasets]
-    angles = -np.unwrap(angles)
-    angles -= np.pi / 2
+    angles = -np.unwrap(angles) - np.pi / 2  # different defintion of angles
 
     # Make a parallel beam geometry with flat detector
-    # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
     angle_partition = uniform_partition(angles.min(), angles.max(),
                                         angles.size)
 
+    # Set minimum and maximum point
     shape = np.array([datasets[0].NumberofDetectorColumns,
                       datasets[0].NumberofDetectorRows])
     pixel_size = np.array([datasets[0].DetectorElementTransverseSpacing,
@@ -100,23 +102,38 @@ def mayo_projector_from_folder(reco_space, folder, nr_start=1, nr_end=-1):
     maxp = minp + shape * pixel_size
     minp, maxp = -maxp, -minp  # different defintion of corner
 
+    # Create partition for detector
     detector_partition = uniform_partition(minp, maxp, shape)
 
+    # Select geometry parameters
     src_radius = datasets[0].DetectorFocalCenterRadialDistance
     det_radius = (datasets[0].ConstantRadialDistance -
                   datasets[0].DetectorFocalCenterRadialDistance)
 
+    # Convert pitch and offset to odl defintions
     pitch = (pixel_size[1] * shape[1] * datasets[0].SpiralPitchFactor *
              src_radius / (src_radius + det_radius))
     pitch_offset = (datasets[0].DetectorFocalCenterAxialPosition -
                     angles[0] / np.pi * pitch)
+
+    # Get flying focal spot data
+    offset_axial = np.array([d.SourceAxialPositionShift for d in datasets])
+    offset_angular = -np.array([d.SourceAngularPositionShift for d in datasets])
+    offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
+
+    offset_x = np.cos(angles) * src_radius - np.cos(angles + offset_angular) * (src_radius + offset_radial)
+    offset_y =  np.sin(angles) * src_radius - np.sin(angles + offset_angular) * (src_radius + offset_radial)
+    offset_z = offset_axial
+
+    source_offsets = np.array([offset_x, offset_y, offset_z]).T
 
     geometry = HelicalConeFlatGeometry(angle_partition,
                                        detector_partition,
                                        src_radius=src_radius,
                                        det_radius=det_radius,
                                        pitch=pitch,
-                                       pitch_offset=pitch_offset)
+                                       pitch_offset=pitch_offset,
+                                       source_offsets=source_offsets)
 
     # ray transform aka forward projection. We use ASTRA CUDA backend.
     ray_trafo = RayTransform(reco_space, geometry, impl='astra_cuda',
@@ -153,40 +170,43 @@ if __name__ == '__main__':
     ray_trafo, proj_data = mayo_projector_from_folder(reco_space, folder,
                                                       16000, 20000)
 
-    # Test FBP reconstruction
-    print('Performing FBP')
+    if False:
+        # Test FBP reconstruction
+        print('Performing FBP')
 
-    # Fourier transform in detector direction
-    fourier = odl.trafos.FourierTransform(ray_trafo.range, axes=[1])
+        # Fourier transform in detector direction
+        fourier = odl.trafos.FourierTransform(ray_trafo.range, axes=[1])
 
-    def fft_filter(x):
-        return np.maximum(np.abs(x) * np.cos(x / 2.0), 0.0)
+        def fft_filter(x):
+            return np.maximum(np.abs(x) * np.cos(x / 2.0), 0.0)
 
-    # Create ramp in the detector direction
-    ramp_function = fourier.range.element(
-        lambda x: 0*x[0] + fft_filter(x[1]) + 0*x[2])
+        # Create ramp in the detector direction
+        ramp_function = fourier.range.element(
+            lambda x: 0*x[0] + fft_filter(x[1]) + 0*x[2])
 
-    # Create ramp filter via the convolution formula with fourier transforms
-    ramp_filter = fourier.inverse * ramp_function * fourier
+        # Create ramp filter via the
+        # convolution formula with fourier transforms
+        ramp_filter = fourier.inverse * ramp_function * fourier
 
-    # Create filtered backprojection by composing the backprojection
-    # (adjoint) with the ramp filter. Also apply a scaling.
-    fbp = ray_trafo.adjoint * ramp_filter / (4 * np.pi)
+        # Create filtered backprojection by composing the backprojection
+        # (adjoint) with the ramp filter. Also apply a scaling.
+        fbp = ray_trafo.adjoint * ramp_filter / (2 * np.pi) ** 2
+        # calculate fbp
+        fbp_result = fbp(proj_data)
+        fbp_result.show('FBP', coords=[None, None, 227], clim=[0.013, 0.026])
+        xl, yl = plt.xlim(), plt.ylim()
+        plt.scatter([-104.71], [33.68], s=300,
+                    facecolors='none', edgecolors='r')
+        plt.xlim(xl)
+        plt.ylim(yl)
+    else:
+        # Conjugate gradient
+        print('Performing CG')
+        partial = odl.solvers.ShowPartial('Conjugate gradient',
+                                          coords=[None, None, 227],
+                                          clim=[0.013, 0.025])
 
-    # calculate fbp
-    fbp_result = fbp(proj_data)
-    fig = fbp_result.show('FBP', coords=[None, None, 227], clim=[0.03, 0.06])
-    xl, yl = plt.xlim(), plt.ylim()
-    plt.scatter([-104.71], [33.68], s=300, facecolors='none', edgecolors='r')
-    plt.xlim(xl)
-    plt.ylim(yl)
-
-    # Conjugate gradient
-    print('Performing CG')
-    partial = odl.solvers.ShowPartial('Conjugate gradient',
-                                      coords=[None, None, 227],
-                                      clim=[0.016, 0.036])
-
-    x = ray_trafo.domain.zero()
-    odl.solvers.conjugate_gradient_normal(ray_trafo, x,
-                                          proj_data, niter=20, partial=partial)
+        x = ray_trafo.domain.zero()
+        odl.solvers.conjugate_gradient_normal(ray_trafo, x,
+                                              proj_data, niter=20,
+                                              partial=partial)
