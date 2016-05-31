@@ -338,6 +338,7 @@ def test_dwt():
     assert all_almost_equal(reconstruction2, disc_phantom)
 
 
+@skip_if_no_pywavelets
 def test_axes_option():
     # 2D
     n = 4
