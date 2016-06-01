@@ -77,20 +77,20 @@ conv = CudaConvolution(kernel)
 iterations = 100
 omega = 1.0 / conv.opnorm() ** 2
 
-# Display partial
-partial = solvers.util.ForEachPartial(
+# Display callback
+callback = solvers.CallbackApply(
     lambda result: plt.plot(conv(result).asarray()))
 
 # Test CGN
 plt.figure()
 plt.plot(data)
 solvers.conjugate_gradient_normal(conv, discr_space.zero(), data, iterations,
-                                  partial)
+                                  callback)
 
 # Landweber
 plt.figure()
 plt.plot(data)
-solvers.landweber(conv, discr_space.zero(), data, iterations, omega, partial)
+solvers.landweber(conv, discr_space.zero(), data, iterations, omega, callback)
 
 
 plt.show()

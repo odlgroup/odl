@@ -30,7 +30,6 @@ standard_library.install_aliases()
 import numpy as np
 
 from odl.operator.operator import Operator
-from odl.solvers.util import Partial
 
 
 __all__ = ('chambolle_pock_solver',)
@@ -97,8 +96,8 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         variable relaxation parameter and step sizes with ``tau`` and
         ``sigma`` as initial values. Requires G or F^* to be uniformly
         convex. Default: `None`
-    partial : `Partial`, optional
-        If not `None` the `Partial` instance(s) are executed in each
+    callback : `callable`, optional
+        If not `None` the ``callback`` instance(s) are executed in each
         iteration, e.g. plotting each iterate. Default: `None`
     x_relax : element in the domain of ``op``, optional
         Required to resume iteration. If `None` it is a copy of the primal
@@ -166,11 +165,11 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         else:
             gamma = float(gamma)
 
-    # Partial object
-    partial = kwargs.pop('partial', None)
-    if partial is not None and not callable(partial):
-        raise TypeError('partial {} is not an instance of {}'
-                        ''.format(op, Partial))
+    # Callback object
+    callback = kwargs.pop('callback', None)
+    if callback is not None and not callable(callback):
+        raise TypeError('`callback` {} is not ``callable``'
+                        ''.format(callback))
 
     # Initialize the relaxation variable
     x_relax = kwargs.pop('x_relax', None)
@@ -217,8 +216,8 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         # Over-relaxation in the primal variable x
         x_relax.lincomb(1 + theta, x, -theta, x_old)
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 
 if __name__ == '__main__':

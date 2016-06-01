@@ -334,7 +334,7 @@ def show_discrete_data(values, grid, title=None, method='',
 
     if updatefig or plt.isinteractive():
         # If we are running in interactive mode, we can always show the fig
-        # This causes an artifact, where users of ShowPartial without
+        # This causes an artifact, where users of `CallbackShow` without
         # interactive mode only shows the figure after the second iteration.
         plt.show(block=False)
         plt.draw()

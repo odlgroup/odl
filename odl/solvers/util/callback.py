@@ -15,30 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Partial objects for per-iterate actions in iterative methods."""
+"""Callback objects for per-iterate actions in iterative methods."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from abc import ABCMeta, abstractmethod
 import time
 
-from odl.util.utility import with_metaclass
+
+__all__ = ('SolverCallback', 'CallbackStore', 'CallbackApply',
+           'CallbackPrintTiming', 'CallbackPrintIteration',
+           'CallbackPrintNorm', 'CallbackShow')
 
 
-__all__ = ('Partial', 'StorePartial', 'ForEachPartial', 'PrintTimingPartial',
-           'PrintIterationPartial', 'PrintNormPartial', 'ShowPartial')
-
-
-class Partial(with_metaclass(ABCMeta, object)):
+class SolverCallback(object):
 
     """Abstract base class for sending partial results of iterations."""
 
-    @abstractmethod
     def __call__(self, result):
-        """Apply the partial object to result.
+        """Apply the callback object to result.
 
         Parameters
         ----------
@@ -53,62 +50,62 @@ class Partial(with_metaclass(ABCMeta, object)):
     def __and__(self, other):
         """Return ``self & other``
 
-        Compose partials, calls both in sequence.
+        Compose callbacks, calls both in sequence.
 
         Parameters
         ----------
-        other : `Partial`
+        other : `Partial` or `callable`
             The other partial to compose with
 
         Returns
         -------
-        result : `Partial`
+        result : `SolverCallback`
             A partial whose `__call__` method calls both constituents
             partials.
 
         Examples
         --------
-        >>> store = StorePartial()
-        >>> iter = PrintIterationPartial()
+        >>> store = CallbackStore()
+        >>> iter = CallbackPrintIteration()
         >>> both = store & iter
         >>> both
-        StorePartial() & PrintIterationPartial()
+        CallbackStore() & CallbackPrintIteration()
         """
-        return AndPartial(self, other)
+        return _CallbackAnd(self, other)
 
     def __repr__(self):
         """Return ``repr(self)``"""
         return '{}()'.format(self.__class__.__name__)
 
 
-class AndPartial(Partial):
+class _CallbackAnd(SolverCallback):
 
-    """Partial used for combining several partials"""
+    """Callback used for combining several callbacks"""
 
     def __init__(self, *callbacks):
         """Initialize an instance.
 
         Parameters
         ----------
-        *callbacks : `callable` or `Partial`'s
-            Partials to be called in sequence as listed.
+        *callbacks : `callable` or `SolverCallback`'s
+            Callbacks to be called in sequence as listed.
         """
-        partials = [c if isinstance(c, Partial) else ForEachPartial(c)
-                    for c in callbacks]
+        callbacks = [c if isinstance(c, SolverCallback) else CallbackApply(c)
+                     for c in callbacks]
 
-        self.partials = partials
+        self.callbacks = callbacks
 
     def __call__(self, result):
         """Apply all partials to result."""
-        for p in self.partials:
+        for p in self.callbacks:
             p(result)
 
     def __repr__(self):
         """Return ``repr(self)``"""
-        return ' & '.join('{}'.format(p) for p in self.partials)
+        return ' & '.join('{}'.format(p) for p in self.callbacks)
 
 
-class StorePartial(Partial):
+class CallbackStore(SolverCallback):
 
     """Simple object for storing all partial results of the solvers.
 
@@ -132,17 +129,17 @@ class StorePartial(Partial):
         --------
         Store results as is
 
-        >>> partial = StorePartial()
+        >>> callback = CallbackStore()
 
         Provide list to store partial results in.
 
         >>> results = []
-        >>> partial = StorePartial(results=results)
+        >>> callback = CallbackStore(results=results)
 
         Store the norm of the results
 
         >>> norm_function = lambda x: x.norm()
-        >>> partial = StorePartial(function=norm_function)
+        >>> callback = CallbackStore(function=norm_function)
         """
         self._results = [] if results is None else results
         self._function = function
@@ -174,15 +171,15 @@ class StorePartial(Partial):
     def __str__(self):
         """Return ``str(self)``"""
         resultstr = '' if self.results == [] else str(self.results)
-        return 'StorePartial({})'.format(resultstr)
+        return 'CallbackStore({})'.format(resultstr)
 
     def __repr__(self):
         """Return ``repr(self)``"""
         resultrepr = '' if self.results == [] else repr(self.results)
-        return 'StorePartial({})'.format(resultrepr)
+        return 'CallbackStore({})'.format(resultrepr)
 
 
-class ForEachPartial(Partial):
+class CallbackApply(SolverCallback):
 
     """Simple object for applying a function to each iterate."""
 
@@ -203,14 +200,14 @@ class ForEachPartial(Partial):
 
     def __str__(self):
         """Return ``str(self)``"""
-        return 'ForEachPartial({})'.format(self.function)
+        return 'CallbackApply({})'.format(self.function)
 
     def __repr__(self):
         """Return ``repr(self)``"""
-        return 'ForEachPartial({!r})'.format(self.function)
+        return 'CallbackApply({!r})'.format(self.function)
 
 
-class PrintIterationPartial(Partial):
+class CallbackPrintIteration(SolverCallback):
 
     """Print the iteration count."""
 
@@ -234,10 +231,10 @@ class PrintIterationPartial(Partial):
 
     def __repr__(self):
         textstr = '' if self.text == self._default_text else self.text
-        return 'PrintIterationPartial({})'.format(textstr)
+        return 'CallbackPrintIteration({})'.format(textstr)
 
 
-class PrintTimingPartial(Partial):
+class CallbackPrintTiming(SolverCallback):
 
     """Print the time elapsed since the previous iteration."""
 
@@ -252,7 +249,7 @@ class PrintTimingPartial(Partial):
         self.time = t
 
 
-class PrintNormPartial(Partial):
+class CallbackPrintNorm(SolverCallback):
 
     """Print the current norm."""
 
@@ -266,7 +263,7 @@ class PrintNormPartial(Partial):
         self.iter += 1
 
 
-class ShowPartial(Partial):
+class CallbackShow(SolverCallback):
 
     """Show the partial result."""
 

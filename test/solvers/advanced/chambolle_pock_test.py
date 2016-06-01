@@ -67,7 +67,7 @@ def test_chambolle_pock_solver_simple_space():
     # Run the algorithm
     chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
                           proximal_primal=prox, proximal_dual=prox,
-                          theta=THETA, niter=1, partial=None,
+                          theta=THETA, niter=1, callback=None,
                           x_relax=discr_vec_relax, y=discr_dual)
 
     # Explicit computation
@@ -123,11 +123,11 @@ def test_chambolle_pock_solver_simple_space():
     assert discr_vec != discr_vec_relax_no_gamma
     assert all_almost_equal(discr_vec_relax_no_gamma, discr_vec_relax_g0)
 
-    # Test partial execution
+    # Test callback execution
     chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
                           proximal_primal=prox, proximal_dual=prox,
                           theta=THETA, niter=1,
-                          partial=odl.solvers.util.PrintIterationPartial())
+                          callback=odl.solvers.CallbackPrintIteration())
 
 
 def test_chambolle_pock_solver_produce_space():
