@@ -178,6 +178,23 @@ class RectPartition(object):
         """Total number of cells, equal to ``self.grid.size``."""
         return self.grid.size
 
+    def __len__(self):
+        """Return ``len(self)``.
+
+        Total number of cells along the first dimension.
+
+        Examples
+        --------
+        >>> partition = uniform_partition([0, 0, 0], [1, 1, 1], [2, 3, 4])
+        >>> len(partition)
+        2
+
+        See Also
+        --------
+        size : The total number of cells.
+        """
+        return len(self.grid)
+
     def points(self):
         """Return the sampling grid points."""
         return self.grid.points()

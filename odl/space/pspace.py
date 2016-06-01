@@ -305,6 +305,10 @@ class ProductSpace(LinearSpace):
         """The number of factors."""
         return self._size
 
+    def __len__(self):
+        """Return ``len(self)``."""
+        return self.size
+
     @property
     def shape(self):
         """Number of spaces per axis."""
@@ -529,10 +533,6 @@ class ProductSpace(LinearSpace):
                     all(x == y for x, y in zip(self.spaces,
                                                other.spaces)))
 
-    def __len__(self):
-        """Return ``len(self)``."""
-        return self._size
-
     def __getitem__(self, indices):
         """Return ``self[indices]``."""
 
@@ -590,6 +590,10 @@ class ProductSpaceVector(LinearSpaceVector):
         """The number of factors of this vector's space."""
         return self.space.size
 
+    def __len__(self):
+        """Return ``len(self)``."""
+        return len(self.space)
+
     def __eq__(self, other):
         """Return ``self == other``.
 
@@ -604,10 +608,6 @@ class ProductSpaceVector(LinearSpaceVector):
             return True
         else:
             return all(sp == op for sp, op in zip(self.parts, other.parts))
-
-    def __len__(self):
-        """Return ``len(self)``."""
-        return len(self.space)
 
     def __getitem__(self, indices):
         """Return ``self[indices]``."""

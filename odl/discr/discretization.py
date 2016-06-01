@@ -242,16 +242,6 @@ class DiscretizedSetVector(NtuplesBaseVector):
         """Structure for data storage."""
         return self._ntuple
 
-    @property
-    def dtype(self):
-        """type of data storage."""
-        return self.ntuple.dtype
-
-    @property
-    def size(self):
-        """size of data storage."""
-        return self.ntuple.size
-
     def copy(self):
         """Create an identical (deep) copy of this vector."""
         return self.space.element(self.ntuple.copy())
