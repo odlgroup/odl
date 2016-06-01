@@ -178,6 +178,10 @@ class RectPartition(object):
         """Total number of cells, equal to ``self.grid.size``."""
         return self.grid.size
 
+    def __len__(self):
+        """Return ``len(self)``."""
+        return self.size
+
     def points(self):
         """Return the sampling grid points."""
         return self.grid.points()
