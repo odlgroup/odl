@@ -52,12 +52,12 @@ class Set(with_metaclass(ABCMeta, object)):
     the operator overload for `in`.
 
     **Parameters:**
-        other : `object`
+        other :
             The object to be tested for membership
 
     **Returns:**
-        contains : `bool`
-            `True` if ``other`` is a member of this set, `False`
+        contains : bool
+            True if ``other`` is a member of this set, False
             otherwise.
 
 
@@ -68,13 +68,13 @@ class Set(with_metaclass(ABCMeta, object)):
     provides the operator overload for ``==``.
 
     **Parameters:**
-        other : `object`
+        other :
             The object to be tested for equality.
 
     **Returns:**
-        equals : `bool`
-            `True` if both sets are of the same type and contain the
-            same elements, `False` otherwise.
+        equals : bool
+            True if both sets are of the same type and contain the
+            same elements, False otherwise.
 
     A default implementation of the operator overload for ``!=`` via
     ``__ne__(self, other)`` is provided as ``not self.__eq__(other)``.
@@ -85,12 +85,12 @@ class Set(with_metaclass(ABCMeta, object)):
     input parameter.
 
     **Parameters:**
-        inp : `object`, optional
+        inp : optional
             The object from which to create the new element
 
     **Returns:**
         element : member of this set
-            If ``inp`` is `None`, return an arbitrary element.
+            If ``inp`` is None, return an arbitrary element.
             Otherwise, return the element created from ``inp``.
     """
 
@@ -144,16 +144,16 @@ class EmptySet(Set):
 
     """Set with no member elements (except `None`).
 
-    `None` is considered as "no element", i.e.
-    ``None in EmptySet()`` is `True`
+    None is considered as "no element", i.e.
+    ``None in EmptySet()`` is True
     """
 
     def __contains__(self, other):
-        """Test if ``other`` is `None`."""
+        """Test if ``other`` is None."""
         return other is None
 
     def contains_set(self, other):
-        """Return `True` for the empty set, otherwise `False`."""
+        """Return True for the empty set, False otherwise."""
         return isinstance(other, EmptySet)
 
     def __eq__(self, other):
@@ -161,7 +161,7 @@ class EmptySet(Set):
         return isinstance(other, EmptySet)
 
     def element(self, inp=None):
-        """Return `None`."""
+        """Return None."""
         return None
 
     def __str__(self):
@@ -181,11 +181,11 @@ class UniversalSet(Set):
     """
 
     def __contains__(self, other):
-        """Return `True`."""
+        """Return True."""
         return True
 
     def contains_set(self, other):
-        """Return `True` for any set."""
+        """Return True for any set."""
         return isinstance(other, Set)
 
     def __eq__(self, other):
@@ -214,7 +214,7 @@ class Strings(Set):
 
         Parameters
         ----------
-        length : `int`
+        length : int
             The fixed length of the strings in this set. Must be
             positive.
         """
@@ -232,8 +232,8 @@ class Strings(Set):
     def __contains__(self, other):
         """Return ``other in self``.
 
-        `True` if ``other`` is a string of at max `length`
-        characters, `False` otherwise."""
+        True if ``other`` is a string of at max `length`
+        characters, False otherwise."""
         return isinstance(other, basestring) and len(other) == self.length
 
     def contains_all(self, array):
@@ -304,9 +304,9 @@ class ComplexNumbers(Field):
 
         Returns
         -------
-        contained : `bool`
-            `True` if other is `ComplexNumbers`,
-            `RealNumbers` or `Integers`, `False` else.
+        contained : bool
+            True if  other is `ComplexNumbers`, `RealNumbers` or `Integers`,
+            else False.
 
         Examples
         --------
@@ -370,9 +370,9 @@ class RealNumbers(Field):
 
         Returns
         -------
-        contained : `bool`
-            `True` if other is `RealNumbers` or
-            `Integers` `False` else.
+        contained : bool
+            True if other is `RealNumbers` or
+            `Integers` False else.
 
         Examples
         --------
@@ -442,8 +442,8 @@ class Integers(Set):
 
         Returns
         -------
-        contained : `bool`
-            `True` if other is `Integers`, `False` otherwise.
+        contained : bool
+            True if  other is `Integers`, else False.
 
         Examples
         --------
@@ -504,7 +504,7 @@ class CartesianProduct(Set):
 
     @property
     def sets(self):
-        """Factors (sets) as a `tuple`."""
+        """Factors (sets) as a tuple."""
         return self.__sets
 
     def __contains__(self, other):
@@ -512,10 +512,10 @@ class CartesianProduct(Set):
 
         Returns
         -------
-        contains : `bool`
-            `True` if ``other`` has the same length as this Cartesian
+        contains : bool
+            True if ``other`` has the same length as this Cartesian
             product and each entry is contained in the set with
-            corresponding index, `False` otherwise.
+            corresponding index, False otherwise.
         """
         try:
             iter(other)
@@ -529,10 +529,10 @@ class CartesianProduct(Set):
 
         Returns
         -------
-        equals : `bool`
-            `True` if ``other`` is a `CartesianProduct` instance,
+        equals : bool
+            True if ``other`` is a `CartesianProduct` instance,
             has the same length as this Cartesian product and all sets
-            with the same index are equal, `False` otherwise.
+            with the same index are equal, False otherwise.
         """
         return (isinstance(other, CartesianProduct) and
                 len(other) == len(self) and
@@ -550,7 +550,7 @@ class CartesianProduct(Set):
 
         Returns
         -------
-        element : `tuple`
+        element : tuple
             A tuple of the given input
         """
         if inp is None:

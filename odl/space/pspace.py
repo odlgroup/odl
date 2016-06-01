@@ -55,11 +55,11 @@ class ProductSpace(LinearSpace):
 
         Parameters
         ----------
-        space1,...,spaceN : `LinearSpace` or `int`
+        space1,...,spaceN : `LinearSpace` or int
             The individual spaces ("factors / parts") in the product
             space. Can also be given as ``space, n`` with ``n`` integer,
             in which case the power space ``space ** n`` is created.
-        exponent : non-zero `float` or ``float('inf')``, optional
+        exponent : non-zero float or ``float('inf')``, optional
             Order of the product distance/norm, i.e.
 
             ``dist(x, y) = np.linalg.norm(x-y, ord=exponent)``
@@ -80,7 +80,7 @@ class ProductSpace(LinearSpace):
             Use weighted inner product, norm, and dist. The following
             types are supported as ``weight``:
 
-            `None` : no weighting (default)
+            None : no weighting (default)
 
             `WeightingBase` : weighting class, used directly. Such a
             class instance can be retrieved from the space by the
@@ -94,7 +94,7 @@ class ProductSpace(LinearSpace):
 
         Other Parameters
         ----------------
-        dist : `callable`, optional
+        dist : callable, optional
             The distance function defining a metric on the space.
             It must accept two `ProductSpaceVector` arguments and
             fulfill the following mathematical conditions for any
@@ -111,9 +111,9 @@ class ProductSpace(LinearSpace):
 
             Cannot be combined with: ``weight, norm, inner``
 
-        norm : `callable`, optional
+        norm : callable, optional
             The norm implementation. It must accept an
-            `ProductSpaceVector` argument, return a `float` and satisfy the
+            `ProductSpaceVector` argument, return a float and satisfy the
             following conditions for all vectors ``x, y`` and scalars
             ``s``:
 
@@ -126,7 +126,7 @@ class ProductSpace(LinearSpace):
 
             Cannot be combined with: ``weight, dist, inner``
 
-        inner : `callable`, optional
+        inner : callable, optional
             The inner product implementation. It must accept two
             `ProductSpaceVector` arguments, return a element from
             the field of the space (real or complex number) and
@@ -139,7 +139,7 @@ class ProductSpace(LinearSpace):
 
             Cannot be combined with: ``weight, dist, norm``
 
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -150,7 +150,7 @@ class ProductSpace(LinearSpace):
 
             This option can only be used if ``exponent`` is 2.0.
 
-            Default: `False`.
+            Default: False.
 
             Cannot be combined with: ``dist``
 
@@ -322,12 +322,12 @@ class ProductSpace(LinearSpace):
 
     @property
     def is_power_space(self):
-        """`True` if all member spaces are equal."""
+        """True if all member spaces are equal."""
         return all(spc == self.spaces[0] for spc in self.spaces[1:])
 
     @property
     def exponent(self):
-        """Exponent of the product space norm/dist, `None` for custom."""
+        """Exponent of the product space norm/dist, None for custom."""
         return self.weighting.exponent
 
     @property
@@ -337,7 +337,7 @@ class ProductSpace(LinearSpace):
 
     @property
     def is_weighted(self):
-        """Return `True` if the weighting is not `ProductSpaceNoWeighting`."""
+        """Return True if the weighting is not `ProductSpaceNoWeighting`."""
         return not isinstance(self.weighting, ProductSpaceNoWeighting)
 
     def element(self, inp=None, cast=True):
@@ -346,13 +346,13 @@ class ProductSpace(LinearSpace):
         Parameters
         ----------
         inp : optional
-            If ``inp`` is `None`, a new element is created from
+            If ``inp`` is None, a new element is created from
             scratch by allocation in the spaces. If ``inp`` is
             already an element of this space, it is re-wrapped.
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
-        cast : `bool`
+        cast : bool
             True if casting should be allowed
 
         Returns
@@ -504,9 +504,9 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        equals : `bool`
-            `True` if ``other`` is a `ProductSpace` instance, has
-            the same length and the same factors. `False` otherwise.
+        equals : bool
+            True if ``other`` is a `ProductSpace` instance, has
+            the same length and the same factors. False otherwise.
 
         Examples
         --------
@@ -755,7 +755,7 @@ class ProductSpaceVector(LinearSpaceVector):
 
         Parameters
         ----------
-        title : `str`
+        title : string
             Title of the figures
 
         indices : index expression, optional
@@ -765,13 +765,13 @@ class ProductSpaceVector(LinearSpaceVector):
             Single index (``indices=0``)
             => display that part
 
-            Single `slice` (``indices=slice(None)``), or
-            index `list` (``indices=[0, 1, 3]``)
+            Single slice (``indices=slice(None)``), or
+            index list (``indices=[0, 1, 3]``)
             => display those parts
 
-            Any `tuple`, for example:
+            Any tuple, for example:
             Created by `numpy.s_` ``indices=np.s_[0, :, :]`` or
-            Using a raw `tuple` ``indices=([0, 3], slice(None))``
+            Using a raw tuple ``indices=([0, 3], slice(None))``
             => take the first elements to select the parts and
             pass the rest on to the underlying show methods.
 
@@ -859,12 +859,12 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
 
         Parameters
         ----------
-        vector : 1-dim. `array-like`
+        vector : 1-dim. array-like
             Weighting vector of the inner product
-        exponent : positive `float`, optional
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -888,7 +888,7 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
 
         Returns
         -------
-        inner : `float` or `complex`
+        inner : float or complex
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
@@ -916,7 +916,7 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
 
         Returns
         -------
-        norm : `float`
+        norm : float
             The norm of the provided vector
         """
         if self.exponent == 2.0:
@@ -967,12 +967,12 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
 
         Parameters
         ----------
-        constant : positive `float`
+        constant : positive float
             Weighting constant of the inner product
-        exponent : positive `float`, optional
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -996,7 +996,7 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
 
         Returns
         -------
-        inner : `float` or `complex`
+        inner : float or complex
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
@@ -1024,7 +1024,7 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
 
         Returns
         -------
-        norm : `float`
+        norm : float
             The norm of the vector
         """
         if self.exponent == 2.0:
@@ -1051,7 +1051,7 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
 
         Returns
         -------
-        dist : `float`
+        dist : float
             The distance between the vectors
         """
         if self.dist_using_inner:
@@ -1119,10 +1119,10 @@ class ProductSpaceNoWeighting(NoWeightingBase, ProductSpaceConstWeighting):
 
         Parameters
         ----------
-        exponent : positive `float`
+        exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -1146,7 +1146,7 @@ class ProductSpaceCustomInnerProduct(CustomInnerProductBase):
 
         Parameters
         ----------
-        inner : `callable`
+        inner : callable
             The inner product implementation. It must accept two
             `ProductSpaceVector` arguments, return a element from
             the field of the space (real or complex number) and
@@ -1157,7 +1157,7 @@ class ProductSpaceCustomInnerProduct(CustomInnerProductBase):
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
 
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -1184,9 +1184,9 @@ class ProductSpaceCustomNorm(CustomNormBase):
 
         Parameters
         ----------
-        norm : `callable`
+        norm : callable
             The norm implementation. It must accept a
-            `ProductSpaceVector` argument, return a `float` and satisfy
+            `ProductSpaceVector` argument, return a float and satisfy
             the following conditions for all vectors
             ``x, y`` and scalars ``s``:
 
@@ -1210,7 +1210,7 @@ class ProductSpaceCustomDist(CustomDistBase):
 
         Parameters
         ----------
-        dist : `callable`
+        dist : callable
             The distance function defining a metric on
             `ProductSpace`. It must accept two `ProductSpaceVector`
             arguments and fulfill the following mathematical conditions

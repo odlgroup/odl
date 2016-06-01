@@ -60,12 +60,12 @@ def combine_proximals(*factory_list):
 
     Parameters
     ----------
-    factory_list : list of `callable`
+    factory_list : list of callable
         A list containing proximal operator factories
 
     Returns
     -------
-    diag_op : `callable`
+    diag_op : callable
         Returns a diagonal product space operator factory to be initialized
         with the same step size parameter
     """
@@ -75,7 +75,7 @@ def combine_proximals(*factory_list):
 
         Parameters
         ----------
-        step_size : positive `float`
+        step_size : positive float
             Step size parameter
 
         Returns
@@ -106,13 +106,13 @@ def proximal_cconj(prox_factory):
 
     Parameters
     ----------
-    prox_factory : `callable`
+    prox_factory : callable
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``
 
     Returns
     -------
-    prox : `callable`
+    prox : callable
         Factory for the proximal operator to be initialized
 
     Notes
@@ -125,7 +125,7 @@ def proximal_cconj(prox_factory):
 
         Parameters
         ----------
-        step_size : positive `float`
+        step_size : positive float
             Step size parameter
 
         Returns
@@ -327,7 +327,7 @@ def proximal_composition(proximal, operator, mu):
 
     Parameters
     ----------
-    prox_factory : `callable`
+    prox_factory : callable
         A factory function that, when called with a step size returns the
         proximal operator of ``F``
     operator : `Operator`
@@ -337,7 +337,7 @@ def proximal_composition(proximal, operator, mu):
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
 
     Notes
@@ -351,7 +351,7 @@ def proximal_composition(proximal, operator, mu):
 
         Parameters
         ----------
-        step_size : positive `float`
+        step_size : positive float
             Step size parameter
 
         Returns
@@ -385,7 +385,7 @@ def proximal_zero(space):
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
     """
 
@@ -394,7 +394,7 @@ def proximal_zero(space):
 
         Parameters
         ----------
-        tau : positive `float`
+        tau : positive float
             Unused step size parameter. Introduced to provide a unified
             interface.
 
@@ -435,13 +435,13 @@ def proximal_box_constraint(space, lower=None, upper=None):
     space : `LinearSpace`
         Domain of the functional G(x)
     lower : ``space.field`` element or ``space`` element-like, optional
-        The lower bound. Default: `None`, interpreted as -infinity
+        The lower bound. Default: None, interpreted as -infinity
     upper : ``space.field`` element or ``space`` element-like, optional
-        The upper bound. Default: `None`, interpreted as +infinity
+        The upper bound. Default: None, interpreted as +infinity
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
 
     See Also
@@ -469,7 +469,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
             Parameters
             ----------
-            tau : positive `float`
+            tau : positive float
                 Step size parameter, not used.
             """
             super().__init__(domain=space, range=space, linear=False)
@@ -519,7 +519,7 @@ def proximal_nonnegativity(space):
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
 
     See Also
@@ -556,12 +556,12 @@ def proximal_cconj_l2(space, lam=1, g=None):
         That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
 
     Notes
@@ -601,12 +601,12 @@ def proximal_l2(space, lam=1, g=None):
         That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
 
     Notes
@@ -634,7 +634,7 @@ def proximal_l2(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive `float`
+            sigma : positive float
                 Step size parameter
             """
             self.sigma = float(sigma)
@@ -696,12 +696,12 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
         That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
 
     See Also
@@ -723,7 +723,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive `float`
+            sigma : positive float
                 Step size parameter
             """
             self.sigma = float(sigma)
@@ -766,12 +766,12 @@ def proximal_l2_squared(space, lam=1, g=None):
         That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
 
     See Also
@@ -832,15 +832,15 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
         Domain of the functional F
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
-    isotropic : `bool`
+    isotropic : bool
         True if the norm should first be taken pointwise. Only available if
         ``space`` is a `ProductSpace`.
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
 
     See Also
@@ -869,7 +869,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
             Parameters
             ----------
-            sigma : positive `float`
+            sigma : positive float
                 Step size parameter
             """
             # sigma is not used
@@ -951,15 +951,15 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
         Domain of the functional F
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
-    isotropic : `bool`
+    isotropic : bool
         True if the norm should first be taken pointwise. Only available if
         ``space`` is a `ProductSpace`.
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : callable
         Factory for the proximal operator to be initialized
 
     See Also
@@ -1005,14 +1005,14 @@ def proximal_cconj_kl(space, lam=1, g=None):
     space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
         Space X which is the domain of the functional F
     g : ``space`` element
-        Data term
-    lam : positive `float`
-        Scaling factor
+        Data term.
+    lam : positive float
+        Scaling factor.
 
     Returns
     -------
-    prox_factory : `callable`
-        Factory for the proximal operator to be initialized
+    prox_factory : callable
+        Factory for the proximal operator to be initialized.
 
     Notes
     -----
@@ -1039,7 +1039,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive `float`
+            sigma : positive float
             """
             self.sigma = float(sigma)
             super().__init__(domain=space, range=space, linear=False)

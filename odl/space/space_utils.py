@@ -37,10 +37,10 @@ def vector(array, dtype=None, impl='numpy'):
 
     Parameters
     ----------
-    array : `array-like`
+    array : array-like
         Array from which to create the vector. Scalars become
         one-dimensional vectors.
-    dtype : `object`, optional
+    dtype : optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
     impl : `str`

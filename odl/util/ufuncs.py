@@ -27,7 +27,7 @@ for more information.
 Notes
 -----
 The default implementation of these methods make heavy use of the
-``NtuplesBaseVector.__array__`` to extract a `numpy.ndarray` from the vector,
+``NtuplesBaseVector.__array__`` to extract a numpy.ndarray from the vector,
 and then apply a ufunc to it. Afterwards, ``NtuplesBaseVector.__array_wrap__``
 is used to re-wrap the data into the appropriate space.
 """

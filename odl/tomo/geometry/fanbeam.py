@@ -60,15 +60,15 @@ class FanFlatGeometry(DivergentBeamGeometry):
             Partition of the angle interval
         dpart : 1-dim. `RectPartition`
             Partition of the detector parameter interval
-        src_radius : nonnegative `float`
+        src_radius : nonnegative float
             Radius of the source circle
-        det_radius : nonnegative `float`
+        det_radius : nonnegative float
             Radius of the detector circle
-        src_to_det_init : `array-like`, shape ``(2,)``, optional
+        src_to_det_init : `array-like` (shape ``(2,)``), optional
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
             Default: ``(1, 0)``.
-        det_init_axis : `array-like` (shape ``(2,)``), optional
+        det_init_axis : array-like (shape ``(2,)``), optional
             Initial axis defining the detector orientation.
             By default, a normalized `perpendicular_vector` to
             ``src_to_det_init`` is used.
@@ -130,13 +130,13 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 
         Returns
         -------
-        point : `numpy.ndarray`, shape ``(2,)``
+        point : numpy.ndarray, shape ``(2,)``
             Source position corresponding to the given angle
         """
         if angle not in self.motion_params:
@@ -161,13 +161,13 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (2,)
+        point : numpy.ndarray, shape (2,)
             Detector reference point corresponding to the given angle
 
         See also
@@ -194,13 +194,13 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (2, 2)
+        rot : numpy.ndarray, shape (2, 2)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,

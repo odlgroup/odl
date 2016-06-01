@@ -171,7 +171,7 @@ class RayTransform(Operator):
            Element in the domain of the operator to be forward projected
         out : `DiscreteLpVector`, optional
             Vector in the projection space to which the result is written.
-            If `None` creates an element in the range of the operator.
+            If None creates an element in the range of the operator.
 
         Returns
         -------
@@ -295,7 +295,7 @@ class RayBackProjection(Operator):
            Element in the domain of the operator which is back-projected
         out : `DiscreteLpVector`, optional
             Element in the reconstruction space to which the result is
-            written. If `None` an element in the range of the operator is
+            written. If None an element in the range of the operator is
             created.
 
         Returns

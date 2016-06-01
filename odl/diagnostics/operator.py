@@ -86,7 +86,7 @@ class OperatorTest(object):
 
         Returns
         -------
-        norm : `float`
+        norm : float
             Estimate of operator norm
 
         References

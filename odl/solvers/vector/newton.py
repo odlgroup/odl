@@ -55,9 +55,9 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length
-    num_iter : `int`, optional
+    num_iter : int, optional
         Number of iterations
-    cg_iter : `int`, optional
+    cg_iter : int, optional
         Number of iterations in the the conjugate gradient solver,
         for computing the search direction.
     callback : `callable`, optional

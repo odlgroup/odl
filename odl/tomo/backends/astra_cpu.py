@@ -54,11 +54,11 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
         Space to which the calling operator maps
     out : `DiscreteLpVector`, optional
         Vector in the projection space to which the result is written. If
-        `None` creates an element in the projection space ``proj_space``
+        None creates an element in the projection space ``proj_space``
 
     Returns
     -------
-    out : ``proj_space`` `element`
+    out : ``proj_space`` element
         Projection data resulting from the application of the projector
     """
     if not isinstance(vol_data, DiscreteLpVector):
@@ -137,9 +137,9 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
         Geometry defining the tomographic setup
     reco_space : `DiscreteLp`
         Space to which the calling operator maps
-    out : `DiscreteLpVector` or `None`, optional
+    out : `DiscreteLpVector` or None, optional
         Vector in the reconstruction space to which the result is written. If
-        `None` creates an element in the reconstruction space ``reco_space``
+        None creates an element in the reconstruction space ``reco_space``
 
     Returns
     -------

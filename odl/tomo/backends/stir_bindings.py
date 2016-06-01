@@ -270,11 +270,11 @@ def stir_projector_from_file(volume_file, projection_file):
 
     Parameters
     ----------
-    volume_file : `str`
+    volume_file : string
         Full file path to the STIR input file containing information on the
         volume. This is usually a '.hv' file. For STIR reasons,
         a '.v' file is also needed.
-    projection_file : `str`
+    projection_file : string
         Full file path to the STIR input file with information on the
         projection data. This is usually a '.hs' file. For STIR reasons,
         a '.s' file is also needed.

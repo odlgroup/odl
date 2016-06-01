@@ -173,7 +173,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
 
     Returns
     -------
-    vectors : `numpy.ndarray`
+    vectors : numpy.ndarray
         Numpy array of shape ``(number of angles, 12)``
     """
 
@@ -228,7 +228,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
 
     Returns
     -------
-    vectors : `numpy.ndarray`
+    vectors : numpy.ndarray
         Numpy array of shape ``(number of angles, 6)``
     """
 
@@ -283,7 +283,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
 
     Returns
     -------
-    vectors : `numpy.ndarray`
+    vectors : numpy.ndarray
         Numpy array of shape ``(number of angles, 12)``
     """
 
@@ -404,10 +404,10 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
     datatype : {'volume', 'projection'}
         Type of the data container
     data : `DiscreteLpVector`, optional
-        Data for the initialization of the data structure. If `None` creates
+        Data for the initialization of the data structure. If None creates
         an ASTRA data object filled with zeros
     ndim : {2, 3}, optional
-        Dimension of the data. If ``data`` is not `None`, this parameter
+        Dimension of the data. If ``data`` is not None, this parameter
         has no effect.
     allow_copy : `bool`, optional
         True if copying ``data`` should be allowed. This means that anything
@@ -416,7 +416,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
 
     Returns
     -------
-    id : `int`
+    id : int
         ASTRA internal ID for the new data structure
     """
     if data is not None:
@@ -485,7 +485,7 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
 
     Returns
     -------
-    proj_id : `int`
+    proj_id : int
         ASTRA reference ID to the ASTRA dict with initialized 'type' key
     """
     if vol_interp not in ('nearest', 'linear'):
@@ -559,18 +559,18 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
         projection
     ndim : {2, 3}
         Number of dimensions of the projector
-    vol_id : `int`
+    vol_id : int
         ASTRA ID of the volume data object
-    sino_id : `int`
+    sino_id : int
         ASTRA ID of the projection data object
-    proj_id : `int`
+    proj_id : int
         ASTRA ID of the projector
     impl : {'cpu', 'cuda'}
         Implementation of the projector
 
     Returns
     -------
-    id : `int`
+    id : int
         ASTRA internal ID for the new algorithm structure
     """
     if direction not in ('forward', 'backward'):

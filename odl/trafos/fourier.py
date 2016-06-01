@@ -95,16 +95,16 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     ----------
     grid : `RegularGrid`
         Original sampling grid
-    shift : `bool` or sequence of `bool`, optional
-        If `True`, the grid is shifted by half a stride in the negative
+    shift : bool or sequence of bool, optional
+        If ``True``, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
         each axis.
     axes : int or sequence of int, optional
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
-        as a sequence. `None` means all axes in ``grid``.
-    halfcomplex : `bool`, optional
-        If `True`, return the half of the grid with last coordinate
+        as a sequence. None means all axes in ``grid``.
+    halfcomplex : bool, optional
+        If ``True``, return the half of the grid with last coordinate
         less than zero. This is related to the fact that for real-valued
         functions, the other half is the mirrored complex conjugate of
         the given half and therefore needs not be stored.
@@ -215,9 +215,9 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
     axes : int or sequence of int, optional
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
-        as a sequence. `None` means all axes in ``grid``.
-    halfcomplex : `bool`, optional
-        If `True`, interpret the given grid as the reciprocal as used
+        as a sequence. None means all axes in ``grid``.
+    halfcomplex : bool, optional
+        If ``True``, interpret the given grid as the reciprocal as used
         in a half-complex FFT (see above). Otherwise, the grid is
         regarded as being used in a complex-to-complex transform.
     halfcx_parity : {'even', 'odd'}
@@ -269,7 +269,7 @@ def _local_to_pyfftw(flag):
 
 
 def _pyfftw_destroys_input(flags, direction, halfcomplex, ndim):
-    """Return `True` if FFTW destroys an input array, `False` otherwise."""
+    """Return ``True`` if FFTW destroys an input array, ``False`` otherwise."""
     if any(flag in flags or _pyfftw_to_local(flag) in flags
            for flag in ('FFTW_MEASURE', 'FFTW_PATIENT', 'FFTW_EXHAUSTIVE',
                         'FFTW_DESTROY_INPUT')):
@@ -367,9 +367,9 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     Parameters
     ----------
-    array_in : `numpy.ndarray`
+    array_in : numpy.ndarray
         Array to be transformed
-    array_out : `numpy.ndarray`
+    array_out : numpy.ndarray
         Output array storing the transformed values, may be aligned
         with ``array_in``.
     direction : {'forward', 'backward'}
@@ -377,9 +377,9 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     axes : int or sequence of int, optional
         Dimensions along which to take the transform. `None` means
         using all axis and is equivalent to ``np.arange(ndim)``.
-    halfcomplex : `bool`, optional
-        If `True`, calculate only the negative frequency part along the
-        last axis. If `False`, calculate the full complex FFT.
+    halfcomplex : bool, optional
+        If ``True``, calculate only the negative frequency part along the
+        last axis. If ``False``, calculate the full complex FFT.
         This option can only be used with real input data.
 
     Other Parameters
@@ -393,19 +393,19 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         FFTW plan. See the `FFTW doc on planner flags
         <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
         Default: 'estimate'
-    planning_timelimit : `float`, optional
-        Limit planning time to roughly this amount of seconds.
-        Default: `None` (no limit)
-    threads : `int`, optional
+    planning_timelimit : float, optional
+        Limit planning time to roughly this many seconds.
+        Default: None (no limit)
+    threads : int, optional
         Number of threads to use.
         Default: Number of CPUs if the number of data points is larger
         than 1000, else 1.
-    normalise_idft : `bool`, optional
-        If `True`, the backward transform is normalized by
+    normalise_idft : bool, optional
+        If ``True``, the backward transform is normalized by
         ``1 / N``, where ``N`` is the total number of points in
         ``array_in[axes]``. This ensures that the IDFT is the true
         inverse of the forward DFT.
-        Default: `False`
+        Default: ``False``
     import_wisdom : filename or file handle, optional
         File to load FFTW wisdom from. If the file does not exist,
         it is ignored.
@@ -540,8 +540,9 @@ class DiscreteFourierTransformBase(Operator):
 
         Parameters
         ----------
-        inverse : `bool`
-            True if the operator should be the inverse transform, False else.
+        inverse : bool
+            ``True`` if the operator should be the inverse transform,
+            else ``False``.
         domain : `DiscreteLp`
             Domain of the Fourier transform. If its
             `DiscreteLp.exponent` is equal to 2.0, this operator has
@@ -551,13 +552,13 @@ class DiscreteFourierTransformBase(Operator):
             is determined from ``domain`` and the other parameters as
             a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
-        axes : int or sequence of `int`, optional
-            Dimensions in which a transform is to be calculated. `None`
+        axes : int or sequence of int, optional
+            Dimensions in which a transform is to be calculated. ``None``
             means all axes.
         sign : {'-', '+'}, optional
-            Sign of the complex exponent. Default: '-'
-        halfcomplex : `bool`, optional
-            If `True`, calculate only the negative frequency part
+            Sign of the complex exponent.
+        halfcomplex : bool, optional
+            If ``True``, calculate only the negative frequency part
             along the last axis in ``axes`` for real input. This
             reduces the size of the range to ``floor(N[i]/2) + 1`` in
             this axis ``i``, where ``N`` is the shape of the input
@@ -640,9 +641,9 @@ class DiscreteFourierTransformBase(Operator):
 
         Parameters
         ----------
-        x : domain `element`
+        x : domain element
             Discretized function to be transformed
-        out : range `element`
+        out : range element
             Element to which the output is written
 
         Notes
@@ -678,7 +679,7 @@ class DiscreteFourierTransformBase(Operator):
 
     @property
     def halfcomplex(self):
-        """Return `True` if the last transform axis is halved."""
+        """Return ``True`` if the last transform axis is halved."""
         return self._halfcomplex
 
     @property
@@ -709,12 +710,12 @@ class DiscreteFourierTransformBase(Operator):
 
         Parameters
         ----------
-        x : `numpy.ndarray`
+        x : numpy.ndarray
             Input array to be transformed
 
         Returns
         -------
-        out : `numpy.ndarray`
+        out : numpy.ndarray
             Result of the transform
         """
         raise NotImplementedError('abstract method')
@@ -724,26 +725,26 @@ class DiscreteFourierTransformBase(Operator):
 
         Parameters
         ----------
-        x : `numpy.ndarray`
+        x : numpy.ndarray
             Input array to be transformed
-        out : `numpy.ndarray`
+        out : numpy.ndarray
             Output array storing the result
-        flags : sequence of `str`, optional
+        flags : sequence of string, optional
             Flags for the transform. ``'FFTW_UNALIGNED'`` is not
             supported, and ``'FFTW_DESTROY_INPUT'`` is enabled by
             default. See the `pyfftw API documentation`_
             for futher information.
             Default: ``('FFTW_MEASURE',)``
-        threads : positive `int`, optional
+        threads : positive int, optional
             Number of threads to use. Default: 1
-        planning_timelimit : `float` or `None`, optional
+        planning_timelimit : float or None, optional
             Rough upper limit in seconds for the planning step of the
-            transform. `None` means no limit. See the
+            transform. None means no limit. See the
             `pyfftw API documentation`_ for futher information.
 
         Returns
         -------
-        out : `numpy.ndarray`
+        out : numpy.ndarray
             Result of the transform. If ``out`` was given, the returned
             object is a reference to it.
 
@@ -755,7 +756,7 @@ class DiscreteFourierTransformBase(Operator):
         assert isinstance(x, np.ndarray)
         assert isinstance(out, np.ndarray)
 
-        kwargs.pop('normalise_idft', None)  # Using 'False' here
+        kwargs.pop('normalise_idft', None)  # Using `False` here
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
         flags = list(_pyfftw_to_local(flag) for flag in
@@ -781,7 +782,7 @@ class DiscreteFourierTransformBase(Operator):
     def init_fftw_plan(self, planning_effort='measure', **kwargs):
         """Initialize the FFTW plan for this transform for later use.
 
-        If the implementation of this operator is not 'pyfftw', this
+        If the implementation of this operator is not ``'pyfftw'``, this
         method should not be called.
 
         Parameters
@@ -790,16 +791,16 @@ class DiscreteFourierTransformBase(Operator):
             Flag for the amount of effort put into finding an optimal
             FFTW plan. See the `FFTW doc on planner flags
             <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
-        planning_timelimit : `float`, optional
+        planning_timelimit : float, optional
             Limit planning time to roughly this amount of seconds.
-            Default: `None` (no limit)
-        threads : `int`, optional
+            Default: None (no limit)
+        threads : int, optional
             Number of threads to use. Default: 1
 
         Raises
         ------
         ValueError
-            If `impl` is not 'pyfftw'
+            If `impl` is not ``'pyfftw'``
 
         Notes
         -----
@@ -829,13 +830,12 @@ class DiscreteFourierTransformBase(Operator):
         Raises
         ------
         ValueError
-            If `impl` is not 'pyfftw'
+            If `impl` is not ``'pyfftw'``
 
         Notes
         -----
         If no plan exists, this is a no-op.
         """
-
         if self.impl != 'pyfftw':
             raise ValueError('cannot create fftw plan without fftw backend')
 
@@ -885,13 +885,13 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
             is determined from ``domain`` and the other parameters as
             a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
-        axes : int or sequence of `int`, optional
-            Dimensions in which a transform is to be calculated. `None`
+        axes : int or sequence of int, optional
+            Dimensions in which a transform is to be calculated. ``None``
             means all axes.
         sign : {'-', '+'}, optional
-            Sign of the complex exponent. Default: '-'
-        halfcomplex : `bool`, optional
-            If `True`, calculate only the negative frequency part
+            Sign of the complex exponent.
+        halfcomplex : bool, optional
+            If ``True``, calculate only the negative frequency part
             along the last axis in ``axes`` for real input. This
             reduces the size of the range to ``floor(N[i]/2) + 1`` in
             this axis ``i``, where ``N`` is the shape of the input
@@ -899,7 +899,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
             Otherwise, calculate the full complex FFT. If ``dom_dtype``
             is a complex type, this option has no effect.
         impl : {'numpy', 'pyfftw'}
-            Backend for the FFT implementation. The 'pyfftw' backend
+            Backend for the FFT implementation. The ``'pyfftw'`` backend
             is faster but requires the ``pyfftw`` package.
 
         Examples
@@ -958,7 +958,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
         assert isinstance(x, np.ndarray)
         assert isinstance(out, np.ndarray)
 
-        kwargs.pop('normalise_idft', None)  # Using 'False' here
+        kwargs.pop('normalise_idft', None)  # Using `False` here
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
         flags = list(_pyfftw_to_local(flag) for flag in
@@ -1034,13 +1034,13 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             domain is determined from ``range`` and the other parameters
             as a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
-        axes : sequence of `int`, optional
+        axes : sequence of int, optional
             Dimensions in which a transform is to be calculated. `None`
             means all axes.
         sign : {'-', '+'}, optional
             Sign of the complex exponent.
-        halfcomplex : `bool`, optional
-            If `True`, interpret the last axis in ``axes`` as the
+        halfcomplex : bool, optional
+            If ``True``, interpret the last axis in ``axes`` as the
             negative frequency part of the transform of a real signal
             and calculate a "half-complex-to-real" inverse FFT. In this
             case, the domain has by default the shape
@@ -1109,13 +1109,13 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             Input vector to be transformed
         out : range element
             Output vector storing the result
-        flags : sequence of `str`, optional
+        flags : sequence of str, optional
             Flags for the transform. ``'FFTW_UNALIGNED'`` is not
             supported, and ``'FFTW_DESTROY_INPUT'`` is enabled by
             default. See the `pyfftw API documentation`_
             for futher information.
             Default: ``('FFTW_MEASURE',)``
-        threads : positive `int`, optional
+        threads : positive int, optional
             Number of threads to use. Default: 1
         planning_timelimit : `float` or `None`, optional
             Rough upper limit in seconds for the planning step of the
@@ -1133,7 +1133,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         .. _pyfftw API documentation:
            http://hgomersall.github.io/pyFFTW/pyfftw/pyfftw.html
         """
-        kwargs.pop('normalise_idft', None)  # Using 'True' here
+        kwargs.pop('normalise_idft', None)  # Using `True` here
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
         flags = list(_pyfftw_to_local(flag) for flag in
@@ -1196,20 +1196,20 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
 
     Parameters
     ----------
-    arr : `array-like`
+    arr : array-like
         Array to be pre-processed. If its data type is a real
         non-floating type, it is converted to 'float64'.
     shift : bool or or sequence of bool, optional
-        If `True`, the grid is shifted by half a stride in the negative
+        If ``True``, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
         each axis.
     axes : int or sequence of int, optional
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
-        as a sequence. `None` means all axes in ``arr``.
+        as a sequence. ``None`` means all axes in ``arr``.
     sign : {'-', '+'}, optional
-        Sign of the complex exponent
-    out : `numpy.ndarray`, optional
+        Sign of the complex exponent.
+    out : numpy.ndarray, optional
         Array in which the result is stored. If ``out is arr``,
         an in-place modification is performed. For real data type,
         this is only possible for ``shift=True`` since the factors are
@@ -1217,7 +1217,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
 
     Returns
     -------
-    out : `numpy.ndarray`
+    out : numpy.ndarray
         Result of the pre-processing. If ``out`` was given, the returned
         object is a reference to it.
 
@@ -1225,7 +1225,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     -----
     If ``out`` is not specified, the data type of the returned array
     is the same as that of ``arr`` except when ``arr`` has real data
-    type and ``shift`` is not `True`. In this case, the return type
+    type and ``shift`` is not ``True``. In this case, the return type
     is the complex counterpart of ``arr.dtype``.
     """
     arr = np.asarray(arr)
@@ -1300,14 +1300,14 @@ def _interp_kernel_ft(norm_freqs, interp):
 
     Parameters
     ----------
-    norm_freqs : `numpy.ndarray`
+    norm_freqs : numpy.ndarray
         Normalized frequencies between -1/2 and 1/2
     interp : {'nearest', 'linear'}
         Type of interpolation kernel
 
     Returns
     -------
-    ker_ft : `numpy.ndarray`
+    ker_ft : numpy.ndarray
         Values of the kernel FT at the given frequencies
     """
     # Numpy's sinc(x) is equal to the 'math' sinc(pi * x)
@@ -1352,7 +1352,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
 
     Parameters
     ----------
-    arr : `array-like`
+    arr : array-like
         Array to be pre-processed. An array with real data type is
         converted to its complex counterpart.
     real_grid : `RegularGrid`
@@ -1360,26 +1360,26 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     recip_grid : `RegularGrid`
         Reciprocal grid in the transform
     shift : bool or sequence of bool
-        If `True`, the grid is shifted by half a stride in the negative
+        If ``True``, the grid is shifted by half a stride in the negative
         direction in the corresponding axes. The sequence must have the
         same length as ``axes``.
-    axes : int or sequence of `int`
+    axes : int or sequence of int
         Dimensions along which to take the transform. The sequence must
         have the same length as ``shifts``.
-    interp : `str` or `sequence` of `str`
-        Interpolation scheme used in the real-space
+    interp : string or sequence of string
+        Interpolation scheme used in the real-space.
     sign : {'-', '+'}, optional
-        Sign of the complex exponent
+        Sign of the complex exponent.
     op : {'multiply', 'divide'}
         Operation to perform with the stride times the interpolation
         kernel FT
-    out : `numpy.ndarray`, optional
+    out : numpy.ndarray, optional
         Array in which the result is stored. If ``out is arr``, an
         in-place modification is performed.
 
     Returns
     -------
-    out : `numpy.ndarray`
+    out : numpy.ndarray
         Result of the post-processing. If ``out`` was given, the returned
         object is a reference to it.
     """
@@ -1484,24 +1484,24 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     space : `DiscreteLp`
         Real space whose reciprocal is calculated. It must be
         uniformly discretized.
-    axes : sequence of `int`, optional
+    axes : sequence of int, optional
         Dimensions along which the Fourier transform is taken.
         Default: all axes
-    halfcomplex : `bool`, optional
-        If `True`, take only the negative frequency part along the last
-        axis for. If `False`, use the full frequency space.
+    halfcomplex : bool, optional
+        If ``True``, take only the negative frequency part along the last
+        axis for. If ``False``, use the full frequency space.
         This option can only be used if ``space`` is a space of
         real-valued functions.
-        Default: `False`
-    shift : `bool` or sequence of `bool`, optional
-        If `True`, the reciprocal grid is shifted by half a stride in
+        Default: ``False``
+    shift : bool or sequence of bool, optional
+        If ``True``, the reciprocal grid is shifted by half a stride in
         the negative direction. With a boolean sequence, this option
         is applied separately to each axis.
         If a sequence is provided, it must have the same length as
-        ``axes`` if supplied. Note that this must be set to `True`
+        ``axes`` if supplied. Note that this must be set to ``True``
         in the halved axis in half-complex transforms.
-        Default: `True`
-    exponent : `float`, optional
+        Default: ``True``
+    exponent : float, optional
         Create a space with this exponent. By default, the conjugate
         exponent ``q = p / (p - 1)`` of the exponent of ``space`` is
         used, where ``q = inf`` for ``p = 1`` and vice versa.
@@ -1554,7 +1554,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
                             axes=axes)
 
     # Make a partition with nodes on the boundary in the last transform axis
-    # if halfcomplex = True, otherwise a standard partition.
+    # if `halfcomplex == True`, otherwise a standard partition.
     if halfcomplex:
         end = {axes[-1]: recip_grid.max_pt[axes[-1]]}
         part = uniform_partition_fromgrid(recip_grid, end=end)
@@ -1600,8 +1600,9 @@ class FourierTransformBase(Operator):
 
         Parameters
         ----------
-        inverse : `bool`
-            True if the operator should be the inverse transform, False else.
+        inverse : bool
+            ``True`` if the operator should be the inverse transform, else
+            ``False``.
         domain : `DiscreteLp`
             Domain of the Fourier transform. If the
             `DiscreteLp.exponent` of ``domain`` and ``range`` are equal
@@ -1620,30 +1621,30 @@ class FourierTransformBase(Operator):
             Default: all axes
         sign : {'-', '+'}, optional
             Sign of the complex exponent. Default: '-'
-        halfcomplex : `bool`, optional
-            If `True`, calculate only the negative frequency part
-            along the last axis for real input. If `False`,
+        halfcomplex : bool, optional
+            If ``True``, calculate only the negative frequency part
+            along the last axis for real input. If ``False``,
             calculate the full complex FFT.
             For complex ``domain``, it has no effect.
-            Default: `True`
-        shift : `bool` or sequence of `bool`, optional
-            If `True`, the reciprocal grid is shifted by half a stride in
+            Default: ``True``
+        shift : bool or sequence of bool, optional
+            If ``True``, the reciprocal grid is shifted by half a stride in
             the negative direction. With a boolean sequence, this option
             is applied separately to each axis.
             If a sequence is provided, it must have the same length as
-            ``axes`` if supplied. Note that this must be set to `True`
+            ``axes`` if supplied. Note that this must be set to ``True``
             in the halved axis in half-complex transforms.
-            Default: `True`
+            Default: ``True``
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_r : `DiscreteLpVector` or numpy.ndarray
             Temporary for calculations in the real space (domain of
             this transform). It is shared with the inverse.
 
             Variants using this: R2C, R2HC, C2R (inverse)
 
-        tmp_f : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_f : `DiscreteLpVector` or numpy.ndarray
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 
@@ -1723,8 +1724,8 @@ class FourierTransformBase(Operator):
         # casts to complex otherwise, and then no half-complex transform
         # is possible.
         if self.halfcomplex and not self.shifts[-1]:
-            raise ValueError('`shift` must be True in the halved (last) axis '
-                             'in half-complex transforms')
+            raise ValueError('`shift` must be `True` in the halved (last) '
+                             'axis in half-complex transforms')
 
         if range is None:
             # self._halfcomplex and self._axes need to be set for this
@@ -1755,9 +1756,9 @@ class FourierTransformBase(Operator):
 
         Parameters
         ----------
-        x : domain `element`
+        x : domain element
             Discretized function to be transformed
-        out : range `element`
+        out : range element
             Element to which the output is written
 
         Notes
@@ -1782,12 +1783,12 @@ class FourierTransformBase(Operator):
 
         Parameters
         ----------
-        x : `numpy.ndarray`
+        x : numpy.ndarray
             Array representing the function to be transformed
 
         Returns
         -------
-        out : `numpy.ndarray`
+        out : numpy.ndarray
             Result of the transform
         """
         raise NotImplementedError('abstract method')
@@ -1797,23 +1798,23 @@ class FourierTransformBase(Operator):
 
         Parameters
         ----------
-        x : `numpy.ndarray`
+        x : numpy.ndarray
             Array representing the function to be transformed
-        out : `numpy.ndarray`
+        out : numpy.ndarray
             Array to which the output is written
         planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
             Flag for the amount of effort put into finding an optimal
             FFTW plan. See the `FFTW doc on planner flags
             <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
-        planning_timelimit : `float`, optional
+        planning_timelimit : float, optional
             Limit planning time to roughly this amount of seconds.
-            Default: `None` (no limit)
-        threads : `int`, optional
+            Default: None (no limit)
+        threads : int, optional
             Number of threads to use. Default: 1
 
         Returns
         -------
-        out : `numpy.ndarray`
+        out : numpy.ndarray
             Result of the transform. The returned object is a reference
             to the input parameter ``out``.
         """
@@ -1836,7 +1837,7 @@ class FourierTransformBase(Operator):
 
     @property
     def halfcomplex(self):
-        """Return `True` if the last transform axis is halved."""
+        """Return ``True`` if the last transform axis is halved."""
         return self._halfcomplex
 
     @property
@@ -1880,9 +1881,9 @@ class FourierTransformBase(Operator):
 
         Parameters
         ----------
-        r : `bool`, optional
+        r : bool, optional
             Create temporary for the real space
-        f : `bool`, optional
+        f : bool, optional
             Create temporary for the frequency space
 
         Notes
@@ -1910,7 +1911,7 @@ class FourierTransformBase(Operator):
             self._tmp_f = fspace.element().asarray()
 
     def clear_temporaries(self):
-        """Set the temporaries to `None`."""
+        """Set the temporaries to None."""
         self._tmp_r = None
         self._tmp_f = None
 
@@ -1926,10 +1927,10 @@ class FourierTransformBase(Operator):
             Flag for the amount of effort put into finding an optimal
             FFTW plan. See the `FFTW doc on planner flags
             <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
-        planning_timelimit : `float`, optional
+        planning_timelimit : float, optional
             Limit planning time to roughly this amount of seconds.
-            Default: `None` (no limit)
-        threads : `int`, optional
+            Default: None (no limit)
+        threads : int, optional
             Number of threads to use. Default: 1
 
         Raises
@@ -2065,20 +2066,20 @@ class FourierTransform(FourierTransformBase):
             Default: all axes
         sign : {'-', '+'}, optional
             Sign of the complex exponent. Default: '-'
-        halfcomplex : `bool`, optional
-            If `True`, calculate only the negative frequency part
-            along the last axis for real input. If `False`,
+        halfcomplex : bool, optional
+            If ``True``, calculate only the negative frequency part
+            along the last axis for real input. If ``False``,
             calculate the full complex FFT.
             For complex ``domain``, it has no effect.
-            Default: `True`
-        shift : `bool` or sequence of `bool`, optional
-            If `True`, the reciprocal grid is shifted by half a stride in
+            Default: ``True``
+        shift : bool or sequence of bool, optional
+            If ``True``, the reciprocal grid is shifted by half a stride in
             the negative direction. With a boolean sequence, this option
             is applied separately to each axis.
             If a sequence is provided, it must have the same length as
-            ``axes`` if supplied. Note that this must be set to `True`
+            ``axes`` if supplied. Note that this must be set to ``True``
             in the halved axis in half-complex transforms.
-            Default: `True`
+            Default: ``True``
 
         Other Parameters
         ----------------
@@ -2214,7 +2215,7 @@ class FourierTransform(FourierTransformBase):
         planning_timelimit : `float`, optional
             Limit planning time to roughly this amount of seconds.
             Default: `None` (no limit)
-        threads : `int`, optional
+        threads : int, optional
             Number of threads to use. Default: 1
 
         Returns
@@ -2227,7 +2228,7 @@ class FourierTransform(FourierTransformBase):
         # given during init or implicitly assumed.
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
-        kwargs.pop('normalise_idft', None)  # We use 'False'
+        kwargs.pop('normalise_idft', None)  # We use `False`
 
         # Pre-processing before calculating the sums, in-place for C2C and R2C
         if self.halfcomplex:
@@ -2299,31 +2300,31 @@ class FourierTransformInverse(FourierTransformBase):
             Dimensions along which to take the transform.
             Default: all axes
         sign : {'-', '+'}, optional
-            Sign of the complex exponent. Default: '+'
-        halfcomplex : `bool`, optional
-            If `True`, calculate only the negative frequency part
-            along the last axis for real input. If `False`,
+            Sign of the complex exponent. Default: ``'+'``
+        halfcomplex : bool, optional
+            If ``True``, calculate only the negative frequency part
+            along the last axis for real input. If ``False``,
             calculate the full complex FFT.
             For complex ``domain``, it has no effect.
-            Default: `True`
-        shift : `bool` or sequence of `bool`, optional
-            If `True`, the reciprocal grid is shifted by half a stride in
+            Default: ``True``
+        shift : bool or sequence of bool, optional
+            If ``True``, the reciprocal grid is shifted by half a stride in
             the negative direction. With a boolean sequence, this option
             is applied separately to each axis.
             If a sequence is provided, it must have the same length as
-            ``axes`` if supplied. Note that this must be set to `True`
+            ``axes`` if supplied. Note that this must be set to ``True``
             in the halved axis in half-complex transforms.
-            Default: `True`
+            Default: ``True``
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_r : `DiscreteLpVector` or numpy.ndarray
             Temporary for calculations in the real space (range of
             this transform). It is shared with the inverse.
 
             Variants using this: C2R, R2C (forward), R2HC (forward)
 
-        tmp_f : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_f : `DiscreteLpVector` or numpy.ndarray
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 
@@ -2406,12 +2407,12 @@ class FourierTransformInverse(FourierTransformBase):
 
         Parameters
         ----------
-        x : `numpy.ndarray`
+        x : numpy.ndarray
             Array representing the function to be transformed
 
         Returns
         -------
-        out : `numpy.ndarray`
+        out : numpy.ndarray
             Result of the transform
         """
         # Pre-processing before calculating the DFT
@@ -2446,23 +2447,23 @@ class FourierTransformInverse(FourierTransformBase):
 
         Parameters
         ----------
-        x : `numpy.ndarray`
+        x : numpy.ndarray
             Array representing the function to be transformed
-        out : `numpy.ndarray`
+        out : numpy.ndarray
             Array to which the output is written
         planning_effort : {'estimate', 'measure', 'patient', 'exhaustive'}
             Flag for the amount of effort put into finding an optimal
             FFTW plan. See the `FFTW doc on planner flags
             <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
-        planning_timelimit : `float`, optional
+        planning_timelimit : float, optional
             Limit planning time to roughly this amount of seconds.
-            Default: `None` (no limit)
-        threads : `int`, optional
+            Default: None (no limit)
+        threads : int, optional
             Number of threads to use. Default: 1
 
         Returns
         -------
-        out : `numpy.ndarray`
+        out : numpy.ndarray
             Result of the transform. If ``out`` was given, the returned
             object is a reference to it.
         """
@@ -2471,7 +2472,7 @@ class FourierTransformInverse(FourierTransformBase):
         # given during init or implicitly assumed.
         kwargs.pop('axes', None)
         kwargs.pop('halfcomplex', None)
-        kwargs.pop('normalise_idft', None)  # We use 'True'
+        kwargs.pop('normalise_idft', None)  # We use `True`
 
         # Pre-processing in IFT = post-processing in FT, but with division
         # instead of multiplication and switched grids. In-place for C2C only.

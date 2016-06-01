@@ -63,38 +63,42 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         Forward operator, the operator ``K`` in the problem formulation.
     x : element in the domain of ``op``
         Starting point of the iteration, updated in-place.
-    tau : positive `float`
+    tau : positive float
         Step size parameter for the update of the primal variable.
         Controls the extent to which ``proximal_primal`` maps points
         towards the minimum of G.
-    sigma : positive `float`
+    sigma : positive float
         Step size parameter for the update of the dual variable. Controls
         the extent to which ``proximal_dual`` maps points towards the
         minimum of ``F^*``.
-    proximal_primal : `callable`
+    proximal_primal : callable
         `proximal factory` for the functional ``G``.
-    proximal_dual : `callable`
+    proximal_dual : callable
         `proximal factory` for the functional ``F^*``.
-    niter : non-negative `int`, optional
+    niter : non-negative int, optional
         Number of iterations.
 
     Other Parameters
     ----------------
-    callback : `callable`, optional
+    callback : callable, optional
         Function called with the current iterate after each iteration.
-    theta : `float` in [0, 1], optional
-        Relaxation parameter. Default: 1
-    gamma : non-negative `float`, optional
-        Acceleration parameter. If not `None`, overwrites ``theta`` and uses
-        variable relaxation parameter and step sizes with ``tau`` and
-        ``sigma`` as initial values. Requires G or F^* to be uniformly
-        convex. Default: `None`
-    x_relax : element in the domain of ``op``, optional
-        Required to resume iteration. If `None` it is a copy of the primal
-        variable x. Default: `None`
-    y : element in the range of ``op``, optional
-        Required to resume iteration. If `None` it is set to a zero element
-        in Y which is the range of ``op``. Default: `None`
+    theta : float, optional
+        Relaxation parameter, required to fulfill ``0 <= theta <= 1``.
+        Default: 1
+    gamma : non-negative float, optional
+        Acceleration parameter. If not ``None``, it overrides ``theta`` and
+        causes variable relaxation parameter and step sizes to be used,
+        with ``tau`` and ``sigma`` as initial values. Requires ``G`` or
+        ``F^*`` to be uniformly convex.
+        Default: ``None``
+    x_relax : ``op.domain`` element, optional
+        Required to resume iteration. For ``None``, a copy of the primal
+        variable ``x`` is used.
+        Default: ``None``
+    y : ``op.range`` element, optional
+        Required to resume iteration. For ``None``, ``op.range.zero()``
+        is used.
+        Default: ``None``
 
     Notes
     -----

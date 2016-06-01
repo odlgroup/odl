@@ -56,7 +56,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        ndim : positive `int`
+        ndim : positive int
             Number of dimensions of this geometry, i.e. dimensionality
             of the physical space in which this geometry is embedded
         motion_part : `RectPartition`
@@ -159,7 +159,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (`ndim`,)
+        point : numpy.ndarray, shape (`ndim`,)
             The reference point, an `ndim`-dimensional vector
         """
 
@@ -176,7 +176,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (`ndim`, `ndim`)
+        rot : numpy.ndarray, shape (`ndim`, `ndim`)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -194,12 +194,12 @@ class Geometry(with_metaclass(ABCMeta, object)):
             Motion parameter at which to evaluate
         dpar : element of detector parameters `det_params`
             Detector parameter at which to evaluate
-        normalized : `bool`, optional
-            If `True`, return a normalized (unit) vector. Default: `True`
+        normalized : bool, optional
+            If True, return a normalized (unit) vector. Default: True
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
+        vec : numpy.ndarray, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
         raise NotImplementedError
@@ -216,8 +216,8 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape (`ndim`,)
-            Source position, a `ndim`-dimensional vector
+        pos : ``numpy.ndarray`` (shape (`ndim`,))
+            Source position, an `ndim`-dimensional vector
         """
         # TODO: check and write test
         return np.asarray(
@@ -259,8 +259,8 @@ class DivergentBeamGeometry(Geometry):
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape (`ndim`,)
-            Source position, a `ndim`-dimensional vector
+        pos : ``numpy.ndarray`` (shape (`ndim`,))
+            Source position, an `ndim`-dimensional vector
         """
 
     def det_to_src(self, mpar, dpar, normalized=True):
@@ -278,12 +278,12 @@ class DivergentBeamGeometry(Geometry):
             Motion parameter at which to evaluate
         dpar : element of detector parameters `det_params`
             Detector parameter at which to evaluate
-        normalized : `bool`, optional
-            If `True`, return a normalized (unit) vector.
+        normalized : bool, optional
+            If True, return a normalized (unit) vector.
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
+        vec : numpy.ndarray, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
         if mpar not in self.motion_params:
@@ -311,7 +311,7 @@ class AxisOrientedGeometry(object):
 
         Parameters
         ----------
-        axis : 3-element `array-like`
+        axis : 3-element array-like
             Vector defining the fixed rotation axis after normalization
         """
         if np.linalg.norm(axis) <= 1e-10:
@@ -340,13 +340,13 @@ class AxisOrientedGeometry(object):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             The motion parameter given in radian. It must be
             contained in this geometry's `motion_params`.
 
         Returns
         -------
-        rot_mat : `numpy.ndarray`, shape ``(3, 3)``
+        rot_mat : numpy.ndarray, shape ``(3, 3)``
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,

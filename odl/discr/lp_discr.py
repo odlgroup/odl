@@ -69,11 +69,11 @@ class DiscreteLp(DiscretizedSpace):
         dspace : `FnBase`
             Space of elements used for data storage. It must have the
             same `FnBase.field` as ``fspace``
-        exponent : positive `float`, optional
+        exponent : positive float, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is
             not equal to the default 2.0, the space has no inner
             product.
-        interp : `str` or `sequence` of `str`, optional
+        interp : string or sequence of string, optional
             The interpolation type to be used for discretization.
             A sequence is interpreted as interpolation scheme per
             axis.
@@ -491,7 +491,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
 
         Parameters
         ----------
-        out : `numpy.ndarray`, optional
+        out : numpy.ndarray, optional
             Array in which the result should be written in-place.
             Has to be contiguous and of the correct dtype and
             shape.
@@ -622,16 +622,16 @@ class DiscreteLpVector(DiscretizedSpaceVector):
 
         Parameters
         ----------
-        indices : `int` or `slice`
+        indices : int or slice
             The position(s) that should be set
         values : scalar or `array-like`
-            The value(s) that are to be assigned.
-            If ``indices`` is an `int`, ``values`` must be a single
+            Value(s) to be assigned.
+            If ``indices`` is an integer, ``values`` must be a scalar
             value.
-            If ``indices`` is a `slice`, ``values`` must be
+            If ``indices`` is a slice, ``values`` must be
             broadcastable to the size of the slice (same size,
-            shape ``(1,)`` or single value).
-            For ``indices=slice(None)``, i.e. in the call
+            shape ``(1,)`` or scalar).
+            For ``indices == slice(None)``, i.e. in the call
             ``vec[:] = values``, a multi-dimensional array of correct
             shape is allowed as ``values``.
         """
@@ -702,10 +702,10 @@ class DiscreteLpVector(DiscretizedSpaceVector):
 
         Parameters
         ----------
-        title : `str`, optional
+        title : string, optional
             Set the title of the figure
 
-        method : `str`, optional
+        method : string, optional
             1d methods:
 
             'plot' : graph plot
@@ -723,7 +723,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
 
         coords : array-like, optional
             Display a slice of the array instead of the full array. The values
-            are shown accordinging to the given values, `None` represent all
+            are shown accordinging to the given values, None represent all
             values along that dimension. For example [None, None, 0.5] shows
             all values in the first two dimensions, with third coordinate equal
             to 0.5.
@@ -739,7 +739,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             (semantically ``[:, :, shape[2:] // 2]``).
             This option is mutually exclusive to coords.
 
-        show : `bool`, optional
+        show : bool, optional
             If the plot should be showed now or deferred until later.
 
         fig : `matplotlib.figure.Figure`
@@ -838,10 +838,10 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     ----------
     partition : `RectPartition`
         Regular (uniform) partition to be used for discretization
-    exponent : positive `float`, optional
+    exponent : positive float, optional
         The parameter ``p`` in ``L^p``. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str` or `sequence` of `str`, optional
+    interp : string or sequence of string, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -941,13 +941,13 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     fspace : `FunctionSpace`
         Continuous function space. Its domain must be an
         `IntervalProd` instance.
-    nsamples : `int` or `tuple` of `int`
+    nsamples : int or tuple of int
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
-    exponent : positive `float`, optional
+    exponent : positive float, optional
         The parameter ``p`` in ``L^p``. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str` or `sequence` of `str`, optional
+    interp : string or sequence of string, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -960,14 +960,14 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Other Parameters
     ----------------
-    nodes_on_bdry : `bool` or boolean `array-like`, optional
-        If `True`, place the outermost grid points at the boundary. For
-        `False`, they are shifted by half a cell size to the 'inner'.
+    nodes_on_bdry : bool or boolean array-like, optional
+        If True, place the outermost grid points at the boundary. For
+        False, they are shifted by half a cell size to the 'inner'.
         If an array-like is given, it must have shape ``(ndim, 2)``,
         where ``ndim`` is the number of dimensions. It defines per axis
         whether the leftmost (first column) and rightmost (second column)
         nodes node lie on the boundary.
-        Default: `False`
+        Default: False
     order : {'C', 'F'}, optional
         Axis ordering in the data storage. Default: 'C'
     dtype : dtype, optional
@@ -1049,13 +1049,13 @@ def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
     ----------
     interval : `IntervalProd`
         The domain of the uniformly discretized space.
-    nsamples : `int` or `tuple` of `int`
+    nsamples : int or tuple of int
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
-    exponent : positive `float`, optional
+    exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str` or `sequence` of `str`, optional
+    interp : string or sequence of string, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -1063,20 +1063,20 @@ def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
 
             'linear' : use linear interpolation
 
-    impl : `str`, optional
+    impl : str, optional
         Implementation of the data storage arrays.
-    nodes_on_bdry : `bool` or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (True) or shift it
         by half a cell size into the interior (False). In each axis,
-        an entry may consist in a single `bool` or a 2-tuple of
-        `bool`. In the latter case, the first tuple entry decides for
+        an entry may consist in a single bool or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
         sequence must be ``array.ndim``.
 
         A single boolean is interpreted as a global choice for all
         boundaries.
-        Default: `False`
+        Default: False
 
     dtype : dtype, optional
         Data type for the discretized space
@@ -1132,17 +1132,16 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     Parameters
     ----------
-    min_corner : `float` or `tuple` of `float`
-        Minimum corner of the result.
-    max_corner : `float` or `tuple` of `float`
-        Minimum corner of the result.
-    nsamples : `int` or `tuple` of `int`
-        Number of samples per axis. For dimension >= 2, a tuple is
+    min_corner, max_corner : float or tuple of float
+        Minimum/maximum corners of the domain of the resulting space.
+        For dimension >= 2, sequences are required.
+    nsamples : int or tuple of int
+        Number of samples per axis. For dimension >= 2, a sequence is
         required.
-    exponent : positive `float`, optional
+    exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str` or `sequence` of `str`, optional
+    interp : string or sequence of string, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -1152,18 +1151,18 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
     impl : `str`, optional
         Implementation of the data storage arrays
-    nodes_on_bdry : `bool` or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (True) or shift it
         by half a cell size into the interior (False). In each axis,
-        an entry may consist in a single `bool` or a 2-tuple of
-        `bool`. In the latter case, the first tuple entry decides for
+        an entry may consist in a single bool or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
         sequence must be ``array.ndim``.
 
         A single boolean is interpreted as a global choice for all
         boundaries.
-        Default: `False`
+        Default: False
 
     dtype : dtype, optional
         Data type for the discretized space
@@ -1224,9 +1223,9 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
 
     Parameters
     ----------
-    shape : `sequence` of `int`
+    shape : sequence of int
         Multi-dimensional size of the elements in this space
-    exponent : positive `float`, optional
+    exponent : positive float, optional
         The parameter ``p`` in ```L^p``. If the exponent is
         not equal to the default 2.0, the space has no inner
         product.

@@ -89,15 +89,15 @@ def show_discrete_data(values, grid, title=None, method='',
 
     Parameters
     ----------
-    values : `numpy.ndarray`
+    values : numpy.ndarray
         The values to visualize
     grid : `TensorGrid` or `RectPartition`
         Grid of the values
 
-    title : `str`, optional
+    title : string, optional
         Set the title of the figure
 
-    method : `str`, optional
+    method : string, optional
         1d methods:
 
         'plot' : graph plot
@@ -116,7 +116,7 @@ def show_discrete_data(values, grid, title=None, method='',
         'wireframe', 'plot_wireframe' : surface plot
 
 
-    show : `bool`, optional
+    show : bool, optional
         If the plot should be showed now or deferred until later
 
     fig : `matplotlib.figure.Figure`
@@ -127,7 +127,7 @@ def show_discrete_data(values, grid, title=None, method='',
     interp : {'nearest', 'linear'}
         Interpolation method to use.
 
-    axis_labels : `str`
+    axis_labels : string
         Axis labels, default: ['x', 'y']
 
     kwargs : {'figsize', 'saveto', ...}

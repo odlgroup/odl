@@ -56,7 +56,7 @@ class ParallelGeometry(Geometry):
             Partition of the angle set
         detector : `Detector`
             The detector to use in this geometry
-        det_init_pos : `array-like`
+        det_init_pos : array-like
             Initial position of the detector reference point
         """
         super().__init__(ndim, apart, detector)
@@ -84,13 +84,13 @@ class ParallelGeometry(Geometry):
 
         Parameters
         ----------
-        angles : `float`
+        angles : float
             Parameters describing the detector rotation, must be
             contained in `motion_params`.
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (`ndim`,)
+        point : numpy.ndarray, shape (`ndim`,)
             The reference point for the given parameters
         """
         if angles not in self.motion_params:
@@ -109,19 +109,19 @@ class ParallelGeometry(Geometry):
 
         Parameters
         ----------
-        angles : `array-like`
+        angles : array-like
             Euler angles given in radians, must be contained
             in this geometry's `motion_params`
-        dpar : `float`
+        dpar : float
             Detector parameters, must be contained in this
             geometry's `det_params`
-        normalized : `bool`, optional
-            If `True`, return the normalized version of the vector.
+        normalized : bool, optional
+            If True, return the normalized version of the vector.
             For parallel geometry, this is the only sensible option.
 
         Returns
         -------
-        vec : `numpy.ndarray`, shape (`ndim`,)
+        vec : numpy.ndarray, shape (`ndim`,)
             Unit vector pointing from the detector to the source
 
         Raises
@@ -166,12 +166,12 @@ class Parallel2dGeometry(ParallelGeometry):
             Partition of the angle interval
         dpart : 1-dim. `RectPartition`
             Partition of the detector parameter interval
-        det_init_pos : `array-like`, shape ``(2,)``, optional
+        det_init_pos : array-like, shape ``(2,)``, optional
             Initial position of the detector reference point. The zero
             vector is only allowed if ``det_init_axis`` is explicitly
             given.
             Default: ``(1, 0)``.
-        det_init_axis : `array-like` (shape ``(2,)``), optional
+        det_init_axis : array-like (shape ``(2,)``), optional
             Initial axis defining the detector orientation.
             By default, a normalized `perpendicular_vector` to
             ``det_init_pos`` is used, which is only valid if
@@ -217,13 +217,13 @@ class Parallel2dGeometry(ParallelGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape (2, 2)
+        rot : numpy.ndarray, shape (2, 2)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -274,12 +274,12 @@ class Parallel3dEulerGeometry(ParallelGeometry):
             Partition of the angle parameter set
         dpart : 2-dim. `RectPartition`
             Partition of the detector parameter interval
-        det_init_pos : `array-like`, shape ``(3,)``, optional
+        det_init_pos : array-like, shape ``(3,)``, optional
             Initial position of the detector reference point. The zero
             vector is only allowed if ``det_init_axes`` is explicitly
             given.
             Default: ``(1, 0, 0)``
-        det_init_axes : 2-tuple of `array-like` (shape ``(3,)``), optional
+        det_init_axes : 2-tuple of array-like (shape ``(3,)``), optional
             Initial axes defining the detector orientation.
             By default, a normalized `perpendicular_vector` to
             ``det_init_pos`` is taken as first axis, and the normalized
@@ -311,13 +311,13 @@ class Parallel3dEulerGeometry(ParallelGeometry):
 
         Parameters
         ----------
-        angles : `array-like`
+        angles : array-like
             Angles in radians defining the rotation, must be contained
             in this geometry's ``motion_params``
 
         Returns
         -------
-        rot : `numpy.ndarray`, shape ``(3, 3)``
+        rot : numpy.ndarray, shape ``(3, 3)``
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -364,14 +364,14 @@ class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
             Partition of the angle interval
         dpart : 2-dim. `RectPartition`
             Partition of the detector parameter interval
-        axis : `array-like`, shape ``(3,)``, optional
+        axis : array-like, shape ``(3,)``, optional
             Fixed rotation axis defined by a 3-element vector
-        det_init_pos : `array-like`, shape ``(3,)``, optional
+        det_init_pos : array-like, shape ``(3,)``, optional
             Initial position of the detector reference point. The zero
             vector is only allowed if ``det_init_axes`` is explicitly
             given.
             By default, a `perpendicular_vector` to ``axis`` is used.
-        det_init_axes : 2-tuple of `array-like` (shape ``(3,)``), optional
+        det_init_axes : 2-tuple of array-like (shape ``(3,)``), optional
             Initial axes defining the detector orientation.
             By default, the normalized cross product of ``axis`` and
             ``det_init_pos`` is used as first axis and ``axis`` as second.

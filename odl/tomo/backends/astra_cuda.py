@@ -59,7 +59,7 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
         Space to which the calling operator maps
     out : `DiscreteLpVector`, optional
         Vector in the projection space to which the result is written. If
-        `None` creates an element in the projection space ``proj_space``
+        None creates an element in the projection space ``proj_space``
 
     Returns
     -------
@@ -164,7 +164,7 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
             Space to which the calling operator maps
         out : `DiscreteLpVector`, optional
             Vector in the reconstruction space to which the result is written.
-            If `None` creates an element in the reconstruction space
+            If None creates an element in the reconstruction space
             ``reco_space``
 
         Returns

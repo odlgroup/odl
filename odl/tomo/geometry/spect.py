@@ -45,15 +45,15 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             Partition of the angle interval
         dpart : 2-dim. `RectPartition`
             Partition of the detector parameter rectangle
-        det_rad : positive `float`
+        det_rad : positive float
             Radius of the circular detector orbit.
-        axis : `array-like`, shape ``(3,)``, optional
+        axis : array-like, shape ``(3,)``, optional
             Fixed rotation axis.
-        orig_to_det_init : `array-like`, shape ``(3,)``, optional
+        orig_to_det_init : array-like, shape ``(3,)``, optional
             Vector pointing towards the detector reference point in
             the initial position.
             Default: a `perpendicular_vector` to ``axis``.
-        det_init_axes : 2-tuple of `array-like` (shape ``(3,)``), optional
+        det_init_axes : 2-tuple of array-like (shape ``(3,)``), optional
             Initial axes defining the detector orientation.
             Default: the normalized cross product of ``axis`` and
             ``orig_to_det_init`` is used as first axis and ``axis`` as second.

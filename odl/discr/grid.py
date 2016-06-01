@@ -43,12 +43,12 @@ def sparse_meshgrid(*x):
 
     Parameters
     ----------
-    x1,...,xN : `array-like`
+    x1,...,xN : array-like
         Input arrays to turn into sparse meshgrid vectors
 
     Returns
     -------
-    meshgrid : `tuple` of `numpy.ndarray`
+    meshgrid : tuple of numpy.ndarray
         Sparse coordinate vectors representing an N-dimensional grid
 
     See also
@@ -108,7 +108,7 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        vec1,...,vecN : `array-like`
+        vec1,...,vecN : array-like
             The coordinate vectors defining the grid points. They must
             be sorted in ascending order and may not contain
             duplicates. Empty vectors are not allowed.
@@ -182,7 +182,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        coord_vectors : tuple of `numpy.ndarray`'s
+        coord_vectors : tuple of numpy.ndarray's
 
         Examples
         --------
@@ -371,18 +371,18 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other : `object`
+        other :
             Object to be tested
-        atol : `float`
+        atol : float
             Allow deviations up to this number in absolute value
             per vector entry.
 
         Returns
         -------
-        equals : `bool`
-            `True` if ``other`` is a `TensorGrid` instance with all
+        equals : bool
+            True if ``other`` is a `TensorGrid` instance with all
             coordinate vectors equal (up to the given tolerance), to
-            the ones of this grid, otherwise `False`.
+            the ones of this grid, False otherwise.
 
         Examples
         --------
@@ -421,9 +421,9 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        other : `array-like` or `float`
+        other : array-like or float
             The object to test for membership in this grid
-        atol : `float`
+        atol : float
             Allow deviations up to this number in absolute value
             per vector entry.
 
@@ -460,7 +460,7 @@ class TensorGrid(Set):
         ----------
         other :  `TensorGrid`
             The other grid which is supposed to contain this grid
-        atol : `float`
+        atol : float
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
@@ -506,7 +506,7 @@ class TensorGrid(Set):
 
         Parameters
         ----------
-        index : `int`
+        index : int
             The index of the dimension before which ``other`` is to
             be inserted. Negative indices count backwards from
             ``self.ndim``.
@@ -589,7 +589,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        points : `numpy.ndarray`
+        points : numpy.ndarray
             The shape of the array is ``size x ndim``, i.e. the points
             are stored as rows.
 
@@ -662,7 +662,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        corners : `numpy.ndarray`
+        corners : numpy.ndarray
             The size of the array is 2^m x ndim, where m is the number
             of non-degenerate axes, i.e. the corners are stored as rows.
 
@@ -688,7 +688,7 @@ class TensorGrid(Set):
 
         Returns
         -------
-        meshgrid : `tuple` of `numpy.ndarray`
+        meshgrid : tuple of numpy.ndarray
             Function evaluation grid with ``ndim`` axes
 
         See also
@@ -727,7 +727,7 @@ class TensorGrid(Set):
         ----------
         indices : index expression
             Object determining which parts of the grid to extract.
-            `None` (new axis) and empty axes are not supported.
+            None (new axis) and empty axes are not supported.
 
         Examples
         --------
@@ -780,7 +780,7 @@ class TensorGrid(Set):
         Parameters
         ----------
         dtype : `numpy.dtype`
-            The numpy dtype of the result array. Default: `float`
+            The numpy dtype of the result array. Default: float
 
         Examples
         --------
@@ -832,13 +832,13 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        min_pt : `array-like` or `float`
+        min_pt : array-like or float
             Grid point with minimum coordinates, can be a single float
             for 1D grids
-        max_pt : `array-like` or `float`
+        max_pt : array-like or float
             Grid point with maximum coordinates, can be a single float
             for 1D grids
-        shape : `array-like` or `int`
+        shape : array-like or int
             The number of grid points per axis, can be an integer for
             1D grids
 
@@ -929,7 +929,7 @@ class RegularGrid(TensorGrid):
         ----------
         other :
             Check if this object is a subgrid
-        atol : `float`
+        atol : float
             Allow deviations up to this number in absolute value
             per coordinate vector entry.
 
@@ -993,7 +993,7 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        index : `int`
+        index : int
             Index of the dimension before which ``other`` is to
             be inserted. Negative indices count backwards from
             ``self.ndim``.
@@ -1070,7 +1070,7 @@ class RegularGrid(TensorGrid):
         ----------
         indices : index expression
             Object determining which parts of the grid to extract.
-            `None` (new axis) and empty axes are not supported.
+            None (new axis) and empty axes are not supported.
 
         Examples
         --------
@@ -1158,16 +1158,16 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     ----------
     intv_prod : `IntervalProd`
         Set to be sampled
-    num_nodes : `int` or `tuple` of `int`
-        Number of nodes per axis. For dimension >= 2, a `tuple`
+    num_nodes : int or tuple of int
+        Number of nodes per axis. For dimension >= 2, a tuple
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
-    nodes_on_bdry : `bool` or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (True) or shift it
         by half a cell size into the interior (False). In each axis,
-        an entry may consist in a single `bool` or a 2-tuple of
-        `bool`. In the latter case, the first tuple entry decides for
+        an entry may consist in a single bool or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
         sequence must be ``array.ndim``.
 
@@ -1276,20 +1276,20 @@ def uniform_sampling(begin, end, num_nodes, nodes_on_bdry=True):
 
     Parameters
     ----------
-    begin : `array-like` or `float`
+    begin : array-like or float
         The lower ends of the intervals in the product
-    end : `array-like` or `float`
+    end : array-like or float
         The upper ends of the intervals in the product
-    num_nodes : `int` or `tuple` of `int`
-        Number of nodes per axis. For dimension >= 2, a `tuple`
+    num_nodes : int or tuple of int
+        Number of nodes per axis. For dimension >= 2, a tuple
         is required. All entries must be positive. Entries
         corresponding to degenerate axes must be equal to 1.
-    nodes_on_bdry : `bool` or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (True) or shift it
         by half a cell size into the interior (False). In each axis,
-        an entry may consist in a single `bool` or a 2-tuple of
-        `bool`. In the latter case, the first tuple entry decides for
+        an entry may consist in a single bool or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
         sequence must be ``array.ndim``.
 

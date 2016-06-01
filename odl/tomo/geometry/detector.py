@@ -140,7 +140,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        measure : `float`
+        measure : float
             The density value at the given parameter
 
         .. _Arc length:
@@ -173,7 +173,7 @@ class FlatDetector(Detector):
 
         Returns
         -------
-        measure : `float`
+        measure : float
             Constant density 1.0
         """
         if param not in self.params:
@@ -197,7 +197,7 @@ class Flat1dDetector(FlatDetector):
         part : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
             line elements
-        axis : `array-like`, shape ``(2,)``
+        axis : array-like, shape ``(2,)``
             Principal axis of the detector
         """
         super().__init__(part)
@@ -239,7 +239,7 @@ class Flat1dDetector(FlatDetector):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (2,)
+        point : numpy.ndarray, shape (2,)
             The point on the detector surface corresponding to the
             given parameters
         """
@@ -259,7 +259,7 @@ class Flat1dDetector(FlatDetector):
 
         Returns
         -------
-        derivative : `numpy.ndarray`, shape (2,)
+        derivative : numpy.ndarray, shape (2,)
             The constant derivative
         """
         if param is not None and param not in self.params:
@@ -293,7 +293,7 @@ class Flat2dDetector(FlatDetector):
         part : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
             pixels
-        axes : 2-tuple of `array-like` (shape ``(3,)``)
+        axes : 2-tuple of array-like (shape ``(3,)``)
             Principal axes of the detector, e.g.
             ``[(0, 1, 0), (0, 0, 1)]``
         """
@@ -345,7 +345,7 @@ class Flat2dDetector(FlatDetector):
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (3,)
+        point : numpy.ndarray, shape (3,)
             The point on the detector surface corresponding to the
             given parameters
         """
@@ -365,7 +365,7 @@ class Flat2dDetector(FlatDetector):
 
         Returns
         -------
-        derivatives : 2-tuple of `numpy.ndarray` (shape ``(3,)``)
+        derivatives : 2-tuple of numpy.ndarray (shape ``(3,)``)
             The constant partial derivatives given by the detector axes
         """
         if param is not None and param not in self.params:
@@ -404,7 +404,7 @@ class CircleSectionDetector(Detector):
         part : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
             angle sections along the line
-        circ_rad : positive `float`
+        circ_rad : positive float
             Radius of the circle along which the detector is curved
         """
         super().__init__(part)
@@ -461,7 +461,7 @@ class CircleSectionDetector(Detector):
 
         Returns
         -------
-        measure : `float`
+        measure : float
             The constant density ``r``, equal to the length of the
             tangent to the detector circle at any point
         """

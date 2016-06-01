@@ -66,14 +66,14 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Partition of the angle interval
         dpart : 2-dim. `RectPartition`
             Partition of the detector parameter rectangle
-        src_radius : nonnegative `float`
+        src_radius : nonnegative float
             Radius of the source circle
-        det_radius : nonnegative `float`
+        det_radius : nonnegative float
             Radius of the detector circle
-        pitch : `float`
+        pitch : float
             Constant vertical distance that a point on the helix
             traverses when increasing the angle parameter by ``2 * pi``
-        axis : `array-like`, shape ``(3,)``, optional
+        axis : array-like, shape ``(3,)``, optional
             Fixed rotation axis, the symmetry axis of the helix
 
         Other Parameters
@@ -82,12 +82,12 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
             By default, a `perpendicular_vector` to ``axis`` is used.
-        det_init_axes : 2-tuple of `array-like` (shape ``(2,)``), optional
+        det_init_axes : 2-tuple of array-like (shape ``(2,)``), optional
             Initial axes defining the detector orientation.
             By default, the normalized cross product of ``axis`` and
             ``src_to_det_init`` is used as first axis and ``axis`` as
             second.
-        pitch_offset : `float`, optional
+        pitch_offset : float, optional
             Offset along the ``axis`` at ``angle=0``
         """
         AxisOrientedGeometry.__init__(self, axis)
@@ -174,13 +174,13 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (3,)
+        point : numpy.ndarray, shape (3,)
             Detector reference point corresponding to the given angle
 
         See also
@@ -217,13 +217,13 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 
         Returns
         -------
-        point : `numpy.ndarray`, shape (3,)
+        point : numpy.ndarray, shape (3,)
             Detector reference point corresponding to the given angle
 
         See also
@@ -312,17 +312,17 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
             Partition of the angle interval
         dpart : 2-dim. `RectPartition`
             Partition of the detector parameter rectangle
-        src_radius : nonnegative `float`
+        src_radius : nonnegative float
             Radius of the source circle
-        det_radius : nonnegative `float`
+        det_radius : nonnegative float
             Radius of the detector circle
-        axis : `array-like`, shape ``(3,)``, optional
+        axis : array-like, shape ``(3,)``, optional
             Fixed rotation axis, the symmetry axis of the helix
-        src_to_det_init : `array-like`, shape ``(2,)``, optional
+        src_to_det_init : array-like (shape ``(2,)``), optional
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
             By default, a `perpendicular_vector` to ``axis`` is used.
-        det_init_axes : 2-tuple of `array-like` (shape ``(2,)``), optional
+        det_init_axes : 2-tuple of array-like (shape ``(2,)``), optional
             Initial axes defining the detector orientation.
             By default, the normalized cross product of ``axis`` and
             ``src_to_det_init`` is used as first axis and ``axis`` as
