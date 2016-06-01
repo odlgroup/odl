@@ -114,15 +114,15 @@ def mayo_projector_from_folder(reco_space, folder, nr_start=1, nr_end=-1):
     pitch = (pixel_size[1] * shape[1] * datasets[0].SpiralPitchFactor *
              src_radius / (src_radius + det_radius))
     pitch_offset = (datasets[0].DetectorFocalCenterAxialPosition -
-                    angles[0] / np.pi * pitch)
+                    angles[0] / (2 * np.pi) * pitch)
 
     # Get flying focal spot data
     offset_axial = np.array([d.SourceAxialPositionShift for d in datasets])
     offset_angular = -np.array([d.SourceAngularPositionShift for d in datasets])
     offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
 
-    offset_x = np.cos(angles) * src_radius - np.cos(angles + offset_angular) * (src_radius + offset_radial)
-    offset_y =  np.sin(angles) * src_radius - np.sin(angles + offset_angular) * (src_radius + offset_radial)
+    offset_x = np.cos(angles + offset_angular) * (-(src_radius + offset_radial)) - np.cos(angles) * (-src_radius)
+    offset_y =  np.sin(angles + offset_angular) * (-(src_radius + offset_radial)) - np.sin(angles) * (-src_radius)
     offset_z = offset_axial
 
     source_offsets = np.array([offset_x, offset_y, offset_z]).T
@@ -158,8 +158,8 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     folder = 'E:/Data/MayoClinic data/Training Cases/L067/full_DICOM-CT-PD'
-    nr_start = 16000
-    nr_end = 20000
+    nr_start = 14000
+    nr_end = 18000
 
     # Discrete reconstruction space: discretized functions on the cube
     # [-20, 20]^3 with 300 samples per dimension.
@@ -168,7 +168,7 @@ if __name__ == '__main__':
         nsamples=[400, 400, 50], dtype='float32')
 
     ray_trafo, proj_data = mayo_projector_from_folder(reco_space, folder,
-                                                      16000, 20000)
+                                                      nr_start, nr_end)
 
     if False:
         # Test FBP reconstruction
@@ -204,7 +204,7 @@ if __name__ == '__main__':
         print('Performing CG')
         partial = odl.solvers.ShowPartial('Conjugate gradient',
                                           coords=[None, None, 227],
-                                          clim=[0.013, 0.025])
+                                          clim=[0.015, 0.025])
 
         x = ray_trafo.domain.zero()
         odl.solvers.conjugate_gradient_normal(ray_trafo, x,
