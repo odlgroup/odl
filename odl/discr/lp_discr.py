@@ -279,15 +279,12 @@ class DiscreteLp(DiscretizedSpace):
         elif inp in self.dspace:
             return self.element_type(self, inp)
 
-        # uspace element -> discretize
-        try:
+        if callable(inp):
+            # uspace element -> discretize
             inp_elem = self.uspace.element(inp)
             return self.element_type(self, self.sampling(inp_elem, **kwargs))
-        except TypeError:
-            pass
-
-        # Sequence-type input
-        try:
+        else:
+            # Sequence-type input
             arr = np.asarray(inp, dtype=self.dtype, order=self.order)
             if arr.ndim > 1 and arr.shape != self.shape:
                 arr = np.squeeze(arr)  # Squeeze could solve the problem
@@ -297,9 +294,6 @@ class DiscreteLp(DiscretizedSpace):
                         ''.format(arr.shape, self.shape))
             arr = arr.ravel(order=self.order)
             return self.element_type(self, self.dspace.element(arr))
-        except (TypeError, IndexError, ValueError) as err:
-            raise_from(ValueError('unable to create an element of {} from '
-                                  '{!r}: {}'.format(self, inp, err)), err)
 
     @property
     def interp(self):
