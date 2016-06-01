@@ -34,7 +34,7 @@ import odl
 from odl.trafos.wavelet import (
     coeff_size_list_axes, coeff_size_list, pywt_list_to_array,
     pywt_dict_to_array, array_to_pywt_list, array_to_pywt_dict,
-    wavelet_decomposition3d, wavelet_reconstruction3d, WaveletTransform)
+    WaveletTransform)
 from odl.util.testutils import (all_almost_equal, all_equal,
                                 skip_if_no_pywavelets)
 
@@ -82,38 +82,6 @@ def test_coeff_size_list_axes():
 
 
 @skip_if_no_pywavelets
-def test_wavelet_decomposition3d_and_reconstruction3d():
-    # Test 3D wavelet decomposition and reconstruction and verify that
-    # they perform as expected
-    x = np.random.rand(16, 16, 16)
-    mode = 'sym'
-    wbasis = pywt.Wavelet('db5')
-    nscales = 1
-    wavelet_coeffs = wavelet_decomposition3d(x, wbasis, mode, nscales)
-    aaa = wavelet_coeffs[0]
-    reference = pywt.dwtn(x, wbasis, mode)
-    aaa_reference = reference['aaa']
-    assert all_almost_equal(aaa, aaa_reference)
-
-    reconstruction = wavelet_reconstruction3d(wavelet_coeffs, wbasis, mode,
-                                              nscales)
-    reconstruction_reference = pywt.idwtn(reference, wbasis, mode)
-    assert all_almost_equal(reconstruction, reconstruction_reference)
-    assert all_almost_equal(reconstruction, x)
-    assert all_almost_equal(reconstruction_reference, x)
-
-    wbasis = pywt.Wavelet('db1')
-    nscales = 3
-    wavelet_coeffs = wavelet_decomposition3d(x, wbasis, mode, nscales)
-    shape_true = (nscales + 1, )
-    assert all_equal(np.shape(wavelet_coeffs), shape_true)
-
-    reconstruction = wavelet_reconstruction3d(wavelet_coeffs, wbasis, mode,
-                                              nscales)
-    assert all_almost_equal(reconstruction, x)
-
-
-@skip_if_no_pywavelets
 def test_pywt_list_to_array_and_array_to_pywt_list():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
@@ -153,17 +121,16 @@ def test_pywt_list_to_array_and_array_to_pywt_list():
     # 3D test
     size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
     x = np.random.rand(n, n, n)
-    coeff_dict = wavelet_decomposition3d(x, wbasis, mode, nscales)
-    coeff_arr = pywt_list_to_array(coeff_dict, size_list)
+    coeff_list = pywt.wavedecn(x, wbasis, mode, nscales)
+    coeff_arr = pywt_list_to_array(coeff_list, size_list)
     assert isinstance(coeff_arr, (np.ndarray))
     length_of_array = np.prod(size_list[0])
     length_of_array += sum(7 * np.prod(shape) for shape in size_list[1:-1])
     assert len(coeff_arr) == length_of_array
 
-    coeff_dict2 = array_to_pywt_list(coeff_arr, size_list)
-    reconstruction = wavelet_reconstruction3d(coeff_dict2, wbasis, mode,
-                                              nscales)
-    assert all_equal(coeff_dict, coeff_dict)
+    coeff_list2 = array_to_pywt_list(coeff_arr, size_list)
+    reconstruction = pywt.waverecn(coeff_list2, wbasis, mode)
+    assert all_equal(coeff_list, coeff_list2)
     assert all_almost_equal(reconstruction, x)
 
 
@@ -191,6 +158,7 @@ def test_pywt_dict_to_array_and_array_to_pywt_dict():
     reconstruction = pywt.idwtn(coeff_dict_converted, wbasis, mode, axes)
     assert all_almost_equal(reconstruction, x)
 
+    # 3D
     axes = [0, 0, 0]
     size_list = coeff_size_list_axes((n, n, n), wbasis, mode, axes)
 
@@ -241,18 +209,11 @@ def test_dwt():
     assert coeffs in disc_range
 
     # Compute the inverse wavelet transform
-    reconstruction1 = Wop.inverse(coeffs)
-    # With othogonal wavelets the inverse is the adjoint
-    reconstruction2 = Wop.adjoint(coeffs)
-    # Verify that the output of Wop.inverse and Wop.adjoint are the same
-    assert all_almost_equal(reconstruction1.asarray(),
-                            reconstruction2.asarray())
+    reconstruction = Wop.inverse(coeffs)
 
     # Verify that reconstructions lie in correct discretized domain
-    assert reconstruction1 in disc_domain
-    assert reconstruction2 in disc_domain
-    assert all_almost_equal(reconstruction1.asarray(), x)
-    assert all_almost_equal(reconstruction2.asarray(), x)
+    assert reconstruction in disc_domain
+    assert all_almost_equal(reconstruction.asarray(), x)
 
     # ---------------------------------------------------------------
     # 2D test
@@ -284,18 +245,11 @@ def test_dwt():
     assert coeffs in disc_range
 
     # Compute the inverse wavelet transform
-    reconstruction1 = Wop.inverse(coeffs)
-    # With othogonal wavelets the inverse is the adjoint
-    reconstruction2 = Wop.adjoint(coeffs)
-    # Verify that the output of Wop.inverse and Wop.adjoint are the same
-    assert all_almost_equal(reconstruction1.asarray(),
-                            reconstruction2.asarray())
+    reconstruction = Wop.inverse(coeffs)
 
     # Verify that reconstructions lie in correct discretized domain
-    assert reconstruction1 in disc_domain
-    assert reconstruction2 in disc_domain
-    assert all_almost_equal(reconstruction1.asarray(), x)
-    assert all_almost_equal(reconstruction2.asarray(), x)
+    assert reconstruction in disc_domain
+    assert all_almost_equal(reconstruction.asarray(), x)
 
     # -------------------------------------------------------------
     # 3D test
@@ -324,24 +278,17 @@ def test_dwt():
     assert coeffs in disc_range
 
     # Compute the inverse wavelet transform
-    reconstruction1 = Wop.inverse(coeffs)
-    # With othogonal wavelets the inverse is the adjoint
-    reconstruction2 = Wop.adjoint(coeffs)
-
-    # Verify that the output of Wop.inverse and Wop.adjoint are the same
-    assert all_almost_equal(reconstruction1, reconstruction2)
+    reconstruction = Wop.inverse(coeffs)
 
     # Verify that reconstructions lie in correct discretized domain
-    assert reconstruction1 in disc_domain
-    assert reconstruction2 in disc_domain
-    assert all_almost_equal(reconstruction1.asarray(), x)
-    assert all_almost_equal(reconstruction2, disc_phantom)
+    assert reconstruction in disc_domain
+    assert all_almost_equal(reconstruction.asarray(), x)
 
 
 @skip_if_no_pywavelets
 def test_axes_option():
     # 2D
-    n = 4
+    n = 16
     x = np.ones((n, n))
     wbasis = pywt.Wavelet('db1')
     mode = 'sym'
@@ -380,7 +327,7 @@ def test_axes_option():
     # 3D
     x = np.ones((n, n, n))
     axes = [0, 0, 2]
-    size_list = coeff_size_list_axes((n, n), wbasis, mode, axes)
+    size_list = coeff_size_list_axes((n, n, n), wbasis, mode, axes)
     # Define a discretized domain
     disc_domain = odl.uniform_discr([-1] * 3, [1] * 3, [n] * 3,
                                     dtype='float32')

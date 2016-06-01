@@ -246,7 +246,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
 
 def pywt_dict_to_array(coeffs, size_list):
-    """Convert a PyWavelet coefficiet dictionary into a flat array.
+    """Convert a PyWavelet coefficient dictionary into a flat array.
 
     Related to 1D, 2D and 3D discrete wavelet transforms with `axes` option.
 
@@ -316,32 +316,24 @@ def pywt_dict_to_array(coeffs, size_list):
         flat_coeff[start:stop] = d.ravel()
 
     elif ndim == 2:
-        aa = coeffs['aa']
-        ad = coeffs['ad']
-        da = coeffs['da']
-        dd = coeffs['dd']
-        details = (ad, da, dd)
+        keys = list(coeffs.keys())
+        keys.sort()
+        details = tuple(coeffs[key] for key in keys if 'd' in key)
         coeff_list = []
         coeff_list.append(details)
-        coeff_list.append(aa)
+        coeff_list.append(coeffs['aa'])
         coeff_list.reverse()
         flat_coeff = pywt_list_to_array(coeff_list, size_list)
 
     elif ndim == 3:
-        aaa = coeffs['aaa']
-        aad = coeffs['aad']
-        ada = coeffs['ada']
-        add = coeffs['add']
-        daa = coeffs['daa']
-        dad = coeffs['dad']
-        dda = coeffs['dda']
-        ddd = coeffs['ddd']
-        details = (aad, ada, add, daa, dad, dda, ddd)
+        keys = list(coeffs.keys())
+        keys.sort()
+        details = tuple(coeffs[key] for key in keys if 'd' in key)
         coeff_list = []
         coeff_list.append(details)
-        coeff_list.append(aaa)
+        coeff_list.append(coeffs['aaa'])
         coeff_list.reverse()
-        flat_coeff[start:stop] = aaa.ravel()
+        flat_coeff[start:stop] = coeffs['aaa'].ravel()
         for fsize, detail_coeffs in zip(flat_sizes[1:], coeff_list[1:]):
             for dcoeff in detail_coeffs:
                 start, stop = stop, stop + fsize
@@ -444,12 +436,24 @@ def pywt_list_to_array(coeff, size_list):
     stop = flat_sizes[0]
     flat_coeff[start:stop] = coeff[0].ravel()
 
-    for fsize, detail_coeffs in zip(flat_sizes[1:], coeff[1:]):
-        if dcoeffs_per_scale == 1:
+    if dcoeffs_per_scale == 1:
+        for fsize, detail_coeffs in zip(flat_sizes[1:], coeff[1:]):
             start, stop = stop, stop + fsize
             flat_coeff[start:stop] = detail_coeffs.ravel()
-        else:
+    elif dcoeffs_per_scale == 3:
+        for fsize, detail_coeffs in zip(flat_sizes[1:], coeff[1:]):
             for dcoeff in detail_coeffs:
+                start, stop = stop, stop + fsize
+                flat_coeff[start:stop] = dcoeff.ravel()
+    elif dcoeffs_per_scale == 7:
+        for ind in range(1, len(size_list) - 1):
+            detail_coeffs_dict = coeff[ind]
+            keys = list(detail_coeffs_dict.keys())
+            keys.sort()
+            details = tuple(detail_coeffs_dict[key] for key in
+                            keys if 'd' in key)
+            fsize = flat_sizes[ind]
+            for dcoeff in details:
                 start, stop = stop, stop + fsize
                 flat_coeff[start:stop] = dcoeff.ravel()
 
@@ -537,9 +541,8 @@ def array_to_pywt_dict(coeff, size_list):
     elif ndim == 3:
         coeff_list = array_to_pywt_list(coeff, size_list)
         aaa = coeff_list[0]
-        (aad, ada, add, daa, dad, dda, ddd) = coeff_list[1]
-        coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
-                      'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
+        coeff_dict = coeff_list[1]
+        coeff_dict['aaa'] = aaa
 
     return coeff_dict
 
@@ -635,178 +638,32 @@ def array_to_pywt_list(coeff, size_list):
     ndim = len(size_list[0])
     dcoeffs_per_scale = 2 ** ndim - 1
 
-    for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
-        start, stop = stop, stop + dcoeffs_per_scale * fsize
-        if dcoeffs_per_scale == 1:
+    if dcoeffs_per_scale == 1:
+        for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
+            start, stop = stop, stop + dcoeffs_per_scale * fsize
             detail_coeffs = np.asarray(coeff)[start:stop]
-        else:
+            coeff_list.append(detail_coeffs)
+    elif ndim == 2:
+        for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
+            start, stop = stop, stop + dcoeffs_per_scale * fsize
             detail_coeffs = tuple(c.reshape(shape) for c in
                                   np.split(np.asarray(coeff)[start:stop],
                                            dcoeffs_per_scale))
-        coeff_list.append(detail_coeffs)
+            coeff_list.append(detail_coeffs)
+    elif ndim == 3:
+        for ind in range(1, len(size_list) - 1):
+            fsize = flat_sizes[ind]
+            shape = size_list[ind]
+            start, stop = stop, stop + dcoeffs_per_scale * fsize
+            detail_coeffs = tuple(c.reshape(shape) for c in
+                                  np.split(np.asarray(coeff)[start:stop],
+                                           dcoeffs_per_scale))
+            (aad, ada, add, daa, dad, dda, ddd) = detail_coeffs
+            coeff_dict = {'aad': aad, 'ada': ada, 'add': add,
+                          'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
+            coeff_list.append(coeff_dict)
 
     return coeff_list
-
-
-def wavelet_decomposition3d(x, wbasis, pad_mode, nscales):
-    """Discrete 3D multiresolution wavelet decomposition.
-
-    Compute the discrete 3D multiresolution wavelet decomposition
-    at the given level (nscales) for a given 3D image.
-    Utilizes a `n-dimensional PyWavelet
-    <http://www.pybytes.com/pywavelets/ref/other-functions.html>`_
-    function ``pywt.dwtn``.
-
-    Parameters
-    ----------
-    x : `DiscreteLpElement`
-
-    wbasis : ``pywt.Wavelet``
-        Selected wavelet basis. For more information see the
-        `PyWavelets documentation on wavelet bases
-        <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
-
-    pad_mode : string
-        Signal extention mode. For possible extensions see the
-        `Pywavelets documentation on signal extenstion modes
-        <http://www.pybytes.com/pywavelets/ref/\
-signal-extension-modes.html>`_.
-
-
-    nscales : int
-       Number of scales in the coefficient list.
-
-    Returns
-    -------
-    coeff_list : list
-
-        A list of coefficient organized in the following way
-         ```[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``` .
-
-         The abbreviations refer to
-
-         ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-         ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-         ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
-
-         ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
-
-         ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-         ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-         ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
-
-         ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
-
-         ``N`` = the number of scaling levels
-    """
-
-    wcoeffs = pywt.dwtn(x, wbasis, pad_mode)
-    aaa = wcoeffs['aaa']
-    aad = wcoeffs['aad']
-    ada = wcoeffs['ada']
-    add = wcoeffs['add']
-    daa = wcoeffs['daa']
-    dad = wcoeffs['dad']
-    dda = wcoeffs['dda']
-    ddd = wcoeffs['ddd']
-
-    details = (aad, ada, add, daa, dad, dda, ddd)
-    coeff_list = []
-    coeff_list.append(details)
-
-    for _ in range(1, nscales):
-        wcoeffs = pywt.dwtn(aaa, wbasis, pad_mode)
-        aaa = wcoeffs['aaa']
-        aad = wcoeffs['aad']
-        ada = wcoeffs['ada']
-        add = wcoeffs['add']
-        daa = wcoeffs['daa']
-        dad = wcoeffs['dad']
-        dda = wcoeffs['dda']
-        ddd = wcoeffs['ddd']
-        details = (aad, ada, add, daa, dad, dda, ddd)
-        coeff_list.append(details)
-
-    coeff_list.append(aaa)
-    coeff_list.reverse()
-
-    return coeff_list
-
-
-def wavelet_reconstruction3d(coeff_list, wbasis, pad_mode, nscales):
-    """Discrete 3D multiresolution wavelet reconstruction
-
-    Compute a discrete 3D multiresolution wavelet reconstruction
-    from a given wavelet coefficient list.
-    Utilizes a `PyWavelet
-    <http://www.pybytes.com/pywavelets/ref/other-functions.html>`_
-    function ``pywt.dwtn``
-
-    Parameters
-    ----------
-    coeff_list : list
-        A list of wavelet approximation and detail coefficients
-        organized in the following way
-        ```[caaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]```.
-
-        The abbreviations refer to
-
-        ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on3rd dim,
-
-        ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
-
-        ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
-
-        ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
-
-        ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
-
-        ``N`` = the number of scaling levels
-
-    wbasis :  ``_pywt.Wavelet``
-        Describes properties of a selected wavelet basis.
-        For more information see PyWavelet `documentation
-        <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
-
-    pad_mode : string
-        Signal extention mode. For possible extensions see the
-        `signal extenstion modes
-        <http://www.pybytes.com/pywavelets/ref/\
-signal-extension-modes.html>`_
-        of PyWavelets.
-
-    nscales : int
-        Number of scales in the coefficient list.
-
-    Returns
-    -------
-    x : `numpy.ndarray`
-        A wavalet reconstruction.
-    """
-    aaa = coeff_list[0]
-    (aad, ada, add, daa, dad, dda, ddd) = coeff_list[1]
-    coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
-                  'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
-    for tpl in coeff_list[2:]:
-        aaa = pywt.idwtn(coeff_dict, wbasis, pad_mode)
-        (aad, ada, add, daa, dad, dda, ddd) = tpl
-        coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
-                      'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
-
-    x = pywt.idwtn(coeff_dict, wbasis, pad_mode)
-    return x
 
 
 class WaveletTransform(Operator):
@@ -920,7 +777,6 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                                  'dimension. Axes len is {} and dimension '
                                  'is {}.'.format(len(axes), domain.ndim))
             else:
-                # TODO new helper function for the size_list with axes option
                 self.size_list = coeff_size_list_axes(
                     domain.shape, self.wbasis, self.pad_mode, self._axes)
                 ran_size = np.prod(self.size_list[0])
@@ -997,8 +853,8 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                 return self.range.element(coeff_arr)
 
             if x.space.ndim == 3:
-                coeff_list = wavelet_decomposition3d(
-                    x, self.wbasis, self.pad_mode, self.nscales)
+                coeff_list = pywt.wavedecn(x, self.wbasis, self.pad_mode,
+                                           self.nscales)
                 coeff_arr = pywt_list_to_array(coeff_list, self.size_list)
 
                 return self.range.element(coeff_arr)
@@ -1140,7 +996,6 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                                  'dimension. Axes len is {} and dimension '
                                  'is {}.'.format(len(axes), range.ndim))
             else:
-                # TODO new helper function for the size_list with axes option
                 self.size_list = coeff_size_list_axes(
                     range.shape, self.wbasis, self.pad_mode, self._axes)
                 dom_size = np.prod(self.size_list[0])
@@ -1213,9 +1068,9 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                 return self.range.element(x)
             elif len(self.range.shape) == 3:
                 coeff_list = array_to_pywt_list(coeff, self.size_list)
-                x = wavelet_reconstruction3d(coeff_list, self.wbasis,
-                                             self.pad_mode, self.nscales)
+                x = pywt.waverecn(coeff_list, self.wbasis, self.pad_mode)
                 return x
+
         else:
             coeff_dict = array_to_pywt_dict(coeff, self.size_list)
             x = pywt.idwtn(coeff_dict, self.wbasis, self.pad_mode, self._axes)
