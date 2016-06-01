@@ -21,6 +21,7 @@ from odl.tomo.geometry import (\
 from odl.tomo.util.utility import perpendicular_vector
 from odl.tomo.geometry.pet import CylindricalPetGeom
 
+sys.path.append('/home/stir/python')
 try:
     import stir
     # Fix for stirextra being moved around in various stir versions
@@ -46,13 +47,60 @@ __all__ = ('STIR_AVAILABLE',
            'stir_get_STIR_data_as_array',\
            'stir_get_domain_from_Proj_info',\
            'stir_unified_display_function',\
-           'stir_transform_array_to_STIR_orientation',
-           'stir_transform_array_to_STIR_orientation_reverse')
+           'stir_transform_array_to_STIR_orientation',\
+           'stir_transform_array_to_STIR_orientation_reverse',\
+           'stir_get_discretized_image_from_Cartesian_voxels')
 
 #
 #
 # INTERFACE FUNCTIONS FROM ODL TO STIR
 #
+
+def stir_get_discretized_image_from_Cartesian_voxels(_voxels):
+
+    # Number of voxels
+    # This function returns [ x, y, z]
+    # range_size = stir.Int3BasicCoordinate()
+    # range_size[3] = np.int32(im_dim[0])  #: x
+    # range_size[2] = np.int32(im_dim[1])  #: y
+    # range_size[1] = np.int32(im_dim[2])  #: z
+
+    ind_range = _voxels.get_index_range()
+
+    # Voxel size
+    # This function returns [ x, y, z]
+    # voxel_size = stir.Float3BasicCoordinate()
+    # voxel_size[3] = np.float32(vox_size[0])  #: z
+    # voxel_size[2] = np.float32(vox_size[1])  #: y
+    # voxel_size[1] = np.float32(vox_size[2])  #: x
+
+    # Shift initial point relatively to 0,0,0
+    # This function returns [ x, y, z]
+    im_origin = stir.FloatCartesianCoordinate3D()
+    im_origin[3] = np.float32(0.0)
+    im_origin[2] = np.float32(0.0)
+    im_origin[1] = np.float32(0.0)
+
+    dic = stir.Float3DDiscretisedDensityOnCartesianGrid(ind_range,im_origin)
+    dic.set_index_range(ind_range)
+    dic.set_origin(im_origin)
+
+    # domain = stir.FloatVoxelsOnCartesianGrid(ind_range, im_origin, voxel_size)
+    dic.fill(np.float32(0.0))
+
+    nx = dic.get_x_size()
+    ny = dic.get_y_size()
+    nz = dic.get_z_size()
+
+    min_ind = dic.get_min_indices()
+    max_ind = dic.get_max_indices()
+    leng = dic.get_lengths()
+
+    ori = dic.get_origin()
+    minPH = dic.get_physical_coordinates_for_indices(dic.get_min_indices())
+    maxPH = dic.get_physical_coordinates_for_indices(dic.get_max_indices())
+
+    return dic
 
 def stir_get_ODL_domain_which_honours_STIR_restrictions(_vox_num, _vox_size):
     """
@@ -179,9 +227,10 @@ def stir_get_STIR_geometry(_num_rings, _num_dets_per_ring,
     # bin_size = (_det_radius*2) / (_num_dets_per_ring/2)
     max_num_non_arc_cor_bins = int(_num_dets_per_ring/2)
 
-    scanner = stir.Scanner.get_scanner_from_name('Unknown_scanner')
+    scanner = stir.Scanner.get_scanner_from_name('')
 
-    scanner.set_num_rings(_num_rings)
+    scanner.set_num_rings(np.int32(_num_rings))
+    scanner.set_num_detectors_per_ring(np.int32(_num_dets_per_ring))
     scanner.set_default_bin_size(np.float32(_voxel_size_xy))
     scanner.set_default_num_arccorrected_bins(np.int32(max_num_non_arc_cor_bins))
     scanner.set_default_intrinsic_tilt(np.float32(_intrinsic_tilt))
@@ -197,7 +246,10 @@ def stir_get_STIR_geometry(_num_rings, _num_dets_per_ring,
     scanner.set_num_transaxial_crystals_per_singles_unit(np.int32(_trans_crystals_per_singles_unit))
     scanner.set_num_detector_layers(np.int32(_num_detector_layers))
 
-    return scanner
+    if scanner.check_consistency():
+        return scanner
+    else:
+        raise TypeError('Something is wrong in the scanner geometry.')
 
 
 def stir_get_projection_data_info(_stir_scanner, _span_num,\
@@ -240,7 +292,7 @@ def stir_get_projection_data_info(_stir_scanner, _span_num,\
         max_ring_diff = np.int32(_max_num_segments)
 
     num_of_views = np.int32(_num_of_views)
-    if(_data_arc_corrected):
+    if _data_arc_corrected:
         num_bins = np.int32(_stir_scanner.get_default_num_arccorrected_bins())
     else:
         num_bins = np.int32(_stir_scanner.get_max_num_non_arccorrected_bins())
@@ -272,7 +324,7 @@ def stir_get_projection_data(_projdata_info,
     return stir.ProjDataInMemory(exam_info, _projdata_info, _zeros)
 
 
-def stir_get_STIR_domain_from_ODL(_discreteLP, _fill_value=0.0):
+def stir_get_STIR_domain_from_ODL(_discreteLP, _fill_value=0.0, _get_me= False):
     """
     Interface function to get a STIR domain without caring about the classes names.
 
@@ -285,7 +337,7 @@ def stir_get_STIR_domain_from_ODL(_discreteLP, _fill_value=0.0):
 
     """
 
-    return create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discreteLP, _fill_value)
+    return create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discreteLP, _fill_value, _get_me)
 
 
 def stir_get_domain_from_Proj_info(_proj_info, _zoom, _size = [-1, -1, -1], _offset = [0, 0, 0]):
@@ -549,7 +601,7 @@ def get_volume_geometry(discr_reco):
 
 
 
-def create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discr, _fill_value = 0.0):
+def create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discr, _fill_value = 0.0, get_me = False):
     """
     This class defines multi-dimensional (numeric) arrays.
     This class implements multi-dimensional arrays which can have 'irregular' ranges.
@@ -576,19 +628,26 @@ def create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discr, _fill_value = 0.0
 
     # Number of voxels
     # This function returns [ x, y, z]
-    range_size = stir.Int3BasicCoordinate()
-    range_size[3] = np.int32(im_dim[0]) #: x
-    range_size[2] = np.int32(im_dim[1]) #: y
-    range_size[1] = np.int32(im_dim[2]) #: z
+    min_indices = stir.Int3BasicCoordinate()
 
-    ind_range = stir.IndexRange3D(range_size)
+    min_indices[3] = np.int32(-im_dim[0]/2) #: x
+    min_indices[2] = np.int32(-im_dim[1]/2) #: y
+    min_indices[1] = np.int32(0) #: z
 
-    # Voxel size
+    # ind_range = stir.IndexRange3D(range_size)
+
+    max_indices =  stir.Int3BasicCoordinate()
+
+    max_indices[3] = min_indices[3] + np.int32(im_dim[0]) -1 #: x
+    max_indices[2] = min_indices[2] + np.int32(im_dim[1]) -1 #: y
+    max_indices[1] = min_indices[1] + np.int32(im_dim[2]) -1 #: z
+
     # This function returns [ x, y, z]
     voxel_size = stir.Float3BasicCoordinate()
     voxel_size[3] = np.float32(vox_size[0]) #: z
     voxel_size[2] = np.float32(vox_size[1]) #: y
     voxel_size[1] = np.float32(vox_size[2]) #: x
+
 
     # Shift initial point relatively to 0,0,0
     # This function returns [ x, y, z]
@@ -597,20 +656,30 @@ def create_empty_VoxelsOnCartesianGrid_from_DiscreteLP(_discr, _fill_value = 0.0
     im_origin[2] = np.float32(0.0)
     im_origin[1] = np.float32(0.0)
 
-    domain = stir.FloatVoxelsOnCartesianGrid( ind_range, im_origin, voxel_size)
+    first_pixel_offset_x = vox_size[0] * min_indices[3]
+    first_pixel_offset_y = vox_size[1] * min_indices[2]
+    first_pixel_offset_z = vox_size[2] * min_indices[1]
+
+    im_origin[3] = first_pixel_offset_x - vox_size[0] * min_indices[3]
+    im_origin[2] = first_pixel_offset_y - vox_size[0] * min_indices[2]
+    im_origin[1] = first_pixel_offset_z - vox_size[0] * min_indices[1]
+
+    range = stir.IndexRange3D(min_indices, max_indices)
+
+    domain = stir.FloatVoxelsOnCartesianGrid( range , im_origin, voxel_size)
     domain.fill(np.float32(_fill_value))
 
-    # nx = domain.get_x_size()
-    # ny = domain.get_y_size()
-    # nz = domain.get_z_size()
-    #
-    # min_ind = domain.get_min_indices()
-    # max_ind = domain.get_max_indices()
-    # leng = domain.get_lengths()
-    #
-    # ori = domain.get_origin()
-    # minPH = domain.get_physical_coordinates_for_indices(domain.get_min_indices())
-    # maxPH = domain.get_physical_coordinates_for_indices(domain.get_max_indices())
+    nx = domain.get_x_size()
+    ny = domain.get_y_size()
+    nz = domain.get_z_size()
+
+    min_ind = domain.get_min_indices()
+    max_ind = domain.get_max_indices()
+    leng = domain.get_lengths()
+
+    ori = domain.get_origin()
+    minPH = domain.get_physical_coordinates_for_indices(domain.get_min_indices())
+    maxPH = domain.get_physical_coordinates_for_indices(domain.get_max_indices())
 
     return domain
 
@@ -629,8 +698,11 @@ def create_DiscreteLP_from_STIR_VoxelsOnCartesianGrid(_voxels):
     An ODL DiscreteLP object with characteristics of the VoxelsOnCartesianGrid
     """
 
-    stir_vox_num = _voxels.get_max_indices()
-    vox_num = [stir_vox_num[1]+1, stir_vox_num[2]+1,stir_vox_num[3]+1]
+    stir_vox_max = _voxels.get_max_indices()
+    stir_vox_min = _voxels.get_min_indices()
+    vox_num = [stir_vox_max[1] - stir_vox_min[1] +1,
+               stir_vox_max[2] - stir_vox_min[2] +1,
+               stir_vox_max[3] - stir_vox_min[3] +1]
 
     stir_vol_max = _voxels.get_physical_coordinates_for_indices(_voxels.get_max_indices())
     stir_vol_min = _voxels.get_physical_coordinates_for_indices(_voxels.get_min_indices())

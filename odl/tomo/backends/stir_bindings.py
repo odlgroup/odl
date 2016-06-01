@@ -41,6 +41,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
+import sys
+sys.path.append('/home/stir/python')
 
 try:
     import stir
@@ -133,28 +135,27 @@ class ForwardProjectorByBinWrapper(Operator):
 
         # Create forward projection by matrix
         if projector is None:
-            proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
-            proj_matrix.set_do_symmetry_90degrees_min_phi(True)
-            proj_matrix.set_do_symmetry_180degrees_min_phi(True)
-            proj_matrix.set_do_symmetry_swap_s(True)
-            proj_matrix.set_do_symmetry_swap_segment(True)
-            proj_matrix.set_num_tangential_LORs(np.int32(1))
+            self.proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
+            self.proj_matrix.set_do_symmetry_90degrees_min_phi(True)
+            self.proj_matrix.set_do_symmetry_180degrees_min_phi(True)
+            self.proj_matrix.set_do_symmetry_swap_s(True)
+            self.proj_matrix.set_do_symmetry_swap_segment(True)
+            self.proj_matrix.set_num_tangential_LORs(np.int32(1))
 
-            proj_matrix.set_up(self.proj_data_info, self.volume)
+            self.proj_matrix.set_up(self.proj_data_info, self.volume)
 
 
-            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin (proj_matrix)
+            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(self.proj_matrix)
 
-            stir.Float3DDiscretisedDensity()
             self.projector.set_up(self.proj_data_info, self.volume)
 
             # If no adjoint was given, we initialize a projector here to
             # save time.
             if adjoint is None:
                 back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(
-                    proj_matrix)
+                    self.proj_matrix)
                 back_projector.set_up(self.proj_data_info,
-                                      self.volume)
+                                       self.volume)
         else:
             # If user wants to provide both a projector and a back-projector,
             # he should wrap the back projector in an Operator
@@ -271,7 +272,7 @@ class BackProjectorByBinWrapper(Operator):
         self.proj_data.fill(projections.asarray().flat)
 
         # back-project
-        with StirVerbosity(0):
+        with StirVerbosity(1):
             self.back_projector.back_project(self.volume, self.proj_data)
 
         # make odl data
