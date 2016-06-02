@@ -1333,6 +1333,17 @@ class OperatorLeftScalarMult(Operator):
             self._op(x, out=out)
             out *= self._scalar
 
+    def __rmul__(self, other):
+        """Implement ``other * self``.
+
+        An optimization for repeated multiplications.
+        """
+
+        if other in self.range.field:
+            return OperatorLeftScalarMult(self._op, self._scalar * other)
+        else:
+            return super().__rmul__(other)
+
     @property
     def inverse(self):
         """The inverse operator.
@@ -1450,6 +1461,18 @@ class OperatorRightScalarMult(Operator):
             tmp = self._tmp if self._tmp is not None else self.domain.element()
             tmp.lincomb(self._scalar, x)
             self._op(tmp, out=out)
+
+    def __mul__(self, other):
+        """Implement ``self * other``.
+
+        An optimization for repeated multiplications.
+        """
+
+        if other in self.range.field:
+            return OperatorRightScalarMult(self._op, self._scalar * other,
+                                           self._tmp)
+        else:
+            return super().__rmul__(other)
 
     @property
     def inverse(self):
