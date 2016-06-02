@@ -87,14 +87,14 @@ ODL development group
 To contact the developers either write an issue on github or send an email to odl@math.kth.se
 
 ##### Main developers
-- Jonas Adler (@adler-j)
-- Holger Kohr (@kohr-h)
+- Jonas Adler ([@adler-j](https://github.com/adler-j))
+- Holger Kohr ([@kohr-h](https://github.com/kohr-h))
 
 ##### Further contributors
-- Julian Moosmann (@moosmann)
-- Kati Niinimäki (@niinimaki)
-- Axel Ringh (@aringh)
-- Ozan Öktem (@ozanoktem)
+- Julian Moosmann ([@moosmann](https://github.com/moosmann))
+- Kati Niinimäki ([@niinimaki](https://github.com/niinimaki))
+- Axel Ringh ([@aringh](https://github.com/aringh))
+- Ozan Öktem ([@ozanoktem](https://github.com/ozanoktem))
 
 
 Funding
