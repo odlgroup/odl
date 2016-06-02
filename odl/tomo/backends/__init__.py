@@ -23,6 +23,10 @@ __all__ = ()
 
 from . import stir_bindings
 
+from . import stir_setup
+from .stir_setup import *
+__all__ += stir_setup.__all__
+
 from . import astra_setup
 from .astra_setup import *
 __all__ += astra_setup.__all__

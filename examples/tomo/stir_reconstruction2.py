@@ -34,18 +34,6 @@ import odl
 # Set path to input files
 base = pth.join(pth.dirname(pth.abspath(__file__)), 'data', 'stir')
 
-# volume_file = str(pth.join(base, 'initial.hv'))
-#
-# N.E. Replace the call to this function by creating a new ODL space and
-# transform it to STIR domain.
-#
-# New ODL domain
-# N.E. At a later point we are going to define a scanner with ring spacing 4.16
-# therefore the z voxel size must be a divisor of that size.
-discr_dom_odl = odl.tomo.stir_get_ODL_domain_which_honours_STIR_restrictions([64, 64, 15], [2.05941, 2.05941, 3.125])
-odl_phantom = odl.util.shepp_logan(discr_dom_odl, modified=True)
-
-stir_domain = odl.tomo.stir_get_STIR_domain_from_ODL(discr_dom_odl, 0.0)
 
 #
 #
@@ -58,28 +46,28 @@ stir_domain = odl.tomo.stir_get_STIR_domain_from_ODL(discr_dom_odl, 0.0)
 # This would correspond to the mCT scanner
 #
 # Detector x size in mm - plus the ring difference
-det_nx_mm = 6.25
+det_nx_mm = 4.16
 # Detector y size in mm - plus the ring difference
-det_ny_mm = 6.25
+det_ny_mm = 4.16
 # Total number of rings
-num_rings = 8
+num_rings = 52
 # Total number of detectors per ring
-num_dets_per_ring = 112
+num_dets_per_ring = 624
 # Inner radius of the scanner (crystal surface)
-det_radius = 57.5 # in mm
+det_radius = 42.4 # in mm
 
 #
 # Additional things that STIR would like to know
 #
-average_depth_of_inter = 7.0 # in mm
+average_depth_of_inter = 1.2 # in mm
 ring_spacing = det_ny_mm
-voxel_size_xy = 1.65 # in mm
-axial_crystals_per_block = 8
-trans_crystals_per_block = 7
-axials_blocks_per_bucket = 1
-trans_blocks_per_bucket = 16
-axial_crystals_per_singles_unit = 8
-trans_crystals_per_singles_unit = 0
+voxel_size_xy = 2.5 # in mm
+axial_crystals_per_block = 13
+trans_crystals_per_block = 13
+axials_blocks_per_bucket = 4
+trans_blocks_per_bucket_v = 1
+axial_crystals_per_singles_unit = 13
+trans_crystals_per_singles_unit = 13
 num_detector_layers = 1
 intrinsic_tilt = 0.0
 
@@ -95,7 +83,7 @@ stir_scanner = odl.tomo.stir_get_STIR_geometry(num_rings, num_dets_per_ring,\
                                                average_depth_of_inter,\
                                                voxel_size_xy,\
                                                axial_crystals_per_block, trans_crystals_per_block,\
-                                               axials_blocks_per_bucket, trans_blocks_per_bucket,\
+                                               axials_blocks_per_bucket, trans_blocks_per_bucket_v,\
                                                axial_crystals_per_singles_unit, trans_crystals_per_singles_unit,\
                                                num_detector_layers, intrinsic_tilt)
 
@@ -124,7 +112,7 @@ span_num = 1
 # In 3D PET segment = 0 refers to direct sinograms
 # The maximum number of segment can be 2*NUM_RINGS - 1
 # Setting the followin variable to -1 implies : maximum possible
-max_num_segments = 3
+max_num_segments = 1
 
 # If the views is less than half the number of detectors defined in
 #  the Scanner then we subsample the scanner angular positions.
@@ -145,13 +133,19 @@ data_arc_corrected = False
 # Now lets create the proper projector info
 proj_info = odl.tomo.stir_get_projection_data_info(stir_scanner, span_num,
                                                    max_num_segments, num_of_views,
-                                                   num_non_arccor_bins, data_arc_corrected,
-                                                   stir_domain)
+                                                   num_non_arccor_bins, data_arc_corrected)
+
+
+# Now let proj_info give a proper domain
+zoom_factor = 1
+# todo: The constructor {projDataInfo, zoom, -1, 0} seems to have a bug, since it initializes only the z axis.
+stir_domain = odl.tomo.stir_get_domain_from_Proj_info(proj_info, zoom_factor)
+
 
 #
 # Now lets create the projector data space (range)
 # or any empty sinogram
-#
+
 initialize_to_zero = True
 proj_data = odl.tomo.stir_get_projection_data(proj_info, initialize_to_zero)
 
@@ -160,21 +154,26 @@ proj_data = odl.tomo.stir_get_projection_data(proj_info, initialize_to_zero)
 #
 #
 
-#
-# I don't enough time to develope all the transformations, therefore I define the
-# dummies discr_dom and phantom which are ODL objects oriented as STIR need them to be.
-#
-#
+# Unfortunately, I don't have enough time to create all possible image/data tranformations.
+# I skip that part by defining a domain which is oriented in the STIR way.
 
-# A DiscreteLP domain which has the STIR orientation
+# z , y, x domain
 dummy_discr_dom_odl = odl.tomo.stir_get_ODL_domain_from_STIR(stir_domain)
 
-# A sample phantom in the dummy odl domain with STIR orientation
+# A sample phantom in the dummy odl domain
 dummy_odl_phantom = odl.util.shepp_logan(dummy_discr_dom_odl, modified=True)
+
+
+
+# A transform the sample phantom to STIR phantom -
+# Here I am not using the dummy domain and phantom because this transformation has been
+# validated
+stir_phantom = odl.tomo.stir_get_STIR_image_from_ODL_Vector(discr_dom_odl, odl_phantom)
+
 
 # Initialize the forward projector
 proj = odl.tomo.backends.stir_bindings.stir_projector_from_memory(dummy_discr_dom_odl,\
-                                                                  stir_domain,\
+                                                                  stir_phantom,\
                                                                   proj_data,
                                                                   proj_info)
 

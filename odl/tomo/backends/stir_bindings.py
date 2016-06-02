@@ -41,6 +41,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import super
+import sys
+sys.path.append('/home/stir/python')
 
 try:
     import stir
@@ -56,11 +58,14 @@ except ImportError:
 
 from odl.discr.lp_discr import uniform_discr
 from odl.operator.operator import Operator
+from odl.tomo.backends import stir_setup
 
+import numpy as np
 
 __all__ = ('ForwardProjectorByBinWrapper',
            'BackProjectorByBinWrapper',
            'stir_projector_from_file',
+           'stir_projector_from_memory'
            'STIR_AVAILABLE')
 
 
@@ -88,6 +93,7 @@ class ForwardProjectorByBinWrapper(Operator):
     """
 
     def __init__(self, dom, ran, volume, proj_data,
+                 _proj_info,
                  projector=None, adjoint=None):
         """Initialize a new instance.
 
@@ -123,24 +129,33 @@ class ForwardProjectorByBinWrapper(Operator):
 
         # Read template of the projection
         self.proj_data = proj_data
-        self.proj_data_info = proj_data.get_proj_data_info()
+        # self.proj_data_info = proj_data.get_proj_data_info()
+        self.proj_data_info = _proj_info
         self.volume = volume
 
         # Create forward projection by matrix
         if projector is None:
-            proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
-            proj_matrix.set_up(self.proj_data_info, self.volume)
-            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(
-                proj_matrix)
+            self.proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
+            self.proj_matrix.set_do_symmetry_90degrees_min_phi(True)
+            self.proj_matrix.set_do_symmetry_180degrees_min_phi(True)
+            self.proj_matrix.set_do_symmetry_swap_s(True)
+            self.proj_matrix.set_do_symmetry_swap_segment(True)
+            self.proj_matrix.set_num_tangential_LORs(np.int32(1))
+
+            self.proj_matrix.set_up(self.proj_data_info, self.volume)
+
+
+            self.projector = stir.ForwardProjectorByBinUsingProjMatrixByBin(self.proj_matrix)
+
             self.projector.set_up(self.proj_data_info, self.volume)
 
             # If no adjoint was given, we initialize a projector here to
             # save time.
             if adjoint is None:
                 back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(
-                    proj_matrix)
-                back_projector.set_up(self.proj_data.get_proj_data_info(),
-                                      self.volume)
+                    self.proj_matrix)
+                back_projector.set_up(self.proj_data_info,
+                                       self.volume)
         else:
             # If user wants to provide both a projector and a back-projector,
             # he should wrap the back projector in an Operator
@@ -161,7 +176,7 @@ class ForwardProjectorByBinWrapper(Operator):
         self.volume.fill(volume.asarray().flat)
 
         # project
-        with StirVerbosity(0):
+        with StirVerbosity(1):
             self.projector.forward_project(self.proj_data, self.volume)
 
         # make odl data
@@ -228,7 +243,6 @@ class BackProjectorByBinWrapper(Operator):
         # Create forward projection by matrix
         if back_projector is None:
             proj_matrix = stir.ProjMatrixByBinUsingRayTracing()
-            proj_matrix.set_up(self.proj_data_info, self.volume)
 
             self.back_projector = stir.BackProjectorByBinUsingProjMatrixByBin(
                 proj_matrix)
@@ -258,11 +272,12 @@ class BackProjectorByBinWrapper(Operator):
         self.proj_data.fill(projections.asarray().flat)
 
         # back-project
-        with StirVerbosity(0):
+        with StirVerbosity(1):
             self.back_projector.back_project(self.volume, self.proj_data)
 
         # make odl data
         out[:] = stirextra.to_numpy(self.volume)
+
 
 
 def stir_projector_from_file(volume_file, projection_file):
@@ -311,6 +326,33 @@ def stir_projector_from_file(volume_file, projection_file):
     data_sp = uniform_discr([0, 0, 0], proj_shape, proj_shape, dtype='float32')
 
     return ForwardProjectorByBinWrapper(recon_sp, data_sp, volume, proj_data)
+
+
+def stir_projector_from_memory(_recon_sp,\
+                               _volume,\
+                               _proj_data,\
+                               _proj_info):
+    """
+
+    Parameters
+    ----------
+    _recon_sp : A discreteLP object
+    _volume : A STIR VoxelsOnCatesianGrid object
+    _proj_data: A ProjData object
+
+    Returns
+    -------
+    projector : `ForwardProjectorByBinWrapper`
+        A STIR forward projector.
+    """
+
+    # TODO: set correct projection space. Currently, a default grid with
+    # stride (1, 1, 1) is used.
+    proj_shape = _proj_data.to_array().shape()
+    data_sp = uniform_discr([0, 0, 0], proj_shape, proj_shape, dtype='float32')
+
+    return ForwardProjectorByBinWrapper(_recon_sp, data_sp, _volume,
+                                        _proj_data, _proj_info)
 
 
 if __name__ == '__main__':
