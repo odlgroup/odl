@@ -31,7 +31,7 @@ __all__ = ('bfgs_method', 'broydens_first_method', 'broydens_second_method')
 # TODO: update all docs
 
 
-def bfgs_method(grad, x, line_search, niter=1, partial=None):
+def bfgs_method(grad, x, line_search, niter=1, callback=None):
     """Quasi-Newton BFGS method to minimize a differentiable function.
 
     This is a general and optimized implementation of a quasi-Newton
@@ -67,8 +67,8 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
-        Object executing code per iteration, e.g. plotting each iterate
+    callback : `callable`, optional
+        Object executing code per iteration, e.g. plotting each iterate.
 
     Returns
     -------
@@ -100,11 +100,11 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
                 (ident - grad_diff * x_update.T / y_inner_s) +
                 x_update * x_update.T / y_inner_s)
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 
-def broydens_first_method(grad, x, line_search, niter=1, partial=None):
+def broydens_first_method(grad, x, line_search, niter=1, callback=None):
     """Broyden's first method, a quasi-Newton scheme.
 
     This is a general and optimized implementation of Broyden's first
@@ -136,8 +136,8 @@ def broydens_first_method(grad, x, line_search, niter=1, partial=None):
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
-        Object executing code per iteration, e.g. plotting each iterate
+    callback : `callable`, optional
+        Object executing code per iteration, e.g. plotting each iterate.
 
     Returns
     -------
@@ -172,11 +172,11 @@ def broydens_first_method(grad, x, line_search, niter=1, partial=None):
         u /= scalprod
         hess -= u * v.T
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 
-def broydens_second_method(grad, x, line_search, niter=1, partial=None):
+def broydens_second_method(grad, x, line_search, niter=1, callback=None):
     """Broyden's first method, a quasi-Newton scheme.
 
     This is a general and optimized implementation of Broyden's second
@@ -208,7 +208,7 @@ def broydens_second_method(grad, x, line_search, niter=1, partial=None):
         Strategy to choose the step length
     niter : `int`, optional
         Number of iterations
-    partial : `Partial`, optional
+    callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
     """
     # TODO: potentially make the implementation faster by considering
@@ -235,8 +235,8 @@ def broydens_second_method(grad, x, line_search, niter=1, partial=None):
         u = (x_update + hess(grad_diff)) / grad_diff_norm2
         hess -= u * grad_diff.T
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 
 if __name__ == '__main__':

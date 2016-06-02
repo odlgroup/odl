@@ -74,20 +74,20 @@ conv = Convolution(kernel)
 iterations = 100
 omega = 1 / conv.opnorm() ** 2
 
-# Display partial
-partial = solvers.util.ForEachPartial(lambda result: plt.plot(conv(result)))
+# Display callback
+callback = solvers.CallbackApply(lambda result: plt.plot(conv(result)))
 
 # Test CGN
 plt.figure()
 plt.plot(phantom)
 solvers.conjugate_gradient_normal(conv, discr_space.zero(), phantom,
-                                  iterations, partial)
+                                  iterations, callback)
 
 # Landweber
 plt.figure()
 plt.plot(phantom)
 solvers.landweber(conv, discr_space.zero(), phantom,
-                  iterations, omega, partial)
+                  iterations, omega, callback)
 
 # testTimingCG
 with Timer("Optimized CG"):
