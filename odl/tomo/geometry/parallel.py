@@ -76,6 +76,11 @@ class ParallelGeometry(Geometry):
         """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
 
+    @property
+    def det_init_pos(self):
+        """The position of the detector reference point at angle=0."""
+        return self._det_init_pos
+
     def det_refpoint(self, angles):
         """Return the position of the detector ref. point at ``angles``.
 
@@ -234,6 +239,13 @@ class Parallel2dGeometry(ParallelGeometry):
                              ''.format(angle, self.motion_params))
         return euler_matrix(angle)
 
+    def __getitem__(self, indices):
+        """Return ``self[indices]``."""
+        motion_part, det_part = self._sliced_partitions(indices)
+        return Parallel2dGeometry(
+            motion_part, det_part, det_init_pos=self.det_init_pos,
+            det_init_axis=self.det_init_axis)
+
     def __repr__(self):
         """Return ``repr(self)``."""
 
@@ -306,6 +318,11 @@ class Parallel3dEulerGeometry(ParallelGeometry):
             raise ValueError('`apart` has dimension {}, expected '
                              '2 or 3'.format(self.motion_partition.ndim))
 
+    @property
+    def det_init_axes(self):
+        """The direction of the detector extent at angle=0."""
+        return self.detector.axes
+
     def rotation_matrix(self, angles):
         """Matrix defining the detector rotation at ``angles``.
 
@@ -327,6 +344,13 @@ class Parallel3dEulerGeometry(ParallelGeometry):
             raise ValueError('`angles` {} not in the valid range {}'
                              ''.format(angles, self.motion_params))
         return euler_matrix(*angles)
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``."""
+        motion_part, det_part = self._sliced_partitions(indices)
+        return Parallel3dEulerGeometry(
+            motion_part, det_part, det_init_pos=self.det_init_pos,
+            det_init_axes=self.det_init_axes)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -398,6 +422,19 @@ class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
         if self.motion_partition.ndim != 1:
             raise ValueError('`apart` has dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
+
+    @property
+    def det_init_axes(self):
+        """The direction of the detector extent at angle=0."""
+        return self.detector.axes
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``."""
+        motion_part, det_part = self._sliced_partitions(indices)
+        return Parallel3dAxisGeometry(
+            motion_part, det_part, axis=self.axis,
+            det_init_pos=self.det_init_pos,
+            det_init_axes=self.det_init_axes)
 
     def __repr__(self):
         """Return ``repr(self)``."""

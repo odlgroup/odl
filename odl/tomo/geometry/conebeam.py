@@ -25,6 +25,7 @@ from builtins import super
 
 import numpy as np
 
+from odl.discr.partition import RectPartition
 from odl.tomo.geometry.detector import Flat2dDetector
 from odl.tomo.geometry.geometry import (
     DivergentBeamGeometry, AxisOrientedGeometry)
@@ -246,6 +247,14 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
                                        self.pitch * angle / (np.pi * 2))
 
         return circle_component + pitch_component
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``."""
+        motion_part, det_part = self._sliced_partitions(indices)
+        return HelicalConeFlatGeometry(
+            motion_part, det_part, self.src_radius, self.det_radius,
+            self.pitch, self.axis, src_to_det_init=self.src_to_det_init,
+            det_init_axes=self.det_init_axes, pitch_offset=self.pitch_offset)
 
     def __repr__(self):
         """Return ``repr(self)``."""

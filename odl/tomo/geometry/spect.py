@@ -63,12 +63,13 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
             raise ValueError('expected a positive radius, got {}'
                              ''.format(det_rad))
 
-        orig_to_det_init = kwargs.pop('orig_to_det_init',
-                                      perpendicular_vector(axis))
+        self._orig_to_det_init = np.asarray(
+            kwargs.pop('orig_to_det_init', perpendicular_vector(axis)))
 
-        init_pos_norm = np.linalg.norm(orig_to_det_init)
+        init_pos_norm = np.linalg.norm(self._orig_to_det_init)
         if init_pos_norm > 1e-10:
-            orig_to_det_init *= self.det_radius / init_pos_norm
+            orig_to_det_init = (self._orig_to_det_init *
+                                self.det_radius / init_pos_norm)
         else:
             raise ValueError('`orig_to_det_init` {} is too close to zero'
                              ''.format(orig_to_det_init))

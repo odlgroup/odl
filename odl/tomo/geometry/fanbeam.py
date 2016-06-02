@@ -114,6 +114,17 @@ class FanFlatGeometry(DivergentBeamGeometry):
         return self._det_radius
 
     @property
+    def src_to_det_init(self):
+        """Initial state of the vector pointing from source to detector
+        reference point."""
+        return self._src_to_det_init
+
+    @property
+    def det_init_axis(self):
+        """Initial axes defining the detector orientation."""
+        return self.detector.axis
+
+    @property
     def angles(self):
         """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
@@ -212,7 +223,13 @@ class FanFlatGeometry(DivergentBeamGeometry):
                              ''.format(angle, self.motion_params))
         return euler_matrix(angle)
 
-    # TODO: back projection weighting function?
+    def __getitem__(self, indices):
+        """Return ``self[indices]``."""
+        motion_part, det_part = self._sliced_partitions(indices)
+        return FanFlatGeometry(
+            motion_part, det_part, self.src_radius, self.det_radius,
+            src_to_det_init=self.src_to_det_init,
+            det_init_axis=self.det_init_axis)
 
     def __repr__(self):
         """Return ``repr(self)``."""

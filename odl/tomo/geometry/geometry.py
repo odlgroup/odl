@@ -237,6 +237,17 @@ class Geometry(with_metaclass(ABCMeta, object)):
         """
         return self._implementation_cache
 
+    def _sliced_partitions(self, indices):
+        """Return motion and detector partition for a given slice."""
+        sliced_part = self.partition[indices]
+        motion_intv = sliced_part.set[0]
+        motion_grid = sliced_part.grid.remove(slice(1, None, None))
+        motion_part = RectPartition(motion_intv, motion_grid)
+        det_intv = sliced_part.set[1:]
+        det_grid = sliced_part.grid.remove(0)
+        det_part = RectPartition(det_intv, det_grid)
+        return motion_part, det_part
+
 
 class DivergentBeamGeometry(Geometry):
 
