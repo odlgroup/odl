@@ -355,8 +355,7 @@ def astra_projection_geometry(geometry):
         # TODO: change to parallel_vec when available
         det_width = geometry.det_partition.cell_sides[0]
         det_count = geometry.detector.size
-        # convention in 'astra_conebeam_2d_geom_to_vec' differs from ASTRA's
-        angles = geometry.angles - np.pi / 2
+        angles = geometry.angles
         proj_geom = astra.create_proj_geom('parallel', det_width, det_count,
                                            angles)
 
