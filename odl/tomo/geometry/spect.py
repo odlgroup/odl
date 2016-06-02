@@ -80,5 +80,39 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         """Radius of the detector orbit."""
         return self._det_radius
 
+    @property
+    def orig_to_det_init(self):
+        """"Direction vector towards the initial detector reference point."""
+        return self._orig_to_det_init
+
+    def __getitem__(self, indices):
+        """Return ``self[indices]``."""
+        motion_part, det_part = self._sliced_partitions(indices)
+        return ParallelHoleCollimatorGeometry(
+            motion_part, det_part, det_rad=self.det_radius,
+            axis=self.axis, orig_to_det_init=self.orig_to_det_init,
+            det_init_axes=self.det_init_axes)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        arg_fstr = '\n    {!r},\n    {!r}'
+        if not np.allclose(self.axis, [0, 0, 1]):
+            arg_fstr += ',\n    axis={axis!r}'
+
+        if not np.allclose(self.orig_to_det_init,
+                           perpendicular_vector(self.axis)):
+            arg_fstr += ',\n    orig_to_det_init={orig_to_det_init!r}'
+
+        default_axes = [np.cross(self.axis, self.orig_to_det_init), self.axis]
+        if not np.allclose(self.detector.axes, default_axes):
+            arg_fstr += ',\n    det_init_axes={det_init_axes!r}'
+
+        arg_str = arg_fstr.format(self.motion_partition,
+                                  self.det_partition,
+                                  axis=self.axis,
+                                  orig_to_det_init=self.orig_to_det_init,
+                                  det_init_axes=self.detector.axes)
+        return '{}({})'.format(self.__class__.__name__, arg_str)
+
     # Fix for bug in ABC thinking this is abstract
     rotation_matrix = AxisOrientedGeometry.rotation_matrix
