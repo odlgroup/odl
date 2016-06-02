@@ -96,18 +96,18 @@ class ProductSpaceOperator(Operator):
     ``prod_op = ProductSpaceOperator(ProductSpace(linear_space), prod_space)``
     """
 
-    def __init__(self, operators, dom=None, ran=None):
+    def __init__(self, operators, domain=None, range=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         operators : `array-like`
             An array of `Operator`'s
-        dom : `ProductSpace`, optional
+        domain : `ProductSpace`, optional
             Domain of the operator. If not provided, it is tried to be
             inferred from the operators. This requires each **column**
             to contain at least one operator.
-        ran : `ProductSpace`, optional
+        range : `ProductSpace`, optional
             Range of the operator. If not provided, it is tried to be
             inferred from the operators. This requires each **row**
             to contain at least one operator.
@@ -133,18 +133,18 @@ class ProductSpaceOperator(Operator):
         """
 
         # Validate input data
-        if dom is not None:
-            if not isinstance(dom, ProductSpace):
+        if domain is not None:
+            if not isinstance(domain, ProductSpace):
                 raise TypeError('space {!r} not a ProductSpace instance.'
-                                ''.format(dom))
-            if dom.is_weighted:
+                                ''.format(domain))
+            if domain.is_weighted:
                 raise NotImplementedError('weighted spaces not supported.')
 
-        if ran is not None:
-            if not isinstance(ran, ProductSpace):
+        if range is not None:
+            if not isinstance(range, ProductSpace):
                 raise TypeError('space {!r} not a ProductSpace instance.'
-                                ''.format(ran))
-            if ran.is_weighted:
+                                ''.format(range))
+            if range.is_weighted:
                 raise NotImplementedError('weighted spaces not supported.')
 
         # Convert ops to sparse representation
@@ -155,15 +155,15 @@ class ProductSpaceOperator(Operator):
                             ''.format(operators))
 
         # Set domain and range (or verify if given)
-        if dom is None:
+        if domain is None:
             domains = [None] * self.ops.shape[1]
         else:
-            domains = dom
+            domains = domain
 
-        if ran is None:
+        if range is None:
             ranges = [None] * self.ops.shape[0]
         else:
-            ranges = ran
+            ranges = range
 
         for row, col, op in zip(self.ops.row, self.ops.col, self.ops.data):
             if domains[col] is None:
@@ -180,28 +180,28 @@ class ProductSpaceOperator(Operator):
                                  'got {} and {}'
                                  ''.format(row, ranges[row], op.range))
 
-        if dom is None:
+        if domain is None:
             for col, sub_domain in enumerate(domains):
                 if sub_domain is None:
                     raise ValueError('Col {} empty, unable to determine '
-                                     'domain, please use `dom` parameter'
+                                     'domain, please use `domain` parameter'
                                      ''.format(col))
 
-            dom = ProductSpace(*domains)
+            domain = ProductSpace(*domains)
 
-        if ran is None:
+        if range is None:
             for row, sub_range in enumerate(ranges):
                 if sub_range is None:
                     raise ValueError('Row {} empty, unable to determine '
-                                     'range, please use `ran` parameter'
+                                     'range, please use `range` parameter'
                                      ''.format(row))
 
-            ran = ProductSpace(*ranges)
+            range = ProductSpace(*ranges)
 
         # Set linearity
         linear = all(op.is_linear for op in self.ops.data)
 
-        super().__init__(domain=dom, range=ran, linear=linear)
+        super().__init__(domain=domain, range=range, linear=linear)
 
     def _call(self, x, out=None):
         """Call the ProductSpace operators.
@@ -299,7 +299,7 @@ class ProductSpaceOperator(Operator):
         Example with linear operator (derivative is itself)
 
         >>> prod_op = ProductSpaceOperator([[0, I], [0, 0]],
-        ...                                dom=X, ran=X)
+        ...                                domain=X, range=X)
         >>> prod_op(x)
         ProductSpace(Rn(3), 2).element([
             [4.0, 5.0, 6.0],
@@ -315,7 +315,7 @@ class ProductSpaceOperator(Operator):
 
         >>> residual_op = odl.ResidualOperator(I, r3.element([1, 1, 1]))
         >>> op = ProductSpaceOperator([[0, residual_op], [0, 0]],
-        ...                           dom=X, ran=X)
+        ...                           domain=X, range=X)
 
         Calling operator gives offset by [1, 1, 1]
 
@@ -366,7 +366,7 @@ class ProductSpaceOperator(Operator):
         Matrix is transposed:
 
         >>> prod_op = ProductSpaceOperator([[0, I], [0, 0]],
-        ...                                dom=X, ran=X)
+        ...                                domain=X, range=X)
         >>> prod_op(x)
         ProductSpace(Rn(3), 2).element([
             [4.0, 5.0, 6.0],
@@ -963,7 +963,8 @@ class DiagonalOperator(ProductSpaceOperator):
         point = self.domain.element(point)
 
         derivs = [op.derivative(p) for op, p in zip(self.operators, point)]
-        return DiagonalOperator(*derivs, dom=self.domain, ran=self.range)
+        return DiagonalOperator(*derivs,
+                                domain=self.domain, range=self.range)
 
     @property
     def adjoint(self):
@@ -991,7 +992,8 @@ class DiagonalOperator(ProductSpaceOperator):
         ProductSpaceOperator.adjoint
         """
         adjoints = [op.adjoint for op in self.operators]
-        return DiagonalOperator(*adjoints, dom=self.range, ran=self.domain)
+        return DiagonalOperator(*adjoints,
+                                domain=self.range, range=self.domain)
 
     @property
     def inverse(self):
@@ -1019,7 +1021,8 @@ class DiagonalOperator(ProductSpaceOperator):
         ProductSpaceOperator.inverse
         """
         inverses = [op.inverse for op in self.operators]
-        return DiagonalOperator(*inverses, dom=self.range, ran=self.domain)
+        return DiagonalOperator(*inverses,
+                                domain=self.range, range=self.domain)
 
 
 if __name__ == '__main__':

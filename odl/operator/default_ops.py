@@ -586,7 +586,7 @@ class ConstantOperator(Operator):
     ``ConstantOperator(vector)(x) <==> vector``
     """
 
-    def __init__(self, vector, dom=None):
+    def __init__(self, vector, domain=None):
         """Initialize an instance.
 
         Parameters
@@ -594,18 +594,18 @@ class ConstantOperator(Operator):
         vector : `LinearSpaceVector`
             The vector constant to be returned
 
-        dom : `LinearSpace`, default : vector.space
+        domain : `LinearSpace`, default : vector.space
             The domain of the operator.
         """
         if not isinstance(vector, LinearSpaceVector):
             raise TypeError('vector {!r} not a LinearSpaceVector instance.'
                             ''.format(vector))
 
-        if dom is None:
-            dom = vector.space
+        if domain is None:
+            domain = vector.space
 
         self.vector = vector
-        super().__init__(dom, vector.space)
+        super().__init__(domain, vector.space)
 
     def _call(self, x, out=None):
         """Return the constant vector or assign it to ``out``.

@@ -101,9 +101,9 @@ class FunctionSetMapping(Operator):
                              'to the size {} of the partition.'
                              ''.format(dspace.size, dspace, partition.size))
 
-        dom = fset if map_type_ == 'sampling' else dspace
-        ran = dspace if map_type_ == 'sampling' else fset
-        Operator.__init__(self, dom, ran, linear=linear)
+        domain = fset if map_type_ == 'sampling' else dspace
+        range = dspace if map_type_ == 'sampling' else fset
+        Operator.__init__(self, domain, range, linear=linear)
         self._partition = partition
 
         if self.is_linear:
