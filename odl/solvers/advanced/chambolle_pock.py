@@ -168,7 +168,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
-        raise TypeError('`callback` {} is not ``callable``'
+        raise TypeError('`callback` {} is not `callable`'
                         ''.format(callback))
 
     # Initialize the relaxation variable

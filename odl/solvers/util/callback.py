@@ -25,14 +25,14 @@ standard_library.install_aliases()
 import time
 
 
-__all__ = ('SolverCallback', 'CallbackStore', 'CallbackApply',
+__all__ = ('CallbackStore', 'CallbackApply',
            'CallbackPrintTiming', 'CallbackPrintIteration',
            'CallbackPrintNorm', 'CallbackShow')
 
 
 class SolverCallback(object):
 
-    """Abstract base class for sending partial results of iterations."""
+    """Abstract base class for handling iterates of solvers."""
 
     def __call__(self, result):
         """Apply the callback object to result.
@@ -48,20 +48,20 @@ class SolverCallback(object):
         """
 
     def __and__(self, other):
-        """Return ``self & other``
+        """Return ``self & other``.
 
         Compose callbacks, calls both in sequence.
 
         Parameters
         ----------
-        other : `Partial` or `callable`
-            The other partial to compose with
+        other : `callable`
+            The other callback to compose with
 
         Returns
         -------
         result : `SolverCallback`
-            A partial whose `__call__` method calls both constituents
-            partials.
+            A callback whose `__call__` method calls both constituents
+            `__call__`.
 
         Examples
         --------
@@ -73,22 +73,18 @@ class SolverCallback(object):
         """
         return _CallbackAnd(self, other)
 
-    def __repr__(self):
-        """Return ``repr(self)``"""
-        return '{}()'.format(self.__class__.__name__)
-
 
 class _CallbackAnd(SolverCallback):
 
-    """Callback used for combining several callbacks"""
+    """Callback used for combining several callbacks."""
 
     def __init__(self, *callbacks):
         """Initialize an instance.
 
         Parameters
         ----------
-        *callbacks : `callable` or `SolverCallback`'s
-            Callbacks to be called in sequence as listed.
+        callback1, ..., callbackN : `callable`
+            Callables to be called in sequence as listed.
         """
         callbacks = [c if isinstance(c, SolverCallback) else CallbackApply(c)
                      for c in callbacks]
@@ -96,7 +92,7 @@ class _CallbackAnd(SolverCallback):
         self.callbacks = callbacks
 
     def __call__(self, result):
-        """Apply all partials to result."""
+        """Apply all callbacks to result."""
         for p in self.callbacks:
             p(result)
 
@@ -107,10 +103,12 @@ class _CallbackAnd(SolverCallback):
 
 class CallbackStore(SolverCallback):
 
-    """Simple object for storing all partial results of the solvers.
+    """Simple object for storing all iterates of a solver.
 
     Can optionally apply a function, for example the norm or calculating the
     residual.
+
+    By default, calls the `copy()` method on the iterates before storing.
     """
 
     def __init__(self, results=None, function=None):
@@ -119,7 +117,7 @@ class CallbackStore(SolverCallback):
         Parameters
         ----------
         results : `list`, optional
-            List in which to store the partial results.
+            List in which to store the iterates.
             Default: new list (``[]``)
         results : `callable`, optional
             Function to be called on all incomming results before storage.
@@ -131,7 +129,7 @@ class CallbackStore(SolverCallback):
 
         >>> callback = CallbackStore()
 
-        Provide list to store partial results in.
+        Provide list to store iterates in.
 
         >>> results = []
         >>> callback = CallbackStore(results=results)
@@ -146,7 +144,7 @@ class CallbackStore(SolverCallback):
 
     @property
     def results(self):
-        """The partial results."""
+        """The iterates."""
         return self._results
 
     def __call__(self, result):
@@ -161,7 +159,10 @@ class CallbackStore(SolverCallback):
         return iter(self.results)
 
     def __getitem__(self, index):
-        """Get partial result."""
+        """Return ``self[index]``.
+
+        Get iterates by index.
+        """
         return self.results[index]
 
     def __len__(self):
@@ -169,12 +170,12 @@ class CallbackStore(SolverCallback):
         return len(self.results)
 
     def __str__(self):
-        """Return ``str(self)``"""
+        """Return ``str(self)``."""
         resultstr = '' if self.results == [] else str(self.results)
         return 'CallbackStore({})'.format(resultstr)
 
     def __repr__(self):
-        """Return ``repr(self)``"""
+        """Return ``repr(self)``."""
         resultrepr = '' if self.results == [] else repr(self.results)
         return 'CallbackStore({})'.format(resultrepr)
 
@@ -199,11 +200,11 @@ class CallbackApply(SolverCallback):
         self.function(result)
 
     def __str__(self):
-        """Return ``str(self)``"""
+        """Return ``str(self)``."""
         return 'CallbackApply({})'.format(self.function)
 
     def __repr__(self):
-        """Return ``repr(self)``"""
+        """Return ``repr(self)``."""
         return 'CallbackApply({!r})'.format(self.function)
 
 
@@ -230,6 +231,7 @@ class CallbackPrintIteration(SolverCallback):
         self.iter += 1
 
     def __repr__(self):
+        """Return ``repr(self)``."""
         textstr = '' if self.text == self._default_text else self.text
         return 'CallbackPrintIteration({})'.format(textstr)
 
@@ -248,6 +250,10 @@ class CallbackPrintTiming(SolverCallback):
         print("Time elapsed = {:<5.03f} s".format(t - self.time))
         self.time = t
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return 'CallbackPrintTiming()'
+
 
 class CallbackPrintNorm(SolverCallback):
 
@@ -262,10 +268,20 @@ class CallbackPrintNorm(SolverCallback):
         print("norm = {}".format(result.norm()))
         self.iter += 1
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return 'CallbackPrintNorm()'
+
 
 class CallbackShow(SolverCallback):
 
-    """Show the partial result."""
+    """Show the iterates.
+
+    See Also
+    --------
+    DiscreteLpVector.show
+    BaseNtuplesVector.show
+    """
 
     def __init__(self, *args, **kwargs):
         """Initialize a new instance.
@@ -297,7 +313,7 @@ class CallbackShow(SolverCallback):
         self.iter += 1
 
     def __repr__(self):
-        """Return ``repr(self)``"""
+        """Return ``repr(self)``."""
 
         return '{}(display_step={}, fig={}, *{!r}, **{!r})'.format(
             self.__class__.__name__,
