@@ -33,7 +33,7 @@ __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
 # TODO: update all docs
 
 
-def landweber(op, x, rhs, niter=1, omega=1, projection=None, partial=None):
+def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     """Optimized implementation of Landweber's method.
 
     This method calculates an approximate least-squares solution of
@@ -94,7 +94,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, partial=None):
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
         argument and modify it in place.
-    partial : `Partial`, optional
+    callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -116,11 +116,11 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, partial=None):
         if projection is not None:
             projection(x)
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 
-def conjugate_gradient(op, x, rhs, niter=1, partial=None):
+def conjugate_gradient(op, x, rhs, niter=1, callback=None):
     """Optimized implementation of CG for self-adjoint operators.
 
     This method solves the inverse problem (of the first kind)
@@ -150,7 +150,7 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : `Partial`, optional
+    callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -197,11 +197,11 @@ def conjugate_gradient(op, x, rhs, niter=1, partial=None):
 
         p.lincomb(1, r, beta, p)                       # p = s + b * p
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 
-def conjugate_gradient_normal(op, x, rhs, niter=1, partial=None):
+def conjugate_gradient_normal(op, x, rhs, niter=1, callback=None):
     """Optimized implementation of CG for the normal equation.
 
     This method solves the normal equation
@@ -237,7 +237,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    partial : `Partial`, optional
+    callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -275,8 +275,8 @@ Conjugate_gradient_on_the_normal_equations>`_.
 
         p.lincomb(1, s, b, p)               # p = s + b * p
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 
 def exp_zero_seq(base):
@@ -309,7 +309,7 @@ def exp_zero_seq(base):
 
 
 def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
-                 partial=None):
+                 callback=None):
     """Optimized implementation of a Gauss-Newton method.
 
     This method solves the inverse problem (of the first kind)
@@ -345,7 +345,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     zero_seq : `iterable`, optional
         Zero sequence whose values are used for the regularization of
         the linearized problem in each Newton step
-    partial : `Partial`, optional
+    callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -386,8 +386,8 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
         # Update x
         x.lincomb(1, x0, 1, dx)  # x = x0 + dx
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

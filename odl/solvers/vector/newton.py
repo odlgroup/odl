@@ -29,7 +29,7 @@ __all__ = ('newtons_method',)
 
 
 def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
-                   partial=None):
+                   callback=None):
     """Newton's method for solving a system of equations.
 
     This is a general and optimized implementation of Newton's method
@@ -60,7 +60,7 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
     cg_iter : `int`, optional
         Number of iterations in the the conjugate gradient solver,
         for computing the search direction.
-    partial : `Partial`, optional
+    callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Notes
@@ -105,8 +105,8 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
         # Updating
         x += step_length * search_direction
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

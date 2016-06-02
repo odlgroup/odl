@@ -30,7 +30,7 @@ __all__ = ('steepest_descent',)
 
 
 def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
-                     partial=None):
+                     callback=None):
     """Steepest descent method to minimize an objective function.
 
     General implementation of steepest decent (also known as gradient
@@ -68,7 +68,7 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
         argument and modify it inplace.
-    partial : `Partial`, optional
+    callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     See Also
@@ -98,8 +98,8 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
         if projection is not None:
             projection(x)
 
-        if partial is not None:
-            partial(x)
+        if callback is not None:
+            callback(x)
 
 
 if __name__ == '__main__':

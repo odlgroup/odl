@@ -108,9 +108,9 @@ niter = 400  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 
-# Optionally pass partial to the solver to display intermediate results
-partial = (odl.solvers.PrintIterationPartial() &
-           odl.solvers.ShowPartial())
+# Optionally pass callback to the solver to display intermediate results
+callback = (odl.solvers.CallbackPrintIteration() &
+            odl.solvers.CallbackShow())
 
 # Choose a starting point
 x = op.domain.zero()
@@ -118,7 +118,7 @@ x = op.domain.zero()
 # Run the algorithm
 odl.solvers.chambolle_pock_solver(
     op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
-    proximal_dual=proximal_dual, niter=niter, partial=partial)
+    proximal_dual=proximal_dual, niter=niter, callback=callback)
 
 # Display images
 discr_phantom.show(title='original image')

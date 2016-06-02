@@ -82,9 +82,9 @@ prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.1,
 proximal_dual = odl.solvers.combine_proximals(prox_convconj_kl,
                                               prox_convconj_l1)
 
-# Optional: pass partial objects to solver
-partial = (odl.solvers.PrintIterationPartial() &
-           odl.solvers.ShowPartial(display_step=20))
+# Optional: pass callback objects to solver
+callback = (odl.solvers.CallbackPrintIteration() &
+            odl.solvers.CallbackShow(display_step=20))
 
 
 # --- Select solver parameters and solve using Chambolle-Pock --- #
@@ -103,7 +103,7 @@ x = op.domain.zero()
 # Run algorithms (and display intermediates)
 odl.solvers.chambolle_pock_solver(
     op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
-    proximal_dual=proximal_dual, niter=niter, partial=partial)
+    proximal_dual=proximal_dual, niter=niter, callback=callback)
 
 # Display images
 orig.show(title='original image')
