@@ -359,10 +359,10 @@ class FunctionSetVector(Operator):
             txt_1d = ' or (n,)' if ndim == 1 else ''
             raise TypeError('argument {!r} not a valid vectorized '
                             'input. Expected an element of the domain '
-                            '{dom}, an array-like with shape '
-                            '({dom.ndim}, n){} or a length-{dom.ndim} '
+                            '{domain}, an array-like with shape '
+                            '({domain.ndim}, n){} or a length-{domain.ndim} '
                             'meshgrid tuple.'
-                            ''.format(x, txt_1d, dom=self.domain))
+                            ''.format(x, txt_1d, domain=self.domain))
 
         # Check bounds if specified
         if bounds_check:

@@ -336,9 +336,9 @@ class Operator(object):
         The set this operator maps to
 
     It is **highly** recommended to call
-    ``super().__init__(dom, ran)`` (Note: add
+    ``super().__init__(domain, range)`` (Note: add
     ``from builtins import super`` in Python 2) in the ``__init__()``
-    method of any subclass, where ``dom`` and ``ran`` are the arguments
+    method of any subclass, where ``domain`` and ``range`` are the arguments
     specifying domain and range of the new operator. In that case, the
     attributes `Operator.domain` and `Operator.range` are automatically
     provided by the parent class `Operator`.
@@ -1854,7 +1854,7 @@ class OpNotImplementedError(NotImplementedError):
     """
 
 
-def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
+def simple_operator(call=None, inv=None, deriv=None, domain=None, range=None,
                     linear=False):
     """Create a simple operator.
 
@@ -1868,10 +1868,10 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
         The operator inverse
     deriv : `Operator`, optional
         The operator derivative, linear
-    dom : `Set`, optional
+    domain : `Set`, optional
         The domain of the operator
         Default: `UniversalSpace` if linear, else `UniversalSet`
-    ran : `Set`, optional
+    range : `Set`, optional
         The range of the operator
         Default: `UniversalSpace` if linear, else `UniversalSet`
     linear : `bool`, optional
@@ -1883,24 +1883,17 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
     op : `Operator`
         An operator with the provided attributes and methods.
 
-    Notes
-    -----
-    It suffices to supply one of the functions ``call`` and ``apply``.
-    If ``dom`` is a `LinearSpace`, a default implementation of the
-    respective other method is automatically provided; if not, a
-    `OpNotImplementedError` is raised when the other method is called.
-
     Examples
     --------
     >>> A = simple_operator(lambda x: 3*x)
     >>> A(5)
     15
     """
-    if dom is None:
-        dom = UniversalSpace() if linear else UniversalSet()
+    if domain is None:
+        domain = UniversalSpace() if linear else UniversalSet()
 
-    if ran is None:
-        ran = UniversalSpace() if linear else UniversalSet()
+    if range is None:
+        range = UniversalSpace() if linear else UniversalSet()
 
     call_has_out, call_out_optional, _ = _dispatch_call_args(unbound_call=call)
 
@@ -1934,7 +1927,7 @@ def simple_operator(call=None, inv=None, deriv=None, dom=None, ran=None,
     attrs['_call'] = _call
 
     SimpleOperator = type('SimpleOperator', (Operator,), attrs)
-    return SimpleOperator(dom, ran, linear)
+    return SimpleOperator(domain, range, linear)
 
 
 if __name__ == '__main__':

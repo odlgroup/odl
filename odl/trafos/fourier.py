@@ -22,6 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import range, super
+range_seq = range  # avoid duplicate names
 from future.utils import raise_from
 
 from math import pi
@@ -548,19 +549,19 @@ class DiscreteFourierTransform(Operator):
        http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
     """
 
-    def __init__(self, dom, ran=None, axes=None, sign='-', halfcomplex=False,
-                 impl='numpy'):
+    def __init__(self, domain, range=None, axes=None, sign='-',
+                 halfcomplex=False, impl='numpy'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `DiscreteLp`
+        domain : `DiscreteLp`
             Domain of the Fourier transform. If its
             `DiscreteLp.exponent` is equal to 2.0, this operator has
             an adjoint which is equal to the inverse.
-        ran : `DiscreteLp`, optional
+        range : `DiscreteLp`, optional
             Range of the Fourier transform. If not given, the range
-            is determined from ``dom`` and the other parameters as
+            is determined from ``domain`` and the other parameters as
             a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
         axes : sequence of `int`, optional
@@ -604,12 +605,12 @@ class DiscreteFourierTransform(Operator):
         >>> fft.domain.shape
         (2, 3, 4)
         """
-        if not isinstance(dom, DiscreteLp):
+        if not isinstance(domain, DiscreteLp):
             raise TypeError('domain {!r} is not a DiscreteLp instance.'
-                            ''.format(dom))
-        if ran is not None and not isinstance(ran, DiscreteLp):
+                            ''.format(domain))
+        if range is not None and not isinstance(range, DiscreteLp):
             raise TypeError('range {!r} is not a DiscreteLp instance.'
-                            ''.format(ran))
+                            ''.format(range))
 
         # Implementation
         self._impl = str(impl).lower()
@@ -621,21 +622,21 @@ class DiscreteFourierTransform(Operator):
 
         # Axes
         if axes is None:
-            axes_ = np.arange(dom.ndim)
+            axes_ = np.arange(domain.ndim)
         else:
             axes_ = np.atleast_1d(axes)
-            axes_[axes_ < 0] += dom.ndim
-            if not all(0 <= ax < dom.ndim for ax in axes_):
+            axes_[axes_ < 0] += domain.ndim
+            if not all(0 <= ax < domain.ndim for ax in axes_):
                 raise ValueError('invalid entries in axes.')
         self._axes = list(axes_)
 
         # Half-complex
-        if dom.field == ComplexNumbers():
+        if domain.field == ComplexNumbers():
             self._halfcomplex = False
-            ran_dtype = dom.dtype
+            ran_dtype = domain.dtype
         else:
             self._halfcomplex = bool(halfcomplex)
-            ran_dtype = _TYPE_MAP_R2C[dom.dtype]
+            ran_dtype = _TYPE_MAP_R2C[domain.dtype]
 
         # Sign of the transform
         if sign not in ('+', '-'):
@@ -647,23 +648,27 @@ class DiscreteFourierTransform(Operator):
 
         # Calculate the range
         ran_shape = reciprocal(
-            dom.grid, shift=False, halfcomplex=halfcomplex, axes=axes).shape
+            domain.grid, shift=False, halfcomplex=halfcomplex, axes=axes).shape
 
-        if ran is None:
-            impl = 'cuda' if isinstance(dom.dspace, CudaNtuples) else 'numpy'
-            ran = discr_sequence_space(
-                ran_shape, conj_exponent(dom.exponent), impl=impl,
-                dtype=ran_dtype, order=dom.order)
+        if range is None:
+            if isinstance(domain.dspace, CudaNtuples):
+                impl = 'cuda'
+            else:
+                impl = 'numpy'
+
+            range = discr_sequence_space(
+                ran_shape, conj_exponent(domain.exponent), impl=impl,
+                dtype=ran_dtype, order=domain.order)
         else:
-            if ran.shape != ran_shape:
+            if range.shape != ran_shape:
                 raise ValueError('expected range shape {}, got {}.'
-                                 ''.format(ran_shape, ran.shape))
-            if ran.dtype != ran_dtype:
+                                 ''.format(ran_shape, range.shape))
+            if range.dtype != ran_dtype:
                 raise ValueError('expected range data type {}, got {}.'
                                  ''.format(dtype_repr(ran_dtype),
-                                           dtype_repr(ran.dtype)))
+                                           dtype_repr(range.dtype)))
 
-        super().__init__(dom, ran, linear=True)
+        super().__init__(domain, range, linear=True)
         self._fftw_plan = None
 
     def _call(self, x, out, **kwargs):
@@ -816,7 +821,7 @@ class DiscreteFourierTransform(Operator):
         """Inverse Fourier transform."""
         sign = '+' if self.sign == '-' else '-'
         return DiscreteFourierTransformInverse(
-            dom=self.range, ran=self.domain, axes=self.axes,
+            domain=self.range, range=self.domain, axes=self.axes,
             halfcomplex=self.halfcomplex, sign=sign)
 
     def init_fftw_plan(self, planning_effort='measure', **kwargs):
@@ -912,19 +917,19 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
     .. _What FFTW really computes:
        http://www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
     """
-    def __init__(self, ran, dom=None, axes=None, sign='+', halfcomplex=False,
-                 impl='numpy'):
+    def __init__(self, range, domain=None, axes=None, sign='+',
+                 halfcomplex=False, impl='numpy'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        ran : `DiscreteLp`
+        range : `DiscreteLp`
             Range of the inverse Fourier transform. If its
             `DiscreteLp.exponent` is equal to 2.0, this operator has
             an adjoint which is equal to the inverse.
-        dom : `DiscreteLp`, optional
+        domain : `DiscreteLp`, optional
             Domain of the inverse Fourier transform. If not given, the
-            domain is determined from ``ran`` and the other parameters
+            domain is determined from ``range`` and the other parameters
             as a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
         axes : sequence of `int`, optional
@@ -939,7 +944,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
             case, the domain has by default the shape
             ``floor(N[i]/2) + 1`` in this axis ``i``.
             Otherwise, domain and range have the same shape. If
-            ``ran`` is a complex space, this option has no effect.
+            ``range`` is a complex space, this option has no effect.
         impl : {'numpy', 'pyfftw'}
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
@@ -974,7 +979,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
         # scenarios.
         bwd_sign = sign
         fwd_sign = '-' if sign == '+' else '+'
-        super().__init__(dom=ran, ran=dom, axes=axes, sign=fwd_sign,
+        super().__init__(domain=range, range=domain, axes=axes, sign=fwd_sign,
                          halfcomplex=halfcomplex, impl=impl)
         self._domain, self._range = self._range, self._domain
         self._sign = bwd_sign
@@ -1066,7 +1071,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
         """Inverse Fourier transform."""
         sign = '-' if self.sign == '+' else '+'
         return DiscreteFourierTransform(
-            dom=self.range, ran=self.domain, axes=self.axes,
+            domain=self.range, range=self.domain, axes=self.axes,
             halfcomplex=self.halfcomplex, sign=sign)
 
 
@@ -1483,19 +1488,19 @@ class FourierTransform(Operator):
     dft_postprocess_data
     """
 
-    def __init__(self, dom, ran=None, impl='numpy', **kwargs):
+    def __init__(self, domain, range=None, impl='numpy', **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `DiscreteLp`
+        domain : `DiscreteLp`
             Domain of the Fourier transform. If the
-            `DiscreteLp.exponent` of ``dom`` and ``ran`` are equal
+            `DiscreteLp.exponent` of ``domain`` and ``range`` are equal
             to 2.0, this operator has an adjoint which is equal to its
             inverse.
-        ran : `DiscreteLp`, optional
+        range : `DiscreteLp`, optional
             Range of the Fourier transform. If not given, the range
-            is determined from ``dom`` and the other parameters. The
+            is determined from ``domain`` and the other parameters. The
             exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
         impl : {'numpy', 'pyfftw'}
@@ -1510,7 +1515,7 @@ class FourierTransform(Operator):
             If `True`, calculate only the negative frequency part
             along the last axis for real input. If `False`,
             calculate the full complex FFT.
-            For complex ``dom``, it has no effect.
+            For complex ``domain``, it has no effect.
             Default: `True`
         shift : `bool` or sequence of `bool`, optional
             If `True`, the reciprocal grid is shifted by half a stride in
@@ -1552,7 +1557,7 @@ class FourierTransform(Operator):
 
         * The `Operator.range` of this operator always has the
           `ComplexNumbers` as `LinearSpace.field`, i.e. if the
-          field of ``dom`` is the `RealNumbers`, this operator's adjoint
+          field of ``domain`` is the `RealNumbers`, this operator's adjoint
           is defined by identifying real and imaginary parts with
           the components of a real product space element.
           See the `mathematical background documentation
@@ -1561,15 +1566,15 @@ class FourierTransform(Operator):
         """
         # TODO: variants wrt placement of 2*pi
 
-        if not isinstance(dom, DiscreteLp):
+        if not isinstance(domain, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
-                            ''.format(dom))
-        if not isinstance(dom.dspace, Ntuples):
+                            ''.format(domain))
+        if not isinstance(domain.dspace, Ntuples):
             raise NotImplementedError(
                 'Only Numpy-based data spaces are supported, got {}.'
-                ''.format(dom.dspace))
+                ''.format(domain.dspace))
 
-        self._axes = list(kwargs.pop('axes', range(dom.ndim)))
+        self._axes = list(kwargs.pop('axes', range_seq(domain.ndim)))
 
         self._impl = str(impl).lower()
         if self.impl not in ('numpy', 'pyfftw'):
@@ -1579,8 +1584,8 @@ class FourierTransform(Operator):
             raise ValueError('pyfftw backend not available.')
 
         # Handle half-complex yes/no and shifts
-        if isinstance(dom.grid, RegularGrid):
-            if dom.field == ComplexNumbers():
+        if isinstance(domain.grid, RegularGrid):
+            if domain.field == ComplexNumbers():
                 self._halfcomplex = False
             else:
                 self._halfcomplex = bool(kwargs.pop('halfcomplex', True))
@@ -1605,13 +1610,13 @@ class FourierTransform(Operator):
             raise ValueError('shift must be True in the halved (last) axis '
                              'in half-complex transforms.')
 
-        if ran is None:
+        if range is None:
             # self._halfcomplex and self._axes need to be set for this
-            ran = reciprocal_space(dom, axes=self.axes,
-                                   halfcomplex=self.halfcomplex,
-                                   shift=self.shifts)
+            range = reciprocal_space(domain, axes=self.axes,
+                                     halfcomplex=self.halfcomplex,
+                                     shift=self.shifts)
 
-        super().__init__(dom, ran, linear=True)
+        super().__init__(domain, range, linear=True)
         self._fftw_plan = None
 
         # Storing temporaries directly as arrays
@@ -1830,9 +1835,9 @@ class FourierTransform(Operator):
         """The inverse Fourier transform."""
         sign = '+' if self.sign == '-' else '-'
         return FourierTransformInverse(
-            dom=self.range, ran=self.domain, impl=self.impl, axes=self.axes,
-            halfcomplex=self.halfcomplex, shift=self.shifts, sign=sign,
-            tmp_r=self._tmp_r, tmp_f=self._tmp_f)
+            domain=self.range, range=self.domain, impl=self.impl,
+            axes=self.axes, halfcomplex=self.halfcomplex, shift=self.shifts,
+            sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f)
 
     def create_temporaries(self, r=True, f=True):
         """Allocate and store reusable temporaries.
@@ -1994,18 +1999,18 @@ class FourierTransformInverse(FourierTransform):
     DiscreteFourierTransformInverse
     """
 
-    def __init__(self, ran, dom=None, impl='numpy', **kwargs):
+    def __init__(self, range, domain=None, impl='numpy', **kwargs):
         """
         Parameters
         ----------
-        ran : `DiscreteLp`
+        range : `DiscreteLp`
             Range of the inverse Fourier transform. If the
-            `DiscreteLp.exponent` of ``dom`` and ``ran`` are equal
+            `DiscreteLp.exponent` of ``domain`` and ``range`` are equal
             to 2.0, this operator has an adjoint which is equal to its
             inverse.
-        dom : `DiscreteLp`, optional
+        domain : `DiscreteLp`, optional
             Domain of the inverse Fourier transform. If not given, the
-            domain is determined from ``ran`` and the other parameters.
+            domain is determined from ``range`` and the other parameters.
             The exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
         impl : {'numpy', 'pyfftw'}
@@ -2020,7 +2025,7 @@ class FourierTransformInverse(FourierTransform):
             If `True`, calculate only the negative frequency part
             along the last axis for real input. If `False`,
             calculate the full complex FFT.
-            For complex ``dom``, it has no effect.
+            For complex ``domain``, it has no effect.
             Default: `True`
         shift : `bool` or sequence of `bool`, optional
             If `True`, the reciprocal grid is shifted by half a stride in
@@ -2063,7 +2068,7 @@ class FourierTransformInverse(FourierTransform):
 
         * The `Operator.range` of this operator always has the
           `ComplexNumbers` as `LinearSpace.field`, i.e. if the
-          field of ``dom`` is the `RealNumbers`, this operator's adjoint
+          field of ``domain`` is the `RealNumbers`, this operator's adjoint
           is defined by identifying real and imaginary parts with
           the components of a real product space element.
           See the `mathematical background documentation
@@ -2082,7 +2087,7 @@ class FourierTransformInverse(FourierTransform):
             bwd_sign = '+'
             fwd_sign = '-'
         kwargs['sign'] = fwd_sign
-        super().__init__(dom=ran, ran=dom, impl=impl, **kwargs)
+        super().__init__(domain=range, range=domain, impl=impl, **kwargs)
         self._domain, self._range = self._range, self._domain
         self._sign = bwd_sign
 
@@ -2243,9 +2248,9 @@ class FourierTransformInverse(FourierTransform):
         """Inverse of the inverse, the forward FT."""
         sign = '+' if self.sign == '-' else '-'
         return FourierTransform(
-            dom=self.range, ran=self.domain, impl=self.impl, axes=self.axes,
-            halfcomplex=self.halfcomplex, shift=self.shifts, sign=sign,
-            tmp_r=self._tmp_r, tmp_f=self._tmp_f)
+            domain=self.range, range=self.domain, impl=self.impl,
+            axes=self.axes, halfcomplex=self.halfcomplex, shift=self.shifts,
+            sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f)
 
 
 def _shift_list(shift, length):

@@ -1302,22 +1302,22 @@ class MatVecOperator(Operator):
 
     """Matrix multiply operator :math:`\mathbb{F}^n -> \mathbb{F}^m`."""
 
-    def __init__(self, matrix, dom=None, ran=None):
+    def __init__(self, matrix, domain=None, range=None):
         """Initialize a new instance.
 
         Parameters
         ----------
         matrix : `array-like` or  ``scipy.sparse.spmatrix``
             Matrix representing the linear operator. Its shape must be
-            ``(m, n)``, where ``n`` is the size of ``dom`` and ``m`` the
-            size of ``ran``. Its dtype must be castable to the range
+            ``(m, n)``, where ``n`` is the size of ``domain`` and ``m`` the
+            size of ``range``. Its dtype must be castable to the range
             ``dtype``.
-        dom : `Fn`, optional
+        domain : `Fn`, optional
             Space on whose elements the matrix acts. If not provided,
             the domain is inferred from the matrix ``dtype`` and
             ``shape``. If provided, its dtype must be castable to the
             range dtype.
-        ran : `Fn`, optional
+        range : `Fn`, optional
             Space to which the matrix maps. If not provided,
             the domain is inferred from the matrix ``dtype`` and
             ``shape``.
@@ -1339,36 +1339,36 @@ class MatVecOperator(Operator):
         else:
             spc_type = Fn
 
-        if dom is None:
-            dom = spc_type(self.matrix.shape[1], dtype=self.matrix.dtype)
-        elif not isinstance(dom, Fn):
+        if domain is None:
+            domain = spc_type(self.matrix.shape[1], dtype=self.matrix.dtype)
+        elif not isinstance(domain, Fn):
             raise TypeError('domain {!r} is not an `Fn` instance.'
-                            ''.format(dom))
+                            ''.format(domain))
 
-        if ran is None:
-            ran = spc_type(self.matrix.shape[0], dtype=self.matrix.dtype)
-        elif not isinstance(ran, Fn):
+        if range is None:
+            range = spc_type(self.matrix.shape[0], dtype=self.matrix.dtype)
+        elif not isinstance(range, Fn):
             raise TypeError('range {!r} is not an `Fn` instance.'
-                            ''.format(ran))
+                            ''.format(range))
 
         # Check compatibility of matrix with domain and range
-        if not np.can_cast(dom.dtype, ran.dtype):
+        if not np.can_cast(domain.dtype, range.dtype):
             raise TypeError('domain data type {!r} cannot be safely cast to '
                             'range data type {!r}.'
-                            ''.format(dom.dtype, ran.dtype))
+                            ''.format(domain.dtype, range.dtype))
 
-        if self.matrix.shape != (ran.size, dom.size):
+        if self.matrix.shape != (range.size, domain.size):
             raise ValueError('matrix shape {} does not match the required '
                              'shape {} of a matrix {} --> {}.'
                              ''.format(self.matrix.shape,
-                                       (ran.size, dom.size),
-                                       dom, ran))
-        if not np.can_cast(self.matrix.dtype, ran.dtype):
+                                       (range.size, domain.size),
+                                       domain, range))
+        if not np.can_cast(self.matrix.dtype, range.dtype):
             raise TypeError('matrix data type {!r} cannot be safely cast to '
                             'range data type {!r}.'
-                            ''.format(matrix.dtype, ran.dtype))
+                            ''.format(matrix.dtype, range.dtype))
 
-        super().__init__(dom, ran, linear=True)
+        super().__init__(domain, range, linear=True)
 
     @property
     def matrix(self):
@@ -1389,7 +1389,7 @@ class MatVecOperator(Operator):
                                       ''.format(self.domain.field,
                                                 self.range.field))
         return MatVecOperator(self.matrix.conj().T,
-                              dom=self.range, ran=self.domain)
+                              domain=self.range, range=self.domain)
 
     def _call(self, x, out=None):
         """Raw apply method on input, writing to given output."""

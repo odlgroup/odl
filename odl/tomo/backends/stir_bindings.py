@@ -87,16 +87,16 @@ class ForwardProjectorByBinWrapper(Operator):
     Uses "ForwardProjectorByBinUsingProjMatrixByBin" as a projector.
     """
 
-    def __init__(self, dom, ran, volume, proj_data,
+    def __init__(self, domain, range, volume, proj_data,
                  projector=None, adjoint=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `DiscreteLp`
+        domain : `DiscreteLp`
             Volume of the projection. Needs to have the same shape as
             ``volume.shape()``.
-        ran : `DiscreteLp`
+        range : `DiscreteLp`
             Projection space. Needs to have the same shape as
             ``proj_data.to_array().shape()``.
         volume : ``stir.FloatVoxelsOnCartesianGrid``
@@ -109,17 +109,17 @@ class ForwardProjectorByBinWrapper(Operator):
             A pre-initialized adjoint.
         """
         # Check data sizes
-        if dom.shape != volume.shape():
-            raise ValueError('dom.shape {} does not equal volume shape {}'
-                             ''.format(dom.shape, volume.shape()))
+        if domain.shape != volume.shape():
+            raise ValueError('domain.shape {} does not equal volume shape {}'
+                             ''.format(domain.shape, volume.shape()))
         # TODO: improve
         proj_shape = proj_data.to_array().shape()
-        if ran.shape != proj_shape:
-            raise ValueError('ran.shape {} does not equal proj shape {}'
-                             ''.format(ran.shape, proj_shape))
+        if range.shape != proj_shape:
+            raise ValueError('range.shape {} does not equal proj shape {}'
+                             ''.format(range.shape, proj_shape))
 
         # Set domain, range etc
-        super().__init__(dom, ran, True)
+        super().__init__(domain, range, True)
 
         # Read template of the projection
         self.proj_data = proj_data
@@ -177,16 +177,16 @@ class BackProjectorByBinWrapper(Operator):
 
     """A back projector using STIR."""
 
-    def __init__(self, dom, ran, volume, proj_data,
+    def __init__(self, domain, range, volume, proj_data,
                  back_projector=None, adjoint=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `DiscreteLp`
+        domain : `DiscreteLp`
             Projection space. Needs to have the same shape as
             ``proj_data.to_array().shape()``.
-        ran : `DiscreteLp`
+        range : `DiscreteLp`
             Volume of the projection. Needs to have the same shape as
             ``volume.shape()``.
         volume : ``stir.FloatVoxelsOnCartesianGrid``
@@ -208,17 +208,17 @@ class BackProjectorByBinWrapper(Operator):
         """
 
         # Check data sizes
-        if ran.shape != volume.shape():
-            raise ValueError('ran.shape {} does not equal volume shape {}'
-                             ''.format(ran.shape, volume.shape()))
+        if range.shape != volume.shape():
+            raise ValueError('range.shape {} does not equal volume shape {}'
+                             ''.format(range.shape, volume.shape()))
         # TODO: improve
         proj_shape = proj_data.to_array().shape()
-        if dom.shape != proj_shape:
-            raise ValueError('dom.shape {} does not equal proj shape {}'
-                             ''.format(ran.shape, proj_shape))
+        if domain.shape != proj_shape:
+            raise ValueError('domain.shape {} does not equal proj shape {}'
+                             ''.format(range.shape, proj_shape))
 
         # Set range domain
-        super().__init__(dom, ran, True)
+        super().__init__(domain, range, True)
 
         # Read template of the projection
         self.proj_data = proj_data

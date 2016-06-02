@@ -511,12 +511,12 @@ class WaveletTransform(Operator):
 
     """Discrete wavelet trafo between discrete L2 spaces."""
 
-    def __init__(self, dom, nscales, wbasis, mode):
+    def __init__(self, domain, nscales, wbasis, mode):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `DiscreteLp`
+        domain : `DiscreteLp`
             Domain of the wavelet transform (the "image domain").
             The exponent :math:`p` of the discrete :math:`L^p`
             space must be equal to 2.0.
@@ -590,15 +590,15 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         else:
             self.wbasis = pywt.Wavelet(wbasis)
 
-        if not isinstance(dom, DiscreteLp):
+        if not isinstance(domain, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
-                            ''.format(dom))
+                            ''.format(domain))
 
-        if dom.exponent != 2.0:
+        if domain.exponent != 2.0:
             raise ValueError('domain Lp exponent is {} instead of 2.0.'
-                             ''.format(dom.exponent))
+                             ''.format(domain.exponent))
 
-        max_level = pywt.dwt_max_level(dom.shape[0],
+        max_level = pywt.dwt_max_level(domain.shape[0],
                                        filter_len=self.wbasis.dec_len)
         # TODO: maybe the error message could tell how to calculate the
         # max number of levels
@@ -606,27 +606,27 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             raise ValueError('Cannot use more than {} scaling levels, '
                              'got {}.'.format(max_level, self.nscales))
 
-        self.size_list = coeff_size_list(dom.shape, self.nscales,
+        self.size_list = coeff_size_list(domain.shape, self.nscales,
                                          self.wbasis, self.mode)
 
         ran_size = np.prod(self.size_list[0])
 
-        if dom.ndim == 1:
+        if domain.ndim == 1:
             ran_size += sum(np.prod(shape) for shape in
                             self.size_list[1:-1])
-        elif dom.ndim == 2:
+        elif domain.ndim == 2:
             ran_size += sum(3 * np.prod(shape) for shape in
                             self.size_list[1:-1])
-        elif dom.ndim == 3:
+        elif domain.ndim == 3:
             ran_size += sum(7 * np.prod(shape) for shape in
                             self.size_list[1:-1])
         else:
             raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                      ''.format(len(dom.ndim)))
+                                      ''.format(len(domain.ndim)))
 
         # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
-        ran = dom.dspace_type(ran_size, dtype=dom.dtype)
-        super().__init__(dom, ran, linear=True)
+        range = domain.dspace_type(ran_size, dtype=domain.dtype)
+        super().__init__(domain, range, linear=True)
 
     @property
     def is_orthogonal(self):
@@ -682,7 +682,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     def inverse(self):
         """The inverse wavelet transform."""
         return WaveletTransformInverse(
-            ran=self.domain, nscales=self.nscales, wbasis=self.wbasis,
+            range=self.domain, nscales=self.nscales, wbasis=self.wbasis,
             mode=self.mode)
 
 
@@ -690,12 +690,12 @@ class WaveletTransformInverse(Operator):
 
     """Discrete inverse wavelet trafo between discrete L2 spaces."""
 
-    def __init__(self, ran, nscales, wbasis, mode):
+    def __init__(self, range, nscales, wbasis, mode):
         """Initialize a new instance.
 
          Parameters
         ----------
-        dom : `DiscreteLp`
+        range : `DiscreteLp`
             Domain of the wavelet transform (the "image domain").
             The exponent :math:`p` of the discrete :math:`L^p`
             space must be equal to 2.0.
@@ -754,15 +754,15 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         self.wbasis = wbasis
         self.mode = str(mode).lower()
 
-        if not isinstance(ran, DiscreteLp):
+        if not isinstance(range, DiscreteLp):
             raise TypeError('range {!r} is not a `DiscreteLp` instance.'
-                            ''.format(ran))
+                            ''.format(range))
 
-        if ran.exponent != 2.0:
+        if range.exponent != 2.0:
             raise ValueError('range Lp exponent is {} instead of 2.0.'
-                             ''.format(ran.exponent))
+                             ''.format(range.exponent))
 
-        max_level = pywt.dwt_max_level(ran.shape[0],
+        max_level = pywt.dwt_max_level(range.shape[0],
                                        filter_len=self.wbasis.dec_len)
         # TODO: maybe the error message could tell how to calculate the
         # max number of levels
@@ -770,26 +770,26 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             raise ValueError('Cannot use more than {} scaling levels, '
                              'got {}.'.format(max_level, self.nscales))
 
-        self.size_list = coeff_size_list(ran.shape, self.nscales,
+        self.size_list = coeff_size_list(range.shape, self.nscales,
                                          self.wbasis, self.mode)
 
         dom_size = np.prod(self.size_list[0])
-        if ran.ndim == 1:
+        if range.ndim == 1:
             dom_size += sum(np.prod(shape) for shape in
                             self.size_list[1:-1])
-        elif ran.ndim == 2:
+        elif range.ndim == 2:
             dom_size += sum(3 * np.prod(shape) for shape in
                             self.size_list[1:-1])
-        elif ran.ndim == 3:
+        elif range.ndim == 3:
             dom_size += sum(7 * np.prod(shape) for shape in
                             self.size_list[1:-1])
         else:
             raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                      ''.format(ran.ndim))
+                                      ''.format(range.ndim))
 
         # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
-        dom = ran.dspace_type(dom_size, dtype=ran.dtype)
-        super().__init__(dom, ran, linear=True)
+        domain = range.dspace_type(dom_size, dtype=range.dtype)
+        super().__init__(domain, range, linear=True)
 
     @property
     def is_orthogonal(self):
@@ -839,7 +839,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     @property
     def inverse(self):
         """The inverse wavelet transform."""
-        return WaveletTransform(dom=self.range, nscales=self.nscales,
+        return WaveletTransform(domain=self.range, nscales=self.nscales,
                                 wbasis=self.wbasis, mode=self.mode)
 
 if __name__ == '__main__':

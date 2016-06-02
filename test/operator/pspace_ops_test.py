@@ -66,7 +66,7 @@ def test_pspace_op_weighted_init():
 
     with pytest.raises(NotImplementedError):
         odl.ProductSpaceOperator([[I],
-                                  [0]], ran=ran)
+                                  [0]], range=ran)
 
 
 def test_pspace_op_sum_call():
