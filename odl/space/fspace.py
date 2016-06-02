@@ -976,6 +976,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         maxs = self.domain.max()
         means = (maxs + mins) / 2.0
         stds = (maxs - mins) / 4.0
+        ndim = getattr(self.domain, 'ndim', None)
 
         # Zero and One
         yield ('Zero', self.zero())
@@ -986,7 +987,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         # Indicator function in first dimension
         def _step_fun(x):
-            if self.domain.ndim == 1:
+            if ndim == 1:
                 return x > means[0]
             else:
                 return (x[0] > means[0]) + 0 * sum(x[1:])  # fix size
@@ -995,7 +996,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         # Indicator function on hypercube
         def _cube_fun(x):
-            if getattr(self.domain, 'ndim', None) == 2:
+            if ndim > 1:
                 result = True
                 for points, mean, std in zip(x, means, stds):
                     result = np.logical_and(result, points < mean + std)
@@ -1003,6 +1004,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             else:
                 result = np.logical_and(x < means + stds,
                                         x > means - stds)
+
             return result
 
         yield ('Cube', self.element(_cube_fun))
@@ -1010,17 +1012,23 @@ class FunctionSpace(FunctionSet, LinearSpace):
         # Indicator function on hypersphere
         if self.domain.ndim > 1:  # Only if ndim > 1, don't duplicate cube
             def _sphere_fun(x):
+                if ndim == 1:
+                    x = (x,)
+
                 r = 0
 
                 for points, mean, std in zip(x, means, stds):
                     r = r + (points - mean) ** 2 / std ** 2
+
                 return r < 1.0
 
             yield ('Sphere', self.element(_sphere_fun))
 
         # Gaussian function
         def _gaussian_fun(x):
-            x = np.atleast_1d(x)
+            if ndim == 1:
+                x = (x,)
+
             r2 = 0
             for points, mean, std in zip(x, means, stds):
                 r2 = r2 + (points - mean) ** 2 / ((std / 2) ** 2)
@@ -1032,6 +1040,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
         # Gradient in each dimensions
         for dim in range(self.domain.ndim):
             def _gradient_fun(x):
+                if ndim == 1:
+                    x = (x,)
+
                 s = 0
                 for ind in range(len(x)):
                     if ind == dim:
@@ -1046,6 +1057,9 @@ class FunctionSpace(FunctionSet, LinearSpace):
         # Gradient in all dimensions
         if self.domain.ndim > 1:  # Only if ndim > 1, don't duplicate grad 0
             def _all_gradient_fun(x):
+                if ndim == 1:
+                    x = (x,)
+
                 s = 0
                 for ind in range(len(x)):
                     s = s + (x[ind] - mins[ind]) / (maxs[ind] - mins[ind])

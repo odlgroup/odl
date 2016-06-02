@@ -29,7 +29,7 @@ import odl
 
 class AddOp(odl.Operator):
     def __init__(self, size, add_this):
-        super().__init__(odl.Rn(size), odl.Rn(size))
+        super().__init__(domain=odl.Rn(size), range=odl.Rn(size))
         self.value = add_this
 
     def _call(self, x, out):
