@@ -541,6 +541,40 @@ class TensorGrid(Set):
                     self.coord_vectors[idx:])
         return TensorGrid(*new_vecs)
 
+    def remove(self, axes):
+        """Remove ``axes`` and return the reduced grid.
+
+        Note that no changes are made in-place.
+
+        Parameters
+        ----------
+        axes : index expression
+            Object determining which parts of the grid to remove
+
+        Returns
+        -------
+        newgrid : `TensorGrid`
+            The reduced grid
+
+        Examples
+        --------
+        >>> g1 = TensorGrid([0, 1], [-1, 2, 5])
+        >>> g1.remove(1)
+        TensorGrid([0.0, 1.0])
+        >>> g1.remove(0)
+        TensorGrid([-1.0, 2.0, 5.0])
+        See Also
+        --------
+        append
+        """
+        index_arr = np.arange(self.ndim)
+        mask = np.ones_like(index_arr, dtype=bool)
+        mask[axes] = False
+        remaining_axes = list(index_arr[mask])
+
+        new_vecs = [self.coord_vectors[i] for i in remaining_axes]
+        return TensorGrid(*new_vecs)
+
     def append(self, other):
         """Insert grid ``other`` at the end.
 
@@ -1045,6 +1079,43 @@ class RegularGrid(TensorGrid):
 
         else:
             raise TypeError('{!r} is not a TensorGrid instance'.format(other))
+
+    def remove(self, axes):
+        """Remove ``axes`` and return the reduced grid.
+
+        Note that no changes are made in-place.
+
+        Parameters
+        ----------
+        axes : index expression
+            Object determining which parts of the grid to remove
+
+        Returns
+        -------
+        newgrid : `RegularGrid`
+            The reduced grid
+
+        Examples
+        --------
+        >>> g = RegularGrid([0, 0, 0], [1, 0, 1], (5, 1, 5))
+        >>> g.remove(1)
+        RegularGrid([0.0, 0.0], [1.0, 1.0], (5, 5))
+        >>> g.remove(0)
+        RegularGrid([0.0, 0.0], [0.0, 1.0], (1, 5))
+        See Also
+        --------
+        append
+        """
+        index_arr = np.arange(self.ndim)
+        mask = np.ones_like(index_arr, dtype=bool)
+        mask[axes] = False
+        remaining_axes = index_arr[mask]
+
+        new_minpt = self.min_pt[remaining_axes]
+        new_maxpt = self.max_pt[remaining_axes]
+        new_shape = tuple(self.shape[i] for i in remaining_axes)
+
+        return RegularGrid(new_minpt, new_maxpt, new_shape)
 
     def squeeze(self):
         """Return the grid with removed degenerate dimensions.
