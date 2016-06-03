@@ -272,14 +272,11 @@ class DiscreteLp(DiscretizedSpace):
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
-        elif isinstance(inp, self.element_type) and inp not in self:
-            # Same kind, but different space -> error
-            raise TypeError('input {!r} not an element of {}.'
-                            ''.format(inp, self))
+        elif inp in self:
+            return inp
         elif inp in self.dspace:
             return self.element_type(self, inp)
-
-        if callable(inp):
+        elif callable(inp):
             # uspace element -> discretize
             inp_elem = self.uspace.element(inp)
             return self.element_type(self, self.sampling(inp_elem, **kwargs))

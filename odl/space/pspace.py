@@ -388,6 +388,9 @@ class ProductSpace(LinearSpace):
         if inp is None:
             inp = [space.element() for space in self.spaces]
 
+        if inp in self:
+            return inp
+
         if (all(isinstance(v, LinearSpaceVector) and v.space == space
                 for v, space in zip(inp, self.spaces))):
             parts = list(inp)

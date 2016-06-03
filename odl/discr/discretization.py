@@ -186,10 +186,11 @@ class DiscretizedSet(NtuplesBase):
         """
         if inp is None:
             return self.element_type(self, self.dspace.element())
-        try:
+        elif inp in self:
+            return inp
+        elif callable(inp):
             return self.element_type(self, self.sampling(inp, **kwargs))
-        except TypeError:
-            # Sequence-type input
+        else:
             return self.element_type(self, self.dspace.element(inp))
 
     def __eq__(self, other):

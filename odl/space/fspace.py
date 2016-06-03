@@ -140,11 +140,13 @@ class FunctionSet(Set):
         """
         if not callable(fcall):
             raise TypeError('function {!r} is not callable.'.format(fcall))
+        elif fcall in self:
+            return fcall
+        else:
+            if not vectorized:
+                fcall = vectorize(fcall)
 
-        if not vectorized:
-            fcall = vectorize(fcall)
-
-        return self.element_type(self, fcall)
+            return self.element_type(self, fcall)
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -626,6 +628,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
         """
         if fcall is None:
             return self.zero()
+        elif fcall in self:
+            return fcall
         else:
             if not callable(fcall):
                 raise TypeError('function {!r} is not callable.'.format(fcall))

@@ -35,15 +35,24 @@ pytestmark = odl.util.skip_if_no_largescale
 
 
 # Pytest fixtures
-spc_params = [never_skip('rn numpy'),
-              never_skip('1d numpy'),
-              never_skip('3d numpy'),
-              skip_if_no_cuda('rn cuda'),
-              skip_if_no_cuda('1d cuda'),
-              skip_if_no_cuda('3d cuda')]
+spc_params = [never_skip('fn numpy float32'),
+              never_skip('fn numpy float64'),
+              never_skip('fn numpy complex64'),
+              never_skip('fn numpy complex128'),
+              never_skip('1d numpy float32'),
+              never_skip('1d numpy float64'),
+              never_skip('1d numpy complex64'),
+              never_skip('1d numpy complex128'),
+              never_skip('3d numpy float32'),
+              never_skip('3d numpy float64'),
+              never_skip('3d numpy complex64'),
+              never_skip('3d numpy complex128'),
+              skip_if_no_cuda('fn cuda float32'),
+              skip_if_no_cuda('1d cuda float32'),
+              skip_if_no_cuda('3d cuda float32')]
 
 
-spc_ids = [' type={} impl={}'
+spc_ids = [' type={} impl={} dtype={}'
            ''.format(*p.args[1].split()) for p in spc_params]
 
 
@@ -55,18 +64,18 @@ spc_params = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
 
 @pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
 def fn(request):
-    spc, impl = request.param.split()
+    spc, impl, dtype = request.param.split()
 
-    if spc == 'rn':
+    if spc == 'fn':
         if impl == 'numpy':
-            return odl.Rn(10 ** 5)
+            return odl.Fn(10 ** 5, dtype=dtype)
         elif impl == 'cuda':
-            return odl.CudaRn(10 ** 5)
+            return odl.CudaFn(10 ** 5, dtype=dtype)
     elif spc == '1d':
-        return odl.uniform_discr(0, 1, 10 ** 5, impl=impl)
+        return odl.uniform_discr(0, 1, 10 ** 5, impl=impl, dtype=dtype)
     elif spc == '3d':
         return odl.uniform_discr([0, 0, 0], [1, 1, 1],
-                                 [100, 100, 100], impl=impl)
+                                 [100, 100, 100], impl=impl, dtype=dtype)
 
 
 def test_element(fn):
@@ -78,7 +87,7 @@ def test_element(fn):
 
     # Rewrap
     y2 = fn.element(y)
-    assert y2 in fn
+    assert y2 is y
 
     w = fn.element(inp=np.zeros(fn.size, fn.dtype))
     assert w in fn
@@ -136,7 +145,7 @@ def test_inner(fn):
 
     [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
-    correct_inner = np.vdot(xarr, yarr) * weighting
+    correct_inner = np.vdot(yarr, xarr) * weighting
 
     assert almost_equal(fn.inner(x, y), correct_inner, places=2)
     assert almost_equal(x.inner(y), correct_inner, places=2)

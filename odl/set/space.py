@@ -74,6 +74,9 @@ class LinearSpace(Set):
         If called without ``inp`` argument, an arbitrary element of the
         space is generated without guarantee of its state.
 
+        If ``inp in self``, this has return ``inp`` or a view of ``inp``,
+        otherwise, a copy may or may not occur.
+
         Parameters
         ----------
         inp : optional

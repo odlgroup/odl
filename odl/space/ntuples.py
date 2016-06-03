@@ -119,12 +119,15 @@ class Ntuples(NtuplesBase):
                 return self.element_type(self, arr)
         else:
             if data_ptr is None:
-                arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
-                if arr.shape != (self.size,):
-                    raise ValueError('expected input shape {}, got {}.'
-                                     ''.format((self.size,), arr.shape))
+                if inp in self:
+                    return inp
+                else:
+                    arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
+                    if arr.shape != (self.size,):
+                        raise ValueError('expected input shape {}, got {}.'
+                                         ''.format((self.size,), arr.shape))
 
-                return self.element_type(self, arr)
+                    return self.element_type(self, arr)
             else:
                 raise ValueError('Cannot provide both `inp` and `data_ptr`')
 
