@@ -405,9 +405,15 @@ class FunctionSetVector(Operator):
                 out = out.astype(self.out_dtype)
 
             if out_shape != (1,) and out.shape != out_shape:
-                raise ValueError('output shape {} not equal to shape '
-                                 '{} expected from input.'
-                                 ''.format(out.shape, out_shape))
+                # Try to broadcast the returned element if possible
+                try:
+                    out = np.broadcast_to(out, out_shape)
+                except AttributeError:
+                    # The above requires numpy 1.10, fallback impl else
+                    shape = [m if n == 1 and m != 1 else 1
+                             for n, m in zip(out.shape, out_shape)]
+                    out = out + np.zeros(shape, dtype=out.dtype)
+
         else:
             if not isinstance(out, np.ndarray):
                 raise TypeError('output {!r} not a `numpy.ndarray` '

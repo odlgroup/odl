@@ -139,12 +139,11 @@ def test_chambolle_pock_solver_produce_space():
     # Operator
     identity = odl.IdentityOperator(discr_space)
 
-    # Create product space operator
-    prod_op = odl.ProductSpaceOperator([[identity], [-2 * identity]])
+    # Create broadcasting operator
+    prod_op = odl.BroadcastOperator(identity, -2 * identity)
 
-    # Starting point
-    # For explicit computation
-    discr_vec_0 = prod_op.domain.element([DATA])
+    # Starting point for explicit computation
+    discr_vec_0 = prod_op.domain.element(DATA)
     # Copy to be overwritten by the algorithm
     discr_vec = discr_vec_0.copy()
 
@@ -158,7 +157,7 @@ def test_chambolle_pock_solver_produce_space():
                           proximal_dual=prox_dual, theta=THETA, niter=1)
 
     vec_expl = discr_vec_0 - TAU * SIGMA * prod_op.adjoint(
-        prod_op(prod_op.domain.element([discr_vec_0])))
+        prod_op(discr_vec_0))
     assert all_almost_equal(discr_vec, vec_expl, PLACES)
 
 

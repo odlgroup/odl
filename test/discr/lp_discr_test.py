@@ -252,6 +252,17 @@ def test_element_from_array_2d():
     linear_vec = discr.element([1, 2, 3, 4])
     assert all_equal(linear_vec.ntuple, [1, 2, 3, 4])
 
+    # Using broadcasting
+    broadcast_vec = discr.element([[1, 2]])
+    broadcast_expected = discr.element([[1, 2],
+                                        [1, 2]])
+    assert all_equal(broadcast_vec, broadcast_expected)
+
+    broadcast_vec = discr.element([[1], [2]])
+    broadcast_expected = discr.element([[1, 1],
+                                        [2, 2]])
+    assert all_equal(broadcast_vec, broadcast_expected)
+
 
 def test_element_from_array_2d_shape():
     # Verify that the shape is correctly tested for
@@ -342,6 +353,15 @@ def test_element_from_function_2d():
     # Using a lambda
     elem_lam = space.element(lambda x: x[0] - x[1])
     true_elem = [x[0] - x[1] for x in points]
+    assert all_equal(elem_lam, true_elem)
+
+    # Using broadcasting
+    elem_lam = space.element(lambda x: x[0])
+    true_elem = [x[0] for x in points]
+    assert all_equal(elem_lam, true_elem)
+
+    elem_lam = space.element(lambda x: x[1])
+    true_elem = [x[1] for x in points]
     assert all_equal(elem_lam, true_elem)
 
 
