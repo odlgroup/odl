@@ -215,6 +215,23 @@ class TensorGrid(Set):
         """The total number of grid points."""
         return np.prod(self.shape)
 
+    def __len__(self):
+        """Return ``len(self)``.
+
+        The length along the first dimension.
+
+        Examples
+        --------
+        >>> g = TensorGrid([0, 1], [-1, 0, 2], [4, 5, 6])
+        >>> len(g)
+        2
+
+        See Also
+        --------
+        size : The total number of elements.
+        """
+        return self.shape[0]
+
     @property
     def min_pt(self):
         """Vector containing the minimal grid coordinates per axis.

@@ -256,6 +256,13 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """Length of this vector, equal to space size."""
         return self.space.size
 
+    def __len__(self):
+        """Return ``len(self)``.
+
+        Return the number of space dimensions.
+        """
+        return self.space.size
+
     @property
     def shape(self):
         """Number of entries per axis, equals (size,) for linear storage."""
@@ -270,13 +277,6 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
     def nbytes(self):
         """The number of bytes this vector uses in memory."""
         return self.size * self.itemsize
-
-    def __len__(self):
-        """Return ``len(self)``.
-
-        Return the number of space dimensions.
-        """
-        return self.space.size
 
     def __array__(self, dtype=None):
         """Return a numpy array of this ntuple.
