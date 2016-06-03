@@ -24,6 +24,7 @@ standard_library.install_aliases()
 from builtins import range, str, super
 
 import numpy as np
+from itertools import product
 try:
     import pywt
     PYWAVELETS_AVAILABLE = True
@@ -145,124 +146,74 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     if nscales is None:
         size_list = [shape]
-        if len(shape) == 1:
-            nscales = len(axes)
-            for scale in range(nscales):
-                shp = tuple(pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
-                                               mode=mode)
-                            for n in size_list[scale])
-                size_list.append(shp)
-        else:
-            ndim = len(shape)
-            axes_counts = [axes.count(i) for i in range(ndim)]
-            reduced_shape = []
-            for ax_len, ax_count in zip(shape, axes_counts):
-                n = ax_len
-                for _ in range(ax_count):
-                    n = pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
-                                           mode=mode)
-                reduced_shape.append(n)
+        ndim = len(shape)
+        axes_counts = [axes.count(i) for i in range(ndim)]
+        reduced_shape = []
+        for ax_len, ax_count in zip(shape, axes_counts):
+            n = ax_len
+            for _ in range(ax_count):
+                n = pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
+                                       mode=mode)
+            reduced_shape.append(n)
 
-            size_list.append(tuple(reduced_shape))
+        size_list.append(tuple(reduced_shape))
         size_list.append(size_list[-1])
         size_list.reverse()
 
     return size_list
 
 
-def pywt_dict_to_array(coeffs, size_list):
+def pywt_dict_to_array(coeffs, size_list, axes):
     """Convert a PyWavelet coefficient dictionary into a flat array.
 
-    Related to 1D, 2D and 3D discrete wavelet transforms with `axes` option.
+    Related to 2D and 3D discrete wavelet transforms with `axes` option.
+    Computing 1D wavelet transform multiple times along the axis
+    corresponds to computing 1D multilevel wavelet transform.
 
     Parameters
     ----------
     coeff : ordered `dict`
-        Coefficients are organized in the dictionary with the following keys:
+        Coefficients are organized in the dictionary with the following
+        appreviations in the key words:
 
-        In 1D:
         ``a`` = approximation,
 
         ``d`` = detail
-
-        In 2D:
-
-        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
-
-        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
-
-        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
-
-        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
-
-        In 3D:
-        ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
-
-        ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
-
-        ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
-
-        ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
     size_list : `list`
         A list containing the sizes of the wavelet (approximation
         and detail) coefficients when `axes` option is used.
 
-    Returns
+    axes :
+   Returns
     -------
     arr : `numpy.ndarray`
         Flattened and concatenated coefficient array
         The length of the array depends on the size of input image to
-        be transformed and on the chosen wavelet basis.
+        be transformed, on the chosen wavelet basis, on the used boundary
+        condition and on the defined axes.
     """
+    keys = list(coeffs.keys())
+    keys.sort()
     flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-    ndim = len(size_list[0])
-    dcoeffs_per_scale = 2 ** ndim - 1
+    num_dcoeffs = len(keys) - 1
 
-    flat_total_size = flat_sizes[0] + dcoeffs_per_scale * sum(flat_sizes[1:])
+    flat_total_size = flat_sizes[0] + num_dcoeffs * sum(flat_sizes[1:])
     flat_coeff = np.empty(flat_total_size)
 
     start = 0
     stop = flat_sizes[0]
 
-    if ndim == 1:
-        a = coeffs['a']
-        d = coeffs['d']
-        flat_coeff[start:stop] = a.ravel()
-        start, stop = stop, stop + flat_sizes[1]
-        flat_coeff[start:stop] = d.ravel()
-
-    elif ndim == 2:
-        keys = list(coeffs.keys())
-        keys.sort()
-        details = tuple(coeffs[key] for key in keys if 'd' in key)
-        coeff_list = []
-        coeff_list.append(details)
-        coeff_list.append(coeffs['aa'])
-        coeff_list.reverse()
-        flat_coeff = pywt_list_to_array(coeff_list, size_list)
-
-    elif ndim == 3:
-        keys = list(coeffs.keys())
-        keys.sort()
-        details = tuple(coeffs[key] for key in keys if 'd' in key)
-        coeff_list = []
-        coeff_list.append(details)
-        coeff_list.append(coeffs['aaa'])
-        coeff_list.reverse()
-        flat_coeff[start:stop] = coeffs['aaa'].ravel()
-        for fsize, detail_coeffs in zip(flat_sizes[1:], coeff_list[1:]):
-            for dcoeff in detail_coeffs:
-                start, stop = stop, stop + fsize
-                flat_coeff[start:stop] = dcoeff.ravel()
+    details = tuple(coeffs[key] for key in keys if 'd' in key)
+    coeff_list = []
+    coeff_list.append(details)
+    coeff_list.append(coeffs[keys[0]])
+    coeff_list.reverse()
+    flat_coeff[start:stop] = coeffs[keys[0]].ravel()
+    for fsize, detail_coeffs in zip(flat_sizes[1:], coeff_list[1:]):
+        for dcoeff in detail_coeffs:
+            start, stop = stop, stop + fsize
+            flat_coeff[start:stop] = dcoeff.ravel()
 
     return flat_coeff
 
@@ -385,89 +336,38 @@ def pywt_list_to_array(coeff, size_list):
     return flat_coeff
 
 
-def array_to_pywt_dict(coeff, size_list):
+def array_to_pywt_dict(coeff, size_list, axes):
     """Convert a flat array into a PyWavelet coefficient dictionary.
 
-    For 1D, 2D and 3D discrete wavelet transform with `axes` option.
+    For 2D and 3D discrete wavelet transform with `axes` option.
+    Computing 1D wavelet transform multiple times along the axis
+    correspond to computing 1D multilevel wavelet transform
 
     Parameters
     ----------
     coeff : `DiscreteLpVector`
         A flat coefficient vector containing the approximation,
-        and detail coefficients in the following order
-        [aaaN, aadN, adaN, addN, daaN, dadN, ddaN, dddN, ...
-        aad1, ada1, add1, daa1, dad1, dda1, ddd1]
+        and detail coefficients
 
     size_list : list
        A list of wavelet coefficient sizes.
 
     Returns
     -------
-    coeff : ordered `dict` with the following key words:
+    coeff_dict : an ordered `dict` . In the key words following
+        appreviations are used
 
-        In 1D:
         ``a`` = approximation,
 
         ``d`` = detail
-
-        In 2D:
-
-        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
-
-        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
-
-        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
-
-        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
-
-        In 3D:
-        ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
-
-        ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
-
-        ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
-
-        ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
-
     """
-    ndim = len(size_list[0])
-
-    if ndim == 1:
-        flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-        start = 0
-        stop = flat_sizes[0]
-        a = np.asarray(coeff)[start:stop].reshape(size_list[0])
-        start, stop = stop, stop + flat_sizes[1]
-        d = np.asarray(coeff)[start:stop].reshape(size_list[1])
-
-        coeff_dict = {'a': a, 'd': d}
-
-    elif ndim == 2:
-        flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-        start = 0
-        stop = flat_sizes[0]
-        aa = np.asarray(coeff)[start:stop].reshape(size_list[0])
-        start, stop = stop, stop + flat_sizes[1]
-        ad = np.asarray(coeff)[start:stop].reshape(size_list[1])
-        start, stop = stop, stop + flat_sizes[1]
-        da = np.asarray(coeff)[start:stop].reshape(size_list[1])
-        start, stop = stop, stop + flat_sizes[1]
-        dd = np.asarray(coeff)[start:stop].reshape(size_list[1])
-        coeff_dict = {'aa': aa, 'ad': ad, 'da': da, 'dd': dd}
-
-    elif ndim == 3:
-        coeff_list = array_to_pywt_list(coeff, size_list)
-        aaa = coeff_list[0]
-        coeff_dict = coeff_list[1]
-        coeff_dict['aaa'] = aaa
+    rep = len(axes)
+    keys = list(''.join(k) for k in product('ad', repeat=rep))
+    num_coeffs = len(keys)
+    shape = size_list[1]
+    values = tuple(c.reshape(shape) for c in
+                   np.split(np.asarray(coeff), num_coeffs))
+    coeff_dict = {key: value for key, value in zip(keys, values)}
 
     return coeff_dict
 
@@ -672,17 +572,11 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         >>> wbasis = pywt.Wavelet('db1')
         >>> discr_domain = odl.uniform_discr([0, 0], [1, 1], (16, 16))
         >>> op = WaveletTransform(discr_domain, nscales=1,
-        ...                               wbasis=wbasis, pad_mode='per')
+        ...                       wbasis=wbasis, pad_mode='per')
         >>> op.is_biorthogonal
         True
         """
-        if nscales is None and axes is None:
-            raise ValueError('Either nscales or axes has to be defined')
-        elif nscales is not None and axes is not None:
-            raise ValueError('Cannot use both nscales and axes options '
-                             ' at the same time, set other to None')
-
-        self.pad_mode = str(mode).lower()
+        self.pad_mode = str(pad_mode).lower()
 
         if isinstance(wbasis, pywt.Wavelet):
             self.wbasis = wbasis
@@ -700,26 +594,20 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         if domain.ndim not in [1, 2, 3]:
             raise NotImplementedError('Dimension of the domain {} not 1, '
                                       '2 or 3'.format(len(domain.ndim)))
-        if nscales is not None:
-            self.nscales = int(nscales)
-            max_level = pywt.dwt_max_level(domain.shape[0],
-                                           filter_len=self.wbasis.dec_len)
-            if self.nscales > max_level:
-                raise ValueError('Cannot use more than {} scaling levels, '
-                                 'got {}. Maximum useful number of levels '
-                                 'can be computed using pywt.dwt_max_level '
-                                 ''.format(max_level, self.nscales))
-            self.size_list = coeff_size_list(
-                domain.shape, self.wbasis, self.pad_mode, self.nscales, axes=None)
-
-            multiplicity = {1: 1, 2: 3, 3: 7}
-            ran_size = (np.prod(self.size_list[0]) +
-                        sum(multiplicity[domain.ndim] * np.prod(shape)
-                            for shape in self.size_list[1:-1]))
-        else:
-            self.nscales = None
 
         if axes is not None:
+            if nscales is not None:
+                raise ValueError('Cannot use both nscales and axes options '
+                                 'at the same time, set other to None')
+
+            else:
+                self.nscales = None
+            if domain.ndim == 1:
+                raise ValueError('Wavelet transform in 1D multiple times '
+                                 'along the axis corresponds to 1D multilevel '
+                                 'wavelet transform. Set axes to  None and '
+                                 'nscales to {}.'.format(len(axes)))
+
             self.axes = tuple(int(ax) for ax in axes)
             max_level = pywt.dwt_max_level(domain.shape[0],
                                            filter_len=self.wbasis.dec_len)
@@ -736,13 +624,33 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                                              self.pad_mode, nscales=None,
                                              axes=self.axes)
 
+            rep = len(axes)
+            keys = list(''.join(k) for k in product('ad', repeat=rep))
+            num_coeffs = len(keys)
+            ran_size = num_coeffs * np.prod(self.size_list[0])
+
+        elif nscales is not None:
+            self.axes = None
+            self.nscales = int(nscales)
+            max_level = pywt.dwt_max_level(domain.shape[0],
+                                           filter_len=self.wbasis.dec_len)
+            if self.nscales > max_level:
+                raise ValueError('Cannot use more than {} scaling levels, '
+                                 'got {}. Maximum useful number of levels '
+                                 'can be computed using pywt.dwt_max_level '
+                                 ''.format(max_level, self.nscales))
+            self.size_list = coeff_size_list(
+                domain.shape, self.wbasis, self.pad_mode, self.nscales,
+                axes=None)
+
             multiplicity = {1: 1, 2: 3, 3: 7}
             ran_size = (np.prod(self.size_list[0]) +
                         sum(multiplicity[domain.ndim] * np.prod(shape)
                             for shape in self.size_list[1:-1]))
 
         else:
-            self.axes = None
+            raise ValueError('Either `nscales` or `axes` has to be given')
+
         # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
         ran = domain.dspace_type(ran_size, dtype=domain.dtype)
         super().__init__(domain, ran, linear=True)
@@ -792,7 +700,8 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                 return self.range.element(coeff_arr)
         else:
             coeff_dict = pywt.dwtn(x, self.wbasis, self.pad_mode, self.axes)
-            coeff_arr = pywt_dict_to_array(coeff_dict, self.size_list)
+            coeff_arr = pywt_dict_to_array(coeff_dict, self.size_list,
+                                           self.axes)
             return self.range.element(coeff_arr)
 
     @property
@@ -836,7 +745,7 @@ class WaveletTransformInverse(Operator):
 
     """Discrete inverse wavelet tranform between discrete Lp spaces."""
 
-    def __init__(self, ran, wbasis, pad_mode, nscales=None, axes=None):
+    def __init__(self, range, wbasis, mode, nscales=None, axes=None):
         """Initialize a new instance.
 
          Parameters
@@ -932,27 +841,18 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         if range.ndim not in [1, 2, 3]:
             raise NotImplementedError('Dimension of the domain {} not 1, '
                                       '2 or 3'.format(len(range.ndim)))
-        if nscales is not None:
-            self.nscales = int(nscales)
-            max_level = pywt.dwt_max_level(range.shape[0],
-                                           filter_len=self.wbasis.dec_len)
-            if self.nscales > max_level:
-                raise ValueError('Cannot use more than {} scaling levels, '
-                                 'got {}. Maximum useful number of levels '
-                                 'can be computed using pywt.dwt_max_level '
-                                 ''.format(max_level, self.nscales))
-            self.size_list = coeff_size_list(
-                range.shape, self.wbasis, self.pad_mode, self.nscales, axes=None)
-
-            multiplicity = {1: 1, 2: 3, 3: 7}
-            dom_size = (np.prod(self.size_list[0]) +
-                        sum(multiplicity[range.ndim] * np.prod(shape)
-                            for shape in self.size_list[1:-1]))
-
-        else:
-            self.nscales = None
 
         if axes is not None:
+            if nscales is not None:
+                raise ValueError('Cannot use both nscales and axes options '
+                                 'at the same time, set other to None')
+            self.nscales = None
+            if range.ndim == 1:
+                raise ValueError('Wavelet transform in 1D multiple times '
+                                 'along the axis corresponds to 1D multilevel '
+                                 'wavelet transform. Set axes to None and '
+                                 'nscales to {}.'.format(len(axes)))
+
             self.axes = tuple(int(ax) for ax in axes)
             max_level = pywt.dwt_max_level(range.shape[0],
                                            filter_len=self.wbasis.dec_len)
@@ -968,13 +868,33 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             self.size_list = coeff_size_list(range.shape, self.wbasis,
                                              self.pad_mode, nscales=None,
                                              axes=self.axes)
+
+            rep = len(axes)
+            keys = list(''.join(k) for k in product('ad', repeat=rep))
+            num_coeffs = len(keys)
+            dom_size = num_coeffs * np.prod(self.size_list[0])
+
+        elif nscales is not None:
+            self.axes = None
+            self.nscales = int(nscales)
+            max_level = pywt.dwt_max_level(range.shape[0],
+                                           filter_len=self.wbasis.dec_len)
+            if self.nscales > max_level:
+                raise ValueError('Cannot use more than {} scaling levels, '
+                                 'got {}. Maximum useful number of levels '
+                                 'can be computed using pywt.dwt_max_level '
+                                 ''.format(max_level, self.nscales))
+            self.size_list = coeff_size_list(
+                range.shape, self.wbasis, self.pad_mode, self.nscales,
+                axes=None)
+
             multiplicity = {1: 1, 2: 3, 3: 7}
             dom_size = (np.prod(self.size_list[0]) +
                         sum(multiplicity[range.ndim] * np.prod(shape)
                             for shape in self.size_list[1:-1]))
 
         else:
-            self.axes = None
+            raise ValueError('Either `nscales` or `axes` has to be given')
 
         # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
         domain = range.dspace_type(dom_size, dtype=range.dtype)
@@ -1007,7 +927,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                 return x
 
         else:
-            coeff_dict = array_to_pywt_dict(coeff, self.size_list)
+            coeff_dict = array_to_pywt_dict(coeff, self.size_list, self.axes)
             x = pywt.idwtn(coeff_dict, self.wbasis, self.pad_mode, self.axes)
             return x
 

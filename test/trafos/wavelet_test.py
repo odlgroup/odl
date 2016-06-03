@@ -145,13 +145,13 @@ def test_pywt_dict_to_array_and_array_to_pywt_dict():
     size_list = coeff_size_list((n, n), wbasis, mode, nscales=None, axes=axes)
     x = np.random.rand(n, n)
     coeff_dict = pywt.dwtn(x, wbasis, mode, axes)
-    coeff_arr = pywt_dict_to_array(coeff_dict, size_list)
+    coeff_arr = pywt_dict_to_array(coeff_dict, size_list, axes)
     assert isinstance(coeff_arr, (np.ndarray))
     length_of_array = np.prod(size_list[0])
     length_of_array += sum(3 * np.prod(shape) for shape in size_list[1:-1])
     assert len(coeff_arr) == length_of_array
 
-    coeff_dict_converted = array_to_pywt_dict(coeff_arr, size_list)
+    coeff_dict_converted = array_to_pywt_dict(coeff_arr, size_list, axes)
     aa_orig = coeff_dict['aa']
     aa_converter = coeff_dict_converted['aa']
     assert all_almost_equal(aa_orig, aa_converter)
@@ -164,13 +164,13 @@ def test_pywt_dict_to_array_and_array_to_pywt_dict():
                                 axes=axes)
     x = np.random.rand(n, n, n)
     coeff_dict = pywt.dwtn(x, wbasis, mode, axes)
-    coeff_arr = pywt_dict_to_array(coeff_dict, size_list)
+    coeff_arr = pywt_dict_to_array(coeff_dict, size_list, axes)
     assert isinstance(coeff_arr, (np.ndarray))
     length_of_array = np.prod(size_list[0])
     length_of_array += sum(7 * np.prod(shape) for shape in size_list[1:-1])
     assert len(coeff_arr) == length_of_array
 
-    coeff_dict_converted = array_to_pywt_dict(coeff_arr, size_list)
+    coeff_dict_converted = array_to_pywt_dict(coeff_arr, size_list, axes)
     aaa_orig = coeff_dict['aaa']
     aaa_converter = coeff_dict_converted['aaa']
     assert all_almost_equal(aaa_orig, aaa_converter)
@@ -293,9 +293,7 @@ def test_axes_option():
     wbasis = pywt.Wavelet('db1')
     mode = 'symmetric'
 
-    axes = [0, 0]
-
-    size_list = coeff_size_list((n, n), wbasis, mode, nscales=None, axes=axes)
+    axes = [0, 0, 1]
 
     # Define a discretized domain
     disc_domain = odl.uniform_discr([-1] * 2, [1] * 2, [n] * 2,
@@ -308,13 +306,6 @@ def test_axes_option():
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
 
-    # Determine the correct range for Wop and verify that coeffs
-    # is an element of it
-    ran_size = np.prod(size_list[0])
-    ran_size += sum(3 * np.prod(shape) for shape in size_list[1:-1])
-    disc_range = disc_domain.dspace_type(ran_size, dtype=disc_domain.dtype)
-    assert coeffs in disc_range
-
     # Check that A*A(x) == x
     reconstruction = Wop.adjoint(coeffs)
     # Verify that the output of Wop.inverse and Wop.adjoint are the same
@@ -325,9 +316,7 @@ def test_axes_option():
 
     # 3D
     x = np.ones((n, n, n))
-    axes = [0, 0, 2]
-    size_list = coeff_size_list((n, n, n), wbasis, mode, nscales=None,
-                                axes=axes)
+    axes = [0, 0, 1, 2]
     # Define a discretized domain
     disc_domain = odl.uniform_discr([-1] * 3, [1] * 3, [n] * 3,
                                     dtype='float32')
