@@ -41,10 +41,10 @@ __all__ = ('WaveletTransform', 'WaveletTransformInverse',
 _SUPPORTED_IMPL = ('pywt',)
 
 
-def coeff_size_list_axes(shape, wbasis, mode, axes):
-    """Construct a size list from given wavelet coefficient and given axes.
+def coeff_size_list(shape, wbasis, mode, nscales=None, axes=None):
+    """Construct a size list from given wavelet coefficients.
 
-    Related to 1D, 2D and 3D wavelet transforms along specified axes using
+    Related to 1D, 2D and 3D multidimensional wavelet transforms that utilize
     `PyWavelets
     <http://www.pybytes.com/pywavelets/>`_.
 
@@ -61,107 +61,21 @@ def coeff_size_list_axes(shape, wbasis, mode, axes):
     mode : `str`
         Signal extention mode. Possible extension modes are
 
-        'zpd': zero-padding -- signal is extended by adding zero samples
+        'zero': zero-padding -- signal is extended by adding zero samples
 
-        'cpd': constant padding -- border values are replicated
+        'constant': constant padding -- border values are replicated
 
-        'sym': symmetric padding -- signal extension by mirroring samples
+        'symmetric': symmetric padding -- signal extension by mirroring samples
 
-        'ppd': periodic padding -- signal is trated as a periodic one
+        'periodic': periodic padding -- signal is trated as a periodic one
 
-        'sp1': smooth padding -- signal is extended according to the
+        'smooth': smooth padding -- signal is extended according to the
         first derivatives calculated on the edges (straight line)
 
-        'per': periodization -- like periodic-padding but gives the
+        'periodization': periodization -- like periodic-padding but gives the
         smallest possible number of decomposition coefficients.
 
-    axes : sequence of `int`, optional
-           Dimensions in which to calculate the wavelet transform.
-    """
-    if len(shape) not in (1, 2, 3):
-        raise ValueError('shape must have length 1, 2 or 3, got {}.'
-                         ''.format(len(shape)))
-
-    size_list = [shape]
-
-    if len(shape) == 1:
-        size_list = coeff_size_list(shape, 1, wbasis, mode)
-    elif len(shape) == 2:
-        x_ax = axes.count(0)
-        y_ax = axes.count(1)
-        nx = shape[0]
-        ny = shape[1]
-        if x_ax != 0:
-            for _ in range(x_ax):
-                shp_x = pywt.dwt_coeff_len(nx, filter_len=wbasis.dec_len,
-                                           mode=mode)
-                nx = shp_x
-        else:
-            shp_x = nx
-
-        if y_ax != 0:
-            for _ in range(y_ax):
-                shp_y = pywt.dwt_coeff_len(ny, filter_len=wbasis.dec_len,
-                                           mode=mode)
-                ny = shp_y
-        else:
-            shp_y = ny
-
-        size_list.append((shp_x, shp_y))
-        size_list.append(size_list[-1])
-        size_list.reverse()
-
-    else:
-        x_ax = axes.count(0)
-        y_ax = axes.count(1)
-        z_ax = axes.count(2)
-        nx = shape[0]
-        ny = shape[1]
-        nz = shape[2]
-
-        if x_ax != 0:
-            for _ in range(x_ax):
-                shp_x = pywt.dwt_coeff_len(nx, filter_len=wbasis.dec_len,
-                                           mode=mode)
-                nx = shp_x
-        else:
-            shp_x = nx
-
-        if y_ax != 0:
-            for _ in range(y_ax):
-                shp_y = pywt.dwt_coeff_len(ny, filter_len=wbasis.dec_len,
-                                           mode=mode)
-                ny = shp_y
-        else:
-            shp_y = ny
-        if z_ax != 0:
-            for _ in range(z_ax):
-                shp_z = pywt.dwt_coeff_len(nz, filter_len=wbasis.dec_len,
-                                           mode=mode)
-                nz = shp_z
-        else:
-            shp_z = nz
-
-        size_list.append((shp_x, shp_y, shp_z))
-        size_list.append(size_list[-1])
-        size_list.reverse()
-
-    return size_list
-
-
-def coeff_size_list(shape, nscales, wbasis, pad_mode):
-    """Construct a size list from given wavelet coefficients.
-
-    Related to 1D, 2D and 3D multidimensional wavelet transforms that utilize
-    `PyWavelets
-    <http://www.pybytes.com/pywavelets/>`_.
-
-    Parameters
-    ----------
-    shape : tuple
-        Number of pixels/voxels in the image. Its length must be 1, 2 or 3.
-
-    nscales : int
+    nscales : `int`, optional
         Number of scales in the multidimensional wavelet
         transform.  This parameter is checked against the maximum number of
         scales returned by ``pywt.dwt_max_level``. For more information
@@ -169,28 +83,11 @@ def coeff_size_list(shape, nscales, wbasis, pad_mode):
         <http://www.pybytes.com/pywavelets/ref/\
 dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 -dwt-max-level>`_.
+        If `nscales=None` `axes` has to be given
 
-    wbasis : ``pywt.Wavelet``
-        Selected wavelet basis. For more information see the
-        `PyWavelets documentation on wavelet bases
-        <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
-
-    pad_mode : string
-        Signal extention mode. Possible extension modes are
-
-        'zpd': zero-padding -- signal is extended by adding zero samples
-
-        'cpd': constant padding -- border values are replicated
-
-        'sym': symmetric padding -- signal extension by mirroring samples
-
-        'ppd': periodic padding -- signal is trated as a periodic one
-
-        'sp1': smooth padding -- signal is extended according to the
-        first derivatives calculated on the edges (straight line)
-
-        'per': periodization -- like periodic-padding but gives the
-        smallest possible number of decomposition coefficients.
+    axes : sequence of `int`, optional
+         Dimensions in which to calculate the wavelet transform.
+         If `axes=None` `nscales` has to be given
 
     Returns
     -------
@@ -214,34 +111,62 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         ``N`` = number of scaling levels = nscales
     """
     if len(shape) not in (1, 2, 3):
-        raise ValueError('shape must have length 1, 2 or 3, got {}'
+        raise ValueError('Shape must have length 1, 2 or 3, got {}.'
                          ''.format(len(shape)))
 
-    max_level = pywt.dwt_max_level(shape[0], filter_len=wbasis.dec_len)
-    if nscales > max_level:
-        raise ValueError('too many scaling levels, got {}, maximum useful '
-                         'level is {}'
-                         ''.format(nscales, max_level))
+    if nscales is None and axes is None:
+        raise ValueError('Either nscales or axes has to be defined')
 
-    # dwt_coeff_len calculates the number of coefficients at the next
-    # scaling level given the input size, the length of the filter and
-    # the applied mode.
-    # We use this in the following way (per dimension):
-    # - length[0] = original data length
-    # - length[n+1] = dwt_coeff_len(length[n], ...)
-    # - until n = nscales
-    size_list = [shape]
-    for scale in range(nscales):
-        shp = tuple(pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
-                                       mode=pad_mode)
-                    for n in size_list[scale])
-        size_list.append(shp)
+    if axes is None:
+        max_level = pywt.dwt_max_level(shape[0], filter_len=wbasis.dec_len)
+        if nscales > max_level:
+            raise ValueError('Too many scaling levels, got {}, maximum useful'
+                             ' level is {}'
+                             ''.format(nscales, max_level))
 
-    # Add a duplicate of the last entry for the approximation coefficients
-    size_list.append(size_list[-1])
+        # dwt_coeff_len calculates the number of coefficients at the next
+        # scaling level given the input size, the length of the filter and
+        # the applied mode.
+        # We use this in the following way (per dimension):
+        # - length[0] = original data length
+        # - length[n+1] = dwt_coeff_len(length[n], ...)
+        # - until n = nscales
+        size_list = [shape]
+        for scale in range(nscales):
+            shp = tuple(pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
+                                           mode=mode)
+                        for n in size_list[scale])
+            size_list.append(shp)
 
-    # We created the list in reversed order compared to what pywt expects
-    size_list.reverse()
+        # Add a duplicate of the last entry for the approximation coefficients
+        size_list.append(size_list[-1])
+        # We created the list in reversed order compared to what pywt expects
+        size_list.reverse()
+
+    if nscales is None:
+        size_list = [shape]
+        if len(shape) == 1:
+            nscales = len(axes)
+            for scale in range(nscales):
+                shp = tuple(pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
+                                               mode=mode)
+                            for n in size_list[scale])
+                size_list.append(shp)
+        else:
+            ndim = len(shape)
+            axes_counts = [axes.count(i) for i in range(ndim)]
+            reduced_shape = []
+            for ax_len, ax_count in zip(shape, axes_counts):
+                n = ax_len
+                for _ in range(ax_count):
+                    n = pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
+                                           mode=mode)
+                reduced_shape.append(n)
+
+            size_list.append(tuple(reduced_shape))
+        size_list.append(size_list[-1])
+        size_list.reverse()
+
     return size_list
 
 
@@ -668,9 +593,9 @@ def array_to_pywt_list(coeff, size_list):
 
 class WaveletTransform(Operator):
 
-    """Discrete wavelet trafo between discrete L2 spaces."""
+    """Discrete wavelet transform between discrete Lp spaces."""
 
-    def __init__(self, domain, nscales, wbasis, pad_mode, axes=None):
+    def __init__(self, domain, wbasis, pad_mode, nscales=None, axes=None):
         """Initialize a new instance.
 
         Parameters
@@ -680,16 +605,7 @@ class WaveletTransform(Operator):
             The exponent :math:`p` of the discrete :math:`L^p`
             space must be equal to 2.0.
 
-        nscales : int
-            Number of scales in the coefficient list.
-            The maximum number of usable scales can be determined
-            by ``pywt.dwt_max_level``. For more information see
-            the corresponding `documentation of PyWavelets
-            <http://www.pybytes.com/pywavelets/ref/\
-dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
--dwt-max-level>`_ .
-
-        wbasis :  {string, ``pywt.Wavelet``}
+        wbasis :  {`str`, ``pywt.Wavelet``}
             If a string is given, converts to a ``pywt.Wavelet``.
             Describes properties of a selected wavelet basis.
             See PyWavelet `documentation
@@ -717,24 +633,38 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
              Possible extension modes are:
 
-            'zpd': zero-padding -- signal is extended by adding zero samples
+            'zero': zero-padding -- signal is extended by adding zero samples
 
-            'cpd': constant padding -- border values are replicated
+            'constant': constant padding -- border values are replicated
 
-            'sym': symmetric padding -- signal extension by mirroring samples
+            'symmetric': symmetric padding -- signal extension by
+            mirroring samples
 
-            'ppd': periodic padding -- signal is trated as a periodic one
+            'periodic': periodic padding -- signal is trated as a periodic one
 
-            'sp1': smooth padding -- signal is extended according to the
+            'smooth': smooth padding -- signal is extended according to the
             first derivatives calculated on the edges (straight line)
 
-            'per': periodization -- like periodic-padding but gives the
-            smallest possible number of decomposition coefficients.
+            'periodization': periodization -- like periodic-padding but gives
+            the smallest possible number of decomposition coefficients.
+
+        nscales : `int`, optional
+            Number of scales in the coefficient list.
+            The maximum number of usable scales can be determined
+            by ``pywt.dwt_max_level``. For more information see
+            the corresponding `documentation of PyWavelets
+            <http://www.pybytes.com/pywavelets/ref/\
+dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
+-dwt-max-level>`_ .
+            `nscales` option cannot be combined with `axes` option:
+            if `nscales=None` `axes` has to be given.
+
         axes : sequence of `int`, optional
             Dimensions in which to calculate the wavelet transform.
             The sequence's length has to be equal to dimension of the ``grid``
             `None` means traditional transform along the axes in ``grid``.
-            If axes is given nscales is discarded.
+            `axes` option cannot be combined with `nscales` option:
+            if `axes=None` `nscales` has to be given.
 
         Examples
         --------
@@ -746,8 +676,13 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         >>> op.is_biorthogonal
         True
         """
-        self.nscales = int(nscales)
-        self.pad_mode = str(pad_mode).lower()
+        if nscales is None and axes is None:
+            raise ValueError('Either nscales or axes has to be defined')
+        elif nscales is not None and axes is not None:
+            raise ValueError('Cannot use both nscales and axes options '
+                             ' at the same time, set other to None')
+
+        self.pad_mode = str(mode).lower()
 
         if isinstance(wbasis, pywt.Wavelet):
             self.wbasis = wbasis
@@ -762,58 +697,55 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             raise ValueError('`domain` Lp exponent is {} instead of 2.0.'
                              ''.format(domain.exponent))
 
-        max_level = pywt.dwt_max_level(domain.shape[0],
-                                       filter_len=self.wbasis.dec_len)
-        # TODO: maybe the error message could tell how to calculate the
-        # max number of levels
-        if self.nscales > max_level:
-            raise ValueError('cannot use more than {} scaling levels, '
-                             'got {}'.format(max_level, self.nscales))
+        if domain.ndim not in [1, 2, 3]:
+            raise NotImplementedError('Dimension of the domain {} not 1, '
+                                      '2 or 3'.format(len(domain.ndim)))
+        if nscales is not None:
+            self.nscales = int(nscales)
+            max_level = pywt.dwt_max_level(domain.shape[0],
+                                           filter_len=self.wbasis.dec_len)
+            if self.nscales > max_level:
+                raise ValueError('Cannot use more than {} scaling levels, '
+                                 'got {}. Maximum useful number of levels '
+                                 'can be computed using pywt.dwt_max_level '
+                                 ''.format(max_level, self.nscales))
+            self.size_list = coeff_size_list(
+                domain.shape, self.wbasis, self.pad_mode, self.nscales, axes=None)
 
-        self._axes = axes
-        if axes is not None:
-            if len(axes) != domain.ndim:
-                raise ValueError('The length of the axes has to be equal to '
-                                 'dimension. Axes len is {} and dimension '
-                                 'is {}.'.format(len(axes), domain.ndim))
-            else:
-                self.size_list = coeff_size_list_axes(
-                    domain.shape, self.wbasis, self.pad_mode, self._axes)
-                ran_size = np.prod(self.size_list[0])
-
-                if domain.ndim == 1:
-                    ran_size += sum(np.prod(shape) for shape in
-                                    self.size_list[1:-1])
-                elif domain.ndim == 2:
-                    ran_size += sum(3 * np.prod(shape) for shape in
-                                    self.size_list[1:-1])
-                elif domain.ndim == 3:
-                    ran_size += sum(7 * np.prod(shape) for shape in
-                                    self.size_list[1:-1])
-                else:
-                    raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                              ''.format(len(domain.ndim)))
+            multiplicity = {1: 1, 2: 3, 3: 7}
+            ran_size = (np.prod(self.size_list[0]) +
+                        sum(multiplicity[domain.ndim] * np.prod(shape)
+                            for shape in self.size_list[1:-1]))
         else:
-            self.size_list = coeff_size_list(domain.shape, self.nscales,
-                                             self.wbasis, self.pad_mode)
+            self.nscales = None
 
-            ran_size = np.prod(self.size_list[0])
-            if domain.ndim == 1:
-                ran_size += sum(np.prod(shape) for shape in
-                                self.size_list[1:-1])
-            elif domain.ndim == 2:
-                ran_size += sum(3 * np.prod(shape) for shape in
-                                self.size_list[1:-1])
-            elif domain.ndim == 3:
-                ran_size += sum(7 * np.prod(shape) for shape in
-                                self.size_list[1:-1])
-            else:
-                raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                          ''.format(len(domain.ndim)))
+        if axes is not None:
+            self.axes = tuple(int(ax) for ax in axes)
+            max_level = pywt.dwt_max_level(domain.shape[0],
+                                           filter_len=self.wbasis.dec_len)
 
+            axes_counts = [axes.count(i) for i in range(domain.ndim)]
+            for i in range(len(axes_counts)):
+                if axes_counts[i] > max_level:
+                    raise ValueError('Wavelet transforms per axes cannot be '
+                                     'performed more than maximum useful '
+                                     'level computed by pywt.dwt_max_level. '
+                                     'Max level here is {}.'.format(max_level))
+
+            self.size_list = coeff_size_list(domain.shape, self.wbasis,
+                                             self.pad_mode, nscales=None,
+                                             axes=self.axes)
+
+            multiplicity = {1: 1, 2: 3, 3: 7}
+            ran_size = (np.prod(self.size_list[0]) +
+                        sum(multiplicity[domain.ndim] * np.prod(shape)
+                            for shape in self.size_list[1:-1]))
+
+        else:
+            self.axes = None
         # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
-        range = domain.dspace_type(ran_size, dtype=domain.dtype)
-        super().__init__(domain, range, linear=True)
+        ran = domain.dspace_type(ran_size, dtype=domain.dtype)
+        super().__init__(domain, ran, linear=True)
 
     @property
     def is_orthogonal(self):
@@ -839,27 +771,27 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             The length of the array depends on the size of input image to
             be transformed and on the chosen wavelet basis.
         """
-        if self._axes is None:
-            if x.space.ndim == 1:
+        if self.axes is None:
+            if self.domain.ndim == 1:
                 coeff_list = pywt.wavedec(x, self.wbasis, self.pad_mode,
                                           self.nscales)
                 coeff_arr = pywt_list_to_array(coeff_list, self.size_list)
                 return self.range.element(coeff_arr)
 
-            if x.space.ndim == 2:
+            if self.domain.ndim == 2:
                 coeff_list = pywt.wavedec2(x, self.wbasis, self.pad_mode,
                                            self.nscales)
                 coeff_arr = pywt_list_to_array(coeff_list, self.size_list)
                 return self.range.element(coeff_arr)
 
-            if x.space.ndim == 3:
+            if self.domain.ndim == 3:
                 coeff_list = pywt.wavedecn(x, self.wbasis, self.pad_mode,
                                            self.nscales)
                 coeff_arr = pywt_list_to_array(coeff_list, self.size_list)
 
                 return self.range.element(coeff_arr)
         else:
-            coeff_dict = pywt.dwtn(x, self.wbasis, self.pad_mode, self._axes)
+            coeff_dict = pywt.dwtn(x, self.wbasis, self.pad_mode, self.axes)
             coeff_arr = pywt_dict_to_array(coeff_dict, self.size_list)
             return self.range.element(coeff_arr)
 
@@ -896,15 +828,15 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         adjoint
         """
         return WaveletTransformInverse(
-            range=self.domain, nscales=self.nscales, wbasis=self.wbasis,
-            mode=self.pad_mode, axes=self._axes)
+            range=self.domain, wbasis=self.wbasis, pad_mode=self.pad_mode,
+            nscales=self.nscales, axes=self.axes)
 
 
 class WaveletTransformInverse(Operator):
 
-    """Discrete inverse wavelet trafo between discrete L2 spaces."""
+    """Discrete inverse wavelet tranform between discrete Lp spaces."""
 
-    def __init__(self, range, nscales, wbasis, pad_mode, axes=None):
+    def __init__(self, ran, wbasis, pad_mode, nscales=None, axes=None):
         """Initialize a new instance.
 
          Parameters
@@ -913,15 +845,6 @@ class WaveletTransformInverse(Operator):
             Domain of the wavelet transform (the "image domain").
             The exponent :math:`p` of the discrete :math:`L^p`
             space must be equal to 2.0.
-
-        nscales : int
-            Number of scales in the coefficient list.
-            The maximum number of usable scales can be determined
-            by ``pywt.dwt_max_level``. For more information see
-            the corresponding `documentation of PyWavelets
-            <http://www.pybytes.com/pywavelets/ref/\
-dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
--dwt-max-level>`_ .
 
         wbasis :  ``pywt.Wavelet``
             Describes properties of a selected wavelet basis.
@@ -950,85 +873,108 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
              Possible extension modes are:
 
-            'zpd': zero-padding -- signal is extended by adding zero samples
+            'zero': zero-padding -- signal is extended by adding zero samples
 
-            'cpd': constant padding -- border values are replicated
+            'constant': constant padding -- border values are replicated
 
-            'sym': symmetric padding -- signal extension by mirroring samples
+            'symmetric': symmetric padding -- signal extension by
+            mirroring samples
 
-            'ppd': periodic padding -- signal is trated as a periodic one
+            'periodic': periodic padding -- signal is trated as a periodic one
 
-            'sp1': smooth padding -- signal is extended according to the
+            'smooth': smooth padding -- signal is extended according to the
             first derivatives calculated on the edges (straight line)
 
-            'per': periodization -- like periodic-padding but gives the
-            smallest possible number of decomposition coefficients.
+            'periodization': periodization -- like periodic-padding but gives
+            the smallest possible number of decomposition coefficients.
+
+        nscales : `int`, optional
+            Number of scales in the coefficient list.
+            The maximum number of usable scales can be determined
+            by ``pywt.dwt_max_level``. For more information see
+            the corresponding `documentation of PyWavelets
+            <http://www.pybytes.com/pywavelets/ref/\
+dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
+-dwt-max-level>`_ .
+            `nscales` option cannot be combined with `axes` option:
+            if `nscales=None` `axes` has to be given.
+
         axes : sequence of `int`, optional
             Dimensions in which to calculate the wavelet transform.
             The sequence's length has to be equal to dimension of the ``grid``
             `None` means traditional transform along the axes in ``grid``.
-            If axes is given nscales is discarded.
+            `axes` option cannot be combined with `nscales` option:
+            if `axes=None` `nscales` has to be given.
         """
-        self.nscales = int(nscales)
-        self.wbasis = wbasis
-        self.pad_mode = str(pad_mode).lower()
+        from builtins import range as range_seq
+
+        if nscales is None and axes is None:
+            raise ValueError('Either nscales or axes has to be defined')
+        elif nscales is not None and axes is not None:
+            raise ValueError('Cannot use both nscales and axes options '
+                             ' at the same time, set other to None')
+
+        self.pad_mode = str(mode).lower()
+
+        if isinstance(wbasis, pywt.Wavelet):
+            self.wbasis = wbasis
+        else:
+            self.wbasis = pywt.Wavelet(wbasis)
 
         if not isinstance(range, DiscreteLp):
-            raise TypeError('range {!r} is not a `DiscreteLp` instance'
+            raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
                             ''.format(range))
 
         if range.exponent != 2.0:
-            raise ValueError('range Lp exponent should be 2.0, got {}'
+            raise ValueError('domain Lp exponent is {} instead of 2.0.'
                              ''.format(range.exponent))
 
-        max_level = pywt.dwt_max_level(range.shape[0],
-                                       filter_len=self.wbasis.dec_len)
-        # TODO: maybe the error message could tell how to calculate the
-        # max number of levels
-        if self.nscales > max_level:
-            raise ValueError('cannot use more than {} scaling levels, '
-                             'got {}'.format(max_level, self.nscales))
+        if range.ndim not in [1, 2, 3]:
+            raise NotImplementedError('Dimension of the domain {} not 1, '
+                                      '2 or 3'.format(len(range.ndim)))
+        if nscales is not None:
+            self.nscales = int(nscales)
+            max_level = pywt.dwt_max_level(range.shape[0],
+                                           filter_len=self.wbasis.dec_len)
+            if self.nscales > max_level:
+                raise ValueError('Cannot use more than {} scaling levels, '
+                                 'got {}. Maximum useful number of levels '
+                                 'can be computed using pywt.dwt_max_level '
+                                 ''.format(max_level, self.nscales))
+            self.size_list = coeff_size_list(
+                range.shape, self.wbasis, self.pad_mode, self.nscales, axes=None)
 
-        self._axes = axes
-        if axes is not None:
-            if len(axes) != range.ndim:
-                raise ValueError('The length of the axes has to be equal to '
-                                 'dimension. Axes len is {} and dimension '
-                                 'is {}.'.format(len(axes), range.ndim))
-            else:
-                self.size_list = coeff_size_list_axes(
-                    range.shape, self.wbasis, self.pad_mode, self._axes)
-                dom_size = np.prod(self.size_list[0])
+            multiplicity = {1: 1, 2: 3, 3: 7}
+            dom_size = (np.prod(self.size_list[0]) +
+                        sum(multiplicity[range.ndim] * np.prod(shape)
+                            for shape in self.size_list[1:-1]))
 
-                if range.ndim == 1:
-                    dom_size += sum(np.prod(shape) for shape in
-                                    self.size_list[1:-1])
-                elif range.ndim == 2:
-                    dom_size += sum(3 * np.prod(shape) for shape in
-                                    self.size_list[1:-1])
-                elif range.ndim == 3:
-                    dom_size += sum(7 * np.prod(shape) for shape in
-                                    self.size_list[1:-1])
-                else:
-                    raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                              ''.format(len(range.ndim)))
         else:
-            self.size_list = coeff_size_list(range.shape, self.nscales,
-                                             self.wbasis, self.pad_mode)
+            self.nscales = None
 
-            dom_size = np.prod(self.size_list[0])
-            if range.ndim == 1:
-                dom_size += sum(np.prod(shape) for shape in
-                                self.size_list[1:-1])
-            elif range.ndim == 2:
-                dom_size += sum(3 * np.prod(shape) for shape in
-                                self.size_list[1:-1])
-            elif range.ndim == 3:
-                dom_size += sum(7 * np.prod(shape) for shape in
-                                self.size_list[1:-1])
-            else:
-                raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                          ''.format(range.ndim))
+        if axes is not None:
+            self.axes = tuple(int(ax) for ax in axes)
+            max_level = pywt.dwt_max_level(range.shape[0],
+                                           filter_len=self.wbasis.dec_len)
+
+            axes_counts = [axes.count(i) for i in range_seq(range.ndim)]
+            for i in range_seq(len(axes_counts)):
+                if axes_counts[i] > max_level:
+                    raise ValueError('Wavelet transforms per axes cannot be '
+                                     'performed more than maximum useful '
+                                     'level computed by pywt.dwt_max_level. '
+                                     'Max level here is {}.'.format(max_level))
+
+            self.size_list = coeff_size_list(range.shape, self.wbasis,
+                                             self.pad_mode, nscales=None,
+                                             axes=self.axes)
+            multiplicity = {1: 1, 2: 3, 3: 7}
+            dom_size = (np.prod(self.size_list[0]) +
+                        sum(multiplicity[range.ndim] * np.prod(shape)
+                            for shape in self.size_list[1:-1]))
+
+        else:
+            self.axes = None
 
         # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
         domain = range.dspace_type(dom_size, dtype=range.dtype)
@@ -1045,19 +991,8 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         return self.wbasis.biorthogonal
 
     def _call(self, coeff):
-        """Compute the discrete 1D, 2D or 3D inverse wavelet transform.
-
-        Parameters
-        ----------
-        coeff : `domain` element
-            Wavelet coefficients supplied to the wavelet reconstruction.
-
-        Returns
-        -------
-        arr : `numpy.ndarray`
-            Result of the wavelet reconstruction.
-        """
-        if self._axes is None:
+        """Compute the discrete 1D, 2D or 3D inverse wavelet transform."""
+        if self.axes is None:
             if len(self.range.shape) == 1:
                 coeff_list = array_to_pywt_list(coeff, self.size_list)
                 x = pywt.waverec(coeff_list, self.wbasis, self.pad_mode)
@@ -1073,7 +1008,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
         else:
             coeff_dict = array_to_pywt_dict(coeff, self.size_list)
-            x = pywt.idwtn(coeff_dict, self.wbasis, self.pad_mode, self._axes)
+            x = pywt.idwtn(coeff_dict, self.wbasis, self.pad_mode, self.axes)
             return x
 
     @property
@@ -1102,19 +1037,10 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     @property
     def inverse(self):
-        """Inverse of this operator.
-
-        Returns
-        -------
-        inverse : `WaveletTransform`
-
-        See Also
-        --------
-        adjoint
-        """
-        return WaveletTransform(domain=self.range, nscales=self.nscales,
-                                wbasis=self.wbasis, pad_mode=self.pad_mode,
-                                axes=self._axes)
+        """The inverse wavelet transform."""
+        return WaveletTransform(domain=self.range, wbasis=self.wbasis,
+                                pad_mode=self.pad_mode, nscales=self.nscales,
+                                axes=self.axes)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

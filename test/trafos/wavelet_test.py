@@ -32,7 +32,7 @@ except ImportError:
 # ODL imports
 import odl
 from odl.trafos.wavelet import (
-    coeff_size_list_axes, coeff_size_list, pywt_list_to_array,
+    coeff_size_list, pywt_list_to_array,
     pywt_dict_to_array, array_to_pywt_list, array_to_pywt_dict,
     WaveletTransform)
 from odl.util.testutils import (all_almost_equal, all_equal,
@@ -42,31 +42,30 @@ from odl.util.testutils import (all_almost_equal, all_equal,
 @skip_if_no_pywavelets
 def test_coeff_size_list():
     # Verify that the helper function does indeed work as expected
+    # Test coeff_size_list with nscales option
     shape = (16,)
     nscale = 3
     wbasis = pywt.Wavelet('db1')
-    mode = 'per'
-    size_list1d = coeff_size_list(shape, nscale, wbasis, mode)
+    mode = 'periodization'
+    size_list1d = coeff_size_list(shape, wbasis, mode, nscale, axes=None)
     S1d = [(2,), (2,), (4,), (8,), (16,)]
     shape = (16, 16)
-    size_list2d = coeff_size_list(shape, nscale, wbasis, mode)
+    size_list2d = coeff_size_list(shape, wbasis, mode, nscale, axes=None)
     S2d = [(2, 2), (2, 2), (4, 4), (8, 8), (16, 16)]
     shape = (16, 16, 16)
-    size_list3d = coeff_size_list(shape, nscale, wbasis, mode)
+    size_list3d = coeff_size_list(shape, wbasis, mode, nscale, axes=None)
     S3d = [(2, 2, 2), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 16)]
     assert all_equal(size_list1d, S1d)
     assert all_equal(size_list2d, S2d)
     assert all_equal(size_list3d, S3d)
 
-
-@skip_if_no_pywavelets
-def test_coeff_size_list_axes():
+    # Test coeff_size_list with axes options
     # 2D
     n = 16
     wbasis = pywt.Wavelet('db1')
-    mode = 'sym'
+    mode = 'symmetric'
     axes = [0, 0]
-    size_list = coeff_size_list_axes((n, n), wbasis, mode, axes)
+    size_list = coeff_size_list((n, n), wbasis, mode, nscales=None, axes=axes)
     sl = [(4, 16), (4, 16), (16, 16)]
     assert all_equal(size_list, sl)
     coeff_dict = pywt.dwtn(np.random.rand(n, n), wbasis, mode, axes)
@@ -74,7 +73,8 @@ def test_coeff_size_list_axes():
 
     # 3D
     axes = [0, 0, 1]
-    size_list = coeff_size_list_axes((n, n, n), wbasis, mode, axes)
+    size_list = coeff_size_list((n, n, n), wbasis, mode, nscales=None,
+                                axes=axes)
     sl = [(4, 8, 16), (4, 8, 16), (16, 16, 16)]
     assert all_equal(size_list, sl)
     coeff_dict = pywt.dwtn(np.random.rand(n, n, n), wbasis, mode, axes)
@@ -85,11 +85,11 @@ def test_coeff_size_list_axes():
 def test_pywt_list_to_array_and_array_to_pywt_list():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
-    mode = 'zpd'
+    mode = 'zero'
     nscales = 2
     n = 16
     # 1D test
-    size_list = coeff_size_list((n,), nscales, wbasis, mode)
+    size_list = coeff_size_list((n,), wbasis, mode, nscales, axes=None)
     x = np.random.rand(n)
     coeff_list = pywt.wavedec(x, wbasis, mode, nscales)
     coeff_arr = pywt_list_to_array(coeff_list, size_list)
@@ -104,7 +104,7 @@ def test_pywt_list_to_array_and_array_to_pywt_list():
     assert all_almost_equal(reconstruction, x)
 
     # 2D test
-    size_list = coeff_size_list((n, n), nscales, wbasis, mode)
+    size_list = coeff_size_list((n, n), wbasis, mode, nscales, axes=None)
     x = np.random.rand(n, n)
     coeff_list = pywt.wavedec2(x, wbasis, mode, nscales)
     coeff_arr = pywt_list_to_array(coeff_list, size_list)
@@ -119,7 +119,7 @@ def test_pywt_list_to_array_and_array_to_pywt_list():
     assert all_almost_equal(reconstruction, x)
 
     # 3D test
-    size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
+    size_list = coeff_size_list((n, n, n), wbasis, mode, nscales, axes=None)
     x = np.random.rand(n, n, n)
     coeff_list = pywt.wavedecn(x, wbasis, mode, nscales)
     coeff_arr = pywt_list_to_array(coeff_list, size_list)
@@ -139,10 +139,10 @@ def test_pywt_dict_to_array_and_array_to_pywt_dict():
     # Verify that the helper function does indeed work as expected
     n = 16
     wbasis = pywt.Wavelet('db1')
-    mode = 'zpd'
+    mode = 'zero'
     # 2D
     axes = [0, 0]
-    size_list = coeff_size_list_axes((n, n), wbasis, mode, axes)
+    size_list = coeff_size_list((n, n), wbasis, mode, nscales=None, axes=axes)
     x = np.random.rand(n, n)
     coeff_dict = pywt.dwtn(x, wbasis, mode, axes)
     coeff_arr = pywt_dict_to_array(coeff_dict, size_list)
@@ -160,8 +160,8 @@ def test_pywt_dict_to_array_and_array_to_pywt_dict():
 
     # 3D
     axes = [0, 0, 0]
-    size_list = coeff_size_list_axes((n, n, n), wbasis, mode, axes)
-
+    size_list = coeff_size_list((n, n, n), wbasis, mode, nscales=None,
+                                axes=axes)
     x = np.random.rand(n, n, n)
     coeff_dict = pywt.dwtn(x, wbasis, mode, axes)
     coeff_arr = pywt_dict_to_array(coeff_dict, size_list)
@@ -187,8 +187,8 @@ def test_dwt():
     x[5:10] = 1
     wbasis = pywt.Wavelet('db1')
     nscales = 2
-    mode = 'sym'
-    size_list = coeff_size_list((n,), nscales, wbasis, mode)
+    mode = 'symmetric'
+    size_list = coeff_size_list((n,), wbasis, mode, nscales, axes=None)
 
     # Define a discretized domain
     disc_domain = odl.uniform_discr([-1], [1], [n], dtype='float32')
@@ -196,7 +196,7 @@ def test_dwt():
 
     # Create the discrete wavelet transform operator.
     # Only the domain of the operator needs to be defined
-    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode)
+    Wop = WaveletTransform(disc_domain, wbasis, mode, nscales, axes=None)
 
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
@@ -222,8 +222,8 @@ def test_dwt():
     x[5:10, 5:10] = 1
     wbasis = pywt.Wavelet('db1')
     nscales = 2
-    mode = 'sym'
-    size_list = coeff_size_list((n, n), nscales, wbasis, mode)
+    mode = 'symmetric'
+    size_list = coeff_size_list((n, n), wbasis, mode, nscales, axes=None)
 
     # Define a discretized domain
     disc_domain = odl.uniform_discr([-1] * 2, [1] * 2, [n] * 2,
@@ -232,7 +232,7 @@ def test_dwt():
 
     # Create the discrete wavelet transform operator.
     # Only the domain of the operator needs to be defined
-    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode)
+    Wop = WaveletTransform(disc_domain, wbasis, mode, nscales, axes=None)
 
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
@@ -258,8 +258,8 @@ def test_dwt():
     x[5:10, 5:10, 5:10] = 1
     wbasis = pywt.Wavelet('db2')
     nscales = 1
-    mode = 'per'
-    size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
+    mode = 'periodization'
+    size_list = coeff_size_list((n, n, n), wbasis, mode, nscales, axes=None)
 
     # Define a discretized domain
     disc_domain = odl.uniform_discr([-1] * 3, [1] * 3, [n] * 3,
@@ -267,7 +267,7 @@ def test_dwt():
     disc_phantom = disc_domain.element(x)
 
     # Create the discrete wavelet transform operator related to 3D transform.
-    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode)
+    Wop = WaveletTransform(disc_domain, wbasis, mode, nscales, axes=None)
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
     # Determine the correct range for Wop and verify that coeffs
@@ -291,12 +291,11 @@ def test_axes_option():
     n = 16
     x = np.ones((n, n))
     wbasis = pywt.Wavelet('db1')
-    mode = 'sym'
-    nscales = 1
+    mode = 'symmetric'
 
     axes = [0, 0]
 
-    size_list = coeff_size_list_axes((n, n), wbasis, mode, axes)
+    size_list = coeff_size_list((n, n), wbasis, mode, nscales=None, axes=axes)
 
     # Define a discretized domain
     disc_domain = odl.uniform_discr([-1] * 2, [1] * 2, [n] * 2,
@@ -304,7 +303,7 @@ def test_axes_option():
     disc_phantom = disc_domain.element(x)
 
     # Create the discrete wavelet transform operator.
-    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode, axes=axes)
+    Wop = WaveletTransform(disc_domain, wbasis, mode, nscales=None, axes=axes)
 
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
@@ -327,13 +326,15 @@ def test_axes_option():
     # 3D
     x = np.ones((n, n, n))
     axes = [0, 0, 2]
-    size_list = coeff_size_list_axes((n, n, n), wbasis, mode, axes)
+    size_list = coeff_size_list((n, n, n), wbasis, mode, nscales=None,
+                                axes=axes)
     # Define a discretized domain
     disc_domain = odl.uniform_discr([-1] * 3, [1] * 3, [n] * 3,
                                     dtype='float32')
     disc_phantom = disc_domain.element(x)
     # Create the discrete wavelet transform operator.
-    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode, axes=axes)
+    Wop = WaveletTransform(disc_domain, wbasis, mode, nscales=None, axes=axes)
+
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
     # Check that A*A(x) == x
