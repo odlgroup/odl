@@ -5,11 +5,11 @@ References
    gradient methods*. IMA Journal of Numerical Analysis, 8 (1988),
    pp 141--148.
 
-.. [BC2015] Bot, R.I, and Csetnek, E.R. *On the convergence rate of
+.. [BC2015] Bot, R I, and Csetnek, E R. *On the convergence rate of
    a forward-backward type primal-dual splitting algorithm for convex
    optimization problems*. Optimization, 64.1 (2015), pp 5--23.
 
-.. [BH2013] Bot, R.I, and Hendrich, C. *A Douglas-Rachford type
+.. [BH2013] Bot, R I, and Hendrich, C. *A Douglas-Rachford type
    primal-dual method for solving inclusions with mixtures of
    composite and parallel-sum type monotone operators*. SIAM Journal
    on Optimization, 23.4 (2013), pp 2541--2565.
@@ -21,15 +21,21 @@ References
 .. [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
    Cambridge university press, 2004.
 
-.. [CP2011a] Chambolle, Antonin and Pock, Thomas. *A First-Order
+.. [CP2011a] Chambolle, A and Pock, T. *A First-Order
    Primal-Dual Algorithm for Convex Problems with Applications to
    Imaging*. Journal of Mathematical Imaging and Vision, 40 (2011),
    pp 120-145.
 
-.. [CP2011b] Chambolle, Antonin and Pock, Thomas. *Diagonal
+.. [CP2011b] Chambolle, A and Pock, T. *Diagonal
    preconditioning for first order primal-dual algorithms in convex
    optimization*. 2011 IEEE International Conference on Computer Vision
    (ICCV), 2011, pp 1762-1769.
+
+.. [CP2011c] Combettes, P L, and Pesquet, J-C. *Proximal splitting
+   methods in signal processing.* In:  Bauschke, H H, Burachik, R S,
+   Combettes, P L, Elser, V, Luke, D R, and Wolkowicz, H. Fixed-point
+   algorithms for inverse problems in science and engineering, Springer,
+   2011.
 
 .. [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
    optimization*. Siam, 2009.
@@ -41,7 +47,7 @@ References
    Scherzer, O. Handbook of Mathematical Methods in Imaging.
    Springer, 2015, pp 937--1031.
 
-.. [PB2014] Parikh, Neal and Boyd, Stephen. *Proximal Algorithms*.
+.. [PB2014] Parikh, N, and Boyd, S. *Proximal Algorithms*.
    Foundations and Trends in Optimization, 1 (2014), pp 127-239.
 
 .. [Pre+2007] Press, W H, Teukolsky, S A, Vetterling, W T, and Flannery, B P.
@@ -55,12 +61,12 @@ References
 .. [Roc1970] Rockafellar, R. Tyrrell. *Convex analysis*. Princeton
    University Press, 1970.
 
-.. [Sid+2012] Sidky, Emil Y, Jorgensen, Jakob H, and Pan, Xiaochuan.
+.. [Sid+2012] Sidky, E Y, Jorgensen, J H, and Pan, X.
    *Convex optimization problem prototyping for image reconstruction in
    computed tomography with the Chambolle-Pock algorithm*. Physics in
    Medicine and Biology, 57 (2012), pp 3065-3091.
 
-.. [SW1971] Stein, E and Weiss, G.
+.. [SW1971] Stein, E, and Weiss, G.
    *Introduction to Fourier Analysis on Euclidean Spaces*.
    Princeton University Press, 1971.
 

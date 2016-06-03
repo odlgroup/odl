@@ -30,13 +30,18 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
+import numpy as np
+
 from odl.operator.operator import Operator
-from odl.operator.default_ops import IdentityOperator
+from odl.operator.default_ops import (IdentityOperator, ScalingOperator,
+                                      ConstantOperator, ResidualOperator)
 from odl.operator.pspace_ops import DiagonalOperator
 from odl.space.pspace import ProductSpace
+from odl.set.space import LinearSpaceVector
 
 
-__all__ = ('combine_proximals', 'proximal_cconj',
+__all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
+           'proximal_arg_scaling', 'proximal_quadratic_perturbation',
            'proximal_composition', 'proximal_zero',
            'proximal_box_constraint', 'proximal_nonnegativity',
            'proximal_l1', 'proximal_cconj_l1',
@@ -85,18 +90,18 @@ def combine_proximals(*factory_list):
     return make_diag
 
 
-def proximal_cconj(proximal):
+def proximal_cconj(prox_factory):
     """Calculate the proximal of the dual using Moreau decomposition.
 
     The Moreau identity states that for any convex function ``F`` with
     convex conjugate ``F^*``, the proximals satisfy
 
-        prox[a * F^*](x) + a * prox[F / a](x / a) = x
+        prox[s * F^*](x) + s * prox[F / s](x / s) = x
 
-    where ``a`` is a scalar step size. Using this, we find the proximal of the
+    where ``s`` is a scalar step size. Using this, we find the proximal of the
     convex conjugate
 
-        prox[a * F^*](x) = x - a * prox[F / a](x / a)
+        prox[s * F^*](x) = x - s * prox[F / s](x / s)
 
     Note that since ``(F^*)^* = F``, this can be used to get the proximal of
     the original function from the proximal of the convex conjugate.
@@ -111,6 +116,10 @@ def proximal_cconj(proximal):
     -------
     prox : `callable`
         Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    For reference on the Moreau identity, see [ComPes2011]_.
     """
 
     def cconj_prox_factory(step_size):
@@ -124,12 +133,182 @@ def proximal_cconj(proximal):
         Returns
         -------
         proximal : `Operator`
-            The proximal operator of ``prox[a * f^*](x)``
+            The proximal operator of ``s * F^*`` where ``s`` is the step size
         """
-        prox_other = step_size * proximal(1.0 / step_size) * (1.0 / step_size)
+        prox_other = (step_size * prox_factory(1.0 / step_size) *
+                      (1.0 / step_size))
         return IdentityOperator(prox_other.domain) - prox_other
 
     return cconj_prox_factory
+
+
+def proximal_translation(prox_factory, y):
+    """Calculate the proximal of the translated function F(x - y).
+
+    This is calculated according to the rule
+
+        prox[s * F( . - y)](x) = y + prox[s * F](x - y)
+
+    where ``y`` is the translation, and ``s`` is the step size.
+
+    Parameters
+    ----------
+    prox_factory : `callable`
+        A factory function that, when called with a step size, returns the
+        proximal operator of ``F``.
+    y : Element in domain of ``F``.
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    For reference on the identity used, see [CP2011c]_.
+    """
+
+    def translation_prox_factory(step_size):
+        """Create proximal for the translation with a given step_size.
+
+        Parameters
+        ----------
+        step_size : positive `float`
+            Step size parameter
+
+        Returns
+        -------
+        proximal : `Operator`
+            The proximal operator of ``s * F( . - y)`` where ``s`` is the
+            step size
+        """
+
+        return (ConstantOperator(y) + prox_factory(step_size) *
+                (IdentityOperator(y.space) - ConstantOperator(y)))
+
+    return translation_prox_factory
+
+
+def proximal_arg_scaling(prox_factory, scaling):
+    """Calculate the proximal of function F(x * scaling).
+
+    This is calculated according to the rule
+
+        prox[s * F( . * scaling)](x) =
+        1/scaling * prox[s * scaling^2 * F ](x * scaling)
+
+    where ``scaling`` is the scaling parameter, and ``s`` is the step size.
+
+    Parameters
+    ----------
+    prox_factory : `callable`
+        A factory function that, when called with a step size, returns the
+        proximal operator of ``F``
+    scaling : `float`
+        Scaling parameter
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    For reference on the identity used, see [CP2011c]_.
+    """
+
+    scaling = float(scaling)
+    if scaling == 0:
+        return proximal_zero(prox_factory(1.0).domain)
+
+    def arg_scaling_prox_factory(step_size):
+        """Create proximal for the translation with a given step_size.
+
+        Parameters
+        ----------
+        step_size : positive `float`
+            Step size parameter
+
+        Returns
+        -------
+        proximal : `Operator`
+            The proximal operator of ``s * F( . * a)`` where ``s`` is the
+            step size
+        """
+        prox = prox_factory(step_size * scaling ** 2)
+        return (1 / scaling) * prox * scaling
+
+    return arg_scaling_prox_factory
+
+
+def proximal_quadratic_perturbation(prox_factory, a, u=None):
+    """Calculate the proximal of function F(x) + a * ||x||^2 + <u,x>.
+
+    This is calculated according to the rule
+
+        prox[s * (F( . ) + a * || . ||^2 + <u, . >)](x) =
+        c prox[s*f( . * c)]((x - s*u)*c)
+
+    where ``c`` is the constant c = 1/sqrt(s*2*a + 1), ``a`` is the scaling
+    parameter belonging to the quadratic term, ``u`` is the vector defining the
+    linear functional, and ``s`` is the step size.
+
+    Parameters
+    ----------
+    prox_factory : `callable`
+        A factory function that, when called with a step size, returns the
+        proximal operator of ``F``
+    a : non-negative `float`
+        Scaling of the quadratic term
+    u : Element in domain of F, optional
+        Defines the linear functional
+        Default: Treated as zero vector
+
+    Returns
+    -------
+    prox : `callable`
+        Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    For reference on the identity used, see [CP2011c]_. Note that this identity
+    is not the exact one given in the reference, but was recalculated for
+    arbitrary step lengths.
+    """
+
+    a = float(a)
+    if a < 0:
+        raise ValueError('scaling parameter {} not non-negative'.format(a))
+
+    if u is not None and not isinstance(u, LinearSpaceVector):
+        raise TypeError('vector {!r} not None or a LinearSpaceVector instance.'
+                        ''.format(u))
+
+    def quadratic_perturbation_prox_factory(step_size):
+        """Create proximal for the quadratic perturbation with a given
+        step_size.
+
+        Parameters
+        ----------
+        step_size : positive `float`
+            Step size parameter
+
+        Returns
+        -------
+        proximal : `Operator`
+            The proximal operator of ``s * (F(x) + a * ||x||^2 + <u,x>)``,
+            where ``s`` is the step size
+        """
+        const = 1.0 / np.sqrt(step_size * 2.0 * a + 1)
+        prox = proximal_arg_scaling(prox_factory, const)(step_size)
+        if u is not None:
+            return (const * prox *
+                    ResidualOperator(ScalingOperator(u.space, const),
+                                     step_size * const * u))
+        else:
+            return const * prox * const
+
+    return quadratic_perturbation_prox_factory
 
 
 def proximal_composition(proximal, operator, mu):
@@ -218,7 +397,7 @@ def proximal_zero(space):
         ----------
         tau : positive `float`
             Unused step size parameter. Introduced to provide a unified
-            interface
+            interface.
 
         Returns
         -------
@@ -292,7 +471,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
             Parameters
             ----------
             tau : positive `float`
-                Step size parameter. Not used.
+                Step size parameter, not used.
             """
             super().__init__(domain=space, range=space, linear=False)
 
@@ -572,7 +751,7 @@ def proximal_l2_squared(space, lam=1, g=None):
     For a step size ``tau``, the proximal operator of ``tau * F`` is
     given by
 
-        prox[tau * F](x) = (x + 2 * tau * lam * g) / (2 * tau * lam)
+        prox[tau * F](x) = (x + 2 * tau * lam * g) / (1 + 2 * tau * lam)
 
     Parameters
     ----------

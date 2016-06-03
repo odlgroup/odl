@@ -229,12 +229,9 @@ def test_proximal_convconj_l2_sq_wo_data():
     x_arr = np.arange(-5, 5)
     x = space.element(x_arr)
 
-    # Create data
-    g = space.element(-2 * x_arr)
-
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_l2_squared(space, lam=lam, g=g)
+    prox_factory = proximal_cconj_l2_squared(space, lam=lam)
 
     # Initialize the proximal operator
     sigma = 0.25
@@ -248,8 +245,8 @@ def test_proximal_convconj_l2_sq_wo_data():
     # Optimal point returned by the proximal operator
     prox(x, x_out)
 
-    # Explicit computation: (x - sigma * g) / (1 + sigma / (2 * lambda))
-    x_verify = (x - sigma * g) / (1 + sigma / (2 * lam))
+    # Explicit computation: x / (1 + sigma / (2 * lambda))
+    x_verify = x / (1 + sigma / (2 * lam))
 
     assert all_almost_equal(x_out, x_verify, PLACES)
 
