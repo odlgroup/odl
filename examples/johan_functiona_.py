@@ -24,7 +24,7 @@ print(space)
 
 class L1Functional(odl.solvers.functional.Functional):
     def __init__(self, domain):
-        super().__init__(domain=domain, linear=False, convex=True, concave=False, smooth=False, lipschitz=1)
+        super().__init__(domain=domain, linear=False, convex=True, concave=False, smooth=False, grad_lipschitz=np.inf)
     
     def _call(self, x):
         return np.abs(x).inner(self.domain.one())
@@ -65,23 +65,22 @@ class L1Functional(odl.solvers.functional.Functional):
 
 class L2Functional(odl.solvers.functional.Functional):
     def __init__(self, domain):
-        super().__init__(domain=domain, linear=False, convex=True, concave=False, smooth=True, lipschitz=1)
+        super().__init__(domain=domain, linear=False, convex=True, concave=False, smooth=True, grad_lipschitz=1)
     
     def _call(self, x):
         return np.sqrt(np.abs(x).inner(np.abs(x)))
     
+    @property
     def gradient(self):
         functional = self
         
-        #TODO: Implement, use weight function to do this!!!
         class L2gradient(odl.operator.Operator):
             def __init__(self):
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
             
             def _call(self, x):
-                raise NotImplementedError
-#                return 2*x/x.norm()
+                return x/x.norm()
         
         return L2gradient()
     
@@ -100,6 +99,7 @@ class L2Functional(odl.solvers.functional.Functional):
         
         return L2Proximal()
 
+    @property
     def conjugate_functional(self):
         functional = self
         
@@ -115,15 +115,17 @@ class L2Functional(odl.solvers.functional.Functional):
                     
         return L2Conjugate_functional()            
 
-
-
+        
+        
         
 l1func = L1Functional(space)
 l1prox = l1func.proximal(sigma=1.5)
 l1conjFun = l1func.conjugate_functional()
 
+
 # Create phantom
 phantom = odl.util.shepp_logan(space, modified=True)*5+1
+
 
 onevector=space.one()*5
 
@@ -132,11 +134,21 @@ l1conjFun_phantom = l1conjFun(phantom)
 
 l2func=L2Functional(space)
 l2prox = l2func.proximal(sigma=1.5)
-l2conjFun = l2func.conjugate_functional()
+l2conjFun = l2func.conjugate_functional
+l2conjGrad = l2func.gradient
 
 
-prox2_phantom=l2prox(phantom)
-l2conjFun_phantom = l2conjFun(phantom)
+prox2_phantom=l2prox(phantom*10)
+l2conjFun_phantom = l2conjFun(phantom/10)
+
+
+
+
+#a=1+2j
+#np.sign(a)
+
+#l2der_0=l2func.derivative(space.one)
+
 
 
 
