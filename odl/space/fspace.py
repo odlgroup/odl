@@ -29,9 +29,9 @@ import numpy as np
 from odl.operator.operator import Operator, _dispatch_call_args
 from odl.set.sets import RealNumbers, ComplexNumbers, Set, Field
 from odl.set.space import LinearSpace, LinearSpaceVector
-from odl.space.base_ntuples import _TYPE_MAP_R2C, _TYPE_MAP_C2R
 from odl.util.utility import (is_real_dtype, is_complex_floating_dtype,
-                              preload_first_arg, dtype_repr)
+                              preload_first_arg, dtype_repr,
+                              TYPE_MAP_R2C, TYPE_MAP_C2R)
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
     out_shape_from_array, out_shape_from_meshgrid, vectorize)
@@ -592,11 +592,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if self.field == RealNumbers():
             self._real_out_dtype = self.out_dtype
             self._real_space = self
-            self._complex_out_dtype = _TYPE_MAP_R2C.get(self.out_dtype,
-                                                        np.dtype(object))
+            self._complex_out_dtype = TYPE_MAP_R2C.get(self.out_dtype,
+                                                       np.dtype(object))
             self._complex_space = None
         elif self.field == ComplexNumbers():
-            self._real_out_dtype = _TYPE_MAP_C2R[self.out_dtype]
+            self._real_out_dtype = TYPE_MAP_C2R[self.out_dtype]
             self._real_space = None
             self._complex_out_dtype = self.out_dtype
             self._complex_space = self
@@ -938,7 +938,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if is_real_dtype(self.out_dtype):
             return x
         else:
-            rdtype = _TYPE_MAP_C2R.get(self.out_dtype, None)
+            rdtype = TYPE_MAP_C2R.get(self.out_dtype, None)
             rspace = self.astype(rdtype)
             return rspace.element(realpart_oop)
 
@@ -952,7 +952,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if is_real_dtype(self.out_dtype):
             return self.zero()
         else:
-            rdtype = _TYPE_MAP_C2R.get(self.out_dtype, None)
+            rdtype = TYPE_MAP_C2R.get(self.out_dtype, None)
             rspace = self.astype(rdtype)
             return rspace.element(imagpart_oop)
 

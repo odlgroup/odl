@@ -34,21 +34,15 @@ try:
 except ImportError:
     PYFFTW_AVAILABLE = False
 
-from odl.discr.grid import RegularGrid
-from odl.discr.lp_discr import (
-    DiscreteLp, dspace_type, discr_sequence_space)
-from odl.discr.partition import uniform_partition_fromgrid
-from odl.operator.operator import Operator
+from odl.discr import (RegularGrid, DiscreteLp,
+                       discr_sequence_space, uniform_partition_fromgrid,
+                       uniform_discr_frompartition)
+from odl.operator import Operator
 from odl.set.sets import RealNumbers, ComplexNumbers
-from odl.space.base_ntuples import _TYPE_MAP_R2C
-from odl.space.cu_ntuples import CudaNtuples
-from odl.space.fspace import FunctionSpace
-from odl.space.ntuples import Ntuples
-from odl.util.normalize import normalized_scalar_param_list
-from odl.util.numerics import fast_1d_tensor_mult
-from odl.util.utility import (
-    is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype, dtype_repr, conj_exponent)
+from odl.util import (fast_1d_tensor_mult, is_real_dtype, is_scalar_dtype,
+                      is_real_floating_dtype, is_complex_floating_dtype,
+                      dtype_repr, conj_exponent, TYPE_MAP_R2C,
+                      normalized_scalar_param_list)
 
 
 __all__ = ('FourierTransform', 'FourierTransformInverse',
@@ -308,7 +302,7 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
                              ''.format(tuple(out_shape), arr_out.shape))
 
         if is_real_dtype(arr_in.dtype):
-            out_dtype = _TYPE_MAP_R2C[arr_in.dtype]
+            out_dtype = TYPE_MAP_R2C[arr_in.dtype]
         elif halfcomplex:
             raise ValueError('cannot combine halfcomplex forward transform '
                              'with complex input')
@@ -336,7 +330,7 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
                              ''.format(tuple(in_shape), arr_in.shape))
 
         if is_real_dtype(arr_out.dtype):
-            in_dtype = _TYPE_MAP_R2C[arr_out.dtype]
+            in_dtype = TYPE_MAP_R2C[arr_out.dtype]
         elif halfcomplex:
             raise ValueError('cannot combine halfcomplex backward transform '
                              'with complex output')
@@ -474,7 +468,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     array_in_copied = False
     if is_real_dtype(array_in.dtype) and not halfcomplex:
         # Need to cast array_in to complex dtype
-        array_in = array_in.astype(_TYPE_MAP_R2C[array_in.dtype])
+        array_in = array_in.astype(TYPE_MAP_R2C[array_in.dtype])
         array_in_copied = True
 
     # Do consistency checks on the arguments
@@ -647,7 +641,7 @@ class DiscreteFourierTransform(Operator):
             ran_dtype = domain.dtype
         else:
             self._halfcomplex = bool(halfcomplex)
-            ran_dtype = _TYPE_MAP_R2C[domain.dtype]
+            ran_dtype = TYPE_MAP_R2C[domain.dtype]
 
         # Sign of the transform
         if sign not in ('+', '-'):
@@ -662,10 +656,7 @@ class DiscreteFourierTransform(Operator):
             domain.grid, shift=False, halfcomplex=halfcomplex, axes=axes).shape
 
         if range is None:
-            if isinstance(domain.dspace, CudaNtuples):
-                impl = 'cuda'
-            else:
-                impl = 'numpy'
+            impl = domain.dspace.impl
 
             range = discr_sequence_space(
                 ran_shape, conj_exponent(domain.exponent), impl=impl,
@@ -1167,7 +1158,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     # Make a copy of arr with correct data type if necessary, or copy values.
     if out is None:
         if is_real_dtype(arr.dtype) and not all(shift_list):
-            out = np.array(arr, dtype=_TYPE_MAP_R2C[arr.dtype], copy=True)
+            out = np.array(arr, dtype=TYPE_MAP_R2C[arr.dtype], copy=True)
         else:
             out = arr.copy()
     elif out is arr:
@@ -1302,7 +1293,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     """
     arr = np.asarray(arr)
     if is_real_floating_dtype(arr.dtype):
-        arr = arr.astype(_TYPE_MAP_R2C[arr.dtype])
+        arr = arr.astype(TYPE_MAP_R2C[arr.dtype])
     elif not is_complex_floating_dtype(arr.dtype):
         raise ValueError('array data type {} is not a floating point data '
                          'type'.format(dtype_repr(arr.dtype)))
@@ -1458,7 +1449,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     dtype = kwargs.pop('dtype', None)
     if dtype is None:
         if is_real_dtype(space.dtype):
-            dtype = _TYPE_MAP_R2C[space.dtype]
+            dtype = TYPE_MAP_R2C[space.dtype]
         else:
             dtype = space.dtype
     else:
@@ -1478,12 +1469,8 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     else:
         part = uniform_partition_fromgrid(recip_grid)
 
-    ran_fspace = FunctionSpace(part.set, out_dtype=dtype)
-    ran_dspace_type = dspace_type(ran_fspace, impl='numpy', dtype=dtype)
-    ran_dspace = ran_dspace_type(part.size, dtype=dtype,
-                                 weight=part.cell_volume, exponent=exponent)
-
-    recip_spc = DiscreteLp(ran_fspace, part, ran_dspace, exponent=exponent)
+    recip_spc = uniform_discr_frompartition(part, exponent=exponent,
+                                            dtype=dtype, impl='numpy')
 
     return recip_spc
 
@@ -1591,7 +1578,7 @@ class FourierTransform(Operator):
         if not isinstance(domain, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance'
                             ''.format(domain))
-        if not isinstance(domain.dspace, Ntuples):
+        if domain.impl != 'numpy':
             raise NotImplementedError(
                 'Only Numpy-based data spaces are supported, got {}'
                 ''.format(domain.dspace))

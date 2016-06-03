@@ -44,7 +44,7 @@ def rosenbrock_function(x):
 class RosenbrockDerivOp(odl.Operator):
 
     def __init__(self):
-        dom = ran = odl.Rn(2)
+        dom = ran = odl.rn(2)
         super().__init__(domain=dom, range=ran)
 
     def _call(self, x, out):
@@ -67,7 +67,7 @@ def test_newton_solver_quadratic():
 
     # Vector representation
     n = H.shape[0]
-    rn = odl.Rn(n)
+    rn = odl.rn(n)
     xvec = rn.one()
     c = rn.element([2, 4, 3])
 

@@ -41,7 +41,7 @@ import numpy as np
 import re
 
 
-__all__ = ('NtuplesBaseUFuncs', 'NtuplesUFuncs', 'CudaNtuplesUFuncs',
+__all__ = ('NtuplesBaseUFuncs', 'NumpyNtuplesUFuncs',
            'DiscreteLpUFuncs', 'ProductSpaceUFuncs')
 
 
@@ -183,9 +183,9 @@ for name, doc in REDUCTIONS:
 
 # Optimized implementation of ufuncs since we can use the out parameter
 # as well as the data parameter to avoid one call to asarray() when using an
-# NtuplesVector
+# NumpyNtuplesVector
 def wrap_ufunc_ntuples(name, n_in, n_out, doc):
-    """Add ufunc methods to `NtuplesUFuncs`."""
+    """Add ufunc methods to `NumpyNtuplesUFuncs`."""
 
     # Get method from numpy
     wrapped = getattr(np, name)
@@ -233,70 +233,23 @@ def wrap_ufunc_ntuples(name, n_in, n_out, doc):
     return wrapper
 
 
-class NtuplesUFuncs(NtuplesBaseUFuncs):
+class NumpyNtuplesUFuncs(NtuplesBaseUFuncs):
 
-    """UFuncs for `NtuplesVector` objects.
+    """UFuncs for `NumpyNtuplesVector` objects.
 
-    Internal object, should not be created except in `NtuplesVector`.
+    Internal object, should not be created except in `NumpyNtuplesVector`.
     """
 
 
 # Add ufunc methods to UFunc class
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_ntuples(name, n_in, n_out, doc)
-    setattr(NtuplesUFuncs, name, method)
-
-
-# Optimizations for CUDA
-def _make_nullary_fun(name):
-    def fun(self):
-        return getattr(self.vector.data, name)()
-
-    fun.__doc__ = getattr(NtuplesBaseUFuncs, name).__doc__
-    fun.__name__ = name
-    return fun
-
-
-def _make_unary_fun(name):
-    def fun(self, out=None):
-        if out is None:
-            out = self.vector.space.element()
-        getattr(self.vector.data, name)(out.data)
-        return out
-
-    fun.__doc__ = getattr(NtuplesBaseUFuncs, name).__doc__
-    fun.__name__ = name
-    return fun
-
-
-class CudaNtuplesUFuncs(NtuplesBaseUFuncs):
-
-    """UFuncs for `CudaNtuplesVector` objects.
-
-    Internal object, should not be created except in `CudaNtuplesVector`.
-    """
-
-    # Ufuncs
-    sin = _make_unary_fun('sin')
-    cos = _make_unary_fun('cos')
-    arcsin = _make_unary_fun('arcsin')
-    arccos = _make_unary_fun('arccos')
-    log = _make_unary_fun('log')
-    exp = _make_unary_fun('exp')
-    absolute = _make_unary_fun('absolute')
-    sign = _make_unary_fun('sign')
-    sqrt = _make_unary_fun('sqrt')
-
-    # Reductions
-    sum = _make_nullary_fun('sum')
-    prod = _make_nullary_fun('prod')
-    min = _make_nullary_fun('min')
-    max = _make_nullary_fun('max')
+    setattr(NumpyNtuplesUFuncs, name, method)
 
 
 # Optimized implementation of ufuncs since we can use the out parameter
 # as well as the data parameter to avoid one call to asarray() when using a
-# NtuplesVector
+# NumpyNtuplesVector
 def wrap_ufunc_discretelp(name, n_in, n_out, doc):
     """Add ufunc methods to `DiscreteLpUFuncs`."""
 

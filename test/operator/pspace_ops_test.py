@@ -31,7 +31,7 @@ from odl.util.testutils import all_almost_equal
 
 
 def test_pspace_op_init():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     I = odl.IdentityOperator(r3)
 
     op = odl.ProductSpaceOperator([I])
@@ -60,7 +60,7 @@ def test_pspace_op_init():
 
 def test_pspace_op_weighted_init():
 
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     ran = odl.ProductSpace(r3, 2, weight=[1, 2])
     I = odl.IdentityOperator(r3)
 
@@ -70,7 +70,7 @@ def test_pspace_op_weighted_init():
 
 
 def test_pspace_op_sum_call():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     I = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([I, I])
 
@@ -83,7 +83,7 @@ def test_pspace_op_sum_call():
 
 
 def test_pspace_op_project_call():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     I = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[I],
                                    [I]])
@@ -97,7 +97,7 @@ def test_pspace_op_project_call():
 
 
 def test_pspace_op_diagonal_call():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     I = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[I, 0],
                                    [0, I]])
@@ -111,7 +111,7 @@ def test_pspace_op_diagonal_call():
 
 
 def test_pspace_op_swap_call():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     I = odl.IdentityOperator(r3)
     op = odl.ProductSpaceOperator([[0, I],
                                    [I, 0]])
@@ -126,7 +126,7 @@ def test_pspace_op_swap_call():
 
 
 def test_comp_proj():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     r3xr3 = odl.ProductSpace(r3, 2)
 
     x = r3xr3.element([[1, 2, 3],
@@ -141,7 +141,7 @@ def test_comp_proj():
 
 
 def test_comp_proj_slice():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     r33 = odl.ProductSpace(r3, 3)
 
     x = r33.element([[1, 2, 3],
@@ -154,7 +154,7 @@ def test_comp_proj_slice():
 
 
 def test_comp_proj_indices():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     r33 = odl.ProductSpace(r3, 3)
 
     x = r33.element([[1, 2, 3],
@@ -167,7 +167,7 @@ def test_comp_proj_indices():
 
 
 def test_comp_proj_adjoint():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     r3xr3 = odl.ProductSpace(r3, 2)
 
     x = r3.element([1, 2, 3])
@@ -188,7 +188,7 @@ def test_comp_proj_adjoint():
 
 
 def test_comp_proj_adjoint_slice():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     r33 = odl.ProductSpace(r3, 3)
 
     x = r33[0:2].element([[1, 2, 3],

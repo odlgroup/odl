@@ -6,6 +6,24 @@
 Release Notes
 #############
 
+ODL 0.3.0 Release Notes (2016-06-29)
+====================================
+
+This release marks the removal of odlpp form the core library. It has instead been moved to a separate library, odlcuda. To enable cuda backends for the odl spaces, an entry point ``'odl.space'`` has been added where external libraries can hook in to add `FnBase` and `NtuplesBase` type spaces.
+
+New features
+------------
+- Added entry point ``'odl.space'``
+- Add fixtures ``'fn_impl'`` and ``'ntuple_impl'`` to the test config ``conf.py``. These can now be accessed from any test.
+- Allow creation of general spaces using the ``fn``, ``cn`` and ``rn`` methods. This functions now take an ``impl`` parameter which defaults to ``'numpy'`` but with odlcuda installed it may also be set to ``'cuda'``. The old numpy specific ``Fn``, ``Cn`` and ``Rn`` functions have been removed.
+
+Changes
+-------
+- Moved all CUDA specfic code out of the library into ``odlcuda``. This means that ``cu_ntuples.py`` and related files have been removed.
+- rename ``ntuples.py`` to ``npy_ntuples.py``.
+- Added ``Numpy`` to the numy based spaces. They are now named ``NumpyFn`` and ``NumpyNtuples``.
+- Prepended ``npy_`` to all methods specific to ``ntuples`` such as weightings.
+
 ODL 0.2.4 Release Notes (2016-06-28)
 ====================================
 

@@ -30,15 +30,14 @@ import pytest
 
 # ODL imports
 import odl
-from odl.space.base_ntuples import _TYPE_MAP_R2C
 from odl.trafos.fourier import (
     reciprocal, inverse_reciprocal, dft_preprocess_data, dft_postprocess_data,
     pyfftw_call, _interp_kernel_ft,
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
     FourierTransform)
-from odl.util.testutils import (all_almost_equal, all_equal,
-                                never_skip, skip_if_no_pyfftw)
-from odl.util.utility import is_real_dtype, conj_exponent
+from odl.util import (all_almost_equal, all_equal,
+                      never_skip, skip_if_no_pyfftw,
+                      is_real_dtype, conj_exponent, TYPE_MAP_R2C)
 
 
 exp_params = [2.0, 1.0, float('inf'), 1.5]
@@ -50,8 +49,8 @@ def exponent(request):
     return request.param
 
 
-dtype_params = [str(dtype) for dtype in _TYPE_MAP_R2C.keys()]
-dtype_params += [str(dtype) for dtype in _TYPE_MAP_R2C.values()]
+dtype_params = [str(dtype) for dtype in TYPE_MAP_R2C.keys()]
+dtype_params += [str(dtype) for dtype in TYPE_MAP_R2C.values()]
 dtype_params = list(set(dtype_params))
 dtype_ids = [' dtype = {} '.format(dt) for dt in dtype_params]
 
@@ -451,7 +450,7 @@ def test_dft_preprocess_data_with_axes(sign):
 def _params_from_dtype(dt):
     if is_real_dtype(dt):
         halfcomplex = True
-        dtype = _TYPE_MAP_R2C[np.dtype(dt)]
+        dtype = TYPE_MAP_R2C[np.dtype(dt)]
     else:
         halfcomplex = False
         dtype = dt

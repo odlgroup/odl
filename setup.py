@@ -89,7 +89,7 @@ Features
 setup(
     name='odl',
 
-    version='0.2.4',
+    version='0.3.0',
 
     description='Operator Discretization Library',
     long_description=long_description,
@@ -142,7 +142,4 @@ setup(
     },
 
     cmdclass={'test': PyTest},
-
-    # package_data={},
-    # data_files=[('my_data', ['data/data_file'])],
 )

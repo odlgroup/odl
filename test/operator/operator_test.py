@@ -42,9 +42,9 @@ class MultiplyAndSquareOp(Operator):
     """Example of a nonlinear operator, x --> (A*x)**2."""
 
     def __init__(self, matrix, domain=None, range=None):
-        dom = (odl.Rn(matrix.shape[1])
+        dom = (odl.rn(matrix.shape[1])
                if domain is None else domain)
-        ran = (odl.Rn(matrix.shape[0])
+        ran = (odl.rn(matrix.shape[0])
                if range is None else range)
 
         super().__init__(dom, ran)
@@ -354,8 +354,8 @@ def test_linear_composition():
 
 
 def test_type_errors():
-    r3 = odl.Rn(3)
-    r4 = odl.Rn(4)
+    r3 = odl.rn(3)
+    r4 = odl.rn(4)
 
     Aop = MatVecOperator(np.random.rand(3, 3))
     r3Vec1 = r3.zero()
@@ -425,7 +425,7 @@ class ConstantVector(Operator):
 
 
 def test_functional():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     x = r3.element([1, 2, 3])
 
     op = SumFunctional(r3)
@@ -434,7 +434,7 @@ def test_functional():
 
 
 def test_functional_out():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     x = r3.element([1, 2, 3])
 
     op = SumFunctional(r3)
@@ -446,7 +446,7 @@ def test_functional_out():
 
 
 def test_functional_adjoint():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
 
     op = SumFunctional(r3)
 
@@ -457,7 +457,7 @@ def test_functional_adjoint():
 
 
 def test_functional_addition():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
 
     Aop = SumFunctional(r3)
     Bop = SumFunctional(r3)
@@ -482,7 +482,7 @@ def test_functional_addition():
 
 
 def test_functional_scale():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
 
     Aop = SumFunctional(r3)
     x = r3.element([1, 2, 3])
@@ -511,8 +511,8 @@ def test_functional_scale():
 
 
 def test_functional_left_vector_mult():
-    r3 = odl.Rn(3)
-    r4 = odl.Rn(4)
+    r3 = odl.rn(3)
+    r4 = odl.rn(4)
 
     Aop = SumFunctional(r3)
     x = r3.element([1, 2, 3])
@@ -537,7 +537,7 @@ def test_functional_left_vector_mult():
 
 
 def test_functional_right_vector_mult():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
 
     Aop = SumFunctional(r3)
     vec = r3.element([1, 2, 3])
@@ -563,7 +563,7 @@ def test_functional_right_vector_mult():
 
 
 def test_functional_composition():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
 
     Aop = SumFunctional(r3)
     Bop = ConstantVector(r3)
@@ -600,7 +600,7 @@ class SumSquaredFunctional(Operator):
 
 
 def test_nonlinear_functional():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     x = r3.element([1, 2, 3])
 
     op = SumSquaredFunctional(r3)
@@ -609,7 +609,7 @@ def test_nonlinear_functional():
 
 
 def test_nonlinear_functional_out():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     x = r3.element([1, 2, 3])
 
     op = SumSquaredFunctional(r3)
@@ -620,7 +620,7 @@ def test_nonlinear_functional_out():
 
 
 def test_nonlinear_functional_operators():
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     x = r3.element([1, 2, 3])
 
     A = SumSquaredFunctional(r3)

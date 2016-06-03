@@ -27,13 +27,11 @@ from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space.ntuples import Ntuples, Fn
+from odl.space import ntuples, fn
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
-from odl.space.cu_ntuples import CudaNtuples, CudaFn, CUDA_AVAILABLE
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
-CudaCn = type(None)
 
 
 __all__ = ('DiscretizedSet', 'DiscretizedSetVector',
@@ -212,6 +210,11 @@ class DiscretizedSet(NtuplesBase):
                 other.dspace == self.dspace and
                 other.sampling == self.sampling and
                 other.interpolation == self.interpolation)
+
+    @property
+    def impl(self):
+        """The underlying implmentation type for the dspace."""
+        return self.dspace.impl
 
     @property
     def domain(self):
@@ -537,11 +540,11 @@ def dspace_type(space, impl, dtype=None):
 
     Parameters
     ----------
-    space :
+    space : `LinearSpace`
         Template space from which to infer an adequate data space. If
         it has a `LinearSpace.field` attribute, ``dtype`` must be
         consistent with it.
-    impl : {'numpy', 'cuda'}
+    impl : `str`
         Implementation backend for the data space
     dtype : `type`, optional
         Data type which the space is supposed to use. If `None`, the
@@ -555,51 +558,37 @@ def dspace_type(space, impl, dtype=None):
         Space type selected after the space's field, the backend and
         the data type
     """
-    impl, impl_in = str(impl).lower(), impl
-    if impl not in ('numpy', 'cuda'):
-        raise ValueError("`impl` '{}' not understood"
-                         ''.format(impl_in))
-
-    if impl == 'cuda' and not CUDA_AVAILABLE:
-        raise ValueError("'cuda' implementation not available")
-
-    basic_map = {'numpy': Fn, 'cuda': CudaFn}
-
-    spacetype_map = {
-        'numpy': {RealNumbers: Fn, ComplexNumbers: Fn,
-                  type(None): Ntuples},
-        'cuda': {RealNumbers: CudaFn, ComplexNumbers: None,
-                 type(None): CudaNtuples}
-    }
+    spacetype_map = {RealNumbers: fn,
+                     ComplexNumbers: fn,
+                     type(None): ntuples}
 
     field_type = type(getattr(space, 'field', None))
 
     if dtype is None:
-        stype = spacetype_map[impl][field_type]
-
+        stype = spacetype_map[field_type]
     elif is_real_floating_dtype(dtype):
         if field_type is None or field_type == ComplexNumbers:
             raise TypeError('real floating data type {!r} requires space '
                             'field to be of type RealNumbers, got {}'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[impl][field_type]
+        stype = spacetype_map[field_type]
     elif is_complex_floating_dtype(dtype):
         if field_type is None or field_type == RealNumbers:
             raise TypeError('complex floating data type {!r} requires space '
                             'field to be of type ComplexNumbers, got {!r}'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[impl][field_type]
+        stype = spacetype_map[field_type]
     elif is_scalar_dtype(dtype):
         if field_type == ComplexNumbers:
             raise TypeError('non-floating data type {!r} requires space field '
                             'to be of type RealNumbers, got {!r}'
                             .format(dtype, field_type))
         elif field_type == RealNumbers:
-            stype = basic_map[impl]
+            stype = spacetype_map[field_type]
         else:
-            stype = spacetype_map[impl][field_type]
+            stype = spacetype_map[field_type]
     elif field_type is None:  # Only in this case are arbitrary types allowed
-        stype = spacetype_map[impl][field_type]
+        stype = spacetype_map[field_type]
     else:
         raise TypeError('non-scalar data type {!r} cannot be combined with '
                         'a `LinearSpace`'.format(dtype))

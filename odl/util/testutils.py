@@ -32,7 +32,7 @@ from time import time
 
 
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
-           'skip_if_no_cuda', 'skip_if_no_stir', 'skip_if_no_pywavelets',
+           'skip_if_no_stir', 'skip_if_no_pywavelets',
            'skip_if_no_pyfftw', 'skip_if_no_largescale',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
            'test', 'run_doctests')
@@ -187,11 +187,6 @@ try:
         reason='Fill in, never skips'
     )
 
-    skip_if_no_cuda = pytest.mark.skipif(
-        "not odl.CUDA_AVAILABLE",
-        reason='CUDA not available'
-    )
-
     skip_if_no_stir = pytest.mark.skipif(
         "not odl.tomo.backends.stir_bindings.STIR_AVAILABLE",
         reason='STIR not available'
@@ -222,7 +217,6 @@ except ImportError:
         return function
 
     never_skip = _pass
-    skip_if_no_cuda = _pass
     skip_if_no_stir = _pass
     skip_if_no_pywavelets = _pass
     skip_if_no_pyfftw = _pass

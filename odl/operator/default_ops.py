@@ -75,17 +75,17 @@ class ScalingOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
         >>> op(vec, out)  # In place, Returns out
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         >>> out
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         >>> op(vec)  # Out of place
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:
             out = self._scal * x
@@ -99,8 +99,8 @@ class ScalingOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
         >>> inv = op.inverse
@@ -220,16 +220,16 @@ class LinCombOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn, ProductSpace
-        >>> r3 = Rn(3)
-        >>> r3xr3 = ProductSpace(r3, r3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> r3xr3 = odl.ProductSpace(r3, r3)
         >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
         >>> z = r3.element()
         >>> op = LinCombOperator(r3, 1.0, 1.0)
         >>> op(xy, out=z)  # Returns z
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         >>> z
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:
             out = self.range.element()
@@ -299,8 +299,8 @@ class MultiplyOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
 
         Multiply by vector
@@ -308,14 +308,14 @@ class MultiplyOperator(Operator):
         >>> op = MultiplyOperator(x)
         >>> out = r3.element()
         >>> op(x, out)
-        Rn(3).element([1.0, 4.0, 9.0])
+        rn(3).element([1.0, 4.0, 9.0])
 
         Multiply by scalar
 
         >>> op2 = MultiplyOperator(x, domain=r3.field)
         >>> out = r3.element()
         >>> op2(3, out)
-        Rn(3).element([3.0, 6.0, 9.0])
+        rn(3).element([3.0, 6.0, 9.0])
         """
         if out is None:
             return x * self.y
@@ -340,8 +340,8 @@ class MultiplyOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
 
         Multiply by vector
@@ -349,7 +349,7 @@ class MultiplyOperator(Operator):
         >>> op = MultiplyOperator(x)
         >>> out = r3.element()
         >>> op.adjoint(x)
-        Rn(3).element([1.0, 4.0, 9.0])
+        rn(3).element([1.0, 4.0, 9.0])
 
         Multiply by scalar
 
@@ -420,14 +420,14 @@ class PowerOperator(Operator):
         --------
         Use with vectors
 
-        >>> from odl import Rn, RealNumbers
-        >>> op = PowerOperator(Rn(3), exponent=2)
+        >>> import odl
+        >>> op = PowerOperator(odl.rn(3), exponent=2)
         >>> op([1, 2, 3])
-        Rn(3).element([1.0, 4.0, 9.0])
+        rn(3).element([1.0, 4.0, 9.0])
 
         or scalars
 
-        >>> op = PowerOperator(RealNumbers(), exponent=2)
+        >>> op = PowerOperator(odl.RealNumbers(), exponent=2)
         >>> op(2.0)
         4.0
         """
@@ -456,18 +456,18 @@ class PowerOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn, RealNumbers
+        >>> import odl
 
         Use with vectors
 
-        >>> op = PowerOperator(Rn(3), exponent=2)
+        >>> op = PowerOperator(odl.rn(3), exponent=2)
         >>> dop = op.derivative(op.domain.element([1, 2, 3]))
         >>> dop([1, 1, 1])
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
 
         Use with scalars:
 
-        >>> op = PowerOperator(RealNumbers(), exponent=2)
+        >>> op = PowerOperator(odl.RealNumbers(), exponent=2)
         >>> dop = op.derivative(2.0)
         >>> dop(2.0)
         8.0
@@ -520,8 +520,8 @@ class InnerProductOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> op = InnerProductOperator(x)
         >>> op(r3.element([1, 2, 3]))
@@ -540,12 +540,12 @@ class InnerProductOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> op = InnerProductOperator(x)
         >>> op.adjoint(2.0)
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         """
         return MultiplyOperator(self.vector, self.vector.space.field)
 
@@ -560,13 +560,13 @@ class InnerProductOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> x.T
-        InnerProductOperator(Rn(3).element([1.0, 2.0, 3.0]))
+        InnerProductOperator(rn(3).element([1.0, 2.0, 3.0]))
         >>> x.T.T
-        Rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([1.0, 2.0, 3.0])
         """
         return self.vector
 
@@ -625,12 +625,12 @@ class ConstantOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> op = ConstantOperator(x)
         >>> op(x, out=r3.element())
-        Rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([1.0, 2.0, 3.0])
         """
         if out is None:
             return self.range.element(self.vector.copy())
@@ -694,14 +694,14 @@ class ResidualOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = IdentityOperator(r3)
         >>> res = ResidualOperator(op, vec)
         >>> x = r3.element([4, 5, 6])
         >>> res(x, out=r3.element())
-        Rn(3).element([3.0, 3.0, 3.0])
+        rn(3).element([3.0, 3.0, 3.0])
         """
         if out is None:
             out = self.op(x)
@@ -725,13 +725,13 @@ class ResidualOperator(Operator):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r3 = Rn(3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
         >>> op = IdentityOperator(r3)
         >>> res = ResidualOperator(op, r3.element([1, 2, 3]))
         >>> x = r3.element([4, 5, 6])
         >>> res.derivative(x)(x)
-        Rn(3).element([4.0, 5.0, 6.0])
+        rn(3).element([4.0, 5.0, 6.0])
         """
         return self.op.derivative(point)
 

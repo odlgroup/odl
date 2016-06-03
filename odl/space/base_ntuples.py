@@ -31,18 +31,11 @@ from odl.set.space import LinearSpace, LinearSpaceVector
 from odl.util.ufuncs import NtuplesBaseUFuncs
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
-    is_scalar_dtype, is_real_dtype, is_floating_dtype)
+    is_scalar_dtype, is_real_dtype, is_floating_dtype,
+    TYPE_MAP_R2C, TYPE_MAP_C2R)
 
 
 __all__ = ('NtuplesBase', 'NtuplesBaseVector', 'FnBase', 'FnBaseVector')
-
-
-_TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
-                 for dtype in np.sctypes['float']}
-
-_TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
-                 for rdt, cdt in _TYPE_MAP_R2C.items()}
-_TYPE_MAP_C2R.update({k: k for k in _TYPE_MAP_R2C.keys()})
 
 
 class NtuplesBase(Set):
@@ -94,13 +87,13 @@ class NtuplesBase(Set):
 
         Examples
         --------
-        >>> from odl import Ntuples
-        >>> long_3 = Ntuples(3, dtype='int64')
+        >>> from odl import ntuples
+        >>> long_3 = ntuples(3, dtype='int64')
         >>> long_3.element() in long_3
         True
-        >>> long_3.element() in Ntuples(3, dtype='int32')
+        >>> long_3.element() in ntuples(3, dtype='int32')
         False
-        >>> long_3.element() in Ntuples(3, dtype='float64')
+        >>> long_3.element() in ntuples(3, dtype='float64')
         False
         """
         return getattr(other, 'space', None) == self
@@ -116,23 +109,23 @@ class NtuplesBase(Set):
 
         Examples
         --------
-        >>> from odl import Ntuples
-        >>> int_3 = Ntuples(3, dtype=int)
+        >>> from odl import ntuples
+        >>> int_3 = ntuples(3, dtype=int)
         >>> int_3 == int_3
         True
 
         Equality is not identity:
 
-        >>> int_3a, int_3b = Ntuples(3, int), Ntuples(3, int)
+        >>> int_3a, int_3b = ntuples(3, int), ntuples(3, int)
         >>> int_3a == int_3b
         True
         >>> int_3a is int_3b
         False
 
-        >>> int_3, int_4 = Ntuples(3, int), Ntuples(4, int)
+        >>> int_3, int_4 = ntuples(3, int), ntuples(4, int)
         >>> int_3 == int_4
         False
-        >>> int_3, str_3 = Ntuples(3, 'int'), Ntuples(3, 'S2')
+        >>> int_3, str_3 = ntuples(3, 'int'), ntuples(3, 'S2')
         >>> int_3 == str_3
         False
         """
@@ -380,6 +373,11 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         return show_discrete_data(self.asarray(), grid, title=title,
                                   method=method, show=show, fig=fig, **kwargs)
 
+    @property
+    def impl(self):
+        """The underlying implementation."""
+        return self.space.impl
+
 
 class FnBase(NtuplesBase, LinearSpace):
 
@@ -409,12 +407,12 @@ class FnBase(NtuplesBase, LinearSpace):
             self._is_real = True
             self._real_dtype = self.dtype
             self._real_space = self
-            self._complex_dtype = _TYPE_MAP_R2C.get(self.dtype, None)
+            self._complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
             self._complex_space = None  # Set in first call of astype
         else:
             field = ComplexNumbers()
             self._is_real = False
-            self._real_dtype = _TYPE_MAP_C2R[self.dtype]
+            self._real_dtype = TYPE_MAP_C2R[self.dtype]
             self._real_space = None  # Set in first call of astype
             self._complex_dtype = self.dtype
             self._complex_space = self

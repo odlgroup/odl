@@ -22,7 +22,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# Internal
 import odl
 
 print('\n\n TESTING FOR Lp SPACE \n\n')
@@ -32,18 +31,18 @@ odl.diagnostics.SpaceTest(discr).run_tests()
 
 print('\n\n TESTING FOR Rn SPACE \n\n')
 
-spc = odl.Rn(10)
+spc = odl.rn(10)
 odl.diagnostics.SpaceTest(spc).run_tests()
 
 
 print('\n\n TESTING FOR Cn SPACE \n\n')
 
-spc = odl.Cn(10)
+spc = odl.cn(10)
 odl.diagnostics.SpaceTest(spc).run_tests()
 
 
-if odl.CUDA_AVAILABLE:
-    print('\n\n TESTING FOR CudaRn SPACE \n\n')
+if 'cuda' in odl.FN_IMPLS:
+    print('\n\n TESTING FOR CUDA Rn SPACE \n\n')
 
-    spc = odl.CudaRn(10)
+    spc = odl.rn(10, impl='cuda')
     odl.diagnostics.SpaceTest(spc, eps=0.0001).run_tests()

@@ -22,14 +22,14 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-__all__ = ('vector',)
+__all__ = ('vector', 'ntuples', 'fn', 'cn', 'rn')
 
 import numpy as np
 
-from odl.space.ntuples import Rn, Cn, Fn, Ntuples
+from odl.set import RealNumbers, ComplexNumbers
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
-from odl.space.cu_ntuples import CUDA_AVAILABLE, CudaRn, CudaFn, CudaNtuples
+from odl.space.entry_points import NTUPLES_IMPLS, FN_IMPLS
 
 
 def vector(array, dtype=None, impl='numpy'):
@@ -43,8 +43,9 @@ def vector(array, dtype=None, impl='numpy'):
     dtype : `object`, optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
-    impl : {'numpy', 'cuda'}
-        Implementation backend for the vector
+    impl : `str`
+        Implementation backend for the vector. See `NTUPLES_IMPLS` and
+        `FN_IMPLS` for more information.
 
     Returns
     -------
@@ -61,25 +62,24 @@ def vector(array, dtype=None, impl='numpy'):
     Examples
     --------
     >>> vector([1, 2, 3])  # No automatic cast to float
-    Fn(3, 'int').element([1, 2, 3])
+    fn(3, 'int').element([1, 2, 3])
     >>> vector([1, 2, 3], dtype=float)
-    Rn(3).element([1.0, 2.0, 3.0])
+    rn(3).element([1.0, 2.0, 3.0])
     >>> vector([1 + 1j, 2, 3 - 2j])
-    Cn(3).element([(1+1j), (2+0j), (3-2j)])
+    cn(3).element([(1+1j), (2+0j), (3-2j)])
 
     Non-scalar types are also supported:
 
     >>> vector([True, False])
-    Ntuples(2, 'bool').element([True, False])
+    ntuples(2, 'bool').element([True, False])
 
     Scalars become a one-element vector:
 
     >>> vector(0.0)
-    Rn(1).element([0.0])
+    rn(1).element([0.0])
     """
     # Sanitize input
     arr = np.array(array, copy=False, ndmin=1)
-    impl, impl_in = str(impl).lower(), impl
 
     # Validate input
     if arr.ndim > 1:
@@ -89,40 +89,176 @@ def vector(array, dtype=None, impl='numpy'):
     # Set dtype
     if dtype is not None:
         space_dtype = dtype
-    elif arr.dtype == np.dtype('float64') and impl == 'cuda':
-        # Special case, default float is float32 on cuda
-        space_dtype = 'float32'
     else:
         space_dtype = arr.dtype
 
     # Select implementation
-    if impl == 'numpy':
-        if is_real_floating_dtype(space_dtype):
-            space_type = Rn
-        elif is_complex_floating_dtype(space_dtype):
-            space_type = Cn
-        elif is_scalar_dtype(space_dtype):
-            space_type = Fn
-        else:
-            space_type = Ntuples
-
-    elif impl == 'cuda':
-        if not CUDA_AVAILABLE:
-            raise ValueError("'cuda' implementation not available")
-
-        if is_real_floating_dtype(space_dtype):
-            space_type = CudaRn
-        elif is_complex_floating_dtype(space_dtype):
-            raise NotImplementedError('complex spaces in CUDA not supported')
-        elif is_scalar_dtype(space_dtype):
-            space_type = CudaFn
-        else:
-            space_type = CudaNtuples
-
+    if space_dtype is None or is_scalar_dtype(space_dtype):
+        space_type = fn
     else:
-        raise ValueError("`impl` '{}' not understood".format(impl_in))
+        space_type = ntuples
 
-    return space_type(len(arr), dtype=space_dtype).element(arr)
+    return space_type(len(arr), dtype=space_dtype, impl=impl).element(arr)
+
+
+def ntuples(size, dtype, impl='numpy', **kwargs):
+    """The set of tuples of a fixed size.
+
+    Parameters
+    ----------
+    size : positive `int`
+        The number of dimensions of the space
+    dtype : `object`
+        The data type of the storage array. Can be provided in any
+        way the `numpy.dtype` function understands, most notably
+        as built-in type, as one of NumPy's internal datatype
+        objects or as string.
+
+        Only complex floating-point data types are allowed.
+    impl : `str`
+        The backend to use. See `NTUPLES_IMPLS` for available options.
+    **kwargs :
+        Extra keyword arguments to pass to the implmentation.
+
+    Returns
+    -------
+    ntuple : `NtuplesBase`
+
+    See also
+    --------
+    fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar data
+         type.
+    """
+    return NTUPLES_IMPLS[impl](size, dtype, **kwargs)
+
+
+def fn(size, dtype=None, impl='numpy', **kwargs):
+
+    """The vector space :math:`F^n` with vector multiplication.
+
+    Parameters
+    ----------
+    size : positive `int`
+        The number of dimensions of the space
+    dtype : `object`
+        The data type of the storage array. Can be provided in any
+        way the `numpy.dtype` function understands, most notably
+        as built-in type, as one of NumPy's internal datatype
+        objects or as string.
+
+        Default: default of the implementation given by calling
+        ``default_dtype()`` on the `FnBase` implementation.
+    impl : `str`
+        The backend to use. See `FN_IMPLS` for available options.
+    **kwargs :
+        Extra keyword arguments to pass to the implmentation.
+
+    Returns
+    -------
+    fn : `FnBase`
+
+    See also
+    --------
+    ntuples : n-tuples over a field :math:`\mathbb{F}` with arbitrary data
+              type.
+    """
+    fn_impl = FN_IMPLS[impl]
+
+    if dtype is None:
+        dtype = fn_impl.default_dtype()
+
+    fn = fn_impl(size, dtype, **kwargs)
+
+    return fn
+
+
+def cn(size, dtype=None, impl='numpy', **kwargs):
+
+    """The complex vector space :math:`C^n` with vector multiplication.
+
+    Parameters
+    ----------
+    size : positive `int`
+        The number of dimensions of the space
+    dtype : `object`
+        The data type of the storage array. Can be provided in any
+        way the `numpy.dtype` function understands, most notably
+        as built-in type, as one of NumPy's internal datatype
+        objects or as string.
+
+        Only complex floating-point data types are allowed.
+
+        Default: default of the implementation given by calling
+        ``default_dtype(ComplexNumbers())`` on the `FnBase` implementation.
+    impl : `str`
+        The backend to use. See `FN_IMPLS` for available options.
+    **kwargs :
+        Extra keyword arguments to pass to the implmentation.
+
+    Returns
+    -------
+    cn : `FnBase`
+
+    See also
+    --------
+    fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
+         data type.
+    """
+    cn_impl = FN_IMPLS[impl]
+
+    if dtype is None:
+        dtype = cn_impl.default_dtype(ComplexNumbers())
+
+    cn = cn_impl(size, dtype, **kwargs)
+
+    if not cn.is_cn:
+        raise TypeError('data type {!r} not a complex floating-point type.'
+                        ''.format(dtype))
+    return cn
+
+
+def rn(size, dtype=None, impl='numpy', **kwargs):
+
+    """The real vector space :math:`R^n` with vector multiplication.
+
+     Parameters
+    ----------
+    size : positive `int`
+        The number of dimensions of the space
+    dtype : `object`
+        The data type of the storage array. Can be provided in any
+        way the `numpy.dtype` function understands, most notably
+        as built-in type, as one of NumPy's internal datatype
+        objects or as string.
+
+        Only real floating-point data types are allowed.
+        Default: default of the implementation given by calling
+        ``default_dtype(RealNumbers())`` on the `FnBase` implementation.
+    impl : `str`
+        The backend to use. See `FN_IMPLS` for available options.
+    **kwargs :
+        Extra keyword arguments to pass to the implmentation.
+
+    Returns
+    -------
+    rn : `FnBase`
+
+    See also
+    --------
+    fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
+         data type.
+    """
+    rn_impl = FN_IMPLS[impl]
+
+    if dtype is None:
+        dtype = rn_impl.default_dtype(RealNumbers())
+
+    rn = rn_impl(size, dtype, **kwargs)
+
+    if not rn.is_rn:
+        raise TypeError('data type {!r} not a real floating-point type.'
+                        ''.format(dtype))
+    return rn
 
 
 if __name__ == '__main__':

@@ -51,7 +51,7 @@ def test_emptyproduct():
 
 
 def test_RxR():
-    H = odl.Rn(2)
+    H = odl.rn(2)
     HxH = odl.ProductSpace(H, H)
     assert len(HxH) == 2
 
@@ -65,7 +65,7 @@ def test_RxR():
 
 
 def test_is_power_space():
-    r2 = odl.Rn(2)
+    r2 = odl.rn(2)
     r2x3 = odl.ProductSpace(r2, 3)
     assert r2x3.is_power_space
 
@@ -74,7 +74,7 @@ def test_is_power_space():
 
 
 def test_lincomb():
-    H = odl.Rn(2)
+    H = odl.rn(2)
     HxH = odl.ProductSpace(H, H)
 
     v1 = H.element([1, 2])
@@ -96,7 +96,7 @@ def test_lincomb():
 
 
 def test_multiply():
-    H = odl.Rn(2)
+    H = odl.rn(2)
     HxH = odl.ProductSpace(H, H)
 
     v1 = H.element([1, 2])
@@ -115,7 +115,7 @@ def test_multiply():
 
 
 def test_metric():
-    H = odl.Rn(2)
+    H = odl.rn(2)
     v11 = H.element([1, 2])
     v12 = H.element([5, 3])
 
@@ -147,7 +147,7 @@ def test_metric():
 
 
 def test_norm():
-    H = odl.Rn(2)
+    H = odl.rn(2)
     v1 = H.element([1, 2])
     v2 = H.element([5, 3])
 
@@ -169,7 +169,7 @@ def test_norm():
 
 
 def test_inner():
-    H = odl.Rn(2)
+    H = odl.rn(2)
     v1 = H.element([1, 2])
     v2 = H.element([5, 3])
 
@@ -183,12 +183,12 @@ def test_inner():
 
 
 def test_vector_weighting(exponent):
-    r2 = odl.Rn(2)
+    r2 = odl.rn(2)
     r2x = r2.element([1, -1])
     r2y = r2.element([-2, 3])
     # inner = -5, dist = 5, norms = (sqrt(2), sqrt(13))
 
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     r3x = r3.element([3, 4, 4])
     r3y = r3.element([1, -2, 1])
     # inner = -1, dist = 7, norms = (sqrt(41), sqrt(6))
@@ -227,12 +227,12 @@ def test_vector_weighting(exponent):
 
 
 def test_const_weighting(exponent):
-    r2 = odl.Rn(2)
+    r2 = odl.rn(2)
     r2x = r2.element([1, -1])
     r2y = r2.element([-2, 3])
     # inner = -5, dist = 5, norms = (sqrt(2), sqrt(13))
 
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     r3x = r3.element([3, 4, 4])
     r3y = r3.element([1, -2, 1])
     # inner = -1, dist = 7, norms = (sqrt(41), sqrt(6))
@@ -295,12 +295,12 @@ def test_custom_funcs():
     # Checking the standard 1-norm and standard inner product, just to
     # see that the functions are handled correctly.
 
-    r2 = odl.Rn(2)
+    r2 = odl.rn(2)
     r2x = r2.element([1, -1])
     r2y = r2.element([-2, 3])
     # inner = -5, dist = 5, norms = (sqrt(2), sqrt(13))
 
-    r3 = odl.Rn(3)
+    r3 = odl.rn(3)
     r3x = r3.element([3, 4, 4])
     r3y = r3.element([1, -2, 1])
     # inner = -1, dist = 7, norms = (sqrt(41), sqrt(6))
@@ -353,7 +353,7 @@ def test_custom_funcs():
 
 
 def test_power_RxR():
-    H = odl.Rn(2)
+    H = odl.rn(2)
     HxH = odl.ProductSpace(H, 2)
     assert len(HxH) == 2
 
@@ -367,7 +367,7 @@ def test_power_RxR():
 
 
 def test_power_lincomb():
-    H = odl.Rn(2)
+    H = odl.rn(2)
     HxH = odl.ProductSpace(H, 2)
 
     v1 = H.element([1, 2])
@@ -389,7 +389,7 @@ def test_power_lincomb():
 
 
 def test_power_inplace_modify():
-    H = odl.Rn(2)
+    H = odl.rn(2)
     HxH = odl.ProductSpace(H, 2)
 
     v1 = H.element([1, 2])
@@ -413,8 +413,8 @@ def test_power_inplace_modify():
 
 
 def test_getitem_single():
-    r1 = odl.Rn(1)
-    r2 = odl.Rn(2)
+    r1 = odl.rn(1)
+    r2 = odl.rn(2)
     H = odl.ProductSpace(r1, r2)
 
     assert H[-2] is r1
@@ -427,9 +427,9 @@ def test_getitem_single():
 
 
 def test_getitem_slice():
-    r1 = odl.Rn(1)
-    r2 = odl.Rn(2)
-    r3 = odl.Rn(3)
+    r1 = odl.rn(1)
+    r2 = odl.rn(2)
+    r3 = odl.rn(3)
     H = odl.ProductSpace(r1, r2, r3)
 
     assert H[:2] == odl.ProductSpace(r1, r2)
@@ -440,9 +440,9 @@ def test_getitem_slice():
 
 
 def test_getitem_fancy():
-    r1 = odl.Rn(1)
-    r2 = odl.Rn(2)
-    r3 = odl.Rn(3)
+    r1 = odl.rn(1)
+    r2 = odl.rn(2)
+    r3 = odl.rn(3)
     H = odl.ProductSpace(r1, r2, r3)
 
     assert H[[0, 2]] == odl.ProductSpace(r1, r3)
@@ -451,7 +451,7 @@ def test_getitem_fancy():
 
 
 def test_vector_equals():
-    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2))
     x = H.element([[0], [1, 2]])
 
     assert x != 0  # test == not always true
@@ -468,7 +468,7 @@ def test_vector_equals():
 
 
 def test_vector_getitem_single():
-    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2))
 
     x1 = H[0].element([0])
     x2 = H[1].element([1, 2])
@@ -484,7 +484,7 @@ def test_vector_getitem_single():
 
 
 def test_vector_getitem_slice():
-    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
     x1 = H[0].element([0])
     x2 = H[1].element([1, 2])
@@ -497,7 +497,7 @@ def test_vector_getitem_slice():
 
 
 def test_vector_getitem_fancy():
-    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
     x1 = H[0].element([0])
     x2 = H[1].element([1, 2])
@@ -510,7 +510,7 @@ def test_vector_getitem_fancy():
 
 
 def test_vector_setitem_single():
-    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2))
 
     x1 = H[0].element([0])
     x2 = H[1].element([1, 2])
@@ -537,7 +537,7 @@ def test_vector_setitem_single():
 
 
 def test_vector_setitem_slice():
-    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
     x1 = H[0].element([0])
     x2 = H[1].element([1, 2])
@@ -552,7 +552,7 @@ def test_vector_setitem_slice():
 
 
 def test_vector_setitem_fancy():
-    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2), odl.Rn(3))
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
     x1 = H[0].element([0])
     x2 = H[1].element([1, 2])
@@ -568,7 +568,7 @@ def test_vector_setitem_fancy():
 
 def test_ufuncs():
     # Cannot use fixture due to bug in pytest
-    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2))
 
     # one arg
     x = H.element([[-1], [-2, -3]])
@@ -603,7 +603,7 @@ def test_ufuncs():
 
 
 def test_reductions():
-    H = odl.ProductSpace(odl.Rn(1), odl.Rn(2))
+    H = odl.ProductSpace(odl.rn(1), odl.rn(2))
     x = H.element([[1], [2, 3]])
     assert x.ufunc.sum() == 6.0
     assert x.ufunc.prod() == 6.0

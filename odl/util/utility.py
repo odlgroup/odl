@@ -15,7 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utilities for internal use."""
+"""Utilities for internal use.
+
+Attributes
+----------
+TYPE_MAP_R2C : `dict`
+    Dictionary mapping real dtypes to complex dtypes
+TYPE_MAP_C2R : `dict`
+    Dictionary mapping complex dtypes to real dtypes
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -27,7 +35,17 @@ import numpy as np
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr')
+           'dtype_repr', 'conj_exponent',
+           'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
+           'is_real_dtype', 'is_real_floating_dtype',
+           'is_complex_floating_dtype', 'TYPE_MAP_R2C', 'TYPE_MAP_C2R')
+
+TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
+                for dtype in np.sctypes['float']}
+
+TYPE_MAP_C2R = {cdt: np.empty(0, dtype=cdt).real.dtype
+                for rdt, cdt in TYPE_MAP_R2C.items()}
+TYPE_MAP_C2R.update({k: k for k in TYPE_MAP_R2C.keys()})
 
 
 def _indent_rows(string, indent=4):

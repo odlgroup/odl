@@ -40,23 +40,24 @@ from odl.space.weighting import (
     WeightingBase, MatrixWeightingBase, VectorWeightingBase,
     ConstWeightingBase, NoWeightingBase,
     CustomInnerProductBase, CustomNormBase, CustomDistBase)
-from odl.util.ufuncs import NtuplesUFuncs
+from odl.util.ufuncs import NumpyNtuplesUFuncs
 from odl.util.utility import (
     dtype_repr, is_real_dtype, is_real_floating_dtype,
     is_complex_floating_dtype)
 
 
-__all__ = ('Ntuples', 'NtuplesVector', 'Fn', 'FnVector', 'Cn', 'Rn',
+__all__ = ('NumpyNtuples', 'NumpyNtuplesVector', 'NumpyFn', 'NumpyFnVector',
            'MatVecOperator',
-           'FnMatrixWeighting', 'FnVectorWeighting', 'FnConstWeighting',
-           'weighted_dist', 'weighted_norm', 'weighted_inner')
+           'NumpyFnMatrixWeighting', 'NumpyFnVectorWeighting',
+           'NumpyFnConstWeighting',
+           'npy_weighted_dist', 'npy_weighted_norm', 'npy_weighted_inner')
 
 
 _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
                 np.dtype('complex64'), np.dtype('complex128'))
 
 
-class Ntuples(NtuplesBase):
+class NumpyNtuples(NtuplesBase):
 
     """The set of n-tuples of arbitrary type."""
 
@@ -78,7 +79,7 @@ class Ntuples(NtuplesBase):
 
         Returns
         -------
-        element : `NtuplesVector`
+        element : `NumpyNtuplesVector`
             The new element created (from ``inp``).
 
         Notes
@@ -88,16 +89,16 @@ class Ntuples(NtuplesBase):
 
         Examples
         --------
-        >>> strings3 = Ntuples(3, dtype='U1')  # 1-char strings
+        >>> strings3 = NumpyNtuples(3, dtype='U1')  # 1-char strings
         >>> x = strings3.element(['w', 'b', 'w'])
         >>> print(x)
         [w, b, w]
         >>> x.space
-        Ntuples(3, '<U1')
+        ntuples(3, '<U1')
 
         Construction from data pointer:
 
-        >>> int3 = Ntuples(3, dtype='int')
+        >>> int3 = NumpyNtuples(3, dtype='int')
         >>> x = int3.element([1, 2, 3])
         >>> y = int3.element(data_ptr=x.data_ptr)
         >>> print(y)
@@ -136,10 +137,10 @@ class Ntuples(NtuplesBase):
 
         Examples
         --------
-        >>> c3 = Cn(3)
+        >>> c3 = NumpyNtuples(3, dtype=complex)
         >>> x = c3.zero()
         >>> x
-        Cn(3).element([0j, 0j, 0j])
+        ntuples(3, 'complex').element([0j, 0j, 0j])
         """
         return self.element(np.zeros(self.size, dtype=self.dtype))
 
@@ -148,27 +149,38 @@ class Ntuples(NtuplesBase):
 
         Examples
         --------
-        >>> c3 = Cn(3)
+        >>> c3 = NumpyNtuples(3, dtype=complex)
         >>> x = c3.one()
         >>> x
-        Cn(3).element([(1+0j), (1+0j), (1+0j)])
+        ntuples(3, 'complex').element([(1+0j), (1+0j), (1+0j)])
         """
         return self.element(np.ones(self.size, dtype=self.dtype))
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        constructor_name = 'ntuples'
+
+        inner_str = '{}'.format(self.size)
+        inner_str += ', {}'.format(dtype_repr(self.dtype))
+
+        return '{}({})'.format(constructor_name, inner_str)
+
     @property
     def element_type(self):
-        """`NtuplesVector`"""
-        return NtuplesVector
+        """`NumpyNtuplesVector`"""
+        return NumpyNtuplesVector
+
+    impl = 'numpy'
 
 
-class NtuplesVector(NtuplesBaseVector):
+class NumpyNtuplesVector(NtuplesBaseVector):
 
-    """Representation of an `Ntuples` element."""
+    """Representation of an `NumpyNtuples` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        if not isinstance(space, Ntuples):
-            raise TypeError('{!r} not an `Ntuples` instance'
+        if not isinstance(space, NumpyNtuples):
+            raise TypeError('{!r} not an `NumpyNtuples` instance'
                             ''.format(space))
 
         if not isinstance(data, np.ndarray):
@@ -211,7 +223,7 @@ class NtuplesVector(NtuplesBaseVector):
         Examples
         --------
         >>> import ctypes
-        >>> vec = Ntuples(3, 'float').element([1, 2, 3])
+        >>> vec = NumpyNtuples(3, 'float').element([1, 2, 3])
         >>> vec.asarray()
         array([ 1.,  2.,  3.])
         >>> vec.asarray(start=1, stop=3)
@@ -239,7 +251,7 @@ class NtuplesVector(NtuplesBaseVector):
         Examples
         --------
         >>> import ctypes
-        >>> vec = Ntuples(3, 'int32').element([1, 2, 3])
+        >>> vec = NumpyNtuples(3, 'int32').element([1, 2, 3])
         >>> arr_type = ctypes.c_int32 * 3
         >>> buffer = arr_type.from_address(vec.data_ptr)
         >>> arr = np.frombuffer(buffer, dtype='int32')
@@ -270,17 +282,17 @@ class NtuplesVector(NtuplesBaseVector):
 
         Examples
         --------
-        >>> vec1 = Ntuples(3, int).element([1, 2, 3])
-        >>> vec2 = Ntuples(3, int).element([-1, 2, 0])
+        >>> vec1 = NumpyNtuples(3, int).element([1, 2, 3])
+        >>> vec2 = NumpyNtuples(3, int).element([-1, 2, 0])
         >>> vec1 == vec2
         False
-        >>> vec2 = Ntuples(3, int).element([1, 2, 3])
+        >>> vec2 = NumpyNtuples(3, int).element([1, 2, 3])
         >>> vec1 == vec2
         True
 
         Space membership matters:
 
-        >>> vec2 = Ntuples(3, float).element([1, 2, 3])
+        >>> vec2 = NumpyNtuples(3, float).element([1, 2, 3])
         >>> vec1 == vec2 or vec2 == vec1
         False
         """
@@ -300,15 +312,15 @@ class NtuplesVector(NtuplesBaseVector):
 
         Returns
         -------
-        copy : `NtuplesVector`
+        copy : `NumpyNtuplesVector`
             The deep copy
 
         Examples
         --------
-        >>> vec1 = Ntuples(3, 'int').element([1, 2, 3])
+        >>> vec1 = NumpyNtuples(3, 'int').element([1, 2, 3])
         >>> vec2 = vec1.copy()
         >>> vec2
-        Ntuples(3, 'int').element([1, 2, 3])
+        ntuples(3, 'int').element([1, 2, 3])
         >>> vec1 == vec2
         True
         >>> vec1 is vec2
@@ -326,19 +338,19 @@ class NtuplesVector(NtuplesBaseVector):
 
         Returns
         -------
-        values : scalar or `NtuplesVector`
+        values : scalar or `NumpyNtuplesVector`
             The value(s) at the index (indices)
 
         Examples
         --------
-        >>> str_3 = Ntuples(3, dtype='U6')  # 6-char unicode
+        >>> str_3 = NumpyNtuples(3, dtype='U6')  # 6-char unicode
         >>> x = str_3.element(['a', 'Hello!', '0'])
         >>> print(x[0])
         a
         >>> print(x[1:3])
         [Hello!, 0]
         >>> x[1:3].space
-        Ntuples(2, '<U6')
+        ntuples(2, '<U6')
         """
         if isinstance(indices, Integral):
             return self.data[indices]  # single index
@@ -353,7 +365,7 @@ class NtuplesVector(NtuplesBaseVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : scalar, `array-like` or `NtuplesVector`
+        values : scalar or `array-like`
             The value(s) that are to be assigned.
 
             If ``indices`` is an integer, ``value`` must be scalar.
@@ -368,31 +380,31 @@ class NtuplesVector(NtuplesBaseVector):
 
         Examples
         --------
-        >>> int_3 = Ntuples(3, 'int')
+        >>> int_3 = NumpyNtuples(3, 'int')
         >>> x = int_3.element([1, 2, 3])
         >>> x[0] = 5
         >>> x
-        Ntuples(3, 'int').element([5, 2, 3])
+        ntuples(3, 'int').element([5, 2, 3])
 
         Assignment from array-like structures or another
         vector:
 
-        >>> y = Ntuples(2, 'short').element([-1, 2])
+        >>> y = NumpyNtuples(2, 'short').element([-1, 2])
         >>> x[:2] = y
         >>> x
-        Ntuples(3, 'int').element([-1, 2, 3])
+        ntuples(3, 'int').element([-1, 2, 3])
         >>> x[1:3] = [7, 8]
         >>> x
-        Ntuples(3, 'int').element([-1, 7, 8])
+        ntuples(3, 'int').element([-1, 7, 8])
         >>> x[:] = np.array([0, 0, 0])
         >>> x
-        Ntuples(3, 'int').element([0, 0, 0])
+        ntuples(3, 'int').element([0, 0, 0])
 
         Broadcasting is also supported:
 
         >>> x[1:3] = -2.
         >>> x
-        Ntuples(3, 'int').element([0, -2, -2])
+        ntuples(3, 'int').element([0, -2, -2])
 
         Array views are preserved:
 
@@ -406,37 +418,53 @@ class NtuplesVector(NtuplesBaseVector):
         Be aware of unsafe casts and over-/underflows, there
         will be warnings at maximum.
 
-        >>> x = Ntuples(2, 'int8').element([0, 0])
+        >>> x = NumpyNtuples(2, 'int8').element([0, 0])
         >>> maxval = 255  # maximum signed 8-bit unsigned int
         >>> x[0] = maxval + 1
         >>> x
-        Ntuples(2, 'int8').element([0, 0])
+        ntuples(2, 'int8').element([0, 0])
         """
-        if isinstance(values, NtuplesVector):
+        if isinstance(values, NumpyNtuplesVector):
             self.data[indices] = values.data
         else:
             self.data[indices] = values
 
+    @staticmethod
+    def available_dtypes():
+        """Return the available `NumpyFn` data types.
+
+        Notes
+        -----
+        This is the set of all dtypes available to numpy. See `numpy.sctypes`
+        for more information.
+
+        The available dtypes may depend on the specific system used.
+        """
+        all_types = []
+        for val in np.sctypes.values():
+            all_types.extend(val)
+        return all_types
+
     @property
     def ufunc(self):
-        """`NtuplesUFuncs`, access to numpy style ufuncs.
+        """`NumpyNtuplesUFuncs`, access to numpy style ufuncs.
 
         Examples
         --------
-        >>> r2 = Rn(2)
+        >>> r2 = NumpyFn(2)
         >>> x = r2.element([1, -2])
         >>> x.ufunc.absolute()
-        Rn(2).element([1.0, 2.0])
+        rn(2).element([1.0, 2.0])
 
         These functions can also be used with broadcasting
 
         >>> x.ufunc.add(3)
-        Rn(2).element([4.0, 1.0])
+        rn(2).element([4.0, 1.0])
 
         and non-space elements
 
         >>> x.ufunc.subtract([3, 3])
-        Rn(2).element([-2.0, -5.0])
+        rn(2).element([-2.0, -5.0])
 
         There is also support for various reductions (sum, prod, min, max)
 
@@ -449,7 +477,7 @@ class NtuplesVector(NtuplesBaseVector):
         >>> out = r2.element()
         >>> result = x.ufunc.add(y, out=out)
         >>> result
-        Rn(2).element([4.0, 2.0])
+        rn(2).element([4.0, 2.0])
         >>> result is out
         True
 
@@ -457,7 +485,7 @@ class NtuplesVector(NtuplesBaseVector):
         -----
         These are optimized for use with ntuples and incur no overhead.
         """
-        return NtuplesUFuncs(self)
+        return NumpyNtuplesUFuncs(self)
 
 
 def _blas_is_applicable(*args):
@@ -556,7 +584,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
                 axpy(x1.data, out.data, native(out.size), a)
 
 
-class Fn(FnBase, Ntuples):
+class NumpyFn(FnBase, NumpyNtuples):
 
     """The vector space F^n with vector multiplication.
 
@@ -566,7 +594,7 @@ class Fn(FnBase, Ntuples):
     Its elements are represented as instances of the `FnVector` class.
     """
 
-    def __init__(self, size, dtype, **kwargs):
+    def __init__(self, size, dtype='float64', **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -681,20 +709,20 @@ class Fn(FnBase, Ntuples):
 
         See also
         --------
-        FnMatrixWeighting
-        FnVectorWeighting
-        FnConstWeighting
+        NumpyFnMatrixWeighting
+        NumpyFnVectorWeighting
+        NumpyFnConstWeighting
 
         Examples
         --------
-        >>> space = Fn(3, 'float')
+        >>> space = NumpyFn(3, 'float')
         >>> space
-        Rn(3)
-        >>> space = Fn(3, 'float', weight=[1, 2, 3])
+        rn(3)
+        >>> space = NumpyFn(3, 'float', weight=[1, 2, 3])
         >>> space
-        Rn(3, weight=[1, 2, 3])
+        rn(3, weight=[1, 2, 3])
         """
-        Ntuples.__init__(self, size, dtype)
+        NumpyNtuples.__init__(self, size, dtype)
         FnBase.__init__(self, size, dtype)
 
         dist = kwargs.pop('dist', None)
@@ -718,13 +746,13 @@ class Fn(FnBase, Ntuples):
             if isinstance(weight, WeightingBase):
                 self._weighting = weight
             elif np.isscalar(weight):
-                self._weighting = FnConstWeighting(
+                self._weighting = NumpyFnConstWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner)
             elif weight is None:
                 # Need to wait until dist, norm and inner are handled
                 pass
             elif isspmatrix(weight):
-                self._weighting = FnMatrixWeighting(
+                self._weighting = NumpyFnMatrixWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner,
                     **kwargs)
             else:  # last possibility: make a matrix
@@ -733,10 +761,10 @@ class Fn(FnBase, Ntuples):
                     raise ValueError('invalid weight argument {}'
                                      ''.format(weight))
                 if arr.ndim == 1:
-                    self._weighting = FnVectorWeighting(
+                    self._weighting = NumpyFnVectorWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner)
                 elif arr.ndim == 2:
-                    self._weighting = FnMatrixWeighting(
+                    self._weighting = NumpyFnMatrixWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner,
                         **kwargs)
                 else:
@@ -744,13 +772,13 @@ class Fn(FnBase, Ntuples):
                                      '2-dimensional'.format(weight))
 
         elif dist is not None:
-            self._weighting = FnCustomDist(dist)
+            self._weighting = NumpyFnCustomDist(dist)
         elif norm is not None:
-            self._weighting = FnCustomNorm(norm)
+            self._weighting = NumpyFnCustomNorm(norm)
         elif inner is not None:
-            self._weighting = FnCustomInnerProduct(inner)
+            self._weighting = NumpyFnCustomInnerProduct(inner)
         else:  # all None -> no weighing
-            self._weighting = FnNoWeighting(
+            self._weighting = NumpyFnNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
 
     @property
@@ -765,35 +793,8 @@ class Fn(FnBase, Ntuples):
 
     @property
     def is_weighted(self):
-        """Return `True` if the weighting is not `FnNoWeighting`."""
-        return not isinstance(self.weighting, FnNoWeighting)
-
-    @staticmethod
-    def default_dtype(field):
-        """Return the default of `Fn` data type for a given field.
-
-        Parameters
-        ----------
-        field : `Field`
-            Set of numbers to be represented by a data type.
-            Currently supported : `RealNumbers`, `ComplexNumbers`
-
-        Returns
-        -------
-        dtype : `type`
-            Numpy data type specifier. The returned defaults are:
-
-            ``RealNumbers()`` : ``np.dtype('float64')``
-
-            ``ComplexNumbers()`` : ``np.dtype('complex128')``
-        """
-        if field == RealNumbers():
-            return np.dtype('float64')
-        elif field == ComplexNumbers():
-            return np.dtype('complex128')
-        else:
-            raise ValueError('no default data type defined for field {}'
-                             ''.format(field))
+        """Return `True` if the weighting is not `NumpyFnNoWeighting`."""
+        return not isinstance(self.weighting, NumpyFnNoWeighting)
 
     def _lincomb(self, a, x1, b, x2, out):
         """Linear combination of ``x1`` and ``x2``.
@@ -816,14 +817,14 @@ class Fn(FnBase, Ntuples):
 
         Examples
         --------
-        >>> c3 = Cn(3)
+        >>> c3 = NumpyFn(3, dtype=complex)
         >>> x = c3.element([1+1j, 2-1j, 3])
         >>> y = c3.element([4+0j, 5, 6+0.5j])
         >>> out = c3.element()
         >>> c3.lincomb(2j, x, 3-1j, y, out)  # out is returned
-        Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
+        cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
         >>> out
-        Cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
+        cn(3).element([(10-2j), (17-1j), (18.5+1.5j)])
         """
         _lincomb(a, x1, b, x2, out, self.dtype)
 
@@ -842,17 +843,32 @@ class Fn(FnBase, Ntuples):
 
         Examples
         --------
-        >>> from numpy.linalg import norm
-        >>> c2_2 = Cn(2, dist=lambda x, y: norm(x - y, ord=2))
+        The default case is the euclidean distance
+
+        >>> c2_2 = NumpyFn(2, dtype=complex)
         >>> x = c2_2.element([3+1j, 4])
         >>> y = c2_2.element([1j, 4-4j])
         >>> c2_2.dist(x, y)
         5.0
 
-        >>> c2_2 = Cn(2, dist=lambda x, y: norm(x - y, ord=1))
+        If the user has given another dist function, that one is used instead.
+        For example, the 2-norm can be given explicitly
+
+        >>> from numpy.linalg import norm
+        >>> c2_2 = NumpyFn(2, dtype=complex,
+        ...                dist=lambda x, y: norm(x - y, ord=2))
         >>> x = c2_2.element([3+1j, 4])
         >>> y = c2_2.element([1j, 4-4j])
         >>> c2_2.dist(x, y)
+        5.0
+
+        Likewise, the 1-norm can be given.
+
+        >>> c2_1 = NumpyFn(2, dtype=complex,
+        ...                dist=lambda x, y: norm(x - y, ord=1))
+        >>> x = c2_1.element([3+1j, 4])
+        >>> y = c2_1.element([1j, 4-4j])
+        >>> c2_1.dist(x, y)
         7.0
         """
         return self.weighting.dist(x1, x2)
@@ -872,14 +888,19 @@ class Fn(FnBase, Ntuples):
 
         Examples
         --------
-        >>> import numpy as np
-        >>> c2_2 = Cn(2, norm=np.linalg.norm)  # 2-norm
+        >>> from numpy.linalg import norm
+
+        2-norm
+
+        >>> c2_2 =  NumpyFn(2, dtype=complex, norm=norm)
         >>> x = c2_2.element([3+1j, 1-5j])
         >>> c2_2.norm(x)
         6.0
 
+        1-norm
+
         >>> from functools import partial
-        >>> c2_1 = Cn(2, norm=partial(np.linalg.norm, ord=1))
+        >>> c2_1 = NumpyFn(2, dtype=complex, norm=partial(norm, ord=1))
         >>> x = c2_1.element([3-4j, 12+5j])
         >>> c2_1.norm(x)
         18.0
@@ -902,7 +923,7 @@ class Fn(FnBase, Ntuples):
         Examples
         --------
         >>> import numpy as np
-        >>> c3 = Cn(2, inner=lambda x, y: np.vdot(y, x))
+        >>> c3 = NumpyFn(2, dtype=complex, inner=lambda x, y: np.vdot(y, x))
         >>> x = c3.element([5+1j, -2j])
         >>> y = c3.element([1, 1+1j])
         >>> c3.inner(x, y) == (5+1j)*1 + (-2j)*(1-1j)
@@ -914,7 +935,7 @@ class Fn(FnBase, Ntuples):
         >>> def weighted_inner(x, y):
         ...     return np.vdot(weights * y.data, x.data)
 
-        >>> c3w = Cn(2, inner=weighted_inner)
+        >>> c3w = NumpyFn(2, dtype=complex, inner=weighted_inner)
         >>> x = c3w.element(x)  # elements must be cast (no copy)
         >>> y = c3w.element(y)
         >>> c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)
@@ -938,14 +959,14 @@ class Fn(FnBase, Ntuples):
 
         Examples
         --------
-        >>> c3 = Cn(3)
+        >>> c3 = NumpyFn(3, dtype=complex)
         >>> x = c3.element([5+1j, 3, 2-2j])
         >>> y = c3.element([1, 2+1j, 3-1j])
         >>> out = c3.element()
         >>> c3.multiply(x, y, out)  # out is returned
-        Cn(3).element([(5+1j), (6+3j), (4-8j)])
+        cn(3).element([(5+1j), (6+3j), (4-8j)])
         >>> out
-        Cn(3).element([(5+1j), (6+3j), (4-8j)])
+        cn(3).element([(5+1j), (6+3j), (4-8j)])
         """
         np.multiply(x1.data, x2.data, out=out.data)
 
@@ -965,14 +986,14 @@ class Fn(FnBase, Ntuples):
 
         Examples
         --------
-        >>> r3 = Rn(3)
+        >>> r3 = NumpyFn(3)
         >>> x = r3.element([3, 5, 6])
         >>> y = r3.element([1, 2, 2])
         >>> out = r3.element()
         >>> r3.divide(x, y, out)  # out is returned
-        Rn(3).element([3.0, 2.5, 3.0])
+        rn(3).element([3.0, 2.5, 3.0])
         >>> out
-        Rn(3).element([3.0, 2.5, 3.0])
+        rn(3).element([3.0, 2.5, 3.0])
         """
         np.divide(x1.data, x2.data, out=out.data)
 
@@ -995,8 +1016,8 @@ class Fn(FnBase, Ntuples):
 
         >>> from functools import partial
         >>> dist2 = partial(dist, ord=2)
-        >>> c3 = Cn(3, dist=dist2)
-        >>> c3_same = Cn(3, dist=dist2)
+        >>> c3 = NumpyFn(3, dtype=complex, dist=dist2)
+        >>> c3_same = NumpyFn(3, dtype=complex, dist=dist2)
         >>> c3  == c3_same
         True
 
@@ -1004,41 +1025,41 @@ class Fn(FnBase, Ntuples):
         same applies for ``norm`` and ``inner``:
 
         >>> dist1 = partial(dist, ord=1)
-        >>> c3_1 = Cn(3, dist=dist1)
-        >>> c3_2 = Cn(3, dist=dist2)
-        >>> c3_1 == c3_2
+        >>> r3_1 = NumpyFn(3, dist=dist1)
+        >>> r3_2 = NumpyFn(3, dist=dist2)
+        >>> r3_1 == r3_2
         False
 
         Be careful with Lambdas - they result in non-identical function
         objects:
 
-        >>> c3_lambda1 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
-        >>> c3_lambda2 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
-        >>> c3_lambda1 == c3_lambda2
+        >>> r3_lambda1 = NumpyFn(3, dist=lambda x, y: norm(x-y, ord=1))
+        >>> r3_lambda2 = NumpyFn(3, dist=lambda x, y: norm(x-y, ord=1))
+        >>> r3_lambda1 == r3_lambda2
         False
 
-        An `Fn` space with the same data type is considered
+        An `NumpyFn` space with the same data type is considered
         equal:
 
-        >>> c3 = Cn(3)
-        >>> f3_cdouble = Fn(3, dtype='complex128')
+        >>> c3 = NumpyFn(3, dtype=complex)
+        >>> f3_cdouble = NumpyFn(3, dtype='complex128')
         >>> c3 == f3_cdouble
         True
         """
         if other is self:
             return True
 
-        return (Ntuples.__eq__(self, other) and
+        return (NumpyNtuples.__eq__(self, other) and
                 self.weighting == other.weighting)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.is_rn:
-            class_name = 'Rn'
+            constructor_name = 'rn'
         elif self.is_cn:
-            class_name = 'Cn'
+            constructor_name = 'cn'
         else:
-            class_name = self.__class__.__name__
+            constructor_name = 'fn'
 
         inner_str = '{}'.format(self.size)
         if self.dtype != self.default_dtype(self.field):
@@ -1047,30 +1068,71 @@ class Fn(FnBase, Ntuples):
         weight_str = self.weighting.repr_part
         if weight_str:
             inner_str += ', ' + weight_str
-        return '{}({})'.format(class_name, inner_str)
+        return '{}({})'.format(constructor_name, inner_str)
 
     # Copy these to handle bug in ABCmeta
-    zero = Ntuples.zero
-    one = Ntuples.one
+    zero = NumpyNtuples.zero
+    one = NumpyNtuples.one
 
     @property
     def element_type(self):
-        """Return `FnVector`."""
-        return FnVector
+        """`NumpyFnVector`"""
+        return NumpyFnVector
+
+    @staticmethod
+    def available_dtypes():
+        """Return the available `NumpyFn` data types.
+
+        Notes
+        -----
+        This is the set of all arithmetic dtypes available to numpy. See
+        `numpy.sctypes` for more information.
+
+        The available dtypes may depend on the specific system used.
+        """
+        return np.sctypes['int'] + np.sctypes['float'] + np.sctypes['complex']
+
+    @staticmethod
+    def default_dtype(field=None):
+        """Return the default of `NumpyFn` data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`, optional
+            Set of numbers to be represented by a data type.
+            Currently supported : `RealNumbers`, `ComplexNumbers`.
+            Default: `RealNumbers`
+
+        Returns
+        -------
+        dtype : `type`
+            Numpy data type specifier. The returned defaults are:
+
+            ``RealNumbers()`` : ``np.dtype('float64')``
+
+            ``ComplexNumbers()`` : ``np.dtype('complex128')``
+        """
+        if field is None or field == RealNumbers():
+            return np.dtype('float64')
+        elif field == ComplexNumbers():
+            return np.dtype('complex128')
+        else:
+            raise ValueError('no default data type defined for field {}.'
+                             ''.format(field))
 
 
-class FnVector(FnBaseVector, NtuplesVector):
+class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
-    """Representation of an `Fn` element."""
+    """Representation of an `NumpyFn` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
-        if not isinstance(space, Fn):
-            raise TypeError('{!r} not an `Fn` instance'
+        if not isinstance(space, NumpyFn):
+            raise TypeError('{!r} not an `NumpyFn` instance'
                             ''.format(space))
 
         FnBaseVector.__init__(self, space)
-        NtuplesVector.__init__(self, space, data)
+        NumpyNtuplesVector.__init__(self, space, data)
 
     @property
     def real(self):
@@ -1078,25 +1140,25 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Returns
         -------
-        real : `FnVector` view with dtype
-            The real part this vector as a vector in `Rn`
+        real : `NumpyFnVector` view with real dtype
+            The real part this vector as a vector in `rn`
 
         Examples
         --------
-        >>> c3 = Cn(3)
+        >>> c3 = NumpyFn(3, dtype=complex)
         >>> x = c3.element([5+1j, 3, 2-2j])
         >>> x.real
-        Rn(3).element([5.0, 3.0, 2.0])
+        rn(3).element([5.0, 3.0, 2.0])
 
-        The `Rn` vector is really a view, so changes affect
+        The `rn` vector is really a view, so changes affect
         the original array:
 
         >>> x.real *= 2
         >>> x
-        Cn(3).element([(10+1j), (6+0j), (4-2j)])
+        cn(3).element([(10+1j), (6+0j), (4-2j)])
         """
-        rn = Rn(self.space.size, self.space._real_dtype)
-        return rn.element(self.data.real)
+        real_space = NumpyFn(self.space.size, self.space._real_dtype)
+        return real_space.element(self.data.real)
 
     @real.setter
     def real(self, newreal):
@@ -1111,21 +1173,21 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Examples
         --------
-        >>> c3 = Cn(3)
+        >>> c3 = NumpyFn(3, dtype=complex)
         >>> x = c3.element([5+1j, 3, 2-2j])
-        >>> a = Rn(3).element([0, 0, 0])
+        >>> a = NumpyFn(3).element([0, 0, 0])
         >>> x.real = a
         >>> x
-        Cn(3).element([1j, 0j, -2j])
+        cn(3).element([1j, 0j, -2j])
 
         Other array-like types and broadcasting:
 
         >>> x.real = 1.0
         >>> x
-        Cn(3).element([(1+1j), (1+0j), (1-2j)])
+        cn(3).element([(1+1j), (1+0j), (1-2j)])
         >>> x.real = [0, 2, -1]
         >>> x
-        Cn(3).element([1j, (2+0j), (-1-2j)])
+        cn(3).element([1j, (2+0j), (-1-2j)])
         """
         self.real.data[:] = newreal
 
@@ -1136,25 +1198,24 @@ class FnVector(FnBaseVector, NtuplesVector):
         Returns
         -------
         imag : `FnVector`
-            The imaginary part this vector as a vector in
-            `Rn`
+            The imaginary part this vector as a vector in `rn`
 
         Examples
         --------
-        >>> c3 = Cn(3)
+        >>> c3 = NumpyFn(3, dtype=complex)
         >>> x = c3.element([5+1j, 3, 2-2j])
         >>> x.imag
-        Rn(3).element([1.0, 0.0, -2.0])
+        rn(3).element([1.0, 0.0, -2.0])
 
-        The `Rn` vector is really a view, so changes affect
+        The `rn` vector is really a view, so changes affect
         the original array:
 
         >>> x.imag *= 2
         >>> x
-        Cn(3).element([(5+2j), (3+0j), (2-4j)])
+        cn(3).element([(5+2j), (3+0j), (2-4j)])
         """
-        rn = Rn(self.space.size, self.space._real_dtype)
-        return rn.element(self.data.imag)
+        real_space = NumpyFn(self.space.size, self.space._real_dtype)
+        return real_space.element(self.data.imag)
 
     @imag.setter
     def imag(self, newimag):
@@ -1164,13 +1225,13 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Parameters
         ----------
-        newreal : `array-like` or scalar
+        newimag : `array-like` or scalar
             The new imaginary part for this vector.
 
         Examples
         --------
-        >>> x = Cn(3).element([5+1j, 3, 2-2j])
-        >>> a = Rn(3).element([0, 0, 0])
+        >>> x = cn(3).element([5+1j, 3, 2-2j])
+        >>> a = NumpyFn(3).element([0, 0, 0])
         >>> x.imag = a; print(x)
         [(5+0j), (3+0j), (2+0j)]
 
@@ -1200,13 +1261,13 @@ class FnVector(FnBaseVector, NtuplesVector):
 
         Examples
         --------
-        >>> x = Cn(3).element([5+1j, 3, 2-2j])
+        >>> x = NumpyFn(3, dtype=complex).element([5+1j, 3, 2-2j])
         >>> y = x.conj(); print(y)
         [(5-1j), (3-0j), (2+2j)]
 
         The out parameter allows you to avoid a copy
 
-        >>> z = Cn(3).element()
+        >>> z = NumpyFn(3, dtype=complex).element()
         >>> z_out = x.conj(out=z); print(z)
         [(5-1j), (3-0j), (2+2j)]
         >>> z_out is z
@@ -1237,70 +1298,6 @@ class FnVector(FnBaseVector, NtuplesVector):
         return self
 
 
-def Cn(size, dtype='complex128', **kwargs):
-
-    """The complex vector space :math:`C^n` with vector multiplication.
-
-    Parameters
-    ----------
-    size : positive `int`
-        The number of dimensions of the space
-    dtype : `object`
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only complex floating-point data types are allowed.
-    kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-        See `Fn`
-
-    See also
-    --------
-    Fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
-        data type
-    """
-
-    cn = Fn(size, dtype, **kwargs)
-
-    if not cn.is_cn:
-        raise TypeError('data type {!r} not a complex floating-point type'
-                        ''.format(dtype))
-    return cn
-
-
-def Rn(size, dtype='float64', **kwargs):
-
-    """The real vector space :math:`R^n` with vector multiplication.
-
-     Parameters
-    ----------
-    size : positive `int`
-        The number of dimensions of the space
-    dtype : `object`
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only real floating-point data types are allowed.
-    kwargs : {'weight', 'dist', 'norm', 'inner', 'dist_using_inner'}
-        See `Fn`
-
-    See also
-    --------
-    Fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
-        data type
-    """
-
-    rn = Fn(size, dtype, **kwargs)
-
-    if not rn.is_rn:
-        raise TypeError('data type {!r} not a real floating-point type'
-                        ''.format(dtype))
-    return rn
-
-
 class MatVecOperator(Operator):
 
     """Matrix multiply operator :math:`\mathbb{F}^n -> \mathbb{F}^m`."""
@@ -1315,12 +1312,12 @@ class MatVecOperator(Operator):
             ``(m, n)``, where ``n`` is the size of ``domain`` and ``m`` the
             size of ``range``. Its dtype must be castable to the range
             ``dtype``.
-        domain : `Fn`, optional
+        domain : `NumpyFn`, optional
             Space on whose elements the matrix acts. If not provided,
             the domain is inferred from the matrix ``dtype`` and
             ``shape``. If provided, its dtype must be castable to the
             range dtype.
-        range : `Fn`, optional
+        range : `NumpyFn`, optional
             Space to which the matrix maps. If not provided,
             the domain is inferred from the matrix ``dtype`` and
             ``shape``.
@@ -1335,23 +1332,16 @@ class MatVecOperator(Operator):
                              ''.format(matrix, self.matrix.ndim))
 
         # Infer domain and range from matrix if necessary
-        if is_real_floating_dtype(self.matrix):
-            spc_type = Rn
-        elif is_complex_floating_dtype(self.matrix):
-            spc_type = Cn
-        else:
-            spc_type = Fn
-
         if domain is None:
-            domain = spc_type(self.matrix.shape[1], dtype=self.matrix.dtype)
-        elif not isinstance(domain, Fn):
-            raise TypeError('`domain` {!r} is not an `Fn` instance'
+            domain = NumpyFn(self.matrix.shape[1], dtype=self.matrix.dtype)
+        elif not isinstance(domain, NumpyFn):
+            raise TypeError('`domain` {!r} is not an `NumpyFn` instance'
                             ''.format(domain))
 
         if range is None:
-            range = spc_type(self.matrix.shape[0], dtype=self.matrix.dtype)
-        elif not isinstance(range, Fn):
-            raise TypeError('`range` {!r} is not an `Fn` instance'
+            range = NumpyFn(self.matrix.shape[0], dtype=self.matrix.dtype)
+        elif not isinstance(range, NumpyFn):
+            raise TypeError('`range` {!r} is not an `NumpyFn` instance'
                             ''.format(range))
 
         # Check compatibility of matrix with domain and range
@@ -1412,20 +1402,20 @@ class MatVecOperator(Operator):
 def _weighting(weight, exponent, dist_using_inner=False):
     """Return a weighting whose type is inferred from the arguments."""
     if np.isscalar(weight):
-        weighting = FnConstWeighting(
+        weighting = NumpyFnConstWeighting(
             weight, exponent=exponent, dist_using_inner=dist_using_inner)
     elif isspmatrix(weight):
-        weighting = FnMatrixWeighting(
+        weighting = NumpyFnMatrixWeighting(
             weight, exponent=exponent, dist_using_inner=dist_using_inner)
     else:
         weight_ = np.asarray(weight)
         if weight_.dtype == object:
             raise ValueError('bad weight {}'.format(weight))
         if weight_.ndim == 1:
-            weighting = FnVectorWeighting(
+            weighting = NumpyFnVectorWeighting(
                 weight_, exponent=exponent, dist_using_inner=dist_using_inner)
         elif weight_.ndim == 2:
-            weighting = FnMatrixWeighting(
+            weighting = NumpyFnMatrixWeighting(
                 weight_, exponent=exponent, dist_using_inner=dist_using_inner)
         else:
             raise ValueError('array-like weight must have 1 or 2 dimensions, '
@@ -1434,8 +1424,8 @@ def _weighting(weight, exponent, dist_using_inner=False):
     return weighting
 
 
-def weighted_inner(weight):
-    """Weighted inner product on `Fn` spaces as free function.
+def npy_weighted_inner(weight):
+    """Weighted inner product on `NumpyFn` spaces as free function.
 
     Parameters
     ----------
@@ -1453,13 +1443,13 @@ def weighted_inner(weight):
 
     See also
     --------
-    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
+    NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting
     """
     return _weighting(weight, exponent=2.0).inner
 
 
-def weighted_norm(weight, exponent=2.0):
-    """Weighted norm on `Fn` spaces as free function.
+def npy_weighted_norm(weight, exponent=2.0):
+    """Weighted norm on `NumpyFn` spaces as free function.
 
     Parameters
     ----------
@@ -1480,13 +1470,13 @@ def weighted_norm(weight, exponent=2.0):
 
     See also
     --------
-    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
+    NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting
     """
     return _weighting(weight, exponent=exponent).norm
 
 
-def weighted_dist(weight, exponent=2.0, use_inner=False):
-    """Weighted distance on `Fn` spaces as free function.
+def npy_weighted_dist(weight, exponent=2.0, use_inner=False):
+    """Weighted distance on `NumpyFn` spaces as free function.
 
     Parameters
     ----------
@@ -1517,7 +1507,7 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
 
     See also
     --------
-    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting
+    NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting
     """
     return _weighting(weight, exponent=exponent,
                       dist_using_inner=use_inner).dist
@@ -1565,9 +1555,9 @@ def _inner_default(x1, x2):
     return dot(x2.data, x1.data)
 
 
-class FnMatrixWeighting(MatrixWeightingBase):
+class NumpyFnMatrixWeighting(MatrixWeightingBase):
 
-    """Matrix weighting for `Fn`.
+    """Matrix weighting for `NumpyFn`.
 
     For exponent 2.0, a new weighted inner product with matrix ``W``
     is defined as::
@@ -1727,9 +1717,9 @@ class FnMatrixWeighting(MatrixWeightingBase):
                                     self.exponent))
 
 
-class FnVectorWeighting(VectorWeightingBase):
+class NumpyFnVectorWeighting(VectorWeightingBase):
 
-    """Vector weighting for `Fn`.
+    """Vector weighting for `NumpyFn`.
 
     For exponent 2.0, a new weighted inner product with vector ``w``
     is defined as::
@@ -1830,9 +1820,9 @@ class FnVectorWeighting(VectorWeightingBase):
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
 
-class FnConstWeighting(ConstWeightingBase):
+class NumpyFnConstWeighting(ConstWeightingBase):
 
-    """Weighting of `Fn` by a constant.
+    """Weighting of `NumpyFn` by a constant.
 
     For exponent 2.0, a new weighted inner product with constant
     ``c`` is defined as::
@@ -1955,9 +1945,9 @@ class FnConstWeighting(ConstWeightingBase):
                     float(_pnorm_default(x1 - x2, self.exponent)))
 
 
-class FnNoWeighting(NoWeightingBase, FnConstWeighting):
+class NumpyFnNoWeighting(NoWeightingBase, NumpyFnConstWeighting):
 
-    """Weighting of `Fn` with constant 1.
+    """Weighting of `NumpyFn` with constant 1.
 
     For exponent 2.0, the unweighted inner product is defined as::
 
@@ -2015,9 +2005,9 @@ class FnNoWeighting(NoWeightingBase, FnConstWeighting):
                          dist_using_inner=dist_using_inner)
 
 
-class FnCustomInnerProduct(CustomInnerProductBase):
+class NumpyFnCustomInnerProduct(CustomInnerProductBase):
 
-    """Class for handling a user-specified inner product in `Fn`."""
+    """Class for handling a user-specified inner product in `NumpyFn`."""
 
     def __init__(self, inner, dist_using_inner=True):
         """Initialize a new instance.
@@ -2047,9 +2037,9 @@ class FnCustomInnerProduct(CustomInnerProductBase):
                          dist_using_inner=dist_using_inner)
 
 
-class FnCustomNorm(CustomNormBase):
+class NumpyFnCustomNorm(CustomNormBase):
 
-    """Class for handling a user-specified norm in `Fn`.
+    """Class for handling a user-specified norm in `NumpyFn`.
 
     Note that this removes ``inner``.
     """
@@ -2072,9 +2062,9 @@ class FnCustomNorm(CustomNormBase):
         super().__init__(norm, impl='numpy')
 
 
-class FnCustomDist(CustomDistBase):
+class NumpyFnCustomDist(CustomDistBase):
 
-    """Class for handling a user-specified distance in `Fn`.
+    """Class for handling a user-specified distance in `NumpyFn`.
 
     Note that this removes ``inner`` and ``norm``.
     """
@@ -2085,7 +2075,7 @@ class FnCustomDist(CustomDistBase):
         Parameters
         ----------
         dist : `callable`
-            The distance function defining a metric on `Fn`. It must
+            The distance function defining a metric on `NumpyFn`. It must
             accept two `FnVector` arguments, return a `float` and and
             fulfill the following mathematical conditions for any three
             vectors ``x, y, z``:

@@ -28,13 +28,15 @@ import pytest
 import scipy as sp
 
 # ODL imports
-from odl import Ntuples, Fn, FnVector, Rn, Cn
+import odl
+from odl import NumpyNtuples, NumpyFn, NumpyFnVector
 from odl.operator.operator import Operator
 from odl.set.space import LinearSpaceTypeError
-from odl.space.ntuples import (
-    FnConstWeighting, FnVectorWeighting, FnMatrixWeighting, FnNoWeighting,
-    FnCustomInnerProduct, FnCustomNorm, FnCustomDist,
-    weighted_inner, weighted_norm, weighted_dist,
+from odl.space.npy_ntuples import (
+    NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting,
+    NumpyFnNoWeighting, NumpyFnCustomInnerProduct, NumpyFnCustomNorm,
+    NumpyFnCustomDist,
+    npy_weighted_inner, npy_weighted_norm, npy_weighted_dist,
     MatVecOperator)
 from odl.util.testutils import (almost_equal, all_almost_equal, all_equal,
                                 example_array, example_element,
@@ -73,9 +75,9 @@ def _sparse_matrix(fn):
 # Pytest fixtures
 
 # Simply modify spc_params to modify the fixture
-spc_params = [Rn(10, np.float64), Rn(10, np.float32),
-              Cn(10, np.complex128), Cn(10, np.complex64),
-              Rn(100)]
+spc_params = [odl.rn(10, np.float64), odl.rn(10, np.float32),
+              odl.cn(10, np.complex128), odl.cn(10, np.complex64),
+              odl.rn(100)]
 spc_ids = [' {!r} '.format(spc) for spc in spc_params]
 spc_fixture = pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
 
@@ -101,39 +103,39 @@ def exponent(request):
 
 def test_init():
     # Test run
-    Ntuples(3, int)
-    Ntuples(3, float)
-    Ntuples(3, complex)
-    Ntuples(3, 'S1')
+    NumpyNtuples(3, int)
+    NumpyNtuples(3, float)
+    NumpyNtuples(3, complex)
+    NumpyNtuples(3, 'S1')
 
     # Fn
-    Fn(3, int)
-    Fn(3, float)
-    Fn(3, complex)
+    NumpyFn(3, int)
+    NumpyFn(3, float)
+    NumpyFn(3, complex)
 
     # Fn only works on scalars
     with pytest.raises(TypeError):
-        Fn(3, 'S1')
+        NumpyFn(3, 'S1')
 
     # Rn
-    Rn(3, float)
+    odl.rn(3, float)
 
     # Rn only works on reals
     with pytest.raises(TypeError):
-        Rn(3, complex)
+        odl.rn(3, complex)
     with pytest.raises(TypeError):
-        Rn(3, 'S1')
+        odl.rn(3, 'S1')
     with pytest.raises(TypeError):
-        Rn(3, int)
+        odl.rn(3, int)
 
     # Cn
-    Cn(3, complex)
+    odl.cn(3, complex)
 
     # Cn only works on reals
     with pytest.raises(TypeError):
-        Cn(3, float)
+        odl.cn(3, float)
     with pytest.raises(TypeError):
-        Cn(3, 'S1')
+        odl.cn(3, 'S1')
 
     # Backported int from future fails (not recognized by numpy.dtype())
     # (Python 2 only)
@@ -141,44 +143,44 @@ def test_init():
     import sys
     if sys.version_info.major != 3:
         with pytest.raises(TypeError):
-            Fn(3, future_int)
+            NumpyFn(3, future_int)
 
     # Init with weights or custom space functions
     const = 1.5
-    weight_vec = _pos_array(Rn(3, float))
-    weight_mat = _dense_matrix(Rn(3, float))
+    weight_vec = _pos_array(odl.rn(3, float))
+    weight_mat = _dense_matrix(odl.rn(3, float))
 
-    Rn(3, weight=const)
-    Rn(3, weight=weight_vec)
-    Rn(3, weight=weight_mat)
+    odl.rn(3, weight=const)
+    odl.rn(3, weight=weight_vec)
+    odl.rn(3, weight=weight_mat)
 
     # Different exponents
     exponents = [0.5, 1.0, 2.0, 5.0, float('inf')]
     for exponent in exponents:
-        Cn(3, exponent=exponent)
+        odl.cn(3, exponent=exponent)
 
 
 def test_init_weighting(exponent):
     const = 1.5
-    weight_vec = _pos_array(Rn(3, float))
-    weight_mat = _dense_matrix(Rn(3, float))
+    weight_vec = _pos_array(odl.rn(3, float))
+    weight_mat = _dense_matrix(odl.rn(3, float))
 
-    spaces = [Fn(3, complex, exponent=exponent, weight=const),
-              Fn(3, complex, exponent=exponent, weight=weight_vec),
-              Fn(3, complex, exponent=exponent, weight=weight_mat)]
-    weightings = [FnConstWeighting(const, exponent=exponent),
-                  FnVectorWeighting(weight_vec, exponent=exponent),
-                  FnMatrixWeighting(weight_mat, exponent=exponent)]
+    spaces = [NumpyFn(3, complex, exponent=exponent, weight=const),
+              NumpyFn(3, complex, exponent=exponent, weight=weight_vec),
+              NumpyFn(3, complex, exponent=exponent, weight=weight_mat)]
+    weightings = [NumpyFnConstWeighting(const, exponent=exponent),
+                  NumpyFnVectorWeighting(weight_vec, exponent=exponent),
+                  NumpyFnMatrixWeighting(weight_mat, exponent=exponent)]
 
     for spc, weight in zip(spaces, weightings):
         assert spc.weighting == weight
 
 
 def test_astype():
-    rn = Rn(3, weight=1.5)
-    cn = Cn(3, weight=1.5)
-    rn_s = Rn(3, weight=1.5, dtype='float32')
-    cn_s = Cn(3, weight=1.5, dtype='complex64')
+    rn = odl.rn(3, weight=1.5)
+    cn = odl.cn(3, weight=1.5)
+    rn_s = odl.rn(3, weight=1.5, dtype='float32')
+    cn_s = odl.cn(3, weight=1.5, dtype='complex64')
 
     # Real
     assert rn.astype('float32') == rn_s
@@ -201,19 +203,19 @@ def test_vector_class_init(fn):
     # Test that code runs
     arr = example_array(fn)
 
-    FnVector(fn, arr)
+    NumpyFnVector(fn, arr)
     # Space has to be an actual space
     for non_space in [1, complex, np.array([1, 2])]:
         with pytest.raises(TypeError):
-            FnVector(non_space, arr)
+            NumpyFnVector(non_space, arr)
 
     # Data has to be a numpy array
     with pytest.raises(TypeError):
-        FnVector(fn, list(arr))
+        NumpyFnVector(fn, list(arr))
 
     # Data has to be a numpy array or correct dtype
     with pytest.raises(TypeError):
-        FnVector(fn, arr.astype(int))
+        NumpyFnVector(fn, arr.astype(int))
 
 
 def _test_lincomb(fn, a, b):
@@ -260,7 +262,7 @@ def test_lincomb(fn):
 
 def test_lincomb_exceptions(fn):
     # Hack to make sure otherfn is different
-    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+    otherfn = odl.rn(1) if fn.size != 1 else odl.rn(2)
 
     otherx = otherfn.zero()
     x, y, z = fn.zero(), fn.zero(), fn.zero()
@@ -299,7 +301,7 @@ def test_multiply(fn):
 
 def test_multiply_exceptions(fn):
     # Hack to make sure otherfn is different
-    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+    otherfn = odl.rn(1) if fn.size != 1 else odl.rn(2)
 
     otherx = otherfn.zero()
     x, y = fn.zero(), fn.zero()
@@ -473,7 +475,7 @@ def test_inner(fn):
 
 def test_inner_exceptions(fn):
     # Hack to make sure otherfn is different
-    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+    otherfn = odl.rn(1) if fn.size != 1 else odl.rn(2)
 
     otherx = otherfn.zero()
     x = fn.zero()
@@ -496,7 +498,7 @@ def test_norm(fn):
 
 def test_norm_exceptions(fn):
     # Hack to make sure otherfn is different
-    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+    otherfn = odl.rn(1) if fn.size != 1 else odl.rn(2)
 
     otherx = otherfn.zero()
 
@@ -505,7 +507,7 @@ def test_norm_exceptions(fn):
 
 
 def test_pnorm(exponent):
-    for fn in (Rn(3, exponent=exponent), Cn(3, exponent=exponent)):
+    for fn in (odl.rn(3, exponent=exponent), odl.cn(3, exponent=exponent)):
         xarr, x = example_vectors(fn)
         correct_norm = np.linalg.norm(xarr, ord=exponent)
 
@@ -524,7 +526,7 @@ def test_dist(fn):
 
 def test_dist_exceptions(fn):
     # Hack to make sure otherfn is different
-    otherfn = Rn(1) if fn.size != 1 else Rn(2)
+    otherfn = odl.rn(1) if fn.size != 1 else odl.rn(2)
 
     otherx = otherfn.zero()
     x = fn.zero()
@@ -537,7 +539,7 @@ def test_dist_exceptions(fn):
 
 
 def test_pdist(exponent):
-    for fn in (Rn(3, exponent=exponent), Cn(3, exponent=exponent)):
+    for fn in (odl.rn(3, exponent=exponent), odl.cn(3, exponent=exponent)):
         [xarr, yarr], [x, y] = example_vectors(fn, n=2)
 
         correct_dist = np.linalg.norm(xarr - yarr, ord=exponent)
@@ -566,7 +568,7 @@ def test_setitem_index_error(fn):
 
 def _test_getslice(slice):
     # Validate get against python list behaviour
-    r6 = Rn(6)
+    r6 = odl.rn(6)
     y = [0, 1, 2, 3, 4, 5]
     x = r6.element(y)
 
@@ -587,7 +589,7 @@ def test_getslice():
 
 def _test_setslice(slice):
     # Validate set against python list behaviour
-    r6 = Rn(6)
+    r6 = odl.rn(6)
     z = [7, 8, 9, 10, 11, 10]
     y = [0, 1, 2, 3, 4, 5]
     x = r6.element(y)
@@ -776,31 +778,31 @@ def test_matvec_init(fn):
     op_float = MatVecOperator([[1.0, 2],
                                [-1, 0.5]])
 
-    assert isinstance(op_float.domain, Fn)
+    assert isinstance(op_float.domain, NumpyFn)
     assert op_float.domain.is_rn
-    assert isinstance(op_float.range, Fn)
+    assert isinstance(op_float.range, NumpyFn)
     assert op_float.domain.is_rn
 
     op_complex = MatVecOperator([[1.0, 2 + 1j],
                                  [-1 - 1j, 0.5]])
 
-    assert isinstance(op_complex.domain, Fn)
+    assert isinstance(op_complex.domain, NumpyFn)
     assert op_complex.domain.is_cn
-    assert isinstance(op_complex.range, Fn)
+    assert isinstance(op_complex.range, NumpyFn)
     assert op_complex.domain.is_cn
 
     op_int = MatVecOperator([[1, 2],
                              [-1, 0]])
 
-    assert isinstance(op_int.domain, Fn)
+    assert isinstance(op_int.domain, NumpyFn)
     assert op_int.domain.dtype == int
-    assert isinstance(op_int.range, Fn)
+    assert isinstance(op_int.range, NumpyFn)
     assert op_int.domain.dtype == int
 
     # Rectangular
     rect_mat = 2 * np.eye(2, 3)
-    r2 = Rn(2)
-    r3 = Rn(3)
+    r2 = odl.rn(2)
+    r3 = odl.rn(3)
 
     MatVecOperator(rect_mat, r3, r2)
 
@@ -814,11 +816,11 @@ def test_matvec_init(fn):
         MatVecOperator(rect_mat, r2, r3)
 
     # Rn to Cn okay
-    MatVecOperator(rect_mat, r3, Cn(2))
+    MatVecOperator(rect_mat, r3, odl.cn(2))
 
     # Cn to Rn not okay (no safe cast)
     with pytest.raises(TypeError):
-        MatVecOperator(rect_mat, Cn(3), r2)
+        MatVecOperator(rect_mat, odl.cn(3), r2)
 
     # Complex matrix between real spaces not okay
     rect_complex_mat = rect_mat + 1j
@@ -833,8 +835,8 @@ def test_matvec_init(fn):
 def test_matvec_simple_properties():
     # Matrix - always ndarray in for dense input, scipy.sparse.spmatrix else
     rect_mat = 2 * np.eye(2, 3)
-    r2 = Rn(2)
-    r3 = Rn(3)
+    r2 = odl.rn(2)
+    r3 = odl.rn(3)
 
     op = MatVecOperator(rect_mat, r3, r2)
     assert isinstance(op.matrix, np.ndarray)
@@ -846,8 +848,8 @@ def test_matvec_simple_properties():
     assert isinstance(op.matrix, np.ndarray)
     assert not op.matrix_issparse
 
-    sparse_mat = _sparse_matrix(Rn(5))
-    op = MatVecOperator(sparse_mat, Rn(5), Rn(5))
+    sparse_mat = _sparse_matrix(odl.rn(5))
+    op = MatVecOperator(sparse_mat, odl.rn(5), odl.rn(5))
     assert isinstance(op.matrix, sp.sparse.spmatrix)
     assert op.matrix_issparse
 
@@ -866,8 +868,8 @@ def test_matvec_adjoint(fn):
 
     # Rectangular case
     rect_mat = 2 * np.eye(2, 3)
-    r2, r3 = Rn(2), Rn(3)
-    c2 = Cn(2)
+    r2, r3 = odl.rn(2), odl.rn(3)
+    c2 = odl.cn(2)
 
     op = MatVecOperator(rect_mat, r3, r2)
     op_adj = op.adjoint
@@ -912,7 +914,7 @@ def test_matvec_call(fn):
 
     # Rectangular case
     rect_mat = 2 * np.eye(2, 3)
-    r2, r3 = Rn(2), Rn(3)
+    r2, r3 = odl.rn(2), odl.rn(3)
 
     op = MatVecOperator(rect_mat, r3, r2)
     xarr = np.arange(3, dtype=float)
@@ -938,40 +940,40 @@ def test_matrix_init(fn, exponent):
     dense_mat = _dense_matrix(fn)
 
     # Just test if the code runs
-    FnMatrixWeighting(dense_mat, exponent=exponent)
+    NumpyFnMatrixWeighting(dense_mat, exponent=exponent)
     if exponent in (1.0, 2.0, float('inf')):
-        FnMatrixWeighting(sparse_mat, exponent=exponent)
+        NumpyFnMatrixWeighting(sparse_mat, exponent=exponent)
     else:
         with pytest.raises(NotImplementedError):
-            FnMatrixWeighting(sparse_mat, exponent=exponent)
+            NumpyFnMatrixWeighting(sparse_mat, exponent=exponent)
 
     nonsquare_mat = np.eye(10, 5)
     with pytest.raises(ValueError):
-        FnMatrixWeighting(nonsquare_mat)
+        NumpyFnMatrixWeighting(nonsquare_mat)
 
 
 def test_matrix_matrix():
-    fn = Rn(5)
+    fn = odl.rn(5)
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
 
-    w_sparse = FnMatrixWeighting(sparse_mat)
-    w_dense = FnMatrixWeighting(dense_mat)
+    w_sparse = NumpyFnMatrixWeighting(sparse_mat)
+    w_dense = NumpyFnMatrixWeighting(dense_mat)
 
     assert isinstance(w_sparse.matrix, sp.sparse.spmatrix)
     assert isinstance(w_dense.matrix, np.ndarray)
 
 
 def test_matrix_is_valid():
-    fn = Rn(5)
+    fn = odl.rn(5)
     sparse_mat = _sparse_matrix(fn)
     dense_mat = _dense_matrix(fn)
     bad_mat = np.eye(5)
     bad_mat[0, 0] = 0
 
-    w_sparse = FnMatrixWeighting(sparse_mat)
-    w_dense = FnMatrixWeighting(dense_mat)
-    w_bad = FnMatrixWeighting(bad_mat)
+    w_sparse = NumpyFnMatrixWeighting(sparse_mat)
+    w_dense = NumpyFnMatrixWeighting(dense_mat)
+    w_bad = NumpyFnMatrixWeighting(bad_mat)
 
     with pytest.raises(NotImplementedError):
         w_sparse.is_valid()
@@ -988,16 +990,16 @@ def test_matrix_equals(fn, exponent):
     different_dense_mat[0, 0] -= 1
 
     if exponent in (1.0, 2.0, float('inf')):
-        w_sparse = FnMatrixWeighting(sparse_mat, exponent=exponent)
-        w_sparse2 = FnMatrixWeighting(sparse_mat, exponent=exponent)
-    w_sparse_as_dense = FnMatrixWeighting(sparse_mat_as_dense,
-                                          exponent=exponent)
-    w_dense = FnMatrixWeighting(dense_mat, exponent=exponent)
-    w_dense2 = FnMatrixWeighting(dense_mat, exponent=exponent)
-    w_different_mat = FnMatrixWeighting(different_dense_mat,
-                                        exponent=exponent)
+        w_sparse = NumpyFnMatrixWeighting(sparse_mat, exponent=exponent)
+        w_sparse2 = NumpyFnMatrixWeighting(sparse_mat, exponent=exponent)
+    w_sparse_as_dense = NumpyFnMatrixWeighting(sparse_mat_as_dense,
+                                               exponent=exponent)
+    w_dense = NumpyFnMatrixWeighting(dense_mat, exponent=exponent)
+    w_dense2 = NumpyFnMatrixWeighting(dense_mat, exponent=exponent)
+    w_different_mat = NumpyFnMatrixWeighting(different_dense_mat,
+                                             exponent=exponent)
     diff_exp = exponent + 1 if np.isfinite(exponent) else 1
-    w_different_exp = FnMatrixWeighting(dense_mat, exponent=diff_exp)
+    w_different_exp = NumpyFnMatrixWeighting(dense_mat, exponent=diff_exp)
 
     # Identical objects -> True
     assert w_dense == w_dense
@@ -1016,19 +1018,19 @@ def test_matrix_equals(fn, exponent):
 
 
 def test_matrix_equiv():
-    fn = Rn(5)
+    fn = odl.rn(5)
     sparse_mat = _sparse_matrix(fn)
     sparse_mat_as_dense = sparse_mat.todense()
     dense_mat = _dense_matrix(fn)
     different_dense_mat = dense_mat.copy()
     different_dense_mat[0, 0] = -10
 
-    w_sparse = FnMatrixWeighting(sparse_mat)
-    w_sparse2 = FnMatrixWeighting(sparse_mat)
-    w_sparse_as_dense = FnMatrixWeighting(sparse_mat_as_dense)
-    w_dense = FnMatrixWeighting(dense_mat)
-    w_dense_copy = FnMatrixWeighting(dense_mat.copy())
-    w_different_dense = FnMatrixWeighting(different_dense_mat)
+    w_sparse = NumpyFnMatrixWeighting(sparse_mat)
+    w_sparse2 = NumpyFnMatrixWeighting(sparse_mat)
+    w_sparse_as_dense = NumpyFnMatrixWeighting(sparse_mat_as_dense)
+    w_dense = NumpyFnMatrixWeighting(dense_mat)
+    w_dense_copy = NumpyFnMatrixWeighting(dense_mat.copy())
+    w_different_dense = NumpyFnMatrixWeighting(different_dense_mat)
 
     # Equal -> True
     assert w_sparse.equiv(w_sparse)
@@ -1041,20 +1043,20 @@ def test_matrix_equiv():
 
     # Test shortcuts
     sparse_eye = sp.sparse.eye(5)
-    w_eye = FnMatrixWeighting(sparse_eye)
-    w_dense_eye = FnMatrixWeighting(sparse_eye.todense())
-    w_eye_vec = FnVectorWeighting(np.ones(5))
+    w_eye = NumpyFnMatrixWeighting(sparse_eye)
+    w_dense_eye = NumpyFnMatrixWeighting(sparse_eye.todense())
+    w_eye_vec = NumpyFnVectorWeighting(np.ones(5))
 
-    w_eye_wrong_exp = FnMatrixWeighting(sparse_eye, exponent=1)
+    w_eye_wrong_exp = NumpyFnMatrixWeighting(sparse_eye, exponent=1)
 
     sparse_smaller_eye = sp.sparse.eye(4)
-    w_smaller_eye = FnMatrixWeighting(sparse_smaller_eye)
+    w_smaller_eye = NumpyFnMatrixWeighting(sparse_smaller_eye)
 
     sparse_shifted_eye = sp.sparse.eye(5, k=1)
-    w_shifted_eye = FnMatrixWeighting(sparse_shifted_eye)
+    w_shifted_eye = NumpyFnMatrixWeighting(sparse_shifted_eye)
 
     sparse_almost_eye = sp.sparse.dia_matrix((np.ones(4), [0]), (5, 5))
-    w_almost_eye = FnMatrixWeighting(sparse_almost_eye)
+    w_almost_eye = NumpyFnMatrixWeighting(sparse_almost_eye)
 
     assert w_eye.equiv(w_dense_eye)
     assert w_dense_eye.equiv(w_eye)
@@ -1080,19 +1082,19 @@ def test_matrix_inner(fn):
     true_inner_sparse = np.vdot(yarr, np.dot(sparse_mat_as_dense, xarr))
     true_inner_dense = np.vdot(yarr, np.dot(dense_mat, xarr))
 
-    w_sparse = FnMatrixWeighting(sparse_mat)
-    w_dense = FnMatrixWeighting(dense_mat)
+    w_sparse = NumpyFnMatrixWeighting(sparse_mat)
+    w_dense = NumpyFnMatrixWeighting(dense_mat)
     assert almost_equal(w_sparse.inner(x, y), true_inner_sparse)
     assert almost_equal(w_dense.inner(x, y), true_inner_dense)
 
     # With free functions
-    w_sparse_inner = weighted_inner(sparse_mat)
-    w_dense_inner = weighted_inner(dense_mat)
+    w_sparse_inner = npy_weighted_inner(sparse_mat)
+    w_dense_inner = npy_weighted_inner(dense_mat)
     assert almost_equal(w_sparse_inner(x, y), true_inner_sparse)
     assert almost_equal(w_dense_inner(x, y), true_inner_dense)
 
     # Exponent != 2 -> no inner
-    w_dense = FnMatrixWeighting(dense_mat, exponent=1)
+    w_dense = NumpyFnMatrixWeighting(dense_mat, exponent=1)
     with pytest.raises(NotImplementedError):
         w_dense.inner(x, y)
 
@@ -1126,21 +1128,21 @@ def test_matrix_norm(fn, exponent):
 
     # Test weighting
     if exponent in (1.0, 2.0, float('inf')):
-        w_sparse = FnMatrixWeighting(sparse_mat, exponent=exponent)
+        w_sparse = NumpyFnMatrixWeighting(sparse_mat, exponent=exponent)
         assert almost_equal(w_sparse.norm(x), true_norm_sparse)
 
-    w_dense = FnMatrixWeighting(dense_mat, exponent=exponent)
+    w_dense = NumpyFnMatrixWeighting(dense_mat, exponent=exponent)
     assert almost_equal(w_dense.norm(x), true_norm_dense)
 
     # With free functions
     if exponent not in (1.0, 2.0, float('inf')):
         with pytest.raises(NotImplementedError):
-            weighted_norm(sparse_mat, exponent=exponent)
+            npy_weighted_norm(sparse_mat, exponent=exponent)
     else:
-        w_sparse_norm = weighted_norm(sparse_mat, exponent=exponent)
+        w_sparse_norm = npy_weighted_norm(sparse_mat, exponent=exponent)
         assert almost_equal(w_sparse_norm(x), true_norm_sparse)
 
-    w_dense_norm = weighted_norm(dense_mat, exponent=exponent)
+    w_dense_norm = npy_weighted_norm(dense_mat, exponent=exponent)
     assert almost_equal(w_dense_norm(x), true_norm_dense)
 
 
@@ -1174,18 +1176,18 @@ def test_matrix_dist(fn, exponent):
                                          ord=exponent)
 
     if exponent in (1.0, 2.0, float('inf')):
-        w_sparse = FnMatrixWeighting(sparse_mat, exponent=exponent)
+        w_sparse = NumpyFnMatrixWeighting(sparse_mat, exponent=exponent)
         assert almost_equal(w_sparse.dist(x, y), true_dist_sparse)
 
-    w_dense = FnMatrixWeighting(dense_mat, exponent=exponent)
+    w_dense = NumpyFnMatrixWeighting(dense_mat, exponent=exponent)
     assert almost_equal(w_dense.dist(x, y), true_dist_dense)
 
     # With free functions
     if exponent in (1.0, 2.0, float('inf')):
-        w_sparse_dist = weighted_dist(sparse_mat, exponent=exponent)
+        w_sparse_dist = npy_weighted_dist(sparse_mat, exponent=exponent)
         assert almost_equal(w_sparse_dist(x, y), true_dist_sparse)
 
-    w_dense_dist = weighted_dist(dense_mat, exponent=exponent)
+    w_dense_dist = npy_weighted_dist(dense_mat, exponent=exponent)
     assert almost_equal(w_dense_dist(x, y), true_dist_dense)
 
 
@@ -1193,7 +1195,7 @@ def test_matrix_dist_using_inner(fn):
     [xarr, yarr], [x, y] = example_vectors(fn, 2)
     mat = _dense_matrix(fn)
 
-    w = FnMatrixWeighting(mat, dist_using_inner=True)
+    w = NumpyFnMatrixWeighting(mat, dist_using_inner=True)
 
     true_dist = np.sqrt(np.vdot(xarr - yarr, np.dot(mat, xarr - yarr)))
     # Using 3 places (single precision default) since the result is always
@@ -1202,57 +1204,57 @@ def test_matrix_dist_using_inner(fn):
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
-        FnMatrixWeighting(mat, exponent=1, dist_using_inner=True)
+        NumpyFnMatrixWeighting(mat, exponent=1, dist_using_inner=True)
 
     # With free function
-    w_dist = weighted_dist(mat, use_inner=True)
+    w_dist = npy_weighted_dist(mat, use_inner=True)
     assert almost_equal(w_dist(x, y), true_dist)
 
 
 def test_vector_init(exponent):
-    rn = Rn(5)
+    rn = odl.rn(5)
     weight_vec = _pos_array(rn)
 
-    FnVectorWeighting(weight_vec, exponent=exponent)
-    FnVectorWeighting(rn.element(weight_vec), exponent=exponent)
+    NumpyFnVectorWeighting(weight_vec, exponent=exponent)
+    NumpyFnVectorWeighting(rn.element(weight_vec), exponent=exponent)
 
 
 def test_vector_vector():
-    rn = Rn(5)
+    rn = odl.rn(5)
     weight_vec = _pos_array(rn)
     weight_elem = rn.element(weight_vec)
 
-    weighting_vec = FnVectorWeighting(weight_vec)
-    weighting_elem = FnVectorWeighting(weight_elem)
+    weighting_vec = NumpyFnVectorWeighting(weight_vec)
+    weighting_elem = NumpyFnVectorWeighting(weight_elem)
 
     assert isinstance(weighting_vec.vector, np.ndarray)
-    assert isinstance(weighting_elem.vector, FnVector)
+    assert isinstance(weighting_elem.vector, NumpyFnVector)
 
 
 def test_vector_is_valid():
-    rn = Rn(5)
+    rn = odl.rn(5)
     weight_vec = _pos_array(rn)
-    weighting_vec = FnVectorWeighting(weight_vec)
+    weighting_vec = NumpyFnVectorWeighting(weight_vec)
 
     assert weighting_vec.is_valid()
 
     # Invalid
     weight_vec[0] = 0
-    weighting_vec = FnVectorWeighting(weight_vec)
+    weighting_vec = NumpyFnVectorWeighting(weight_vec)
     assert not weighting_vec.is_valid()
 
 
 def test_vector_equals():
-    rn = Rn(5)
+    rn = odl.rn(5)
     weight_vec = _pos_array(rn)
     weight_elem = rn.element(weight_vec)
 
-    weighting_vec = FnVectorWeighting(weight_vec)
-    weighting_vec2 = FnVectorWeighting(weight_vec)
-    weighting_elem = FnVectorWeighting(weight_elem)
-    weighting_elem2 = FnVectorWeighting(weight_elem)
-    weighting_other_vec = FnVectorWeighting(weight_vec - 1)
-    weighting_other_exp = FnVectorWeighting(weight_vec - 1, exponent=1)
+    weighting_vec = NumpyFnVectorWeighting(weight_vec)
+    weighting_vec2 = NumpyFnVectorWeighting(weight_vec)
+    weighting_elem = NumpyFnVectorWeighting(weight_elem)
+    weighting_elem2 = NumpyFnVectorWeighting(weight_elem)
+    weighting_other_vec = NumpyFnVectorWeighting(weight_vec - 1)
+    weighting_other_exp = NumpyFnVectorWeighting(weight_vec - 1, exponent=1)
 
     assert weighting_vec == weighting_vec2
     assert weighting_vec != weighting_elem
@@ -1262,16 +1264,16 @@ def test_vector_equals():
 
 
 def test_vector_equiv():
-    rn = Rn(5)
+    rn = odl.rn(5)
     weight_vec = _pos_array(rn)
     weight_elem = rn.element(weight_vec)
     diag_mat = weight_vec * np.eye(5)
     different_vec = weight_vec - 1
 
-    w_vec = FnVectorWeighting(weight_vec)
-    w_elem = FnVectorWeighting(weight_elem)
-    w_diag_mat = FnMatrixWeighting(diag_mat)
-    w_different_vec = FnVectorWeighting(different_vec)
+    w_vec = NumpyFnVectorWeighting(weight_vec)
+    w_elem = NumpyFnVectorWeighting(weight_elem)
+    w_diag_mat = NumpyFnMatrixWeighting(diag_mat)
+    w_different_vec = NumpyFnVectorWeighting(different_vec)
 
     # Equal -> True
     assert w_vec.equiv(w_vec)
@@ -1284,10 +1286,10 @@ def test_vector_equiv():
     # Test shortcuts
     const_vec = np.ones(5) * 1.5
 
-    w_vec = FnVectorWeighting(const_vec)
-    w_const = FnConstWeighting(1.5)
-    w_wrong_const = FnConstWeighting(1)
-    w_wrong_exp = FnConstWeighting(1.5, exponent=1)
+    w_vec = NumpyFnVectorWeighting(const_vec)
+    w_const = NumpyFnConstWeighting(1.5)
+    w_wrong_const = NumpyFnConstWeighting(1)
+    w_wrong_exp = NumpyFnConstWeighting(1.5, exponent=1)
 
     assert w_vec.equiv(w_const)
     assert not w_vec.equiv(w_wrong_const)
@@ -1303,27 +1305,27 @@ def test_vector_inner(fn):
     [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     weight_vec = _pos_array(fn)
-    weighting_vec = FnVectorWeighting(weight_vec)
+    weighting_vec = NumpyFnVectorWeighting(weight_vec)
 
     true_inner = np.vdot(yarr, xarr * weight_vec)
 
     assert almost_equal(weighting_vec.inner(x, y), true_inner)
 
     # With free function
-    inner_vec = weighted_inner(weight_vec)
+    inner_vec = npy_weighted_inner(weight_vec)
 
     assert almost_equal(inner_vec(x, y), true_inner)
 
     # Exponent != 2 -> no inner product, should raise
     with pytest.raises(NotImplementedError):
-        FnVectorWeighting(weight_vec, exponent=1.0).inner(x, y)
+        NumpyFnVectorWeighting(weight_vec, exponent=1.0).inner(x, y)
 
 
 def test_vector_norm(fn, exponent):
     xarr, x = example_vectors(fn)
 
     weight_vec = _pos_array(fn)
-    weighting_vec = FnVectorWeighting(weight_vec, exponent=exponent)
+    weighting_vec = NumpyFnVectorWeighting(weight_vec, exponent=exponent)
 
     if exponent == float('inf'):
         true_norm = np.linalg.norm(weight_vec * xarr, ord=float('inf'))
@@ -1334,7 +1336,7 @@ def test_vector_norm(fn, exponent):
     assert almost_equal(weighting_vec.norm(x), true_norm)
 
     # With free function
-    pnorm_vec = weighted_norm(weight_vec, exponent=exponent)
+    pnorm_vec = npy_weighted_norm(weight_vec, exponent=exponent)
     assert almost_equal(pnorm_vec(x), true_norm)
 
 
@@ -1342,7 +1344,7 @@ def test_vector_dist(fn, exponent):
     [xarr, yarr], [x, y] = example_vectors(fn, n=2)
 
     weight_vec = _pos_array(fn)
-    weighting_vec = FnVectorWeighting(weight_vec, exponent=exponent)
+    weighting_vec = NumpyFnVectorWeighting(weight_vec, exponent=exponent)
 
     if exponent == float('inf'):
         true_dist = np.linalg.norm(
@@ -1354,7 +1356,7 @@ def test_vector_dist(fn, exponent):
     assert almost_equal(weighting_vec.dist(x, y), true_dist)
 
     # With free function
-    pdist_vec = weighted_dist(weight_vec, exponent=exponent)
+    pdist_vec = npy_weighted_dist(weight_vec, exponent=exponent)
     assert almost_equal(pdist_vec(x, y), true_dist)
 
 
@@ -1362,7 +1364,7 @@ def test_vector_dist_using_inner(fn):
     [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     weight_vec = _pos_array(fn)
-    w = FnVectorWeighting(weight_vec)
+    w = NumpyFnVectorWeighting(weight_vec)
 
     true_dist = np.linalg.norm(np.sqrt(weight_vec) * (xarr - yarr))
     # Using 3 places (single precision default) since the result is always
@@ -1371,10 +1373,10 @@ def test_vector_dist_using_inner(fn):
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
-        FnVectorWeighting(weight_vec, exponent=1, dist_using_inner=True)
+        NumpyFnVectorWeighting(weight_vec, exponent=1, dist_using_inner=True)
 
     # With free function
-    w_dist = weighted_dist(weight_vec, use_inner=True)
+    w_dist = npy_weighted_dist(weight_vec, use_inner=True)
     assert almost_equal(w_dist(x, y), true_dist, places=3)
 
 
@@ -1382,30 +1384,30 @@ def test_constant_init(exponent):
     constant = 1.5
 
     # Just test if the code runs
-    FnConstWeighting(constant, exponent=exponent)
+    NumpyFnConstWeighting(constant, exponent=exponent)
 
     with pytest.raises(ValueError):
-        FnConstWeighting(0)
+        NumpyFnConstWeighting(0)
     with pytest.raises(ValueError):
-        FnConstWeighting(-1)
+        NumpyFnConstWeighting(-1)
     with pytest.raises(ValueError):
-        FnConstWeighting(float('inf'))
+        NumpyFnConstWeighting(float('inf'))
 
 
 def test_constant_equals():
     n = 10
     constant = 1.5
 
-    w_const = FnConstWeighting(constant)
-    w_const2 = FnConstWeighting(constant)
-    w_other_const = FnConstWeighting(constant + 1)
-    w_other_exp = FnConstWeighting(constant, exponent=1)
+    w_const = NumpyFnConstWeighting(constant)
+    w_const2 = NumpyFnConstWeighting(constant)
+    w_other_const = NumpyFnConstWeighting(constant + 1)
+    w_other_exp = NumpyFnConstWeighting(constant, exponent=1)
 
     const_sparse_mat = sp.sparse.dia_matrix(([constant] * n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
-    w_matrix_sp = FnMatrixWeighting(const_sparse_mat)
-    w_matrix_de = FnMatrixWeighting(const_dense_mat)
+    w_matrix_sp = NumpyFnMatrixWeighting(const_sparse_mat)
+    w_matrix_de = NumpyFnMatrixWeighting(const_dense_mat)
 
     assert w_const == w_const
     assert w_const == w_const2
@@ -1423,14 +1425,14 @@ def test_constant_equiv():
     n = 10
     constant = 1.5
 
-    w_const = FnConstWeighting(constant)
-    w_const2 = FnConstWeighting(constant)
+    w_const = NumpyFnConstWeighting(constant)
+    w_const2 = NumpyFnConstWeighting(constant)
 
     const_sparse_mat = sp.sparse.dia_matrix(([constant] * n, [0]),
                                             shape=(n, n))
     const_dense_mat = constant * np.eye(n)
-    w_matrix_sp = FnMatrixWeighting(const_sparse_mat)
-    w_matrix_de = FnMatrixWeighting(const_dense_mat)
+    w_matrix_sp = NumpyFnMatrixWeighting(const_sparse_mat)
+    w_matrix_de = NumpyFnMatrixWeighting(const_dense_mat)
 
     # Equal -> True
     assert w_const.equiv(w_const)
@@ -1439,7 +1441,7 @@ def test_constant_equiv():
     assert w_const.equiv(w_matrix_sp)
     assert w_const.equiv(w_matrix_de)
 
-    w_different_const = FnConstWeighting(2.5)
+    w_different_const = NumpyFnConstWeighting(2.5)
     assert not w_const.equiv(w_different_const)
 
     # Bogus input
@@ -1454,11 +1456,11 @@ def test_constant_inner(fn):
     constant = 1.5
     true_result_const = constant * np.vdot(yarr, xarr)
 
-    w_const = FnConstWeighting(constant)
+    w_const = NumpyFnConstWeighting(constant)
     assert almost_equal(w_const.inner(x, y), true_result_const)
 
     # Exponent != 2 -> no inner
-    w_const = FnConstWeighting(constant, exponent=1)
+    w_const = NumpyFnConstWeighting(constant, exponent=1)
     with pytest.raises(NotImplementedError):
         w_const.inner(x, y)
 
@@ -1473,11 +1475,11 @@ def test_constant_norm(fn, exponent):
         factor = constant ** (1 / exponent)
     true_norm = factor * np.linalg.norm(xarr, ord=exponent)
 
-    w_const = FnConstWeighting(constant, exponent=exponent)
+    w_const = NumpyFnConstWeighting(constant, exponent=exponent)
     assert almost_equal(w_const.norm(x), true_norm)
 
     # With free function
-    w_const_norm = weighted_norm(constant, exponent=exponent)
+    w_const_norm = npy_weighted_norm(constant, exponent=exponent)
     assert almost_equal(w_const_norm(x), true_norm)
 
 
@@ -1491,11 +1493,11 @@ def test_constant_dist(fn, exponent):
         factor = constant ** (1 / exponent)
     true_dist = factor * np.linalg.norm(xarr - yarr, ord=exponent)
 
-    w_const = FnConstWeighting(constant, exponent=exponent)
+    w_const = NumpyFnConstWeighting(constant, exponent=exponent)
     assert almost_equal(w_const.dist(x, y), true_dist)
 
     # With free function
-    w_const_dist = weighted_dist(constant, exponent=exponent)
+    w_const_dist = npy_weighted_dist(constant, exponent=exponent)
     assert almost_equal(w_const_dist(x, y), true_dist)
 
 
@@ -1503,7 +1505,7 @@ def test_const_dist_using_inner(fn):
     [xarr, yarr], [x, y] = example_vectors(fn, 2)
 
     constant = 1.5
-    w = FnConstWeighting(constant)
+    w = NumpyFnConstWeighting(constant)
 
     true_dist = np.sqrt(constant) * np.linalg.norm(xarr - yarr)
     # Using 3 places (single precision default) since the result is always
@@ -1512,22 +1514,22 @@ def test_const_dist_using_inner(fn):
 
     # Only possible for exponent=2
     with pytest.raises(ValueError):
-        FnConstWeighting(constant, exponent=1, dist_using_inner=True)
+        NumpyFnConstWeighting(constant, exponent=1, dist_using_inner=True)
 
     # With free function
-    w_dist = weighted_dist(constant, use_inner=True)
+    w_dist = npy_weighted_dist(constant, use_inner=True)
     assert almost_equal(w_dist(x, y), true_dist, places=3)
 
 
 def test_noweight():
-    w = FnNoWeighting()
-    w_same1 = FnNoWeighting()
-    w_same2 = FnNoWeighting(2)
-    w_same3 = FnNoWeighting(2, False)
-    w_same4 = FnNoWeighting(2, dist_using_inner=False)
-    w_same5 = FnNoWeighting(exponent=2, dist_using_inner=False)
-    w_other_exp = FnNoWeighting(exponent=1)
-    w_dist_inner = FnNoWeighting(dist_using_inner=True)
+    w = NumpyFnNoWeighting()
+    w_same1 = NumpyFnNoWeighting()
+    w_same2 = NumpyFnNoWeighting(2)
+    w_same3 = NumpyFnNoWeighting(2, False)
+    w_same4 = NumpyFnNoWeighting(2, dist_using_inner=False)
+    w_same5 = NumpyFnNoWeighting(exponent=2, dist_using_inner=False)
+    w_other_exp = NumpyFnNoWeighting(exponent=1)
+    w_dist_inner = NumpyFnNoWeighting(dist_using_inner=True)
 
     # Singleton pattern
     for same in (w_same1, w_same2, w_same3, w_same4, w_same5):
@@ -1546,10 +1548,10 @@ def test_custom_inner(fn):
     def inner(x, y):
         return np.vdot(y, x)
 
-    w = FnCustomInnerProduct(inner)
-    w_same = FnCustomInnerProduct(inner)
-    w_other = FnCustomInnerProduct(np.dot)
-    w_d = FnCustomInnerProduct(inner, dist_using_inner=False)
+    w = NumpyFnCustomInnerProduct(inner)
+    w_same = NumpyFnCustomInnerProduct(inner)
+    w_other = NumpyFnCustomInnerProduct(np.dot)
+    w_d = NumpyFnCustomInnerProduct(inner, dist_using_inner=False)
 
     assert w == w
     assert w == w_same
@@ -1569,7 +1571,7 @@ def test_custom_inner(fn):
     assert almost_equal(w_d.dist(x, y), true_dist)
 
     with pytest.raises(TypeError):
-        FnCustomInnerProduct(1)
+        NumpyFnCustomInnerProduct(1)
 
 
 def test_custom_norm(fn):
@@ -1580,9 +1582,9 @@ def test_custom_norm(fn):
     def other_norm(x):
         return np.linalg.norm(x, ord=1)
 
-    w = FnCustomNorm(norm)
-    w_same = FnCustomNorm(norm)
-    w_other = FnCustomNorm(other_norm)
+    w = NumpyFnCustomNorm(norm)
+    w_same = NumpyFnCustomNorm(norm)
+    w_other = NumpyFnCustomNorm(other_norm)
 
     assert w == w
     assert w == w_same
@@ -1598,7 +1600,7 @@ def test_custom_norm(fn):
     assert almost_equal(w.dist(x, y), true_dist)
 
     with pytest.raises(TypeError):
-        FnCustomNorm(1)
+        NumpyFnCustomNorm(1)
 
 
 def test_custom_dist(fn):
@@ -1610,9 +1612,9 @@ def test_custom_dist(fn):
     def other_dist(x, y):
         return np.linalg.norm(x - y, ord=1)
 
-    w = FnCustomDist(dist)
-    w_same = FnCustomDist(dist)
-    w_other = FnCustomDist(other_dist)
+    w = NumpyFnCustomDist(dist)
+    w_same = NumpyFnCustomDist(dist)
+    w_other = NumpyFnCustomDist(other_dist)
 
     assert w == w
     assert w == w_same
@@ -1628,7 +1630,7 @@ def test_custom_dist(fn):
     assert almost_equal(w.dist(x, y), true_dist)
 
     with pytest.raises(TypeError):
-        FnCustomDist(1)
+        NumpyFnCustomDist(1)
 
 
 def test_ufuncs(fn, ufunc):
@@ -1714,7 +1716,7 @@ def _impl_test_reduction(fn, name):
 
 
 def test_reductions():
-    fn = Rn(3)
+    fn = odl.rn(3)
 
     for name, _ in REDUCTIONS:
         yield _impl_test_reduction, fn, name
