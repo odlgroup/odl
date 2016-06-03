@@ -20,7 +20,6 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-from future.utils import raise_from
 standard_library.install_aliases()
 from builtins import super, str
 
@@ -286,12 +285,24 @@ class DiscreteLp(DiscretizedSpace):
         else:
             # Sequence-type input
             arr = np.asarray(inp, dtype=self.dtype, order=self.order)
-            if arr.ndim > 1 and arr.shape != self.shape:
+            input_shape = arr.shape
+
+            # Attempt to handle some cases with exact match
+            if arr.ndim > 1 and self.ndim == 1:
                 arr = np.squeeze(arr)  # Squeeze could solve the problem
                 if arr.shape != self.shape:
                     raise ValueError(
-                        'input shape {} does not match grid shape {}.'
-                        ''.format(arr.shape, self.shape))
+                        'input shape {} does not match grid shape {}'
+                        ''.format(input_shape, self.shape))
+            elif arr.shape != self.shape and arr.ndim == self.ndim:
+                # Try to broadcast the array if possible
+                try:
+                    arr = np.broadcast_to(arr, self.shape)
+                except AttributeError:
+                    # The above requires numpy 1.10, fallback impl else
+                    shape = [m if n == 1 and m != 1 else 1
+                             for n, m in zip(arr.shape, self.shape)]
+                    arr = arr + np.zeros(shape, dtype=arr.dtype)
             arr = arr.ravel(order=self.order)
             return self.element_type(self, self.dspace.element(arr))
 
