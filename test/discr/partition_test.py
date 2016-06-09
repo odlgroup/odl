@@ -313,11 +313,13 @@ def test_uniform_partition_fromgrid():
 
 
 def test_uniform_partition():
-    # Testing just the standard case, everything else is covered by
-    # odl.uniform_partition_frominterv
+
     begin = [0, 0]
     end = [1, 2]
     nsamp = (4, 10)
+    csides = [0.25, 0.2]
+
+    # Test standard case
     part = odl.uniform_partition(begin, end, nsamp, nodes_on_bdry=True)
 
     assert all_equal(part.begin, begin)
@@ -334,6 +336,89 @@ def test_uniform_partition():
     assert part[1:, 2:5].is_regular
     assert part[1:, ::3].is_regular
 
+    # Test combinations of parameters
+    true_part = odl.uniform_partition(begin, end, nsamp, nodes_on_bdry=False)
+    part = odl.uniform_partition(begin=begin, end=end, num_nodes=nsamp,
+                                 cell_sides=None)
+    assert part == true_part
+    part = odl.uniform_partition(begin=begin, end=end, num_nodes=None,
+                                 cell_sides=csides)
+    assert part == true_part
+    part = odl.uniform_partition(begin=begin, end=None,
+                                 num_nodes=nsamp, cell_sides=csides)
+    assert part == true_part
+    part = odl.uniform_partition(begin=None, end=end, num_nodes=nsamp,
+                                 cell_sides=csides)
+    assert part == true_part
+    part = odl.uniform_partition(begin=begin, end=end, num_nodes=nsamp,
+                                 cell_sides=csides)
+    assert part == true_part
+
+    # Test parameters per axis
+    part = odl.uniform_partition(
+        begin=[0, None], end=[None, 2], num_nodes=nsamp, cell_sides=csides)
+    assert part == true_part
+    part = odl.uniform_partition(
+        begin=begin, end=[None, 2], num_nodes=(4, None), cell_sides=csides)
+    assert part == true_part
+    part = odl.uniform_partition(
+        begin=begin, end=end, num_nodes=(None, 4), cell_sides=[0.25, None])
+
+    # Test robustness against numerical error
+    part = odl.uniform_partition(
+        begin=begin, end=[None, np.sqrt(2) ** 2], num_nodes=nsamp,
+        cell_sides=[0.25, np.log(np.exp(0.2))])
+    assert part.approx_equals(true_part, atol=1e-8)
+
+    # Test nodes_on_bdry
+    # Here we compute stuff, so we can only expect approximate equality
+    csides = [1 / 3., 2 / 9.5]
+    true_part = odl.uniform_partition(begin, end, nsamp,
+                                      nodes_on_bdry=(True, (False, True)))
+    part = odl.uniform_partition(
+        begin=[0, None], end=[None, 2], num_nodes=nsamp,
+        cell_sides=csides, nodes_on_bdry=(True, (False, True)))
+    assert part.approx_equals(true_part, atol=1e-8)
+    part = odl.uniform_partition(
+        begin=begin, end=[None, 2], num_nodes=(4, None), cell_sides=csides,
+        nodes_on_bdry=(True, (False, True)))
+    assert part.approx_equals(true_part, atol=1e-8)
+    part = odl.uniform_partition(
+        begin=begin, end=end, num_nodes=(None, 10), cell_sides=[1 / 3., None],
+        nodes_on_bdry=(True, (False, True)))
+    assert part.approx_equals(true_part, atol=1e-8)
+
+    # Test error scenarios
+
+    # Not enough parameters (total / per axis)
+    with pytest.raises(ValueError):
+        odl.uniform_partition()
+
+    with pytest.raises(ValueError):
+        odl.uniform_partition(begin, end)
+
+    with pytest.raises(ValueError):
+        part = odl.uniform_partition(
+            begin=[0, None], end=[1, None], num_nodes=nsamp, cell_sides=csides)
+
+    with pytest.raises(ValueError):
+        part = odl.uniform_partition(
+            begin=begin, end=[1, None], num_nodes=(4, None), cell_sides=csides)
+
+    # Parameters with inconsistent sizes
+    with pytest.raises(ValueError):
+        part = odl.uniform_partition(
+            begin=begin, end=[1, None, None], num_nodes=nsamp)
+
+    # Too large rounding error in computing num_nodes
+    with pytest.raises(ValueError):
+        part = odl.uniform_partition(
+            begin=begin, end=end, cell_sides=[0.25, 0.2001])
+
+    # Inconsistent values
+    with pytest.raises(ValueError):
+        part = odl.uniform_partition(
+            begin=begin, end=end, num_nodes=nsamp, cell_sides=[0.25, 0.2001])
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

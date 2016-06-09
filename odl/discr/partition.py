@@ -591,71 +591,6 @@ def uniform_partition_fromintv(intv_prod, num_nodes, nodes_on_bdry=False):
     return RectPartition(intv_prod, grid)
 
 
-def uniform_partition(begin, end, num_nodes, nodes_on_bdry=False):
-    """Return a partition of [begin, end] with equally sized cells.
-
-    Parameters
-    ----------
-    begin, end : `array-like`
-        Vectors defining the begin end end points of an `IntervalProd`
-        (a rectangular box)
-    num_nodes : `int` or `sequence` of `int`
-        Number of nodes per axis. For 1d intervals, a single integer
-        can be specified.
-    nodes_on_bdry : `bool` or `sequence`, optional
-        If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (True) or shift it
-        by half a cell size into the interior (False). In each axis,
-        an entry may consist in a single `bool` or a 2-tuple of
-        `bool`. In the latter case, the first tuple entry decides for
-        the left, the second for the right boundary. The length of the
-        sequence must be ``array.ndim``.
-
-        A single boolean is interpreted as a global choice for all
-        boundaries.
-
-    See also
-    --------
-    uniform_partition_fromintv : partition an existing set
-    uniform_partition_fromgrid : use an existing grid as basis
-
-    Examples
-    --------
-    By default, no grid points are placed on the boundary:
-
-    >>> part = uniform_partition(0, 1, 4)
-    >>> part.cell_boundary_vecs
-    (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]),)
-    >>> part.grid.coord_vectors
-    (array([ 0.125,  0.375,  0.625,  0.875]),)
-
-    This can be changed with the nodes_on_bdry parameter:
-
-    >>> part = uniform_partition(0, 1, 3, nodes_on_bdry=True)
-    >>> part.cell_boundary_vecs
-    (array([ 0.  ,  0.25,  0.75,  1.  ]),)
-    >>> part.grid.coord_vectors
-    (array([ 0. ,  0.5,  1. ]),)
-
-    We can specify this per axis, too. In this case we choose both
-    in the first axis and only the rightmost in the second:
-
-    >>> part = uniform_partition([0, 0], [1, 1], (3, 3),
-    ...                          nodes_on_bdry=(True, (False, True)))
-    ...
-    >>> part.cell_boundary_vecs[0]  # first axis, as above
-    array([ 0.  ,  0.25,  0.75,  1.  ])
-    >>> part.grid.coord_vectors[0]
-    array([ 0. ,  0.5,  1. ])
-    >>> part.cell_boundary_vecs[1]  # second, asymmetric axis
-    array([ 0. ,  0.4,  0.8,  1. ])
-    >>> part.grid.coord_vectors[1]
-    array([ 0.2,  0.6,  1. ])
-    """
-    return uniform_partition_fromintv(
-        IntervalProd(begin, end), num_nodes, nodes_on_bdry)
-
-
 def uniform_partition_fromgrid(grid, begin=None, end=None):
     """Return a partition of an interval product based on a given grid.
 
@@ -764,6 +699,199 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
             end_vec[ax] = end_val
 
     return RectPartition(IntervalProd(begin_vec, end_vec), grid)
+
+
+def uniform_partition(begin=None, end=None, num_nodes=None,
+                      cell_sides=None, nodes_on_bdry=False):
+    """Return a partition with equally sized cells.
+
+    Parameters
+    ----------
+    begin, end : float or array-like, optional
+        Vectors defining the begin end end points of an `IntervalProd`
+        (a rectangular box). For one-dimensional partitions, single
+        floats can be provided. ``None`` entries mean "compute the value".
+    num_nodes : int or sequence of int, optional
+        Number of nodes per axis. For 1d intervals, a single integer
+        can be specified. ``None`` entries mean "compute the value".
+    cell_sides : float or array-like, optional
+        Side length of the partition cells per axis. For 1d intervals,
+        a single integer can be specified. ``None`` entries mean
+        "compute the value".
+    nodes_on_bdry : `bool` or `sequence`, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (True) or shift it
+        by half a cell size into the interior (False). In each axis,
+        an entry may consist in a single `bool` or a 2-tuple of
+        `bool`. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
+
+    Notes
+    -----
+    In each axis, 3 of the 4 possible parameters ``begin``, ``end``,
+    ``num_nodes`` and ``cell_sides`` must be given. If all four are
+    provided, they are checked for consistency.
+
+    See also
+    --------
+    uniform_partition_fromintv : partition an existing set
+    uniform_partition_fromgrid : use an existing grid as basis
+
+    Examples
+    --------
+    Any combination of three of the four parameters can be used for
+    creation of a partition:
+
+    >>> part = uniform_partition(begin=0, end=2, num_nodes=4)
+    >>> part.cell_boundary_vecs
+    (array([ 0. ,  0.5,  1. ,  1.5,  2. ]),)
+    >>> part = uniform_partition(begin=0, num_nodes=4, cell_sides=0.5)
+    >>> part.cell_boundary_vecs
+    (array([ 0. ,  0.5,  1. ,  1.5,  2. ]),)
+    >>> part = uniform_partition(end=2, num_nodes=4, cell_sides=0.5)
+    >>> part.cell_boundary_vecs
+    (array([ 0. ,  0.5,  1. ,  1.5,  2. ]),)
+    >>> part = uniform_partition(begin=0, end=2, cell_sides=0.5)
+    >>> part.cell_boundary_vecs
+    (array([ 0. ,  0.5,  1. ,  1.5,  2. ]),)
+
+    In higher dimensions, the parameters can be given differently in
+    each axis. Where None is given, the value will be computed:
+
+    >>> part = uniform_partition(begin=[0, 0], end=[1, 2],
+    ...                          num_nodes=[4, 2])
+    >>> part.cell_boundary_vecs
+    (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]), array([ 0.,  1.,  2.]))
+    >>> part = uniform_partition(begin=[0, 0], end=[1, 2],
+    ...                          num_nodes=[None, 2],
+    ...                          cell_sides=[0.25, None])
+    >>> part.cell_boundary_vecs
+    (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]), array([ 0.,  1.,  2.]))
+    >>> part = uniform_partition(begin=[0, None], end=[None, 2],
+    ...                          num_nodes=[4, 2],
+    ...                          cell_sides=[0.25, 1])
+    >>> part.cell_boundary_vecs
+    (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]), array([ 0.,  1.,  2.]))
+
+    By default, no grid points are placed on the boundary:
+
+    >>> part = uniform_partition(0, 1, 4)
+    >>> part.cell_boundary_vecs
+    (array([ 0.  ,  0.25,  0.5 ,  0.75,  1.  ]),)
+    >>> part.grid.coord_vectors
+    (array([ 0.125,  0.375,  0.625,  0.875]),)
+
+    This can be changed with the nodes_on_bdry parameter:
+
+    >>> part = uniform_partition(0, 1, 3, nodes_on_bdry=True)
+    >>> part.cell_boundary_vecs
+    (array([ 0.  ,  0.25,  0.75,  1.  ]),)
+    >>> part.grid.coord_vectors
+    (array([ 0. ,  0.5,  1. ]),)
+
+    We can specify this per axis, too. In this case we choose both
+    in the first axis and only the rightmost in the second:
+
+    >>> part = uniform_partition([0, 0], [1, 1], (3, 3),
+    ...                          nodes_on_bdry=(True, (False, True)))
+    ...
+    >>> part.cell_boundary_vecs[0]  # first axis, as above
+    array([ 0.  ,  0.25,  0.75,  1.  ])
+    >>> part.grid.coord_vectors[0]
+    array([ 0. ,  0.5,  1. ])
+    >>> part.cell_boundary_vecs[1]  # second, asymmetric axis
+    array([ 0. ,  0.4,  0.8,  1. ])
+    >>> part.grid.coord_vectors[1]
+    array([ 0.2,  0.6,  1. ])
+    """
+    # Normalize partition parameters
+
+    # np.size(None) == 1
+    sizes = [np.size(p) for p in (begin, end, num_nodes, cell_sides)]
+    ndim = int(np.max(sizes))
+
+    if ndim == 1:
+        begin = [begin]
+        end = [end]
+        num_nodes = [num_nodes]
+        cell_sides = [cell_sides]
+    else:
+        if begin is None:
+            begin = [None] * ndim
+        if end is None:
+            end = [None] * ndim
+        if num_nodes is None:
+            num_nodes = [None] * ndim
+        if cell_sides is None:
+            cell_sides = [None] * ndim
+
+        begin = list(begin)
+        end = list(end)
+        num_nodes = list(num_nodes)
+        cell_sides = list(cell_sides)
+        sizes = [len(p) for p in (begin, end, num_nodes, cell_sides)]
+
+        if not all(s == ndim for s in sizes):
+            raise ValueError('inconsistent sizes {}, {}, {}, {} of '
+                             'arguments `begin`, `end`, `num_nodes`, '
+                             '`cell_sides`'.format(*sizes))
+
+    # Normalize nodes_on_bdry
+    if np.shape(nodes_on_bdry) == ():
+        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] * ndim)
+    elif ndim == 1 and len(nodes_on_bdry) == 2:
+        nodes_on_bdry = [nodes_on_bdry]
+    elif len(nodes_on_bdry) != ndim:
+        raise ValueError('nodes_on_bdry has length {}, expected {}.'
+                         ''.format(len(nodes_on_bdry), ndim))
+
+    # Calculate the missing parameters in begin, end, num_nodes
+    for i, (b, e, n, s, on_bdry) in enumerate(zip(begin, end, num_nodes,
+                                                  cell_sides, nodes_on_bdry)):
+        num_params = sum(p is not None for p in (b, e, n, s))
+        if num_params < 3:
+            raise ValueError('in axis {}: expected at least 3 of the '
+                             'parameters `begin`, `end`, `num_nodes`, '
+                             '`cell_sides`, got {}'
+                             ''.format(i, num_params))
+
+        # Unpack the tuple if possible, else use bool globally for this axis
+        try:
+            bdry_l, bdry_r = on_bdry
+        except TypeError:
+            bdry_l = bdry_r = on_bdry
+
+        # For each node on the boundary, we subtract 1/2 from the number of
+        # full cells between begin and end.
+        if b is None:
+            begin[i] = e - (n - sum([bdry_l, bdry_r]) / 2.0) * s
+        elif e is None:
+            end[i] = b + (n - sum([bdry_l, bdry_r]) / 2.0) * s
+        elif n is None:
+            # Here we add to n since (e-b)/s gives the reduced number of cells.
+            n_calc = (e - b) / s + sum([bdry_l, bdry_r]) / 2.0
+            n_round = int(round(n_calc))
+            if abs(n_calc - n_round) > 1e-5:
+                raise ValueError('in axis {}: calculated number of nodes '
+                                 '{} = ({} - {}) / {} too far from integer'
+                                 ''.format(i, n_calc, e, b, s))
+            num_nodes[i] = n_round
+        elif s is None:
+            pass
+        else:
+            e_calc = b + (n - sum([bdry_l, bdry_r]) / 2.0) * s
+            if not np.isclose(e, e_calc):
+                raise ValueError('in axis {}: calculated endpoint '
+                                 '{} = {} + {} * {} too far from given '
+                                 'endpoint {}.'
+                                 ''.format(i, e_calc, b, n, s, e))
+
+    return uniform_partition_fromintv(
+        IntervalProd(begin, end), num_nodes, nodes_on_bdry)
 
 
 if __name__ == '__main__':
