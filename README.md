@@ -6,7 +6,7 @@
 ODL
 ===
 
-Operator Discretization Library (ODL) is a Python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at [KTH, Royal Institute of Technology](https://www.kth.se/en/sci/institutioner/math).
+Operator Discretization Library (ODL) is a Python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at [KTH Royal Institute of Technology](https://www.kth.se/en/sci/institutioner/math).
 
 The main intent of ODL is to enable mathematicians and applied scientists to use different numerical methods on real-world problems without having to implement all necessary parts from the bottom up.
 This is reached by an `Operator` structure which encapsulates all application-specific parts, and a high-level formulation of solvers which usually expect an operator, data and additional parameters.
@@ -21,7 +21,7 @@ Features
 ========
 
 - Efficient and well-tested data containers based on [NumPy](https://github.com/numpy/numpy) (default) or CUDA (optional)
-- Objects to represent mathematical notions like vector spaces and operators including properties as expected from mathematics (inner product, norm, operator composition, ...)
+- Objects to represent mathematical notions like vector spaces and operators, including properties as expected from mathematics (inner product, norm, operator composition, ...)
 - Convenience functionality for operators like arithmetic, composition, operator matrices etc., which satisfy the known mathematical rules.
 - Out-of-the-box support for frequently used operators like scaling, partial derivative, gradient, Fourier transform etc.
 - Support for tomographic imaging with a unified geometry representation and bindings to external libraries for efficient computation of projections and back-projections.
@@ -50,30 +50,31 @@ where FOO, BAR, etc are the dependencies. Others require more complicated instal
 
 | Package | Purpose | Dependency |
 |---------|---------|------------|
-| [ASTRA](https://github.com/astra-toolbox/astra-toolbox)    | Tomographic forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html). |  |
-| [scikit-image](http://scikit-image.org/)    | 2D parallel beam forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html). | scikit |
-| [FFTW](https://github.com/pyFFTW/pyFFTW)   | Accelerated [FourierTransform](http://odl.readthedocs.io/generated/odl.trafos.fourier.FourierTransform.html). | fftw |
-| [PyWavelets](https://github.com/PyWavelets/pywt)   | Computation of the  [WaveletTransform](http://odl.readthedocs.io/generated/odl.trafos.wavelet.WaveletTransform.html). | pywavelets |
-| [matplotlib](http://matplotlib.org/)   | Visualization through the [show](http://odl.readthedocs.io/generated/odl.discr.lp_discr.DiscreteLpVector.show.html) command. | show |
-| [pytest](http://pytest.org/latest/)   | Automatic tests for ODL. | testing |
+| [ASTRA](https://github.com/astra-toolbox/astra-toolbox)    | Tomographic forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html) |  |
+| [scikit-image](http://scikit-image.org/)    | 2D parallel beam forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html) | scikit |
+| [FFTW](https://github.com/pyFFTW/pyFFTW)   | Accelerated [FourierTransform](http://odl.readthedocs.io/generated/odl.trafos.fourier.FourierTransform.html) | fftw |
+| [PyWavelets](https://github.com/PyWavelets/pywt)   | Computation of the  [WaveletTransform](http://odl.readthedocs.io/generated/odl.trafos.wavelet.WaveletTransform.html) | pywavelets |
+| [matplotlib](http://matplotlib.org/)   | Visualization through the [show](http://odl.readthedocs.io/generated/odl.discr.lp_discr.DiscreteLpVector.show.html) command | show |
+| [pytest](http://pytest.org/latest/)   | Unit tests | testing |
 
 
 Compatibility
 -------------
 ODL is compatible to Python 2 and 3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
 
-Current status (2016-03-11) is
+Currently (2016-06-10) working combinations are:
 
-| Platform     | Python | Works | CUDA  |
-|--------------|--------|-------|-------|
-| Windows 7    | 2.7    | ✔     | ✔     |
-| Windows 10   | 2.7    | ✔     | ✔     |
-| Ubuntu 14.04 | 2.7    | ✔     | ✔     |
-| Fedora 22    | 2.7    | ✔     | x (1) |
-| Fedora 22    | 3.4    | ✔     | x (1) |
-| Mac OSX      | 3.5    | ✔     | ??    |
+| Platform     | Python          | CUDA  |
+|--------------|-----------------|-------|
+| Windows 7    | 2.7             | ✔     |
+| Windows 10   | 2.7             | ✔     |
+| Ubuntu 14.04 | 2.7             | ✔     |
+| Ubuntu 15.10 | 2.7 / 3.4 / 3.5 | ✔     |
+| Ubuntu 16.04 | 2.7 / 3.4 / 3.5 | ✔     |
+| Fedora 22    | 2.7 / 3.4       | x (1) |
+| Mac OSX      | 3.5             | ??    |
 
-(1) The GCC 5.x compiler is not compatible with current CUDA (7.5)
+(1) The default GCC 5.x compiler is not compatible with current CUDA (7.5)
 
 
 License
@@ -90,12 +91,12 @@ To contact the developers either write an issue on github or send an email to od
 - Jonas Adler ([@adler-j](https://github.com/adler-j))
 - Holger Kohr ([@kohr-h](https://github.com/kohr-h))
 
-##### Further contributors
-- Julian Moosmann ([@moosmann](https://github.com/moosmann))
+##### Contributors
+- Ozan Öktem ([@ozanoktem](https://github.com/ozanoktem))
 - Kati Niinimäki ([@niinimaki](https://github.com/niinimaki))
 - Axel Ringh ([@aringh](https://github.com/aringh))
-- Ozan Öktem ([@ozanoktem](https://github.com/ozanoktem))
-
+- Julian Moosmann ([@moosmann](https://github.com/moosmann))
+- Willem Jan Palenstijn ([@wjp](https://github.com/wjp))
 
 Funding
 -------

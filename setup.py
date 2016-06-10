@@ -62,7 +62,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 long_description = """
-Operator Discretization Library (ODL) is a Python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at `KTH, Royal Institute of Technology <https://www.kth.se/en/sci/institutioner/math>`_.
+Operator Discretization Library (ODL) is a Python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at `KTH Royal Institute of Technology <https://www.kth.se/en/sci/institutioner/math>`_.
 
 The main intent of ODL is to enable mathematicians and applied scientists to use different numerical methods on real-world problems without having to implement all necessary parts from the bottom up.
 This is reached by an `Operator` structure which encapsulates all application-specific parts, and a high-level formulation of solvers which usually expect an operator, data and additional parameters.
@@ -79,7 +79,7 @@ Features
 ========
 
 - Efficient and well-tested data containers based on Numpy (default) or CUDA (optional)
-- Objects to represent mathematical notions like vector spaces and operators including properties as expected from mathematics (inner product, norm, operator composition, ...)
+- Objects to represent mathematical notions like vector spaces and operators, including properties as expected from mathematics (inner product, norm, operator composition, ...)
 - Convenience functionality for operators like arithmetic, composition, operator matrices etc., which satisfy the known mathematical rules.
 - Out-of-the-box support for frequently used operators like scaling, partial derivative, gradient, Fourier transform etc.
 - Support for tomographic imaging with a unified geometry representation and bindings to external libraries for efficient computation of projections and back-projections.
