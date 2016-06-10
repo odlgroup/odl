@@ -193,5 +193,23 @@ def test_adjoint(projector):
     assert almost_equal(result_AxAx, result_xAtAx, places=places)
 
 
+def test_angles(projector):
+    """Test discrete Ray transform angle conventions."""
+
+    # Smoothed line/hyperplane around 0:th dimension
+    vol = projector.domain.element(lambda x: np.exp(-x[0] ** 2))
+
+    # Create projection
+    result = projector(vol).asarray()
+
+    # Find the angle where the projection has a maximum (along the line)
+    axes = 1 if projector.domain.ndim == 2 else (1, 2)
+    ind_angle = np.argmax(np.max(result, axis=axes))
+    maximum_angle = projector.geometry.angles[ind_angle]
+
+    # We expect the maximum at pi / 2 (and possibly multiples of it)
+    assert almost_equal(np.fmod(maximum_angle, np.pi), np.pi / 2, places=1)
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))

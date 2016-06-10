@@ -70,12 +70,13 @@ def _axes_info(grid, npoints=5):
         indices = np.linspace(0, grid.shape[axis] - 1, npoints, dtype=int)
         tick_values = grid.coord_vectors[axis][indices]
 
-        format_str = '{:.'+str(_digits(minv, maxv)) +'f}'
+        format_str = '{:.' + str(_digits(minv, maxv)) + 'f}'
         tick_labels = [format_str.format(f) for f in tick_values]
 
         result += [(points, tick_labels)]
 
     return result
+
 
 def show_discrete_data(values, grid, title=None, method='',
                        show=False, fig=None, **kwargs):
