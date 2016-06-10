@@ -377,12 +377,13 @@ class LinearSpace(Set):
 
     @property
     def element_type(self):
-        """Type of elements of this space."""
+        """Type of elements of this space (`LinearSpaceVector`)."""
         return LinearSpaceVector
 
 
 class LinearSpaceVector(object):
-    """Abstract `LinearSpace` element.
+
+    """Abstract class for `LinearSpace` elements.
 
     Do not use this class directly -- to create an element of a vector
     space, call the space's `LinearSpace.element` method instead.
