@@ -281,7 +281,7 @@ class IntervalProd(Set):
             return False
         return (self.begin <= point).all() and (point <= self.end).all()
 
-    def contains_set(self, other, tol=0.0):
+    def contains_set(self, other, atol=0.0):
         """Test if another set is contained.
 
         Parameters
@@ -289,10 +289,9 @@ class IntervalProd(Set):
         other : `Set`
             The set to be tested. It must implement a ``min()`` and a
             ``max()`` method, otherwise a `TypeError` is raised.
-        tol : `float`, optional
+        atol : `float`, optional
             The maximum allowed distance in 'inf'-norm between the
             other set and this interval product.
-            Default: 0.0
 
         Examples
         --------
@@ -306,14 +305,14 @@ class IntervalProd(Set):
         False
         """
         try:
-            return (self.approx_contains(other.min(), tol) and
-                    self.approx_contains(other.max(), tol))
+            return (self.approx_contains(other.min(), atol) and
+                    self.approx_contains(other.max(), atol))
         except AttributeError as err:
             raise_from(
                 AttributeError('cannot test {!r} without `min()` and `max()`'
                                'methods.'.format(other)), err)
 
-    def contains_all(self, other):
+    def contains_all(self, other, atol=0.0):
         """Test if all points defined by ``other`` are contained.
 
         Parameters
@@ -321,6 +320,9 @@ class IntervalProd(Set):
         other :
             Can be a single point, a ``(d, N)`` array where ``d`` is the
             number of dimensions or a length-``d`` meshgrid tuple
+        atol : `float`, optional
+            The maximum allowed distance in 'inf'-norm between the
+            other set and this interval product.
 
         Returns
         -------
@@ -363,22 +365,24 @@ class IntervalProd(Set):
         >>> rbox.contains_all(agrid)
         True
         """
+        atol = float(atol)
+
         # First try optimized methods
         if other in self:
             return True
         if hasattr(other, 'meshgrid'):
-            return self.contains_all(other.meshgrid)
+            return self.contains_all(other.meshgrid, atol=atol)
         elif is_valid_input_meshgrid(other, self.ndim):
             vecs = tuple(vec.squeeze() for vec in other)
             mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
             maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
-            return np.all(mins >= self.begin) and np.all(maxs <= self.end)
+            return (np.all(mins >= self.begin - atol) and
+                    np.all(maxs <= self.end + atol))
 
         # Convert to array and check each element
         other = np.asarray(other)
         if is_valid_input_array(other, self.ndim):
             if self.ndim == 1:
-
                 mins = np.min(other)
                 maxs = np.max(other)
             else:
