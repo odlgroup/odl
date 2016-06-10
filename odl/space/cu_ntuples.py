@@ -175,9 +175,8 @@ class CudaNtuples(NtuplesBase):
                 if isinstance(inp, self._vector_impl):
                     return self.element_type(self, inp)
                 elif isinstance(inp, self.element_type):
-                    if inp.dtype == self.dtype:
-                        # Simply rewrap for matching dtypes
-                        return self.element_type(self, inp.data)
+                    if inp in self:
+                        return inp
                     else:
                         # Bulk-copy for non-matching dtypes
                         elem = self.element()
