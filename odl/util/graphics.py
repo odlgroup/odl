@@ -46,15 +46,36 @@ def _colorbar_ticks(minval, maxval):
     return [minval, (maxval + minval) / 2., maxval]
 
 
+def _digits(minval, maxval):
+    """Digits needed to comforatbly display values in [minval, maxval]"""
+    if minval == maxval:
+        return 3
+    else:
+        return min(10, max(2, int(1 + abs(np.log10(maxval - minval)))))
+
+
 def _colorbar_format(minval, maxval):
     """Return the format string for the colorbar."""
-    if minval == maxval:
-        decimals = 5
-    else:
-        decimals = min(10, max(4, int(1 + abs(np.log10(maxval - minval)))))
+    return '%.{}f'.format(_digits(minval, maxval))
 
-    return '%.{}f'.format(decimals)
 
+def _axes_info(grid, npoints=5):
+    result = []
+
+    for axis in range(grid.ndim):
+        minv = grid.coord_vectors[axis].min()
+        maxv = grid.coord_vectors[axis].max()
+
+        points = np.linspace(minv, maxv, npoints)
+        indices = np.linspace(0, grid.shape[axis] - 1, npoints, dtype=int)
+        tick_values = grid.coord_vectors[axis][indices]
+
+        format_str = '{:.'+str(_digits(minv, maxv)) +'f}'
+        tick_labels = [format_str.format(f) for f in tick_values]
+
+        result += [(points, tick_labels)]
+
+    return result
 
 def show_discrete_data(values, grid, title=None, method='',
                        show=False, fig=None, **kwargs):
@@ -64,7 +85,7 @@ def show_discrete_data(values, grid, title=None, method='',
     ----------
     values : `numpy.ndarray`
         The values to visualize
-    grid : `RegularGrid`
+    grid : `TensorGrid`
         Grid of the values
 
     title : `str`, optional
@@ -244,6 +265,11 @@ def show_discrete_data(values, grid, title=None, method='',
         display_re = getattr(sub_re, method)
         csub_re = display_re(*args_re, **dsp_kwargs)
 
+        # Axis ticks
+        (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
+        plt.xticks(xpts, xlabels)
+        plt.yticks(ypts, ylabels)
+
         if method == 'imshow' and len(fig.axes) < 2:
             # Create colorbar if none seems to exist
 
@@ -273,6 +299,11 @@ def show_discrete_data(values, grid, title=None, method='',
 
         display_im = getattr(sub_im, method)
         csub_im = display_im(*args_im, **dsp_kwargs)
+
+        # Axis ticks
+        (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
+        plt.xticks(xpts, xlabels)
+        plt.yticks(ypts, ylabels)
 
         if method == 'imshow' and len(fig.axes) < 4:
             # Create colorbar if none seems to exist
@@ -308,6 +339,11 @@ def show_discrete_data(values, grid, title=None, method='',
 
         display = getattr(sub, method)
         csub = display(*args_re, **dsp_kwargs)
+
+        # Axis ticks
+        (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
+        plt.xticks(xpts, xlabels)
+        plt.yticks(ypts, ylabels)
 
         if method == 'imshow' and len(fig.axes) < 2:
             # Create colorbar if none seems to exist
