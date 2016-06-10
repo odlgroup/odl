@@ -1200,9 +1200,11 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     if np.shape(nodes_on_bdry) == ():
         nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
                          intv_prod.ndim)
+    elif intv_prod.ndim == 1 and len(nodes_on_bdry) == 2:
+        nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != intv_prod.ndim:
-        raise ValueError('nodes_on_bdry has length {}, expected {}.'
-                         ''.format(len(nodes_on_bdry), intv_prod.ndim, 2))
+        raise ValueError('`nodes_on_bdry` has length {}, expected {}.'
+                         ''.format(len(nodes_on_bdry), intv_prod.ndim))
     else:
         num_nodes = tuple(int(n) for n in num_nodes)
 
