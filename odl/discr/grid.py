@@ -1200,9 +1200,11 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     if np.shape(nodes_on_bdry) == ():
         nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
                          intv_prod.ndim)
+    elif intv_prod.ndim == 1 and len(nodes_on_bdry) == 2:
+        nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != intv_prod.ndim:
-        raise ValueError('nodes_on_bdry has length {}, expected {}.'
-                         ''.format(len(nodes_on_bdry), intv_prod.ndim, 2))
+        raise ValueError('`nodes_on_bdry` has length {}, expected {}.'
+                         ''.format(len(nodes_on_bdry), intv_prod.ndim))
     else:
         num_nodes = tuple(int(n) for n in num_nodes)
 
@@ -1211,7 +1213,7 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     # and for a given side (left or right), the entry is True, the node lies
     # on the boundary, so this coordinate can simply be taken as-is.
     #
-    # Otherwise, the following conditionsmust be met:
+    # Otherwise, the following conditions must be met:
     #
     # 1. The node should be half a stride s away from the boundary
     # 2. Adding or subtracting (n-1)*s should give the other extremal node.

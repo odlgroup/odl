@@ -183,14 +183,14 @@ class IntervalProd(Set):
             raise TypeError('inp {!r} not a valid element in {!r}.'
                             ''.format(inp, self))
 
-    def approx_equals(self, other, tol):
-        """Test if ``other`` is equal to this set up to ``tol``.
+    def approx_equals(self, other, atol):
+        """Test if ``other`` is equal to this set up to ``atol``.
 
         Parameters
         ----------
         other : `object`
             The object to be tested
-        tol : `float`
+        atol : `float`
             The maximum allowed difference in 'inf'-norm between the
             interval endpoints.
 
@@ -199,9 +199,9 @@ class IntervalProd(Set):
         >>> from math import sqrt
         >>> rbox1 = IntervalProd(0, 0.5)
         >>> rbox2 = IntervalProd(0, sqrt(0.5)**2)
-        >>> rbox1.approx_equals(rbox2, tol=0)  # Num error
+        >>> rbox1.approx_equals(rbox2, atol=0)  # Num error
         False
-        >>> rbox1.approx_equals(rbox2, tol=1e-15)
+        >>> rbox1.approx_equals(rbox2, atol=1e-15)
         True
         """
         if other is self:
@@ -209,14 +209,14 @@ class IntervalProd(Set):
         elif not isinstance(other, IntervalProd):
             return False
 
-        return (np.allclose(self.begin, other.begin, atol=tol, rtol=0.0) and
-                np.allclose(self.end, other.end, atol=tol, rtol=0.0))
+        return (np.allclose(self.begin, other.begin, atol=atol, rtol=0.0) and
+                np.allclose(self.end, other.end, atol=atol, rtol=0.0))
 
     def __eq__(self, other):
         """Return ``self == other``."""
-        return self.approx_equals(other, tol=0.0)
+        return self.approx_equals(other, atol=0.0)
 
-    def approx_contains(self, point, tol):
+    def approx_contains(self, point, atol):
         """Test if a point is contained.
 
         Parameters
@@ -225,7 +225,7 @@ class IntervalProd(Set):
             The point to be tested. Its length must be equal
             to the set's dimension. In the 1d case, 'point'
             can be given as a `float`.
-        tol : `float`
+        atol : `float`
             The maximum allowed distance in 'inf'-norm between the
             point and the set.
             Default: 0.0
@@ -236,9 +236,9 @@ class IntervalProd(Set):
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(b, e)
         >>> # Numerical error
-        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=0)
+        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], atol=0)
         False
-        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], tol=1e-9)
+        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], atol=1e-9)
         True
         """
         point = np.atleast_1d(point)
@@ -246,7 +246,7 @@ class IntervalProd(Set):
             return False
         if not is_real_dtype(point.dtype):
             return False
-        return self.dist(point, exponent=np.inf) <= tol
+        return self.dist(point, exponent=np.inf) <= atol
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -281,7 +281,7 @@ class IntervalProd(Set):
             return False
         return (self.begin <= point).all() and (point <= self.end).all()
 
-    def contains_set(self, other, tol=0.0):
+    def contains_set(self, other, atol=0.0):
         """Test if another set is contained.
 
         Parameters
@@ -289,10 +289,9 @@ class IntervalProd(Set):
         other : `Set`
             The set to be tested. It must implement a ``min()`` and a
             ``max()`` method, otherwise a `TypeError` is raised.
-        tol : `float`, optional
+        atol : `float`, optional
             The maximum allowed distance in 'inf'-norm between the
             other set and this interval product.
-            Default: 0.0
 
         Examples
         --------
@@ -306,14 +305,14 @@ class IntervalProd(Set):
         False
         """
         try:
-            return (self.approx_contains(other.min(), tol) and
-                    self.approx_contains(other.max(), tol))
+            return (self.approx_contains(other.min(), atol) and
+                    self.approx_contains(other.max(), atol))
         except AttributeError as err:
             raise_from(
                 AttributeError('cannot test {!r} without `min()` and `max()`'
                                'methods.'.format(other)), err)
 
-    def contains_all(self, other):
+    def contains_all(self, other, atol=0.0):
         """Test if all points defined by ``other`` are contained.
 
         Parameters
@@ -321,6 +320,9 @@ class IntervalProd(Set):
         other :
             Can be a single point, a ``(d, N)`` array where ``d`` is the
             number of dimensions or a length-``d`` meshgrid tuple
+        atol : `float`, optional
+            The maximum allowed distance in 'inf'-norm between the
+            other set and this interval product.
 
         Returns
         -------
@@ -363,22 +365,24 @@ class IntervalProd(Set):
         >>> rbox.contains_all(agrid)
         True
         """
+        atol = float(atol)
+
         # First try optimized methods
         if other in self:
             return True
         if hasattr(other, 'meshgrid'):
-            return self.contains_all(other.meshgrid)
+            return self.contains_all(other.meshgrid, atol=atol)
         elif is_valid_input_meshgrid(other, self.ndim):
             vecs = tuple(vec.squeeze() for vec in other)
             mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
             maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
-            return np.all(mins >= self.begin) and np.all(maxs <= self.end)
+            return (np.all(mins >= self.begin - atol) and
+                    np.all(maxs <= self.end + atol))
 
         # Convert to array and check each element
         other = np.asarray(other)
         if is_valid_input_array(other, self.ndim):
             if self.ndim == 1:
-
                 mins = np.min(other)
                 maxs = np.max(other)
             else:
