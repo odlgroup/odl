@@ -84,7 +84,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    'sphinx.ext.pngmath',
+    'sphinx.ext.imgmath',
     'numpydoc'
 ]
 
