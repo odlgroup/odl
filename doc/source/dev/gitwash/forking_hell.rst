@@ -7,27 +7,27 @@ Making your own copy (fork) of ODL
 You need to do this only once.  The instructions here are very similar
 to the instructions at http://help.github.com/forking/ |emdash| please see
 that page for more detail.  We're repeating some of it here just to give the
-specifics for the `ODL`_ project, and to suggest some default names.
+specifics for the ODL project, and to suggest some default names.
 
-Set up and configure a github account
+Set up and configure a GitHub account
 =====================================
 
-If you don't have a github account, go to the github page, and make one.
+If you don't have a GitHub account yet, go to the GitHub_ page and create one.
 
-You then need to configure your account to allow write access |emdash| see
-the ``Generating SSH keys`` help on `github help`_.
+After that, you need to configure your account to allow write access |emdash| see
+the "Generating SSH keys" help on the `GitHub Help`_ pages.
 
-Create your own forked copy of `ODL`_
+Create your own forked copy of ODL
 ======================================================
 
-#. Log into your github account.
-#. Go to the `ODL`_ github home at `ODL github`_.
+#. Log into your GitHub account.
+#. Go to the ODL repository page at `ODL GitHub`_.
 #. Click on the *fork* button:
 
-   .. image:: forking_button.png
+   .. image:: fork_button.jpg
 
-   Now, after a short pause and some 'Hardcore forking action', you
-   should find yourself at the home page for your own forked copy of `ODL`_.
+   Now, after a short pause and some "Hardcore forking action", you
+   should find yourself at the home page for your own forked copy of ODL.
 
 .. include:: links.inc
 

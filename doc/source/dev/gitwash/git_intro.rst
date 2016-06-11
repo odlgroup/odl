@@ -2,17 +2,12 @@
  Introduction
 ==============
 
-These pages describe a git_ and github_ workflow for the `ODL`_
-project.
+These pages describe a Git_ and GitHub_ workflow for the `ODL`_ project.
 
-There are several different workflows here, for different ways of
-working with *ODL*.
+This is not a comprehensive Git reference, it is just a workflow for our own project, tailored
+to the GitHub hosting service. You may well find better or quicker ways of getting stuff done with
+Git, but these instructions should get you started.
 
-This is not a comprehensive git reference, it's just a workflow for our
-own project.  It's tailored to the github hosting service. You may well
-find better or quicker ways of getting stuff done with git, but these
-should get you started.
-
-For general resources for learning git, see :ref:`git-resources`.
+For general resources for learning Git, see :ref:`git-resources`.
 
 .. include:: links.inc
