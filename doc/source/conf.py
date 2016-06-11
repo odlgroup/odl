@@ -18,6 +18,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from distutils.version import StrictVersion
+import sphinx
 import glob
 import os
 import sphinx_rtd_theme
@@ -84,9 +86,13 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    'sphinx.ext.pngmath',
     'numpydoc'
 ]
+# Use newer 'imgmath' extension if possible
+if StrictVersion(sphinx.__version__) >= '1.4':
+    extensions.append('sphinx.ext.imgmath')
+else:
+    extensions.append('sphinx.ext.pngmath')
 
 if not on_rtd:
     # TODO: fix this once RTD updates their intersphinx version
