@@ -1,0 +1,46 @@
+package:
+    name: odl
+    version: "0.2.3"
+
+source:
+    fn: odl-0.2.3.tar.gz
+    url: https://pypi.python.org/packages/c2/23/b208c56d0c25ec647cab9f164f050205c4792f5129deaf6b7a9cd3b99b1c/odl-0.2.3.tar.gz
+    md5: c8008ecf717b2b97ed72f8163e2ec805
+    # git_url: https://github.com/odlgroup/odl
+    # git_rev: v0.2.3
+
+requirements:
+    build:
+        - python 2.7|>=3.4
+        - nomkl
+        - setuptools
+        - future >=0.14
+        - numpy >=1.9
+        - scipy >=0.14
+    run:
+        - nomkl
+        - python 2.7|>=3.4
+        - future >=0.14
+        - numpy >=1.9
+        - scipy >=0.14
+
+test:
+    imports:
+        - odl
+    
+    requires:
+        - pytest
+    
+about:
+    home: https://github.com/odlgroup/odl
+    license: GPLv3+
+    license_file: LICENSE
+    summary: "Operator Discretization Library - a versatile Python framework for rapid prototyping in Inverse Problems and related fields"
+    
+extra:
+    maintainers:
+        - Jonas Adler (@adler-j)
+        - Holger Kohr (@kohr-h)
+        - Ozan Öktem (@ozanoktem)
+
+
