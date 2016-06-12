@@ -90,7 +90,7 @@ def mayo_projector_from_folder(reco_space, folder, nr_start=1, nr_end=-1):
 
     # Make a parallel beam geometry with flat detector
     angle_partition = uniform_partition(angles.min(), angles.max(),
-                                        angles.size)
+                                        angles.size, nodes_on_bdry=True)
 
     # Set minimum and maximum point
     shape = np.array([datasets[0].NumberofDetectorColumns,
@@ -98,9 +98,8 @@ def mayo_projector_from_folder(reco_space, folder, nr_start=1, nr_end=-1):
     pixel_size = np.array([datasets[0].DetectorElementTransverseSpacing,
                            datasets[0].DetectorElementAxialSpacing])
 
-    minp = - np.array(datasets[0].DetectorCentralElement) * pixel_size
-    maxp = minp + shape * pixel_size
-    minp, maxp = -maxp, -minp  # different defintion of corner
+    maxp = (np.array(datasets[0].DetectorCentralElement) - [0.5, 0.5]) * pixel_size
+    minp = maxp - shape * pixel_size
 
     # Create partition for detector
     detector_partition = uniform_partition(minp, maxp, shape)
@@ -164,13 +163,13 @@ if __name__ == '__main__':
     # Discrete reconstruction space: discretized functions on the cube
     # [-20, 20]^3 with 300 samples per dimension.
     reco_space = odl.uniform_discr(
-        min_corner=[-180, -180, 200], max_corner=[180, 180, 245],
-        nsamples=[400, 400, 50], dtype='float32')
+        min_corner=[-170, -170, 200], max_corner=[170, 170, 242.5],
+        nsamples=[512, 512, 64], dtype='float32')
 
     ray_trafo, proj_data = mayo_projector_from_folder(reco_space, folder,
                                                       nr_start, nr_end)
 
-    if False:
+    if True:
         # Test FBP reconstruction
         print('Performing FBP')
 
@@ -190,21 +189,41 @@ if __name__ == '__main__':
 
         # Create filtered backprojection by composing the backprojection
         # (adjoint) with the ramp filter. Also apply a scaling.
-        fbp = ray_trafo.adjoint * ramp_filter / (2 * np.pi) ** 2
+        fbp = ray_trafo.adjoint * ramp_filter / (2 * np.pi ** 2)
         # calculate fbp
         fbp_result = fbp(proj_data)
-        fbp_result.show('FBP', coords=[None, None, 227], clim=[0.013, 0.026])
+        fbp_result.show('FBP', coords=[None, None, 227], clim=[0.010, 0.025])
+        fbp_result.show('FBP', coords=[None, 0, 227])
         xl, yl = plt.xlim(), plt.ylim()
         plt.scatter([-104.71], [33.68], s=300,
                     facecolors='none', edgecolors='r')
         plt.xlim(xl)
         plt.ylim(yl)
+
+        # compare to ref
+        folder = 'E:/Data/MayoClinic data/Training Cases/L067/full_1mm_sharp'
+        file_name = 'L067_FD_1_SHARP_1.CT.0002.0201.2016.01.21.18.11.40.977560.404633815.IMA'
+
+        dataset = dicom.read_file(folder + '/' + file_name)
+
+        data_array = np.fromstring(dataset.PixelData, 'H')
+
+        data_array = data_array.reshape([512, 512], order='F').T
+
+        arr = np.tile(np.roll(np.rot90(data_array, -1), -17, 0)[:, :, None], (1, 1, 64))
+        y = reco_space.element(arr)
+
+        (y * 0.00002 - fbp_result).show('reference',
+               coords=[None, None, 227.5],
+               clim=[-0.003, 0.003])
     else:
         # Conjugate gradient
         print('Performing CG')
+
         partial = odl.solvers.ShowPartial('Conjugate gradient',
                                           coords=[None, None, 227],
                                           clim=[0.015, 0.025])
+
 
         x = ray_trafo.domain.zero()
         odl.solvers.conjugate_gradient_normal(ray_trafo, x,
