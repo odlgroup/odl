@@ -204,4 +204,4 @@ First official release.
 .. _Numpy's FFTPACK based transform: http://docs.scipy.org/doc/numpy/reference/routines.fft.html
 .. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
 
-.. include:: prs.rst
+.. include:: prs.inc

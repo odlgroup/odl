@@ -1,7 +1,3 @@
-####################
-Merged pull requests
-####################
-
 .. _PR 289: https://github.com/odlgroup/odl/pull/289
 .. _PR 304: https://github.com/odlgroup/odl/pull/304
 .. _PR 308: https://github.com/odlgroup/odl/pull/308
