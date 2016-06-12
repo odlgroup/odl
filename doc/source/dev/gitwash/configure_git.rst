@@ -1,7 +1,7 @@
 .. _configure-git:
 
 ===============
- Configure git
+ Configure Git
 ===============
 
 .. _git-config-basic:
@@ -9,7 +9,7 @@
 Overview
 ========
 
-Your personal git configurations are saved in the ``.gitconfig`` file in
+Your personal Git configurations are saved in the ``.gitconfig`` file in
 your home directory.
 
 Here is an example ``.gitconfig`` file::
@@ -25,26 +25,30 @@ Here is an example ``.gitconfig`` file::
           stat = status
           br = branch
           wdiff = diff --color-words
+          show-conflicts = !git --no-pager diff --name-only --diff-filter=U
 
   [core]
-          editor = vim
+          editor = nano
 
   [merge]
           summary = true
 
 You can edit this file directly or you can use the ``git config --global``
-command::
+command:
 
-  git config --global user.name "Your Name"
-  git config --global user.email you@yourdomain.example.com
-  git config --global alias.ci "commit -a"
-  git config --global alias.co checkout
-  git config --global alias.st "status -a"
-  git config --global alias.stat "status -a"
-  git config --global alias.br branch
-  git config --global alias.wdiff "diff --color-words"
-  git config --global core.editor vim
-  git config --global merge.summary true
+.. code-block:: bash
+
+   $ git config --global user.name "Your Name"
+   $ git config --global user.email you@yourdomain.example.com
+   $ git config --global alias.ci "commit -a"
+   $ git config --global alias.co checkout
+   $ git config --global alias.st "status"
+   $ git config --global alias.stat "status"
+   $ git config --global alias.br branch
+   $ git config --global alias.wdiff "diff --color-words"
+   $ git config --global alias.show-conflicts "!git --no-pager diff --name-only --diff-filter=U"
+   $ git config --global core.editor nano
+   $ git config --global merge.summary true
 
 To set up on another computer, you can copy your ``~/.gitconfig`` file,
 or run the commands above.
@@ -55,14 +59,16 @@ In detail
 user.name and user.email
 ------------------------
 
-It is good practice to tell git_ who you are, for labeling any changes
-you make to the code.  The simplest way to do this is from the command
-line::
+It is good practice to tell Git_ who you are, for labeling any changes
+you make to the code. The simplest way to do this is from the command
+line:
 
-  git config --global user.name "Your Name"
-  git config --global user.email you@yourdomain.example.com
+.. code-block:: bash
 
-This will write the settings into your git configuration file,  which
+   $ git config --global user.name "Your Name"
+   $ git config --global user.email you@yourdomain.example.com
+
+This will write the settings into your Git configuration file,  which
 should now contain a user section with your name and email::
 
   [user]
@@ -79,16 +85,21 @@ You might well benefit from some aliases to common commands.
 
 For example, you might well want to be able to shorten ``git checkout``
 to ``git co``.  Or you may want to alias ``git diff --color-words``
-(which gives a nicely formatted output of the diff) to ``git wdiff``
+(which gives a nicely formatted output of the diff) to ``git wdiff``.
+Another useful alias is ``git show-conflicts`` which displays files that
+are currently in conflict.
 
-The following ``git config --global`` commands::
+The ``git config --global`` commands
 
-  git config --global alias.ci "commit -a"
-  git config --global alias.co checkout
-  git config --global alias.st "status -a"
-  git config --global alias.stat "status -a"
-  git config --global alias.br branch
-  git config --global alias.wdiff "diff --color-words"
+.. code-block:: bash
+
+   $ git config --global alias.ci "commit -a"
+   $ git config --global alias.co checkout
+   $ git config --global alias.st "status -a"
+   $ git config --global alias.stat "status -a"
+   $ git config --global alias.br branch
+   $ git config --global alias.wdiff "diff --color-words"
+   $ git config --global alias.show-conflicts "!git --no-pager diff --name-only --diff-filter=U"
 
 will create an ``alias`` section in your ``.gitconfig`` file with contents
 like this::
@@ -100,13 +111,16 @@ like this::
           stat = status -a
           br = branch
           wdiff = diff --color-words
+          show-conflicts = !git --no-pager diff --name-only --diff-filter=U
 
 Editor
 ------
 
-You may also want to make sure that your editor of choice is used ::
+You may also want to make sure that your favorite editor is used:
 
-  git config --global core.editor vim
+.. code-block:: bash
+
+   $ git config --global core.editor nano
 
 Merging
 -------
@@ -116,9 +130,11 @@ To enforce summaries when doing merges (``~/.gitconfig`` file again)::
    [merge]
       log = true
 
-Or from the command line::
+Or from the command line:
 
-  git config --global merge.log true
+.. code-block:: bash
+
+   $ git config --global merge.log true
 
 .. _fancy-log:
 
@@ -128,30 +144,44 @@ Fancy log output
 This is a very nice alias to get a fancy log output; it should go in the
 ``alias`` section of your ``.gitconfig`` file::
 
-    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)[%an]%Creset' --abbrev-commit --date=relative
+    fancylog = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)[%an]%Creset' --abbrev-commit --date=relative
 
-You use the alias with::
+You use the alias with:
 
-    git lg
+.. code-block:: bash
+
+   $ git fancylog
 
 and it gives graph / text output something like this (but with color!)::
 
-    * 6d8e1ee - (HEAD, origin/my-fancy-feature, my-fancy-feature) NF - a fancy file (45 minutes ago) [Matthew Brett]
-    *   d304a73 - (origin/placeholder, placeholder) Merge pull request #48 from hhuuggoo/master (2 weeks ago) [Jonathan Terhorst]
-    |\  
-    | * 4aff2a8 - fixed bug 35, and added a test in test_bugfixes (2 weeks ago) [Hugo]
-    |/  
-    * a7ff2e5 - Added notes on discussion/proposal made during Data Array Summit. (2 weeks ago) [Corran Webster]
-    * 68f6752 - Initial implimentation of AxisIndexer - uses 'index_by' which needs to be changed to a call on an Axes object - this is all very sketchy right now. (2 weeks ago) [Corr
-    *   376adbd - Merge pull request #46 from terhorst/master (2 weeks ago) [Jonathan Terhorst]
-    |\  
-    | * b605216 - updated joshu example to current api (3 weeks ago) [Jonathan Terhorst]
-    | * 2e991e8 - add testing for outer ufunc (3 weeks ago) [Jonathan Terhorst]
-    | * 7beda5a - prevent axis from throwing an exception if testing equality with non-axis object (3 weeks ago) [Jonathan Terhorst]
-    | * 65af65e - convert unit testing code to assertions (3 weeks ago) [Jonathan Terhorst]
-    | *   956fbab - Merge remote-tracking branch 'upstream/master' (3 weeks ago) [Jonathan Terhorst]
-    | |\  
+    * a105abc - (HEAD -> master, upstream/master) Revert "MAINT: replace deprecated pngmath extension by imgmath" (50 minutes ago) [Holger Kohr]
+    * 05168c9 - MAINT: replace deprecated pngmath extension by imgmath (53 minutes ago) [Holger Kohr]
+    * f654c3d - DOC: update README and description in setup.py a bit (19 hours ago) [Holger Kohr]
+    *   d097c7b - Merge pull request #436 from odlgroup/issue-435__parallel2d_rotation (19 hours ago) [Holger Kohr]
+    |\
+    | * 180ba96 - (upstream/issue-435__parallel2d_rotation, issue-435__parallel2d_rotation) TST: Add test for angle conventions of projectors (24 hours ago) [Jonas Adler]
+    | * de2ab55 - BUG: fix behaviour of show with nonuniform data (26 hours ago) [Jonas Adler]
+    | * a979666 - BUG: fix rotation by 90 degrees for 2d parallel (27 hours ago) [Holger Kohr]
+    |/
+    *   ecfd306 - Merge pull request #444 from odlgroup/issue-443__uniform_partition (29 hours ago) [Holger Kohr]
+    |\
+    | * 024552f - MAINT: replace 10 ** -10 with 1e-10 in domain_test.py (29 hours ago) [Holger Kohr]
+    | * 032b89d - ENH: allow single tuple for nodes_on_bdry in uniform_sampling for 1d (29 hours ago) [Holger Kohr]
+    | * 85dda52 - ENH: add atol to IntervalProd.contains_all (29 hours ago) [Holger Kohr]
+    | * bdaef8c - ENH: make uniform_partition more flexible (29 hours ago) [Holger Kohr]
+    | * 72b4bd5 - MAINT: use odl.foo instead of from odl import foo in partition_test.py (2 days ago) [Holger Kohr]
+    | * 11ec155 - MAINT: fix typo in grid.py (2 days ago) [Holger Kohr]
+    | * dabc917 - MAINT: change tol parameter in IntervalProd to atol (2 days ago) [Holger Kohr]
+    * |   e59662c - Merge pull request #439 from odlgroup/issue-409__element_noop (29 hours ago) [Jonas Adler]
+    |\ \
     | |/
+    |/|
+    | * 1d41554 - API: enforce element(vec) noop (8 days ago) [Jonas Adler]
+    * |   34d4e74 - Merge pull request #438 from odlgroup/issue-437__discr_element_broadcast (8 days ago) [Jonas Adler]
+    |\ \
+    | |/
+    |/|
+    | * e09bfa9 - ENH: allow broadcasting in discr element (8 days ago) [Jonas Adler]
 
 Thanks to Yury V. Zaytsev for posting it.
 
