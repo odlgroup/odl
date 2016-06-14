@@ -60,7 +60,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         """
         self._det_radius = float(det_rad)
         if self.det_radius <= 0:
-            raise ValueError('expected a positive radius, got {}.'
+            raise ValueError('expected a positive radius, got {}'
                              ''.format(det_rad))
 
         orig_to_det_init = kwargs.pop('orig_to_det_init',
@@ -70,8 +70,8 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
         if init_pos_norm > 1e-10:
             orig_to_det_init *= self.det_radius / init_pos_norm
         else:
-            raise ValueError('initial detector position {} is too close '
-                             'to zero.'.format(orig_to_det_init))
+            raise ValueError('`orig_to_det_init` {} is too close to zero'
+                             ''.format(orig_to_det_init))
         kwargs['det_init_pos'] = orig_to_det_init
         super().__init__(apart, dpart, axis, **kwargs)
 

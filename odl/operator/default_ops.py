@@ -50,7 +50,7 @@ class ScalingOperator(Operator):
             scaled with
         """
         if not isinstance(space, LinearSpace):
-            raise TypeError('space {!r} not a LinearSpace instance.'
+            raise TypeError('`space` {!r} not a LinearSpace instance'
                             ''.format(space))
 
         super().__init__(space, space, linear=True)
@@ -123,11 +123,11 @@ class ScalingOperator(Operator):
             return ScalingOperator(self._space, self._scal.conjugate())
 
     def __repr__(self):
-        """op.__repr__() <==> repr(op)."""
+        """Return ``repr(self)``."""
         return 'ScalingOperator({!r}, {!r})'.format(self._space, self._scal)
 
     def __str__(self):
-        """op.__str__() <==> str(op)."""
+        """Return ``str(self)``."""
         return '{} * I'.format(self._scal)
 
 
@@ -146,11 +146,11 @@ class ZeroOperator(ScalingOperator):
         super().__init__(space, 0)
 
     def __repr__(self):
-        """op.__repr__() <==> repr(op)."""
+        """Return ``repr(self)``."""
         return 'ZeroOperator({!r})'.format(self._space)
 
     def __str__(self):
-        """op.__str__() <==> str(op)."""
+        """Return ``str(self)``."""
         return '0'
 
 
@@ -325,7 +325,7 @@ class MultiplyOperator(Operator):
             else:
                 out.multiply(x, self.y)
         else:
-            raise ValueError('Can only use `out` with `LinearSpace` range')
+            raise ValueError('can only use `out` with `LinearSpace` range')
 
     @property
     def adjoint(self):
@@ -434,7 +434,7 @@ class PowerOperator(Operator):
         if out is None:
             return x ** self.exponent
         elif self._domain_is_field:
-            raise ValueError('Cannot use `out` with field')
+            raise ValueError('cannot use `out` with field')
         else:
             out.assign(x)
             out **= self.exponent
@@ -598,7 +598,7 @@ class ConstantOperator(Operator):
             The domain of the operator.
         """
         if not isinstance(vector, LinearSpaceVector):
-            raise TypeError('vector {!r} not a LinearSpaceVector instance.'
+            raise TypeError('`vector` {!r} not a LinearSpaceVector instance'
                             ''.format(vector))
 
         if domain is None:
@@ -665,11 +665,11 @@ class ResidualOperator(Operator):
             Vector to be subtracted from the operator result
         """
         if not isinstance(op, Operator):
-            raise TypeError('op {!r} not a Operator instance.'
+            raise TypeError('`op` {!r} not a Operator instance'
                             ''.format(op))
 
         if not isinstance(op.range, LinearSpace):
-            raise TypeError('operator range {!r} not a LinearSpace instance.'
+            raise TypeError('`op.range` {!r} not a LinearSpace instance'
                             ''.format(op.range))
 
         self.op = op

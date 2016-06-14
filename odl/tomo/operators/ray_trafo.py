@@ -68,54 +68,54 @@ class RayTransform(Operator):
             Default: 'nearest'
         """
         if not isinstance(discr_domain, DiscreteLp):
-            raise TypeError('discretized domain {!r} is not a `DiscreteLp`'
-                            ' instance.'.format(discr_domain))
+            raise TypeError('`discr_domain` {!r} is not a `DiscreteLp`'
+                            ' instance'.format(discr_domain))
 
         if not isinstance(geometry, Geometry):
-            raise TypeError('geometry {!r} is not a `Geometry` instance.'
+            raise TypeError('`geometry` {!r} is not a `Geometry` instance'
                             ''.format(geometry))
 
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_IMPL:
-            raise ValueError('implementation {!r} not supported.'
+            raise ValueError('`impl` {!r} not supported'
                              ''.format(impl_in))
 
         # TODO: sanity checks between impl and discretization impl
         if impl.startswith('astra'):
             # TODO: these should be moved somewhere else
             if not ASTRA_AVAILABLE:
-                raise ValueError('ASTRA back-end not available.')
+                raise ValueError("'astra' back-end not available")
             if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
-                raise ValueError('ASTRA CUDA back-end not available.')
+                raise ValueError("'astra_cuda' back-end not available")
             if discr_domain.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
-                                 'real and `complex64` for complex data.')
+                                 'real and `complex64` for complex data')
             if not np.allclose(discr_domain.partition.cell_sides[1:],
                                discr_domain.partition.cell_sides[:-1]):
                 raise ValueError('ASTRA does not support different voxel '
-                                 'sizes per axis, got {}.'
+                                 'sizes per axis, got {}'
                                  ''.format(discr_domain.partition.cell_sides))
             if geometry.ndim > 2 and impl.endswith('cpu'):
-                raise ValueError('impl: {}, only works for 2d geometries.'
+                raise ValueError('`impl` {}, only works for 2d geometries'
                                  ' got {}-d'.format(impl_in, geometry))
         elif impl == 'scikit':
             if not isinstance(geometry, Parallel2dGeometry):
-                raise TypeError('scikit backend only supports 2d parallel '
-                                'geometries.')
+                raise TypeError("'scikit' backend only supports 2d parallel "
+                                'geometries')
 
             midp = discr_domain.domain.midpoint
             if not all(midp == [0, 0]):
-                raise ValueError('discr_domain.domain needs to be '
+                raise ValueError('`discr_domain.domain` needs to be '
                                  'centered on [0, 0], got {}'.format(midp))
 
             shape = discr_domain.shape
             if shape[0] != shape[1]:
-                raise ValueError('discr_domain.shape needs to be square '
+                raise ValueError('`discr_domain.shape` needs to be square '
                                  'got {}'.format(shape))
 
             extent = discr_domain.domain.extent()
             if extent[0] != extent[1]:
-                raise ValueError('discr_domain.extent needs to be square '
+                raise ValueError('`discr_domain.extent` needs to be square '
                                  'got {}'.format(extent))
 
         # TODO: sanity checks between domain and geometry (ndim, ...)
@@ -186,11 +186,11 @@ class RayTransform(Operator):
                                                     self.range, out)
             else:
                 # Should never happen
-                raise RuntimeError('implementation info is inconsistent.')
+                raise RuntimeError('implementation info is inconsistent')
         elif self.impl == 'scikit':
             return scikit_radon_forward(x, self.geometry, self.range, out)
         else:  # Should never happen
-            raise RuntimeError('implementation info is inconsistent.')
+            raise RuntimeError('implementation info is inconsistent')
 
     @property
     def adjoint(self):
@@ -222,30 +222,30 @@ class RayBackProjection(Operator):
             Default: 'nearest'
         """
         if not isinstance(discr_range, DiscreteLp):
-            raise TypeError('discretized range {!r} is not a `DiscreteLp`'
-                            ' instance.'.format(discr_range))
+            raise TypeError('`discr_range` {!r} is not a `DiscreteLp`'
+                            ' instance'.format(discr_range))
 
         if not isinstance(geometry, Geometry):
-            raise TypeError('geometry {!r} is not a `Geometry` instance.'
+            raise TypeError('`geometry` {!r} is not a `Geometry` instance'
                             ''.format(geometry))
 
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_IMPL:
-            raise ValueError("implementation '{}' not supported."
+            raise ValueError("`impl` '{}' not supported"
                              ''.format(impl_in))
 
         if impl.startswith('astra'):
             if not ASTRA_AVAILABLE:
-                raise ValueError('ASTRA backend not available.')
+                raise ValueError("'astra' backend not available")
             if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
-                raise ValueError('ASTRA CUDA backend not available.')
+                raise ValueError("'astra_cuda' backend not available")
             if discr_range.dspace.dtype not in (np.float32, np.complex64):
                 raise ValueError('ASTRA support is limited to `float32` for '
-                                 'real and `complex64` for complex data.')
+                                 'real and `complex64` for complex data')
             if not np.allclose(discr_range.partition.cell_sides[1:],
                                discr_range.partition.cell_sides[:-1]):
                 raise ValueError('ASTRA does not support different voxel '
-                                 'sizes per axis, got {}.'
+                                 'sizes per axis, got {}'
                                  ''.format(discr_range.partition.cell_sides))
 
         self._geometry = geometry
@@ -310,12 +310,12 @@ class RayBackProjection(Operator):
                                                  self.range, out)
             else:
                 # Should never happen
-                raise RuntimeError('implementation info is inconsistent.')
+                raise RuntimeError('implementation info is inconsistent')
         elif self.impl == 'scikit':
             return scikit_radon_back_projector(x, self.geometry,
                                                self.range, out)
         else:  # Should never happen
-            raise RuntimeError('implementation info is inconsistent.')
+            raise RuntimeError('implementation info is inconsistent')
 
     @property
     def adjoint(self):

@@ -87,40 +87,40 @@ class DiscretizedSet(NtuplesBase):
             ``interpol.range == uspace``.
             """
         if not isinstance(uspace, Set):
-            raise TypeError('undiscretized space {!r} not a `Set` instance.'
+            raise TypeError('`uspace` {!r} not a `Set` instance'
                             ''.format(uspace))
         if not isinstance(dspace, NtuplesBase):
-            raise TypeError('data space {!r} not an `NtuplesBase` instance.'
+            raise TypeError('`dspace` {!r} not an `NtuplesBase` instance'
                             ''.format(dspace))
 
         if sampling is not None:
             if not isinstance(sampling, Operator):
-                raise TypeError('sampling operator {!r} not an `Operator` '
-                                'instance.'.format(sampling))
+                raise TypeError('`sampling` {!r} not an `Operator` '
+                                'instance'.format(sampling))
 
             if sampling.domain != uspace:
-                raise ValueError('sampling operator domain {} not equal to '
-                                 'the undiscretized space {}.'
+                raise ValueError('`sampling.domain` {} not equal to '
+                                 'the undiscretized space {}'
                                  ''.format(sampling.domain, dspace))
 
             if sampling.range != dspace:
-                raise ValueError('sampling operator range {} not equal to'
-                                 'the data space {}.'
+                raise ValueError('`sampling.range` {} not equal to'
+                                 'the data space {}'
                                  ''.format(sampling.range, dspace))
 
         if interpol is not None:
             if not isinstance(interpol, Operator):
-                raise TypeError('interpolation operator {!r} not an Operator '
-                                'instance.'.format(interpol))
+                raise TypeError('`interpol` {!r} not an Operator '
+                                'instance'.format(interpol))
 
             if interpol.domain != dspace:
-                raise ValueError('interpolation operator domain {} not equal '
-                                 'to the data space {}.'
+                raise ValueError('`interpol.domain` {} not equal '
+                                 'to the data space {}'
                                  ''.format(interpol.domain, dspace))
 
             if interpol.range != uspace:
-                raise ValueError('interpolation operator range {} not equal to'
-                                 'the undiscretized space {}.'
+                raise ValueError('`interpol.range` {} not equal to'
+                                 'the undiscretized space {}'
                                  ''.format(interpol.range, uspace))
 
         super().__init__(dspace.size, dspace.dtype)
@@ -150,7 +150,7 @@ class DiscretizedSet(NtuplesBase):
         if self._sampling is not None:
             return self._sampling
         else:
-            raise NotImplementedError('no sampling operator provided.')
+            raise NotImplementedError('no sampling operator provided')
 
     @property
     def interpolation(self):
@@ -158,7 +158,7 @@ class DiscretizedSet(NtuplesBase):
         if self._interpolation is not None:
             return self._interpolation
         else:
-            raise NotImplementedError('no interpolation operator provided.')
+            raise NotImplementedError('no interpolation operator provided')
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
@@ -220,7 +220,7 @@ class DiscretizedSet(NtuplesBase):
 
     @property
     def element_type(self):
-        """ `DiscretizedSetVector` """
+        """`DiscretizedSetVector`"""
         return DiscretizedSetVector
 
 
@@ -242,6 +242,23 @@ class DiscretizedSetVector(NtuplesBaseVector):
     def ntuple(self):
         """Structure for data storage."""
         return self._ntuple
+
+    @property
+    def dtype(self):
+        """Type of data storage."""
+        return self.ntuple.dtype
+
+    @property
+    def size(self):
+        """Size of data storage."""
+        return self.ntuple.size
+
+    def __len__(self):
+        """Return ``len(self)``.
+
+        Size of data storage.
+        """
+        return self.size
 
     def copy(self):
         """Create an identical (deep) copy of this vector."""
@@ -423,35 +440,25 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
         FnBase.__init__(self, dspace.size, dspace.dtype)
 
         if not isinstance(uspace, LinearSpace):
-            raise TypeError('undiscretized space {!r} not a LinearSpace '
-                            'instance.'.format(uspace))
+            raise TypeError('`uspace` {!r} not a LinearSpace '
+                            'instance'.format(uspace))
 
         if not isinstance(dspace, FnBase):
-            raise TypeError('data space {!r} not an FnBase instance.'
+            raise TypeError('`dspace` {!r} not an FnBase instance'
                             ''.format(dspace))
 
         if uspace.field != dspace.field:
             raise ValueError('fields {} and {} of the undiscretized and '
-                             'data spaces, resp., are not equal.'
+                             'data spaces, resp., are not equal'
                              ''.format(uspace.field, dspace.field))
 
-        if sampling is not None:
-            if not isinstance(sampling, Operator):
-                raise TypeError('sampling operator {!r} is not an '
-                                'Operator instance.'.format(sampling))
+        if sampling is not None and not sampling.is_linear:
+            raise TypeError('`sampling` {!r} is not linear'
+                            ''.format(sampling))
 
-            if not sampling.is_linear:
-                raise TypeError('sampling operator {!r} is not '
-                                'linear'.format(sampling))
-
-        if interpol is not None:
-            if not isinstance(interpol, Operator):
-                raise TypeError('interpolation operator {!r} is not an '
-                                'Operator instance.'.format(interpol))
-
-            if not interpol.is_linear:
-                raise TypeError('interpolation operator {!r} is not '
-                                'linear'.format(interpol))
+        if interpol is not None and not interpol.is_linear:
+            raise TypeError('`interpol` {!r} is not linear'
+                            ''.format(interpol))
 
     # Pass-through attributes of the wrapped ``dspace``
     def zero(self):
@@ -511,7 +518,7 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
 
     @property
     def element_type(self):
-        """ `DiscretizedSpaceVector` """
+        """`DiscretizedSpaceVector`"""
         return DiscretizedSpaceVector
 
 
@@ -550,11 +557,11 @@ def dspace_type(space, impl, dtype=None):
     """
     impl, impl_in = str(impl).lower(), impl
     if impl not in ('numpy', 'cuda'):
-        raise ValueError("implementation '{}' not understood."
+        raise ValueError("`impl` '{}' not understood"
                          ''.format(impl_in))
 
     if impl == 'cuda' and not CUDA_AVAILABLE:
-        raise ValueError('CUDA implementation not available.')
+        raise ValueError("'cuda' implementation not available")
 
     basic_map = {'numpy': Fn, 'cuda': CudaFn}
 
@@ -573,19 +580,19 @@ def dspace_type(space, impl, dtype=None):
     elif is_real_floating_dtype(dtype):
         if field_type is None or field_type == ComplexNumbers:
             raise TypeError('real floating data type {!r} requires space '
-                            'field to be of type RealNumbers, got {}.'
+                            'field to be of type RealNumbers, got {}'
                             ''.format(dtype, field_type))
         stype = spacetype_map[impl][field_type]
     elif is_complex_floating_dtype(dtype):
         if field_type is None or field_type == RealNumbers:
             raise TypeError('complex floating data type {!r} requires space '
-                            'field to be of type ComplexNumbers, got {!r}.'
+                            'field to be of type ComplexNumbers, got {!r}'
                             ''.format(dtype, field_type))
         stype = spacetype_map[impl][field_type]
     elif is_scalar_dtype(dtype):
         if field_type == ComplexNumbers:
             raise TypeError('non-floating data type {!r} requires space field '
-                            'to be of type RealNumbers, got {!r}.'
+                            'to be of type RealNumbers, got {!r}'
                             .format(dtype, field_type))
         elif field_type == RealNumbers:
             stype = basic_map[impl]
@@ -595,11 +602,11 @@ def dspace_type(space, impl, dtype=None):
         stype = spacetype_map[impl][field_type]
     else:
         raise TypeError('non-scalar data type {!r} cannot be combined with '
-                        'a LinearSpace.'.format(dtype))
+                        'a `LinearSpace`'.format(dtype))
 
     if stype is None:
         raise NotImplementedError('no corresponding data space available '
-                                  'for space {!r} and implementation {!r}.'
+                                  'for space {!r} and implementation {!r}'
                                   ''.format(space, impl))
     return stype
 

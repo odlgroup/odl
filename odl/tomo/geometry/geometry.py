@@ -65,14 +65,14 @@ class Geometry(with_metaclass(ABCMeta, object)):
            The detector of this geometry
         """
         if int(ndim) <= 0:
-            raise ValueError('number of dimensions {} is not positive.'
+            raise ValueError('number of dimensions {} is not positive'
                              ''.format(ndim))
         if not isinstance(motion_part, RectPartition):
-            raise TypeError('motion_part {!r} not a RectPartition instance.'
+            raise TypeError('`motion_part` {!r} not a RectPartition instance'
                             ''.format(motion_part))
 
         if not isinstance(detector, Detector):
-            raise TypeError('detector {!r} not a Detector instance.'
+            raise TypeError('`detector` {!r} not a Detector instance'
                             ''.format(detector))
 
         self._ndim = int(ndim)
@@ -287,11 +287,11 @@ class DivergentBeamGeometry(Geometry):
             (Unit) vector pointing from the detector to the source
         """
         if mpar not in self.motion_params:
-            raise ValueError('mpar {} is not in the valid range {}.'
+            raise ValueError('`mpar` {} is not in the valid range {}'
                              ''.format(mpar, self.motion_params))
         if dpar not in self.det_params:
-            raise ValueError('detector parameter {} is not in the valid '
-                             'range {}.'.format(dpar, self.det_params))
+            raise ValueError('`dpar` {} is not in the valid range {}'
+                             ''.format(dpar, self.det_params))
 
         vec = self.src_position(mpar) - self.det_point_position(mpar, dpar)
 
@@ -315,11 +315,11 @@ class AxisOrientedGeometry(object):
             Vector defining the fixed rotation axis after normalization
         """
         if np.linalg.norm(axis) <= 1e-10:
-            raise ValueError('axis {} too close to zero.'.format(axis))
+            raise ValueError('`axis` {} too close to zero'.format(axis))
 
         self._axis = np.asarray(axis, dtype=float) / np.linalg.norm(axis)
         if self.axis.shape != (3,):
-            raise ValueError('axis has shape {}, expected (3,).'
+            raise ValueError('`axis` has shape {}, expected (3,)'
                              ''.format(self.axis.shape))
 
     @property
@@ -354,7 +354,7 @@ class AxisOrientedGeometry(object):
         """
         angle = float(angle)
         if angle not in self.motion_params:
-            raise ValueError('angle {} is not in the valid range {}.'
+            raise ValueError('`angle` {} is not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
         axis = self.axis

@@ -143,31 +143,31 @@ class TensorGrid(Set):
         TensorGrid([-1.0], [2.0, 4.0], [5.0], [4.0, 7.0])
         """
         if not coord_vectors:
-            raise ValueError('No coordinate vectors given.')
+            raise ValueError('no coordinate vectors given')
 
         vecs = tuple(np.atleast_1d(vec).astype('float64')
                      for vec in coord_vectors)
         for i, vec in enumerate(vecs):
 
             if len(vec) == 0:
-                raise ValueError('vector {} has zero length.'
+                raise ValueError('vector {} has zero length'
                                  ''.format(i + 1))
 
             if not np.all(np.isfinite(vec)):
-                raise ValueError('vector {} contains invalid entries.'
+                raise ValueError('vector {} contains invalid entries'
                                  ''.format(i + 1))
 
             if vec.ndim != 1:
-                raise ValueError('vector {} has {} dimensions instead of 1.'
+                raise ValueError('vector {} has {} dimensions instead of 1'
                                  ''.format(i + 1, vec.ndim))
 
             sorted_vec = np.sort(vec)
             if np.any(vec != sorted_vec):
-                raise ValueError('vector {} not sorted.'
+                raise ValueError('vector {} not sorted'
                                  ''.format(i + 1))
 
             if np.any(np.diff(vec) == 0):
-                raise ValueError('vector {} contains duplicates.'
+                raise ValueError('vector {} contains duplicates'
                                  ''.format(i + 1))
 
         self._coord_vectors = vecs
@@ -525,7 +525,7 @@ class TensorGrid(Set):
         if idx < 0:
             idx = self.ndim + idx
         if not 0 <= idx <= self.ndim:
-            raise IndexError('index {} outside the valid range 0 ... {}.'
+            raise IndexError('index {} outside the valid range 0 ... {}'
                              ''.format(idx, self.ndim))
 
         new_vecs = (self.coord_vectors[:idx] + other.coord_vectors +
@@ -603,7 +603,7 @@ class TensorGrid(Set):
                [ 1.,  2.]])
         """
         if str(order).upper() not in ('C', 'F'):
-            raise ValueError('order {!r} not recognized.'.format(order))
+            raise ValueError('order {!r} not recognized'.format(order))
         else:
             order = str(order).upper()
 
@@ -844,36 +844,36 @@ class RegularGrid(TensorGrid):
 
         if any(x.ndim != 1 for x in (min_pt, max_pt, shape)):
             raise ValueError('input arrays have dimensions {}, {}, {} '
-                             'instead of 1.'
+                             'instead of 1'
                              ''.format(min_pt.ndim, max_pt.ndim, shape.ndim))
 
         if not min_pt.shape == max_pt.shape == shape.shape:
-            raise ValueError('input array shapes {}, {}, {} are not equal.'
+            raise ValueError('input array shapes {}, {}, {} are not equal'
                              ''.format(min_pt.shape, max_pt.shape,
                                        shape.shape))
 
         if not np.all(np.isfinite(min_pt)):
-            raise ValueError('minimum point {} has invalid entries.'
+            raise ValueError('minimum point {} has invalid entries'
                              ''.format(min_pt))
 
         if not np.all(np.isfinite(max_pt)):
-            raise ValueError('maximum point {} has invalid entries.'
+            raise ValueError('maximum point {} has invalid entries'
                              ''.format(max_pt))
 
         if not np.all(min_pt <= max_pt):
             raise ValueError('minimum point {} has entries larger than '
-                             'those of maximum point {}.'
+                             'those of maximum point {}'
                              ''.format(min_pt, max_pt))
 
         if np.any(shape <= 0):
             raise ValueError('shape parameter is {} but should only contain '
-                             'positive values.'.format(shape))
+                             'positive values'.format(shape))
 
         degen = np.where(min_pt == max_pt)[0]
         if np.any(shape[degen] != 1):
             raise ValueError('degenerated axes {} with shapes {}, expected '
-                             '{}.'.format(tuple(degen[:]), tuple(shape[degen]),
-                                          len(degen) * (1,)))
+                             '{}'.format(tuple(degen[:]), tuple(shape[degen]),
+                                         len(degen) * (1,)))
 
         coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
@@ -1013,7 +1013,7 @@ class RegularGrid(TensorGrid):
             if idx < 0:
                 idx = self.ndim + idx
             if not 0 <= idx <= self.ndim:
-                raise IndexError('index out of valid range 0 -> {}.'
+                raise IndexError('index out of valid range 0 -> {}'
                                  ''.format(self.ndim))
 
             new_shape = self.shape[:idx] + other.shape + self.shape[idx:]
@@ -1028,7 +1028,7 @@ class RegularGrid(TensorGrid):
             return self_tg.insert(index, other)
 
         else:
-            raise TypeError('{!r} is not a TensorGrid instance.'.format(other))
+            raise TypeError('{!r} is not a TensorGrid instance'.format(other))
 
     def squeeze(self):
         """Return the grid with removed degenerate dimensions.
@@ -1194,7 +1194,7 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     num_nodes = np.atleast_1d(num_nodes).astype('int64', casting='safe')
 
     if not isinstance(intv_prod, IntervalProd):
-        raise TypeError('{!r} is not an `IntervalProd` instance.'
+        raise TypeError('{!r} is not an `IntervalProd` instance'
                         ''.format(intv_prod))
 
     if np.shape(nodes_on_bdry) == ():
@@ -1203,7 +1203,7 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     elif intv_prod.ndim == 1 and len(nodes_on_bdry) == 2:
         nodes_on_bdry = [nodes_on_bdry]
     elif len(nodes_on_bdry) != intv_prod.ndim:
-        raise ValueError('`nodes_on_bdry` has length {}, expected {}.'
+        raise ValueError('`nodes_on_bdry` has length {}, expected {}'
                          ''.format(len(nodes_on_bdry), intv_prod.ndim))
     else:
         num_nodes = tuple(int(n) for n in num_nodes)

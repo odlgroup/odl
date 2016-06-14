@@ -86,10 +86,10 @@ class WeightingBase(object):
         self._impl = str(impl).lower()
         if self._exponent <= 0:
             raise ValueError('only positive exponents or inf supported, '
-                             'got {}.'.format(exponent))
+                             'got {}'.format(exponent))
         elif self._exponent != 2.0 and self._dist_using_inner:
             raise ValueError('`dist_using_inner` can only be used if the '
-                             'exponent is 2.0.')
+                             'exponent is 2.0')
 
     @property
     def impl(self):
@@ -276,20 +276,20 @@ class MatrixWeightingBase(WeightingBase):
         else:
             self._matrix = np.asarray(matrix)
             if self._matrix.dtype == object:
-                raise ValueError('invalid matrix {}.'.format(matrix))
+                raise ValueError('invalid matrix {}'.format(matrix))
             elif self._matrix.ndim != 2:
                 raise ValueError('matrix {} is {}-dimensional instead of '
-                                 '2-dimensional.'
+                                 '2-dimensional'
                                  ''.format(matrix, self._matrix.ndim))
 
         if self._matrix.shape[0] != self._matrix.shape[1]:
-            raise ValueError('matrix has shape {}, expected a square matrix.'
+            raise ValueError('matrix has shape {}, expected a square matrix'
                              ''.format(self._matrix.shape))
 
         if (self.matrix_issparse and
                 self.exponent not in (1.0, 2.0, float('inf'))):
             raise NotImplementedError('sparse matrices only supported for '
-                                      'exponent 1.0, 2.0 or `inf`.')
+                                      'exponent 1.0, 2.0 or `inf`')
 
         # Compute the power and decomposition if desired
         self._eigval = self._eigvec = None
@@ -328,7 +328,7 @@ class MatrixWeightingBase(WeightingBase):
         """
         if self.matrix_issparse:
             raise NotImplementedError('validation not supported for sparse '
-                                      'matrices.')
+                                      'matrices')
         elif self._eigval is not None:
             return np.all(np.greater(self._eigval, 0))
         else:
@@ -368,7 +368,7 @@ class MatrixWeightingBase(WeightingBase):
             if the matrix is sparse (not supported by scipy 0.17)
         """
         if self.matrix_issparse:
-            raise NotImplementedError('sparse matrix not supported.')
+            raise NotImplementedError('sparse matrix not supported')
 
         if cache is None:
             cache = self._cache_mat_decomp
@@ -557,10 +557,10 @@ class VectorWeightingBase(WeightingBase):
             self._vector = np.asarray(vector)
 
         if self.vector.dtype == object:
-            raise ValueError('invalid vector {}.'.format(vector))
+            raise ValueError('invalid vector {}'.format(vector))
         elif self.vector.ndim != 1:
             raise ValueError('vector {} is {}-dimensional instead of '
-                             '1-dimensional.'
+                             '1-dimensional'
                              ''.format(vector, self._vector.ndim))
 
     @property
@@ -678,10 +678,10 @@ class ConstWeightingBase(WeightingBase):
                          dist_using_inner=dist_using_inner)
         self._const = float(constant)
         if self.const <= 0:
-            raise ValueError('expected positive constant, got {}.'
+            raise ValueError('expected positive constant, got {}'
                              ''.format(constant))
         if not np.isfinite(self.const):
-            raise ValueError('constant {} is invalid.'.format(constant))
+            raise ValueError('`constant` {} is invalid'.format(constant))
 
     @property
     def const(self):
@@ -846,7 +846,7 @@ class CustomInnerProductBase(WeightingBase):
                          dist_using_inner=dist_using_inner)
 
         if not callable(inner):
-            raise TypeError('inner product function {!r} is not callable.'
+            raise TypeError('`inner` {!r} is not callable'
                             ''.format(inner))
         self._inner = inner
 
@@ -914,7 +914,7 @@ class CustomNormBase(WeightingBase):
         super().__init__(impl=impl, exponent=1.0, dist_using_inner=False)
 
         if not callable(norm):
-            raise TypeError('norm function {!r} is not callable.'
+            raise TypeError('`norm` {!r} is not callable'
                             ''.format(norm))
         self._norm = norm
 
@@ -983,7 +983,7 @@ class CustomDistBase(WeightingBase):
         super().__init__(impl=impl, exponent=1.0, dist_using_inner=False)
 
         if not callable(dist):
-            raise TypeError('distance function {!r} is not callable.'
+            raise TypeError('`dist` {!r} is not callable'
                             ''.format(dist))
         self._dist = dist
 

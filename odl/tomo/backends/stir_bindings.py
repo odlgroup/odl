@@ -164,7 +164,7 @@ class ForwardProjectorByBinWrapper(Operator):
         with StirVerbosity(0):
             self.projector.forward_project(self.proj_data, self.volume)
 
-        # make odl data
+        # make ODL data
         out[:] = stirextra.to_numpy(self.proj_data)
 
     @property
@@ -209,12 +209,12 @@ class BackProjectorByBinWrapper(Operator):
 
         # Check data sizes
         if range.shape != volume.shape():
-            raise ValueError('range.shape {} does not equal volume shape {}'
+            raise ValueError('`range.shape` {} does not equal volume shape {}'
                              ''.format(range.shape, volume.shape()))
         # TODO: improve
         proj_shape = proj_data.to_array().shape()
         if domain.shape != proj_shape:
-            raise ValueError('domain.shape {} does not equal proj shape {}'
+            raise ValueError('`domain.shape` {} does not equal proj shape {}'
                              ''.format(range.shape, proj_shape))
 
         # Set range domain
@@ -261,7 +261,7 @@ class BackProjectorByBinWrapper(Operator):
         with StirVerbosity(0):
             self.back_projector.back_project(self.volume, self.proj_data)
 
-        # make odl data
+        # make ODL data
         out[:] = stirextra.to_numpy(self.volume)
 
 

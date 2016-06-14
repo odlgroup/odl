@@ -32,8 +32,6 @@ standard_library.install_aliases()
 
 import numpy as np
 import scipy
-import scipy.ndimage
-
 import odl
 
 

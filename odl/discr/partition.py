@@ -67,21 +67,21 @@ class RectPartition(object):
             contained in ``intv_prod``.
         """
         if not isinstance(intv_prod, IntervalProd):
-            raise TypeError('{!r} is not an IntervalProd instance.'
+            raise TypeError('{!r} is not an IntervalProd instance'
                             ''.format(intv_prod))
         if not isinstance(grid, TensorGrid):
-            raise TypeError('{!r} is not a TensorGrid instance.'
+            raise TypeError('{!r} is not a TensorGrid instance'
                             ''.format(grid))
 
         # More conclusive error than the one from contains_set
         if intv_prod.ndim != grid.ndim:
             raise ValueError('interval product {} is {}-dimensional while '
-                             'grid {} is {}-dimensional.'
+                             'grid {} is {}-dimensional'
                              ''.format(intv_prod, intv_prod.ndim,
                                        grid, grid.ndim))
 
         if not intv_prod.contains_set(grid):
-            raise ValueError('{} is not contained in {}.'
+            raise ValueError('{} is not contained in {}'
                              ''.format(grid, intv_prod))
 
         super().__init__()
@@ -325,7 +325,7 @@ class RectPartition(object):
         if not self.is_regular:
             raise NotImplementedError(
                 'cell sides not defined for irregular partitions. Use '
-                'cell_sizes_vecs() instead.')
+                'cell_sizes_vecs() instead')
 
         sides = self.grid.stride
         sides[sides == 0] = self.extent()[sides == 0]
@@ -682,7 +682,7 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
             cvec = grid.coord_vectors[ax]
             if len(cvec) == 1:
                 raise ValueError('cannot calculate begin in axis {} with '
-                                 'only 1 grid point.'.format(ax))
+                                 'only 1 grid point'.format(ax))
             begin_vec[ax] = cvec[0] - (cvec[1] - cvec[0]) / 2
         else:
             begin_vec[ax] = beg_val
@@ -693,7 +693,7 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
             cvec = grid.coord_vectors[ax]
             if len(cvec) == 1:
                 raise ValueError('cannot calculate end in axis {} with '
-                                 'only 1 grid point.'.format(ax))
+                                 'only 1 grid point'.format(ax))
             end_vec[ax] = cvec[-1] + (cvec[-1] - cvec[-2]) / 2
         else:
             end_vec[ax] = end_val

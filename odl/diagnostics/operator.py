@@ -90,7 +90,7 @@ class OperatorTest(object):
         return operator_norm
 
     def self_adjoint(self):
-        """Verify (Ax, y) = (x, Ay)"""
+        """Verify (Ax, y) = (x, Ay)."""
         name = 'Verifying the identity (Ax, y) = (x, Ay)'
 
         left_inner_vals = []
@@ -121,7 +121,7 @@ class OperatorTest(object):
         print('(x, Ay) / (Ax, y) = {}. Should be 1.0'.format(scale))
 
     def _adjoint_definition(self):
-        """Verify (Ax, y) = (x, A^T y)"""
+        """Verify (Ax, y) = (x, A^T y)."""
         name = 'Verifying the identity (Ax, y) = (x, A^T y)'
 
         left_inner_vals = []
@@ -217,7 +217,7 @@ class OperatorTest(object):
     def _derivative_convergence(self):
         name = 'Testing derivative is linear approximation'
 
-        with FailCounter(name, "error = "
+        with FailCounter(name, "Error = "
                          "inf_c ||A(x+c*p)-A(x)-A'(x)(c*p)|| / c") as counter:
             for [name_x, x], [name_dx, dx] in samples(self.operator.domain,
                                                       self.operator.domain):

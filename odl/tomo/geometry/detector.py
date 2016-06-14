@@ -57,7 +57,7 @@ class Detector(with_metaclass(ABCMeta, object)):
            It determines dimension, parameter range and discretization.
         """
         if not isinstance(part, RectPartition):
-            raise TypeError('partition {!r} is not a RectPartition instance.'
+            raise TypeError('`part` {!r} is not a RectPartition instance'
                             ''.format(part))
 
         self._part = part
@@ -149,7 +149,7 @@ class Detector(with_metaclass(ABCMeta, object)):
             https://en.wikipedia.org/wiki/Surface_area
         """
         if param not in self.params:
-            raise ValueError('parameter value {} not in the valid range {}.'
+            raise ValueError('`param` {} not in the valid range {}'
                              ''.format(param, self.params))
         if self.ndim == 1:
             return float(np.linalg.norm(self.surface_deriv(param)))
@@ -177,8 +177,8 @@ class FlatDetector(Detector):
             The constant density 1.0
         """
         if param not in self.params:
-            raise ValueError('parameter value {} not in the valid range '
-                             '{}.'.format(param, self.params))
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param, self.params))
         # TODO: apart from being constant, there is no big simplification
         # in this method compared to parent. Consider removing FlatDetector
         # altogether.
@@ -203,10 +203,10 @@ class Flat1dDetector(FlatDetector):
         super().__init__(part)
         if self.ndim != 1:
             raise ValueError('expected partition to have 1 dimension, '
-                             'got {}.'.format(self.ndim))
+                             'got {}'.format(self.ndim))
 
         if np.linalg.norm(axis) <= 1e-10:
-            raise ValueError('axis vector {} too close to zero.'
+            raise ValueError('`axis` vector {} too close to zero'
                              ''.format(axis))
         self._axis = np.asarray(axis) / np.linalg.norm(axis)
         self._normal = perpendicular_vector(self.axis)
@@ -245,8 +245,8 @@ class Flat1dDetector(FlatDetector):
         """
         param = float(param)
         if param not in self.params:
-            raise ValueError('parameter value {} not in the valid range '
-                             '{}.'.format(param, self.params))
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param, self.params))
         return self.axis * param
 
     def surface_deriv(self, param=None):
@@ -263,8 +263,8 @@ class Flat1dDetector(FlatDetector):
             The constant derivative
         """
         if param is not None and param not in self.params:
-            raise ValueError('parameter value {} not in the valid range '
-                             '{}.'.format(param, self.params))
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param, self.params))
         return self.axis
 
     def __repr__(self):
@@ -300,21 +300,21 @@ class Flat2dDetector(FlatDetector):
         super().__init__(part)
         if self.ndim != 2:
             raise ValueError('expected partition to have 2 dimensions, '
-                             'got {}.'.format(self.ndim))
+                             'got {}'.format(self.ndim))
 
         for i, a in enumerate(axes):
             if np.linalg.norm(a) <= 1e-10:
-                raise ValueError('axis vector {} {} too close to zero.'
+                raise ValueError('axis vector {} {} too close to zero'
                                  ''.format(i, axes[i]))
             if np.shape(a) != (3,):
-                raise ValueError('axis vector {} has shape {}. expected (3,).'
+                raise ValueError('axis vector {} has shape {}. expected (3,)'
                                  ''.format(i, np.shape(a)))
 
         self._axes = tuple(np.asarray(a) / np.linalg.norm(a) for a in axes)
         self._normal = np.cross(self.axes[0], self.axes[1])
 
         if np.linalg.norm(self.normal) <= 1e-4:
-            raise ValueError('axes are almost parallel (norm of normal = '
+            raise ValueError('`axes` are almost parallel (norm of normal = '
                              '{})'.format(np.linalg.norm(self.normal)))
 
     @property
@@ -350,8 +350,8 @@ class Flat2dDetector(FlatDetector):
             given parameters
         """
         if param not in self.params:
-            raise ValueError('parameter value {} not in the valid range '
-                             '{}.'.format(param, self.params))
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param, self.params))
 
         return sum(float(p) * ax for p, ax in zip(param, self.axes))
 
@@ -369,8 +369,8 @@ class Flat2dDetector(FlatDetector):
             The constant partial derivatives given by the detector axes
         """
         if param is not None and param not in self.params:
-            raise ValueError('parameter value {} not in the valid range '
-                             '{}.'.format(param, self.params))
+            raise ValueError('`param` {} not in the valid range '
+                             '{}'.format(param, self.params))
         return self.axes
 
     def __repr__(self):
@@ -409,13 +409,13 @@ class CircleSectionDetector(Detector):
         """
         super().__init__(part)
         if self.ndim != 1:
-            raise ValueError('expected partition to have 1 dimension, '
-                             'got {}.'.format(self.ndim))
+            raise ValueError('expected `part` to have 1 dimension, '
+                             'got {}'.format(self.ndim))
 
-        self._circ_rad = float(circ_rad)
+        self._circ_rad, circ_rad_in = float(circ_rad), circ_rad
         if self.circ_rad <= 0:
-            raise ValueError('circle radius {} is not positive.'
-                             ''.format(circ_rad))
+            raise ValueError('`circ_rad` {} is not positive'
+                             ''.format(circ_rad_in))
 
     @property
     def circ_rad(self):
@@ -434,8 +434,8 @@ class CircleSectionDetector(Detector):
             return (self.circ_rad *
                     np.array([np.cos(param) - 1, np.sin(param)]).T)
         else:
-            raise ValueError('parameter value(s) {} not in the valid range '
-                             '{}.'.format(param, self.params))
+            raise ValueError('`param` value(s) {} not in the valid range '
+                             '{}'.format(param, self.params))
 
     def surface_deriv(self, param):
         """The partial derivative(s) of the surface parametrization.
@@ -448,8 +448,8 @@ class CircleSectionDetector(Detector):
         if param in self.params or self.params.contains_all(param):
             return self.circ_rad * np.array([-np.sin(param), np.cos(param)]).T
         else:
-            raise ValueError('parameter value(s) {} not in the valid range '
-                             '{}.'.format(param, self.params))
+            raise ValueError('`param` value(s) {} not in the valid range '
+                             '{}'.format(param, self.params))
 
     def surface_measure(self, param):
         """The constant density function of the surface measure.
@@ -470,8 +470,8 @@ class CircleSectionDetector(Detector):
         elif self.params.contains_all(param):
             return self.circ_rad * np.ones_like(param, dtype=float)
         else:
-            raise ValueError('parameter value(s) {} not in the valid range '
-                             '{}.'.format(param, self.params))
+            raise ValueError('`param` value(s) {} not in the valid range '
+                             '{}'.format(param, self.params))
 
     def __repr__(self):
         """Return ``repr(self)``."""

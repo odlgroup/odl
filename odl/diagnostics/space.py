@@ -76,7 +76,7 @@ class SpaceTest(object):
         self.eps = eps
 
     def element(self):
-        """Verify `LinearSpace.element`"""
+        """Verify `LinearSpace.element`."""
         name = 'Verifying element method'
 
         with FailCounter(name) as counter:
@@ -90,7 +90,7 @@ class SpaceTest(object):
                 counter.fail('*** space.element() not in space ***')
 
     def field(self):
-        """Verify `LinearSpace.field`"""
+        """Verify `LinearSpace.field`."""
         name = 'Verifying field property'
 
         with FailCounter(name) as counter:

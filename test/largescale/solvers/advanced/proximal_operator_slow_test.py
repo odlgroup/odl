@@ -29,11 +29,9 @@ import pytest
 # Internal
 import odl
 from odl.solvers.advanced.proximal_operators import (
-    combine_proximals, proximal_zero, proximal_nonnegativity,
     proximal_l1, proximal_cconj_l1,
     proximal_l2, proximal_cconj_l2,
-    proximal_l2_squared, proximal_cconj_l2_squared,
-    proximal_cconj_kl)
+    proximal_l2_squared, proximal_cconj_l2_squared)
 from odl.util.testutils import example_element
 
 

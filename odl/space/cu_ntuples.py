@@ -109,7 +109,7 @@ class CudaNtuples(NtuplesBase):
         """
 
         if np.dtype(dtype) not in _TYPE_MAP_NPY2CUDA.keys():
-            raise TypeError('data type {!r} not supported in CUDA'
+            raise TypeError('`dtype` {!r} not supported in CUDA'
                             ''.format(dtype))
 
         super().__init__(size, dtype)
@@ -186,17 +186,17 @@ class CudaNtuples(NtuplesBase):
                     # Array-like input. Need to go through a NumPy array
                     arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
                     if arr.shape != (self.size,):
-                        raise ValueError('expected input shape {}, got {}.'
+                        raise ValueError('expected input shape {}, got {}'
                                          ''.format((self.size,), arr.shape))
                     elem = self.element()
                     elem[:] = arr
                     return elem
             else:
-                raise ValueError('cannot provide both inp and data_ptr.')
+                raise ValueError('cannot provide both `inp` and `data_ptr`')
 
     @property
     def element_type(self):
-        """ `CudaNtuplesVector` """
+        """`CudaNtuplesVector`"""
         return CudaNtuplesVector
 
 
@@ -207,13 +207,13 @@ class CudaNtuplesVector(NtuplesBaseVector, LinearSpaceVector):
     def __init__(self, space, data):
         """Initialize a new instance."""
         if not isinstance(space, CudaNtuples):
-            raise TypeError('{!r} not a `CudaNtuples` instance.'
+            raise TypeError('`space` {!r} not a `CudaNtuples` instance'
                             ''.format(space))
 
         super().__init__(space)
 
         if not isinstance(data, self._space._vector_impl):
-            raise TypeError('data {!r} not a `{}` instance.'
+            raise TypeError('`data` {!r} not a `{}` instance'
                             ''.format(data, self._space._vector_impl))
         self._data = data
 
@@ -604,7 +604,7 @@ class CudaFn(FnBase, CudaNtuples):
         # Check validity of option combination (3 or 4 out of 4 must be None)
         if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
-                             '`dist`, `norm` and `inner`.')
+                             '`dist`, `norm` and `inner`')
         if weight is not None:
             if isinstance(weight, WeightingBase):
                 self._weighting = weight
@@ -621,7 +621,7 @@ class CudaFn(FnBase, CudaNtuples):
                     self._weighting = CudaFnVectorWeighting(
                         weight, exponent=exponent)
                 else:
-                    raise ValueError('invalid weight argument {!r}.'
+                    raise ValueError('invalid weight argument {!r}'
                                      ''.format(weight))
         elif dist is not None:
             self._weighting = CudaFnCustomDist(dist)
@@ -669,7 +669,7 @@ class CudaFn(FnBase, CudaNtuples):
         if field == RealNumbers():
             return np.dtype('float32')
         else:
-            raise ValueError('no default data type defined for field {}.'
+            raise ValueError('no default data type defined for field {}'
                              ''.format(field))
 
     def _lincomb(self, a, x1, b, x2, out):
@@ -848,7 +848,7 @@ class CudaFn(FnBase, CudaNtuples):
         return self.element_type(self, self._vector_impl(self.size, 1))
 
     def __eq__(self, other):
-        """s.__eq__(other) <==> s == other.
+        """Return ``self == other``
 
         Returns
         -------
@@ -894,7 +894,7 @@ class CudaFn(FnBase, CudaNtuples):
                 self.weighting == other.weighting)
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """Return ``repr(self)``."""
         if self.is_rn:
             class_name = 'CudaRn'
         elif self.is_cn:
@@ -913,7 +913,7 @@ class CudaFn(FnBase, CudaNtuples):
 
     @property
     def element_type(self):
-        """ `CudaFnVector` """
+        """`CudaFnVector`"""
         return CudaFnVector
 
 
@@ -950,7 +950,7 @@ def CudaRn(size, dtype='float32', **kwargs):
     rn = CudaFn(size, dtype, **kwargs)
 
     if not rn.is_rn:
-        raise TypeError('data type {!r} not a real floating-point type.'
+        raise TypeError('data type {!r} not a real floating-point type'
                         ''.format(dtype))
     return rn
 
@@ -972,12 +972,10 @@ def _weighting(weight, exponent):
                 weight_, exponent)
         elif weight_.ndim == 2:
             raise NotImplementedError('matrix weighting not implemented '
-                                      'for CUDA spaces.')
-#            weighting = CudaFnMatrixWeighting(
-#                weight_, exponent, dist_using_inner=dist_using_inner)
+                                      'for CUDA spaces')
         else:
             raise ValueError('array-like weight must have 1 or 2 dimensions, '
-                             'but {} has {} dimensions.'
+                             'but {} has {} dimensions'
                              ''.format(weight, weight_.ndim))
     return weighting
 
@@ -1067,7 +1065,7 @@ def _dist_default(x1, x2):
 def _pdist_default(x1, x2, p):
     """Default p-distance implementation."""
     if p == float('inf'):
-        raise NotImplementedError('inf-norm not implemented.')
+        raise NotImplementedError('`inf`-norm not implemented')
     return x1.data.dist_power(x2.data, p)
 
 
@@ -1084,14 +1082,14 @@ def _norm_default(x):
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
     if p == float('inf'):
-        raise NotImplementedError('inf-norm not implemented.')
+        raise NotImplementedError('`inf`-norm not implemented')
     return x.data.norm_power(p)
 
 
 def _pnorm_diagweight(x, p, w):
     """Diagonally weighted p-norm implementation."""
     if p == float('inf'):
-        raise NotImplementedError('inf-norm not implemented.')
+        raise NotImplementedError('`inf`-norm not implemented')
     return x.data.norm_weight(p, w.data)
 
 
@@ -1149,7 +1147,7 @@ class CudaFnVectorWeighting(VectorWeightingBase):
             product is not defined.
         """
         if not isinstance(vector, CudaFnVector):
-            raise TypeError('vector {!r} is not a CudaFnVector instance.'
+            raise TypeError('vector {!r} is not a CudaFnVector instance'
                             ''.format(vector))
 
         super().__init__(vector, impl='cuda', exponent=exponent,
@@ -1169,8 +1167,8 @@ class CudaFnVectorWeighting(VectorWeightingBase):
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('No inner product defined for '
-                                      'exponent != 2 (got {}).'
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
             return _inner_diagweight(x1, x2, self.vector)
@@ -1189,7 +1187,7 @@ class CudaFnVectorWeighting(VectorWeightingBase):
             The norm of the provided vector
         """
         if self.exponent == float('inf'):
-            raise NotImplementedError('inf norm not implemented yet.')
+            raise NotImplementedError('`inf` norm not implemented yet')
         else:
             return _pnorm_diagweight(x, self.exponent, self.vector)
 
@@ -1207,7 +1205,7 @@ class CudaFnVectorWeighting(VectorWeightingBase):
             The distance between the vectors
         """
         if self.exponent == float('inf'):
-            raise NotImplementedError('inf norm not implemented yet.')
+            raise NotImplementedError('inf norm not implemented yet')
         else:
             return _pdist_diagweight(x1, x2, self.exponent, self.vector)
 
@@ -1271,8 +1269,8 @@ class CudaFnConstWeighting(ConstWeightingBase):
             The inner product of the two vectors
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('No inner product defined for '
-                                      'exponent != 2 (got {}).'
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
             return self.const * _inner_default(x1, x2)

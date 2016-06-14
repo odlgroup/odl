@@ -78,27 +78,27 @@ class FunctionSetMapping(Operator):
         """
         map_type_ = str(map_type).lower()
         if map_type_ not in ('sampling', 'interpolation'):
-            raise ValueError('mapping type {!r} not understood.'
+            raise ValueError('`map_type` {} not understood'
                              ''.format(map_type))
         if not isinstance(fset, FunctionSet):
-            raise TypeError('function set {!r} is not a `FunctionSet` '
-                            'instance.'.format(fset))
+            raise TypeError('`fset` {!r} is not a `FunctionSet` '
+                            'instance'.format(fset))
 
         if not isinstance(partition, RectPartition):
-            raise TypeError('grid {!r} is not a `TensorGrid` instance.'
-                            ''.format(partition))
+            raise TypeError('`partition` {!r} is not a `RectPartition` '
+                            'instance'.format(partition))
         if not isinstance(dspace, NtuplesBase):
-            raise TypeError('data space {!r} is not an `NtuplesBase` instance.'
+            raise TypeError('`dspace` {!r} is not an `NtuplesBase` instance'
                             ''.format(dspace))
 
         if not fset.domain.contains_set(partition):
             raise ValueError('{} not contained in the domain {} '
-                             'of the function set {}.'
+                             'of the function set {}'
                              ''.format(partition, fset.domain, fset))
 
         if dspace.size != partition.size:
             raise ValueError('size {} of the data space {} not equal '
-                             'to the size {} of the partition.'
+                             'to the size {} of the partition'
                              ''.format(dspace.size, dspace, partition.size))
 
         domain = fset if map_type_ == 'sampling' else dspace
@@ -108,19 +108,19 @@ class FunctionSetMapping(Operator):
 
         if self.is_linear:
             if not isinstance(fset, FunctionSpace):
-                raise TypeError('function space {!r} is not a `FunctionSpace` '
-                                'instance.'.format(fset))
+                raise TypeError('`fset` {!r} is not a `FunctionSpace` '
+                                'instance'.format(fset))
             if not isinstance(dspace, FnBase):
-                raise TypeError('data space {!r} is not an `FnBase` instance.'
+                raise TypeError('`dspace` {!r} is not an `FnBase` instance'
                                 ''.format(dspace))
             if fset.field != dspace.field:
-                raise ValueError('field {} of the function space and field '
-                                 '{} of the data space are not equal.'
+                raise ValueError('`field` {} of the function space and `field`'
+                                 ' {} of the data space are not equal'
                                  ''.format(fset.field, dspace.field))
 
         order = str(kwargs.pop('order', 'C'))
         if str(order).upper() not in ('C', 'F'):
-            raise ValueError('order {!r} not recognized.'.format(order))
+            raise ValueError('`order` {!r} not recognized'.format(order))
         else:
             self._order = str(order).upper()
 
@@ -327,6 +327,9 @@ class NearestInterpolation(FunctionSetMapping):
             Data space providing containers for the values of a
             discretized object. Its `NtuplesBase.size` must be equal
             to the total number of grid points.
+
+        Other Parameters
+        ----------------
         variant : {'left', 'right'}, optional
             Behavior variant at midpoint between neighbors
 
@@ -352,7 +355,7 @@ class NearestInterpolation(FunctionSetMapping):
         variant = kwargs.pop('variant', 'left')
         self._variant = str(variant).lower()
         if self._variant not in ('left', 'right'):
-            raise ValueError("variant '{}' not understood.".format(variant))
+            raise ValueError("`variant` '{}' not understood".format(variant))
 
     def _call(self, x, out=None):
         """Create an interpolator from grid values ``x``.
@@ -482,8 +485,8 @@ class LinearInterpolation(FunctionSetMapping):
             Default: 'C'
         """
         if not isinstance(fspace, FunctionSpace):
-            raise TypeError('function space {!r} is not a `FunctionSpace` '
-                            'instance.'.format(fspace))
+            raise TypeError('`fspace` {!r} is not a `FunctionSpace` '
+                            'instance'.format(fspace))
 
         FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
                                     dspace, linear=True, **kwargs)
@@ -573,8 +576,8 @@ class PerAxisInterpolation(FunctionSetMapping):
             Default: 'C'
         """
         if not isinstance(fspace, FunctionSpace):
-            raise TypeError('function space {!r} is not a `FunctionSpace` '
-                            'instance.'.format(fspace))
+            raise TypeError('`fspace` {!r} is not a `FunctionSpace` '
+                            'instance'.format(fspace))
 
         FunctionSetMapping.__init__(self, 'interpolation', fspace, partition,
                                     dspace, linear=True, **kwargs)
@@ -601,14 +604,14 @@ class PerAxisInterpolation(FunctionSetMapping):
 
         for i, (scm, var) in enumerate(zip(schemes_, variants_)):
             if scm not in _SUPPORTED_INTERP_SCHEMES:
-                raise ValueError("Interpolation scheme '{}' at index {} not "
-                                 "understood.".format(scm, i))
+                raise ValueError("interpolation scheme '{}' at index {} not "
+                                 "understood".format(scm, i))
             if scm == 'nearest' and var not in ('left', 'right'):
-                raise ValueError("Nearest neighbor variant '{}' at index {} "
-                                 "not understood.".format(var, i))
+                raise ValueError("nearest neighbor variant '{}' at index {} "
+                                 "not understood".format(var, i))
             elif scm != 'nearest' and var is not None:
-                raise ValueError('Option nn_variants used in axis {} with '
-                                 'scheme {!r}.'.format(i, scm))
+                raise ValueError('option nn_variants used in axis {} with '
+                                 'scheme {!r}'.format(i, scm))
 
         self._schemes = schemes_
         self._nn_variants = variants_
@@ -711,18 +714,19 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         values = np.asarray(values)
         typ_ = str(input_type).lower()
         if typ_ not in ('array', 'meshgrid'):
-            raise ValueError("Type '{}' not understood.".format(input_type))
+            raise ValueError('`input_type` ({}) not understood'
+                             ''.format(input_type))
 
         if len(coord_vecs) > values.ndim:
-            raise ValueError('There are {} point arrays, but `values` has {} '
-                             'dimensions.'.format(len(coord_vecs),
-                                                  values.ndim))
+            raise ValueError('there are {} point arrays, but `values` has {} '
+                             'dimensions'.format(len(coord_vecs),
+                                                 values.ndim))
         for i, p in enumerate(coord_vecs):
             if not np.asarray(p).ndim == 1:
-                raise ValueError('The points in dimension {} must be '
+                raise ValueError('the points in dimension {} must be '
                                  '1-dimensional'.format(i))
             if values.shape[i] != len(p):
-                raise ValueError('There are {} points and {} values in '
+                raise ValueError('there are {} points and {} values in '
                                  'dimension {}'.format(len(p),
                                                        values.shape[i], i))
 
@@ -755,17 +759,17 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         else:
             if len(x) != ndim:
                 raise ValueError('number of vectors in x is {} instead of '
-                                 'the grid dimension {}.'
+                                 'the grid dimension {}'
                                  ''.format(len(x), ndim))
             out_shape = out_shape_from_meshgrid(x)
 
         if out is not None:
             if not isinstance(out, np.ndarray):
                 raise TypeError('`out` {!r} not a `numpy.ndarray` '
-                                'instance.'.format(out))
+                                'instance'.format(out))
             if out.shape != out_shape:
-                raise ValueError('Output shape {} not equal to expected '
-                                 'shape {}.'.format(out.shape, out_shape))
+                raise ValueError('output shape {} not equal to expected '
+                                 'shape {}'.format(out.shape, out_shape))
 
         indices, norm_distances = self._find_indices(x)
         return self._evaluate(indices, norm_distances, out)
@@ -823,7 +827,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         super().__init__(coord_vecs, values, input_type)
         variant_ = str(variant).lower()
         if variant_ not in ('left', 'right'):
-            raise ValueError("Variant '{}' not understood.".format(variant_))
+            raise ValueError("variant '{}' not understood".format(variant_))
         self.variant = variant_
 
     def _evaluate(self, indices, norm_distances, out=None):
@@ -919,7 +923,7 @@ def _create_weight_edge_lists(indices, norm_distances, schemes, variants):
             w_lo, w_hi, edge = _compute_linear_weights_edge(
                 idcs, yi)
         else:
-            raise ValueError("scheme '{}' at index {} not supported."
+            raise ValueError("scheme '{}' at index {} not supported"
                              "".format(scm, i))
 
         low_weights.append(w_lo)

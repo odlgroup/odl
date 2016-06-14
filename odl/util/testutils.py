@@ -232,7 +232,7 @@ except ImportError:
 
 # Helpers to generate data
 def example_array(space):
-    """Generate an example array that is compatible with ``space``"""
+    """Generate an example array that is compatible with ``space``."""
     # Generate numpy vectors, real or complex or int
     if np.issubdtype(space.dtype, np.floating):
         arr = np.random.randn(space.size)
@@ -299,7 +299,7 @@ class FailCounter(object):
 
     def __exit__(self, type, value, traceback):
         if self.num_failed == 0:
-            print('{:<70}: Completed all test cases'.format(self.test_name))
+            print('{:<70}: Completed all test cases.'.format(self.test_name))
         else:
             print(self.test_name)
 
@@ -396,7 +396,7 @@ class ProgressBar(object):
         """Initialize a new instance."""
         self.text = str(text)
         if len(njobs) == 0:
-            raise ValueError('Need to provide at least one job len')
+            raise ValueError('need to provide at least one job')
         self.njobs = njobs
         self.current_progress = 0.0
         self.index = 0
@@ -441,7 +441,7 @@ class ProgressBar(object):
 
 class ProgressRange(object):
 
-    """Simple range sequence with progress bar output."""
+    """Simple range sequence with progress bar output"""
 
     def __init__(self, text, n):
         """Initialize a new instance."""
@@ -463,7 +463,7 @@ class ProgressRange(object):
 
 
 def test(arguments=''):
-    """Run odl tests given by arguments"""
+    """Run ODL tests given by arguments."""
     import pytest
     this_dir = os.path.dirname(__file__)
     odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))

@@ -108,19 +108,19 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     if callable(func):
         func = [func] * array.ndim
     elif len(func) != array.ndim:
-        raise ValueError('sequence of functions has length {}, expected {}.'
+        raise ValueError('sequence of functions has length {}, expected {}'
                          ''.format(len(func), array.ndim))
 
     if which_boundaries is None:
         which_boundaries = ([(True, True)] * array.ndim)
     elif len(which_boundaries) != array.ndim:
-        raise ValueError('which_boundaries has length {}, expected {}.'
+        raise ValueError('`which_boundaries` has length {}, expected {}'
                          ''.format(len(which_boundaries), array.ndim))
 
     if axis_order is None:
         axis_order = list(range(array.ndim))
     elif len(axis_order) != array.ndim:
-        raise ValueError('axis_order has length {}, expected {}.'
+        raise ValueError('`axis_order` has length {}, expected {}'
                          ''.format(len(axis_order), array.ndim))
 
     if out is None:
@@ -234,13 +234,13 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         out[:] = ndarr  # Self-assignment is free if out is ndarr
 
     if not onedim_arrs:
-        raise ValueError('No 1d arrays given.')
+        raise ValueError('no 1d arrays given')
 
     if axes is None:
         axes = list(range(out.ndim - len(onedim_arrs), out.ndim))
         axes_in = None
     elif len(axes) != len(onedim_arrs):
-        raise ValueError('There are {} 1d arrays, but {} axes entries.'
+        raise ValueError('there are {} 1d arrays, but {} axes entries'
                          ''.format(len(onedim_arrs), len(axes)))
     else:
         # Make axes positive
@@ -249,13 +249,13 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
         axes = list(axes)
 
     if np.any(np.array(axes) >= out.ndim) or np.any(np.array(axes) < 0):
-        raise ValueError('axes {} out of bounds for {} dimensions.'
+        raise ValueError('`axes` {} out of bounds for {} dimensions'
                          ''.format(axes_in, out.ndim))
 
     # Make scalars 1d arrays and squeezable arrays 1d
     alist = [np.atleast_1d(np.asarray(a).squeeze()) for a in onedim_arrs]
     if any(a.ndim != 1 for a in alist):
-        raise ValueError('Only 1d arrays allowed.')
+        raise ValueError('only 1d arrays allowed')
 
     if len(axes) < out.ndim:
         # Make big factor array (start with 0d)

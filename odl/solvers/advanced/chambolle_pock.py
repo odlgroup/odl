@@ -123,35 +123,33 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     """
     # Forward operator
     if not isinstance(op, Operator):
-        raise TypeError('operator {} is not an instance of {}'
+        raise TypeError('`op` {} is not an instance of {}'
                         ''.format(op, Operator))
 
     # Starting point
     if x.space != op.domain:
-        raise TypeError('starting point {} is not in the domain of `op` {}'
+        raise TypeError('`x` {} is not in the domain of `op` {}'
                         ''.format(x.space, op.domain))
 
     # Step size parameter
+    tau, tau_in = float(tau), tau
     if tau <= 0:
-        raise ValueError('step size parameter {} not positive.'.format(tau))
-    else:
-        tau = float(tau)
+        raise ValueError('`tau` must be positive, got {}'.format(tau_in))
 
     # Step size parameter
+    sigma, sigma_in = float(sigma), sigma
     if sigma <= 0:
-        raise ValueError('step size parameter {} not positive.'.format(sigma))
-    else:
-        sigma = float(sigma)
+        raise ValueError('`sigma` must be positive, got {}'.format(sigma_in))
 
     # Number of iterations
     if not isinstance(niter, int) or niter < 0:
-        raise ValueError('number of iterations {} not valid.'
+        raise ValueError('`niter` {} not understood'
                          ''.format(niter))
 
     # Relaxation parameter
     theta = kwargs.pop('theta', 1)
     if not 0 <= theta <= 1:
-        raise ValueError('relaxation parameter {} not in [0, 1].'
+        raise ValueError('`theta` {} not in [0, 1]'
                          ''.format(theta))
     else:
         theta = float(theta)
@@ -160,8 +158,8 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     gamma = kwargs.pop('gamma', None)
     if gamma is not None:
         if gamma < 0:
-            raise ValueError('acceleration parameter {} not '
-                             'non-negative'.format(gamma))
+            raise ValueError('`gamma` must be non-negative, got {}'
+                             ''.format(gamma))
         else:
             gamma = float(gamma)
 
@@ -177,7 +175,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_relax = x.copy()
     else:
         if x_relax.space != op.domain:
-            raise TypeError('relaxation variable {} is not in the domain of '
+            raise TypeError('`x_relax` {} is not in the domain of '
                             '`op` {}'.format(x_relax.space, op.domain))
 
     # Initialize the dual variable
@@ -186,7 +184,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         y = op.range.zero()
     else:
         if y.space != op.range:
-            raise TypeError('variable {} is not in the range of `op` '
+            raise TypeError('`y` {} is not in the range of `op` '
                             '{}'.format(y.space, op.range))
 
     # Temporal copy to store previous iterate

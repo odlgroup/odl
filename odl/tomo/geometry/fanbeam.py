@@ -77,28 +77,28 @@ class FanFlatGeometry(DivergentBeamGeometry):
         det_init_axis = kwargs.pop('det_init_axis', None)
 
         if np.shape(src_to_det_init) != (2,):
-            raise ValueError('initial source to detector vector has shape {}, '
-                             'expected (2,).'
+            raise ValueError('`src_to_det_init` has shape {}, '
+                             'expected (2,)'
                              ''.format(np.shape(src_to_det_init)))
         if np.linalg.norm(src_to_det_init) <= 1e-10:
-            raise ValueError('initial source to detector vector {} too close '
-                             'to zero.'.format(src_to_det_init))
+            raise ValueError('`src_to_det_init` {} too close '
+                             'to zero'.format(src_to_det_init))
         self._src_to_det_init = (np.asarray(src_to_det_init, dtype='float64') /
                                  np.linalg.norm(src_to_det_init))
 
         if det_init_axis is None:
             det_init_axis = perpendicular_vector(self._src_to_det_init)
 
-        self._src_radius = float(src_radius)
+        self._src_radius, src_radius_in = float(src_radius), src_radius
         if self.src_radius < 0:
-            raise ValueError('source circle radius {} is negative.'
-                             ''.format(src_radius))
-        self._det_radius = float(det_radius)
+            raise ValueError('`src_radius` {} is negative'
+                             ''.format(src_radius_in))
+        self._det_radius, det_radius_in = float(det_radius), det_radius
         if det_radius < 0:
-            raise ValueError('detector circle radius {} is negative.'
-                             ''.format(det_radius))
+            raise ValueError('`det_radius` {} is negative'
+                             ''.format(det_radius_in))
         if self.src_radius == 0 and self.det_radius == 0:
-            raise ValueError('source and detector radii cannot both be 0.')
+            raise ValueError('source and detector radii cannot both be 0')
 
         detector = Flat1dDetector(dpart, det_init_axis)
         super().__init__(ndim=2, motion_part=apart, detector=detector)
@@ -140,7 +140,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
             Source position corresponding to the given angle
         """
         if angle not in self.motion_params:
-            raise ValueError('angle {} is not in the valid range {}.'
+            raise ValueError('`angle` {} is not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
         # Initial vector from 0 to the source. It can be computed this way
@@ -175,7 +175,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         rotation_matrix
         """
         if angle not in self.motion_params:
-            raise ValueError('angle {} is not in the valid range {}.'
+            raise ValueError('`angle` {} is not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
         # Initial vector from 0 to the detector. It can be computed this way
@@ -208,14 +208,14 @@ class FanFlatGeometry(DivergentBeamGeometry):
         """
         angle = float(angle)
         if angle not in self.motion_params:
-            raise ValueError('angle {} not in the valid range {}.'
+            raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
         return euler_matrix(angle)
 
     # TODO: back projection weighting function?
 
     def __repr__(self):
-        """Returns ``repr(self)``."""
+        """Return ``repr(self)``."""
         arg_fstr = '{!r}, {!r}, src_radius={}, det_radius={}'
 
         if not np.allclose(self._src_to_det_init, [1, 0]):

@@ -376,7 +376,7 @@ def phantom(space, ellipses):
     elif space.ndim == 3:
         return ellipse_phantom_3d(space, ellipses)
     else:
-        raise ValueError("Dimension not 2 or 3, no phantom available")
+        raise ValueError('dimension not 2 or 3, no phantom available')
 
 
 def derenzo_sources(space):
@@ -393,7 +393,7 @@ def derenzo_sources(space):
         return ellipse_phantom_3d(
             space, _make_3d_cylinders(_derenzo_sources_2d()))
     else:
-        raise ValueError("Dimension not 2, no phantom available")
+        raise ValueError('dimension not 2, no phantom available')
 
 
 def shepp_logan(space, modified=False):
@@ -410,7 +410,7 @@ def shepp_logan(space, modified=False):
     elif space.ndim == 3:
         ellipses = _shepp_logan_ellipse_3d()
     else:
-        raise ValueError("Dimension not 2 or 3, no phantom available")
+        raise ValueError('dimension not 2 or 3, no phantom available')
 
     if modified:
         _modified_shepp_logan_ellipses(ellipses)
@@ -444,7 +444,7 @@ def submarine_phantom(discr, smooth=True, taper=20.0):
         else:
             return _submarine_phantom_2d_nonsmooth(discr)
     else:
-        raise ValueError('Phantom only defined in 2 dimensions, got {}.'
+        raise ValueError('phantom only defined in 2 dimensions, got {}'
                          ''.format(discr.dim))
 
 
@@ -649,7 +649,7 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
      [ 0.  0.  0.  0.  0.  0.  0.  0.]]
     """
     if not 0 < scale_structures <= 1:
-        raise ValueError('scale structure ({}) is not in (0, 1]'
+        raise ValueError('`scale_structures` ({}) is not in (0, 1]'
                          ''.format(scale_structures))
 
     shape = discr_space.shape
@@ -683,7 +683,7 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
 
 
 def white_noise(space):
-    """Standard gaussian noise in space, pointwise N(0, 1)"""
+    """Standard gaussian noise in space, pointwise N(0, 1)."""
     values = np.random.randn(*space.shape)
     return space.element(values)
 

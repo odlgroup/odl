@@ -30,7 +30,7 @@ from odl.tomo.geometry.geometry import Geometry, AxisOrientedGeometry
 from odl.tomo.util.utility import euler_matrix, perpendicular_vector
 
 
-__all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dGeometry',
+__all__ = ('ParallelGeometry', 'Parallel2dGeometry', 'Parallel3dEulerGeometry',
            'Parallel3dAxisGeometry')
 
 
@@ -62,13 +62,13 @@ class ParallelGeometry(Geometry):
         super().__init__(ndim, apart, detector)
 
         if self.ndim not in (2, 3):
-            raise ValueError('number of dimensions is {}, expected 2 or 3.'
+            raise ValueError('number of dimensions is {}, expected 2 or 3'
                              ''.format(ndim))
 
         self._det_init_pos = np.asarray(det_init_pos, dtype='float64')
         if self._det_init_pos.shape != (self.ndim,):
             raise ValueError('initial detector position has shape {}, '
-                             'expected ({},).'
+                             'expected ({},)'
                              ''.format(self._det_init_pos.shape, self.ndim))
 
     @property
@@ -94,7 +94,7 @@ class ParallelGeometry(Geometry):
             The reference point for the given parameters
         """
         if angles not in self.motion_params:
-            raise ValueError('angles {} not in the valid range {}.'
+            raise ValueError('`angles` {} not in the valid range {}'
                              ''.format(angles, self.motion_params))
         return self.rotation_matrix(angles).dot(self._det_init_pos)
 
@@ -131,12 +131,12 @@ class ParallelGeometry(Geometry):
             well defined.
         """
         if angles not in self.motion_params:
-            raise ValueError('angles {} not in the valid range {}.'
+            raise ValueError('`angles` {} not in the valid range {}'
                              ''.format(angles, self.motion_params))
 
         if dpar not in self.det_params:
-            raise ValueError('detector parameters {} not in the valid range '
-                             '{}.'.format(dpar, self.det_params))
+            raise ValueError('`dpar` {} not in the valid range '
+                             '{}'.format(dpar, self.det_params))
 
         if not normalized:
             raise NotImplementedError('non-normalized detector to source is '
@@ -182,9 +182,9 @@ class Parallel2dGeometry(ParallelGeometry):
 
         if self.det_init_axis is None:
             if np.linalg.norm(self.det_init_pos) <= 1e-10:
-                raise ValueError('initial detector position {} is close to '
+                raise ValueError('`det_init_pos` {} is close to '
                                  'zero. This is only allowed for explicit '
-                                 'det_init_axis.'
+                                 'det_init_axis'
                                  ''.format(self.det_init_pos))
 
             det_init_axis = perpendicular_vector(self.det_init_pos)
@@ -194,7 +194,7 @@ class Parallel2dGeometry(ParallelGeometry):
                          det_init_pos=self.det_init_pos)
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('angle partition has dimension {}, expected 1.'
+            raise ValueError('`apart` dimension {}, expected 1'
                              ''.format(self.motion_partition.ndim))
 
     @property
@@ -230,7 +230,7 @@ class Parallel2dGeometry(ParallelGeometry):
             expressed in the fixed system
         """
         if angle not in self.motion_params:
-            raise ValueError('angle {} not in the valid range {}.'
+            raise ValueError('`angle` {} not in the valid range {}'
                              ''.format(angle, self.motion_params))
         return euler_matrix(angle)
 
@@ -253,7 +253,7 @@ class Parallel2dGeometry(ParallelGeometry):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class Parallel3dGeometry(ParallelGeometry):
+class Parallel3dEulerGeometry(ParallelGeometry):
 
     """Parallel beam geometry in 3d.
 
@@ -290,9 +290,9 @@ class Parallel3dGeometry(ParallelGeometry):
 
         if det_init_axes is None:
             if np.linalg.norm(det_init_pos) <= 1e-10:
-                raise ValueError('initial detector position {} is close to '
+                raise ValueError('`det_init_pos` {} is close to '
                                  'zero. This is only allowed for explicit '
-                                 'det_init_axes.'.format(det_init_pos))
+                                 '`det_init_axes`.'.format(det_init_pos))
 
             det_init_axis_0 = perpendicular_vector(det_init_pos)
             det_init_axis_1 = np.cross(det_init_pos, det_init_axis_0)
@@ -303,8 +303,8 @@ class Parallel3dGeometry(ParallelGeometry):
                          det_init_pos=det_init_pos)
 
         if self.motion_partition.ndim not in (2, 3):
-            raise ValueError('angle set partition has dimension {}, expected '
-                             '2 or 3.'.format(self.motion_partition.ndim))
+            raise ValueError('`apart` has dimension {}, expected '
+                             '2 or 3'.format(self.motion_partition.ndim))
 
     def rotation_matrix(self, angles):
         """Matrix defining the detector rotation at ``angles``.
@@ -324,7 +324,7 @@ class Parallel3dGeometry(ParallelGeometry):
             expressed in the fixed system.
         """
         if angles not in self.motion_params:
-            raise ValueError('angles {} not in the valid range {}.'
+            raise ValueError('`angles` {} not in the valid range {}'
                              ''.format(angles, self.motion_params))
         return euler_matrix(*angles)
 
@@ -385,7 +385,7 @@ class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
             if np.linalg.norm(det_init_pos) <= 1e-10:
                 raise ValueError('initial detector position {} is close to '
                                  'zero. This is only allowed for explicit '
-                                 'det_init_axes.'.format(det_init_pos))
+                                 '`det_init_axes`.'.format(det_init_pos))
 
             det_init_axis_0 = np.cross(self.axis, det_init_pos)
             det_init_axis_0 /= np.linalg.norm(det_init_axis_0)
@@ -396,8 +396,8 @@ class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
                          det_init_pos=det_init_pos)
 
         if self.motion_partition.ndim != 1:
-            raise ValueError('angle set partition has dimension {}, expected '
-                             '1.'.format(self.motion_partition.ndim))
+            raise ValueError('`apart` has dimension {}, expected 1'
+                             ''.format(self.motion_partition.ndim))
 
     def __repr__(self):
         """Return ``repr(self)``."""

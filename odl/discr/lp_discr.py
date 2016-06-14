@@ -87,43 +87,43 @@ class DiscreteLp(DiscretizedSpace):
             Default: 'C'
         """
         if not isinstance(fspace, FunctionSpace):
-            raise TypeError('{!r} is not a FunctionSpace instance.'
+            raise TypeError('{!r} is not a FunctionSpace instance'
                             ''.format(fspace))
         if not isinstance(fspace.domain, IntervalProd):
-            raise TypeError('Function space domain {!r} is not an '
-                            'IntervalProd instance.'.format(fspace.domain))
+            raise TypeError('function space domain {!r} is not an '
+                            'IntervalProd instance'.format(fspace.domain))
         if not isinstance(partition, RectPartition):
-            raise TypeError('Partition {!r} is not a RectPartition '
-                            'instance.'.format(partition))
+            raise TypeError('`partition` {!r} is not a RectPartition '
+                            'instance'.format(partition))
         if not fspace.domain.contains_set(partition.set):
-            raise ValueError('Partition {} is not a subset of the function '
+            raise ValueError('`partition` {} is not a subset of the function '
                              'domain {}'.format(partition, fspace.domain))
         if fspace.out_dtype != dspace.dtype:
-            raise ValueError('out_dtype of Function Space {} does not match '
-                             'dspace dtype {}.'
+            raise ValueError('`out_dtype` of Function Space {} does not match '
+                             'dspace dtype {}'
                              ''.format(fspace.out_dtype, dspace.dtype))
 
         try:
             # Got single string
             interp, interp_in = str(interp + '').lower(), interp
             if interp not in _SUPPORTED_INTERP:
-                raise ValueError("interpolation type '{}' not understood."
+                raise ValueError("`interp` type '{}' not understood"
                                  "".format(interp_in))
             self._interp = [interp] * partition.ndim
         except TypeError:
             # Got sequence of strings
             if len(interp) != partition.ndim:
                 raise ValueError('expected {} (ndim) entries in interp, '
-                                 'got {}.'.format(partition.ndim, len(interp)))
+                                 'got {}'.format(partition.ndim, len(interp)))
 
             self._interp = [str(s).lower() for s in interp]
             if any(s not in _SUPPORTED_INTERP for s in self._interp):
                 raise ValueError('interp sequence {} contains illegal '
-                                 'values.'.format(interp))
+                                 'values'.format(interp))
 
         order = str(kwargs.pop('order', 'C'))
         if str(order).upper() not in ('C', 'F'):
-            raise ValueError('order {!r} not recognized.'.format(order))
+            raise ValueError('`order` {!r} not recognized'.format(order))
         else:
             self._order = str(order).upper()
 
@@ -144,8 +144,8 @@ class DiscreteLp(DiscretizedSpace):
         self._exponent = float(exponent)
         if (hasattr(self.dspace, 'exponent') and
                 self.exponent != dspace.exponent):
-            raise ValueError('exponent {} not equal to data space exponent '
-                             '{}.'.format(self.exponent, dspace.exponent))
+            raise ValueError('`exponent` {} not equal to data space exponent '
+                             '{}'.format(self.exponent, dspace.exponent))
 
         if self.field == RealNumbers():
             self._real_space = self
@@ -371,7 +371,7 @@ class DiscreteLp(DiscretizedSpace):
             return super()._dist(self.element(arrs[0]), self.element(arrs[1]))
 
     def __repr__(self):
-        """Return ``repr(self).``"""
+        """Return ``repr(self)``."""
         # Check if the factory repr can be used
         if (uniform_partition_fromintv(
                 self.uspace.domain, self.shape,
@@ -394,7 +394,7 @@ class DiscreteLp(DiscretizedSpace):
                 impl = 'cuda'
                 default_dtype = np.float32
             else:  # This should never happen
-                raise RuntimeError('unable to determine data space impl.')
+                raise RuntimeError('unable to determine data space impl')
             arg_fstr = '{}, {}, {}'
             if self.exponent != 2.0:
                 arg_fstr += ', exponent={exponent}'
@@ -451,7 +451,7 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def element_type(self):
-        """ `DiscreteLpVector` """
+        """`DiscreteLpVector`"""
         return DiscreteLpVector
 
 
@@ -475,7 +475,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
         else:
             if out.shape not in (self.space.shape, (self.space.size,)):
                 raise ValueError('output array has shape {}, expected '
-                                 '{} or ({},).'
+                                 '{} or ({},)'
                                  ''.format(out.shape, self.space.shape,
                                            self.space.size))
             out_r = out.reshape(self.space.shape,
@@ -485,11 +485,11 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             elif out_r.flags.f_contiguous:
                 out_order = 'F'
             else:
-                raise ValueError('output array not contiguous.')
+                raise ValueError('output array not contiguous')
 
             if out_order != self.space.order:
                 raise ValueError('output array has ordering {!r}, '
-                                 'expected {!r}.'
+                                 'expected {!r}'
                                  ''.format(self.space.order, out_order))
 
             super().asarray(out=out.ravel(order=self.space.order))
@@ -621,8 +621,8 @@ class DiscreteLpVector(DiscretizedSpaceVector):
                 values = np.atleast_1d(values)
                 if (values.ndim > 1 and
                         values.shape != self.space.shape):
-                    raise ValueError('shape {} of value array {} not equal'
-                                     ' to sampling grid shape {}.'
+                    raise ValueError('shape {} of value array {} not equal '
+                                     'to sampling grid shape {}'
                                      ''.format(values.shape, values,
                                                self.space.shape))
                 values = values.ravel(order=self.space.order)
@@ -743,7 +743,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
 
         if coords is not None:
             if indices is not None:
-                raise ValueError('Cannot provide both coords and indices')
+                raise ValueError('cannot provide both coords and indices')
 
             interv = self.space.uspace.domain
             shape = self.shape
@@ -783,11 +783,11 @@ class DiscreteLpVector(DiscretizedSpaceVector):
                        indices[pos + 1:])
 
         if len(indices) < self.ndim:
-            raise ValueError('too few axes ({} < {}).'.format(len(indices),
-                                                              self.ndim))
+            raise ValueError('too few axes ({} < {})'.format(len(indices),
+                                                             self.ndim))
         if len(indices) > self.ndim:
-            raise ValueError('too many axes ({} > {}).'.format(len(indices),
-                                                               self.ndim))
+            raise ValueError('too many axes ({} > {})'.format(len(indices),
+                                                              self.ndim))
 
         if self.ndim <= 3:
             axis_labels = ['x', 'y', 'z']
@@ -867,20 +867,20 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
         partition of the function domain
     """
     if not isinstance(partition, RectPartition):
-        raise TypeError('partition {!r} is not a RectPartition instance.'
+        raise TypeError('`partition` {!r} is not a `RectPartition` instance'
                         ''.format(partition))
     if not partition.is_regular:
-        raise ValueError('partition is not regular.')
+        raise ValueError('`partition` is not regular')
 
     impl, impl_in = str(impl).lower(), impl
     if impl == 'numpy':
         dtype = np.dtype(kwargs.pop('dtype', 'float64'))
     elif impl == 'cuda':
         if not CUDA_AVAILABLE:
-            raise ValueError('CUDA not available.')
+            raise ValueError('cUDA not available')
         dtype = np.dtype(kwargs.pop('dtype', 'float32'))
     else:
-        raise ValueError("implementation '{}' not understood.".format(impl_in))
+        raise ValueError("`impl` '{}' not understood".format(impl_in))
 
     fspace = FunctionSpace(partition.set, out_dtype=dtype)
     ds_type = dspace_type(fspace, impl, dtype)
@@ -894,7 +894,8 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     elif weighting == 'const':
         weight = partition.cell_volume
     else:
-        raise ValueError("weighting '{}' not understood.".format(weighting_in))
+        raise ValueError("`weighting` '{}' not understood"
+                         "".format(weighting_in))
 
     if dtype is not None:
         dspace = ds_type(partition.size, dtype=dtype, weight=weight,
@@ -977,11 +978,11 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         partition of the function domain
     """
     if not isinstance(fspace, FunctionSpace):
-        raise TypeError('space {!r} is not a `FunctionSpace` instance.'
+        raise TypeError('`fspace` {!r} is not a `FunctionSpace` instance'
                         ''.format(fspace))
     if not isinstance(fspace.domain, IntervalProd):
         raise TypeError('domain {!r} of the function space is not an '
-                        '`IntervalProd` instance.'.format(fspace.domain))
+                        '`IntervalProd` instance'.format(fspace.domain))
 
     impl, impl_in = str(impl).lower(), impl
     dtype = kwargs.pop('dtype', None)
@@ -994,17 +995,17 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         dtype, dtype_in = np.dtype(dtype), dtype
         if not np.can_cast(fspace.out_dtype, dtype, casting='safe'):
             raise ValueError('cannot safely cast from output data {} type of '
-                             'the function space to given data type {}.'
+                             'the function space to given data type {}'
                              ''.format(fspace.out, dtype_in))
 
     if fspace.field == RealNumbers() and not is_real_dtype(dtype):
         raise ValueError('cannot discretize real space {} with '
-                         'non-real data type {}.'
+                         'non-real data type {}'
                          ''.format(fspace, dtype))
     elif (fspace.field == ComplexNumbers() and
           not is_complex_floating_dtype(dtype)):
         raise ValueError('cannot discretize complex space {} with '
-                         'non-complex-floating data type {}.'
+                         'non-complex-floating data type {}'
                          ''.format(fspace, dtype))
 
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)

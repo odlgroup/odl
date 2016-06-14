@@ -73,6 +73,10 @@ class SolverCallback(object):
         """
         return _CallbackAnd(self, other)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}()'.format(self.__class__.__name__)
+
 
 class _CallbackAnd(SolverCallback):
 
@@ -97,7 +101,7 @@ class _CallbackAnd(SolverCallback):
             p(result)
 
     def __repr__(self):
-        """Return ``repr(self)``"""
+        """Return ``repr(self)``."""
         return ' & '.join('{}'.format(p) for p in self.callbacks)
 
 
@@ -155,7 +159,7 @@ class CallbackStore(SolverCallback):
             self._results.append(result.copy())
 
     def __iter__(self):
-        """Allow iteration over the results"""
+        """Allow iteration over the results."""
         return iter(self.results)
 
     def __getitem__(self, index):

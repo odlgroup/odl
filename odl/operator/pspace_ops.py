@@ -135,23 +135,23 @@ class ProductSpaceOperator(Operator):
         # Validate input data
         if domain is not None:
             if not isinstance(domain, ProductSpace):
-                raise TypeError('space {!r} not a ProductSpace instance.'
+                raise TypeError('`domain` {!r} not a ProductSpace instance'
                                 ''.format(domain))
             if domain.is_weighted:
-                raise NotImplementedError('weighted spaces not supported.')
+                raise NotImplementedError('weighted spaces not supported')
 
         if range is not None:
             if not isinstance(range, ProductSpace):
-                raise TypeError('space {!r} not a ProductSpace instance.'
+                raise TypeError('`range` {!r} not a ProductSpace instance'
                                 ''.format(range))
             if range.is_weighted:
-                raise NotImplementedError('weighted spaces not supported.')
+                raise NotImplementedError('weighted spaces not supported')
 
         # Convert ops to sparse representation
         self.ops = sp.sparse.coo_matrix(operators)
 
         if not all(isinstance(op, Operator) for op in self.ops.data):
-            raise TypeError('operators {!r} must be a matrix of operators.'
+            raise TypeError('`operators` {!r} must be a matrix of Operators'
                             ''.format(operators))
 
         # Set domain and range (or verify if given)
@@ -169,21 +169,21 @@ class ProductSpaceOperator(Operator):
             if domains[col] is None:
                 domains[col] = op.domain
             elif domains[col] != op.domain:
-                raise ValueError('Column {}, has inconsistent domains, '
+                raise ValueError('column {}, has inconsistent domains, '
                                  'got {} and {}'
                                  ''.format(col, domains[col], op.domain))
 
             if ranges[row] is None:
                 ranges[row] = op.range
             elif ranges[row] != op.range:
-                raise ValueError('Row {}, has inconsistent ranges, '
+                raise ValueError('row {}, has inconsistent ranges, '
                                  'got {} and {}'
                                  ''.format(row, ranges[row], op.range))
 
         if domain is None:
             for col, sub_domain in enumerate(domains):
                 if sub_domain is None:
-                    raise ValueError('Col {} empty, unable to determine '
+                    raise ValueError('col {} empty, unable to determine '
                                      'domain, please use `domain` parameter'
                                      ''.format(col))
 
@@ -192,7 +192,7 @@ class ProductSpaceOperator(Operator):
         if range is None:
             for row, sub_range in enumerate(ranges):
                 if sub_range is None:
-                    raise ValueError('Row {} empty, unable to determine '
+                    raise ValueError('row {} empty, unable to determine '
                                      'range, please use `range` parameter'
                                      ''.format(row))
 
@@ -385,7 +385,7 @@ class ProductSpaceOperator(Operator):
         return ProductSpaceOperator(adj_matrix, self.range, self.domain)
 
     def __repr__(self):
-        """op.__repr__() <==> repr(op)."""
+        """Return ``repr(self)``."""
         return 'ProductSpaceOperator({!r})'.format(self.ops)
 
 
@@ -411,7 +411,8 @@ class ComponentProjection(Operator):
     """
 
     def __init__(self, space, index):
-        """
+        """Initialize an instance.
+
         Parameters
         ----------
         space : `ProductSpace`
@@ -647,16 +648,16 @@ class BroadcastOperator(Operator):
 
     @property
     def prod_op(self):
-        """The prod-op implementation"""
+        """The prod-op implementation."""
         return self._prod_op
 
     @property
     def operators(self):
-        """A tuple of sub-operators"""
+        """A tuple of sub-operators."""
         return self._operators
 
     def __getitem__(self, index):
-        """Return an operator by index"""
+        """Return an operator by index."""
         return self.operators[index]
 
     def _call(self, x, out=None):
@@ -772,16 +773,16 @@ class ReductionOperator(Operator):
 
     @property
     def prod_op(self):
-        """The prod-op implementation"""
+        """The prod-op implementation."""
         return self._prod_op
 
     @property
     def operators(self):
-        """A tuple of sub-operators"""
+        """A tuple of sub-operators."""
         return self._operators
 
     def __getitem__(self, index):
-        """Return an operator by index"""
+        """Return an operator by index."""
         return self.operators[index]
 
     def _call(self, x, out=None):
@@ -924,11 +925,11 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def operators(self):
-        """A tuple of sub-operators"""
+        """A tuple of sub-operators."""
         return self._operators
 
     def __getitem__(self, index):
-        """Return an operator by index"""
+        """Return an operator by index."""
         return self.operators[index]
 
     def derivative(self, point):

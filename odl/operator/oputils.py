@@ -33,7 +33,7 @@ __all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator')
 
 
 def matrix_representation(op):
-    """Returns a matrix representation of a linear operator.
+    """Return a matrix representation of a linear operator.
 
     Parameters
     ----------
@@ -53,18 +53,18 @@ def matrix_representation(op):
     """
 
     if not op.is_linear:
-        raise ValueError('The operator is not linear')
+        raise ValueError('the operator is not linear')
 
     if not (isinstance(op.domain, FnBase) or
             (isinstance(op.domain, ProductSpace) and
              all(isinstance(spc, FnBase) for spc in op.domain))):
-        raise TypeError('Operator domain {!r} is not FnBase, nor ProductSpace '
+        raise TypeError('operator domain {!r} is not FnBase, nor ProductSpace '
                         'with only FnBase components'.format(op.domain))
 
     if not (isinstance(op.range, FnBase) or
             (isinstance(op.range, ProductSpace) and
              all(isinstance(spc, FnBase) for spc in op.range))):
-        raise TypeError('Operator range {!r} is not FnBase, nor ProductSpace '
+        raise TypeError('operator range {!r} is not FnBase, nor ProductSpace '
                         'with only FnBase components'.format(op.range))
 
     # Get the size of the range, and handle ProductSpace
@@ -150,7 +150,7 @@ def power_method_opnorm(op, niter, xstart=None):
         except AttributeError as exc:
             raise_from(
                 ValueError('a starting element must be defined in case the '
-                           'operator domain has no `one()`.'), exc)
+                           'operator domain has no `one()`'), exc)
     else:
         x = xstart.copy()
 
@@ -182,7 +182,7 @@ def power_method_opnorm(op, niter, xstart=None):
 
 
 def as_scipy_operator(op):
-    """ Wrap ``op`` as a ``scipy.sparse.linalg.LinearOperator``
+    """Wrap ``op`` as a ``scipy.sparse.linalg.LinearOperator.``
 
     This is intended to be used with the scipy sparse linear solvers.
 
@@ -216,7 +216,7 @@ def as_scipy_operator(op):
     nonlocal type, the overhead is significant.
     """
     if not op.is_linear:
-        raise ValueError('``op`` needs to be linear.')
+        raise ValueError('`op` needs to be linear')
 
     dtype = op.domain.dtype
     if op.range.dtype != dtype:

@@ -124,12 +124,12 @@ class Ntuples(NtuplesBase):
                 else:
                     arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
                     if arr.shape != (self.size,):
-                        raise ValueError('expected input shape {}, got {}.'
+                        raise ValueError('expected input shape {}, got {}'
                                          ''.format((self.size,), arr.shape))
 
                     return self.element_type(self, arr)
             else:
-                raise ValueError('Cannot provide both `inp` and `data_ptr`')
+                raise ValueError('cannot provide both `inp` and `data_ptr`')
 
     def zero(self):
         """Create a vector of zeros.
@@ -157,7 +157,7 @@ class Ntuples(NtuplesBase):
 
     @property
     def element_type(self):
-        """ `NtuplesVector` """
+        """`NtuplesVector`"""
         return NtuplesVector
 
 
@@ -168,15 +168,15 @@ class NtuplesVector(NtuplesBaseVector):
     def __init__(self, space, data):
         """Initialize a new instance."""
         if not isinstance(space, Ntuples):
-            raise TypeError('{!r} not an `Ntuples` instance.'
+            raise TypeError('{!r} not an `Ntuples` instance'
                             ''.format(space))
 
         if not isinstance(data, np.ndarray):
-            raise TypeError('data {!r} not a `numpy.ndarray` instance.'
+            raise TypeError('`data` {!r} not a `numpy.ndarray` instance'
                             ''.format(data))
 
         if data.dtype != space.dtype:
-            raise TypeError('data {!r} not of dtype {!r}.'
+            raise TypeError('`data` {!r} not of dtype {!r}'
                             ''.format(data, space.dtype))
         self._data = data
 
@@ -707,11 +707,11 @@ class Fn(FnBase, Ntuples):
         # Check validity of option combination (3 or 4 out of 4 must be None)
         if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options `weight`, '
-                             '`dist`, `norm` and `inner`.')
+                             '`dist`, `norm` and `inner`')
 
         if any(x is not None for x in (dist, norm, inner)) and exponent != 2.0:
-            raise ValueError('exponent cannot be used together with '
-                             'inner, norm or dist.')
+            raise ValueError('`exponent` cannot be used together with '
+                             '`dist`, `norm` and `inner`')
 
         # Set the weighting
         if weight is not None:
@@ -730,7 +730,7 @@ class Fn(FnBase, Ntuples):
             else:  # last possibility: make a matrix
                 arr = np.asarray(weight)
                 if arr.dtype == object:
-                    raise ValueError('invalid weight argument {}.'
+                    raise ValueError('invalid weight argument {}'
                                      ''.format(weight))
                 if arr.ndim == 1:
                     self._weighting = FnVectorWeighting(
@@ -741,7 +741,7 @@ class Fn(FnBase, Ntuples):
                         **kwargs)
                 else:
                     raise ValueError('array-like input {} is not 1- or '
-                                     '2-dimensional.'.format(weight))
+                                     '2-dimensional'.format(weight))
 
         elif dist is not None:
             self._weighting = FnCustomDist(dist)
@@ -792,7 +792,7 @@ class Fn(FnBase, Ntuples):
         elif field == ComplexNumbers():
             return np.dtype('complex128')
         else:
-            raise ValueError('no default data type defined for field {}.'
+            raise ValueError('no default data type defined for field {}'
                              ''.format(field))
 
     def _lincomb(self, a, x1, b, x2, out):
@@ -1032,7 +1032,7 @@ class Fn(FnBase, Ntuples):
                 self.weighting == other.weighting)
 
     def __repr__(self):
-        """s.__repr__() <==> repr(s)."""
+        """Return ``repr(self)``."""
         if self.is_rn:
             class_name = 'Rn'
         elif self.is_cn:
@@ -1066,7 +1066,7 @@ class FnVector(FnBaseVector, NtuplesVector):
     def __init__(self, space, data):
         """Initialize a new instance."""
         if not isinstance(space, Fn):
-            raise TypeError('{!r} not an `Fn` instance.'
+            raise TypeError('{!r} not an `Fn` instance'
                             ''.format(space))
 
         FnBaseVector.__init__(self, space)
@@ -1264,7 +1264,7 @@ def Cn(size, dtype='complex128', **kwargs):
     cn = Fn(size, dtype, **kwargs)
 
     if not cn.is_cn:
-        raise TypeError('data type {!r} not a complex floating-point type.'
+        raise TypeError('data type {!r} not a complex floating-point type'
                         ''.format(dtype))
     return cn
 
@@ -1296,7 +1296,7 @@ def Rn(size, dtype='float64', **kwargs):
     rn = Fn(size, dtype, **kwargs)
 
     if not rn.is_rn:
-        raise TypeError('data type {!r} not a real floating-point type.'
+        raise TypeError('data type {!r} not a real floating-point type'
                         ''.format(dtype))
     return rn
 
@@ -1331,7 +1331,7 @@ class MatVecOperator(Operator):
             self._matrix = np.asarray(matrix)
 
         if self.matrix.ndim != 2:
-            raise ValueError('matrix {} has {} axes instead of 2.'
+            raise ValueError('matrix {} has {} axes instead of 2'
                              ''.format(matrix, self.matrix.ndim))
 
         # Infer domain and range from matrix if necessary
@@ -1345,24 +1345,24 @@ class MatVecOperator(Operator):
         if domain is None:
             domain = spc_type(self.matrix.shape[1], dtype=self.matrix.dtype)
         elif not isinstance(domain, Fn):
-            raise TypeError('domain {!r} is not an `Fn` instance.'
+            raise TypeError('`domain` {!r} is not an `Fn` instance'
                             ''.format(domain))
 
         if range is None:
             range = spc_type(self.matrix.shape[0], dtype=self.matrix.dtype)
         elif not isinstance(range, Fn):
-            raise TypeError('range {!r} is not an `Fn` instance.'
+            raise TypeError('`range` {!r} is not an `Fn` instance'
                             ''.format(range))
 
         # Check compatibility of matrix with domain and range
         if not np.can_cast(domain.dtype, range.dtype):
             raise TypeError('domain data type {!r} cannot be safely cast to '
-                            'range data type {!r}.'
+                            'range data type {!r}'
                             ''.format(domain.dtype, range.dtype))
 
         if self.matrix.shape != (range.size, domain.size):
             raise ValueError('matrix shape {} does not match the required '
-                             'shape {} of a matrix {} --> {}.'
+                             'shape {} of a matrix {} --> {}'
                              ''.format(self.matrix.shape,
                                        (range.size, domain.size),
                                        domain, range))
@@ -1388,7 +1388,7 @@ class MatVecOperator(Operator):
         """Adjoint operator represented by the adjoint matrix."""
         if self.domain.field != self.range.field:
             raise NotImplementedError('adjoint not defined since fields '
-                                      'of domain and range differ ({} != {}).'
+                                      'of domain and range differ ({} != {})'
                                       ''.format(self.domain.field,
                                                 self.range.field))
         return MatVecOperator(self.matrix.conj().T,
@@ -1429,7 +1429,7 @@ def _weighting(weight, exponent, dist_using_inner=False):
                 weight_, exponent=exponent, dist_using_inner=dist_using_inner)
         else:
             raise ValueError('array-like weight must have 1 or 2 dimensions, '
-                             'but {} has {} dimensions.'
+                             'but {} has {} dimensions'
                              ''.format(weight, weight_.ndim))
     return weighting
 
@@ -1669,8 +1669,8 @@ class FnMatrixWeighting(MatrixWeightingBase):
             The inner product of the vectors
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('No inner product defined for '
-                                      'exponent != 2 (got {}).'
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
             inner = _inner_default(x1.space.element(self.matrix.dot(x1)), x2)
@@ -1700,7 +1700,7 @@ class FnMatrixWeighting(MatrixWeightingBase):
             # This case can only be reached if p != 1,2,inf
             if self.matrix_issparse:
                 raise NotImplementedError('sparse matrix powers not '
-                                          'suppoerted.')
+                                          'suppoerted')
 
             if self._eigval is None or self._eigvec is None:
                 # No cached decomposition, computing new one
@@ -1798,8 +1798,8 @@ class FnVectorWeighting(VectorWeightingBase):
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('No inner product defined for '
-                                      'exponent != 2 (got {}).'
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
             inner = _inner_default(x1 * self.vector, x2)
@@ -1899,8 +1899,8 @@ class FnConstWeighting(ConstWeightingBase):
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('No inner product defined for '
-                                      'exponent != 2 (got {}).'
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
             inner = self.const * _inner_default(x1, x2)

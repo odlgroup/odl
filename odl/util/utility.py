@@ -336,7 +336,7 @@ def preload_first_arg(instance, mode):
         elif mode == 'in-place':
             return ip_wrapper
         else:
-            raise ValueError('bad mode {!r}.'.format(mode))
+            raise ValueError('bad mode {!r}'.format(mode))
 
     return decorator
 
@@ -383,7 +383,7 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     # Turn Ellipsis into the correct number of slice(None)
     if Ellipsis in indices:
         if indices.count(Ellipsis) > 1:
-            raise ValueError('cannot use more than one Ellipsis.')
+            raise ValueError('cannot use more than one `Ellipsis`')
 
         eidx = indices.index(Ellipsis)
         extra_dims = ndim - len(indices) + 1
@@ -397,8 +397,8 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
                 idx += n
 
             if idx >= n:
-                raise IndexError('Index {} is out of bounds for axis '
-                                 '{} with size {}.'
+                raise IndexError('index {} is out of bounds for axis '
+                                 '{} with size {}'
                                  ''.format(idx, i, n))
             if int_to_slice:
                 indices[i] = slice(idx, idx + 1)
@@ -407,11 +407,11 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     if any(s.start == s.stop and s.start is not None or
            s.start == n
            for s, n in zip(indices, shape) if isinstance(s, slice)):
-        raise ValueError('Slices with empty axes not allowed.')
+        raise ValueError('slices with empty axes not allowed')
     if None in indices:
-        raise ValueError('creating new axes is not supported.')
+        raise ValueError('creating new axes is not supported')
     if len(indices) > ndim:
-        raise IndexError('too may indices: {} > {}.'
+        raise IndexError('too may indices: {} > {}'
                          ''.format(len(indices), ndim))
 
     return tuple(indices)

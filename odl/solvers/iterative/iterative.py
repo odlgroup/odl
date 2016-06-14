@@ -165,7 +165,7 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
     # TODO: update doc
 
     if op.domain != op.range:
-        raise ValueError('Operator needs to be self-adjoint')
+        raise ValueError('operator needs to be self-adjoint')
 
     r = op(x)
     r.lincomb(1, rhs, -1, r)       # r = rhs - A x

@@ -83,7 +83,7 @@ def vector(array, dtype=None, impl='numpy'):
 
     # Validate input
     if arr.ndim > 1:
-        raise ValueError('array has {} dimensions, expected 1.'
+        raise ValueError('array has {} dimensions, expected 1'
                          ''.format(arr.ndim))
 
     # Set dtype
@@ -108,19 +108,19 @@ def vector(array, dtype=None, impl='numpy'):
 
     elif impl == 'cuda':
         if not CUDA_AVAILABLE:
-            raise ValueError('CUDA implementation not available.')
+            raise ValueError("'cuda' implementation not available")
 
         if is_real_floating_dtype(space_dtype):
             space_type = CudaRn
         elif is_complex_floating_dtype(space_dtype):
-            raise NotImplementedError('complex spaces in CUDA not supported.')
+            raise NotImplementedError('complex spaces in CUDA not supported')
         elif is_scalar_dtype(space_dtype):
             space_type = CudaFn
         else:
             space_type = CudaNtuples
 
     else:
-        raise ValueError("implementation '{}' not understood.".format(impl_in))
+        raise ValueError("`impl` '{}' not understood".format(impl_in))
 
     return space_type(len(arr), dtype=space_dtype).element(arr)
 

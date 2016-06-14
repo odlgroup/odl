@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Radon transform (ray transform) in 2d using skimage.transform"""
+"""Radon transform (ray transform) in 2d using skimage.transform."""
 
 from odl.discr import uniform_discr_frompartition, uniform_partition
 import numpy as np

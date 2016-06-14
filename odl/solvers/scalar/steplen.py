@@ -152,13 +152,13 @@ class BacktrackingLineSearch(LineSearch):
 
         if np.isnan(fx) or np.isinf(fx):
             raise ValueError('function returned invalid value {} in starting '
-                             'point ({}).'.format(fx, x))
+                             'point ({})'.format(fx, x))
 
         num_iter = 0
         while True:
             if num_iter > self.max_num_iter:
                 raise ValueError('number of iterations exceeded maximum: {} '
-                                 'without finding a sufficient decrease.'
+                                 'without finding a sufficient decrease'
                                  ''.format(self.max_num_iter))
 
             fval = self.function(x + alpha * direction)
@@ -167,7 +167,7 @@ class BacktrackingLineSearch(LineSearch):
                 # We do not want to compare against NaN below, and NaN should
                 # indicate a user error.
                 raise ValueError('function returned NaN in point '
-                                 ' point ({})'.format(x + alpha * direction))
+                                 'point ({})'.format(x + alpha * direction))
 
             if (not np.isinf(fval) and  # short circuit if fval is infite
                     fval <= fx + alpha * dir_derivative * self.discount):
