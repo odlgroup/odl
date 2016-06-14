@@ -64,7 +64,8 @@ class NtuplesBase(Set):
         """
         self._size = int(size)
         if self.size < 0:
-            raise TypeError('size {!r} is not non-negative.'.format(size))
+            raise TypeError('`size` must be non-negative, got {!r}'
+                            ''.format(size))
         self._dtype = np.dtype(dtype)
 
     @property
@@ -150,7 +151,7 @@ class NtuplesBase(Set):
 
     @property
     def element_type(self):
-        """ `NtuplesBaseVector` """
+        """`NtuplesBaseVector`"""
         return NtuplesBaseVector
 
 
@@ -401,7 +402,7 @@ class FnBase(NtuplesBase, LinearSpace):
         NtuplesBase.__init__(self, size, dtype)
 
         if not is_scalar_dtype(self.dtype):
-            raise TypeError('{!r} is not a scalar data type.'.format(dtype))
+            raise TypeError('{!r} is not a scalar data type'.format(dtype))
 
         if is_real_dtype(self.dtype):
             field = RealNumbers()
@@ -452,7 +453,7 @@ class FnBase(NtuplesBase, LinearSpace):
         """
         if dtype is None:
             # Need to filter this out since Numpy iterprets it as 'float'
-            raise ValueError("Unknown data type 'None'.")
+            raise ValueError('unknown data type `None`')
 
         dtype = np.dtype(dtype)
         if dtype == self.dtype:
@@ -508,7 +509,7 @@ class FnBase(NtuplesBase, LinearSpace):
 
     @property
     def element_type(self):
-        """ `FnBaseVector` """
+        """`FnBaseVector`"""
         return FnBaseVector
 
 

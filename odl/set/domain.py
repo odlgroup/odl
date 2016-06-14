@@ -68,20 +68,20 @@ class IntervalProd(Set):
         self._end = np.atleast_1d(end).astype('float64')
 
         if self.begin.ndim > 1:
-            raise ValueError('begin {} is {}- instead of 1-dimensional.'
+            raise ValueError('`begin` {} is {}- instead of 1-dimensional'
                              ''.format(begin, self.begin.ndim))
         if self.end.ndim > 1:
-            raise ValueError('end {} is {}- instead of 1-dimensional.'
+            raise ValueError('`end` {} is {}- instead of 1-dimensional'
                              ''.format(end, self.end.ndim))
         if len(self.begin) != len(self.end):
-            raise ValueError('begin {} and end {} have different '
-                             'lengths ({} != {}).'
+            raise ValueError('`begin` {} and end {} have different '
+                             'lengths ({} != {})'
                              ''.format(begin, end,
                                        len(self.begin), len(self.end)))
         if not np.all(self.begin <= self.end):
             i_wrong = np.where(self.begin > self.end)
             raise ValueError('entries at indices {} of begin exceed '
-                             'those of end ({} > {}).'
+                             'those of end ({} > {})'
                              ''.format(i_wrong, list(self.begin[i_wrong]),
                                        list(self.end[i_wrong])))
 
@@ -119,14 +119,14 @@ class IntervalProd(Set):
     def length(self):
         """The length of this interval."""
         if self.ndim != 1:
-            raise NotImplementedError('length not defined if ndim != 1.')
+            raise NotImplementedError('`length` not defined if ndim != 1')
         return self.volume
 
     @property
     def area(self):
         """The length of this interval."""
         if self.ndim != 2:
-            raise NotImplementedError('area not defined if ndim != 2.')
+            raise NotImplementedError('`area` not defined if ndim != 2')
         return self.volume
 
     @property
@@ -137,11 +137,11 @@ class IntervalProd(Set):
         return midp
 
     def min(self):
-        """The minimum value in this interval product"""
+        """The minimum value in this interval product."""
         return self.begin
 
     def max(self):
-        """The maximum value in this interval product"""
+        """The maximum value in this interval product."""
         return self.end
 
     def extent(self):
@@ -180,7 +180,7 @@ class IntervalProd(Set):
             else:
                 return np.asarray(inp)
         else:
-            raise TypeError('inp {!r} not a valid element in {!r}.'
+            raise TypeError('`inp` {!r} not a valid element in {!r}'
                             ''.format(inp, self))
 
     def approx_equals(self, other, atol):
@@ -310,7 +310,7 @@ class IntervalProd(Set):
         except AttributeError as err:
             raise_from(
                 AttributeError('cannot test {!r} without `min()` and `max()`'
-                               'methods.'.format(other)), err)
+                               'methods'.format(other)), err)
 
     def contains_all(self, other, atol=0.0):
         """Test if all points defined by ``other`` are contained.
@@ -461,7 +461,7 @@ class IntervalProd(Set):
         point = np.atleast_1d(point)
         if len(point) != self.ndim:
             raise ValueError('length {} of point {} does not match '
-                             'the dimension {} of the set {}.'
+                             'the dimension {} of the set {}'
                              ''.format(len(point), point, self.ndim, self))
 
         if np.any(np.isnan(point)):
@@ -513,22 +513,22 @@ class IntervalProd(Set):
         values = np.atleast_1d(values)
         if len(indices) != len(values):
             raise ValueError('lengths of indices {} and values {} do not '
-                             'match ({} != {}).'
+                             'match ({} != {})'
                              ''.format(indices, values,
                                        len(indices), len(values)))
 
         if np.any(indices < 0) or np.any(indices >= self.ndim):
-            raise IndexError('indices {} out of range 0 --> {}.'
+            raise IndexError('indices {} out of range 0 --> {}'
                              ''.format(list(indices), self.ndim))
 
         if np.any(values < self.begin[indices]):
             raise ValueError('values {} not above the lower interval '
-                             'boundaries {}.'
+                             'boundaries {}'
                              ''.format(values, self.begin[indices]))
 
         if np.any(values > self.end[indices]):
             raise ValueError('values {} not below the upper interval '
-                             'boundaries {}.'
+                             'boundaries {}'
                              ''.format(values, self.end[indices]))
 
         b_new = self.begin.copy()
@@ -600,7 +600,7 @@ class IntervalProd(Set):
             index = int(index)
 
         if not 0 <= index <= self.ndim:
-            raise IndexError('index {} outside the valid range 0 ... {}.'
+            raise IndexError('index {} outside the valid range 0 ... {}'
                              ''.format(index, self.ndim))
 
         new_beg = np.empty(self.ndim + other.ndim)
@@ -740,8 +740,8 @@ class IntervalProd(Set):
         """Return ``self + other``."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
-                raise ValueError('Addition not possible for {} and {}: '
-                                 'dimension mismatch ({} != {}).'
+                raise ValueError('addition not possible for {} and {}: '
+                                 'dimension mismatch ({} != {})'
                                  ''.format(self, other, self.ndim, other.ndim))
             return type(self)(self.begin + other.begin, self.end + other.end)
         elif np.isscalar(other):
@@ -757,8 +757,8 @@ class IntervalProd(Set):
         """Return ``self * other``."""
         if isinstance(other, IntervalProd):
             if self.ndim != other.ndim:
-                raise ValueError('Multiplication not possible for {!r} and'
-                                 '{!r}: dimension mismatch ({} != {}).'
+                raise ValueError('multiplication not possible for {!r} and'
+                                 '{!r}: dimension mismatch ({} != {})'
                                  ''.format(self, other, self.ndim, other.ndim))
 
             comp_mat = np.empty([self.ndim, 4])
@@ -788,8 +788,8 @@ class IntervalProd(Set):
             contains_zero = np.any(np.logical_and(self.begin <= 0,
                                                   self.end >= 0))
             if contains_zero:
-                raise ValueError('Division by other {!r} not possible:'
-                                 'Interval contains 0.'
+                raise ValueError('division by other {!r} not possible:'
+                                 'Interval contains 0'
                                  ''.format(other))
 
             vec1 = other / self.begin
@@ -833,8 +833,8 @@ def Interval(begin, end):
     """
     interval = IntervalProd(begin, end)
     if interval.ndim != 1:
-        raise ValueError('cannot make an interval from begin {} and '
-                         'end {}.'.format(begin, end))
+        raise ValueError('cannot make an interval from `begin` {} and '
+                         '`end` {}'.format(begin, end))
     return interval
 
 
@@ -850,8 +850,8 @@ def Rectangle(begin, end):
     """
     rectangle = IntervalProd(begin, end)
     if rectangle.ndim != 2:
-        raise ValueError('cannot make a rectangle from begin {} and '
-                         'end {}.'.format(begin, end))
+        raise ValueError('cannot make a rectangle from `begin` {} and '
+                         '`end` {}'.format(begin, end))
     return rectangle
 
 
@@ -867,8 +867,8 @@ def Cuboid(begin, end):
     """
     cuboid = IntervalProd(begin, end)
     if cuboid.ndim != 3:
-        raise ValueError('cannot make a cuboid from begin {} and '
-                         'end {}.'.format(begin, end))
+        raise ValueError('cannot make a cuboid from `begin` {} and '
+                         '`end` {}'.format(begin, end))
     return cuboid
 
 

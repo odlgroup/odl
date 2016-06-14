@@ -278,7 +278,8 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
 
     a = float(a)
     if a < 0:
-        raise ValueError('scaling parameter {} not non-negative'.format(a))
+        raise ValueError('scaling parameter muts be non-negative, got {}'
+                         ''.format(a))
 
     if u is not None and not isinstance(u, LinearSpaceVector):
         raise TypeError('vector {!r} not None or a LinearSpaceVector instance.'
@@ -458,7 +459,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
     if lower in space.field and upper in space.field:
         if lower > upper:
-            raise ValueError('Invalid values, `lower` ({}) > `upper` ({}).'
+            raise ValueError('invalid values, `lower` ({}) > `upper` ({})'
                              ''.format(lower, upper))
 
     class ProxOpBoxConstraint(Operator):
@@ -723,8 +724,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
             super().__init__(domain=space, range=space, linear=g is None)
 
         def _call(self, x, out):
-            """Apply the operator to ``x`` and stores the result in
-            ``out``"""
+            """Apply the operator to ``x`` and stores the result in ``out``"""
 
             # (x - sig*g) / (1 + sig/(2 lam))
 

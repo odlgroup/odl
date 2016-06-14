@@ -158,7 +158,7 @@ class LinearSpace(Set):
             The one vector of this space
         """
         raise LinearSpaceNotImplementedError(
-            '"one" element not implemented in space {!r}.'.format(self))
+            '`one` element not implemented in space {!r}'.format(self))
 
     # Default methods
     def zero(self):
@@ -238,35 +238,33 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise LinearSpaceTypeError('output vector {!r} not in space {!r}.'
+            raise LinearSpaceTypeError('`out` {!r} not in space {!r}'
                                        ''.format(out, self))
 
         if a not in self.field:
-            raise LinearSpaceTypeError('first scalar {!r} not in the field '
-                                       '{!r} of the space {!r}.'
+            raise LinearSpaceTypeError('`a` {!r} not in the field '
+                                       '{!r} of the space {!r}'
                                        ''.format(a, self.field, self))
 
         if x1 not in self:
-            raise LinearSpaceTypeError('first input vector {!r} '
-                                       'not in space {!r}.'
+            raise LinearSpaceTypeError('`x1` {!r} not in space {!r}'
                                        ''.format(x1, self))
 
         if b is None:  # Single argument
             if x2 is not None:
-                raise ValueError('second input vector provided but no '
-                                 'second scalar.')
+                raise ValueError('`x2` provided but no `b`')
             self._lincomb(a, x1, 0, x1, out)
             return out
 
         else:  # Two arguments
             if b not in self.field:
-                raise LinearSpaceTypeError('second scalar {!r} not in the '
-                                           'field {!r} of the space {!r}.'
+                raise LinearSpaceTypeError('`b` {!r} not in the '
+                                           'field {!r} of the space {!r}'
                                            ''.format(b, self.field, self))
 
             if x2 not in self:
-                raise LinearSpaceTypeError('second input vector {!r} not '
-                                           'in space {!r}.'.format(x2, self))
+                raise LinearSpaceTypeError('`x2` {!r} not in space {!r}'
+                                           ''.format(x2, self))
 
             # Call method
             self._lincomb(a, x1, b, x2, out)
@@ -287,10 +285,10 @@ class LinearSpace(Set):
                Distance between vectors
         """
         if x1 not in self:
-            raise LinearSpaceTypeError('first vector {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`x1` {!r} not in space {!r}'
                                        ''.format(x1, self))
         if x2 not in self:
-            raise LinearSpaceTypeError('second vector {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`x2` {!r} not in space {!r}'
                                        ''.format(x2, self))
 
         return float(self._dist(x1, x2))
@@ -309,7 +307,7 @@ class LinearSpace(Set):
             Norm of the vector
         """
         if x not in self:
-            raise LinearSpaceTypeError('vector {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`x` {!r} not in space {!r}'
                                        ''.format(x, self))
 
         return float(self._norm(x))
@@ -329,10 +327,10 @@ class LinearSpace(Set):
             returned object is a reference to it.
         """
         if x1 not in self:
-            raise LinearSpaceTypeError('first vector {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`x1` {!r} not in space {!r}'
                                        ''.format(x1, self))
         if x2 not in self:
-            raise LinearSpaceTypeError('second vector {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`x2` {!r} not in space {!r}'
                                        ''.format(x2, self))
 
         return self.field.element(self._inner(x1, x2))
@@ -357,14 +355,14 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise LinearSpaceTypeError('out {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`out` {!r} not in space {!r}'
                                        ''.format(out, self))
 
         if x1 not in self:
-            raise LinearSpaceTypeError('x1 {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`x1` {!r} not in space {!r}'
                                        ''.format(x1, self))
         if x2 not in self:
-            raise LinearSpaceTypeError('x2 {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`x2` {!r} not in space {!r}'
                                        ''.format(x2, self))
 
         self._multiply(x1, x2, out)
@@ -393,14 +391,14 @@ class LinearSpace(Set):
         if out is None:
             out = self.element()
         elif out not in self:
-            raise LinearSpaceTypeError('out {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`out` {!r} not in space {!r}'
                                        ''.format(out, self))
 
         if x1 not in self:
-            raise LinearSpaceTypeError('x1 {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`x1` {!r} not in space {!r}'
                                        ''.format(x1, self))
         if x2 not in self:
-            raise LinearSpaceTypeError('x2 {!r} not in space {!r}'
+            raise LinearSpaceTypeError('`x2` {!r} not in space {!r}'
                                        ''.format(x2, self))
 
         self._divide(x1, x2, out)
@@ -408,7 +406,7 @@ class LinearSpace(Set):
 
     @property
     def element_type(self):
-        """ `LinearSpaceVector` """
+        """`LinearSpaceVector`"""
         return LinearSpaceVector
 
 
@@ -425,7 +423,7 @@ class LinearSpaceVector(object):
         All deriving classes must call this method to set space.
         """
         if not isinstance(space, LinearSpace):
-            raise TypeError('space {!r} is not a `LinearSpace` instance'
+            raise TypeError('`space` {!r} is not a `LinearSpace` instance'
                             ''.format(space))
         self._space = space
 
@@ -640,11 +638,11 @@ class LinearSpaceVector(object):
         return tmp
 
     def __neg__(self):
-        """Implementation of ``-self``."""
+        """Implement ``-self``."""
         return (-1) * self
 
     def __pos__(self):
-        """Implementation of ``+self``."""
+        """Implement ``+self``."""
         return self.copy()
 
     # Metric space method

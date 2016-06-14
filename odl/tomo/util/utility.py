@@ -65,7 +65,7 @@ def euler_matrix(*angles):
         psi = float(angles[2])
         ndim = 3
     else:
-        raise ValueError('Number of angles must be between 1 and 3')
+        raise ValueError('number of angles must be between 1 and 3')
 
     cph = cos(phi)
     sph = sin(phi)
@@ -119,14 +119,14 @@ def axis_rotation(axis, angle, vectors):
 
     if not (vectors.shape == (3,) or (vectors.ndim == 2 and
                                       vectors.shape[1] == 3)):
-        raise ValueError('`vector` shape {} not (3,) or (N, 3).'
+        raise ValueError('`vector` shape {} not (3,) or (N, 3)'
                          ''.format(vectors.shape))
 
     if not hasattr(axis, 'shape'):
         axis = np.asarray(axis)
 
     if axis.shape != (3,):
-        raise ValueError('`axis` shape {} not (3,).'.format(axis.shape))
+        raise ValueError('`axis` shape {} not (3,)'.format(axis.shape))
 
     angle = float(angle)
 
@@ -168,7 +168,7 @@ def axis_rotation_matrix(axis, angle):
         axis = np.asarray(axis)
 
     if axis.shape != (3,):
-        raise ValueError('`axis` shape {} not (3,).'.format(axis.shape))
+        raise ValueError('`axis` shape {} not (3,)'.format(axis.shape))
 
     angle = float(angle)
 
@@ -232,7 +232,7 @@ def angles_from_matrix(rot_matrix):
 
     else:
         raise ValueError('shape of `rot_matrix` is {}, expected (2, 2) '
-                         'or (3, 3).'.format(rot_matrix.shape))
+                         'or (3, 3)'.format(rot_matrix.shape))
 
 
 def to_lab_sys(vec_in_local_coords, local_sys):

@@ -97,7 +97,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         if np.linalg.norm(src_to_det_init) <= 1e-10:
             raise ValueError('initial source to detector vector {} is too '
-                             'close to zero.'.format(src_to_det_init))
+                             'close to zero'.format(src_to_det_init))
         self._src_to_det_init = (np.array(src_to_det_init) /
                                  np.linalg.norm(src_to_det_init))
 
@@ -114,16 +114,16 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         self._pitch_offset = float(kwargs.pop('pitch_offset', 0))
         self._src_radius = float(src_radius)
         if self.src_radius < 0:
-            raise ValueError('source circle radius {} is negative.'
+            raise ValueError('source circle radius {} is negative'
                              ''.format(src_radius))
         self._det_radius = float(det_radius)
         if self.det_radius < 0:
-            raise ValueError('detector circle radius {} is negative.'
+            raise ValueError('detector circle radius {} is negative'
                              ''.format(det_radius))
 
         if self.src_radius == 0 and self.det_radius == 0:
             raise ValueError('source and detector circle radii cannot both be '
-                             '0.')
+                             '0')
 
     @property
     def src_radius(self):
@@ -153,7 +153,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
     @property
     def pitch_offset(self):
-        """Vertical offset at ``angle=0``"""
+        """Vertical offset at ``angle=0``."""
         return self._pitch_offset
 
     @property
@@ -189,7 +189,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         """
         angle = float(angle)
         if angle not in self.motion_params:
-            raise ValueError('angle {} is not in the valid range {}.'
+            raise ValueError('`angle` {} is not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
         # Initial vector from 0 to the detector. It can be computed this way
@@ -232,7 +232,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         """
         angle = float(angle)
         if angle not in self.motion_params:
-            raise ValueError('angle {} is not in the valid range {}.'
+            raise ValueError('`angle` {} is not in the valid range {}'
                              ''.format(angle, self.motion_params))
 
         # Initial vector from 0 to the source. It can be computed this way
@@ -248,7 +248,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         return circle_component + pitch_component
 
     def __repr__(self):
-        """Return ``repr(self)``"""
+        """Return ``repr(self)``."""
 
         arg_fstr = '\n    {!r},\n    {!r},\n    src_radius={}, det_radius={}'
         if self.pitch != 0:

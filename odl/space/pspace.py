@@ -236,11 +236,11 @@ class ProductSpace(LinearSpace):
         # Check validity of option combination (3 or 4 out of 4 must be None)
         if sum(x is None for x in (dist, norm, inner, weight)) < 3:
             raise ValueError('invalid combination of options weight, '
-                             'dist, norm and inner.')
+                             'dist, norm and inner')
 
         if any(x is not None for x in (dist, norm, inner)) and exponent != 2.0:
-            raise ValueError('exponent cannot be used together with '
-                             'inner, norm or dist.')
+            raise ValueError('`exponent` cannot be used together with '
+                             'inner, norm or dist')
 
         # Make a power space if the second argument is an integer
         if (len(spaces) == 2 and
@@ -252,18 +252,18 @@ class ProductSpace(LinearSpace):
         wrong_spaces = [spc for spc in spaces
                         if not isinstance(spc, LinearSpace)]
         if wrong_spaces:
-            raise TypeError('{!r} not LinearSpace instance(s).'
+            raise TypeError('{!r} not LinearSpace instance(s)'
                             ''.format(wrong_spaces))
 
         if not all(spc.field == spaces[0].field for spc in spaces):
-            raise ValueError('all spaces must have the same field.')
+            raise ValueError('all spaces must have the same field')
 
         # Assign spaces and field
         self._spaces = tuple(spaces)
         self._size = len(spaces)
         if field is None:
             if self.size == 0:
-                raise ValueError('No spaces provided, cannot deduce field')
+                raise ValueError('no spaces provided, cannot deduce field')
             field = self.spaces[0].field
 
         super().__init__(field)
@@ -281,14 +281,14 @@ class ProductSpace(LinearSpace):
             else:  # last possibility: make a vector
                 arr = np.asarray(weight)
                 if arr.dtype == object:
-                    raise ValueError('invalid weight argument {}.'
+                    raise ValueError('invalid weight argument {}'
                                      ''.format(weight))
                 if arr.ndim == 1:
                     self._weighting = ProductSpaceVectorWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner)
                 else:
                     raise ValueError('weighting array has {} dimensions, '
-                                     'expected 1.'.format(arr.ndim))
+                                     'expected 1'.format(arr.ndim))
 
         elif dist is not None:
             self._weighting = ProductSpaceCustomDist(dist)
@@ -400,7 +400,7 @@ class ProductSpace(LinearSpace):
                      for arg, space in zip(inp, self.spaces)]
         else:
             raise TypeError('input {!r} not a sequence of elements of the '
-                            'component spaces.'.format(inp))
+                            'component spaces'.format(inp))
 
         return self.element_type(self, parts)
 
@@ -570,7 +570,7 @@ class ProductSpace(LinearSpace):
 
     @property
     def element_type(self):
-        """ `ProductSpaceVector` """
+        """`ProductSpaceVector`"""
         return ProductSpaceVector
 
 
@@ -579,7 +579,7 @@ class ProductSpaceVector(LinearSpaceVector):
     """Elements of a `ProductSpace`."""
 
     def __init__(self, space, parts):
-        """"Initialize a new instance."""
+        """Initialize a new instance."""
         super().__init__(space)
         self._parts = list(parts)
 
@@ -623,7 +623,7 @@ class ProductSpaceVector(LinearSpaceVector):
             return self.space[indices].element(out_parts)
 
     def __setitem__(self, indices, values):
-        """Implement ``self[indices] = vals``."""
+        """Implement ``self[indices] = values``."""
         try:
             self.parts[indices] = values
         except TypeError:
@@ -892,8 +892,8 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('No inner product defined for '
-                                      'exponent != 2 (got {}).'
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
                                       ''.format(self.exponent))
 
         inners = np.fromiter(
@@ -1000,8 +1000,8 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
             The inner product of the two provided vectors
         """
         if self.exponent != 2.0:
-            raise NotImplementedError('No inner product defined for '
-                                      'exponent != 2 (got {}).'
+            raise NotImplementedError('no inner product defined for '
+                                      'exponent != 2 (got {})'
                                       ''.format(self.exponent))
 
         inners = np.fromiter(

@@ -55,7 +55,7 @@ def _default_out_of_place(func, x, **kwargs):
         out_shape = out_shape_from_meshgrid(x)
     else:
         raise TypeError('cannot use in-place method to implement '
-                        'out-of-place non-vectorized evaluation.')
+                        'out-of-place non-vectorized evaluation')
 
     dtype = func.space.out_dtype
     if dtype is None:
@@ -88,10 +88,12 @@ class FunctionSet(Set):
             evaluation.
         """
         if not isinstance(domain, Set):
-            raise TypeError('domain {!r} not a `Set` instance.'.format(domain))
+            raise TypeError('`domain` {!r} not a `Set` instance'
+                            ''.format(domain))
 
         if not isinstance(range, Set):
-            raise TypeError('range {!r} not a `Set` instance.'.format(range))
+            raise TypeError('`range` {!r} not a `Set` instance'
+                            ''.format(range))
 
         self._domain = domain
         self._range = range
@@ -139,7 +141,7 @@ class FunctionSet(Set):
             evaluation
         """
         if not callable(fcall):
-            raise TypeError('function {!r} is not callable.'.format(fcall))
+            raise TypeError('`fcall` {!r} is not `callable`'.format(fcall))
         elif fcall in self:
             return fcall
         else:
@@ -223,11 +225,11 @@ class FunctionSetVector(Operator):
         elif hasattr(fcall, 'nin') and hasattr(fcall, 'nout'):
             if fcall.nin != 1:
                 raise ValueError('ufunc {} has {} input parameter(s), '
-                                 'expected 1.'
+                                 'expected 1'
                                  ''.format(fcall.__name__, fcall.nin))
             if fcall.nout > 1:
                 raise ValueError('ufunc {} has {} output parameter(s), '
-                                 'expected at most 1.'
+                                 'expected at most 1'
                                  ''.format(fcall.__name__, fcall.nout))
             call_has_out = call_out_optional = (fcall.nout == 1)
         elif isfunction(fcall):
@@ -237,7 +239,7 @@ class FunctionSetVector(Operator):
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 bound_call=fcall.__call__)
         else:
-            raise TypeError('type {!r} not callable.')
+            raise TypeError('type {!r} not callable')
 
         self._call_has_out = call_has_out
         self._call_out_optional = call_out_optional
@@ -330,12 +332,12 @@ class FunctionSetVector(Operator):
         if bounds_check and not hasattr(self.domain, 'contains_all'):
             raise AttributeError('bounds check not possible for '
                                  'domain {}, missing `contains_all()` '
-                                 'method.'.format(self.domain))
+                                 'method'.format(self.domain))
 
         if bounds_check and not hasattr(self.range, 'contains_all'):
             raise AttributeError('bounds check not possible for '
                                  'range {}, missing `contains_all()` '
-                                 'method.'.format(self.range))
+                                 'method'.format(self.range))
 
         ndim = getattr(self.domain, 'ndim', None)
         # Check for input type and determine output shape
@@ -359,7 +361,7 @@ class FunctionSetVector(Operator):
         else:
             # Unknown input
             txt_1d = ' or (n,)' if ndim == 1 else ''
-            raise TypeError('argument {!r} not a valid vectorized '
+            raise TypeError('Argument {!r} not a valid vectorized '
                             'input. Expected an element of the domain '
                             '{domain}, an array-like with shape '
                             '({domain.ndim}, n){} or a length-{domain.ndim} '
@@ -370,7 +372,7 @@ class FunctionSetVector(Operator):
         if bounds_check:
             if not self.domain.contains_all(x):
                 raise ValueError('input contains points outside '
-                                 'the domain {}.'.format(self.domain))
+                                 'the domain {}'.format(self.domain))
 
         # Call the function and check out shape, before or after
         if out is None:
@@ -397,7 +399,7 @@ class FunctionSetVector(Operator):
                     # first case.
                     out = self._call(x[0], **kwargs)
                     if np.ndim(out) == 0 and not scalar_out:
-                        raise ValueError('invalid scalar output.')
+                        raise ValueError('invalid scalar output')
                     out = np.atleast_1d(np.squeeze(out))
             else:
                 out = self._call(x, **kwargs)
@@ -415,18 +417,17 @@ class FunctionSetVector(Operator):
                     shape = [m if n == 1 and m != 1 else 1
                              for n, m in zip(out.shape, out_shape)]
                     out = out + np.zeros(shape, dtype=out.dtype)
-
         else:
             if not isinstance(out, np.ndarray):
                 raise TypeError('output {!r} not a `numpy.ndarray` '
-                                'instance.')
+                                'instance')
             if out_shape != (1,) and out.shape != out_shape:
                 raise ValueError('output shape {} not equal to shape '
-                                 '{} expected from input.'
+                                 '{} expected from input'
                                  ''.format(out.shape, out_shape))
             if self.out_dtype is not None and out.dtype != self.out_dtype:
-                raise ValueError('out.dtype ({}) does not match out_dtype ({})'
-                                 ''.format(out.dtype, self.out_dtype))
+                raise ValueError('`out.dtype` ({}) does not match out_dtype '
+                                 '({})'.format(out.dtype, self.out_dtype))
 
             if ndim == 1:
                 # TypeError for meshgrid in 1d, but expected array (see above)
@@ -441,7 +442,7 @@ class FunctionSetVector(Operator):
         if bounds_check:
             if not self.range.contains_all(out):
                 raise ValueError('output contains points outside '
-                                 'the range {}.'
+                                 'the range {}'
                                  ''.format(self.range))
 
         # Numpy does not implement __complex__ for arrays (in contrast to
@@ -456,8 +457,8 @@ class FunctionSetVector(Operator):
         ``vec.assign(other)``.
         """
         if other not in self.space:
-            raise TypeError('vector {!r} is not an element of the space '
-                            '{} of this vector.'
+            raise TypeError('`other` {!r} is not an element of the space '
+                            '{} of this vector'
                             ''.format(other, self.space))
         self._call_in_place = other._call_in_place
         self._call_out_of_place = other._call_out_of_place
@@ -471,7 +472,7 @@ class FunctionSetVector(Operator):
         return result
 
     def __eq__(self, other):
-        """Returns ``vec == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -503,7 +504,7 @@ class FunctionSetVector(Operator):
         return self.space == other.space and funcs_equal
 
     def __str__(self):
-        """Return ``str(self)``"""
+        """Return ``str(self)``."""
         if self._call_has_out:
             func = self._call_in_place
         else:
@@ -511,7 +512,7 @@ class FunctionSetVector(Operator):
         return '{}: {} --> {}'.format(func, self.domain, self.range)
 
     def __repr__(self):
-        """Return ``repr(self)``"""
+        """Return ``repr(self)``."""
         if self._call_has_out:
             func = self._call_in_place
         else:
@@ -544,10 +545,10 @@ class FunctionSpace(FunctionSet, LinearSpace):
             for complex spaces.
         """
         if not isinstance(domain, Set):
-            raise TypeError('domain {!r} not a Set instance.'.format(domain))
+            raise TypeError('`domain` {!r} not a Set instance'.format(domain))
 
         if field is not None and not isinstance(field, Field):
-            raise TypeError('field {!r} not a `Field` instance.'
+            raise TypeError('`field` {!r} not a `Field` instance'
                             ''.format(field))
 
         # Data type: check if consistent with field, take default for None
@@ -565,7 +566,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             elif is_complex_floating_dtype(dtype):
                 field = ComplexNumbers()
             else:
-                raise ValueError('{} is not a scalar data type.'
+                raise ValueError('{} is not a scalar data type'
                                  ''.format(dtype_in))
 
         # field given -> infer dtype if not given, else check consistency
@@ -573,13 +574,13 @@ class FunctionSpace(FunctionSet, LinearSpace):
             if out_dtype is None:
                 out_dtype = np.dtype('float64')
             elif not is_real_dtype(dtype):
-                raise ValueError('{} is not a real data type.'
+                raise ValueError('{} is not a real data type'
                                  ''.format(dtype_in))
         elif field == ComplexNumbers():
             if out_dtype is None:
                 out_dtype = np.dtype('complex128')
             elif not is_complex_floating_dtype(dtype):
-                raise ValueError('{} is not a complex data type.'
+                raise ValueError('{} is not a complex data type'
                                  ''.format(dtype_in))
 
         # Else: keep out_dtype=None, which results in lazy dtype determination
@@ -638,7 +639,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             return fcall
         else:
             if not callable(fcall):
-                raise TypeError('function {!r} is not callable.'.format(fcall))
+                raise TypeError('`fcall` {!r} is not callable'.format(fcall))
             if not vectorized:
                 if self.field == RealNumbers():
                     dtype = 'float64'
@@ -664,7 +665,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             elif is_valid_input_array(x, self.domain.ndim):
                 out_shape = out_shape_from_array(x)
             else:
-                raise TypeError('invalid input type.')
+                raise TypeError('invalid input type')
 
             if out is None:
                 return np.zeros(out_shape, dtype=self.out_dtype)
@@ -685,7 +686,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             elif is_valid_input_array(x, self.domain.ndim):
                 out_shape = out_shape_from_array(x)
             else:
-                raise TypeError('invalid input type.')
+                raise TypeError('invalid input type')
 
             if out is None:
                 return np.ones(out_shape, dtype=self.out_dtype)
@@ -695,7 +696,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return self.element_type(self, one_vec)
 
     def __eq__(self, other):
-        """Returns ``s == other``.
+        """Return ``self == other``.
 
         Returns
         -------
@@ -786,7 +787,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             """Linear combination, in-place version."""
             if not isinstance(out, np.ndarray):
                 raise TypeError('in-place evaluation only possible if output '
-                                'is of type `numpy.ndarray`.')
+                                'is of type `numpy.ndarray`')
             # TODO: this could be optimized for the case when x1 and x2
             # are identical
             if a == 0 and b == 0:
@@ -1147,8 +1148,8 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
             `numpy.ndarray` of such (vectorized call).
         """
         if not isinstance(fspace, FunctionSpace):
-            raise TypeError('function space {!r} not a `FunctionSpace` '
-                            'instance.'.format(fspace))
+            raise TypeError('`fspace` {!r} not a `FunctionSpace` '
+                            'instance'.format(fspace))
 
         FunctionSetVector.__init__(self, fspace, fcall)
         LinearSpaceVector.__init__(self, fspace)

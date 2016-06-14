@@ -87,7 +87,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             accuracy in the interior.
         """
         if not isinstance(space, DiscreteLp):
-            raise TypeError('space {!r} is not a DiscreteLp instance.'
+            raise TypeError('`space` {!r} is not a DiscreteLp instance'
                             ''.format(space))
 
         # Method is affine if nonzero padding is given.
@@ -166,8 +166,8 @@ class PartialDerivative(PointwiseTensorFieldOperator):
     def adjoint(self):
         """Return the adjoint operator."""
         if not self.is_linear:
-            raise ValueError('Operator with nonzero padding_value ({}) is not'
-                             ' linear and has no adjoint.'
+            raise ValueError('operator with nonzero padding_value ({}) is not'
+                             ' linear and has no adjoint'
                              ''.format(self.padding_value))
 
         return -PartialDerivative(self.domain, self.axis,
@@ -235,18 +235,18 @@ class Gradient(PointwiseTensorFieldOperator):
         True
         """
         if domain is None and range is None:
-            raise ValueError('either domain or range must be specified.')
+            raise ValueError('either `domain` or `range` must be specified')
 
         if domain is None:
             if not isinstance(range, ProductSpace):
-                raise TypeError('range {!r} is not a ProductSpace instance.'
+                raise TypeError('`range` {!r} is not a ProductSpace instance'
                                 ''.format(range))
             domain = range[0]
 
         if range is None:
             if not isinstance(domain, DiscreteLp):
-                raise TypeError('domain {!r} is not a `DiscreteLp` '
-                                'instance.'.format(domain))
+                raise TypeError('`domain` {!r} is not a `DiscreteLp` '
+                                'instance'.format(domain))
             range = ProductSpace(domain, domain.ndim)
 
         linear = not (padding_method == 'constant' and padding_value != 0)
@@ -348,8 +348,8 @@ class Gradient(PointwiseTensorFieldOperator):
         this operator.
         """
         if not self.is_linear:
-            raise ValueError('Operator with nonzero padding_value ({}) is not'
-                             ' linear and has no adjoint.'
+            raise ValueError('operator with nonzero padding_value ({}) is not'
+                             ' linear and has no adjoint'
                              ''.format(self.padding_value))
 
         return - Divergence(domain=self.range, range=self.domain,
@@ -416,17 +416,17 @@ class Divergence(PointwiseTensorFieldOperator):
         True
         """
         if domain is None and range is None:
-            raise ValueError('either domain or range must be specified.')
+            raise ValueError('either `domain` or `range` must be specified')
 
         if domain is None:
             if not isinstance(range, DiscreteLp):
-                raise TypeError('range {!r} is not a DiscreteLp instance.'
+                raise TypeError('`range` {!r} is not a DiscreteLp instance'
                                 ''.format(range))
             domain = ProductSpace(range, range.ndim)
 
         if range is None:
             if not isinstance(domain, ProductSpace):
-                raise TypeError('domain {!r} is not a ProductSpace instance.'
+                raise TypeError('`domain` {!r} is not a ProductSpace instance'
                                 ''.format(domain))
             range = domain[0]
 
@@ -525,8 +525,8 @@ class Divergence(PointwiseTensorFieldOperator):
         the method and padding.
         """
         if not self.is_linear:
-            raise ValueError('Operator with nonzero padding_value ({}) is not'
-                             ' linear and has no adjoint.'
+            raise ValueError('operator with nonzero padding_value ({}) is not'
+                             ' linear and has no adjoint'
                              ''.format(self.padding_value))
 
         return - Gradient(domain=self.range, range=self.domain,
@@ -566,7 +566,7 @@ class Laplacian(PointwiseTensorFieldOperator):
             ``padding_value`` for indices outside the domain of ``f``.
         """
         if not isinstance(space, DiscreteLp):
-            raise TypeError('space {!r} is not a DiscreteLp instance.'
+            raise TypeError('`space` {!r} is not a DiscreteLp instance'
                             ''.format(space))
         super().__init__(domain=space, range=space, linear=True)
         self.padding_method = padding_method
@@ -774,26 +774,27 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     ndim = f_arr.ndim
 
     if f_arr.shape[axis] < 2:
-        raise ValueError('In axis {}: at least two elements required, got {}.'
+        raise ValueError('in axis {}: at least two elements required, got {}'
                          ''.format(axis, f_arr.shape[axis]))
 
     if axis < 0:
         axis += ndim
     if not (0 <= axis < ndim):
-        raise IndexError('axis {} outside the valid range 0 ... {}'
+        raise IndexError('`axis` {} outside the valid range 0 ... {}'
                          ''.format(axis, ndim - 1))
 
     dx, dx_in = float(dx), dx
     if dx <= 0 or not np.isfinite(dx):
-        raise ValueError("step length {} not positive.".format(dx_in))
+        raise ValueError("`dx` must be positive, got {}".format(dx_in))
 
     method, method_in = str(method).lower(), method
     if method not in _SUPPORTED_DIFF_METHODS:
-        raise ValueError('method {} is not understood'.format(method_in))
+        raise ValueError('`method` {} was not understood'.format(method_in))
 
     padding_method = kwargs.pop('padding_method', None)
     if padding_method not in _SUPPORTED_PADDING_METHODS:
-        raise ValueError('padding value {} not valid'.format(padding_method))
+        raise ValueError('`padding_method` {} not understood'
+                         ''.format(padding_method))
     if padding_method == 'constant':
         padding_value = float(kwargs.pop('padding_value', 0))
 
@@ -804,13 +805,14 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
         else:
             edge_order = 1
     elif edge_order not in (1, 2):
-            raise ValueError('edge order {} not valid'.format(edge_order))
+            raise ValueError('`edge_order` must be 1 or 2, got {}'
+                             ''.format(edge_order))
 
     if out is None:
         out = np.empty_like(f_arr)
     else:
         if out.shape != f.shape:
-            raise ValueError('expected output shape {}, got {}.'
+            raise ValueError('expected output shape {}, got {}'
                              ''.format(f.shape, out.shape))
 
     if f_arr.shape[axis] == 2 and edge_order == 2:
@@ -818,9 +820,8 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
 
     if padding_method is not None:
         if method == 'central' and edge_order == 1:
-            raise ValueError(
-                'central differences with padding cannot be used with '
-                'first-order accurate edges')
+            raise ValueError('central differences with padding cannot be used '
+                             'with first-order accurate edges')
         if method in ('forward', 'backward') and edge_order == 2:
             raise ValueError('{} differences with padding only use edge '
                              'order 1'.format(method))

@@ -126,11 +126,11 @@ class Set(with_metaclass(ABCMeta, object)):
 
         Implementing this method is optional.
         """
-        raise NotImplementedError("'element' method not implemented.")
+        raise NotImplementedError('`element` method not implemented')
 
     @property
     def examples(self):
-        """Returns a `generator` with elements in the set as name-value pairs.
+        """Return a `generator` with elements in the set as name-value pairs.
 
         Can return a finite set of examples or an infinite set.
 
@@ -220,7 +220,8 @@ class Strings(Set):
         """
         length_ = int(length)
         if length_ <= 0:
-            raise ValueError('`length` {} is not positive.'.format(length))
+            raise ValueError('`length` must be positive, got {}'
+                             ''.format(length))
         self._length = length_
 
     @property
@@ -560,7 +561,7 @@ class CartesianProduct(Set):
 
             if len(tpl) != len(self):
                 raise ValueError('input provides only {} values, needed '
-                                 'are {}.'.format(len(tpl), len(self)))
+                                 'are {}'.format(len(tpl), len(self)))
 
         return tpl
 

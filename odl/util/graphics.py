@@ -176,7 +176,7 @@ def show_discrete_data(values, grid, title=None, method='',
             args_re += [grid.coord_vectors[0], values.real]
             args_im += [grid.coord_vectors[0], values.imag]
         else:
-            raise ValueError('display method {!r} not supported.'
+            raise ValueError('`method` {!r} not supported'
                              ''.format(method))
 
     elif values.ndim == 2:
@@ -215,11 +215,11 @@ def show_discrete_data(values, grid, title=None, method='',
                        else [])
             sub_kwargs.update({'projection': '3d'})
         else:
-            raise ValueError('display method {!r} not supported.'
+            raise ValueError('`method` {!r} not supported'
                              ''.format(method))
 
     else:
-        raise NotImplementedError('no method for {}d display implemented.'
+        raise NotImplementedError('no method for {}d display implemented'
                                   ''.format(values.ndim))
 
     # Additional keyword args are passed on to the display method
@@ -228,7 +228,7 @@ def show_discrete_data(values, grid, title=None, method='',
     if fig is not None:
         # Reuse figure if given as input
         if not isinstance(fig, plt.Figure):
-            raise TypeError('fig {} not a matplotlib figure'.format(fig))
+            raise TypeError('`fig` {} not a matplotlib figure'.format(fig))
 
         if not plt.fignum_exists(fig.number):
             # If figure does not exist, user either closed the figure or

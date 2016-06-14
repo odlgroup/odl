@@ -67,20 +67,20 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
     """
     if not isinstance(vol_data, DiscreteLpVector):
         raise TypeError('volume data {!r} is not a DiscreteLpVector '
-                        'instance.'.format(vol_data))
+                        'instance'.format(vol_data))
     if not isinstance(geometry, Geometry):
-        raise TypeError('geometry  {!r} is not a Geometry instance.'
+        raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
     if vol_data.ndim != geometry.ndim:
         raise ValueError('dimensions {} of volume data and {} of geometry '
-                         'do not match.'
+                         'do not match'
                          ''.format(vol_data.ndim, geometry.ndim))
     if not isinstance(proj_space, DiscreteLp):
         raise TypeError('projection space {!r} is not a DiscreteLp '
-                        'instance.'.format(proj_space))
+                        'instance'.format(proj_space))
     if out is not None:
         if not isinstance(out, DiscreteLpVector):
-            raise TypeError('out {} is neither None nor a '
+            raise TypeError('`out` {} is neither None nor a '
                             'DiscreteLpVector instance'.format(out))
 
     ndim = vol_data.ndim
@@ -163,20 +163,20 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         """
     if not isinstance(proj_data, DiscreteLpVector):
         raise TypeError('projection data {!r} is not a DiscreteLpVector '
-                        'instance.'.format(proj_data))
+                        'instance'.format(proj_data))
     if not isinstance(geometry, Geometry):
-        raise TypeError('geometry  {!r} is not a Geometry instance.'
+        raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
     if not isinstance(reco_space, DiscreteLp):
         raise TypeError('reconstruction space {!r} is not a DiscreteLp '
-                        'instance.'.format(reco_space))
+                        'instance'.format(reco_space))
     if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
-                         'geometry do not match.'.format(reco_space.ndim,
-                                                         geometry.ndim))
+                         'geometry do not match'.format(reco_space.ndim,
+                                                        geometry.ndim))
     if out is not None:
         if not isinstance(out, DiscreteLpVector):
-            raise TypeError('out {} is neither None nor a '
+            raise TypeError('`out` {} is neither None nor a '
                             'DiscreteLpVector instance'.format(out))
 
     ndim = proj_data.ndim

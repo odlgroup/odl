@@ -34,9 +34,6 @@ standard_library.install_aliases()
 
 import numpy as np
 import scipy
-import scipy.ndimage
-import matplotlib.pyplot as plt
-
 import odl
 
 # Read test image: use only every second pixel, convert integer to float,
@@ -107,5 +104,4 @@ odl.solvers.chambolle_pock_solver(
 # Display images
 orig.show(title='original image')
 noisy.show(title='noisy image')
-x.show(title='reconstruction')
-plt.show()
+x.show(title='reconstruction', show=True)

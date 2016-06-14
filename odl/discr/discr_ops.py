@@ -62,8 +62,9 @@ class Resampling(Operator):
         >>> resampling = Resampling(X, Y)
         """
         if domain.uspace != range.uspace:
-            raise ValueError('domain.uspace ({}) does not match range.uspace '
-                             '({})'.format(domain.uspace, range.uspace))
+            raise ValueError('`domain.uspace` ({}) does not match '
+                             '`range.uspace` ({})'
+                             ''.format(domain.uspace, range.uspace))
 
         super().__init__(domain=domain, range=range, linear=True)
 

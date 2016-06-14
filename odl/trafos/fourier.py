@@ -246,7 +246,7 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
         elif str(halfcx_parity).lower() == 'odd':
             irshape[axes[-1]] = 2 * rshape[axes[-1]] - 1
         else:
-            raise ValueError("halfcomplex parity '{}' not understood."
+            raise ValueError("`halfcomplex` parity '{}' not understood"
                              "".format(halfcx_parity))
 
     irmin = np.asarray(x0)
@@ -282,7 +282,7 @@ def _pyfftw_destroys_input(flags, direction, halfcomplex, ndim):
 def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
     """Raise an error if anything is not ok with in and out."""
     if len(set(axes)) != len(axes):
-        raise ValueError('Duplicate axes are not allowed.')
+        raise ValueError('duplicate axes are not allowed')
 
     if direction == 'forward':
         out_shape = list(arr_in.shape)
@@ -291,24 +291,24 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
                 out_shape[axes[-1]] = arr_in.shape[axes[-1]] // 2 + 1
             except IndexError as err:
                 raise_from(IndexError('axis index {} out of range for array '
-                                      'with {} axes.'
+                                      'with {} axes'
                                       ''.format(axes[-1], arr_in.ndim)),
                            err)
 
         if arr_out.shape != tuple(out_shape):
-            raise ValueError('Expected output shape {}, got {}.'
+            raise ValueError('expected output shape {}, got {}'
                              ''.format(tuple(out_shape), arr_out.shape))
 
         if is_real_dtype(arr_in.dtype):
             out_dtype = _TYPE_MAP_R2C[arr_in.dtype]
         elif halfcomplex:
-            raise ValueError('Cannot combine halfcomplex forward transform '
-                             'with complex input.')
+            raise ValueError('cannot combine halfcomplex forward transform '
+                             'with complex input')
         else:
             out_dtype = arr_in.dtype
 
         if arr_out.dtype != out_dtype:
-            raise ValueError('Expected output dtype {}, got {}.'
+            raise ValueError('expected output dtype {}, got {}'
                              ''.format(dtype_repr(out_dtype),
                                        dtype_repr(arr_out.dtype)))
 
@@ -319,24 +319,24 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
                 in_shape[axes[-1]] = arr_out.shape[axes[-1]] // 2 + 1
             except IndexError as err:
                 raise_from(IndexError('axis index {} out of range for array '
-                                      'with {} axes.'
+                                      'with {} axes'
                                       ''.format(axes[-1], arr_out.ndim)),
                            err)
 
         if arr_in.shape != tuple(in_shape):
-            raise ValueError('Expected input shape {}, got {}.'
+            raise ValueError('expected input shape {}, got {}'
                              ''.format(tuple(in_shape), arr_in.shape))
 
         if is_real_dtype(arr_out.dtype):
             in_dtype = _TYPE_MAP_R2C[arr_out.dtype]
         elif halfcomplex:
-            raise ValueError('Cannot combine halfcomplex backward transform '
-                             'with complex output.')
+            raise ValueError('cannot combine halfcomplex backward transform '
+                             'with complex output')
         else:
             in_dtype = arr_out.dtype
 
         if arr_in.dtype != in_dtype:
-            raise ValueError('Expected input dtype {}, got {}.'
+            raise ValueError('expected input dtype {}, got {}'
                              ''.format(dtype_repr(in_dtype),
                                        dtype_repr(arr_in.dtype)))
 
@@ -390,7 +390,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         Flag for the amount of effort put into finding an optimal
         FFTW plan. See the `FFTW doc on planner flags
         <http://www.fftw.org/fftw3_doc/Planner-Flags.html>`_.
-        Default: 'estimate'.
+        Default: 'estimate'
     planning_timelimit : `float`, optional
         Limit planning time to roughly this amount of seconds.
         Default: `None` (no limit)
@@ -439,10 +439,10 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     import pickle
 
     if not array_in.flags.aligned:
-        raise ValueError('Input array not aligned.')
+        raise ValueError('input array not aligned')
 
     if not array_out.flags.aligned:
-        raise ValueError('Output array not aligned.')
+        raise ValueError('output array not aligned')
 
     if axes is None:
         axes = tuple(range(array_in.ndim))
@@ -606,19 +606,19 @@ class DiscreteFourierTransform(Operator):
         (2, 3, 4)
         """
         if not isinstance(domain, DiscreteLp):
-            raise TypeError('domain {!r} is not a DiscreteLp instance.'
+            raise TypeError('`domain` {!r} is not a `DiscreteLp` instance'
                             ''.format(domain))
         if range is not None and not isinstance(range, DiscreteLp):
-            raise TypeError('range {!r} is not a DiscreteLp instance.'
+            raise TypeError('`range` {!r} is not a `DiscreteLp` instance'
                             ''.format(range))
 
         # Implementation
         self._impl = str(impl).lower()
         if self.impl not in ('numpy', 'pyfftw'):
-            raise ValueError("implementation '{}' not understood."
+            raise ValueError("`impl` '{}' not understood"
                              "".format(impl))
         if self.impl == 'pyfftw' and not PYFFTW_AVAILABLE:
-            raise ValueError('pyfftw backend not available.')
+            raise ValueError("'pyfftw' backend not available")
 
         # Axes
         if axes is None:
@@ -627,7 +627,7 @@ class DiscreteFourierTransform(Operator):
             axes_ = np.atleast_1d(axes)
             axes_[axes_ < 0] += domain.ndim
             if not all(0 <= ax < domain.ndim for ax in axes_):
-                raise ValueError('invalid entries in axes.')
+                raise ValueError('invalid entries in axes')
         self._axes = list(axes_)
 
         # Half-complex
@@ -640,10 +640,10 @@ class DiscreteFourierTransform(Operator):
 
         # Sign of the transform
         if sign not in ('+', '-'):
-            raise ValueError("sign '{}' not understood.".format(sign))
+            raise ValueError("`sign` '{}' not understood".format(sign))
         if sign == '+' and self.halfcomplex:
             raise ValueError("cannot combine sign '+' with a half-complex "
-                             "transform.")
+                             "transform")
         self._sign = sign
 
         # Calculate the range
@@ -813,7 +813,7 @@ class DiscreteFourierTransform(Operator):
             return self.inverse
         else:
             raise NotImplementedError(
-                'no adjoint defined for exponents ({}, {}) != (2, 2).'
+                'no adjoint defined for exponents ({}, {}) != (2, 2)'
                 ''.format(self.domain.exponent, self.range.exponent))
 
     @property
@@ -857,7 +857,7 @@ class DiscreteFourierTransform(Operator):
         clear_fftw_plan
         """
         if self.impl != 'pyfftw':
-            raise ValueError('Cannot create fftw plan without fftw backend.')
+            raise ValueError('cannot create fftw plan without fftw backend')
 
         x = self.domain.element()
         y = self.range.element()
@@ -883,7 +883,7 @@ class DiscreteFourierTransform(Operator):
         """
 
         if self.impl != 'pyfftw':
-            raise ValueError('Cannot create fftw plan without fftw backend.')
+            raise ValueError('cannot create fftw plan without fftw backend')
 
         self._fftw_plan = None
 
@@ -1007,7 +1007,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransform):
                         np.prod(np.take(self.domain.shape, self.axes)))
 
     def _call_pyfftw(self, x, out, **kwargs):
-        """Implement ``self(x[, out, **kwargs])``using pyfftw.
+        """Implement ``self(x[, out, **kwargs])`` using pyfftw.
 
         Parameters
         ----------
@@ -1136,7 +1136,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     """
     arr = np.asarray(arr)
     if not is_scalar_dtype(arr.dtype):
-        raise ValueError('array has non-scalar data type {}.'
+        raise ValueError('array has non-scalar data type {}'
                          ''.format(dtype_repr(arr.dtype)))
     elif is_real_dtype(arr.dtype) and not is_real_floating_dtype(arr.dtype):
         arr = arr.astype('float64')
@@ -1162,14 +1162,14 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
 
     if is_real_dtype(out.dtype) and not shift:
         raise ValueError('cannot pre-process real input in place without '
-                         'shift.')
+                         'shift')
 
     if sign == '-':
         imag = -1j
     elif sign == '+':
         imag = 1j
     else:
-        raise ValueError("sign '{}' not understood.".format(sign))
+        raise ValueError("`sign` '{}' not understood".format(sign))
 
     def _onedim_arr(length, shift):
         if shift:
@@ -1219,7 +1219,7 @@ def _interp_kernel_ft(norm_freqs, interp):
     elif interp_ == 'linear':
         return np.sinc(norm_freqs) ** 2 / np.sqrt(2 * np.pi)
     else:
-        raise ValueError("interpolation '{}' not understood.".format(interp))
+        raise ValueError("`interp` '{}' not understood".format(interp))
 
 
 def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
@@ -1290,7 +1290,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
         arr = arr.astype(_TYPE_MAP_R2C[arr.dtype])
     elif not is_complex_floating_dtype(arr.dtype):
         raise ValueError('array data type {} is not a floating point data '
-                         'type.'.format(dtype_repr(arr.dtype)))
+                         'type'.format(dtype_repr(arr.dtype)))
 
     if out is None:
         out = arr.copy()
@@ -1305,11 +1305,11 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
     elif sign == '+':
         imag = 1j
     else:
-        raise ValueError("sign '{}' not understood.".format(sign))
+        raise ValueError("`sign` '{}' not understood".format(sign))
 
     op, op_in = str(op).lower(), op
     if op not in ('multiply', 'divide'):
-        raise ValueError("kernel op '{}' not understood.".format(op_in))
+        raise ValueError("kernel `op` '{}' not understood".format(op_in))
 
     # Make a list from interp if that's not the case already
     try:
@@ -1411,10 +1411,10 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
         coincide with the grid node.
     """
     if not isinstance(space, DiscreteLp):
-        raise TypeError('space {!r} is not a `DiscreteLp` instance.'
+        raise TypeError('`space` {!r} is not a `DiscreteLp` instance'
                         ''.format(space))
     if not space.partition.is_regular:
-        raise ValueError('space is not uniformly discretized.')
+        raise ValueError('`space` is not uniformly discretized')
 
     if axes is None:
         axes = list(range(space.ndim))
@@ -1422,8 +1422,8 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
         axes = list(axes)
 
     if halfcomplex and space.field != RealNumbers():
-        raise ValueError('halfcomplex option can only be used with real '
-                         'spaces.')
+        raise ValueError('`halfcomplex` option can only be used with real '
+                         'spaces')
 
     shift = _shift_list(shift, len(axes))
 
@@ -1439,7 +1439,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
             dtype = space.dtype
     else:
         if not is_complex_floating_dtype(dtype):
-            raise ValueError('{} is not a complex data type.'
+            raise ValueError('{} is not a complex data type'
                              ''.format(dtype_repr(dtype)))
 
     # Calculate range
@@ -1565,23 +1565,22 @@ class FourierTransform(Operator):
           for details.
         """
         # TODO: variants wrt placement of 2*pi
-
         if not isinstance(domain, DiscreteLp):
-            raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
+            raise TypeError('domain {!r} is not a `DiscreteLp` instance'
                             ''.format(domain))
         if not isinstance(domain.dspace, Ntuples):
             raise NotImplementedError(
-                'Only Numpy-based data spaces are supported, got {}.'
+                'Only Numpy-based data spaces are supported, got {}'
                 ''.format(domain.dspace))
 
         self._axes = list(kwargs.pop('axes', range_seq(domain.ndim)))
 
         self._impl = str(impl).lower()
         if self.impl not in ('numpy', 'pyfftw'):
-            raise ValueError("implementation '{}' not understood."
+            raise ValueError("`impl` '{}' not understood"
                              "".format(impl))
         if self.impl == 'pyfftw' and not PYFFTW_AVAILABLE:
-            raise ValueError('pyfftw backend not available.')
+            raise ValueError('pyfftw backend not available')
 
         # Handle half-complex yes/no and shifts
         if isinstance(domain.grid, RegularGrid):
@@ -1593,22 +1592,22 @@ class FourierTransform(Operator):
             self._shifts = _shift_list(kwargs.pop('shift', True),
                                        length=len(self.axes))
         else:
-            raise NotImplementedError('irregular grids not yet supported.')
+            raise NotImplementedError('irregular grids not yet supported')
 
         sign = kwargs.pop('sign', '-')
         if sign not in ('+', '-'):
-            raise ValueError("sign '{}' not understood.".format(sign))
+            raise ValueError("`sign` '{}' not understood".format(sign))
         if sign == '+' and self.halfcomplex:
             raise ValueError("cannot combine sign '+' with a half-complex "
-                             "transform.")
+                             "transform")
         self._sign = sign
 
         # Need to filter out this situation since the pre-processing step
         # casts to complex otherwise, and then no half-complex transform
         # is possible.
         if self.halfcomplex and not self.shifts[-1]:
-            raise ValueError('shift must be True in the halved (last) axis '
-                             'in half-complex transforms.')
+            raise ValueError('`shift` must be True in the halved (last) axis '
+                             'in half-complex transforms')
 
         if range is None:
             # self._halfcomplex and self._axes need to be set for this
@@ -1827,7 +1826,7 @@ class FourierTransform(Operator):
             return self.inverse
         else:
             raise NotImplementedError(
-                'no adjoint defined for exponents ({}, {}) != (2, 2).'
+                'no adjoint defined for exponents ({}, {}) != (2, 2)'
                 ''.format(self.domain.exponent, self.range.exponent))
 
     @property
@@ -1913,7 +1912,7 @@ class FourierTransform(Operator):
         clear_fftw_plan
         """
         if self.impl != 'pyfftw':
-            raise ValueError('Cannot create fftw plan without fftw backend.')
+            raise ValueError('cannot create fftw plan without fftw backend')
 
         # Using available temporaries if possible
         inverse = isinstance(self, FourierTransformInverse)
@@ -1979,7 +1978,7 @@ class FourierTransform(Operator):
         """
 
         if self.impl != 'pyfftw':
-            raise ValueError('Cannot create fftw plan without fftw backend.')
+            raise ValueError('cannot create fftw plan without fftw backend')
 
         self._fftw_plan = None
 
@@ -2258,7 +2257,7 @@ def _shift_list(shift, length):
     try:
         shift_list = [bool(s) for s in shift]
         if len(shift_list) != length:
-            raise ValueError('Expected {} entries in shift sequence, got {}.'
+            raise ValueError('expected {} entries in shift sequence, got {}'
                              ''.format(length, len(shift_list)))
     except TypeError:
         shift_list = [bool(shift)] * length

@@ -63,28 +63,28 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
     """
     if not isinstance(vol_data, DiscreteLpVector):
         raise TypeError('volume data {!r} is not a DiscreteLpVector '
-                        'instance.'.format(vol_data))
+                        'instance'.format(vol_data))
     if not isinstance(vol_data.space.dspace, Ntuples):
         raise TypeError('data type {!r} of the volume space is not an '
                         'instance of Ntuples'.format(vol_data.space.dspace))
     if not isinstance(geometry, Geometry):
-        raise TypeError('geometry  {!r} is not a Geometry instance.'
+        raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
     if not isinstance(proj_space, DiscreteLp):
         raise TypeError('projection space {!r} is not a DiscreteLp '
-                        'instance.'.format(proj_space))
+                        'instance'.format(proj_space))
     if not isinstance(proj_space.dspace, Ntuples):
         raise TypeError('data type {!r} of the reconstruction space is not an '
                         'instance of Ntuples'.format(proj_space.dspace))
     if vol_data.ndim != geometry.ndim:
         raise ValueError('dimensions {} of volume data and {} of geometry '
-                         'do not match.'
+                         'do not match'
                          ''.format(vol_data.ndim, geometry.ndim))
     if out is None:
         out = proj_space.element()
     else:
         if not isinstance(out, DiscreteLpVector):
-            raise TypeError('out {} is neither None nor a '
+            raise TypeError('`out` {} is neither None nor a '
                             'DiscreteLpVector instance'.format(out))
 
     ndim = vol_data.ndim
@@ -100,8 +100,8 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
 
     # Create projector
     if not all(s == vol_data.space.interp[0] for s in vol_data.space.interp):
-        raise ValueError('Volume interpolation must be the same in each '
-                         'dimension, got {}.'.format(vol_data.space.interp))
+        raise ValueError('volume interpolation must be the same in each '
+                         'dimension, got {}'.format(vol_data.space.interp))
     vol_interp = vol_data.space.interp[0]
     proj_id = astra_projector(vol_interp, vol_geom, proj_geom, ndim,
                               impl='cpu')
@@ -144,28 +144,28 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     """
     if not isinstance(proj_data, DiscreteLpVector):
         raise TypeError('projection data {!r} is not a DiscreteLpVector '
-                        'instance.'.format(proj_data))
+                        'instance'.format(proj_data))
     if not isinstance(proj_data.space.dspace, Ntuples):
         raise TypeError('data type {!r} of the projection space is not an '
                         'instance of Ntuples'.format(proj_data.shape.dspace))
     if not isinstance(geometry, Geometry):
-        raise TypeError('geometry  {!r} is not a Geometry instance.'
+        raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
     if not isinstance(reco_space, DiscreteLp):
         raise TypeError('reconstruction space {!r} is not a DiscreteLp '
-                        'instance.'.format(reco_space))
+                        'instance'.format(reco_space))
     if not isinstance(reco_space.dspace, Ntuples):
         raise TypeError('data type {!r} of the reconstruction space is not an '
                         'instance of Ntuples'.format(reco_space.dspace))
     if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
-                         'geometry do not match.'.format(
+                         'geometry do not match'.format(
                              reco_space.ndim, geometry.ndim))
     if out is None:
         out = reco_space.element()
     else:
         if not isinstance(out, DiscreteLpVector):
-            raise TypeError('out {} is neither None nor a '
+            raise TypeError('`out` {} is neither None nor a '
                             'DiscreteLpVector instance'.format(out))
 
     ndim = proj_data.ndim
@@ -182,8 +182,8 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     # Create projector
     # TODO: implement with different schemes for angles and detector
     if not all(s == proj_data.space.interp[0] for s in proj_data.space.interp):
-        raise ValueError('Data interpolation must be the same in each '
-                         'dimension, got {}.'.format(proj_data.space.interp))
+        raise ValueError('data interpolation must be the same in each '
+                         'dimension, got {}'.format(proj_data.space.interp))
     proj_interp = proj_data.space.interp[0]
     proj_id = astra_projector(proj_interp, vol_geom, proj_geom, ndim,
                               impl='cpu')

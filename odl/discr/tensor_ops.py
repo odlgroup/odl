@@ -73,37 +73,37 @@ class PointwiseTensorFieldOperator(Operator):
         """
         if isinstance(domain, ProductSpace):
             if not domain.is_power_space:
-                raise TypeError('domain {!r} is not a power space.'
+                raise TypeError('`domain` {!r} is not a power space'
                                 ''.format(domain))
 
             if domain.size == 0:
-                raise ValueError('domain is a product space of size 0.')
+                raise ValueError('`domain` is a product space of size 0')
 
             dom_base = domain[0]
         elif isinstance(domain, LinearSpace):
             dom_base = domain
         else:
-            raise TypeError('domain {!r} is not a ProductSpace or LinearSpace '
-                            'instance.'.format(domain))
+            raise TypeError('`domain` {!r} is not a ProductSpace or '
+                            'LinearSpace instance'.format(domain))
 
         if isinstance(range, ProductSpace):
             if not range.is_power_space:
-                raise TypeError('range {!r} is not a power space.'
+                raise TypeError('`range` {!r} is not a power space'
                                 ''.format(range))
 
             if range.size == 0:
-                raise ValueError('range is a product space of size 0.')
+                raise ValueError('`range` is a product space of size 0')
 
             ran_base = range[0]
         elif isinstance(range, LinearSpace):
             ran_base = range
         else:
-            raise TypeError('range {!r} is not a ProductSpace or LinearSpace '
-                            'instance.'.format(range))
+            raise TypeError('`range` {!r} is not a ProductSpace or '
+                            'LinearSpace instance'.format(range))
 
         if dom_base != ran_base:
-            raise ValueError('domain and range have different base spaces '
-                             '({!r} != {!r}).'
+            raise ValueError('`domain` and `range` have different base spaces '
+                             '({!r} != {!r})'
                              ''.format(dom_base, ran_base))
 
         super().__init__(domain=domain, range=range, linear=linear)
@@ -190,8 +190,8 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         [[1.0, 7.0]]
         """
         if not isinstance(vfspace, ProductSpace):
-            raise TypeError('vector field space {!r} is not a ProductSpace '
-                            'instance.'.format(vfspace))
+            raise TypeError('`vfspace` {!r} is not a ProductSpace '
+                            'instance'.format(vfspace))
         super().__init__(domain=vfspace, range=vfspace[0], linear=False)
 
         # Need to check for product space shape once higher order tensors
@@ -199,11 +199,11 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         if exponent is None:
             if self.domain.exponent is None:
-                raise ValueError('cannot determine exponent from {}.'
+                raise ValueError('cannot determine `exponent` from {}'
                                  ''.format(self.domain))
             self._exponent = self.domain.exponent
         elif exponent < 1:
-            raise ValueError('exponent smaller than 1 not allowed.')
+            raise ValueError('`exponent` smaller than 1 not allowed')
         else:
             self._exponent = float(exponent)
 
@@ -217,19 +217,19 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
                                  np.ones(len(self.domain)))
             else:
                 raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting vector or constant.'
+                                 'not define a weighting vector or constant'
                                  ''.format(self.domain.weighting))
         elif np.isscalar(weight):
             if weight <= 0:
                 raise ValueError('weighting constant must be positive, got '
-                                 '{}.'.format(weight))
+                                 '{}'.format(weight))
             self._weights = float(weight) * np.ones(self.domain.size)
         else:
             self._weights = np.asarray(weight, dtype='float64')
             if (not np.all(self.weights > 0) or
                     not np.all(np.isfinite(self.weights))):
                 raise ValueError('weighting array {} contains invalid '
-                                 'entries.'.format(weight))
+                                 'entries'.format(weight))
         self._is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
@@ -351,11 +351,11 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         """
         if self.domain.field == ComplexNumbers():
             raise NotImplementedError('operator not Frechet-differentiable '
-                                      'on a complex space.')
+                                      'on a complex space')
 
         if self.exponent == float('inf'):
             raise NotImplementedError('operator not Frechet-differentiable '
-                                      'for exponent = inf.')
+                                      'for exponent = inf')
 
         vf = self.domain.element(vf)
         vf_pwnorm_fac = self(vf)
@@ -430,8 +430,8 @@ class PointwiseInner(PointwiseTensorFieldOperator):
         [[0.0, -7.0]]
         """
         if not isinstance(vfspace, ProductSpace):
-            raise TypeError('vector field space {!r} is not a ProductSpace '
-                            'instance.'.format(vfspace))
+            raise TypeError('`vfsoace` {!r} is not a ProductSpace '
+                            'instance'.format(vfspace))
         super().__init__(domain=vfspace, range=vfspace[0], linear=True)
 
         # Bail out if the space is complex but we cannot take the complex
@@ -440,7 +440,7 @@ class PointwiseInner(PointwiseTensorFieldOperator):
                 not hasattr(self.base_space.element_type, 'conj')):
             raise NotImplementedError(
                 'base space element type {!r} does not implement conj() '
-                'method required for complex inner products.'
+                'method required for complex inner products'
                 ''.format(self.base_space.element_type))
 
         self._vecfield = self.domain.element(vecfield)
@@ -454,19 +454,19 @@ class PointwiseInner(PointwiseTensorFieldOperator):
                                  np.ones(len(self.domain)))
             else:
                 raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting vector or constant.'
+                                 'not define a weighting vector or constant'
                                  ''.format(self.domain.weighting))
         elif np.isscalar(weight):
             if weight <= 0:
                 raise ValueError('weighting constant must be positive, got '
-                                 '{}.'.format(weight))
+                                 '{}'.format(weight))
             self._weights = float(weight) * np.ones(self.domain.size)
         else:
             self._weights = np.asarray(weight, dtype='float64')
             if (not np.all(self.weights > 0) or
                     not np.all(np.isfinite(self.weights))):
                 raise ValueError('weighting array {} contains invalid '
-                                 'entries.'.format(weight))
+                                 'entries'.format(weight))
         self._is_weighted = not np.array_equiv(self.weights, 1.0)
 
     @property
@@ -565,11 +565,11 @@ class PointwiseInnerAdjoint(PointwiseInner):
             vfspace = ProductSpace(sspace, len(vecfield), weight=weight)
         else:
             if not isinstance(vfspace, ProductSpace):
-                raise TypeError('vector field space {!r} is not a '
-                                'ProductSpace instance.'.format(vfspace))
+                raise TypeError('`vfspace` {!r} is not a '
+                                'ProductSpace instance'.format(vfspace))
             if vfspace[0] != sspace:
                 raise ValueError('base space of the range is different from '
-                                 'the given scalar space ({!r} != {!r}).'
+                                 'the given scalar space ({!r} != {!r})'
                                  ''.format(vfspace[0], sspace))
         super().__init__(vfspace, vecfield, weight=weight)
 
@@ -584,7 +584,7 @@ class PointwiseInnerAdjoint(PointwiseInner):
                                  np.ones(len(self.range)))
         else:
             raise ValueError('weighting scheme {!r} of the range does '
-                             'not define a weighting vector or constant.'
+                             'not define a weighting vector or constant'
                              ''.format(self.range.weighting))
 
     def _call(self, f, out):

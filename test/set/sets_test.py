@@ -23,7 +23,6 @@ standard_library.install_aliases()
 
 # External module imports
 import pytest
-import numpy as np
 
 # ODL imports
 from odl.set.sets import (EmptySet, UniversalSet, Strings, ComplexNumbers,
