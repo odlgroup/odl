@@ -16,12 +16,23 @@ References
    composite and parallel-sum type monotone operators*. SIAM Journal
    on Optimization, 23.4 (2013), pp 2541--2565.
 
+.. [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
+   Cambridge university press, 2004.
+
 .. [Bro1965] Broyden, C G. *A class of methods for solving nonlinear
    simultaneous equations*. Mathematics of computation, 33 (1965),
    pp 577--593.
 
-.. [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
-   Cambridge university press, 2004.
+.. [Bro+2008] Brown, S, and Bailey, D L, and Willowson, K, and Baldock, C
+   *Investigation of the relationship between linear attenuation
+   coefficients and CT Houndsfield units using radionuclides for SPECT*.
+   Applied Radiation and Isotopes, 66 (2008), pp 1206--1212.
+
+.. [Bur+2002] Burger, C, and Goerres, G, and Schoenes, S, and Buck, A,
+   and Lonn, A H R, and von Schulthess, G K *PET attenuation coefficient
+   from CT images: experimental evaluation of the transformation of CT into
+   PET 511-keV attenuation coefficients*.
+   European Journal of Nuclear Medicine, 29 (2002), pp 922--927.
 
 .. [CP2011a] Chambolle, A and Pock, T. *A First-Order
    Primal-Dual Algorithm for Convex Problems with Applications to
