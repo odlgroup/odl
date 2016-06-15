@@ -38,11 +38,11 @@ def test_spect_projector():
     """Test discrete SPECT transform."""
 
     # Geometry
-    det_nx_pix = 16
-    det_ny_pix = 16
+    det_nx_pix = 32
+    det_ny_pix = 32
     det_nx_mm = 4
     det_radius = 200
-    n_proj = 16
+    n_proj = 32
     det_param = det_nx_mm * det_nx_pix
     dpart = odl.uniform_partition([-det_param, -det_param],
                                   [det_param, det_param],
@@ -58,7 +58,7 @@ def test_spect_projector():
     vol = odl.util.phantom.shepp_logan(domain, True)
     # Create a SPECT projector
     projector = AttenuatedRayTransform(
-        domain, geometry, attenuation=None, psf=None, impl='niftyrec')
+        domain, geometry, attenuation=None, impl='niftyrec')
 
     # Calculate projection and back-projection
     proj = projector(vol)
