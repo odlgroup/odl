@@ -159,6 +159,11 @@ class RectPartition(object):
         return self.set.extent()
 
     @property
+    def midpoint(self):
+        """Midpoint of this partition."""
+        return self.set.midpoint
+
+    @property
     def grid(self):
         """`TensorGrid` defining this partition."""
         return self.__grid

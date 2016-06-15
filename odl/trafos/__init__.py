@@ -33,3 +33,6 @@ __all__ += fourier.__all__
 
 from .wavelet import *
 __all__ += wavelet.__all__
+
+from .convolution import *
+__all__ += convolution.__all__
