@@ -71,7 +71,7 @@ def read_clintec_CT_reconstruction(path):
     rescale_intercept = int(dataset.RescaleIntercept)
     rescale_slope = int(dataset.RescaleSlope)
 
-    ct_volume = rescale_slope*np.float32(data_array) + rescale_intercept
+    ct_volume = rescale_slope * np.float32(data_array) + rescale_intercept
 
     return ct_volume, dataset
 
