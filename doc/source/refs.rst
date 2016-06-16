@@ -20,6 +20,11 @@ References
    simultaneous equations*. Mathematics of computation, 33 (1965),
    pp 577--593.
 
+.. [Bro+2008] Brown, S, and Bailey, D L, and Willowson, K, and Baldock, C
+   *Investigation of the relationship between linear attenuation
+   coefficients and CT Houndsfield units using radionuclides for SPECT*.
+   Applied Radiation and Isotopes, 66 (2008), pp 1206--1212
+
 .. [BV2004] Boyd, S, and Vandenberghe, L. *Convex optimization*.
    Cambridge university press, 2004.
 
