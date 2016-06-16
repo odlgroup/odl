@@ -21,3 +21,6 @@ __all__ = ()
 
 from .functional import *
 __all__ += functional.__all__
+
+from .convex_conjugate_utils import *
+__all__ += convex_conjugate_utils.__all__

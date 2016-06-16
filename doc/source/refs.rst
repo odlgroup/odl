@@ -45,6 +45,10 @@ References
 .. [Hei+2016] Heide, F et al. *ProxImaL: Efficient Image Optimization using
    Proximal Algorithms*. ACM Transactions on Graphics (TOG), 2016.
 
+.. [KP2015] Komodakis, N, and Pesquet, J-C. *Playing with Duality: An overview
+   of recent primal-dual approaches for solving large-scale optimization
+   problems*. IEEE Signal Processing Magazine, 32.6 (2015), pp 31--54.
+
 .. [Kva1991] Kvaalen, E. *A faster Broyden method*. BIT Numerical
    Mathematics 31 (1991), pp 369--372.
 
