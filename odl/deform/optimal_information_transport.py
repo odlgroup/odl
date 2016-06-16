@@ -15,28 +15,35 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-""":math:`L^p` type discretizations of function spaces."""
+"""
+Example of shape-based image reconstruction
+using optimal information transformation.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
-standard_library.install_aliases()
-
+from odl.operator.operator import Operator
+from builtins import super
 import numpy as np
-
+import matplotlib.pyplot as plt
 from odl.discr import Gradient
 from odl.trafos import FourierTransform
+standard_library.install_aliases()
 
 __all__ = ('optimal_information_transport_solver',)
 
 
-def optimal_information_transport_solver(op, I, g, niter, eps, sigma, callback=None):
-    DPhiJacobian = op.domain.one()
+def optimal_information_transport_solver(gradS, I, g, niter, eps,
+                                         sigma, callback=None):
 
-    grad = Gradient(op.domain, method='central')
+    DPhiJacobian = gradS.domain.one()
+
+    grad = Gradient(gradS.domain, method='central')
 
     # We solve poisson using the fourier transform
-    ft = FourierTransform(op.domain)
+    # ft = FourierTransform(op.domain)
+    ft = FourierTransform(gradS.domain)
     k2_values = sum((ft.range.points() ** 2).T)
     k2 = ft.range.element(np.maximum(np.abs(k2_values), 0.01))
     poisson_solver = ft.inverse * (1 / k2) * ft
@@ -44,124 +51,184 @@ def optimal_information_transport_solver(op, I, g, niter, eps, sigma, callback=N
     for _ in range(niter):
         PhiStarX = DPhiJacobian * I
 
-        tmp = grad(op.adjoint(op(PhiStarX) - g))
-        for i in range(tmp.size):
-            tmp[i] = PhiStarX * tmp[i]
+        grads = gradS.call(PhiStarX, g)
+
+        tmp = grad(grads)
+
+        tmp = tmp.space.element([tp * PhiStarX for tp in tmp])
 
         u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
 
         # solve for v
         v = grad.range.element()
+
         for i in range(u.size):
             v[i] = poisson_solver(u[i])
             v[i] -= v[i][0]
 
-        new_points = op.domain.points().T
+        new_points = gradS.domain.points().T
+
         for i in range(tmp.size):
             new_points[i] -= eps * v[i].ntuple.asarray()
 
-        # print(np.min(new_points), np.max(new_points))
-
-        I.assign(op.domain.element(I.interpolation(new_points, bounds_check=False)))
-        DPhiJacobian = np.exp(eps * grad.adjoint(v)) * op.domain.element(DPhiJacobian.interpolation(new_points, bounds_check=False))
+        I.assign(gradS.domain.element(I.interpolation(new_points,
+                                                      bounds_check=False)))
+        DPhiJacobian = np.exp(eps * grad.adjoint(v)) * gradS.domain.element(
+            DPhiJacobian.interpolation(new_points, bounds_check=False))
 
         if callback is not None:
             callback(I)
 
-        # raise Exception
+
+# Code for the example starts here
+
+
+class GradSOperator(Operator):
+    """
+    Create the gradient operator for the L2 functional
+    """
+
+    def __init__(self, op):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        op : `forward operator`
+        """
+        self.op = op
+
+        super().__init__(op.domain, op.domain, linear=False)
+
+    def call(self, template, g):
+        """Implementation of ``self(invphi, detjacinvphi)``.
+
+        Parameters
+        ----------
+        template : `DiscreteLpVector`
+
+        g: 'DiscreteLpVector'
+        """
+        out = self.op.adjoint(self.op(template) - g)
+        return out
+
+
+def SNR(signal, noise, impl='general'):
+    """Compute the signal-to-noise ratio.
+    This compute::
+        impl='general'
+            SNR = s_power / n_power
+        impl='dB'
+            SNR = 10 * log10 (
+                s_power / n_power)
+    Parameters
+    ----------
+    signal : projection
+    noise : white noise
+    impl : implementation method
+    """
+    if np.abs(np.asarray(noise)).sum() != 0:
+        ave1 = np.sum(signal)/signal.size
+        ave2 = np.sum(noise)/noise.size
+        s_power = np.sqrt(np.sum((signal - ave1) * (signal - ave1)))
+        n_power = np.sqrt(np.sum((noise - ave2) * (noise - ave2)))
+        if impl == 'general':
+            snr = s_power/n_power
+        else:
+            snr = 10.0 * np.log10(s_power/n_power)
+
+        return snr
+
+    else:
+        return float('inf')
 
 
 if __name__ == '__main__':
     import odl
 
-    example = 3
+    I0name = '../../ddmatch/Example3 letters/c_highres.png'
+    I1name = '../../ddmatch/Example3 letters/i_highres.png'
 
-    if example == 1:
-        space = odl.uniform_discr(-1, 1, 100, interp='linear')
+    I0 = np.rot90(plt.imread(I0name).astype('float'), -1)[::2, ::2]
+    I1 = np.rot90(plt.imread(I1name).astype('float'), -1)[::2, ::2]
 
-        op = odl.IdentityOperator(space)
+    # Discrete reconstruction space: discretized functions on the rectangle
+    space = odl.uniform_discr(
+        min_corner=[-16, -16], max_corner=[16, 16], nsamples=[128, 128],
+        dtype='float32', interp='linear')
 
-        I = space.element(lambda x: np.exp(-20 * x**2))
-        g = space.element(lambda x: np.exp(-20 * (x - 0.05)**2))
+    # Make a parallel beam geometry with flat detector
+    # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
+    # Create the uniformly distributed directions
+    angle_partition = odl.uniform_partition(0, np.pi, 6)
 
-        I.show()
-        g.show()
+    # Create 2-D projection domain
+    # The length should be 1.5 times of that of the reconstruction space
+    detector_partition = odl.uniform_partition(-24, 24, 192)
 
-        niter = 5000
-        eps = 0.01
-        sigma = 0.1
-        callback = odl.solvers.CallbackShow(display_step=10)
+    # Create 2-D parallel projection geometry
+    geometry = odl.tomo.Parallel2dGeometry(angle_partition,
+                                           detector_partition)
 
-        optimal_information_transport_solver(op, I, g, niter, eps, sigma,
-                                             callback)
+    # ray transform aka forward projection. We use ASTRA CUDA backend.
+    ray_trafo = odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
 
-    elif example == 2:
-        space = odl.uniform_discr([-1]*2, [1]*2, [50]*2, interp='linear')
+    # Create the ground truth as the given image
+    ground_truth = space.element(I0)
 
-        op = odl.IdentityOperator(space)
+    # Create projection data by calling the ray transform on the phantom
+    proj_data = ray_trafo(ground_truth)
 
-        I = space.element(lambda x: np.exp(-10 * x[0]**2 - 50 * x[1]**2))
-        g = space.element(lambda x: np.exp(-50 * x[0]**2 - 10 * x[1]**2))
+    # Add white Gaussion noise onto the noiseless data
+    noise = odl.util.white_noise(ray_trafo.range) * 3
 
-        I.show()
-        g.show()
+    # Create the noisy projection data
+    noise_proj_data = proj_data + noise
 
-        niter = 1000
-        eps = 0.5
-        sigma = 0.1
-        callback = odl.solvers.CallbackShow(display_step=20)
+    # Compute the signal-to-noise ratio in dB
+    snr = SNR(proj_data, noise, impl='dB')
 
-        optimal_information_transport_solver(op, I, g, niter, eps, sigma,
-                                             callback)
+    # Output the signal-to-noise ratio
+    print('snr = {!r}'.format(snr))
 
-    elif example == 3:
-        I0name = 'c_highres.png'
-        I1name = 'i_highres.png'
+    # Maximum iteration number
+    niter = 2000
 
-        I0 = np.rot90(plt.imread(I0name).astype('float'), -1)[::2, ::2]
-        I1 = np.rot90(plt.imread(I1name).astype('float'), -1)[::2, ::2]
+    callback = odl.solvers.CallbackShow(
+        'iterates', display_step=50) & odl.solvers.CallbackPrintIteration()
+
+    template = space.element(I1)
+    template *= np.sum(ground_truth) / np.sum(template)
+
+    ground_truth.show('phantom')
+    template.show('template')
 
 
-        # Discrete reconstruction space: discretized functions on the rectangle
-        # [-20, 20]^2 with 300 samples per dimension.
-        space = odl.uniform_discr(
-            min_corner=[-16, -16], max_corner=[16, 16], nsamples=[128, 128],
-            dtype='float32', interp='linear')
 
-        # Make a parallel beam geometry with flat detector
-        # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
-        angle_partition = odl.uniform_partition(0, np.pi, 6)
+    # For image reconstruction
+    eps = 0.002
+    sigma = 1e2
 
-        # Detector: uniformly sampled, n = 558, min = -30, max = 30
-        detector_partition = odl.uniform_partition(-24, 24, 192)
-        geometry = odl.tomo.Parallel2dGeometry(angle_partition,
-                                               detector_partition)
+    # Create the forward operator for image reconstruction
+    op = ray_trafo
 
-        # ray transform aka forward projection. We use ASTRA CUDA backend.
-        ray_trafo = odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
+    # Create the gradient operator for the L2 functional
+    gradS = GradSOperator(op)
 
-        # Create a discrete Shepp-Logan phantom (modified version)
-        phantom = odl.util.submarine_phantom(space)
-        phantom[:] = I0
+    # Compute by optimal information transport solver
+    optimal_information_transport_solver(gradS, template, noise_proj_data,
+                                         niter, eps, sigma, callback)
 
-        # Create projection data by calling the ray transform on the phantom
-        proj_data = ray_trafo(phantom)
-        proj_data += odl.util.white_noise(ray_trafo.range) * 3
 
-        niter = 10000
-        eps = 0.0002
-        sigma = 1e3
-        callback = odl.solvers.CallbackShow('iterates', display_step=50) & odl.solvers.CallbackPrintIteration()
 
-        n = 15
-        I = space.element(lambda x: np.exp(-(x[0]**2 + x[1]**2)**(n/2) /(8**n)))
-        I *= phantom.norm() / I.norm()
-
-        I[:] = I1
-        I *= np.sum(phantom) / np.sum(I)
-
-        phantom.show('phantom')
-        I.show('template')
-
-        optimal_information_transport_solver(ray_trafo, I, proj_data, niter,
-                                             eps, sigma, callback)
+#    # For image matching
+#    eps = 0.2
+#    sigma = 1
+#    # Create the forward operator for image matching
+#    op = odl.IdentityOperator(space)
+#
+#    # Create the gradient operator for the L2 functional
+#    gradS = GradSOperator(op)
+#
+#    # Compute by optimal information transport solver
+#    optimal_information_transport_solver(gradS, template, ground_truth,
+#                                         niter, eps, sigma, callback)
