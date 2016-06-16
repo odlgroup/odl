@@ -67,7 +67,8 @@ class Functional(Operator):
 
         self._grad_lipschitz = float(grad_lipschitz)
 
-        super().__init__(domain=domain, range=domain.field, linear=linear)
+        #super()
+        Operator.__init__(self, domain=domain, range=domain.field, linear=linear)
 
     @property
     def gradient(self):
@@ -196,7 +197,7 @@ class Functional(Operator):
             # case of linear operator.
             raise NotImplementedError
             if self.is_linear:
-                return OperatorLeftScalarMult(self, other)
+                return FunctionalLeftScalarMult(self, other)
             else:
                 return OperatorRightScalarMult(self, other)
         elif isinstance(other, LinearSpaceVector) and other in self.domain:
@@ -204,6 +205,24 @@ class Functional(Operator):
             return OperatorRightVectorMult(self, other.copy())
         else:
             return NotImplemented
+
+
+
+    def __rmul__(self, other):
+
+        if isinstance(other, Operator):
+            return OperatorComp(other, self)
+        elif isinstance(other, Number):
+            return FunctionalLeftScalarMult(self, other)
+        #elif other in self.range:
+        #    return OperatorLeftVectorMult(self, other.copy())
+        elif (isinstance(other, LinearSpaceVector) and
+              other.space.field == self.range):
+            return FunctionalLeftVectorMult(self, other.copy())
+        else:
+            return NotImplemented
+
+
 
     @property
     def is_smooth(self):
@@ -224,6 +243,58 @@ class Functional(Operator):
     def grad_lipschitz(self):
         """Lipschitz constant for the gradient of the functional"""
         return self._grad_lipschitz   
+
+
+
+class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
+
+    """Scalar multiplication a functional."""
+
+    def __init__(self, func, scalar):
+
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        scal : `Scalar`
+            Scalar argument
+        func : `Functional`
+            The right ("inner") functional
+        """
+
+        if not isinstance(func, Functional):
+            raise TypeError('functional {!r} is not a Functional instance.'
+                            ''.format(func))
+
+        scalar=func.range.element(scalar)
+      
+        #Functional.__init__(self, domain=func.domain)        
+        
+        if scalar>0:
+            Functional.__init__(self, domain=func.domain, linear=func.is_linear, smooth=func.is_smooth, concave=func.is_concave, convex=func.is_convex, grad_lipschitz=scalar*func.grad_lipschitz)
+        elif scalar==0:
+            Functional.__init__(self, domain=func.domain, linear=True, smooth=True, concave=True, convex=True, grad_lipschitz=0)
+        else:
+            Functional.__init__(self, domain=func.domain, linear=func.is_linear, smooth=func.is_smooth, concave=func.is_convex, convex=func.is_concave, grad_lipschitz=-scalar*func.grad_lipschitz)
+
+
+        OperatorLeftScalarMult.__init__(self, op=func, scalar=scalar)
+
+
+        self._func = func
+        self._scalar = scalar
+                
+        
+ #   def _call(self, x):
+ #       return self._scalar*self._func(x)     
+
+    @property
+    def gradient(self, x):
+        return self._scalar * self._func.gradient(x)
+
+        
+
+
 
 class FunctionalComp(Functional, OperatorComp):
 

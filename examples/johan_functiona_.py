@@ -196,9 +196,16 @@ prox22=l22.proximal(1)(phantom)
 l22(phantom)
 cf22=l22.conjugate_functional(phantom)
 
+l1func3=-3*l1func
+
+l1func3(phantom)
+l1func(phantom)
 
 
 
+
+
+'''
 def test_gradient_solver(op_term, x_0, n_iter=100 ):
     
     functional=op_term[0]
@@ -213,7 +220,7 @@ def test_gradient_solver(op_term, x_0, n_iter=100 ):
 #        Make a simple test case:
     
     
-
+'''
 
 #a=1+2j
 #np.sign(a)
