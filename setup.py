@@ -137,8 +137,9 @@ setup(
         'show': 'matplotlib',
         'fftw': 'pyfftw',
         'pywavelets': 'Pywavelets',
-        'scikit' : 'scikit-image',
-        'all': test_requires + ['matplotlib', 'pyfftw', 'Pywavelets', 'scikit-image']
+        'scikit': 'scikit-image',
+        'dicom': 'dicom',
+        'all': test_requires + ['matplotlib', 'pyfftw', 'Pywavelets', 'scikit-image', 'dicom']
     },
 
     cmdclass={'test': PyTest},
