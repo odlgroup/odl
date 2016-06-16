@@ -18,13 +18,8 @@
 """Helpers for reading CLINTEC SPECT data formats.
 
 For the bilinear relationship of linear attenuation coefficients and
-Houndsfield units see, for example
+Houndsfield units see [Bro+2008]_ and references therein, for example.
 
-Investigation of the relationship between linear attenuation
-coefficients and CT Houndsfield units using radionuclides for SPECT
-S. Brown et al, Applied Radiation and Isotopes 66 (2008) 1206-1212
-
-and references therein.
 """
 
 # Imports for common Python 2/3 codebase
@@ -35,38 +30,37 @@ standard_library.install_aliases()
 import numpy as np
 import dicom
 import os
-from natsort import natsorted
 
 
 def read_clintec_CT_reconstruction(path):
-    """Reads the data in Dicom format and returns a HU CT volume.
+    """Reads the data in DICOM format and returns a HU CT volume.
 
     Parameters
     ----------
-    path : a `path` to the folder where Dicom data is
+    path : `str`
+        a path to the folder where DICOM data is
+
+    Returns
+    -------
+    ct_volume : `numpy.ndarray`
+        an array of CT reconstruction in Houndsfield units.
+    dataset : `DICOM` File Meta Information
 
     """
 
-    lstFilesDCM = []  # create an empty list
+    dcm_file_list = []
     for dirName, subdirList, fileList in os.walk(path):
-        for filename in natsorted(fileList):
-            if ".dcm" in filename.lower():
-                # check whether the file ends by .dcm
-                lstFilesDCM.append(os.path.join(dirName, filename))
-            else:
-                lstFilesDCM.append(os.path.join(dirName, filename))
+        for filename in sorted(fileList):
+            dcm_file_list.append(os.path.join(dirName, filename))
 
-    dataset = dicom.read_file(lstFilesDCM[0])
+    dataset = dicom.read_file(dcm_file_list[0])
 
-    # Load dimensions based on the number of rows, columns, and slices
-    shape = (int(dataset.Rows), int(dataset.Columns), len(lstFilesDCM))
+    shape = (int(dataset.Rows), int(dataset.Columns), len(dcm_file_list))
     data_array = np.zeros(shape, dtype=dataset.pixel_array.dtype)
-    # loop through all the DICOM files
-    for filenameDCM in lstFilesDCM:
-        # read the file
-        ds = dicom.read_file(filenameDCM)
-        # store the raw image data
-        data_array[:, :, lstFilesDCM.index(filenameDCM)] = ds.pixel_array
+
+    for i, fname in enumerate(dcm_file_list):
+        ds = dicom.read_file(fname)
+        data_array[:, :, i] = ds.pixel_array
 
     rescale_intercept = int(dataset.RescaleIntercept)
     rescale_slope = int(dataset.RescaleSlope)
@@ -76,45 +70,60 @@ def read_clintec_CT_reconstruction(path):
     return ct_volume, dataset
 
 
-def linear_attenuation_map_from_HU_data(path, a, b):
-    """Converts HU data to linear attenuation map.
+def linear_attenuation_map_from_HU(volume, a, b):
+    """Converts Houndsfield units to a linear attenuation map.
 
     Parameters
     ----------
-    path : a `path` to the data folder
-    a, b : `tuple`
+    volume : `numpy.ndarray`
+        an array of Houndsfield units to be converted
+    a, b : `sequence`
         a = (a1, a2) where a1 `float` and a2 `float` are the intercepts
             of the bilinear curve
         b = (b1, b2) where b1 `float` and b2 `float` are the slopes
             of the bilinear curve
+        see `Notes` for furher information
+
+    Notes
+    -----
         a and b are parameters of a bilinear curve for converting
-        HU-values to linear attenuation map, such that
+        Houndsfield units to linear attenuation map, such that
         mu = a1 + b1 * ct_volume for HU < 0
         mu = a2 + b2 * ct_volume for HU >= 0
 
+    Returns
+    -------
+    attenuation_map : `numpy.ndarray`
+        An array of linear attenuation values.
     """
     a1, a2 = a
     b1, b2 = b
-
-    ct_volume, dataset = read_clintec_CT_reconstruction(path)
-    (i1, j1, k1) = np.where(ct_volume < 0)
-    (i2, j2, k2) = np.where(ct_volume >= 0)
-
-    attenuation_map = np.zeros_like(ct_volume)
-    attenuation_map = np.zeros_like(ct_volume)
-    attenuation_map[i1, j1, k1] = a1 + b1 * ct_volume[i1, j1, k1]
-    attenuation_map[i2, j2, k2] = a2 + b2 * ct_volume[i2, j2, k2]
+    mask = np.less(volume, 0)
+    attenuation_map = np.empty_like(volume)
+    attenuation_map[mask] = a1 + b1 * volume[mask]
+    attenuation_map[~mask] = a2 + b2 * volume[~mask]
     attenuation_map = np.absolute(attenuation_map)
-
     return attenuation_map
 
 
 def read_clintec_raw_spect_data(path):
-    """Reads the raw spect Dicom data and retuns an array of the data."""
+    """Reads the raw spect DICOM data and retuns an array of the data.
 
-    filenames = [f for f in os.listdir(path)]
+    Parameters
+    ----------
+    path : `str`
+        a path to the data folder
+
+    Returns
+    -------
+    spect_data : `numpy.ndarray`
+        an array of SPECT projection data
+    dataset : `DICOM` File Meta Information
+    """
+
+    filenames = list(os.listdir(path))
     data_dicom = os.path.join(path, filenames[0])
     dataset = dicom.read_file(data_dicom)
-    spect_data = np.float32(dataset.pixel_array)
+    spect_data = dataset.pixel_array
 
-    return spect_data
+    return spect_data, dataset
