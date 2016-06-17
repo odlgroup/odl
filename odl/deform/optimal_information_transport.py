@@ -15,6 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Solver for the shape-based reconstruction using
+optimal information transportation.
+
+The model is:
+
+min sigma * (1 - sqrt{DetJacInvPhi})^2 + (T(phi.I) - g)^2,
+where phi.I := DetJacInvPhi * I(InvPhi) is a mass-preserving deformation.
+
+Note that:
+If T is an identity operator, the above model reduces for image matching.
+If T is a forward projection operator, the above model is
+for image reconstruction.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
