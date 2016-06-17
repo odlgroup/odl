@@ -1,3 +1,4 @@
+
 # Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
@@ -15,25 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Tomography related operators and geometries."""
 
+"""Helpers for reading in standardized projection data formats."""
 
 from __future__ import absolute_import
 
 __all__ = ()
 
-from . import geometry
-from .geometry import *
-__all__ += geometry.__all__
 
-from . import backends
-from .backends import *
-__all__ += backends.__all__
-
-from . import operators
-from .operators import *
-__all__ += operators.__all__
-
-from . import data
-from .data import *
-__all__ += data.__all__
+from . import clintec_spect
+from .clintec_spect import *
+__all__ += clintec_spect.__all__
