@@ -34,7 +34,7 @@ standard_library.install_aliases()
 __all__ = ('optimal_information_transport_solver',)
 
 
-def optimal_information_transport_solver(gradS, I, g, niter, eps,
+def optimal_information_transport_solver(gradS, I, niter, eps,
                                          sigma, callback=None):
 
     DPhiJacobian = gradS.domain.one()
@@ -51,7 +51,7 @@ def optimal_information_transport_solver(gradS, I, g, niter, eps,
     for _ in range(niter):
         PhiStarX = DPhiJacobian * I
 
-        grads = gradS.call(PhiStarX, g)
+        grads = gradS(PhiStarX)
 
         tmp = grad(grads)
 
@@ -81,35 +81,6 @@ def optimal_information_transport_solver(gradS, I, g, niter, eps,
 
 
 # Code for the example starts here
-
-
-class GradSOperator(Operator):
-    """
-    Create the gradient operator for the L2 functional
-    """
-
-    def __init__(self, op):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        op : `forward operator`
-        """
-        self.op = op
-
-        super().__init__(op.domain, op.domain, linear=False)
-
-    def call(self, template, g):
-        """Implementation of ``self(invphi, detjacinvphi)``.
-
-        Parameters
-        ----------
-        template : `DiscreteLpVector`
-
-        g: 'DiscreteLpVector'
-        """
-        out = self.op.adjoint(self.op(template) - g)
-        return out
 
 
 def SNR(signal, noise, impl='general'):
@@ -204,31 +175,31 @@ if __name__ == '__main__':
 
 
 
-    # For image reconstruction
-    eps = 0.002
-    sigma = 1e2
-
-    # Create the forward operator for image reconstruction
-    op = ray_trafo
-
-    # Create the gradient operator for the L2 functional
-    gradS = GradSOperator(op)
-
-    # Compute by optimal information transport solver
-    optimal_information_transport_solver(gradS, template, noise_proj_data,
-                                         niter, eps, sigma, callback)
-
-
-
-#    # For image matching
-#    eps = 0.2
-#    sigma = 1
-#    # Create the forward operator for image matching
-#    op = odl.IdentityOperator(space)
+#    # For image reconstruction
+#    eps = 0.002
+#    sigma = 1e2
+#
+#    # Create the forward operator for image reconstruction
+#    op = ray_trafo
 #
 #    # Create the gradient operator for the L2 functional
-#    gradS = GradSOperator(op)
+#    gradS = op.adjoint * odl.ResidualOperator(op, noise_proj_data)
 #
 #    # Compute by optimal information transport solver
-#    optimal_information_transport_solver(gradS, template, ground_truth,
-#                                         niter, eps, sigma, callback)
+#    optimal_information_transport_solver(gradS, template, niter,
+#                                         eps, sigma, callback)
+
+
+
+    # For image matching
+    eps = 0.2
+    sigma = 1
+    # Create the forward operator for image matching
+    op = odl.IdentityOperator(space)
+
+    # Create the gradient operator for the L2 functional
+    gradS = op.adjoint * odl.ResidualOperator(op, ground_truth)
+
+    # Compute by optimal information transport solver
+    optimal_information_transport_solver(gradS, template, niter,
+                                         eps, sigma, callback)
