@@ -58,6 +58,8 @@ ray_trafo = odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
 
 # Create the ground truth as the given image
 ground_truth = space.element(I0)
+ground_truth = odl.util.submarine_phantom(
+    space, smooth=True, taper=50.0)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(ground_truth)
@@ -80,7 +82,8 @@ niter = 2000
 callback = odl.solvers.CallbackShow(
     'iterates', display_step=50) & odl.solvers.CallbackPrintIteration()
 
-template = space.element(I1)
+# template = space.element(I1)
+template = odl.util.disc_phantom(space, smooth=True, taper=50.0)
 template *= np.sum(ground_truth) / np.sum(template)
 
 ground_truth.show('phantom')
