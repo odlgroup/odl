@@ -27,7 +27,7 @@ import numpy as np
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr')
+           'dtype_repr', 'snr')
 
 
 def _indent_rows(string, indent=4):
@@ -415,6 +415,36 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
                          ''.format(len(indices), ndim))
 
     return tuple(indices)
+
+
+def snr(signal, noise, impl='general'):
+    """Compute the signal-to-noise ratio.
+    This compute::
+        impl='general'
+            SNR = s_power / n_power
+        impl='dB'
+            SNR = 10 * log10 (
+                s_power / n_power)
+    Parameters
+    ----------
+    signal : projection
+    noise : white noise
+    impl : implementation method
+    """
+    if np.abs(np.asarray(noise)).sum() != 0:
+        ave1 = np.sum(signal)/signal.size
+        ave2 = np.sum(noise)/noise.size
+        s_power = np.sqrt(np.sum((signal - ave1) * (signal - ave1)))
+        n_power = np.sqrt(np.sum((noise - ave2) * (noise - ave2)))
+        if impl == 'general':
+            snr = s_power/n_power
+        else:
+            snr = 10.0 * np.log10(s_power/n_power)
+
+        return snr
+
+    else:
+        return float('inf')
 
 
 if __name__ == '__main__':
