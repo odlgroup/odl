@@ -422,11 +422,12 @@ def snr(signal, noise, impl):
 
     Parameters
     ----------
-    signal :
+    signal : `array-like`
         Noiseless data.
-    noise :
-        White noise.
-    impl : implementation method
+    noise : `array-like`
+        Noise.
+    impl : {'general', 'dB'}
+        Implementation method.
         'general' means SNR = s_power / n_power,
         'dB' means SNR = 10 * log10 (s_power / n_power).
 
@@ -440,12 +441,11 @@ def snr(signal, noise, impl):
         s_power = np.var(signal)
         n_power = np.var(noise)
         if impl == 'general':
-            snr = s_power / n_power
+            return s_power / n_power
         elif impl == 'dB':
-            snr = 10.0 * np.log10(s_power / n_power)
+            return 10.0 * np.log10(s_power / n_power)
         else:
             raise ValueError('unknown `impl` {}'.format(impl))
-        return snr
     else:
         return float('inf')
 
