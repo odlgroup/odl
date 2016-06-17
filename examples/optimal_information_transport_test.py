@@ -42,8 +42,6 @@ space = odl.uniform_discr(
     min_corner=[-16, -16], max_corner=[16, 16], nsamples=[128, 128],
     dtype='float32', interp='linear')
 
-# Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
 # Create the uniformly distributed directions
 angle_partition = odl.uniform_partition(0, np.pi, 6)
 
