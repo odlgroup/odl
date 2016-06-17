@@ -52,6 +52,9 @@ References
 .. [Kva1991] Kvaalen, E. *A faster Broyden method*. BIT Numerical
    Mathematics 31 (1991), pp 369--372.
 
+.. [Lue1969] Luenberger, D G. *Optimization by vector space methods*. Wiley,
+   1969.
+
 .. [Okt2015] Oktem, O. *Mathematics of electron tomography*. In:
    Scherzer, O. Handbook of Mathematical Methods in Imaging.
    Springer, 2015, pp 937--1031.

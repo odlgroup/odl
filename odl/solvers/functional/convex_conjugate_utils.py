@@ -15,16 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""REWRITE!
+"""Utility functions for computing convex conjugate functionals of a functional
+in which
+1) the arguemnt is shifted
+2) the argument is scalled
+3) the functional is scalled
+4) a linear functional is added to it
 
-Factory functions for creating proximal operators.
-
-Functions with ``cconj`` mean the proximal of the convex conjugate and are
-provided for convenience.
-
-For more details see :ref:`proximal_operators` and references therein. For
-more details on proximal operators including how to evaluate the proximal
-operator of a variety of functions see [PB2014]_. """
+For more details on convex conjugate functionals, see for example [Lue1969]_.
+"""
 
 
 # Imports for common Python 2/3 codebase
@@ -34,9 +33,11 @@ standard_library.install_aliases()
 from builtins import super
 
 from odl.solvers.functional import Functional
-from odl import LinearSpaceVector
+from odl import LinearSpaceVector, Operator, ResidualOperator, IdentityOperator
 
-__all__ = ('convex_conjugate_translation', 'convex_conjugate_arg_scaling')
+__all__ = ('convex_conjugate_translation', 'convex_conjugate_arg_scaling',
+           'convex_conjugate_functional_scaling',
+           'convex_conjugate_linear_perturbation')
 
 
 def convex_conjugate_translation(convex_conj_f, y):
@@ -45,7 +46,7 @@ def convex_conjugate_translation(convex_conj_f, y):
 
     This is calculated according to the rule
 
-        (F( . - y))^* (x) = F^*(x) - <y, x>
+        (F( . - y))^* (x) = F^*(x) + <y, x>
 
     where ``y`` is the translation of the argument.
 
@@ -79,6 +80,15 @@ def convex_conjugate_translation(convex_conj_f, y):
         """
 
         def __init__(self, convex_conj_f, y):
+            """Initialize a ConvexConjugateTranslation instance.
+
+            Parameters
+            ----------
+            convex_conj_f : `Functional`
+                Function corresponding to F^*.
+
+            y : Element in domain of F^*.
+            """
             super().__init__(domain=convex_conj_f.domain,
                              linear=convex_conj_f.is_linear,
                              smooth=convex_conj_f.is_smooth,
@@ -88,16 +98,65 @@ def convex_conjugate_translation(convex_conj_f, y):
             self.orig_convex_conj_f = convex_conj_f
             self.y = y
 
+            # TODO:
             # The Lipschitz constant for the gradient can be bounded, by using
             # triangle inequality. However: is it the tightest bound?
 
-        def _call(self, x, out):
-            out[:] = convex_conj_f(x) + x.inner(self.y)
+        def _call(self, x):
+            """Applies the functional to the given point.
 
-        def gradient(self, x, out):
-            out[:] = self.orig_convex_conj_f.gradient(x) + self.y
+            Returns
+            -------
+            `self(x)` : `float`
+                Evaluation of the functional.
+            """
+            return convex_conj_f(x) + x.inner(self.y)
 
-        #TODO: Add this when the proximal frame-work is added to the functional
+        @property
+        def gradient(self):
+            """Gradient operator of the functional.
+
+            Returns the operator that corresponds to the mapping
+
+                x -> grad_f(x)
+
+            where ``grad_f(x)`` is the element used to evaluated derivatives in
+            a direction ``d`` by <grad_f(x), d>.
+
+            Returns
+            -------
+            ConvexConjugateTranslationGradient : `Operator`
+                Operator to evaluated grad_f in a point.
+            """
+
+            tmp = self
+
+            class ConvexConjugateTranslationGradient(Operator):
+                """Operator corresponding to the gradient of the convex
+                conjugate of a translated function.
+                """
+
+                def __init__(self):
+                    """Initialize a ConvexConjugateTranslationGradient
+                    instance.
+                    """
+                    super().__init__(tmp.domain, tmp.domain)
+                    self.original_gradient = \
+                        tmp.orig_convex_conj_f.gradient
+
+                def _call(self, x):
+                    """Applies the operator to the given point.
+
+                    Returns
+                    -------
+                    `self(x)` : `LinearSpaceVector`
+                        Evaluation of the gradient in the point ´x´.
+                    """
+                    return self.original_gradient(x) + tmp.y
+
+            return ConvexConjugateTranslationGradient()
+
+        # TODO: Add this when the proximal is added to the functional
 #        def proximal(self, sigma=1.0):
 #            """Return the proximal operator of the functional.
 #
@@ -113,9 +172,9 @@ def convex_conjugate_translation(convex_conj_f, y):
 #            """
 #            raise NotImplementedError
 
-        #TODO: Add this when convex conjugate of a linear perturbation has been
-        # added. THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND LSC
-        # AND THIS WOULD HAVE TO BE THE BIDUAL!
+        # TODO: Add this when convex conjugate of a linear perturbation has
+        # been added. THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
+        # LSC AND THIS WOULD HAVE TO BE THE BIDUAL!
 #        def conjugate_functional(self):
 #            """Convex conjugate functional of the functional.
 #
@@ -129,21 +188,6 @@ def convex_conjugate_translation(convex_conj_f, y):
 #                Domain equal to domain of functional
 #            """
 #            raise NotImplementedError
-
-        def derivative(self, point):
-
-            class DerivativeOperator(Functional):
-                def __init__(self):
-                    super().__init__(self.orig_convex_conj_f.domain,
-                                     linear=True)
-
-                self.point=point
-
-                def _call(self, x):
-                    return x.inner(self.y +
-                                   self.orig_convex_conj_f.gradient(point))
-
-            return DerivativeOperator()
 
     return ConvexConjugateTranslation(convex_conj_f, y)
 
@@ -195,13 +239,15 @@ def convex_conjugate_arg_scaling(convex_conj_f, scaling):
             self.orig_convex_conj_f = convex_conj_f
             self.scaling = scaling
 
-        def _call(self, x, out):
-            out[:] = convex_conj_f(x * (1/self.scaling))
+        def _call(self, x):
+            return convex_conj_f(x * (1/self.scaling))
 
-        def gradient(self, x, out):
-            out[:] = (1/self.scaling) * self.orig_convex_conj_f.gradient(x)
+        @property
+        def gradient(self):
+            return ((1/self.scaling) * self.orig_convex_conj_f.gradient *
+                    (1/self.scaling))
 
-        #TODO: Add this when the proximal frame-work is added to the functional
+        # TODO: Add when the proximal frame-work is added to the functional
 #        def proximal(self, sigma=1.0):
 #            """Return the proximal operator of the functional.
 #
@@ -217,7 +263,9 @@ def convex_conjugate_arg_scaling(convex_conj_f, scaling):
 #            """
 #            raise NotImplementedError
 
-        #TODO: Add this
+        # TODO: Add this
+        # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
+        # LSC AND THIS WOULD HAVE TO BE THE BIDUAL!
 #        def conjugate_functional(self):
 #            """Convex conjugate functional of the functional.
 #
@@ -264,6 +312,9 @@ def convex_conjugate_functional_scaling(convex_conj_f, scaling):
     For reference on the identity used, see [KP2015]_.
     """
 
+    # TODO: scaling with zero gives the zero-functional. Should this be
+    # allowed?
+
     scaling = float(scaling)
     if scaling == 0:
         raise ValueError('Scaling with 0 is not allowed. Current value: {}.'
@@ -283,13 +334,14 @@ def convex_conjugate_functional_scaling(convex_conj_f, scaling):
             self.orig_convex_conj_f = convex_conj_f
             self.scaling = scaling
 
-        def _call(self, x, out):
-            out[:] = self.scaling * convex_conj_f(x * (1/self.scaling))
+        def _call(self, x):
+            return self.scaling * convex_conj_f(x * (1/self.scaling))
 
-        def gradient(self, x, out):
-            out[:] = self.orig_convex_conj_f.gradient(x)
+        @property
+        def gradient(self):
+            return self.orig_convex_conj_f.gradient * (1/self.scaling)
 
-        #TODO: Add this when the proximal frame-work is added to the functional
+        # TODO: Add when the proximal frame-work is added to the functional
 #        def proximal(self, sigma=1.0):
 #            """Return the proximal operator of the functional.
 #
@@ -305,7 +357,9 @@ def convex_conjugate_functional_scaling(convex_conj_f, scaling):
 #            """
 #            raise NotImplementedError
 
-        #TODO: Add this
+        # TODO: Add this
+        # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
+        # LSC AND THIS WOULD HAVE TO BE THE BIDUAL!
 #        def conjugate_functional(self):
 #            """Convex conjugate functional of the functional.
 #
@@ -373,13 +427,15 @@ def convex_conjugate_linear_perturbation(convex_conj_f, y):
             self.orig_convex_conj_f = convex_conj_f
             self.y = y
 
-        def _call(self, x, out):
-            out[:] = convex_conj_f(x - self.y)
+        def _call(self, x):
+            return convex_conj_f(x - self.y)
 
-        def gradient(self, x, out):
-            out[:] = self.orig_convex_conj_f.gradient(x)
+        @property
+        def gradient(self):
+            return (self.orig_convex_conj_f.gradient *
+                    ResidualOperator(IdentityOperator(self.domain), -self.y))
 
-        #TODO: Add this when the proximal frame-work is added to the functional
+        # TODO: Add when the proximal frame-work is added to the functional
 #        def proximal(self, sigma=1.0):
 #            """Return the proximal operator of the functional.
 #
@@ -395,7 +451,9 @@ def convex_conjugate_linear_perturbation(convex_conj_f, y):
 #            """
 #            raise NotImplementedError
 
-        #TODO: Add this
+        # TODO: Add this
+        # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
+        # LSC AND THIS WOULD HAVE TO BE THE BIDUAL!
 #        def conjugate_functional(self):
 #            """Convex conjugate functional of the functional.
 #
