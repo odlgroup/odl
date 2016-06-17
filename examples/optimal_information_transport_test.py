@@ -31,8 +31,8 @@ import odl
 standard_library.install_aliases()
 
 
-I0name = '../ddmatch/Example3 letters/c_highres.png'
-I1name = '../ddmatch/Example3 letters/i_highres.png'
+I0name = './pictures/c_highres.png'
+I1name = './pictures/i_highres.png'
 
 I0 = np.rot90(plt.imread(I0name).astype('float'), -1)[::2, ::2]
 I1 = np.rot90(plt.imread(I1name).astype('float'), -1)[::2, ::2]
