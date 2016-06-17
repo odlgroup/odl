@@ -126,13 +126,13 @@ def linear_attenuation_from_HU(volume, a, b):
     return attenuation
 
 
-def read_clintec_raw_spect_data(path):
+def read_clintec_raw_spect_data(file_dicom):
     """Read raw SPECT DICOM data to array.
 
     Parameters
     ----------
     path : `str`
-        Path of the folder where DICOM data is stored.
+        Name of the file where DICOM data is stored.
 
     Returns
     -------
@@ -141,12 +141,7 @@ def read_clintec_raw_spect_data(path):
     dataset : DICOM File Meta Information
     """
 
-    filenames = list(os.listdir(path))
-    if len(filenames) == 1:
-        data_dicom = os.path.join(path, filenames[0])
-        dataset = dicom.read_file(data_dicom)
-        spect_data = dataset.pixel_array
-    else:
-        raise NotImplementedError('folder contais more than one item')
+    dataset = dicom.read_file(file_dicom)
+    spect_data = dataset.pixel_array
 
     return spect_data, dataset
