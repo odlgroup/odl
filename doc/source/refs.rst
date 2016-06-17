@@ -26,13 +26,13 @@ References
 .. [Bro+2008] Brown, S, and Bailey, D L, and Willowson, K, and Baldock, C
    *Investigation of the relationship between linear attenuation
    coefficients and CT Houndsfield units using radionuclides for SPECT*.
-   Applied Radiation and Isotopes, 66 (2008), pp 1206--1212
+   Applied Radiation and Isotopes, 66 (2008), pp 1206--1212.
 
-..  Burger, C, and Goerres, G, and Schoenes, S, and Buck, A,
+.. [Bur+2002] Burger, C, and Goerres, G, and Schoenes, S, and Buck, A,
    and Lonn, A H R, and von Schulthess, G K *PET attenuation coefficient
    from CT images: experimental evaluation of the transformation of CT into
    PET 511-keV attenuation coefficients*.
-   European Journal of Nuclear Medicine, 29 (2002), pp 922--927
+   European Journal of Nuclear Medicine, 29 (2002), pp 922--927.
 
 .. [CP2011a] Chambolle, A and Pock, T. *A First-Order
    Primal-Dual Algorithm for Convex Problems with Applications to
