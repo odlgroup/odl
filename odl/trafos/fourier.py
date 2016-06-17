@@ -44,6 +44,7 @@ from odl.space.base_ntuples import _TYPE_MAP_R2C
 from odl.space.cu_ntuples import CudaNtuples
 from odl.space.fspace import FunctionSpace
 from odl.space.ntuples import Ntuples
+from odl.util.normalize import normalized_scalar_param_list
 from odl.util.numerics import fast_1d_tensor_mult
 from odl.util.utility import (
     is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
@@ -104,7 +105,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
         If `True`, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
         each axis.
-    axes : sequence of `int`, optional
+    axes : int or sequence of int, optional
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
         as a sequence. `None` means all axes in ``grid``.
@@ -122,10 +123,14 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     if axes is None:
         axes = list(range(grid.ndim))
     else:
-        axes = list(axes)
+        try:
+            axes = [int(axes)]
+        except TypeError:
+            axes = list(axes)
 
     # List indicating shift or not per "active" axis, same length as axes
-    shift_list = _shift_list(shift, len(axes))
+    shift_list = normalized_scalar_param_list(shift, length=grid.ndim,
+                                              param_conv=bool)
 
     # Full-length vectors
     stride = grid.stride
@@ -213,7 +218,7 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
         Original sampling grid
     x0 : array-like
         Minimal point of the inverse reciprocal grid
-    axes : sequence of `int`, optional
+    axes : int or sequence of int, optional
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
         as a sequence. `None` means all axes in ``grid``.
@@ -233,7 +238,10 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
     if axes is None:
         axes = list(range(grid.ndim))
     else:
-        axes = list(axes)
+        try:
+            axes = [int(axes)]
+        except TypeError:
+            axes = list(axes)
 
     rstride = grid.stride
     rshape = grid.shape
@@ -372,7 +380,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         with ``array_in``.
     direction : {'forward', 'backward'}
         Direction of the transform
-    axes : sequence of `int`, optional
+    axes : int or sequence of int, optional
         Dimensions along which to take the transform. `None` means
         using all axis and is equivalent to ``np.arange(ndim)``.
     halfcomplex : `bool`, optional
@@ -447,7 +455,10 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     if axes is None:
         axes = tuple(range(array_in.ndim))
     else:
-        axes = tuple(axes)
+        try:
+            axes = tuple(int(axes))
+        except TypeError:
+            axes = tuple(axes)
 
     direction = _pyfftw_to_local(direction)
     fftw_plan_in = kwargs.pop('fftw_plan', None)
@@ -564,7 +575,7 @@ class DiscreteFourierTransform(Operator):
             is determined from ``domain`` and the other parameters as
             a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
-        axes : sequence of `int`, optional
+        axes : int or sequence of `int`, optional
             Dimensions in which a transform is to be calculated. `None`
             means all axes.
         sign : {'-', '+'}, optional
@@ -1105,14 +1116,14 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     arr : `array-like`
         Array to be pre-processed. If its data type is a real
         non-floating type, it is converted to 'float64'.
-    shift : `bool` or sequence of `bool`, optional
+    shift : bool or or sequence of bool, optional
         If `True`, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
         each axis.
-    axes : sequence of `int`, optional
+    axes : int or sequence of int, optional
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
-        as a sequence. `None` means all axes in ``dfunc``.
+        as a sequence. `None` means all axes in ``arr``.
     sign : {'-', '+'}, optional
         Sign of the complex exponent
     out : `numpy.ndarray`, optional
@@ -1144,10 +1155,14 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     if axes is None:
         axes = list(range(arr.ndim))
     else:
-        axes = list(axes)
+        try:
+            axes = [int(axes)]
+        except TypeError:
+            axes = list(axes)
 
     shape = arr.shape
-    shift_list = _shift_list(shift, len(axes))
+    shift_list = normalized_scalar_param_list(shift, length=arr.ndim,
+                                              param_conv=bool)
 
     # Make a copy of arr with correct data type if necessary, or copy values.
     if out is None:
@@ -1222,7 +1237,7 @@ def _interp_kernel_ft(norm_freqs, interp):
         raise ValueError("`interp` '{}' not understood".format(interp))
 
 
-def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
+def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
                          interp, sign='-', op='multiply', out=None):
     """Post-process the Fourier-space data after DFT.
 
@@ -1261,11 +1276,11 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
         Real space grid in the transform
     recip_grid : `RegularGrid`
         Reciprocal grid in the transform
-    shifts : sequence of `bool`
+    shift : bool or sequence of bool
         If `True`, the grid is shifted by half a stride in the negative
         direction in the corresponding axes. The sequence must have the
         same length as ``axes``.
-    axes : sequence of `int`
+    axes : int or sequence of `int`
         Dimensions along which to take the transform. The sequence must
         have the same length as ``shifts``.
     interp : `str` or `sequence` of `str`
@@ -1297,8 +1312,16 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shifts, axes,
     elif out is not arr:
         out[:] = arr
 
-    shift_list = list(shifts)
-    axes = list(axes)
+    if axes is None:
+        axes = list(range(arr.ndim))
+    else:
+        try:
+            axes = [int(axes)]
+        except TypeError:
+            axes = list(axes)
+
+    shift_list = normalized_scalar_param_list(shift, length=arr.ndim,
+                                              param_conv=bool)
 
     if sign == '-':
         imag = -1j
@@ -1419,13 +1442,14 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     if axes is None:
         axes = list(range(space.ndim))
     else:
-        axes = list(axes)
+        try:
+            axes = [int(axes)]
+        except TypeError:
+            axes = list(axes)
 
     if halfcomplex and space.field != RealNumbers():
         raise ValueError('`halfcomplex` option can only be used with real '
                          'spaces')
-
-    shift = _shift_list(shift, len(axes))
 
     exponent = kwargs.pop('exponent', None)
     if exponent is None:
@@ -1506,7 +1530,7 @@ class FourierTransform(Operator):
         impl : {'numpy', 'pyfftw'}
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
-        axes : sequence of `int`, optional
+        axes : int or sequence of int, optional
             Dimensions along which to take the transform.
             Default: all axes
         sign : {'-', '+'}, optional
@@ -1564,7 +1588,6 @@ class FourierTransform(Operator):
           <odl.readthedocs.io/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
-        # TODO: variants wrt placement of 2*pi
         if not isinstance(domain, DiscreteLp):
             raise TypeError('domain {!r} is not a `DiscreteLp` instance'
                             ''.format(domain))
@@ -1573,8 +1596,15 @@ class FourierTransform(Operator):
                 'Only Numpy-based data spaces are supported, got {}'
                 ''.format(domain.dspace))
 
-        self._axes = list(kwargs.pop('axes', range_seq(domain.ndim)))
+        # axes
+        axes = kwargs.pop('axes', range_seq(domain.ndim))
+        axes = np.atleast_1d(axes)
+        axes[axes < 0] += domain.ndim
+        if not all(0 <= ax < domain.ndim for ax in axes):
+            raise ValueError('invalid entries in axes.')
+        self._axes = list(axes)
 
+        # impl
         self._impl = str(impl).lower()
         if self.impl not in ('numpy', 'pyfftw'):
             raise ValueError("`impl` '{}' not understood"
@@ -1589,8 +1619,9 @@ class FourierTransform(Operator):
             else:
                 self._halfcomplex = bool(kwargs.pop('halfcomplex', True))
 
-            self._shifts = _shift_list(kwargs.pop('shift', True),
-                                       length=len(self.axes))
+            self._shifts = normalized_scalar_param_list(
+                kwargs.pop('shift', True), length=len(self.axes),
+                param_conv=bool)
         else:
             raise NotImplementedError('irregular grids not yet supported')
 
@@ -1695,7 +1726,7 @@ class FourierTransform(Operator):
                 out = self._tmp_f
         return dft_postprocess_data(
             out, real_grid=self.domain.grid, recip_grid=self.range.grid,
-            shifts=self.shifts, axes=self.axes, sign=self.sign,
+            shift=self.shifts, axes=self.axes, sign=self.sign,
             interp=self.domain.interp, op='multiply', out=out)
 
     def _call_numpy(self, x):
@@ -2015,7 +2046,7 @@ class FourierTransformInverse(FourierTransform):
         impl : {'numpy', 'pyfftw'}
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
-        axes : sequence of `int`, optional
+        axes : int or sequence of int, optional
             Dimensions along which to take the transform.
             Default: all axes
         sign : {'-', '+'}, optional
@@ -2110,7 +2141,7 @@ class FourierTransformInverse(FourierTransform):
                 out = self._tmp_f
         return dft_postprocess_data(
             x, real_grid=self.range.grid, recip_grid=self.domain.grid,
-            shifts=self.shifts, axes=self.axes, sign=self.sign,
+            shift=self.shifts, axes=self.axes, sign=self.sign,
             interp=self.domain.interp, op='divide', out=out)
 
     def _postprocess(self, x, out=None):
@@ -2250,19 +2281,6 @@ class FourierTransformInverse(FourierTransform):
             domain=self.range, range=self.domain, impl=self.impl,
             axes=self.axes, halfcomplex=self.halfcomplex, shift=self.shifts,
             sign=sign, tmp_r=self._tmp_r, tmp_f=self._tmp_f)
-
-
-def _shift_list(shift, length):
-    """Turn a single boolean or sequence into a list of given length."""
-    try:
-        shift_list = [bool(s) for s in shift]
-        if len(shift_list) != length:
-            raise ValueError('expected {} entries in shift sequence, got {}'
-                             ''.format(length, len(shift_list)))
-    except TypeError:
-        shift_list = [bool(shift)] * length
-
-    return shift_list
 
 
 if __name__ == '__main__':

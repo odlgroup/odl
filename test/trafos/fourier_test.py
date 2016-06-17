@@ -283,7 +283,7 @@ def test_reciprocal_nd_axes():
     grid = odl.uniform_sampling([0] * 3, [1] * 3, num_nodes=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
-    axes_list = [[1, -1], [0], [0, 2, 1], [2, 0]]
+    axes_list = [[1, -1], [0], 0, [0, 2, 1], [2, 0]]
 
     for axes in axes_list:
         active = np.zeros(grid.ndim, dtype=bool)
@@ -424,7 +424,7 @@ def test_dft_preprocess_data_with_axes(sign):
 
     shape = (2, 3, 4)
 
-    axes = [1]  # Only middle index counts
+    axes = 1  # Only middle index counts
     correct_arr = []
     for _, j, __ in product(range(shape[0]), range(shape[1]), range(shape[2])):
         correct_arr.append(1 - 2 * (j % 2))
@@ -461,6 +461,11 @@ def _params_from_dtype(dt):
 def _halfcomplex_shape(shape, axes=None):
     if axes is None:
         axes = tuple(range(len(shape)))
+
+    try:
+        axes = tuple(int(axes))
+    except TypeError:
+        pass
 
     shape = list(shape)
     shape[axes[-1]] = shape[axes[-1]] // 2 + 1
@@ -707,7 +712,7 @@ def test_pyfftw_call_forward_with_axes(dtype):
     halfcomplex, out_dtype = _params_from_dtype(dtype)
     shape = (3, 4, 5)
 
-    test_axes = [(0, 1), (1,), (-1,), (1, 0), (-1, -2, -3)]
+    test_axes = [(0, 1), 1, (-1,), (1, 0), (-1, -2, -3)]
     for axes in test_axes:
         arr = _random_array(shape, dtype)
         if halfcomplex:
@@ -732,7 +737,7 @@ def test_pyfftw_call_backward_with_axes(dtype):
     halfcomplex, in_dtype = _params_from_dtype(dtype)
     shape = (3, 4, 5)
 
-    test_axes = [(0, 1), (1,), (-1,), (1, 0), (-1, -2, -3)]
+    test_axes = [(0, 1), 1, (-1,), (1, 0), (-1, -2, -3)]
     for axes in test_axes:
         # Only the shape indexed by axes count for the scaling
         active_shape = np.take(shape, axes)
@@ -976,7 +981,7 @@ def test_dft_call(impl):
 
     # 2d, halfcomplex, first axis
     shape = (4, 5)
-    axes = (0,)
+    axes = 0
     dft_dom = odl.discr_sequence_space(shape, dtype='float32')
     dft = DiscreteFourierTransform(domain=dft_dom, impl=impl, halfcomplex=True,
                                    axes=axes)
@@ -1054,7 +1059,7 @@ def test_dft_init_plan(impl):
 
     # 2d, halfcomplex, first axis
     shape = (4, 5)
-    axes = (0,)
+    axes = 0
     dft_dom = odl.discr_sequence_space(shape, dtype='float32')
 
     dft = DiscreteFourierTransform(dft_dom, impl=impl, axes=axes,
@@ -1330,7 +1335,7 @@ def test_fourier_trafo_inverse(impl, sign):
                               dtype='complex64')
     discr_rect = discr.element(char_rect)
 
-    for axes in [(0,), (1,)]:
+    for axes in [(0,), 1]:
         ft = FourierTransform(discr, sign=sign, impl=impl, axes=axes)
         assert all_almost_equal(ft.inverse(ft(char_rect)), discr_rect)
         assert all_almost_equal(ft.adjoint(ft(char_rect)), discr_rect)
@@ -1533,10 +1538,10 @@ def test_fourier_trafo_completely():
 
     fpost_s = dft_postprocess_data(
         range_s.element(fft_s), real_grid=discr.grid, recip_grid=recip_s,
-        shifts=[True], axes=(0,), interp='nearest')
+        shift=[True], axes=(0,), interp='nearest')
     fpost_n = dft_postprocess_data(
         range_n.element(fft_n), real_grid=discr.grid, recip_grid=recip_n,
-        shifts=[False], axes=(0,), interp='nearest')
+        shift=[False], axes=(0,), interp='nearest')
 
     assert np.allclose(fpost_s, fft_s * postproc_s * interp_s)
     assert np.allclose(fpost_n, fft_n * postproc_n * interp_n)
@@ -1582,10 +1587,10 @@ def test_fourier_trafo_completely():
 
     fpost_s = dft_postprocess_data(
         range_s.element(fft_s), real_grid=discr.grid, recip_grid=recip_s,
-        shifts=[True], axes=(0,), interp='nearest')
+        shift=[True], axes=(0,), interp='nearest')
     fpost_n = dft_postprocess_data(
         range_n.element(fft_n), real_grid=discr.grid, recip_grid=recip_n,
-        shifts=[False], axes=(0,), interp='nearest')
+        shift=[False], axes=(0,), interp='nearest')
 
     assert np.allclose(fpost_s, fft_s * postproc_s * interp_s)
     assert np.allclose(fpost_n, fft_n * postproc_n * interp_n)
