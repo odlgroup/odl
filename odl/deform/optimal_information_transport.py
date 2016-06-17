@@ -29,6 +29,8 @@ import numpy as np
 
 from odl.discr import Gradient
 from odl.trafos import FourierTransform
+from odl.util import snr
+
 
 __all__ = ('optimal_information_transport_solver',)
 
@@ -82,36 +84,6 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
 # Code for the example starts here
 
 
-def SNR(signal, noise, impl='general'):
-    """Compute the signal-to-noise ratio.
-    This compute::
-        impl='general'
-            SNR = s_power / n_power
-        impl='dB'
-            SNR = 10 * log10 (
-                s_power / n_power)
-    Parameters
-    ----------
-    signal : projection
-    noise : white noise
-    impl : implementation method
-    """
-    if np.abs(np.asarray(noise)).sum() != 0:
-        ave1 = np.sum(signal)/signal.size
-        ave2 = np.sum(noise)/noise.size
-        s_power = np.sqrt(np.sum((signal - ave1) * (signal - ave1)))
-        n_power = np.sqrt(np.sum((noise - ave2) * (noise - ave2)))
-        if impl == 'general':
-            snr = s_power/n_power
-        else:
-            snr = 10.0 * np.log10(s_power/n_power)
-
-        return snr
-
-    else:
-        return float('inf')
-
-
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import odl
@@ -156,7 +128,7 @@ if __name__ == '__main__':
     noise_proj_data = proj_data + noise
 
     # Compute the signal-to-noise ratio in dB
-    snr = SNR(proj_data, noise, impl='dB')
+    snr = snr(proj_data, noise, impl='dB')
 
     # Output the signal-to-noise ratio
     print('snr = {!r}'.format(snr))
