@@ -60,9 +60,9 @@ class Functional(Operator):
         """
 
         self._is_smooth = bool(smooth)
-        
+
         self._is_convex = bool(convex)
-        
+
         self._is_concave = bool(concave)
 
         self._grad_lipschitz = float(grad_lipschitz)
@@ -73,13 +73,6 @@ class Functional(Operator):
     @property
     def gradient(self):
         """Gradient operator of the functional.
-
-        Parameters
-        ----------
-        x : domain element-like
-            Point in which to evaluate the gradient
-        out : domain element, optional
-            Element into which the result is written
 
         Returns
         -------
@@ -94,12 +87,12 @@ class Functional(Operator):
         Parameters
         ----------
         sigma : positive float, optional
-            Regularization parameter of the proximal operator  
+            Regularization parameter of the proximal operator
 
         Returns
         -------
-        out : Operator 
-            Domain and range equal to domain of functional 
+        out : Operator
+            Domain and range equal to domain of functional
         """
         raise NotImplementedError
 
@@ -110,32 +103,27 @@ class Functional(Operator):
         Parameters
         ----------
         none
-        
+
         Returns
         -------
-        out : Functional 
-            Domain equal to domain of functional 
+        out : Functional
+            Domain equal to domain of functional
         """
         raise NotImplementedError
 
-
     def derivative(self, point):
         functional = self
-        
-        
+
         class DerivativeOperator(Functional):
             def __init__(self):
                 super().__init__(functional.domain, linear=True)
 
-            self.point=point
-            
-            #self.gradi=functional.gradient()
+            self.point = point
 
             def _call(self, x):
-                return x.inner(functional.gradient(point)) #gradi(point))
-        
-        return DerivativeOperator()
+                return x.inner(functional.gradient(point))
 
+        return DerivativeOperator()
 
     def __mul__(self, other):
         """Return ``self * other``.
@@ -227,22 +215,22 @@ class Functional(Operator):
     @property
     def is_smooth(self):
         """`True` if this operator is continuously differentiable."""
-        return self._is_smooth        
+        return self._is_smooth
 
     @property
     def is_concave(self):
         """`True` if this operator is concave."""
-        return self._is_concave    
+        return self._is_concave
 
     @property
     def is_convex(self):
         """`True` if this operator is convex."""
-        return self._is_convex   
+        return self._is_convex
 
     @property
     def grad_lipschitz(self):
         """Lipschitz constant for the gradient of the functional"""
-        return self._grad_lipschitz   
+        return self._grad_lipschitz
 
 
 
