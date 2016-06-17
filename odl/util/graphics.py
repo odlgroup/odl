@@ -1,4 +1,4 @@
-﻿# Copyright 2014-2016 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -267,9 +267,10 @@ def show_discrete_data(values, grid, title=None, method='',
         csub_re = display_re(*args_re, **dsp_kwargs)
 
         # Axis ticks
-        (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
-        plt.xticks(xpts, xlabels)
-        plt.yticks(ypts, ylabels)
+        if method == 'imshow':
+            (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
+            plt.xticks(xpts, xlabels)
+            plt.yticks(ypts, ylabels)
 
         if method == 'imshow' and len(fig.axes) < 2:
             # Create colorbar if none seems to exist
@@ -302,9 +303,10 @@ def show_discrete_data(values, grid, title=None, method='',
         csub_im = display_im(*args_im, **dsp_kwargs)
 
         # Axis ticks
-        (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
-        plt.xticks(xpts, xlabels)
-        plt.yticks(ypts, ylabels)
+        if method == 'imshow':
+            (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
+            plt.xticks(xpts, xlabels)
+            plt.yticks(ypts, ylabels)
 
         if method == 'imshow' and len(fig.axes) < 4:
             # Create colorbar if none seems to exist
@@ -342,9 +344,10 @@ def show_discrete_data(values, grid, title=None, method='',
         csub = display(*args_re, **dsp_kwargs)
 
         # Axis ticks
-        (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
-        plt.xticks(xpts, xlabels)
-        plt.yticks(ypts, ylabels)
+        if method == 'imshow':
+            (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
+            plt.xticks(xpts, xlabels)
+            plt.yticks(ypts, ylabels)
 
         if method == 'imshow' and len(fig.axes) < 2:
             # Create colorbar if none seems to exist
