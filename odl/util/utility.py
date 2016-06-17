@@ -444,16 +444,22 @@ class writable_array(object):
 
 def snr(signal, noise, impl):
     """Compute the signal-to-noise ratio.
-    This compute::
-        impl='general'
-            SNR = s_power / n_power
-        impl='dB'
-            SNR = 10 * log10 (s_power / n_power)
+
     Parameters
     ----------
-    signal : projection
-    noise : white noise
+    signal :
+        Noiseless data.
+    noise :
+        White noise.
     impl : implementation method
+        'general' means SNR = s_power / n_power,
+        'dB' means SNR = 10 * log10 (s_power / n_power).
+
+    Returns
+    -------
+    The value of signal-to-noise ratio.
+        If the power of noise is zero, then the return is 'inf',
+        otherwise, the return is the computed value.
     """
     if np.abs(np.asarray(noise)).sum() != 0:
         ave1 = np.sum(signal) / signal.size
