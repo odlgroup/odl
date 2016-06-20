@@ -77,6 +77,7 @@ def test_spect_projector():
     assert almost_equal(result_AxAx, result_xAtAx, places=places)
 
 
+@skip_if_no_niftyrec
 def test_attenuation():
     det_nx_pix = 16
     det_ny_pix = 16
