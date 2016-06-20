@@ -68,6 +68,44 @@ def normalized_scalar_param_list(param, length, param_conv=None,
     -------
     plist : list
         Input parameter turned into a list of length ``length``.
+
+    Examples
+    --------
+    Turn input into a list of given length, possibly by broadcasting.
+    By default, no conversion is performed.
+
+    >>> normalized_scalar_param_list((1, 2, 3), 3)
+    [1, 2, 3]
+    >>> normalized_scalar_param_list((1, None, 3.0), 3)
+    [1, None, 3.0]
+
+    Single parameters are broadcast to the given length.
+
+    >>> normalized_scalar_param_list(1, 3)
+    [1, 1, 1]
+    >>> normalized_scalar_param_list('10', 3)
+    ['10', '10', '10']
+    >>> normalized_scalar_param_list(None, 3)
+    [None, None, None]
+
+    List entries can be explicitly converted using ``param_conv``. If
+    ``None`` should be kept, set ``keep_none`` to True:
+
+    >>> normalized_scalar_param_list(1, 3, param_conv=float)
+    [1.0, 1.0, 1.0]
+    >>> normalized_scalar_param_list('10', 3, param_conv=int)
+    [10, 10, 10]
+    >>> normalized_scalar_param_list((1, None, 3.0), 3, param_conv=int,
+    ...                              keep_none=True)  # default
+    [1, None, 3]
+
+    The conversion parameter can be any callable:
+
+    >>> def myconv(x):
+    ...     return False if x is None else bool(x)
+    >>> normalized_scalar_param_list((0, None, 3.0), 3, param_conv=myconv,
+    ...                              keep_none=False)
+    [False, False, True]
     """
     length, length_in = int(length), length
     if length <= 0:
@@ -125,18 +163,55 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
 
     Parameters
     ----------
-    indices : `int`, `slice` or `sequence` of those
+    indices : int, slice, Ellipsis or sequence of these
         Index expression to be normalized
-    shape : `sequence` of `int`
+    shape : sequence of int
         Target shape for error checking of out-of-bounds indices.
         Also needed to determine the number of axes.
-    int_to_slice : `bool`, optional
-        If `True`, turn integers into corresponding slice objects.
+    int_to_slice : bool, optional
+        If True, turn integers into corresponding slice objects.
 
     Returns
     -------
-    normalized : `tuple` of `slice`
+    normalized : tuple of int or slice
         Normalized index expression
+
+    Examples
+    --------
+    Sequences are turned into tuples. We can have at most as many entries
+    as the length of ``shape``, but fewer are allowed - the remaining
+    list places are filled up by ``slice(None)``:
+
+    >>> normalized_index_expression([1, 2, 3], shape=(3, 4, 5))
+    (1, 2, 3)
+    >>> normalized_index_expression([1, 2], shape=(3, 4, 5))
+    (1, 2, slice(None, None, None))
+    >>> normalized_index_expression([slice(2), 2], shape=(3, 4, 5))
+    (slice(None, 2, None), 2, slice(None, None, None))
+    >>> normalized_index_expression([1, Ellipsis], shape=(3, 4, 5))
+    (1, slice(None, None, None), slice(None, None, None))
+
+    By default, integer indices are kept. If they should be converted
+    to slices, use ``int_to_slice=True``. This can be useful to guarantee
+    that the result of slicing with the returned object is of the same
+    type as the array into which is sliced and has the same number of
+    axes:
+
+    >>> x = np.zeros(shape=(3, 4, 5))
+    >>> idx1 = normalized_index_expression([1, 2, 3], shape=(3, 4, 5),
+    ...                                   int_to_slice=True)
+    >>> idx1
+    (slice(1, 2, None), slice(2, 3, None), slice(3, 4, None))
+    >>> x[idx1]
+    array([[[ 0.]]])
+    >>> x[idx1].shape
+    (1, 1, 1)
+    >>> idx2 = normalized_index_expression([1, 2, 3], shape=(3, 4, 5),
+    ...                                   int_to_slice=False)
+    >>> idx2
+    (1, 2, 3)
+    >>> x[idx2]
+    0.0
     """
     ndim = len(shape)
     # Support indexing with fewer indices as indexing along the first
