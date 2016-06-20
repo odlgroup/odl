@@ -31,8 +31,8 @@ import numpy as np
 
 from odl.set.domain import IntervalProd
 from odl.set.sets import Set
-from odl.util.utility import (
-    array1d_repr, array1d_str, normalized_index_expression)
+from odl.util.normalize import normalized_index_expression
+from odl.util.utility import array1d_repr, array1d_str
 
 
 __all__ = ('TensorGrid', 'RegularGrid', 'uniform_sampling_fromintv',

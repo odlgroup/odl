@@ -21,23 +21,21 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import testutils
 from .testutils import *
 __all__ += testutils.__all__
 
-from . import utility
 from .utility import *
 __all__ += utility.__all__
 
-from . import phantom
+from .normalize import *
+__all__ += normalize.__all__
+
 from .phantom import *
 __all__ += phantom.__all__
 
-from . import graphics
 from .graphics import *
 __all__ += graphics.__all__
 
-from .import numerics
 from .numerics import *
 __all__ += numerics.__all__
 
