@@ -30,7 +30,7 @@ import numpy as np
 import odl
 from odl.tomo.operators.spect_trafo import AttenuatedRayTransform
 from odl.util.testutils import skip_if_no_niftyrec
-from odl.util.testutils import almost_equal
+from odl.util.testutils import almost_equal, all_equal
 
 
 @skip_if_no_niftyrec
@@ -42,7 +42,7 @@ def test_spect_projector():
     det_ny_pix = 32
     det_nx_mm = 4
     det_radius = 200
-    n_proj = 32
+    n_proj = 16
     det_param = det_nx_mm * det_nx_pix
     dpart = odl.uniform_partition([-det_param, -det_param],
                                   [det_param, det_param],
@@ -64,6 +64,8 @@ def test_spect_projector():
     proj = projector(vol)
     backproj = projector.adjoint(proj)
 
+    assert all_equal(proj.shape, (n_proj, det_nx_pix, det_ny_pix))
+    assert all_equal(backproj.shape, vol.shape)
     assert proj in projector.range
     assert backproj in projector.domain
 
@@ -73,6 +75,48 @@ def test_spect_projector():
     # Accept 1% errors
     places = 2
     assert almost_equal(result_AxAx, result_xAtAx, places=places)
+
+
+def test_attenuation():
+    det_nx_pix = 16
+    det_ny_pix = 16
+    det_nx_mm = 0.4
+    det_radius = 20
+    n_proj = 1
+    det_param = det_nx_mm * det_nx_pix
+    dpart = odl.uniform_partition([-det_param, -det_param],
+                                  [det_param, det_param],
+                                  [det_nx_pix, det_ny_pix])
+
+    apart = odl.uniform_partition(0, 2 * np.pi, n_proj)
+    geometry = odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry(
+        apart, dpart, det_rad=det_radius)
+
+    # Create a discrete domain and a phantom as an element of the domain
+    domain = odl.uniform_discr([-1] * 3, [1] * 3, [det_nx_pix] * 3)
+
+    vol = np.zeros((16, 16, 16))
+    vol[0, 0, 0] = 100
+
+    vol_element = domain.element(vol)
+    projector = AttenuatedRayTransform(
+        domain, geometry, attenuation=None, impl='niftyrec')
+    proj_no_att = projector(vol_element)
+    # Accept 0.1 % error
+    places = 3
+    assert odl.util.testutils.almost_equal(np.max(proj_no_att), 100,
+                                           places=places)
+
+    attenuation = np.zeros((16, 16, 16))
+    attenuation[0, 0, 0] = 0.2
+    projector_att = AttenuatedRayTransform(
+        domain, geometry, attenuation=attenuation, impl='niftyrec')
+    proj_att = projector_att(vol_element)
+
+    value = np.sum(vol * np.exp(-np.sum(attenuation)))
+    assert odl.util.testutils.almost_equal(np.max(proj_att), value,
+                                           places=places)
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
