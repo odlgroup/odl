@@ -52,7 +52,6 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
 
     grad = Gradient(gradS.domain, method='central')
 
-    # We solve poisson using the fourier transform
     # ft = FourierTransform(op.domain)
     ft = FourierTransform(gradS.domain)
     k2_values = sum((ft.range.points() ** 2).T)
@@ -60,15 +59,20 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
     poisson_solver = ft.inverse * (1 / k2) * ft
 
     for _ in range(niter):
-        PhiStarX = DPhiJacobian * I
+
+#        PhiStarX = DPhiJacobian * I
+        PhiStarX = I
 
         grads = gradS(PhiStarX)
 
-        tmp = grad(grads)
+#        tmp = grad(grads)
+        tmp = grad(PhiStarX)
 
-        tmp = tmp.space.element([tp * PhiStarX for tp in tmp])
+#        tmp = tmp.space.element([tp * PhiStarX for tp in tmp])
+        tmp = tmp.space.element([tp * grads for tp in tmp])
 
-        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
+#        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
+        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) + 2 * tmp
 
         # solve for v
         v = grad.range.element()

@@ -58,14 +58,14 @@ ray_trafo = odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
 
 # Create the ground truth as the given image
 ground_truth = space.element(I0)
-ground_truth = odl.util.submarine_phantom(
-    space, smooth=True, taper=50.0)
+#ground_truth = odl.util.submarine_phantom(
+#    space, smooth=True, taper=50.0)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(ground_truth)
 
 # Add white Gaussion noise onto the noiseless data
-noise = odl.util.white_noise(ray_trafo.range) * 3
+noise = odl.util.white_noise(ray_trafo.range) * 1.0
 
 # Create the noisy projection data
 noise_proj_data = proj_data + noise
@@ -82,8 +82,8 @@ niter = 2000
 callback = odl.solvers.CallbackShow(
     'iterates', display_step=50) & odl.solvers.CallbackPrintIteration()
 
-# template = space.element(I1)
-template = odl.util.disc_phantom(space, smooth=True, taper=50.0)
+template = space.element(I1)
+#template = odl.util.disc_phantom(space, smooth=True, taper=50.0)
 template *= np.sum(ground_truth) / np.sum(template)
 
 ground_truth.show('phantom')
@@ -103,15 +103,15 @@ gradS = op.adjoint * odl.ResidualOperator(op, noise_proj_data)
 optimal_information_transport_solver(gradS, template, niter,
                                      eps, sigma, callback)
 
-# # For image matching
-# eps = 0.2
-# sigma = 1
-# # Create the forward operator for image matching
-# op = odl.IdentityOperator(space)
+## For image matching
+#eps = 0.2
+#sigma = 1
+## Create the forward operator for image matching
+#op = odl.IdentityOperator(space)
 #
-# # Create the gradient operator for the L2 functional
-# gradS = op.adjoint * odl.ResidualOperator(op, ground_truth)
+## Create the gradient operator for the L2 functional
+#gradS = op.adjoint * odl.ResidualOperator(op, ground_truth)
 #
-# # Compute by optimal information transport solver
-# optimal_information_transport_solver(gradS, template, niter,
+## Compute by optimal information transport solver
+#optimal_information_transport_solver(gradS, template, niter,
 #                                      eps, sigma, callback)
