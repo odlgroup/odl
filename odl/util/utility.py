@@ -428,15 +428,15 @@ def snr(signal, noise, impl):
         Noise.
     impl : {'general', 'dB'}
         Implementation method.
-        'general' means SNR = s_power / n_power,
-        'dB' means SNR = 10 * log10 (s_power / n_power).
+        'general' means SNR = variance(signal) / variance(noise),
+        'dB' means SNR = 10 * log10 (variance(signal) / variance(noise)).
 
     Returns
     -------
     snr : `float`
-    Value of signal-to-noise ratio.
-    If the power of noise is zero, then the return is 'inf',
-    otherwise, the computed value.
+        Value of signal-to-noise ratio.
+        If the power of noise is zero, then the return is 'inf',
+        otherwise, the computed value.
     """
     if np.any(noise):
         s_power = np.var(signal)
