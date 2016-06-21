@@ -31,8 +31,6 @@ import numpy as np
 
 from odl.discr import Gradient
 from odl.trafos import FourierTransform
-from odl.util import snr
-
 
 __all__ = ('optimal_information_transport_solver',)
 
@@ -55,9 +53,18 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
     """
     DPhiJacobian = gradS.domain.one()
 
+    pspace = gradS.domain.vector_field_space
+
+    invphi = pspace.element(gradS.domain.points().T)
+
     grad = Gradient(gradS.domain, method='central')
 
-    # ft = FourierTransform(op.domain)
+    Id = gradS.domain.points().T
+
+    new_points = grad.range.element()
+
+    v = grad.range.element()
+
     ft = FourierTransform(gradS.domain)
     k2_values = sum((ft.range.points() ** 2).T)
     k2 = ft.range.element(np.maximum(np.abs(k2_values), 0.01))
@@ -66,7 +73,10 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
     for _ in range(niter):
 
         # implementation for mass-preserving case
-        PhiStarX = DPhiJacobian * I
+        PhiStarX = DPhiJacobian * I.space.element(
+            I.interpolation(invphi, bounds_check=False))
+#        PhiStarX = DPhiJacobian * I
+
         grads = gradS(PhiStarX)
         tmp = grad(grads)
         for i in range(tmp.size):
@@ -84,19 +94,27 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
 #        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) + 2 * tmp
 
         # solve for v
-        v = grad.range.element()
+#        v = grad.range.element()
 
         for i in range(u.size):
             v[i] = poisson_solver(u[i])
             v[i] -= v[i][0]
 
-        new_points = gradS.domain.points().T
+#        new_points = gradS.domain.points().T
 
         for i in range(tmp.size):
-            new_points[i] -= eps * v[i].ntuple.asarray()
+            new_points[i] = Id[i] - eps * v[i].ntuple.asarray()
 
-        I.assign(gradS.domain.element(I.interpolation(new_points,
-                                                      bounds_check=False)))
+#        I.assign(gradS.domain.element(I.interpolation(new_points,
+#                                                      bounds_check=False)))
+
+        for i in range(invphi.size):
+            invphi[i] = invphi[i].space.element(
+                invphi[i].interpolation(new_points, bounds_check=False))
+#        invphi = invphi.space.element(
+#            [invphi_i.interpolation(new_points, bounds_check=False)
+#                for invphi_i in invphi])
+
         DPhiJacobian = np.exp(eps * grad.adjoint(v)) * gradS.domain.element(
             DPhiJacobian.interpolation(new_points, bounds_check=False))
 
