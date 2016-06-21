@@ -56,19 +56,23 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
 
     for _ in range(niter):
 
-#        PhiStarX = DPhiJacobian * I
-        PhiStarX = I
-
+        # implementation for mass-preserving case
+        PhiStarX = DPhiJacobian * I
         grads = gradS(PhiStarX)
+        tmp = grad(grads)
+        for i in range(tmp.size):
+            tmp[i] *= PhiStarX
+        # tmp = tmp.space.element([tp * PhiStarX for tp in tmp])
+        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
 
-#        tmp = grad(grads)
-        tmp = grad(PhiStarX)
-
-#        tmp = tmp.space.element([tp * PhiStarX for tp in tmp])
-        tmp = tmp.space.element([tp * grads for tp in tmp])
-
-#        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
-        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) + 2 * tmp
+#        # implementation for non-mass-preserving case
+#        PhiStarX = I
+#        grads = gradS(PhiStarX)
+#        tmp = grad(PhiStarX)
+#        for i in range(tmp.size):
+#            tmp[i] *= grads
+#        # tmp = tmp.space.element([tp * grads for tp in tmp])
+#        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) + 2 * tmp
 
         # solve for v
         v = grad.range.element()
