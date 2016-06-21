@@ -433,9 +433,10 @@ def snr(signal, noise, impl):
 
     Returns
     -------
-    The value of signal-to-noise ratio.
-        If the power of noise is zero, then the return is 'inf',
-        otherwise, the return is the computed value.
+    snr : `float`
+    Value of signal-to-noise ratio.
+    If the power of noise is zero, then the return is 'inf',
+    otherwise, the computed value.
     """
     if np.any(noise):
         s_power = np.var(signal)
