@@ -16,18 +16,10 @@
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Solver for the shape-based reconstruction using
-optimal information transportation.
+Shape-based reconstruction using optimal information transportation.
 
-The model is:
-
-min sigma * (1 - sqrt{DetJacInvPhi})^2 + (T(phi.I) - g)^2,
-where phi.I := DetJacInvPhi * I(InvPhi) is a mass-preserving deformation.
-
-Note that:
-If T is an identity operator, the above model reduces for image matching.
-If T is a forward projection operator, the above model is
-for image reconstruction.
+The Fisher-Rao metric is used in regularization term. And L2 data matching
+term is used in fitting term.
 """
 
 # Imports for common Python 2/3 codebase
@@ -47,7 +39,20 @@ __all__ = ('optimal_information_transport_solver',)
 
 def optimal_information_transport_solver(gradS, I, niter, eps,
                                          sigma, callback=None):
+    """
+    Solver for the shape-based reconstruction using
+    optimal information transportation.
 
+    The model is:
+
+    min sigma * (1 - sqrt{DetJacInvPhi})^2 + (T(phi.I) - g)^2,
+    where phi.I := DetJacInvPhi * I(InvPhi) is a mass-preserving deformation.
+
+    Note that:
+    If T is an identity operator, the above model reduces for image matching.
+    If T is a forward projection operator, the above model is
+    for image reconstruction.
+    """
     DPhiJacobian = gradS.domain.one()
 
     grad = Gradient(gradS.domain, method='central')
