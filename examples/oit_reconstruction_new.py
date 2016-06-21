@@ -32,7 +32,6 @@ import time
 import matplotlib.pyplot as plt
 from odl.trafos import FourierTransform
 import numba
-import ddmatch
 from odl.util import snr
 standard_library.install_aliases()
 
