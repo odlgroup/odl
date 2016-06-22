@@ -21,6 +21,10 @@ from __future__ import absolute_import
 
 __all__ = ()
 
+from . import linear_deformation
+from .linear_deformation import *
+__all__ += linear_deformation.__all__
+
 from . import optimal_information_transport
 from .optimal_information_transport import *
 __all__ += optimal_information_transport.__all__
