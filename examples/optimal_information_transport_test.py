@@ -30,10 +30,13 @@ from odl.deform import optimal_information_transport_solver
 import odl
 standard_library.install_aliases()
 
-
+# Give input images
 I0name = './pictures/c_highres.png'
 I1name = './pictures/i_highres.png'
+# I0name = './pictures/handnew1.png'
+# I1name = './pictures/DS0002AxialSlice80.png'
 
+# Get digital images
 I0 = np.rot90(plt.imread(I0name).astype('float'), -1)[::2, ::2]
 I1 = np.rot90(plt.imread(I1name).astype('float'), -1)[::2, ::2]
 
@@ -42,8 +45,12 @@ space = odl.uniform_discr(
     min_corner=[-16, -16], max_corner=[16, 16], nsamples=[128, 128],
     dtype='float32', interp='linear')
 
+# Give the number of directions
+num_angles = 6
+
 # Create the uniformly distributed directions
-angle_partition = odl.uniform_partition(0, np.pi, 6)
+angle_partition = odl.uniform_partition(0, np.pi, num_angles,
+                                        nodes_on_bdry=[(True, False)])
 
 # Create 2-D projection domain
 # The length should be 1.5 times of that of the reconstruction space
@@ -53,7 +60,7 @@ detector_partition = odl.uniform_partition(-24, 24, 192)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition,
                                        detector_partition)
 
-# ray transform aka forward projection. We use ASTRA CUDA backend.
+# Ray transform aka forward projection. We use ASTRA CUDA backend.
 ray_trafo = odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
 
 # Create the ground truth as the given image
@@ -78,7 +85,7 @@ snr = snr(proj_data, noise, impl='dB')
 print('snr = {!r}'.format(snr))
 
 # Maximum iteration number
-niter = 2000
+niter = 4000
 
 callback = odl.solvers.CallbackShow(
     'iterates', display_step=50) & odl.solvers.CallbackPrintIteration()
@@ -89,36 +96,56 @@ template = space.element(I1)
 # # Create the template as the disc phantom
 # template = odl.util.disc_phantom(space, smooth=True, taper=50.0)
 
-# Normalize the template's density as the same as the ground truth for
-# mass preserving defmormation method
-template *= np.sum(ground_truth) / np.sum(template)
+# Implementation method for mass preserving or not,
+# impl chooses 'mp' or 'nmp', 'mp' means mass-preserving method,
+# 'nmp' means non-mass-preserving method
+impl1 = 'nmp'
+
+# Implementation method for image matching or image reconstruction,
+# impl chooses 'matching' or 'reconstruction', 'matching' means image matching,
+# 'reconstruction' means image reconstruction
+impl2 = 'matching'
+
+# Normalize the template's density as the same as the ground truth if consider
+# mass preserving method
+if impl1 == 'nmp':
+    template *= np.sum(ground_truth) / np.sum(template)
 
 ground_truth.show('phantom')
 template.show('template')
 
 # For image reconstruction
-eps = 0.002
-sigma = 1e2
+if impl2 == 'reconstruction':
+    # Give step size for solver
+    eps = 0.0002
 
-# Create the forward operator for image reconstruction
-op = ray_trafo
+    # Give regularization parameter
+    sigma = 1e3
 
-# Create the gradient operator for the L2 functional
-gradS = op.adjoint * odl.ResidualOperator(op, noise_proj_data)
+    # Create the forward operator for image reconstruction
+    op = ray_trafo
 
-# Compute by optimal information transport solver
-optimal_information_transport_solver(gradS, template, niter,
-                                     eps, sigma, callback)
+    # Create the gradient operator for the L2 functional
+    gradS = op.adjoint * odl.ResidualOperator(op, noise_proj_data)
 
-## For image matching
-#eps = 0.2
-#sigma = 1
-## Create the forward operator for image matching
-#op = odl.IdentityOperator(space)
-#
-## Create the gradient operator for the L2 functional
-#gradS = op.adjoint * odl.ResidualOperator(op, ground_truth)
-#
-## Compute by optimal information transport solver
-#optimal_information_transport_solver(gradS, template, niter,
-#                                      eps, sigma, callback)
+    # Compute by optimal information transport solver
+    optimal_information_transport_solver(gradS, template, niter,
+                                         eps, sigma, impl1, callback)
+
+# For image matching
+if impl2 == 'matching':
+    # Give step size for solver
+    eps = 0.02
+
+    # Give regularization parameter
+    sigma = 1
+
+    # Create the forward operator for image matching
+    op = odl.IdentityOperator(space)
+
+    # Create the gradient operator for the L2 functional
+    gradS = op.adjoint * odl.ResidualOperator(op, ground_truth)
+
+    # Compute by optimal information transport solver
+    optimal_information_transport_solver(gradS, template, niter,
+                                         eps, sigma, impl1, callback)
