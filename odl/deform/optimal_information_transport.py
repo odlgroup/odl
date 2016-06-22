@@ -28,7 +28,7 @@ from future import standard_library
 import numpy as np
 from odl.discr import Gradient
 from odl.trafos import FourierTransform
-import odl
+from odl.deform import LinearDeformation, MassPreservingLinearDeformation
 standard_library.install_aliases()
 
 __all__ = ('optimal_information_transport_solver',)
@@ -50,17 +50,9 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
     If T is a forward projection operator, the above model is
     for image reconstruction.
     """
-    DPhiJacobian = gradS.domain.one()
-
-    pspace = odl.ProductSpace(DPhiJacobian.space, DPhiJacobian.space.ndim)
-
-    invphi = pspace.element(gradS.domain.points().T)
+    invphi = MassPreservingLinearDeformation.identity(gradS.domain)
 
     grad = Gradient(gradS.domain, method='central')
-
-    Id = gradS.domain.points().T
-
-    new_points = grad.range.element()
 
     v = grad.range.element()
 
@@ -72,50 +64,22 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
     for _ in range(niter):
 
         # implementation for mass-preserving case
-        PhiStarX = DPhiJacobian * I.space.element(
-            I.interpolation(invphi, bounds_check=False))
-#        PhiStarX = DPhiJacobian * I
+        PhiStarX = invphi(I)
 
         grads = gradS(PhiStarX)
         tmp = grad(grads)
         for i in range(tmp.size):
             tmp[i] *= PhiStarX
+
         # tmp = tmp.space.element([tp * PhiStarX for tp in tmp])
-        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
-
-#        # implementation for non-mass-preserving case
-#        PhiStarX = I
-#        grads = gradS(PhiStarX)
-#        tmp = grad(PhiStarX)
-#        for i in range(tmp.size):
-#            tmp[i] *= grads
-#        # tmp = tmp.space.element([tp * grads for tp in tmp])
-#        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) + 2 * tmp
-
-        # solve for v
-#        v = grad.range.element()
+        u = sigma * grad(1 - np.sqrt(invphi.vector_field_jacobian)) - 2 * tmp
 
         for i in range(u.size):
             v[i] = poisson_solver(u[i])
             v[i] -= v[i][0]
 
-#        new_points = gradS.domain.points().T
-
-        for i in range(tmp.size):
-            new_points[i] = Id[i] - eps * v[i].ntuple.asarray()
-
-#        I.assign(gradS.domain.element(I.interpolation(new_points,
-#                                                      bounds_check=False)))
-
-        for i in range(invphi.size):
-            invphi[i] = invphi[i].space.element(
-                invphi[i].interpolation(new_points, bounds_check=False))
-#        invphi = invphi.space.element(
-#            [invphi_i.interpolation(new_points, bounds_check=False)
-#                for invphi_i in invphi])
-
-        DPhiJacobian = np.exp(eps * grad.adjoint(v)) * gradS.domain.element(
-            DPhiJacobian.interpolation(new_points, bounds_check=False))
+        update_deform = LinearDeformation(- eps * v)
+        invphi = invphi.compose(update_deform)
 
         if callback is not None:
-            callback(I)
+            callback(PhiStarX)

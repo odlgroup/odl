@@ -43,7 +43,7 @@ space = odl.uniform_discr(
     dtype='float32', interp='linear')
 
 # Create the uniformly distributed directions
-angle_partition = odl.uniform_partition(0, np.pi, 6)
+angle_partition = odl.uniform_partition(0, np.pi, 60)
 
 # Create 2-D projection domain
 # The length should be 1.5 times of that of the reconstruction space
