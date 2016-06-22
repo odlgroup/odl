@@ -25,7 +25,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 import numpy as np
 import matplotlib.pyplot as plt
-from odl.util import snr
 from odl.deform import optimal_information_transport_solver
 import odl
 standard_library.install_aliases()
@@ -79,7 +78,7 @@ noise = odl.util.white_noise(ray_trafo.range) * 1.0
 noise_proj_data = proj_data + noise
 
 # Compute the signal-to-noise ratio in dB
-snr = snr(proj_data, noise, impl='dB')
+snr = odl.util.snr(proj_data, noise, impl='dB')
 
 # Output the signal-to-noise ratio
 print('snr = {!r}'.format(snr))
