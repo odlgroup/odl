@@ -98,37 +98,34 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
 
     # Begin iteration
     for _ in range(niter):
+        # Convert the invphi into an array for efficient interpolation
+        invphi_pts = np.empty([invphi.size, invphi[0].size])
+        for i in range(invphi.size):
+            invphi_pts[i] = invphi[i].ntuple.asarray()
 
         # Implementation for mass-preserving case
         if impl == 'mp':
-            invphi_pts = np.empty([invphi.size, invphi[0].size])
-            for i in range(invphi.size):
-                invphi_pts[i] = invphi[i].ntuple.asarray()
             non_mp_def = I.space.element(
                 I.interpolation(invphi_pts, bounds_check=False))
             PhiStarX = DPhiJacobian * non_mp_def
 
-            # Compute the minus L2 gradient
             grads = gradS(PhiStarX)
             tmp = grad(grads)
             for i in range(tmp.size):
                 tmp[i] *= PhiStarX
-            u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
 
         # Implementation for non-mass-preserving case
         if impl == 'nmp':
-            invphi_pts = np.empty([invphi.size, invphi[0].size])
-            for i in range(invphi.size):
-                invphi_pts[i] = invphi[i].ntuple.asarray()
-                PhiStarX = I.space.element(
-                    I.interpolation(invphi_pts, bounds_check=False))
+            PhiStarX = I.space.element(
+                I.interpolation(invphi_pts, bounds_check=False))
 
-            # Compute the minus L2 gradient
             grads = gradS(PhiStarX)
             tmp = -grad(PhiStarX)
             for i in range(tmp.size):
                 tmp[i] *= grads
-                u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
+
+        # Compute the minus L2 gradient
+        u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
 
         # Check the mass
         print(np.sum(PhiStarX))

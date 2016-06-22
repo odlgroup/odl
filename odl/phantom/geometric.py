@@ -196,6 +196,7 @@ def _getshapes_2d(center, max_radius, shape):
               (slice(None), idx[1])]
     return idx, shapes
 
+<<<<<<< HEAD
 
 def _ellipse_phantom_2d(space, ellipses):
     """Create a phantom of ellipses in 2d space.
@@ -208,6 +209,19 @@ def _ellipse_phantom_2d(space, ellipses):
         Each row should contain:
         'value', 'axis_1', 'axis_2', 'center_x', 'center_y', 'rotation'
         The ellipses should be contained the he rectangle [-1, -1] x [1, 1].
+=======
+    Parameters
+    ----------
+    discr : `DiscreteLp`
+        Discretized space in which the phantom is supposed to be created
+    smooth : `bool`, optional
+        If `True`, the boundaries are smoothed out. Otherwise, the
+        function steps from 0 to 1 at the boundaries.
+        If `False`, the boundaries are sharp.
+    taper : `float`, optional
+        Tapering parameter for the boundary smoothing. Larger values
+        mean faster taper, i.e. sharper boundaries.
+>>>>>>> EHN: simplified implementation.
 
     Returns
     -------
@@ -293,11 +307,20 @@ def _ellipse_phantom_2d(space, ellipses):
 
     return space.element(p)
 
+<<<<<<< HEAD
 
 def _getshapes_3d(center, max_radius, shape):
     """Calculate indices and slices for the bounding box of a ball."""
     index_mean = shape * center
     index_radius = max_radius / 2.0 * np.array(shape)
+=======
+        out = np.sqrt(sq_ndist)
+        out -= 1
+        return logistic(out, -taper)
+
+    out = discr.element(blurred_ellipse)
+    return out.ufunc.minimum(1.0, out=out)
+>>>>>>> EHN: simplified implementation.
 
     min_idx = np.floor(index_mean - index_radius).astype(int)
     max_idx = np.ceil(index_mean + index_radius).astype(int)
