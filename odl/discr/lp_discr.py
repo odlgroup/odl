@@ -31,7 +31,6 @@ from odl.discr.discretization import (
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
-from odl.discr.grid import _bdry_conv
 from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set.sets import RealNumbers, ComplexNumbers
@@ -39,9 +38,10 @@ from odl.set.domain import IntervalProd
 from odl.space.cu_ntuples import CUDA_AVAILABLE, CudaFn
 from odl.space.fspace import FunctionSpace
 from odl.space.ntuples import Fn
+from odl.util.normalize import (
+    normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
-from odl.util.normalize import normalized_param_list
 from odl.util.utility import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr)
 
@@ -1360,20 +1360,26 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
     --------
     uniform_partition : underlying domain partitioning scheme
     """
+    if not isinstance(discr, DiscreteLp):
+        raise TypeError('`discr` {!r} is not a DiscreteLp instance'
+                        ''.format(discr))
+    if not discr.partition.is_regular:
+        raise ValueError('`discr` {} is not uniformly discretized'
+                         ''.format(discr))
+
     # Normalize partition parameters
-    # np.size(None) == 1
-    min_corner = normalized_param_list(min_corner, length=discr.ndim,
-                                       param_conv=float)
-    max_corner = normalized_param_list(max_corner, length=discr.ndim,
-                                       param_conv=float)
-    nsamples = normalized_param_list(nsamples, length=discr.ndim,
-                                     param_conv=int)
-    cell_sides = normalized_param_list(cell_sides, length=discr.ndim,
-                                       param_conv=float)
+    min_corner = normalized_scalar_param_list(min_corner, discr.ndim,
+                                              param_conv=float, keep_none=True)
+    max_corner = normalized_scalar_param_list(max_corner, discr.ndim,
+                                              param_conv=float, keep_none=True)
+    nsamples = normalized_scalar_param_list(nsamples, discr.ndim,
+                                            param_conv=safe_int_conv,
+                                              keep_none=True)
+    cell_sides = normalized_scalar_param_list(cell_sides, discr.ndim,
+                                              param_conv=float, keep_none=True)
+
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
-    nodes_on_bdry = normalized_param_list(
-        nodes_on_bdry, length=discr.ndim, param_conv=_bdry_conv,
-        entry_conv=bool)
+    nodes_on_bdry = normalized_nodes_on_bdry(nodes_on_bdry, discr.ndim)
 
     new_beg = []
     new_end = []

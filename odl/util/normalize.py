@@ -21,7 +21,6 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from future.utils import raise_from
 
 import numpy as np
 
@@ -260,6 +259,77 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
                          ''.format(len(indices), ndim))
 
     return tuple(indices)
+
+
+def normalized_nodes_on_bdry(nodes_on_bdry, length):
+    """Return a list of 2-tuples of bool from the input parameter.
+
+    This function is intended to normalize a ``nodes_on_bdry`` parameter
+    that can be given as a single boolean (global) or as a sequence
+    (per axis). Each entry of the sequence can either be a single
+    boolean (global for the axis) or a boolean sequence of length 2.
+
+    Parameters
+    ----------
+    nodes_on_bdry : bool or sequence
+        Input parameter to be normalized according to the above scheme.
+    length : positive int
+        Desired length of the returned list.
+
+    Returns
+    -------
+    normalized : list of 2-tuples of bool
+        Normalized list with ``length`` entries, each of which is a
+        2-tuple of boolean values.
+
+    Examples
+    --------
+    Global for all axes:
+
+    >>> normalized_nodes_on_bdry(True, length=2)
+    [(True, True), (True, True)]
+
+    Global per axis:
+
+    >>> normalized_nodes_on_bdry([True, False], length=2)
+    [(True, True), (False, False)]
+
+    Mixing global and explicit per axis:
+
+    >>> normalized_nodes_on_bdry([[True, False], False, True], length=3)
+    [(True, False), (False, False), (True, True)]
+    """
+    shape = np.shape(nodes_on_bdry)
+    if shape == ():
+        out_list = [(bool(nodes_on_bdry), bool(nodes_on_bdry))] * length
+    elif length == 1 and shape == (2,):
+        out_list = [(bool(nodes_on_bdry[0]), bool(nodes_on_bdry[1]))]
+    elif len(nodes_on_bdry) == length:
+        out_list = []
+
+        for i, on_bdry in enumerate(nodes_on_bdry):
+            shape_i = np.shape(on_bdry)
+            if shape_i == ():
+                out_list.append((bool(on_bdry), bool(on_bdry)))
+            elif shape_i == (2,):
+                out_list.append((bool(on_bdry[0]), bool(on_bdry[1])))
+            else:
+                raise ValueError('in axis {}: `nodes_on_bdry` has shape {}, '
+                                 'expected (2,)'
+                                 .format(i, shape_i))
+    else:
+        raise ValueError('`nodes_on_bdry` has shape {}, expected ({},)'
+                         ''.format(shape, length))
+
+    return out_list
+
+
+def safe_int_conv(number):
+    """Safely convert a single number to integer."""
+    try:
+        return int(np.array(number).astype(int, casting='safe'))
+    except TypeError:
+        raise ValueError('cannot safely convert {} to integer'.format(number))
 
 
 if __name__ == '__main__':
