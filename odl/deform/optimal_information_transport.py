@@ -51,7 +51,7 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
     If T is a forward projection operator, the above model is
     for image reconstruction.
 
-    parameters
+    Parameters
     ----------
     gradS : `Operator`
         op.adjoint * odl.ResidualOperator(op, noise_proj_data),

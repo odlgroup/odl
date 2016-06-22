@@ -85,7 +85,7 @@ snr = snr(proj_data, noise, impl='dB')
 print('snr = {!r}'.format(snr))
 
 # Maximum iteration number
-niter = 4000
+niter = 2000
 
 callback = odl.solvers.CallbackShow(
     'iterates', display_step=50) & odl.solvers.CallbackPrintIteration()
@@ -108,7 +108,7 @@ impl2 = 'matching'
 
 # Normalize the template's density as the same as the ground truth if consider
 # mass preserving method
-if impl1 == 'nmp':
+if impl1 == 'mp':
     template *= np.sum(ground_truth) / np.sum(template)
 
 ground_truth.show('phantom')
