@@ -50,6 +50,28 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
     If T is an identity operator, the above model reduces for image matching.
     If T is a forward projection operator, the above model is
     for image reconstruction.
+
+    parameters
+    ----------
+    gradS : `Operator`
+        op.adjoint * odl.ResidualOperator(op, noise_proj_data),
+        where op is a forward operator, noise_proj_data is the given data.
+    I: `DiscreteLpVector`
+        Fixed template deformed by the deformation.
+    iter : 'int'
+        The given maximum iteration number.
+    eps : 'float'
+        The given step size.
+    sigma : 'float'
+        The given regularization parameter. It's a
+        wight on regularization-term side.
+    impl : 'string'
+        The given implementation method for mass preserving or not.
+        The impl chooses 'mp' or 'nmp', where 'mp' means using
+        mass-preserving method, and 'nmp' means non-mass-preserving method.
+        Its defalt choice is 'mp'.
+    callback : 'Class'
+        Show the iterates.
     """
     # Initialize the determinant of Jacobian of inverse deformation
     DPhiJacobian = gradS.domain.one()
@@ -63,7 +85,7 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
     # Create the identity mapping
     Id = gradS.domain.points().T
 
-    # Create the temporary enelemts for update
+    # Create the temporary elements for update
     grad = Gradient(gradS.domain, method='central')
     new_points = grad.range.element()
     v = grad.range.element()
