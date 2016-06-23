@@ -31,9 +31,192 @@ import numpy as np
 
 from odl.operator import Operator
 from odl.discr import DiscreteLp, Divergence
-from odl.space import ProductSpace
+import odl
 
 __all__ = ('LinearDeformation', 'MassPreservingLinearDeformation')
+
+
+class LinearizedDeformationOperator(Operator):
+    """
+    Linearized deformation operator mapping parameters into a
+    deformed template. It is a left action given by pushforward.
+
+    This operator computes the deformed template for a fixed
+    template ``I``:
+
+        v --> I(Id + v)
+
+    where ``Id`` is the identity mapping:
+
+        y --> y
+
+    and the vector field ``v`` is a displacement mapping:
+
+        y --> v(y)
+
+    Here, the ``y`` is an element in the domain of the target.
+    In diffeomorphic sense,  the domain of ``I`` is the same
+    as the target.
+    """
+
+    def __init__(self, template):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        template : `DiscreteLpVector`
+            Fixed template deformed by the vector field.
+        """
+        self.template = template
+        self.domain_space = odl.ProductSpace(self.template.space,
+                                             self.template.space.ndim)
+
+        super().__init__(self.domain_space, self.template.space, linear=False)
+
+    def _call(self, displacement):
+        """Implementation of ``self(displacement)``.
+
+        Parameters
+        ----------
+        displacement : `ProductSpaceVector`
+            Linearized deformation parameters for image grid points.
+        """
+        image_pts = self.template.space.grid.points()
+        image_pts += np.asarray(displacement).T
+
+        return self.template.interpolation(image_pts.T, bounds_check=False)
+
+    def linear_deform(self, template, displacement):
+        """Implementation of ``self(template, displacement)``.
+
+        This function computes the deformed template for a given
+        template ``I`` and displacement ``v``:
+
+            (I, v) --> I(Id + v)
+
+        Parameters
+        ----------
+        template : `DiscreteLpVector`
+            Fixed template deformed by the vector field.
+        displacement : `ProductSpaceVector`
+            Linearized deformation parameters for image grid points.
+        """
+        image_pts = template.space.grid.points()
+        image_pts += np.asarray(displacement).T
+
+        return template.interpolation(image_pts.T, bounds_check=False)
+
+
+class MassPreservingDeformationOperator(Operator):
+    """
+    Mass-preserving deformation operator mapping parameters to a
+    deformed template. It is a left action given by pushforward.
+
+    This operator computes the deformed template
+    for a fixed template ``I``:
+
+        (jacdetinvdef, invdef) --> jacdetinvdef * I(invdef)
+
+    where ``invdef`` is the inverse of deformation mapping:
+
+        y --> invdef(y)
+
+    and ``jacdetinvdef`` is the Jacobian determinant of ``invdef``:
+
+        y --> jacdetinvdef(y)
+
+    Here, ``y`` is an element in the domain of target.
+    In diffeomorphic sense,  the domain of ``I`` is the same
+    as the target.
+    """
+
+    def __init__(self, template):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        template : `DiscreteLpVector`
+            Fixed template deformed by the vector field.
+        """
+        self.template = template
+        self.domain_space = odl.ProductSpace(self.template.space,
+                                             self.template.space.ndim + 1)
+        self.invdef_pts = np.empty([self.template.space.ndim,
+                                    self.template.size])
+
+        super().__init__(self.domain_space, self.template.space, linear=False)
+
+    def _call(self, jacdetinvdef_invdef):
+        """Implementation of ``self(jacdetinvdef_invdef)``.
+
+        Parameters
+        ----------
+        jacdetinvdef_invdef : 'ProductSpaceVector'
+
+                R^{n} --> R^{1} times R^{n}
+
+            The ``jacdetinvdef_invdef`` is defined on a product
+            space ``R^{1} times R^{n}`` for ``jacdetinvdef`` and
+            ``invdef``, respectively, where
+
+            jacdetinvdef : 'DiscreteLpVector'
+
+                    R^{n} --> R^{1}
+
+                The Jacobian determinant of the inverse deformation.
+                The ``jacdetinvdef`` equals to ``jacdetinvdef_invdef[0]``.
+            invdef : `ProductSpaceVector`
+
+                    R^{n} --> R^{n}
+
+                General inverse deformation for image grid points.
+                The ``invdef`` equals to ``jacdetinvdef_invdef[1:n]``.
+        """
+        for i in range(self.template.space.ndim):
+            self.invdef_pts[i] = \
+                jacdetinvdef_invdef[i+1].ntuple.asarray()
+        return jacdetinvdef_invdef[0] * self.template.space.element(
+            self.template.interpolation(self.invdef_pts, bounds_check=False))
+
+    def mp_deform(self, template, jacdetinvdef_invdef):
+        """Implementation of ``self(template, jacdetinvdef_invdef)``.
+
+        This function computes the deformed template for a given
+        template ``I``, and a given inverse deformation ``invdef``
+        and its Jacobian determinant ``jacdetinvdef``:
+
+            (I, jacdetinvdef, invdef) --> jacdetinvdef * I(invdef)
+
+        Parameters
+        ----------
+        template : `DiscreteLpVector`
+            Fixed template deformed by the vector field.
+        jacdetinvdef_invdef : 'ProductSpaceVector'
+
+                R^{n} --> R^{1} times R^{n}
+
+            The ``jacdetinvdef_invdef`` is defined on a product
+            space ``R^{1} times R^{n}`` for ``jacdetinvdef`` and
+            ``invdef``, respectively, where
+
+            jacdetinvdef : 'DiscreteLpVector'
+
+                    R^{n} --> R^{1}
+
+                The Jacobian determinant of the inverse deformation.
+                The ``jacdetinvdef`` equals to ``jacdetinvdef_invdef[0]``.
+            invdef : `ProductSpaceVector`
+
+                    R^{n} --> R^{n}
+
+                General inverse deformation for image grid points.
+                The ``invdef`` equals to ``jacdetinvdef_invdef[1:n]``.
+        """
+        invdef_pts = np.empty([template.space.ndim, template.size])
+        for i in range(template.space.ndim):
+            invdef_pts[i] = jacdetinvdef_invdef[i+1].ntuple.asarray()
+        return jacdetinvdef_invdef[0] * template.space.element(
+            template.interpolation(invdef_pts, bounds_check=False))
 
 
 class LinearDeformation(Operator):
@@ -61,7 +244,7 @@ class LinearDeformation(Operator):
         >>> deformation = LinearDeformation(vector_field)
         """
 
-        assert isinstance(offsets.space, ProductSpace)
+        assert isinstance(offsets.space, odl.ProductSpace)
         assert offsets.space.is_power_space
         assert isinstance(offsets.space[0], DiscreteLp)
 
@@ -86,7 +269,7 @@ class LinearDeformation(Operator):
     @staticmethod
     def identity(space):
         """Create the identity transformation on a space."""
-        pspace = ProductSpace(space, space.ndim)
+        pspace = odl.ProductSpace(space, space.ndim)
         vector_field = pspace.zero()
         deformation = LinearDeformation(vector_field)
         return deformation
@@ -120,7 +303,7 @@ class MassPreservingLinearDeformation(Operator):
         ...                                               jacobian)
         """
 
-        assert isinstance(offsets.space, ProductSpace)
+        assert isinstance(offsets.space, odl.ProductSpace)
         assert offsets.space.is_power_space
         assert isinstance(offsets.space[0], DiscreteLp)
         assert vector_field_jacobian in offsets.space[0]
@@ -136,7 +319,7 @@ class MassPreservingLinearDeformation(Operator):
         self.offsets = offsets
         self.vector_field_jacobian = vector_field_jacobian
 
-        #offsets.show('offsets')
+        # offsets.show('offsets')
 
         if divergence is None:
             self.divergence = Divergence(range=space, method='central')
@@ -179,7 +362,7 @@ class MassPreservingLinearDeformation(Operator):
     @staticmethod
     def identity(space):
         """Create the identity transformation on a space."""
-        pspace = ProductSpace(space, space.ndim)
+        pspace = odl.ProductSpace(space, space.ndim)
         vector_field = pspace.zero()
         jacobian = space.one()
         deformation = MassPreservingLinearDeformation(vector_field,
