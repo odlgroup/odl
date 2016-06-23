@@ -33,7 +33,9 @@ from odl.operator import Operator
 from odl.discr import DiscreteLp, Divergence
 import odl
 
-__all__ = ('LinearDeformation', 'MassPreservingLinearDeformation')
+__all__ = ('LinearDeformation', 'MassPreservingLinearDeformation',
+           'LinearizedDeformationOperator',
+           'MassPreservingDeformationOperator')
 
 
 class LinearizedDeformationOperator(Operator):
