@@ -1359,6 +1359,71 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
     See also
     --------
     uniform_partition : underlying domain partitioning scheme
+
+    Examples
+    --------
+    >>> discr = uniform_discr([0, 0], [1, 2], (10, 5))
+    >>> discr.cell_sides
+    array([ 0.1,  0.4])
+
+    No additional arguments -> copy:
+
+    >>> uniform_discr_fromdiscr(discr) == discr
+    True
+
+    1 or 2 arguments -> pick missing information from discr.
+
+    Changing ``min_corner`` or ``max_corner`` translates the domain.
+    Changing ``cell_sides`` or ``nsamples`` keeps the domain and
+    adapts the cell sides:
+
+    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1])
+    uniform_discr([1.0, 1.0], [2.0, 3.0], [10, 5])
+    >>> uniform_discr_fromdiscr(discr, max_corner=[0, 0])
+    uniform_discr([-1.0, -2.0], [0.0, 0.0], [10, 5])
+    >>> uniform_discr_fromdiscr(discr, cell_sides=[1, 1])
+    uniform_discr([0.0, 0.0], [1.0, 2.0], [1, 2])
+    >>> uniform_discr_fromdiscr(discr, nsamples=[5, 5])
+    uniform_discr([0.0, 0.0], [1.0, 2.0], [5, 5])
+    >>> uniform_discr_fromdiscr(discr, nsamples=[5, 5]).cell_sides
+    array([ 0.2,  0.4])
+
+    2 arguments -> pick missing information from discr.
+
+    Giving new ``min_corner`` and ``max_corner`` adapts the cell
+    sides, keeping the shape.
+    Combining one of ``min_corner`` and ``max_corner`` with ``nsamples``
+    computes the new domain by keeping ``cell_sides``.
+    Giving one of ``min_corner`` and ``max_corner`` together with
+    ``cell_sides`` keeps ``nsamples`` constant:
+
+    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
+    ...                                max_corner=[3, 3])
+    uniform_discr([1.0, 1.0], [3.0, 3.0], [10, 5])
+    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
+    ...                                max_corner=[3, 3]).cell_sides
+    array([ 0.2,  0.4])
+    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
+    ...                                nsamples=[5, 5])
+    uniform_discr([1.0, 1.0], [1.5, 3.0], [5, 5])
+    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
+    ...                                cell_sides=[1, 1])
+    uniform_discr([1.0, 1.0], [11.0, 6.0], [10, 5])
+
+    Specifying 3 or more new parameters will ignore ``discr``:
+
+    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
+    ...                                max_corner=[3, 3],
+    ...                                cell_sides=[0.5, 0.25])
+    uniform_discr([1.0, 1.0], [3.0, 3.0], [4, 8])
+
+    Finally, everything can be done per axis. ``None`` entries are
+    interpreted as "not specified":
+
+    >>> uniform_discr_fromdiscr(discr, min_corner=[None, 1],
+    ...                                max_corner=[3, None],
+    ...                                cell_sides=[None, 0.25])
+    uniform_discr([2.0, 1.0], [3.0, 2.25], [10, 5])
     """
     if not isinstance(discr, DiscreteLp):
         raise TypeError('`discr` {!r} is not a DiscreteLp instance'
@@ -1374,7 +1439,7 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
                                               param_conv=float, keep_none=True)
     nsamples = normalized_scalar_param_list(nsamples, discr.ndim,
                                             param_conv=safe_int_conv,
-                                              keep_none=True)
+                                            keep_none=True)
     cell_sides = normalized_scalar_param_list(cell_sides, discr.ndim,
                                               param_conv=float, keep_none=True)
 
@@ -1391,70 +1456,44 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
                 discr.cell_sides)):
         num_params = sum(p is not None for p in (b, e, n, s))
 
+        new_params = []
+
         if num_params == 0:
-            new_beg.append(old_b)
-            new_end.append(old_e)
-            new_shape.append(old_n)
-            new_csides.append(None)
+            new_params = [old_b, old_e, old_n, None]
 
         elif num_params == 1:
             if b is not None:
-                new_beg.append(b)
-                new_end.append(old_e + (b - old_b))
-                new_shape.append(old_n)
-                new_csides.append(None)
+                new_params = [b, old_e + (b - old_b), old_n, None]
             elif e is not None:
-                new_beg.append(old_b + (e - old_e))
-                new_end.append(e)
-                new_shape.append(old_n)
-                new_csides.append(None)
+                new_params = [old_b + (e - old_e), e, old_n, None]
             elif n is not None:
-                new_beg.append(old_b)
-                new_end.append(old_e)
-                new_shape.append(n)
-                new_csides.append(None)
+                new_params = [old_b, old_e, n, None]
             else:
-                new_beg.append(old_b)
-                new_end.append(old_e)
-                new_shape.append(None)
-                new_csides.append(s)
+                new_params = [old_b, old_e, None, s]
 
         elif num_params == 2:
             if b is not None and e is not None:
-                new_beg.append(b)
-                new_end.append(e)
-                new_shape.append(old_n)
-                new_csides.append(None)
+                new_params = [b, e, old_n, None]
             elif b is not None and n is not None:
-                new_beg.append(b)
-                new_end.append(None)
-                new_shape.append(n)
-                new_csides.append(old_s)
+                new_params = [b, None, n, old_s]
             elif b is not None and s is not None:
-                new_beg.append(b)
-                new_end.append(None)
-                new_shape.append(old_n)
-                new_csides.append(s)
+                new_params = [b, None, old_n, s]
             elif e is not None and n is not None:
-                new_beg.append(None)
-                new_end.append(e)
-                new_shape.append(n)
-                new_csides.append(old_s)
+                new_params = [None, e, n, old_s]
             elif e is not None and s is not None:
-                new_beg.append(None)
-                new_end.append(e)
-                new_shape.append(old_n)
-                new_csides.append(s)
+                new_params = [None, e, old_n, s]
             else:
                 raise ValueError('in axis {}: cannot use `nsamples` and '
                                  '`cell_size` only due to ambiguous values '
                                  'for begin and end.'.format(i))
 
         else:
-            new_beg.append(b)
-            new_end.append(e)
-            new_shape.append(n)
-            new_csides.append(s)
+            new_params = [b, e, n, s]
+
+        new_beg.append(new_params[0])
+        new_end.append(new_params[1])
+        new_shape.append(new_params[2])
+        new_csides.append(new_params[3])
 
     new_part = uniform_partition(begin=new_beg, end=new_end,
                                  num_nodes=new_shape,
