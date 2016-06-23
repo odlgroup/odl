@@ -463,7 +463,7 @@ def _halfcomplex_shape(shape, axes=None):
         axes = tuple(range(len(shape)))
 
     try:
-        axes = tuple(int(axes))
+        axes = (int(axes),)
     except TypeError:
         pass
 
@@ -712,7 +712,7 @@ def test_pyfftw_call_forward_with_axes(dtype):
     halfcomplex, out_dtype = _params_from_dtype(dtype)
     shape = (3, 4, 5)
 
-    test_axes = [(0, 1), 1, (-1,), (1, 0), (-1, -2, -3)]
+    test_axes = [(0, 1), [1], (-1,), (1, 0), (-1, -2, -3)]
     for axes in test_axes:
         arr = _random_array(shape, dtype)
         if halfcomplex:
@@ -737,7 +737,7 @@ def test_pyfftw_call_backward_with_axes(dtype):
     halfcomplex, in_dtype = _params_from_dtype(dtype)
     shape = (3, 4, 5)
 
-    test_axes = [(0, 1), 1, (-1,), (1, 0), (-1, -2, -3)]
+    test_axes = [(0, 1), [1], (-1,), (1, 0), (-1, -2, -3)]
     for axes in test_axes:
         # Only the shape indexed by axes count for the scaling
         active_shape = np.take(shape, axes)

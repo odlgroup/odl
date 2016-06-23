@@ -129,7 +129,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
             axes = list(axes)
 
     # List indicating shift or not per "active" axis, same length as axes
-    shift_list = normalized_scalar_param_list(shift, length=grid.ndim,
+    shift_list = normalized_scalar_param_list(shift, length=len(axes),
                                               param_conv=bool)
 
     # Full-length vectors
@@ -1161,7 +1161,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
             axes = list(axes)
 
     shape = arr.shape
-    shift_list = normalized_scalar_param_list(shift, length=arr.ndim,
+    shift_list = normalized_scalar_param_list(shift, length=len(axes),
                                               param_conv=bool)
 
     # Make a copy of arr with correct data type if necessary, or copy values.
@@ -1320,7 +1320,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         except TypeError:
             axes = list(axes)
 
-    shift_list = normalized_scalar_param_list(shift, length=arr.ndim,
+    shift_list = normalized_scalar_param_list(shift, length=len(axes),
                                               param_conv=bool)
 
     if sign == '-':
