@@ -1275,13 +1275,12 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
     ----------
     discr : `DiscreteLp`
         Uniformly discretized space used as a template.
-    min_corner : `float` or `tuple` of `float`
-        Minimum corner of the result.
-    max_corner : `float` or `tuple` of `float`
-        Maximum corner of the result.
-    nsamples : `int` or `tuple` of `int`
-        Number of samples per axis. For dimension >= 2, a tuple is
-        required.
+    min_corner : float or sequence of float
+        Minimum corner of the resulting spatial domain.
+    max_corner : float or sequence of float
+        Maximum corner of the resulting spatial domain.
+    nsamples : int or sequence of int
+        Number of samples per axis.
     exponent : positive `float`, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
@@ -1296,20 +1295,23 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
     impl : {'numpy', 'cuda'}, optional
         Implementation of the data storage arrays
     nodes_on_bdry : `bool` or `sequence`, optional
+        Specifies whether to put the outmost grid nodes on the
+        boundary of the domain.
+
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (True) or shift it
         by half a cell size into the interior (False). In each axis,
-        an entry may consist in a single `bool` or a 2-tuple of
-        `bool`. In the latter case, the first tuple entry decides for
+        an entry may consist in a single boolean or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
-        sequence must be ``array.ndim``.
+        sequence must be ``discr.ndim``.
 
         A single boolean is interpreted as a global choice for all
         boundaries.
         Default: `False`
 
     dtype : dtype, optional
-        Data type for the discretized space
+        Data type for the discretized space.
 
             Default for 'numpy': 'float64' / 'complex128'
 
@@ -1366,16 +1368,17 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
     >>> discr.cell_sides
     array([ 0.1,  0.4])
 
-    No additional arguments -> copy:
+    If no additional argument is given, a copy of ``discr`` is
+    returned:
 
     >>> uniform_discr_fromdiscr(discr) == discr
     True
+    >>> uniform_discr_fromdiscr(discr) is discr
+    False
 
-    1 or 2 arguments -> pick missing information from discr.
-
-    Changing ``min_corner`` or ``max_corner`` translates the domain.
-    Changing ``cell_sides`` or ``nsamples`` keeps the domain and
-    adapts the cell sides:
+    Giving ``min_corner`` or ``max_corner`` results in a
+    translation, while for the other two options, the domain
+    is kept but re-partitioned:
 
     >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1])
     uniform_discr([1.0, 1.0], [2.0, 3.0], [10, 5])
@@ -1388,42 +1391,30 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
     >>> uniform_discr_fromdiscr(discr, nsamples=[5, 5]).cell_sides
     array([ 0.2,  0.4])
 
-    2 arguments -> pick missing information from discr.
+    The cases with 2 or more additional arguments and the syntax
+    for specifying quantities per axis is illustrated in the following:
 
-    Giving new ``min_corner`` and ``max_corner`` adapts the cell
-    sides, keeping the shape.
-    Combining one of ``min_corner`` and ``max_corner`` with ``nsamples``
-    computes the new domain by keeping ``cell_sides``.
-    Giving one of ``min_corner`` and ``max_corner`` together with
-    ``cell_sides`` keeps ``nsamples`` constant:
-
-    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
-    ...                                max_corner=[3, 3])
-    uniform_discr([1.0, 1.0], [3.0, 3.0], [10, 5])
-    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
-    ...                                max_corner=[3, 3]).cell_sides
-    array([ 0.2,  0.4])
-    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
-    ...                                nsamples=[5, 5])
-    uniform_discr([1.0, 1.0], [1.5, 3.0], [5, 5])
-    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
-    ...                                cell_sides=[1, 1])
-    uniform_discr([1.0, 1.0], [11.0, 6.0], [10, 5])
-
-    Specifying 3 or more new parameters will ignore ``discr``:
-
-    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1],
-    ...                                max_corner=[3, 3],
-    ...                                cell_sides=[0.5, 0.25])
-    uniform_discr([1.0, 1.0], [3.0, 3.0], [4, 8])
-
-    Finally, everything can be done per axis. ``None`` entries are
-    interpreted as "not specified":
-
-    >>> uniform_discr_fromdiscr(discr, min_corner=[None, 1],
-    ...                                max_corner=[3, None],
-    ...                                cell_sides=[None, 0.25])
+    # axis 0: translate to match max_corner = 3
+    # axis 1: recompute max_corner using the original nsamples with the
+    # new min_corner and cell_sides
+    >>> new_discr = uniform_discr_fromdiscr(discr, min_corner=[None, 1],
+    ...                                     max_corner=[3, None],
+    ...                                     cell_sides=[None, 0.25])
+    >>> new_discr
     uniform_discr([2.0, 1.0], [3.0, 2.25], [10, 5])
+    >>> new_discr.cell_sides
+    array([ 0.1 ,  0.25])
+
+    # axis 0: recompute min_corner from old cell_sides and new
+    # max_corner and nsamples
+    # axis 1: use new min_corner, nsamples and cell_sides only
+    >>> new_discr = uniform_discr_fromdiscr(discr, min_corner=[None, 1],
+    ...                                     max_corner=[3, None],
+    ...                                     nsamples=[5, 5],
+    ...                                     cell_sides=[None, 0.25])
+    >>> new_discr
+    uniform_discr([2.5, 1.0], [3.0, 2.25], [5, 5])
+    >>> new_discr.cell_sides
     """
     if not isinstance(discr, DiscreteLp):
         raise TypeError('`discr` {!r} is not a DiscreteLp instance'
@@ -1455,8 +1446,6 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
                 discr.min_corner, discr.max_corner, discr.shape,
                 discr.cell_sides)):
         num_params = sum(p is not None for p in (b, e, n, s))
-
-        new_params = []
 
         if num_params == 0:
             new_params = [old_b, old_e, old_n, None]
