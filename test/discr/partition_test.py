@@ -333,8 +333,8 @@ def test_uniform_partition():
         assert all_almost_equal(cs[0], cs[1] / 2)
         assert all_almost_equal(cs[-1], cs[-2] / 2)
 
-    assert part[1:, 2:5].is_regular
-    assert part[1:, ::3].is_regular
+    assert part[1:, 2:5].is_uniform
+    assert part[1:, ::3].is_uniform
 
     # Test combinations of parameters
     true_part = odl.uniform_partition(begin, end, nsamp, nodes_on_bdry=False)

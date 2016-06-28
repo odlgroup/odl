@@ -78,7 +78,7 @@ def astra_volume_geometry(discr_reco):
     ----------
     discr_reco : `DiscreteLp`
         Discretization of an L2 space on the reconstruction domain.
-        It must be 2- or 3-dimensional and sampled by a regular grid.
+        It must be 2- or 3-dimensional and uniformly discretized.
 
     Returns
     -------
@@ -92,11 +92,11 @@ def astra_volume_geometry(discr_reco):
     """
     # TODO: allow other discretizations?
     if not isinstance(discr_reco, DiscreteLp):
-        raise TypeError('discretized domain {!r} is not a DiscreteLp '
-                        'instance'.format(discr_reco))
+        raise TypeError('`discr_reco` {!r} is not a DiscreteLp instance'
+                        ''.format(discr_reco))
 
-    if not discr_reco.partition.is_regular:
-        raise ValueError('irregular volume sampling not supported')
+    if not discr_reco.is_uniform:
+        raise ValueError('`discr_reco` {} is not uniformly discretized')
 
     vol_shp = discr_reco.partition.shape
     vol_min = discr_reco.partition.begin
@@ -327,13 +327,13 @@ def astra_projection_geometry(geometry):
 
     Parameters
     ----------
-    geometry : instance of ``Geometry``
-        The ODL geometry instance used to create the projection geometry
+    geometry : `Geometry`
+        Object from which to create the ASTRA projection geometry.
 
     Returns
     -------
     proj_geom : `dict`
-        Dictionary defining the ASTRA projection geometry
+        Dictionary defining the ASTRA projection geometry.
     """
     if not isinstance(geometry, Geometry):
         raise TypeError('`geometry` {!r} is not a `Geometry` instance'
@@ -343,8 +343,8 @@ def astra_projection_geometry(geometry):
         # Shortcut, reuse already computed value.
         return geometry.implementation_cache['astra']
 
-    if not geometry.det_partition.is_regular:
-        raise ValueError('irregular detector sampling is not supported')
+    if not geometry.det_partition.is_uniform:
+        raise ValueError('non-uniform detector sampling is not supported')
 
     # As of ASTRA version 1.7beta the volume width can be specified in the
     # volume geometry creator also for 3D geometries. For version < 1.7

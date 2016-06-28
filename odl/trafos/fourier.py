@@ -1436,7 +1436,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     if not isinstance(space, DiscreteLp):
         raise TypeError('`space` {!r} is not a `DiscreteLp` instance'
                         ''.format(space))
-    if not space.partition.is_regular:
+    if not space.is_uniform:
         raise ValueError('`space` is not uniformly discretized')
 
     if axes is None:
