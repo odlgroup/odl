@@ -19,7 +19,7 @@
 
 from __future__ import absolute_import
 
-__all__ = ('base_tensors', 'base_tensors', 'weighting')
+__all__ = ()
 
 from . import base_tensors
 from . import entry_points

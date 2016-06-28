@@ -28,7 +28,7 @@ import numpy as np
 from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
 from odl.space.base_tensors import TensorSpace
-from odl.space.npy.tensors import MatVecOperator
+# from odl.space.npy_tensors import MatVecOperator
 
 
 __all__ = ('RosenbrockFunctional',)
