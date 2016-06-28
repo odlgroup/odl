@@ -42,7 +42,7 @@ import re
 
 
 __all__ = ('NtuplesBaseUFuncs', 'NumpyNtuplesUFuncs',
-           'BaseGeneralizedTensorUFuncs',
+           'BaseGeneralizedTensorUFuncs', 'NumpyGeneralTensorUFuncs',
            'DiscreteLpUFuncs', 'ProductSpaceUFuncs')
 
 
@@ -269,6 +269,21 @@ class NumpyNtuplesUFuncs(NtuplesBaseUFuncs):
 for name, n_in, n_out, doc in UFUNCS:
     method = wrap_ufunc_numpy(name, n_in, n_out, doc)
     setattr(NumpyNtuplesUFuncs, name, method)
+
+
+class NumpyGeneralTensorUFuncs(GeneralTensorBaseUFuncs):
+
+    """UFuncs for `NumpyGeneralTensor` objects.
+
+    Internal object, should not be created except in
+    `NumpyGeneralTensor`.
+    """
+
+
+# Add ufunc methods to UFunc class
+for name, n_in, n_out, doc in UFUNCS:
+    method = wrap_ufunc_numpy(name, n_in, n_out, doc)
+    setattr(NumpyGeneralTensorUFuncs, name, method)
 
 
 # For DiscreteLP, basically the UFunc mechanism can be propagated from its
