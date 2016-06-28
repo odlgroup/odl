@@ -529,7 +529,7 @@ class ArrayWeighting(Weighting):
 
         Parameters
         ----------
-        array : 1-dim. `array-like`
+        vector : 1-dim. `array-like`
             Weighting array of inner product, norm and distance.
             Native `Tensor` instances are stored as-is without copying.
         impl : string

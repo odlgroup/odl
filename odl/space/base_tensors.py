@@ -17,11 +17,11 @@ import numpy as np
 
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace, LinearSpaceElement
-from odl.util.ufuncs import TensorSetUfuncs
-from odl.util.utility import (
+from odl.util import (
     is_scalar_dtype, is_floating_dtype, is_real_dtype,
-    arraynd_repr, dtype_str, repr_signature,
-    TYPE_MAP_R2C, TYPE_MAP_C2R)
+    arraynd_repr, dtype_str, signature_string)
+from odl.util.ufuncs import TensorSetUfuncs
+from odl.util.utility import TYPE_MAP_R2C, TYPE_MAP_C2R
 
 
 __all__ = ('TensorSet', 'GeneralizedTensor',
@@ -108,7 +108,7 @@ class TensorSet(Set):
 
         Examples
         --------
-        Elements created with the `BaseTensorSet.element` method are
+        Elements created with the `TensorSet.element` method are
         guaranteed to be contained in the same space:
 
         >>> spc = odl.tensor_space((2, 3), dtype='uint64')
@@ -194,7 +194,7 @@ class TensorSet(Set):
         posargs = [self.shape, dtype_str(self.dtype)]
         optargs = [('order', self.order, self.default_order())]
         return "{}({})".format(self.__class__.__name__,
-                               repr_signature(posargs, optargs))
+                               signature_string(posargs, optargs))
 
     @staticmethod
     def default_order():

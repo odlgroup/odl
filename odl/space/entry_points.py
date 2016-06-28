@@ -37,7 +37,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 from pkg_resources import iter_entry_points
-
 from odl.space.npy_tensors import NumpyTensorSet, NumpyTensorSpace
 
 __all__ = ()

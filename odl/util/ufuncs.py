@@ -33,7 +33,6 @@ import re
 
 
 __all__ = ('TensorSetUfuncs', 'NumpyTensorSetUfuncs',
-           'TensorSetUfuncs',
            'DiscreteLpUfuncs', 'ProductSpaceUfuncs')
 
 
@@ -173,29 +172,6 @@ for name, doc in REDUCTIONS:
     setattr(TensorSetUfuncs, name, method)
 
 
-class TensorSetUfuncs(object):
-
-    """Ufuncs for `GeneralizedTensor` objects.
-
-    Internal object, should not be created except in `GeneralizedTensor`.
-    """
-
-    def __init__(self, vector):
-        """Create ufunc wrapper for vector."""
-        self.vector = vector
-
-
-# Add ufunc methods to ufunc class
-for name, n_in, n_out, doc in UFUNCS:
-    method = wrap_ufunc_base(name, n_in, n_out, doc)
-    setattr(TensorSetUfuncs, name, method)
-
-# Add reduction methods to ufunc class
-for name, doc in REDUCTIONS:
-    method = wrap_reduction_base(name, doc)
-    setattr(TensorSetUfuncs, name, method)
-
-
 # Optimized implementation of ufuncs since we can use the out parameter
 # as well as the data parameter to avoid one call to asarray() when using a
 # Numpy-based data class.
@@ -249,9 +225,10 @@ def wrap_ufunc_numpy(name, n_in, n_out, doc):
 
 class NumpyTensorSetUfuncs(TensorSetUfuncs):
 
-    """Ufuncs for `NumpyTensorSetVector` objects.
+    """Ufuncs for `NumpyGeneralizedTensor` objects.
 
-    Internal object, should not be created except in `NumpyTensorSetVector`.
+    Internal object, should not be created except in
+    `NumpyGeneralTensor`.
     """
 
 
