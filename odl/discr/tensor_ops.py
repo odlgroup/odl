@@ -369,7 +369,104 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         return PointwiseInner(self.domain, inner_vf, weight=self.weights)
 
 
-class PointwiseInner(PointwiseTensorFieldOperator):
+class PointwiseInnerBase(PointwiseTensorFieldOperator):
+    """ Base class for `PointwiseInner` and `PointwiseInnerAdjoint`.
+
+    Implemented to allow code reuse between the classes.
+    """
+
+    def __init__(self, adjoint, vfspace, vecfield, weight=None):
+        """Initialize a new instance.
+
+        All parameters are given according to the specifics of the "usual"
+        operator. The ``adjoint`` parameter is used to control conversions
+        for the inverse transform.
+
+        Parameters
+        ----------
+        adjoint : `bool`
+            True if the operator should be the adjoint, False else.
+        vfspace : `ProductSpace`
+            Space of vector fields on which the operator acts.
+            It has to be a product space of identical spaces, i.e. a
+            power space.
+        vecfield : domain `element-like`
+            Vector field with which to calculate the point-wise inner
+            product of an input vector field
+        weight : `array-like` or `float`, optional
+            Weighting array or constant for the norm. If an array is
+            given, its length must be equal to ``domain.size``, and
+            all entries must be positive. A provided constant must be
+            positive.
+            By default, the weights are is taken from
+            ``domain.weighting``. Note that this excludes unusual
+            weightings with custom inner product, norm or dist.
+        """
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('`vfsoace` {!r} is not a ProductSpace '
+                            'instance'.format(vfspace))
+        if adjoint:
+            super().__init__(domain=vfspace[0], range=vfspace, linear=True)
+        else:
+            super().__init__(domain=vfspace, range=vfspace[0], linear=True)
+
+        # Bail out if the space is complex but we cannot take the complex
+        # conjugate.
+        if (vfspace.field == ComplexNumbers() and
+                not hasattr(self.base_space.element_type, 'conj')):
+            raise NotImplementedError(
+                'base space element type {!r} does not implement conj() '
+                'method required for complex inner products'
+                ''.format(self.base_space.element_type))
+
+        self._vecfield = vfspace.element(vecfield)
+
+        # Handle weighting, including sanity checks
+        if weight is None:
+            if hasattr(vfspace.weighting, 'vector'):
+                self._weights = vfspace.weighting.vector
+            elif hasattr(vfspace.weighting, 'const'):
+                self._weights = (vfspace.weighting.const *
+                                 np.ones(len(vfspace)))
+            else:
+                raise ValueError('weighting scheme {!r} of the domain does '
+                                 'not define a weighting vector or constant'
+                                 ''.format(vfspace.weighting))
+        elif np.isscalar(weight):
+            if weight <= 0:
+                raise ValueError('weighting constant must be positive, got '
+                                 '{}'.format(weight))
+            self._weights = float(weight) * np.ones(vfspace.size)
+        else:
+            self._weights = np.asarray(weight, dtype='float64')
+            if (not np.all(self.weights > 0) or
+                    not np.all(np.isfinite(self.weights))):
+                raise ValueError('weighting array {} contains invalid '
+                                 'entries'.format(weight))
+        self._is_weighted = not np.array_equiv(self.weights, 1.0)
+
+    @property
+    def vecfield(self):
+        """Fixed vector field ``G`` of this inner product."""
+        return self._vecfield
+
+    @property
+    def weights(self):
+        """Weighting vector of this norm."""
+        return self._weights
+
+    @property
+    def is_weighted(self):
+        """`True` if weighting is not 1 or all ones."""
+        return self._is_weighted
+
+    @property
+    def adjoint(self):
+        """Adjoint operator."""
+        raise NotImplementedError('abstract method')
+
+
+class PointwiseInner(PointwiseInnerBase):
 
     """Take the point-wise norm of a vector field.
 
@@ -429,45 +526,8 @@ class PointwiseInner(PointwiseTensorFieldOperator):
         >>> print(pw_inner(x))
         [[0.0, -7.0]]
         """
-        if not isinstance(vfspace, ProductSpace):
-            raise TypeError('`vfsoace` {!r} is not a ProductSpace '
-                            'instance'.format(vfspace))
-        super().__init__(domain=vfspace, range=vfspace[0], linear=True)
-
-        # Bail out if the space is complex but we cannot take the complex
-        # conjugate.
-        if (self.domain.field == ComplexNumbers() and
-                not hasattr(self.base_space.element_type, 'conj')):
-            raise NotImplementedError(
-                'base space element type {!r} does not implement conj() '
-                'method required for complex inner products'
-                ''.format(self.base_space.element_type))
-
-        self._vecfield = self.domain.element(vecfield)
-
-        # Handle weighting, including sanity checks
-        if weight is None:
-            if hasattr(self.domain.weighting, 'vector'):
-                self._weights = self.domain.weighting.vector
-            elif hasattr(self.domain.weighting, 'const'):
-                self._weights = (self.domain.weighting.const *
-                                 np.ones(len(self.domain)))
-            else:
-                raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting vector or constant'
-                                 ''.format(self.domain.weighting))
-        elif np.isscalar(weight):
-            if weight <= 0:
-                raise ValueError('weighting constant must be positive, got '
-                                 '{}'.format(weight))
-            self._weights = float(weight) * np.ones(self.domain.size)
-        else:
-            self._weights = np.asarray(weight, dtype='float64')
-            if (not np.all(self.weights > 0) or
-                    not np.all(np.isfinite(self.weights))):
-                raise ValueError('weighting array {} contains invalid '
-                                 'entries'.format(weight))
-        self._is_weighted = not np.array_equiv(self.weights, 1.0)
+        super().__init__(adjoint=False, vfspace=vfspace, vecfield=vecfield,
+                         weight=weight)
 
     @property
     def vecfield(self):
@@ -523,7 +583,7 @@ class PointwiseInner(PointwiseTensorFieldOperator):
             vfspace=self.domain, weight=self.weights)
 
 
-class PointwiseInnerAdjoint(PointwiseInner):
+class PointwiseInnerAdjoint(PointwiseInnerBase):
 
     """Adjoint of the point-wise inner product operator.
 
@@ -576,10 +636,8 @@ class PointwiseInnerAdjoint(PointwiseInner):
                 raise ValueError('base space of the range is different from '
                                  'the given scalar space ({!r} != {!r})'
                                  ''.format(vfspace[0], sspace))
-        super().__init__(vfspace, vecfield, weight=weight)
-
-        # Switch domain and range
-        self._domain, self._range = self._range, self._domain
+        super().__init__(adjoint=True, vfspace=vfspace, vecfield=vecfield,
+                         weight=weight)
 
         # Get weighting from range
         if hasattr(self.range.weighting, 'vector'):
