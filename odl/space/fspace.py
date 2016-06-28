@@ -592,21 +592,41 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         # Init cache attributes for real / complex variants
         if self.field == RealNumbers():
-            self._real_out_dtype = self.out_dtype
-            self._real_space = self
-            self._complex_out_dtype = TYPE_MAP_R2C.get(self.out_dtype,
-                                                       np.dtype(object))
-            self._complex_space = None
+            self.__real_out_dtype = self.out_dtype
+            self.__real_space = self
+            self.__complex_out_dtype = TYPE_MAP_R2C.get(self.out_dtype,
+                                                        np.dtype(object))
+            self.__complex_space = None
         elif self.field == ComplexNumbers():
-            self._real_out_dtype = TYPE_MAP_C2R[self.out_dtype]
-            self._real_space = None
-            self._complex_out_dtype = self.out_dtype
-            self._complex_space = self
+            self.__real_out_dtype = TYPE_MAP_C2R[self.out_dtype]
+            self.__real_space = None
+            self.__complex_out_dtype = self.out_dtype
+            self.__complex_space = self
         else:
-            self._real_out_dtype = None
-            self._real_space = None
-            self._complex_out_dtype = None
-            self._complex_space = None
+            self.__real_out_dtype = None
+            self.__real_space = None
+            self.__complex_out_dtype = None
+            self.__complex_space = None
+
+    @property
+    def real_out_dtype(self):
+        """The real dtype corresponding to this space's `out_dtype`."""
+        return self.__real_out_dtype
+
+    @property
+    def complex_out_dtype(self):
+        """The complex dtype corresponding to this space's `out_dtype`."""
+        return self.__complex_out_dtype
+
+    @property
+    def real_space(self):
+        """The space corresponding to this space's `real_dtype`."""
+        return self.astype(self.real_out_dtype)
+
+    @property
+    def complex_space(self):
+        """The space corresponding to this space's `complex_dtype`."""
+        return self.astype(self.complex_out_dtype)
 
     def element(self, fcall=None, vectorized=True):
         """Create a `FunctionSpace` element.
@@ -737,14 +757,14 @@ class FunctionSpace(FunctionSet, LinearSpace):
             return self
 
         # Caching for real and complex versions (exact dtyoe mappings)
-        if out_dtype == self._real_out_dtype:
-            if self._real_space is None:
-                self._real_space = self._astype(out_dtype)
-            return self._real_space
-        elif out_dtype == self._complex_out_dtype:
-            if self._complex_space is None:
-                self._complex_space = self._astype(out_dtype)
-            return self._complex_space
+        if out_dtype == self.real_out_dtype:
+            if self.__real_space is None:
+                self.__real_space = self._astype(out_dtype)
+            return self.__real_space
+        elif out_dtype == self.complex_out_dtype:
+            if self.__complex_space is None:
+                self.__complex_space = self._astype(out_dtype)
+            return self.__complex_space
         else:
             return self._astype(out_dtype)
 

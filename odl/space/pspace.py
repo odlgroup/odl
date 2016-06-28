@@ -259,8 +259,8 @@ class ProductSpace(LinearSpace):
             raise ValueError('all spaces must have the same field')
 
         # Assign spaces and field
-        self._spaces = tuple(spaces)
-        self._size = len(spaces)
+        self.__spaces = tuple(spaces)
+        self.__size = len(spaces)
         if field is None:
             if self.size == 0:
                 raise ValueError('no spaces provided, cannot deduce field')
@@ -271,9 +271,9 @@ class ProductSpace(LinearSpace):
         # Assign weighting
         if weight is not None:
             if isinstance(weight, WeightingBase):
-                self._weighting = weight
+                self.__weighting = weight
             elif np.isscalar(weight):
-                self._weighting = ProductSpaceConstWeighting(
+                self.__weighting = ProductSpaceConstWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner)
             elif weight is None:
                 # Need to wait until dist, norm and inner are handled
@@ -284,26 +284,26 @@ class ProductSpace(LinearSpace):
                     raise ValueError('invalid weight argument {}'
                                      ''.format(weight))
                 if arr.ndim == 1:
-                    self._weighting = ProductSpaceVectorWeighting(
+                    self.__weighting = ProductSpaceVectorWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner)
                 else:
                     raise ValueError('weighting array has {} dimensions, '
                                      'expected 1'.format(arr.ndim))
 
         elif dist is not None:
-            self._weighting = ProductSpaceCustomDist(dist)
+            self.__weighting = ProductSpaceCustomDist(dist)
         elif norm is not None:
-            self._weighting = ProductSpaceCustomNorm(norm)
+            self.__weighting = ProductSpaceCustomNorm(norm)
         elif inner is not None:
-            self._weighting = ProductSpaceCustomInnerProduct(inner)
+            self.__weighting = ProductSpaceCustomInnerProduct(inner)
         else:  # all None -> no weighing
-            self._weighting = ProductSpaceNoWeighting(
+            self.__weighting = ProductSpaceNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
 
     @property
     def size(self):
         """The number of factors."""
-        return self._size
+        return self.__size
 
     def __len__(self):
         """Return ``len(self)``."""
@@ -318,7 +318,7 @@ class ProductSpace(LinearSpace):
     @property
     def spaces(self):
         """A tuple containing all spaces."""
-        return self._spaces
+        return self.__spaces
 
     @property
     def is_power_space(self):
@@ -333,7 +333,7 @@ class ProductSpace(LinearSpace):
     @property
     def weighting(self):
         """This space's weighting scheme."""
-        return self._weighting
+        return self.__weighting
 
     @property
     def is_weighted(self):

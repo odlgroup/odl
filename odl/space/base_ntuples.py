@@ -55,21 +55,21 @@ class NtuplesBase(Set):
             as built-in type, as one of NumPy's internal datatype
             objects or as string.
         """
-        self._size = int(size)
+        self.__size = int(size)
         if self.size < 0:
             raise TypeError('`size` must be non-negative, got {!r}'
                             ''.format(size))
-        self._dtype = np.dtype(dtype)
+        self.__dtype = np.dtype(dtype)
 
     @property
     def dtype(self):
         """The data type of each entry."""
-        return self._dtype
+        return self.__dtype
 
     @property
     def size(self):
         """The number of entries per tuple."""
-        return self._size
+        return self.__size
 
     @property
     def shape(self):
@@ -419,34 +419,54 @@ class FnBase(NtuplesBase, LinearSpace):
 
         if is_real_dtype(self.dtype):
             field = RealNumbers()
-            self._is_real = True
-            self._real_dtype = self.dtype
-            self._real_space = self
-            self._complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
-            self._complex_space = None  # Set in first call of astype
+            self.__is_real = True
+            self.__real_dtype = self.dtype
+            self.__real_space = self
+            self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
+            self.__complex_space = None  # Set in first call of astype
         else:
             field = ComplexNumbers()
-            self._is_real = False
-            self._real_dtype = TYPE_MAP_C2R[self.dtype]
-            self._real_space = None  # Set in first call of astype
-            self._complex_dtype = self.dtype
-            self._complex_space = self
+            self.__is_real = False
+            self.__real_dtype = TYPE_MAP_C2R[self.dtype]
+            self.__real_space = None  # Set in first call of astype
+            self.__complex_dtype = self.dtype
+            self.__complex_space = self
 
-        self._is_floating = is_floating_dtype(self.dtype)
+        self.__is_floating = is_floating_dtype(self.dtype)
         LinearSpace.__init__(self, field)
 
     @property
     def is_rn(self):
         """Return `True` if the space represents R^n, i.e. real tuples."""
-        return self._is_real and self._is_floating
+        return self.__is_real and self.__is_floating
 
     @property
     def is_cn(self):
         """Return `True` if the space represents C^n, i.e. complex tuples."""
-        return (not self._is_real) and self._is_floating
+        return (not self.__is_real) and self.__is_floating
+
+    @property
+    def real_dtype(self):
+        """The real dtype corresponding to this space's `dtype`."""
+        return self.__real_dtype
+
+    @property
+    def complex_dtype(self):
+        """The complex dtype corresponding to this space's `dtype`."""
+        return self.__complex_dtype
+
+    @property
+    def real_space(self):
+        """The space corresponding to this space's `real_dtype`."""
+        return self.astype(self.real_dtype)
+
+    @property
+    def complex_space(self):
+        """The space corresponding to this space's `complex_dtype`."""
+        return self.astype(self.complex_dtype)
 
     def _astype(self, dtype):
-        """Internal helper for ``astype``."""
+        """Internal helper for ``astype``. Can be overwritten by subclasses."""
         return type(self)(self.size, dtype=dtype, weight=self.weighting)
 
     def astype(self, dtype):
@@ -472,15 +492,15 @@ class FnBase(NtuplesBase, LinearSpace):
         if dtype == self.dtype:
             return self
 
-        # Caching for real and complex versions (exact dtyoe mappings)
-        if dtype == self._real_dtype:
-            if self._real_space is None:
-                self._real_space = self._astype(dtype)
-            return self._real_space
-        elif dtype == self._complex_dtype:
-            if self._complex_space is None:
-                self._complex_space = self._astype(dtype)
-            return self._complex_space
+        # Caching for real and complex versions (exact dtype mappings)
+        if dtype == self.real_dtype:
+            if self.__real_space is None:
+                self.__real_space = self._astype(dtype)
+            return self.__real_space
+        elif dtype == self.complex_dtype:
+            if self.__complex_space is None:
+                self.__complex_space = self._astype(dtype)
+            return self.__complex_space
         else:
             return self._astype(dtype)
 

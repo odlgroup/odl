@@ -149,16 +149,6 @@ class DiscreteLp(DiscretizedSpace):
             raise ValueError('`exponent` {} not equal to data space exponent '
                              '{}'.format(self.exponent, dspace.exponent))
 
-        if self.field == RealNumbers():
-            self._real_space = self
-            self._complex_space = None
-        elif self.field == ComplexNumbers():
-            self._real_space = None
-            self._complex_space = self
-        else:
-            self._real_space = None
-            self._complex_space = None
-
     @property
     def min_corner(self):
         """Vector of minimal coordinates of the function domain."""
@@ -546,15 +536,12 @@ class DiscreteLpVector(DiscretizedSpaceVector):
     @property
     def real(self):
         """Real part of this element."""
-        rspace = self.space.astype(self.space._real_dtype)
+        rspace = self.space.astype(self.space.real_dtype)
         return rspace.element(self.asarray().real)
 
     @real.setter
     def real(self, newreal):
         """Set the real part of this element to ``newreal``."""
-        # rspace = self.space.astype(self.space._real_dtype)
-        # newreal = rspace.element(newreal)
-        # self.ntuple.real = newreal.ntuple
         newreal_flat = np.asarray(newreal, order=self.space.order).reshape(
             -1, order=self.space.order)
         self.ntuple.real = newreal_flat
@@ -562,7 +549,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
     @property
     def imag(self):
         """Imaginary part of this element."""
-        rspace = self.space.astype(self.space._real_dtype)
+        rspace = self.space.astype(self.space.real_dtype)
         return rspace.element(self.asarray().imag)
 
     @imag.setter

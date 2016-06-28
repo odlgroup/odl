@@ -185,18 +185,18 @@ def test_astype():
     # Real
     assert rn.astype('float32') == rn_s
     assert rn.astype('float64') is rn
-    assert rn._real_space is rn
+    assert rn.real_space is rn
     assert rn.astype('complex64') == cn_s
     assert rn.astype('complex128') == cn
-    assert rn._complex_space == cn
+    assert rn.complex_space == cn
 
     # Complex
     assert cn.astype('complex64') == cn_s
     assert cn.astype('complex128') is cn
-    assert cn._complex_space is cn
+    assert cn.real_space == rn
     assert cn.astype('float32') == rn_s
     assert cn.astype('float64') == rn
-    assert cn._complex_space is cn
+    assert cn.complex_space is cn
 
 
 def test_vector_class_init(fn):
