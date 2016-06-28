@@ -119,8 +119,8 @@ class RayTransform(Operator):
                                  'got {}'.format(extent))
 
         # TODO: sanity checks between domain and geometry (ndim, ...)
-        self._geometry = geometry
-        self._impl = impl
+        self.__geometry = geometry
+        self.__impl = impl
         self.kwargs = kwargs
 
         dtype = discr_domain.dspace.dtype
@@ -153,12 +153,12 @@ class RayTransform(Operator):
     @property
     def impl(self):
         """Implementation back-end for evaluation of this operator."""
-        return self._impl
+        return self.__impl
 
     @property
     def geometry(self):
         """Geometry of this operator."""
-        return self._geometry
+        return self.__geometry
 
     def _call(self, x, out=None):
         """Apply the operator to ``x`` and store the result in ``out``.
@@ -248,8 +248,8 @@ class RayBackProjection(Operator):
                                  'sizes per axis, got {}'
                                  ''.format(discr_range.partition.cell_sides))
 
-        self._geometry = geometry
-        self._impl = impl
+        self.__geometry = geometry
+        self.__impl = impl
         self.kwargs = kwargs
 
         dtype = discr_range.dspace.dtype
@@ -275,12 +275,12 @@ class RayBackProjection(Operator):
     @property
     def impl(self):
         """Implementation back-end for evaluation of this operator."""
-        return self._impl
+        return self.__impl
 
     @property
     def geometry(self):
         """Geometry of this operator."""
-        return self._geometry
+        return self.__geometry
 
     def _call(self, x, out=None):
         """Apply the operator to ``x`` and store the result in ``out``.

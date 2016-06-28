@@ -425,7 +425,7 @@ class LinearSpaceVector(object):
         if not isinstance(space, LinearSpace):
             raise TypeError('`space` {!r} is not a `LinearSpace` instance'
                             ''.format(space))
-        self._space = space
+        self.__space = space
 
     @property
     def space(self):
@@ -433,7 +433,7 @@ class LinearSpaceVector(object):
 
         `LinearSpace`
         """
-        return self._space
+        return self.__space
 
     # Convenience functions
     def assign(self, other):

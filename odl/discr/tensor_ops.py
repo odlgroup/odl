@@ -107,12 +107,12 @@ class PointwiseTensorFieldOperator(Operator):
                              ''.format(dom_base, ran_base))
 
         super().__init__(domain=domain, range=range, linear=linear)
-        self._base_space = dom_base
+        self.__base_space = dom_base
 
     @property
     def base_space(self):
         """The base space ``X`` of this operator's domain and range."""
-        return self._base_space
+        return self.__base_space
 
 
 class PointwiseNorm(PointwiseTensorFieldOperator):
@@ -370,7 +370,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
 
 class PointwiseInnerBase(PointwiseTensorFieldOperator):
-    """ Base class for `PointwiseInner` and `PointwiseInnerAdjoint`.
+    """Base class for `PointwiseInner` and `PointwiseInnerAdjoint`.
 
     Implemented to allow code reuse between the classes.
     """
@@ -468,7 +468,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
 
 class PointwiseInner(PointwiseInnerBase):
 
-    """Take the point-wise norm of a vector field.
+    """Take the point-wise inner product with a given vector field.
 
     This operator takes the (weighted) inner product
 

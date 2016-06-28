@@ -85,8 +85,8 @@ class RectPartition(object):
                              ''.format(grid, intv_prod))
 
         super().__init__()
-        self._set = intv_prod
-        self._grid = grid
+        self.__set = intv_prod
+        self.__grid = grid
 
         # Initialize the cell boundaries, the defining property of partitions
         bdry_vecs = []
@@ -97,7 +97,7 @@ class RectPartition(object):
             bdry[-1] = self.max()[ax]
             bdry_vecs.append(bdry)
 
-        self._cell_boundary_vecs = tuple(bdry_vecs)
+        self.__cell_boundary_vecs = tuple(bdry_vecs)
 
     @property
     def cell_boundary_vecs(self):
@@ -111,12 +111,12 @@ class RectPartition(object):
         >>> part.cell_boundary_vecs
         (array([ 0. ,  0.5,  1. ]), array([-1. , -0.5,  1. ,  2. ]))
         """
-        return self._cell_boundary_vecs
+        return self.__cell_boundary_vecs
 
     @property
     def set(self):
         """The partitioned set, an `IntervalProd`."""
-        return self._set
+        return self.__set
 
     # IntervalProd related pass-through methods and derived properties
     # min, max and extent are for duck-typing purposes
@@ -155,7 +155,7 @@ class RectPartition(object):
     @property
     def grid(self):
         """The `TensorGrid` defining this partition."""
-        return self._grid
+        return self.__grid
 
     # TensorGrid related pass-through methods and derived properties
     @property
@@ -533,8 +533,7 @@ class RectPartition(object):
         TensorGrid.squeeze
         IntervalProd.squeeze
         """
-        # TODO: use public property
-        newset = self.set[self.grid._inondeg]
+        newset = self.set[self.grid.inondeg]
         return RectPartition(newset, self.grid.squeeze())
 
     def __str__(self):

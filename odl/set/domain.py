@@ -64,8 +64,8 @@ class IntervalProd(Set):
         >>> rbox
         IntervalProd([-1.0, 2.5, 70.0, 80.0], [-0.5, 10.0, 75.0, 90.0])
         """
-        self._begin = np.atleast_1d(begin).astype('float64')
-        self._end = np.atleast_1d(end).astype('float64')
+        self.__begin = np.atleast_1d(begin).astype('float64')
+        self.__end = np.atleast_1d(end).astype('float64')
 
         if self.begin.ndim > 1:
             raise ValueError('`begin` {} is {}- instead of 1-dimensional'
@@ -85,20 +85,20 @@ class IntervalProd(Set):
                              ''.format(i_wrong, list(self.begin[i_wrong]),
                                        list(self.end[i_wrong])))
 
-        self._ideg = np.where(self.begin == self.end)[0]
-        self._inondeg = np.where(self.begin != self.end)[0]
+        self.__ideg = np.where(self.begin == self.end)[0]
+        self.__inondeg = np.where(self.begin != self.end)[0]
         super().__init__()
 
     # Basic properties
     @property
     def begin(self):
         """The left interval boundary/boundaries."""
-        return self._begin
+        return self.__begin
 
     @property
     def end(self):
         """The right interval boundary/boundaries."""
-        return self._end
+        return self.__end
 
     @property
     def ndim(self):
@@ -108,7 +108,7 @@ class IntervalProd(Set):
     @property
     def true_ndim(self):
         """The number of non-degenerate (zero-length) intervals."""
-        return len(self._inondeg)
+        return len(self.inondeg)
 
     @property
     def volume(self):
@@ -133,8 +133,18 @@ class IntervalProd(Set):
     def midpoint(self):
         """The midpoint of the interval product."""
         midp = (self.end + self.begin) / 2.
-        midp[self._ideg] = self.begin[self._ideg]
+        midp[self.ideg] = self.begin[self.ideg]
         return midp
+
+    @property
+    def ideg(self):
+        """Indices of the degenerate dimensions."""
+        return self.__ideg
+
+    @property
+    def inondeg(self):
+        """Indices of the non-degenerate dimensions."""
+        return self.__inondeg
 
     def min(self):
         """The minimum value in this interval product."""
@@ -435,7 +445,7 @@ class IntervalProd(Set):
         elif ndim > self.true_ndim:
             return 0.0
         else:
-            return np.prod((self.end - self.begin)[self._inondeg])
+            return np.prod((self.end - self.begin)[self.inondeg])
 
     def dist(self, point, exponent=2.0):
         """Calculate the distance to a point.
@@ -566,8 +576,8 @@ class IntervalProd(Set):
         >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
         IntervalProd([], [])
         """
-        b_new = self.begin[self._inondeg]
-        e_new = self.end[self._inondeg]
+        b_new = self.begin[self.inondeg]
+        e_new = self.end[self.inondeg]
         return IntervalProd(b_new, e_new)
 
     def insert(self, index, other):
@@ -686,9 +696,9 @@ class IntervalProd(Set):
         from odl.discr.grid import TensorGrid
 
         minmax_vecs = [0] * self.ndim
-        for axis in self._ideg:
+        for axis in self.ideg:
             minmax_vecs[axis] = self.begin[axis]
-        for axis in self._inondeg:
+        for axis in self.inondeg:
             minmax_vecs[axis] = (self.begin[axis], self.end[axis])
 
         minmax_grid = TensorGrid(*minmax_vecs)
