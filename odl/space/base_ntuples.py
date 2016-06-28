@@ -76,6 +76,16 @@ class NtuplesBase(Set):
         """Shape ``(size,)`` of this space."""
         return (self.size,)
 
+    @property
+    def itemsize(self):
+        """The size in bytes on one element of this type."""
+        return self.dtype.itemsize
+
+    @property
+    def nbytes(self):
+        """The number of bytes this vector uses in memory."""
+        return self.size * self.itemsize
+
     def __contains__(self, other):
         """Return ``other in self``.
 
@@ -289,13 +299,13 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
     @property
     def itemsize(self):
-        """Size in bytes of one element of this vector."""
-        return self.dtype.itemsize
+        """Size in bytes on one element of this type."""
+        return self.space.itemsize
 
     @property
     def nbytes(self):
-        """Number of bytes this vector uses in memory."""
-        return self.size * self.itemsize
+        """Number of bytes this element uses in memory."""
+        return self.space.nbytes
 
     def __array__(self, dtype=None):
         """Return a Numpy array containing this vector's data.
