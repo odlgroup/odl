@@ -408,7 +408,8 @@ class RealSpaceConvolution(Convolution):
 
     """Convolution implemented in real space."""
 
-    def __init__(self, domain, kernel, range=None, **kwargs):
+    def __init__(self, domain, kernel, range=None, impl='scipy_convolve',
+                 **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -505,8 +506,8 @@ class RealSpaceConvolution(Convolution):
         if not isinstance(domain, DiscreteLp):
             raise TypeError('domain {!r} is not a DiscreteLp instance'
                             ''.format(domain))
-        if not domain.partition.is_regular:
-            raise NotImplementedError('irregular sampling not supported')
+        if not domain.is_uniform:
+            raise ValueError('irregular sampling not supported')
 
         if range is not None:
             # TODO
@@ -518,27 +519,23 @@ class RealSpaceConvolution(Convolution):
 
         super().__init__(domain, range, linear=True)
 
-        # Handle kernel mode and impl
-        impl = kwargs.pop('impl', 'scipy_convolve')
+        # Handle impl
         impl, impl_in = str(impl).lower(), impl
         if impl not in _REAL_CONV_SUPPORTED_IMPL:
             raise ValueError("implementation '{}' not understood"
                              ''.format(impl_in))
-
         self._impl = impl
 
         # Handle the `resample` input parameter
         resample = normalized_scalar_param_list(kwargs.pop('resample', 'down'),
                                                 length=self.domain.ndim,
                                                 param_conv=str)
-
         for i, r in enumerate(resample):
             if r.lower() not in ('up', 'down'):
                 raise ValueError("in axis {}: `resample` '{}' not understood"
                                  ''.format(i, r))
             else:
                 resample[i] = r.lower()
-
         self._resample = resample
 
         # Initialize resampling operators
@@ -589,35 +586,30 @@ class RealSpaceConvolution(Convolution):
         range : `DiscreteLp`
             Range of the convolution operator.
         """
-        if isinstance(kernel, DiscreteLpVector) and kernel not in domain:
+        if isinstance(kernel, domain.element_type):
             if kernel.ndim != domain.ndim:
                 raise ValueError('`kernel` has dimension {}, expected {}'
                                  ''.format(kernel.ndim, domain.ndim))
-            # The kernel lies in a different space. We first zero-center
-            # its domain and set the range to the domain shifted by
-            # the the midpoint of the kernel domain.
-
-            # TODO: DiscreteLp.element should probably bail out if
-            # kernel is a DiscreteLpVector but not in the same space
+            # Set the range equal to the domain shifted by the midpoint of
+            # the kernel space.
             kernel_shift = kernel.space.partition.midpoint
             range = uniform_discr_fromdiscr(
                 domain, min_corner=domain.min_corner + kernel_shift)
+            return kernel, range
 
-        elif callable(kernel):
-            # The kernel is a Python function or some other callable object.
-            kernel = domain.element(kernel, **kernel_kwargs)
-            range = domain
         else:
-            try:
-                # kernel is an array-like of the correct shape or an
-                # element of `domain`
-                kernel = domain.element(kernel)
-            except (TypeError, ValueError):
-                # Array-like of wrong shape -> find adequate space for the
-                # kernel. Assume 0-centering and same cell size.
-
-                # TODO: handle the case when the outer cells are of
-                # different size
+            if callable(kernel):
+                # Use "natural" kernel space, which is the zero-centered
+                # version of the domain.
+                extent = domain.partition.extent()
+                std_kernel_space = uniform_discr_fromdiscr(
+                    domain, min_corner=-extent / 2)
+                kernel = std_kernel_space.element(kernel, **kernel_kwargs)
+                range = domain
+                return kernel, range
+            else:
+                # Make a zero-centered space with the same cell sides as
+                # domain, but shape according to the kernel.
                 kernel = np.asarray(kernel, dtype=domain.dtype)
                 nsamples = kernel.shape
                 extent = domain.cell_sides * nsamples
@@ -625,10 +617,8 @@ class RealSpaceConvolution(Convolution):
                     domain, min_corner=-extent / 2, max_corner=extent / 2,
                     nsamples=nsamples)
                 kernel = kernel_space.element(kernel)
-
-            range = domain
-
-        return kernel, range
+                range = domain
+                return kernel, range
 
     @staticmethod
     def _get_resamp_csides(resample, ker_csides, dom_csides):
@@ -667,8 +657,8 @@ class RealSpaceConvolution(Convolution):
         """Return the real-space kernel of this convolution operator.
 
         Note that internally, the scaled kernel is stored if
-        ``scale=True`` was chosen during initialization, i.e. calculating
-        the original kernel requires to reverse the scaling.
+        ``scale=True`` (default) was chosen during initialization, i.e.
+        calculating the original kernel requires to reverse the scaling.
         Otherwise, the original unscaled kernel is returned.
         """
         if self._scale:
@@ -680,27 +670,41 @@ class RealSpaceConvolution(Convolution):
         """Implement ``self(x)``."""
         if np.allclose(self._kernel.space.cell_sides, self.domain.cell_sides):
             # No resampling needed
-            print('no resampling')
-
-            # According to the documentation of scipy.signal.convolve, we
-            # would need to switch order of x and kernel since `convolve`
-            # expects the larger array first. However, this does not seem
-            # to be needed.
             return signal.convolve(x, self._kernel, mode='same')
         else:
             if self.domain != self._domain_resampling_op.range:
                 # Only resample if necessary
-                print('resample function')
                 x = self._domain_resampling_op(x)
 
             if self._kernel.space != self._kernel_resampling_op.range:
-                print('resample kernel')
                 kernel = self._kernel_resampling_op(self._kernel)
             else:
                 kernel = self._kernel
 
             conv = signal.convolve(x, kernel, mode='same')
             return self._domain_resampling_op.inverse(conv)
+
+    @property
+    def adjoint(self):
+        """Adjoint operator defined by the reversed kernel."""
+        # Make space for the adjoint kernel, -S if S is the kernel space
+        adj_min_corner = -self._kernel.space.max_corner
+        adj_max_corner = -self._kernel.space.min_corner
+        adj_ker_space = uniform_discr_fromdiscr(
+            self._kernel.space,
+            min_corner=adj_min_corner, max_corner=adj_max_corner)
+
+        # Reverse the kernel
+        reverse_slice = (slice(None, None, -1),) * self.domain.ndim
+        adj_kernel = adj_ker_space.element(
+            self._kernel.asarray()[reverse_slice])
+
+        adj_conv = RealSpaceConvolution(self.range, adj_kernel, impl=self.impl,
+                                        scale=False, resample=self.resample)
+        # Kernel is already scaled, but we need to make sure that the
+        # kernel() method returns the rescaled kernel.
+        adj_conv._scale = True
+        return adj_conv
 
 
 if __name__ == '__main__':
