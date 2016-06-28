@@ -6,6 +6,26 @@
 Release Notes
 #############
 
+ODL 0.2.4 Release Notes (2016-06-28)
+====================================
+
+New features
+------------
+- Add ``uniform_discr_fromdiscr`` (`PR 467`).
+- Add conda build files (`commit 86ff166`).
+
+Bugfixes
+--------
+- Fix bug in submarine phantom with non-centered space (`PR 469`).
+- Fix crash when plotting in 1d (`commit 3255fa3`).
+
+Changes
+-------
+- Move phantoms to new module odl.phantom (`PR 469`).
+- Rename ``RectPartition.is_uniform`` to ``RectPartition.is_uniform``
+  (`PR 468`).
+
+
 ODL 0.2.3 Release Notes (2016-06-12)
 ====================================
 

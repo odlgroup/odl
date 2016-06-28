@@ -30,9 +30,6 @@ __all__ += utility.__all__
 from .normalize import *
 __all__ += normalize.__all__
 
-from .phantom import *
-__all__ += phantom.__all__
-
 from .graphics import *
 __all__ += graphics.__all__
 

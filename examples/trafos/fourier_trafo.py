@@ -35,7 +35,7 @@ discr_space = odl.uniform_discr([-1, -1], [1, 1], (512, 512), dtype='complex')
 ft_op = odl.trafos.FourierTransform(discr_space)
 
 # Create a phantom and its Fourier transfrom and display them
-phantom = odl.util.phantom.shepp_logan(discr_space, modified=True)
+phantom = odl.phantom.shepp_logan(discr_space, modified=True)
 phantom.show(title='Shepp-Logan phantom', show=True)
 phantom_ft = ft_op(phantom)
 phantom_ft.show(title='Full Fourier Transform', show=True)
@@ -51,7 +51,7 @@ phantom_ft_axis0.show(title='Fourier transform along axis 0', show=True)
 # its complex conjugate. This is faster and more memory efficient.
 discr_space_real = odl.uniform_discr([-1, -1], [1, 1], (512, 512))
 ft_op_halfc = odl.trafos.FourierTransform(discr_space_real, halfcomplex=True)
-phantom_real = odl.util.phantom.shepp_logan(discr_space_real, modified=True)
+phantom_real = odl.phantom.shepp_logan(discr_space_real, modified=True)
 phantom_real.show(title='Shepp-Logan phantom, real version', show=True)
 phantom_real_ft = ft_op_halfc(phantom_real)
 phantom_real_ft.show(title='Half-complex Fourier Transform', show=True)

@@ -43,7 +43,7 @@ def test_astra_cuda_projector_parallel2d():
 
     # Create reco space and a phantom
     reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32')
-    phantom = odl.util.phantom.cuboid(reco_space, begin=0.5, end=1)
+    phantom = odl.phantom.cuboid(reco_space, begin=[0, 0], end=[4, 5])
 
     # Create parallel geometry
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
@@ -71,7 +71,7 @@ def test_astra_cuda_projector_fanflat():
 
     # Create reco space and a phantom
     reco_space = odl.uniform_discr([-4, -5], [4, 5], (4, 5), dtype='float32')
-    phantom = odl.util.phantom.cuboid(reco_space, begin=0.5, end=1)
+    phantom = odl.phantom.cuboid(reco_space, begin=[0, 0], end=[4, 5])
 
     # Create fan beam geometry with flat detector
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
@@ -104,7 +104,7 @@ def test_astra_cuda_projector_parallel3d():
     # Create reco space and a phantom
     reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
                                    dtype='float32')
-    phantom = odl.util.phantom.cuboid(reco_space, begin=0.5, end=1)
+    phantom = odl.phantom.cuboid(reco_space, begin=[0, 0, 0], end=[4, 5, 6])
 
     # Create parallel geometry
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
@@ -133,7 +133,7 @@ def test_astra_gpu_projector_circular_conebeam():
     # Create reco space and a phantom
     reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
                                    dtype='float32')
-    phantom = odl.util.phantom.cuboid(reco_space, begin=0.5, end=1)
+    phantom = odl.phantom.cuboid(reco_space, begin=[0, 0, 0], end=[4, 5, 6])
 
     # Create circular cone beam geometry with flat detector
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)
@@ -165,7 +165,7 @@ def test_astra_cuda_projector_helical_conebeam():
     # Create reco space and a phantom
     reco_space = odl.uniform_discr([-4, -5, -6], [4, 5, 6], (4, 5, 6),
                                    dtype='float32')
-    phantom = odl.util.phantom.cuboid(reco_space, begin=0.5, end=1)
+    phantom = odl.phantom.cuboid(reco_space, begin=[0, 0, 0], end=[4, 5, 6])
 
     # Create circular cone beam geometry with flat detector
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)

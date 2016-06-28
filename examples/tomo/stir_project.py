@@ -46,7 +46,7 @@ proj = odl.tomo.backends.stir_bindings.ForwardProjectorByBinWrapper(
     recon_sp, data_sp, volume, proj_data)
 
 # Create shepp-logan phantom
-vol = odl.util.shepp_logan(proj.domain, modified=True)
+vol = odl.phantom.shepp_logan(proj.domain, modified=True)
 
 # Project and show
 result = proj(vol)

@@ -70,7 +70,7 @@ fbp = ray_trafo.adjoint * ramp_filter / (2 * np.pi)
 
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.util.phantom.shepp_logan(reco_space, modified=True)
+phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)

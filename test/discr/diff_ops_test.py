@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Unit tests for `tensor_ops`."""
+"""Unit tests for `diff_ops`."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -30,7 +30,6 @@ from odl.discr.diff_ops import (
     finite_diff, PartialDerivative, Gradient, Divergence, Laplacian)
 from odl.util.testutils import (
     all_equal, all_almost_equal, almost_equal, skip_if_no_cuda, never_skip)
-from odl.util import cuboid
 
 
 methods = ['central', 'forward', 'backward']
@@ -342,7 +341,7 @@ def test_gradient(method, impl, padding):
 
         # DiscreteLp Vector
         space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
-        dom_vec = cuboid(space, [0.2] * ndim, [0.8] * ndim)
+        dom_vec = odl.phantom.cuboid(space, [0.2] * ndim, [0.8] * ndim)
 
         # gradient
         grad = Gradient(space, method=method,
@@ -413,7 +412,7 @@ def test_divergence(method, impl, padding):
         div = Divergence(range=space, method=method,
                          padding_method=padding_method,
                          padding_value=padding_value)
-        dom_vec = cuboid(space, [0.2] * ndim, [0.8] * ndim)
+        dom_vec = odl.phantom.cuboid(space, [0.2] * ndim, [0.8] * ndim)
         div([dom_vec] * ndim)
 
 

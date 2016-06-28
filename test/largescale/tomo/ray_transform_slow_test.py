@@ -170,8 +170,8 @@ def projector(request):
 def test_reconstruction(projector):
     """Test discrete Ray transform using ASTRA for reconstruction."""
 
-    # Create shepp-logan phantom
-    vol = odl.util.shepp_logan(projector.domain, modified=True)
+    # Create Shepp-Logan phantom
+    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
 
     # Project data
     projections = projector(vol)

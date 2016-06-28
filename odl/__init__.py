@@ -25,9 +25,9 @@ to be used to write general code and faciliate code reuse.
 
 from __future__ import absolute_import
 
-__version__ = '0.2.3'
+__version__ = '0.2.4'
 __all__ = ('diagnostics', 'discr', 'operator', 'set', 'space', 'solvers',
-           'tomo', 'trafos', 'util')
+           'tomo', 'trafos', 'util', 'phantom')
 
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
@@ -53,6 +53,7 @@ from . import solvers
 from . import trafos
 from . import tomo
 from . import util
+from . import phantom
 
 from .util import test
 __all__ += ('test',)
