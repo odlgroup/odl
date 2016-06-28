@@ -721,18 +721,18 @@ def test_astype():
     # Real
     assert rdiscr.astype('float32') == rdiscr_s
     assert rdiscr.astype('float64') is rdiscr
-    assert rdiscr._real_space is rdiscr
+    assert rdiscr.real_space is rdiscr
     assert rdiscr.astype('complex64') == cdiscr_s
     assert rdiscr.astype('complex128') == cdiscr
-    assert rdiscr._complex_space == cdiscr
+    assert rdiscr.complex_space == cdiscr
 
     # Complex
     assert cdiscr.astype('complex64') == cdiscr_s
     assert cdiscr.astype('complex128') is cdiscr
-    assert cdiscr._complex_space is cdiscr
+    assert cdiscr.complex_space is cdiscr
     assert cdiscr.astype('float32') == rdiscr_s
     assert cdiscr.astype('float64') == rdiscr
-    assert cdiscr._real_space == rdiscr
+    assert cdiscr.real_space == rdiscr
 
 
 def test_ufunc(fn_impl, ufunc):

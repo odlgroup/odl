@@ -188,15 +188,15 @@ def test_fspace_astype():
 
     assert rspace.astype('complex64') == cspace_s
     assert rspace.astype('complex128') == cspace
-    assert rspace.astype('complex128') is rspace._complex_space
+    assert rspace.astype('complex128') is rspace.complex_space
     assert rspace.astype('float32') == rspace_s
-    assert rspace.astype('float64') is rspace._real_space
+    assert rspace.astype('float64') is rspace.real_space
 
     assert cspace.astype('float32') == rspace_s
     assert cspace.astype('float64') == rspace
-    assert cspace.astype('float64') is cspace._real_space
+    assert cspace.astype('float64') is cspace.real_space
     assert cspace.astype('complex64') == cspace_s
-    assert cspace.astype('complex128') is cspace._complex_space
+    assert cspace.astype('complex128') is cspace.complex_space
 
 
 def test_fspace_vector_eval_real():
