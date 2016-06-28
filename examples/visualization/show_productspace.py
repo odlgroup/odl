@@ -30,10 +30,10 @@ spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
 pspace = odl.ProductSpace(spc, m)
 
 # Making a product space element where each component consists of a
-# Shepp-Logan phantom multiplied by the constant (i+1), where i is the
+# Shepp-Logan phantom multiplied by the constant i, where i is the
 # index of the product space component.
-vec = pspace.element([odl.util.shepp_logan(spc, modified=True) * i
-                      for i in range(1, m + 1)])
+vec = pspace.element([odl.phantom.shepp_logan(spc, modified=True) * i
+                      for i in range(m)])
 
 # By default 4 uniformly spaced elements are shown. Since there are 7 in
 # total, the shown components are 0, 2, 4 and 6

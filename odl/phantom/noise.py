@@ -1,4 +1,4 @@
-# Copyright 2014-2016 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,27 +15,35 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example on using show and updating the figure in real time in 2d."""
+"""Functions to create noise samples of different distributions."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import odl
-import matplotlib.pyplot as plt
+import numpy as np
 
-n = 100
-m = 20
-spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
-vec = odl.phantom.shepp_logan(spc, modified=True)
 
-# Create a figure by saving the result of show
-fig = None
+__all__ = ('white_noise',)
 
-# Reuse the figure indefinitely, values are overwritten.
-for i in range(m):
-    fig = (vec * i).show(fig=fig, clim=[0, m])
-    plt.pause(0.1)
 
-plt.show()
+def white_noise(space):
+    """Standard gaussian noise in space, pointwise N(0, 1).
+
+    """
+    values = np.random.randn(*space.shape)
+    return space.element(values)
+
+
+if __name__ == '__main__':
+    # Show the phantoms
+    import odl
+
+    discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
+    white_noise(discr).show('white_noise')
+
+    # Run also the doctests
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()

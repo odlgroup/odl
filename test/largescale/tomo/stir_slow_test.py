@@ -42,7 +42,7 @@ def test_from_file():
     proj = stir_projector_from_file(volume_file, projection_file)
 
     # Create SPECT phantom
-    vol = odl.util.derenzo_sources(proj.domain)
+    vol = odl.phantom.derenzo_sources(proj.domain)
 
     # Project data
     projections = proj(vol)

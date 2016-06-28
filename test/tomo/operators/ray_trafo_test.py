@@ -162,7 +162,7 @@ def test_projector(projector):
     # Accept 10% errors
     places = 1
 
-    # Create shepp-logan phantom
+    # Create Shepp-Logan phantom
     vol = projector.domain.one()
 
     # Calculate projection
@@ -180,8 +180,8 @@ def test_adjoint(projector):
     # Accept 10% errors
     places = 1
 
-    # Create shepp-logan phantom
-    vol = odl.util.shepp_logan(projector.domain, modified=True)
+    # Create Shepp-Logan phantom
+    vol = odl.phantom.shepp_logan(projector.domain, modified=True)
 
     # Calculate projection
     proj = projector(vol)

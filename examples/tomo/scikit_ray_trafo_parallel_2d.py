@@ -37,7 +37,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='scikit')
 
 # Create a discrete Shepp-Logan phantom (modified version)
-phantom = odl.util.phantom.shepp_logan(reco_space, modified=True)
+phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 
 # Create projection data by calling the ray transform on the phantom
 proj_data = ray_trafo(phantom)

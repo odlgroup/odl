@@ -35,7 +35,7 @@ proj = odl.tomo.backends.stir_bindings.stir_projector_from_file(
     volume_file, projection_file)
 
 # Create shepp-logan phantom
-vol = odl.util.shepp_logan(proj.domain, modified=True)
+vol = odl.phantom.shepp_logan(proj.domain, modified=True)
 
 # Project data
 projections = proj(vol)

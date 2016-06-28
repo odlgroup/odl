@@ -1,4 +1,4 @@
-# Copyright 2014-2016 The ODL development group
+﻿# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,18 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Examples on using the vector.show() syntax
+"""Test data for tomography problems."""
 
-NOTES
------
-The behaviour of blocking shows etc in matplotlib is experimental and can cause
-issues with these examples.
-"""
+from __future__ import absolute_import
 
-import odl
+__all__ = ()
 
-spc = odl.uniform_discr([0, 0], [1, 1], [100, 100], dtype='complex')
-vec = odl.phantom.shepp_logan(spc, modified=True) * (1 + 0.5j)
+from . import phantom_utils
 
-# Can also force "instant" plotting
-vec.show(show=True)
+from .emission import *
+__all__ += emission.__all__
+
+from .geometric import *
+__all__ += geometric.__all__
+
+from .misc_phantoms import *
+__all__ += misc_phantoms.__all__
+
+from .noise import *
+__all__ += noise.__all__
+
+from .transmission import *
+__all__ += transmission.__all__
