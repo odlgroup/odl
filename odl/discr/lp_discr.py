@@ -182,6 +182,11 @@ class DiscreteLp(DiscretizedSpace):
         return self._partition
 
     @property
+    def is_uniform(self):
+        """Return `True` if ``self.partition`` is uniform."""
+        return self.partition.is_uniform
+
+    @property
     def grid(self):
         """Sampling grid of the discretization mappings."""
         return self.partition.grid
@@ -883,8 +888,8 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     if not isinstance(partition, RectPartition):
         raise TypeError('`partition` {!r} is not a `RectPartition` instance'
                         ''.format(partition))
-    if not partition.is_regular:
-        raise ValueError('`partition` is not regular')
+    if not partition.is_uniform:
+        raise ValueError('`partition` is not uniform')
 
     impl, impl_in = str(impl).lower(), impl
     if impl == 'numpy':
@@ -1281,10 +1286,10 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
         Maximum corner of the resulting spatial domain.
     nsamples : int or sequence of int
         Number of samples per axis.
-    exponent : positive `float`, optional
+    exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str` or `sequence` of `str`, optional
+    interp : str or sequence of str, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -1294,7 +1299,7 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
 
     impl : {'numpy', 'cuda'}, optional
         Implementation of the data storage arrays
-    nodes_on_bdry : `bool` or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         Specifies whether to put the outmost grid nodes on the
         boundary of the domain.
 
@@ -1310,7 +1315,7 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
         boundaries.
         Default: `False`
 
-    dtype : dtype, optional
+    dtype : optional
         Data type for the discretized space.
 
             Default for 'numpy': 'float64' / 'complex128'
@@ -1415,11 +1420,12 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
     >>> new_discr
     uniform_discr([2.5, 1.0], [3.0, 2.25], [5, 5])
     >>> new_discr.cell_sides
+    array([ 0.1 ,  0.25])
     """
     if not isinstance(discr, DiscreteLp):
         raise TypeError('`discr` {!r} is not a DiscreteLp instance'
                         ''.format(discr))
-    if not discr.partition.is_regular:
+    if not discr.is_uniform:
         raise ValueError('`discr` {} is not uniformly discretized'
                          ''.format(discr))
 
