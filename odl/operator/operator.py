@@ -470,10 +470,10 @@ class Operator(object):
             raise TypeError('`range` {!r} is not a `Set` instance'
                             ''.format(range))
 
-        self._domain = domain
-        self._range = range
-        self._is_linear = bool(linear)
-        self._is_functional = isinstance(range, Field)
+        self.__domain = domain
+        self.__range = range
+        self.__is_linear = bool(linear)
+        self.__is_functional = isinstance(range, Field)
 
         # Mandatory out makes no sense for functionals.
         # However, we need to allow optional out to support vectorized
@@ -567,22 +567,22 @@ class Operator(object):
     @property
     def domain(self):
         """Set of objects on which this operator can be evaluated."""
-        return self._domain
+        return self.__domain
 
     @property
     def range(self):
         """Set in which the result of an evaluation of this operator lies."""
-        return self._range
+        return self.__range
 
     @property
     def is_linear(self):
         """`True` if this operator is linear."""
-        return self._is_linear
+        return self.__is_linear
 
     @property
     def is_functional(self):
         """`True` if the this operator's range is a `Field`."""
-        return self._is_functional
+        return self.__is_functional
 
     @property
     def adjoint(self):
