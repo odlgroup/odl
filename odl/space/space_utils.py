@@ -101,7 +101,7 @@ def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
         as a string.
-        For ``None``, the `TensorSpaceBase.default_dtype` of the
+        For ``None``, the `TensorSpace.default_dtype` of the
         created space is used.
     order : {'C', 'F'}, optional
         Axis ordering of the data storage.
@@ -139,7 +139,7 @@ def cn(shape, dtype=None, order='C', impl='numpy', **kwargs):
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
         as a string. Only complex floating-point data types are allowed.
-        For ``None``, the `TensorSpaceBase.default_dtype` of the
+        For ``None``, the `TensorSpace.default_dtype` of the
         created space is used in the form
         ``default_dtype(ComplexNumbers())``.
     order : {'C', 'F'}, optional
@@ -153,7 +153,7 @@ def cn(shape, dtype=None, order='C', impl='numpy', **kwargs):
 
     Returns
     -------
-    complex_tspace : `TensorSpaceBase`
+    complex_tspace : `TensorSpace`
 
     See also
     --------
@@ -182,7 +182,7 @@ def rn(shape, dtype=None, order='C', impl='numpy', **kwargs):
         Data type of each element. Can be provided in any way the
         `numpy.dtype` function understands, e.g. as built-in type or
         as a string. Only real floating-point data types are allowed.
-        For ``None``, the `TensorSpaceBase.default_dtype` of the
+        For ``None``, the `TensorSpace.default_dtype` of the
         created space is used in the form
         ``default_dtype(RealNumbers())``.
     order : {'C', 'F'}, optional
@@ -196,7 +196,7 @@ def rn(shape, dtype=None, order='C', impl='numpy', **kwargs):
 
     Returns
     -------
-    real_tspace : `TensorSpaceBase`
+    real_tspace : `TensorSpace`
 
     See also
     --------
