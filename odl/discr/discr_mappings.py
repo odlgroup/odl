@@ -104,7 +104,7 @@ class FunctionSetMapping(Operator):
         domain = fset if map_type_ == 'sampling' else dspace
         range = dspace if map_type_ == 'sampling' else fset
         Operator.__init__(self, domain, range, linear=linear)
-        self._partition = partition
+        self.__partition = partition
 
         if self.is_linear:
             if not isinstance(fset, FunctionSpace):
@@ -122,7 +122,7 @@ class FunctionSetMapping(Operator):
         if str(order).upper() not in ('C', 'F'):
             raise ValueError('`order` {!r} not recognized'.format(order))
         else:
-            self._order = str(order).upper()
+            self.__order = str(order).upper()
 
     def __eq__(self, other):
         return (isinstance(other, type(self)) and
@@ -135,7 +135,7 @@ class FunctionSetMapping(Operator):
     @property
     def partition(self):
         """Underlying domain partition."""
-        return self._partition
+        return self.__partition
 
     @property
     def grid(self):
@@ -145,7 +145,7 @@ class FunctionSetMapping(Operator):
     @property
     def order(self):
         """Axis ordering in the data storage."""
-        return self._order
+        return self.__order
 
 
 class PointCollocation(FunctionSetMapping):
@@ -353,9 +353,14 @@ class NearestInterpolation(FunctionSetMapping):
                                     dspace, linear, **kwargs)
 
         variant = kwargs.pop('variant', 'left')
-        self._variant = str(variant).lower()
-        if self._variant not in ('left', 'right'):
+        self.__variant = str(variant).lower()
+        if self.variant not in ('left', 'right'):
             raise ValueError("`variant` '{}' not understood".format(variant))
+
+    @property
+    def variant(self):
+        """The variant (left / right) of interpolation."""
+        return self.__variant
 
     def _call(self, x, out=None):
         """Create an interpolator from grid values ``x``.
@@ -435,7 +440,7 @@ class NearestInterpolation(FunctionSetMapping):
             interpolator = _NearestInterpolator(
                 self.grid.coord_vectors,
                 x.asarray().reshape(self.grid.shape, order=self.order),
-                variant=self._variant,
+                variant=self.variant,
                 input_type=input_type)
 
             return interpolator(arg, out=out)
@@ -450,8 +455,8 @@ class NearestInterpolation(FunctionSetMapping):
         if self.order != 'C':
             inner_str += sep + "order='{}'".format(self.order)
             sep = ', '
-        if self._variant != 'left':
-            inner_str += sep + "variant='{}'".format(self._variant)
+        if self.variant != 'left':
+            inner_str += sep + "variant='{}'".format(self.variant)
 
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
@@ -613,18 +618,18 @@ class PerAxisInterpolation(FunctionSetMapping):
                 raise ValueError('option nn_variants used in axis {} with '
                                  'scheme {!r}'.format(i, scm))
 
-        self._schemes = schemes_
-        self._nn_variants = variants_
+        self.__schemes = schemes_
+        self.__nn_variants = variants_
 
     @property
     def schemes(self):
         """List of interpolation schemes, one for each axis."""
-        return self._schemes
+        return self.__schemes
 
     @property
     def nn_variants(self):
         """List of nearest neighbor variants, one for each axis."""
-        return self._nn_variants
+        return self.__nn_variants
 
     def _call(self, x, out=None):
         """Create an interpolator from grid values ``x``.
@@ -775,7 +780,10 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
         return self._evaluate(indices, norm_distances, out)
 
     def _find_indices(self, x):
-        """Find indices and distances of the given nodes."""
+        """Find indices and distances of the given nodes.
+
+        Can be overridden by subclasses to improve efficiency.
+        """
         # find relevant edges between which xi are situated
         index_vecs = []
         # compute distance to lower edge in unity units

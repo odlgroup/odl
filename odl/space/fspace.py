@@ -111,19 +111,19 @@ class FunctionSet(Set):
             raise TypeError('`range` {!r} not a `Set` instance'
                             ''.format(range))
 
-        self._domain = domain
-        self._range = range
-        self._out_dtype = None if out_dtype is None else np.dtype(out_dtype)
+        self.__domain = domain
+        self.__range = range
+        self.__out_dtype = None if out_dtype is None else np.dtype(out_dtype)
 
     @property
     def domain(self):
         """Common domain of all functions in this set."""
-        return self._domain
+        return self.__domain
 
     @property
     def range(self):
         """Common range of all functions in this set."""
-        return self._range
+        return self.__range
 
     @property
     def out_dtype(self):
@@ -131,7 +131,7 @@ class FunctionSet(Set):
 
         If None, dtype is not uniquely pre-defined.
         """
-        return self._out_dtype
+        return self.__out_dtype
 
     def element(self, fcall=None, vectorized=True):
         """Create a `FunctionSet` element.
@@ -229,8 +229,8 @@ class FunctionSetVector(Operator):
             `numpy.ndarray` of such (vectorized call).
         out_d
         """
-        self._space = fset
-        super().__init__(self._space.domain, self._space.range, linear=False)
+        self.__space = fset
+        super().__init__(self.space.domain, self.space.range, linear=False)
 
         # Determine which type of implementation fcall is
         if isinstance(fcall, FunctionSetVector):
@@ -279,7 +279,7 @@ class FunctionSetVector(Operator):
     @property
     def space(self):
         """Space or set this function belongs to."""
-        return self._space
+        return self.__space
 
     @property
     def out_dtype(self):
@@ -1173,8 +1173,8 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
             raise TypeError('`fspace` {!r} not a `FunctionSpace` '
                             'instance'.format(fspace))
 
-        FunctionSetVector.__init__(self, fspace, fcall)
         LinearSpaceVector.__init__(self, fspace)
+        FunctionSetVector.__init__(self, fspace, fcall)
 
     # Tradeoff: either we subclass LinearSpaceVector first and override the
     # 3 methods in FunctionSetVector (as below) which LinearSpaceVector

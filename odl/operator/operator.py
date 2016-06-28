@@ -473,6 +473,8 @@ class Operator(object):
         self.__domain = domain
         self.__range = range
         self.__is_linear = bool(linear)
+
+        # Cache for efficiency since this is done in each call.
         self.__is_functional = isinstance(range, Field)
 
         # Mandatory out makes no sense for functionals.

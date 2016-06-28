@@ -1054,7 +1054,7 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
         dist : `float`
             The distance between the vectors
         """
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             norms1 = np.fromiter(
                 (x1p.norm() for x1p in x1.parts),
                 dtype=np.float64, count=len(x1))

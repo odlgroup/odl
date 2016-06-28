@@ -206,14 +206,14 @@ class NumpyNtuplesVector(NtuplesBaseVector):
         if data.dtype != space.dtype:
             raise TypeError('`data` {!r} not of dtype {!r}'
                             ''.format(data, space.dtype))
-        self._data = data
+        self.__data = data
 
         NtuplesBaseVector.__init__(self, space)
 
     @property
     def data(self):
         """Raw `numpy.ndarray` representing the data."""
-        return self._data
+        return self.__data
 
     def asarray(self, start=None, stop=None, step=None, out=None):
         """Extract the data of this array as a numpy array.
@@ -280,7 +280,7 @@ class NumpyNtuplesVector(NtuplesBaseVector):
         >>> print(vec)
         [5, 2, 3]
         """
-        return self._data.ctypes.data
+        return self.data.ctypes.data
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -1934,7 +1934,7 @@ class NumpyFnConstWeighting(ConstWeightingBase):
         dist : `float`
             The distance between the vectors
         """
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             dist_squared = (_norm_default(x1) ** 2 + _norm_default(x2) ** 2 -
                             2 * _inner_default(x1, x2).real)
             if dist_squared < 0.0:  # Compensate for numerical error

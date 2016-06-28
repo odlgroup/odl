@@ -170,10 +170,10 @@ class TensorGrid(Set):
                 raise ValueError('vector {} contains duplicates'
                                  ''.format(i + 1))
 
-        self._coord_vectors = vecs
-        self._ideg = np.array([i for i in range(len(vecs))
+        self.__coord_vectors = vecs
+        self.__ideg = np.array([i for i in range(len(vecs))
                                if len(vecs[i]) == 1])
-        self._inondeg = np.array([i for i in range(len(vecs))
+        self.__inondeg = np.array([i for i in range(len(vecs))
                                   if len(vecs[i]) != 1])
 
     # Attributes
@@ -198,7 +198,7 @@ class TensorGrid(Set):
         --------
         meshgrid : Same result but with nd arrays
         """
-        return self._coord_vectors
+        return self.__coord_vectors
 
     @property
     def ndim(self):
@@ -255,6 +255,16 @@ class TensorGrid(Set):
         array([ 5.,  2.])
         """
         return np.array([vec[-1] for vec in self.coord_vectors])
+
+    @property
+    def ideg(self):
+        """Indices of the degenerate axes of this grid."""
+        return self.__ideg
+
+    @property
+    def inondeg(self):
+        """Indices of the non-degenerate axes of this grid."""
+        return self.__inondeg
 
     # min, max and extent are for set duck-typing
     def min(self, **kwargs):
@@ -567,7 +577,7 @@ class TensorGrid(Set):
         >>> g.squeeze()
         TensorGrid([0.0, 1.0], [-1.0, 0.0, 2.0])
         """
-        coord_vecs = [self.coord_vectors[axis] for axis in self._inondeg]
+        coord_vecs = [self.coord_vectors[axis] for axis in self.inondeg]
         return TensorGrid(*coord_vecs)
 
     def points(self, order='C'):
@@ -883,11 +893,11 @@ class RegularGrid(TensorGrid):
         coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
         TensorGrid.__init__(self, *coord_vecs)
-        self._center = (self.max_pt + self.min_pt) / 2
-        self._stride = np.zeros(len(shape), dtype='float64')
+        self.__center = (self.max_pt + self.min_pt) / 2
+        self.__stride = np.zeros(len(shape), dtype='float64')
         idcs = np.where(shape > 1)
-        self._stride[idcs] = ((self.max_pt - self.min_pt)[idcs] /
-                              (shape[idcs] - 1))
+        self.__stride[idcs] = ((self.max_pt - self.min_pt)[idcs] /
+                               (shape[idcs] - 1))
 
     @property
     def center(self):
@@ -899,7 +909,7 @@ class RegularGrid(TensorGrid):
         >>> rg.center
         array([-1.,  1.])
         """
-        return self._center
+        return self.__center
 
     @property
     def stride(self):
@@ -911,7 +921,7 @@ class RegularGrid(TensorGrid):
         >>> rg.stride
         array([ 1.,  2.])
         """
-        return self._stride
+        return self.__stride
 
     def is_subgrid(self, other, atol=0.0):
         """Test if this grid is contained in another grid.
@@ -1049,9 +1059,9 @@ class RegularGrid(TensorGrid):
         >>> g.squeeze()
         RegularGrid([0.0, 0.0], [1.0, 1.0], (5, 5))
         """
-        sq_minpt = [self.min_pt[axis] for axis in self._inondeg]
-        sq_maxpt = [self.max_pt[axis] for axis in self._inondeg]
-        sq_shape = [self.shape[axis] for axis in self._inondeg]
+        sq_minpt = [self.min_pt[axis] for axis in self.inondeg]
+        sq_maxpt = [self.max_pt[axis] for axis in self.inondeg]
+        sq_shape = [self.shape[axis] for axis in self.inondeg]
         return RegularGrid(sq_minpt, sq_maxpt, sq_shape)
 
     def __getitem__(self, indices):

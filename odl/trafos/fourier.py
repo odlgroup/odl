@@ -702,7 +702,7 @@ class DiscreteFourierTransformBase(Operator):
 
         Abstract method.
         """
-        return NotImplemented
+        raise NotImplementedError('abstract method')
 
     def _call_numpy(self, x):
         """Return ``self(x)`` using numpy.
@@ -717,7 +717,7 @@ class DiscreteFourierTransformBase(Operator):
         out : `numpy.ndarray`
             Result of the transform
         """
-        raise NotImplemented
+        raise NotImplementedError('abstract method')
 
     def _call_pyfftw(self, x, out, **kwargs):
         """Implement ``self(x[, out, **kwargs])`` using pyfftw.
@@ -1876,7 +1876,7 @@ class FourierTransformBase(Operator):
     def create_temporaries(self, r=True, f=True):
         """Allocate and store reusable temporaries.
 
-        Existing temporaries are overwritten.
+        Existing temporaries are overridden.
 
         Parameters
         ----------
