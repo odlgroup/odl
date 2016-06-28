@@ -159,7 +159,7 @@ class RectPartition(object):
 
     # TensorGrid related pass-through methods and derived properties
     @property
-    def is_regular(self):
+    def is_uniform(self):
         """Return `True` if ``self.grid`` is a `RegularGrid`."""
         return isinstance(self.grid, RegularGrid)
 
@@ -322,10 +322,10 @@ class RectPartition(object):
         >>> part.cell_sides
         array([ 0.5,  1.5])
         """
-        if not self.is_regular:
+        if not self.is_uniform:
             raise NotImplementedError(
                 'cell sides not defined for irregular partitions. Use '
-                'cell_sizes_vecs() instead')
+                '`cell_sizes_vecs()` instead')
 
         sides = self.grid.stride
         sides[sides == 0] = self.extent()[sides == 0]
