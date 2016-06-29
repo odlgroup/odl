@@ -172,6 +172,22 @@ class NumpyNtuples(NtuplesBase):
 
     impl = 'numpy'
 
+    @staticmethod
+    def available_dtypes():
+        """Available data types.
+
+        Notes
+        -----
+        This is all dtypes available to numpy. See `numpy.sctypes`
+        for more information.
+
+        The available dtypes may depend on the specific system used.
+        """
+        all_types = []
+        for val in np.sctypes.values():
+            all_types.extend(val)
+        return all_types
+
 
 class NumpyNtuplesVector(NtuplesBaseVector):
 
@@ -428,22 +444,6 @@ class NumpyNtuplesVector(NtuplesBaseVector):
             self.data[indices] = values.data
         else:
             self.data[indices] = values
-
-    @staticmethod
-    def available_dtypes():
-        """Return the available `NumpyFn` data types.
-
-        Notes
-        -----
-        This is the set of all dtypes available to numpy. See `numpy.sctypes`
-        for more information.
-
-        The available dtypes may depend on the specific system used.
-        """
-        all_types = []
-        for val in np.sctypes.values():
-            all_types.extend(val)
-        return all_types
 
     @property
     def ufunc(self):
@@ -852,7 +852,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         5.0
 
         If the user has given another dist function, that one is used instead.
-        For example, the 2-norm can be given explicitly
+        For example, the 2-norm can be given explicitly:
 
         >>> from numpy.linalg import norm
         >>> c2_2 = NumpyFn(2, dtype=complex,
@@ -862,7 +862,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         >>> c2_2.dist(x, y)
         5.0
 
-        Likewise, the 1-norm can be given.
+        Likewise, the 1-norm can be given
 
         >>> c2_1 = NumpyFn(2, dtype=complex,
         ...                dist=lambda x, y: norm(x - y, ord=1))
@@ -1038,8 +1038,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         >>> r3_lambda1 == r3_lambda2
         False
 
-        An `NumpyFn` space with the same data type is considered
-        equal:
+        An `NumpyFn` space with the same data type is considered equal:
 
         >>> c3 = NumpyFn(3, dtype=complex)
         >>> f3_cdouble = NumpyFn(3, dtype='complex128')
@@ -1081,7 +1080,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
     @staticmethod
     def available_dtypes():
-        """Return the available `NumpyFn` data types.
+        """Available data types.
 
         Notes
         -----

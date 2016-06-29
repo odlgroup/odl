@@ -144,8 +144,23 @@ class NtuplesBase(Set):
 
     @property
     def element_type(self):
-        """`NtuplesBaseVector`"""
-        return NtuplesBaseVector
+        """Type of the elements of this space.
+
+        Returns
+        -------
+        element_type : `NtuplesBaseVector`
+        """
+        raise NotImplementedError('abstract method')
+
+    @staticmethod
+    def available_dtypes():
+        """Available data types.
+
+        Returns
+        -------
+        available_dtypes : `sequence`
+        """
+        raise NotImplementedError('abstract method')
 
 
 class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
@@ -375,7 +390,7 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
     @property
     def impl(self):
-        """The underlying implementation."""
+        """Underlying implementation."""
         return self.space.impl
 
 
@@ -505,10 +520,21 @@ class FnBase(NtuplesBase, LinearSpace):
     def _divide(self, x1, x2, out):
         """The entry-wise division of two vectors, assigned to ``out``."""
 
-    @property
-    def element_type(self):
-        """`FnBaseVector`"""
-        return FnBaseVector
+    @staticmethod
+    def default_dtype(field=None):
+        """Return the default data type for a given field.
+
+        Parameters
+        ----------
+        field : `Field`, optional
+            Set of numbers to be represented by a data type.
+
+        Returns
+        -------
+        dtype :
+            Numpy data type specifier. The returned defaults are:
+        """
+        raise NotImplementedError('abstract method')
 
 
 class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):

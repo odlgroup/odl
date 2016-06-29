@@ -56,8 +56,7 @@ def vector(array, dtype=None, impl='numpy'):
     Notes
     -----
     This is a convenience function and not intended for use in
-    speed-critical algorithms. It creates a NumPy array first, hence
-    especially CUDA vectors as input result in a large speed penalty.
+    speed-critical algorithms.
 
     Examples
     --------
@@ -117,7 +116,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
         Only complex floating-point data types are allowed.
     impl : `str`
         The backend to use. See `NTUPLES_IMPLS` for available options.
-    **kwargs :
+    kwargs :
         Extra keyword arguments to pass to the implmentation.
 
     Returns
@@ -133,8 +132,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
 
 
 def fn(size, dtype=None, impl='numpy', **kwargs):
-
-    """The vector space :math:`F^n` with vector multiplication.
+    """Return the space `F^n` for arbitrary field `F`.
 
     Parameters
     ----------
@@ -150,7 +148,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
         ``default_dtype()`` on the `FnBase` implementation.
     impl : `str`
         The backend to use. See `FN_IMPLS` for available options.
-    **kwargs :
+    kwargs :
         Extra keyword arguments to pass to the implmentation.
 
     Returns
@@ -159,8 +157,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
     See also
     --------
-    ntuples : n-tuples over a field :math:`\mathbb{F}` with arbitrary data
-              type.
+    ntuples : n-tuples over a field `F` with arbitrary data type.
     """
     fn_impl = FN_IMPLS[impl]
 
@@ -173,8 +170,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
 
 def cn(size, dtype=None, impl='numpy', **kwargs):
-
-    """The complex vector space :math:`C^n` with vector multiplication.
+    """Return the complex vector space `C^n`.
 
     Parameters
     ----------
@@ -192,7 +188,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
         ``default_dtype(ComplexNumbers())`` on the `FnBase` implementation.
     impl : `str`
         The backend to use. See `FN_IMPLS` for available options.
-    **kwargs :
+    kwargs :
         Extra keyword arguments to pass to the implmentation.
 
     Returns
@@ -201,8 +197,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
 
     See also
     --------
-    fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
-         data type.
+    fn : n-tuples over a field `F` with arbitrary scalar data type.
     """
     cn_impl = FN_IMPLS[impl]
 
@@ -218,10 +213,9 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
 
 
 def rn(size, dtype=None, impl='numpy', **kwargs):
+    """Return the real vector space `R^n`.
 
-    """The real vector space :math:`R^n` with vector multiplication.
-
-     Parameters
+    Parameters
     ----------
     size : positive `int`
         The number of dimensions of the space
@@ -236,7 +230,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
         ``default_dtype(RealNumbers())`` on the `FnBase` implementation.
     impl : `str`
         The backend to use. See `FN_IMPLS` for available options.
-    **kwargs :
+    kwargs :
         Extra keyword arguments to pass to the implmentation.
 
     Returns
@@ -245,8 +239,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
 
     See also
     --------
-    fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar
-         data type.
+    fn : n-tuples over a field `F` with arbitrary scalar data type.
     """
     rn_impl = FN_IMPLS[impl]
 

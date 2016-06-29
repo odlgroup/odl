@@ -884,10 +884,15 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     if not partition.is_uniform:
         raise ValueError('`partition` is not uniform')
 
-    dtype = np.dtype(kwargs.pop('dtype', None))
+    dtype = kwargs.pop('dtype', None)
+    if dtype is not None:
+        dtype = np.dtype(dtype)
 
     fspace = FunctionSpace(partition.set, out_dtype=dtype)
     ds_type = dspace_type(fspace, impl, dtype)
+
+    if dtype is None:
+        dtype = ds_type.default_dtype()
 
     order = kwargs.pop('order', 'C')
 

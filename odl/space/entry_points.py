@@ -21,17 +21,23 @@ External packages can add implementations of `NtuplesBase` and `FnBase` by
 hooking into the setuptools entry point 'odl.space' and exposing the methods
 ``ntuples_impls`` and ``fn_impls``.
 
+
 Attributes
 ----------
 NTUPLES_IMPLS : `dict`
-    A dictionary that maps a string to a `NtuplesBase` implementation.
+    A dictionary that maps a string to an `NtuplesBase` implementation.
 FN_IMPLS : `dict`
-    A dictionary that maps a string to a `FnBase` implementation.
+    A dictionary that maps a string to an `FnBase` implementation.
 
 Notes
 -----
 This is used with functions such as `rn`, `fn` and `uniform_discr` in order
 to allow arbitrary implementations.
+
+See Also
+--------
+NumpyFn : Numpy based implementation of `FnBase`
+NumpyNtuples : Numpy based implementation of `NtuplesBase`
 """
 
 # Imports for common Python 2/3 codebase

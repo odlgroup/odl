@@ -338,7 +338,7 @@ class Gradient(PointwiseTensorFieldOperator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint operator.
 
         The adjoint is given by the negative `Divergence` with corrections for
         the method and padding.
@@ -519,7 +519,7 @@ class Divergence(PointwiseTensorFieldOperator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint operator.
 
         The adjoint is given by the negative `Gradient` with corrections for
         the method and padding.

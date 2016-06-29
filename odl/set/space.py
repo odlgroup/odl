@@ -49,7 +49,7 @@ class LinearSpace(Set):
         Parameters
         ----------
         field : `Field`
-            The underlying scalar field of the space
+            Underlying scalar field of the space
         """
         self._field = field
 
@@ -63,7 +63,7 @@ class LinearSpace(Set):
         Returns
         -------
         field : `Field`
-            The underlying field.
+            Underlying field.
         """
         return self._field
 

@@ -25,5 +25,6 @@ Contents
 .. toctree::
    :maxdepth: 3
 
-   gitwash/index
+   extend
    document
+   gitwash/index

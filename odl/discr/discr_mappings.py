@@ -134,12 +134,12 @@ class FunctionSetMapping(Operator):
 
     @property
     def partition(self):
-        """The underlying domain partition."""
+        """Underlying domain partition."""
         return self._partition
 
     @property
     def grid(self):
-        """The sampling grid."""
+        """Sampling grid."""
         return self.partition.grid
 
     @property

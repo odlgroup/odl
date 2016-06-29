@@ -27,7 +27,7 @@ from odl.util.utility import arraynd_repr, arraynd_str
 from odl.operator.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space import ntuples, fn
+from odl.space import FN_IMPLS, NTUPLES_IMPLS
 from odl.set.sets import Set, RealNumbers, ComplexNumbers
 from odl.set.space import LinearSpace
 from odl.util.utility import (
@@ -213,12 +213,12 @@ class DiscretizedSet(NtuplesBase):
 
     @property
     def impl(self):
-        """The underlying implmentation type for the dspace."""
+        """Underlying implmentation type for the dspace."""
         return self.dspace.impl
 
     @property
     def domain(self):
-        """The domain of the continuous space."""
+        """Domain of the continuous space."""
         return self.uspace.domain
 
     @property
@@ -558,40 +558,34 @@ def dspace_type(space, impl, dtype=None):
         Space type selected after the space's field, the backend and
         the data type
     """
-    spacetype_map = {RealNumbers: fn,
-                     ComplexNumbers: fn,
-                     type(None): ntuples}
+    spacetype_map = {RealNumbers: FN_IMPLS,
+                     ComplexNumbers: FN_IMPLS,
+                     type(None): NTUPLES_IMPLS}
 
     field_type = type(getattr(space, 'field', None))
 
     if dtype is None:
-        stype = spacetype_map[field_type]
+        pass
     elif is_real_floating_dtype(dtype):
         if field_type is None or field_type == ComplexNumbers:
             raise TypeError('real floating data type {!r} requires space '
                             'field to be of type RealNumbers, got {}'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[field_type]
     elif is_complex_floating_dtype(dtype):
         if field_type is None or field_type == RealNumbers:
             raise TypeError('complex floating data type {!r} requires space '
                             'field to be of type ComplexNumbers, got {!r}'
                             ''.format(dtype, field_type))
-        stype = spacetype_map[field_type]
     elif is_scalar_dtype(dtype):
         if field_type == ComplexNumbers:
             raise TypeError('non-floating data type {!r} requires space field '
                             'to be of type RealNumbers, got {!r}'
                             .format(dtype, field_type))
-        elif field_type == RealNumbers:
-            stype = spacetype_map[field_type]
-        else:
-            stype = spacetype_map[field_type]
-    elif field_type is None:  # Only in this case are arbitrary types allowed
-        stype = spacetype_map[field_type]
     else:
         raise TypeError('non-scalar data type {!r} cannot be combined with '
                         'a `LinearSpace`'.format(dtype))
+
+    stype = spacetype_map[field_type].get(impl, None)
 
     if stype is None:
         raise NotImplementedError('no corresponding data space available '
