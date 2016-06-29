@@ -34,42 +34,49 @@ from odl.space.ntuples import Ntuples
 from odl.space.cu_ntuples import CudaNtuples
 from odl.set.sets import ComplexNumbers
 from odl.trafos.fourier import FourierTransform
-from odl.util.normalize import normalized_scalar_param_list
+from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 
 
 __all__ = ('Convolution', 'FourierSpaceConvolution', 'RealSpaceConvolution')
 
 
 _REAL_CONV_SUPPORTED_IMPL = ('scipy_convolve',)
-_FOURIER_CONV_SUPPORTED_IMPL = ('default_ft', 'pyfftw_ft')
-_FOURIER_CONV_SUPPORTED_KER_MODES = ('real', 'ft', 'ft_hc')
+_FOURIER_CONV_SUPPORTED_IMPL = ('default', 'pyfftw')
+_FOURIER_CONV_SUPPORTED_KER_MODES = ('real', 'fourier')
 
 
 class Convolution(Operator):
-    pass
+
+    """Discretization of the convolution integral as an operator.
+
+    This class provides common attributes and methods for subclasses
+    implementing different variants.
+    """
+
+    def kernel(self):
+        """Return the kernel of this convolution operator."""
+        raise NotImplementedError('abstract method')
 
 
 class FourierSpaceConvolution(Convolution):
 
-    """Discretization of the convolution integral as an operator.
+    """Convolution with a kernel, implemented in Fourier space.
 
     This operator implements a discrete approximation to the continuous
     convolution with a fixed kernel. It supports real-space and
     Fourier based back-ends.
     """
 
-    def __init__(self, dom, kernel, ran=None, **kwargs):
+    def __init__(self, domain, kernel, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
-        dom : `DiscreteLp`
-            Domain of the operator
-        ran : `DiscreteLp`, optional
-            Range of the operator, by default the same as ``dom``
+        domain : `DiscreteLp`
+            Domain of the operator.
         kernel :
-            The kernel can be specified in several ways, depending on
-            the choice of ``impl``:
+            Convolution kernel of this operator. The kernel can be
+            specified in several ways:
 
             domain `element-like` : The object is interpreted as the
             real-space kernel representation (mode ``'real'``).
@@ -87,39 +94,31 @@ class FourierSpaceConvolution(Convolution):
             the convolved function.
             Valid for ``impl``: ``'scipy_convolve'``
 
-        kernel_mode : {'real', 'ft', 'ft_hc'}, optional
-            How the provided kernel is to be interpreted. If not
+        kernel_mode : {'real', 'fourier'}, optional
+            Specifies the way the kernel is to be interpreted. If not
             provided, the kernel is tried to be converted into an element
-            of ``dom`` or a "sliced" version of it according to ``axes``.
+            of a reasonable space derived from ``domain``.
 
-            'real' : element of ``dom`` (default)
+            'real' : real-space kernel (default)
 
-            'ft' : function in the range of the Fourier transform
-
-            'ft_hc' : function in the range of the half-complex
-            (real-to-complex) Fourier transform
+            'fourier' : fourier-space kernel
 
         impl : `str`, optional
             Implementation of the convolution. Available options are:
 
-            'scipy_convolve': Real-space convolution using
-            `scipy.signal.convolve` (default, fast for short kernels)
-
-            'default_ft' : Fourier transform using the default FFT
+            'default' : Fourier transform using the default FFT
             implementation
 
-            'pyfftw_ft' : Fourier transform using pyFFTW (faster than
+            'pyfftw' : Fourier transform using pyFFTW (faster than
             the default FT)
 
         axes : sequence of `int`, optional
             Dimensions in which to convolve. Default: all axes
 
         scale : `bool`, optional
-            If `True`, scale the discrete convolution such that it
-            corresponds to a continuous convolution. The scaling
-            factor is ``2*pi ** (ndim/2)`` for FT-based convolutions
-            and the `DiscreteLp.cell_volume` for the SciPy
-            implementation.
+            If `True`, scale the discrete convolution by
+            ``2*pi ** (ndim/2)``, such that it corresponds to a
+            continuous convolution.
             Default: `True`
 
         kwargs :
@@ -133,11 +132,6 @@ class FourierSpaceConvolution(Convolution):
 
         Notes
         -----
-        - For Fourier-based convolutions, only the Fourier transform
-          of the kernel is stored. The real-space kernel can be retrieved
-          with ``conv.transform.inverse(conv.kernel_ft)`` if ``conv``
-          is the convolution operator.
-
         - The continuous convolution of two functions
           :math:`f` and :math:`g` defined on :math:`\mathbb{R^d}` is
 
@@ -155,18 +149,13 @@ class FourierSpaceConvolution(Convolution):
           This implementation covers the case of a fixed convolution
           kernel :math:`k`, i.e. the linear operator
 
-              :math:`\\big[\mathcal{C}_k(f)\\big](x) = [k \\ast f](x)`
-
-          mapping the Lebesgue space :math:`L^p(\mathbb{R^d})` to itself
-          (provided :math:`k \\in L^1(\mathbb{R^d})`), according to
-          `Young's inequality for convolutions
-          <https://en.wikipedia.org/wiki/Young's_inequality#\
-Young.27s_inequality_for_convolutions>`_.
+              :math:`\\big[\mathcal{C}_k(f)\\big](x) = [k \\ast f](x)`.
         """
         # Basic checks
-        if not isinstance(dom, DiscreteLp):
-            raise TypeError('domain {!r} is not a DiscreteLp instance.'
-                            ''.format(dom))
+        if not isinstance(domain, DiscreteLp):
+            raise TypeError('`domain` {!r} is not a `DiscreteLp` instance.'
+                            ''.format(domain))
+
 
         if ran is not None:
             # TODO
