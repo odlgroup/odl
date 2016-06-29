@@ -696,6 +696,108 @@ class RealSpaceConvolution(Convolution):
         return adj_conv
 
 
+def resize_array_symm(arr, newshp, out=None):
+    """Return the resized version of ``arr`` with shape ``newshp``.
+
+    In axes where ``newshp > arr.shape``, zeros are added evenly to
+    the left and the right, with preference for right if the number
+    of added zeros is odd.
+    Where ``newshp < arr.shape``, entries are discarded, in the same
+    symmetric manner as above.
+
+    Parameters
+    ----------
+    arr : array-like
+        Array to be resized.
+    newshp : int or sequence of int
+        Desired shape of the output array.
+    out : `numpy.ndarray`, optional
+        Array to write the result to. Must have shape ``newshp`` and
+        be able to hold the data type of the input array.
+
+    Returns
+    -------
+    resized : `numpy.ndarray`
+        Resized array created according to the above rules. If ``out``
+        was given, the returned object is a reference to it.
+    """
+    arr = np.asarray(arr)
+    newshp = tuple(normalized_scalar_param_list(newshp, arr.ndim,
+                                                param_conv=safe_int_conv))
+    if out is None:
+        out = np.zeros(newshp, dtype=arr.dtype)
+    else:
+        if not isinstance(out, np.ndarray):
+            raise TypeError('`out` must be a `numpy.ndarray` instance, got '
+                            '{!r}'.format(out))
+        if not np.can_cast(arr.dtype, out.dtype):
+            raise ValueError('data type {} of `arr` cannot be safely cast '
+                             'to data type {} of `out`'
+                             ''.format(arr.dtype, out.dtype))
+        if out.shape != newshp:
+            raise ValueError('`out` must have shape {}, got {}'
+                             ''.format(newshp, out.shape))
+        out.fill(0.0)
+
+    arr_slc, out_slc = [], []
+    for n_old, n_new in zip(arr.shape, out.shape):
+        if n_new > n_old:
+            iremove = n_new - n_old
+            istart = iremove // 2
+            istop = -(iremove - istart)
+            arr_slc.append(slice(None))
+            out_slc.append(slice(istart, istop))
+        elif n_new < n_old:
+            iadd = n_old - n_new
+            istart = iadd // 2
+            istop = -(iadd - istart)
+            arr_slc.append(slice(istart, istop))
+            out_slc.append(slice(None))
+        else:
+            arr_slc.append(slice(None))
+            out_slc.append(slice(None))
+
+    arr_slc = tuple(arr_slc)
+    out_slc = tuple(out_slc)
+    out[out_slc] = arr[arr_slc]
+    return out
+
+
+def zero_centered_discr_fromdiscr(discr, shape=None):
+    """Return a discretization centered around zero.
+
+    The cell sizes will be kept in any case, but the total size can
+    be changed with the ``shape`` option.
+
+    Parameters
+    ----------
+    discr : `DiscreteLp`
+        Uniformly discretized space to be used as template.
+    shape : int or sequence of int, optional
+        If specified, resize the space to this shape.
+
+    Returns
+    -------
+    newspace : `DiscreteLp`
+        Uniformly discretized space whose domain has midpoint
+        ``(0, ..., 0)`` and the same cell size as ``discr``.
+    """
+    if not isinstance(discr, DiscreteLp):
+        raise TypeError('`discr` {!r} is not a DiscreteLp instance'
+                        ''.format(discr))
+    if not discr.is_uniform:
+        raise ValueError('irregular sampling not supported')
+
+    if shape is not None:
+        shape = normalized_scalar_param_list(shape, discr.ndim,
+                                             param_conv=safe_int_conv)
+    else:
+        shape = discr.shape
+    new_min_corner = -(discr.cell_sides * shape) / 2
+    return uniform_discr_fromdiscr(discr, min_corner=new_min_corner,
+                                   nsamples=shape)
+
+
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
