@@ -27,7 +27,7 @@ from __future__ import absolute_import
 
 __version__ = '0.2.4'
 __all__ = ('diagnostics', 'discr', 'operator', 'set', 'space', 'solvers',
-           'tomo', 'trafos', 'util', 'phantom')
+           'tomo', 'trafos', 'util', 'phantom', 'deform')
 
 # Propagate names defined in __all__ of all submodules into the top-level
 # module
@@ -54,6 +54,7 @@ from . import trafos
 from . import tomo
 from . import util
 from . import phantom
+from . import deform
 
 from .util import test
 __all__ += ('test',)
