@@ -47,7 +47,6 @@ except ImportError:
 import numpy as np
 
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
-from odl.space.ntuples import FnVector
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, DivergentBeamGeometry, ParallelGeometry,
     FlatDetector)
@@ -449,7 +448,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
     if data is not None:
         if isinstance(data, np.ndarray):
             return link(astra_dtype_str, astra_geom, data)
-        elif isinstance(data.ntuple, FnVector):
+        elif data.ntuple.impl == 'numpy':
             return link(astra_dtype_str, astra_geom, data.asarray())
         else:
             # Something else than NumPy data representation

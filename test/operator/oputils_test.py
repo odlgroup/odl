@@ -32,7 +32,7 @@ from odl.operator.oputils import matrix_representation, power_method_opnorm
 from odl.space.pspace import ProductSpace
 from odl.operator.pspace_ops import ProductSpaceOperator
 
-from odl.space.ntuples import MatVecOperator
+from odl.space.npy_ntuples import MatVecOperator
 from odl.util.testutils import almost_equal
 
 
@@ -53,12 +53,12 @@ def test_matrix_representation_product_to_lin_space():
     # Verify that the matrix representation function returns the correct matrix
 
     n = 3
-    rn = odl.Rn(n)
+    rn = odl.rn(n)
     A = np.random.rand(n, n)
     Aop = MatVecOperator(A)
 
     m = 2
-    rm = odl.Rn(m)
+    rm = odl.rn(m)
     B = np.random.rand(n, m)
     Bop = MatVecOperator(B)
 
@@ -77,12 +77,12 @@ def test_matrix_representation_lin_space_to_product():
     # Verify that the matrix representation function returns the correct matrix
 
     n = 3
-    rn = odl.Rn(n)
+    rn = odl.rn(n)
     A = np.random.rand(n, n)
     Aop = MatVecOperator(A)
 
     m = 2
-    rm = odl.Rn(m)
+    rm = odl.rn(m)
     B = np.random.rand(m, n)
     Bop = MatVecOperator(B)
 
@@ -101,12 +101,12 @@ def test_matrix_representation_product_to_product():
     # Verify that the matrix representation function returns the correct matrix
 
     n = 3
-    rn = odl.Rn(n)
+    rn = odl.rn(n)
     A = np.random.rand(n, n)
     Aop = MatVecOperator(A)
 
     m = 2
-    rm = odl.Rn(m)
+    rm = odl.rn(m)
     B = np.random.rand(m, m)
     Bop = MatVecOperator(B)
 
@@ -126,7 +126,7 @@ def test_matrix_representation_product_to_product_two():
     # Verify that the matrix representation function returns the correct matrix
 
     n = 3
-    rn = odl.Rn(n)
+    rn = odl.rn(n)
     A = np.random.rand(n, n)
     Aop = MatVecOperator(A)
 
@@ -150,10 +150,10 @@ def test_matrix_representation_not_linear_op():
     class small_nonlin_op(odl.Operator):
         """Small nonlinear test operator"""
         def __init__(self):
-            super().__init__(domain=odl.Rn(3), range=odl.Rn(4), linear=False)
+            super().__init__(domain=odl.rn(3), range=odl.rn(4), linear=False)
 
         def _call(self, x, out):
-            return odl.Rn(np.random.rand(4))
+            return odl.rn(np.random.rand(4))
 
     nonlin_op = small_nonlin_op()
     with pytest.raises(ValueError):
@@ -165,13 +165,13 @@ def test_matrix_representation_wrong_domain():
     class small_op(odl.Operator):
         """Small nonlinear test operator"""
         def __init__(self):
-            super().__init__(domain=ProductSpace(odl.Rn(3),
-                                                 ProductSpace(odl.Rn(3),
-                                                              odl.Rn(3))),
-                             range=odl.Rn(4), linear=True)
+            super().__init__(domain=ProductSpace(odl.rn(3),
+                                                 ProductSpace(odl.rn(3),
+                                                              odl.rn(3))),
+                             range=odl.rn(4), linear=True)
 
         def _call(self, x, out):
-            return odl.Rn(np.random.rand(4))
+            return odl.rn(np.random.rand(4))
 
     nonlin_op = small_op()
     with pytest.raises(TypeError):
@@ -183,14 +183,14 @@ def test_matrix_representation_wrong_range():
     class small_op(odl.Operator):
         """Small nonlinear test operator"""
         def __init__(self):
-            super().__init__(domain=odl.Rn(3),
-                             range=ProductSpace(odl.Rn(3),
-                                                ProductSpace(odl.Rn(3),
-                                                             odl.Rn(3))),
+            super().__init__(domain=odl.rn(3),
+                             range=ProductSpace(odl.rn(3),
+                                                ProductSpace(odl.rn(3),
+                                                             odl.rn(3))),
                              linear=True)
 
         def _call(self, x, out):
-            return odl.Rn(np.random.rand(4))
+            return odl.rn(np.random.rand(4))
 
     nonlin_op = small_op()
     with pytest.raises(TypeError):
@@ -211,7 +211,7 @@ def test_power_method_opnorm_symm():
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
     # Start at a different point
-    xstart = odl.Rn(2).element([0.8, 0.5])
+    xstart = odl.rn(2).element([0.8, 0.5])
     opnorm_est = power_method_opnorm(op, niter=10, xstart=xstart)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
@@ -231,7 +231,7 @@ def test_power_method_opnorm_nonsymm():
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
     # Start close to the correct eigenvector, converges very fast
-    xstart = odl.Rn(2).element([-0.8, 0.5])
+    xstart = odl.rn(2).element([-0.8, 0.5])
     opnorm_est = power_method_opnorm(op, niter=5, xstart=xstart)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 

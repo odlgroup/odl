@@ -203,8 +203,6 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
     (slice(1, 2, None), slice(2, 3, None), slice(3, 4, None))
     >>> x[idx1]
     array([[[ 0.]]])
-    >>> x[idx1].shape
-    (1, 1, 1)
     >>> idx2 = normalized_index_expression([1, 2, 3], shape=(3, 4, 5),
     ...                                   int_to_slice=False)
     >>> idx2

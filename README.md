@@ -50,6 +50,7 @@ where FOO, BAR, etc are the dependencies. Others require more complicated instal
 
 | Package | Purpose | Dependency |
 |---------|---------|------------|
+| [odlcuda](https://github.com/odlgroup/odlcuda/)   | CUDA backend |  |
 | [ASTRA](https://github.com/astra-toolbox/astra-toolbox)    | Tomographic forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html) |  |
 | [scikit-image](http://scikit-image.org/)    | 2D parallel beam forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html) | scikit |
 | [FFTW](https://github.com/pyFFTW/pyFFTW)   | Accelerated [FourierTransform](http://odl.readthedocs.io/generated/odl.trafos.fourier.FourierTransform.html) | fftw |
@@ -62,20 +63,17 @@ Compatibility
 -------------
 ODL is compatible to Python 2 and 3 through the `future` library. It is intended to work on all major platforms (GNU/Linux / Mac / Windows).
 
-Currently (2016-06-10) working combinations are:
+Currently (2016-06-10) known working combinations are:
 
-| Platform     | Python          | CUDA  |
-|--------------|-----------------|-------|
-| Windows 7    | 2.7             | ✔     |
-| Windows 10   | 2.7             | ✔     |
-| Ubuntu 14.04 | 2.7             | ✔     |
-| Ubuntu 15.10 | 2.7 / 3.4 / 3.5 | ✔     |
-| Ubuntu 16.04 | 2.7 / 3.4 / 3.5 | ✔     |
-| Fedora 22    | 2.7 / 3.4       | x (1) |
-| Mac OSX      | 3.5             | ??    |
-
-(1) The default GCC 5.x compiler is not compatible with current CUDA (7.5)
-
+| Platform     | Python          |
+|--------------|-----------------|
+| Windows 7    | 2.7             |
+| Windows 10   | 2.7             |
+| Ubuntu 14.04 | 2.7             |
+| Ubuntu 15.10 | 2.7 / 3.4 / 3.5 |
+| Ubuntu 16.04 | 2.7 / 3.4 / 3.5 |
+| Fedora 22    | 2.7 / 3.4       |
+| Mac OSX      | 3.5             |
 
 License
 -------

@@ -28,7 +28,6 @@ except ImportError:
     pass
 
 from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
-from odl.space.ntuples import Ntuples
 from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_data,
     astra_projector, astra_algorithm)
@@ -62,20 +61,21 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
         Projection data resulting from the application of the projector
     """
     if not isinstance(vol_data, DiscreteLpVector):
-        raise TypeError('volume data {!r} is not a DiscreteLpVector '
-                        'instance'.format(vol_data))
-    if not isinstance(vol_data.space.dspace, Ntuples):
-        raise TypeError('data type {!r} of the volume space is not an '
-                        'instance of Ntuples'.format(vol_data.space.dspace))
+        raise TypeError('volume data {!r} is not a `DiscreteLpVector` '
+                        'instance.'.format(vol_data))
+    if vol_data.space.impl != 'numpy':
+        raise TypeError('dspace {!r} of the volume is not an '
+                        'instance of `NumpyNtuples`'
+                        ''.format(vol_data.space.dspace))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
     if not isinstance(proj_space, DiscreteLp):
         raise TypeError('projection space {!r} is not a DiscreteLp '
-                        'instance'.format(proj_space))
-    if not isinstance(proj_space.dspace, Ntuples):
+                        'instance.'.format(proj_space))
+    if proj_space.impl != 'numpy':
         raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of Ntuples'.format(proj_space.dspace))
+                        'instance of NumpyNtuples'.format(proj_space.dspace))
     if vol_data.ndim != geometry.ndim:
         raise ValueError('dimensions {} of volume data and {} of geometry '
                          'do not match'
@@ -145,18 +145,19 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
     if not isinstance(proj_data, DiscreteLpVector):
         raise TypeError('projection data {!r} is not a DiscreteLpVector '
                         'instance'.format(proj_data))
-    if not isinstance(proj_data.space.dspace, Ntuples):
+    if proj_data.space.impl != 'numpy':
         raise TypeError('data type {!r} of the projection space is not an '
-                        'instance of Ntuples'.format(proj_data.shape.dspace))
+                        'instance of NumpyNtuples'
+                        ''.format(proj_data.shape.dspace))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
                         ''.format(geometry))
     if not isinstance(reco_space, DiscreteLp):
         raise TypeError('reconstruction space {!r} is not a DiscreteLp '
                         'instance'.format(reco_space))
-    if not isinstance(reco_space.dspace, Ntuples):
+    if reco_space.impl != 'numpy':
         raise TypeError('data type {!r} of the reconstruction space is not an '
-                        'instance of Ntuples'.format(reco_space.dspace))
+                        'instance of NumpyNtuples'.format(reco_space.dspace))
     if reco_space.ndim != geometry.ndim:
         raise ValueError('dimensions {} of reconstruction space and {} of '
                          'geometry do not match'.format(

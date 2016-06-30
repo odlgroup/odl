@@ -653,23 +653,23 @@ class Operator(object):
 
         Examples
         --------
-        >>> from odl import Rn, ScalingOperator
-        >>> rn = Rn(3)
-        >>> op = ScalingOperator(rn, 2.0)
+        >>> import odl
+        >>> rn = odl.rn(3)
+        >>> op = odl.ScalingOperator(rn, 2.0)
         >>> x = rn.element([1, 2, 3])
 
         Out-of-place evaluation:
 
         >>> op(x)
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
 
         In-place evaluation:
 
         >>> y = rn.element()
         >>> op(x, out=y)
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         >>> y
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
 
         See Also
         --------
@@ -770,15 +770,15 @@ class Operator(object):
 
         Examples
         --------
-        >>> from odl import Rn, IdentityOperator
-        >>> rn = Rn(3)
-        >>> op = IdentityOperator(rn)
+        >>> import odl
+        >>> rn = odl.rn(3)
+        >>> op = odl.IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> op(x)
-        Rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([1.0, 2.0, 3.0])
         >>> Scaled = op * 3
         >>> Scaled(x)
-        Rn(3).element([3.0, 6.0, 9.0])
+        rn(3).element([3.0, 6.0, 9.0])
         """
         if isinstance(other, Operator):
             return OperatorComp(self, other)
@@ -853,15 +853,15 @@ class Operator(object):
 
         Examples
         --------
-        >>> from odl import Rn, IdentityOperator
-        >>> rn = Rn(3)
-        >>> op = IdentityOperator(rn)
+        >>> import odl
+        >>> rn = odl.rn(3)
+        >>> op = odl.IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
         >>> op(x)
-        Rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([1.0, 2.0, 3.0])
         >>> Scaled = 3 * op
         >>> Scaled(x)
-        Rn(3).element([3.0, 6.0, 9.0])
+        rn(3).element([3.0, 6.0, 9.0])
         """
         if isinstance(other, Operator):
             return OperatorComp(other, self)
@@ -905,18 +905,18 @@ class Operator(object):
 
         Examples
         --------
-        >>> from odl import Rn, ScalingOperator
-        >>> rn = Rn(3)
-        >>> op = ScalingOperator(rn, 3)
+        >>> import odl
+        >>> rn = odl.rn(3)
+        >>> op = odl.ScalingOperator(rn, 3)
         >>> x = rn.element([1, 2, 3])
         >>> op(x)
-        Rn(3).element([3.0, 6.0, 9.0])
+        rn(3).element([3.0, 6.0, 9.0])
         >>> squared = op**2
         >>> squared(x)
-        Rn(3).element([9.0, 18.0, 27.0])
+        rn(3).element([9.0, 18.0, 27.0])
         >>> squared = op**3
         >>> squared(x)
-        Rn(3).element([27.0, 54.0, 81.0])
+        rn(3).element([27.0, 54.0, 81.0])
         """
         if isinstance(n, Integral) and n > 0:
             op = self
@@ -948,15 +948,15 @@ class Operator(object):
 
         Examples
         --------
-        >>> from odl import Rn, IdentityOperator
-        >>> rn = Rn(3)
-        >>> op = IdentityOperator(rn)
+        >>> import odl
+        >>> rn = odl.rn(3)
+        >>> op = odl.IdentityOperator(rn)
         >>> x = rn.element([3, 6, 9])
         >>> op(x)
-        Rn(3).element([3.0, 6.0, 9.0])
+        rn(3).element([3.0, 6.0, 9.0])
         >>> Scaled = op / 3.0
         >>> Scaled(x)
-        Rn(3).element([1.0, 2.0, 3.0])
+        rn(3).element([1.0, 2.0, 3.0])
         """
         if isinstance(other, Number):
             return self * (1.0 / other)
@@ -1060,17 +1060,17 @@ class OperatorSum(Operator):
 
         Examples
         --------
-        >>> from odl import Rn, IdentityOperator
-        >>> r3 = Rn(3)
-        >>> op = IdentityOperator(r3)
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> op = odl.IdentityOperator(r3)
         >>> x = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> OperatorSum(op, op)(x, out)  # In place, returns out
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         >>> out
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         >>> OperatorSum(op, op)(x)
-        Rn(3).element([2.0, 4.0, 6.0])
+        rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:
             return self._op1(x) + self._op2(x)

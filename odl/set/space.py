@@ -49,7 +49,7 @@ class LinearSpace(Set):
         Parameters
         ----------
         field : `Field`
-            The underlying scalar field of the space
+            Underlying scalar field of the space
         """
         self._field = field
 
@@ -63,7 +63,7 @@ class LinearSpace(Set):
         Returns
         -------
         field : `Field`
-            The underlying field.
+            Underlying field.
         """
         return self._field
 
@@ -669,9 +669,9 @@ class LinearSpaceVector(object):
 
         Examples
         --------
-        >>> from odl import Rn
+        >>> import odl
         >>> import numpy as np
-        >>> rn = Rn(1, norm=np.linalg.norm)
+        >>> rn = odl.rn(1, norm=np.linalg.norm)
         >>> x = rn.element([0.1])
         >>> x == x
         True
@@ -791,9 +791,9 @@ class LinearSpaceVector(object):
 
         Examples
         --------
-        >>> from odl import Rn
+        >>> import odl
         >>> import numpy as np
-        >>> rn = Rn(3)
+        >>> rn = odl.rn(3)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element([2, 1, 3])
         >>> x.T(y)

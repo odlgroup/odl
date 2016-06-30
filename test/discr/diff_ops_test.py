@@ -29,7 +29,7 @@ import odl
 from odl.discr.diff_ops import (
     finite_diff, PartialDerivative, Gradient, Divergence, Laplacian)
 from odl.util.testutils import (
-    all_equal, all_almost_equal, almost_equal, skip_if_no_cuda, never_skip)
+    all_equal, all_almost_equal, almost_equal, never_skip)
 
 
 methods = ['central', 'forward', 'backward']
@@ -47,17 +47,6 @@ padding_ids = [' constant=0 ', ' constant=1 ', ' symmetric ', ' periodic ']
 
 @pytest.fixture(scope="module", params=paddings, ids=padding_ids)
 def padding(request):
-    return request.param
-
-
-# Find the valid projectors
-impls = [never_skip('numpy'),
-         skip_if_no_cuda('cuda')]
-impl_ids = [' impl={} '.format(p.args[1]) for p in impls]
-
-
-@pytest.fixture(scope="module", params=impls, ids=impl_ids)
-def impl(request):
     return request.param
 
 
@@ -243,11 +232,11 @@ def test_finite_diff_periodic_padding():
 # --- PartialDerivative --- #
 
 
-def test_part_deriv(impl, method, padding):
+def test_part_deriv(fn_impl, method, padding):
     """Discretized partial derivative."""
 
     with pytest.raises(TypeError):
-        PartialDerivative(odl.Rn(1))
+        PartialDerivative(odl.rn(1))
 
     if isinstance(padding, tuple):
         padding_method, padding_value = padding
@@ -255,7 +244,7 @@ def test_part_deriv(impl, method, padding):
         padding_method, padding_value = padding, None
 
     # discretized space
-    space = odl.uniform_discr([0, 0], [2, 1], DATA_2D.shape, impl=impl)
+    space = odl.uniform_discr([0, 0], [2, 1], DATA_2D.shape, impl=fn_impl)
     dom_vec = space.element(DATA_2D)
 
     # operator
@@ -290,11 +279,11 @@ def test_part_deriv(impl, method, padding):
 # --- Gradient --- #
 
 
-def test_gradient(method, impl, padding):
+def test_gradient(method, fn_impl, padding):
     """Discretized spatial gradient operator."""
 
     with pytest.raises(TypeError):
-        Gradient(odl.Rn(1), method=method)
+        Gradient(odl.rn(1), method=method)
 
     if isinstance(padding, tuple):
         padding_method, padding_value = padding
@@ -302,7 +291,8 @@ def test_gradient(method, impl, padding):
         padding_method, padding_value = padding, None
 
     # DiscreteLp Vector
-    discr_space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=impl)
+    discr_space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape,
+                                    impl=fn_impl)
     dom_vec = discr_space.element(DATA_2D)
 
     # computation of gradient components with helper function
@@ -353,12 +343,12 @@ def test_gradient(method, impl, padding):
 # --- Divergence --- #
 
 
-def test_divergence(method, impl, padding):
+def test_divergence(method, fn_impl, padding):
     """Discretized spatial divergence operator."""
 
     # Invalid space
     with pytest.raises(TypeError):
-        Divergence(range=odl.Rn(1), method=method)
+        Divergence(range=odl.rn(1), method=method)
 
     if isinstance(padding, tuple):
         padding_method, padding_value = padding
@@ -366,7 +356,7 @@ def test_divergence(method, impl, padding):
         padding_method, padding_value = padding, None
 
     # DiscreteLp
-    space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=impl)
+    space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
 
     # Operator instance
     div = Divergence(range=space, method=method,
@@ -416,12 +406,12 @@ def test_divergence(method, impl, padding):
         div([dom_vec] * ndim)
 
 
-def test_laplacian(impl, padding):
+def test_laplacian(fn_impl, padding):
     """Discretized spatial laplacian operator."""
 
     # Invalid space
     with pytest.raises(TypeError):
-        Divergence(range=odl.Rn(1))
+        Divergence(range=odl.rn(1))
 
     if isinstance(padding, tuple):
         padding_method, padding_value = padding
@@ -429,7 +419,7 @@ def test_laplacian(impl, padding):
         padding_method, padding_value = padding, None
 
     # DiscreteLp
-    space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=impl)
+    space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
 
     # Operator instance
     lap = Laplacian(space,

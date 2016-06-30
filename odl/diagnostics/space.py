@@ -910,6 +910,6 @@ class SpaceTest(object):
 
 
 if __name__ == '__main__':
-    from odl import Rn, uniform_discr
-    SpaceTest(Rn(10)).run_tests()
+    from odl import rn, uniform_discr
+    SpaceTest(rn(10)).run_tests()
     SpaceTest(uniform_discr([0, 0], [1, 1], [5, 5])).run_tests()

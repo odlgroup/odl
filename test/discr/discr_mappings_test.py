@@ -33,17 +33,17 @@ from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
 from odl.util.testutils import (
-    all_almost_equal, all_equal, almost_equal, skip_if_no_cuda)
+    all_almost_equal, all_equal, almost_equal)
 
 
-def test_nearest_interpolation_1d_complex():
+def test_nearest_interpolation_1d_complex(fn_impl):
     intv = odl.Interval(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     space = odl.FunctionSpace(intv, field=odl.ComplexNumbers())
-    dspace = odl.Cn(part.size)
+    dspace = odl.cn(part.size)
     interp_op = NearestInterpolation(space, part, dspace)
     function = interp_op([0 + 1j, 1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j])
 
@@ -76,7 +76,7 @@ def test_nearest_interpolation_1d_variants():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     space = odl.FunctionSpace(intv)
-    dspace = odl.Rn(part.size)
+    dspace = odl.rn(part.size)
 
     # 'left' variant
     interp_op = NearestInterpolation(space, part, dspace, variant='left')
@@ -104,7 +104,7 @@ def test_nearest_interpolation_2d_float():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(part.size)
+    dspace = odl.rn(part.size)
     interp_op = NearestInterpolation(space, part, dspace)
     function = interp_op([0, 1, 2, 3, 4, 5, 6, 7])
 
@@ -137,7 +137,7 @@ def test_nearest_interpolation_2d_string():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSet(rect, odl.Strings(1))
-    dspace = odl.Ntuples(part.size, dtype='U1')
+    dspace = odl.ntuples(part.size, dtype='U1')
     interp_op = NearestInterpolation(space, part, dspace)
     values = np.array([c for c in 'mystring'])
     function = interp_op(values)
@@ -171,7 +171,7 @@ def test_linear_interpolation_1d():
     # [0.1, 0.3, 0.5, 0.7, 0.9]
 
     space = odl.FunctionSpace(intv)
-    dspace = odl.Rn(part.size)
+    dspace = odl.rn(part.size)
     interp_op = LinearInterpolation(space, part, dspace)
     function = interp_op([1, 2, 3, 4, 5])
 
@@ -193,7 +193,7 @@ def test_linear_interpolation_2d():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(part.size)
+    dspace = odl.rn(part.size)
     interp_op = LinearInterpolation(space, part, dspace)
     values = np.arange(1, 9, dtype='float64')
     function = interp_op(values)
@@ -262,7 +262,7 @@ def test_per_axis_interpolation():
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
 
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(part.size)
+    dspace = odl.rn(part.size)
     schemes = ['linear', 'nearest']
     variants = [None, 'right']
     interp_op = PerAxisInterpolation(space, part, dspace, schemes=schemes,
@@ -318,7 +318,7 @@ def test_collocation_interpolation_identity():
     rect = odl.Rectangle([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2])
     space = odl.FunctionSpace(rect)
-    dspace = odl.Rn(part.size)
+    dspace = odl.rn(part.size)
 
     coll_op_c = PointCollocation(space, part, dspace, order='C')
     coll_op_f = PointCollocation(space, part, dspace, order='F')
@@ -345,20 +345,6 @@ def test_collocation_interpolation_identity():
         ident_values = coll_op_f(interp_op_f(values))
         assert all_almost_equal(ident_values, values)
 
-
-@skip_if_no_cuda
-def test_collocation_cuda():
-    rect = odl.Rectangle([0, 0], [1, 1])
-    part = odl.uniform_partition_fromintv(rect, [4, 2])
-    space = odl.FunctionSpace(rect)
-    dspace = odl.CudaRn(part.size)
-
-    coll_op = PointCollocation(space, part, dspace)
-    interp_op = LinearInterpolation(space, part, dspace)
-
-    values = np.arange(1, 9, dtype='float64')
-    ident_values = coll_op(interp_op(values))
-    assert all_almost_equal(ident_values, values)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

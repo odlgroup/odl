@@ -96,7 +96,7 @@ class ProductSpace(LinearSpace):
         ----------------
         dist : `callable`, optional
             The distance function defining a metric on the space.
-            It must accept two `FnVector` arguments and
+            It must accept two `ProductSpaceVector` arguments and
             fulfill the following mathematical conditions for any
             three vectors ``x, y, z``:
 
@@ -113,7 +113,7 @@ class ProductSpace(LinearSpace):
 
         norm : `callable`, optional
             The norm implementation. It must accept an
-            `FnVector` argument, return a `float` and satisfy the
+            `ProductSpaceVector` argument, return a `float` and satisfy the
             following conditions for all vectors ``x, y`` and scalars
             ``s``:
 
@@ -128,7 +128,7 @@ class ProductSpace(LinearSpace):
 
         inner : `callable`, optional
             The inner product implementation. It must accept two
-            `FnVector` arguments, return a element from
+            `ProductSpaceVector` arguments, return a element from
             the field of the space (real or complex number) and
             satisfy the following conditions for all vectors
             ``x, y, z`` and scalars ``s``:
@@ -165,8 +165,8 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r2x3 = ProductSpace(Rn(2), Rn(3))
+        >>> import odl
+        >>> r2x3 = ProductSpace(odl.rn(2), odl.rn(3))
 
         Notes
         -----
@@ -362,8 +362,8 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r2, r3 = Rn(2), Rn(3)
+        >>> import odl
+        >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
         >>> r2x3 = ProductSpace(r2, r3)
         >>> vec_2x3 = r2x3.element()
@@ -374,8 +374,7 @@ class ProductSpace(LinearSpace):
 
         Create an element of the product space
 
-        >>> from odl import Rn
-        >>> r2, r3 = Rn(2), Rn(3)
+        >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> prod = ProductSpace(r2, r3)
         >>> x2 = r2.element([1, 2])
         >>> x3 = r3.element([1, 2, 3])
@@ -429,8 +428,8 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r2, r3 = Rn(2), Rn(3)
+        >>> import odl
+        >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = ProductSpace(r2, r3)
         >>> zero_2x3 = r2x3.zero()
@@ -458,8 +457,8 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r2, r3 = Rn(2), Rn(3)
+        >>> import odl
+        >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> one_2, one_3 = r2.one(), r3.one()
         >>> r2x3 = ProductSpace(r2, r3)
         >>> one_2x3 = r2x3.one()
@@ -511,19 +510,19 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r2, r3 = Rn(2), Rn(3)
-        >>> rn, rm = Rn(2), Rn(3)
+        >>> import odl
+        >>> r2, r3 = odl.rn(2), odl.rn(3)
+        >>> rn, rm = odl.rn(2), odl.rn(3)
         >>> r2x3, rnxm = ProductSpace(r2, r3), ProductSpace(rn, rm)
         >>> r2x3 == rnxm
         True
         >>> r3x2 = ProductSpace(r3, r2)
         >>> r2x3 == r3x2
         False
-        >>> r5 = ProductSpace(*[Rn(1)]*5)
+        >>> r5 = ProductSpace(*[odl.rn(1)]*5)
         >>> r2x3 == r5
         False
-        >>> r5 = Rn(5)
+        >>> r5 = odl.rn(5)
         >>> r2x3 == r5
         False
         """
@@ -639,11 +638,11 @@ class ProductSpaceVector(LinearSpaceVector):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r22 = ProductSpace(Rn(2), 2)
+        >>> import odl
+        >>> r22 = ProductSpace(odl.rn(2), 2)
         >>> x = r22.element([[1, -2], [-3, 4]])
         >>> x.ufunc.absolute()
-        ProductSpace(Rn(2), 2).element([
+        ProductSpace(rn(2), 2).element([
             [1.0, 2.0],
             [3.0, 4.0]
         ])
@@ -652,7 +651,7 @@ class ProductSpaceVector(LinearSpaceVector):
         support broadcasting, both by element
 
         >>> x.ufunc.add([1, 1])
-        ProductSpace(Rn(2), 2).element([
+        ProductSpace(rn(2), 2).element([
             [2.0, -1.0],
             [-2.0, 5.0]
         ])
@@ -660,7 +659,7 @@ class ProductSpaceVector(LinearSpaceVector):
         and also recursively
 
         >>> x.ufunc.subtract(1)
-        ProductSpace(Rn(2), 2).element([
+        ProductSpace(rn(2), 2).element([
             [0.0, -3.0],
             [-4.0, 3.0]
         ])
@@ -675,7 +674,7 @@ class ProductSpaceVector(LinearSpaceVector):
         >>> y = r22.element()
         >>> result = x.ufunc.absolute(out=y)
         >>> result
-        ProductSpace(Rn(2), 2).element([
+        ProductSpace(rn(2), 2).element([
             [1.0, 2.0],
             [3.0, 4.0]
         ])
@@ -702,8 +701,9 @@ class ProductSpaceVector(LinearSpaceVector):
 
         Examples
         --------
-        >>> from odl import Rn
-        >>> r2, r3 = Rn(2), Rn(3)
+        >>> import odl
+        >>> from odl import rn  # need to import rn into namespace
+        >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> r2x3 = ProductSpace(r2, r3)
         >>> x = r2x3.element([[1, 2], [3, 4, 5]])
         >>> eval(repr(x)) == x
@@ -712,7 +712,7 @@ class ProductSpaceVector(LinearSpaceVector):
         The result is readable:
 
         >>> x
-        ProductSpace(Rn(2), Rn(3)).element([
+        ProductSpace(rn(2), rn(3)).element([
             [1.0, 2.0],
             [3.0, 4.0, 5.0]
         ])
@@ -724,7 +724,7 @@ class ProductSpaceVector(LinearSpaceVector):
         >>> eval(repr(x)) == x
         True
         >>> x
-        ProductSpace(ProductSpace(Rn(2), Rn(3)), 2).element([
+        ProductSpace(ProductSpace(rn(2), rn(3)), 2).element([
             [
                 [1.0, 2.0],
                 [3.0, 4.0, 5.0]

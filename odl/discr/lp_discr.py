@@ -35,11 +35,9 @@ from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
-from odl.space.cu_ntuples import CUDA_AVAILABLE, CudaFn
-from odl.space.fspace import FunctionSpace
-from odl.space.ntuples import Fn
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
+from odl.space import FunctionSpace, FN_IMPLS
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
@@ -259,7 +257,7 @@ class DiscreteLp(DiscretizedSpace):
         >>> space = odl.uniform_discr(-1, 1, 4)
         >>> space.element([1, 2, 3, 4])
         uniform_discr(-1.0, 1.0, 4).element([1.0, 2.0, 3.0, 4.0])
-        >>> vector = odl.Rn(4).element([0, 1, 2, 3])
+        >>> vector = odl.rn(4).element([0, 1, 2, 3])
         >>> space.element(vector)
         uniform_discr(-1.0, 1.0, 4).element([0.0, 1.0, 2.0, 3.0])
 
@@ -406,14 +404,9 @@ class DiscreteLp(DiscretizedSpace):
             use_uniform = False
 
         if use_uniform:
-            if isinstance(self.dspace, Fn):
-                impl = 'numpy'
-                default_dtype = np.float64
-            elif isinstance(self.dspace, CudaFn):
-                impl = 'cuda'
-                default_dtype = np.float32
-            else:  # This should never happen
-                raise RuntimeError('unable to determine data space impl')
+            impl = self.dspace.impl
+            default_dtype = self.dspace.default_dtype(RealNumbers())
+
             arg_fstr = '{}, {}, {}'
             if self.exponent != 2.0:
                 arg_fstr += ', exponent={exponent}'
@@ -619,7 +612,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
         ----------
         indices : `int` or `slice`
             The position(s) that should be set
-        values : scalar, `array-like` or `NtuplesVector`
+        values : scalar or `array-like`
             The value(s) that are to be assigned.
             If ``indices`` is an `int`, ``values`` must be a single
             value.
@@ -844,7 +837,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
 
             'linear' : use linear interpolation
 
-    impl : {'numpy', 'cuda'}, optional
+    impl : `str`, optional
         Implementation of the data storage arrays
 
     Other Parameters
@@ -891,18 +884,15 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     if not partition.is_uniform:
         raise ValueError('`partition` is not uniform')
 
-    impl, impl_in = str(impl).lower(), impl
-    if impl == 'numpy':
-        dtype = np.dtype(kwargs.pop('dtype', 'float64'))
-    elif impl == 'cuda':
-        if not CUDA_AVAILABLE:
-            raise ValueError('cUDA not available')
-        dtype = np.dtype(kwargs.pop('dtype', 'float32'))
-    else:
-        raise ValueError("`impl` '{}' not understood".format(impl_in))
+    dtype = kwargs.pop('dtype', None)
+    if dtype is not None:
+        dtype = np.dtype(dtype)
 
     fspace = FunctionSpace(partition.set, out_dtype=dtype)
     ds_type = dspace_type(fspace, impl, dtype)
+
+    if dtype is None:
+        dtype = ds_type.default_dtype()
 
     order = kwargs.pop('order', 'C')
 
@@ -917,10 +907,11 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
                          "".format(weighting_in))
 
     if dtype is not None:
-        dspace = ds_type(partition.size, dtype=dtype, weight=weight,
+        dspace = ds_type(partition.size, dtype=dtype, impl=impl, weight=weight,
                          exponent=exponent)
     else:
-        dspace = ds_type(partition.size, weight=weight, exponent=exponent)
+        dspace = ds_type(partition.size, impl=impl, weight=weight,
+                         exponent=exponent)
 
     return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order)
 
@@ -948,7 +939,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
             'linear' : use linear interpolation
 
-    impl : {'numpy', 'cuda'}, optional
+    impl : `str`, optional
         Implementation of the data storage arrays
 
     Other Parameters
@@ -1003,7 +994,6 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
         raise TypeError('domain {!r} of the function space is not an '
                         '`IntervalProd` instance'.format(fspace.domain))
 
-    impl, impl_in = str(impl).lower(), impl
     dtype = kwargs.pop('dtype', None)
 
     # Set data type. If given check consistency with fspace's field and
@@ -1031,7 +1021,7 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     partition = uniform_partition_fromintv(fspace.domain, nsamples,
                                            nodes_on_bdry)
 
-    return uniform_discr_frompartition(partition, exponent, interp, impl_in,
+    return uniform_discr_frompartition(partition, exponent, interp, impl,
                                        dtype=dtype, **kwargs)
 
 
@@ -1041,10 +1031,8 @@ def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
 
     Parameters
     ----------
-    domain : `IntervalProd`
+    interval : `IntervalProd`
         The domain of the uniformly discretized space.
-    nsamples : `float` or `tuple` of `float`
-        Minimum corner of the result.
     nsamples : `int` or `tuple` of `int`
         Number of samples per axis. For dimension >= 2, a tuple is
         required.
@@ -1059,8 +1047,8 @@ def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
 
             'linear' : use linear interpolation
 
-    impl : {'numpy', 'cuda'}, optional
-        Implementation of the data storage arrays
+    impl : `str`, optional
+        Implementation of the data storage arrays.
     nodes_on_bdry : `bool` or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (True) or shift it
@@ -1113,13 +1101,9 @@ def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
     uniform_discr_fromspace : uniform discretization from an existing
         function space
     """
-    # Select field by dtype
     dtype = kwargs.pop('dtype', None)
     if dtype is None:
-        if str(impl).lower() == 'cuda':
-            dtype = np.dtype('float32')
-        else:
-            dtype = np.dtype('float64')
+        dtype = FN_IMPLS[impl].default_dtype()
 
     fspace = FunctionSpace(interval, out_dtype=dtype)
     return uniform_discr_fromspace(fspace, nsamples, exponent, interp, impl,
@@ -1150,7 +1134,7 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
             'linear' : use linear interpolation
 
-    impl : {'numpy', 'cuda'}, optional
+    impl : `str`, optional
         Implementation of the data storage arrays
     nodes_on_bdry : `bool` or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
@@ -1230,9 +1214,9 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
         The parameter ``p`` in ```L^p``. If the exponent is
         not equal to the default 2.0, the space has no inner
         product.
-    impl : {'numpy', 'cuda'}
+    impl : `str`, optional
         Implementation of the data storage arrays
-    dtype : dtype
+    dtype : dtype, optional
         Data type for the discretized space
 
             Default for 'numpy': 'float64'
@@ -1297,8 +1281,8 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
 
             'linear' : use linear interpolation
 
-    impl : {'numpy', 'cuda'}, optional
-        Implementation of the data storage arrays
+    impl : `str`
+        Implementation of the data storage arrays. See
     nodes_on_bdry : bool or sequence, optional
         Specifies whether to put the outmost grid nodes on the
         boundary of the domain.
@@ -1495,10 +1479,8 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
                                  cell_sides=new_csides,
                                  nodes_on_bdry=nodes_on_bdry)
 
-    # TODO: use property when it becomes available
-    impl = 'cuda' if isinstance(discr.dspace, CudaFn) else 'numpy'
     return uniform_discr_frompartition(new_part, exponent=discr.exponent,
-                                       interp=discr.interp, impl=impl)
+                                       interp=discr.interp, impl=discr.impl)
 
 
 def _scaling_func_list(bdry_fracs, exponent=1.0):

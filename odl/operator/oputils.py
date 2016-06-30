@@ -182,7 +182,7 @@ def power_method_opnorm(op, niter, xstart=None):
 
 
 def as_scipy_operator(op):
-    """Wrap ``op`` as a ``scipy.sparse.linalg.LinearOperator.``
+    """Wrap ``op`` as a ``scipy.sparse.linalg.LinearOperator``.
 
     This is intended to be used with the scipy sparse linear solvers.
 
@@ -202,7 +202,7 @@ def as_scipy_operator(op):
     Wrap operator and solve simple problem (here toy problem ``Ix = b``)
 
     >>> import odl
-    >>> op = op = odl.IdentityOperator(odl.Rn(3))
+    >>> op = odl.IdentityOperator(odl.rn(3))
     >>> scipy_op = as_scipy_operator(op)
     >>> import scipy.sparse.linalg as sl
     >>> result, status = sl.cg(scipy_op, [0, 1, 0])
@@ -211,9 +211,9 @@ def as_scipy_operator(op):
 
     Notes
     -----
-    If the data representation of ``op``'s domain and range is of type `Fn`
-    this incurs no significant overhead. If the data type is `CudaFn` or other
-    nonlocal type, the overhead is significant.
+    If the data representation of ``op``'s domain and range is of type
+    `NumpyFn` this incurs no significant overhead. If the data type is `CudaFn`
+    or other nonlocal type, the overhead is significant.
     """
     if not op.is_linear:
         raise ValueError('`op` needs to be linear')

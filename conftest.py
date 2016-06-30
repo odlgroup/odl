@@ -23,13 +23,10 @@ standard_library.install_aliases()
 
 import pytest
 import odl
-from odl.space.cu_ntuples import CUDA_AVAILABLE
 from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
 
 collect_ignore = ['setup.py', 'run_tests.py']
 
-if not CUDA_AVAILABLE:
-    collect_ignore.append('odl/space/cu_ntuples.py')
 if not PYWAVELETS_AVAILABLE:
     collect_ignore.append('odl/trafos/wavelet.py')
 
@@ -43,6 +40,22 @@ def pytest_addoption(parser):
 
 
 # reusable fixtures
+fn_impl_params = odl.FN_IMPLS.keys()
+fn_impl_ids = [" impl='{}' ".format(p) for p in fn_impl_params]
+
+
+@pytest.fixture(scope="module", ids=fn_impl_ids, params=fn_impl_params)
+def fn_impl(request):
+    return request.param
+
+ntuples_impl_params = odl.NTUPLES_IMPLS.keys()
+ntuples_impl_ids = [" impl='{}' ".format(p) for p in ntuples_impl_params]
+
+
+@pytest.fixture(scope="module", ids=ntuples_impl_ids, params=ntuples_impl_params)
+def ntuples_impl(request):
+    return request.param
+
 ufunc_params = [ufunc for ufunc in odl.util.ufuncs.UFUNCS]
 ufunc_ids = [' ufunc={} '.format(p[0]) for p in ufunc_params]
 

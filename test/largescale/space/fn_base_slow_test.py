@@ -28,54 +28,27 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.util.testutils import (all_almost_equal, almost_equal,
-                                never_skip, skip_if_no_cuda, example_vectors)
+from odl.util.testutils import all_almost_equal, almost_equal, example_vectors
 
 pytestmark = odl.util.skip_if_no_largescale
 
 
 # Pytest fixtures
-spc_params = [never_skip('fn numpy float32'),
-              never_skip('fn numpy float64'),
-              never_skip('fn numpy complex64'),
-              never_skip('fn numpy complex128'),
-              never_skip('1d numpy float32'),
-              never_skip('1d numpy float64'),
-              never_skip('1d numpy complex64'),
-              never_skip('1d numpy complex128'),
-              never_skip('3d numpy float32'),
-              never_skip('3d numpy float64'),
-              never_skip('3d numpy complex64'),
-              never_skip('3d numpy complex128'),
-              skip_if_no_cuda('fn cuda float32'),
-              skip_if_no_cuda('1d cuda float32'),
-              skip_if_no_cuda('3d cuda float32')]
-
-
-spc_ids = [' type={} impl={} dtype={}'
-           ''.format(*p.args[1].split()) for p in spc_params]
-
-
-# bug in pytest (ignores pytestmark) forces us to do this this
-largescale = " or not pytest.config.getoption('--largescale')"
-spc_params = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
-              for p in spc_params]
+spc_params = ['rn', '1d', '3d']
+spc_ids = [' type={} ' ''.format(p) for p in spc_params]
 
 
 @pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
-def fn(request):
-    spc, impl, dtype = request.param.split()
+def fn(fn_impl, request):
+    spc = request.param
 
-    if spc == 'fn':
-        if impl == 'numpy':
-            return odl.Fn(10 ** 5, dtype=dtype)
-        elif impl == 'cuda':
-            return odl.CudaFn(10 ** 5, dtype=dtype)
+    if spc == 'rn':
+        return odl.rn(10 ** 5, impl=fn_impl)
     elif spc == '1d':
-        return odl.uniform_discr(0, 1, 10 ** 5, impl=impl, dtype=dtype)
+        return odl.uniform_discr(0, 1, 10 ** 5, impl=fn_impl)
     elif spc == '3d':
         return odl.uniform_discr([0, 0, 0], [1, 1, 1],
-                                 [100, 100, 100], impl=impl, dtype=dtype)
+                                 [100, 100, 100], impl=fn_impl)
 
 
 def test_element(fn):
@@ -206,7 +179,7 @@ def _test_member_lincomb(spc, a):
     # Device side calculation
     y_device.lincomb(a, x_device)
 
-    # Cuda only uses floats, so require 5 places
+    # CUDA only uses floats, so require 5 places
     assert all_almost_equal(y_device, y_host, places=2)
 
 

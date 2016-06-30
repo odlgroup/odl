@@ -88,14 +88,14 @@ class SimpleRn(odl.space.base_ntuples.FnBase):
             return self.data(*args)
 
 r5 = SimpleRn(5)
-odl.diagnostics.SpaceTest(r5).run_tests()
+#odl.diagnostics.SpaceTest(r5).run_tests()
 
 # Do some tests to compare
 n = 10**7
 iterations = 10
 
 # Perform some benchmarks with Rn adn CudaRn
-opt_spc = odl.Rn(n)
+opt_spc = odl.rn(n)
 simple_spc = SimpleRn(n)
 
 x, y, z = np.random.rand(n), np.random.rand(n), np.random.rand(n)
@@ -103,8 +103,8 @@ ox, oy, oz = (opt_spc.element(x.copy()), opt_spc.element(y.copy()),
               opt_spc.element(z.copy()))
 sx, sy, sz = (simple_spc.element(x.copy()), simple_spc.element(y.copy()),
               simple_spc.element(z.copy()))
-if odl.CUDA_AVAILABLE:
-    cu_spc = odl.CudaRn(n)
+if 'cuda' in odl.FN_IMPLS:
+    cu_spc = odl.rn(n, impl='cuda')
     cx, cy, cz = (cu_spc.element(x.copy()), cu_spc.element(y.copy()),
                   cu_spc.element(z.copy()))
 
@@ -114,13 +114,13 @@ with Timer("SimpleRn"):
         simple_spc.lincomb(2.13, sx, 3.14, sy, out=sz)
 print("result: {}".format(sz[1:5]))
 
-with Timer("Rn"):
+with Timer("odl numpy"):
     for _ in range(iterations):
         opt_spc.lincomb(2.13, ox, 3.14, oy, out=oz)
 print("result: {}".format(oz[1:5]))
 
-if odl.CUDA_AVAILABLE:
-    with Timer("CudaRn"):
+if 'cuda' in odl.FN_IMPLS:
+    with Timer("odl cuda"):
         for _ in range(iterations):
             cu_spc.lincomb(2.13, cx, 3.14, cy, out=cz)
     print("result: {}".format(cz[1:5]))
@@ -132,13 +132,13 @@ with Timer("SimpleRn"):
         result = sz.norm()
 print("result: {}".format(result))
 
-with Timer("Rn"):
+with Timer("odl numpy"):
     for _ in range(iterations):
         result = oz.norm()
 print("result: {}".format(result))
 
-if odl.CUDA_AVAILABLE:
-    with Timer("CudaRn"):
+if 'cuda' in odl.FN_IMPLS:
+    with Timer("odl cuda"):
         for _ in range(iterations):
             result = cz.norm()
     print("result: {}".format(result))
@@ -150,13 +150,13 @@ with Timer("SimpleRn"):
         result = sz.inner(sx)
 print("result: {}".format(result))
 
-with Timer("Rn"):
+with Timer("odl numpy"):
     for _ in range(iterations):
         result = oz.inner(ox)
 print("result: {}".format(result))
 
-if odl.CUDA_AVAILABLE:
-    with Timer("CudaRn"):
+if 'cuda' in odl.FN_IMPLS:
+    with Timer("odl cuda"):
         for _ in range(iterations):
             result = cz.inner(cx)
     print("result: {}".format(result))

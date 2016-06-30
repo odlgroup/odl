@@ -134,12 +134,12 @@ class FunctionSetMapping(Operator):
 
     @property
     def partition(self):
-        """The underlying domain partition."""
+        """Underlying domain partition."""
         return self._partition
 
     @property
     def grid(self):
-        """The sampling grid."""
+        """Sampling grid."""
         return self.partition.grid
 
     @property
@@ -242,11 +242,11 @@ vectorization_guide.html>`_ for a detailed introduction.
 
         Partition the rectangle by a tensor grid:
 
-        >>> from odl import TensorGrid, Rectangle, RectPartition, Rn
-        >>> rect = Rectangle([1, 3], [2, 5])
-        >>> grid = TensorGrid([1, 2], [3, 4, 5])
-        >>> partition = RectPartition(rect, grid)
-        >>> rn = Rn(grid.size)
+        >>> import odl
+        >>> rect = odl.Rectangle([1, 3], [2, 5])
+        >>> grid = odl.TensorGrid([1, 2], [3, 4, 5])
+        >>> partition = odl.RectPartition(rect, grid)
+        >>> rn = odl.rn(grid.size)
 
         Finally create the operator and test it on a function:
 
@@ -255,18 +255,18 @@ vectorization_guide.html>`_ for a detailed introduction.
         ... # Properly vectorized function
         >>> func_elem = funcset.element(lambda x: x[0] - x[1])
         >>> coll_op(func_elem)
-        Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
         >>> coll_op(lambda x: x[0] - x[1])  # Works directly
-        Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
-        >>> out = Rn(6).element()
+        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        >>> out = odl.rn(6).element()
         >>> coll_op(func_elem, out=out)  # In-place
-        Rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
 
         Fortran ordering:
 
         >>> coll_op = PointCollocation(funcset, partition, rn, order='F')
         >>> coll_op(func_elem)
-        Rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
+        rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
         mesh = self.grid.meshgrid
         if out is None:
@@ -362,7 +362,7 @@ class NearestInterpolation(FunctionSetMapping):
 
         Parameters
         ----------
-        x : `NtuplesVector`
+        x : `NtuplesBaseVector`
             The array of values to be interpolated
         out : `FunctionSetVector`, optional
             Vector in which to store the interpolator
@@ -402,13 +402,13 @@ class NearestInterpolation(FunctionSetMapping):
         Partitioning the domain uniformly with no nodes on the boundary
         (will shift the grid points):
 
-        >>> from odl import uniform_partition_fromintv, Ntuples
+        >>> from odl import uniform_partition_fromintv, ntuples
         >>> part = uniform_partition_fromintv(rect, [4, 2],
         ...                                   nodes_on_bdry=False)
         >>> part.grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
-        >>> dspace = Ntuples(part.size, dtype='U1')
+        >>> dspace = ntuples(part.size, dtype='U1')
 
         Now we initialize the operator and test it with some points:
 

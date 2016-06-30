@@ -284,7 +284,7 @@ class CallbackShow(SolverCallback):
     See Also
     --------
     DiscreteLpVector.show
-    BaseNtuplesVector.show
+    NtuplesBaseVector.show
     """
 
     def __init__(self, *args, **kwargs):

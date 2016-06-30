@@ -84,7 +84,7 @@ def test_pointwise_norm_init_properties():
 
     # Bad input
     with pytest.raises(TypeError):
-        PointwiseNorm(odl.Rn(3))  # No power space
+        PointwiseNorm(odl.rn(3))  # No power space
 
     with pytest.raises(ValueError):
         PointwiseNorm(vfspace, exponent=0.5)  # < 1 not allowed
@@ -211,7 +211,7 @@ def test_pointwise_inner_init_properties():
 
     # Bad input
     with pytest.raises(TypeError):
-        PointwiseInner(odl.Rn(3), odl.Rn(3).one())  # No power space
+        PointwiseInner(odl.rn(3), odl.rn(3).one())  # No power space
 
     # TODO: Does not raise currently, although bad_vecfield not in vfspace!
     """
