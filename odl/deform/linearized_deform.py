@@ -488,7 +488,7 @@ class LinDeforFixedDispAdj(Operator):
         """
         div_op = odl.Divergence(range=template.space)
         jacobian_det = 1 - div_op(self.displacement)
-        return jacobian_det * linear_deform(template, -self.displacement)
+        return jacobian_det * linear_deform(template, -self.displacement).reshape
 
 
 if __name__ == '__main__':
