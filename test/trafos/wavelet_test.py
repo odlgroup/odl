@@ -35,7 +35,7 @@ from odl.trafos.wavelet import (
     coeff_size_list, pywt_list_to_array,
     pywt_dict_to_array, array_to_pywt_list, array_to_pywt_dict,
     WaveletTransform)
-from odl.util.testutils import (all_almost_equal, all_equal,
+from odl.util.testutils import (all_almost_equal, all_equal, almost_equal,
                                 skip_if_no_pywavelets)
 
 
@@ -306,9 +306,7 @@ def test_axes_option():
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
 
-    # Check that A*A(x) == x
-    reconstruction = Wop.adjoint(coeffs)
-    # Verify that the output of Wop.inverse and Wop.adjoint are the same
+    reconstruction = Wop.inverse(coeffs)
     assert all_almost_equal(reconstruction.asarray(),
                             disc_phantom.asarray())
     # Verify that reconstructions lie in correct discretized domain
@@ -326,11 +324,55 @@ def test_axes_option():
 
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
-    # Check that A*A(x) == x
-    reconstruction = Wop.adjoint(coeffs)
-    # Verify that the output of Wop.inverse and Wop.adjoint are the same
+    reconstruction = Wop.inverse(coeffs)
     assert all_almost_equal(reconstruction.asarray(),
                             disc_phantom.asarray())
+
+
+def adjoint_test():
+    n = 32
+    wbasis = pywt.Wavelet('db1')
+    nscales = 1
+    mode = 'symmetric'
+    # Define a discretized domain
+    disc_domain = odl.uniform_discr([-1] * 2, [1] * 2, [n] * 2,
+                                    dtype='float32')
+    disc_phantom = odl.util.shepp_logan(disc_domain, modified=True)
+    # Create the discrete wavelet transform operator related to 3D transform.
+    Wop = WaveletTransform(disc_domain, wbasis, mode, nscales, axes=None)
+
+    # Compute the discrete wavelet transform of discrete imput image
+    proj = Wop(disc_phantom)
+    backproj = Wop.adjoint(proj)
+
+    # Verified the identity <Ax, Ax> = <A^* A x, x>
+    # Accept 0.1 % error
+    places = 3
+    result_AxAx = proj.inner(proj)
+    result_xAtAx = backproj.inner(disc_phantom)
+    assert almost_equal(result_AxAx, result_xAtAx, places=places)
+
+
+def adjoint_test_biorthogonal():
+    n = 32
+    wbasis = pywt.Wavelet('bior3.1')
+    nscales = 1
+    mode = 'zero'
+    disc_domain = odl.uniform_discr([-1] * 2, [1] * 2, [n] * 2,
+                                    dtype='float32')
+    disc_phantom = odl.util.shepp_logan(disc_domain, modified=True)
+    # Create the discrete wavelet transform operator related to 3D transform.
+    Wop = WaveletTransform(disc_domain, wbasis, mode, nscales, axes=None)
+
+    # Compute the discrete wavelet transform of discrete imput image
+    proj = Wop(disc_phantom)
+    backproj = Wop.adjoint(proj)
+    # Verified the identity <Ax, Ax> = <A^* A x, x>
+    # Accept 0.1 % error
+    places = 3
+    result_AxAx = proj.inner(proj)
+    result_xAtAx = backproj.inner(disc_phantom)
+    assert almost_equal(result_AxAx, result_xAtAx, places=places)
 
 
 if __name__ == '__main__':
