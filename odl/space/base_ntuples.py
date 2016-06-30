@@ -193,6 +193,44 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             Numpy array of the same type as the space.
         """
 
+    @property
+    def aswriteablearray(self):
+        """Extract the data of this array as a context managed numpy array.
+
+        Parameters
+        ----------
+        args, kwargs
+            Arguments to `asarray`
+
+        Returns
+        -------
+        context_manager
+            A context manager class that manages the writable array.
+
+        Examples
+        --------
+
+        >>> import odl
+        >>> X = odl.CudaRn(3)
+        >>> x = X.zero()
+        >>> with x.aswriteablearray() as arr:
+        ...     arr[:] = [1, 2, 3]
+        >>> x
+        CudaRn(3).element([1.0, 2.0, 3.0])
+        """
+        class ArrayContextManager(object):
+            def __init__(cm_self, *args, **kwargs):
+                cm_self.array = self.asarray(*args, **kwargs)
+
+            def __enter__(cm_self):
+                return cm_self.array
+
+            def __exit__(cm_self, type, value, traceback):
+                # TODO: handle exceptions as expected
+                self[:] = cm_self.array
+
+        return ArrayContextManager
+
     @abstractmethod
     def __getitem__(self, indices):
         """Access values of this vector.
