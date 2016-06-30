@@ -719,9 +719,19 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             If `is_orthogonal` is not true, the adjoint is not implemented.
         """
         if self.is_orthogonal:
-            return self.inverse
+            output = self.inverse
+            output /= self.domain.cell_volume
+            return output
+            #return self.inverse
+        elif self.wbasis.name.startswith('bior'):
+            adjoint_name = self.wbasis.name.replace('bior', 'rbio')
+            wbasis_adjoint = pywt.Wavelet(adjoint_name)
+            output = WaveletTransformInverse(
+                ran=self.domain, wbasis=wbasis_adjoint, mode=self.mode,
+                nscales=self.nscales, axes=self.axes)
+            output /= self.domain.cell_volume
+            return output
         else:
-            # TODO: put adjoint here
             return super().adjoint
 
     @property
@@ -951,8 +961,13 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         """
         if self.is_orthogonal:
             return self.inverse
+        elif self.wbasis.name.startswith('bior'):
+            adjoint_name = self.wbasis.name.replace('bior', 'rbio')
+            wbasis_adjoint = pywt.Wavelet(adjoint_name)
+            return WaveletTransform(dom=self.range, wbasis=wbasis_adjoint,
+                                    mode=self.mode, nscales=self.nscales,
+                                    axes=self.axes)
         else:
-            # TODO: put adjoint here
             return super().adjoint
 
     @property
