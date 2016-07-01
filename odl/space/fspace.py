@@ -66,6 +66,22 @@ def _default_out_of_place(func, x, **kwargs):
     return out
 
 
+def _broadcast_to(array, shape):
+    """Wrapper for the numpy function broadcast_to.
+
+    Added since we dont require numpy 1.10 and hence cant guarantee that this
+    exists.
+    """
+    array = np.asarray(array)
+    try:
+        return np.broadcast_to(array, shape)
+    except AttributeError:
+        # The above requires numpy 1.10, fallback impl else
+        shape = [m if n == 1 and m != 1 else 1
+                 for n, m in zip(array.shape, shape)]
+        return array + np.zeros(shape, dtype=array.dtype)
+
+
 class FunctionSet(Set):
 
     """A general set of functions with common domain and range."""
@@ -379,14 +395,6 @@ class FunctionSetVector(Operator):
             if ndim == 1:
                 try:
                     out = self._call(x, **kwargs)
-                    if np.ndim(out) == 0 and not scalar_out:
-                        # Don't accept scalar result. A typical situation where
-                        # this occurs is with comparison operators, e.g.
-                        # "return x > 0" which simply gives 'True' for a
-                        # non-empty tuple (in Python 2). We raise TypeError
-                        # to trigger the call with x[0].
-                        raise TypeError
-                    out = np.atleast_1d(np.squeeze(out))
                 except (TypeError, IndexError):
                     # TypeError is raised if a meshgrid was used but the
                     # function expected an array (1d only). In this case we try
@@ -398,25 +406,19 @@ class FunctionSetVector(Operator):
                     # same scenario (scalar output when not valid) as in the
                     # first case.
                     out = self._call(x[0], **kwargs)
-                    if np.ndim(out) == 0 and not scalar_out:
-                        raise ValueError('invalid scalar output')
-                    out = np.atleast_1d(np.squeeze(out))
+
+                # squeeze to remove extra axes.
+                out = np.squeeze(out)
             else:
                 out = self._call(x, **kwargs)
 
-            if self.out_dtype is not None:
-                # Cast to proper dtype if needed
-                out = out.astype(self.out_dtype)
+            # Cast to proper dtype if needed, also convert to array if out
+            # is scalar.
+            out = np.asarray(out, self.out_dtype)
 
             if out_shape != (1,) and out.shape != out_shape:
                 # Try to broadcast the returned element if possible
-                try:
-                    out = np.broadcast_to(out, out_shape)
-                except AttributeError:
-                    # The above requires numpy 1.10, fallback impl else
-                    shape = [m if n == 1 and m != 1 else 1
-                             for n, m in zip(out.shape, out_shape)]
-                    out = out + np.zeros(shape, dtype=out.dtype)
+                out = _broadcast_to(out, out_shape)
         else:
             if not isinstance(out, np.ndarray):
                 raise TypeError('output {!r} not a `numpy.ndarray` '
