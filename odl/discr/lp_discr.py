@@ -234,13 +234,23 @@ class DiscreteLp(DiscretizedSpace):
         Parameters
         ----------
         inp : optional
-            The input data to create an element from. It needs to be
-            understood by either the `sampling` operator of this
-            instance or by its ``dspace.element`` method.
+            The input data to create an element from.
+
+            If `callable`, it needs to be understood by the ``uspace.element``
+            method.
+
+            Otherwise, it has to be understandable by the
+            ``dspace.element`` method.
         kwargs :
             Additional arguments passed on to `sampling` when called
             on ``inp``, in the form ``sampling(inp, **kwargs)``.
             This can be used e.g. for functions with parameters.
+
+        Other Parameters
+        ----------------
+        vectorized : `bool`
+            Can only be used if ``inp`` is `callable`, in that case, indicates
+            if ``inp`` is vectorized.
 
         Returns
         -------
@@ -293,8 +303,9 @@ class DiscreteLp(DiscretizedSpace):
         elif inp in self.dspace:
             return self.element_type(self, inp)
         elif callable(inp):
+            vectorized = kwargs.pop('vectorized', True)
             # uspace element -> discretize
-            inp_elem = self.uspace.element(inp)
+            inp_elem = self.uspace.element(inp, vectorized=vectorized)
             return self.element_type(self, self.sampling(inp_elem, **kwargs))
         else:
             # Sequence-type input
