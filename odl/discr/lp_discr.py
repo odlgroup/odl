@@ -810,10 +810,10 @@ class DiscreteLpVector(DiscretizedSpaceVector):
         axis_labels = [axis_labels[axis] for axis in squeezed_axes]
 
         # Squeeze grid and values according to the index expression
-        grid = self.space.grid[indices].squeeze()
+        part = self.space.partition[indices].squeeze()
         values = self.asarray()[indices].squeeze()
 
-        return show_discrete_data(values, grid, title=title, method=method,
+        return show_discrete_data(values, part, title=title, method=method,
                                   show=show, fig=fig, axis_labels=axis_labels,
                                   **kwargs)
 

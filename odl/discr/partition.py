@@ -204,6 +204,11 @@ class RectPartition(object):
         """Return the sparse meshgrid of sampling points."""
         return self.grid.meshgrid
 
+    @property
+    def coord_vectors(self):
+        """The coordinate vectors of the grid."""
+        return self.grid.coord_vectors
+
     # Further derived methods / properties
     @property
     def boundary_cell_fractions(self):
@@ -500,6 +505,36 @@ class RectPartition(object):
         insert
         """
         return self.insert(self.ndim, other)
+
+    def squeeze(self):
+        """Return the partition with removed degenerate (length 1) dimensions.
+
+        Returns
+        -------
+        squeezed : `RectPartition`
+            The squeezed partition
+
+        Examples
+        --------
+        >>> p = uniform_partition([0, -1], [1, 2], (3, 1))
+        >>> p.squeeze()
+        uniform_partition(0.0, 1.0, 3)
+
+        Notes
+        -----
+        This is not equivalent to
+        ``RectPartiton(self.set.squeeze(), self.grid.squeeze())`` since the
+        definition of degenerate is different in sets and grids. This functions
+        follow the definition used by grids.
+
+        See Also
+        --------
+        TensorGrid.squeeze
+        IntervalProd.squeeze
+        """
+        # TODO: use public property
+        newset = self.set[self.grid._inondeg]
+        return RectPartition(newset, self.grid.squeeze())
 
     def __str__(self):
         """Return ``str(self)``."""
