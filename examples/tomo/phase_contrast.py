@@ -117,49 +117,88 @@ class IntensityOperator(PointwiseTensorFieldOperator):
         return ReductionOperator(*mul_ops)
 
 
-wavenum = 1
-prop_dist = 1
-
-
-def propagation_kernel_ft_cos(x):
+def propagation_kernel_ft_cos(x, **kwargs):
     """Modified Fresnel propagation kernel for the real part.
 
     Notes
     -----
     The kernel is defined as
 
-        :math:`k(\\xi) = -\\frac{\kappa}{4\pi}
+        :math:`k(\\xi) = -\\frac{\kappa}{2}
         \cos\\left(\kappa d + \\frac{d}{2\kappa} \\lvert \\xi \\rvert^2
         \\right)`,
 
     where :math:`\kappa` is the wave number of the incoming wave and
     :math:`d` the propagation distance.
     """
+    wavenum = float(kwargs.pop('wavenum', 1.0))
+    prop_dist = float(kwargs.pop('prop_dist', 1.0))
     scaled = [np.sqrt(prop_dist / (2 * wavenum)) * xi for xi in x]
     kernel = sum(sxi ** 2 for sxi in scaled)
     kernel += wavenum * prop_dist
     np.cos(kernel, out=kernel)
-    kernel *= -wavenum / (4 * np.pi)
+    kernel *= -wavenum / 2
     return kernel
 
 
-def propagation_kernel_ft_sin(x):
+def propagation_kernel_ft_sin(x, **kwargs):
     """Modified Fresnel propagation kernel for the imaginary part.
 
     Notes
     -----
     The kernel is defined as
 
-        :math:`k(\\xi) = -\\frac{\kappa}{4\pi}
+        :math:`k(\\xi) = -\\frac{\kappa}{2}
         \sin\\left(\kappa d + \\frac{d}{2\kappa} \\lvert \\xi \\rvert^2
         \\right)`,
 
     where :math:`\kappa` is the wave number of the incoming wave and
     :math:`d` the propagation distance.
     """
+    wavenum = float(kwargs.pop('wavenum', 1.0))
+    prop_dist = float(kwargs.pop('prop_dist', 1.0))
     scaled = [np.sqrt(prop_dist / (2 * wavenum)) * xi for xi in x]
     kernel = sum(sxi ** 2 for sxi in scaled)
     kernel += wavenum * prop_dist
     np.sin(kernel, out=kernel)
-    kernel *= -wavenum / (4 * np.pi)
+    kernel *= -wavenum / 2
     return kernel
+
+
+#%% Example 1: Real and imaginary part
+
+import odl
+
+# Discrete reconstruction space: discretized functions on the cube
+# [-20, 20]^3 with 300 samples per dimension.
+reco_space = odl.uniform_discr(
+    min_corner=[-20, -20, -20], max_corner=[20, 20, 20],
+    nsamples=[300, 300, 300], dtype='float32')
+
+# Make a parallel beam geometry with flat detector
+# Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
+angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
+# Detector: uniformly sampled, n = (558, 558), min = (-30, -30), max = (30, 30)
+detector_partition = odl.uniform_partition([-30, -30], [30, 30], [558, 558])
+# Discrete reconstruction space
+
+# Astra cannot handle axis aligned origin_to_det unless it is aligned
+# with the third coordinate axis. See issue #18 at ASTRA's github.
+# This is fixed in new versions of astra, with older versions, this could
+# give a zero result.
+geometry = odl.tomo.Parallel3dAxisGeometry(angle_partition, detector_partition)
+
+# ray transform aka forward projection. We use ASTRA CUDA backend.
+ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
+vec_ray_trafo = odl.ProductSpaceOperator([[ray_trafo, 0],
+                                          [0, ray_trafo]])
+
+ft = odl.trafos.FourierTransform(ray_trafo.range, axes=[1, 2])
+prop_sin = ft.range.element(propagation_kernel_ft_sin, wavenum=10000,
+                            prop_dist=0.1)
+prop_cos = ft.range.element(propagation_kernel_ft_cos, wavenum=10000,
+                            prop_dist=0.1)
+
+prop_1 = ft.inverse * prop_sin * ft
+prop_2 = ft.inverse * prop_cos * ft
+
