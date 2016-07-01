@@ -21,15 +21,16 @@ Linearized deformations.
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
+standard_library.install_aliases()
+
 from odl.operator.operator import Operator
 import odl
 import numpy as np
-standard_library.install_aliases()
 
 
-__all__ = ('linear_deform', 'deform_grad', 'LinDeforFixedTempOp',
-           'LinDeforFixedTempDeriv', 'LinDeforFixedTempDerivAdj',
-           'LinDeforFixedDispOp', 'LinDeforFixedDispAdj')
+__all__ = ('LinDeforFixedTempOp', 'LinDeforFixedTempDeriv',
+           'LinDeforFixedTempDerivAdj', 'LinDeforFixedDispOp',
+           'LinDeforFixedDispAdj', 'linear_deform', 'deform_grad')
 
 
 def linear_deform(template, displacement):
@@ -39,11 +40,19 @@ def linear_deform(template, displacement):
 
         (I, v) --> I(Id + v)
 
+    where ``Id`` is the identity mapping:
+
+        y --> y
+
+    and the vector field ``v`` is a displacement field:
+
+        y --> v(y)
+
     Parameters
     ----------
     template : `DiscreteLpVector`
         Template to be deformed by a displacement field.
-    displacement : `ProductSpaceVector`
+    displacement : product space of `ProductSpaceVector`
         The vector field (displacement field) used in the linearized
         deformation.
 
@@ -106,7 +115,7 @@ def deform_grad(grad_f, displacement):
 
     Define a displacement field ``displacement_field``.
 
-    >>> disp_field_space = odl.ProductSpace(space, space.ndim)
+    >>> disp_field_space = gradOp.range
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
 
     Calculate linearized deformation of the ``template_grad`` (gradient of
@@ -164,7 +173,8 @@ class LinDeforFixedTempOp(Operator):
         >>> op(displacement_field)
         uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 1.0, 1.0, 0.0])
         """
-        assert isinstance(template.space, odl.DiscreteLp)
+        if not isinstance(template.space, odl.DiscreteLp):
+            raise TypeError('`template.space` must be `DiscreteLp`')
 
         domain_space = odl.ProductSpace(template.space, template.space.ndim)
         range_space = template.space
@@ -178,7 +188,7 @@ class LinDeforFixedTempOp(Operator):
 
         Parameters
         ----------
-        displacement : `ProductSpaceVector`
+        displacement : `domain` element
             The displacement field used in the linearized deformation.
         """
 
@@ -189,16 +199,15 @@ class LinDeforFixedTempOp(Operator):
 
         Parameters
         ----------
-        displacement: `ProductSpaceVector`
+        displacement : `domain` element
             The point that the Gateaux derivative need to be computed at.
 
         Returns
         -------
-        deriv_op : `Operator`
+        derivative : `LinDeforFixedTempDeriv`
             The derivative evaluated at ``displacement``
         """
-        deriv_op = LinDeforFixedTempDeriv(self.template, displacement)
-        return deriv_op
+        return LinDeforFixedTempDeriv(self.template, displacement)
 
 
 class LinDeforFixedTempDeriv(Operator):
@@ -324,10 +333,12 @@ class LinDeforFixedTempDerivAdj(Operator):
         >>> template = space.element([0, 0, 1, 0, 0])
         >>> disp_field_space = odl.ProductSpace(space, space.ndim)
         >>> disp_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
-        >>> vector_field = disp_field_space.element([[1, 1, 1, 2, 1]])
-        >>> op = LinDeforFixedTempDeriv(template, disp_field)
-        >>> op(vector_field)
-        uniform_discr(0.0, 1.0, 5).element([0.0, 5.0, -5.0, -10.0, 0.0])
+        >>> op = LinDeforFixedTempDerivAdj(template, disp_field)
+        >>> given_template = space.element([1, 2, 1, 2, 1])
+        >>> op(given_template)
+        ProductSpace(uniform_discr(0.0, 1.0, 5), 1).element([
+            [0.0, 10.0, -5.0, -10.0, 0.0]
+        ])
         """
         assert displacement[0] in template.space
 
@@ -434,7 +445,7 @@ class LinDeforFixedDispAdj(Operator):
     This operator computes the adjoint of the linear operator that
     map a template ``I`` to its deformation using a fixed displacement ``v``:
 
-        I --> det(D(Id - v)) * I(Id - v)
+        I --> exp(-div(v)) * I(Id - v)
 
     Here, the ``I`` is the given template, ``Id`` is the identity mapping:
 
@@ -444,10 +455,9 @@ class LinDeforFixedDispAdj(Operator):
 
         y --> v(y)
 
-    and, ``det(D(Id - v)) = 1 - div(v)`` is the determinant of the
-    Jacobian of ``Id - v``. Note that ``(Id + v)^{-1}`` is approximated
-    by ``(Id - v)``, which is accurate in some sense if the magnitude
-    of``v`` is close to ``0`` .
+    and, ``exp(-div(v))`` is an approximation of the determinant of the
+    Jacobian of ``(Id + v)^{-1}``, which is accurate in some sense if the
+    magnitude of``v`` is close to ``0`` .
     """
     def __init__(self, displacement):
         """Initialize a new instance.
@@ -462,11 +472,12 @@ class LinDeforFixedDispAdj(Operator):
         >>> import odl
         >>> space = odl.uniform_discr(0, 1, 5)
         >>> disp_field_space = odl.ProductSpace(space, space.ndim)
-        >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
+        >>> displacement_field = disp_field_space.element([[0, 0, 0, 0.02, 0]])
         >>> op = LinDeforFixedDispAdj(displacement_field)
         >>> template = space.element([0, 0, 1, 0, 0])
         >>> op(template)
-        uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 2.0, 0.0, 0.0])
+        uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 0.90483741803595963,
+        0.0, 0.0])
         """
         assert isinstance(displacement.space, odl.ProductSpace)
 
@@ -487,8 +498,9 @@ class LinDeforFixedDispAdj(Operator):
             displacement field.
         """
         div_op = odl.Divergence(range=template.space)
-        jacobian_det = 1 - div_op(self.displacement)
-        return jacobian_det * linear_deform(template, -self.displacement).reshape
+        jacobian_det = np.exp(-div_op(self.displacement))
+        return jacobian_det * template.space.element(
+            linear_deform(template, -self.displacement))
 
 
 if __name__ == '__main__':
