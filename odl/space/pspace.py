@@ -936,31 +936,9 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
 
     """Array weighting for `ProductSpace`.
 
-    For exponent 2.0, a new weighted inner product with array ``w``
-    is defined as::
-
-        <x, y>_w = <w * x, y>
-
-    with component-wise multiplication ``w * x``. For other exponents,
-    only ``norm`` and ```dist`` are defined. In the case of exponent
-    ``inf``, the weighted norm is::
-
-        ||x||_{w,inf} = ||w * x||_inf
-
-    otherwise it is::
-
-        ||x||_{w,p} = ||w^(1/p) * x||_p
-
-    Not that this definition does **not** fulfill the limit property
-    in ``p``, i.e.::
-
-        ||x||_{w,p} --/-> ||x||_{w,inf}  for p --> inf
-
-    unless ``w = (1,...,1)``.
-
-    The array may only have positive entries, otherwise it does not
-    define an inner product or norm, respectively. This is not checked
-    during initialization.
+    This class defines a weighting that has a different value for
+    each index defined in a given space.
+    See ``Notes`` for mathematical details.
     """
 
     def __init__(self, array, exponent=2.0, dist_using_inner=False):
@@ -983,6 +961,43 @@ class ProductSpaceArrayWeighting(ArrayWeighting):
             exactly zero for equal (but not identical) ``x`` and ``y``.
 
             Can only be used if ``exponent`` is 2.0.
+
+        Notes
+        -----
+        - For exponent 2.0, a new weighted inner product with array
+          :math:`w` is defined as
+
+          .. math::
+
+              \\langle x, y \\rangle_w = \\langle w \odot x, y \\rangle
+
+          with component-wise multiplication :math:`w \odot x`. For other
+          exponents, only ``norm`` and ``dist`` are defined. In the case
+          of exponent ``inf``, the weighted norm is
+
+          .. math::
+
+              \|x\|_{w,\infty} = \|w \odot x\|_\infty,
+
+          otherwise it is
+
+          .. math::
+
+              \|x\|_{w,p} = \|w^{1/p} \odot x\|_p.
+
+        - Note that this definition does **not** fulfill the limit property
+          in :math:`p`, i.e.,
+
+          .. math::
+
+              \|x\|_{w,p} \\not\\to \|x\|_{w,\infty}
+              \quad\\text{for } p \\to \infty
+
+          unless :math:`w = (1,...,1)`.
+
+        - The array may only have positive entries, otherwise it does not
+          define an inner product or norm, respectively. This is not checked
+          during initialization.
         """
         super().__init__(array, impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner)
@@ -1046,29 +1061,6 @@ class ProductSpaceConstWeighting(ConstWeighting):
 
     """Constant weighting for `ProductSpace`.
 
-    For exponent 2.0, a new weighted inner product with constant
-    ``c`` is defined as::
-
-        <x, y>_c = c * <x, y>
-
-    For other exponents, only ``norm`` and ```dist`` are defined.
-    In the case of exponent ``inf``, the weighted norm is::
-
-        ||x||_{c,inf} = c * ||x||_inf
-
-    otherwise it is::
-
-        ||x||_{c,p} = c^(1/p) * ||x||_p
-
-    Note that this definition does **not** fulfill the limit property
-    in ``p``, i.e.::
-
-        ||x||_{c,p} --/-> ||x||_{c,inf}  for p --> inf
-
-    unless ``c = 1``.
-
-    The constant must be positive, otherwise it does not define an
-    inner product or norm, respectively.
     """
 
     def __init__(self, constant, exponent=2.0, dist_using_inner=False):
@@ -1091,6 +1083,41 @@ class ProductSpaceConstWeighting(ConstWeighting):
             exactly zero for equal (but not identical) ``x`` and ``y``.
 
             Can only be used if ``exponent`` is 2.0.
+
+        Notes
+        -----
+        - For exponent 2.0, a new weighted inner product with constant
+          :math:`c` is defined as
+
+          .. math::
+
+            \\langle x, y \\rangle_c = c\, \\langle x, y \\rangle.
+
+          For other exponents, only ``norm`` and ```dist`` are defined.
+          In the case of exponent ``inf``, the weighted norm is
+
+          .. math::
+
+              \|x\|_{c,\infty} = c\, \|x\|_\infty,
+
+          otherwise it is
+
+          .. math::
+
+              \|x\|_{c,p} = c^{1/p} \, \|x\|_p.
+
+        - Note that this definition does **not** fulfill the limit property
+          in :math:`p`, i.e.,
+
+          .. math::
+
+              \|x\|_{c,p} \\not\\to \|x\|_{c,\infty}
+              \quad \\text{for } p \\to \infty
+
+          unless :math:`c = 1`.
+
+        - The constant must be positive, otherwise it does not define an
+          inner product or norm, respectively.
         """
         super().__init__(constant, impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner)
@@ -1245,7 +1272,7 @@ class ProductSpaceNoWeighting(NoWeighting, ProductSpaceConstWeighting):
 
 class ProductSpaceCustomInner(CustomInner):
 
-    """Class for handling a user-specified inner product on `ProductSpace`."""
+    """Class for handling a user-specified inner products."""
 
     def __init__(self, inner, dist_using_inner=False):
         """Initialize a new instance.

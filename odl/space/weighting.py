@@ -529,14 +529,14 @@ class ArrayWeighting(Weighting):
         Parameters
         ----------
         array : 1-dim. `array-like`
-            Weighting array of the inner product.
+            Weighting array of inner product, norm and distance.
+            Native `FnBaseVector` instances are stored
+            as-is without copying.
         impl : string
             Specifier for the implementation backend.
         exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-            If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
-            are allowed.
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
@@ -552,6 +552,9 @@ class ArrayWeighting(Weighting):
                          dist_using_inner=dist_using_inner)
 
         if isinstance(array, FnBaseVector):
+        # We store our "own" data structures as-is to retain Numpy
+        # compatibility while avoiding copies. Other things are run through
+        # numpy.asarray.
             self.__array = array
         else:
             self.__array = np.asarray(array)
@@ -565,11 +568,11 @@ class ArrayWeighting(Weighting):
 
     @property
     def array(self):
-        """Weighting array of this inner product."""
+        """Weighting array of this inner instance."""
         return self.__array
 
     def is_valid(self):
-        """Test if the array is a valid weight, i.e. positive."""
+        """Return True if the array is a valid weight, i.e. positive."""
         return np.all(np.greater(self.array, 0))
 
     def __eq__(self, other):
@@ -592,7 +595,7 @@ class ArrayWeighting(Weighting):
                 self.array is getattr(other, 'array', None))
 
     def equiv(self, other):
-        """Test if other is an equivalent weighting.
+        """Return True if other is an equivalent weighting.
 
         Returns
         -------
@@ -647,11 +650,9 @@ class ArrayWeighting(Weighting):
 
 class ConstWeighting(Weighting):
 
-    """Weighting of a space by a constant.
+    """Weighting of a space by a constant."""
 
-    """
-
-    def __init__(self, constant, impl, exponent=2.0, dist_using_inner=False):
+    def __init__(self, const, impl, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
@@ -676,12 +677,12 @@ class ConstWeighting(Weighting):
         """
         super().__init__(impl=impl, exponent=exponent,
                          dist_using_inner=dist_using_inner)
-        self._const = float(constant)
+        self._const = float(const)
         if self.const <= 0:
             raise ValueError('expected positive constant, got {}'
-                             ''.format(constant))
+                             ''.format(const))
         if not np.isfinite(self.const):
-            raise ValueError('`constant` {} is invalid'.format(constant))
+            raise ValueError('`const` {} is invalid'.format(const))
 
     @property
     def const(self):
