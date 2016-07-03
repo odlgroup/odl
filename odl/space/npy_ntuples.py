@@ -36,17 +36,15 @@ from odl.set import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector)
 from odl.space.weighting import (
-    WeightingBase, MatrixWeightingBase, VectorWeightingBase,
+    WeightingBase, MatrixWeightingBase, ArrayWeightingBase,
     ConstWeightingBase, NoWeightingBase,
-    CustomInnerProductBase, CustomNormBase, CustomDistBase)
+    CustomInnerBase, CustomNormBase, CustomDistBase)
 from odl.util.ufuncs import NumpyNtuplesUFuncs
 from odl.util.utility import dtype_repr, is_real_dtype
 
 
 __all__ = ('NumpyNtuples', 'NumpyNtuplesVector', 'NumpyFn', 'NumpyFnVector',
            'MatVecOperator',
-           'NumpyFnMatrixWeighting', 'NumpyFnVectorWeighting',
-           'NumpyFnConstWeighting',
            'npy_weighted_dist', 'npy_weighted_norm', 'npy_weighted_inner')
 
 
@@ -707,7 +705,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         See Also
         --------
         NumpyFnMatrixWeighting
-        NumpyFnVectorWeighting
+        NumpyFnArrayWeighting
         NumpyFnConstWeighting
 
         Examples
@@ -759,7 +757,7 @@ class NumpyFn(FnBase, NumpyNtuples):
                     raise ValueError('invalid weight argument {}'
                                      ''.format(weight))
                 if arr.ndim == 1:
-                    self._weighting = NumpyFnVectorWeighting(
+                    self._weighting = NumpyFnArrayWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner)
                 elif arr.ndim == 2:
                     self._weighting = NumpyFnMatrixWeighting(
@@ -774,7 +772,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         elif norm is not None:
             self._weighting = NumpyFnCustomNorm(norm)
         elif inner is not None:
-            self._weighting = NumpyFnCustomInnerProduct(inner)
+            self._weighting = NumpyFnCustomInner(inner)
         else:  # all None -> no weighing
             self._weighting = NumpyFnNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
@@ -1441,7 +1439,7 @@ def _weighting(weight, exponent, dist_using_inner=False):
         if weight_.dtype == object:
             raise ValueError('bad weight {}'.format(weight))
         if weight_.ndim == 1:
-            weighting = NumpyFnVectorWeighting(
+            weighting = NumpyFnArrayWeighting(
                 weight_, exponent=exponent, dist_using_inner=dist_using_inner)
         elif weight_.ndim == 2:
             weighting = NumpyFnMatrixWeighting(
@@ -1472,7 +1470,9 @@ def npy_weighted_inner(weight):
 
     See Also
     --------
-    NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting
+    NumpyFnConstWeighting
+    NumpyFnArrayWeighting
+    NumpyFnMatrixWeighting
     """
     return _weighting(weight, exponent=2.0).inner
 
@@ -1499,7 +1499,9 @@ def npy_weighted_norm(weight, exponent=2.0):
 
     See Also
     --------
-    NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting
+    NumpyFnConstWeighting,
+    NumpyFnArrayWeighting,
+    NumpyFnMatrixWeighting
     """
     return _weighting(weight, exponent=exponent).norm
 
@@ -1536,7 +1538,9 @@ def npy_weighted_dist(weight, exponent=2.0, use_inner=False):
 
     See Also
     --------
-    NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting
+    NumpyFnConstWeighting,
+    NumpyFnArrayWeighting,
+    NumpyFnMatrixWeighting
     """
     return _weighting(weight, exponent=exponent,
                       dist_using_inner=use_inner).dist
@@ -1747,49 +1751,25 @@ class NumpyFnMatrixWeighting(MatrixWeightingBase):
                                     self.exponent))
 
 
-class NumpyFnVectorWeighting(VectorWeightingBase):
+class NumpyFnArrayWeighting(ArrayWeightingBase):
 
-    """Vector weighting for `NumpyFn`.
+    """Weighting of `Fn` by an array.
 
-    For exponent 2.0, a new weighted inner product with vector ``w``
-    is defined as::
-
-        <a, b>_w := <w * a, b> = b^H (w * a)
-
-    with ``b^H`` standing for transposed complex conjugate and
-    ``w * a`` for entry-wise multiplication.
-
-    For other exponents, only norm and dist are defined. In the case of
-    exponent ``inf``, the weighted norm is
-
-        ||a||_{w, inf} := ||w * a||_inf
-
-    otherwise it is::
-
-        ||a||_{w, p} := ||w^{1/p} * a||
-
-    Note that this definition does **not** fulfill the limit property
-    in ``p``, i.e.::
-
-        ||x||_{w, p} --/-> ||x||_{w, inf}  for p --> inf
-
-    unless ``w = (1,...,1)``.
-
-    The vector may only have positive entries, otherwise it does not
-    define an inner product or norm, respectively. This is not checked
-    during initialization.
+    This class defines a weighting that has a different value for
+    each index defined in a given tensor space.
+    See ``Notes`` for mathematical details.
     """
 
-    def __init__(self, vector, exponent=2.0, dist_using_inner=False):
+    def __init__(self, array, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
         ----------
-        vector : `array-like`, one-dim.
-            Weighting vector of the inner product, norm and distance
+        array : `array-like`, one-dim.
+            Weighting array of the inner product, norm and distance.
         exponent : positive float
-            Exponent of the norm. For values other than 2.0, the inner
-            product is not defined.
+            Exponent of the norm. For values other than 2.0, no inner
+            product is defined.
         dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
@@ -1800,12 +1780,47 @@ class NumpyFnVectorWeighting(VectorWeightingBase):
             exactly zero for equal (but not identical) ``x`` and ``y``.
 
             This option can only be used if ``exponent`` is 2.0.
+
+        Notes
+        -----
+        - For exponent 2.0, a new weighted inner product with array
+          :math:`w` is defined as
+
+              :math:`\\langle a, b\\rangle_w :=
+              \\langle w \cdot a, b\\rangle =
+              b^{\mathrm{H}} (w \cdot a)`,
+
+          where :math:`b^{\mathrm{H}}` stands for transposed complex
+          conjugate and :math:`w \cdot a` for entry-wise multiplication.
+
+        - For other exponents, only norm and dist are defined. In the
+          case of exponent :math:`\\infty`, the weighted norm is
+
+              :math:`\\lVert a\\rVert_{w, \\infty} :=
+              \\lVert w \cdot a\\rVert_{\\infty}`,
+
+          otherwise it is (using point-wise exponentiation)
+
+              :math:`\\lVert a\\rVert_{w, p} :=
+              \\lVert w^{1/p} \cdot a\\rVert_{\\infty}`.
+
+        - Note that this definition does **not** fulfill the limit
+          property in :math:`p`, i.e.
+
+              :math:`\\lVert a\\rVert_{w, p} \\not\\to
+              \\lVert a\\rVert_{w, \\infty} \quad (p \\to \\infty)`
+
+          unless all weights are equal to 1.
+
+        - The array may only have positive entries, otherwise it does
+          not define an inner product or norm, respectively. This is not
+          checked during initialization.
         """
-        super().__init__(vector, impl='numpy', exponent=exponent,
+        super().__init__(array, impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
-        """Calculate the vector weighted inner product of two vectors.
+        """Return the weighted inner product of two vectors.
 
         Parameters
         ----------
@@ -1815,14 +1830,14 @@ class NumpyFnVectorWeighting(VectorWeightingBase):
         Returns
         -------
         inner : float or complex
-            The inner product of the two provided vectors
+            The inner product of the two provided vectors.
         """
         if self.exponent != 2.0:
             raise NotImplementedError('no inner product defined for '
                                       'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
-            inner = _inner_default(x1 * self.vector, x2)
+            inner = _inner_default(x1 * self.array, x2)
             if is_real_dtype(x1.dtype):
                 return float(inner)
             else:
@@ -1847,7 +1862,7 @@ class NumpyFnVectorWeighting(VectorWeightingBase):
                 norm_squared = 0.0  # Compensate for numerical error
             return np.sqrt(norm_squared)
         else:
-            return float(_pnorm_diagweight(x, self.exponent, self.vector))
+            return float(_pnorm_diagweight(x, self.exponent, self.array))
 
 
 class NumpyFnConstWeighting(ConstWeightingBase):
@@ -2035,7 +2050,7 @@ class NumpyFnNoWeighting(NoWeightingBase, NumpyFnConstWeighting):
                          dist_using_inner=dist_using_inner)
 
 
-class NumpyFnCustomInnerProduct(CustomInnerProductBase):
+class NumpyFnCustomInner(CustomInnerBase):
 
     """Class for handling a user-specified inner product in `NumpyFn`."""
 

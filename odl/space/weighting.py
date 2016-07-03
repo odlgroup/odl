@@ -29,12 +29,13 @@ import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
 from odl.space.base_ntuples import FnBaseVector
+from odl.space.base_tensors import TensorBase
 from odl.util.utility import array1d_repr, arraynd_repr
 
 
-__all__ = ('MatrixWeightingBase', 'VectorWeightingBase', 'ConstWeightingBase',
+__all__ = ('MatrixWeightingBase', 'ArrayWeightingBase', 'ConstWeightingBase',
            'NoWeightingBase',
-           'CustomInnerProductBase', 'CustomNormBase', 'CustomDistBase')
+           'CustomInnerBase', 'CustomNormBase', 'CustomDistBase')
 
 
 class WeightingBase(object):
@@ -441,15 +442,15 @@ class MatrixWeightingBase(WeightingBase):
                 else:
                     return np.array_equal(self.matrix, other.matrix)
 
-        elif isinstance(other, VectorWeightingBase):
+        elif isinstance(other, ArrayWeightingBase):
             if self.matrix_issparse:
                 return (np.array_equiv(self.matrix.diagonal(),
-                                       other.vector) and
+                                       other.array) and
                         np.array_equal(self.matrix.asformat('dia').offsets,
                                        np.array([0])))
             else:
                 return np.array_equal(
-                    self.matrix, other.vector * np.eye(self.matrix.shape[0]))
+                    self.matrix, other.array * np.eye(self.matrix.shape[0]))
 
         elif isinstance(other, ConstWeightingBase):
             if self.matrix_issparse:
@@ -511,32 +512,32 @@ class MatrixWeightingBase(WeightingBase):
                                                             self.matrix)
 
 
-class VectorWeightingBase(WeightingBase):
+class ArrayWeightingBase(WeightingBase):
 
-    """Weighting of a space by a vector.
+    """Weighting of a space by an array.
 
     The exact definition of the weighted inner product, norm and
     distance functions depend on the concrete space.
 
-    The vector may only have positive entries, otherwise it does not
+    The array may only have positive entries, otherwise it does not
     define an inner product or norm, respectively. This is not checked
     during initialization.
     """
 
-    def __init__(self, vector, impl, exponent=2.0, dist_using_inner=False):
+    def __init__(self, array, impl, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
         ----------
-        vector : 1-dim. `array-like`
-            Weighting vector of the inner product.
+        array : 1-dim. `array-like`
+            Weighting array of inner product, norm and distance.
+            Native `FnBaseVector` or `BaseTensor` instances are stored
+            as-is without copying.
         impl : string
             Specifier for the implementation backend.
         exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-            If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
-            are allowed.
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
@@ -551,26 +552,25 @@ class VectorWeightingBase(WeightingBase):
         super().__init__(impl=impl, exponent=exponent,
                          dist_using_inner=dist_using_inner)
 
-        if isinstance(vector, FnBaseVector):
-            self._vector = vector
+        # We store our "own" data structures as-is to retain Numpy
+        # compatibility while avoiding copies. Other things are run through
+        # numpy.asarray.
+        if isinstance(array, (FnBaseVector, TensorBase)):
+            self.__array = array
         else:
-            self._vector = np.asarray(vector)
+            self.__array = np.asarray(array)
 
-        if self.vector.dtype == object:
-            raise ValueError('invalid vector {}'.format(vector))
-        elif self.vector.ndim != 1:
-            raise ValueError('vector {} is {}-dimensional instead of '
-                             '1-dimensional'
-                             ''.format(vector, self._vector.ndim))
+        if self.array.dtype == object:
+            raise ValueError('invalid `array` {}'.format(array))
 
     @property
-    def vector(self):
-        """Weighting vector of this inner product."""
-        return self._vector
+    def array(self):
+        """Weighting array of this inner product."""
+        return self.__array
 
     def is_valid(self):
-        """Test if the vector is a valid weight, i.e. positive."""
-        return np.all(np.greater(self.vector, 0))
+        """Return True if the array is a valid weight, i.e. positive."""
+        return np.all(np.greater(self.array, 0))
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -578,8 +578,8 @@ class VectorWeightingBase(WeightingBase):
         Returns
         -------
         equals : bool
-            ``True`` if other is a `VectorWeightingBase` instance with
-            **identical** vector, ``False`` otherwise.
+            ``True`` if ``other`` is an `ArrayWeightingBase` instance with
+            **identical** array, False otherwise.
 
         See Also
         --------
@@ -589,18 +589,18 @@ class VectorWeightingBase(WeightingBase):
             return True
 
         return (super().__eq__(other) and
-                self.vector is getattr(other, 'vector', None))
+                self.array is getattr(other, 'array', None))
 
     def equiv(self, other):
-        """Test if other is an equivalent weighting.
+        """Return True if other is an equivalent weighting.
 
         Returns
         -------
         equivalent : bool
-            ``True`` if other is a `WeightingBase` instance with the same
+            ``True`` if ``other`` is a `WeightingBase` instance with the same
             `WeightingBase.impl`, which yields the same result as this
             weighting for any input, ``False`` otherwise. This is checked
-            by entry-wise comparison of matrices/vectors/constants.
+            by entry-wise comparison of arrays / constants.
         """
         # Optimization for equality
         if self == other:
@@ -611,14 +611,14 @@ class VectorWeightingBase(WeightingBase):
         elif isinstance(other, MatrixWeightingBase):
             return other.equiv(self)
         elif isinstance(other, ConstWeightingBase):
-            return np.array_equiv(self.vector, other.const)
+            return np.array_equiv(self.array, other.const)
         else:
-            return np.array_equal(self.vector, other.vector)
+            return np.array_equal(self.array, other.array)
 
     @property
     def repr_part(self):
         """String usable in a space's ``__repr__`` method."""
-        part = 'weight={}'.format(array1d_repr(self.vector, nprint=10))
+        part = 'weight={}'.format(array1d_repr(self.array, nprint=10))
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
         if self.dist_using_inner:
@@ -627,31 +627,29 @@ class VectorWeightingBase(WeightingBase):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        inner_fstr = '{vector!r}'
+        inner_fstr = '{array!r}'
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
         if self.dist_using_inner:
             inner_fstr += ', dist_using_inner=True'
 
-        inner_str = inner_fstr.format(vector=self.vector, ex=self.exponent)
+        inner_str = inner_fstr.format(array=self.array, ex=self.exponent)
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
     def __str__(self):
         """Return ``str(self)``."""
         if self.exponent == 2.0:
-            return 'Weighting: vector =\n{}'.format(self.vector)
+            return 'Weighting: vector =\n{}'.format(self.array)
         else:
             return 'Weighting: p = {}, vector =\n{}'.format(self.exponent,
-                                                            self.vector)
+                                                            self.array)
 
 
 class ConstWeightingBase(WeightingBase):
 
-    """Weighting of a space by a constant.
+    """Weighting of a space by a constant."""
 
-    """
-
-    def __init__(self, constant, impl, exponent=2.0, dist_using_inner=False):
+    def __init__(self, const, impl, exponent=2.0, dist_using_inner=False):
         """Initialize a new instance.
 
         Parameters
@@ -676,12 +674,12 @@ class ConstWeightingBase(WeightingBase):
         """
         super().__init__(impl=impl, exponent=exponent,
                          dist_using_inner=dist_using_inner)
-        self._const = float(constant)
+        self._const = float(const)
         if self.const <= 0:
             raise ValueError('expected positive constant, got {}'
-                             ''.format(constant))
+                             ''.format(const))
         if not np.isfinite(self.const):
-            raise ValueError('`constant` {} is invalid'.format(constant))
+            raise ValueError('`const` {} is invalid'.format(const))
 
     @property
     def const(self):
@@ -716,7 +714,7 @@ class ConstWeightingBase(WeightingBase):
         """
         if isinstance(other, ConstWeightingBase):
             return self == other
-        elif isinstance(other, (VectorWeightingBase, MatrixWeightingBase)):
+        elif isinstance(other, (ArrayWeightingBase, MatrixWeightingBase)):
             return other.equiv(self)
         else:
             return False
@@ -786,7 +784,7 @@ class NoWeightingBase(ConstWeightingBase):
         # Support singleton pattern for subclasses
         if not hasattr(self, '_initialized'):
             ConstWeightingBase.__init__(
-                self, constant=1.0, impl=impl, exponent=exponent,
+                self, const=1.0, impl=impl, exponent=exponent,
                 dist_using_inner=dist_using_inner)
             self._initialized = True
 
@@ -809,7 +807,7 @@ class NoWeightingBase(ConstWeightingBase):
             return 'NoWeighting: p = {}'.format(self.exponent)
 
 
-class CustomInnerProductBase(WeightingBase):
+class CustomInnerBase(WeightingBase):
 
     """Class for handling a user-specified inner product."""
 
@@ -861,7 +859,7 @@ class CustomInnerProductBase(WeightingBase):
         Returns
         -------
         equal : bool
-            ``True`` if other is a `CustomInnerProductBase`
+            ``True`` if other is a `CustomInnerBase`
             instance with the same inner product, ``False`` otherwise.
         """
         return super().__eq__(other) and self.inner == other.inner

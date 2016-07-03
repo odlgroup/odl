@@ -207,15 +207,15 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         # Handle weighting, including sanity checks
         if weight is None:
-            # TODO: find a more robust way of getting the weighs as a vector
-            if hasattr(self.domain.weighting, 'vector'):
-                self._weights = self.domain.weighting.vector
+            # TODO: find a more robust way of getting the weighs as an array
+            if hasattr(self.domain.weighting, 'array'):
+                self._weights = self.domain.weighting.array
             elif hasattr(self.domain.weighting, 'const'):
                 self._weights = (self.domain.weighting.const *
                                  np.ones(len(self.domain)))
             else:
                 raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting vector or constant'
+                                 'not define a weighting array or constant'
                                  ''.format(self.domain.weighting))
         elif np.isscalar(weight):
             if weight <= 0:
@@ -237,7 +237,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
     @property
     def weights(self):
-        """Weighting vector of this norm."""
+        """Weighting array of this norm."""
         return self._weights
 
     @property
@@ -423,14 +423,14 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
 
         # Handle weighting, including sanity checks
         if weight is None:
-            if hasattr(vfspace.weighting, 'vector'):
-                self._weights = vfspace.weighting.vector
+            if hasattr(vfspace.weighting, 'array'):
+                self._weights = vfspace.weighting.array
             elif hasattr(vfspace.weighting, 'const'):
                 self._weights = (vfspace.weighting.const *
                                  np.ones(len(vfspace)))
             else:
                 raise ValueError('weighting scheme {!r} of the domain does '
-                                 'not define a weighting vector or constant'
+                                 'not define a weighting array or constant'
                                  ''.format(vfspace.weighting))
         elif np.isscalar(weight):
             if weight <= 0:
@@ -452,7 +452,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
 
     @property
     def weights(self):
-        """Weighting vector of this norm."""
+        """Weighting array of this norm."""
         return self._weights
 
     @property
@@ -639,14 +639,14 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
                          weight=weight)
 
         # Get weighting from range
-        if hasattr(self.range.weighting, 'vector'):
-            self._ran_weights = self.range.weighting.vector
+        if hasattr(self.range.weighting, 'array'):
+            self._ran_weights = self.range.weighting.array
         elif hasattr(self.range.weighting, 'const'):
             self._ran_weights = (self.range.weighting.const *
                                  np.ones(len(self.range)))
         else:
             raise ValueError('weighting scheme {!r} of the range does '
-                             'not define a weighting vector or constant'
+                             'not define a weighting array or constant'
                              ''.format(self.range.weighting))
 
     def _call(self, f, out):

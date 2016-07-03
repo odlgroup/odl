@@ -29,8 +29,8 @@ import numpy as np
 
 from odl.set import LinearSpace, LinearSpaceElement
 from odl.space.weighting import (
-    WeightingBase, VectorWeightingBase, ConstWeightingBase, NoWeightingBase,
-    CustomInnerProductBase, CustomNormBase, CustomDistBase)
+    WeightingBase, ArrayWeightingBase, ConstWeightingBase, NoWeightingBase,
+    CustomInnerBase, CustomNormBase, CustomDistBase)
 from odl.util.ufuncs import ProductSpaceUFuncs
 from odl.util.utility import is_real_dtype
 
@@ -159,7 +159,7 @@ class ProductSpace(LinearSpace):
 
         See Also
         --------
-        ProductSpaceElementWeighting
+        ProductSpaceArrayWeighting
         ProductSpaceConstWeighting
 
         Examples
@@ -286,7 +286,7 @@ class ProductSpace(LinearSpace):
                     raise ValueError('invalid weight argument {}'
                                      ''.format(weight))
                 if arr.ndim == 1:
-                    self.__weighting = ProductSpaceElementWeighting(
+                    self.__weighting = ProductSpaceArrayWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner)
                 else:
                     raise ValueError('weighting array has {} dimensions, '
@@ -297,7 +297,7 @@ class ProductSpace(LinearSpace):
         elif norm is not None:
             self.__weighting = ProductSpaceCustomNorm(norm)
         elif inner is not None:
-            self.__weighting = ProductSpaceCustomInnerProduct(inner)
+            self.__weighting = ProductSpaceCustomInner(inner)
         else:  # all None -> no weighing
             self.__weighting = ProductSpaceNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
@@ -900,7 +900,7 @@ for op in ['add', 'sub', 'mul', 'div', 'truediv']:
         setattr(ProductSpaceElement, name, _broadcast_arithmetic(name))
 
 
-class ProductSpaceElementWeighting(VectorWeightingBase):
+class ProductSpaceArrayWeighting(ArrayWeightingBase):
 
     """Vector weighting for `ProductSpace`.
 
@@ -977,7 +977,7 @@ class ProductSpaceElementWeighting(VectorWeightingBase):
             (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
             dtype=x1[0].space.dtype, count=len(x1))
 
-        inner = np.dot(inners, self.vector)
+        inner = np.dot(inners, self.array)
         if is_real_dtype(x1[0].dtype):
             return float(inner)
         else:
@@ -1003,9 +1003,9 @@ class ProductSpaceElementWeighting(VectorWeightingBase):
             norms = np.fromiter(
                 (xi.norm() for xi in x), dtype=np.float64, count=len(x))
             if self.exponent in (1.0, float('inf')):
-                norms *= self.vector
+                norms *= self.array
             else:
-                norms *= self.vector ** (1.0 / self.exponent)
+                norms *= self.array ** (1.0 / self.exponent)
 
             return float(np.linalg.norm(norms, ord=self.exponent))
 
@@ -1211,9 +1211,9 @@ class ProductSpaceNoWeighting(NoWeightingBase, ProductSpaceConstWeighting):
                          dist_using_inner=dist_using_inner)
 
 
-class ProductSpaceCustomInnerProduct(CustomInnerProductBase):
+class ProductSpaceCustomInner(CustomInnerBase):
 
-    """Class for handling a user-specified inner product on `ProductSpace`."""
+    """Class for handling a user-specified inner products."""
 
     def __init__(self, inner, dist_using_inner=False):
         """Initialize a new instance.
