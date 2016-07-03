@@ -272,7 +272,7 @@ def show_discrete_data(values, grid, title=None, method='',
         csub_re = display_re(*args_re, **dsp_kwargs)
 
         # Axis ticks
-        if method == 'imshow':
+        if method == 'imshow' and not grid.is_uniform:
             (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
             plt.xticks(xpts, xlabels)
             plt.yticks(ypts, ylabels)
@@ -308,7 +308,7 @@ def show_discrete_data(values, grid, title=None, method='',
         csub_im = display_im(*args_im, **dsp_kwargs)
 
         # Axis ticks
-        if method == 'imshow':
+        if method == 'imshow' and not grid.is_uniform:
             (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
             plt.xticks(xpts, xlabels)
             plt.yticks(ypts, ylabels)
@@ -349,7 +349,7 @@ def show_discrete_data(values, grid, title=None, method='',
         csub = display(*args_re, **dsp_kwargs)
 
         # Axis ticks
-        if method == 'imshow':
+        if method == 'imshow' and not grid.is_uniform:
             (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
             plt.xticks(xpts, xlabels)
             plt.yticks(ypts, ylabels)

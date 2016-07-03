@@ -512,7 +512,7 @@ class RectPartition(object):
         Returns
         -------
         squeezed : `RectPartition`
-            The squeezed partition
+            Squeezed partition.
 
         Examples
         --------
@@ -524,8 +524,9 @@ class RectPartition(object):
         -----
         This is not equivalent to
         ``RectPartiton(self.set.squeeze(), self.grid.squeeze())`` since the
-        definition of degenerate is different in sets and grids. This functions
-        follow the definition used by grids.
+        definition of degenerate is different in sets and grids. This method
+        follow the definition used in grids, that is, an axis is degenerate if
+        it has only one element.
 
         See Also
         --------
