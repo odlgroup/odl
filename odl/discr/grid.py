@@ -706,6 +706,11 @@ class TensorGrid(Set):
         """
         return sparse_meshgrid(*self.coord_vectors)
 
+    @property
+    def is_uniform(self):
+        """Return `True` if this is a `RegularGrid`."""
+        return isinstance(self, RegularGrid)
+
     def __getitem__(self, indices):
         """Return ``self[indices]``.
 
