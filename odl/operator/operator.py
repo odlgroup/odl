@@ -425,7 +425,7 @@ class Operator(object):
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance."""
-        instance = super().__new__(cls)
+        instance = object.__new__(cls)
 
         call_has_out, call_out_optional, _ = _dispatch_call_args(cls)
         instance._call_has_out = call_has_out
