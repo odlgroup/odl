@@ -62,13 +62,18 @@ def _colorbar_format(minval, maxval):
 def _axes_info(grid, npoints=5):
     result = []
 
+    min_corner = grid.min()
+    max_corner = grid.max()
     for axis in range(grid.ndim):
-        minv = grid.coord_vectors[axis].min()
-        maxv = grid.coord_vectors[axis].max()
+        minv = min_corner[axis]
+        maxv = max_corner[axis]
 
         points = np.linspace(minv, maxv, npoints)
         indices = np.linspace(0, grid.shape[axis] - 1, npoints, dtype=int)
         tick_values = grid.coord_vectors[axis][indices]
+
+        # Do not use corner point in case of a partition, use outer corner
+        tick_values[[0, -1]] = minv, maxv
 
         format_str = '{:.' + str(_digits(minv, maxv)) + 'f}'
         tick_labels = [format_str.format(f) for f in tick_values]
@@ -86,7 +91,7 @@ def show_discrete_data(values, grid, title=None, method='',
     ----------
     values : `numpy.ndarray`
         The values to visualize
-    grid : `TensorGrid`
+    grid : `TensorGrid` or `RectPartition`
         Grid of the values
 
     title : `str`, optional
@@ -267,7 +272,7 @@ def show_discrete_data(values, grid, title=None, method='',
         csub_re = display_re(*args_re, **dsp_kwargs)
 
         # Axis ticks
-        if method == 'imshow':
+        if method == 'imshow' and not grid.is_uniform:
             (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
             plt.xticks(xpts, xlabels)
             plt.yticks(ypts, ylabels)
@@ -303,7 +308,7 @@ def show_discrete_data(values, grid, title=None, method='',
         csub_im = display_im(*args_im, **dsp_kwargs)
 
         # Axis ticks
-        if method == 'imshow':
+        if method == 'imshow' and not grid.is_uniform:
             (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
             plt.xticks(xpts, xlabels)
             plt.yticks(ypts, ylabels)
@@ -344,7 +349,7 @@ def show_discrete_data(values, grid, title=None, method='',
         csub = display(*args_re, **dsp_kwargs)
 
         # Axis ticks
-        if method == 'imshow':
+        if method == 'imshow' and not grid.is_uniform:
             (xpts, xlabels), (ypts, ylabels) = _axes_info(grid)
             plt.xticks(xpts, xlabels)
             plt.yticks(ypts, ylabels)
