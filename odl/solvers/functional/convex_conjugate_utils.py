@@ -25,7 +25,6 @@ in which
 For more details on convex conjugate functionals, see for example [Lue1969]_.
 """
 
-
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
@@ -33,7 +32,9 @@ standard_library.install_aliases()
 from builtins import super
 
 from odl.solvers.functional import Functional
-from odl import LinearSpaceVector, Operator, ResidualOperator, IdentityOperator
+from odl import (LinearSpaceVector, Operator, ResidualOperator,
+                 IdentityOperator, ConstantOperator)
+
 
 __all__ = ('convex_conjugate_translation', 'convex_conjugate_arg_scaling',
            'convex_conjugate_functional_scaling',
@@ -116,45 +117,19 @@ def convex_conjugate_translation(convex_conj_f, y):
         def gradient(self):
             """Gradient operator of the functional.
 
-            Returns the operator that corresponds to the mapping
+            Notes
+            -----
+            The operator that corresponds to the mapping
 
-                x -> grad_f(x)
+            .. math::
 
-            where ``grad_f(x)`` is the element used to evaluated derivatives in
-            a direction ``d`` by <grad_f(x), d>.
+                x \\to \\nabla f(x)
 
-            Returns
-            -------
-            ConvexConjugateTranslationGradient : `Operator`
-                Operator to evaluated grad_f in a point.
+            where :math:`\\nabla f(x)` is the element used to evaluated
+            derivatives in a direction :math:`d` by
+            :math:`\\langle \\nabla f(x), d \\rangle`.
             """
-
-            tmp = self
-
-            class ConvexConjugateTranslationGradient(Operator):
-                """Operator corresponding to the gradient of the convex
-                conjugate of a translated function.
-                """
-
-                def __init__(self):
-                    """Initialize a ConvexConjugateTranslationGradient
-                    instance.
-                    """
-                    super().__init__(tmp.domain, tmp.domain)
-                    self.original_gradient = \
-                        tmp.orig_convex_conj_f.gradient
-
-                def _call(self, x):
-                    """Applies the operator to the given point.
-
-                    Returns
-                    -------
-                    `self(x)` : `LinearSpaceVector`
-                        Evaluation of the gradient in the point ´x´.
-                    """
-                    return self.original_gradient(x) + tmp.y
-
-            return ConvexConjugateTranslationGradient()
+            return self.orig_convex_conj_f.gradient + ConstantOperator(self.y)
 
         # TODO: Add this when the proximal is added to the functional
 #        def proximal(self, sigma=1.0):
@@ -230,6 +205,16 @@ def convex_conjugate_arg_scaling(convex_conj_f, scaling):
         """
 
         def __init__(self, convex_conj_f, scaling):
+            """Initialize a ConvexConjugateArgScaling instance.
+
+            Parameters
+            ----------
+            convex_conj_f : `Functional`
+                Function corresponding to F^*.
+
+            scaling : 'float'
+                The scaling parameter.
+            """
             super().__init__(domain=convex_conj_f.domain,
                              linear=convex_conj_f.is_linear,
                              smooth=convex_conj_f.is_smooth,
@@ -237,13 +222,34 @@ def convex_conjugate_arg_scaling(convex_conj_f, scaling):
                              convex=convex_conj_f.is_convex)
 
             self.orig_convex_conj_f = convex_conj_f
-            self.scaling = scaling
+            self.scaling = float(scaling)
 
         def _call(self, x):
+            """Applies the functional to the given point.
+
+            Returns
+            -------
+            `self(x)` : `float`
+                Evaluation of the functional.
+            """
             return convex_conj_f(x * (1/self.scaling))
 
         @property
         def gradient(self):
+            """Gradient operator of the functional.
+
+            Notes
+            -----
+            The operator that corresponds to the mapping
+
+            .. math::
+
+                x \\to \\nabla f(x)
+
+            where :math:`\\nabla f(x)` is the element used to evaluated
+            derivatives in a direction :math:`d` by
+            :math:`\\langle \\nabla f(x), d \\rangle`.
+            """
             return ((1/self.scaling) * self.orig_convex_conj_f.gradient *
                     (1/self.scaling))
 
@@ -325,6 +331,16 @@ def convex_conjugate_functional_scaling(convex_conj_f, scaling):
         """
 
         def __init__(self, convex_conj_f, scaling):
+            """Initialize a ConvexConjugateFuncScaling instance.
+
+            Parameters
+            ----------
+            convex_conj_f : `Functional`
+                Function corresponding to F^*.
+
+            scaling : 'float'
+                The scaling parameter.
+            """
             super().__init__(domain=convex_conj_f.domain,
                              linear=convex_conj_f.is_linear,
                              smooth=convex_conj_f.is_smooth,
@@ -335,10 +351,31 @@ def convex_conjugate_functional_scaling(convex_conj_f, scaling):
             self.scaling = scaling
 
         def _call(self, x):
+            """Applies the functional to the given point.
+
+            Returns
+            -------
+            `self(x)` : `float`
+                Evaluation of the functional.
+            """
             return self.scaling * convex_conj_f(x * (1/self.scaling))
 
         @property
         def gradient(self):
+            """Gradient operator of the functional.
+
+            Notes
+            -----
+            The operator that corresponds to the mapping
+
+            .. math::
+
+                x \\to \\nabla f(x)
+
+            where :math:`\\nabla f(x)` is the element used to evaluated
+            derivatives in a direction :math:`d` by
+            :math:`\\langle \\nabla f(x), d \\rangle`.
+            """
             return self.orig_convex_conj_f.gradient * (1/self.scaling)
 
         # TODO: Add when the proximal frame-work is added to the functional
@@ -418,6 +455,15 @@ def convex_conjugate_linear_perturbation(convex_conj_f, y):
         """
 
         def __init__(self, convex_conj_f, y):
+            """Initialize a ConvexConjugateLinearPerturb instance.
+
+            Parameters
+            ----------
+            convex_conj_f : `Functional`
+                Function corresponding to F^*.
+
+            y : Element in domain of F^*.
+            """
             super().__init__(domain=convex_conj_f.domain,
                              linear=convex_conj_f.is_linear,
                              smooth=convex_conj_f.is_smooth,
@@ -428,10 +474,31 @@ def convex_conjugate_linear_perturbation(convex_conj_f, y):
             self.y = y
 
         def _call(self, x):
+            """Applies the functional to the given point.
+
+            Returns
+            -------
+            `self(x)` : `float`
+                Evaluation of the functional.
+            """
             return convex_conj_f(x - self.y)
 
         @property
         def gradient(self):
+            """Gradient operator of the functional.
+
+            Notes
+            -----
+            The operator that corresponds to the mapping
+
+            .. math::
+
+                x \\to \\nabla f(x)
+
+            where :math:`\\nabla f(x)` is the element used to evaluated
+            derivatives in a direction :math:`d` by
+            :math:`\\langle \\nabla f(x), d \\rangle`.
+            """
             return (self.orig_convex_conj_f.gradient *
                     ResidualOperator(IdentityOperator(self.domain), -self.y))
 
