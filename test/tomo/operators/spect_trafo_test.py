@@ -29,8 +29,8 @@ import numpy as np
 # Internal
 import odl
 from odl.tomo.operators.spect_trafo import AttenuatedRayTransform
-from odl.util.testutils import skip_if_no_niftyrec
-from odl.util.testutils import almost_equal, all_equal
+from odl.util.testutils import (skip_if_no_niftyrec,
+                                almost_equal, all_equal)
 
 
 @skip_if_no_niftyrec
@@ -49,7 +49,7 @@ def test_spect_projector():
                                   [det_nx_pix, det_ny_pix])
 
     apart = odl.uniform_partition(0, 2 * np.pi, n_proj)
-    geometry = odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry(
+    geometry = odl.tomo.geometry.ParallelHoleCollimatorGeometry(
         apart, dpart, det_rad=det_radius)
 
     # Create a discrete domain and a phantom as an element of the domain
@@ -58,7 +58,7 @@ def test_spect_projector():
     vol = odl.util.phantom.shepp_logan(domain, True)
     # Create a SPECT projector
     projector = AttenuatedRayTransform(
-        domain, geometry, attenuation=None, impl='niftyrec')
+        domain, geometry, attenuation=None, impl='niftyrec_cpu')
 
     # Calculate projection and back-projection
     proj = projector(vol)
@@ -66,7 +66,6 @@ def test_spect_projector():
 
     assert all_equal(proj.shape, (n_proj, det_nx_pix, det_ny_pix))
     assert all_equal(backproj.shape, vol.shape)
-    assert proj in projector.range
     assert backproj in projector.domain
 
     # Adjoint test:  Verified the identity <Ax, Ax> = <A^* A x, x>
@@ -81,42 +80,41 @@ def test_spect_projector():
 def test_attenuation():
     det_nx_pix = 16
     det_ny_pix = 16
-    det_nx_mm = 0.4
+    det_nx_mm = 0.125
     det_radius = 20
     n_proj = 1
     det_param = det_nx_mm * det_nx_pix
-    dpart = odl.uniform_partition([-det_param, -det_param],
-                                  [det_param, det_param],
+    dpart = odl.uniform_partition([-det_param/2, -det_param/2],
+                                  [det_param/2, det_param/2],
                                   [det_nx_pix, det_ny_pix])
 
     apart = odl.uniform_partition(0, 2 * np.pi, n_proj)
-    geometry = odl.tomo.geometry.spect.ParallelHoleCollimatorGeometry(
+    geometry = odl.tomo.geometry.ParallelHoleCollimatorGeometry(
         apart, dpart, det_rad=det_radius)
 
     # Create a discrete domain and a phantom as an element of the domain
     domain = odl.uniform_discr([-1] * 3, [1] * 3, [det_nx_pix] * 3)
 
-    vol = np.zeros((16, 16, 16))
+    vol = np.zeros([det_nx_pix] * 3)
     vol[0, 0, 0] = 100
 
     vol_element = domain.element(vol)
     projector = AttenuatedRayTransform(
-        domain, geometry, attenuation=None, impl='niftyrec')
+        domain, geometry, attenuation=None, impl='niftyrec_cpu')
     proj_no_att = projector(vol_element)
     # Accept 0.1 % error
     places = 3
-    assert odl.util.testutils.almost_equal(np.max(proj_no_att), 100,
-                                           places=places)
+    assert almost_equal(np.max(proj_no_att), 100*det_param/det_ny_pix,
+                        places=places)
 
     attenuation = np.zeros((16, 16, 16))
     attenuation[0, 0, 0] = 0.2
     projector_att = AttenuatedRayTransform(
-        domain, geometry, attenuation=attenuation, impl='niftyrec')
+        domain, geometry, attenuation=attenuation, impl='niftyrec_cpu')
     proj_att = projector_att(vol_element)
 
-    value = np.sum(vol * np.exp(-np.sum(attenuation)))
-    assert odl.util.testutils.almost_equal(np.max(proj_att), value,
-                                           places=places)
+    value = 100*det_param/det_ny_pix * np.exp(-0.2*det_nx_mm)
+    assert almost_equal(np.max(proj_att), value, places=places)
 
 
 if __name__ == '__main__':
