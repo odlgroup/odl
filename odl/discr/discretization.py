@@ -205,7 +205,7 @@ class DiscretizedSet(NtuplesBase):
         if other is self:
             return True
 
-        return (super().__eq__(other) and
+        return (NtuplesBase.__eq__(self, other) and
                 other.uspace == self.uspace and
                 other.dspace == self.dspace and
                 other.sampling == self.sampling and

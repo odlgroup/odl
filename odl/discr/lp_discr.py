@@ -482,8 +482,8 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             shape.
         """
         if out is None:
-            return super().asarray().reshape(self.shape,
-                                             order=self.space.order)
+            return DiscretizedSpaceVector.asarray(self).reshape(
+                self.shape, order=self.space.order)
         else:
             if out.shape not in (self.space.shape, (self.space.size,)):
                 raise ValueError('output array has shape {}, expected '

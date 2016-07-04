@@ -241,11 +241,15 @@ class IntervalProd(Set):
         >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], atol=1e-9)
         True
         """
-        point = np.atleast_1d(point)
+        try:
+            # Duck-typed check of type
+            point = np.array(point, dtype=np.float, copy=False, ndmin=1)
+        except (ValueError, TypeError):
+            return False
+
         if point.shape != (self.ndim,):
             return False
-        if not is_real_dtype(point.dtype):
-            return False
+
         return self.dist(point, exponent=np.inf) <= atol
 
     def __contains__(self, other):
@@ -304,6 +308,9 @@ class IntervalProd(Set):
         >>> rbox2.contains_set(rbox1)
         False
         """
+        if self is other:
+            return True
+
         try:
             return (self.approx_contains(other.min(), atol) and
                     self.approx_contains(other.max(), atol))
