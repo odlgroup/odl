@@ -646,7 +646,11 @@ def proximal_l2(space, lam=1, g=None):
             """Apply the operator to ``x`` and stores the result in ``out``."""
 
             if g is None:
-                step = self.sigma * lam / x.norm()
+                x_norm = x.norm()
+                if x_norm > 0:
+                    step = self.sigma * lam / x_norm
+                else:
+                    step = np.infty
 
                 if step < 1.0:
                     out.lincomb(1.0 - step, x)
@@ -654,7 +658,11 @@ def proximal_l2(space, lam=1, g=None):
                     out.set_zero()
 
             else:
-                step = self.sigma * lam / (x - g).norm()
+                x_norm = (x - g).norm()
+                if x_norm > 0:
+                    step = self.sigma * lam / x_norm
+                else:
+                    step = np.infty
 
                 if step < 1.0:
                     out.lincomb(1.0 - step, x, step, g)
