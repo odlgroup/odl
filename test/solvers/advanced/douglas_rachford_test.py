@@ -24,13 +24,12 @@ standard_library.install_aliases()
 
 import pytest
 import odl
-import odl.solvers as odls
 
 from odl.util.testutils import all_almost_equal
 
 
 def test_l1():
-    """Verify that the correct value is returned for l1 optimization."""
+    """Verify that the correct value is returned for l1 dist optimization."""
 
     # Define the space
     space = odl.rn(5)
@@ -43,13 +42,13 @@ def test_l1():
     data_2 = odl.util.testutils.example_element(space)
 
     # Proximals
-    prox_f = odls.proximal_l1(space, g=data_1)
+    prox_f = odl.solvers.proximal_l1(space, g=data_1)
 
     # Solve with f term dominating
     x = space.zero()
-    prox_cc_g = [odls.proximal_cconj_l1(space, g=data_2, lam=0.5)]
-    odls.douglas_rachford_pd(x, prox_f, prox_cc_g, L,
-                             tau=3.0, sigma=[1.0], lam=1.0, niter=5)
+    prox_cc_g = [odl.solvers.proximal_cconj_l1(space, g=data_2, lam=0.5)]
+    odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, L,
+                                    tau=3.0, sigma=[1.0], niter=5)
 
     assert all_almost_equal(x, data_1, places=2)
 

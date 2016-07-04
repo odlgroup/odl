@@ -44,7 +44,7 @@ smoothing = ft.inverse * gaussian * ft
 
 # Load cameraman data and noise
 data = space.element(np.rot90(scipy.misc.ascent()[::2, ::2], 3))
-noise = space.element(np.random.randn(*space.shape) * 2.0)
+noise = odl.phantom.white_noise(space) * 0.001
 
 # Create noisy convolved data
 noisy_data = smoothing(data) + noise
@@ -59,14 +59,13 @@ lin_ops = [smoothing, gradient]
 
 # Create proximals as needed
 prox_cc_g = [odl.solvers.proximal_cconj_l1(space, g=noisy_data),
-             odl.solvers.proximal_cconj_l1(gradient.range, lam=0.03)]
+             odl.solvers.proximal_cconj_l1(gradient.range, lam=0.003)]
 prox_f = odl.solvers.proximal_box_constraint(space, 0, 255)
 
 # Solve
-x = space.zero()
-callback = (odl.solvers.CallbackShow('results',
-                                     display_step=20, clim=[0, 255]) &
+x = noisy_data.copy()
+callback = (odl.solvers.CallbackShow(display_step=20, clim=[0, 255]) &
             odl.solvers.CallbackPrintIteration())
 odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
-                                tau=1.0, sigma=[1.0, 0.2], lam=1.0,
-                                niter=2000, callback=callback)
+                                tau=1.0, sigma=[1.0, 0.2],
+                                niter=1000, callback=callback)

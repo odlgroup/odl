@@ -30,6 +30,7 @@ the problem can be written as:
     min_{x in R^2}  sum_i inf_{z \in Omega_i} ||x - z||
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import odl
 
@@ -61,6 +62,9 @@ prox_cc_l = [odl.solvers.proximal_cconj(prox) for prox in prox_l]
 tau = 1.0 / len(rectangles)
 sigma = [1.0] * len(rectangles)
 
+# The lam parameter can be used to accelerate the convergence rate
+lam = lambda n: 1.0 + 1.0 / (n + 1)
+
 
 def print_objective(x):
     """Calculates the objective value and prints it."""
@@ -73,6 +77,17 @@ def print_objective(x):
 # Solve
 x = space.zero()
 odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
-                                tau=tau, sigma=sigma, lam=1.0,
-                                niter=20, callback=print_objective,
-                                prox_cc_l=prox_cc_l)
+                                tau=tau, sigma=sigma, niter=20, lam=lam,
+                                callback=print_objective, prox_cc_l=prox_cc_l)
+
+# plot the result
+for minp, maxp in rectangles:
+    xp = [minp[0], maxp[0], maxp[0], minp[0], minp[0]]
+    yp = [minp[1], minp[1], maxp[1], maxp[1], minp[1]]
+    plt.plot(xp, yp)
+
+plt.scatter(x[0], x[1])
+
+plt.xlim(-1, 4)
+plt.ylim(-1, 4)
+plt.show()
