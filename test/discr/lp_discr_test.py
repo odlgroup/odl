@@ -277,6 +277,15 @@ def test_element_from_function_1d():
     true_elem = [-x ** 2 for x in points]
     assert all_equal(elem_lam, true_elem)
 
+    # Broadcast from constant function
+    elem_lam = space.element(lambda x: 1.0)
+    true_elem = [1.0 for x in points]
+    assert all_equal(elem_lam, true_elem)
+
+    # Non vectorized
+    elem_lam = space.element(lambda x: x[0], vectorized=False)
+    assert all_equal(elem_lam, points)
+
 
 def test_element_from_function_2d():
 
@@ -316,6 +325,16 @@ def test_element_from_function_2d():
 
     elem_lam = space.element(lambda x: x[1])
     true_elem = [x[1] for x in points]
+    assert all_equal(elem_lam, true_elem)
+
+    # Broadcast from constant function
+    elem_lam = space.element(lambda x: 1.0)
+    true_elem = [1.0 for x in points]
+    assert all_equal(elem_lam, true_elem)
+
+    # Non vectorized
+    elem_lam = space.element(lambda x: x[0] + x[1], vectorized=False)
+    true_elem = [x[0] + x[1] for x in points]
     assert all_equal(elem_lam, true_elem)
 
 
