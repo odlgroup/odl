@@ -183,11 +183,11 @@ class Functional(Operator):
         elif isinstance(other, Number):
             # Left multiplication is more efficient, so we can use this in the
             # case of linear operator.
-            raise NotImplementedError
-            if self.is_linear:
-                return FunctionalLeftScalarMult(self, other)
-            else:
-                return OperatorRightScalarMult(self, other)
+            # raise NotImplementedError
+            # if self.is_linear:
+            #    return FunctionalLeftScalarMult(self, other)
+            #else:
+                return FunctionalRightScalarMult(self, other)
         elif isinstance(other, LinearSpaceVector) and other in self.domain:
             raise NotImplementedError
             return OperatorRightVectorMult(self, other.copy())
@@ -273,14 +273,90 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         self._scalar = scalar
                 
         
- #   def _call(self, x):
- #       return self._scalar*self._func(x)     
+#    def _call(self, x):
+#        return self._scalar*self._func(x)     
+
+    @property
+    def gradient(self):
+        
+        functional = self
+        
+        class LeftScalarMultGradient(Operator):
+            def __init__(self):
+                super().__init__(functional.domain, functional.domain,
+                                 linear=False)
+            def _call(self, x):
+                return functional._scalar*functional._func.gradient(x)
+        
+        return LeftScalarMultGradient()
+#        return self._scalar * self._func.gradient(x)
+
+                
+    @property
+    def conjugate_functional(self):  
+        return 0
+#        return convex_conjugate_functinoal_scaling(x,self._scalar)
+
+        
+#    def proximal(self, sigma=1.0):
+ #proximal_functinoal_scaling(x,self._scalar, sigma)
+
+
+
+class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
+
+    """Scalar multiplication of the argument of functional."""
+
+    def __init__(self, func, scalar):
+
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        scal : `Scalar`
+            Scalar argument
+        func : `Functional`
+            The left ("outer") functional
+        """
+
+        if not isinstance(func, Functional):
+            raise TypeError('functional {!r} is not a Functional instance.'
+                            ''.format(func))
+
+        scalar=func.range.element(scalar)
+      
+        #Functional.__init__(self, domain=func.domain)        
+        
+        if scalar==0:
+            Functional.__init__(self, domain=func.domain, linear=True, smooth=True, concave=True, convex=True, grad_lipschitz=0)
+        else:
+            Functional.__init__(self, domain=func.domain, linear=func.is_linear, smooth=func.is_smooth, concave=func.is_concave, convex=func.is_convex, grad_lipschitz=np.abs(scalar)*func.grad_lipschitz)
+
+
+        OperatorRightScalarMult.__init__(self, op=func, scalar=scalar)
+
+
+        self._func = func
+        self._scalar = scalar
+                
+
+#    def _call(self, x):
+#        return self._func(self._scalar*x)     
 
     @property
     def gradient(self, x):
-        return self._scalar * self._func.gradient(x)
+        return self._scalar * self._func.gradient(x* self.scalar)
+
+                
+    @property
+    def conjugate_functional(self):  
+        return 0
+#        return convex_conjugate_functinoal_scaling_Right(x,self._scalar)
 
         
+#    def proximal(self, sigma=1.0):
+ #proximal_functinoal_scaling_Right(x,self._scalar, sigma)
+
 
 
 
