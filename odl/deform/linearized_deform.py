@@ -500,8 +500,8 @@ class LinDeformFixedDispAdj(Operator):
         >>> op = LinDeformFixedDispAdj(displacement_field)
         >>> template = space.element([0, 0, 1, 0, 0])
         >>> op(template)
-        uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 0.90483741803595963,
-        0.0, 0.0])
+        uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 0.95122942450071402,
+            0.0, 0.0])
         """
         if not isinstance(displacement.space, odl.ProductSpace):
             raise TypeError('`displacement` {!r} not an element'
@@ -523,7 +523,8 @@ class LinDeformFixedDispAdj(Operator):
             Given template that is to be deformed by the fixed
             displacement field.
         """
-        div_op = odl.Divergence(range=template.space)
+        div_op = odl.Divergence(range=template.space, method='central',
+                                padding_method='symmetric')
         jacobian_det = np.exp(-div_op(self.displacement))
         return jacobian_det * template.space.element(
             linear_deform(template, -self.displacement))
