@@ -19,20 +19,19 @@
 
 Solves the optimization problem
 
-    min_{x \in R^2}  sum_i^n d(x, Omega_i)
+    min_{x in R^2}  sum_i d(x, Omega_i)
 
-Where d(x, \Omega_i) is the distance from x to the set Omega_i. Here, the
+Where d(x, Omega_i) is the distance from x to the set Omega_i. Here, the
 Omega_i are given by three rectangles.
 
 This uses the infimal convolution option of the Douglas-Rachford solver since
-the problem can be written:
+the problem can be written as:
 
-    min_{x \in R^2}  sum_i^n inf_{z \in Omega_i} ||x - z||
+    min_{x in R^2}  sum_i inf_{z \in Omega_i} ||x - z||
 """
 
 import numpy as np
 import odl
-import odl.solvers as odls
 
 # Create the solution space
 space = odl.rn(2)
@@ -43,35 +42,37 @@ rectangles = [[[0, 0], [1, 1]],
               [[2, 2], [3, 3]]]
 
 # The L operators are simply the identity in this case
-L = [odl.IdentityOperator(space)] * len(rectangles)
+lin_ops = [odl.IdentityOperator(space)] * len(rectangles)
 
-# f is the zero function
-prox_f = odls.proximal_zero(space)
+# The function f in the douglas rachford solver is not needed so we set it
+# to the zero function
+prox_f = odl.solvers.proximal_zero(space)
 
 # g is the distance function. Here, the l2 distance
-prox_cc_g = [odls.proximal_cconj_l2(space)] * len(rectangles)
+prox_cc_g = [odl.solvers.proximal_cconj_l2(space)] * len(rectangles)
 
-# l are the indicator functions on the rectangles. We want the proximal of the
-# convex conjugate, so we need to convert to that.
-prox_cc_l = [odls.proximal_cconj(odls.proximal_box_constraint(space,
-                                                              minp, maxp))
-             for minp, maxp in rectangles]
+# l are the indicator functions on the rectangles.
+prox_l = [odl.solvers.proximal_box_constraint(space, minp, maxp)
+          for minp, maxp in rectangles]
+# We want the proximal of the convex conjugate, so we need to convert to that.
+prox_cc_l = [odl.solvers.proximal_cconj(prox) for prox in prox_l]
 
 # Select step size
 tau = 1.0 / len(rectangles)
+sigma = [1.0] * len(rectangles)
 
 
 def print_objective(x):
     """Calculates the objective value and prints it."""
     value = 0
     for minp, maxp in rectangles:
-        x_inside = np.minimum(np.maximum(x, minp), maxp)
-        value += (x - x_inside).norm()
+        x_proj = np.minimum(np.maximum(x, minp), maxp)
+        value += (x - x_proj).norm()
     print('point = [{:.4f}, {:.4f}], value = {:.4f}'.format(x[0], x[1], value))
 
 # Solve
 x = space.zero()
-odls.douglas_rachford_pd(x, prox_f, prox_cc_g, L,
-                         tau=tau, sigma=[1.0] * len(rectangles), lam=1.0,
-                         niter=20, callback=print_objective,
-                         prox_cc_l=prox_cc_l)
+odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
+                                tau=tau, sigma=sigma, lam=1.0,
+                                niter=20, callback=print_objective,
+                                prox_cc_l=prox_cc_l)

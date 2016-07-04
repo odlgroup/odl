@@ -27,6 +27,6 @@ from . import chambolle_pock
 from .chambolle_pock import *
 __all__ += chambolle_pock.__all__
 
-from . import douglas_rachford_primal_dual
-from .douglas_rachford_primal_dual import *
-__all__ += douglas_rachford_primal_dual.__all__
+from . import douglas_rachford
+from .douglas_rachford import *
+__all__ += douglas_rachford.__all__

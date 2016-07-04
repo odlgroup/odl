@@ -21,13 +21,13 @@ Solves the optimization problem
 
     min_{0 <= x <= 255}  1/2 ||x - g||_2^2 + lam || |grad(x)| ||_1
 
-Where ``grad`` the spatial gradient and ``g`` is given noisy data.
+where ``grad`` is the spatial gradient and ``g`` the given noisy data.
 """
 
 import numpy as np
-from skimage import data
+import scipy
+
 import odl
-import odl.solvers as odls
 
 # Parameters
 n = 256
@@ -38,35 +38,35 @@ space = odl.uniform_discr([0, 0], [n, n], [n, n])
 
 # Smoothing by fourier formula
 ft = odl.trafos.FourierTransform(space)
-C = filter_width**2 / 4.0**2  # by fourier transform of gaussian function
-gaussian = ft.range.element(lambda x: np.exp(-(x[0]**2 + x[1]**2) * C))
+const = filter_width**2 / 4.0**2  # by fourier transform of gaussian function
+gaussian = ft.range.element(lambda x: np.exp(-(x[0] ** 2 + x[1] ** 2) * const))
 smoothing = ft.inverse * gaussian * ft
 
 # Load cameraman data and noise
-cameraman = np.rot90(data.camera()[::2, ::2], -1)
-data = space.element(cameraman)
-noise = space.element(np.random.randn(*space.shape) * 2e0)
+data = space.element(np.rot90(scipy.misc.ascent()[::2, ::2], 3))
+noise = space.element(np.random.randn(*space.shape) * 2.0)
 
 # Create noisy convolved data
 noisy_data = smoothing(data) + noise
 data.show('Original data')
-noisy_data.show('Noisy-convolved data')
+noisy_data.show('Noisy convolved data')
 
 # Gradient for TV regularization
 gradient = odl.Gradient(space)
 
 # Assemble all operators
-L = [smoothing, gradient]
+lin_ops = [smoothing, gradient]
 
 # Create proximals as needed
-prox_cc_g = [odls.proximal_cconj_l1(space, g=noisy_data),
-             odls.proximal_cconj_l1(gradient.range, lam=0.03)]
-prox_f = odls.proximal_box_constraint(space, 0, 255)
+prox_cc_g = [odl.solvers.proximal_cconj_l1(space, g=noisy_data),
+             odl.solvers.proximal_cconj_l1(gradient.range, lam=0.03)]
+prox_f = odl.solvers.proximal_box_constraint(space, 0, 255)
 
 # Solve
 x = space.zero()
-callback = (odls.CallbackShow('results', display_step=20, clim=[0, 255]) &
-            odls.CallbackPrintIteration())
-odls.douglas_rachford_pd(x, prox_f, prox_cc_g, L,
-                         tau=1.0, sigma=[1.0, 0.2], lam=1.0, niter=2000,
-                         callback=callback)
+callback = (odl.solvers.CallbackShow('results',
+                                     display_step=20, clim=[0, 255]) &
+            odl.solvers.CallbackPrintIteration())
+odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
+                                tau=1.0, sigma=[1.0, 0.2], lam=1.0,
+                                niter=2000, callback=callback)

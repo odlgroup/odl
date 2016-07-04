@@ -22,7 +22,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-
 from odl.operator import Operator
 
 
@@ -36,35 +35,34 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, lam, niter,
     Minimizes the sum of several convex functions composed with linear
     operators
 
-        min_x f(x) + \sum_i g_i(L_i x)
+        ``min_x f(x) + sum_i g_i(L_i x)``
 
-    Where f, g_i are convex functions, L_i are linear operators.
+    Where f, g_i are convex functions, L_i are linear `Operator`'s.
 
     Can also be used to solve the more general problem
 
-        min_x f(x) + \sum_i (g_i @ l_i)(L_i x)
+        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x)``
 
     Where l_i are convex functions and  @ is the infimal convolution:
 
-        (f @ g)(x) = inf_y { f(x-y) + g(y) }
+        ``(f @ g)(x) = inf_y { f(x-y) + g(y) }``
 
     Parameters
     ----------
     x : `LinearSpaceVector`
         Initial point, updated in place.
     prox_f : `callable`
-        Funciton returning an `Operator` when called with `tau`.
-        The Operator should be the proximal of `tau * f`.
+        Function returning an `Operator` when called with stepsize.
+        The Operator should be the proximal of ``f``.
     prox_cc_g : `sequence` of `callable`'s
-        Sequence of functions returning an operator when called with stepsize.
+        Sequence of functions returning an operator when called with step size.
         The `Operator` should be the proximal of ``g_i^*``.
     L : `sequence` of `Operator`'s
-        A sequence with as many elements as ``prox_cc_gs`` of operators
-        ``L_i``.
+        Sequence of `Opeartor`s` with as many elements as ``prox_cc_gs``.
     tau : `float`
-        Stepsize of ``f``.
+        Step size for ``f``.
     sigma : `sequence` of  `float`
-        Stepsize of the ``g_i``'s.
+        Step size for the ``g_i``'s.
     lam : `float`
         Step size.
     niter : `int`
@@ -75,7 +73,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, lam, niter,
     Other Parameters
     ----------------
     prox_cc_l : `sequence` of `callable`'s
-        Sequence of functions returning an operator when called with stepsize.
+        Sequence of functions returning an operator when called with step size.
         The `Operator` should be the proximal of ``l_i^*``.
 
     Notes
@@ -90,11 +88,6 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, lam, niter,
     References
     ----------
     For references on the Forward-Backward algorithm, see [BH2013]_.
-
-    For more on convex analysis including convex conjugates and
-    resolvent operators see [Roc1970]_.
-
-    For more on proximal operators and algorithms see [PB2014]_.
     """
 
     # Problem size
@@ -102,13 +95,13 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, lam, niter,
     if not all(isinstance(op, Operator) for op in L):
         raise ValueError('`L` not a sequence of operators')
     if not all(op.is_linear for op in L):
-        raise ValueError('Not all operators are linear')
+        raise ValueError('not all operators in `L` are linear')
     if not all(x in op.domain for op in L):
         raise ValueError('`x` not in the domain of all operators')
     if len(sigma) != m:
-        raise ValueError('`sigma` not same length as `L`')
+        raise ValueError('len(sigma) != len(L)')
     if len(prox_cc_g) != m:
-        raise ValueError('`prox_cc_g` not same length as `L`')
+        raise ValueError('len(prox_cc_g) != len(L)')
 
     # Get parameters
     prox_cc_l = kwargs.pop('prox_cc_l', None)
@@ -117,7 +110,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, lam, niter,
 
     # Check for unused parameters
     if kwargs:
-        raise TypeError('Unexpected **kwargs: {}'.format(kwargs))
+        raise TypeError('unexpected keyword argument: {}'.format(kwargs))
 
     # Pre-allocate values
     v = [Li.range.zero() for Li in L]
@@ -131,18 +124,18 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, lam, niter,
     w1 = x.space.zero()
     w2 = [Li.range.zero() for Li in L]
 
-    # Iteratively solve
     for k in range(niter):
         tmp_1 = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
-        p1 = prox_f(tau)(x - (tau / 2.0) * tmp_1)
-        w1 = 2.0 * p1 - x
+        prox_f(tau)(x - (tau / 2.0) * tmp_1, out=p1)
+        w1.lincomb(2.0, p1, -1, x)
 
         for i in range(m):
-            p2[i] = prox_cc_g[i](sigma[i])(v[i] + (sigma[i] / 2.0) * L[i](w1))
-            w2[i] = 2.0 * p2[i] - v[i]
+            prox_cc_g[i](sigma[i])(v[i] + (sigma[i] / 2.0) * L[i](w1),
+                                   out=p2[i])
+            w2[i].lincomb(2.0, p2[i], -1, v[i])
 
         tmp_2 = sum(Li.adjoint(wi) for Li, wi in zip(L, w2))
-        z1 = w1 - (tau / 2.0) * tmp_2
+        z1.lincomb(1.0, w1, - (tau / 2.0), tmp_2)
         x += lam * (z1 - p1)
 
         for i in range(m):
