@@ -164,7 +164,7 @@ class DiscretizedSet(NtuplesBase):
         Parameters
         ----------
         inp : optional
-            The input data to create an element from. It needs to be
+            Input data to create an element from. It needs to be
             understood by either the `sampling` operator of this
             instance or by its ``dspace.element`` method.
         kwargs :

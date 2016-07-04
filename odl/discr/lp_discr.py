@@ -234,13 +234,13 @@ class DiscreteLp(DiscretizedSpace):
         Parameters
         ----------
         inp : optional
-            The input data to create an element from.
+            Input data to create an element from.
 
             If `callable`, it needs to be understood by the ``uspace.element``
             method.
 
-            Otherwise, it has to be understandable by the
-            ``dspace.element`` method.
+            Otherwise, it has to be understood by the ``dspace.element``
+            method.
         kwargs :
             Additional arguments passed on to `sampling` when called
             on ``inp``, in the form ``sampling(inp, **kwargs)``.
@@ -249,8 +249,10 @@ class DiscreteLp(DiscretizedSpace):
         Other Parameters
         ----------------
         vectorized : `bool`
-            Can only be used if ``inp`` is `callable`, in that case, indicates
-            if ``inp`` is vectorized.
+            Can only be used if ``inp`` is `callable`, in which case it
+            indicates if ``inp`` is vectorized. If not, it will be wrapped
+            with a vectorizer.
+            Default: True
 
         Returns
         -------
@@ -274,10 +276,7 @@ class DiscreteLp(DiscretizedSpace):
         On the other hand, non-discretized objects like Python functions
         can be discretized "on the fly":
 
-        >>> def f(x):
-        ...     return x * 2
-        ...
-        >>> space.element(f)
+        >>> space.element(lambda x: x * 2)
         uniform_discr(-1.0, 1.0, 4).element([-1.5, -0.5, 0.5, 1.5])
 
         This works also with parameterized functions, however only
