@@ -23,158 +23,241 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from odl.solvers.functional.functional import Functional
-from odl.operator.operator import Operator
+import numpy as np
+
+from odl import (ZeroOperator, IdentityOperator, Operator, Functional)
 #from odl.space.pspace import ProductSpace
 #from odl.set.space import LinearSpace, LinearSpaceVector
 #from odl.set.sets import Field
-import numpy as np
 
 
-__all__ = ('L1Norm','L2Norm','L2NormSquare')
+__all__ = ('L1Norm', 'L2Norm', 'L2NormSquare', 'ZeroFunctional')
+
 
 class L1Norm(Functional):
     def __init__(self, domain):
-        super().__init__(domain=domain, linear=False, convex=True, concave=False, smooth=False, grad_lipschitz=np.inf)
-    
+        super().__init__(domain=domain, linear=False, convex=True,
+                         concave=False, smooth=False, grad_lipschitz=np.inf)
+
     def _call(self, x):
         return np.abs(x).inner(self.domain.one())
-    
+
     @property
     def gradient(x):
         raise NotImplementedError
-    
+
     def proximal(self, sigma=1.0):
         functional = self
-        
+
         class L1Proximal(Operator):
             def __init__(self):
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
                 self.sigma = sigma
-            
-            #TODO: Check that this works for complex x
+
+            # TODO: Check that this works for complex x
             def _call(self, x):
-                return np.maximum(np.abs(x)-sigma,0)*np.sign(x) 
-        
+                return np.maximum(np.abs(x)-sigma, 0)*np.sign(x)
+
         return L1Proximal()
+
     @property
     def conjugate_functional(self):
         functional = self
-        
+
         class L1Conjugate_functional(Functional):
             def __init__(self):
                 super().__init__(functional.domain, linear=False)
-                
+
             def _call(self, x):
                 if np.max(np.abs(x)) > 1:
                     return np.inf
                 else:
                     return 0
-                    
-        return L1Conjugate_functional()            
+
+        return L1Conjugate_functional()
+
 
 class L2Norm(Functional):
     def __init__(self, domain):
-        super().__init__(domain=domain, linear=False, convex=True, concave=False, smooth=False, grad_lipschitz=np.inf)
-    
+        super().__init__(domain=domain, linear=False, convex=True,
+                         concave=False, smooth=False, grad_lipschitz=np.inf)
+
     def _call(self, x):
         return np.sqrt(np.abs(x).inner(np.abs(x)))
-    
+
     @property
     def gradient(self):
         functional = self
-        
+
         class L2Gradient(Operator):
             def __init__(self):
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
-            
+
             def _call(self, x):
                 return x/x.norm()
-        
+
         return L2Gradient()
-    
+
     def proximal(self, sigma=1.0):
         functional = self
-        
+
         class L2Proximal(Operator):
             def __init__(self):
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
                 self.sigma = sigma
-            
-            #TODO: Check that this works for complex x
+
+            # TODO: Check that this works for complex x
             def _call(self, x):
-                return np.maximum(x.norm()-sigma,0)*(x/x.norm())
-        
+                return np.maximum(x.norm()-sigma, 0)*(x/x.norm())
+
         return L2Proximal()
 
     @property
     def conjugate_functional(self):
         functional = self
-        
+
         class L2Conjugate_functional(Functional):
             def __init__(self):
                 super().__init__(functional.domain, linear=False)
-                
+
             def _call(self, x):
                 if x.norm() > 1:
                     return np.inf
                 else:
                     return 0
-                    
-        return L2Conjugate_functional()            
+
+        return L2Conjugate_functional()
+
 
 class L2NormSquare(Functional):
     def __init__(self, domain):
-        super().__init__(domain=domain, linear=False, convex=True, concave=False, smooth=True, grad_lipschitz=2)
-    
+        super().__init__(domain=domain, linear=False, convex=True,
+                         concave=False, smooth=True, grad_lipschitz=2)
+
     def _call(self, x):
         return np.abs(x).inner(np.abs(x))
-    
+
     @property
     def gradient(self):
         functional = self
-        
+
         class L2SquareGradient(Operator):
             def __init__(self):
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
-            
+
             def _call(self, x):
                 return 2*x
-        
+
         return L2SquareGradient()
-    
+
     def proximal(self, sigma=1.0):
         functional = self
-        
+
         class L2SquareProximal(Operator):
             def __init__(self):
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
                 self.sigma = sigma
-            
-            #TODO: Check that this works for complex x
+
+            # TODO: Check that this works for complex x
             def _call(self, x):
                 return x/3
-        
+
         return L2SquareProximal()
 
     @property
     def conjugate_functional(self):
         functional = self
-        
+
         class L2SquareConjugateFunctional(Functional):
             def __init__(self):
                 super().__init__(functional.domain, linear=False)
-                
+
             def _call(self, x):
-                return x.norm()/4                
-                
-        return L2SquareConjugateFunctional()            
+                return x.norm()/4
+
+        return L2SquareConjugateFunctional()
 
 
+class ZeroFunctional(Functional):
+    def __init__(self, domain):
+        """Initialize a ZeroFunctional instance.
 
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            The space of elements which the functional is acting on.
+        """
+        super().__init__(domain=domain, linear=True, convex=True,
+                         concave=True, smooth=True, grad_lipschitz=0)
+
+    def _call(self, x):
+        """Applies the functional to the given point.
+
+        Returns
+        -------
+        `self(x)` : `float`
+            Evaluation of the functional, which is always zero.
+        """
+        return 0
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The operator that corresponds to the mapping
+
+        .. math::
+
+            x \\to \\nabla f(x)
+
+        where :math:`\\nabla f(x)` is the element used to evaluated
+        derivatives in a direction :math:`d` by
+        :math:`\\langle \\nabla f(x), d \\rangle`.
+        """
+        return ZeroOperator(self.domain)
+
+    def proximal(self, sigma=1.0):
+        """something...
+        """
+        # TODO: Update doc above
+
+        return IdentityOperator(self.domain)
+
+    @property
+    def conjugate_functional(self):
+        functional = self
+
+        class ZeroFunctionalConjugateFunctional(Functional):
+            """something...
+            """
+            # TODO: Update doc above
+
+            def __init__(self):
+                """Initialize a ZeroFunctionalConjugateFunctional instance.
+                """
+                super().__init__(functional.domain, linear=False)
+                self.zero_element = self.domain.zero()
+
+            def _call(self, x):
+                """Applies the functional to the given point.
+
+                Returns
+                -------
+                `self(x)` : `float`
+                    Evaluation of the functional.
+                """
+
+                if x == self.zero_element:
+                    return 0
+                else:
+                    return np.inf
+
+        return ZeroFunctionalConjugateFunctional()
 
