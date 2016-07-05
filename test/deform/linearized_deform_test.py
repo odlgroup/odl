@@ -61,13 +61,13 @@ def hat_function_grad1(x, **kwargs):
 def disp_field0(x):
     """First component of analytic displacement field (x,y) -> eps * (x+y)."""
     eps = 0.25
-    return eps*(x[0]+x[1])
+    return eps * (x[0] + x[1])
 
 
 def disp_field1(x):
     """Second component of analytic displacement field (x,y) -> eps * 3xy."""
     eps = 0.25
-    return eps*3*x[0]*x[1]
+    return eps * 3 * x[0] * x[1]
 
 
 def deform_hat(x, **kwargs):
@@ -75,19 +75,19 @@ def deform_hat(x, **kwargs):
     The analytic displacement field (x,y) -> eps * (x+y, 3xy)."""
     r = kwargs.pop('r', 0.5)
     eps = 0.25
-    x0 = x[0]+eps*(x[0]+x[1])
-    x1 = x[1]+eps*3*x[0]*x[1]
+    x0 = x[0] + eps * (x[0] + x[1])
+    x1 = x[1] + eps * 3 * x[0] * x[1]
     return (r - abs(x0)) * (abs(x0) < r) * (r - abs(x1)) * (abs(x1) < r)
 
 
 def vector_field0(x):
     """First component of analytic displacement field (x,y) -> x-y."""
-    return x[0]-x[1]
+    return x[0] - x[1]
 
 
 def vector_field1(x):
     """Second component of analytic displacement field (x,y) -> 4xy."""
-    return 4*x[0]*x[1]
+    return 4 * x[0] * x[1]
 
 
 def hat_deform_grad0(x, **kwargs):
@@ -97,8 +97,8 @@ def hat_deform_grad0(x, **kwargs):
     """
     r = kwargs.pop('r', 0.5)
     eps = 0.25
-    x0 = x[0]+eps*(x[0]+x[1])
-    x1 = x[1]+eps*3*x[0]*x[1]
+    x0 = x[0] + eps * (x[0] + x[1])
+    x1 = x[1] + eps * 3 * x[0] * x[1]
 
     return (np.where(abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0) *
             (abs(x0) < r) * (abs(x1) < r))
@@ -111,8 +111,8 @@ def hat_deform_grad1(x, **kwargs):
     """
     r = kwargs.pop('r', 0.5)
     eps = 0.25
-    x0 = x[0]+eps*(x[0]+x[1])
-    x1 = x[1]+eps*3*x[0]*x[1]
+    x0 = x[0] + eps * (x[0] + x[1])
+    x1 = x[1] + eps * 3 * x[0] * x[1]
 
     return (np.where(abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0) *
             (abs(x0) < r) * (abs(x1) < r))
@@ -121,8 +121,8 @@ def hat_deform_grad1(x, **kwargs):
 def fixed_templ_Deriv_hat(x, **kwargs):
     r = kwargs.pop('r', 0.5)
     eps = 0.25
-    x0 = x[0]+eps*(x[0]+x[1])
-    x1 = x[1]+eps*3*x[0]*x[1]
+    x0 = x[0] + eps * (x[0] + x[1])
+    x1 = x[1] + eps * 3 * x[0] * x[1]
 
     dg0 = (np.where(
         abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0) *
@@ -130,8 +130,8 @@ def fixed_templ_Deriv_hat(x, **kwargs):
     dg1 = (np.where(
         abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0) *
             (abs(x0) < r) * (abs(x1) < r))
-    v0 = x[0]-x[1]
-    v1 = 4*x[0]*x[1]
+    v0 = x[0] - x[1]
+    v1 = 4 * x[0] * x[1]
 
     return dg0*v0 + dg1*v1
 
@@ -197,30 +197,30 @@ disp_field = grad_space.element([disp_field0, disp_field1])
 
 # Test deformation for LinDeformFixedTempl
 def test_fixed_templ():
-    deform_templ_an = discr_space.element(deform_hat)
+    deform_templ_anal = discr_space.element(deform_hat)
 
     fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
-    deform_templ_cp_1 = fixed_templ_op(disp_field)
+    deform_templ_comp_1 = fixed_templ_op(disp_field)
 
-    tmp = (deform_templ_an - deform_templ_cp_1).norm()
+    tmp = (deform_templ_anal - deform_templ_comp_1).norm()
 
-    rlt_err = tmp / deform_templ_cp_1.norm()
+    rlt_err = tmp / deform_templ_comp_1.norm()
 
     assert rlt_err < 0.03
 
 
 # Test deformed gradient
 def test_deformed_grad():
-    templ_deform_an_grad = grad_space.element([hat_deform_grad0,
-                                               hat_deform_grad1])
+    templ_deform_anal_grad = grad_space.element([hat_deform_grad0,
+                                                 hat_deform_grad1])
 
     grad = odl.Gradient(template.space)
     grad_templ = grad(template)
-    templ_deform_cp_grad = odl.deform.deform_grad(grad_templ, disp_field)
+    templ_deform_comp_grad = odl.deform.deform_grad(grad_templ, disp_field)
 
-    tmp = (templ_deform_an_grad - templ_deform_cp_grad).norm()
+    tmp = (templ_deform_anal_grad - templ_deform_comp_grad).norm()
 
-    rlt_err_deform_grad = tmp / templ_deform_cp_grad.norm()
+    rlt_err_deform_grad = tmp / templ_deform_comp_grad.norm()
 
     assert rlt_err_deform_grad < 0.5
 
@@ -231,21 +231,21 @@ def test_deformed_grad():
 def test_fixed_templ_deriv():
     vector_field = grad_space.element([vector_field0, vector_field1])
 
-    fixed_templ_deriv_an = discr_space.element(fixed_templ_Deriv_hat)
+    fixed_templ_deriv_anal = discr_space.element(fixed_templ_Deriv_hat)
 
     fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(
         template, disp_field)
-    fixed_templ_deriv_cp_1 = fixed_templ_deriv_op(vector_field)
+    fixed_templ_deriv_comp_1 = fixed_templ_deriv_op(vector_field)
 
     fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
     fixed_templ_op_deriv = fixed_templ_op.derivative(disp_field)
-    fixed_templ_deriv_cp_2 = fixed_templ_op_deriv(vector_field)
+    fixed_templ_deriv_comp_2 = fixed_templ_op_deriv(vector_field)
 
-    assert all_equal(fixed_templ_deriv_cp_1, fixed_templ_deriv_cp_2)
+    assert all_equal(fixed_templ_deriv_comp_1, fixed_templ_deriv_comp_2)
 
-    tmp = (fixed_templ_deriv_an - fixed_templ_deriv_cp_1).norm()
+    tmp = (fixed_templ_deriv_anal - fixed_templ_deriv_comp_1).norm()
 
-    rlt_err = tmp / fixed_templ_deriv_cp_1.norm()
+    rlt_err = tmp / fixed_templ_deriv_comp_1.norm()
 
     assert rlt_err < 0.5
 
@@ -255,30 +255,30 @@ def test_fixed_templ_deriv():
 # the fixed template operator is evaluated.
 # This will be the same as the hat function.
 def test_fixed_templ_adj():
-    fixed_templ_adj_an = grad_space.element([fixed_templ_adj_hat1,
-                                             fixed_templ_adj_hat2])
+    fixed_templ_adj_anal = grad_space.element([fixed_templ_adj_hat1,
+                                               fixed_templ_adj_hat2])
 
     fixed_templ_adj_op = odl.deform.LinDeformFixedTemplDerivAdj(
         template, disp_field)
     given_template = discr_space.element(given_hat)
-    fixed_templ_adj_cp_1 = fixed_templ_adj_op(
+    fixed_templ_adj_comp_1 = fixed_templ_adj_op(
         given_template)
 
     fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(template,
                                                                disp_field)
-    fixed_templ_adj_cp_2 = fixed_templ_deriv_op.adjoint(given_template)
+    fixed_templ_adj_comp_2 = fixed_templ_deriv_op.adjoint(given_template)
 
     fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
     fixed_templ_op_deriv = fixed_templ_op.derivative(disp_field)
-    fixed_templ_adj_cp_3 = fixed_templ_op_deriv.adjoint(given_template)
+    fixed_templ_adj_comp_3 = fixed_templ_op_deriv.adjoint(given_template)
 
-    assert all_equal(fixed_templ_adj_cp_1, fixed_templ_adj_cp_2)
+    assert all_equal(fixed_templ_adj_comp_1, fixed_templ_adj_comp_2)
 
-    assert all_equal(fixed_templ_adj_cp_1, fixed_templ_adj_cp_3)
+    assert all_equal(fixed_templ_adj_comp_1, fixed_templ_adj_comp_3)
 
-    tmp = (fixed_templ_adj_an - fixed_templ_adj_cp_1).norm()
+    tmp = (fixed_templ_adj_anal - fixed_templ_adj_comp_1).norm()
 
-    rlt_err = tmp / fixed_templ_adj_cp_1.norm()
+    rlt_err = tmp / fixed_templ_adj_comp_1.norm()
 
     assert rlt_err < 0.5
 
@@ -288,12 +288,12 @@ def test_fixed_templ_adj():
 # Define the analytic template to be deformed as the hat function
 def test_fixed_disp():
     fixed_disp_op = odl.deform.LinDeformFixedDisp(disp_field)
-    deform_templ_cp_2 = fixed_disp_op(template)
+    deform_templ_comp_2 = fixed_disp_op(template)
 
     fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
-    deform_templ_cp_1 = fixed_templ_op(disp_field)
+    deform_templ_comp_1 = fixed_templ_op(disp_field)
 
-    assert all_equal(deform_templ_cp_1, deform_templ_cp_2)
+    assert all_equal(deform_templ_comp_1, deform_templ_comp_2)
 
 
 # Test adjoint of LinDeformFixedDisp
@@ -301,20 +301,20 @@ def test_fixed_disp():
 # Define the above template as the hat function
 def test_fixed_disp_adj():
     fixed_disp_adj_op = odl.deform.LinDeformFixedDispAdj(disp_field)
-    fixed_disp_adj_cp_1 = fixed_disp_adj_op(template)
+    fixed_disp_adj_comp_1 = fixed_disp_adj_op(template)
 
     fixed_disp_op = odl.deform.LinDeformFixedDisp(disp_field)
-    fixed_disp_adj_cp_2 = fixed_disp_op.adjoint(template)
+    fixed_disp_adj_comp_2 = fixed_disp_op.adjoint(template)
 
-    assert all_equal(fixed_disp_adj_cp_1, fixed_disp_adj_cp_2)
+    assert all_equal(fixed_disp_adj_comp_1, fixed_disp_adj_comp_2)
 
-    inv_deform_templ_an = discr_space.element(inv_deform_hat)
+    inv_deform_templ_anal = discr_space.element(inv_deform_hat)
     exp_div = discr_space.element(exp_div_inv_disp)
-    fixed_disp_adj_an = exp_div*inv_deform_templ_an
+    fixed_disp_adj_anal = exp_div*inv_deform_templ_anal
 
-    tmp = (fixed_disp_adj_an - fixed_disp_adj_cp_1).norm()
+    tmp = (fixed_disp_adj_anal - fixed_disp_adj_comp_1).norm()
 
-    rlt_err = tmp / fixed_disp_adj_cp_1.norm()
+    rlt_err = tmp / fixed_disp_adj_comp_1.norm()
 
     assert rlt_err < 0.05
 
