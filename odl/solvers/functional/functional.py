@@ -344,8 +344,18 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 #        return self._func(self._scalar*x)     
 
     @property
-    def gradient(self, x):
-        return self._scalar * self._func.gradient(x* self.scalar)
+    def gradient(self):
+        
+        functional = self
+        
+        class RightScalarMultGradient(Operator):
+            def __init__(self):
+                super().__init__(functional.domain, functional.domain,
+                                 linear=False)
+            def _call(self, x):
+                return functional._scalar*functional._func.gradient(functional._scalar*x)
+        
+        return RightScalarMultGradient()
 
                 
     @property

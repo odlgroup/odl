@@ -25,7 +25,13 @@ from builtins import super
 
 import numpy as np
 
-from odl import (ZeroOperator, IdentityOperator, Operator, Functional)
+from odl.solvers.functional.functional import Functional
+from odl.operator.operator import Operator
+# from odl.space.pspace import ProductSpace
+# from odl.set.space import LinearSpace, LinearSpaceVector
+# from odl.set.sets import Field
+
+from odl import (ZeroOperator, IdentityOperator)
 #from odl.space.pspace import ProductSpace
 #from odl.set.space import LinearSpace, LinearSpaceVector
 #from odl.set.sets import Field

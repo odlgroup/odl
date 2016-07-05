@@ -39,28 +39,28 @@ n = 3
 # Discretized spaces
 space = odl.uniform_discr([0, 0], [1, 1], [n, n])
 
-#phantom = odl.util.shepp_logan(space, modified=True)*5+1
+# phantom = odl.util.shepp_logan(space, modified=True)*5+1
 
-#LogPhantom=np.log(phantom)
+# LogPhantom=np.log(phantom)
 
 
-#l1func = L1Norm(space)
-#l1prox = l1func.proximal(sigma=1.5)
-#l1conjFun = l1func.conjugate_functional
+# l1func = L1Norm(space)
+# l1prox = l1func.proximal(sigma=1.5)
+# l1conjFun = l1func.conjugate_functional
 
 
 def test_derivative():
     # Verify that the derivative does indeed work as expected
 
-    x = space.element(np.random.standard_normal((n,n)))
-    y = space.element(np.random.standard_normal((n,n)))
+    x = space.element(np.random.standard_normal((n, n)))
+
+    y = space.element(np.random.standard_normal((n, n)))
     epsK = 1e-7
 
-    F=odl.solvers.functional.L2Norm(space)
-    
-    
+    F = odl.solvers.functional.L2Norm(space)
+
     assert all_almost_equal((F(x+epsK*y)-F(x))/epsK,
-                            y.inner(F.gradient(x)), 
+                            y.inner(F.gradient(x)),
                             places=PLACES)
 
 
@@ -73,14 +73,14 @@ def test_scalar_multiplication_call():
     scal=np.random.standard_normal()
     F=odl.solvers.functional.L2Norm(space)
 
-    assert all_almost_equal((F*scal)(x), (F)(scal*x), 
+    assert all_almost_equal((F*scal)(x), (F)(scal*x),
                             places=PLACES)
-    
-    assert all_almost_equal((scal*F)(x), scal*(F(x)), 
+
+    assert all_almost_equal((scal*F)(x), scal*(F(x)),
                             places=PLACES)
 
 #     print((scal*F).gradient(x))
-#    assert all_almost_equal((scal*F).derivative(x), scal*(F(x)), 
+#    assert all_almost_equal((scal*F).derivative(x), scal*(F(x)),
 #                            places=PLACES)
 
 
@@ -96,10 +96,10 @@ def test_scalar_multiplication_call():
 
     #make some tests that check that prox work.
 
-    #assert all_almost_equal((F*scal)(x), (F)(scal*x), 
+    #assert all_almost_equal((F*scal)(x), (F)(scal*x),
     #                        places=PLACES)
-    
-    #assert all_almost_equal((scal*F)(x), scal*(F(x)), 
+
+    #assert all_almost_equal((scal*F)(x), scal*(F(x)),
     #                        places=PLACES)
 
 

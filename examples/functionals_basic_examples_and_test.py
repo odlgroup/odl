@@ -92,7 +92,15 @@ Fs=F*scal
 print(Fs(x))
 
 
-z=(F*scal).gradient(x)    
+l2grad=(scal*F).gradient
+
+print((scal*F).gradient(x))
+print((F*scal).gradient(x))
+
+z=l2grad(x)    
+
+
+
 
 
 
