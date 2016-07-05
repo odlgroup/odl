@@ -1,4 +1,4 @@
-# Copyright 2014, 2015 The ODL development group
+# Copyright 2014-2016 The ODL development group
 #
 # This file is part of ODL.
 #
@@ -15,16 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Test operators of linearized deformations"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
-
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
-import numpy as np
+# External
 import pytest
+import numpy as np
+
+# Internal
 import odl
 from odl.util.testutils import (all_equal)
 
@@ -56,19 +58,19 @@ def hat_function_grad1(x, **kwargs):
             (abs(x[0]) < r) * (abs(x[1]) < r))
 
 
-def displacement_field0(x):
+def disp_field0(x):
     """First component of analytic displacement field (x,y) -> eps * (x+y)."""
     eps = 0.25
     return eps*(x[0]+x[1])
 
 
-def displacement_field1(x):
+def disp_field1(x):
     """Second component of analytic displacement field (x,y) -> eps * 3xy."""
     eps = 0.25
     return eps*3*x[0]*x[1]
 
 
-def deformed_hat_function(x, **kwargs):
+def deform_hat(x, **kwargs):
     """Analytic deformed hat function with support in square with side r.
     The analytic displacement field (x,y) -> eps * (x+y, 3xy)."""
     r = kwargs.pop('r', 0.5)
@@ -88,7 +90,7 @@ def vector_field1(x):
     return 4*x[0]*x[1]
 
 
-def hat_function_deform_grad0(x, **kwargs):
+def hat_deform_grad0(x, **kwargs):
     """First component of the deformed gradient of the hat function,
     which is the same as evaluating the gradient
     at (x, y) + eps * (2x+y, y+3xy).
@@ -102,7 +104,7 @@ def hat_function_deform_grad0(x, **kwargs):
             (abs(x0) < r) * (abs(x1) < r))
 
 
-def hat_function_deform_grad1(x, **kwargs):
+def hat_deform_grad1(x, **kwargs):
     """Second component of the deformed gradient of the hat function,
     which is the same as evaluating the gradient
     at (x, y) + eps * (2x+y, y+3xy).
@@ -116,7 +118,7 @@ def hat_function_deform_grad1(x, **kwargs):
             (abs(x0) < r) * (abs(x1) < r))
 
 
-def LinDeformFixedTemplDeriv_hat_function(x, **kwargs):
+def fixed_templ_Deriv_hat(x, **kwargs):
     r = kwargs.pop('r', 0.5)
     eps = 0.25
     x0 = x[0]+eps*(x[0]+x[1])
@@ -134,7 +136,7 @@ def LinDeformFixedTemplDeriv_hat_function(x, **kwargs):
     return dg0*v0 + dg1*v1
 
 
-def LinDeformFixedTemplDerivAdj_hat_function1(x, **kwargs):
+def fixed_templ_adj_hat1(x, **kwargs):
     r = kwargs.pop('r', 0.5)
     eps = 0.25
     x0 = x[0]+eps*(x[0]+x[1])
@@ -147,7 +149,7 @@ def LinDeformFixedTemplDerivAdj_hat_function1(x, **kwargs):
         abs(x[0]) < r) * (r - abs(x[1])) * (abs(x[1]) < r))
 
 
-def LinDeformFixedTemplDerivAdj_hat_function2(x, **kwargs):
+def fixed_templ_adj_hat2(x, **kwargs):
     r = kwargs.pop('r', 0.5)
     eps = 0.25
     x0 = x[0]+eps*(x[0]+x[1])
@@ -160,7 +162,7 @@ def LinDeformFixedTemplDerivAdj_hat_function2(x, **kwargs):
         r - abs(x[1])) * (abs(x[1]) < r))
 
 
-def given_hat_function(x, **kwargs):
+def given_hat(x, **kwargs):
     r = kwargs.pop('r', 0.5)
     retval = (r - abs(x[0])) * (abs(x[0]) < r)
     for xi in x[1:]:
@@ -168,7 +170,7 @@ def given_hat_function(x, **kwargs):
     return retval
 
 
-def inv_deformed_hat_function(x, **kwargs):
+def inv_deform_hat(x, **kwargs):
     """Analytic deformed hat function with support in square with side r.
     The analytic displacement field (x,y) -> - eps * (x+y, 3xy)."""
     r = kwargs.pop('r', 0.5)
@@ -189,153 +191,132 @@ discr_space = odl.uniform_discr([-1, -1], [1, 1], (30, 30), interp='linear')
 template = discr_space.element(hat_function)
 
 # Define the displacement field (x,y) -> eps * (x+y, 3xy)
-gradient_space = odl.ProductSpace(discr_space, 2)
-displacement_field = gradient_space.element(
-    [displacement_field0, displacement_field1])
+grad_space = odl.ProductSpace(discr_space, 2)
+disp_field = grad_space.element([disp_field0, disp_field1])
 
 
 # Test deformation for LinDeformFixedTempl
-def test_LinDeformFixedTempl():
-    deformed_template_analytic = discr_space.element(deformed_hat_function)
+def test_fixed_templ():
+    deform_templ_an = discr_space.element(deform_hat)
 
-    LinDeformFixedTempl_op = odl.deform.LinDeformFixedTempl(template)
-    deformed_template_computed_1 = LinDeformFixedTempl_op(displacement_field)
+    fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
+    deform_templ_cp_1 = fixed_templ_op(disp_field)
 
-    relative_error_deformed_template = \
-        (deformed_template_analytic - deformed_template_computed_1).norm() / \
-        deformed_template_computed_1.norm()
+    tmp = (deform_templ_an - deform_templ_cp_1).norm()
 
-    assert relative_error_deformed_template < 0.03
+    rlt_err = tmp / deform_templ_cp_1.norm()
+
+    assert rlt_err < 0.03
 
 
 # Test deformed gradient
 def test_deformed_grad():
-    template_deform_analytic_grad = gradient_space.element(
-        [hat_function_deform_grad0, hat_function_deform_grad1])
+    templ_deform_an_grad = grad_space.element([hat_deform_grad0,
+                                               hat_deform_grad1])
 
     grad = odl.Gradient(template.space)
-    grad_template = grad(template)
-    template_deform_computed_grad = odl.deform.deform_grad(grad_template,
-                                                           displacement_field)
+    grad_templ = grad(template)
+    templ_deform_cp_grad = odl.deform.deform_grad(grad_templ, disp_field)
 
-    relative_error_deformed_gradient = \
-        (template_deform_analytic_grad -
-            template_deform_computed_grad).norm() / \
-        template_deform_computed_grad.norm()
+    tmp = (templ_deform_an_grad - templ_deform_cp_grad).norm()
 
-    assert relative_error_deformed_gradient < 0.5
+    rlt_err_deform_grad = tmp / templ_deform_cp_grad.norm()
+
+    assert rlt_err_deform_grad < 0.5
 
 
 # Test derivative for LinDeformFixedTemplDeriv
 # Define the vector field where the deriative of the fixed template
 # operator is evaluated. This will be the vector field (x,y) -> (x-y, 4xy)
-def test_LinDeformFixedTemplDeriv():
-    vector_field = gradient_space.element([vector_field0, vector_field1])
+def test_fixed_templ_deriv():
+    vector_field = grad_space.element([vector_field0, vector_field1])
 
-    LinDeformFixedTemplDeriv_analytic = discr_space.element(
-        LinDeformFixedTemplDeriv_hat_function)
+    fixed_templ_deriv_an = discr_space.element(fixed_templ_Deriv_hat)
 
-    LinDeformFixedTemplDeriv_op = odl.deform.LinDeformFixedTemplDeriv(
-        template, displacement_field)
-    LinDeformFixedTemplDeriv_computed_1 = LinDeformFixedTemplDeriv_op(
-        vector_field)
+    fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(
+        template, disp_field)
+    fixed_templ_deriv_cp_1 = fixed_templ_deriv_op(vector_field)
 
-    LinDeformFixedTempl_op = odl.deform.LinDeformFixedTempl(template)
-    LinDeformFixedTempl_op_derivative = LinDeformFixedTempl_op.derivative(
-        displacement_field)
-    LinDeformFixedTemplDeriv_computed_2 = \
-        LinDeformFixedTempl_op_derivative(vector_field)
+    fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
+    fixed_templ_op_deriv = fixed_templ_op.derivative(disp_field)
+    fixed_templ_deriv_cp_2 = fixed_templ_op_deriv(vector_field)
 
-    assert all_equal(LinDeformFixedTemplDeriv_computed_1,
-                     LinDeformFixedTemplDeriv_computed_2)
+    assert all_equal(fixed_templ_deriv_cp_1, fixed_templ_deriv_cp_2)
 
-    relative_error_LinDeforFixedTempDeriv = \
-        (LinDeformFixedTemplDeriv_analytic -
-            LinDeformFixedTemplDeriv_computed_1).norm() / \
-        LinDeformFixedTemplDeriv_computed_1.norm()
+    tmp = (fixed_templ_deriv_an - fixed_templ_deriv_cp_1).norm()
 
-    assert relative_error_LinDeforFixedTempDeriv < 0.5
+    rlt_err = tmp / fixed_templ_deriv_cp_1.norm()
+
+    assert rlt_err < 0.5
 
 
 # Test adjoint for LinDeformFixedTemplDeriv, LinDeformFixedTemplDerivAdj
 # Define the given template where the adjoint of the deriative
 # the fixed template operator is evaluated.
 # This will be the same as the hat function.
-def test_LinDeformFixedTemplDerivAdj():
-    LinDeformFixedTemplDerivAdj_analytic = gradient_space.element(
-        [LinDeformFixedTemplDerivAdj_hat_function1,
-         LinDeformFixedTemplDerivAdj_hat_function2])
+def test_fixed_templ_adj():
+    fixed_templ_adj_an = grad_space.element([fixed_templ_adj_hat1,
+                                             fixed_templ_adj_hat2])
 
-    LinDeformFixedTemplDerivAdj_op = odl.deform.LinDeformFixedTemplDerivAdj(
-        template, displacement_field)
-    given_template = discr_space.element(given_hat_function)
-    LinDeformFixedTemplDerivAdj_computed_1 = LinDeformFixedTemplDerivAdj_op(
+    fixed_templ_adj_op = odl.deform.LinDeformFixedTemplDerivAdj(
+        template, disp_field)
+    given_template = discr_space.element(given_hat)
+    fixed_templ_adj_cp_1 = fixed_templ_adj_op(
         given_template)
 
-    LinDeformFixedTemplDeriv_op = odl.deform.LinDeformFixedTemplDeriv(
-        template, displacement_field)
-    LinDeformFixedTemplDerivAdj_computed_2 = \
-        LinDeformFixedTemplDeriv_op.adjoint(given_template)
+    fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(template,
+                                                               disp_field)
+    fixed_templ_adj_cp_2 = fixed_templ_deriv_op.adjoint(given_template)
 
-    LinDeformFixedTempl_op = odl.deform.LinDeformFixedTempl(template)
-    LinDeformFixedTempl_op_derivative = LinDeformFixedTempl_op.derivative(
-        displacement_field)
-    LinDeformFixedTemplDerivAdj_computed_3 = \
-        LinDeformFixedTempl_op_derivative.adjoint(given_template)
+    fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
+    fixed_templ_op_deriv = fixed_templ_op.derivative(disp_field)
+    fixed_templ_adj_cp_3 = fixed_templ_op_deriv.adjoint(given_template)
 
-    assert all_equal(LinDeformFixedTemplDerivAdj_computed_1,
-                     LinDeformFixedTemplDerivAdj_computed_2)
+    assert all_equal(fixed_templ_adj_cp_1, fixed_templ_adj_cp_2)
 
-    assert all_equal(LinDeformFixedTemplDerivAdj_computed_1,
-                     LinDeformFixedTemplDerivAdj_computed_3)
+    assert all_equal(fixed_templ_adj_cp_1, fixed_templ_adj_cp_3)
 
-    relative_error_LinDeformFixedTemplDerivAdj = \
-        (LinDeformFixedTemplDerivAdj_analytic -
-            LinDeformFixedTemplDerivAdj_computed_1).norm() / \
-        LinDeformFixedTemplDerivAdj_computed_1.norm()
+    tmp = (fixed_templ_adj_an - fixed_templ_adj_cp_1).norm()
 
-    assert relative_error_LinDeformFixedTemplDerivAdj < 0.5
+    rlt_err = tmp / fixed_templ_adj_cp_1.norm()
+
+    assert rlt_err < 0.5
 
 
 # Test deformation for LinDeformFixedDisp
 # Define the fixed displacement field (x,y) -> eps * (x+y, 3xy)
 # Define the analytic template to be deformed as the hat function
-def test_LinDeformFixedDisp():
-    LinDeformFixedDisp_op = odl.deform.LinDeformFixedDisp(displacement_field)
-    deformed_template_computed_2 = LinDeformFixedDisp_op(template)
+def test_fixed_disp():
+    fixed_disp_op = odl.deform.LinDeformFixedDisp(disp_field)
+    deform_templ_cp_2 = fixed_disp_op(template)
 
-    LinDeformFixedTempl_op = odl.deform.LinDeformFixedTempl(template)
-    deformed_template_computed_1 = LinDeformFixedTempl_op(displacement_field)
+    fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
+    deform_templ_cp_1 = fixed_templ_op(disp_field)
 
-    assert all_equal(deformed_template_computed_1,
-                     deformed_template_computed_2)
+    assert all_equal(deform_templ_cp_1, deform_templ_cp_2)
 
 
 # Test adjoint of LinDeformFixedDisp
 # Define the template as the point of the adjoint computed at.
 # Define the above template as the hat function
-def test_LinDeformFixedDispAdj():
-    LinDeformFixedDispAdj_op = odl.deform.LinDeformFixedDispAdj(
-        displacement_field)
-    LinDeformFixedDispAdj_computed_1 = LinDeformFixedDispAdj_op(template)
+def test_fixed_disp_adj():
+    fixed_disp_adj_op = odl.deform.LinDeformFixedDispAdj(disp_field)
+    fixed_disp_adj_cp_1 = fixed_disp_adj_op(template)
 
-    LinDeformFixedDisp_op = odl.deform.LinDeformFixedDisp(displacement_field)
-    LinDeformFixedDispAdj_computed_2 = LinDeformFixedDisp_op.adjoint(template)
+    fixed_disp_op = odl.deform.LinDeformFixedDisp(disp_field)
+    fixed_disp_adj_cp_2 = fixed_disp_op.adjoint(template)
 
-    assert all_equal(LinDeformFixedDispAdj_computed_1,
-                     LinDeformFixedDispAdj_computed_2)
+    assert all_equal(fixed_disp_adj_cp_1, fixed_disp_adj_cp_2)
 
-    inv_deformed_template_analytic = discr_space.element(
-        inv_deformed_hat_function)
+    inv_deform_templ_an = discr_space.element(inv_deform_hat)
     exp_div = discr_space.element(exp_div_inv_disp)
-    LinDeformFixedDispAdj_analytic = exp_div*inv_deformed_template_analytic
+    fixed_disp_adj_an = exp_div*inv_deform_templ_an
 
-    relative_error_LinDeformFixedDispAdj = \
-        (LinDeformFixedDispAdj_analytic -
-            LinDeformFixedDispAdj_computed_1).norm() / \
-        LinDeformFixedDispAdj_computed_1.norm()
+    tmp = (fixed_disp_adj_an - fixed_disp_adj_cp_1).norm()
 
-    assert relative_error_LinDeformFixedDispAdj < 0.05
+    rlt_err = tmp / fixed_disp_adj_cp_1.norm()
+
+    assert rlt_err < 0.05
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
