@@ -30,8 +30,6 @@ from odl.discr.discr_ops import Resampling
 from odl.discr.lp_discr import (
     DiscreteLp, DiscreteLpVector, uniform_discr, uniform_discr_fromdiscr)
 from odl.operator.operator import Operator
-from odl.space.ntuples import Ntuples
-from odl.space.cu_ntuples import CudaNtuples
 from odl.set.sets import ComplexNumbers
 from odl.trafos.fourier import FourierTransform
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
@@ -262,16 +260,10 @@ class FourierSpaceConvolution(Convolution):
             # Assuming uniform discretization
             min_corner = -self.domain.cell_sides * self.domain.shape / 2
             max_corner = self.domain.cell_sides * self.domain.shape / 2
-            if isinstance(self.domain.dspace, Ntuples):
-                impl = 'numpy'
-            elif isinstance(self.domain.dspace, CudaNtuples):
-                impl = 'cuda'
-            else:
-                raise RuntimeError
-
             space = uniform_discr(min_corner, max_corner, kernel.shape,
                                   self.domain.exponent, self.domain.interp,
-                                  impl, dtype=self.domain.dspace.dtype,
+                                  impl=self.domain.impl,
+                                  dtype=self.domain.dspace.dtype,
                                   order=self.domain.order,
                                   weighting=self.domain.weighting)
             return space.element(kernel)

@@ -53,13 +53,13 @@ def test_real_conv_init_errors():
     odl.trafos.RealSpaceConvolution(cdiscr, small_ker_arr)
 
     with pytest.raises(TypeError):
-        odl.trafos.RealSpaceConvolution(odl.Rn(5), [1, 1, 1])
+        odl.trafos.RealSpaceConvolution(odl.rn(5), [1, 1, 1])
 
     with pytest.raises(ValueError):
         fspace = odl.FunctionSpace(odl.Interval(0, 1))
         grid = odl.TensorGrid([0, 0.4, 1])
         part = odl.RectPartition(fspace.domain, grid)
-        nonuni_discr = odl.DiscreteLp(fspace, part, odl.Rn(3))
+        nonuni_discr = odl.DiscreteLp(fspace, part, odl.rn(3))
         odl.trafos.RealSpaceConvolution(nonuni_discr, [1, 1, 1])
 
     with pytest.raises(NotImplementedError):
