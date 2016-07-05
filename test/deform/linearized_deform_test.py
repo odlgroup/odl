@@ -197,12 +197,12 @@ disp_field = grad_space.element([disp_field0, disp_field1])
 
 # Test deformation for LinDeformFixedTempl
 def test_fixed_templ():
-    deform_templ_anal = discr_space.element(deform_hat)
+    deform_templ_exact = discr_space.element(deform_hat)
 
     fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
     deform_templ_comp_1 = fixed_templ_op(disp_field)
 
-    tmp = (deform_templ_anal - deform_templ_comp_1).norm()
+    tmp = (deform_templ_exact - deform_templ_comp_1).norm()
 
     rlt_err = tmp / deform_templ_comp_1.norm()
 
@@ -211,14 +211,14 @@ def test_fixed_templ():
 
 # Test deformed gradient
 def test_deformed_grad():
-    templ_deform_anal_grad = grad_space.element([hat_deform_grad0,
+    templ_deform_exact_grad = grad_space.element([hat_deform_grad0,
                                                  hat_deform_grad1])
 
     grad = odl.Gradient(template.space)
     grad_templ = grad(template)
     templ_deform_comp_grad = odl.deform.deform_grad(grad_templ, disp_field)
 
-    tmp = (templ_deform_anal_grad - templ_deform_comp_grad).norm()
+    tmp = (templ_deform_exact_grad - templ_deform_comp_grad).norm()
 
     rlt_err_deform_grad = tmp / templ_deform_comp_grad.norm()
 
@@ -231,7 +231,7 @@ def test_deformed_grad():
 def test_fixed_templ_deriv():
     vector_field = grad_space.element([vector_field0, vector_field1])
 
-    fixed_templ_deriv_anal = discr_space.element(fixed_templ_Deriv_hat)
+    fixed_templ_deriv_exact = discr_space.element(fixed_templ_Deriv_hat)
 
     fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(
         template, disp_field)
@@ -243,7 +243,7 @@ def test_fixed_templ_deriv():
 
     assert all_equal(fixed_templ_deriv_comp_1, fixed_templ_deriv_comp_2)
 
-    tmp = (fixed_templ_deriv_anal - fixed_templ_deriv_comp_1).norm()
+    tmp = (fixed_templ_deriv_exact - fixed_templ_deriv_comp_1).norm()
 
     rlt_err = tmp / fixed_templ_deriv_comp_1.norm()
 
@@ -255,7 +255,7 @@ def test_fixed_templ_deriv():
 # the fixed template operator is evaluated.
 # This will be the same as the hat function.
 def test_fixed_templ_adj():
-    fixed_templ_adj_anal = grad_space.element([fixed_templ_adj_hat1,
+    fixed_templ_adj_exact = grad_space.element([fixed_templ_adj_hat1,
                                                fixed_templ_adj_hat2])
 
     fixed_templ_adj_op = odl.deform.LinDeformFixedTemplDerivAdj(
@@ -276,7 +276,7 @@ def test_fixed_templ_adj():
 
     assert all_equal(fixed_templ_adj_comp_1, fixed_templ_adj_comp_3)
 
-    tmp = (fixed_templ_adj_anal - fixed_templ_adj_comp_1).norm()
+    tmp = (fixed_templ_adj_exact - fixed_templ_adj_comp_1).norm()
 
     rlt_err = tmp / fixed_templ_adj_comp_1.norm()
 
@@ -285,7 +285,7 @@ def test_fixed_templ_adj():
 
 # Test deformation for LinDeformFixedDisp
 # Define the fixed displacement field (x,y) -> eps * (x+y, 3xy)
-# Define the analytic template to be deformed as the hat function
+# Define the exactytic template to be deformed as the hat function
 def test_fixed_disp():
     fixed_disp_op = odl.deform.LinDeformFixedDisp(disp_field)
     deform_templ_comp_2 = fixed_disp_op(template)
@@ -308,11 +308,11 @@ def test_fixed_disp_adj():
 
     assert all_equal(fixed_disp_adj_comp_1, fixed_disp_adj_comp_2)
 
-    inv_deform_templ_anal = discr_space.element(inv_deform_hat)
+    inv_deform_templ_exact = discr_space.element(inv_deform_hat)
     exp_div = discr_space.element(exp_div_inv_disp)
-    fixed_disp_adj_anal = exp_div*inv_deform_templ_anal
+    fixed_disp_adj_exact = exp_div*inv_deform_templ_exact
 
-    tmp = (fixed_disp_adj_anal - fixed_disp_adj_comp_1).norm()
+    tmp = (fixed_disp_adj_exact - fixed_disp_adj_comp_1).norm()
 
     rlt_err = tmp / fixed_disp_adj_comp_1.norm()
 
