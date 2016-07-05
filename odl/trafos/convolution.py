@@ -425,10 +425,12 @@ class RealSpaceConvolution(Convolution):
 
         scale : `bool`, optional
             If `True`, scale the discrete convolution with
-            `DiscreteLp.cell_volume`, such that it
-            corresponds to a continuous convolution.
+            `DiscreteLp.cell_volume`, such that it approximates a
+            continuous convolution.
             Default: `True`
 
+        Other parameters
+        ----------------
         resample : string or sequence of strings
             If ``kernel`` and ``domain`` have different cell sizes,
             this option defines the behavior of the evaluation. The
@@ -439,6 +441,11 @@ class RealSpaceConvolution(Convolution):
 
             'up' : Use the smaller one of the two cell sizes. Note that
             this can be computationally expensive.
+
+        kernel_scaled : bool, optional
+            If True, the kernel is interpreted as already scaled
+            as described under the ``scale`` argument.
+            Default: False
 
         kernel_kwargs : dict, optional
             Keyword arguments passed to the call of the kernel function
@@ -534,9 +541,10 @@ class RealSpaceConvolution(Convolution):
                                                 kernel_resamp_space)
 
         # Scale the kernel if desired
+        kernel_scaled = kwargs.pop('kernel_scaled', False)
         self._kernel_scaling = np.prod(new_kernel_csides)
         self._scale = bool(kwargs.pop('scale', True))
-        if self._scale:
+        if self._scale and not kernel_scaled:
             # Don't modify the input
             self._kernel = self._kernel * self._kernel_scaling
 
@@ -674,17 +682,15 @@ class RealSpaceConvolution(Convolution):
             self._kernel.space,
             min_corner=adj_min_corner, max_corner=adj_max_corner)
 
-        # Reverse the kernel
+        # Adjoint kernel is k_adj(x) = k(-x), i.e. the kernel array is
+        # reversed in each axis.
         reverse_slice = (slice(None, None, -1),) * self.domain.ndim
         adj_kernel = adj_ker_space.element(
             self._kernel.asarray()[reverse_slice])
 
-        adj_conv = RealSpaceConvolution(self.range, adj_kernel, impl=self.impl,
-                                        scale=False, resample=self.resample)
-        # Kernel is already scaled, but we need to make sure that the
-        # kernel() method returns the rescaled kernel.
-        adj_conv._scale = True
-        return adj_conv
+        return RealSpaceConvolution(self.range, adj_kernel, impl=self.impl,
+                                    resample=self.resample, scale=True,
+                                    kernel_scaled=True)
 
 
 def resize_array_symm(arr, newshp, out=None):
