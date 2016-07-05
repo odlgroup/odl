@@ -179,7 +179,7 @@ def test_real_conv_resampling():
     discr_ud = odl.uniform_discr_fromdiscr(discr, cell_sides=cs_ud)
     ker_discr_ud = odl.uniform_discr_fromdiscr(ker_discr, cell_sides=cs_ud)
     conv_ud = odl.trafos.RealSpaceConvolution(discr, kernel,
-                                              resample=['up', 'down'])
+                                              resample=['UP', 'DOWN'])
     assert conv_ud._domain_resampling_op.domain == discr
     assert conv_ud._domain_resampling_op.range == discr_ud
     assert conv_ud._kernel_resampling_op.domain == ker_discr

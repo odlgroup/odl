@@ -508,15 +508,14 @@ class RealSpaceConvolution(Convolution):
         self._impl = impl
 
         # Handle the `resample` input parameter
-        resample = normalized_scalar_param_list(kwargs.pop('resample', 'down'),
-                                                length=self.domain.ndim,
-                                                param_conv=str)
-        for i, r in enumerate(resample):
-            if r.lower() not in ('up', 'down'):
+        resample = kwargs.pop('resample', 'down')
+        resample, resample_in = normalized_scalar_param_list(
+            resample, length=self.domain.ndim,
+            param_conv=lambda s: str(s).lower()), resample
+        for i, (r, r_in) in enumerate(zip(resample, resample_in)):
+            if r not in ('up', 'down'):
                 raise ValueError("in axis {}: `resample` '{}' not understood"
-                                 ''.format(i, r))
-            else:
-                resample[i] = r.lower()
+                                 ''.format(i, r_in))
         self._resample = resample
 
         # Initialize resampling operators
