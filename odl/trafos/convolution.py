@@ -58,11 +58,10 @@ class Convolution(Operator):
 
 class FourierSpaceConvolution(Convolution):
 
-    """Convolution with a kernel, implemented in Fourier space.
+    """Convolution implemented in Fourier space.
 
     This operator implements a discrete approximation to the continuous
-    convolution with a fixed kernel. It supports real-space and
-    Fourier based back-ends.
+    convolution with a fixed kernel.
     """
 
     def __init__(self, domain, kernel, **kwargs):
@@ -454,6 +453,37 @@ class RealSpaceConvolution(Convolution):
         See also
         --------
         scipy.signal.convolve : real-space convolution
+
+        Examples
+        --------
+        >>> import odl
+        >>> space = odl.uniform_discr(-5, 5, 5)
+        >>> print(space.cell_sides)
+        [ 2.]
+
+        By default, the discretized convolution is scaled such that
+        it approximates the convolution integral. This behavior can be
+        switched off with ``scale=False``:
+
+        >>> kernel = [-1, 1]
+        >>> conv = RealSpaceConvolution(space, kernel)
+        >>> conv([0, 1, 2, 0, 0])
+        uniform_discr(-5.0, 5.0, 5).element([0.0, -2.0, -2.0, 4.0, 0.0])
+        >>> conv_noscale = RealSpaceConvolution(space, kernel, scale=False)
+        >>> conv_noscale([0, 1, 2, 0, 0])
+        uniform_discr(-5.0, 5.0, 5).element([0.0, -1.0, -1.0, 2.0, 0.0])
+
+        If the kernel is given as an element of a uniformly discretized
+        function space, the convolution operator range is shifted by
+        the midpoint of the kernel domain:
+
+        >>> kernel_space = odl.uniform_discr(0, 4, 2)  # midpoint 2.0
+        >>> kernel = kernel_space.element([-1, 1])
+        >>> conv_shift = RealSpaceConvolution(space, kernel)
+        >>> conv_shift.range  # Shifted by 2.0 in positive direction
+        uniform_discr(-3.0, 7.0, 5)
+        >>> conv_shift([0, 1, 2, 0, 0])
+        uniform_discr(-3.0, 7.0, 5).element([0.0, -2.0, -2.0, 4.0, 0.0])
 
         Notes
         -----
