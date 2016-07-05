@@ -26,18 +26,12 @@ import numpy as np
 import odl
 
 
-# Define a rectangle function
-def rectangle(x):
-    # Characteristic function of [-0.5, -0.25]x[-0.5, 0.0]
-    return (x[0] >= -0.5) & (x[0] <= -0.25) & (x[1] >= -0.5) & (x[1] <= 0.0)
-
-
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-1, 1]^2 with 100 samples per dimension.
 discr_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100), interp='linear')
 
-# The template is a 100 x 100 pixel image
-template = discr_space.element(rectangle)
+# Create a template
+template = odl.phantom.cuboid(discr_space, [-0.5, -0.5], [-0.25, 0])
 
 # Define a displacement field that shifts an image horizontally by hx
 # to the right and vertically by hy up. The it rotates clockwise by theta.
@@ -52,10 +46,10 @@ fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
 
 # Discrete a displacement field space corresponding to the above
 # discrete reconstruction space
-pspace = fixed_templ_op.domain
+disp_field_space = fixed_templ_op.domain
 
 # Create a displacement field based on ``disp_func``
-disp_field = pspace.element(disp_func)
+disp_field = disp_field_space.element(disp_func)
 
 # Calculate the deformed template by the fixed template
 # linearized deformation operator
@@ -68,7 +62,7 @@ fixed_templ_deriv_op = fixed_templ_op.derivative(disp_field)
 # Evaluate the derivative at the vector field that is only 1. This should be
 # the same as the pointwise inner product between linearly deformed
 # gradient and the said vector field
-vector_field = pspace.one()
+vector_field = disp_field_space.one()
 fixed_templ_deriv = fixed_templ_deriv_op(vector_field)
 
 # Evaluate the adjoint of derivative at the element that is only 1
