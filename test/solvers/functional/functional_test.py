@@ -28,7 +28,7 @@ import pytest
 
 # Internal
 import odl
-from odl.util.testutils import all_almost_equal
+from odl.util.testutils import all_almost_equal, example_element
 
 # Places for the accepted error when comparing results
 PLACES = 8
@@ -111,6 +111,265 @@ def test_scalar_multiplication_conjugate_functional():
     assert all_almost_equal((F*scal).conjugate_functional(x),
                             (F.conjugate_functional(x/scal)),
                             places=PLACES)
+
+
+# TODO: Remove this one when the "Functional" branch is in and this is
+# exists as a defult functional
+class L2NormSquare(odl.solvers.Functional):
+    def __init__(self, domain):
+        super().__init__(domain=domain, linear=False, convex=True,
+                         concave=False, smooth=True, grad_lipschitz=2)
+
+    def _call(self, x):
+        return np.abs(x).inner(np.abs(x))
+
+    @property
+    def gradient(self):
+        functional = self
+
+        class L2SquareGradient(odl.Operator):
+            def __init__(self):
+                super().__init__(functional.domain, functional.domain,
+                                 linear=False)
+
+            def _call(self, x):
+                return 2.0*x
+
+        return L2SquareGradient()
+
+    @property
+    def conjugate_functional(self):
+        functional = self
+
+        class L2SquareConjugateFunctional(odl.solvers.Functional):
+            def __init__(self):
+                super().__init__(functional.domain, linear=False)
+
+            def _call(self, x):
+                return x.norm()**2 * 1/4
+
+            @property
+            def gradient(self):
+                functional = self
+
+                class L2CCSquareGradient(odl.Operator):
+                    def __init__(self):
+                        super().__init__(functional.domain, functional.domain,
+                                         linear=False)
+
+                    def _call(self, x):
+                        return x*(1.0/2.0)
+
+                return L2CCSquareGradient()
+
+        return L2SquareConjugateFunctional()
+
+
+def test_convex_conjugate_translation():
+    """Test for the convex conjugate of a translation: (f(. - y))^*"""
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # The translation; an element in the domain
+    translation = example_element(space)
+
+    # Creating the functional ||x||_2^2
+    test_functional = L2NormSquare(space)
+    cc_test_functional = test_functional.conjugate_functional
+
+    # Testing that translation needs to be a 'LinearSpaceVector'
+    with pytest.raises(TypeError):
+        odl.solvers.ConvexConjugateTranslation(cc_test_functional, 1)
+
+    # Testing that translation belonging to the wrong space gives TypeError
+    wrong_space = odl.uniform_discr(1, 2, 10)
+    wrong_translation = example_element(wrong_space)
+    with pytest.raises(TypeError):
+        odl.solvers.ConvexConjugateTranslation(cc_test_functional,
+                                               wrong_translation)
+
+    # Create translated convex conjugate functional
+    cc_translated = odl.solvers.ConvexConjugateTranslation(cc_test_functional,
+                                                           translation)
+
+    # Create an element in the space, in which to evaluate
+    x = example_element(space)
+
+    # Test for evaluation of the functional
+    # Explicit computation: 1/4 * ||x||^2 + <x,translation>
+    expected_result = 1.0/4.0 * x.norm()**2 + x.inner(translation)
+    assert all_almost_equal(cc_translated(x), expected_result, places=PLACES)
+
+    # Test for the gradient
+    # Explicit computation: x/2 + translation
+    expected_result = 1.0/2.0 * x + translation
+    cc_translated_gradient = cc_translated.gradient
+    assert all_almost_equal(cc_translated_gradient(x), expected_result,
+                            places=PLACES)
+
+    # Test for derivative in direction p
+    p = example_element(space)
+
+    # Explicit computation in point x, in direction p: <x/2 + translation, p>
+    expected_result = p.inner(1.0/2.0 * x + translation)
+    assert all_almost_equal(cc_translated.derivative(x)(p), expected_result,
+                            places=PLACES)
+
+
+def test_convex_conjugate_arg_scaling():
+    """Test for the convex conjugate of a scaling: (f(. scaling))^*"""
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # The scaling parameter
+    scaling = np.random.rand()
+
+    # Creating the functional ||x||_2^2
+    test_functional = L2NormSquare(space)
+    cc_test_functional = test_functional.conjugate_functional
+
+    # Testing that not accept scaling with 0
+    with pytest.raises(ValueError):
+        odl.solvers.ConvexConjugateArgScaling(cc_test_functional, 0)
+
+    # Create scaled convex conjugate functional
+    cc_arg_scaled = odl.solvers.ConvexConjugateArgScaling(
+                     cc_test_functional,
+                     scaling)
+
+    # Create an element in the space, in which to evaluate
+    x = example_element(space)
+
+    # Test for evaluation of the functional
+    # Explicit computation: 1/(4*scaling^2) * ||x||^2
+    expected_result = 1.0/(4.0 * scaling**2) * x.norm()**2
+    assert all_almost_equal(cc_arg_scaled(x), expected_result, places=PLACES)
+
+    # Test for the gradient
+    # Explicit computation: x/(2*scaling^2)
+    expected_result = 1.0/(2.0*scaling**2) * x
+    cc_scaled_gradient = cc_arg_scaled.gradient
+    assert all_almost_equal(cc_scaled_gradient(x), expected_result,
+                            places=PLACES)
+
+    # Test for derivative in direction p
+    p = example_element(space)
+
+    # Explicit computation in point x, in direction p: <x/(2*scaling^2), p>
+    expected_result = p.inner(1.0/(2.0*scaling**2) * x)
+    assert all_almost_equal(cc_arg_scaled.derivative(x)(p), expected_result,
+                            places=PLACES)
+
+
+def test_convex_conjugate_functional_scaling():
+    """Test for the convex conjugate of a scaling: (scaling * f(.))^*"""
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # The scaling parameter
+    scaling = np.random.rand()
+
+    # Creating the functional ||x||_2^2
+    test_functional = L2NormSquare(space)
+    cc_test_functional = test_functional.conjugate_functional
+
+    # Testing that not accept scaling with 0
+    with pytest.raises(ValueError):
+        odl.solvers.ConvexConjugateFuncScaling(cc_test_functional, 0)
+
+    # Create scaled convex conjugate functional
+    cc_functional_scaled = odl.solvers.ConvexConjugateFuncScaling(
+                            cc_test_functional,
+                            scaling)
+
+    # Create an element in the space, in which to evaluate
+    x = example_element(space)
+
+    # Test for evaluation of the functional
+    # Explicit computation: 1/(4*scaling) * ||x||^2
+    expected_result = 1.0/(4.0 * scaling) * x.norm()**2
+    assert all_almost_equal(cc_functional_scaled(x), expected_result,
+                            places=PLACES)
+
+    # Test for the gradient
+    # Explicit computation: x/(2*scaling)
+    expected_result = 1.0/(2.0*scaling) * x
+    cc_scaled_gradient = cc_functional_scaled.gradient
+    assert all_almost_equal(cc_scaled_gradient(x), expected_result,
+                            places=PLACES)
+
+    # Test for derivative in direction p
+    p = example_element(space)
+
+    # Explicit computation in point x, in direction p: <x/(2*scaling), p>
+    expected_result = p.inner(1.0/(2.0*scaling) * x)
+    assert all_almost_equal(cc_functional_scaled.derivative(x)(p),
+                            expected_result, places=PLACES)
+
+
+def test_convex_conjugate_linear_perturbation():
+    """Test for the convex conjugate of a scaling: (f(.) - <y,.>)^*"""
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # The perturbation; an element in the domain (which is the same as the dual
+    # space of the domain, since we assume Hilbert space)
+    perturbation = example_element(space)
+
+    # Creating the functional ||x||_2^2
+    test_functional = L2NormSquare(space)
+    cc_test_functional = test_functional.conjugate_functional
+
+    # Testing that translation needs to be a 'LinearSpaceVector'
+    with pytest.raises(TypeError):
+        odl.solvers.ConvexConjugateLinearPerturb(cc_test_functional, 1)
+
+    # Testing that translation belonging to the wrong space gives TypeError
+    wrong_space = odl.uniform_discr(1, 2, 10)
+    wrong_perturbation = example_element(wrong_space)
+    with pytest.raises(TypeError):
+        odl.solvers.ConvexConjugateLinearPerturb(cc_test_functional,
+                                                 wrong_perturbation)
+
+    # Creating the functional ||x||_2^2
+    test_functional = L2NormSquare(space)
+    cc_test_functional = test_functional.conjugate_functional
+
+    # Create translated convex conjugate functional
+    cc_functional_perturbed = odl.solvers.ConvexConjugateLinearPerturb(
+                               cc_test_functional,
+                               perturbation)
+
+    # Create an element in the space, in which to evaluate
+    x = example_element(space)
+
+    # Test for evaluation of the functional
+    # Explicit computation: ||x||^2/2 - ||x-y||^2/4 + ||y||^2/2 - <x,y>
+    expected_result = (x.norm()**2/2.0 - (x-perturbation).norm()**2/4.0 +
+                       perturbation.norm()**2/2.0 - x.inner(perturbation))
+    assert all_almost_equal(cc_functional_perturbed(x), expected_result,
+                            places=PLACES)
+
+    # Test for the gradient
+    # Explicit computation: x/2 + y/2
+    expected_result = 1.0/2.0 * x + 1.0/2.0 * perturbation
+    cc_perturbed_gradient = cc_functional_perturbed.gradient
+    assert all_almost_equal(cc_perturbed_gradient(x), expected_result,
+                            places=PLACES)
+
+    # Test for derivative in direction p
+    p = example_element(space)
+
+    # Explicit computation in point x, in direction p:
+    # <1.0/2.0 * x + 1.0/2.0 * perturbation, p>
+    expected_result = p.inner(1.0/2.0 * x + 1.0/2.0 * perturbation)
+    assert all_almost_equal(cc_functional_perturbed.derivative(x)(p),
+                            expected_result, places=PLACES)
+
 
 
 # TODO: test prox functinoality for scaling
