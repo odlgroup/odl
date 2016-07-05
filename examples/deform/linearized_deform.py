@@ -26,6 +26,9 @@ import numpy as np
 import odl
 
 
+# --- Create template and displacement field --- #
+
+
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-1, 1]^2 with 100 samples per dimension.
 discr_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100), interp='linear')
@@ -51,6 +54,7 @@ disp_field = disp_field_space.element(disp_func)
 # Show template and displacement field
 template.show('template')
 disp_field.show('displacement field')
+
 
 # --- Example of LinDeformFixedTempl and its derivative,
 # and the adjoint of the derivative --- #
