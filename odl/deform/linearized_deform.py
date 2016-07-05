@@ -103,7 +103,7 @@ def deform_grad(grad_f, displacement):
 
     >>> space = odl.uniform_discr(0, 1, 5)
     >>> template = space.element([0, 0, 1, 0, 0])
-    >>> gradOp = odl.Gradient(template.space, method='forward')
+    >>> gradOp = odl.Gradient(template.space, method='forward', padding_method='symmetric')
     >>> template_grad = gradOp(template)
     >>> template_grad
     ProductSpace(uniform_discr(0.0, 1.0, 5), 1).element([
@@ -285,7 +285,8 @@ class LinDeformFixedTemplDeriv(Operator):
                             '`displacement.space`'.format(
                                 vector_field, self.displacement.space))
 
-        grad = odl.Gradient(self.range)
+        grad = odl.Gradient(self.range, method='forward',
+                            padding_method='symmetric')
         grad_template = grad(self.template)
         def_grad = deform_grad(grad_template, self.displacement)
 
@@ -374,7 +375,8 @@ class LinDeformFixedTemplDerivAdj(Operator):
             The evaluation point, i.e. an element in the template space,
             for the deformed gradient of the template.
         """
-        grad = odl.Gradient(self.domain)
+        grad = odl.Gradient(self.domain, method='forward',
+                            padding_method='symmetric')
         template_grad = grad(self.template)
 
         def_grad = deform_grad(template_grad, self.displacement)
@@ -500,7 +502,7 @@ class LinDeformFixedDispAdj(Operator):
         >>> op = LinDeformFixedDispAdj(displacement_field)
         >>> template = space.element([0, 0, 1, 0, 0])
         >>> op(template)
-        uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 0.95122942450071402,
+        uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 0.90483741803595963,
             0.0, 0.0])
         """
         if not isinstance(displacement.space, odl.ProductSpace):
@@ -523,7 +525,7 @@ class LinDeformFixedDispAdj(Operator):
             Given template that is to be deformed by the fixed
             displacement field.
         """
-        div_op = odl.Divergence(range=template.space, method='central',
+        div_op = odl.Divergence(range=template.space, method='forward',
                                 padding_method='symmetric')
         jacobian_det = np.exp(-div_op(self.displacement))
         return jacobian_det * template.space.element(
