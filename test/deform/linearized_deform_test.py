@@ -28,7 +28,7 @@ import numpy as np
 
 # Internal
 import odl
-from odl.util.testutils import (all_equal)
+from odl.util.testutils import all_equal
 
 
 def hat_function(x, **kwargs):
