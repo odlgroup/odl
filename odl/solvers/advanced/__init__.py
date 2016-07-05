@@ -27,3 +27,6 @@ __all__ += chambolle_pock.__all__
 
 from .douglas_rachford import *
 __all__ += douglas_rachford.__all__
+
+from .forward_backward import *
+__all__ += forward_backward.__all__
