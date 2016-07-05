@@ -31,7 +31,7 @@ import odl
 from odl.util.testutils import all_almost_equal
 
 # Places for the accepted error when comparing results
-PLACES = 6
+PLACES = 8
 
 # Discretization parameters
 n = 3
@@ -55,38 +55,67 @@ def test_derivative():
     x = space.element(np.random.standard_normal((n, n)))
 
     y = space.element(np.random.standard_normal((n, n)))
-    epsK = 1e-7
+    epsK = 1e-8
 
     F = odl.solvers.functional.L2Norm(space)
 
+    # Numerical test of gradient
     assert all_almost_equal((F(x+epsK*y)-F(x))/epsK,
+                            y.inner(F.gradient(x)),
+                            places=PLACES/2)
+
+    # Check that derivative and gradient is consistent
+    assert all_almost_equal(F.derivative(x)(y),
                             y.inner(F.gradient(x)),
                             places=PLACES)
 
 
-
 def test_scalar_multiplication_call():
-    # Verify that the left and right scalar multiplication does indeed work as expected
+    # Verify that the left and right scalar multiplication does
+    # indeed work as expected
 
-    x = space.element(np.random.standard_normal((n,n)))
+    x = space.element(np.random.standard_normal((n, n)))
 
-    scal=np.random.standard_normal()
-    F=odl.solvers.functional.L2Norm(space)
+    scal = np.random.standard_normal()
+    F = odl.solvers.functional.L2Norm(space)
 
+    # Evaluation of right and left scalar multiplication
     assert all_almost_equal((F*scal)(x), (F)(scal*x),
                             places=PLACES)
 
     assert all_almost_equal((scal*F)(x), scal*(F(x)),
                             places=PLACES)
 
-#     print((scal*F).gradient(x))
-#    assert all_almost_equal((scal*F).derivative(x), scal*(F(x)),
-#                            places=PLACES)
+    # Test gradient of right and left scalar multiplication
+    assert all_almost_equal((scal*F).gradient(x), scal*(F.gradient(x)),
+                            places=PLACES)
+
+    assert all_almost_equal((F*scal).gradient(x), scal*(F.gradient(scal*x)),
+                            places=PLACES)
 
 
+def test_scalar_multiplication_conjugate_functional():
+    # Verify that conjugate functional of right and left scalar multiplication
+    # work as intended
+
+    x = space.element(np.random.standard_normal((n, n)))
+
+    scal = np.abs(np.random.standard_normal())
+
+    F = odl.solvers.functional.L2Norm(space)
+
+    assert all_almost_equal((scal*F).conjugate_functional(x),
+                            scal*(F.conjugate_functional(x/scal)),
+                            places=PLACES)
+
+    assert all_almost_equal((F*scal).conjugate_functional(x),
+                            (F.conjugate_functional(x/scal)),
+                            places=PLACES)
 
 
-#def test_prox:
+# TODO: test prox functinoality for scaling
+
+# def test_prox:
     # Verify that the left and right scalar multiplication does indeed work as expected
 
 #    x = space.element(np.random.standard_normal((n,n)))
@@ -102,11 +131,11 @@ def test_scalar_multiplication_call():
     #assert all_almost_equal((scal*F)(x), scal*(F(x)),
     #                        places=PLACES)
 
+# TODO: implement translation for prox and conjugate functionals + tests
 
+# TODO: Test that prox and conjugate functionals are not returned for negative left scaling.
 
-
-
-
+# TODO: Move tests from convex_conjugate_utils_test to here!!!
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
