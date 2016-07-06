@@ -386,41 +386,37 @@ class FourierSpaceConvolution(Convolution):
 
 class RealSpaceConvolution(Convolution):
 
-    """Convolution implemented in real space."""
+    """Convolution implemented in real space.
 
-    def __init__(self, domain, kernel, range=None, impl='scipy_convolve',
-                 **kwargs):
+    This variant of the convolution is based on `scipy.signal.convolve`
+    and is usually fast for small kernels. For a kernel of similar size
+    as the input, `FourierSpaceConvolution` is probably much faster.
+    """
+
+    def __init__(self, domain, kernel, **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         domain : `DiscreteLp`
-            Domain of the operator
-        kernel :
-            The kernel can be specified in several ways, depending on
-            the choice of ``impl``:
+            Uniformly discretized space of functions on which the
+            operator can act.
+        kernel : `DiscreteLpVector`, callable or array-like
+            Fixed kernel of the convolution operator. It can be
+            specified in two ways, resulting in varying
+            `Operator.range`. In both cases, the kernel must have
+            the same number of dimensions as ``domain``, but the shapes
+            can be different.
 
-            `DiscreteLpVector` :
-            Valid for ``impl``: ``'scipy_convolve'``
+            `DiscreteLpVector` : The range is shifted by the midpoint
+            of the kernel domain.
 
-            `array-like`, arbitrary shape : The object is interpreted as
-            real-space kernel (mode ``'real'``) and can be differently
-            sized than the convolved function. It is assumed to be an
-            element of a space with same `DiscreteLp.cell_sides` as
-            ``domain``. Note that the ``scipy_convolve`` back-end does
-            not allow the kernel to be larger.
-            Valid for ``impl``: ``'scipy_convolve'``
+            callable or `array-like` : The kernel is interpreted as a
+            continuous/discretized function with support centered around
+            zero, which leads to the range of this operator being equal
+            to its domain.
 
-        range : `DiscreteLp`, optional
-            Range of the operator. By default, the range is calculated
-            from the kernel.
-            Note: custom range is currently not supported.
-
-        impl : string, optional
-            Implementation of the convolution. Available options are:
-
-            'scipy_convolve': Real-space convolution using
-            `scipy.signal.convolve` (default, fast for short kernels)
+            See ``Notes`` for further explanation.
 
         scale : `bool`, optional
             If `True`, scale the discrete convolution with
@@ -527,22 +523,14 @@ class RealSpaceConvolution(Convolution):
         if not domain.is_uniform:
             raise ValueError('irregular sampling not supported')
 
-        if range is not None:
-            # TODO
-            raise NotImplementedError('custom range not implemented')
-        else:
-            kernel_kwargs = kwargs.pop('kernel_kwargs', {})
-            self._kernel, range = self._compute_kernel_and_range(
-                kernel, domain, kernel_kwargs)
+        kernel_kwargs = kwargs.pop('kernel_kwargs', {})
+        self._kernel, range = self._compute_kernel_and_range(
+            kernel, domain, kernel_kwargs)
 
         super().__init__(domain, range, linear=True)
 
-        # Handle impl
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _REAL_CONV_SUPPORTED_IMPL:
-            raise ValueError("implementation '{}' not understood"
-                             ''.format(impl_in))
-        self._impl = impl
+        # Hard-coding impl for now until we add more
+        self._impl = 'scipy_convolve'
 
         # Handle the `resample` input parameter
         resample = kwargs.pop('resample', 'down')

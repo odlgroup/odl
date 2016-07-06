@@ -62,9 +62,6 @@ def test_real_conv_init_errors():
         nonuni_discr = odl.DiscreteLp(fspace, part, odl.rn(3))
         odl.trafos.RealSpaceConvolution(nonuni_discr, [1, 1, 1])
 
-    with pytest.raises(NotImplementedError):
-        odl.trafos.RealSpaceConvolution(discr, small_ker_arr, range=discr)
-
 
 def test_real_conv_range():
 
