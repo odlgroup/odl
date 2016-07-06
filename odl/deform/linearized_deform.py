@@ -193,7 +193,7 @@ class LinDeformFixedTempl(Operator):
 
         Returns
         -------
-        "derivative : LinDeforFixedTempDeriv"
+        derivative : `LinDeforFixedTempDeriv`
             The derivative evaluated at ``displacement``.
         """
         return LinDeformFixedTemplDeriv(self.template, displacement)
@@ -285,7 +285,7 @@ class LinDeformFixedTemplDeriv(Operator):
 
         Returns
         -------
-        "adjoint : LinDeformFixedTemplDerivAdj"
+        adjoint : `LinDeformFixedTemplDerivAdj`
             The adjoint of the operator.
         """
         return LinDeformFixedTemplDerivAdj(self.template, self.displacement)
@@ -442,7 +442,7 @@ class LinDeformFixedDisp(Operator):
 
         Returns
         -------
-        "adjoint: LinDeformFixedTemplDerivAdj"
+        adjoint: `LinDeformFixedTemplDerivAdj`
             The adjoint of the operator.
         """
         return LinDeformFixedDispAdj(self.displacement)
