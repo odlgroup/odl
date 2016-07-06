@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Implementation of the Forward-Backward splitting algorithm """
+""" Implementation of the forward-backward primal-dual splitting algorithm for
+optimization.
+"""
 
 
 # Imports for common Python 2/3 codebase
@@ -31,44 +33,42 @@ __all__ = ('forward_backward_pd',)
 
 def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
                         callback=None, **kwargs):
-    """ The forward-backward primal-dual splitting algorithm
+    """ The forward-backward primal-dual splitting algorithm.
 
-    Minimizes the sum of several convex functions composed with linear
-    operators
+    The algorithm minimizes the sum of several convex functionals composed with
+    linear operators,
 
-        ``min_x f(x) + sum_i g_i(L_i x) + h(x)``
+        ``min_x f(x) + sum_i g_i(L_i x) + h(x)``,
 
-    Where f, g_i, h are convex functions, L_i are linear `Operator`'s, and h is
-    also differentiable.
+    where ``f``, ``g_i`` are convex functionals, ``L_i`` are linear
+    `Operator`'s, and ``h`` is a convex and differentiable functional.
 
-    Can also be used to solve the more general problem
+    The method can also be used to solve the more general problem
 
-        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x)``
+        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x)``,
 
-    where l_i are convex functions and @ is the infimal convolution:
+    where ``l_i`` are convex functionals and @ is the infimal convolution:
 
         ``(f @ g)(x) = inf_y { f(x-y) + g(y) }``
 
     Parameters
     ----------
-    x : `Vector`
-        Initial point
+    x : `LinearSpaceVector`
+        Initial point, updated in place.
     prox_f : `callable`
-        Funciton returning an `Operator` when called with `tau`.
-        The Operator should be the proximal of `tau * f`.
+        `Proximal factory` for the functional ``f``.
     prox_cc_g : `sequence` of `callable`'s
-        Sequence of functions returning an operator when called with stepsize
-        `sigma`.
-        The Operator should be the proximal of `sigma_i * g_i^*`.
+        Sequence of `proximal factories` for the convex conjuates of the
+        functionals ``g_i``.
     grad_h : `Operator`
         Operators representing the gradient of  `h`.
     L : `sequence` of `Operator`'s
         A sequence with as many elements as ``prox__cc_gs`` of operators
         ``L_i``
     tau : `float`
-        Stepsize of ``f``
+        Step size-like parameter for ``prox_f``
     sigma : `sequence` of  `float`
-        Stepsize of the ``g_i``'s
+        Sequence of step size-like parameter for the sequence ``prox_cc_g``
     niter : `int`
         Number of iterations
     callback : `Callback`, optional
@@ -78,35 +78,40 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     ----------------
     grad_cc_l : `sequence` of `Operator`'s, optional
         Sequence of operators representing the gradient of  `l_i^*`.
-        If omitted, the simpler problem will be considered, which corresponds
-        to the convex conjugate functionals of the l_i:s being zero functionals
-        and hence the gradient being the zero-operator.
+        If omitted, the simpler problem will be considered.
 
     Notes
     -----
-    Strictly, we have the following conditions on the functions involved: f and
-    g_i are proper, convex and lower semicontinuous, and h is convex and
-    differentialbe with :math:`\\eta`-Lipschitz continuous gradient.
+    The exact conditions on the involved functionals are as follows: :math:`f`
+    and :math:`g_i` are proper, convex and lower semicontinuous, and :math:`h`
+    is convex and differentialbe with :math:`\\eta`-Lipschitz continuous
+    gradient.
 
-    For the optional input l_i we need it to be proper, convex, lower
-    semicontinuous, and :math:`\\nu_i^{-1}`-strongly convex. The fact that l_i
-    is :math:`\\nu_i^{-1}`-strongly convex implies that the convex conjugate
-    functional of l_i is differentiable with :math:`\\nu_i`-Lipschitz
-    continuous gradient.
+    The optional input :math:`\\nabla l_i^*` need to be :math:`\\nu_i`
+    -Lipschitz continuous. Note that in the reference [BC2015]_, the condition
+    is formulated as :math:`l_i` being proper, lower semicontinuous, and
+    :math:`\\nu_i^{-1}`-strongly convex, which implies that :math:`l_i^*` have
+    :math:`\\nu_i`-Lipschitz continuous gradient.
+
+    If the optional input :math:`\\nabla l_i^*` is omitted, the simpler problem
+    will be considered. Mathematically, this is done by taking :math:`l_i` to
+    be the functional that is zero only in the zero element and :math:`\\infty`
+    otherwise. This gives that :math:`l_i^*` is the zero functional, and hence
+    the corresponding gradient is the zero operator.
 
     To guarantee convergence, the parameters ``tau``, ``sigma`` and
     ``L`` need to satisfy
 
     .. math::
 
-       2 * \min \{ \\frac{1}{\\tau}, \\frac{1}{\sigma_1}, \\ldots,
-       \\frac{1}{\sigma_m} \} * \min\{ \\eta, \\nu_1, \\ldots, \\nu_m  \} *
-       \\sqrt{1 - \\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2} > 1
+       2 \min \{ \\frac{1}{\\tau}, \\frac{1}{\sigma_1}, \\ldots,
+       \\frac{1}{\sigma_m} \} \cdot \min\{ \\eta, \\nu_1, \\ldots, \\nu_m  \}
+       \cdot \\sqrt{1 - \\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2} > 1,
 
     where, if the simpler problem is considered, all :math:`\\nu_i` can be
     considered to be :math:`\\infty`.
 
-    For references on the Forward-Backward algorithm, see [BC2015]_.
+    For reference on the forward-backward primal-dual algorithm, see [BC2015]_.
 
     For more on convex analysis including convex conjugates and
     resolvent operators see [Roc1970]_.
@@ -129,12 +134,10 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     if len(prox_cc_g) != m:
         raise ValueError('len(prox_cc_g) != len(L)')
 
-    # Get parameters from kwargs
-    grad_cc_l = kwargs.pop('prox_cc_l', None)
+    grad_cc_l = kwargs.pop('grad_cc_l', None)
     if grad_cc_l is not None and len(grad_cc_l) != m:
         raise ValueError('`grad_cc_l` not same length as `L`')
 
-    # Check for unused parameters
     if kwargs:
         raise TypeError('unexpected keyword argument: {}'.format(kwargs))
 
@@ -151,15 +154,15 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
         y.lincomb(2.0, x, -1, x_old)
 
         for i in range(m):
-            # In this case gradients were given
             if grad_cc_l is not None:
+                # In this case gradients were given.
                 tmp_2 = sigma[i] * (L[i](y) + grad_cc_l[i](v[i]))
-
-            # In this case there were not. "Applying" zero-operator
             else:
+                # In this case gradients were not given. Therefore the gradient
+                # step is omitted. For more details, see the documentation.
                 tmp_2 = sigma[i] * L[i](y)
 
-            v[i] = prox_cc_g[i](sigma[i])(v[i] + tmp_2)
+            prox_cc_g[i](sigma[i])(v[i] + tmp_2, out=v[i])
 
         if callback is not None:
             callback(x)

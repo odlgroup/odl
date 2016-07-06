@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Total variation denoising using the Forward-backward solver.
+"""Total variation denoising using the forward-backward primal dual solver.
 
 Solves the optimization problem
 
@@ -48,22 +48,29 @@ noisy_data.show('Noisy convolved data')
 # Gradient for TV regularization
 gradient = odl.Gradient(space)
 
-# Assemble all operators
+# Assemble the linear operators. Here the TV-term is mapped into a composition
+# of the 1-norm and the gradient. See the documentation of the solver
+# `forward_backward_pd` for the general form of the problem.
 lin_ops = [gradient]
 
-# Create proximals as needed
+# Create proximals for the convex conjugate of the 1-norm and the bound
+# constrains.
 prox_cc_g = [odlsol.proximal_cconj_l1(gradient.range, lam=1e1,
                                       isotropic=False)]
 prox_f = odlsol.proximal_box_constraint(space, 0, 255)
 
-# Create gradient needed. This is the derivative of the 2-norm squared
+# This gradient encodes the differentiable term(s) of the goal functional,
+# which corresponds to the "forward" part of the method. In this example the
+# differentiable part is the 2-norm squared.
 grad_h = odl.ResidualOperator(odl.IdentityOperator(space), noisy_data)
 
-# Solve
+# Create initial guess for the solver.
 x = noisy_data.copy()
 
+# Used to display intermediate results and print iteration number.
 callback = (odl.solvers.CallbackShow(display_step=20, clim=[0, 255]) &
             odl.solvers.CallbackPrintIteration())
 
+# Call the solver
 odlsol.forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=1.0,
                            sigma=[0.01], niter=1000, callback=callback)

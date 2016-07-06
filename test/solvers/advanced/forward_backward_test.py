@@ -35,25 +35,22 @@ from odl.util.testutils import all_almost_equal, example_element
 PLACES = 8
 
 
-def test_forward_backward_inpit_handeling():
-    """Test to see that input is handled correctly.
-    """
+def test_forward_backward_input_handling():
+    """Test to see that input is handled correctly."""
 
-    # Create spaces
     space1 = odl.uniform_discr(0, 1, 10)
 
-    # Create "correct" set of operators
     lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
     prox_cc_g = [odl.solvers.proximal_zero(space1),  # Identity operator
                  odl.solvers.proximal_zero(space1)]  # Identity operator
     prox_f = odl.solvers.proximal_zero(space1)  # Identity operator
     grad_h = odl.ZeroOperator(space1)
 
-    # Check that the algorithm runs. With the above operators the algorithm
-    # is the identity operator in each iteration
+    # Check that the algorithm runs. With the above operators, the algorithm
+    # returns the input.
     x0 = example_element(space1)
     x = x0.copy()
-    niter = np.random.randint(low=3, high=20)
+    niter = 3
 
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=1.0,
                         sigma=[1.0, 1.0], niter=niter)
@@ -65,17 +62,6 @@ def test_forward_backward_inpit_handeling():
     with pytest.raises(ValueError):
         forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=1.0,
                             sigma=[1.0], niter=niter)
-
-    # To many sigma_i:s
-    with pytest.raises(ValueError):
-        forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=1.0,
-                            sigma=[1.0, 1.0, 1.0], niter=niter)
-
-    # To few operators
-    prox_cc_g_to_few = [odl.solvers.proximal_zero(space1)]
-    with pytest.raises(ValueError):
-        forward_backward_pd(x, prox_f, prox_cc_g_to_few, lin_ops, grad_h,
-                            tau=1.0, sigma=[1.0, 1.0], niter=niter)
 
     # To many operators
     prox_cc_g_to_many = [odl.solvers.proximal_zero(space1),
@@ -93,7 +79,7 @@ def test_forward_backward_inpit_handeling():
                             sigma=[1.0, 1.0], niter=niter)
 
 
-def test_forward_backward():
+def test_forward_backward_basic():
     """Test for the forward-backward solver by minimizing ||x||_2^2. The
     general problem is of the form
 
@@ -103,10 +89,8 @@ def test_forward_backward():
     zero-operator.
     """
 
-    # Create spaces
     space = odl.rn(10)
 
-    # Create "correct" set of operators
     lin_ops = [odl.ZeroOperator(space)]
     prox_cc_g = [odl.solvers.proximal_cconj(odl.solvers.proximal_zero(space))]
     prox_f = odl.solvers.proximal_zero(space)
@@ -119,6 +103,78 @@ def test_forward_backward():
                         sigma=[1.0], niter=10)
 
     assert all_almost_equal(x, x_global_min, places=PLACES)
+
+
+def test_forward_backward_with_lin_ops():
+    """Test for the forward-backward solver by minimizing ||x - b||_2^2 +
+    ||alpha * x||_2^2. The general problem is of the form
+
+        ``min_x f(x) + sum_i g_i(L_i x) + h(x)``
+
+    and here we take f = 0, g = ||.||_2^2, L = alpha * IndentityOperator,
+    and h = ||. - b||_2^2.
+    """
+
+    space = odl.rn(10)
+    scaling = 0.1
+    b = example_element(space)
+
+    lin_op = scaling * odl.IdentityOperator(space)
+    lin_ops = [lin_op]
+    prox_cc_g = [odl.solvers.proximal_cconj_l2_squared(space)]
+    prox_f = odl.solvers.proximal_zero(space)
+    # Gradient of two-norm square
+    grad_h = 2.0 * (odl.IdentityOperator(space) - odl.ConstantOperator(b))
+
+    x = example_element(space)
+
+    # Explicit solution: x_hat = (I^T * I + (alpha*I)^T * (alpha*I))^-1 * (I*b)
+    op = odl.IdentityOperator(space) + lin_op.adjoint * lin_op
+    x_global_min = space.zero()
+    odl.solvers.conjugate_gradient(op, x_global_min, b, niter=10)
+
+    forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
+                        sigma=[1.0], niter=20)
+
+    assert all_almost_equal(x, x_global_min, places=3)
+
+
+def test_forward_backward_with_li():
+    """Test for the forward-backward solver by minimizing the functional
+    ``(g @ l)(x) + h(x)``, where
+
+        ``(g @ l)(x) = inf_y { g(x-y) + l(y) }``,
+
+    g is the indicator function on [-1, 1], and l(x) = h(x) = 1/2||x - 5||_2^2.
+    The optimal solution to this problem is given by x in [4,6].
+    """
+    shift = -5
+    upper_lim = 1
+    lower_lim = -1
+    tol = 1e-8
+
+    space = odl.rn(1)
+    a = space.element(shift)
+
+    lin_op = odl.IdentityOperator(space)
+    lin_ops = [lin_op]
+    prox_cc_g = [odl.solvers.proximal_cconj(
+                 odl.solvers.proximal_box_constraint(space,
+                                                     lower=lower_lim,
+                                                     upper=upper_lim))]
+    prox_f = odl.solvers.proximal_zero(space)
+    grad_h = odl.IdentityOperator(space) + odl.ConstantOperator(a)
+
+    grad_cc_ls = [odl.IdentityOperator(space) + odl.ConstantOperator(a)]
+
+    x = example_element(space)
+
+    forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
+                        sigma=[1.0], niter=20, grad_cc_l=grad_cc_ls)
+
+    solution_interv = odl.Interval(-shift + lower_lim - tol,
+                                   -shift + upper_lim + tol)
+    assert x in solution_interv
 
 
 if __name__ == '__main__':
