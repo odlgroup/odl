@@ -98,9 +98,6 @@ def deform_grad(grad_f, displacement):
     Examples
     --------
     >>> import odl
-
-    Define ``gradOp`` as the gradient operator, let it act on ``template``.
-
     >>> space = odl.uniform_discr(0, 1, 5)
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> gradOp = odl.Gradient(template.space, method='forward', padding_method='symmetric')
@@ -109,15 +106,8 @@ def deform_grad(grad_f, displacement):
     ProductSpace(uniform_discr(0.0, 1.0, 5), 1).element([
         [0.0, 5.0, -5.0, 0.0, 0.0]
     ])
-
-    Define a displacement field ``displacement_field``.
-
     >>> disp_field_space = gradOp.range
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
-
-    Calculate linearized deformation of the ``template_grad`` (gradient of
-    the template) using the displacement field ``displacement_field``.
-
     >>> deform_grad(template_grad, displacement_field)
     ProductSpace(uniform_discr(0.0, 1.0, 5), 1).element([
         [0.0, 5.0, -5.0, -5.0, 0.0]
@@ -158,11 +148,6 @@ class LinDeformFixedTempl(Operator):
 
         Examples
         --------
-        Deform a 1D function ``template`` that has value ``1`` at 3:rd sample
-        point using a displacement field ``displacement_field`` that has
-        value ``-0.2`` in the 4:th sample point. The outcome should be a
-        1D function that has values ``1`` at 3:rd and 4:th sample points.
-
         >>> import odl
         >>> space = odl.uniform_discr(0, 1, 5)
         >>> template = space.element([0, 0, 1, 0, 0])
