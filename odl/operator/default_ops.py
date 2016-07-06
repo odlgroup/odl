@@ -754,15 +754,19 @@ class ConstantOperator(Operator):
         ``ConstantOperator(y)(x) == y``
     """
 
-    def __init__(self, vector, domain=None):
-        """Initialize a new instance.
+    def __init__(self, vector, domain=None, range=None):
+        """Initialize an instance.
 
         Parameters
         ----------
+<<<<<<< 65607450bfb21ebce3b5f9c948decd1ebb02ba61
         vector : `LinearSpaceElement`
             The constant space element to be returned.
         domain : `LinearSpace`, optional
             Domain of the operator. Default : ``vector.space``.
+        range : `LinearSpace`, optional
+            default : vector.space
+            The range of the operator.
 
         Examples
         --------
@@ -773,15 +777,22 @@ class ConstantOperator(Operator):
         >>> op(x, out=r3.element())
         rn(3).element([1.0, 2.0, 3.0])
         """
-        if not isinstance(vector, LinearSpaceElement):
-            raise TypeError('`vector` {!r} not a LinearSpaceElement instance'
-                            ''.format(vector))
+
+        if domain is None or range is None:
+            if not isinstance(vector, LinearSpaceElement):
+                raise TypeError('`vector` {!r} not a LinearSpaceElement '
+                                'instance'.format(vector))
 
         if domain is None:
             domain = vector.space
+        if range is None:
+            range = vector.space
+        if vector not in range:
+            raise TypeError('`vector` {!r} not in range {}'
+                            ''.format(vector, range))
 
         self.__vector = vector
-        super().__init__(domain, vector.space, linear=False)
+        super().__init__(domain, range)
 
     @property
     def vector(self):
@@ -791,9 +802,9 @@ class ConstantOperator(Operator):
     def _call(self, x, out=None):
         """Return the constant vector or assign it to ``out``."""
         if out is None:
-            return self.range.element(self.vector.copy())
+            return self.range.element(self.__vector.copy())
         else:
-            out.assign(self.vector)
+            out.assign(self.__vector)
 
     def derivative(self, point):
         """Derivative of this operator, always zero.
