@@ -28,7 +28,7 @@ import numpy as np
 from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
 # from odl.space.pspace import ProductSpace
-# from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.set.space import LinearSpace #  , LinearSpaceVector
 # from odl.set.sets import Field
 
 from odl import (ZeroOperator, IdentityOperator)
@@ -156,7 +156,7 @@ class L2NormSquare(Functional):
                                  linear=False)
 
             def _call(self, x):
-                return 2*x
+                return 2.0*x
 
         return L2SquareGradient()
 
@@ -184,11 +184,26 @@ class L2NormSquare(Functional):
                 super().__init__(functional.domain, linear=False)
 
             def _call(self, x):
-                return x.norm()/4
+                return x.norm()**2 * 1/4
+
+            @property
+            def gradient(self):
+                functional = self
+
+                class L2CCSquareGradient(Operator):
+                    def __init__(self):
+                        super().__init__(functional.domain, functional.domain,
+                                         linear=False)
+
+                    def _call(self, x):
+                        return x*(1.0/2.0)
+
+                return L2CCSquareGradient()
 
         return L2SquareConjugateFunctional()
 
 
+# TODO: Remove this one and simply make it a ConstantFunctional with const. 0.
 class ZeroFunctional(Functional):
     def __init__(self, domain):
         """Initialize a ZeroFunctional instance.
@@ -248,7 +263,7 @@ class ZeroFunctional(Functional):
             def __init__(self):
                 """Initialize a ZeroFunctionalConjugateFunctional instance.
                 """
-                super().__init__(functional.domain, linear=False)
+                super().__init__(functional.domain, linear=False, convex=True)
                 self.zero_element = self.domain.zero()
 
             def _call(self, x):
@@ -267,3 +282,91 @@ class ZeroFunctional(Functional):
 
         return ZeroFunctionalConjugateFunctional()
 
+
+class ConstantFunctional(Functional):
+    def __init__(self, domain, constant):
+        """Initialize a ConstantFunctional instance.
+
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            The space of elements which the functional is acting on.
+        constant : element in `domain.field`
+            The constant value of the functional
+        """
+
+        super().__init__(domain=domain, linear=True, convex=True,
+                         concave=True, smooth=True, grad_lipschitz=0)
+
+        if constant not in self.range:
+            raise TypeError('constant {} not in the range {}.'
+                            ''.format(constant, self.range))
+
+        self._constant = constant
+
+    def _call(self, x):
+        """Applies the functional to the given point.
+
+        Returns
+        -------
+        `self(x)` : `float`
+            Evaluation of the functional, which is a constant.
+        """
+        return self._constant
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The operator that corresponds to the mapping
+
+        .. math::
+
+            x \\to \\nabla f(x)
+
+        where :math:`\\nabla f(x)` is the element used to evaluated
+        derivatives in a direction :math:`d` by
+        :math:`\\langle \\nabla f(x), d \\rangle`.
+        """
+        return ZeroOperator(self.domain)
+
+    def proximal(self, sigma=1.0):
+        """something...
+        """
+        # TODO: Update doc above
+
+        return IdentityOperator(self.domain)
+
+    @property
+    def conjugate_functional(self):
+        functional = self
+
+        class ConstantFunctionalConjugateFunctional(Functional):
+            """something...
+            """
+            # TODO: Update doc above
+
+            def __init__(self):
+                """Initialize a  ConstantFunctionalConjugateFunctional
+                instance.
+                """
+                super().__init__(functional.domain, linear=False, convex=True)
+                self.zero_element = self.domain.zero()
+
+            def _call(self, x):
+                """Applies the functional to the given point.
+
+                Returns
+                -------
+                `self(x)` : `float`
+                    Evaluation of the functional.
+                """
+
+                if x == self.zero_element:
+                    return 0
+                else:
+                    return np.inf
+
+        return ConstantFunctionalConjugateFunctional()

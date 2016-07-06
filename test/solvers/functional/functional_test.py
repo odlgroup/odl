@@ -33,24 +33,15 @@ from odl.util.testutils import all_almost_equal, example_element
 # Places for the accepted error when comparing results
 PLACES = 8
 
-# Discretization parameters
-n = 3
-
-# Discretized spaces
-space = odl.uniform_discr([0, 0], [1, 1], [n, n])
-
-# phantom = odl.util.shepp_logan(space, modified=True)*5+1
-
-# LogPhantom=np.log(phantom)
-
-
-# l1func = L1Norm(space)
-# l1prox = l1func.proximal(sigma=1.5)
-# l1conjFun = l1func.conjugate_functional
-
 
 def test_derivative():
     # Verify that the derivative does indeed work as expected
+
+    # Discretization parameters
+    n = 3
+
+    # Discretized spaces
+    space = odl.uniform_discr([0, 0], [1, 1], [n, n])
 
     x = space.element(np.random.standard_normal((n, n)))
 
@@ -73,6 +64,12 @@ def test_derivative():
 def test_scalar_multiplication_call():
     # Verify that the left and right scalar multiplication does
     # indeed work as expected
+
+    # Discretization parameters
+    n = 3
+
+    # Discretized spaces
+    space = odl.uniform_discr([0, 0], [1, 1], [n, n])
 
     x = space.element(np.random.standard_normal((n, n)))
 
@@ -98,6 +95,12 @@ def test_scalar_multiplication_conjugate_functional():
     # Verify that conjugate functional of right and left scalar multiplication
     # work as intended
 
+    # Discretization parameters
+    n = 3
+
+    # Discretized spaces
+    space = odl.uniform_discr([0, 0], [1, 1], [n, n])
+
     x = space.element(np.random.standard_normal((n, n)))
 
     scal = np.abs(np.random.standard_normal())
@@ -113,56 +116,30 @@ def test_scalar_multiplication_conjugate_functional():
                             places=PLACES)
 
 
-# TODO: Remove this one when the "Functional" branch is in and this is
-# exists as a defult functional
-class L2NormSquare(odl.solvers.Functional):
-    def __init__(self, domain):
-        super().__init__(domain=domain, linear=False, convex=True,
-                         concave=False, smooth=True, grad_lipschitz=2)
+def test_scalar_multiplication_proximal():
+    # Verify that conjugate functional of right and left scalar multiplication
+    # work as intended
 
-    def _call(self, x):
-        return np.abs(x).inner(np.abs(x))
+    # Discretization parameters
+    n = 3
 
-    @property
-    def gradient(self):
-        functional = self
+    # Discretized spaces
+    space = odl.uniform_discr([0, 0], [1, 1], [n, n])
 
-        class L2SquareGradient(odl.Operator):
-            def __init__(self):
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+    x = space.element(np.random.standard_normal((n, n)))
 
-            def _call(self, x):
-                return 2.0*x
+    scal = np.abs(np.random.standard_normal())
+    step_len = np.random.rand()
 
-        return L2SquareGradient()
+    F = odl.solvers.functional.L2Norm(space)
 
-    @property
-    def conjugate_functional(self):
-        functional = self
+    assert all_almost_equal(((scal*F).proximal(step_len))(x),
+                            (F.proximal(step_len*scal))(x),
+                            places=PLACES)
 
-        class L2SquareConjugateFunctional(odl.solvers.Functional):
-            def __init__(self):
-                super().__init__(functional.domain, linear=False)
-
-            def _call(self, x):
-                return x.norm()**2 * 1/4
-
-            @property
-            def gradient(self):
-                functional = self
-
-                class L2CCSquareGradient(odl.Operator):
-                    def __init__(self):
-                        super().__init__(functional.domain, functional.domain,
-                                         linear=False)
-
-                    def _call(self, x):
-                        return x*(1.0/2.0)
-
-                return L2CCSquareGradient()
-
-        return L2SquareConjugateFunctional()
+    assert all_almost_equal(((F*scal).proximal(step_len))(x),
+                            1/scal*(F.proximal(step_len*scal**2))(x*scal),
+                            places=PLACES)
 
 
 def test_convex_conjugate_translation():
@@ -175,7 +152,7 @@ def test_convex_conjugate_translation():
     translation = example_element(space)
 
     # Creating the functional ||x||_2^2
-    test_functional = L2NormSquare(space)
+    test_functional = odl.solvers.L2NormSquare(space)
     cc_test_functional = test_functional.conjugate_functional
 
     # Testing that translation needs to be a 'LinearSpaceVector'
@@ -227,7 +204,7 @@ def test_convex_conjugate_arg_scaling():
     scaling = np.random.rand()
 
     # Creating the functional ||x||_2^2
-    test_functional = L2NormSquare(space)
+    test_functional = odl.solvers.L2NormSquare(space)
     cc_test_functional = test_functional.conjugate_functional
 
     # Testing that not accept scaling with 0
@@ -273,7 +250,7 @@ def test_convex_conjugate_functional_scaling():
     scaling = np.random.rand()
 
     # Creating the functional ||x||_2^2
-    test_functional = L2NormSquare(space)
+    test_functional = odl.solvers.L2NormSquare(space)
     cc_test_functional = test_functional.conjugate_functional
 
     # Testing that not accept scaling with 0
@@ -321,7 +298,7 @@ def test_convex_conjugate_linear_perturbation():
     perturbation = example_element(space)
 
     # Creating the functional ||x||_2^2
-    test_functional = L2NormSquare(space)
+    test_functional = odl.solvers.L2NormSquare(space)
     cc_test_functional = test_functional.conjugate_functional
 
     # Testing that translation needs to be a 'LinearSpaceVector'
@@ -336,7 +313,7 @@ def test_convex_conjugate_linear_perturbation():
                                                  wrong_perturbation)
 
     # Creating the functional ||x||_2^2
-    test_functional = L2NormSquare(space)
+    test_functional = odl.solvers.L2NormSquare(space)
     cc_test_functional = test_functional.conjugate_functional
 
     # Create translated convex conjugate functional
@@ -393,8 +370,6 @@ def test_convex_conjugate_linear_perturbation():
 # TODO: implement translation for prox and conjugate functionals + tests
 
 # TODO: Test that prox and conjugate functionals are not returned for negative left scaling.
-
-# TODO: Move tests from convex_conjugate_utils_test to here!!!
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

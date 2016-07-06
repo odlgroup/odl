@@ -825,26 +825,36 @@ class ConstantOperator(Operator):
     ``ConstantOperator(vector)(x) <==> vector``
     """
 
-    def __init__(self, vector, domain=None):
-        """Initialize a new instance.
+    def __init__(self, vector, domain=None, range=None):
+        """Initialize an instance.
 
         Parameters
         ----------
         vector : `LinearSpaceVector`
             The vector constant to be returned
-
-        domain : `LinearSpace`, default : vector.space
+        domain : `LinearSpace`, optional
+            default is vector.space
             The domain of the operator.
+        range : `LinearSpace`, optional
+            default : vector.space
+            The range of the operator.
         """
-        if not isinstance(vector, LinearSpaceVector):
-            raise TypeError('`vector` {!r} not a LinearSpaceVector instance'
-                            ''.format(vector))
+        if domain is None or range is None:
+            if not isinstance(vector, LinearSpaceVector):
+                # TODO: rewirte error!
+                raise TypeError('`vector` {!r} not a LinearSpaceVector instance'
+                                ''.format(vector))
 
         if domain is None:
             domain = vector.space
+        if range is None:
+            range = vector.space
+        if vector not in range:
+            # TODO: rewirte error!
+            raise TypeError('')
 
         self.__vector = vector
-        super().__init__(domain, vector.space, linear=False)
+        super().__init__(domain, range)
 
     @property
     def vector(self):
@@ -877,9 +887,9 @@ class ConstantOperator(Operator):
         rn(3).element([1.0, 2.0, 3.0])
         """
         if out is None:
-            return self.range.element(self.vector.copy())
+            return self.range.element(self.__vector.copy())
         else:
-            out.assign(self.vector)
+            out.assign(self.__vector)
 
     def derivative(self, point):
         """Derivative of this operator, always zero.

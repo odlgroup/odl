@@ -27,16 +27,15 @@ from numbers import Number
 from odl.operator.operator import (
     Operator, OperatorComp, OperatorLeftScalarMult, OperatorRightScalarMult,
     OperatorRightVectorMult, OperatorSum)
+from odl.operator.default_ops import (ResidualOperator, IdentityOperator,
+                                      ConstantOperator)
 from odl.set.space import LinearSpaceVector
-#from odl.solvers.functional.convex_conjugate_utils import (convex_conjugate_translation, convex_conjugate_arg_scaling,
-#           convex_conjugate_functional_scaling, convex_conjugate_linear_perturbation)
-
-from odl import (ResidualOperator, IdentityOperator, ConstantOperator)
+from odl.solvers.advanced import proximal_arg_scaling
 
 
 __all__ = ('Functional', 'ConvexConjugateArgScaling',
            'ConvexConjugateFuncScaling', 'ConvexConjugateLinearPerturb',
-           'ConvexConjugateTranslation')
+           'ConvexConjugateTranslation', 'ConstantFunctional')
 
 
 class Functional(Operator):
@@ -193,30 +192,35 @@ class Functional(Operator):
         elif isinstance(other, Number):
             # Left multiplication is more efficient, so we can use this in the
             # case of linear operator.
-            # raise NotImplementedError
-            # if self.is_linear:
-            #    return FunctionalLeftScalarMult(self, other)
-            # else:
+            if self.is_linear:
+                return FunctionalLeftScalarMult(self, other)
+            else:
                 return FunctionalRightScalarMult(self, other)
-        elif isinstance(other, LinearSpaceVector) and other in self.domain:
-            raise NotImplementedError
-            return OperatorRightVectorMult(self, other.copy())
         else:
-            return NotImplemented
+            super().__mul__(self, other)
 
+    # TODO: Write doc
     def __rmul__(self, other):
-
-        if isinstance(other, Operator):
-            return OperatorComp(other, self)
-        elif isinstance(other, Number):
+        """..."""
+        if other in self.domain.field:
             return FunctionalLeftScalarMult(self, other)
-        #e lif other in self.range:
-        #    return OperatorLeftVectorMult(self, other.copy())
-        elif (isinstance(other, LinearSpaceVector) and
-              other.space.field == self.range):
-            return FunctionalLeftVectorMult(self, other.copy())
+        else:
+            super().__rmul__(self, other)
+
+    def __add__(self, other):
+        """Return ``self + other``."""
+        if other in self.domain.field:
+            # TODO: use the tmp here for speed?
+            return FunctionalScalarSum(self, other)
+        elif isinstance(other, Functional):
+            # TODO: use the tmp here for speed?
+            return FunctionalSum(self, other)
         else:
             return NotImplemented
+
+    def __sub__(self, other):
+        """Return ``self - other``."""
+        return self.__add__(-1 * other)
 
     @property
     def is_smooth(self):
@@ -261,8 +265,6 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
         scalar = func.range.element(scalar)
 
-        # Functional.__init__(self, domain=func.domain)
-
         if scalar > 0:
             Functional.__init__(self, domain=func.domain,
                                 linear=func.is_linear,
@@ -289,10 +291,6 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         self._func = func
         self._scalar = scalar
 
-
-#    def _call(self, x):
-#        return self._scalar*self._func(x)
-
     @property
     def gradient(self):
 
@@ -307,17 +305,15 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
                 return functional._scalar*functional._func.gradient(x)
 
         return LeftScalarMultGradient()
-#        return self._scalar * self._func.gradient(x)
 
     @property
     def conjugate_functional(self):
-        # return odl.solvers.functional.convex_conjugate_utils.
         return ConvexConjugateFuncScaling(
                 self._func.conjugate_functional, self._scalar)
 
-#    def proximal(self, sigma=1.0):
-#    proximal_functinoal_scaling(x,self._scalar, sigma)
-
+    def proximal(self, sigma=1.0):
+        sigma = float(sigma)
+        return self._func.proximal(sigma*self._scalar)
 
 
 class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
@@ -342,8 +338,6 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
         scalar = func.range.element(scalar)
 
-        #Functional.__init__(self, domain=func.domain)
-
         if scalar == 0:
             Functional.__init__(self, domain=func.domain, linear=True,
                                 smooth=True, concave=True, convex=True,
@@ -352,16 +346,13 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
             Functional.__init__(self, domain=func.domain,
                                 linear=func.is_linear, smooth=func.is_smooth,
                                 concave=func.is_concave, convex=func.is_convex,
-                                grad_lipschitz=np.abs(scalar)*func.grad_lipschitz)
+                                grad_lipschitz=(np.abs(scalar) *
+                                                func.grad_lipschitz))
 
         OperatorRightScalarMult.__init__(self, op=func, scalar=scalar)
 
         self._func = func
         self._scalar = scalar
-
-
-#    def _call(self, x):
-#        return self._func(self._scalar*x)
 
     @property
     def gradient(self):
@@ -384,8 +375,9 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         return ConvexConjugateArgScaling(self._func.conjugate_functional,
                                          self._scalar)
 
-#    def proximal(self, sigma=1.0):
- #proximal_functinoal_scaling_Right(x,self._scalar, sigma)
+    def proximal(self, sigma=1.0):
+        sigma = float(sigma)
+        return (proximal_arg_scaling(self._func.proximal, self._scalar))(sigma)
 
 
 class FunctionalComp(Functional, OperatorComp):
@@ -413,6 +405,13 @@ class FunctionalComp(Functional, OperatorComp):
                             ''.format(func))
 
         OperatorComp.__init__(self, left=func, right=op, tmp=tmp1)
+
+        Functional.__init__(self, domain=func.domain,
+                            linear=(func.is_linear and op.is_linear),
+                            smooth=(func.is_smooth and op.is_linear),
+                            concave=(func.is_concave and op.is_linear),
+                            convex=(func.is_convex and op.is_linear),
+                            grad_lipschitz=np.infty)
 
         if tmp2 is not None and tmp2 not in self._left.domain:
             raise TypeError('second temporary {!r} not in the domain '
@@ -479,6 +478,14 @@ class FunctionalSum(Functional, OperatorSum):
             raise TypeError('functional 2 {!r} is not a Functional instance.'
                             ''.format(func2))
 
+        Functional.__init__(domain=func1.domain,
+                            linear=(func1.is_linear and func2.is_linear),
+                            smooth=(func1.is_smooth and func2.is_smooth),
+                            concave=(func1.is_concave and func2.is_concave),
+                            convex=(func1.is_convex and func2.is_convex),
+                            grad_lipschitz=(func1.grad_lipschitz +
+                                            func2.grad_lipschitz))
+
         OperatorSum.__init__(self, func1, func2, tmp_ran=None,
                              tmp_dom=tmp_dom)
 
@@ -493,6 +500,49 @@ class FunctionalSum(Functional, OperatorSum):
             self._op2.gradient(x, out=tmp)
             out += tmp
             return out
+
+
+class FunctionalScalarSum(Functional, OperatorSum):
+    """Expression type for the sum of a functional and a scalar.
+
+    ``FunctionalScalarSum(func, scalar) <==> (x --> func(x) + scalar)``
+    """
+    def __init__(self, func, scalar, tmp_dom=None):
+        """..."""
+        if not isinstance(func, Functional):
+            raise TypeError('functional {!r} is no a Functional instance'
+                            ''.format(func))
+        if scalar not in func.range:
+            raise TypeError('the scalar {} is not in the range of the'
+                            'functional {!r}'.format(scalar, func))
+
+        Functional.__init__(domain=func.domain, linear=func.is_linear,
+                            smooth=func.is_smooth, concave=func.is_concave,
+                            convex=func.is_convex,
+                            grad_lipschitz=func.grad_lipschitz)
+
+        OperatorSum.__init__(self, func,
+                             ConstantOperator(vector=scalar,
+                                              domain=func.domain,
+                                              range=func.range),
+                             tmp_ran=None, tmp_dom=tmp_dom)
+
+        self.original_func = func
+        self.scalar = scalar
+
+        @property
+        def gradient(self):
+            return self.original_func.gradient
+
+        def proximal(self, sigma=1.0):
+            return self.original_func.proximal(sigma)
+
+        @property
+        def conjugate_functional(self):
+            return self.original_func.conjugate_functional - self.scalar
+
+        def derivative(self, point):
+            return self.original_func.derivative(point)
 
 
 class ConvexConjugateTranslation(Functional):
