@@ -61,47 +61,55 @@ class FourierSpaceConvolution(Convolution):
     """Convolution implemented in Fourier space.
 
     This operator implements a discrete approximation to the continuous
-    convolution with a fixed kernel.
+    convolution with a fixed kernel. It is based on the Fourier
+    transform and usually performs better than `RealSpaceConvolution`,
+    except for small kernels.
     """
 
-    def __init__(self, domain, kernel, **kwargs):
+    def __init__(self, domain, kernel, kernel_mode='real', impl='default',
+                 **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         domain : `DiscreteLp`
-            Domain of the operator.
-        kernel :
-            Convolution kernel of this operator. The kernel can be
-            specified in several ways:
+            Uniformly discretized space of functions on which the
+            operator can act.
+        kernel : `DiscreteLpVector`, callable or array-like
+            Fixed kernel of the convolution operator. It can be
+            given in real or Fourier space (see ``kernel_mode``), and
+            specified in several ways, resulting in varying
+            `Operator.range`. In all cases, the kernel must have
+            the same number of dimensions as ``domain``, but the shapes
+            can be different.
 
-            domain `element-like` : The object is interpreted as the
-            real-space kernel representation (mode ``'real'``).
-            Valid for ``impl``: ``'numpy_ft', 'pyfftw_ft',
-            'scipy_convolve'``
+            `DiscreteLpVector` : If ``kernel_mode == 'real'``, the range
+            is shifted by the midpoint of the kernel domain. The extents
+            of ``domain`` and the kernel domain need to match.
+            If ``kernel_mode == 'fourier'``, the cell sizes in Fourier
+            space need to match, but the shapes can be different.
 
-            `element-like` for the range of `FourierTransform` defined
-            on ``dom`` : The object is interpreted as the Fourier
-            transform of a real-space kernel (mode ``ft`` or ``'ft_hc'``).
-            The correct space can be calculated with `reciprocal_space`.
-            Valid for ``impl``: ``'default_ft', 'pyfftw_ft'``
+            callable or array-like : If ``kernel_mode == 'real'``, the
+            kernel is interpreted as a continuous/discretized function
+            with support centered around zero, which leads to the range
+            of this operator being equal to its domain.
+            If ``kernel_mode == 'fourier'``, ``kernel`` must be understood
+            by the ``element`` method of the range of the Fourier
+            transform used in this convolution. For an array-like object,
+            this means that the shapes must match.
 
-            `array-like`, arbitrary length : The object is interpreted as
-            real-space kernel (mode ``'real'``) and can be shorter than
-            the convolved function.
-            Valid for ``impl``: ``'scipy_convolve'``
+            See ``Notes`` for further explanation.
 
         kernel_mode : {'real', 'fourier'}, optional
-            Specifies the way the kernel is to be interpreted. If not
-            provided, the kernel is tried to be converted into an element
-            of a reasonable space derived from ``domain``.
+            Specifies the way the kernel is to be interpreted:
 
             'real' : real-space kernel (default)
 
-            'fourier' : fourier-space kernel
+            'fourier' : Fourier-space kernel
 
         impl : `str`, optional
-            Implementation of the convolution. Available options are:
+            Implementation of the Fourier transform. Available options
+            are:
 
             'default' : Fourier transform using the default FFT
             implementation
@@ -109,23 +117,60 @@ class FourierSpaceConvolution(Convolution):
             'pyfftw' : Fourier transform using pyFFTW (faster than
             the default FT)
 
+        Other parameters
+        ----------------
         axes : sequence of `int`, optional
             Dimensions in which to convolve. Default: all axes
 
+        resample : str or sequence of str, optional
+            If the kernel represents a function sampled differently
+            from functions in ``domain``, this option defines the behavior
+            of the evaluation. The following values can be given (per axis
+            in the case of a sequence):
+
+            'domain' : Restrict / extend the kernel FT to the Fourier
+            domain of input functions.
+            This needs to be done only once and is generally
+            recommended as global choice.
+
+            'kernel' : Restrict / extend the FT of input functions to
+            match the Fourier domain of the kernel.
+
+            'down' : Restrict the FTs of both function and kernel to the
+            minimum of the Fourier domains.
+            Note that this can lead to loss of resolution.
+
+            'up' : Extend the FTs of both function and kernel to the
+            maximum of the Fourier domains.
+            Note that this can be computationally expensive.
+
+            Default: 'domain'
+
         scale : `bool`, optional
-            If `True`, scale the discrete convolution by
-            ``2*pi ** (ndim/2)``, such that it corresponds to a
+            If `True`, scale the discrete convolution with
+            ``(2*pi)**(ndim/2)``, such that it approximates a
             continuous convolution.
             Default: `True`
 
-        kwargs :
-            Extra arguments are passed to the transform when the
-            kernel FT is calculated.
+        kernel_scaled : bool, optional
+            If True, the kernel is interpreted as already scaled
+            as described under the ``scale`` argument.
+            Default: False
+
+        kernel_kwargs : dict, optional
+            Keyword arguments passed to the call of the kernel function
+            if given as a callable.
+
+        fourier_trafo : `FourierTransform` or callable, optional
+            Use this object to compute Fourier transforms instead of
+            the default one. Resizing operations in Fourier space
+            (see ``resample``) only work for a `FourierTransform`
+            operator.
 
         See also
         --------
-        FourierTransform : discretization of the continuous FT
-        scipy.signal.convolve : real-space convolution
+        FourierTransform
+        RealSpaceConvolution
 
         Notes
         -----
@@ -147,18 +192,30 @@ class FourierSpaceConvolution(Convolution):
           kernel :math:`k`, i.e. the linear operator
 
               :math:`\\big[\mathcal{C}_k(f)\\big](x) = [k \\ast f](x)`.
+
+        - If a 1D function defined on an interval of length :math:`L`
+          is sampled at a regular grid with step size :math:`s`, the
+          corresponding Fourier space grid has step size
+          :math:`\hat s = 2\pi / L` and the Fourier domain has extent
+          :math:`\hat L = 2\pi / s`. This means that resampling in real
+          space on the same interval corresponds to resizing the
+          Fourier domain (larger for smaller step size).
+
+          In higher dimensions, the same argument can be applied per
+          axis.
+
+        - Since resampling in Fourier space is known to produce
+          artefacts, it is not allowed in this implementation. This means
+          that the domains of definition of kernel and input functions
+          must have the same extent (shift is allowed).
         """
         # Basic checks
         if not isinstance(domain, DiscreteLp):
             raise TypeError('`domain` {!r} is not a `DiscreteLp` instance.'
                             ''.format(domain))
 
+        # TODO: calculate range
 
-        if ran is not None:
-            # TODO
-            raise NotImplementedError('custom range not implemented')
-        else:
-            ran = dom
 
         super().__init__(dom, ran, linear=True)
 
@@ -403,8 +460,8 @@ class RealSpaceConvolution(Convolution):
             operator can act.
         kernel : `DiscreteLpVector`, callable or array-like
             Fixed kernel of the convolution operator. It can be
-            specified in two ways, resulting in varying
-            `Operator.range`. In both cases, the kernel must have
+            specified in several ways, resulting in varying
+            `Operator.range`. In all cases, the kernel must have
             the same number of dimensions as ``domain``, but the shapes
             can be different.
 
@@ -432,16 +489,23 @@ class RealSpaceConvolution(Convolution):
             following values can be given (per axis in the case of a
             sequence):
 
-            'down' : Use the larger one of the two cell sizes (default).
+            'domain' : Resample the kernel to match the sampling of
+            ``domain``. This needs to be done only once and is generally
+            recommended as global choice.
 
-            'up' : Use the smaller one of the two cell sizes. Note that
-            this can be computationally expensive.
+            'kernel' : Resample input functions to match the kernel
+            sampling.
+
+            'down' : Use the larger one of the two cell sizes.
+            This can lead to loss of resolution.
+
+            'up' : Use the smaller one of the two cell sizes.
+            This can be computationally expensive.
 
         kernel_scaled : bool, optional
             If True, the kernel is interpreted as already scaled
             as described under the ``scale`` argument.
             Default: False
-
         kernel_kwargs : dict, optional
             Keyword arguments passed to the call of the kernel function
             if given as a callable.
@@ -533,6 +597,7 @@ class RealSpaceConvolution(Convolution):
         self._impl = 'scipy_convolve'
 
         # Handle the `resample` input parameter
+        # TODO: handle 'domain' and 'kernel'
         resample = kwargs.pop('resample', 'down')
         resample, resample_in = normalized_scalar_param_list(
             resample, length=self.domain.ndim,
