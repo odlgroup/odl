@@ -40,7 +40,6 @@ __all__ = ('Convolution', 'FourierSpaceConvolution', 'RealSpaceConvolution')
 
 _REAL_CONV_SUPPORTED_IMPL = ('scipy_convolve',)
 _FOURIER_CONV_SUPPORTED_IMPL = ('default', 'pyfftw')
-_FOURIER_CONV_SUPPORTED_KER_MODES = ('real', 'fourier')
 
 
 class Convolution(Operator):
@@ -222,18 +221,20 @@ class FourierSpaceConvolution(Convolution):
         # Handle kernel mode and impl
         impl = kwargs.pop('impl', 'default_ft')
         impl, impl_in = str(impl).lower(), impl
-        if impl not in _CONV_SUPPORTED_IMPL:
-            raise ValueError("implementation '{}' not understood."
+        if impl not in _FOURIER_CONV_SUPPORTED_IMPL:
+            raise ValueError("`impl` '{}' not understood."
                              ''.format(impl_in))
         self._impl = impl
 
-        ker_mode = kwargs.pop('kernel_mode', 'real')
-        ker_mode, ker_mode_in = str(ker_mode).lower(), ker_mode
-        if ker_mode not in _CONV_SUPPORTED_KER_MODES:
-            raise ValueError("kernel mode '{}' not understood."
-                             ''.format(ker_mode_in))
+        kernel_mode = kwargs.pop('kernel_mode', 'real')
+        kernel_mode, kernel_mode_in = str(kernel_mode).lower(), kernel_mode
+        if kernel_mode not in ('real', 'fourier'):
+            raise ValueError("`kernel_mode` '{}' not understood."
+                             ''.format(kernel_mode_in))
 
-        self._kernel_mode = ker_mode
+        self._kernel_mode = kernel_mode
+
+        # TODO: continue here
 
         use_own_ft = (self.impl in ('default_ft', 'pyfftw_ft'))
         if not use_own_ft and self.kernel_mode != 'real':
