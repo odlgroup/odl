@@ -27,41 +27,41 @@ where ``grad`` is the spatial gradient and ``g`` the given noisy data.
 import numpy as np
 import scipy.misc
 import odl
-import odl.solvers as odlsol
 
-# Parameters
-n = 256
+# Load image
+image = np.rot90(scipy.misc.ascent()[::2, ::2], 3)
+
+# Reading the size
+n = image.shape[0]
+m = image.shape[1]
 
 # Create a space
-space = odl.uniform_discr([0, 0], [n, n], [n, n])
+space = odl.uniform_discr([0, 0], [n, m], [n, m])
 
-# Load image and noise
-data = space.element(np.rot90(scipy.misc.ascent()[::2, ::2], 3))
+# Create data, noise and noisy data
+data = space.element(image)
 noise = odl.phantom.white_noise(space) * 10.0
-
-# Create noisy data
 noisy_data = data + noise
 data.show('Original data')
-noisy_data.show('Noisy convolved data')
-
+noisy_data.show('Noisy data')
 
 # Gradient for TV regularization
 gradient = odl.Gradient(space)
 
-# Assemble the linear operators. Here the TV-term is mapped into a composition
-# of the 1-norm and the gradient. See the documentation of the solver
-# `forward_backward_pd` for the general form of the problem.
+# Assemble the linear operators. Here the TV-term is represented as a
+# composition of the 1-norm and the gradient. See the documentation of the
+# solver `forward_backward_pd` for the general form of the problem.
 lin_ops = [gradient]
 
-# Create proximals for the convex conjugate of the 1-norm and the bound
+# Create proximals for the convex conjugates of the 1-norm and the bound
 # constrains.
-prox_cc_g = [odlsol.proximal_cconj_l1(gradient.range, lam=1e1,
-                                      isotropic=False)]
-prox_f = odlsol.proximal_box_constraint(space, 0, 255)
+prox_cc_g = [odl.solvers.proximal_cconj_l1(gradient.range, lam=1e1,
+                                           isotropic=False)]
+prox_f = odl.solvers.proximal_box_constraint(space, 0, 255)
 
 # This gradient encodes the differentiable term(s) of the goal functional,
 # which corresponds to the "forward" part of the method. In this example the
-# differentiable part is the 2-norm squared.
+# differentiable part is the squared 2-norm.
 grad_h = odl.ResidualOperator(odl.IdentityOperator(space), noisy_data)
 
 # Create initial guess for the solver.
@@ -71,6 +71,6 @@ x = noisy_data.copy()
 callback = (odl.solvers.CallbackShow(display_step=20, clim=[0, 255]) &
             odl.solvers.CallbackPrintIteration())
 
-# Call the solver
-odlsol.forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=1.0,
-                           sigma=[0.01], niter=1000, callback=callback)
+# Call the solver. x is updated in-place with the consecutive iterates.
+odl.solvers.forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=1.0,
+                                sigma=[0.01], niter=1000, callback=callback)

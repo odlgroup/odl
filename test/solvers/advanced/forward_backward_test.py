@@ -29,10 +29,11 @@ import numpy as np
 # Internal
 import odl
 from odl.solvers import forward_backward_pd
-from odl.util.testutils import all_almost_equal, example_element
+from odl.util.testutils import all_almost_equal, almost_equal, example_element
 
 # Places for the accepted error when comparing results
-PLACES = 8
+HIGH_ACCURACY = 8
+LOW_ACCURACY = 4
 
 
 def test_forward_backward_input_handling():
@@ -58,17 +59,17 @@ def test_forward_backward_input_handling():
     assert x == x0
 
     # Testing that sizes needs to agree:
-    # To few sigma_i:s
+    # Too few sigma_i:s
     with pytest.raises(ValueError):
         forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=1.0,
                             sigma=[1.0], niter=niter)
 
-    # To many operators
-    prox_cc_g_to_many = [odl.solvers.proximal_zero(space1),
-                         odl.solvers.proximal_zero(space1),
-                         odl.solvers.proximal_zero(space1)]
+    # Too many operators
+    prox_cc_g_too_many = [odl.solvers.proximal_zero(space1),
+                          odl.solvers.proximal_zero(space1),
+                          odl.solvers.proximal_zero(space1)]
     with pytest.raises(ValueError):
-        forward_backward_pd(x, prox_f, prox_cc_g_to_many, lin_ops, grad_h,
+        forward_backward_pd(x, prox_f, prox_cc_g_too_many, lin_ops, grad_h,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
 
     # Test for correct space
@@ -80,8 +81,9 @@ def test_forward_backward_input_handling():
 
 
 def test_forward_backward_basic():
-    """Test for the forward-backward solver by minimizing ||x||_2^2. The
-    general problem is of the form
+    """Test for the forward-backward solver by minimizing ||x||_2^2.
+
+    The general problem is of the form
 
         ``min_x f(x) + sum_i g_i(L_i x) + h(x)``
 
@@ -102,12 +104,14 @@ def test_forward_backward_basic():
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
                         sigma=[1.0], niter=10)
 
-    assert all_almost_equal(x, x_global_min, places=PLACES)
+    assert all_almost_equal(x, x_global_min, places=HIGH_ACCURACY)
 
 
 def test_forward_backward_with_lin_ops():
-    """Test for the forward-backward solver by minimizing ||x - b||_2^2 +
-    ||alpha * x||_2^2. The general problem is of the form
+    """Test for the forward-backward solver with linear operatros.
+
+    The test is done by minimizing ||x - b||_2^2 + ||alpha * x||_2^2. The
+    general problem is of the form
 
         ``min_x f(x) + sum_i g_i(L_i x) + h(x)``
 
@@ -136,25 +140,24 @@ def test_forward_backward_with_lin_ops():
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
                         sigma=[1.0], niter=20)
 
-    assert all_almost_equal(x, x_global_min, places=3)
+    assert all_almost_equal(x, x_global_min, places=LOW_ACCURACY)
 
 
 def test_forward_backward_with_li():
-    """Test for the forward-backward solver by minimizing the functional
-    ``(g @ l)(x) + h(x)``, where
+    """Test for the forward-backward solver with infimal convolution.
 
-        ``(g @ l)(x) = inf_y { g(x-y) + l(y) }``,
+    The test is done by minimizing the functional ``(g @ l)(x)``, where
 
-    g is the indicator function on [-1, 1], and l(x) = h(x) = 1/2||x - 5||_2^2.
-    The optimal solution to this problem is given by x in [4,6].
+        ``(g @ l)(x) = inf_y { g(y) + l(x-y) }``,
+
+    g is the indicator function on [-3, -1], and l(x) = 1/2||x||_2^2.
+    The optimal solution to this problem is given by x in [-3, -1].
     """
-    shift = -5
-    upper_lim = 1
-    lower_lim = -1
-    tol = 1e-8
+    # Parameter values for the box constraint
+    upper_lim = -1
+    lower_lim = -3
 
     space = odl.rn(1)
-    a = space.element(shift)
 
     lin_op = odl.IdentityOperator(space)
     lin_ops = [lin_op]
@@ -163,18 +166,61 @@ def test_forward_backward_with_li():
                                                      lower=lower_lim,
                                                      upper=upper_lim))]
     prox_f = odl.solvers.proximal_zero(space)
-    grad_h = odl.IdentityOperator(space) + odl.ConstantOperator(a)
+    grad_h = odl.ZeroOperator(space)
 
-    grad_cc_ls = [odl.IdentityOperator(space) + odl.ConstantOperator(a)]
+    grad_cc_ls = [odl.IdentityOperator(space)]
 
+    # Centering around a point further away from [-3,-1].
+    x = example_element(space) + space.element(3)
+    print(x)
+
+    forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
+                        sigma=[1.0], niter=20, grad_cc_l=grad_cc_ls)
+
+    solution_interv = odl.Interval(lower_lim - LOW_ACCURACY,
+                                   upper_lim + LOW_ACCURACY)
+    print(x)
+
+    assert x in solution_interv
+
+
+def test_forward_backward_with_li_and_h():
+    """Test for the forward-backward solver with infimal convolution.
+
+    The test is done by minimizing the functional ``(g @ l)(x) + h(x)``, where
+
+        ``(g @ l)(x) = inf_y { g(y) + l(x-y) }``,
+
+    g is the indicator function on [-3, -1], and l(x) = h(x) = 1/2||x||_2^2.
+    The optimal solution to this problem is given by x = 0.5.
+    """
+
+    # Parameter values for the box constraint
+    upper_lim = -1
+    lower_lim = -3
+
+    space = odl.rn(1)
+
+    lin_op = odl.IdentityOperator(space)
+    lin_ops = [lin_op]
+    prox_cc_g = [odl.solvers.proximal_cconj(
+                 odl.solvers.proximal_box_constraint(space,
+                                                     lower=lower_lim,
+                                                     upper=upper_lim))]
+    prox_f = odl.solvers.proximal_zero(space)
+    grad_h = odl.IdentityOperator(space)
+
+    grad_cc_ls = [odl.IdentityOperator(space)]
+
+    # Centering the initial guess around the optimal solution, to reduce the
+    # number of iterations needed.
     x = example_element(space)
 
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
                         sigma=[1.0], niter=20, grad_cc_l=grad_cc_ls)
 
-    solution_interv = odl.Interval(-shift + lower_lim - tol,
-                                   -shift + upper_lim + tol)
-    assert x in solution_interv
+    expected_result = space.element(-0.5)
+    assert almost_equal(x.data, expected_result.data, places=LOW_ACCURACY)
 
 
 if __name__ == '__main__':
