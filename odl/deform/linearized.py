@@ -52,7 +52,7 @@ def linear_deform(template, displacement, out=None):
 
     Parameters
     ----------
-    template : `DiscreteLp` element
+    template : `DiscreteLpVector`
         Template to be deformed by a displacement field.
     displacement : `ProductSpace` element
         The vector field (displacement field) used in the linearized
@@ -365,7 +365,7 @@ class LinDeformFixedDisp(Operator):
     Here, the ``y`` is an element in the domain.
     """
 
-    def __init__(self, displacement):
+    def __init__(self, displacement, domain=None):
         """Initialize a new instance.
 
         Parameters
@@ -384,16 +384,20 @@ class LinDeformFixedDisp(Operator):
         >>> op(template)
         uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 1.0, 1.0, 0.0])
         """
-        if not isinstance(displacement.space, ProductSpace):
-            raise TypeError('`displacement` {!r} not an element'
-                            'of `ProductSpace`'.format(displacement))
-        if not isinstance(displacement.space[0], DiscreteLp):
-            raise TypeError('`displacement[0]` {!r} not an element of'
-                            '`DiscreteLp`'.format(displacement[0]))
+        if domain is None:
+            if not isinstance(displacement.space, ProductSpace):
+                raise TypeError('`displacement` {!r} not an element'
+                                'of `ProductSpace`'.format(displacement))
+            if not isinstance(displacement.space[0], DiscreteLp):
+                raise TypeError('`displacement[0]` {!r} not an element of'
+                                '`DiscreteLp`'.format(displacement[0]))
 
-        domain_space = displacement[0].space
+            domain = displacement[0].space
+        else:
+            displacement = ProductSpace(domain, domain.ndim).element(
+                displacement)
 
-        Operator.__init__(self, domain_space, domain_space, linear=True)
+        Operator.__init__(self, domain, domain, linear=True)
 
         self.displacement = displacement
 
@@ -440,8 +444,8 @@ class LinDeformFixedDispAdj(Operator):
     and the ``y`` is an element in the domain.
 
     Here, ``exp(-div(v))`` is an approximation of the determinant of the
-    Jacobian of ``(Id + v)^{-1}``, which is accurate in some sense if the
-    magnitude of``v`` is close to ``0``.
+    Jacobian of ``(Id + v)^{-1}``, which is valid if the magnitude
+    of``v`` is close to ``0``.
     """
 
     def __init__(self, displacement):
@@ -466,11 +470,13 @@ class LinDeformFixedDispAdj(Operator):
         if not isinstance(displacement.space, ProductSpace):
             raise TypeError('`displacement` {!r} not an element'
                             'of `ProductSpace`'.format(displacement))
+        if not isinstance(displacement.space[0], DiscreteLp):
+            raise TypeError('`displacement[0]` {!r} not an element of'
+                            '`DiscreteLp`'.format(displacement[0]))
 
-        domain_space = displacement[0].space
-        range_space = domain_space
+        domain = displacement[0].space
 
-        Operator.__init__(self, domain_space, range_space, linear=True)
+        Operator.__init__(self, domain, domain, linear=True)
 
         self.displacement = displacement
 
