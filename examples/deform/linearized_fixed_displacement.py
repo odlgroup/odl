@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Simple example using the operators of linearized deformations."""
+"""
+Simple example using the operator of fixed-displacement linearized deformation.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -33,18 +35,17 @@ import odl
 # [-1, 1]^2 with 100 samples per dimension.
 discr_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100), interp='linear')
 
-# Discrete a displacement field space corresponding to the above
-# discrete reconstruction space
+# Create a product space for displacement field
 disp_field_space = odl.ProductSpace(discr_space, discr_space.ndim)
 
 # Create a template
 template = odl.phantom.cuboid(discr_space, [-0.5, -0.5], [-0.25, 0])
 
 # Define a displacement field that shifts an image horizontally by hx
-# to the right and vertically by hy up. The it rotates clockwise by theta.
+# to the right and vertically by hy upwards. The it rotates clockwise by theta.
 hx = -0.5
 hy = -0.5
-theta = np.pi/4
+theta = np.pi / 4
 disp_func = [lambda x: (np.cos(theta) - 1) * x[0] - np.sin(theta) * x[1] + hx,
              lambda x: np.sin(theta) * x[0] + (np.cos(theta) - 1) * x[1] + hy]
 
@@ -52,39 +53,8 @@ disp_func = [lambda x: (np.cos(theta) - 1) * x[0] - np.sin(theta) * x[1] + hx,
 disp_field = disp_field_space.element(disp_func)
 
 # Show template and displacement field
-template.show('template')
-disp_field.show('displacement field')
-
-
-# --- Example of LinDeformFixedTempl and its derivative,
-# and the adjoint of the derivative --- #
-
-
-# Define the deformation operator where template is fixed
-fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
-
-# Calculate the deformed template by the fixed template
-# linearized deformation operator
-deform_templ_fixed_templ = fixed_templ_op(disp_field)
-
-# Define the derivative of the fixed template linearized
-# deformation operator.
-fixed_templ_deriv_op = fixed_templ_op.derivative(disp_field)
-
-# Evaluate the derivative at the vector field that is only 1. This should be
-# the same as the pointwise inner product between linearly deformed
-# gradient and the said vector field
-vector_field = disp_field_space.one()
-fixed_templ_deriv = fixed_templ_deriv_op(vector_field)
-
-# Evaluate the adjoint of derivative at the element that is only 1
-func = discr_space.one()
-fixed_templ_adj = fixed_templ_deriv_op.adjoint(func)
-
-# Show results
-deform_templ_fixed_templ.show('deformed template fixed template')
-fixed_templ_deriv.show('derivative fixed template')
-fixed_templ_adj.show('adjoint fixed template')
+template.show('Template')
+disp_field.show('Displacement field')
 
 
 # --- Example of LinDeformFixedDisp and its adjoint --- #
@@ -93,13 +63,12 @@ fixed_templ_adj.show('adjoint fixed template')
 # Define the deformation operator where the displacement field is fixed
 fixed_disp_op = odl.deform.LinDeformFixedDisp(disp_field)
 
-# Calculate the deformed template
+# Apply the deformation operator to get the deformed template
 deform_templ_fixed_disp = fixed_disp_op(template)
 
-# Compute the adjoint of the fixed displacement
-# linearized deformation operator
+# Compute the adjoint of the operator
 fixed_disp_adj = fixed_disp_op.adjoint(template)
 
 # Show results
-deform_templ_fixed_disp.show('deformed template fixed displacement')
-fixed_disp_adj.show('adjoint fixed displacement')
+deform_templ_fixed_disp.show('Deformed template')
+fixed_disp_adj.show('Adjoint of operator applied to template')
