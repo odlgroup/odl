@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test operators of linearized deformations"""
+"""Tests for linearized deformation operators."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -41,16 +41,14 @@ def hat_function(x, **kwargs):
 
 
 def hat_function_grad0(x, **kwargs):
-    """First component of gradient of hat function with support in square
-    with side 2r."""
+    """First component of gradient of the hat function."""
     r = kwargs.pop('r', 0.5)
     tmp = np.where(abs(x[0]) >= 1e-6, -x[0] / abs(x[0]) * (r - abs(x[1])), 0)
     return tmp * (abs(x[0]) < r) * (abs(x[1]) < r)
 
 
 def hat_function_grad1(x, **kwargs):
-    """2nd component of gradient of hat function with support in square
-    with side 2r."""
+    """2nd component of gradient of the hat function."""
     r = kwargs.pop('r', 0.5)
     tmp = np.where(abs(x[1]) >= 1e-6, -x[1] / abs(x[1]) * (r - abs(x[0])), 0)
     return tmp * (abs(x[0]) < r) * (abs(x[1]) < r)
@@ -69,7 +67,8 @@ def disp_field1(x):
 
 
 def deform_hat(x, **kwargs):
-    """Analytic deformed hat function with support in square with side r.
+    """Analytic linear deformation of the hat function.
+
     The analytic displacement field (x,y) -> eps * (x+y, 3xy)."""
     r = kwargs.pop('r', 0.5)
     eps = 0.25
@@ -79,19 +78,19 @@ def deform_hat(x, **kwargs):
 
 
 def vector_field0(x):
-    """First component of analytic displacement field (x,y) -> x-y."""
+    """First component of analytic vector field (x,y) -> x-y."""
     return x[0] - x[1]
 
 
 def vector_field1(x):
-    """Second component of analytic displacement field (x,y) -> 4xy."""
+    """Second component of analytic vector field (x,y) -> 4xy."""
     return 4 * x[0] * x[1]
 
 
 def hat_deform_grad0(x, **kwargs):
-    """First component of the deformed gradient of the hat function,
-    which is the same as evaluating the gradient
-    at (x, y) + eps * (2x+y, y+3xy).
+    """First component of the deformed gradient of the hat function.
+
+    It is the same as evaluating the gradient at (x, y) + eps * (2x+y, y+3xy).
     """
     r = kwargs.pop('r', 0.5)
     eps = 0.25
@@ -103,9 +102,9 @@ def hat_deform_grad0(x, **kwargs):
 
 
 def hat_deform_grad1(x, **kwargs):
-    """Second component of the deformed gradient of the hat function,
-    which is the same as evaluating the gradient
-    at (x, y) + eps * (2x+y, y+3xy).
+    """Second component of the deformed gradient of the hat function.
+
+    It is the same as evaluating the gradient at (x, y) + eps * (2x+y, y+3xy).
     """
     r = kwargs.pop('r', 0.5)
     eps = 0.25
@@ -116,7 +115,7 @@ def hat_deform_grad1(x, **kwargs):
     return tmp * (abs(x0) < r) * (abs(x1) < r)
 
 
-def fixed_templ_Deriv_hat(x, **kwargs):
+def fixed_templ_deriv_hat(x, **kwargs):
     r = kwargs.pop('r', 0.5)
     eps = 0.25
     x0 = x[0] + eps * (x[0] + x[1])
@@ -168,8 +167,9 @@ def given_hat(x, **kwargs):
 
 
 def inv_deform_hat(x, **kwargs):
-    """Analytic deformed hat function with support in square with side r.
-    The analytic displacement field (x,y) -> - eps * (x+y, 3xy)."""
+    """Analytic inverse deformation of the hat function.
+
+    The analytic inverse displacement field (x,y) -> - eps * (x+y, 3xy)."""
     r = kwargs.pop('r', 0.5)
     eps = 0.25
     x0 = x[0] - eps * (x[0] + x[1])
@@ -212,7 +212,7 @@ def test_fixed_templ():
 def test_fixed_templ_deriv():
     vector_field = grad_space.element([vector_field0, vector_field1])
 
-    fixed_templ_deriv_exact = discr_space.element(fixed_templ_Deriv_hat)
+    fixed_templ_deriv_exact = discr_space.element(fixed_templ_deriv_hat)
 
     fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(template,
                                                                disp_field)
@@ -265,7 +265,7 @@ def test_fixed_templ_adj():
 
 # Test deformation for LinDeformFixedDisp
 # Define the fixed displacement field (x,y) -> eps * (x+y, 3xy)
-# Define the exactytic template to be deformed as the hat function
+# Define the analytic template to be deformed as the hat function
 def test_fixed_disp():
     fixed_disp_op = odl.deform.LinDeformFixedDisp(disp_field)
     deform_templ_comp_2 = fixed_disp_op(template)
