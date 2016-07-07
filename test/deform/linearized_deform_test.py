@@ -130,7 +130,7 @@ def fixed_templ_Deriv_hat(x, **kwargs):
 
     v0 = x[0] - x[1]
     v1 = 4 * x[0] * x[1]
-    return dg0*v0 + dg1*v1
+    return dg0 * v0 + dg1 * v1
 
 
 def fixed_templ_adj_hat1(x, **kwargs):
@@ -230,8 +230,8 @@ def test_fixed_templ_deriv():
 
     fixed_templ_deriv_exact = discr_space.element(fixed_templ_Deriv_hat)
 
-    fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(
-        template, disp_field)
+    fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(template,
+                                                               disp_field)
     fixed_templ_deriv_comp_1 = fixed_templ_deriv_op(vector_field)
 
     fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
@@ -255,11 +255,10 @@ def test_fixed_templ_adj():
     fixed_templ_adj_exact = grad_space.element([fixed_templ_adj_hat1,
                                                fixed_templ_adj_hat2])
 
-    fixed_templ_adj_op = odl.deform.LinDeformFixedTemplDerivAdj(
-        template, disp_field)
+    fixed_templ_adj_op = odl.deform.LinDeformFixedTemplDerivAdj(template,
+                                                                disp_field)
     given_template = discr_space.element(given_hat)
-    fixed_templ_adj_comp_1 = fixed_templ_adj_op(
-        given_template)
+    fixed_templ_adj_comp_1 = fixed_templ_adj_op(given_template)
 
     fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(template,
                                                                disp_field)
@@ -307,7 +306,7 @@ def test_fixed_disp_adj():
 
     inv_deform_templ_exact = discr_space.element(inv_deform_hat)
     exp_div = discr_space.element(exp_div_inv_disp)
-    fixed_disp_adj_exact = exp_div*inv_deform_templ_exact
+    fixed_disp_adj_exact = exp_div * inv_deform_templ_exact
 
     tmp = (fixed_disp_adj_exact - fixed_disp_adj_comp_1).norm()
 
