@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Deformations based on ODL."""
+"""Operators and functions for linearized deformations in ODL."""
 
 from __future__ import absolute_import
 
@@ -23,9 +23,6 @@ from __future__ import absolute_import
 __all__ = ()
 
 
-# Propagate names defined in __all__ of all submodules into the top-level
-# module
-
-from . import linearized_deform
-from .linearized_deform import *
-__all__ += linearized_deform.__all__
+from . import linearized
+from .linearized import *
+__all__ += linearized.__all__
