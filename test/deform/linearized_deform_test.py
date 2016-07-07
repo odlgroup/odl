@@ -44,18 +44,16 @@ def hat_function_grad0(x, **kwargs):
     """First component of gradient of hat function with support in square
     with side 2r."""
     r = kwargs.pop('r', 0.5)
-    return (np.where(
-        abs(x[0]) >= 1e-6, -x[0] / abs(x[0]) * (r - abs(x[1])), 0) *
-            (abs(x[0]) < r) * (abs(x[1]) < r))
+    tmp = np.where(abs(x[0]) >= 1e-6, -x[0] / abs(x[0]) * (r - abs(x[1])), 0)
+    return tmp * (abs(x[0]) < r) * (abs(x[1]) < r)
 
 
 def hat_function_grad1(x, **kwargs):
     """2nd component of gradient of hat function with support in square
     with side 2r."""
     r = kwargs.pop('r', 0.5)
-    return (np.where(
-        abs(x[1]) >= 1e-6, -x[1] / abs(x[1]) * (r - abs(x[0])), 0) *
-            (abs(x[0]) < r) * (abs(x[1]) < r))
+    tmp = np.where(abs(x[1]) >= 1e-6, -x[1] / abs(x[1]) * (r - abs(x[0])), 0)
+    return tmp * (abs(x[0]) < r) * (abs(x[1]) < r)
 
 
 def disp_field0(x):
@@ -100,8 +98,8 @@ def hat_deform_grad0(x, **kwargs):
     x0 = x[0] + eps * (x[0] + x[1])
     x1 = x[1] + eps * 3 * x[0] * x[1]
 
-    return (np.where(abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0) *
-            (abs(x0) < r) * (abs(x1) < r))
+    tmp = np.where(abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0)
+    return tmp * (abs(x0) < r) * (abs(x1) < r)
 
 
 def hat_deform_grad1(x, **kwargs):
@@ -114,8 +112,8 @@ def hat_deform_grad1(x, **kwargs):
     x0 = x[0] + eps * (x[0] + x[1])
     x1 = x[1] + eps * 3 * x[0] * x[1]
 
-    return (np.where(abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0) *
-            (abs(x0) < r) * (abs(x1) < r))
+    tmp = np.where(abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0)
+    return tmp * (abs(x0) < r) * (abs(x1) < r)
 
 
 def fixed_templ_Deriv_hat(x, **kwargs):
@@ -124,42 +122,41 @@ def fixed_templ_Deriv_hat(x, **kwargs):
     x0 = x[0] + eps * (x[0] + x[1])
     x1 = x[1] + eps * 3 * x[0] * x[1]
 
-    dg0 = (np.where(
-        abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0) *
-            (abs(x0) < r) * (abs(x1) < r))
-    dg1 = (np.where(
-        abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0) *
-            (abs(x0) < r) * (abs(x1) < r))
+    tmp1 = np.where(abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0)
+    dg0 = tmp1 * (abs(x0) < r) * (abs(x1) < r)
+
+    tmp2 = np.where(abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0)
+    dg1 = tmp2 * (abs(x0) < r) * (abs(x1) < r)
+
     v0 = x[0] - x[1]
     v1 = 4 * x[0] * x[1]
-
     return dg0*v0 + dg1*v1
 
 
 def fixed_templ_adj_hat1(x, **kwargs):
     r = kwargs.pop('r', 0.5)
     eps = 0.25
-    x0 = x[0]+eps*(x[0]+x[1])
-    x1 = x[1]+eps*3*x[0]*x[1]
+    x0 = x[0] + eps * (x[0] + x[1])
+    x1 = x[1] + eps * 3 * x[0] * x[1]
 
-    dg0 = (np.where(
-        abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0) *
-            (abs(x0) < r) * (abs(x1) < r))
-    return (dg0 * (r - abs(x[0])) * (
-        abs(x[0]) < r) * (r - abs(x[1])) * (abs(x[1]) < r))
+    tmp1 = np.where(abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0)
+    dg0 = tmp1 * (abs(x0) < r) * (abs(x1) < r)
+
+    hat = (r - abs(x[0])) * (abs(x[0]) < r) * (r - abs(x[1])) * (abs(x[1]) < r)
+    return dg0 * hat
 
 
 def fixed_templ_adj_hat2(x, **kwargs):
     r = kwargs.pop('r', 0.5)
     eps = 0.25
-    x0 = x[0]+eps*(x[0]+x[1])
-    x1 = x[1]+eps*3*x[0]*x[1]
+    x0 = x[0] + eps * (x[0] + x[1])
+    x1 = x[1] + eps * 3 * x[0] * x[1]
 
-    dg1 = (np.where(
-        abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0) *
-            (abs(x0) < r) * (abs(x1) < r))
-    return (dg1 * (r - abs(x[0])) * (abs(x[0]) < r) * (
-        r - abs(x[1])) * (abs(x[1]) < r))
+    tmp = np.where(abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0)
+    dg1 = tmp * (abs(x0) < r) * (abs(x1) < r)
+
+    hat = (r - abs(x[0])) * (abs(x[0]) < r) * (r - abs(x[1])) * (abs(x[1]) < r)
+    return dg1 * hat
 
 
 def given_hat(x, **kwargs):
@@ -175,14 +172,14 @@ def inv_deform_hat(x, **kwargs):
     The analytic displacement field (x,y) -> - eps * (x+y, 3xy)."""
     r = kwargs.pop('r', 0.5)
     eps = 0.25
-    x0 = x[0]-eps*(x[0]+x[1])
-    x1 = x[1]-eps*3*x[0]*x[1]
+    x0 = x[0] - eps * (x[0] + x[1])
+    x1 = x[1] - eps * 3 * x[0] * x[1]
     return (r - abs(x0)) * (abs(x0) < r) * (r - abs(x1)) * (abs(x1) < r)
 
 
 def exp_div_inv_disp(x, **kwargs):
     eps = 0.25
-    x0 = -(eps+3*eps*x[0])
+    x0 = -(eps + 3 * eps * x[0])
     return np.exp(x0)
 
 
