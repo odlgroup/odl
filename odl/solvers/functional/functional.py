@@ -38,7 +38,7 @@ __all__ = ('Functional', 'ConvexConjugateArgScaling',
            'ConvexConjugateTranslation', 'TranslatedFunctional')
 
 
-# TODO: What if derivative is implemeted and  not gradient?
+# TODO: What if derivative is implemeted and not gradient?
 # In this case we would like to use this in scalar-multiplication, etc.
 
 class Functional(Operator):
@@ -72,7 +72,9 @@ class Functional(Operator):
             The Lipschitz constant of the gradient.
         """
 
-        super().__init__(domain=domain, range=domain.field, linear=linear)
+        # TODO: use super() instead? However, that does not seem to work? Why?
+        Operator.__init__(self, domain=domain,
+                          range=domain.field, linear=linear)
         self._is_smooth = bool(smooth)
         self._is_convex = bool(convex)
         self._is_concave = bool(concave)

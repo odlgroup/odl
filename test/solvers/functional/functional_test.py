@@ -347,29 +347,14 @@ def test_convex_conjugate_linear_perturbation():
     assert all_almost_equal(cc_functional_perturbed.derivative(x)(p),
                             expected_result, places=PLACES)
 
-
-
-# TODO: test prox functinoality for scaling
-
-# def test_prox:
-    # Verify that the left and right scalar multiplication does indeed work as expected
-
-#    x = space.element(np.random.standard_normal((n,n)))
-
-#    scal=np.random.standard_normal()
-#    F=odl.solvers.functional.L1Norm(space)
-
-    #make some tests that check that prox work.
-
-    #assert all_almost_equal((F*scal)(x), (F)(scal*x),
-    #                        places=PLACES)
-
-    #assert all_almost_equal((scal*F)(x), scal*(F(x)),
-    #                        places=PLACES)
+# TODO: make some tests that check that prox work.
 
 # TODO: implement translation for prox and conjugate functionals + tests
 
 # TODO: Test that prox and conjugate functionals are not returned for negative left scaling.
+
+# TODO: Test flags for positive/negative scalar multiplication
+# TODO: Test flags for translations etc.
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
