@@ -206,22 +206,6 @@ def test_fixed_templ():
     assert rlt_err < 0.03
 
 
-# Test deformed gradient
-def test_deformed_grad():
-    templ_deform_exact_grad = grad_space.element([hat_deform_grad0,
-                                                 hat_deform_grad1])
-
-    grad = odl.Gradient(template.space)
-    grad_templ = grad(template)
-    templ_deform_comp_grad = odl.deform.deform_grad(grad_templ, disp_field)
-
-    tmp = (templ_deform_exact_grad - templ_deform_comp_grad).norm()
-
-    rlt_err_deform_grad = tmp / templ_deform_comp_grad.norm()
-
-    assert rlt_err_deform_grad < 0.5
-
-
 # Test derivative for LinDeformFixedTemplDeriv
 # Define the vector field where the deriative of the fixed template
 # operator is evaluated. This will be the vector field (x,y) -> (x-y, 4xy)
