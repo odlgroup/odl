@@ -23,16 +23,17 @@ from future import standard_library
 standard_library.install_aliases()
 
 from odl.operator.operator import Operator
-from odl import ProductSpace, DiscreteLp, Gradient, PointwiseInner, Divergence
+from odl import ProductSpace, DiscreteLp, Gradient, Divergence
+from odl import PointwiseInner, DiscreteLpVector
 import numpy as np
 
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedTemplDeriv',
            'LinDeformFixedTemplDerivAdj', 'LinDeformFixedDisp',
-           'LinDeformFixedDispAdj', 'linear_deform', 'deform_grad')
+           'LinDeformFixedDispAdj')
 
 
-def linear_deform(template, displacement):
+def linear_deform(template, displacement, out=None):
     """Linearized deformation of a template with a displacement field.
 
     The template ``I`` is deformed by a displacement field ``v`` as:
@@ -60,7 +61,6 @@ def linear_deform(template, displacement):
     Returns
     -------
     deformed_template : `numpy.ndarray`
-        Deformed template as an numpy array.
 
     Examples
     --------
@@ -72,57 +72,10 @@ def linear_deform(template, displacement):
     >>> linear_deform(template, displacement_field)
     array([ 0.,  0.,  1.,  1.,  0.])
     """
-    image_pts = template.space.grid.points()
-    image_pts += np.asarray(displacement).T
-    return template.interpolation(image_pts.T, bounds_check=False)
-
-
-def deform_grad(grad_f, displacement):
-    """Compute the deformation of the template gradient.
-
-    The template gradient ``grad(I)`` after deformation with displacement
-    field ``v``:
-
-        grad(I)(Id + v)
-
-    where ``Id`` is the identity mapping:
-
-        y --> y
-
-    and the vector field ``v`` is a displacement field:
-
-        y --> v(y)
-
-    Here, the ``y`` is an element in the domain.
-
-    Parameters
-    ----------
-    grad_f: `ProductSpace` element
-        Gradient of the template, i.e. a vector field on the
-        image domain
-    displacement : `ProductSpace` element
-        The vector field (displacement field) used in the linearized
-        deformation.
-    Examples
-    --------
-    >>> import odl
-    >>> space = odl.uniform_discr(0, 1, 5)
-    >>> template = space.element([0, 0, 1, 0, 0])
-    >>> grad_op = odl.Gradient(template.space, method='forward')
-    >>> template_grad = grad_op(template)
-    >>> template_grad
-    ProductSpace(uniform_discr(0.0, 1.0, 5), 1).element([
-        [0.0, 5.0, -5.0, 0.0, 0.0]
-    ])
-    >>> disp_field_space = grad_op.range
-    >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
-    >>> deform_grad(template_grad, displacement_field)
-    ProductSpace(uniform_discr(0.0, 1.0, 5), 1).element([
-        [0.0, 5.0, -5.0, -5.0, 0.0]
-    ])
-    """
-    return displacement.space.element(
-        [linear_deform(gf, displacement) for gf in grad_f])
+    image_pts = template.space.points()
+    for i, vi in enumerate(displacement):
+        image_pts[:, i] += vi.asarray().ravel()
+    return template.interpolation(image_pts.T, out=out, bounds_check=False)
 
 
 class LinDeformFixedTempl(Operator):
@@ -145,13 +98,22 @@ class LinDeformFixedTempl(Operator):
     Here, the ``y`` is an element in the domain.
     """
 
-    def __init__(self, template):
+    def __init__(self, template, domain=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        template : `DiscreteLp` element
-            Fixed template that is to be deformed by the displacement field.
+        template : `DiscreteLpVector` or array-like
+            Fixed template that is to be deformed.
+            If ``domain`` is not given, ``template`` must
+            be a `DiscreteLpVector`, and the domain of this operator
+            is inferred from ``template.space``. If ``domain`` is
+            given, ``template`` can be anything that is understood
+            by the ``domain[0].element()`` method.
+        domain : product space of `DiscreteLp`, optional
+            Space of displacement fields on which this operator
+            acts, i.e. the operator domain. If not given, it is
+            inferred from ``template.space``.
 
         Examples
         --------
@@ -164,14 +126,17 @@ class LinDeformFixedTempl(Operator):
         >>> op(displacement_field)
         uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 1.0, 1.0, 0.0])
         """
-        if not isinstance(template.space, DiscreteLp):
-            raise TypeError('`template.space` {!r} not an element of'
-                            '`DiscreteLp`'.format(template.space))
+        if domain is None:
+            if not isinstance(template, DiscreteLpVector):
+                raise TypeError('`template` must be a `DiscreteLpVector`'
+                                'instance if `domain` is None, got {!r}'
+                                ''.format(template))
 
-        domain_space = ProductSpace(template.space, template.space.ndim)
-        range_space = template.space
+            domain = ProductSpace(template.space, template.space.ndim)
+        else:
+            template = domain[0].element(template)
 
-        Operator.__init__(self, domain_space, range_space, linear=False)
+        Operator.__init__(self, domain, domain[0], linear=False)
 
         self.template = template
 
@@ -183,11 +148,6 @@ class LinDeformFixedTempl(Operator):
         displacement : `domain` element
             The displacement field used in the linearized deformation.
         """
-        if displacement[0] not in self.template.space:
-            raise TypeError('`displacement[0]` {!r} not an element of'
-                            '`template.space`'.format(displacement[0],
-                                                      self.template.space))
-
         return linear_deform(self.template, displacement)
 
     def derivative(self, displacement):
@@ -236,7 +196,7 @@ class LinDeformFixedTemplDeriv(Operator):
         template : `DiscreteLp` element
             Fixed template deformed by the vector field.
         displacement: `ProductSpace` element
-            Point that the derivative needs to be computed at.
+            Point at which the derivative is taken.
 
         Examples
         --------
@@ -261,6 +221,13 @@ class LinDeformFixedTemplDeriv(Operator):
         self.template = template
         self.displacement = displacement
 
+        grad = Gradient(self.range, method='forward',
+                        padding_method='symmetric')
+        grad_template = grad(self.template)
+
+        self.def_grad = self.displacement.space.element(
+            [linear_deform(gf, self.displacement) for gf in grad_template])
+
     def _call(self, vector_field):
         """Implementation of ``self(vector_field)``.
 
@@ -270,19 +237,9 @@ class LinDeformFixedTemplDeriv(Operator):
             The evaluation point, i.e. a displacement field, for the
             deformed gradient of the template.
         """
-        if vector_field not in self.displacement.space:
-            raise TypeError('`vector_field` {!r} not an element of'
-                            '`displacement.space`'.format(
-                                vector_field, self.displacement.space))
+        inner_op = PointwiseInner(self.displacement.space, self.def_grad)
 
-        grad = Gradient(self.range, method='forward',
-                        padding_method='symmetric')
-        grad_template = grad(self.template)
-        def_grad = deform_grad(grad_template, self.displacement)
-
-        innerProdOp = PointwiseInner(self.displacement.space, def_grad)
-
-        return innerProdOp(vector_field)
+        return inner_op(vector_field)
 
     @property
     def adjoint(self):
@@ -293,7 +250,8 @@ class LinDeformFixedTemplDeriv(Operator):
         adjoint : `LinDeformFixedTemplDerivAdj`
             The adjoint of the operator.
         """
-        return LinDeformFixedTemplDerivAdj(self.template, self.displacement)
+        return LinDeformFixedTemplDerivAdj(self.template, self.displacement,
+                                           self.def_grad)
 
 
 class LinDeformFixedTemplDerivAdj(Operator):
@@ -318,7 +276,7 @@ class LinDeformFixedTemplDerivAdj(Operator):
     Here, the ``y`` is an element in the domain.
     """
 
-    def __init__(self, template, displacement):
+    def __init__(self, template, displacement, def_grad=None):
         """Initialize a new instance.
 
         Parameters
@@ -351,8 +309,18 @@ class LinDeformFixedTemplDerivAdj(Operator):
         Operator.__init__(self, template.space, displacement.space,
                           linear=True)
 
-        self.template = template
-        self.displacement = displacement
+        if def_grad is None:
+            self.template = template
+            self.displacement = displacement
+
+            grad = Gradient(self.domain, method='forward',
+                            padding_method='symmetric')
+            template_grad = grad(self.template)
+
+            self.def_grad = self.displacement.space.element(
+                [linear_deform(gf, self.displacement) for gf in template_grad])
+        else:
+            self.def_grad = def_grad
 
     def _call(self, func):
         """Implement ``self(func)```.
@@ -363,13 +331,7 @@ class LinDeformFixedTemplDerivAdj(Operator):
             The evaluation point, i.e. an element in the template space,
             for the deformed gradient of the template.
         """
-        grad = Gradient(self.domain, method='forward',
-                        padding_method='symmetric')
-        template_grad = grad(self.template)
-
-        def_grad = deform_grad(template_grad, self.displacement)
-
-        return [gf * func for gf in def_grad]
+        return [gf * func for gf in self.def_grad]
 
     @property
     def adjoint(self):
@@ -385,7 +347,7 @@ class LinDeformFixedTemplDerivAdj(Operator):
 
 class LinDeformFixedDisp(Operator):
 
-    """Operator using fixed displacement to map template to deformed template.
+    """Deformation operator with fixed displacement acting on template.
 
     This linear operator maps a template ``I`` to the corresponding
     deformed template using a fixed displacement field ``v``:
