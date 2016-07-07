@@ -84,8 +84,8 @@ def test_attenuation():
     det_radius = 20
     n_proj = 1
     det_param = det_nx_mm * det_nx_pix
-    dpart = odl.uniform_partition([-det_param/2, -det_param/2],
-                                  [det_param/2, det_param/2],
+    dpart = odl.uniform_partition([-det_param / 2, -det_param / 2],
+                                  [det_param / 2, det_param / 2],
                                   [det_nx_pix, det_ny_pix])
 
     apart = odl.uniform_partition(0, 2 * np.pi, n_proj)
@@ -104,7 +104,7 @@ def test_attenuation():
     proj_no_att = projector(vol_element)
     # Accept 0.1 % error
     places = 3
-    assert almost_equal(np.max(proj_no_att), 100*det_param/det_ny_pix,
+    assert almost_equal(np.max(proj_no_att), 100 * det_param / det_ny_pix,
                         places=places)
 
     attenuation = np.zeros((16, 16, 16))
@@ -113,7 +113,7 @@ def test_attenuation():
         domain, geometry, attenuation=attenuation, impl='niftyrec_cpu')
     proj_att = projector_att(vol_element)
 
-    value = 100*det_param/det_ny_pix * np.exp(-0.2*det_nx_mm)
+    value = 100 * det_param / det_ny_pix * np.exp(-0.2 * det_nx_mm)
     assert almost_equal(np.max(proj_att), value, places=places)
 
 
