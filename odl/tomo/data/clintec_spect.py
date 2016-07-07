@@ -27,6 +27,8 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
+from odl import (uniform_partition, uniform_discr)
+from odl.tomo.geometry import ParallelHoleCollimatorGeometry
 try:
     import dicom
     DICOM_AVAILABLE = True
@@ -145,3 +147,54 @@ def read_clintec_raw_spect_data(file_dicom):
     spect_data = dataset.pixel_array
 
     return spect_data, dataset
+
+
+def spect_clintec_geometries_from_file(spect_file):
+    """SPECT CLINTEC geometries from a SPECT data file
+
+    Parameters
+    ----------
+    spect_file : `str`
+        File where SPECT DICOM data is stored.
+
+    Returns
+    -------
+    spect_data : `array-like`
+        The SPECT data stored in a 3D array
+    geometry  : `ParallelHoleCollimatorGeometry`
+        The geometry of the SPECT transform for CLINTEC data.
+    domain : `DiscreteLp`
+        SPECT reconstruction domain, 3 dimensional.
+    """
+    spect_data, header = read_clintec_raw_spect_data(spect_file)
+    # Permutation order for NiftyRec
+    spect_data = np.transpose(np.float32(spect_data), (0, 2, 1))
+
+    rot_info = header.data_element("RotationInformationSequence")[0]
+    det_nx_pix = header.Columns
+    det_ny_pix = header.Rows
+    det_nx_mm = float(header.PixelSpacing[0])
+    angular_step = float(rot_info.AngularStep)
+    start_angle = float(rot_info.StartAngle)
+    num_proj = len(header.AngularViewVector)
+    stop_angle = start_angle + angular_step * num_proj
+    start_angle *= np.pi / 180
+    stop_angle *= np.pi / 180
+
+    det_rads = np.asarray(rot_info.RadialPosition)
+    det_radius = np.max(det_rads)
+
+    det_param = det_nx_mm * det_nx_pix
+    dpart = uniform_partition([-det_param, -det_param],
+                              [det_param, det_param],
+                              [det_nx_pix, det_ny_pix])
+
+    apart = uniform_partition(start_angle, stop_angle, num_proj)
+    geometry = ParallelHoleCollimatorGeometry(
+        apart, dpart, det_rad=det_radius)
+
+    domain = uniform_discr([-det_param / 2, -det_param / 2, -det_param / 2],
+                           [det_param / 2, det_param / 2, det_param / 2],
+                           [det_nx_pix, det_nx_pix, det_nx_pix])
+
+    return spect_data, geometry, domain
