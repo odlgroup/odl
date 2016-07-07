@@ -37,7 +37,8 @@ from odl import (ZeroOperator, IdentityOperator)
 #from odl.set.sets import Field
 
 
-__all__ = ('L1Norm', 'L2Norm', 'L2NormSquare', 'ZeroFunctional')
+__all__ = ('L1Norm', 'L2Norm', 'L2NormSquare', 'ZeroFunctional',
+           'ConstantFunctional')
 
 
 class L1Norm(Functional):
@@ -203,86 +204,6 @@ class L2NormSquare(Functional):
         return L2SquareConjugateFunctional()
 
 
-# TODO: Remove this one and simply make it a ConstantFunctional with const. 0.
-class ZeroFunctional(Functional):
-    def __init__(self, domain):
-        """Initialize a ZeroFunctional instance.
-
-        Parameters
-        ----------
-        domain : `LinearSpace`
-            The space of elements which the functional is acting on.
-        """
-        super().__init__(domain=domain, linear=True, convex=True,
-                         concave=True, smooth=True, grad_lipschitz=0)
-
-    def _call(self, x):
-        """Applies the functional to the given point.
-
-        Returns
-        -------
-        `self(x)` : `float`
-            Evaluation of the functional, which is always zero.
-        """
-        return 0
-
-    @property
-    def gradient(self):
-        """Gradient operator of the functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluated
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
-        return ZeroOperator(self.domain)
-
-    def proximal(self, sigma=1.0):
-        """something...
-        """
-        # TODO: Update doc above
-
-        return IdentityOperator(self.domain)
-
-    @property
-    def conjugate_functional(self):
-        functional = self
-
-        class ZeroFunctionalConjugateFunctional(Functional):
-            """something...
-            """
-            # TODO: Update doc above
-
-            def __init__(self):
-                """Initialize a ZeroFunctionalConjugateFunctional instance.
-                """
-                super().__init__(functional.domain, linear=False, convex=True)
-                self.zero_element = self.domain.zero()
-
-            def _call(self, x):
-                """Applies the functional to the given point.
-
-                Returns
-                -------
-                `self(x)` : `float`
-                    Evaluation of the functional.
-                """
-
-                if x == self.zero_element:
-                    return 0
-                else:
-                    return np.inf
-
-        return ZeroFunctionalConjugateFunctional()
-
-
 class ConstantFunctional(Functional):
     def __init__(self, domain, constant):
         """Initialize a ConstantFunctional instance.
@@ -370,3 +291,86 @@ class ConstantFunctional(Functional):
                     return np.inf
 
         return ConstantFunctionalConjugateFunctional()
+
+
+# TODO: Remove this one and simply make it a ConstantFunctional with constant
+# 0. In doing so ZeroFunctional should inherite from ConstantFunctional, and
+# init simply call super().__init__(domain, 0). However, what if 0 is not in
+# domain.field?
+class ZeroFunctional(Functional):
+    def __init__(self, domain):
+        """Initialize a ZeroFunctional instance.
+
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            The space of elements which the functional is acting on.
+        """
+        super().__init__(domain=domain, linear=True, convex=True,
+                         concave=True, smooth=True, grad_lipschitz=0)
+
+    def _call(self, x):
+        """Applies the functional to the given point.
+
+        Returns
+        -------
+        `self(x)` : `float`
+            Evaluation of the functional, which is always zero.
+        """
+        return 0
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The operator that corresponds to the mapping
+
+        .. math::
+
+            x \\to \\nabla f(x)
+
+        where :math:`\\nabla f(x)` is the element used to evaluated
+        derivatives in a direction :math:`d` by
+        :math:`\\langle \\nabla f(x), d \\rangle`.
+        """
+        return ZeroOperator(self.domain)
+
+    def proximal(self, sigma=1.0):
+        """something...
+        """
+        # TODO: Update doc above
+
+        return IdentityOperator(self.domain)
+
+    @property
+    def conjugate_functional(self):
+        functional = self
+
+        class ZeroFunctionalConjugateFunctional(Functional):
+            """something...
+            """
+            # TODO: Update doc above
+
+            def __init__(self):
+                """Initialize a ZeroFunctionalConjugateFunctional instance.
+                """
+                super().__init__(functional.domain, linear=False, convex=True)
+                self.zero_element = self.domain.zero()
+
+            def _call(self, x):
+                """Applies the functional to the given point.
+
+                Returns
+                -------
+                `self(x)` : `float`
+                    Evaluation of the functional.
+                """
+
+                if x == self.zero_element:
+                    return 0
+                else:
+                    return np.inf
+
+        return ZeroFunctionalConjugateFunctional()
