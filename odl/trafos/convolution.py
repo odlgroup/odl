@@ -65,7 +65,7 @@ class FourierSpaceConvolution(Convolution):
     except for small kernels.
     """
 
-    def __init__(self, domain, kernel, kernel_mode='real', impl='default',
+    def __init__(self, domain, kernel, kernel_mode='real', ft_impl='default',
                  **kwargs):
         """Initialize a new instance.
 
@@ -106,7 +106,7 @@ class FourierSpaceConvolution(Convolution):
 
             'fourier' : Fourier-space kernel
 
-        impl : `str`, optional
+        ft_impl : `str`, optional
             Implementation of the Fourier transform. Available options
             are:
 
@@ -159,6 +159,11 @@ class FourierSpaceConvolution(Convolution):
         kernel_kwargs : dict, optional
             Keyword arguments passed to the call of the kernel function
             if given as a callable.
+
+        ft_kwargs : dict, optional
+            Keyword arguments passed to the initializer of the internally
+            used `FourierTransform`. This will have no effect if a
+            ``fourier_trafo`` parameter is supplied.
 
         fourier_trafo : `FourierTransform` or callable, optional
             Use this object to compute Fourier transforms instead of
@@ -236,10 +241,15 @@ class FourierSpaceConvolution(Convolution):
 
         # TODO: continue here
 
-        use_own_ft = (self.impl in ('default_ft', 'pyfftw_ft'))
-        if not use_own_ft and self.kernel_mode != 'real':
-            raise ValueError("kernel mode 'real' is required for impl "
-                             "{}.".format(impl_in))
+        fourier_trafo = kwargs.pop('fourier_trafo', None)
+        if fourier_trafo is None:
+            self._fourier_trafo = FourierTransform(domain, impl=ft_impl)
+        if (fourier_trafo is not None and
+                not isinstance(fourier_trafo, Operator)):
+            ft_has_range = False
+            self._fourier_trafo = fourier_trafo
+
+
 
         self._axes = list(kwargs.pop('axes', (range(self.domain.ndim))))
         if ker_mode == 'real':
@@ -775,73 +785,6 @@ class RealSpaceConvolution(Convolution):
         return RealSpaceConvolution(self.range, adj_kernel, impl=self.impl,
                                     resample=self.resample, scale=True,
                                     kernel_scaled=True)
-
-
-def resize_array_symm(arr, newshp, out=None):
-    """Return the resized version of ``arr`` with shape ``newshp``.
-
-    In axes where ``newshp > arr.shape``, zeros are added evenly to
-    the left and the right, with preference for right if the number
-    of added zeros is odd.
-    Where ``newshp < arr.shape``, entries are discarded, in the same
-    symmetric manner as above.
-
-    Parameters
-    ----------
-    arr : array-like
-        Array to be resized.
-    newshp : int or sequence of int
-        Desired shape of the output array.
-    out : `numpy.ndarray`, optional
-        Array to write the result to. Must have shape ``newshp`` and
-        be able to hold the data type of the input array.
-
-    Returns
-    -------
-    resized : `numpy.ndarray`
-        Resized array created according to the above rules. If ``out``
-        was given, the returned object is a reference to it.
-    """
-    arr = np.asarray(arr)
-    newshp = tuple(normalized_scalar_param_list(newshp, arr.ndim,
-                                                param_conv=safe_int_conv))
-    if out is None:
-        out = np.zeros(newshp, dtype=arr.dtype)
-    else:
-        if not isinstance(out, np.ndarray):
-            raise TypeError('`out` must be a `numpy.ndarray` instance, got '
-                            '{!r}'.format(out))
-        if not np.can_cast(arr.dtype, out.dtype):
-            raise ValueError('data type {} of `arr` cannot be safely cast '
-                             'to data type {} of `out`'
-                             ''.format(arr.dtype, out.dtype))
-        if out.shape != newshp:
-            raise ValueError('`out` must have shape {}, got {}'
-                             ''.format(newshp, out.shape))
-        out.fill(0.0)
-
-    arr_slc, out_slc = [], []
-    for n_old, n_new in zip(arr.shape, out.shape):
-        if n_new > n_old:
-            iremove = n_new - n_old
-            istart = iremove // 2
-            istop = -(iremove - istart)
-            arr_slc.append(slice(None))
-            out_slc.append(slice(istart, istop))
-        elif n_new < n_old:
-            iadd = n_old - n_new
-            istart = iadd // 2
-            istop = -(iadd - istart)
-            arr_slc.append(slice(istart, istop))
-            out_slc.append(slice(None))
-        else:
-            arr_slc.append(slice(None))
-            out_slc.append(slice(None))
-
-    arr_slc = tuple(arr_slc)
-    out_slc = tuple(out_slc)
-    out[out_slc] = arr[arr_slc]
-    return out
 
 
 def zero_centered_discr_fromdiscr(discr, shape=None):
