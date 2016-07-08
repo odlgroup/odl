@@ -19,10 +19,14 @@ from __future__ import absolute_import
 
 __all__ = ()
 
+from . import proximal_operators
+from .proximal_operators import *
+__all__ += proximal_operators.__all__
+
 from . import chambolle_pock
 from .chambolle_pock import *
 __all__ += chambolle_pock.__all__
 
-from . import proximal_operators
-from .proximal_operators import *
-__all__ += proximal_operators.__all__
+from . import douglas_rachford
+from .douglas_rachford import *
+__all__ += douglas_rachford.__all__
