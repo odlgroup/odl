@@ -36,19 +36,8 @@ __all__ = ('LinDeformFixedTempl', 'LinDeformFixedTemplDeriv',
 def linear_deform(template, displacement, out=None):
     """Linearized deformation of a template with a displacement field.
 
-    The template ``I`` is deformed by a displacement field ``v`` as:
-
-        (I, v) --> I(Id + v)
-
-    where ``Id`` is the identity mapping:
-
-        y --> y
-
-    and the vector field ``v`` is a displacement field:
-
-        y --> v(y)
-
-    Here, the ``y`` is an element in the domain.
+    The function maps a gived template ``I`` and a given displacement
+    field ``v`` to the new function ``x --> I(x + v(x))``.
 
     Parameters
     ----------
@@ -82,20 +71,8 @@ class LinDeformFixedTempl(Operator):
 
     """Operator mapping a displacement field to corresponding deformed template.
 
-    The operator maps a displacement field to the corresponding
-    deformed fixed template ``I``:
-
-        v --> I(Id + v)
-
-    where ``Id`` is the identity mapping:
-
-        y --> y
-
-    and the vector field ``v`` is a displacement field:
-
-        y --> v(y)
-
-    Here, the ``y`` is an element in the domain.
+    The operator has a fixed template ``I`` and maps a displacement
+    field ``v`` to the new function ``x --> I(x + v(x))``.
     """
 
     def __init__(self, template, domain=None):
@@ -138,9 +115,9 @@ class LinDeformFixedTempl(Operator):
 
         Operator.__init__(self, domain, domain[0], linear=False)
 
-        self.template = template
+        self._template = template
 
-    def _call(self, displacement):
+    def _call(self, displacement, out=None):
         """Implementation of ``self(displacement)``.
 
         Parameters
@@ -148,7 +125,7 @@ class LinDeformFixedTempl(Operator):
         displacement : `domain` element
             The displacement field used in the linearized deformation.
         """
-        return linear_deform(self.template, displacement)
+        return linear_deform(self._template, displacement, out)
 
     def derivative(self, displacement):
         """Derivative of the operator in ``displacement``.
@@ -163,29 +140,16 @@ class LinDeformFixedTempl(Operator):
         derivative : `LinDeforFixedTempDeriv`
             The derivative evaluated at ``displacement``.
         """
-        return LinDeformFixedTemplDeriv(self.template, displacement)
+        return LinDeformFixedTemplDeriv(self._template, displacement)
 
 
 class LinDeformFixedTemplDeriv(Operator):
 
     """Derivative of the fixed template linearized deformation operator.
 
-    This operator computes the derivative of the fixed template
-    linearized deformation operator for the fixed
-    template ``I`` at given displacement ``v``:
-
-        u --> grad(I)(Id + v).T u
-
-    where the ``u`` is a given vector field and
-    the ``Id`` is the identity mapping:
-
-        y --> y
-
-    and the vector field ``v`` is a displacement field:
-
-        y --> v(y)
-
-    Here, the ``y`` is an element in the domain.
+    The operator has a given template ``I`` and a given
+    displacement field ``v``, and maps displacement ``u`` to the new
+    function ``x --> grad(I)(x + v(x)).T u(x)``.
     """
 
     def __init__(self, template, displacement):
@@ -221,10 +185,10 @@ class LinDeformFixedTemplDeriv(Operator):
         self.template = template
         self.displacement = displacement
 
+        # TODO maybe need to cache ``def_grad``
         grad = Gradient(self.range, method='forward',
                         padding_method='symmetric')
         grad_template = grad(self.template)
-
         self.def_grad = self.displacement.space.element(
             [linear_deform(gf, self.displacement) for gf in grad_template])
 
@@ -258,22 +222,9 @@ class LinDeformFixedTemplDerivAdj(Operator):
 
     """Adjoint operator of the derivative operator.
 
-    This operator computes the adjoint of the derivative of the fixed
-    template linearized deformation operator for the fixed template ``I``
-    at given displacement ``v``:
-
-        J --> grad(I)(Id + v) J
-
-    where the ``J`` is the given template and
-    the ``Id`` is the identity mapping:
-
-        y --> y
-
-    and the vector field ``v`` is a displacement mapping:
-
-        y --> v(y)
-
-    Here, the ``y`` is an element in the domain.
+    The operator has a given template ``I`` and a given displacement
+    field ``v``, and maps a template ``J`` to the new function
+    ``x --> grad(I)(x + v(x)) J(x)``.
     """
 
     def __init__(self, template, displacement, def_grad=None):
@@ -316,7 +267,6 @@ class LinDeformFixedTemplDerivAdj(Operator):
             grad = Gradient(self.domain, method='forward',
                             padding_method='symmetric')
             template_grad = grad(self.template)
-
             self.def_grad = self.displacement.space.element(
                 [linear_deform(gf, self.displacement) for gf in template_grad])
         else:
@@ -349,20 +299,8 @@ class LinDeformFixedDisp(Operator):
 
     """Deformation operator with fixed displacement acting on template.
 
-    This linear operator maps a template ``I`` to the corresponding
-    deformed template using a fixed displacement field ``v``:
-
-        I --> I(Id + v)
-
-    where the ``I`` is a given template, ``Id`` is the identity mapping:
-
-        y --> y
-
-    and the vector field ``v`` is a displacement mapping:
-
-        y --> v(y)
-
-    Here, the ``y`` is an element in the domain.
+    The operator has a fixed displacement field ``v`` and
+    maps a template ``I`` to the new function ``x --> I(x + v(x))``.
     """
 
     def __init__(self, displacement, domain=None):
@@ -370,8 +308,16 @@ class LinDeformFixedDisp(Operator):
 
         Parameters
         ----------
-        displacement : `ProductSpace` element
+        displacement : `ProductSpace` element or array-like
             Fixed displacement field used in the linearized deformation.
+            If ``domain`` is not given, ``displacement`` must
+            be a `ProductSpace` element, and the domain of this operator
+            is inferred from ``displacement[0].space``. If ``domain`` is
+            given, ``displacement`` can be anything that is understood
+            by the ``ProductSpace(domain, domain.ndim).element()`` method.
+        domain : `DiscreteLp`, optional
+            Space of templates on which this operator acts, i.e. the operator
+            domain. If not given, ``displacement[0].space`` is used as domain.
 
         Examples
         --------
@@ -399,9 +345,9 @@ class LinDeformFixedDisp(Operator):
 
         Operator.__init__(self, domain, domain, linear=True)
 
-        self.displacement = displacement
+        self._displacement = displacement
 
-    def _call(self, template):
+    def _call(self, template, out=None):
         """Implementation of ``self(template)``.
 
         Parameters
@@ -410,7 +356,7 @@ class LinDeformFixedDisp(Operator):
             Given template that is to be deformed by the fixed
             displacement field.
         """
-        return linear_deform(template, self.displacement)
+        return linear_deform(template, self._displacement, out)
 
     @property
     def adjoint(self):
@@ -421,29 +367,17 @@ class LinDeformFixedDisp(Operator):
         adjoint: `LinDeformFixedTemplDerivAdj`
             The adjoint of the operator.
         """
-        return LinDeformFixedDispAdj(self.displacement)
+        return LinDeformFixedDispAdj(self._displacement)
 
 
 class LinDeformFixedDispAdj(Operator):
 
     """Adjoint of the fixed displacement linearized deformation operator.
 
-    This operator computes the adjoint of the linear operator that
-    map a template ``I`` to its deformation using a fixed displacement ``v``:
+    The operator has a given displacement field ``v`` and maps a template
+    ``I`` to the new function ``x --> exp(-div(v(x))) * I(x - v(x))``.
 
-        I --> exp(-div(v)) * I(Id - v)
-
-    Here, the ``I`` is the given template, ``Id`` is the identity mapping:
-
-        y --> y
-
-    the vector field ``v`` is a displacement field:
-
-        y --> v(y)
-
-    and the ``y`` is an element in the domain.
-
-    Here, ``exp(-div(v))`` is an approximation of the determinant of the
+    Here, the ``exp(-div(v))`` is an approximation of the determinant of the
     Jacobian of ``(Id + v)^{-1}``, which is valid if the magnitude
     of``v`` is close to ``0``.
     """
@@ -489,6 +423,7 @@ class LinDeformFixedDispAdj(Operator):
             Given template that is to be deformed by the fixed
             displacement field.
         """
+        # TODO: maybe need to cache ``jacobian_det``
         div_op = Divergence(range=template.space, method='forward',
                             padding_method='symmetric')
         jacobian_det = np.exp(-div_op(self.displacement))
