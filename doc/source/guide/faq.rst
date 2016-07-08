@@ -16,22 +16,45 @@ General errors
         from . import diagnostics
 
         ImportError: cannot import diagnostics
+        
+   However, I did not change anything in ``diagnostics``? Where does the error come from?
 
-   **P:** When you for the first time import (=execute) a module or execute a
-   script, a `bytecode <https://en.wikipedia.org/wiki/Bytecode>`_ file is created,
-   basically to speed up execution next time. If you installed ``odl`` with
-   ``pip -e`` (``--editable``), these files can interfere with changes to your
-   codebase.
+   **P:** Usually, this error originates from invalid code in a completely different place. You
+   may have edited or added a module and broken the import chain in some way. Unfortunately, the
+   error message is always as above, not specific to the invalid module.
 
-   **S:** Delete the bytecode files. In a standard GNU/Linux shell, you can
-   simply invoke (in your ``odl`` working directory)
-   ::
+   Another more subtle reason can be related to old
+   `bytecode <https://en.wikipedia.org/wiki/Bytecode>`_ files. When you for the first time import
+   (=execute) a module or execute a script, a bytecode file is created, basically to speed up
+   execution next time. If you installed ``odl`` with ``pip -e`` (``--editable``), these files can
+   sometimes interfere with changes to your codebase.
 
-     find . -name *.pyc | xargs rm
+   **S:** Here are two things you can do to find the error more quickly.
+   
+   1. Delete the bytecode files. In a standard GNU/Linux shell, you can simply invoke (in your
+      ``odl`` working directory)
+
+      .. code-block:: bash
+
+         find . -name *.pyc | xargs rm
+   
+   2. Execute the modules you changed since the last working (importable) state. In most IDEs, you
+      have the possibility to run a currently opened file. Alternatively, you can run on the
+      command line
+      
+      .. code-block:: bash
+      
+         python path/to/your/module.py
+      
+      This will yield a specific error message for an erroneous module that helps you debugging your
+      changes.
 
 #. **Q:** When adding two vectors, the following error is shown::
 
-      TypeError: unsupported operand type(s) for -: 'DiscreteLpVector' and 'DiscreteLpVector'
+      TypeError: unsupported operand type(s) for +: 'DiscreteLpVector' and 'DiscreteLpVector'
+      
+   This seems completely illogical since it works in other situations and clearly must be supported.
+   Why is this error shown?
 
    **P:** The vectors you are trying to add are not in the same space,
    for example the following code gives the error
@@ -75,14 +98,16 @@ General errors
 Errors related to Python 2/3
 ----------------------------
 
-#. **Q:** I follow your recommendation to call ``super().__init__(dom, ran)``
+#. **Q:** I follow your recommendation to call ``super().__init__(domain, range)``
    in the ``__init__()`` method of ``MyOperator``, but I get the following
    error::
 
-	File <...>, line ..., in __init__
+    File <...>, line ..., in __init__
 		super().__init__(dom, ran)
 
 	TypeError: super() takes at least 1 argument (0 given)
+
+   What is this error related to and how can I fix it?
 
    **P:** The ``super()`` function `in Python 2
    <https://docs.python.org/2/library/functions.html#super>`_ has to
