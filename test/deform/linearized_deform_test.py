@@ -34,10 +34,8 @@ from odl.util.testutils import all_equal
 def hat_function(x, **kwargs):
     """Hat function with support in square with side 2r."""
     r = kwargs.pop('r', 0.5)
-    retval = (r - abs(x[0])) * (abs(x[0]) < r)
-    for xi in x[1:]:
-        retval = retval * (r - abs(xi)) * (abs(xi) < r)
-    return retval
+    tmp = (r - abs(x[0])) * (abs(x[0]) < r) * (r - abs(x[1])) * (abs(x[1]) < r)
+    return tmp
 
 
 def hat_function_grad0(x, **kwargs):
@@ -70,11 +68,9 @@ def deform_hat(x, **kwargs):
     """Analytic linear deformation of the hat function.
 
     The analytic displacement field (x,y) -> eps * (x+y, 3xy)."""
-    r = kwargs.pop('r', 0.5)
-    eps = 0.25
-    x0 = x[0] + eps * (x[0] + x[1])
-    x1 = x[1] + eps * 3 * x[0] * x[1]
-    return (r - abs(x0)) * (abs(x0) < r) * (r - abs(x1)) * (abs(x1) < r)
+    x0 = x[0] + disp_field0(x)
+    x1 = x[1] + disp_field1(x)
+    return hat_function([x0, x1])
 
 
 def vector_field0(x):
@@ -92,13 +88,9 @@ def hat_deform_grad0(x, **kwargs):
 
     It is the same as evaluating the gradient at (x, y) + eps * (2x+y, y+3xy).
     """
-    r = kwargs.pop('r', 0.5)
-    eps = 0.25
-    x0 = x[0] + eps * (x[0] + x[1])
-    x1 = x[1] + eps * 3 * x[0] * x[1]
-
-    tmp = np.where(abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0)
-    return tmp * (abs(x0) < r) * (abs(x1) < r)
+    x0 = x[0] + disp_field0(x)
+    x1 = x[1] + disp_field1(x)
+    return hat_function_grad0([x0, x1])
 
 
 def hat_deform_grad1(x, **kwargs):
@@ -106,75 +98,34 @@ def hat_deform_grad1(x, **kwargs):
 
     It is the same as evaluating the gradient at (x, y) + eps * (2x+y, y+3xy).
     """
-    r = kwargs.pop('r', 0.5)
-    eps = 0.25
-    x0 = x[0] + eps * (x[0] + x[1])
-    x1 = x[1] + eps * 3 * x[0] * x[1]
-
-    tmp = np.where(abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0)
-    return tmp * (abs(x0) < r) * (abs(x1) < r)
+    x0 = x[0] + disp_field0(x)
+    x1 = x[1] + disp_field1(x)
+    return hat_function_grad1([x0, x1])
 
 
 def fixed_templ_deriv_hat(x, **kwargs):
-    r = kwargs.pop('r', 0.5)
-    eps = 0.25
-    x0 = x[0] + eps * (x[0] + x[1])
-    x1 = x[1] + eps * 3 * x[0] * x[1]
-
-    tmp1 = np.where(abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0)
-    dg0 = tmp1 * (abs(x0) < r) * (abs(x1) < r)
-
-    tmp2 = np.where(abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0)
-    dg1 = tmp2 * (abs(x0) < r) * (abs(x1) < r)
-
-    v0 = x[0] - x[1]
-    v1 = 4 * x[0] * x[1]
+    dg0 = hat_deform_grad0(x)
+    dg1 = hat_deform_grad1(x)
+    v0 = vector_field0(x)
+    v1 = vector_field1(x)
     return dg0 * v0 + dg1 * v1
 
 
+def fixed_templ_adj_hat0(x, **kwargs):
+    return hat_deform_grad0(x) * hat_function(x)
+
+
 def fixed_templ_adj_hat1(x, **kwargs):
-    r = kwargs.pop('r', 0.5)
-    eps = 0.25
-    x0 = x[0] + eps * (x[0] + x[1])
-    x1 = x[1] + eps * 3 * x[0] * x[1]
-
-    tmp1 = np.where(abs(x0) >= 1e-6, -x0 / abs(x0) * (r - abs(x1)), 0)
-    dg0 = tmp1 * (abs(x0) < r) * (abs(x1) < r)
-
-    hat = (r - abs(x[0])) * (abs(x[0]) < r) * (r - abs(x[1])) * (abs(x[1]) < r)
-    return dg0 * hat
-
-
-def fixed_templ_adj_hat2(x, **kwargs):
-    r = kwargs.pop('r', 0.5)
-    eps = 0.25
-    x0 = x[0] + eps * (x[0] + x[1])
-    x1 = x[1] + eps * 3 * x[0] * x[1]
-
-    tmp = np.where(abs(x1) >= 1e-6, -x1 / abs(x1) * (r - abs(x0)), 0)
-    dg1 = tmp * (abs(x0) < r) * (abs(x1) < r)
-
-    hat = (r - abs(x[0])) * (abs(x[0]) < r) * (r - abs(x[1])) * (abs(x[1]) < r)
-    return dg1 * hat
-
-
-def given_hat(x, **kwargs):
-    r = kwargs.pop('r', 0.5)
-    retval = (r - abs(x[0])) * (abs(x[0]) < r)
-    for xi in x[1:]:
-        retval = retval * (r - abs(xi)) * (abs(xi) < r)
-    return retval
+    return hat_deform_grad1(x) * hat_function(x)
 
 
 def inv_deform_hat(x, **kwargs):
     """Analytic inverse deformation of the hat function.
 
     The analytic inverse displacement field (x,y) -> - eps * (x+y, 3xy)."""
-    r = kwargs.pop('r', 0.5)
-    eps = 0.25
-    x0 = x[0] - eps * (x[0] + x[1])
-    x1 = x[1] - eps * 3 * x[0] * x[1]
-    return (r - abs(x0)) * (abs(x0) < r) * (r - abs(x1)) * (abs(x1) < r)
+    x0 = x[0] - disp_field0(x)
+    x1 = x[1] - disp_field1(x)
+    return hat_function([x0, x1])
 
 
 def exp_div_inv_disp(x, **kwargs):
@@ -183,17 +134,17 @@ def exp_div_inv_disp(x, **kwargs):
     return np.exp(x0)
 
 
-# Define the analytic template as the hat function and its gradient
-discr_space = odl.uniform_discr([-1, -1], [1, 1], (30, 30), interp='linear')
-template = discr_space.element(hat_function)
-
-# Define the displacement field (x,y) -> eps * (x+y, 3xy)
-grad_space = odl.ProductSpace(discr_space, 2)
-disp_field = grad_space.element([disp_field0, disp_field1])
-
-
 # Test deformation for LinDeformFixedTempl
 def test_fixed_templ():
+    # Define the analytic template as the hat function and its gradient
+    discr_space = odl.uniform_discr(
+        [-1, -1], [1, 1], (30, 30), interp='linear')
+    template = discr_space.element(hat_function)
+
+    # Define the displacement field (x,y) -> eps * (x+y, 3xy)
+    grad_space = odl.ProductSpace(discr_space, discr_space.ndim)
+    disp_field = grad_space.element([disp_field0, disp_field1])
+
     deform_templ_exact = discr_space.element(deform_hat)
 
     fixed_templ_op = odl.deform.LinDeformFixedTempl(template)
@@ -210,6 +161,15 @@ def test_fixed_templ():
 # Define the vector field where the deriative of the fixed template
 # operator is evaluated. This will be the vector field (x,y) -> (x-y, 4xy)
 def test_fixed_templ_deriv():
+    # Define the analytic template as the hat function and its gradient
+    discr_space = odl.uniform_discr(
+        [-1, -1], [1, 1], (30, 30), interp='linear')
+    template = discr_space.element(hat_function)
+
+    # Define the displacement field (x,y) -> eps * (x+y, 3xy)
+    grad_space = odl.ProductSpace(discr_space, discr_space.ndim)
+    disp_field = grad_space.element([disp_field0, disp_field1])
+
     vector_field = grad_space.element([vector_field0, vector_field1])
 
     fixed_templ_deriv_exact = discr_space.element(fixed_templ_deriv_hat)
@@ -236,12 +196,21 @@ def test_fixed_templ_deriv():
 # the fixed template operator is evaluated.
 # This will be the same as the hat function.
 def test_fixed_templ_adj():
-    fixed_templ_adj_exact = grad_space.element([fixed_templ_adj_hat1,
-                                               fixed_templ_adj_hat2])
+    # Define the analytic template as the hat function and its gradient
+    discr_space = odl.uniform_discr(
+        [-1, -1], [1, 1], (30, 30), interp='linear')
+    template = discr_space.element(hat_function)
+
+    # Define the displacement field (x,y) -> eps * (x+y, 3xy)
+    grad_space = odl.ProductSpace(discr_space, discr_space.ndim)
+    disp_field = grad_space.element([disp_field0, disp_field1])
+
+    fixed_templ_adj_exact = grad_space.element([fixed_templ_adj_hat0,
+                                               fixed_templ_adj_hat1])
 
     fixed_templ_adj_op = odl.deform.LinDeformFixedTemplDerivAdj(template,
                                                                 disp_field)
-    given_template = discr_space.element(given_hat)
+    given_template = discr_space.element(hat_function)
     fixed_templ_adj_comp_1 = fixed_templ_adj_op(given_template)
 
     fixed_templ_deriv_op = odl.deform.LinDeformFixedTemplDeriv(template,
@@ -267,6 +236,15 @@ def test_fixed_templ_adj():
 # Define the fixed displacement field (x,y) -> eps * (x+y, 3xy)
 # Define the analytic template to be deformed as the hat function
 def test_fixed_disp():
+    # Define the analytic template as the hat function and its gradient
+    discr_space = odl.uniform_discr(
+        [-1, -1], [1, 1], (30, 30), interp='linear')
+    template = discr_space.element(hat_function)
+
+    # Define the displacement field (x,y) -> eps * (x+y, 3xy)
+    grad_space = odl.ProductSpace(discr_space, discr_space.ndim)
+    disp_field = grad_space.element([disp_field0, disp_field1])
+
     fixed_disp_op = odl.deform.LinDeformFixedDisp(disp_field)
     deform_templ_comp_2 = fixed_disp_op(template)
 
@@ -277,9 +255,18 @@ def test_fixed_disp():
 
 
 # Test adjoint of LinDeformFixedDisp
-# Define the template as the point of the adjoint computed at.
+# Define the template as the point of the adjoint taken.
 # Define the above template as the hat function
 def test_fixed_disp_adj():
+    # Define the analytic template as the hat function and its gradient
+    discr_space = odl.uniform_discr(
+        [-1, -1], [1, 1], (30, 30), interp='linear')
+    template = discr_space.element(hat_function)
+
+    # Define the displacement field (x,y) -> eps * (x+y, 3xy)
+    grad_space = odl.ProductSpace(discr_space, discr_space.ndim)
+    disp_field = grad_space.element([disp_field0, disp_field1])
+
     fixed_disp_adj_op = odl.deform.LinDeformFixedDispAdj(disp_field)
     fixed_disp_adj_comp_1 = fixed_disp_adj_op(template)
 
