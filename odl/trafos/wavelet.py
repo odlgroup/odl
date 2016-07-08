@@ -193,7 +193,7 @@ def pywt_coeff_to_array(coeff, size_list):
 
         ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
 
-        ``N`` refers to  the number of scaling levels
+        ``N`` refers to the number of scaling levels
 
     size_list : `list`
         A list containing the sizes of the wavelet (approximation

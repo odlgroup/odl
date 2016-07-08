@@ -191,7 +191,7 @@ class Gradient(PointwiseTensorFieldOperator):
         """Initialize a `Gradient` operator instance.
 
         Zero padding is assumed for the adjoint of the `Gradient`
-        operator to match  negative `Divergence` operator.
+        operator to match negative `Divergence` operator.
 
         Parameters
         ----------

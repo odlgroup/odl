@@ -305,7 +305,7 @@ class ComplexNumbers(Field):
         Returns
         -------
         contained : `bool`
-            `True` if  other is `ComplexNumbers`,
+            `True` if other is `ComplexNumbers`,
             `RealNumbers` or `Integers`, `False` else.
 
         Examples
@@ -443,7 +443,7 @@ class Integers(Set):
         Returns
         -------
         contained : `bool`
-            `True` if  other is `Integers`, `False` otherwise.
+            `True` if other is `Integers`, `False` otherwise.
 
         Examples
         --------

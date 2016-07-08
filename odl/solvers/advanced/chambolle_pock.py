@@ -78,7 +78,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         Evaluated at ``tau``, the function returns the proximal operator,
         prox[tau * G](x), of the functional G. The domain of G and its
         proximal operator instance are the space, X, of the primal variable
-        x  i.e. the domain of ``op``.
+        x i.e. the domain of ``op``.
     proximal_dual : `callable`
         Evaluated at ``sigma``, the function returns the proximal operator,
         prox[sigma * F^*](x), of the convex conjugate, F^*, of the function

@@ -116,8 +116,8 @@ class BacktrackingLineSearch(LineSearch):
             fulfill the condition and be accepted (see the references).
         max_num_iter : `int`, optional
             Maximum number of iterations allowed each time the line
-            search method is called. If not set, this number  is
-            calculated to allow a shortest step length of 0.0001.
+            search method is called. If not set, this number is calculated
+            to allow a shortest step length of 0.0001.
         """
         self.function = function
         self.tau = tau
