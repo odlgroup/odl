@@ -58,7 +58,7 @@ def _linear_deform(template, displacement, out=None):
     >>> disp_field_space = odl.ProductSpace(space, space.ndim)
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
-    >>> linear_deform(template, displacement_field)
+    >>> _linear_deform(template, displacement_field)
     array([ 0.,  0.,  1.,  1.,  0.])
     """
     image_pts = template.space.points()
