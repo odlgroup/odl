@@ -43,7 +43,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
         ``min_x f(x) + sum_i (g_i @ l_i)(L_i x)``
 
-    Where l_i are convex functions and  @ is the infimal convolution:
+    Where l_i are convex functions and @ is the infimal convolution:
 
         ``(f @ g)(x) = inf_y { f(x-y) + g(y) }``
 
@@ -52,17 +52,16 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     x : `LinearSpaceVector`
         Initial point, updated in place.
     prox_f : `callable`
-        Function returning an `Operator` when called with stepsize.
-        The Operator should be the proximal of ``f``.
+        `proximal factory` for the function ``f``.
     prox_cc_g : `sequence` of `callable`'s
-        Sequence of functions returning an operator when called with step size.
-        The `Operator` should be the proximal of ``g_i^*``.
+        Sequence of `proximal factory` for the convex conjuates of the
+        functions ``g_i``.
     L : `sequence` of `Operator`'s
         Sequence of `Opeartor`s` with as many elements as ``prox_cc_gs``.
     tau : `float`
-        Step size for ``f``.
+        Step size parameter for ``prox_f``.
     sigma : `sequence` of  `float`
-        Step size for the ``g_i``'s.
+        Step size parameters for the ``prox_cc_g``s.
     niter : `int`
         Number of iterations.
     callback : `Callback`, optional
@@ -71,8 +70,9 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     Other Parameters
     ----------------
     prox_cc_l : `sequence` of `callable`'s, optional
-        Sequence of functions returning an operator when called with step size.
-        The `Operator` should be the proximal of ``l_i^*``.
+        Sequence of `proximal factory` for the convex conjuates of the
+        functions ``l_i``.
+        If omitted, the simpler problem without ``l_i``  will be considered.
     lam : `float` or `callable`, optional
         Overrelaxation step size. If callable, should take an index (zero
         indexed) and return the corresponding step size.
@@ -155,9 +155,13 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
         for i in range(m):
             tmp = w2[i] + (sigma[i] / 2.0) * L[i](2.0 * z1 - w1)
             if prox_cc_l is not None:
+                # In this case the infimal convolution is used.
                 prox_cc_l[i](sigma[i])(tmp, out=z2[i])
             else:
-                z2[i] = tmp
+                # If the infimal convolution is not given, prox_cc_l is the
+                # identity and hence omitted. For more details, see the
+                # documentation.
+                z2[i].assign(tmp)
             v[i] += lam(k) * (z2[i] - p2[i])
 
         if callback is not None:

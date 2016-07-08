@@ -29,7 +29,14 @@ from odl.util.testutils import all_almost_equal
 
 
 def test_l1():
-    """Verify that the correct value is returned for l1 dist optimization."""
+    """Verify that the correct value is returned for l1 dist optimization.
+
+    Solves the optimization problem
+
+        min_x ||x - data_1||_1 + 0.5 ||x - data_2||_1
+
+    which has optimum value data_1.
+    """
 
     # Define the space
     space = odl.rn(5)
@@ -43,10 +50,10 @@ def test_l1():
 
     # Proximals
     prox_f = odl.solvers.proximal_l1(space, g=data_1)
+    prox_cc_g = [odl.solvers.proximal_cconj_l1(space, g=data_2, lam=0.5)]
 
     # Solve with f term dominating
     x = space.zero()
-    prox_cc_g = [odl.solvers.proximal_cconj_l1(space, g=data_2, lam=0.5)]
     odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, L,
                                     tau=3.0, sigma=[1.0], niter=5)
 

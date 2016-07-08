@@ -15,57 +15,56 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Total variation denoising using the Douglas-Rachford solver.
+"""Total variation MRI inversion using the Douglas-Rachford solver.
 
 Solves the optimization problem
 
-    min_{0 <= x <= 255}  1/2 ||x - g||_2^2 + lam || |grad(x)| ||_1
+    min_{0 <= x <= 1} ||Ax - g||_2^2 + lam || |grad(x)| ||_1
 
-where ``grad`` is the spatial gradient and ``g`` the given noisy data.
+where ``A`` is a simplified MRI imaging operator, ``grad`` is the spatial
+gradient and ``g`` the given noisy data.
 """
 
 import numpy as np
-import scipy
-
 import odl
 
 # Parameters
 n = 256
-filter_width = 4.0
+subsampling = 0.5  # propotion of data to use
 
 # Create a space
 space = odl.uniform_discr([0, 0], [n, n], [n, n])
 
-# Smoothing by fourier formula
+# Create MRI operator. First fourier transform, then subsample
 ft = odl.trafos.FourierTransform(space)
-const = filter_width**2 / 4.0**2  # by fourier transform of gaussian function
-gaussian = ft.range.element(lambda x: np.exp(-(x[0] ** 2 + x[1] ** 2) * const))
-smoothing = ft.inverse * gaussian * ft
+sampling_points = np.random.rand(*ft.range.shape) < subsampling
+sampling_vector = ft.range.element(sampling_points)
+mri_op = sampling_vector * ft
 
-# Load cameraman data and noise
-data = space.element(np.rot90(scipy.misc.ascent()[::2, ::2], 3))
-noise = odl.phantom.white_noise(space) * 0.001
-
-# Create noisy convolved data
-noisy_data = smoothing(data) + noise
-data.show('Original data')
-noisy_data.show('Noisy convolved data')
+# Create noisy MRI data
+phantom = odl.phantom.shepp_logan(space, modified=True)
+noisy_data = mri_op(phantom) + odl.phantom.white_noise(mri_op.range) * 0.1
+phantom.show('Phantom')
+noisy_data.show('Noisy MRI data')
 
 # Gradient for TV regularization
 gradient = odl.Gradient(space)
 
 # Assemble all operators
-lin_ops = [smoothing, gradient]
+lin_ops = [mri_op, gradient]
 
 # Create proximals as needed
-prox_cc_g = [odl.solvers.proximal_cconj_l1(space, g=noisy_data),
+prox_cc_g = [odl.solvers.proximal_cconj_l2(mri_op.range, g=noisy_data),
              odl.solvers.proximal_cconj_l1(gradient.range, lam=0.003)]
-prox_f = odl.solvers.proximal_box_constraint(space, 0, 255)
+prox_f = odl.solvers.proximal_box_constraint(space, 0, 1)
 
 # Solve
-x = noisy_data.copy()
-callback = (odl.solvers.CallbackShow(display_step=20, clim=[0, 255]) &
+x = mri_op.domain.zero()
+callback = (odl.solvers.CallbackShow(display_step=20, clim=[0, 1]) &
             odl.solvers.CallbackPrintIteration())
 odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
                                 tau=1.0, sigma=[1.0, 0.2],
-                                niter=1000, callback=callback)
+                                niter=500, callback=callback)
+
+x.show('douglas rachford result')
+ft.inverse(noisy_data).show('fourier inversion result')
