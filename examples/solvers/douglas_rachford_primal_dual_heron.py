@@ -17,17 +17,17 @@
 
 """Solves the generalized Heron problem using the Douglas-Rachford solver.
 
-Solves the optimization problem
+The generalized Heron problem is defined as
 
-    min_{x in R^2}  sum_i d(x, Omega_i)
+    min_{x in R^2}  sum_i d(x, Omega_i),
 
-Where d(x, Omega_i) is the distance from x to the set Omega_i. Here, the
+where d(x, Omega_i) is the distance from x to the set Omega_i. Here, the
 Omega_i are given by three rectangles.
 
 This uses the infimal convolution option of the Douglas-Rachford solver since
 the problem can be written as:
 
-    min_{x in R^2}  sum_i inf_{z \in Omega_i} ||x - z||
+    min_{x in R^2}  sum_i inf_{z \in Omega_i} ||x - z||.
 """
 
 import matplotlib.pyplot as plt
@@ -67,7 +67,7 @@ lam = lambda n: 1.0 + 1.0 / (n + 1)
 
 
 def print_objective(x):
-    """Calculates the objective value and prints it."""
+    """Calculate the objective value and prints it."""
     value = 0
     for minp, maxp in rectangles:
         x_proj = np.minimum(np.maximum(x, minp), maxp)

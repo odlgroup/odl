@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Implementation of the Douglas-Rachford splitting algorithm """
+"""Douglas-Rachford splitting algorithm for convex optimization."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -35,17 +35,17 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     Minimizes the sum of several convex functions composed with linear
     operators
 
-        ``min_x f(x) + sum_i g_i(L_i x)``
+        ``min_x f(x) + sum_i g_i(L_i x)``,
 
-    Where f, g_i are convex functions, L_i are linear `Operator`'s.
+    where f, g_i are convex functions, L_i are linear `Operator`'s.
 
     Can also be used to solve the more general problem
 
-        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x)``
+        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x)``,
 
-    Where l_i are convex functions and @ is the infimal convolution:
+    where l_i are convex functions and @ is the infimal convolution:
 
-        ``(f @ g)(x) = inf_y { f(x-y) + g(y) }``
+        ``(g @ l)(x) = inf_y g(y) + l(x - y)``.
 
     Parameters
     ----------
@@ -64,8 +64,8 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
         Step size parameters for the ``prox_cc_g``s.
     niter : `int`
         Number of iterations.
-    callback : `Callback`, optional
-        Show partial results.
+    callback : `callable`, optional
+        Function called with the current iterate after each iteration.
 
     Other Parameters
     ----------------
@@ -79,24 +79,42 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
     Notes
     -----
-    To guarantee convergence, the parameters ``tau``, ``sigma`` and ``L`` need
-    to satisfy
+    The mathematical problem to solve is
+
+    .. math::
+
+       \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x),
+
+    where :math:`f`, :math:`g_i`, :math:`l_i` are proper, convex and lower
+    semicontinuous. The infimal convolution :math:`g \Box l` is defined by
+
+    .. math::
+
+       (g \Box l)(x) = \inf_y g(y) + l(x - y).
+
+    The simplified problem can be obtained by setting
+
+    .. math::
+
+        l(x) = 0 \\text{ if } x = 0, \infty \\text{ else.}
+
+    To guarantee convergence, the parameters :math:`\\tau`, :math:`\\sigma_i`
+    and :math:`L_i` need to satisfy
 
     .. math::
 
        \\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2 < 4
 
-    The parameter ``lam`` needs to satisfy ``0 < lam < 2`` and if it is given
-    as a function it needs to satisfy
+    The parameter :math:`\\lambda` needs to satisfy :math:`0 < \\lambda < 2`
+    and if it is given as a function it needs to satisfy
 
     .. math::
 
-        \\sum_{i=1}^\infty \\lambda_i (2 - \\lambda_i) = +\infty
+        \\sum_{n=1}^\infty \\lambda_n (2 - \\lambda_n) = +\infty.
 
     References
     ----------
-    For references on the Forward-Backward algorithm, see algorithm 3.1 in
-    [BH2013]_.
+    For references on the algorithm, see algorithm 3.1 in [BH2013]_.
     """
 
     # Problem size
@@ -117,7 +135,8 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     # Get parameters from kwargs
     prox_cc_l = kwargs.pop('prox_cc_l', None)
     if prox_cc_l is not None and len(prox_cc_l) != m:
-        raise ValueError('`prox_cc_l` not same length as `L`')
+        raise ValueError('`prox_cc_l` does not have the same number of '
+                         'elements as `L`')
 
     lam_in = kwargs.pop('lam', 1.0)
     if not callable(lam_in) and not (0 < lam_in < 2):
