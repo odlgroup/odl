@@ -68,7 +68,7 @@ class SpaceTest(object):
         Parameters
         ----------
         space : `LinearSpace`
-            The space that should be tested
+            Space that should be tested.
         eps : `float`, optional
             Precision of the tests.
         """

@@ -416,9 +416,9 @@ class ComponentProjection(Operator):
         Parameters
         ----------
         space : `ProductSpace`
-            The space to project from
+            Space to project from.
         index : `int`, `slice`, or `iterable` [int]
-            The indices defining the subspace. If ``index`` is not
+            Indices defining the subspace. If ``index`` is not
             and `int`, the `Operator.range` of this
             operator is also a `ProductSpace`.
 
@@ -529,9 +529,9 @@ class ComponentProjectionAdjoint(Operator):
         Parameters
         ----------
         space : `ProductSpace`
-            The space to project to
+            Space to project to.
         index : `int`, `slice`, or `iterable` [int]
-            The indexes to project from
+            Indexes to project from.
 
         Examples
         --------

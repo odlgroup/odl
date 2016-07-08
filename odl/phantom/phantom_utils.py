@@ -57,7 +57,7 @@ def ellipse_phantom_2d(space, ellipses):
     Parameters
     ----------
     space : `DiscreteLp`
-        The space the phantom should be generated in.
+        Space the phantom should be generated in.
     ellipses : list of lists
         Each row should contain:
         'value', 'axis_1', 'axis_2', 'center_x', 'center_y', 'rotation'
@@ -181,7 +181,7 @@ def ellipse_phantom_3d(space, ellipses):
     Parameters
     ----------
     space : `DiscreteLp`
-        The space the phantom should be generated in.
+        Space the phantom should be generated in.
     ellipses : list of lists
         Each row should contain:
         'value', 'axis_1', 'axis_2', 'axis_2',

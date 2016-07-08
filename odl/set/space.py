@@ -211,11 +211,11 @@ class LinearSpace(Set):
         a : Scalar in the field of this space
             Scalar to multiply ``x1`` with.
         x1 : `LinearSpaceVector`
-            The first of the summands
+            First of the summands.
         b : Scalar, optional
             Scalar to multiply ``x2`` with.
         x2 : `LinearSpaceVector`, optional
-            The second of the summands
+            Second of the summands.
         out : `LinearSpaceVector`, optional
             The Vector that the result should be written to.
 

@@ -1018,10 +1018,10 @@ class OperatorSum(Operator):
         Parameters
         ----------
         op1 : `Operator`
-            The first summand. Its `Operator.range` must be a
+            First summand. Its `Operator.range` must be a
             `LinearSpace` or `Field`.
         op2 : `Operator`
-            The second summand. Must have the same
+            Second summand. Must have the same
             `Operator.domain` and `Operator.range` as
             ``op1``.
         tmp_ran : `Operator.range` `element`, optional

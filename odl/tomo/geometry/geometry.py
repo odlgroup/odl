@@ -217,7 +217,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
         Returns
         -------
         pos : `numpy.ndarray`, shape (`ndim`,)
-            The source position, a `ndim`-dimensional vector
+            Source position, a `ndim`-dimensional vector
         """
         # TODO: check and write test
         return np.asarray(
@@ -260,7 +260,7 @@ class DivergentBeamGeometry(Geometry):
         Returns
         -------
         pos : `numpy.ndarray`, shape (`ndim`,)
-            The source position, a `ndim`-dimensional vector
+            Source position, a `ndim`-dimensional vector
         """
 
     def det_to_src(self, mpar, dpar, normalized=True):

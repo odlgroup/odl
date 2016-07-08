@@ -291,7 +291,7 @@ class IntervalProd(Set):
         Parameters
         ----------
         other : `Set`
-            The set to be tested. It must implement a ``min()`` and a
+            Set to be tested. It must implement a ``min()`` and a
             ``max()`` method, otherwise a `TypeError` is raised.
         atol : `float`, optional
             The maximum allowed distance in 'inf'-norm between the
@@ -553,7 +553,7 @@ class IntervalProd(Set):
         Returns
         -------
         squeezed : `IntervalProd`
-            The squeezed set
+            Squeezed set
 
         Examples
         --------
@@ -629,7 +629,7 @@ class IntervalProd(Set):
         Parameters
         ----------
         other : `IntervalProd`, `float` or array-like
-            The set to be inserted. A `float` or array a is
+            Set to be inserted. A `float` or array a is
             treated as an ``IntervalProd(a, a)``.
 
         Examples

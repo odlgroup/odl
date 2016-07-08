@@ -1242,7 +1242,7 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
     Returns
     -------
     seqspc : `DiscreteLp`
-        The sequence-space-like discrete Lp
+        Sequence-space-like discrete Lp.
 
     Examples
     --------

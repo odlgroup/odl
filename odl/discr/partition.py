@@ -491,7 +491,7 @@ class RectPartition(object):
         Parameters
         ----------
         other : `RectPartition`,
-            The set to be inserted.
+            Set to be inserted.
 
         Examples
         --------

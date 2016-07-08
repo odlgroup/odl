@@ -86,7 +86,7 @@ def scikit_radon_forward(volume, geometry, range, out=None):
     Returns
     -------
     sinogram : ``range`` element
-        The sinogram given by the projection
+        Sinogram given by the projection.
     """
 
     # Check basic requirements. Fully checking should be in wrapper
@@ -115,18 +115,18 @@ def scikit_radon_back_projector(sinogram, geometry, range, out=None):
     Parameters
     ----------
     sinogram : `DiscreteLpVector`
-        The sinogram (projections) to backproject
+        Sinogram (projections) to backproject.
     geometry : `Geometry`
-        The projection geometry to use
+        The projection geometry to use.
     range : `DiscreteLp`
-        range of this projection (volume space)
+        range of this projection (volume space).
     out : ``range`` element, optional
-        An element in range that the result should be written to
+        An element in range that the result should be written to.
 
     Returns
     -------
     sinogram : ``range`` element
-        The sinogram given by the projection
+        Sinogram given by the projection.
     """
     theta = scikit_theta(geometry)
     scikit_range = scikit_sinogram_space(geometry, range, sinogram.space)

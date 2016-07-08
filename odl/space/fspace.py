@@ -222,7 +222,7 @@ class FunctionSetVector(Operator):
         Parameters
         ----------
         fset : `FunctionSet`
-            The set of functions this element lives in
+            Set of functions this element lives in.
         fcall : `callable`
             The actual instruction for out-of-place evaluation.
             It must return an `FunctionSet.range` element or a
@@ -1143,7 +1143,7 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
         Parameters
         ----------
         fspace : `FunctionSpace`
-            The set of functions this element lives in
+            Set of functions this element lives in.
         fcall : `callable`
             The actual instruction for out-of-place evaluation.
             It must return an `FunctionSet.range` element or a

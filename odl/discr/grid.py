@@ -538,7 +538,7 @@ class TensorGrid(Set):
         Parameters
         ----------
         other : `TensorGrid`
-            The set to be inserted
+            Set to be inserted.
 
         Examples
         --------
@@ -559,7 +559,7 @@ class TensorGrid(Set):
         Returns
         -------
         squeezed : `TensorGrid`
-            The squeezed grid
+            Squeezed grid.
 
         Examples
         --------
@@ -1041,7 +1041,7 @@ class RegularGrid(TensorGrid):
         Returns
         -------
         squeezed : `RegularGrid`
-            The squeezed grid
+            Squeezed grid
 
         Examples
         --------

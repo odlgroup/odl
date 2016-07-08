@@ -55,7 +55,6 @@ class StepLength(with_metaclass(ABCMeta, object)):
         Returns
         -------
         step : `float`
-            The step length
         """
 
 
@@ -79,7 +78,6 @@ class LineSearch(with_metaclass(ABCMeta, object)):
         Returns
         -------
         step : `float`
-            The step length
         """
 
 
@@ -108,7 +106,7 @@ class BacktrackingLineSearch(LineSearch):
         tau : `float`, optional
             The amount the step length is decreased in each iteration,
             as long as it does not fulfill the decrease condition.
-            The step length is updated as ``step_length *= tau``
+            The step length is updated as ``step_length *= tau``.
         c : `float`, optional
             The 'discount factor' on the
             ``step length * direction derivative``,
@@ -251,7 +249,6 @@ class BarzilaiBorweinStep(object):
         Returns
         -------
         step : `float`
-            The step length
         """
         if x == x0:
             return self.step0

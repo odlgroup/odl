@@ -44,7 +44,7 @@ class ScalingOperator(Operator):
         Parameters
         ----------
         space : `LinearSpace`
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on
         scalar : `LinearSpace.field` `element`
             An element of the field of the space which vectors are
             scaled with
@@ -141,7 +141,7 @@ class ZeroOperator(ScalingOperator):
         Parameters
         ----------
         space : `LinearSpace`
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on.
         """
         super().__init__(space, 0)
 
@@ -164,7 +164,7 @@ class IdentityOperator(ScalingOperator):
         Parameters
         ----------
         space : LinearSpace
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on.
         """
         super().__init__(space, 1)
 
@@ -192,9 +192,9 @@ class LinCombOperator(Operator):
         Parameters
         ----------
         space : `LinearSpace`
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on.
         a, b : scalar
-            Scalars to multiply ``x[0]`` and ``x[1]`` with, respectively
+            Scalars to multiply ``x[0]`` and ``x[1]`` with, respectively.
         """
         domain = ProductSpace(space, space)
         super().__init__(domain, space, linear=True)
@@ -265,9 +265,9 @@ class MultiplyOperator(Operator):
         Parameters
         ----------
         y : `LinearSpaceVector`
-            The value to multiply by
+            Value to multiply by.
         domain : `LinearSpace` or `Field`, optional
-            The set to take values in. Default: ``x.space``
+            Set to take values in. Default: ``x.space``
         """
         if domain is None:
             domain = y.space
@@ -390,9 +390,9 @@ class PowerOperator(Operator):
         Parameters
         ----------
         exponent : Number
-            The power to take
+            Power to take.
         domain : `LinearSpace` or `Field`, optional
-            The set to take values in
+            Set to take values in.
         """
 
         self.exponent = float(exponent)
