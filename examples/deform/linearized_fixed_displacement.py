@@ -39,8 +39,8 @@ disp_field_space = odl.ProductSpace(discr_space, discr_space.ndim)
 # Create a template
 template = odl.phantom.cuboid(discr_space, [-0.5, -0.5], [-0.25, 0])
 
-# Define a displacement field that shifts an image horizontally by hx
-# to the right and vertically by hy upwards. The it rotates clockwise by theta.
+# Define a displacement field that shifts an image by hx
+# to the right and by hy upwards. Then it rotates clockwise by theta.
 hx = -0.5
 hy = -0.5
 theta = np.pi / 4
