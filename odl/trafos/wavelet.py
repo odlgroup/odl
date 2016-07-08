@@ -36,6 +36,7 @@ from odl.operator import Operator
 
 
 __all__ = ('WaveletTransform', 'WaveletTransformInverse',
+           'WaveletTransformAdjoint',
            'PYWAVELETS_AVAILABLE')
 
 
@@ -153,7 +154,6 @@ def adjoint_correction_matrices(shape, wbasis, mode):
     dec_lo = wbasis.dec_lo
     dec_hi = wbasis.dec_hi
 
-    # TOP
     if mode == 'constant':
         T_lowpass = []
         T_highpass = []
@@ -167,26 +167,18 @@ def adjoint_correction_matrices(shape, wbasis, mode):
         T_lowpass = np.asarray(T_lowpass)[:, None]
         T_highpass = np.asarray(T_highpass)[:, None]
 
+        B_lowpass = []
+        B_highpass = []
+        stop = len_filter - 2
+        for _ in range(niter):
+            B_lowpass.append(sum(dec_lo[0:stop]))
+            B_highpass.append(sum(dec_hi[0:stop]))
+            stop -= 2
+
         if (num % 2 == 0):
-            B_lowpass = []
-            B_highpass = []
-            stop = len_filter - 2
-            for _ in range(niter):
-                B_lowpass.append(sum(dec_lo[0:stop]))
-                B_highpass.append(sum(dec_hi[0:stop]))
-                stop -= 2
             B_lowpass.reverse()
             B_highpass.reverse()
-
         else:
-            # Bottom for odd data
-            B_lowpass = []
-            B_highpass = []
-            stop = len_filter - 2
-            for _ in range(niter):
-                B_lowpass.append(sum(dec_lo[0:stop]))
-                B_highpass.append(sum(dec_hi[0:stop]))
-                stop -= 2
             B_lowpass.append(dec_lo[0])
             B_highpass.append(dec_hi[0])
             B_lowpass.reverse()
@@ -202,7 +194,7 @@ def adjoint_correction_matrices(shape, wbasis, mode):
         T_highpass = np.zeros((rows, cols))
         flip_filter_low = np.flipud(dec_lo)
         flip_filter_high = np.flipud(dec_hi)
-        start_T = 0  # cols - (len_filter - 2)
+        start_T = 0
         stop_filter = len_filter - 2
         for ii in range(rows):
             T_lowpass[ii, start_T::] = flip_filter_low[0:stop_filter]
@@ -320,32 +312,34 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     ndim = len(shape)
 
     if ndim == 1:
-        if mode == 'constant':
-            if wbasis.name.startswith('bior'):
-                adjoint_name = wbasis.name.replace('bior', 'rbio')
-                wbasis_adjoint = pywt.Wavelet(adjoint_name)
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis_adjoint, mode)
-                wbasis = wbasis_adjoint
-            else:
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis, mode)
+        if wbasis.name.startswith('bior'):
+            adjoint_name = wbasis.name.replace('bior', 'rbio')
+            wbasis_adjoint = pywt.Wavelet(adjoint_name)
+            T_low, T_high, B_low, B_high = adjoint_correction_matrices(
+                shape, wbasis_adjoint, mode)
+            wbasis = wbasis_adjoint
+        else:
+            T_low, T_high, B_low, B_high = adjoint_correction_matrices(
+                shape, wbasis, mode)
 
-            wcoef_list = array_to_pywt_list(wave_coeffs, size_list)
+        rows_Ttrans, cols_Ttrans = np.shape(np.transpose(T_low))
+        rows_Btrans, cols_Btrans = np.shape(np.transpose(B_low))
+        wcoef_list = array_to_pywt_list(wave_coeffs, size_list)
 
-            approx = wcoef_list[0]
-            for ii in range(1, nscales + 1):
-                detail = wcoef_list[ii]
-                tmp_list = []
-                tmp_list.append(approx)
-                tmp_list.append(detail)
-                shape = size_list[ii + 1]
-                size_list_tmp = coeff_size_list(shape, wbasis, mode, nscales=1)
-                wcoeffs_tmp = pywt_list_to_array(tmp_list, size_list_tmp)
-                approx = pywt.waverec(tmp_list, wbasis, mode)
-                if np.shape(approx) != shape:
-                    approx = approx[0:-1]
+        approx = wcoef_list[0]
+        for ii in range(1, nscales + 1):
+            detail = wcoef_list[ii]
+            tmp_list = []
+            tmp_list.append(approx)
+            tmp_list.append(detail)
+            shape = size_list[ii + 1]
+            size_list_tmp = coeff_size_list(shape, wbasis, mode, nscales=1)
+            wcoeffs_tmp = pywt_list_to_array(tmp_list, size_list_tmp)
+            approx = pywt.waverec(tmp_list, wbasis, mode)
+            if np.shape(approx) != shape:
+                approx = approx[0:-1]
 
+            if mode == 'constant':
                 corr = np.zeros_like(approx)
                 top_low_high = np.zeros_like(wcoeffs_tmp)
                 top_low_high[0:len(T_low)] = T_low[:, 0]
@@ -357,40 +351,9 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                 bot_low_high[-len(B_high)::] = B_high[:, 0]
                 corr[0] = np.dot(top_low_high, wcoeffs_tmp)
                 corr[-1] = np.dot(bot_low_high, wcoeffs_tmp)
-
                 approx += corr
 
-            corrected_adjoint_coeffs = corr + approx
-            return corrected_adjoint_coeffs
-
-        if mode == 'periodic':
-            if wbasis.name.startswith('bior'):
-                adjoint_name = wbasis.name.replace('bior', 'rbio')
-                wbasis_adjoint = pywt.Wavelet(adjoint_name)
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis_adjoint, mode)
-                wbasis = wbasis_adjoint
-            else:
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis, mode)
-
-            rows_Ttrans, cols_Ttrans = np.shape(np.transpose(T_low))
-            rows_Btrans, cols_Btrans = np.shape(np.transpose(B_low))
-
-            wcoef_list = array_to_pywt_list(wave_coeffs, size_list)
-            approx = wcoef_list[0]
-            for ii in range(1, nscales + 1):
-                detail = wcoef_list[ii]
-                tmp_list = []
-                tmp_list.append(approx)
-                tmp_list.append(detail)
-                shape = size_list[ii + 1]
-                size_list_tmp = coeff_size_list(shape, wbasis, mode, nscales=1)
-                wcoeffs_tmp = pywt_list_to_array(tmp_list, size_list_tmp)
-                approx = pywt.waverec(tmp_list, wbasis, mode)
-                if np.shape(approx) != shape:
-                    approx = approx[0:-1]
-
+            elif mode == 'periodic':
                 corr_mtx_part1 = np.zeros((rows_Btrans, np.size(wcoeffs_tmp)))
                 start_low = size_list[ii][0] - cols_Btrans
                 stop_low = size_list[ii][0]
@@ -411,35 +374,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                 corr_vect[-len(corr_part2)::] = corr_part2
 
                 approx += corr_vect
-            return approx
-
-        if mode == 'symmetric':
-            if wbasis.name.startswith('bior'):
-                adjoint_name = wbasis.name.replace('bior', 'rbio')
-                wbasis_adjoint = pywt.Wavelet(adjoint_name)
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis_adjoint, mode)
-                wbasis = wbasis_adjoint
-            else:
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis, mode)
-            rows_Ttrans, cols_Ttrans = np.shape(np.transpose(T_low))
-            rows_Btrans, cols_Btrans = np.shape(np.transpose(B_low))
-
-            wcoef_list = array_to_pywt_list(wave_coeffs, size_list)
-            approx = wcoef_list[0]
-            for ii in range(1, nscales + 1):
-                detail = wcoef_list[ii]
-                tmp_list = []
-                tmp_list.append(approx)
-                tmp_list.append(detail)
-                shape = size_list[ii + 1]
-                size_list_tmp = coeff_size_list(shape, wbasis, mode, nscales=1)
-                wcoeffs_tmp = pywt_list_to_array(tmp_list, size_list_tmp)
-                approx = pywt.waverec(tmp_list, wbasis, mode)
-                if np.shape(approx) != shape:
-                    approx = approx[0:-1]
-
+            elif mode == 'symmetric':
                 corr_mtx_part1 = np.zeros((rows_Ttrans, np.size(wcoeffs_tmp)))
                 corr_mtx_part1[:, 0:cols_Ttrans] = np.transpose(T_low)
                 start_high = size_list[ii][0]
@@ -479,7 +414,6 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                 shape = size_list[ii + 1]
                 l = pywt.idwt(approx, lh, wbasis, mode, axis=0)
                 h = pywt.idwt(hl, hh, wbasis, mode, axis=0)
-                # Correct l and h
                 correct_len_0 = shape[0]
                 if l.shape[0] != correct_len_0:
                     l = l[:-1, :]
@@ -539,104 +473,46 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             return approx
 
     if ndim == 3:
-        if mode == 'constant' or 'symmetric':
-            if wbasis.name.startswith('bior'):
-                adjoint_name = wbasis.name.replace('bior', 'rbio')
-                wbasis_adjoint = pywt.Wavelet(adjoint_name)
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis_adjoint, mode)
-                wbasis = wbasis_adjoint
-            else:
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis, mode)
+        if wbasis.name.startswith('bior'):
+            adjoint_name = wbasis.name.replace('bior', 'rbio')
+            wbasis_adjoint = pywt.Wavelet(adjoint_name)
+            T_low, T_high, B_low, B_high = adjoint_correction_matrices(
+                shape, wbasis_adjoint, mode)
+            wbasis = wbasis_adjoint
+        else:
+            T_low, T_high, B_low, B_high = adjoint_correction_matrices(
+                shape, wbasis, mode)
 
-            wcoef_list = array_to_pywt_list(wave_coeffs, size_list)
-            approx = wcoef_list[0]
-            for ii in range(1, nscales + 1):
-                details = wcoef_list[ii]
-                llh = details['aad']
-                lhl = details['ada']
-                lhh = details['add']
-                hll = details['daa']
-                hlh = details['dad']
-                hhl = details['dda']
-                hhh = details['ddd']
-                shape = size_list[ii + 1]
-                ll = pywt.idwt(approx, llh, wbasis, mode, axis=2)
-                lh = pywt.idwt(lhl, lhh, wbasis, mode, axis=2)
-                hl = pywt.idwt(hll, hlh, wbasis, mode, axis=2)
-                hh = pywt.idwt(hhl, hhh, wbasis, mode, axis=2)
-                correct_len_0 = shape[2]
-                if ll.shape[2] != correct_len_0:
-                    ll = ll[:, :, :-1]
-                    lh = lh[:, :, :-1]
-                    hl = hl[:, :, :-1]
-                    hh = hh[:, :, :-1]
+        wcoef_list = array_to_pywt_list(wave_coeffs, size_list)
+        approx = wcoef_list[0]
+        for ii in range(1, nscales + 1):
+            details = wcoef_list[ii]
+            llh = details['aad']
+            lhl = details['ada']
+            lhh = details['add']
+            hll = details['daa']
+            hlh = details['dad']
+            hhl = details['dda']
+            hhh = details['ddd']
+            shape = size_list[ii + 1]
+            ll = pywt.idwt(approx, llh, wbasis, mode, axis=2)
+            lh = pywt.idwt(lhl, lhh, wbasis, mode, axis=2)
+            hl = pywt.idwt(hll, hlh, wbasis, mode, axis=2)
+            hh = pywt.idwt(hhl, hhh, wbasis, mode, axis=2)
+            correct_len_0 = shape[2]
+            if ll.shape[2] != correct_len_0:
+                ll = ll[:, :, :-1]
+                lh = lh[:, :, :-1]
+                hl = hl[:, :, :-1]
+                hh = hh[:, :, :-1]
 
-                coeffs = [(ll, (approx, llh)), (lh, (lhl, lhh)),
-                          (hl, (hll, hlh)), (hh, (hhl, hhh))]
-                for rec, (rec_l, rec_h) in coeffs:
+            coeffs = [(ll, (approx, llh)), (lh, (lhl, lhh)),
+                      (hl, (hll, hlh)), (hh, (hhl, hhh))]
+            for rec, (rec_l, rec_h) in coeffs:
+                if mode == 'constant' or 'symmetric':
                     corr_one_level(rec, (rec_l, rec_h), (T_low, T_high),
                                    (B_low, B_high), axis=2)
-
-                l = pywt.idwt(ll, lh, wbasis, mode, axis=0)
-                h = pywt.idwt(hl, hh, wbasis, mode, axis=0)
-                correct_len_0 = shape[0]
-                if l.shape[0] != correct_len_0:
-                    l = l[:-1, :, :]
-                    h = h[:-1, :, :]
-                coeffs = [(l, (ll, lh)), (h, (hl, hh))]
-                for rec, (rec_l, rec_h) in coeffs:
-                    corr_one_level(rec, (rec_l, rec_h), (T_low, T_high),
-                                   (B_low, B_high), axis=0)
-
-                approx = pywt.idwt(l, h, wbasis, mode, axis=1)
-                correct_len_1 = shape[1]
-                if approx.shape[1] != correct_len_1:
-                    approx = approx[:, :-1, :]
-
-                corr_one_level(approx, (l, h), (T_low, T_high),
-                               (B_low, B_high), axis=1)
-            return approx
-
-        if mode == 'periodic':
-            if wbasis.name.startswith('bior'):
-                adjoint_name = wbasis.name.replace('bior', 'rbio')
-                wbasis_adjoint = pywt.Wavelet(adjoint_name)
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis_adjoint, mode)
-                wbasis = wbasis_adjoint
-            else:
-                T_low, T_high, B_low, B_high = adjoint_correction_matrices(
-                    shape, wbasis, mode)
-
-            wcoef_list = array_to_pywt_list(wave_coeffs, size_list)
-            approx = wcoef_list[0]
-
-            for ii in range(1, nscales + 1):
-                details = wcoef_list[ii]
-                llh = details['aad']
-                lhl = details['ada']
-                lhh = details['add']
-                hll = details['daa']
-                hlh = details['dad']
-                hhl = details['dda']
-                hhh = details['ddd']
-                shape = size_list[ii + 1]
-                ll = pywt.idwt(approx, llh, wbasis, mode, axis=2)
-                lh = pywt.idwt(lhl, lhh, wbasis, mode, axis=2)
-                hl = pywt.idwt(hll, hlh, wbasis, mode, axis=2)
-                hh = pywt.idwt(hhl, hhh, wbasis, mode, axis=2)
-                correct_len_0 = shape[2]
-                if ll.shape[2] != correct_len_0:
-                    ll = ll[:, :, :-1]
-                    lh = lh[:, :, :-1]
-                    hl = hl[:, :, :-1]
-                    hh = hh[:, :, :-1]
-
-                coeffs = [(ll, (approx, llh)), (lh, (lhl, lhh)),
-                          (hl, (hll, hlh)), (hh, (hhl, hhh))]
-                for rec, (rec_l, rec_h) in coeffs:
+                elif mode == 'periodic':
                     corr_one_level(rec, (rec_l, rec_h), (B_low, B_high),
                                    (T_low, T_high), axis=2)
 
@@ -648,16 +524,23 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                     h = h[:-1, :, :]
                 coeffs = [(l, (ll, lh)), (h, (hl, hh))]
                 for rec, (rec_l, rec_h) in coeffs:
-                    corr_one_level(rec, (rec_l, rec_h), (B_low, B_high),
-                                   (T_low, T_high), axis=0)
+                    if mode == 'constant' or 'symmetric':
+                        corr_one_level(rec, (rec_l, rec_h), (T_low, T_high),
+                                       (B_low, B_high), axis=0)
+                    elif mode == 'periodic':
+                        corr_one_level(rec, (rec_l, rec_h), (B_low, B_high),
+                                       (T_low, T_high), axis=0)
 
                 approx = pywt.idwt(l, h, wbasis, mode, axis=1)
                 correct_len_1 = shape[1]
                 if approx.shape[1] != correct_len_1:
                     approx = approx[:, :-1, :]
-
-                corr_one_level(approx, (l, h), (B_low, B_high),
-                               (T_low, T_high), axis=1)
+                if mode == 'constant' or 'symmetric':
+                    corr_one_level(approx, (l, h), (T_low, T_high),
+                                   (B_low, B_high), axis=1)
+                elif mode == 'periodic':
+                    corr_one_level(approx, (l, h), (B_low, B_high),
+                                   (T_low, T_high), axis=1)
             return approx
 
 
@@ -1241,7 +1124,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
             self.size_list = coeff_size_list(domain.shape, self.wbasis,
                                              self.pad_mode, nscales=None,
-                                             axes=self.axescoeffs)
+                                             axes=self.axes)
 
             rep = len(axes)
             keys = list(''.join(k) for k in product('ad', repeat=rep))
@@ -1338,18 +1221,52 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             If `is_orthogonal` is not true, the adjoint is not implemented.
         """
         if self.is_orthogonal:
-            output = self.inverse
-            output /= self.domain.cell_volume
-            return output
-            # return self.inverse
+            if self.wbasis.dec_len == 2:
+                output = self.inverse
+                output /= self.domain.cell_volume
+                return output
+            elif self.pad_mode == 'zero' or self.pad_mode == 'periodization':
+                output = self.inverse
+                output /= self.domain.cell_volume
+                return output
+            elif (self.pad_mode == 'constant' or
+                  self.pad_mode == 'symmetric' or
+                  self.pad_mode == 'periodic'):
+                output = WaveletTransformAdjoint(
+                    ran=self.domain, wbasis=self.wbasis, mode=self.pad_mode,
+                    nscales=self.nscales)
+                output /= self.domain.cell_volume
+                return output
+            else:
+                return super().adjoint
+
         elif self.wbasis.name.startswith('bior'):
-            adjoint_name = self.wbasis.name.replace('bior', 'rbio')
-            wbasis_adjoint = pywt.Wavelet(adjoint_name)
-            output = WaveletTransformInverse(
-                ran=self.domain, wbasis=wbasis_adjoint, mode=self.pad_mode,
-                nscales=self.nscales, axes=self.axes)
-            output /= self.domain.cell_volume
-            return output
+            if self.wbasis.dec_len == 2:
+                adjoint_name = self.wbasis.name.replace('bior', 'rbio')
+                wbasis_adjoint = pywt.Wavelet(adjoint_name)
+                output = WaveletTransformInverse(
+                    ran=self.domain, wbasis=wbasis_adjoint, mode=self.pad_mode,
+                    nscales=self.nscales, axes=self.axes)
+                output /= self.domain.cell_volume
+            elif self.pad_mode == 'zero' or 'periodization':
+                adjoint_name = self.wbasis.name.replace('bior', 'rbio')
+                wbasis_adjoint = pywt.Wavelet(adjoint_name)
+                output = WaveletTransformInverse(
+                    ran=self.domain, wbasis=wbasis_adjoint, mode=self.pad_mode,
+                    nscales=self.nscales, axes=self.axes)
+                output /= self.domain.cell_volume
+                return output
+
+            elif (self.pad_mode == 'constant' or
+                  self.pad_mode == 'symmetric' or
+                  self.pad_mode == 'periodic'):
+                output = WaveletTransformAdjoint(
+                    ran=self.domain, wbasis=self.wbasis, mode=self.pad_mode,
+                    nscales=self.nscales)
+                output /= self.domain.cell_volume
+                return output
+            else:
+                return super().adjoint
         else:
             return super().adjoint
 
@@ -1583,9 +1500,9 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         elif self.wbasis.name.startswith('bior'):
             adjoint_name = self.wbasis.name.replace('bior', 'rbio')
             wbasis_adjoint = pywt.Wavelet(adjoint_name)
-            return WaveletTransform(dom=self.range, wbasis=wbasis_adjoint,
-                                    mode=self.pad_mode, nscales=self.nscales,
-                                    axes=self.axes)
+            return WaveletTransform(
+                dom=self.range, wbasis=wbasis_adjoint, pad_mode=self.pad_mode,
+                nscales=self.nscales, axes=self.axes)
         else:
             return super().adjoint
 
@@ -1595,6 +1512,142 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         return WaveletTransform(domain=self.range, wbasis=self.wbasis,
                                 pad_mode=self.pad_mode, nscales=self.nscales,
                                 axes=self.axes)
+
+
+class WaveletTransformAdjoint(Operator):
+
+    """Discrete adjoint of wavelet tranform between discrete Lp spaces."""
+
+    def __init__(self, ran, wbasis, mode, nscales):
+        """Initialize a new instance.
+
+         Parameters
+        ----------
+        ran : `DiscreteLp`
+            Range of the wavelet transform (the "image domain").
+            The exponent :math:`p` of the discrete :math:`L^p`
+            space must be equal to 2.0.
+
+        wbasis :  ``pywt.Wavelet``
+            Describes properties of a selected wavelet basis.
+            See PyWavelet `documentation
+            <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
+
+            Possible wavelet families are:
+
+            Haar (``haar``)
+
+            Daubechies (``db``)
+
+            Symlets (``sym``)
+
+            Coiflets (``coif``)
+
+            Biorthogonal (``bior``)
+
+            Reverse biorthogonal (``rbio``)
+
+            Discrete FIR approximation of Meyer wavelet (``dmey``)
+
+        mode : `str`
+             Signal extention modes
+
+            'constant': constant padding -- border values are replicated
+
+            'symmetric': symmetric padding -- signal extension by
+            mirroring samples
+
+            'periodic': periodic padding -- signal is trated as a periodic one
+
+        nscales : `int`, optional
+            Number of scales in the coefficient list.
+            The maximum number of usable scales can be determined
+            by ``pywt.dwt_max_level``. For more information see
+            the corresponding `documentation of PyWavelets
+            <http://www.pybytes.com/pywavelets/ref/\
+dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
+-dwt-max-level>`_ .
+        """
+        if not isinstance(ran, DiscreteLp):
+            raise TypeError('domain {!r} is not a `DiscreteLp` instance.'
+                            ''.format(ran))
+
+        if ran.exponent != 2.0:
+            raise ValueError('domain Lp exponent is {} instead of 2.0.'
+                             ''.format(ran.exponent))
+
+        self.pad_mode = str(mode).lower()
+
+        if isinstance(wbasis, pywt.Wavelet):
+            self.wbasis = wbasis
+        else:
+            self.wbasis = pywt.Wavelet(wbasis)
+
+        if ran.ndim not in [1, 2, 3]:
+            raise NotImplementedError('Dimension of the domain {} not 1, '
+                                      '2 or 3'.format(len(ran.ndim)))
+
+        self.nscales = int(nscales)
+        max_level = pywt.dwt_max_level(ran.shape[0],
+                                       filter_len=self.wbasis.dec_len)
+        if self.nscales > max_level:
+            raise ValueError('Cannot use more than {} scaling levels, '
+                             'got {}. Maximum useful number of levels '
+                             'can be computed using pywt.dwt_max_level '
+                             ''.format(max_level, self.nscales))
+        self.size_list = coeff_size_list(ran.shape, self.wbasis, self.pad_mode,
+                                         self.nscales, axes=None)
+
+        multiplicity = {1: 1, 2: 3, 3: 7}
+        dom_size = (np.prod(self.size_list[0]) +
+                    sum(multiplicity[ran.ndim] * np.prod(shape)
+                        for shape in self.size_list[1:-1]))
+
+        dom = ran.dspace_type(dom_size, dtype=ran.dtype)
+        super().__init__(dom, ran, linear=True)
+
+    @property
+    def is_orthogonal(self):
+        """Whether or not the wavelet basis is orthogonal."""
+        return self.wbasis.orthogonal
+
+    @property
+    def is_biorthogonal(self):
+        """Whether or not the wavelet basis is bi-orthogonal."""
+        return self.wbasis.biorthogonal
+
+    def _call(self, coeff):
+        """Compute the discrete 1D, 2D or 3D inverse wavelet transform.
+
+        Parameters
+        ----------
+        coeff : `domain element`
+
+        Returns
+        -------
+        arr : `range element`
+
+        """
+        x = correct_adjoint_of_wavelet_transform(self.range.shape, self.wbasis,
+                                                 self.pad_mode, coeff,
+                                                 self.nscales)
+        return x
+
+    @property
+    def adjoint(self):
+        """The wavelet transform."""
+        if self.is_orthogonal:
+            return WaveletTransform(
+                dom=self.range, wbasis=self.wbasis, pad_mode=self.pad_mode,
+                nscales=self.nscales, axes=self.axes)
+        elif self.wbasis.name.startswith('bior'):
+            adjoint_name = self.wbasis.name.replace('bior', 'rbio')
+            wbasis_adjoint = pywt.Wavelet(adjoint_name)
+            return WaveletTransform(
+                dom=self.range, wbasis=wbasis_adjoint, pad_mode=self.pad_mode,
+                nscales=self.nscales, axes=self.axes)
+        else:
+            return super().adjoint
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
