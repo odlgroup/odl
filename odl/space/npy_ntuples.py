@@ -59,7 +59,7 @@ _BLAS_DTYPES = (np.dtype('float32'), np.dtype('float64'),
 
 class NumpyNtuples(NtuplesBase):
 
-    """The set of n-tuples of arbitrary type."""
+    """Set of n-tuples of arbitrary type."""
 
     def element(self, inp=None, data_ptr=None):
         """Create a new element.
@@ -212,7 +212,7 @@ class NumpyNtuplesVector(NtuplesBaseVector):
 
     @property
     def data(self):
-        """The raw `numpy.ndarray` representing the data."""
+        """Raw `numpy.ndarray` representing the data."""
         return self._data
 
     def asarray(self, start=None, stop=None, step=None, out=None):
@@ -586,7 +586,7 @@ def _lincomb(a, x1, b, x2, out, dtype):
 
 class NumpyFn(FnBase, NumpyNtuples):
 
-    """The vector space F^n with vector multiplication.
+    """Vector space F^n with vector multiplication.
 
     This space implements n-tuples of elements from a `Field` ``F``,
     which is usually the real or complex numbers.
@@ -944,7 +944,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         return self.weighting.inner(x1, x2)
 
     def _multiply(self, x1, x2, out):
-        """The entry-wise product of two vectors, assigned to out.
+        """Entry-wise product of two vectors, assigned to out.
 
         Parameters
         ----------
@@ -971,7 +971,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         np.multiply(x1.data, x2.data, out=out.data)
 
     def _divide(self, x1, x2, out):
-        """The entry-wise division of two vectors, assigned to out.
+        """Entry-wise division of two vectors, assigned to out.
 
         Parameters
         ----------
@@ -1135,7 +1135,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
     @property
     def real(self):
-        """The real part of this vector.
+        """Real part of this vector.
 
         Returns
         -------
@@ -1161,7 +1161,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
     @real.setter
     def real(self, newreal):
-        """The setter for the real part.
+        """Setter for the real part.
 
         This method is invoked by ``vec.real = other``.
 
@@ -1192,7 +1192,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
     @property
     def imag(self):
-        """The imaginary part of this vector.
+        """Imaginary part of this vector.
 
         Returns
         -------
@@ -1218,7 +1218,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
     @imag.setter
     def imag(self, newimag):
-        """The setter for the imaginary part.
+        """Setter for the imaginary part.
 
         This method is invoked by ``vec.imag = other``.
 
@@ -1244,7 +1244,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
         self.imag.data[:] = newimag
 
     def conj(self, out=None):
-        """The complex conjugate of this vector.
+        """Complex conjugate of this vector.
 
         Parameters
         ----------

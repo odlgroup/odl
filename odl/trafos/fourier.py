@@ -1849,7 +1849,7 @@ class FourierTransform(Operator):
 
     @property
     def inverse(self):
-        """The inverse Fourier transform."""
+        """Inverse Fourier transform."""
         sign = '+' if self.sign == '-' else '-'
         return FourierTransformInverse(
             domain=self.range, range=self.domain, impl=self.impl,

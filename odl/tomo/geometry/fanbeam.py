@@ -115,7 +115,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
     @property
     def angles(self):
-        """The discrete angles given in this geometry."""
+        """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
 
     def src_position(self, angle):

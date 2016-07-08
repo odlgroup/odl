@@ -616,7 +616,7 @@ class ComponentProjectionAdjoint(Operator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint operator.
 
         The adjoint is given by the `ComponentProjection`
         related to this operator's `index`.
@@ -648,7 +648,7 @@ class BroadcastOperator(Operator):
 
     @property
     def prod_op(self):
-        """The prod-op implementation."""
+        """`ProductSpaceOperator` implementation."""
         return self._prod_op
 
     @property
@@ -773,7 +773,7 @@ class ReductionOperator(Operator):
 
     @property
     def prod_op(self):
-        """The prod-op implementation."""
+        """`ProductSpaceOperator` implementation."""
         return self._prod_op
 
     @property
@@ -933,7 +933,7 @@ class DiagonalOperator(ProductSpaceOperator):
         return self.operators[index]
 
     def derivative(self, point):
-        """The derivative operator.
+        """Derivative operator.
 
         For example, if A and B are operators
 
@@ -969,7 +969,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint operator.
 
         For example, if A and B are operators
 
@@ -998,7 +998,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def inverse(self):
-        """The inverse operator
+        """Inverse operator.
 
         For example, if A and B are operators
 

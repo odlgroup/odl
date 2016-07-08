@@ -671,7 +671,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     @property
     def adjoint(self):
-        """The adjoint wavelet transform."""
+        """Adjoint wavelet transform."""
         if self.is_orthogonal:
             return self.inverse
         else:
@@ -680,7 +680,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     @property
     def inverse(self):
-        """The inverse wavelet transform."""
+        """Inverse wavelet transform."""
         return WaveletTransformInverse(
             range=self.domain, nscales=self.nscales, wbasis=self.wbasis,
             mode=self.mode)
@@ -829,7 +829,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     @property
     def adjoint(self):
-        """The adjoint wavelet transform."""
+        """Adjoint wavelet transform."""
         if self.is_orthogonal:
             return self.inverse
         else:
@@ -838,7 +838,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     @property
     def inverse(self):
-        """The inverse wavelet transform."""
+        """Inverse wavelet transform."""
         return WaveletTransform(domain=self.range, nscales=self.nscales,
                                 wbasis=self.wbasis, mode=self.mode)
 

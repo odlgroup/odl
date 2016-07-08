@@ -302,7 +302,7 @@ class ProductSpace(LinearSpace):
 
     @property
     def size(self):
-        """The number of factors."""
+        """Number of factors."""
         return self._size
 
     def __len__(self):
@@ -584,12 +584,12 @@ class ProductSpaceVector(LinearSpaceVector):
 
     @property
     def parts(self):
-        """The parts of this vector."""
+        """Parts of this vector."""
         return self._parts
 
     @property
     def size(self):
-        """The number of factors of this vector's space."""
+        """Number of factors of this vector's space."""
         return self.space.size
 
     def __len__(self):

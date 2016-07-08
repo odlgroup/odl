@@ -278,7 +278,7 @@ class FunctionSetVector(Operator):
 
     @property
     def space(self):
-        """The space or set this function belongs to."""
+        """Space or set this function belongs to."""
         return self._space
 
     @property
@@ -653,7 +653,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
             return self.element_type(self, fcall)
 
     def zero(self):
-        """The function mapping everything to zero.
+        """Function mapping everything to zero.
 
         This function is the additive unit in the function space.
 
@@ -661,7 +661,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         directly.
         """
         def zero_vec(x, out=None):
-            """The zero function, vectorized."""
+            """Zero function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
                 out_shape = out_shape_from_meshgrid(x)
             elif is_valid_input_array(x, self.domain.ndim):
@@ -677,12 +677,12 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return self.element_type(self, zero_vec)
 
     def one(self):
-        """The function mapping everything to one.
+        """Function mapping everything to one.
 
         This function is the multiplicative unit in the function space.
         """
         def one_vec(x, out=None):
-            """The one function, vectorized."""
+            """One function, vectorized."""
             if is_valid_input_meshgrid(x, self.domain.ndim):
                 out_shape = out_shape_from_meshgrid(x)
             elif is_valid_input_array(x, self.domain.ndim):
@@ -833,12 +833,12 @@ class FunctionSpace(FunctionSet, LinearSpace):
         x2_call_ip = x2._call_in_place
 
         def product_call_out_of_place(x):
-            """The product out-of-place evaluation function."""
+            """Product out-of-place evaluation function."""
             return np.asarray(x1_call_oop(x) * x2_call_oop(x),
                               dtype=self.out_dtype)
 
         def product_call_in_place(x, out):
-            """The product in-place evaluation function."""
+            """Product in-place evaluation function."""
             tmp = np.empty_like(out, dtype=self.out_dtype)
             x1_call_ip(x, out)
             x2_call_ip(x, tmp)
@@ -859,12 +859,12 @@ class FunctionSpace(FunctionSet, LinearSpace):
         x2_call_ip = x2._call_in_place
 
         def quotient_call_out_of_place(x):
-            """The quotient out-of-place evaluation function."""
+            """Quotient out-of-place evaluation function."""
             return np.asarray(x1_call_oop(x) / x2_call_oop(x),
                               dtype=self.out_dtype)
 
         def quotient_call_in_place(x, out):
-            """The quotient in-place evaluation function."""
+            """Quotient in-place evaluation function."""
             tmp = np.empty_like(out, dtype=self.out_dtype)
             x1_call_ip(x, out)
             x2_call_ip(x, tmp)
@@ -904,7 +904,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 return x
 
         def power_call_out_of_place(x):
-            """The power out-of-place evaluation function."""
+            """Power out-of-place evaluation function."""
             if p == 0:
                 return self.one()
             elif p == int(p) and p >= 1:
@@ -914,7 +914,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
                 return np.power(x_call_oop(x), p).astype(self.out_dtype)
 
         def power_call_in_place(x, out):
-            """The power in-place evaluation function."""
+            """Power in-place evaluation function."""
             if p == 0:
                 out.assign(self.one())
 

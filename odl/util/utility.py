@@ -258,7 +258,7 @@ def is_complex_floating_dtype(dtype):
 
 
 def conj_exponent(exp):
-    """The conjugate exponent p / (p-1).
+    """Conjugate exponent p / (p-1).
 
     Parameters
     ----------

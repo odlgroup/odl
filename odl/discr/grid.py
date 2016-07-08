@@ -179,7 +179,7 @@ class TensorGrid(Set):
     # Attributes
     @property
     def coord_vectors(self):
-        """The coordinate vectors of the grid.
+        """Coordinate vectors of the grid.
 
         Returns
         -------
@@ -202,17 +202,17 @@ class TensorGrid(Set):
 
     @property
     def ndim(self):
-        """The number of dimensions of the grid."""
+        """Number of dimensions of the grid."""
         return len(self.coord_vectors)
 
     @property
     def shape(self):
-        """The number of grid points per axis."""
+        """Number of grid points per axis."""
         return tuple(len(vec) for vec in self.coord_vectors)
 
     @property
     def size(self):
-        """The total number of grid points."""
+        """Total number of grid points."""
         return np.prod(self.shape)
 
     def __len__(self):
@@ -644,7 +644,7 @@ class TensorGrid(Set):
         return TensorGrid(*minmax_vecs)
 
     def corners(self, order='C'):
-        """The corner points of the grid in a single array.
+        """Corner points of the grid in a single array.
 
         Parameters
         ----------
@@ -891,7 +891,7 @@ class RegularGrid(TensorGrid):
 
     @property
     def center(self):
-        """The center of the grid. Not necessarily a grid point.
+        """Center of the grid. Not necessarily a grid point.
 
         Examples
         --------
@@ -903,7 +903,7 @@ class RegularGrid(TensorGrid):
 
     @property
     def stride(self):
-        """The step per axis between two neighboring grid points.
+        """Step per axis between two neighboring grid points.
 
         Examples
         --------

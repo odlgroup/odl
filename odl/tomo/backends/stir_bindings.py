@@ -169,7 +169,7 @@ class ForwardProjectorByBinWrapper(Operator):
 
     @property
     def adjoint(self):
-        """The back-projector associated with this operator."""
+        """Back-projector associated with this operator."""
         return self._adjoint
 
 

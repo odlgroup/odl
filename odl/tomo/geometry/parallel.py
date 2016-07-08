@@ -73,7 +73,7 @@ class ParallelGeometry(Geometry):
 
     @property
     def angles(self):
-        """The discrete angles given in this geometry."""
+        """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
 
     def det_refpoint(self, angles):
@@ -199,12 +199,12 @@ class Parallel2dGeometry(ParallelGeometry):
 
     @property
     def det_init_pos(self):
-        """The position of the detector reference point at angle=0."""
+        """Position of the detector reference point at angle=0."""
         return self._det_init_pos
 
     @property
     def det_init_axis(self):
-        """The direction of the detector extent at angle=0."""
+        """Direction of the detector extent at angle=0."""
         return self._det_init_axis
 
     def rotation_matrix(self, angle):

@@ -329,7 +329,7 @@ class MultiplyOperator(Operator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint operator.
 
         Returns
         -------
@@ -374,7 +374,7 @@ class MultiplyOperator(Operator):
 
 class PowerOperator(Operator):
 
-    """The power of a vector or scalar.
+    """Power of a vector or scalar.
 
     ``MultiplyOperator(n)(x) <==> x ** n``
 
@@ -440,7 +440,7 @@ class PowerOperator(Operator):
             out **= self.exponent
 
     def derivative(self, point):
-        """The derivative operator.
+        """Derivative operator.
 
         ``MultiplyOperator(n).derivative(x)(y) <==> n * x ** (n - 1) * y``
 
@@ -531,7 +531,7 @@ class InnerProductOperator(Operator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint operator.
 
         Returns
         -------
@@ -551,7 +551,7 @@ class InnerProductOperator(Operator):
 
     @property
     def T(self):
-        """The vector of this operator.
+        """Vector of this operator.
 
         Returns
         -------
@@ -712,7 +712,7 @@ class ResidualOperator(Operator):
         return out
 
     def derivative(self, point):
-        """The derivative the residual operator.
+        """Derivative the residual operator.
 
         It is equal to the derivative of the "inner" operator:
 

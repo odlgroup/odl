@@ -586,7 +586,7 @@ class Operator(object):
 
     @property
     def adjoint(self):
-        """The operator adjoint (abstract).
+        """Operator adjoint (abstract).
 
         Raises
         ------
@@ -1096,7 +1096,7 @@ class OperatorSum(Operator):
 
     @property
     def adjoint(self):
-        """The operator adjoint.
+        """Operator adjoint.
 
         The adjoint of the operator sum is the sum of the operator
         adjoints:
@@ -1177,7 +1177,7 @@ class OperatorComp(Operator):
 
     @property
     def inverse(self):
-        """The operator inverse.
+        """Operator inverse.
 
         The inverse of the operator composition is the composition of
         the inverses in reverse order:
@@ -1209,7 +1209,7 @@ class OperatorComp(Operator):
 
     @property
     def adjoint(self):
-        """The operator adjoint.
+        """Operator adjoint.
 
         The adjoint of the operator composition is the composition of
         the operator adjoints in reverse order:
@@ -1346,7 +1346,7 @@ class OperatorLeftScalarMult(Operator):
 
     @property
     def inverse(self):
-        """The inverse operator.
+        """Inverse operator.
 
         The inverse of ``scalar * op`` is given by
         ``op.inverse * 1/scalar`` if ``scalar != 0``. If ``scalar == 0``,
@@ -1381,7 +1381,7 @@ class OperatorLeftScalarMult(Operator):
 
     @property
     def adjoint(self):
-        """The operator adjoint.
+        """Operator adjoint.
 
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
@@ -1476,7 +1476,7 @@ class OperatorRightScalarMult(Operator):
 
     @property
     def inverse(self):
-        """The inverse operator.
+        """Inverse operator.
 
         The inverse of ``op * scalar`` is given by
         ``1/scalar * op.inverse`` if ``scalar != 0``. If ``scalar == 0``,
@@ -1508,7 +1508,7 @@ class OperatorRightScalarMult(Operator):
 
     @property
     def adjoint(self):
-        """The operator adjoint.
+        """Operator adjoint.
 
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
@@ -1601,7 +1601,7 @@ class FunctionalLeftVectorMult(Operator):
 
     @property
     def adjoint(self):
-        """The operator adjoint.
+        """Operator adjoint.
 
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
@@ -1673,7 +1673,7 @@ class OperatorLeftVectorMult(Operator):
 
     @property
     def inverse(self):
-        """The inverse operator.
+        """Inverse operator.
 
         The inverse of ``vector * op`` is given by
         ``op.inverse / vector``.
@@ -1700,7 +1700,7 @@ class OperatorLeftVectorMult(Operator):
 
     @property
     def adjoint(self):
-        """The operator adjoint.
+        """Operator adjoint.
 
         The adjoint of the operator vector multiplication is the
         vector multiplication of the operator adjoint:
@@ -1774,7 +1774,7 @@ class OperatorRightVectorMult(Operator):
 
     @property
     def inverse(self):
-        """The inverse operator.
+        """Inverse operator.
 
         The inverse of ``op * vector`` is given by
         ``(1.0 / vector) * op.inverse``.
@@ -1801,7 +1801,7 @@ class OperatorRightVectorMult(Operator):
 
     @property
     def adjoint(self):
-        """The operator adjoint.
+        """Operator adjoint.
 
         The adjoint of the operator vector multiplication is the
         vector multiplication of the operator adjoint:

@@ -164,17 +164,17 @@ class FlatDetector(Detector):
     """Abstract class for flat detectors in 2 and 3 dimensions."""
 
     def surface_measure(self, param=None):
-        """The constant density function of the surface measure.
+        """Constant density function of the surface measure.
 
         Parameters
         ----------
         param : element of `params`, optional
-            The parameter value where to evaluate the function
+            Parameter value where to evaluate the function
 
         Returns
         -------
         measure : `float`
-            The constant density 1.0
+            Constant density 1.0
         """
         if param not in self.params:
             raise ValueError('`param` {} not in the valid range '
@@ -226,7 +226,7 @@ class Flat1dDetector(FlatDetector):
         return self._normal
 
     def surface(self, param):
-        """The parametrization of the (1d) detector reference surface.
+        """Parametrization of the (1d) detector reference surface.
 
         The reference line segment is chosen to be aligned with the
         second coordinate axis, such that the parameter value 0 results
@@ -250,7 +250,7 @@ class Flat1dDetector(FlatDetector):
         return self.axis * param
 
     def surface_deriv(self, param=None):
-        """The derivative of the surface parametrization.
+        """Derivative of the surface parametrization.
 
         Parameters
         ----------
@@ -356,7 +356,7 @@ class Flat2dDetector(FlatDetector):
         return sum(float(p) * ax for p, ax in zip(param, self.axes))
 
     def surface_deriv(self, param=None):
-        """The derivative of the surface parametrization.
+        """Derivative of the surface parametrization.
 
         Parameters
         ----------
@@ -423,7 +423,7 @@ class CircleSectionDetector(Detector):
         return self._circ_rad
 
     def surface(self, param):
-        """The parametrization of the detector reference surface.
+        """Parametrization of the detector reference surface.
 
         Parameters
         ----------
@@ -438,7 +438,7 @@ class CircleSectionDetector(Detector):
                              '{}'.format(param, self.params))
 
     def surface_deriv(self, param):
-        """The partial derivative(s) of the surface parametrization.
+        """Partial derivative(s) of the surface parametrization.
 
         Parameters
         ----------
@@ -452,7 +452,7 @@ class CircleSectionDetector(Detector):
                              '{}'.format(param, self.params))
 
     def surface_measure(self, param):
-        """The constant density function of the surface measure.
+        """Constant density function of the surface measure.
 
         Parameters
         ----------

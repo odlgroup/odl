@@ -111,7 +111,7 @@ class PointwiseTensorFieldOperator(Operator):
 
     @property
     def base_space(self):
-        """The base space ``X`` of this operator's domain and range."""
+        """Base space ``X`` of this operator's domain and range."""
         return self._base_space
 
 

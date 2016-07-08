@@ -63,17 +63,17 @@ class NtuplesBase(Set):
 
     @property
     def dtype(self):
-        """The data type of each entry."""
+        """Data type of each entry."""
         return self._dtype
 
     @property
     def size(self):
-        """The number of entries per tuple."""
+        """Number of entries per tuple."""
         return self._size
 
     @property
     def shape(self):
-        """The shape of this space."""
+        """Shape of this space."""
         return (self.size,)
 
     def __contains__(self, other):
@@ -279,12 +279,12 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
 
     @property
     def itemsize(self):
-        """The size in bytes on one element of this type."""
+        """Size in bytes on one element of this type."""
         return self.dtype.itemsize
 
     @property
     def nbytes(self):
-        """The number of bytes this vector uses in memory."""
+        """Number of bytes this vector uses in memory."""
         return self.size * self.itemsize
 
     def __array__(self, dtype=None):
@@ -514,11 +514,11 @@ class FnBase(NtuplesBase, LinearSpace):
 
     @abstractmethod
     def _multiply(self, x1, x2, out):
-        """The entry-wise product of two vectors, assigned to ``out``."""
+        """Entry-wise product of two vectors, assigned to ``out``."""
 
     @abstractmethod
     def _divide(self, x1, x2, out):
-        """The entry-wise division of two vectors, assigned to ``out``."""
+        """Entry-wise division of two vectors, assigned to ``out``."""
 
     @staticmethod
     def default_dtype(field=None):

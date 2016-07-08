@@ -92,60 +92,60 @@ class IntervalProd(Set):
     # Basic properties
     @property
     def begin(self):
-        """The left interval boundary/boundaries."""
+        """Left interval boundary/boundaries."""
         return self._begin
 
     @property
     def end(self):
-        """The right interval boundary/boundaries."""
+        """Right interval boundary/boundaries."""
         return self._end
 
     @property
     def ndim(self):
-        """The number of intervals in the product."""
+        """Number of intervals in the product."""
         return len(self.begin)
 
     @property
     def true_ndim(self):
-        """The number of non-degenerate (zero-length) intervals."""
+        """Number of non-degenerate (zero-length) intervals."""
         return len(self._inondeg)
 
     @property
     def volume(self):
-        """The 'dim'-dimensional volume of this interval product."""
+        """'dim'-dimensional volume of this interval product."""
         return self.measure(ndim=self.ndim)
 
     @property
     def length(self):
-        """The length of this interval."""
+        """Length of this interval."""
         if self.ndim != 1:
             raise NotImplementedError('`length` not defined if ndim != 1')
         return self.volume
 
     @property
     def area(self):
-        """The length of this interval."""
+        """Area of this rectangle."""
         if self.ndim != 2:
             raise NotImplementedError('`area` not defined if ndim != 2')
         return self.volume
 
     @property
     def midpoint(self):
-        """The midpoint of the interval product."""
+        """Midpoint of the interval product."""
         midp = (self.end + self.begin) / 2.
         midp[self._ideg] = self.begin[self._ideg]
         return midp
 
     def min(self):
-        """The minimum value in this interval product."""
+        """Minimum value in this interval product."""
         return self.begin
 
     def max(self):
-        """The maximum value in this interval product."""
+        """Maximum value in this interval product."""
         return self.end
 
     def extent(self):
-        """The interval length per axis."""
+        """Interval length per axis."""
         return self.max() - self.min()
 
     def element(self, inp=None):
@@ -401,7 +401,7 @@ class IntervalProd(Set):
 
     # Additional property-like methods
     def measure(self, ndim=None):
-        """The (Lebesgue) measure of this interval product.
+        """(Lebesgue) measure of this interval product.
 
         Parameters
         ----------
@@ -645,7 +645,7 @@ class IntervalProd(Set):
         return self.insert(self.ndim, other)
 
     def corners(self, order='C'):
-        """The corner points in a single array.
+        """Corner points in a single array.
 
         Parameters
         ----------

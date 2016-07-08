@@ -45,7 +45,7 @@ __all__ = ('RayTransform', 'RayBackProjection')
 
 class RayTransform(Operator):
 
-    """The discrete Ray transform between L^p spaces."""
+    """Discrete Ray transform between L^p spaces."""
 
     def __init__(self, discr_domain, geometry, impl='astra_cpu', **kwargs):
         """Initialize a new instance.
@@ -200,7 +200,7 @@ class RayTransform(Operator):
 
 
 class RayBackProjection(Operator):
-    """The adjoint of the discrete Ray transform between L^p spaces."""
+    """Adjoint of the discrete Ray transform between L^p spaces."""
 
     def __init__(self, discr_range, geometry, impl='astra_cpu', **kwargs):
         """Initialize a new instance.

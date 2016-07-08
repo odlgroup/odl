@@ -280,7 +280,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
 
 
 def exp_zero_seq(base):
-    """The default exponential zero sequence.
+    """Default exponential zero sequence.
 
     It is defined by
 

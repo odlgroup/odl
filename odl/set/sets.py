@@ -142,7 +142,7 @@ class Set(with_metaclass(ABCMeta, object)):
 
 class EmptySet(Set):
 
-    """The empty set.
+    """Set with no member elements (except `None`).
 
     `None` is considered as "no element", i.e.
     ``None in EmptySet()`` is `True`
@@ -175,7 +175,7 @@ class EmptySet(Set):
 
 class UniversalSet(Set):
 
-    """The set of all objects.
+    """Set of all objects.
 
     Forget about set theory for a moment :-).
     """
@@ -207,7 +207,7 @@ class UniversalSet(Set):
 
 class Strings(Set):
 
-    """The set of fixed-length (unicode) strings."""
+    """Set of fixed-length (unicode) strings."""
 
     def __init__(self, length):
         """Initialize a new instance.
@@ -226,7 +226,7 @@ class Strings(Set):
 
     @property
     def length(self):
-        """The length attribute."""
+        """Length of the strings."""
         return self._length
 
     def __contains__(self, other):
@@ -281,7 +281,7 @@ class Field(Set):
 
     @property
     def field(self):
-        """The field of scalars for a field is itself.
+        """Field of scalars for a field is itself.
 
         Notes
         -----
@@ -293,7 +293,7 @@ class Field(Set):
 
 class ComplexNumbers(Field):
 
-    """The set of complex numbers."""
+    """Set of complex numbers."""
 
     def __contains__(self, other):
         """Test if ``other`` is a complex number."""
@@ -359,7 +359,7 @@ class ComplexNumbers(Field):
 
 class RealNumbers(Field):
 
-    """The set of real numbers."""
+    """Set of real numbers."""
 
     def __contains__(self, other):
         """Test if ``other`` is a real number."""
@@ -424,7 +424,7 @@ class RealNumbers(Field):
 
 class Integers(Set):
 
-    """The set of integers."""
+    """Set of integers."""
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -487,7 +487,7 @@ class Integers(Set):
 
 class CartesianProduct(Set):
 
-    """The Cartesian product of ``n`` sets.
+    """Cartesian product of ``n`` sets.
 
     The elements of this set are ``n``-tuples where the i-th entry
     is an element of the i-th set.
@@ -504,7 +504,7 @@ class CartesianProduct(Set):
 
     @property
     def sets(self):
-        """The factors (sets) as a `tuple`."""
+        """Factors (sets) as a `tuple`."""
         return self._sets
 
     def __contains__(self, other):
