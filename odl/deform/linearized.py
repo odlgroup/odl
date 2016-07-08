@@ -33,7 +33,7 @@ __all__ = ('LinDeformFixedTempl', 'LinDeformFixedTemplDeriv',
            'LinDeformFixedDispAdj')
 
 
-def linear_deform(template, displacement, out=None):
+def _linear_deform(template, displacement, out=None):
     """Linearized deformation of a template with a displacement field.
 
     The function maps a gived template ``I`` and a given displacement
@@ -125,7 +125,7 @@ class LinDeformFixedTempl(Operator):
         displacement : `domain` element
             The displacement field used in the linearized deformation.
         """
-        return linear_deform(self._template, displacement, out)
+        return _linear_deform(self._template, displacement, out)
 
     def derivative(self, displacement):
         """Derivative of the operator in ``displacement``.
@@ -188,9 +188,9 @@ class LinDeformFixedTemplDeriv(Operator):
         # TODO maybe need to cache ``def_grad``
         grad = Gradient(self.range, method='forward',
                         padding_method='symmetric')
-        grad_template = grad(self.template)
+        grad_templ = grad(self.template)
         self.def_grad = self.displacement.space.element(
-            [linear_deform(gf, self.displacement) for gf in grad_template])
+            [_linear_deform(gf, self.displacement) for gf in grad_templ])
 
     def _call(self, vector_field):
         """Implementation of ``self(vector_field)``.
@@ -266,9 +266,9 @@ class LinDeformFixedTemplDerivAdj(Operator):
 
             grad = Gradient(self.domain, method='forward',
                             padding_method='symmetric')
-            template_grad = grad(self.template)
+            templ_grad = grad(self.template)
             self.def_grad = self.displacement.space.element(
-                [linear_deform(gf, self.displacement) for gf in template_grad])
+                [_linear_deform(gf, self.displacement) for gf in templ_grad])
         else:
             self.def_grad = def_grad
 
@@ -331,12 +331,12 @@ class LinDeformFixedDisp(Operator):
         uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 1.0, 1.0, 0.0])
         """
         if domain is None:
-            if not isinstance(displacement.space, ProductSpace):
-                raise TypeError('`displacement` {!r} not an element'
-                                'of `ProductSpace`'.format(displacement))
             if not isinstance(displacement.space[0], DiscreteLp):
                 raise TypeError('`displacement[0]` {!r} not an element of'
                                 '`DiscreteLp`'.format(displacement[0]))
+            if not displacement.space.is_power_space:
+                raise TypeError('`displacement.space` {!r} not a product'
+                                'space'.format(displacement.space))
 
             domain = displacement[0].space
         else:
@@ -356,7 +356,7 @@ class LinDeformFixedDisp(Operator):
             Given template that is to be deformed by the fixed
             displacement field.
         """
-        return linear_deform(template, self._displacement, out)
+        return _linear_deform(template, self._displacement, out)
 
     @property
     def adjoint(self):
@@ -401,12 +401,12 @@ class LinDeformFixedDispAdj(Operator):
         >>> op(template)
         uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 0.0, 1.0, 0.0])
         """
-        if not isinstance(displacement.space, ProductSpace):
-            raise TypeError('`displacement` {!r} not an element'
-                            'of `ProductSpace`'.format(displacement))
         if not isinstance(displacement.space[0], DiscreteLp):
             raise TypeError('`displacement[0]` {!r} not an element of'
                             '`DiscreteLp`'.format(displacement[0]))
+        if not displacement.space.is_power_space:
+            raise TypeError('`displacement.space` {!r} not a product'
+                            'space'.format(displacement.space))
 
         domain = displacement[0].space
 
@@ -424,11 +424,11 @@ class LinDeformFixedDispAdj(Operator):
             displacement field.
         """
         # TODO: maybe need to cache ``jacobian_det``
-        div_op = Divergence(range=template.space, method='forward',
+        div_op = Divergence(range=self.domain, method='forward',
                             padding_method='symmetric')
         jacobian_det = np.exp(-div_op(self.displacement))
         return jacobian_det * template.space.element(
-            linear_deform(template, -self.displacement))
+            _linear_deform(template, -self.displacement))
 
     @property
     def adjoint(self):
