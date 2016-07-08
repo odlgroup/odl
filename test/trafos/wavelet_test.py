@@ -330,6 +330,47 @@ def test_axes_option():
 
 
 def adjoint_test():
+    # 1D
+    n = 16
+    wbasis = pywt.Wavelet('db3')
+    nscales = 1
+    mode = 'symmetric'
+    # Define a discretized domain
+    disc_domain = odl.uniform_discr([-1], [1], [n], dtype='float32')
+    x = np.random.rand(n,)
+    disc_phantom = disc_domain.element(x)
+    # Create the discrete wavelet transform operator related to 3D transform.
+    Wop = WaveletTransform(disc_domain, wbasis, mode, nscales, axes=None)
+
+    # Compute the discrete wavelet transform of discrete imput image
+    proj = Wop(disc_phantom)
+    backproj = Wop.adjoint(proj)
+    places = 3
+    result_AxAx = proj.inner(proj)
+    result_xAtAx = backproj.inner(disc_phantom)
+    assert almost_equal(result_AxAx, result_xAtAx, places=places)
+
+    # 2D
+    n = 32
+    wbasis = pywt.Wavelet('db4')
+    nscales = 1
+    mode = 'periodic'
+    # Define a discretized domain
+    disc_domain = odl.uniform_discr([-1] * 2, [1] * 2, [n] * 2,
+                                    dtype='float32')
+    disc_phantom = odl.util.shepp_logan(disc_domain, modified=True)
+    # Create the discrete wavelet transform operator related to 3D transform.
+    Wop = WaveletTransform(disc_domain, wbasis, mode, nscales, axes=None)
+
+    # Compute the discrete wavelet transform of discrete imput image
+    proj = Wop(disc_phantom)
+    backproj = Wop.adjoint(proj)
+    result_AxAx = proj.inner(proj)
+    result_xAtAx = backproj.inner(disc_phantom)
+    places = 1
+    assert almost_equal(result_AxAx, result_xAtAx, places=places)
+
+    # 3D
     n = 32
     wbasis = pywt.Wavelet('db1')
     nscales = 1
