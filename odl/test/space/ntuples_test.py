@@ -117,27 +117,27 @@ def test_init():
     NumpyFn(3, complex)
 
     # Fn only works on scalars
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         NumpyFn(3, 'S1')
 
     # Rn
     odl.rn(3, float)
 
     # Rn only works on reals
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.rn(3, complex)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.rn(3, 'S1')
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.rn(3, int)
 
     # Cn
     odl.cn(3, complex)
 
     # Cn only works on reals
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.cn(3, float)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         odl.cn(3, 'S1')
 
     # Backported int from future fails (not recognized by numpy.dtype())
@@ -145,7 +145,7 @@ def test_init():
     from builtins import int as future_int
     import sys
     if sys.version_info.major != 3:
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             NumpyFn(3, future_int)
 
     # Init with weights or custom space functions
