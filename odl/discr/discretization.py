@@ -15,8 +15,8 @@ standard_library.install_aliases()
 from builtins import super
 
 from odl.operator import Operator
-from odl.space.base_tensors import (TensorSet, GeneralizedTensor,
-                                    TensorSpace, Tensor)
+from odl.space.base_tensors import (
+    TensorSet, GeneralizedTensor, TensorSpace, Tensor)
 from odl.space import FunctionSet
 from odl.space.entry_points import TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
