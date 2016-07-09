@@ -46,12 +46,17 @@ from future import standard_library
 standard_library.install_aliases()
 
 from pkg_resources import iter_entry_points
+
 from odl.space.npy_ntuples import NumpyNtuples, NumpyFn
+from odl.space.npy_tensors import NumpyTensorSet, NumpyTensorSpace
 
 __all__ = ('NTUPLES_IMPLS', 'FN_IMPLS')
 
+
 NTUPLES_IMPLS = {'numpy': NumpyNtuples}
+TENSOR_SET_IMPLS = {'numpy': NumpyTensorSet}
 FN_IMPLS = {'numpy': NumpyFn}
+TENSOR_SPACE_IMPLS = {'numpy': NumpyTensorSpace}
 for entry_point in iter_entry_points(group='odl.space', name=None):
     try:
         module = entry_point.load()

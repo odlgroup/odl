@@ -22,14 +22,18 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-__all__ = ('vector', 'ntuples', 'fn', 'cn', 'rn')
-
 import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
 from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
-from odl.space.entry_points import NTUPLES_IMPLS, FN_IMPLS
+from odl.space.entry_points import (
+    NTUPLES_IMPLS, FN_IMPLS, TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS)
+
+
+__all__ = ('vector', 'ntuples',
+           'fn', 'cn', 'rn',
+           'tensor_set', 'tensor_space', 'ctensors', 'rtensors')
 
 
 def vector(array, dtype=None, impl='numpy'):
@@ -244,6 +248,228 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
         raise ValueError('data type {!r} not a real floating-point type'
                          ''.format(dtype))
     return rn
+
+
+def tensor(array, dtype=None, order='C', impl='numpy'):
+    """Create a tensor from an array-like object.
+
+    Parameters
+    ----------
+    array : `array-like`
+        Array from which to create the vector. Scalars become
+        one-dimensional tensors.
+    dtype : `object`, optional
+        Set the data type of the tensor manually with this option.
+        By default, the space type is inferred from the input data.
+    order : {'C', 'F'}, optional
+        Axis ordering of the data storage.
+    impl : `str`
+        Implementation backend for the vector. See `TENSOR_SET_IMPLS`
+        and `TENSOR_SPACE_IMPLS` for more information.
+
+    Returns
+    -------
+    tensor : `GeneralTensorBase`
+        Tensor created from the input array. Its concrete type depends
+        on the provided arguments.
+
+    Notes
+    -----
+    This is a convenience function and not intended for use in
+    speed-critical algorithms.
+
+    Examples
+    --------
+    >>> tensor([[1, 2, 3],
+    ...         [4, 5, 6]])  # No automatic cast to float
+
+    >>> tensor([[1, 2, 3],
+    ...         [4, 5, 6]], dtype=float)
+
+    >>> tensor([[1, 2 - 1j, 3],
+    ...         [4, 5, 6 + 2j]])
+
+    Non-scalar types are also supported:
+
+    >>> tensor([[True, True, False],
+    ...         [False, False, True]])
+
+    """
+    # Sanitize input
+    arr = np.array(array, copy=False, order=order, ndmin=1)
+
+    if arr.dtype is object:
+        raise ValueError('invalid input data resulting in `dtype==object`')
+
+    # Set dtype
+    if dtype is not None:
+        space_dtype = dtype
+    else:
+        space_dtype = arr.dtype
+
+    # Select implementation
+    if space_dtype is None or is_scalar_dtype(space_dtype):
+        space_constructor = tensor_space
+    else:
+        space_constructor = tensor_set
+
+    return space_constructor(
+        arr.shape, dtype=space_dtype, order=order, impl=impl).element(arr)
+
+
+def tensor_set(shape, dtype, order='C', impl='numpy', **kwargs):
+    """Return a tensor set with arbitrary data type.
+
+    Parameters
+    ----------
+    shape : sequence of positive int
+        Number of entries per axis for each element.
+    dtype :
+        Data type of each element. Can be provided in any way the
+        `numpy.dtype` function understands, e.g. as built-in type or
+        as a string.
+    order : {'C', 'F'}, optional
+        Axis ordering of the data storage.
+    impl : str, optional
+        The backend to use. See `TENSOR_SET_IMPLS` for available
+        options.
+    kwargs :
+        Extra keyword arguments passed to the set constructor.
+
+    Returns
+    -------
+    tset : `TensorSetBase`
+
+    See also
+    --------
+    tensor_space : space of tensors with arbitrary scalar data type.
+    """
+    return TENSOR_SET_IMPLS[impl](shape, dtype, order, **kwargs)
+
+
+def tensor_space(shape, dtype=None, order='C', impl='numpy', **kwargs):
+    """Return a tensor space with arbitrary scalar data type.
+
+    Parameters
+    ----------
+    shape : sequence of positive int
+        Number of entries per axis for each element.
+    dtype : optional
+        Data type of each element. Can be provided in any way the
+        `numpy.dtype` function understands, e.g. as built-in type or
+        as a string.
+        For ``None``, the `TensorSpaceBase.default_dtype` of the
+        created space is used.
+    order : {'C', 'F'}, optional
+        Axis ordering of the data storage.
+    impl : str, optional
+        The backend to use. See `TENSOR_SPACE_IMPLS` for available
+        options.
+    kwargs :
+        Extra keyword arguments passed to the space constructor.
+
+    Returns
+    -------
+    tspace : `TensorSpaceBase`
+
+    See also
+    --------
+    tensor_set : set of tensors with arbitrary data type.
+    """
+    tspace_type = TENSOR_SPACE_IMPLS[impl]
+
+    if dtype is None:
+        dtype = tspace_type.default_dtype()
+
+    return tspace_type(shape, dtype, order, **kwargs)
+
+
+def ctensors(shape, dtype=None, order='C', impl='numpy', **kwargs):
+    """Return a space of complex tensors.
+
+    Parameters
+    ----------
+    shape : sequence of positive int
+        Number of entries per axis for each element.
+    dtype : optional
+        Data type of each element. Can be provided in any way the
+        `numpy.dtype` function understands, e.g. as built-in type or
+        as a string. Only complex floating-point data types are allowed.
+        For ``None``, the `TensorSpaceBase.default_dtype` of the
+        created space is used in the form
+        ``default_dtype(ComplexNumbers())``.
+    order : {'C', 'F'}, optional
+        Axis ordering of the data storage.
+    impl : str, optional
+        The backend to use. See `TENSOR_SPACE_IMPLS` for available
+        options.
+    kwargs :
+        Extra keyword arguments passed to the space constructor.
+
+    Returns
+    -------
+    complex_tspace : `TensorSpaceBase`
+
+    See also
+    --------
+    tensor_space : space of tensors with arbitrary scalar data type.
+    """
+    complex_tspace_type = TENSOR_SPACE_IMPLS[impl]
+
+    if dtype is None:
+        dtype = complex_tspace_type.default_dtype(ComplexNumbers())
+
+    complex_tspace = complex_tspace_type(shape, dtype, order, **kwargs)
+
+    if not complex_tspace.is_complex_space:
+        raise ValueError('data type {!r} not a complex floating-point type'
+                         ''.format(dtype))
+
+    return complex_tspace
+
+
+def rtensors(shape, dtype=None, order='C', impl='numpy', **kwargs):
+    """Return a space of real tensors.
+
+    Parameters
+    ----------
+    shape : sequence of positive int
+        Number of entries per axis for each element.
+    dtype : optional
+        Data type of each element. Can be provided in any way the
+        `numpy.dtype` function understands, e.g. as built-in type or
+        as a string. Only real floating-point data types are allowed.
+        For ``None``, the `TensorSpaceBase.default_dtype` of the
+        created space is used in the form
+        ``default_dtype(RealNumbers())``.
+    order : {'C', 'F'}, optional
+        Axis ordering of the data storage.
+    impl : str, optional
+        The backend to use. See `TENSOR_SPACE_IMPLS` for available
+        options.
+    kwargs :
+        Extra keyword arguments passed to the space constructor.
+
+    Returns
+    -------
+    real_tspace : `TensorSpaceBase`
+
+    See also
+    --------
+    tensor_space : space of tensors with arbitrary scalar data type.
+    """
+    real_tspace_type = TENSOR_SPACE_IMPLS[impl]
+
+    if dtype is None:
+        dtype = real_tspace_type.default_dtype(RealNumbers())
+
+    real_tspace = real_tspace_type(shape, dtype, order, **kwargs)
+
+    if not real_tspace.is_real_space:
+        raise ValueError('data type {!r} not a real floating-point type'
+                         ''.format(dtype))
+
+    return real_tspace
 
 
 if __name__ == '__main__':

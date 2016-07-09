@@ -102,7 +102,6 @@ class NumpyTensorSet(TensorSetBase):
         >>> print(x)
 
         """
-        # TODO: exactly the same code would work for NumpyNtuples, factor out!
         if inp is None:
             if data_ptr is None:
                 arr = np.empty(self.shape, dtype=self.dtype, order=self.order)
@@ -568,8 +567,8 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         size : positive int
             The number of dimensions of the space
         dtype : optional
-            The data type of the storage array. For ``None``,
-            the default data type of this space is used.
+            Data type of the storage array. For ``None``, the default
+            data type of this space is used.
             Only scalar data types are allowed.
 
             ``dtype`` can be given in any way the `numpy.dtype`
@@ -728,9 +727,6 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         # Set the weighting
         if weight is not None:
             if isinstance(weight, WeightingBase):
-                if not weight.__class__.__name__.startswith('Tensor'):
-                    raise TypeError('expected a tensor weighting class, got '
-                                    '{!r}'.format(weight))
                 self._weighting = weight
             else:
                 self._weighting = _weighting(weight, exponent,
@@ -1049,16 +1045,27 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
     def __repr__(self):
         """Return ``repr(self)``."""
+        if self.is_real_space:
+            constructor_name = 'rtensors'
+        elif self.is_complex_space:
+            constructor_name = 'ctensors'
+        else:
+            constructor_name = 'tensor_space'
+
         inner_str = '{}'.format(self.shape)
-        if self.dtype != self.default_dtype(self.field):
+
+        if (constructor_name == 'tensor_space' or
+                self.dtype != self.default_dtype(self.field)):
             inner_str += ', {}'.format(dtype_repr(self.dtype))
+
+        # TODO: default order class attribute?
         if self.order != 'C':
             inner_str += ", order='F'"
 
         weight_str = self.weighting.repr_part
         if weight_str:
             inner_str += ', ' + weight_str
-        return '{}({})'.format(self.__class__.__name__, inner_str)
+        return '{}({})'.format(constructor_name, inner_str)
 
     @property
     def element_type(self):
@@ -1379,6 +1386,7 @@ def _inner_default(x1, x2):
 
 # TODO: implement intermediate weighting schemes with arrays that are
 # broadcast, i.e. between scalar and full-blown in dimensionality?
+# Possible use case: outer product of `ndim` 1-dim. arrays
 
 
 class NumpyTensorSpaceArrayWeighting(ArrayWeightingBase):
