@@ -11,7 +11,7 @@
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 
-__all__ = ('vector', 'tensor_set', 'tensor_space', 'cn', 'rn')
+__all__ = ('vector', 'tensor_space', 'cn', 'rn')
 
 import numpy as np
 
@@ -22,7 +22,7 @@ from odl.util import (
 
 
 def vector(array, dtype=None, impl='numpy'):
-    """Create an n-tuples type vector from an array.
+    """Create an n-tuples type vector from an array-like object.
 
     Parameters
     ----------
@@ -83,66 +83,28 @@ def vector(array, dtype=None, impl='numpy'):
 
     # Select implementation
     if space_dtype is None or is_scalar_dtype(space_dtype):
-        space_type = tensor_space
+        space_constr = tensor_space
     else:
-        space_type = tensor_set
+        space_constr = tensor_set
 
-    return space_type(len(arr), dtype=space_dtype, impl=impl).element(arr)
-
-
-def tensor_set(size, dtype, impl='numpy', **kwargs):
-    """Set of tuples of a fixed size.
-
-    Parameters
-    ----------
-    size : positive int
-        The number of dimensions of the space
-    dtype : `object`
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only complex floating-point data types are allowed.
-    impl : string, optional
-        The backend to use. See
-        `odl.space.entry_points.tensor_space_impl_names` for available
-        options.
-    kwargs :
-        Extra keyword arguments to pass to the implmentation.
-
-    Returns
-    -------
-    tset : `TensorSet`
-
-    See Also
-    --------
-    tensor_space : n-tuples over a field with arbitrary scalar data type.
-    """
-    return tensor_space_impl(impl)(size, dtype, **kwargs)
+    return space_constr(len(arr), dtype=space_dtype, impl=impl).element(arr)
 
 
 def tensor_space(size, dtype=None, impl='numpy', **kwargs):
-    """Return the space ``F^n`` for arbitrary field ``F``.
+    """Return a space of n-tuples of arbitrary scalar data type.
 
     Parameters
     ----------
     size : positive int
-        The number of dimensions of the space
-    dtype : `object`, optional
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Default: default of the implementation given by calling
-        ``default_dtype()`` on the `TensorSpace` implementation.
+        Number of entries per space element.
+    dtype : optional
+        Data type of the storage arrays. Can be provided in any
+        way the `numpy.dtype` function understands, e.g. as built-in type
+        or as a string.
+        For ``None``, the `TensorSpace.default_dtype` of the created space
+        is used.
     impl : string, optional
-        The backend to use. See
-        `odl.space.entry_points.tensor_space_impl_names` for available
-        options.
-    kwargs :
-        Extra keyword arguments to pass to the implmentation.
+        Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
@@ -157,7 +119,7 @@ def tensor_space(size, dtype=None, impl='numpy', **kwargs):
     if dtype is None:
         dtype = tspace_cls.default_dtype()
 
-    return tspace_cls(size, dtype=dtype, **kwargs)
+    return tspace_cls(size, dtype, **kwargs)
 
 
 def cn(size, dtype=None, impl='numpy', **kwargs):
@@ -166,25 +128,19 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
     Parameters
     ----------
     size : positive int
-        The number of dimensions of the space
-    dtype : `object`, optional
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only complex floating-point data types are allowed.
-
-        Default: default of the implementation given by calling
-        ``default_dtype(ComplexNumbers())`` on the `TensorSpace`
-        implementation.
-
+        Number of entries per space element.
+    dtype : optional
+        Data type of the storage arrays. Can be provided in any
+        way the `numpy.dtype` function understands, e.g. as built-in type
+        or as a string.
+        For ``None``, the `TensorSpace.default_dtype` of the created space
+        is used in the form ``default_dtype(ComplexNumbers())``.
     impl : string, optional
         The backend to use. See
         `odl.space.entry_points.tensor_space_impl_names` for available
         options.
     kwargs :
-        Extra keyword arguments to pass to the implmentation.
+        Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
@@ -213,23 +169,19 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
     Parameters
     ----------
     size : positive int
-        The number of dimensions of the space
-    dtype : `object`, optional
-        The data type of the storage array. Can be provided in any
-        way the `numpy.dtype` function understands, most notably
-        as built-in type, as one of NumPy's internal datatype
-        objects or as string.
-
-        Only real floating-point data types are allowed.
-        Default: default of the implementation given by calling
-        ``default_dtype(RealNumbers())`` on the `TensorSpace` implementation.
-
+        Number of entries per space element.
+    dtype : optional
+        Data type of the storage arrays. Can be provided in any
+        way the `numpy.dtype` function understands, e.g. as built-in type
+        or as a string.
+        For ``None``, the `TensorSpace.default_dtype` of the created space
+        is used in the form ``default_dtype(RealNumbers())``.
     impl : string, optional
         The backend to use. See
         `odl.space.entry_points.tensor_space_impl_names` for available
         options.
     kwargs :
-        Extra keyword arguments to pass to the implmentation.
+        Extra keyword arguments passed to the space constructor.
 
     Returns
     -------
