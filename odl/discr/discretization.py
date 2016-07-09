@@ -12,8 +12,8 @@
 from __future__ import print_function, division, absolute_import
 
 from odl.operator import Operator
-from odl.space.base_tensors import (TensorSet, GeneralizedTensor,
-                                    TensorSpace, Tensor)
+from odl.space.base_tensors import (
+    TensorSet, GeneralizedTensor, TensorSpace, Tensor)
 from odl.space import FunctionSet
 from odl.space.entry_points import tensor_space_impl
 from odl.set import RealNumbers, ComplexNumbers, LinearSpace
