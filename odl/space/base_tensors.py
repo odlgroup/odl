@@ -412,8 +412,8 @@ class TensorSpace(TensorSet, LinearSpace):
         TensorSet.__init__(self, shape, dtype, order)
 
         if not is_scalar_dtype(self.dtype):
-            raise TypeError('`dtype` must be a scalar data type, got {!r}'
-                            ''.format(dtype))
+            raise ValueError('`dtype` must be a scalar data type, got {!r}'
+                             ''.format(dtype))
 
         if is_real_dtype(self.dtype):
             field = RealNumbers()
