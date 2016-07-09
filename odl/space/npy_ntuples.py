@@ -1055,7 +1055,9 @@ class NumpyFn(FnBase, NumpyNtuples):
             constructor_name = 'fn'
 
         inner_str = '{}'.format(self.size)
-        if self.dtype != self.default_dtype(self.field):
+
+        if (constructor_name == 'fn' or
+                self.dtype != self.default_dtype(self.field)):
             inner_str += ', {}'.format(dtype_repr(self.dtype))
 
         weight_str = self.weighting.repr_part
