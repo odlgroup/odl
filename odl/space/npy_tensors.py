@@ -100,23 +100,31 @@ class NumpyTensorSet(TensorSetBase):
 
         Examples
         --------
-        >>> strings3 = Ntuples(3, dtype='U1')  # 1-char strings
-        >>> x = strings3.element(['w', 'b', 'w'])
-        >>> print(x)
-
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.element([[1, 2, 3],
+                                [4, 5, 6]])
+        >>> x
+        rtensors((2, 3)).element(
+        [[1.0, 2.0, 3.0],
+         [4.0, 5.0, 6.0]]
+        )
         >>> x.space
-
+        rtensors((2, 3))
 
         Construction from data pointer:
 
-        >>> int3 = Ntuples(3, dtype='int')
-        >>> x = int3.element([1, 2, 3])
-        >>> y = int3.element(data_ptr=x.data_ptr)
+        >>> int_tset = NumpyTensorSet((2, 3), dtype='int')
+        >>> x = int_tset.element([[1, 2, 3],
+                                  [4, 5, 6]])
+        >>> y = int_tset.element(data_ptr=x.data_ptr)
         >>> print(y)
-
-        >>> y[0] = 5
+        [[1, 2, 3],
+         [4, 5, 6]]
+        >>> y[0, 1] = -1
         >>> print(x)
-
+        [[1, -1, 3],
+         [4, 5, 6]]
         """
         if inp is None:
             if data_ptr is None:
@@ -149,10 +157,14 @@ class NumpyTensorSet(TensorSetBase):
 
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.zero()
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.zero()
         >>> x
-
+        rtensors((2, 3)).element(
+        [[0.0, 0.0, 0.0],
+         [0.0, 0.0, 0.0]]
+        )
         """
         return self.element(np.zeros(self.shape, dtype=self.dtype,
                                      order=self.order))
@@ -162,10 +174,14 @@ class NumpyTensorSet(TensorSetBase):
 
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.one()
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.one()
         >>> x
-
+        rtensors((2, 3)).element(
+        [[1.0, 1.0, 1.0],
+         [1.0, 1.0, 1.0]]
+        )
         """
         return self.element(np.ones(self.shape, dtype=self.dtype,
                                     order=self.order))
@@ -241,20 +257,25 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         Examples
         --------
-        >>> vec = Ntuples(3, 'float').element([1, 2, 3])
-        >>> vec.asarray()
-
-        >>> vec.asarray(start=1, stop=3)
-
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3), dtype='float32')
+        >>> x = tspace.element([[1, 2, 3],
+                                [4, 5, 6]])
+        >>> x.asarray()
+        array([[ 1.,  2.,  3.],
+               [ 4.,  5.,  6.]], dtype=float32)
 
         Using the out parameter:
 
-        >>> out = np.empty((3,), dtype='float')
-        >>> result = vec.asarray(out=out)
+        >>> import numpy as np
+        >>> out = np.empty((2, 3), dtype='float32')
+        >>> result = x.asarray(out=out)
         >>> out
+        array([[ 1.,  2.,  3.],
+               [ 4.,  5.,  6.]], dtype=float32)
 
         >>> result is out
-
+        True
         """
         if out is None:
             return self.data
@@ -269,18 +290,22 @@ class NumpyGeneralTensor(GeneralTensorBase):
         Examples
         --------
         >>> import ctypes
-        >>> vec = Ntuples(3, 'int32').element([1, 2, 3])
-        >>> arr_type = ctypes.c_int32 * 3
-        >>> buffer = arr_type.from_address(vec.data_ptr)
+        >>> import numpy as np
+        >>> tset = NumpyTensorSet((2, 3), dtype='int32')
+        >>> x = tset.element([[1, 2, 3],
+                              [4, 5, 6]])
+        >>> arr_type = ctypes.c_int32 * 6  # C type "array of 6 int32"
+        >>> buffer = arr_type.from_address(x.data_ptr)
         >>> arr = np.frombuffer(buffer, dtype='int32')
         >>> print(arr)
-
+        [1 2 3 4 5 6]
 
         In-place modification via pointer:
 
-        >>> arr[0] = 5
-        >>> print(vec)
-
+        >>> arr[0] = -1
+        >>> print(x)
+        [[-1, 2, 3],
+         [4, 5, 6]]
         """
         return self.data.ctypes.data
 
@@ -300,19 +325,27 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         Examples
         --------
-        >>> vec1 = Ntuples(3, int).element([1, 2, 3])
-        >>> vec2 = Ntuples(3, int).element([-1, 2, 0])
-        >>> vec1 == vec2
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.element([[1, 2, 3],
+                                [4, 5, 6]])
+        >>> y = tspace.element([[1, 2, 3],
+                                [4, 5, 6]])
+        >>> x == y
+        True
 
-        >>> vec2 = Ntuples(3, int).element([1, 2, 3])
-        >>> vec1 == vec2
-
+        >>> y = tspace.element([[-1, 2, 3],
+                                [4, 5, 6]])
+        >>> x == y
+        False
 
         Space membership matters:
 
-        >>> vec2 = Ntuples(3, float).element([1, 2, 3])
-        >>> vec1 == vec2 or vec2 == vec1
-
+        >>> tset = odl.NumpyTensorSet((2, 3), dtype='float64')
+        >>> y = tset.element([[1, 2, 3],
+                              [4, 5, 6]])
+        >>> x == y or y == x
+        False
         """
         if other is self:
             return True
@@ -335,14 +368,15 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         Examples
         --------
-        >>> vec1 = Ntuples(3, 'int').element([1, 2, 3])
-        >>> vec2 = vec1.copy()
-        >>> vec2
-
-        >>> vec1 == vec2
-
-        >>> vec1 is vec2
-
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tset.element([[1, 2, 3],
+                              [4, 5, 6]])
+        >>> y = x.copy()
+        >>> y == x
+        True
+        >>> y is x
+        False
         """
         return self.space.element(self.data.copy())
 
@@ -365,14 +399,17 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         Examples
         --------
-        >>> str_3 = Ntuples(3, dtype='U6')  # 6-char unicode
-        >>> x = str_3.element(['a', 'Hello!', '0'])
-        >>> print(x[0])
-
-        >>> print(x[1:3])
-
-        >>> x[1:3].space
-
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.element([[1, 2, 3],
+                                [4, 5, 6]])
+        >>> x[0, 1]
+        2.0
+        >>> x[:, 1:]
+        rtensors((2, 2)).element(
+        [[2.0, 3.0],
+         [5.0, 6.0]]
+        )
         """
         arr = self.data[indices]
         if np.isscalar(arr):
@@ -399,49 +436,81 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         Examples
         --------
-        >>> int_3 = Ntuples(3, 'int')
-        >>> x = int_3.element([1, 2, 3])
-        >>> x[0] = 5
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.element([[1, 2, 3],
+                                [4, 5, 6]])
+        >>> x[0, 1] = -1
         >>> x
+        rtensors((2, 3)).element(
+        [[1.0, -1.0, 3.0],
+         [4.0, 5.0, 6.0]]
+        )
 
+        Assignment from array-like structures or another tensor
+        (may be in a different space):
 
-        Assignment from array-like structures or another
-        vector:
-
-        >>> y = Ntuples(2, 'short').element([-1, 2])
-        >>> x[:2] = y
+        >>> tset = odl.NumpyTensorSet((2, 2), 'short')
+        >>> y = tset.element([[-1, 2],
+                              [0, 0]])
+        >>> x[:, :2] = y
         >>> x
-
-        >>> x[1:3] = [7, 8]
+        rtensors((2, 3)).element(
+        [[-1.0, 2.0, 3.0],
+         [0.0, 0.0, 6.0]]
+        )
+        >>> x[0, 1:] = [7, 8]
         >>> x
-
-        >>> x[:] = np.array([0, 0, 0])
+        rtensors((2, 3)).element(
+        [[-1.0, 7.0, 8.0],
+         [0.0, 0.0, 6.0]]
+        )
+        >>> import numpy as np
+        >>> x[:] = np.array([[0, 0, 0],
+                             [1, 1, 1]])
         >>> x
-
+        rtensors((2, 3)).element(
+        [[0.0, 0.0, 0.0],
+         [1.0, 1.0, 1.0]]
+        )
 
         Broadcasting is also supported:
 
-        >>> x[1:3] = -2.
+        >>> x[:, ::2] = -2.
         >>> x
-
+        rtensors((2, 3)).element(
+        [[-2.0, 0.0, -2.0],
+         [-2.0, 1.0, -2.0]]
+        )
 
         Array views are preserved:
 
-        >>> y = x[::2]  # view into x
+        >>> y = x[:, ::2]  # view into x
         >>> y[:] = -9
-        >>> print(y)
-
-        >>> print(x)
-
+        >>> y
+        rtensors((2, 2)).element(
+        [[-9.0, -9.0],
+         [-9.0, -9.0]]
+        )
+        >>> x
+        rtensors((2, 3)).element(
+        [[-9.0, 0.0, -9.0],
+         [-9.0, 1.0, -9.0]]
+        )
 
         Be aware of unsafe casts and over-/underflows, there
         will be warnings at maximum.
 
-        >>> x = Ntuples(2, 'int8').element([0, 0])
+        >>> tset = odl.NumpyTensorSet((2, 3), 'int8')
+        >>> x = tset.element([[0, 0, 0],
+                              [1, 1, 1]])
         >>> maxval = 255  # maximum signed 8-bit unsigned int
-        >>> x[0] = maxval + 1
+        >>> x[0, :] = maxval + 1
         >>> x
-
+        NumpyTensorSet((2, 3), 'int8').element(
+        [[0, 0, 0],
+         [1, 1, 1]]
+        )
         """
         if isinstance(values, NumpyGeneralTensor):
             self.data[indices] = values.data
@@ -452,41 +521,55 @@ class NumpyGeneralTensor(GeneralTensorBase):
     def ufunc(self):
         """`NtuplesUFuncs`, access to numpy style ufuncs.
 
-        Examples
-        --------
-        >>> r2 = Rn(2)
-        >>> x = r2.element([1, -2])
-        >>> x.ufunc.absolute()
-
-
-        These functions can also be used with broadcasting
-
-        >>> x.ufunc.add(3)
-
-
-        and non-space elements
-
-        >>> x.ufunc.subtract([3, 3])
-
-
-        There is also support for various reductions (sum, prod, min, max)
-
-        >>> x.ufunc.sum()
-
-
-        They also support an out parameter
-
-        >>> y = r2.element([3, 4])
-        >>> out = r2.element()
-        >>> result = x.ufunc.add(y, out=out)
-        >>> result
-
-        >>> result is out
-
-
         Notes
         -----
-        These are optimized for use with ntuples and incur no overhead.
+        These ufuncs are optimized for use with `NumpyGeneralTensor`'s
+        and incur practically no overhead.
+
+        Examples
+        --------
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.element([[1, -2, 3],
+                                [4, -5, 6]])
+        >>> x.ufunc.absolute()
+        rtensors((2, 3)).element(
+        [[1.0, 2.0, 3.0],
+         [4.0, 5.0, 6.0]]
+        )
+
+        Broadcasting and array-like input is supported, too:
+
+        >>> x.ufunc.add(3)
+        rtensors((2, 3)).element(
+        [[4.0, 1.0, 6.0],
+         [7.0, -2.0, 9.0]]
+        )
+        >>> x.ufunc.subtract([[0, 0, 1],
+                              [1, 0, 0]])
+        rtensors((2, 3)).element(
+        [[1.0, -2.0, 2.0],
+         [3.0, -5.0, 6.0]]
+        )
+
+        There is also support for various reductions (sum, prod, min,
+        max):
+
+        >>> x.ufunc.sum()
+        7.0
+
+        The ``out`` parameter can be used for result storage:
+
+        >>> y = tspace.one()
+        >>> out = tspace.element()
+        >>> result = x.ufunc.add(y, out=out)
+        >>> result
+        rtensors((2, 3)).element(
+        [[2.0, -1.0, 4.0],
+         [5.0, -4.0, 7.0]]
+        )
+        >>> result is out
+        True
         """
         return NumpyGeneralTensorUFuncs(self)
 
@@ -853,7 +936,7 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
     one = NumpyTensorSet.one
 
     def _lincomb(self, a, x1, b, x2, out):
-        """Calculate the linear combination of ``x1`` and ``x2``.
+        """Implement the linear combination of ``x1`` and ``x2``.
 
         Compute ``out = a*x1 + b*x2`` using optimized
         BLAS routines if possible.
@@ -870,20 +953,25 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         out : `NumpyTensor`
             Tensor to which the result is written.
 
-        Returns
-        -------
-        `None`
-
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([1+1j, 2-1j, 3])
-        >>> y = c3.element([4+0j, 5, 6+0.5j])
-        >>> out = c3.element()
-        >>> c3.lincomb(2j, x, 3-1j, y, out)  # out is returned
-
+        >>> import odl
+        >>> tspace = odl.ctensors((2, 3))
+        >>> x = tspace.element([[0, 1j, 1],
+                                [0, 1, 0]])
+        >>> y = tspace.element([[0, 0, 1j],
+                                [-1j, 0, 2j]])
+        >>> out = tspace.element()
+        >>> tspace.lincomb(1j, x, 1, y, out)  # out is returned
+        ctensors((2, 3)).element(
+        [[0j, (-1+0j), 2j],
+         [-1j, 1j, 2j]]
+        )
         >>> out
-
+        ctensors((2, 3)).element(
+        [[0j, (-1+0j), 2j],
+         [-1j, 1j, 2j]]
+        )
         """
         _lincomb(a, x1, b, x2, out, self.dtype)
 
@@ -905,18 +993,30 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         Examples
         --------
-        >>> from numpy.linalg import norm
-        >>> c2_2 = Cn(2, dist=lambda x, y: norm(x - y, ord=2))
-        >>> x = c2_2.element([3+1j, 4])
-        >>> y = c2_2.element([1j, 4-4j])
-        >>> c2_2.dist(x, y)
+        >>> import odl
+        >>> tspace_2 = odl.rtensors((2, 3), exponent=2)
+        >>> x = tspace_2.element([[-1, 1, 2],
+                                  [1, -1, 1]])
+        >>> y = tspace_2.one()
+        >>> tspace_2.dist(x, y)
+        3.0
 
+        >>> tspace_1 = odl.rtensors((2, 3), exponent=1)
+        >>> x = tspace_1.element([[-1, 1, 2],
+                                  [1, -1, 1]])
+        >>> y = tspace_1.one()
+        >>> tspace_1.dist(x, y)
+        5.0
 
-        >>> c2_2 = Cn(2, dist=lambda x, y: norm(x - y, ord=1))
-        >>> x = c2_2.element([3+1j, 4])
-        >>> y = c2_2.element([1j, 4-4j])
-        >>> c2_2.dist(x, y)
+        Weighting is supported, too:
 
+        >>> weights = [[2, 1, 1], [1, 1, 2]]
+        >>> tspace_1_w = odl.rtensors((2, 3), exponent=1, weight=weights)
+        >>> x = tspace_1_w.element([[-1, 1, 2],
+                                    [1, -1, 1]])
+        >>> y = tspace_1_w.one()
+        >>> tspace_1_w.dist(x, y)
+        7.0
         """
         return self.weighting.dist(x1, x2)
 
@@ -938,17 +1038,27 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         Examples
         --------
-        >>> import numpy as np
-        >>> c2_2 = Cn(2, norm=np.linalg.norm)  # 2-norm
-        >>> x = c2_2.element([3+1j, 1-5j])
-        >>> c2_2.norm(x)
+        >>> import odl
+        >>> tspace_2 = odl.rtensors((2, 3), exponent=2)
+        >>> x = tspace_2.element([[1, 0, 3],
+                                  [4, -1, 3]])
+        >>> tspace_2.norm(x)
+        6.0
+        >>> tspace_1 = odl.rtensors((2, 3), exponent=1)
+        >>> x = tspace_1.element([[1, 0, 3],
+                                  [4, -1, 3]])
+        >>> tspace_1.norm(x)
+        12.0
 
+        Weighting is supported:
 
-        >>> from functools import partial
-        >>> c2_1 = Cn(2, norm=partial(np.linalg.norm, ord=1))
-        >>> x = c2_1.element([3-4j, 12+5j])
-        >>> c2_1.norm(x)
-
+        >>> weights = [[1, 2, 1], [1, 1, 2]]
+        >>> tspace_1_w = odl.rtensors((2, 3), exponent=1,
+        ...                           weight=weights)
+        >>> x = tspace_1_w.element([[1, 0, 3],
+                                    [4, -1, 3]])
+        >>> tspace_1_w.norm(x)
+        15.0
         """
         return self.weighting.norm(x)
 
@@ -970,24 +1080,23 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         Examples
         --------
-        >>> import numpy as np
-        >>> c3 = Cn(2, inner=lambda x, y: np.vdot(y, x))
-        >>> x = c3.element([5+1j, -2j])
-        >>> y = c3.element([1, 1+1j])
-        >>> c3.inner(x, y) == (5+1j)*1 + (-2j)*(1-1j)
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.element([[1, 0, 3],
+                                [4, -1, 3]])
+        >>> y = tspace.one()
+        >>> tspace.inner(x, y)
+        10.0
 
+        Weighting is supported, too:
 
-        Define a space with custom inner product:
-
-        >>> weights = np.array([1., 2.])
-        >>> def weighted_inner(x, y):
-        ...     return np.vdot(weights * y.data, x.data)
-
-        >>> c3w = Cn(2, inner=weighted_inner)
-        >>> x = c3w.element(x)  # elements must be cast (no copy)
-        >>> y = c3w.element(y)
-        >>> c3w.inner(x, y) == 1*(5+1j)*1 + 2*(-2j)*(1-1j)
-
+        >>> weights = [[1, 2, 1], [2, 1, 1]]
+        >>> tspace_w = odl.rtensors((2, 3), weight=weights)
+        >>> x = tspace_w.element([[1, 0, 3],
+                                  [4, -1, 3]])
+        >>> y = tspace_w.one()
+        >>> tspace_w.inner(x, y)
+        14.0
         """
         return self.weighting.inner(x1, x2)
 
@@ -1006,14 +1115,23 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([5+1j, 3, 2-2j])
-        >>> y = c3.element([1, 2+1j, 3-1j])
-        >>> out = c3.element()
-        >>> c3.multiply(x, y, out)  # out is returned
-
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.element([[1, 0, 3],
+                                [4, -1, 3]])
+        >>> y = tspace.element([[-1, 1, -1],
+                                [1, -1, 1]])
+        >>> out = tspace.element()
+        >>> tspace.multiply(x, y, out=out)  # out is returned
+        rtensors((2, 3)).element(
+        [[-1.0, 0.0, -3.0],
+         [4.0, 1.0, 3.0]]
+        )
         >>> out
-
+        rtensors((2, 3)).element(
+        [[-1.0, 0.0, -3.0],
+         [4.0, 1.0, 3.0]]
+        )
         """
         np.multiply(x1.data, x2.data, out=out.data)
 
@@ -1032,14 +1150,23 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         Examples
         --------
-        >>> r3 = Rn(3)
-        >>> x = r3.element([3, 5, 6])
-        >>> y = r3.element([1, 2, 2])
-        >>> out = r3.element()
-        >>> r3.divide(x, y, out)  # out is returned
-
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> x = tspace.element([[2, 0, 4],
+                                [-4, 0, 2]])
+        >>> y = tspace.element([[1, 1, 2],
+                                [-4, 1, 2]])
+        >>> out = tspace.element()
+        >>> tspace.divide(x, y, out=out)  # out is returned
+        rtensors((2, 3)).element(
+        [[2.0, 0.0, 2.0],
+         [1.0, 0.0, 1.0]]
+        )
         >>> out
-
+        rtensors((2, 3)).element(
+        [[2.0, 0.0, 2.0],
+         [1.0, 0.0, 1.0]]
+        )
         """
         np.divide(x1.data, x2.data, out=out.data)
 
@@ -1409,20 +1536,20 @@ def _norm_default(x):
 
 def _pnorm_default(x, p):
     """Default p-norm implementation."""
-    return np.linalg.norm(x.data, ord=p)
+    return np.linalg.norm(x.data.ravel(), ord=p)
 
 
 def _pnorm_diagweight(x, p, w):
     """Diagonally weighted p-norm implementation."""
     # This is faster than first applying the weights and then summing with
     # BLAS dot or nrm2
-    xp = np.abs(x.data)
+    xp = np.abs(x.data.ravel())
     if np.isfinite(p):
         xp = np.power(xp, p, out=xp)
-        xp *= w  # w is a plain NumPy array
+        xp *= w.ravel()  # w is a plain NumPy array
         return np.sum(xp) ** (1 / p)
     else:
-        xp *= w
+        xp *= w.ravel()
         return np.max(xp)
 
 
@@ -1436,7 +1563,7 @@ def _inner_default(x1, x2):
     else:
         dot = np.vdot  # slowest alternative
     # x2 as first argument because we want linearity in x1
-    return dot(x2.data, x1.data)
+    return dot(x2.data.ravel(), x1.data.ravel())
 
 
 # TODO: implement intermediate weighting schemes with arrays that are
@@ -1538,7 +1665,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeightingBase):
                                       'exponent != 2 (got {})'
                                       ''.format(self.exponent))
         else:
-            inner = _inner_default(x1 * self.vector, x2)
+            inner = _inner_default(x1 * self.array, x2)
             if is_real_dtype(x1.dtype):
                 return float(inner)
             else:
@@ -1563,7 +1690,7 @@ class NumpyTensorSpaceArrayWeighting(ArrayWeightingBase):
                 norm_squared = 0.0  # Compensate for numerical error
             return sqrt(norm_squared)
         else:
-            return float(_pnorm_diagweight(x, self.exponent, self.vector))
+            return float(_pnorm_diagweight(x, self.exponent, self.array))
 
 
 class NumpyTensorSpaceConstWeighting(ConstWeightingBase):
