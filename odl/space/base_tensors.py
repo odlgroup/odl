@@ -208,6 +208,11 @@ class BaseTensorSet(Set):
         """Return the list of data types available in this implementation."""
         raise NotImplementedError('abstract method')
 
+    @staticmethod
+    def available_dtypes():
+        """Return the list of data types available in this implementation."""
+        raise NotImplementedError('abstract method')
+
     @property
     def element_type(self):
         """Type of elements in this set: `BaseGeneralizedTensor`."""

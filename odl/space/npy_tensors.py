@@ -152,6 +152,22 @@ class NumpyTensorSet(TensorSetBase):
         return self.element(np.ones(self.shape, dtype=self.dtype,
                                     order=self.order))
 
+    @staticmethod
+    def available_dtypes():
+        """Return the list of data types available in this implementation.
+
+        Notes
+        -----
+        This is all dtypes available in Numpy. See `numpy.sctypes`
+        for more information.
+
+        The available dtypes may depend on the specific system used.
+        """
+        all_types = []
+        for val in np.sctypes.values():
+            all_types.extend(val)
+        return all_types
+
     @property
     def element_type(self):
         """Type of elements in this space: `NumpyGeneralTensor`."""
@@ -771,6 +787,19 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         return not isinstance(self.weighting, NumpyTensorSpaceNoWeighting)
 
     @staticmethod
+    def available_dtypes():
+        """Return the list of data types available in this implementation.
+
+        Notes
+        -----
+        This is the set of all arithmetic dtypes available in Numpy. See
+        `numpy.sctypes` for more information.
+
+        The available dtypes may depend on the specific system used.
+        """
+        return np.sctypes['int'] + np.sctypes['float'] + np.sctypes['complex']
+
+    @staticmethod
     def default_dtype(field):
         """Return the default data type of this class for a given field.
 
@@ -796,6 +825,9 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         else:
             raise ValueError('no default data type defined for field {}'
                              ''.format(field))
+
+    zero = NumpyTensorSet.zero
+    one = NumpyTensorSet.one
 
     def _lincomb(self, a, x1, b, x2, out):
         """Calculate the linear combination of ``x1`` and ``x2``.

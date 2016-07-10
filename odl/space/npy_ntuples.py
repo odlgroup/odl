@@ -1080,7 +1080,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Notes
         -----
-        This is the set of all arithmetic dtypes available to numpy. See
+        This is the set of all arithmetic dtypes available in Numpy. See
         `numpy.sctypes` for more information.
 
         The available dtypes may depend on the specific system used.

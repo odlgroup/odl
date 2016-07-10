@@ -164,12 +164,7 @@ class NtuplesBase(Set):
 
     @staticmethod
     def available_dtypes():
-        """Available data types for this space type.
-
-        Returns
-        -------
-        available_dtypes : sequence
-        """
+        """Return a list of data types available in this implementation."""
         raise NotImplementedError('abstract method')
 
 
@@ -642,7 +637,7 @@ class FnBase(NtuplesBase, LinearSpace):
         Returns
         -------
         dtype :
-            Numpy data type specifier. The returned defaults are:
+            Numpy data type specifier.
         """
         raise NotImplementedError('abstract method')
 
