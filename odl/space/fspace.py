@@ -216,7 +216,7 @@ class FunctionSetVector(Operator):
 
     """Representation of a `FunctionSet` element."""
 
-    def __init__(self, fset, fcall, out_dtype=None):
+    def __init__(self, fset, fcall):
         """Initialize a new instance.
 
         Parameters
@@ -227,7 +227,6 @@ class FunctionSetVector(Operator):
             The actual instruction for out-of-place evaluation.
             It must return an `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
-        out_d
         """
         self.__space = fset
         super().__init__(self.space.domain, self.space.range, linear=False)
@@ -271,8 +270,6 @@ class FunctionSetVector(Operator):
         else:
             # In-place only
             self._call_in_place = fcall
-            # The default out-of-place method needs to guess the data
-            # type, so we need a separate decorator to help it.
             self._call_out_of_place = preload_first_arg(self, 'out-of-place')(
                 _default_out_of_place)
 
