@@ -57,6 +57,22 @@ class NumpyTensorSet(TensorSetBase):
 
     """The set of tensors of arbitrary type."""
 
+    def __init__(self, shape, dtype, order='C'):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        shape : sequence of int
+            Number of elements per axis.
+        dtype :
+            Data type of each element. Can be provided in any
+            way the `numpy.dtype` function understands, e.g.
+            as built-in type or as a string.
+        order : {'C', 'F'}, optional
+            Axis ordering of the data storage.
+        """
+        TensorSetBase.__init__(self, shape, dtype, order)
+
     def element(self, inp=None, data_ptr=None):
         """Create a new element.
 
@@ -110,14 +126,16 @@ class NumpyTensorSet(TensorSetBase):
                 ctype_array_def = ctypes.c_byte * self.nbytes
                 as_ctype_array = ctype_array_def.from_address(data_ptr)
                 as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
-                arr = as_numpy_array.view(dtype=self.dtype).reshape(self.shape)
+                arr = as_numpy_array.view(dtype=self.dtype).reshape(
+                    self.shape, self.order)
                 return self.element_type(self, arr)
         else:
             if data_ptr is None:
                 if inp in self:
                     return inp
                 else:
-                    arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1)
+                    arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1,
+                                   order=self.order)
                     if arr.shape != self.shape:
                         raise ValueError('expected input shape {}, got {}'
                                          ''.format((self.size,), arr.shape))
