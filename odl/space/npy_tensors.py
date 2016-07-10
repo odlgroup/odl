@@ -125,7 +125,7 @@ class NumpyTensorSet(TensorSet):
                 as_ctype_array = ctype_array_def.from_address(data_ptr)
                 as_numpy_array = np.ctypeslib.as_array(as_ctype_array)
                 arr = as_numpy_array.view(dtype=self.dtype).reshape(
-                    self.shape, self.order)
+                    self.shape, order=self.order)
                 return self.element_type(self, arr)
         else:
             if data_ptr is None:
@@ -133,7 +133,7 @@ class NumpyTensorSet(TensorSet):
                     return inp
                 else:
                     arr = np.array(inp, copy=False, dtype=self.dtype, ndmin=1,
-                                   order=self.order)
+                                   order='A')
                     if arr.shape != self.shape:
                         raise ValueError('expected input shape {}, got {}'
                                          ''.format((self.size,), arr.shape))
@@ -167,6 +167,11 @@ class NumpyTensorSet(TensorSet):
         """
         return self.element(np.ones(self.shape, dtype=self.dtype,
                                     order=self.order))
+
+    @staticmethod
+    def default_order():
+        """Return the default axis ordering of this implementation."""
+        return 'C'
 
     @staticmethod
     def available_dtypes():
