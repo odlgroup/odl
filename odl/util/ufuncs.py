@@ -237,7 +237,7 @@ class NumpyTensorSetUfuncs(TensorSetUfuncs):
     """Ufuncs for `NumpyGeneralizedTensor` objects.
 
     Internal object, should not be created except in
-    `NumpyGeneralTensor`.
+    `NumpyGeneralizedTensor`.
     """
 
 
