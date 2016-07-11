@@ -34,9 +34,9 @@ from odl.discr.discr_mappings import (
 from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
+from odl.space import FunctionSpace, ProductSpace, FN_IMPLS
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
-from odl.space import FunctionSpace, FN_IMPLS
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
@@ -233,9 +233,10 @@ class DiscreteLp(DiscretizedSpace):
         return self.__exponent
 
     @property
-    def interp(self):
-        """Interpolation type of this discretization."""
-        return self.__interp
+    def tangent_space(self):
+        """Tangent space."""
+        real_space = self.astype(self._real_dtype)
+        return ProductSpace(real_space, self.ndim)
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
