@@ -467,7 +467,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
         """Proximal operator for G(x) = ind(a <= x <= b)."""
 
         def __init__(self, tau):
-            """Initialize the proximal operator.
+            """Initialize a new instance.
 
             Parameters
             ----------
@@ -632,7 +632,7 @@ def proximal_l2(space, lam=1, g=None):
         """Proximal operator of the l2-norm/distance."""
 
         def __init__(self, sigma):
-            """Initialize the proximal operator.
+            """Initialize a new instance.
 
             Parameters
             ----------
@@ -721,7 +721,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
         """Proximal operator of the convex conj of the squared l2-norm/dist."""
 
         def __init__(self, sigma):
-            """Initialize the proximal operator.
+            """Initialize a new instance.
 
             Parameters
             ----------
@@ -867,7 +867,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
         """Proximal operator of the convex conj of the l1-norm/distance."""
 
         def __init__(self, sigma):
-            """Initialize the proximal operator.
+            """Initialize a new instance.
 
             Parameters
             ----------
@@ -1037,7 +1037,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
         """Proximal operator of the convex conjugate of the KL divergence."""
 
         def __init__(self, sigma):
-            """Initialize the proximal operator.
+            """Initialize a new instance.
 
             Parameters
             ----------

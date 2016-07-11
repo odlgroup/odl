@@ -105,7 +105,7 @@ class TensorGrid(Set):
     """
 
     def __init__(self, *coord_vectors):
-        """Initialize a TensorGrid instance.
+        """Initialize a new instance.
 
         Parameters
         ----------

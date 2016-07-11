@@ -39,7 +39,7 @@ class ScalingOperator(Operator):
     """Operator of multiplication with a scalar."""
 
     def __init__(self, space, scalar):
-        """Initialize a ScalingOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -136,7 +136,7 @@ class ZeroOperator(ScalingOperator):
     """Operator mapping each element to the zero element."""
 
     def __init__(self, space):
-        """Initialize a ZeroOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -159,7 +159,7 @@ class IdentityOperator(ScalingOperator):
     """Operator mapping each element to itself."""
 
     def __init__(self, space):
-        """Initialize an IdentityOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -187,7 +187,7 @@ class LinCombOperator(Operator):
     """
 
     def __init__(self, space, a, b):
-        """Initialize a LinCombOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -260,7 +260,7 @@ class MultiplyOperator(Operator):
     """
 
     def __init__(self, y, domain=None, range=None):
-        """Initialize a MultiplyOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -385,7 +385,7 @@ class PowerOperator(Operator):
     """
 
     def __init__(self, domain, exponent):
-        """Initialize a PowerOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -495,7 +495,7 @@ class InnerProductOperator(Operator):
     """
 
     def __init__(self, vector):
-        """Initialize a InnerProductOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -587,7 +587,7 @@ class ConstantOperator(Operator):
     """
 
     def __init__(self, vector, domain=None):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------

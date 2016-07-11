@@ -54,7 +54,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
     def __init__(self, space, axis=0, method='forward', padding_method=None,
                  padding_value=0, edge_order=None):
-        """Initialize an operator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -188,7 +188,7 @@ class Gradient(PointwiseTensorFieldOperator):
 
     def __init__(self, domain=None, range=None, method='forward',
                  padding_method='constant', padding_value=0):
-        """Initialize a `Gradient` operator instance.
+        """Initialize a new instance.
 
         Zero padding is assumed for the adjoint of the `Gradient`
         operator to match  negative `Divergence` operator.
@@ -369,7 +369,7 @@ class Divergence(PointwiseTensorFieldOperator):
 
     def __init__(self, domain=None, range=None, method='forward',
                  padding_method='constant', padding_value=0):
-        """Initialize a `Divergence` operator instance.
+        """Initialize a new instance.
 
         Zero padding is assumed for the adjoint of the `Divergence`
         operator to match the negative `Gradient` operator.
@@ -545,7 +545,7 @@ class Laplacian(PointwiseTensorFieldOperator):
     """
 
     def __init__(self, space, padding_method='constant', padding_value=0):
-        """Initialize a `Laplacian` operator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
