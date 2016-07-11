@@ -1208,6 +1208,9 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
         """Pointwise complex conjugate of this function."""
         return self.space._conj(self)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return 'FunctionSpaceVector'
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
