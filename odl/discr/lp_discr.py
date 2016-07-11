@@ -35,6 +35,7 @@ from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set.sets import RealNumbers, ComplexNumbers
 from odl.set.domain import IntervalProd
+from odl.space import ProductSpace
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.space import FunctionSpace, FN_IMPLS
@@ -150,16 +151,6 @@ class DiscreteLp(DiscretizedSpace):
             raise ValueError('`exponent` {} not equal to data space exponent '
                              '{}'.format(self.exponent, dspace.exponent))
 
-        if self.field == RealNumbers():
-            self._real_space = self
-            self._complex_space = None
-        elif self.field == ComplexNumbers():
-            self._real_space = None
-            self._complex_space = self
-        else:
-            self._real_space = None
-            self._complex_space = None
-
     @property
     def interp(self):
         """Interpolation type of this discretization."""
@@ -242,6 +233,12 @@ class DiscreteLp(DiscretizedSpace):
     def exponent(self):
         """The exponent ``p`` in ``L^p``."""
         return self._exponent
+
+    @property
+    def tangent_space(self):
+        """Tangent space."""
+        real_space = self.astype(self._real_dtype)
+        return ProductSpace(real_space, self.ndim)
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
