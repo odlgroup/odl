@@ -26,7 +26,7 @@ from builtins import super
 from odl.operator.operator import Operator
 from odl.space.pspace import ProductSpace
 from odl.set.space import LinearSpace, LinearSpaceVector
-from odl.set.sets import Field
+from odl.set.sets import Field, RealNumbers
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
@@ -577,6 +577,97 @@ class InnerProductOperator(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return "{}.T".format(self.vector)
+
+
+class NormOperator(Operator):
+    """Operator taking the norm of a vector.
+
+    ``NormOperator(space)(x) <==> space.norm(x)``
+
+    This is only applicable in normed spaces.
+
+    See Also
+    --------
+    InnerProductOperator : Inner product with fixed vector.
+    DistOperator : Distance to fixed vector.
+    """
+
+    def __init__(self, space):
+        """Initialize a NormOperator instance.
+
+        Parameters
+        ----------
+        vector : `LinearSpace`
+            Space to take the norm in.
+        """
+        super().__init__(space, RealNumbers(), linear=False)
+
+    def _call(self, x):
+        """Return the norm of x.
+
+        Parameters
+        ----------
+        x : `domain` `element`
+            A vector in the domain.
+
+        Returns
+        -------
+        out : ``field`` `element`
+            Result of the inner product calculation
+
+        Examples
+        --------
+        >>> import odl
+        >>> r2 = odl.rn(2)
+        >>> op = NormOperator(r2)
+        >>> op([3, 4])
+        5.0
+        """
+        return x.norm()
+
+    def derivative(self, point):
+        """The derivative operator.
+
+        This is only applicable in inner product spaces.
+
+        Parameters
+        ----------
+        x : `domain` `element-like`
+            Point in which to take the derivative.
+
+        Returns
+        -------
+        derivative : `InnerProductOperator`
+
+        Raises
+        ------
+        ValueError
+            If ``point.norm() == 0``, in which case the derivative is not well
+            defined in the Frechet sense.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> op = NormOperator(r3)
+        >>> derivative = op.derivative([1, 0, 0])
+        >>> derivative([1, 0, 0])
+        1.0
+        """
+        point = self.domain.element(point)
+        norm = point.norm()
+        if norm == 0:
+            raise ValueError('`NormOperator` not differentiable in 0')
+
+        return InnerProductOperator(point / norm)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return 'NormOperator({!r})'.format(self.domain)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return 'NormOperator({})'.format(self.domain)
 
 
 class ConstantOperator(Operator):
