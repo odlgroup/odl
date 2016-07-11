@@ -107,11 +107,29 @@ class LinDeformFixedTempl(Operator):
                                 'instance if `domain` is None, got {!r}'
                                 ''.format(template))
 
-            domain = ProductSpace(template.space, template.space.ndim)
+            domain = template.space.tangent_space
         else:
+            if not isinstance(domain, ProductSpace):
+                raise TypeError('`domain` {!r} not a `ProductSpace`'
+                                ''.format(domain))
+            if not domain.is_power_space:
+                raise TypeError('`domain` {!r} not a product'
+                                'space'.format(domain))
+            if not isinstance(domain[0], DiscreteLp):
+                raise TypeError('`domain[0]` {!r} not a `DiscreteLp`'
+                                ''.format(domain))
+            if not domain[0].is_rn:
+                raise TypeError('`domain[0]` {!r} not a real space'
+                                ''.format(domain[0]))
+            if not domain[0].domain == template.space.domain:
+                raise TypeError('`domain[0].domain {!r} does not match '
+                                'template.space.domain {!r}'
+                                ''.format(domain[0].domain,
+                                          template.space.domain))
+
             template = domain[0].element(template)
 
-        Operator.__init__(self, domain, domain[0], linear=False)
+        Operator.__init__(self, domain, template.space, linear=False)
 
         self._template = template
 
@@ -138,18 +156,22 @@ class LinDeformFixedTempl(Operator):
         derivative : `PointwiseInner`
             The derivative evaluated at ``displacement``.
         """
+        # To implement the complex case we need to be able to embed the real
+        # tangent space into the range of the gradient. Issue #59.
+        if not self.range.is_rn:
+            raise NotImplementedError('derivative not implemented for complex '
+                                      'spaces.')
+
         displacement = self.domain.element(displacement)
 
         # TODO allow users to select what method to use here.
-        grad = Gradient(self.range, method='central',
+        grad = Gradient(domain=self.range, method='central',
                         padding_method='symmetric')
         grad_templ = grad(self._template)
-        self.def_grad = displacement.space.element(
+        def_grad = self.domain.element(
             [_linear_deform(gf, displacement) for gf in grad_templ])
 
-        inner_op = PointwiseInner(displacement.space, self.def_grad)
-
-        return inner_op
+        return PointwiseInner(self.domain, def_grad)
 
 
 class LinDeformFixedDisp(Operator):
@@ -191,14 +213,16 @@ class LinDeformFixedDisp(Operator):
             if not isinstance(displacement.space[0], DiscreteLp):
                 raise TypeError('`displacement[0]` {!r} not an element of'
                                 '`DiscreteLp`'.format(displacement[0]))
+            if not displacement.space[0].is_rn:
+                raise TypeError('`displacement[0]` {!r} not a real space'
+                                ''.format(displacement[0]))
             if not displacement.space.is_power_space:
                 raise TypeError('`displacement.space` {!r} not a product'
                                 'space'.format(displacement.space))
 
             domain = displacement[0].space
         else:
-            displacement = ProductSpace(domain, domain.ndim).element(
-                displacement)
+            displacement = domain.tangent_space.element(displacement)
 
         Operator.__init__(self, domain, domain, linear=True)
 
@@ -226,10 +250,12 @@ class LinDeformFixedDisp(Operator):
         """
 
         # TODO allow users to select what method to use here.
-        div_op = Divergence(range=self.domain, method='forward',
+        div_op = Divergence(domain=self._displacement.space, method='forward',
                             padding_method='symmetric')
-        jacobian_det = np.exp(-div_op(self._displacement))
-        return jacobian_det * LinDeformFixedDisp(-self._displacement)
+        jacobian_det = self.domain.element(np.exp(-div_op(self._displacement)))
+        deformation = LinDeformFixedDisp(-self._displacement,
+                                         domain=self.domain)
+        return jacobian_det * deformation
 
 
 if __name__ == '__main__':

@@ -770,6 +770,10 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
             if out.shape != out_shape:
                 raise ValueError('output shape {} not equal to expected '
                                  'shape {}'.format(out.shape, out_shape))
+            if out.dtype != self.values.dtype:
+                raise ValueError('output dtype {} not equal to expected '
+                                 'dtype {}'
+                                 ''.format(out.dtype, self.values.dtype))
 
         indices, norm_distances = self._find_indices(x)
         return self._evaluate(indices, norm_distances, out)
@@ -970,10 +974,9 @@ class _PerAxisInterpolator(_Interpolator):
         # slice for broadcasting over trailing dimensions in self.values
         vslice = (slice(None),) + (None,) * (self.values.ndim - len(indices))
 
-        out_shape = out_shape_from_meshgrid(norm_distances)
-        out_dtype = norm_distances[0].dtype
-
         if out is None:
+            out_shape = out_shape_from_meshgrid(norm_distances)
+            out_dtype = self.values.dtype
             out = np.zeros(out_shape, dtype=out_dtype)
         else:
             out[:] = 0.0
