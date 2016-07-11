@@ -492,6 +492,11 @@ class InnerProductOperator(Operator):
     ``InnerProductOperator(vec)(x) <==> x.inner(vec)``
 
     This is only applicable in inner product spaces.
+
+    See Also
+    --------
+    DistOperator : Distance to fixed vector.
+    NormOperator : Norm of a vector.
     """
 
     def __init__(self, vector):
@@ -597,7 +602,7 @@ class NormOperator(Operator):
 
         Parameters
         ----------
-        vector : `LinearSpace`
+        space : `LinearSpace`
             Space to take the norm in.
         """
         super().__init__(space, RealNumbers(), linear=False)
@@ -668,6 +673,102 @@ class NormOperator(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return 'NormOperator({})'.format(self.domain)
+
+
+class DistOperator(Operator):
+    """Operator taking the distance to a fixed vector.
+
+    ``NormOperator(x)(y) <==> x.dist(y)``
+
+    This is only applicable in metric spaces.
+
+    See Also
+    --------
+    InnerProductOperator : Inner product with fixed vector.
+    NormOperator : Norm of a vector.
+    """
+
+    def __init__(self, vector):
+        """Initialize a DistOperator instance.
+
+        Parameters
+        ----------
+        vector : `LinearSpaceVector`
+            Point to calculate the distance to.
+        """
+        self.vector = vector
+        super().__init__(vector.space, RealNumbers(), linear=False)
+
+    def _call(self, x):
+        """Return the distance to x.
+
+        Parameters
+        ----------
+        x : `domain` `element`
+            A vector in the domain.
+
+        Returns
+        -------
+        out : ``field`` `element`
+            Result of the inner product calculation
+
+        Examples
+        --------
+        >>> import odl
+        >>> r2 = odl.rn(2)
+        >>> x = r2.element([1, 1])
+        >>> op = DistOperator(x)
+        >>> op([4, 5])
+        5.0
+        """
+        return self.vector.dist(x)
+
+    def derivative(self, point):
+        """The derivative operator.
+
+        This is only applicable in inner product spaces.
+
+        Parameters
+        ----------
+        x : `domain` `element-like`
+            Point in which to take the derivative.
+
+        Returns
+        -------
+        derivative : `InnerProductOperator`
+
+        Raises
+        ------
+        ValueError
+            If ``point == self.vector``, in which case the derivative is not
+            well defined in the Frechet sense.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r2 = odl.rn(2)
+        >>> x = r2.element([1, 1])
+        >>> op = DistOperator(x)
+        >>> derivative = op.derivative([2, 1])
+        >>> derivative([1, 0])
+        1.0
+        """
+        point = self.domain.element(point)
+        diff = point - self.vector
+        norm = diff.norm()
+        if norm == 0:
+            raise ValueError('Not differentiable at the reference vector {!r}.'
+                             ''.format(self.vector))
+
+        return InnerProductOperator(diff / norm)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return 'DistOperator({!r})'.format(self.vector)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return 'DistOperator({})'.format(self.vector)
 
 
 class ConstantOperator(Operator):
