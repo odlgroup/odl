@@ -43,11 +43,16 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
     The method can also be used to solve the more general problem
 
-        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x)``,
+        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x) + h(x)``,
 
-    where ``l_i`` are convex functionals and @ is the infimal convolution:
+    where ``l_i`` are strongly convex functionals and @ is the infimal
+    convolution:
 
-        ``(f @ g)(x) = inf_y { f(y) + g(x-y) }``.
+        ``(g @ l)(x) = inf_y { g(y) + l(x-y) }``.
+
+    Note that the strong convetiy of ``l_i`` makes the convex conjugate
+    ``l_i^*`` differentialbe; see the Notes section for more information on
+    this.
 
     Parameters
     ----------
@@ -61,7 +66,7 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     grad_h : `Operator`
         Operator representing the gradient of  ``h``.
     L : `sequence` of `Operator`
-        A sequence with as many elements as ``prox__cc_gs`` of linear operators
+        Sequence with as many elements as ``prox_cc_gs`` of linear operators
         ``L_i``.
     tau : `float`
         Step size-like parameter for ``prox_f``.
@@ -69,8 +74,8 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
         Sequence of step size-like parameters for the sequence ``prox_cc_g``.
     niter : `int`
         Number of iterations.
-    callback : `Callback`, optional
-        Show partial results.
+    callback : `callable`, optional
+        Function called with the current iterate after each iteration.
 
     Other Parameters
     ----------------
@@ -80,23 +85,36 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
     Notes
     -----
+    The mathematical problem to solve is
+
+     .. math::
+
+        \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x) + h(x),
+
+     where :math:`L_i` are linear functionals and the infimal convolution
+     :math:`g \Box l` is defined by
+
+     .. math::
+
+        (g \Box l)(x) = \inf_y g(y) + l(x - y).
+
     The exact conditions on the involved functionals are as follows: :math:`f`
     and :math:`g_i` are proper, convex and lower semicontinuous, and :math:`h`
     is convex and differentialbe with :math:`\\eta^{-1}`-Lipschitz continuous
     gradient, :math:`\\eta > 0`.
 
     The optional operators :math:`\\nabla l_i^*` need to be
-    :math:`\\nu_i^{-1}`-Lipschitz continuous. Note that in the reference
+    :math:`\\nu_i`-Lipschitz continuous. Note that in the reference
     [BC2015]_, the condition is formulated as :math:`l_i` being proper, lower
     semicontinuous, and :math:`\\nu_i^{-1}`-strongly convex, which implies that
     :math:`l_i^*` have :math:`\\nu_i`-Lipschitz continuous gradients.
 
     If the optional operators :math:`\\nabla l_i^*` are omitted, the simpler
-    problem without :mat:`l_i` will be considered. Mathematically, this is done
-    by taking :math:`l_i` to be the functionals that are zero only in the zero
-    element and :math:`\\infty` otherwise. This gives that :math:`l_i^*` are
-    the zero functionals, and hence the corresponding gradients are the zero
-    operators.
+    problem without :math:`l_i` will be considered. Mathematically, this is
+    done by taking :math:`l_i` to be the functionals that are zero only in the
+    zero element and :math:`\\infty` otherwise. This gives that :math:`l_i^*`
+    are the zero functionals, and hence the corresponding gradients are the
+    zero operators.
 
     To guarantee convergence, the parameters ``tau``, ``sigma`` and
     ``L`` need to satisfy
@@ -109,13 +127,6 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
     where, if the simpler problem is considered, all :math:`\\nu_i` can be
     considered to be :math:`\\infty`.
-
-
-
-    Note here that if the functional
-    :math:`h` is taken as the zero functional, its gradient will be the zero
-    operator and thus :math:`\\eta = 0`. Hence the algorithm CANNOT be
-    guaranteed to converge in this case.
 
     For reference on the forward-backward primal-dual algorithm, see [BC2015]_.
 

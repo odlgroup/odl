@@ -24,7 +24,6 @@ standard_library.install_aliases()
 
 # External
 import pytest
-import numpy as np
 
 # Internal
 import odl
@@ -120,22 +119,21 @@ def test_forward_backward_with_lin_ops():
     """
 
     space = odl.rn(10)
-    scaling = 0.1
+    alpha = 0.1
     b = example_element(space)
 
-    lin_op = scaling * odl.IdentityOperator(space)
+    lin_op = alpha * odl.IdentityOperator(space)
     lin_ops = [lin_op]
     prox_cc_g = [odl.solvers.proximal_cconj_l2_squared(space)]
     prox_f = odl.solvers.proximal_zero(space)
+
     # Gradient of two-norm square
     grad_h = 2.0 * (odl.IdentityOperator(space) - odl.ConstantOperator(b))
 
     x = example_element(space)
 
     # Explicit solution: x_hat = (I^T * I + (alpha*I)^T * (alpha*I))^-1 * (I*b)
-    op = odl.IdentityOperator(space) + lin_op.adjoint * lin_op
-    x_global_min = space.zero()
-    odl.solvers.conjugate_gradient(op, x_global_min, b, niter=10)
+    x_global_min = b / (1 + alpha**2)
 
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
                         sigma=[1.0], niter=20)
@@ -170,18 +168,15 @@ def test_forward_backward_with_li():
 
     grad_cc_ls = [odl.IdentityOperator(space)]
 
-    # Centering around a point further away from [-3,-1].
-    x = example_element(space) + space.element(3)
-    print(x)
+    # Creating an element not to far away from [-3,-1], in order to converge in
+    # a few number of iterations.
+    x = space.element(10)
 
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
                         sigma=[1.0], niter=20, grad_cc_l=grad_cc_ls)
 
-    solution_interv = odl.Interval(lower_lim - LOW_ACCURACY,
-                                   upper_lim + LOW_ACCURACY)
-    print(x)
-
-    assert x in solution_interv
+    assert lower_lim - 10**(-LOW_ACCURACY) <= x[0]
+    assert x[0] <= upper_lim + 10**(-LOW_ACCURACY)
 
 
 def test_forward_backward_with_li_and_h():
@@ -192,7 +187,7 @@ def test_forward_backward_with_li_and_h():
         ``(g @ l)(x) = inf_y { g(y) + l(x-y) }``,
 
     g is the indicator function on [-3, -1], and l(x) = h(x) = 1/2||x||_2^2.
-    The optimal solution to this problem is given by x = 0.5.
+    The optimal solution to this problem is given by x = -0.5.
     """
 
     # Parameter values for the box constraint
@@ -212,9 +207,9 @@ def test_forward_backward_with_li_and_h():
 
     grad_cc_ls = [odl.IdentityOperator(space)]
 
-    # Centering the initial guess around the optimal solution, to reduce the
-    # number of iterations needed.
-    x = example_element(space)
+    # Creating an element not to far away from -0.5, in order to converge in
+    # a few number of iterations.
+    x = space.element(10)
 
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
                         sigma=[1.0], niter=20, grad_cc_l=grad_cc_ls)
