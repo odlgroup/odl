@@ -152,7 +152,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     p1 = x.space.zero()
     p2 = [Li.range.zero() for Li in L]
     z1 = x.space.zero()
-    z2 = [Li.domain.zero() for Li in L]
+    z2 = [Li.range.zero() for Li in L]
     w1 = x.space.zero()
     w2 = [Li.range.zero() for Li in L]
 
