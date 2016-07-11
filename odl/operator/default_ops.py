@@ -31,7 +31,8 @@ from odl.set.sets import Field, RealNumbers
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
-           'InnerProductOperator', 'ConstantOperator', 'ResidualOperator')
+           'InnerProductOperator', 'NormOperator', 'DistOperator',
+           'ConstantOperator', 'ResidualOperator')
 
 
 class ScalingOperator(Operator):
@@ -650,6 +651,15 @@ class NormOperator(Operator):
             If ``point.norm() == 0``, in which case the derivative is not well
             defined in the Frechet sense.
 
+        Notes
+        -----
+        The derivative cannot be written in a general sense except in Hilbert
+        spaces, in that case, it is given by
+
+        .. Math::
+
+            (D ||.||)(x)(y) = < x / ||x||, y >
+
         Examples
         --------
         >>> import odl
@@ -662,7 +672,7 @@ class NormOperator(Operator):
         point = self.domain.element(point)
         norm = point.norm()
         if norm == 0:
-            raise ValueError('`NormOperator` not differentiable in 0')
+            raise ValueError('not differentiable in 0')
 
         return InnerProductOperator(point / norm)
 
@@ -678,7 +688,7 @@ class NormOperator(Operator):
 class DistOperator(Operator):
     """Operator taking the distance to a fixed vector.
 
-    ``NormOperator(x)(y) <==> x.dist(y)``
+    ``DistOperator(x)(y) <==> x.dist(y)``
 
     This is only applicable in metric spaces.
 
@@ -743,6 +753,15 @@ class DistOperator(Operator):
             If ``point == self.vector``, in which case the derivative is not
             well defined in the Frechet sense.
 
+        Notes
+        -----
+        The derivative cannot be written in a general sense except in Hilbert
+        spaces, in that case, it is given by
+
+        .. Math::
+
+            (D d(x, y))(y)(z) = < (x-y) / d(x, y), y >
+
         Examples
         --------
         >>> import odl
@@ -755,12 +774,12 @@ class DistOperator(Operator):
         """
         point = self.domain.element(point)
         diff = point - self.vector
-        norm = diff.norm()
-        if norm == 0:
-            raise ValueError('Not differentiable at the reference vector {!r}.'
+        dist = self.vector.dist(point)
+        if dist == 0:
+            raise ValueError('not differentiable at the reference vector {!r}'
                              ''.format(self.vector))
 
-        return InnerProductOperator(diff / norm)
+        return InnerProductOperator(diff / dist)
 
     def __repr__(self):
         """Return ``repr(self)``."""
