@@ -26,12 +26,13 @@ from builtins import super
 from odl.operator.operator import Operator
 from odl.space.pspace import ProductSpace
 from odl.set.space import LinearSpace, LinearSpaceVector
-from odl.set.sets import Field
+from odl.set.sets import Field, RealNumbers
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
-           'InnerProductOperator', 'ConstantOperator', 'ResidualOperator')
+           'InnerProductOperator', 'NormOperator', 'DistOperator',
+           'ConstantOperator', 'ResidualOperator')
 
 
 class ScalingOperator(Operator):
@@ -39,7 +40,7 @@ class ScalingOperator(Operator):
     """Operator of multiplication with a scalar."""
 
     def __init__(self, space, scalar):
-        """Initialize a ScalingOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -136,7 +137,7 @@ class ZeroOperator(ScalingOperator):
     """Operator mapping each element to the zero element."""
 
     def __init__(self, space):
-        """Initialize a ZeroOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -187,7 +188,7 @@ class LinCombOperator(Operator):
     """
 
     def __init__(self, space, a, b):
-        """Initialize a LinCombOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -260,7 +261,7 @@ class MultiplyOperator(Operator):
     """
 
     def __init__(self, y, domain=None, range=None):
-        """Initialize a MultiplyOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -385,7 +386,7 @@ class PowerOperator(Operator):
     """
 
     def __init__(self, domain, exponent):
-        """Initialize a PowerOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -492,10 +493,15 @@ class InnerProductOperator(Operator):
     ``InnerProductOperator(vec)(x) <==> x.inner(vec)``
 
     This is only applicable in inner product spaces.
+
+    See Also
+    --------
+    DistOperator : Distance to fixed vector.
+    NormOperator : Norm of a vector.
     """
 
     def __init__(self, vector):
-        """Initialize a InnerProductOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -579,6 +585,213 @@ class InnerProductOperator(Operator):
         return "{}.T".format(self.vector)
 
 
+class NormOperator(Operator):
+
+    """Operator taking the norm of a vector.
+
+    ``NormOperator(space)(x) <==> space.norm(x)``
+
+    This is only applicable in normed spaces.
+
+    See Also
+    --------
+    InnerProductOperator : Inner product with fixed vector.
+    DistOperator : Distance to fixed vector.
+    """
+
+    def __init__(self, space):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `LinearSpace`
+            Space to take the norm in.
+        """
+        super().__init__(space, RealNumbers(), linear=False)
+
+    def _call(self, x):
+        """Return the norm of ``x``.
+
+        Parameters
+        ----------
+        x : `domain` element
+            Element to take the norm of.
+
+        Returns
+        -------
+        norm : `float`
+            Norm of ``x``.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r2 = odl.rn(2)
+        >>> op = NormOperator(r2)
+        >>> op([3, 4])
+        5.0
+        """
+        return x.norm()
+
+    def derivative(self, point):
+        """Derivative of this operator in ``point``.
+
+        This is only applicable in inner product spaces.
+
+        Parameters
+        ----------
+        x : `domain` `element-like`
+            Point in which to take the derivative.
+
+        Returns
+        -------
+        derivative : `InnerProductOperator`
+
+        Raises
+        ------
+        ValueError
+            If ``point.norm() == 0``, in which case the derivative is not well
+            defined in the Frechet sense.
+
+        Notes
+        -----
+        The derivative cannot be written in a general sense except in Hilbert
+        spaces, in which case it is given by
+
+        .. math::
+
+            (D ||.||)(x)(y) = < x / ||x||, y >
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> op = NormOperator(r3)
+        >>> derivative = op.derivative([1, 0, 0])
+        >>> derivative([1, 0, 0])
+        1.0
+        """
+        point = self.domain.element(point)
+        norm = point.norm()
+        if norm == 0:
+            raise ValueError('not differentiable in 0')
+
+        return InnerProductOperator(point / norm)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return '{}({})'.format(self.__class__.__name__, self.domain)
+
+
+class DistOperator(Operator):
+
+    """Operator taking the distance to a fixed vector.
+
+    ``DistOperator(x)(y) <==> x.dist(y)``
+
+    This is only applicable in metric spaces.
+
+    See Also
+    --------
+    InnerProductOperator : Inner product with fixed vector.
+    NormOperator : Norm of a vector.
+    """
+
+    def __init__(self, vector):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        vector : `LinearSpaceVector`
+            Point to calculate the distance to.
+        """
+        self.vector = vector
+        super().__init__(vector.space, RealNumbers(), linear=False)
+
+    def _call(self, x):
+        """Return the distance to x.
+
+        Parameters
+        ----------
+        x : `domain` element
+            An element in the domain.
+
+        Returns
+        -------
+        out : `float`
+            Distance from of ``x`` to ``self.vector``.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r2 = odl.rn(2)
+        >>> x = r2.element([1, 1])
+        >>> op = DistOperator(x)
+        >>> op([4, 5])
+        5.0
+        """
+        return self.vector.dist(x)
+
+    def derivative(self, point):
+        """The derivative operator.
+
+        This is only applicable in inner product spaces.
+
+        Parameters
+        ----------
+        x : `domain` `element-like`
+            Point in which to take the derivative.
+
+        Returns
+        -------
+        derivative : `InnerProductOperator`
+
+        Raises
+        ------
+        ValueError
+            If ``point == self.vector``, in which case the derivative is not
+            well defined in the Frechet sense.
+
+        Notes
+        -----
+        The derivative cannot be written in a general sense except in Hilbert
+        spaces, in which case it is given by
+
+        .. math::
+
+            (D d(x, y))(y)(z) = < (x-y) / d(x, y), y >
+
+        Examples
+        --------
+        >>> import odl
+        >>> r2 = odl.rn(2)
+        >>> x = r2.element([1, 1])
+        >>> op = DistOperator(x)
+        >>> derivative = op.derivative([2, 1])
+        >>> derivative([1, 0])
+        1.0
+        """
+        point = self.domain.element(point)
+        diff = point - self.vector
+        dist = self.vector.dist(point)
+        if dist == 0:
+            raise ValueError('not differentiable at the reference vector {!r}'
+                             ''.format(self.vector))
+
+        return InnerProductOperator(diff / dist)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.vector)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return '{}({})'.format(self.__class__.__name__, self.vector)
+
+
 class ConstantOperator(Operator):
 
     """Operator that always returns the same value
@@ -587,7 +800,7 @@ class ConstantOperator(Operator):
     """
 
     def __init__(self, vector, domain=None):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -639,7 +852,7 @@ class ConstantOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ConstantOperator({!r})'.format(self.vector)
+        return '{}({!r})'.format(self.__class__.__name__, self.vector)
 
     def __str__(self):
         """Return ``str(self)``."""
