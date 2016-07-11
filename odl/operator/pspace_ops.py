@@ -411,7 +411,7 @@ class ComponentProjection(Operator):
     """
 
     def __init__(self, space, index):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -903,7 +903,7 @@ class DiagonalOperator(ProductSpaceOperator):
     """
 
     def __init__(self, *operators, **kwargs):
-        """Initialize a DiagonalOperator.
+        """Initialize a new instance.
 
         Parameters
         ----------

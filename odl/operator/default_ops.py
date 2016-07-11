@@ -160,7 +160,7 @@ class IdentityOperator(ScalingOperator):
     """Operator mapping each element to itself."""
 
     def __init__(self, space):
-        """Initialize an IdentityOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------

@@ -42,7 +42,7 @@ class Resampling(Operator):
     """
 
     def __init__(self, domain, range):
-        """Initialize a Resampling.
+        """Initialize a new instance.
 
         Parameters
         ----------

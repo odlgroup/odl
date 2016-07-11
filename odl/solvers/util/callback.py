@@ -83,7 +83,7 @@ class _CallbackAnd(SolverCallback):
     """Callback used for combining several callbacks."""
 
     def __init__(self, *callbacks):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -116,7 +116,7 @@ class CallbackStore(SolverCallback):
     """
 
     def __init__(self, results=None, function=None):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -189,7 +189,7 @@ class CallbackApply(SolverCallback):
     """Simple object for applying a function to each iterate."""
 
     def __init__(self, function):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -219,7 +219,7 @@ class CallbackPrintIteration(SolverCallback):
     _default_text = 'iter ='
 
     def __init__(self, text=None):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -245,7 +245,7 @@ class CallbackPrintTiming(SolverCallback):
     """Print the time elapsed since the previous iteration."""
 
     def __init__(self):
-        """Initialize an instance."""
+        """Initialize a new instance."""
         self.time = time.time()
 
     def __call__(self, _):
@@ -264,7 +264,7 @@ class CallbackPrintNorm(SolverCallback):
     """Print the current norm."""
 
     def __init__(self):
-        """Initialize an instance."""
+        """Initialize a new instance."""
         self.iter = 0
 
     def __call__(self, result):

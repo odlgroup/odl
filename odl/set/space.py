@@ -41,7 +41,7 @@ class LinearSpace(Set):
     """
 
     def __init__(self, field):
-        """Initialize a LinearSpace.
+        """Initialize a new instance.
 
         This method should be called by all inheriting methods so that the
         field property of the space is set properly.
@@ -815,7 +815,7 @@ class UniversalSpace(LinearSpace):
     """
 
     def __init__(self):
-        """Initialize a universal space."""
+        """Initialize a new instance."""
         LinearSpace.__init__(self, field=UniversalSet())
 
     def element(self, inp=None):
