@@ -40,7 +40,7 @@ class ScalingOperator(Operator):
     """Operator of multiplication with a scalar."""
 
     def __init__(self, space, scalar):
-        """Initialize a ScalingOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -137,7 +137,7 @@ class ZeroOperator(ScalingOperator):
     """Operator mapping each element to the zero element."""
 
     def __init__(self, space):
-        """Initialize a ZeroOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -188,7 +188,7 @@ class LinCombOperator(Operator):
     """
 
     def __init__(self, space, a, b):
-        """Initialize a LinCombOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -261,7 +261,7 @@ class MultiplyOperator(Operator):
     """
 
     def __init__(self, y, domain=None, range=None):
-        """Initialize a MultiplyOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -386,7 +386,7 @@ class PowerOperator(Operator):
     """
 
     def __init__(self, domain, exponent):
-        """Initialize a PowerOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -501,7 +501,7 @@ class InnerProductOperator(Operator):
     """
 
     def __init__(self, vector):
-        """Initialize a InnerProductOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -586,6 +586,7 @@ class InnerProductOperator(Operator):
 
 
 class NormOperator(Operator):
+
     """Operator taking the norm of a vector.
 
     ``NormOperator(space)(x) <==> space.norm(x)``
@@ -599,7 +600,7 @@ class NormOperator(Operator):
     """
 
     def __init__(self, space):
-        """Initialize a NormOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -609,17 +610,17 @@ class NormOperator(Operator):
         super().__init__(space, RealNumbers(), linear=False)
 
     def _call(self, x):
-        """Return the norm of x.
+        """Return the norm of ``x``.
 
         Parameters
         ----------
-        x : `domain` `element`
-            A vector in the domain.
+        x : `domain` element
+            Element to take the norm of.
 
         Returns
         -------
-        out : ``field`` `element`
-            Result of the inner product calculation
+        norm : `float`
+            Norm of ``x``.
 
         Examples
         --------
@@ -632,7 +633,7 @@ class NormOperator(Operator):
         return x.norm()
 
     def derivative(self, point):
-        """The derivative operator.
+        """Derivative of this operator in ``point``.
 
         This is only applicable in inner product spaces.
 
@@ -654,9 +655,9 @@ class NormOperator(Operator):
         Notes
         -----
         The derivative cannot be written in a general sense except in Hilbert
-        spaces, in that case, it is given by
+        spaces, in which case it is given by
 
-        .. Math::
+        .. math::
 
             (D ||.||)(x)(y) = < x / ||x||, y >
 
@@ -678,14 +679,15 @@ class NormOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'NormOperator({!r})'.format(self.domain)
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return 'NormOperator({})'.format(self.domain)
+        return '{}({})'.format(self.__class__.__name__, self.domain)
 
 
 class DistOperator(Operator):
+
     """Operator taking the distance to a fixed vector.
 
     ``DistOperator(x)(y) <==> x.dist(y)``
@@ -699,7 +701,7 @@ class DistOperator(Operator):
     """
 
     def __init__(self, vector):
-        """Initialize a DistOperator instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -714,13 +716,13 @@ class DistOperator(Operator):
 
         Parameters
         ----------
-        x : `domain` `element`
-            A vector in the domain.
+        x : `domain` element
+            An element in the domain.
 
         Returns
         -------
-        out : ``field`` `element`
-            Result of the inner product calculation
+        out : `float`
+            Distance from of ``x`` to ``self.vector``.
 
         Examples
         --------
@@ -756,9 +758,9 @@ class DistOperator(Operator):
         Notes
         -----
         The derivative cannot be written in a general sense except in Hilbert
-        spaces, in that case, it is given by
+        spaces, in which case it is given by
 
-        .. Math::
+        .. math::
 
             (D d(x, y))(y)(z) = < (x-y) / d(x, y), y >
 
@@ -783,11 +785,11 @@ class DistOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'DistOperator({!r})'.format(self.vector)
+        return '{}({!r})'.format(self.__class__.__name__, self.vector)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return 'DistOperator({})'.format(self.vector)
+        return '{}({})'.format(self.__class__.__name__, self.vector)
 
 
 class ConstantOperator(Operator):
@@ -798,7 +800,7 @@ class ConstantOperator(Operator):
     """
 
     def __init__(self, vector, domain=None):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -850,7 +852,7 @@ class ConstantOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ConstantOperator({!r})'.format(self.vector)
+        return '{}({!r})'.format(self.__class__.__name__, self.vector)
 
     def __str__(self):
         """Return ``str(self)``."""
