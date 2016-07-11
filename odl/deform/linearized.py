@@ -78,7 +78,7 @@ class LinDeformFixedTempl(Operator):
 
         Parameters
         ----------
-        template : `DiscreteLpVector` or array-like
+        template : `DiscreteLpVector` or element-like
             Fixed template that is to be deformed.
             If ``domain`` is not given, ``template`` must
             be a `DiscreteLpVector`, and the domain of this operator
@@ -92,14 +92,34 @@ class LinDeformFixedTempl(Operator):
 
         Examples
         --------
+        Create a template and deform it with a given deformation field.
+
+        Where the deformation field is zero we expect to get the same output
+        as the input. In the 4:th point, the deformation is non-zero and hence
+        we expect to get the value of the point 0.2 to the left, that is 1.0.
+
         >>> import odl
-        >>> space = odl.uniform_discr(0, 1, 5)
-        >>> disp_field_space = odl.ProductSpace(space, space.ndim)
+        >>> space = odl.uniform_discr(0, 1, 5, interp='nearest')
         >>> template = space.element([0, 0, 1, 0, 0])
-        >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
         >>> op = LinDeformFixedTempl(template)
-        >>> op(displacement_field)
-        uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 1.0, 1.0, 0.0])
+        >>> disp_field = [[0, 0, 0, -0.2, 0]]
+        >>> print(op(disp_field))
+        [0.0, 0.0, 1.0, 1.0, 0.0]
+
+        The result depends on the chosen interpolation. If we chose 'linear'
+        interpolation and offset the point half the distance between two
+        points, 0.1, we expect to get the mean of the values.
+
+        >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
+        >>> template = space.element([0, 0, 1, 0, 0])
+        >>> op = LinDeformFixedTempl(template)
+        >>> disp_field = [[0, 0, 0, -0.1, 0]]
+        >>> print(op(disp_field))
+        [0.0, 0.0, 1.0, 0.5, 0.0]
+
+        See Also
+        --------
+        LinDeformFixedDisp : Deformation with a fixed displacement.
         """
         if domain is None:
             if not isinstance(template, DiscreteLpVector):
@@ -121,11 +141,6 @@ class LinDeformFixedTempl(Operator):
             if not domain[0].is_rn:
                 raise TypeError('`domain[0]` {!r} not a real space'
                                 ''.format(domain[0]))
-            if not domain[0].domain == template.space.domain:
-                raise TypeError('`domain[0].domain {!r} does not match '
-                                'template.space.domain {!r}'
-                                ''.format(domain[0].domain,
-                                          template.space.domain))
 
             template = domain[0].element(template)
 
@@ -173,6 +188,17 @@ class LinDeformFixedTempl(Operator):
 
         return PointwiseInner(self.domain, def_grad)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        if self.domain == self._template.space.tangent_space:
+            domain_repr = ''
+        else:
+            domain_repr = ', domain={!r}'.format(self.domain)
+
+        return '{}({!r}{})'.format(self.__class__.__name__,
+                                   self._template,
+                                   domain_repr)
+
 
 class LinDeformFixedDisp(Operator):
 
@@ -187,41 +213,65 @@ class LinDeformFixedDisp(Operator):
 
         Parameters
         ----------
-        displacement : `ProductSpace` element or array-like
+        displacement : `ProductSpace` element-like
             Fixed displacement field used in the linearized deformation.
             If ``domain`` is not given, ``displacement`` must
             be a `ProductSpace` element, and the domain of this operator
             is inferred from ``displacement[0].space``. If ``domain`` is
             given, ``displacement`` can be anything that is understood
-            by the ``ProductSpace(domain, domain.ndim).element()`` method.
+            by the ``domain.tangent_space.element()`` method.
         domain : `DiscreteLp`, optional
             Space of templates on which this operator acts, i.e. the operator
             domain. If not given, ``displacement[0].space`` is used as domain.
 
         Examples
         --------
+        Create a given deformation and use it to deform a function.
+
+        Where the deformation field is zero we expect to get the same output
+        as the input. In the 4:th point, the deformation is non-zero and hence
+        we expect to get the value of the point 0.2 to the left, that is 1.0.
+
         >>> import odl
         >>> space = odl.uniform_discr(0, 1, 5)
-        >>> disp_field_space = odl.ProductSpace(space, space.ndim)
-        >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
-        >>> template = space.element([0, 0, 1, 0, 0])
-        >>> op = LinDeformFixedDisp(displacement_field)
-        >>> op(template)
-        uniform_discr(0.0, 1.0, 5).element([0.0, 0.0, 1.0, 1.0, 0.0])
+        >>> disp_field = space.tangent_space.element([[0, 0, 0, -0.2, 0]])
+        >>> op = LinDeformFixedDisp(disp_field)
+        >>> template = [0, 0, 1, 0, 0]
+        >>> print(op([0, 0, 1, 0, 0]))
+        [0.0, 0.0, 1.0, 1.0, 0.0]
+
+        The result depends on the chosen interpolation. If we chose 'linear'
+        interpolation and offset the point half the distance between two
+        points, 0.1, we expect to get the mean of the values.
+
+        >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
+        >>> disp_field = space.tangent_space.element([[0, 0, 0, -0.1, 0]])
+        >>> op = LinDeformFixedDisp(disp_field)
+        >>> template = [0, 0, 1, 0, 0]
+        >>> print(op(template))
+        [0.0, 0.0, 1.0, 0.5, 0.0]
+
+        See Also
+        --------
+        LinDeformFixedTempl : Deformation with a fixed template.
         """
         if domain is None:
-            if not isinstance(displacement.space[0], DiscreteLp):
-                raise TypeError('`displacement[0]` {!r} not an element of'
-                                '`DiscreteLp`'.format(displacement[0]))
-            if not displacement.space[0].is_rn:
-                raise TypeError('`displacement[0]` {!r} not a real space'
-                                ''.format(displacement[0]))
+            if not isinstance(displacement.space, ProductSpace):
+                raise TypeError('`displacement.space` {!r} not a '
+                                '`ProductSpace`'.format(displacement.space))
             if not displacement.space.is_power_space:
-                raise TypeError('`displacement.space` {!r} not a product'
+                raise TypeError('`displacement.space` {!r} not a power'
                                 'space'.format(displacement.space))
+            if not isinstance(displacement[0].space, DiscreteLp):
+                raise TypeError('`displacement[0].space` {!r} not an '
+                                '`DiscreteLp`'.format(displacement[0]))
 
             domain = displacement[0].space
         else:
+            if not isinstance(domain, DiscreteLp):
+                raise TypeError('`displacement[0]` {!r} not an `DiscreteLp`'
+                                ''.format(displacement[0]))
+
             displacement = domain.tangent_space.element(displacement)
 
         Operator.__init__(self, domain, domain, linear=True)
@@ -256,6 +306,17 @@ class LinDeformFixedDisp(Operator):
         deformation = LinDeformFixedDisp(-self._displacement,
                                          domain=self.domain)
         return jacobian_det * deformation
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        if self.domain == self._displacement.space[0]:
+            domain_repr = ''
+        else:
+            domain_repr = ', domain={!r}'.format(self.domain)
+
+        return '{}({!r}{})'.format(self.__class__.__name__,
+                                   self._displacement,
+                                   domain_repr)
 
 
 if __name__ == '__main__':
