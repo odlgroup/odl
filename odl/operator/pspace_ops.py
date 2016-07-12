@@ -442,13 +442,13 @@ class ComponentProjection(Operator):
         >>> proj.range
         ProductSpace(rn(1), rn(3))
         """
-        self._index = index
+        self.__index = index
         super().__init__(space, space[index], linear=True)
 
     @property
     def index(self):
         """Index of the subspace."""
-        return self._index
+        return self.__index
 
     def _call(self, x, out=None):
         """Project x onto subspace.
@@ -553,13 +553,13 @@ class ComponentProjectionAdjoint(Operator):
         >>> proj.domain
         ProductSpace(rn(1), rn(3))
         """
-        self._index = index
+        self.__index = index
         super().__init__(space[index], space, linear=True)
 
     @property
     def index(self):
         """Index of the subspace."""
-        return self._index
+        return self.__index
 
     def _call(self, x, out=None):
         """Extend ``x`` from the subspace.
@@ -638,8 +638,8 @@ class BroadcastOperator(Operator):
     It is implemented using a `ProductSpaceOperator`.
     """
     def __init__(self, *operators):
-        self._operators = operators
-        self._prod_op = ProductSpaceOperator([[op] for op in operators])
+        self.__operators = operators
+        self.__prod_op = ProductSpaceOperator([[op] for op in operators])
 
         super().__init__(self.prod_op.domain[0],
                          self.prod_op.range,
@@ -648,12 +648,12 @@ class BroadcastOperator(Operator):
     @property
     def prod_op(self):
         """`ProductSpaceOperator` implementation."""
-        return self._prod_op
+        return self.__prod_op
 
     @property
     def operators(self):
         """A tuple of sub-operators."""
-        return self._operators
+        return self.__operators
 
     def __getitem__(self, index):
         """Return an operator by index."""
@@ -762,8 +762,8 @@ class ReductionOperator(Operator):
     It is implemented using a `ProductSpaceOperator`.
     """
     def __init__(self, *operators):
-        self._operators = operators
-        self._prod_op = ProductSpaceOperator([operators])
+        self.__operators = operators
+        self.__prod_op = ProductSpaceOperator([operators])
 
         super().__init__(self.prod_op.domain,
                          self.prod_op.range[0],
@@ -772,12 +772,12 @@ class ReductionOperator(Operator):
     @property
     def prod_op(self):
         """`ProductSpaceOperator` implementation."""
-        return self._prod_op
+        return self.__prod_op
 
     @property
     def operators(self):
         """A tuple of sub-operators."""
-        return self._operators
+        return self.__operators
 
     def __getitem__(self, index):
         """Return an operator by index."""
@@ -916,14 +916,14 @@ class DiagonalOperator(ProductSpaceOperator):
         shape = (len(operators), len(operators))
         op_matrix = sp.sparse.coo_matrix((operators, indices), shape)
 
-        self._operators = operators
+        self.__operators = tuple(operators)
 
         super().__init__(op_matrix, **kwargs)
 
     @property
     def operators(self):
         """A tuple of sub-operators."""
-        return self._operators
+        return self.__operators
 
     def __getitem__(self, index):
         """Return an operator by index."""
