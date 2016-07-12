@@ -930,7 +930,7 @@ class DiagonalOperator(ProductSpaceOperator):
         return self.operators[index]
 
     def derivative(self, point):
-        """Derivative operator.
+        """Derivative of this operator.
 
         For example, if A and B are operators
 
@@ -995,7 +995,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def inverse(self):
-        """Inverse operator.
+        """Inverse of this operator.
 
         For example, if A and B are operators
 

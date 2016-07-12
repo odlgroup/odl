@@ -450,7 +450,7 @@ class PowerOperator(Operator):
             out **= self.exponent
 
     def derivative(self, point):
-        """Derivative operator.
+        """Derivative of this operator.
 
         ``MultiplyOperator(n).derivative(x)(y) <==> n * x ** (n - 1) * y``
 

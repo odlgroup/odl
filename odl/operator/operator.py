@@ -1354,7 +1354,7 @@ class OperatorLeftScalarMult(Operator):
 
     @property
     def inverse(self):
-        """Inverse operator.
+        """Inverse of this operator.
 
         The inverse of ``scalar * op`` is given by
         ``op.inverse * 1/scalar`` if ``scalar != 0``. If ``scalar == 0``,
@@ -1484,7 +1484,7 @@ class OperatorRightScalarMult(Operator):
 
     @property
     def inverse(self):
-        """Inverse operator.
+        """Inverse of this operator.
 
         The inverse of ``op * scalar`` is given by
         ``1/scalar * op.inverse`` if ``scalar != 0``. If ``scalar == 0``,
@@ -1685,7 +1685,7 @@ class OperatorLeftVectorMult(Operator):
 
     @property
     def inverse(self):
-        """Inverse operator.
+        """Inverse of this operator.
 
         The inverse of ``vector * op`` is given by
         ``op.inverse / vector``.
@@ -1790,7 +1790,7 @@ class OperatorRightVectorMult(Operator):
 
     @property
     def inverse(self):
-        """Inverse operator.
+        """Inverse of this operator.
 
         The inverse of ``op * vector`` is given by
         ``(1.0 / vector) * op.inverse``.
