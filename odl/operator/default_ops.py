@@ -54,8 +54,12 @@ class ScalingOperator(Operator):
                             ''.format(space))
 
         super().__init__(space, space, linear=True)
-        self._space = space
-        self._scal = space.field.element(scalar)
+        self.__scalar = space.field.element(scalar)
+
+    @property
+    def scalar(self):
+        """The scalar to scale by."""
+        return self.__scalar
 
     def _call(self, x, out=None):
         """Scale input and write to output.
@@ -88,9 +92,9 @@ class ScalingOperator(Operator):
         rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:
-            out = self._scal * x
+            out = self.scalar * x
         else:
-            out.lincomb(self._scal, x)
+            out.lincomb(self.scalar, x)
         return out
 
     @property
@@ -109,26 +113,32 @@ class ScalingOperator(Operator):
         >>> op(inv(vec)) == vec
         True
         """
-        if self._scal == 0.0:
+        if self.scalar == 0.0:
             raise ZeroDivisionError('scaling operator not invertible for '
                                     'scalar==0')
-        return ScalingOperator(self._space, 1.0 / self._scal)
+        return ScalingOperator(self.domain, 1.0 / self.scalar)
 
     @property
     def adjoint(self):
-        """Adjoint, given as scaling with the conjugate of the scalar."""
-        if complex(self._scal).imag == 0.0:
+        """Adjoint, given as scaling with the conjugate of the scalar.
+
+        Returns
+        -------
+        adjoint : `ScalingOperator`
+            ``self`` if `scalar` is real, else `scalar` is conjugated.
+        """
+        if complex(self.scalar).imag == 0.0:
             return self
         else:
-            return ScalingOperator(self._space, self._scal.conjugate())
+            return ScalingOperator(self.domain, self.scalar.conjugate())
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ScalingOperator({!r}, {!r})'.format(self._space, self._scal)
+        return 'ScalingOperator({!r}, {!r})'.format(self.domain, self.scalar)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{} * I'.format(self._scal)
+        return '{} * I'.format(self.scalar)
 
 
 class ZeroOperator(ScalingOperator):
@@ -329,7 +339,7 @@ class MultiplyOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint operator.
+        """Adjoint of this operator.
 
         Returns
         -------
@@ -531,7 +541,7 @@ class InnerProductOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint operator.
+        """Adjoint of this operator.
 
         Returns
         -------

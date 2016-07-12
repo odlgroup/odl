@@ -194,7 +194,12 @@ class RayTransform(Operator):
 
     @property
     def adjoint(self):
-        """Return the adjoint operator."""
+        """Adjoint of this operator.
+
+        Returns
+        -------
+        adjoint : `RayBackProjection`
+        """
         return RayBackProjection(self.domain, self.geometry, self.impl,
                                  **self.kwargs)
 
@@ -319,7 +324,12 @@ class RayBackProjection(Operator):
 
     @property
     def adjoint(self):
-        """Return the adjoint operator."""
+        """Adjoint of this operator.
+
+        Returns
+        -------
+        adjoint : `RayTransform`
+        """
         return RayTransform(self.range, self.geometry, impl=self.impl,
                             **self.kwargs)
 

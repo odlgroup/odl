@@ -820,7 +820,12 @@ class DiscreteFourierTransform(Operator):
 
     @property
     def inverse(self):
-        """Inverse Fourier transform."""
+        """Inverse Fourier transform.
+
+        See Also
+        --------
+        adjoint : Equivalent since the fourier transform is unitary.
+        """
         sign = '+' if self.sign == '-' else '-'
         return DiscreteFourierTransformInverse(
             domain=self.range, range=self.domain, axes=self.axes,
@@ -1849,7 +1854,12 @@ class FourierTransform(Operator):
 
     @property
     def inverse(self):
-        """Inverse Fourier transform."""
+        """Inverse Fourier transform.
+
+        See Also
+        --------
+        adjoint : Equivalent since the fourier transform is unitary.
+        """
         sign = '+' if self.sign == '-' else '-'
         return FourierTransformInverse(
             domain=self.range, range=self.domain, impl=self.impl,

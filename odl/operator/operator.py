@@ -586,7 +586,7 @@ class Operator(object):
 
     @property
     def adjoint(self):
-        """Operator adjoint (abstract).
+        """Adjoint of this operator (abstract).
 
         Raises
         ------
@@ -1096,13 +1096,17 @@ class OperatorSum(Operator):
 
     @property
     def adjoint(self):
-        """Operator adjoint.
+        """Adjoint of this operator.
 
         The adjoint of the operator sum is the sum of the operator
         adjoints:
 
         ``OperatorSum(op1, op2).adjoint ==
         OperatorSum(op1.adjoint, op2.adjoint)``
+
+        Returns
+        -------
+        adjoint : `OperatorSum`
 
         Raises
         ------
@@ -1177,7 +1181,7 @@ class OperatorComp(Operator):
 
     @property
     def inverse(self):
-        """Operator inverse.
+        """Inverse of this operator.
 
         The inverse of the operator composition is the composition of
         the inverses in reverse order:
@@ -1209,13 +1213,17 @@ class OperatorComp(Operator):
 
     @property
     def adjoint(self):
-        """Operator adjoint.
+        """Adjoint of this operator.
 
         The adjoint of the operator composition is the composition of
         the operator adjoints in reverse order:
 
         ``OperatorComp(left, right).adjoint ==
         OperatorComp(right.adjoint, left.adjoint)``
+
+        Returns
+        -------
+        adjoint : `OperatorComp`
 
         Raises
         ------
@@ -1381,7 +1389,7 @@ class OperatorLeftScalarMult(Operator):
 
     @property
     def adjoint(self):
-        """Operator adjoint.
+        """Adjoint of this operator.
 
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
@@ -1508,7 +1516,7 @@ class OperatorRightScalarMult(Operator):
 
     @property
     def adjoint(self):
-        """Operator adjoint.
+        """Adjoint of this operator.
 
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
@@ -1601,7 +1609,7 @@ class FunctionalLeftVectorMult(Operator):
 
     @property
     def adjoint(self):
-        """Operator adjoint.
+        """Adjoint of this operator.
 
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
@@ -1610,6 +1618,10 @@ class FunctionalLeftVectorMult(Operator):
         OperatorComp(op.adjoint, vector.T)``
 
         ``(x * A)^T = A^T * x^T``
+
+        Returns
+        -------
+        adjoint : `OperatorComp`
 
         Raises
         ------
@@ -1700,7 +1712,7 @@ class OperatorLeftVectorMult(Operator):
 
     @property
     def adjoint(self):
-        """Operator adjoint.
+        """Adjoint of this operator.
 
         The adjoint of the operator vector multiplication is the
         vector multiplication of the operator adjoint:
@@ -1709,6 +1721,10 @@ class OperatorLeftVectorMult(Operator):
         ``OperatorRightVectorMult(op.adjoint, vector)``
 
         ``(x * A)^T = A^T * x``
+
+        Returns
+        -------
+        adjoint : `OperatorRightVectorMult`
 
         Raises
         ------
@@ -1801,7 +1817,7 @@ class OperatorRightVectorMult(Operator):
 
     @property
     def adjoint(self):
-        """Operator adjoint.
+        """Adjoint of this operator.
 
         The adjoint of the operator vector multiplication is the
         vector multiplication of the operator adjoint:
@@ -1810,6 +1826,10 @@ class OperatorRightVectorMult(Operator):
         ``OperatorLeftVectorMult(op.adjoint, vector)``
 
         ``(A x)^T = x * A^T``
+
+        Returns
+        -------
+        adjoint : `OperatorLeftVectorMult`
 
         Raises
         ------

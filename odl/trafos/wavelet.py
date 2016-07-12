@@ -671,7 +671,18 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     @property
     def adjoint(self):
-        """Adjoint wavelet transform."""
+        """Adjoint wavelet transform.
+
+        Returns
+        -------
+        adjoint : `WaveletTransformInverse`
+            If the transform is orthogonal, the adjoint is the inverse.
+
+        Raises
+        ------
+        OpNotImplementedError
+            If `is_orthogonal` is not true, the adjoint is not implemented.
+        """
         if self.is_orthogonal:
             return self.inverse
         else:
@@ -680,7 +691,16 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     @property
     def inverse(self):
-        """Inverse wavelet transform."""
+        """Inverse wavelet transform.
+
+        Returns
+        -------
+        inverse : `WaveletTransformInverse`
+
+        See Also
+        --------
+        adjoint
+        """
         return WaveletTransformInverse(
             range=self.domain, nscales=self.nscales, wbasis=self.wbasis,
             mode=self.mode)
@@ -829,7 +849,22 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     @property
     def adjoint(self):
-        """Adjoint wavelet transform."""
+        """Adjoint of this operator.
+
+        Returns
+        -------
+        adjoint : `WaveletTransform`
+            If the transform is orthogonal, the adjoint is the inverse.
+
+        Raises
+        ------
+        OpNotImplementedError
+            If `is_orthogonal` is not true, the adjoint is not implemented.
+
+        See Also
+        --------
+        inverse
+        """
         if self.is_orthogonal:
             return self.inverse
         else:
@@ -838,7 +873,16 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     @property
     def inverse(self):
-        """Inverse wavelet transform."""
+        """Inverse of this operator.
+
+        Returns
+        -------
+        inverse : `WaveletTransform`
+
+        See Also
+        --------
+        adjoint
+        """
         return WaveletTransform(domain=self.range, nscales=self.nscales,
                                 wbasis=self.wbasis, mode=self.mode)
 

@@ -342,7 +342,7 @@ class ProductSpaceOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint of the product space operator.
+        """Adjoint of this operator.
 
         The adjoint is given by taking the transpose of the matrix
         and the adjoint of each component operator.
@@ -616,14 +616,13 @@ class ComponentProjectionAdjoint(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint operator.
+        """Adjoint of this operator.
 
-        The adjoint is given by the `ComponentProjection`
-        related to this operator's `index`.
-
-        See also
-        --------
-        ComponentProjection
+        Returns
+        -------
+        adjoint : `ComponentProjection`
+            The adjoint is given by the `ComponentProjection` related to this
+            operator's `index`.
         """
         return ComponentProjection(self.range, self.index)
 
@@ -735,12 +734,11 @@ class BroadcastOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint of the broadcast operator.
+        """Adjoint of this operator.
 
         Returns
         -------
         adjoint : linear `BroadcastOperator`
-            The adjoint
 
         Examples
         --------
@@ -871,12 +869,11 @@ class ReductionOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint of the reduction operator.
+        """Adjoint of this operator.
 
         Returns
         -------
         adjoint : linear `BroadcastOperator`
-            The adjoint
 
         Examples
         --------
@@ -969,7 +966,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def adjoint(self):
-        """Adjoint operator.
+        """Adjoint of this operator.
 
         For example, if A and B are operators
 

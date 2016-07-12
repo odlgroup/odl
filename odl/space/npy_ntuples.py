@@ -1374,7 +1374,12 @@ class MatVecOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint operator represented by the adjoint matrix."""
+        """Adjoint operator represented by the adjoint matrix.
+
+        Returns
+        -------
+        adjoint : `MatVecOperator`
+        """
         if self.domain.field != self.range.field:
             raise NotImplementedError('adjoint not defined since fields '
                                       'of domain and range differ ({} != {})'
