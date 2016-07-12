@@ -48,57 +48,47 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
         min_{x in X} F(K x) + G(x)
 
-    where ``X`` and ``Y`` are finite-dimensional Hilbert spaces, ``K``
-    is a linear operator ``K : X -> Y``.  and ``G : X -> [0, +inf]``
-    and ``F : Y -> [0, +inf]`` are proper, convex, lower-semicontinuous
-    functionals.
+    where ``K`` is an operator and ``F`` and ``G`` are functionals.
 
-    The Chambolle-Pock algorithm basically consists of alternating a
-    gradient ascent in the dual variable y and a gradient descent in the
-    primal variable x. The proximal operator is used to generate a ascent
-    direction for the convex conjugate of F and descent direction for G.
-    Additionally an over-relaxation in the primal variable is performed.
+    The Chambolle-Pock algorithm is a primal-dual algorithm, and basically
+    consists of alternating a gradient ascent in the dual variable and a
+    gradient descent in the primal variable. The proximal operator is used to
+    generate a ascent direction for the convex conjugate of F and descent
+    direction for G. Additionally an over-relaxation in the primal variable is
+    performed.
 
     Parameters
     ----------
     op : `Operator`
-        A (product space) operator between Hilbert spaces with domain X
-        and range Y
+        Forward operator, the operator ``K`` in the problem formulation.
     x : element in the domain of ``op``
-        Starting point of the iteration
+        Starting point of the iteration, updated in place.
     tau : positive `float`
-        Step size parameter for the update of the primal variable x.
+        Step size parameter for the update of the primal variable.
         Controls the extent to which ``proximal_primal`` maps points
         towards the minimum of G.
     sigma : positive `float`
-        Step size parameter for the update of the dual variable y. Controls
+        Step size parameter for the update of the dual variable. Controls
         the extent to which ``proximal_dual`` maps points towards the
-        minimum of F^*.
+        minimum of ``F^*``.
     proximal_primal : `callable`
-        Evaluated at ``tau``, the function returns the proximal operator,
-        prox[tau * G](x), of the functional G. The domain of G and its
-        proximal operator instance are the space, X, of the primal variable
-        x i.e. the domain of ``op``.
+        `proximal factory` for the functional ``G``.
     proximal_dual : `callable`
-        Evaluated at ``sigma``, the function returns the proximal operator,
-        prox[sigma * F^*](x), of the convex conjugate, F^*, of the function
-        F. The domain of F^* and its proximal operator instance are the
-        space, Y, of the dual variable y i.e. the range of ``op``.
+        `proximal factory` for the functional ``F^*``.
     niter : non-negative `int`, optional
-        Number of iterations
+        Number of iterations.
 
     Other Parameters
     ----------------
+    callback : `callable`, optional
+        Function called with the current iterate after each iteration.
     theta : `float` in [0, 1], optional
         Relaxation parameter. Default: 1
     gamma : non-negative `float`, optional
-        Acceleration parameter. If not `None` overwrites ``theta`` and uses
+        Acceleration parameter. If not `None`, overwrites ``theta`` and uses
         variable relaxation parameter and step sizes with ``tau`` and
         ``sigma`` as initial values. Requires G or F^* to be uniformly
         convex. Default: `None`
-    callback : `callable`, optional
-        If not `None` the ``callback`` instance(s) are executed in each
-        iteration, e.g. plotting each iterate. Default: `None`
     x_relax : element in the domain of ``op``, optional
         Required to resume iteration. If `None` it is a copy of the primal
         variable x. Default: `None`
@@ -108,9 +98,42 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     Notes
     -----
+    The problem of interest is
+
+    .. math::
+
+        \\min_{x \\in X} F(K x) + G(x),
+
+    where the technical conditions are that :math:`K` is an operator
+    between Hilbert spaces :math:`X` and :math:`Y`, where convergence is only
+    guaranteed if :math:`K` is linear and :math:`X, Y` are finite dimensional.
+    Further, :math:`G : X -> [0, +\\infty]` and :math:`F : Y -> [0, +\\infty]`
+    are proper, convex, lower-semicontinuous functionals.
+
+    It is often of interest to study problems that involve several operators,
+    for example the classical TV regularized problem
+
+    .. math::
+
+        \\min_x ||Ax - b||_2^2 + ||\\nabla x||_1.
+
+    Here it is tempting to let :math:`K=A`, :math:`F(y)=||y||_2^2` and
+    :math:`G(x)=||\\nabla x||_1`. This is however not feasible since the
+    proximal of :math:`||\\nabla x||_1` has no closed form expression.
+
+    Instead, the problem can be formulated :math:`K(x) = (A(x), \\nabla x)`,
+    :math:`F((x_1, x_2)) = ||x_1||_2^2 + ||x_2||_1`, :math:`G(x)=0`. See the
+    examples folder for more information on how to do this.
+
+    See Also
+    --------
+    douglas_rachford_pd : Solver for similar problems.
+
+    References
+    ----------
     For a more detailed documentation see :ref:`chambolle_pock`.
 
-    For references on the Chambolle-Pock algorithm see [CP2011a]_ and
+    References on the Chambolle-Pock algorithm can be found in [CP2011a]_ and
     [CP2011b]_.
 
     This implementation of the CP algorithm is along the lines of
@@ -120,6 +143,8 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     resolvent operators see [Roc1970]_.
 
     For more on proximal operators and algorithms see [PB2014]_.
+
+    The non-linear case is analyzed in [Val2014]_.
     """
     # Forward operator
     if not isinstance(op, Operator):
@@ -127,7 +152,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
                         ''.format(op, Operator))
 
     # Starting point
-    if x.space != op.domain:
+    if x not in op.domain:
         raise TypeError('`x` {} is not in the domain of `op` {}'
                         ''.format(x.space, op.domain))
 
@@ -148,20 +173,18 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     # Relaxation parameter
     theta = kwargs.pop('theta', 1)
+    theta, theta_in = float(theta), theta
     if not 0 <= theta <= 1:
         raise ValueError('`theta` {} not in [0, 1]'
-                         ''.format(theta))
-    else:
-        theta = float(theta)
+                         ''.format(theta_in))
 
     # Acceleration parameter
     gamma = kwargs.pop('gamma', None)
     if gamma is not None:
+        gamma, gamma_in = float(gamma), gamma
         if gamma < 0:
             raise ValueError('`gamma` must be non-negative, got {}'
-                             ''.format(gamma))
-        else:
-            gamma = float(gamma)
+                             ''.format(gamma_in))
 
     # Callback object
     callback = kwargs.pop('callback', None)
@@ -173,25 +196,20 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     x_relax = kwargs.pop('x_relax', None)
     if x_relax is None:
         x_relax = x.copy()
-    else:
-        if x_relax.space != op.domain:
-            raise TypeError('`x_relax` {} is not in the domain of '
-                            '`op` {}'.format(x_relax.space, op.domain))
+    elif x_relax not in op.domain:
+        raise TypeError('`x_relax` {} is not in the domain of '
+                        '`op` {}'.format(x_relax.space, op.domain))
 
     # Initialize the dual variable
     y = kwargs.pop('y', None)
     if y is None:
         y = op.range.zero()
-    else:
-        if y.space != op.range:
-            raise TypeError('`y` {} is not in the range of `op` '
-                            '{}'.format(y.space, op.range))
+    elif y not in op.range:
+        raise TypeError('`y` {} is not in the range of `op` '
+                        '{}'.format(y.space, op.range))
 
-    # Temporal copy to store previous iterate
+    # Temporary copy to store previous iterate
     x_old = x.space.element()
-
-    # Adjoint of the (product space) operator
-    op_adjoint = op.adjoint
 
     for _ in range(niter):
         # Copy required for relaxation
@@ -202,7 +220,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         proximal_dual(sigma)(dual_tmp, out=y)
 
         # Gradient descent in the primal variable x
-        primal_tmp = x + (- tau) * op_adjoint(y)
+        primal_tmp = x + (- tau) * op.derivative(x).adjoint(y)
         proximal_primal(tau)(primal_tmp, out=x)
 
         # Acceleration

@@ -112,6 +112,10 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
         \\sum_{n=1}^\infty \\lambda_n (2 - \\lambda_n) = +\infty.
 
+    See Also
+    --------
+    chambolle_pock : Solver for similar problems.
+
     References
     ----------
     For references on the algorithm, see algorithm 3.1 in [BH2013]_.
