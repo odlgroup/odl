@@ -583,7 +583,7 @@ def proximal_cconj_l2(space, lam=1, g=None):
 def proximal_l2(space, lam=1, g=None):
     """Proximal operator factory of the l2-norm/distance.
 
-    Function for the proximal operator of the  functional ``F`` where ``F``
+    Function for the proximal operator of the functional ``F`` where ``F``
     is the l2-norm (or distance to g, if given)
 
         F(x) =  lam ||x - g||_2
@@ -1005,9 +1005,9 @@ def proximal_cconj_kl(space, lam=1, g=None):
     Parameters
     ----------
     space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
-        The space X which is the domain of the functional F
+        Space X which is the domain of the functional F
     g : ``space`` element
-        The data term
+        Data term
     lam : positive `float`
         Scaling factor
 

@@ -176,7 +176,7 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def partition(self):
-        """The `RectPartition` of the domain."""
+        """`RectPartition` of the domain."""
         return self._partition
 
     @property
@@ -225,7 +225,7 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def exponent(self):
-        """The exponent ``p`` in ``L^p``."""
+        """Exponent ``p`` in ``L^p``."""
         return self._exponent
 
     def element(self, inp=None, **kwargs):
@@ -573,7 +573,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
         self.ntuple.imag = newimag_flat
 
     def conj(self, out=None):
-        """The complex conjugate of this element.
+        """Complex conjugate of this element.
 
         Parameters
         ----------
@@ -1242,7 +1242,7 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
     Returns
     -------
     seqspc : `DiscreteLp`
-        The sequence-space-like discrete Lp
+        Sequence-space-like discrete Lp.
 
     Examples
     --------

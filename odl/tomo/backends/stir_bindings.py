@@ -100,9 +100,9 @@ class ForwardProjectorByBinWrapper(Operator):
             Projection space. Needs to have the same shape as
             ``proj_data.to_array().shape()``.
         volume : ``stir.FloatVoxelsOnCartesianGrid``
-            The stir volume to use in the forward projection
+            Stir volume to use in the forward projection
         proj_data : ``stir.ProjData``
-            The stir description of the projection.
+            Stir description of the projection.
         projector : ``stir.ForwardProjectorByBin``, optional
             A pre-initialized projector.
         adjoint : `BackProjectorByBinWrapper`, optional
@@ -169,7 +169,7 @@ class ForwardProjectorByBinWrapper(Operator):
 
     @property
     def adjoint(self):
-        """The back-projector associated with this operator."""
+        """Back-projector associated with this operator."""
         return self._adjoint
 
 
@@ -190,9 +190,9 @@ class BackProjectorByBinWrapper(Operator):
             Volume of the projection. Needs to have the same shape as
             ``volume.shape()``.
         volume : ``stir.FloatVoxelsOnCartesianGrid``
-            The stir volume to use in the forward projection
+            Stir volume to use in the forward projection
         proj_data : ``stir.ProjData``
-            The stir description of the projection.
+            Stir description of the projection.
         back_projector : ``stir.BackProjectorByBin``, optional
             A pre-initialized back-projector.
         adjoint : `ForwardProjectorByBinWrapper`, optional

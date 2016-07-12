@@ -148,7 +148,7 @@ class CallbackStore(SolverCallback):
 
     @property
     def results(self):
-        """The iterates."""
+        """Sequence of partial results."""
         return self._results
 
     def __call__(self, result):
@@ -170,7 +170,7 @@ class CallbackStore(SolverCallback):
         return self.results[index]
 
     def __len__(self):
-        """The number of results stored."""
+        """Number of results stored."""
         return len(self.results)
 
     def __str__(self):

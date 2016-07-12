@@ -79,7 +79,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         Other Parameters
         ----------------
         src_to_det_init : `array-like`, shape ``(2,)``, optional
-            Initial state of the vector pointing from source to  detector
+            Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
             By default, a `perpendicular_vector` to ``axis`` is used.
         det_init_axes : 2-tuple of `array-like` (shape ``(2,)``), optional
@@ -158,7 +158,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
     @property
     def angles(self):
-        """The discrete angles given in this geometry."""
+        """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
 
     def det_refpoint(self, angle):
@@ -319,7 +319,7 @@ class CircularConeFlatGeometry(HelicalConeFlatGeometry):
         axis : `array-like`, shape ``(3,)``, optional
             Fixed rotation axis, the symmetry axis of the helix
         src_to_det_init : `array-like`, shape ``(2,)``, optional
-            Initial state of the vector pointing from source to  detector
+            Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
             By default, a `perpendicular_vector` to ``axis`` is used.
         det_init_axes : 2-tuple of `array-like` (shape ``(2,)``), optional

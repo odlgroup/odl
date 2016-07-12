@@ -101,7 +101,7 @@ def vector(array, dtype=None, impl='numpy'):
 
 
 def ntuples(size, dtype, impl='numpy', **kwargs):
-    """The set of tuples of a fixed size.
+    """Set of tuples of a fixed size.
 
     Parameters
     ----------

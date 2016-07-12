@@ -42,7 +42,7 @@ class OperatorTest(object):
     """
 
     def __init__(self, operator, operator_norm=None, verbose=True):
-        """Create a new instance
+        """Initialize a new instance.
 
         Parameters
         ----------

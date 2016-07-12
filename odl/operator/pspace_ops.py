@@ -342,7 +342,7 @@ class ProductSpaceOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint of the product space operator.
+        """Adjoint of this operator.
 
         The adjoint is given by taking the transpose of the matrix
         and the adjoint of each component operator.
@@ -416,9 +416,9 @@ class ComponentProjection(Operator):
         Parameters
         ----------
         space : `ProductSpace`
-            The space to project from
+            Space to project from.
         index : `int`, `slice`, or `iterable` [int]
-            The indices defining the subspace. If ``index`` is not
+            Indices defining the subspace. If ``index`` is not
             and `int`, the `Operator.range` of this
             operator is also a `ProductSpace`.
 
@@ -529,9 +529,9 @@ class ComponentProjectionAdjoint(Operator):
         Parameters
         ----------
         space : `ProductSpace`
-            The space to project to
+            Space to project to.
         index : `int`, `slice`, or `iterable` [int]
-            The indexes to project from
+            Indexes to project from.
 
         Examples
         --------
@@ -616,14 +616,13 @@ class ComponentProjectionAdjoint(Operator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint of this operator.
 
-        The adjoint is given by the `ComponentProjection`
-        related to this operator's `index`.
-
-        See also
-        --------
-        ComponentProjection
+        Returns
+        -------
+        adjoint : `ComponentProjection`
+            The adjoint is given by the `ComponentProjection` related to this
+            operator's `index`.
         """
         return ComponentProjection(self.range, self.index)
 
@@ -648,7 +647,7 @@ class BroadcastOperator(Operator):
 
     @property
     def prod_op(self):
-        """The prod-op implementation."""
+        """`ProductSpaceOperator` implementation."""
         return self._prod_op
 
     @property
@@ -735,12 +734,11 @@ class BroadcastOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint of the broadcast operator.
+        """Adjoint of this operator.
 
         Returns
         -------
         adjoint : linear `BroadcastOperator`
-            The adjoint
 
         Examples
         --------
@@ -773,7 +771,7 @@ class ReductionOperator(Operator):
 
     @property
     def prod_op(self):
-        """The prod-op implementation."""
+        """`ProductSpaceOperator` implementation."""
         return self._prod_op
 
     @property
@@ -871,12 +869,11 @@ class ReductionOperator(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint of the reduction operator.
+        """Adjoint of this operator.
 
         Returns
         -------
         adjoint : linear `BroadcastOperator`
-            The adjoint
 
         Examples
         --------
@@ -933,7 +930,7 @@ class DiagonalOperator(ProductSpaceOperator):
         return self.operators[index]
 
     def derivative(self, point):
-        """The derivative operator.
+        """Derivative of this operator.
 
         For example, if A and B are operators
 
@@ -969,7 +966,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint of this operator.
 
         For example, if A and B are operators
 
@@ -998,7 +995,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def inverse(self):
-        """The inverse operator
+        """Inverse of this operator.
 
         For example, if A and B are operators
 

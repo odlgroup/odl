@@ -65,7 +65,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         det_radius : nonnegative `float`
             Radius of the detector circle
         src_to_det_init : `array-like`, shape ``(2,)``, optional
-            Initial state of the vector pointing from source to  detector
+            Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
             Default: ``(1, 0)``.
         det_init_axis : `array-like` (shape ``(2,)``), optional
@@ -115,7 +115,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
     @property
     def angles(self):
-        """The discrete angles given in this geometry."""
+        """Discrete angles given in this geometry."""
         return self.motion_grid.coord_vectors[0]
 
     def src_position(self, angle):

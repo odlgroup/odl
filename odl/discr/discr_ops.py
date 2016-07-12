@@ -47,9 +47,9 @@ class Resampling(Operator):
         Parameters
         ----------
         domain : `LinearSpace`
-            The space that should be cast from
+            Space that should be cast from.
         range : `LinearSpace`
-            The space that should be cast to
+            Space that should be cast to.
 
         Examples
         --------

@@ -45,7 +45,7 @@ class ScalingOperator(Operator):
         Parameters
         ----------
         space : `LinearSpace`
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on
         scalar : `LinearSpace.field` `element`
             An element of the field of the space which vectors are
             scaled with
@@ -55,8 +55,12 @@ class ScalingOperator(Operator):
                             ''.format(space))
 
         super().__init__(space, space, linear=True)
-        self._space = space
-        self._scal = space.field.element(scalar)
+        self.__scalar = space.field.element(scalar)
+
+    @property
+    def scalar(self):
+        """The scalar to scale by."""
+        return self.__scalar
 
     def _call(self, x, out=None):
         """Scale input and write to output.
@@ -89,9 +93,9 @@ class ScalingOperator(Operator):
         rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:
-            out = self._scal * x
+            out = self.scalar * x
         else:
-            out.lincomb(self._scal, x)
+            out.lincomb(self.scalar, x)
         return out
 
     @property
@@ -110,26 +114,32 @@ class ScalingOperator(Operator):
         >>> op(inv(vec)) == vec
         True
         """
-        if self._scal == 0.0:
+        if self.scalar == 0.0:
             raise ZeroDivisionError('scaling operator not invertible for '
                                     'scalar==0')
-        return ScalingOperator(self._space, 1.0 / self._scal)
+        return ScalingOperator(self.domain, 1.0 / self.scalar)
 
     @property
     def adjoint(self):
-        """Adjoint, given as scaling with the conjugate of the scalar."""
-        if complex(self._scal).imag == 0.0:
+        """Adjoint, given as scaling with the conjugate of the scalar.
+
+        Returns
+        -------
+        adjoint : `ScalingOperator`
+            ``self`` if `scalar` is real, else `scalar` is conjugated.
+        """
+        if complex(self.scalar).imag == 0.0:
             return self
         else:
-            return ScalingOperator(self._space, self._scal.conjugate())
+            return ScalingOperator(self.domain, self.scalar.conjugate())
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ScalingOperator({!r}, {!r})'.format(self._space, self._scal)
+        return 'ScalingOperator({!r}, {!r})'.format(self.domain, self.scalar)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{} * I'.format(self._scal)
+        return '{} * I'.format(self.scalar)
 
 
 class ZeroOperator(ScalingOperator):
@@ -142,7 +152,7 @@ class ZeroOperator(ScalingOperator):
         Parameters
         ----------
         space : `LinearSpace`
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on.
         """
         super().__init__(space, 0)
 
@@ -165,7 +175,7 @@ class IdentityOperator(ScalingOperator):
         Parameters
         ----------
         space : LinearSpace
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on.
         """
         super().__init__(space, 1)
 
@@ -193,9 +203,9 @@ class LinCombOperator(Operator):
         Parameters
         ----------
         space : `LinearSpace`
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on.
         a, b : scalar
-            Scalars to multiply ``x[0]`` and ``x[1]`` with, respectively
+            Scalars to multiply ``x[0]`` and ``x[1]`` with, respectively.
         """
         domain = ProductSpace(space, space)
         super().__init__(domain, space, linear=True)
@@ -266,9 +276,9 @@ class MultiplyOperator(Operator):
         Parameters
         ----------
         y : `LinearSpaceVector`
-            The value to multiply by
+            Value to multiply by.
         domain : `LinearSpace` or `Field`, optional
-            The set to take values in. Default: ``x.space``
+            Set to take values in. Default: ``x.space``
         """
         if domain is None:
             domain = y.space
@@ -330,7 +340,7 @@ class MultiplyOperator(Operator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint of this operator.
 
         Returns
         -------
@@ -375,7 +385,7 @@ class MultiplyOperator(Operator):
 
 class PowerOperator(Operator):
 
-    """The power of a vector or scalar.
+    """Power of a vector or scalar.
 
     ``MultiplyOperator(n)(x) <==> x ** n``
 
@@ -391,9 +401,9 @@ class PowerOperator(Operator):
         Parameters
         ----------
         exponent : Number
-            The power to take
+            Power to take.
         domain : `LinearSpace` or `Field`, optional
-            The set to take values in
+            Set to take values in.
         """
 
         self.exponent = float(exponent)
@@ -441,7 +451,7 @@ class PowerOperator(Operator):
             out **= self.exponent
 
     def derivative(self, point):
-        """The derivative operator.
+        """Derivative of this operator.
 
         ``MultiplyOperator(n).derivative(x)(y) <==> n * x ** (n - 1) * y``
 
@@ -537,7 +547,7 @@ class InnerProductOperator(Operator):
 
     @property
     def adjoint(self):
-        """The adjoint operator.
+        """Adjoint of this operator.
 
         Returns
         -------
@@ -557,7 +567,7 @@ class InnerProductOperator(Operator):
 
     @property
     def T(self):
-        """The vector of this operator.
+        """Vector of this operator.
 
         Returns
         -------
@@ -925,7 +935,7 @@ class ResidualOperator(Operator):
         return out
 
     def derivative(self, point):
-        """The derivative the residual operator.
+        """Derivative the residual operator.
 
         It is equal to the derivative of the "inner" operator:
 

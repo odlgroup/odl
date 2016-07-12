@@ -70,9 +70,7 @@ def _modified_shepp_logan_ellipses(ellipses):
 
 
 def shepp_logan(space, modified=False):
-    """Create a Shepp-Logan phantom.
-
-    The standard `Shepp-Logan phantom`_ in 2 or 3 dimensions.
+    """Standard `Shepp-Logan phantom`_ in 2 or 3 dimensions.
 
     Parameters
     ----------

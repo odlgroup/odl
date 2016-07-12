@@ -23,14 +23,13 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from odl.util.utility import arraynd_repr, arraynd_str
-from odl.operator.operator import Operator
+from odl.operator import Operator
 from odl.space.base_ntuples import (NtuplesBase, NtuplesBaseVector,
                                     FnBase, FnBaseVector)
-from odl.space import FN_IMPLS, NTUPLES_IMPLS
-from odl.set.sets import Set, RealNumbers, ComplexNumbers
-from odl.set.space import LinearSpace
+from odl.space import FunctionSet, FN_IMPLS, NTUPLES_IMPLS
+from odl.set import RealNumbers, ComplexNumbers, LinearSpace
 from odl.util.utility import (
+    arraynd_repr, arraynd_str,
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
 
@@ -70,7 +69,7 @@ class DiscretizedSet(NtuplesBase):
 
         Parameters
         ----------
-        uspace : `Set`
+        uspace : `FunctionSet`
             The undiscretized (abstract) set to be discretized
         dspace : `NtuplesBase`
             Data space providing containers for the values of a
@@ -84,7 +83,7 @@ class DiscretizedSet(NtuplesBase):
             Must satisfy ``interpol.domain == dspace``,
             ``interpol.range == uspace``.
             """
-        if not isinstance(uspace, Set):
+        if not isinstance(uspace, FunctionSet):
             raise TypeError('`uspace` {!r} not a `Set` instance'
                             ''.format(uspace))
         if not isinstance(dspace, NtuplesBase):
@@ -129,12 +128,22 @@ class DiscretizedSet(NtuplesBase):
 
     @property
     def uspace(self):
-        """The undiscretized space."""
+        """Undiscretized/continuous space of this discretization.
+
+        Returns
+        -------
+        uspace : `FunctionSet`
+        """
         return self._uspace
 
     @property
     def dspace(self):
-        """The data space."""
+        """Space for the coefficients of the vectors in this space.
+
+        Returns
+        -------
+        dspace : `NtuplesBase`
+        """
         return self._dspace
 
     @property
@@ -144,7 +153,7 @@ class DiscretizedSet(NtuplesBase):
 
     @property
     def sampling(self):
-        """The operator mapping a `uspace` element to an n-tuple."""
+        """Operator mapping a `uspace` element to an n-tuple."""
         if self._sampling is not None:
             return self._sampling
         else:
@@ -152,7 +161,7 @@ class DiscretizedSet(NtuplesBase):
 
     @property
     def interpolation(self):
-        """The operator mapping an n-tuple to a `uspace` element."""
+        """Operator mapping an n-tuple to a `uspace` element."""
         if self._interpolation is not None:
             return self._interpolation
         else:
@@ -358,7 +367,7 @@ class DiscretizedSetVector(NtuplesBaseVector):
 
     @property
     def interpolation(self):
-        """The interpolation operator associated with this vector.
+        """Interpolation operator associated with this vector.
 
         Returns
         -------

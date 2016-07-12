@@ -82,7 +82,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
     @property
     def ndim(self):
-        """The number of dimensions of the geometry."""
+        """Number of dimensions of the geometry."""
         return self._ndim
 
     @property
@@ -149,7 +149,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def det_refpoint(self, mpar):
-        """The detector reference point function.
+        """Detector reference point function.
 
         Parameters
         ----------
@@ -165,7 +165,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def rotation_matrix(self, mpar):
-        """The detector rotation function for calculating the detector
+        """Detector rotation function for calculating the detector
         reference position.
 
         Parameters
@@ -205,7 +205,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
         raise NotImplementedError
 
     def det_point_position(self, mpar, dpar):
-        """The detector point position function.
+        """Detector point position function.
 
         Parameters
         ----------
@@ -217,7 +217,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
         Returns
         -------
         pos : `numpy.ndarray`, shape (`ndim`,)
-            The source position, a `ndim`-dimensional vector
+            Source position, a `ndim`-dimensional vector
         """
         # TODO: check and write test
         return np.asarray(
@@ -250,7 +250,7 @@ class DivergentBeamGeometry(Geometry):
 
     @abstractmethod
     def src_position(self, mpar):
-        """The source position function.
+        """Source position function.
 
         Parameters
         ----------
@@ -260,7 +260,7 @@ class DivergentBeamGeometry(Geometry):
         Returns
         -------
         pos : `numpy.ndarray`, shape (`ndim`,)
-            The source position, a `ndim`-dimensional vector
+            Source position, a `ndim`-dimensional vector
         """
 
     def det_to_src(self, mpar, dpar, normalized=True):
@@ -324,11 +324,11 @@ class AxisOrientedGeometry(object):
 
     @property
     def axis(self):
-        """The normalized axis of rotation, a 3-element vector."""
+        """Normalized axis of rotation, a 3-element vector."""
         return self._axis
 
     def rotation_matrix(self, angle):
-        """The detector rotation function.
+        """Detector rotation function.
 
         Returns the matrix for rotating a vector in 3d by an angle ``angle``
         about the rotation axis given by the property `axis` according to

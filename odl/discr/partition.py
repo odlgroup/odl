@@ -115,7 +115,7 @@ class RectPartition(object):
 
     @property
     def set(self):
-        """The partitioned set, an `IntervalProd`."""
+        """Partitioned set, an `IntervalProd`."""
         return self._set
 
     # IntervalProd related pass-through methods and derived properties
@@ -154,7 +154,7 @@ class RectPartition(object):
 
     @property
     def grid(self):
-        """The `TensorGrid` defining this partition."""
+        """`TensorGrid` defining this partition."""
         return self._grid
 
     # TensorGrid related pass-through methods and derived properties
@@ -206,7 +206,7 @@ class RectPartition(object):
 
     @property
     def coord_vectors(self):
-        """The coordinate vectors of the grid."""
+        """Coordinate vectors of the grid."""
         return self.grid.coord_vectors
 
     # Further derived methods / properties
@@ -491,7 +491,7 @@ class RectPartition(object):
         Parameters
         ----------
         other : `RectPartition`,
-            The set to be inserted.
+            Set to be inserted.
 
         Examples
         --------

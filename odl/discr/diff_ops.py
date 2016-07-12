@@ -59,12 +59,12 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         Parameters
         ----------
         space : `DiscreteLp`
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on.
         axis : `int`, optional
-            The axis along which the partial derivative is evaluated
+            Axis along which the partial derivative is evaluated.
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method which is used in the interior of the
-            domain of ``f``
+            domain of ``f``.
         padding_method : {'constant', 'symmetric', 'periodic', None}, optional
 
             'constant' : Pads values outside the domain of ``f`` with a
@@ -191,15 +191,15 @@ class Gradient(PointwiseTensorFieldOperator):
         """Initialize a new instance.
 
         Zero padding is assumed for the adjoint of the `Gradient`
-        operator to match  negative `Divergence` operator.
+        operator to match negative `Divergence` operator.
 
         Parameters
         ----------
         domain : `DiscreteLp`, optional
-            The space of elements which the operator acts on.
+            Space of elements which the operator acts on.
             This is required if ``range`` is not given.
         range : power space of `DiscreteLp`, optional
-            The space of elements to which the operator maps.
+            Space of elements to which the operator maps.
             This is required if ``domain`` is not given.
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method to be used
@@ -338,7 +338,7 @@ class Gradient(PointwiseTensorFieldOperator):
 
     @property
     def adjoint(self):
-        """Adjoint operator.
+        """Adjoint of this operator.
 
         The adjoint is given by the negative `Divergence` with corrections for
         the method and padding.
@@ -377,10 +377,10 @@ class Divergence(PointwiseTensorFieldOperator):
         Parameters
         ----------
         domain : power space of `DiscreteLp`, optional
-            The space of elements which the operator acts on.
+            Space of elements which the operator acts on.
             This is required if ``range`` is not given.
         range : `DiscreteLp`, optional
-            The space of elements to which the operator maps.
+            Space of elements to which the operator maps.
             This is required if ``domain`` is not given.
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method to be used
@@ -519,7 +519,7 @@ class Divergence(PointwiseTensorFieldOperator):
 
     @property
     def adjoint(self):
-        """Adjoint operator.
+        """Adjoint of this operator.
 
         The adjoint is given by the negative `Gradient` with corrections for
         the method and padding.
@@ -550,7 +550,7 @@ class Laplacian(PointwiseTensorFieldOperator):
         Parameters
         ----------
         space : `DiscreteLp`
-            The space of elements which the operator is acting on
+            Space of elements which the operator is acting on.
         padding_method : {'constant', 'symmetric', 'periodic'}, optional
 
             'constant' : Pads values outside the domain of ``f`` with a

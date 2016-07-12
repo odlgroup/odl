@@ -111,7 +111,7 @@ class PointwiseTensorFieldOperator(Operator):
 
     @property
     def base_space(self):
-        """The base space ``X`` of this operator's domain and range."""
+        """Base space ``X`` of this operator's domain and range."""
         return self._base_space
 
 
@@ -512,7 +512,12 @@ class PointwiseInner(PointwiseTensorFieldOperator):
 
     @property
     def adjoint(self):
-        """Adjoint of the pointwise inner product operator."""
+        """Adjoint of this operator.
+
+        Returns
+        -------
+        adjoint : `PointwiseInnerAdjoint`
+        """
         return PointwiseInnerAdjoint(
             sspace=self.base_space, vecfield=self.vecfield,
             vfspace=self.domain, weight=self.weights)
@@ -597,7 +602,12 @@ class PointwiseInnerAdjoint(PointwiseInner):
 
     @property
     def adjoint(self):
-        """Adjoint of the adjoint, the original operator."""
+        """Adjoint of this operator.
+
+        Returns
+        -------
+        adjoint : `PointwiseInner`
+        """
         return PointwiseInner(vfspace=self.range, vecfield=self.vecfield,
                               weight=self.weights)
 

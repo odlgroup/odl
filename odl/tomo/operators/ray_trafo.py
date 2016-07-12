@@ -45,7 +45,7 @@ __all__ = ('RayTransform', 'RayBackProjection')
 
 class RayTransform(Operator):
 
-    """The discrete Ray transform between L^p spaces."""
+    """Discrete Ray transform between L^p spaces."""
 
     def __init__(self, discr_domain, geometry, impl='astra_cpu', **kwargs):
         """Initialize a new instance.
@@ -194,13 +194,18 @@ class RayTransform(Operator):
 
     @property
     def adjoint(self):
-        """Return the adjoint operator."""
+        """Adjoint of this operator.
+
+        Returns
+        -------
+        adjoint : `RayBackProjection`
+        """
         return RayBackProjection(self.domain, self.geometry, self.impl,
                                  **self.kwargs)
 
 
 class RayBackProjection(Operator):
-    """The adjoint of the discrete Ray transform between L^p spaces."""
+    """Adjoint of the discrete Ray transform between L^p spaces."""
 
     def __init__(self, discr_range, geometry, impl='astra_cpu', **kwargs):
         """Initialize a new instance.
@@ -319,7 +324,12 @@ class RayBackProjection(Operator):
 
     @property
     def adjoint(self):
-        """Return the adjoint operator."""
+        """Adjoint of this operator.
+
+        Returns
+        -------
+        adjoint : `RayTransform`
+        """
         return RayTransform(self.range, self.geometry, impl=self.impl,
                             **self.kwargs)
 
