@@ -222,12 +222,12 @@ class Strings(Set):
         if length_ <= 0:
             raise ValueError('`length` must be positive, got {}'
                              ''.format(length))
-        self._length = length_
+        self.__length = length_
 
     @property
     def length(self):
         """Length of the strings."""
-        return self._length
+        return self.__length
 
     def __contains__(self, other):
         """Return ``other in self``.
@@ -500,12 +500,12 @@ class CartesianProduct(Set):
                      if not isinstance(set_, Set)]
             raise TypeError('{!r} not Set instance(s)'.format(wrong))
 
-        self._sets = tuple(sets)
+        self.__sets = tuple(sets)
 
     @property
     def sets(self):
         """Factors (sets) as a `tuple`."""
-        return self._sets
+        return self.__sets
 
     def __contains__(self, other):
         """Test if ``other`` is contained in this set.

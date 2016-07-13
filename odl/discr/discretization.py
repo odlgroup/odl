@@ -121,10 +121,10 @@ class DiscretizedSet(NtuplesBase):
                                  ''.format(interpol.range, uspace))
 
         super().__init__(dspace.size, dspace.dtype)
-        self._uspace = uspace
-        self._dspace = dspace
-        self._sampling = sampling
-        self._interpolation = interpol
+        self.__uspace = uspace
+        self.__dspace = dspace
+        self.__sampling = sampling
+        self.__interpolation = interpol
 
     @property
     def uspace(self):
@@ -134,7 +134,7 @@ class DiscretizedSet(NtuplesBase):
         -------
         uspace : `FunctionSet`
         """
-        return self._uspace
+        return self.__uspace
 
     @property
     def dspace(self):
@@ -144,7 +144,7 @@ class DiscretizedSet(NtuplesBase):
         -------
         dspace : `NtuplesBase`
         """
-        return self._dspace
+        return self.__dspace
 
     @property
     def dspace_type(self):
@@ -154,16 +154,16 @@ class DiscretizedSet(NtuplesBase):
     @property
     def sampling(self):
         """Operator mapping a `uspace` element to an n-tuple."""
-        if self._sampling is not None:
-            return self._sampling
+        if self.__sampling is not None:
+            return self.__sampling
         else:
             raise NotImplementedError('no sampling operator provided')
 
     @property
     def interpolation(self):
         """Operator mapping an n-tuple to a `uspace` element."""
-        if self._interpolation is not None:
-            return self._interpolation
+        if self.__interpolation is not None:
+            return self.__interpolation
         else:
             raise NotImplementedError('no interpolation operator provided')
 
@@ -248,12 +248,12 @@ class DiscretizedSetVector(NtuplesBaseVector):
         assert ntuple in space.dspace
 
         NtuplesBaseVector.__init__(self, space)
-        self._ntuple = ntuple
+        self.__ntuple = ntuple
 
     @property
     def ntuple(self):
         """Structure for data storage."""
-        return self._ntuple
+        return self.__ntuple
 
     @property
     def dtype(self):

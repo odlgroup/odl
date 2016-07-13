@@ -81,25 +81,30 @@ class WeightingBase(object):
 
             Default: `False`.
         """
-        self._dist_using_inner = bool(dist_using_inner)
-        self._exponent = float(exponent)
-        self._impl = str(impl).lower()
-        if self._exponent <= 0:
+        self.__impl = str(impl).lower()
+        self.__exponent = float(exponent)
+        self.__dist_using_inner = bool(dist_using_inner)
+        if self.exponent <= 0:
             raise ValueError('only positive exponents or inf supported, '
                              'got {}'.format(exponent))
-        elif self._exponent != 2.0 and self._dist_using_inner:
+        elif self.exponent != 2.0 and self.dist_using_inner:
             raise ValueError('`dist_using_inner` can only be used if the '
                              'exponent is 2.0')
 
     @property
     def impl(self):
         """Implementation backend of this weighting."""
-        return self._impl
+        return self.__impl
 
     @property
     def exponent(self):
         """Exponent of this weighting."""
-        return self._exponent
+        return self.__exponent
+
+    @property
+    def dist_using_inner(self):
+        """True if the distance should be calculated using inner."""
+        return self.__dist_using_inner
 
     def __eq__(self, other):
         """Return ``self == other``.
@@ -117,14 +122,14 @@ class WeightingBase(object):
         `equiv` method.
         """
         return (isinstance(other, WeightingBase) and
+                self.impl == other.impl and
                 self.exponent == other.exponent and
-                self._dist_using_inner == other._dist_using_inner and
-                self.impl == other.impl)
+                self.dist_using_inner == other.dist_using_inner)
 
     def equiv(self, other):
         """Test if ``other`` is an equivalent weighting.
 
-        Should be overwritten, default tests for equality.
+        Should be overridden, default tests for equality.
 
         Returns
         -------
@@ -184,7 +189,7 @@ class WeightingBase(object):
         dist : `float`
             The distance between the vectors
         """
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             dist_squared = (self.norm(x1) ** 2 + self.norm(x2) ** 2 -
                             2 * self.inner(x1, x2).real)
             if dist_squared < 0:  # Compensate for numerical error
@@ -471,7 +476,7 @@ class MatrixWeightingBase(WeightingBase):
             part = 'weight={}'.format(arraynd_repr(self.matrix, nprint=10))
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             part += ', dist_using_inner=True'
         return part
 
@@ -484,7 +489,7 @@ class MatrixWeightingBase(WeightingBase):
             nnz = self.matrix.nnz
             if self.exponent != 2.0:
                 inner_fstr += ', exponent={ex}'
-            if self._dist_using_inner:
+            if self.dist_using_inner:
                 inner_fstr += ', dist_using_inner=True'
         else:
             inner_fstr = '\n{matrix!r}'
@@ -492,7 +497,7 @@ class MatrixWeightingBase(WeightingBase):
             nnz = 0
             if self.exponent != 2.0:
                 inner_fstr += ',\nexponent={ex}'
-            if self._dist_using_inner:
+            if self.dist_using_inner:
                 inner_fstr += ',\ndist_using_inner=True'
             else:
                 inner_fstr += '\n'
@@ -621,7 +626,7 @@ class VectorWeightingBase(WeightingBase):
         part = 'weight={}'.format(array1d_repr(self.vector, nprint=10))
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             part += ', dist_using_inner=True'
         return part
 
@@ -630,7 +635,7 @@ class VectorWeightingBase(WeightingBase):
         inner_fstr = '{vector!r}'
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             inner_fstr += ', dist_using_inner=True'
 
         inner_str = inner_fstr.format(vector=self.vector, ex=self.exponent)
@@ -734,7 +739,7 @@ class ConstWeightingBase(WeightingBase):
         if self.exponent != 2.0:
             part += sep + 'exponent={}'.format(self.exponent)
             sep = ', '
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             part += sep + 'dist_using_inner=True'
         return part
 
@@ -743,7 +748,7 @@ class ConstWeightingBase(WeightingBase):
         inner_fstr = '{}'
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             inner_fstr += ', dist_using_inner=True'
 
         inner_str = inner_fstr.format(self.const, ex=self.exponent)
@@ -795,7 +800,7 @@ class NoWeightingBase(ConstWeightingBase):
         inner_fstr = ''
         if self.exponent != 2.0:
             inner_fstr += ', exponent={ex}'
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             inner_fstr += ', dist_using_inner=True'
         inner_str = inner_fstr.format(ex=self.exponent).lstrip(', ')
 
@@ -872,14 +877,14 @@ class CustomInnerProductBase(WeightingBase):
         part = 'inner={}'.format(self.inner)
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             part += ', dist_using_inner=True'
         return part
 
     def __repr__(self):
         """Return ``repr(self)``."""
         inner_fstr = '{!r}'
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             inner_fstr += ', dist_using_inner=True'
 
         inner_str = inner_fstr.format(self.inner)
@@ -944,7 +949,7 @@ class CustomNormBase(WeightingBase):
         part = 'norm={}'.format(self.norm)
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             part += ', dist_using_inner=True'
         return part
 
@@ -1017,7 +1022,7 @@ class CustomDistBase(WeightingBase):
         part = 'dist={}'.format(self.dist)
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             part += ', dist_using_inner=True'
         return part
 

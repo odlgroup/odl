@@ -158,7 +158,7 @@ class ZeroOperator(ScalingOperator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ZeroOperator({!r})'.format(self._space)
+        return 'ZeroOperator({!r})'.format(self.domain)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -181,7 +181,7 @@ class IdentityOperator(ScalingOperator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'IdentityOperator({!r})'.format(self._space)
+        return 'IdentityOperator({!r})'.format(self.domain)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -270,26 +270,33 @@ class MultiplyOperator(Operator):
     in the second the scalar multiplication.
     """
 
-    def __init__(self, y, domain=None, range=None):
+    def __init__(self, multiplicand, domain=None, range=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        y : `LinearSpaceVector`
+        multiplicand : `LinearSpaceVector` or `Number`
             Value to multiply by.
         domain : `LinearSpace` or `Field`, optional
-            Set to take values in. Default: ``x.space``
+            Set to take values in. Default: ``x.space``.
+        range : `LinearSpace` or `Field`, optional
+            Set to map to. Default: ``x.space``.
         """
         if domain is None:
-            domain = y.space
+            domain = multiplicand.space
 
         if range is None:
-            range = y.space
+            range = multiplicand.space
 
-        self.y = y
-        self._domain_is_field = isinstance(domain, Field)
-        self._range_is_field = isinstance(range, Field)
+        self.__multiplicand = multiplicand
+        self.__domain_is_field = isinstance(domain, Field)
+        self.__range_is_field = isinstance(range, Field)
         super().__init__(domain, range, linear=True)
+
+    @property
+    def multiplicand(self):
+        """Value to multiply by."""
+        return self.__multiplicand
 
     def _call(self, x, out=None):
         """Multiply the input and write to output.
@@ -329,12 +336,12 @@ class MultiplyOperator(Operator):
         rn(3).element([3.0, 6.0, 9.0])
         """
         if out is None:
-            return x * self.y
-        elif not self._range_is_field:
-            if self._domain_is_field:
-                out.lincomb(x, self.y)
+            return x * self.multiplicand
+        elif not self.__range_is_field:
+            if self.__domain_is_field:
+                out.lincomb(x, self.multiplicand)
             else:
-                out.multiply(x, self.y)
+                out.multiply(x, self.multiplicand)
         else:
             raise ValueError('can only use `out` with `LinearSpace` range')
 
@@ -368,11 +375,11 @@ class MultiplyOperator(Operator):
         >>> op2.adjoint(x)
         14.0
         """
-        if self._domain_is_field:
-            return InnerProductOperator(self.y)
+        if self.__domain_is_field:
+            return InnerProductOperator(self.multiplicand)
         else:
             # TODO: complex case
-            return MultiplyOperator(self.y)
+            return MultiplyOperator(self.multiplicand)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -406,9 +413,14 @@ class PowerOperator(Operator):
             Set to take values in.
         """
 
-        self.exponent = float(exponent)
-        self._domain_is_field = isinstance(domain, Field)
+        self.__exponent = float(exponent)
+        self.__domain_is_field = isinstance(domain, Field)
         super().__init__(domain, domain, linear=(exponent == 1))
+
+    @property
+    def exponent(self):
+        """Power of the input element to take."""
+        return self.__exponent
 
     def _call(self, x, out=None):
         """Multiply the input and write to output.
@@ -444,7 +456,7 @@ class PowerOperator(Operator):
         """
         if out is None:
             return x ** self.exponent
-        elif self._domain_is_field:
+        elif self.__domain_is_field:
             raise ValueError('cannot use `out` with field')
         else:
             out.assign(x)
@@ -518,8 +530,13 @@ class InnerProductOperator(Operator):
         vector : `LinearSpaceVector`
             The vector to take the inner product with
         """
-        self.vector = vector
+        self.__vector = vector
         super().__init__(vector.space, vector.space.field, linear=True)
+
+    @property
+    def vector(self):
+        """Vector to take the inner product with."""
+        return self.__vector
 
     def _call(self, x):
         """Multiply the input and write to output.
@@ -827,8 +844,13 @@ class ConstantOperator(Operator):
         if domain is None:
             domain = vector.space
 
-        self.vector = vector
-        super().__init__(domain, vector.space)
+        self.__vector = vector
+        super().__init__(domain, vector.space, linear=False)
+
+    @property
+    def vector(self):
+        """Constant value."""
+        return self.__vector
 
     def _call(self, x, out=None):
         """Return the constant vector or assign it to ``out``.
@@ -860,6 +882,25 @@ class ConstantOperator(Operator):
         else:
             out.assign(self.vector)
 
+    def derivative(self, point):
+        """Derivative of this operator, always zero.
+
+        Returns
+        -------
+        derivative : `ZeroOperator`
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = ConstantOperator(x)
+        >>> deriv = op.derivative([1, 1, 1])
+        >>> deriv([2, 2, 2])
+        rn(3).element([0.0, 0.0, 0.0])
+        """
+        return ZeroOperator(self.domain)
+
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r})'.format(self.__class__.__name__, self.vector)
@@ -876,28 +917,38 @@ class ResidualOperator(Operator):
     ``ResidualOperator(op, vector)(x) <==> op(x) - vec``
     """
 
-    def __init__(self, op, vec):
+    def __init__(self, operator, vector):
         """Initialize a new instance.
 
         Parameters
         ----------
-        op : `Operator`
+        operator : `Operator`
             Operator to be used in the residual expression. Its
             `Operator.range` must be a `LinearSpace`.
-        vec : `Operator.range` `element-like`
-            Vector to be subtracted from the operator result
+        vector : `Operator.range` `element-like`
+            Vector to be subtracted from the operator result.
         """
-        if not isinstance(op, Operator):
+        if not isinstance(operator, Operator):
             raise TypeError('`op` {!r} not a Operator instance'
-                            ''.format(op))
+                            ''.format(operator))
 
-        if not isinstance(op.range, LinearSpace):
+        if not isinstance(operator.range, LinearSpace):
             raise TypeError('`op.range` {!r} not a LinearSpace instance'
-                            ''.format(op.range))
+                            ''.format(operator.range))
 
-        self.op = op
-        self.vector = op.range.element(vec)
-        super().__init__(op.domain, op.range)
+        self.__operator = operator
+        self.__vector = operator.range.element(vector)
+        super().__init__(operator.domain, operator.range)
+
+    @property
+    def operator(self):
+        """The operator to apply."""
+        return self.__operator
+
+    @property
+    def vector(self):
+        """The constant vector to subtract."""
+        return self.__vector
 
     def _call(self, x, out=None):
         """Evaluate the residual at ``x``.
@@ -927,9 +978,9 @@ class ResidualOperator(Operator):
         rn(3).element([3.0, 3.0, 3.0])
         """
         if out is None:
-            out = self.op(x)
+            out = self.operator(x)
         else:
-            self.op(x, out=out)
+            self.operator(x, out=out)
 
         out -= self.vector
         return out
@@ -956,11 +1007,12 @@ class ResidualOperator(Operator):
         >>> res.derivative(x)(x)
         rn(3).element([4.0, 5.0, 6.0])
         """
-        return self.op.derivative(point)
+        return self.operator.derivative(point)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ResidualOperator({!r}, {!r})'.format(self.op, self.vector)
+        return 'ResidualOperator({!r}, {!r})'.format(self.operator,
+                                                     self.vector)
 
     def __str__(self):
         """Return ``str(self)``."""
