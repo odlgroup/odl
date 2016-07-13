@@ -60,7 +60,7 @@ References
    large scale unconstrained minimization problem*. SIAM J. Optim.,
    7 (1997), pp 26--33.
 
-.. [Roc1970] Rockafellar, R. Tyrrell. *Convex analysis*. Princeton
+.. [Roc1970] Rockafellar, R. T. *Convex analysis*. Princeton
    University Press, 1970.
 
 .. [Sid+2012] Sidky, E Y, Jorgensen, J H, and Pan, X.
@@ -72,4 +72,7 @@ References
    *Introduction to Fourier Analysis on Euclidean Spaces*.
    Princeton University Press, 1971.
 
+.. [Val2014] Valkonen, T.
+   *A primal-dual hybrid gradient method for non-linear operators with
+   applications to MRI*. Inverse Problems, 30 (2014).
 
