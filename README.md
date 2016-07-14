@@ -56,6 +56,7 @@ where FOO, BAR, etc are the dependencies. Others require more complicated instal
 | [FFTW](https://github.com/pyFFTW/pyFFTW)   | Accelerated [FourierTransform](http://odl.readthedocs.io/generated/odl.trafos.fourier.FourierTransform.html) | fftw |
 | [PyWavelets](https://github.com/PyWavelets/pywt)   | Computation of the  [WaveletTransform](http://odl.readthedocs.io/generated/odl.trafos.wavelet.WaveletTransform.html) | pywavelets |
 | [matplotlib](http://matplotlib.org/)   | Visualization through the [show](http://odl.readthedocs.io/generated/odl.discr.lp_discr.DiscreteLpVector.show.html) command | show |
+| [proximal](http://github.com/comp-imaging/ProxImaL)   | Solution of some convex optimization problems | proximal |
 | [pytest](http://pytest.org/latest/)   | Unit tests | testing |
 
 
