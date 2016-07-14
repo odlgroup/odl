@@ -55,7 +55,8 @@ ntuples_impl_params = odl.NTUPLES_IMPLS.keys()
 ntuples_impl_ids = [" impl='{}' ".format(p) for p in ntuples_impl_params]
 
 
-@pytest.fixture(scope="module", ids=ntuples_impl_ids, params=ntuples_impl_params)
+@pytest.fixture(scope="module", ids=ntuples_impl_ids,
+                params=ntuples_impl_params)
 def ntuples_impl(request):
     return request.param
 
