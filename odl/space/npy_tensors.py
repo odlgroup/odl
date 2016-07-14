@@ -103,7 +103,7 @@ class NumpyTensorSet(TensorSetBase):
         >>> import odl
         >>> tspace = odl.rtensors((2, 3))
         >>> x = tspace.element([[1, 2, 3],
-                                [4, 5, 6]])
+        ...                     [4, 5, 6]])
         >>> x
         rtensors((2, 3)).element(
         [[1.0, 2.0, 3.0],
@@ -116,7 +116,7 @@ class NumpyTensorSet(TensorSetBase):
 
         >>> int_tset = NumpyTensorSet((2, 3), dtype='int')
         >>> x = int_tset.element([[1, 2, 3],
-                                  [4, 5, 6]])
+        ...                       [4, 5, 6]])
         >>> y = int_tset.element(data_ptr=x.data_ptr)
         >>> print(y)
         [[1, 2, 3],
@@ -260,7 +260,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
         >>> import odl
         >>> tspace = odl.rtensors((2, 3), dtype='float32')
         >>> x = tspace.element([[1, 2, 3],
-                                [4, 5, 6]])
+        ...                     [4, 5, 6]])
         >>> x.asarray()
         array([[ 1.,  2.,  3.],
                [ 4.,  5.,  6.]], dtype=float32)
@@ -293,7 +293,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
         >>> import numpy as np
         >>> tset = NumpyTensorSet((2, 3), dtype='int32')
         >>> x = tset.element([[1, 2, 3],
-                              [4, 5, 6]])
+        ...                   [4, 5, 6]])
         >>> arr_type = ctypes.c_int32 * 6  # C type "array of 6 int32"
         >>> buffer = arr_type.from_address(x.data_ptr)
         >>> arr = np.frombuffer(buffer, dtype='int32')
@@ -328,14 +328,14 @@ class NumpyGeneralTensor(GeneralTensorBase):
         >>> import odl
         >>> tspace = odl.rtensors((2, 3))
         >>> x = tspace.element([[1, 2, 3],
-                                [4, 5, 6]])
+        ...                     [4, 5, 6]])
         >>> y = tspace.element([[1, 2, 3],
-                                [4, 5, 6]])
+        ...                     [4, 5, 6]])
         >>> x == y
         True
 
         >>> y = tspace.element([[-1, 2, 3],
-                                [4, 5, 6]])
+        ...                     [4, 5, 6]])
         >>> x == y
         False
 
@@ -343,7 +343,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         >>> tset = odl.NumpyTensorSet((2, 3), dtype='float64')
         >>> y = tset.element([[1, 2, 3],
-                              [4, 5, 6]])
+        ...                   [4, 5, 6]])
         >>> x == y or y == x
         False
         """
@@ -370,8 +370,8 @@ class NumpyGeneralTensor(GeneralTensorBase):
         --------
         >>> import odl
         >>> tspace = odl.rtensors((2, 3))
-        >>> x = tset.element([[1, 2, 3],
-                              [4, 5, 6]])
+        >>> x = tspace.element([[1, 2, 3],
+        ...                     [4, 5, 6]])
         >>> y = x.copy()
         >>> y == x
         True
@@ -402,7 +402,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
         >>> import odl
         >>> tspace = odl.rtensors((2, 3))
         >>> x = tspace.element([[1, 2, 3],
-                                [4, 5, 6]])
+        ...                     [4, 5, 6]])
         >>> x[0, 1]
         2.0
         >>> x[:, 1:]
@@ -439,7 +439,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
         >>> import odl
         >>> tspace = odl.rtensors((2, 3))
         >>> x = tspace.element([[1, 2, 3],
-                                [4, 5, 6]])
+        ...                     [4, 5, 6]])
         >>> x[0, 1] = -1
         >>> x
         rtensors((2, 3)).element(
@@ -452,7 +452,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         >>> tset = odl.NumpyTensorSet((2, 2), 'short')
         >>> y = tset.element([[-1, 2],
-                              [0, 0]])
+        ...                   [0, 0]])
         >>> x[:, :2] = y
         >>> x
         rtensors((2, 3)).element(
@@ -467,7 +467,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
         )
         >>> import numpy as np
         >>> x[:] = np.array([[0, 0, 0],
-                             [1, 1, 1]])
+        ...                  [1, 1, 1]])
         >>> x
         rtensors((2, 3)).element(
         [[0.0, 0.0, 0.0],
@@ -503,7 +503,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
 
         >>> tset = odl.NumpyTensorSet((2, 3), 'int8')
         >>> x = tset.element([[0, 0, 0],
-                              [1, 1, 1]])
+        ...                   [1, 1, 1]])
         >>> maxval = 255  # maximum signed 8-bit unsigned int
         >>> x[0, :] = maxval + 1
         >>> x
@@ -531,7 +531,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
         >>> import odl
         >>> tspace = odl.rtensors((2, 3))
         >>> x = tspace.element([[1, -2, 3],
-                                [4, -5, 6]])
+        ...                     [4, -5, 6]])
         >>> x.ufunc.absolute()
         rtensors((2, 3)).element(
         [[1.0, 2.0, 3.0],
@@ -546,7 +546,7 @@ class NumpyGeneralTensor(GeneralTensorBase):
          [7.0, -2.0, 9.0]]
         )
         >>> x.ufunc.subtract([[0, 0, 1],
-                              [1, 0, 0]])
+        ...                   [1, 0, 0]])
         rtensors((2, 3)).element(
         [[1.0, -2.0, 2.0],
          [3.0, -5.0, 6.0]]
@@ -708,7 +708,7 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
             Default: 2.0
 
-        weight : optional
+        weighting : optional
             Use weighted inner product, norm, and dist. The following
             types are supported as ``weight``:
 
@@ -777,8 +777,12 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         See also
         --------
-        NumpyTensorSpaceArrayWeighting
-        NumpyTensorSpaceConstWeighting
+        rtensors : constructor for real tensor spaces
+        ctensors : constructor for complex tensor spaces
+        tensor_space :
+            constructor for tensor spaces of arbitrary scalar
+            data type
+
 
         Notes
         -----
@@ -820,12 +824,18 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         Examples
         --------
-        >>> space = Fn(3, 'float')
-        >>> space
+        >>> import odl
+        >>> tspace = odl.NumpyTensorSpace((2, 3), dtype='float64')
+        >>> tspace
+        rtensors((2, 3))
 
-        >>> space = Fn(3, 'float', weight=[1, 2, 3])
-        >>> space
+        >>> tspace = odl.NumpyTensorSpace((2, 3), dtype='complex64')
+        >>> tspace
+        ctensors((2, 3), 'complex64')
 
+        >>> tspace = odl.NumpyTensorSpace((2, 3), dtype='int64')
+        >>> tspace
+        tensor_space((2, 3), 'int')
         """
         NumpyTensorSet.__init__(self, shape, dtype, order)
         TensorSpaceBase.__init__(self, shape, dtype, order)
@@ -833,13 +843,13 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         dist = kwargs.pop('dist', None)
         norm = kwargs.pop('norm', None)
         inner = kwargs.pop('inner', None)
-        weight = kwargs.pop('weight', None)
+        weighting = kwargs.pop('weighting', None)
         exponent = kwargs.pop('exponent', 2.0)
         dist_using_inner = bool(kwargs.pop('dist_using_inner', False))
 
         # Check validity of option combination (3 or 4 out of 4 must be None)
-        if sum(x is None for x in (dist, norm, inner, weight)) < 3:
-            raise ValueError('invalid combination of options `weight`, '
+        if sum(x is None for x in (dist, norm, inner, weighting)) < 3:
+            raise ValueError('invalid combination of options `weighting`, '
                              '`dist`, `norm` and `inner`')
 
         if any(x is not None for x in (dist, norm, inner)) and exponent != 2.0:
@@ -847,34 +857,37 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
                              '`dist`, `norm` and `inner`')
 
         # Set the weighting
-        if weight is not None:
-            if isinstance(weight, WeightingBase):
-                self._weighting = weight
+        if weighting is not None:
+            if isinstance(weighting, WeightingBase):
+                self.__weighting = weighting
             else:
-                self._weighting = _weighting(weight, exponent,
-                                             dist_using_inner=dist_using_inner)
+                self.__weighting = _weighting(
+                    weighting, exponent, dist_using_inner=dist_using_inner)
             if isinstance(self.weighting, NumpyTensorSpaceArrayWeighting):
                 if self.weighting.array.dtype == object:
-                    raise ValueError('invalid weight argument {}'
-                                     ''.format(weight))
+                    raise ValueError('invalid `weighting` argument: {}'
+                                     ''.format(weighting))
                 if self.weighting.array.ndim != self.ndim:
-                    raise ValueError('array-like weight must have {} '
+                    raise ValueError('array-like `weighting` must have {} '
                                      'dimensions, got a {}-dim. array'
-                                     ''.format(self.weighting.array.ndim))
+                                     ''.format(self.ndim,
+                                               self.weighting.array.ndim))
+
                 for i, (n_a, n_s) in enumerate(zip(self.weighting.array.shape,
                                                    self.shape)):
+                    # TODO: document (implement??) this possibility
                     if n_a not in (1, n_s):
                         raise ValueError('in axis {}: expected shape 1 or '
                                          '{}, got {}'.format(i, n_s, n_a))
 
         elif dist is not None:
-            self._weighting = NumpyTensorSpaceCustomDist(dist)
+            self.__weighting = NumpyTensorSpaceCustomDist(dist)
         elif norm is not None:
-            self._weighting = NumpyTensorSpaceCustomNorm(norm)
+            self.__weighting = NumpyTensorSpaceCustomNorm(norm)
         elif inner is not None:
-            self._weighting = NumpyTensorSpaceCustomInner(inner)
+            self.__weighting = NumpyTensorSpaceCustomInner(inner)
         else:
-            self._weighting = NumpyTensorSpaceNoWeighting(
+            self.__weighting = NumpyTensorSpaceNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
 
     @property
@@ -885,7 +898,7 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
     @property
     def weighting(self):
         """This space's weighting scheme."""
-        return self._weighting
+        return self.__weighting
 
     @property
     def is_weighted(self):
@@ -958,9 +971,9 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         >>> import odl
         >>> tspace = odl.ctensors((2, 3))
         >>> x = tspace.element([[0, 1j, 1],
-                                [0, 1, 0]])
+        ...                     [0, 1, 0]])
         >>> y = tspace.element([[0, 0, 1j],
-                                [-1j, 0, 2j]])
+        ...                     [-1j, 0, 2j]])
         >>> out = tspace.element()
         >>> tspace.lincomb(1j, x, 1, y, out)  # out is returned
         ctensors((2, 3)).element(
@@ -996,14 +1009,14 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         >>> import odl
         >>> tspace_2 = odl.rtensors((2, 3), exponent=2)
         >>> x = tspace_2.element([[-1, 1, 2],
-                                  [1, -1, 1]])
+        ...                       [1, -1, 1]])
         >>> y = tspace_2.one()
         >>> tspace_2.dist(x, y)
         3.0
 
         >>> tspace_1 = odl.rtensors((2, 3), exponent=1)
         >>> x = tspace_1.element([[-1, 1, 2],
-                                  [1, -1, 1]])
+        ...                       [1, -1, 1]])
         >>> y = tspace_1.one()
         >>> tspace_1.dist(x, y)
         5.0
@@ -1011,9 +1024,9 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         Weighting is supported, too:
 
         >>> weights = [[2, 1, 1], [1, 1, 2]]
-        >>> tspace_1_w = odl.rtensors((2, 3), exponent=1, weight=weights)
+        >>> tspace_1_w = odl.rtensors((2, 3), exponent=1, weighting=weights)
         >>> x = tspace_1_w.element([[-1, 1, 2],
-                                    [1, -1, 1]])
+        ...                         [1, -1, 1]])
         >>> y = tspace_1_w.one()
         >>> tspace_1_w.dist(x, y)
         7.0
@@ -1041,12 +1054,12 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         >>> import odl
         >>> tspace_2 = odl.rtensors((2, 3), exponent=2)
         >>> x = tspace_2.element([[1, 0, 3],
-                                  [4, -1, 3]])
+        ...                       [4, -1, 3]])
         >>> tspace_2.norm(x)
         6.0
         >>> tspace_1 = odl.rtensors((2, 3), exponent=1)
         >>> x = tspace_1.element([[1, 0, 3],
-                                  [4, -1, 3]])
+        ...                       [4, -1, 3]])
         >>> tspace_1.norm(x)
         12.0
 
@@ -1054,9 +1067,9 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         >>> weights = [[1, 2, 1], [1, 1, 2]]
         >>> tspace_1_w = odl.rtensors((2, 3), exponent=1,
-        ...                           weight=weights)
+        ...                           weighting=weights)
         >>> x = tspace_1_w.element([[1, 0, 3],
-                                    [4, -1, 3]])
+        ...                         [4, -1, 3]])
         >>> tspace_1_w.norm(x)
         15.0
         """
@@ -1083,7 +1096,7 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         >>> import odl
         >>> tspace = odl.rtensors((2, 3))
         >>> x = tspace.element([[1, 0, 3],
-                                [4, -1, 3]])
+        ...                     [4, -1, 3]])
         >>> y = tspace.one()
         >>> tspace.inner(x, y)
         10.0
@@ -1091,9 +1104,9 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         Weighting is supported, too:
 
         >>> weights = [[1, 2, 1], [2, 1, 1]]
-        >>> tspace_w = odl.rtensors((2, 3), weight=weights)
+        >>> tspace_w = odl.rtensors((2, 3), weighting=weights)
         >>> x = tspace_w.element([[1, 0, 3],
-                                  [4, -1, 3]])
+        ...                       [4, -1, 3]])
         >>> y = tspace_w.one()
         >>> tspace_w.inner(x, y)
         14.0
@@ -1118,9 +1131,9 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         >>> import odl
         >>> tspace = odl.rtensors((2, 3))
         >>> x = tspace.element([[1, 0, 3],
-                                [4, -1, 3]])
+        ...                     [4, -1, 3]])
         >>> y = tspace.element([[-1, 1, -1],
-                                [1, -1, 1]])
+        ...                     [1, -1, 1]])
         >>> out = tspace.element()
         >>> tspace.multiply(x, y, out=out)  # out is returned
         rtensors((2, 3)).element(
@@ -1153,9 +1166,9 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
         >>> import odl
         >>> tspace = odl.rtensors((2, 3))
         >>> x = tspace.element([[2, 0, 4],
-                                [-4, 0, 2]])
+        ...                     [-4, 0, 2]])
         >>> y = tspace.element([[1, 1, 2],
-                                [-4, 1, 2]])
+        ...                     [-4, 1, 2]])
         >>> out = tspace.element()
         >>> tspace.divide(x, y, out=out)  # out is returned
         rtensors((2, 3)).element(
@@ -1183,41 +1196,31 @@ class NumpyTensorSpace(TensorSpaceBase, NumpyTensorSet):
 
         Examples
         --------
-        >>> from numpy.linalg import norm
-        >>> def dist(x, y, ord):
-        ...     return norm(x - y, ord)
+        >>> import odl
+        >>> tspace = odl.rtensors((2, 3))
+        >>> same_tspace = odl.rtensors((2, 3), exponent=2)
+        >>> same_tspace == tspace
+        True
 
-        >>> from functools import partial
-        >>> dist2 = partial(dist, ord=2)
-        >>> c3 = Cn(3, dist=dist2)
-        >>> c3_same = Cn(3, dist=dist2)
-        >>> c3  == c3_same
+        Different `shape`, `exponent` or `dtype` all result in
+        different spaces:
 
+        >>> diff_tspace = odl.rtensors((2, 3, 4))
+        >>> diff_tspace == tspace
+        False
+        >>> diff_tspace = odl.rtensors((2, 3), exponent=1)
+        >>> diff_tspace == tspace
+        False
+        >>> diff_tspace = odl.rtensors((2, 3), dtype='float32')
+        >>> diff_tspace == tspace
+        False
 
-        Different ``dist`` functions result in different spaces - the
-        same applies for ``norm`` and ``inner``:
-
-        >>> dist1 = partial(dist, ord=1)
-        >>> c3_1 = Cn(3, dist=dist1)
-        >>> c3_2 = Cn(3, dist=dist2)
-        >>> c3_1 == c3_2
-
-
-        Be careful with Lambdas - they result in non-identical function
-        objects:
-
-        >>> c3_lambda1 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
-        >>> c3_lambda2 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
-        >>> c3_lambda1 == c3_lambda2
-
-
-        An `Fn` space with the same data type is considered
+        A `NumpyTensorSpace` with the same properties is considered
         equal:
 
-        >>> c3 = Cn(3)
-        >>> f3_cdouble = Fn(3, dtype='complex128')
-        >>> c3 == f3_cdouble
-
+        >>> same_tspace = odl.NumpyTensorSpace((2, 3), dtype='float64')
+        >>> same_tspace == tspace
+        True
         """
         if other is self:
             return True
@@ -1275,15 +1278,20 @@ class NumpyTensor(TensorBase, NumpyGeneralTensor):
         Returns
         -------
         real : `NumpyTensor`
-            Real part this element as an element of a `NumpyTensorSpace`
-            with real data type.
+            Real part of this element as a member of a
+            `NumpyTensorSpace` with corresponding real data type.
 
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> import odl
+        >>> tspace = odl.ctensors((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
         >>> x.real
-
+        rtensors((2, 3)).element(
+        [[1.0, 2.0, 3.0],
+         [4.0, 5.0, 6.0]]
+        )
         """
         real_space = self.space.astype(self.space.real_dtype)
         return real_space.element(self.data.real)
@@ -1301,21 +1309,33 @@ class NumpyTensor(TensorBase, NumpyGeneralTensor):
 
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([5+1j, 3, 2-2j])
-        >>> a = Rn(3).element([0, 0, 0])
-        >>> x.real = a
+        >>> import odl
+        >>> tspace = odl.ctensors((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
+        >>> zero = odl.rtensors((2, 3)).zero()
+        >>> x.real = zero
         >>> x
-
+        ctensors((2, 3)).element(
+        [[1j, 0j, -3j],
+         [0j, -5j, 0j]]
+        )
 
         Other array-like types and broadcasting:
 
         >>> x.real = 1.0
         >>> x
-
-        >>> x.real = [0, 2, -1]
+        ctensors((2, 3)).element(
+        [[(1+1j), (1+0j), (1-3j)],
+         [(1+0j), (1-5j), (1+0j)]]
+        )
+        >>> x.real = [[2, 3, 4],
+        ...           [5, 6, 7]]
         >>> x
-
+        ctensors((2, 3)).element(
+        [[(2+1j), (3+0j), (4-3j)],
+         [(5+0j), (6-5j), (7+0j)]]
+        )
         """
         self.real.data[:] = newreal
 
@@ -1331,10 +1351,15 @@ class NumpyTensor(TensorBase, NumpyGeneralTensor):
 
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> import odl
+        >>> tspace = odl.ctensors((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
         >>> x.imag
-
+        rtensors((2, 3)).element(
+        [[1.0, 0.0, -3.0],
+         [0.0, -5.0, 0.0]]
+        )
         """
         real_space = self.space.astype(self.space.real_dtype)
         return real_space.element(self.data.imag)
@@ -1352,17 +1377,33 @@ class NumpyTensor(TensorBase, NumpyGeneralTensor):
 
         Examples
         --------
-        >>> x = Cn(3).element([5+1j, 3, 2-2j])
-        >>> a = Rn(3).element([0, 0, 0])
-        >>> x.imag = a; print(x)
-
+        >>> import odl
+        >>> tspace = odl.ctensors((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
+        >>> zero = odl.rtensors((2, 3)).zero()
+        >>> x.imag = zero
+        >>> x
+        ctensors((2, 3)).element(
+        [[(1+0j), (2+0j), (3+0j)],
+         [(4+0j), (5+0j), (6+0j)]]
+        )
 
         Other array-like types and broadcasting:
 
-        >>> x.imag = 1.0; print(x)
-
-        >>> x.imag = [0, 2, -1]; print(x)
-
+        >>> x.imag = 1.0
+        >>> x
+        ctensors((2, 3)).element(
+        [[(1+1j), (2+1j), (3+1j)],
+         [(4+1j), (5+1j), (6+1j)]]
+        )
+        >>> x.imag = [[2, 3, 4],
+        ...           [5, 6, 7]]
+        >>> x
+        ctensors((2, 3)).element(
+        [[(1+2j), (2+3j), (3+4j)],
+         [(4+5j), (5+6j), (6+7j)]]
+        )
         """
         self.imag.data[:] = newimag
 
@@ -1383,24 +1424,36 @@ class NumpyTensor(TensorBase, NumpyGeneralTensor):
 
         Examples
         --------
-        >>> x = Cn(3).element([5+1j, 3, 2-2j])
-        >>> y = x.conj(); print(y)
-
+        >>> import odl
+        >>> tspace = odl.ctensors((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
+        >>> x.conj()
+        ctensors((2, 3)).element(
+        [[(1-1j), (2-0j), (3+3j)],
+         [(4-0j), (5+5j), (6-0j)]]
+        )
 
         The out parameter allows you to avoid a copy
 
-        >>> z = Cn(3).element()
-        >>> z_out = x.conj(out=z); print(z)
+        >>> y = tspace.element()
+        >>> y_out = x.conj(out=y)
+        >>> y
+        ctensors((2, 3)).element(
+        [[(1-1j), (2-0j), (3+3j)],
+         [(4-0j), (5+5j), (6-0j)]]
+        )
+        >>> y_out is y
+        True
 
-        >>> z_out is z
+        It can also be used for in-place conjugation:
 
-
-        It can also be used for in-place conj
-
-        >>> x_out = x.conj(out=x); print(x)
-
-        >>> x_out is x
-
+        >>> x_out = x.conj(out=x)
+        >>> x
+        ctensors((2, 3)).element(
+        [[(1-1j), (2-0j), (3+3j)],
+         [(4-0j), (5+5j), (6-0j)]]
+        )
         """
         if out is None:
             return self.space.element(self.data.conj())
@@ -1481,7 +1534,8 @@ def weighted_norm(weight, exponent=2.0):
 
     See also
     --------
-    NumpyTensorSpaceConstWeighting, FnVectorWeighting, FnMatrixWeighting
+    NumpyTensorSpaceConstWeighting
+    NumpyTensorSpaceArrayWeighting
     """
     return _weighting(weight, exponent=exponent).norm
 
@@ -1518,7 +1572,8 @@ def weighted_dist(weight, exponent=2.0, use_inner=False):
 
     See also
     --------
-    NumpyTensorSpaceConstWeighting, FnVectorWeighting, FnMatrixWeighting
+    NumpyTensorSpaceConstWeighting
+    NumpyTensorSpaceArrayWeighting
     """
     return _weighting(weight, exponent=exponent,
                       dist_using_inner=use_inner).dist
@@ -1813,7 +1868,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeightingBase):
         dist : float
             The distance between the tensors.
         """
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             dist_squared = (_norm_default(x1) ** 2 + _norm_default(x2) ** 2 -
                             2 * _inner_default(x1, x2).real)
             if dist_squared < 0.0:  # Compensate for numerical error

@@ -26,12 +26,13 @@ import numpy as np
 
 from odl.set import RealNumbers, ComplexNumbers
 from odl.util.utility import (
-    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
+    is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype,
+    dtype_repr)
 from odl.space.entry_points import (
     NTUPLES_IMPLS, FN_IMPLS, TENSOR_SET_IMPLS, TENSOR_SPACE_IMPLS)
 
 
-__all__ = ('vector', 'ntuples',
+__all__ = ('vector', 'tensor', 'ntuples',
            'fn', 'cn', 'rn',
            'tensor_set', 'tensor_space', 'ctensors', 'rtensors')
 
@@ -204,8 +205,8 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
     cn = cn_type(size, dtype, **kwargs)
 
     if not cn.is_cn:
-        raise ValueError('data type {!r} not a complex floating-point type'
-                         ''.format(dtype))
+        raise ValueError('data type {} not a complex floating-point type'
+                         ''.format(dtype_repr(dtype)))
     return cn
 
 
@@ -245,8 +246,8 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
     rn = rn_type(size, dtype, **kwargs)
 
     if not rn.is_rn:
-        raise ValueError('data type {!r} not a real floating-point type'
-                         ''.format(dtype))
+        raise ValueError('data type {} not a real floating-point type'
+                         ''.format(dtype_repr(dtype)))
     return rn
 
 
@@ -280,20 +281,33 @@ def tensor(array, dtype=None, order='C', impl='numpy'):
 
     Examples
     --------
-    >>> tensor([[1, 2, 3],
-    ...         [4, 5, 6]])  # No automatic cast to float
-
-    >>> tensor([[1, 2, 3],
-    ...         [4, 5, 6]], dtype=float)
-
-    >>> tensor([[1, 2 - 1j, 3],
-    ...         [4, 5, 6 + 2j]])
+    >>> odl.tensor([[1, 2, 3],
+    ...             [4, 5, 6]])  # No automatic cast to float
+    tensor_space((2, 3), 'int').element(
+    [[1, 2, 3],
+     [4, 5, 6]]
+    )
+    >>> odl.tensor([[1, 2, 3],
+    ...             [4, 5, 6]], dtype=float)
+    rtensors((2, 3)).element(
+    [[1.0, 2.0, 3.0],
+     [4.0, 5.0, 6.0]]
+    )
+    >>> odl.tensor([[1, 2 - 1j, 3],
+    ...             [4, 5, 6 + 2j]])
+    ctensors((2, 3)).element(
+    [[(1+0j), (2-1j), (3+0j)],
+     [(4+0j), (5+0j), (6+2j)]]
+    )
 
     Non-scalar types are also supported:
 
-    >>> tensor([[True, True, False],
-    ...         [False, False, True]])
-
+    >>> odl.tensor([[True, True, False],
+    ...             [False, False, True]])
+    NumpyTensorSet((2, 3), 'bool').element(
+    [[True, True, False],
+     [False, False, True]]
+    )
     """
     # Sanitize input
     arr = np.array(array, copy=False, order=order, ndmin=1)

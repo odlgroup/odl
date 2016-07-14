@@ -740,15 +740,15 @@ class NumpyFn(FnBase, NumpyNtuples):
         # Set the weighting
         if weight is not None:
             if isinstance(weight, WeightingBase):
-                self._weighting = weight
+                self.__weighting = weight
             elif np.isscalar(weight):
-                self._weighting = NumpyFnConstWeighting(
+                self.__weighting = NumpyFnConstWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner)
             elif weight is None:
                 # Need to wait until dist, norm and inner are handled
                 pass
             elif isspmatrix(weight):
-                self._weighting = NumpyFnMatrixWeighting(
+                self.__weighting = NumpyFnMatrixWeighting(
                     weight, exponent, dist_using_inner=dist_using_inner,
                     **kwargs)
             else:  # last possibility: make a matrix
@@ -757,10 +757,10 @@ class NumpyFn(FnBase, NumpyNtuples):
                     raise ValueError('invalid weight argument {}'
                                      ''.format(weight))
                 if arr.ndim == 1:
-                    self._weighting = NumpyFnArrayWeighting(
+                    self.__weighting = NumpyFnArrayWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner)
                 elif arr.ndim == 2:
-                    self._weighting = NumpyFnMatrixWeighting(
+                    self.__weighting = NumpyFnMatrixWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner,
                         **kwargs)
                 else:
@@ -768,24 +768,24 @@ class NumpyFn(FnBase, NumpyNtuples):
                                      '2-dimensional'.format(weight))
 
         elif dist is not None:
-            self._weighting = NumpyFnCustomDist(dist)
+            self.__weighting = NumpyFnCustomDist(dist)
         elif norm is not None:
-            self._weighting = NumpyFnCustomNorm(norm)
+            self.__weighting = NumpyFnCustomNorm(norm)
         elif inner is not None:
-            self._weighting = NumpyFnCustomInner(inner)
+            self.__weighting = NumpyFnCustomInner(inner)
         else:  # all None -> no weighing
-            self._weighting = NumpyFnNoWeighting(
+            self.__weighting = NumpyFnNoWeighting(
                 exponent, dist_using_inner=dist_using_inner)
 
     @property
     def exponent(self):
         """Exponent of the norm and distance."""
-        return self._weighting.exponent
+        return self.weighting.exponent
 
     @property
     def weighting(self):
         """This space's weighting scheme."""
-        return self._weighting
+        return self.__weighting
 
     @property
     def is_weighted(self):
