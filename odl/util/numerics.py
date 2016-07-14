@@ -24,7 +24,7 @@ standard_library.install_aliases()
 
 import numpy as np
 
-from odl.util.normalize import normalized_scalar_param_list
+from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 
 
 __all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'resize_array')
@@ -303,14 +303,14 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     return out
 
 
-def resize_array(arr, newshp, frac_left=0.5, pad_mode='constant',
-                 pad_const=0.0, out=None):
+def resize_array(arr, newshp, frac_left=None, num_left=None,
+                 pad_mode='constant', pad_const=0.0, out=None):
     """Return the resized version of ``arr`` with shape ``newshp``.
 
-    In axes where ``newshp > arr.shape``, ``padding_value`` entries
-    are added to the left and right.
-    Where ``newshp < arr.shape``, entries are discarded, in the same
-    manner as above.
+    In axes where ``newshp > arr.shape``, padding is applied according
+    to the supplied options.
+    Where ``newshp < arr.shape``, the array is cropped to the new
+    size.
 
     Parameters
     ----------
@@ -323,8 +323,13 @@ def resize_array(arr, newshp, frac_left=0.5, pad_mode='constant',
         of the addition/removal is performed on the "left" side. If
         ``frac_left`` times the shape difference is not integer, the
         number of entries added to the left is gained by rounding to the
-        nearest integer.
+        nearest integer. The default ``None`` is equivalent to 0.5.
         This option can be specified per axis with a sequence.
+        Cannot be combined with ``num_left``.
+    num_left : sequence of int, optional
+        Specifies how many entries are added to/removed from the left
+        side of ``arr``.
+        Cannot be combined with ``frac_left``.
     pad_mode : str, optional
         Method to be used to fill in missing values in an enlarged array.
 
@@ -363,7 +368,69 @@ def resize_array(arr, newshp, frac_left=0.5, pad_mode='constant',
 
     Examples
     --------
-    >>> resize_array([0, 1, 2], (6,))
+    The input can be shrunk by simply providing a smaller size.
+    The left/right distribution of removed entries is ananogous to
+    the case of array enlargement, see below.
+
+    >>> from odl.util.numerics import resize_array
+    >>> resize_array([1, 2, 3], (1,))
+    array([2])
+    >>> resize_array([1, 2, 3], (2,))
+    array([1, 2])
+
+    When enlarging, zero-padding is applied by default, and half of the
+    zeros are added to each side (with preference for the left side in
+    case of ambiguity):
+
+    >>> resize_array([1, 2, 3], (6,))
+    array([0, 0, 1, 2, 3, 0])
+    >>> resize_array([1, 2, 3], (7,))
+    array([0, 0, 1, 2, 3, 0, 0])
+
+    One of the ``frac_left`` and ``num_left`` parameters can be
+    supplied to change the default distribution of the extra values:
+
+    >>> resize_array([1, 2, 3], (7,), frac_left=0.25)
+    array([0, 1, 2, 3, 0, 0, 0])
+    >>> resize_array([1, 2, 3], (7,), num_left=1)
+    array([0, 1, 2, 3, 0, 0, 0])
+
+    The padding constant can be changed, as well as the padding
+    mode:
+
+    >>> resize_array([1, 2, 3], (7,), pad_const=-1)
+    array([-1, -1,  1,  2,  3, -1, -1])
+    >>> resize_array([1, 2, 3], (7,), pad_mode='periodic')
+    array([2, 3, 1, 2, 3, 1, 2])
+    >>> resize_array([1, 2, 3], (7,), pad_mode='symmetric')
+    array([3, 2, 1, 2, 3, 2, 1])
+    >>> resize_array([1, 2, 3], (7,), pad_mode='order0')
+    array([1, 1, 1, 2, 3, 3, 3])
+    >>> resize_array([1, 2, 3], (7,), pad_mode='order1')
+    array([-1,  0,  1,  2,  3,  4,  5])
+
+    Everything works for arbitrary number of dimensions:
+
+    >>> # Take the middle two columns and extend rows symmetrically
+    >>> resize_array([[1, 2, 3, 4],
+    ...               [5, 6, 7, 8],
+    ...               [9, 10, 11, 12]], (5, 2), pad_mode='symmetric')
+    array([[ 6,  7],
+           [ 2,  3],
+           [ 6,  7],
+           [10, 11],
+           [ 6,  7]])
+    >>> # Take the rightmost two columns and extend rows symmetrically
+    >>> # downwards
+    >>> resize_array([[1, 2, 3, 4],
+    ...               [5, 6, 7, 8],
+    ...               [9, 10, 11, 12]], (5, 2), pad_mode='symmetric',
+    ...              frac_left=[0, 1])
+    array([[ 3,  4],
+           [ 7,  8],
+           [11, 12],
+           [ 7,  8],
+           [ 3,  4]])
     """
     # Handle arrays and shapes
     try:
@@ -391,30 +458,46 @@ def resize_array(arr, newshp, frac_left=0.5, pad_mode='constant',
                              'not match ({} != {})'
                              ''.format(arr.ndim, len(newshp)))
 
-    # Handle fraction parameter
-    frac_left, frac_left_in = normalized_scalar_param_list(
-        frac_left, out.ndim, param_conv=float, keep_none=False,
-        return_nonconv=True)
-
-    for i, (fl, fl_in) in enumerate(zip(frac_left, frac_left_in)):
-        if not 0.0 <= fl <= 1.0:
-            raise ValueError('in axis {}: `frac_l` must lie between 0 and 1, '
-                             'got {}'.format(i, fl_in))
+    # Handle frac_left and num_left parameters
+    if frac_left is not None and num_left is not None:
+        raise ValueError('the options `frac_left` and `num_left` cannot be '
+                         'combined')
+    if num_left is None:
+        # Compute num_left from frac_left
+        if frac_left is None:
+            frac_left = 0.5
+        frac_left, frac_left_in = normalized_scalar_param_list(
+            frac_left, out.ndim, param_conv=float, keep_none=False,
+            return_nonconv=True)
+        num_left = [round(frac_l * abs(n_orig - n_new))
+                    for frac_l, n_orig, n_new in zip(frac_left, arr.shape,
+                                                     out.shape)]
+        for i, (fl, fl_in) in enumerate(zip(frac_left, frac_left_in)):
+            if not 0.0 <= fl <= 1.0:
+                raise ValueError('in axis {}: `frac_l` must lie between 0 '
+                                 'and 1, got {}'.format(i, fl_in))
+    else:
+        num_left = normalized_scalar_param_list(
+            num_left, out.ndim, param_conv=safe_int_conv, keep_none=False)
 
     # Handle padding
     pad_mode, pad_mode_in = str(pad_mode), pad_mode
     if pad_mode not in _SUPPORTED_PAD_MODES:
         raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
 
+    if pad_mode == 'constant' and not np.can_cast(pad_const, out.dtype):
+        raise ValueError('`pad_const` {} cannot be safely cast to the data '
+                         'type {} of the output array'
+                         ''.format(pad_const, out.dtype))
+
     # Calculate the slices for the inner and outer parts
     arr_slc, out_slc, pad_l_slc, pad_r_slc = [], [], [], []
-    for i, (n_orig, n_new, frac_l) in enumerate(zip(arr.shape, out.shape,
-                                                    frac_left)):
+    for i, (n_orig, n_new, num_l) in enumerate(zip(arr.shape, out.shape,
+                                                   num_left)):
         if n_new < n_orig:
             # Simple case: remove according to fraction
             n_remove = n_orig - n_new
-            # TODO: fix for extreme cases frac_l = 0 or 1
-            istart = round(n_remove * frac_l)
+            istart = num_l
             istop = n_orig - (n_remove - istart)
             arr_slc.append(slice(istart, istop))
             out_slc.append(slice(None))
@@ -427,7 +510,7 @@ def resize_array(arr, newshp, frac_left=0.5, pad_mode='constant',
             # Padding case: calculate start and stop indices for the
             # bigger new array, together with the padding slices
             n_add = n_new - n_orig
-            istart = round(n_add * frac_l)
+            istart = num_l
             istop = n_new - (n_add - istart)
 
             n_pad_l = len(range(istart))
@@ -465,13 +548,10 @@ def resize_array(arr, newshp, frac_left=0.5, pad_mode='constant',
             pad_r_slc.append(slice(0))
 
     # Set the "inner" part
-    arr_slc = tuple(arr_slc)
-    out_slc = tuple(out_slc)
-    out[out_slc] = arr[arr_slc]
+    out[tuple(out_slc)] = arr[tuple(arr_slc)]
 
     # Perform the padding
     for i, (slc_l, slc_r) in enumerate(zip(pad_l_slc, pad_r_slc)):
-        print('axis ', i, 'slc_l ', slc_l, 'slc_r ', slc_r)
         _apply_padding(out, slc_l, slc_r, i, pad_mode, pad_const)
 
     return out
