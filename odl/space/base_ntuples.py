@@ -26,8 +26,8 @@ from builtins import int
 from abc import ABCMeta, abstractmethod
 import numpy as np
 
-from odl.set.sets import Set, RealNumbers, ComplexNumbers
-from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.set import (Set, RealNumbers, ComplexNumbers, LinearSpace,
+                     LinearSpaceVector)
 from odl.util.ufuncs import NtuplesBaseUFuncs
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,

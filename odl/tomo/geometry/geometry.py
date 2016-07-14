@@ -26,7 +26,7 @@ from builtins import object
 from abc import ABCMeta, abstractmethod
 import numpy as np
 
-from odl.discr.partition import RectPartition
+from odl.discr import RectPartition
 from odl.tomo.geometry.detector import Detector
 from odl.util.utility import with_metaclass
 

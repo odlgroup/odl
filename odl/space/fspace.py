@@ -27,8 +27,8 @@ from inspect import isfunction
 import numpy as np
 
 from odl.operator.operator import Operator, _dispatch_call_args
-from odl.set.sets import RealNumbers, ComplexNumbers, Set, Field
-from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.set import (RealNumbers, ComplexNumbers, Set, Field, LinearSpace,
+                     LinearSpaceVector)
 from odl.util.utility import (is_real_dtype, is_complex_floating_dtype,
                               preload_first_arg, dtype_repr,
                               TYPE_MAP_R2C, TYPE_MAP_C2R)

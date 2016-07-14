@@ -27,7 +27,7 @@ import numpy as np
 
 from odl.discr.lp_discr import DiscreteLp
 from odl.discr.tensor_ops import PointwiseTensorFieldOperator
-from odl.space.pspace import ProductSpace
+from odl.space import ProductSpace
 
 
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')

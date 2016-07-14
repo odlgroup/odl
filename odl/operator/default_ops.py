@@ -24,9 +24,8 @@ standard_library.install_aliases()
 from builtins import super
 
 from odl.operator.operator import Operator
-from odl.space.pspace import ProductSpace
-from odl.set.space import LinearSpace, LinearSpaceVector
-from odl.set.sets import Field, RealNumbers
+from odl.space import ProductSpace
+from odl.set import LinearSpace, LinearSpaceVector, Field, RealNumbers
 
 
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',

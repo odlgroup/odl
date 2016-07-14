@@ -29,7 +29,7 @@ standard_library.install_aliases()
 
 import numpy as np
 
-from odl.operator.operator import Operator
+from odl.operator import Operator
 
 
 __all__ = ('chambolle_pock_solver',)

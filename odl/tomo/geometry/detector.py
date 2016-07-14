@@ -26,7 +26,7 @@ from builtins import object, super
 from abc import ABCMeta, abstractmethod
 import numpy as np
 
-from odl.discr.partition import RectPartition
+from odl.discr import RectPartition
 from odl.tomo.util.utility import perpendicular_vector
 from odl.util.utility import with_metaclass
 

@@ -27,7 +27,7 @@ try:
 except ImportError:
     pass
 
-from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
+from odl.discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_data,
     astra_projector, astra_algorithm)

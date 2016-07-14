@@ -29,8 +29,7 @@ from builtins import super, range, str, zip
 
 import numpy as np
 
-from odl.set.domain import IntervalProd
-from odl.set.sets import Set
+from odl.set import Set, IntervalProd
 from odl.util.normalize import normalized_index_expression
 from odl.util.utility import array1d_repr, array1d_str
 

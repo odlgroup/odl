@@ -28,9 +28,8 @@ import inspect
 from numbers import Number, Integral
 import sys
 
-from odl.set.space import (
-    LinearSpace, LinearSpaceVector, UniversalSpace)
-from odl.set.sets import Set, UniversalSet, Field
+from odl.set import (LinearSpace, LinearSpaceVector, UniversalSpace,
+                     Set, UniversalSet, Field)
 
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',

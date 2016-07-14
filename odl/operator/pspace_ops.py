@@ -26,8 +26,8 @@ from builtins import super
 import numpy as np
 import scipy as sp
 
-from odl.operator.operator import Operator
-from odl.space.pspace import ProductSpace
+from odl.operator import Operator
+from odl.space import ProductSpace
 
 
 __all__ = ('ProductSpaceOperator',

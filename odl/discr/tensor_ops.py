@@ -25,10 +25,9 @@ from builtins import super
 
 import numpy as np
 
-from odl.operator.operator import Operator
-from odl.set.sets import RealNumbers, ComplexNumbers
-from odl.set.space import LinearSpace
-from odl.space.pspace import ProductSpace
+from odl.operator import Operator
+from odl.set import RealNumbers, ComplexNumbers, LinearSpace
+from odl.space import ProductSpace
 
 
 __all__ = ('PointwiseNorm', 'PointwiseInner')

@@ -29,7 +29,7 @@ try:
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
-from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
+from odl.discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_projector,
     astra_data, astra_algorithm)

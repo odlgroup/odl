@@ -25,9 +25,9 @@ from builtins import str, super
 
 import numpy as np
 
-from odl.discr.lp_discr import DiscreteLp
-from odl.operator.operator import Operator
-from odl.space.fspace import FunctionSpace
+from odl.discr import DiscreteLp
+from odl.operator import Operator
+from odl.space import FunctionSpace
 from odl.tomo.geometry import Geometry, Parallel2dGeometry
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE,

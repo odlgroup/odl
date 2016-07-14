@@ -23,7 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from odl.operator.operator import Operator
+from odl.operator import Operator
 
 
 __all__ = ('Resampling',)

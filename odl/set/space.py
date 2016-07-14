@@ -799,7 +799,7 @@ class LinearSpaceVector(object):
         >>> x.T(y)
         13.0
         """
-        from odl.operator.default_ops import InnerProductOperator
+        from odl.operator import InnerProductOperator
         return InnerProductOperator(self.copy())
 
     # Give a `Vector` a higher priority than any NumPy array type. This
