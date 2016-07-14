@@ -291,12 +291,11 @@ def test_gradient(method, fn_impl, padding):
         padding_method, padding_value = padding, None
 
     # DiscreteLp Vector
-    discr_space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape,
-                                    impl=fn_impl)
-    dom_vec = discr_space.element(DATA_2D)
+    space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
+    dom_vec = space.element(DATA_2D)
 
     # computation of gradient components with helper function
-    dx0, dx1 = discr_space.cell_sides
+    dx0, dx1 = space.cell_sides
     diff_0 = finite_diff(DATA_2D, axis=0, dx=dx0, method=method,
                          padding_method=padding_method,
                          padding_value=padding_value)
@@ -305,7 +304,7 @@ def test_gradient(method, fn_impl, padding):
                          padding_value=padding_value)
 
     # gradient
-    grad = Gradient(discr_space, method=method,
+    grad = Gradient(space, method=method,
                     padding_method=padding_method,
                     padding_value=padding_value)
     grad_vec = grad(dom_vec)

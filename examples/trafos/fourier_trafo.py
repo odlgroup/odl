@@ -28,30 +28,39 @@ import odl
 
 # Discretized space: discretized functions on the rectangle [-1, 1] x [-1, 1]
 # with 512 samples per dimension and complex data type (for full FT).
-discr_space = odl.uniform_discr([-1, -1], [1, 1], (512, 512), dtype='complex')
+space = odl.uniform_discr([-1, -1], [1, 1], (512, 512), dtype='complex')
 
 # Make the Fourier transform operator on this space. The range is calculated
 # automatically. The default backend is numpy.fft
-ft_op = odl.trafos.FourierTransform(discr_space)
+ft_op = odl.trafos.FourierTransform(space)
 
 # Create a phantom and its Fourier transfrom and display them
-phantom = odl.phantom.shepp_logan(discr_space, modified=True)
-phantom.show(title='Shepp-Logan phantom', show=True)
+phantom = odl.phantom.shepp_logan(space, modified=True)
+phantom.show(title='Shepp-Logan phantom')
 phantom_ft = ft_op(phantom)
-phantom_ft.show(title='Full Fourier Transform', show=True)
+phantom_ft.show(title='Full Fourier Transform')
+
+# Calculate the inverse transform
+phantom_ft_inv = ft_op.inverse(phantom_ft)
+phantom_ft_inv.show(title='Full Fourier Transform inverted')
 
 # Calculate the FT only along the first axis
-ft_op_axis0 = odl.trafos.FourierTransform(discr_space, axes=(0,))
+ft_op_axis0 = odl.trafos.FourierTransform(space, axes=0)
 phantom_ft_axis0 = ft_op_axis0(phantom)
-phantom_ft_axis0.show(title='Fourier transform along axis 0', show=True)
+phantom_ft_axis0.show(title='Fourier transform along axis 0')
 
 # If a real space is used, the Fourier transform can be calculated in the
 # "half-complex" mode. This means that along the last axis of the transform,
 # only the negative half of the spectrum is stored since the other half is
 # its complex conjugate. This is faster and more memory efficient.
-discr_space_real = odl.uniform_discr([-1, -1], [1, 1], (512, 512))
-ft_op_halfc = odl.trafos.FourierTransform(discr_space_real, halfcomplex=True)
-phantom_real = odl.phantom.shepp_logan(discr_space_real, modified=True)
-phantom_real.show(title='Shepp-Logan phantom, real version', show=True)
+real_space = space.real_space
+ft_op_halfc = odl.trafos.FourierTransform(real_space, halfcomplex=True)
+phantom_real = odl.phantom.shepp_logan(real_space, modified=True)
+phantom_real.show(title='Shepp-Logan phantom, real version')
 phantom_real_ft = ft_op_halfc(phantom_real)
-phantom_real_ft.show(title='Half-complex Fourier Transform', show=True)
+phantom_real_ft.show(title='Half-complex Fourier Transform')
+
+# If the space is real, the inverse also gives a real result
+phantom_real_ft_inv = ft_op_halfc.inverse(phantom_real_ft)
+phantom_real_ft_inv.show(title='Half-complex Fourier Transform inverted',
+                         show=True)

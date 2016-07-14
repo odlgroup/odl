@@ -47,19 +47,19 @@ image *= 100 / image.max()
 noisy_image = np.random.poisson(1 + image)
 
 # Discretized spaces and vectors
-discr_space = odl.uniform_discr([0, 0], shape, shape)
-orig = discr_space.element(image)
-noisy = discr_space.element(noisy_image)
+space = odl.uniform_discr([0, 0], shape, shape)
+orig = space.element(image)
+noisy = space.element(noisy_image)
 
 
 # --- Set up the inverse problem --- #
 
 
 # Gradient operator
-gradient = odl.Gradient(discr_space, method='forward')
+gradient = odl.Gradient(space, method='forward')
 
 # Matrix of operators
-op = odl.BroadcastOperator(odl.IdentityOperator(discr_space), gradient)
+op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 
 
 # Proximal operator related to the primal variable
@@ -70,7 +70,7 @@ proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
 # Proximal operators related to the dual variable
 
 # l2-data matching
-prox_convconj_kl = odl.solvers.proximal_cconj_kl(discr_space, lam=1.0, g=noisy)
+prox_convconj_kl = odl.solvers.proximal_cconj_kl(space, lam=1.0, g=noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
 prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.1,
@@ -90,8 +90,6 @@ callback = (odl.solvers.CallbackPrintIteration() &
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
 op_norm = 1.1 * odl.power_method_opnorm(op, 100)
-
-niter = 100  # Number of iterations
 tau = 10.0 / op_norm  # Step size for the primal variable
 sigma = 0.1 / op_norm  # Step size for the dual variable
 
@@ -101,7 +99,7 @@ x = op.domain.zero()
 # Run algorithms (and display intermediates)
 odl.solvers.chambolle_pock_solver(
     op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
-    proximal_dual=proximal_dual, niter=niter, callback=callback)
+    proximal_dual=proximal_dual, niter=100, callback=callback)
 
 # Display images
 orig.show(title='original image')
