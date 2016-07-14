@@ -23,10 +23,15 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
+import numpy as np
+
+from odl.discr.lp_discr import DiscreteLp, uniform_discr
 from odl.operator.operator import Operator
+from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
+from odl.util.numerics import resize_array, _SUPPORTED_PAD_MODES
 
 
-__all__ = ('Resampling',)
+__all__ = ('Resampling', 'ResizingOperator')
 
 
 class Resampling(Operator):
@@ -150,6 +155,193 @@ class Resampling(Operator):
         [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         """
         return self.inverse
+
+
+class ResizingOperator(Operator):
+
+    """Operator mapping between discretized spaces of different shapes.
+
+    This operator is intended as a mapping between uniformly
+    discretized spaces with the same `DiscreteLp.cell_sides` but
+    different `DiscreteLp.shape`. The underlying operation is array
+    resizing, i.e. no resampling is performed.
+
+    By default, the `Operator.range` is a uniformly discretized space
+    with  the same properties as `Operator.domain`, except for changed
+    shape.
+    """
+
+    def __init__(self, domain, range=None, ran_shp=None, **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        domain : uniform `DiscreteLp`
+            Uniformly discretized space, the operator can be applied
+            to its elements.
+        range : uniform `DiscreteLp`, optional
+            Uniformly discretized space in which the result of the
+            application of this operator lies.
+            For the default ``None``, a space with the same attributes
+            as ``domain`` is used, except for its shape, which is set
+            to ``ran_shp``.
+        ran_shp : sequence of int
+            Shape of the range of this operator. This can be provided
+            instead of ``range`` and is mandatory if ``range`` is
+            ``None``.
+        num_left : int or sequence of int, optional
+            Number of cells to add to/remove from the left of
+            ``domain.partition``. By default, the difference is
+            distributed evenly, with preference for left in case of
+            ambiguity.
+            This option is can only be used together with ``ran_shp``.
+        pad_mode : str, optional
+            Method to be used to fill in missing values in an enlarged array.
+
+            ``'constant'``: Fill with ``pad_const``.
+
+            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            outmost values. This requires left and right padding sizes
+            to be strictly smaller than the original array shape.
+
+            ``'periodic'``: Fill in values from the other side, keeping
+            the order. This requires left and right padding sizes to be
+            at most as large as the original array shape.
+
+            ``'order0'``: Extend constantly with the outmost values
+            (ensures continuity).
+
+            ``'order1'``: Extend with constant slope (ensures continuity of
+            the first derivative). This requires at least 2 values along
+            each axis where padding is applied.
+
+            Note that for ``'symmetric'`` and ``'periodic'`` padding, the
+            number of added values on each side of the array cannot exceed
+            the original size.
+
+        pad_const : scalar, optional
+            Value to be used in the ``'constant'`` padding mode.
+
+        discr_kwargs: dict, optional
+            Keyword arguments passed to the `uniform_discr` constructor.
+        """
+        if not isinstance(domain, DiscreteLp):
+            raise TypeError('`domain` must be a `DiscreteLp` instance, '
+                            'got {!r}'.format(domain))
+
+        if not domain.is_uniform:
+            raise ValueError('`domain` is not uniformly discretized')
+
+        num_left = kwargs.pop('num_left', None)
+        discr_kwargs = kwargs.pop('discr_kwargs', {})
+
+        if range is None:
+            if ran_shp is None:
+                raise ValueError('either `range` or `ran_shp` must be '
+                                 'given')
+
+            num_left = normalized_scalar_param_list(
+                num_left, domain.ndim, param_conv=safe_int_conv)
+
+            range = _resize_discr(domain, ran_shp, num_left, discr_kwargs)
+
+        elif ran_shp is None:
+            if num_left is not None:
+                raise ValueError('`num_left` can only be combined with '
+                                 '`ran_shp`')
+
+        else:
+            raise ValueError('cannot combine `range` with `ran_shape`')
+
+        self.__num_left = num_left
+
+        pad_mode = kwargs.pop('pad_mode', 'constant')
+        self.__pad_mode = str(pad_mode).lower()
+        if self.pad_mode not in _SUPPORTED_PAD_MODES:
+            raise ValueError("`pad_mode` '{}' not understood".format(pad_mode))
+
+        self.__pad_const = float(kwargs.pop('pad_const', 0.0))
+
+        # padding mode 'constant' with `pad_const != 0` is not linear
+        linear = (self.pad_mode != 'constant' or self.pad_const == 0.0)
+
+        super().__init__(domain, range, linear=linear)
+
+    @property
+    def num_left(self):
+        """Number of cells added to/removed from the left."""
+        return self.__num_left
+
+    @property
+    def pad_mode(self):
+        """Padding mode used by this operator."""
+        return self.__pad_mode
+
+    @property
+    def pad_const(self):
+        """Constant used by this operator in case of constant padding."""
+        return self.__pad_const
+
+    def _call(self, x, out):
+        """Implement ``self(x, out)``."""
+        # TODO: simplify once context manager is available
+        out[:] = resize_array(x.asarray(), self.range.shape,
+                              num_left=self.num_left, pad_mode=self.pad_mode,
+                              pad_const=self.pad_const, out=out.asarray())
+
+    def derivative(self, point):
+        """Derivative of this operator.
+
+        For the particular case of constant padding with non-zero
+        constant, the derivative is the corresponding zero-padding
+        variant. In all other cases, this operator is linear, i.e.
+        the derivative is equal to ``self``.
+        """
+        if self.pad_mode == 'constant' and self.pad_const != 0:
+            return ResizingOperator(
+                domain=self.domain, range=self.range, pad_mode='constant',
+                pad_const=0.0)
+
+    @property
+    def adjoint(self):
+        """Adjoint of this operator.
+
+        In axes where ``self`` extends, the adjoint is given by the
+        corresponding restriction. In restriction axes, the adjoint
+        performs zero-padding.
+        """
+        return ResizingOperator(domain=self.range, range=self.domain,
+                                pad_mode='constant', pad_const=0.0)
+
+
+def _resize_discr(discr, newshp, num_left, discr_kwargs):
+    """Return ``discr`` resized to ``newshp``.
+
+    Resize to ``newshp``, using ``num_left`` added/removed points to
+    the left (per axis). In axes where ``num_left`` is ``None``, the
+    points are distributed evenly.
+    """
+    new_begin, new_end = [], []
+    for b_orig, e_orig, n_orig, cs, n_new, num_l in zip(
+            discr.min_corner, discr.max_corner, discr.shape, discr.cell_sides,
+            newshp, num_left):
+
+        n_diff = n_new - n_orig
+        print(n_diff)
+        if num_l is None:
+            num_r = n_diff // 2
+            num_l = n_diff - num_r
+        else:
+            num_r = n_diff - num_l
+
+        print(num_l, num_r)
+
+        new_begin.append(b_orig - num_l * cs)
+        new_end.append(e_orig + num_r * cs)
+
+    print(new_begin, new_end)
+
+    return uniform_discr(new_begin, new_end, newshp, **discr_kwargs)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
