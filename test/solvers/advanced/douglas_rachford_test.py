@@ -104,7 +104,7 @@ def test_primal_dual_l1():
     # Solve with f term dominating
     x = space.zero()
     douglas_rachford_pd(x, prox_f, prox_cc_g, L,
-                        tau=3.0, sigma=[1.0], niter=5)
+                        tau=3.0, sigma=[1.0], niter=10)
 
     assert all_almost_equal(x, data_1, places=2)
 
