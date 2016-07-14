@@ -19,6 +19,5 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import callback
 from .callback import *
 __all__ += callback.__all__

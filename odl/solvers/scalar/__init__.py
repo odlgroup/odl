@@ -21,11 +21,8 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-
-from . import gradient
 from .gradient import *
 __all__ += gradient.__all__
 
-from . import steplen
 from .steplen import *
 __all__ += steplen.__all__

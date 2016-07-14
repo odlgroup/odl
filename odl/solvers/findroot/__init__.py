@@ -19,6 +19,5 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import newton
 from .newton import *
 __all__ += newton.__all__

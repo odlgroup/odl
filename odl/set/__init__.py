@@ -23,14 +23,11 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import sets
 from .sets import *
 __all__ += sets.__all__
 
-from . import domain
 from .domain import *
 __all__ += domain.__all__
 
-from . import space
 from .space import *
 __all__ += space.__all__

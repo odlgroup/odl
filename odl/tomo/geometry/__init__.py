@@ -20,23 +20,18 @@ from __future__ import absolute_import
 __all__ = ()
 
 
-from . import detector
 from .detector import *
 __all__ += detector.__all__
 
-from . import geometry
 from .geometry import *
 __all__ += geometry.__all__
 
-from . import parallel
 from .parallel import *
 __all__ += parallel.__all__
 
-from . import fanbeam
 from .fanbeam import *
 __all__ += fanbeam.__all__
 
-from . import conebeam
 from .conebeam import *
 __all__ += conebeam.__all__
 

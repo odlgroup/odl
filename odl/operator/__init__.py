@@ -21,18 +21,14 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import operator
 from .operator import *
 __all__ += operator.__all__
 
-from . import default_ops
 from .default_ops import *
 __all__ += default_ops.__all__
 
-from . import pspace_ops
 from .pspace_ops import *
 __all__ += pspace_ops.__all__
 
-from . import oputils
 from .oputils import *
 __all__ += oputils.__all__

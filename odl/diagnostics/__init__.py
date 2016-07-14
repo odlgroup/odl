@@ -21,14 +21,11 @@ from __future__ import absolute_import
 
 __all__ = ()
 
-from . import examples
 from .examples import *
 __all__ += examples.__all__
 
-from . import space
 from .space import *
 __all__ += space.__all__
 
-from . import operator
 from .operator import *
 __all__ += operator.__all__
