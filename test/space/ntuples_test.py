@@ -43,6 +43,10 @@ from odl.util.testutils import (almost_equal, all_almost_equal, all_equal,
                                 example_vectors)
 from odl.util.ufuncs import UFUNCS, REDUCTIONS
 
+# Check for python3
+from sys import version_info
+PYTHON2 = version_info < (3, 0)
+
 
 # Helpers to generate data
 def _pos_array(fn):
@@ -730,7 +734,42 @@ def test_nbytes(fn):
     assert x.nbytes == x.itemsize * x.size
 
 
-# Numpy Array tests
+# Type conversion tests
+
+
+def test_scalar_method():
+    # Too large space
+    space = odl.rn(2)
+    element = space.one()
+
+    with pytest.raises(TypeError):
+        int(element)
+    with pytest.raises(TypeError):
+        float(element)
+    with pytest.raises(TypeError):
+        complex(element)
+    if PYTHON2:
+        with pytest.raises(TypeError):
+            long(element)
+
+    # Size 1 real space
+    space = odl.rn(1)
+    value = 1.5
+    element = space.element(value)
+
+    assert int(element) == int(value)
+    assert float(element) == float(value)
+    assert complex(element) == complex(value)
+    if PYTHON2:
+        assert long(element) == long(value)
+
+    # Size 1 complex space
+    space = odl.cn(1)
+    value = 1.5 + 0.5j
+    element = space.element(value)
+
+    assert complex(element) == complex(value)
+
 
 def test_array_method(fn):
     # Verify that the __array__ method works

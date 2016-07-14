@@ -141,8 +141,8 @@ def test_primal_dual_with_li():
     douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops, tau=0.5,
                         sigma=[1.0], niter=20, prox_cc_l=prox_cc_ls)
 
-    assert lower_lim - 10 ** -LOW_ACCURACY <= x[0]
-    assert x[0] <= upper_lim + 10 ** -LOW_ACCURACY
+    assert lower_lim - 10 ** -LOW_ACCURACY <= float(x)
+    assert float(x) <= upper_lim + 10 ** -LOW_ACCURACY
 
 
 if __name__ == '__main__':

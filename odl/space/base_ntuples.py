@@ -325,6 +325,72 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
         """Return ``self != other``."""
         return not self.__eq__(other)
 
+    def __int__(self):
+        """Return ``int(self)``.
+
+        Returns
+        -------
+        int : `int`
+            Integer representing this vector.
+
+        Raises
+        ------
+        TypeError : If the vector is of `size` != 1.
+        """
+        if self.size != 1:
+            raise TypeError('only size 1 vectors can be converted to int')
+        return int(self[0])
+
+    def __long__(self):
+        """Return ``long(self)``.
+
+        The `long` method is only available in Python 2.
+
+        Returns
+        -------
+        long : `long`
+            Integer representing this vector.
+
+        Raises
+        ------
+        TypeError : If the vector is of `size` != 1.
+        """
+        if self.size != 1:
+            raise TypeError('only size 1 vectors can be converted to long')
+        return long(self[0])
+
+    def __float__(self):
+        """Return ``float(self)``.
+
+        Returns
+        -------
+        float : `float`
+            Floating point number representing this vector.
+
+        Raises
+        ------
+        TypeError : If the vector is of `size` != 1.
+        """
+        if self.size != 1:
+            raise TypeError('only size 1 vectors can be converted to float')
+        return float(self[0])
+
+    def __complex__(self):
+        """Return ``complex(self)``.
+
+        Returns
+        -------
+        complex : `complex`
+            Complex floating point number representing this vector.
+
+        Raises
+        ------
+        TypeError : If the vector is of `size` != 1.
+        """
+        if self.size != 1:
+            raise TypeError('only size 1 vectors can be converted to complex')
+        return complex(self[0])
+
     def __str__(self):
         """Return ``str(self)``."""
         return array1d_str(self)
