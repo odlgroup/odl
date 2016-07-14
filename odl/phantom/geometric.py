@@ -27,24 +27,24 @@ import numpy as np
 __all__ = ('cuboid', 'indicate_proj_axis')
 
 
-def cuboid(discr_space, begin=None, end=None):
+def cuboid(space, begin=None, end=None):
     """Rectangular cuboid.
 
     Parameters
     ----------
-    discr_space : `DiscretizedSpace`
+    space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created.
-    begin : array-like of length ``discr_space.ndim``
+    begin : array-like of length ``space.ndim``
         The lower left corner of the cuboid within the space.
         Default: A quarter of the volume from the minimum corner
-    end : array-like of length ``discr_space.ndim``
+    end : array-like of length ``space.ndim``
         The upper right corner of the cuboid within the space.
         Default: A quarter of the volume from the maximum corner
 
     Returns
     -------
     phantom : `LinearSpaceVector`
-        Returns an element in ``discr_space``
+        Returns an element in ``space``
 
     Examples
     --------
@@ -59,8 +59,8 @@ def cuboid(discr_space, begin=None, end=None):
      [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
      [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
     """
-    minp = np.asarray(discr_space.domain.min())
-    maxp = np.asarray(discr_space.domain.max())
+    minp = np.asarray(space.domain.min())
+    maxp = np.asarray(space.domain.max())
 
     if begin is None:
         begin = minp * 0.75 + maxp * 0.25
@@ -70,8 +70,8 @@ def cuboid(discr_space, begin=None, end=None):
     begin = np.atleast_1d(begin)
     end = np.atleast_1d(end)
 
-    assert begin.size == discr_space.ndim
-    assert end.size == discr_space.ndim
+    assert begin.size == space.ndim
+    assert end.size == space.ndim
 
     def phan(x):
         result = True
@@ -81,10 +81,10 @@ def cuboid(discr_space, begin=None, end=None):
                       np.less_equal(minv, xp) & np.less_equal(xp, maxv))
         return result
 
-    return discr_space.element(phan)
+    return space.element(phan)
 
 
-def indicate_proj_axis(discr_space, scale_structures=0.5):
+def indicate_proj_axis(space, scale_structures=0.5):
     """Phantom indicating along which axis it is projected.
 
     The number (n) of rectangles in a parallel-beam projection along a main
@@ -93,7 +93,7 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
 
     Parameters
     ----------
-    discr_space : `DiscretizedSpace`
+    space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created
     scale_structures : positive `float` in (0, 1]
         Scales objects (cube, cuboids)
@@ -101,7 +101,7 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
     Returns
     -------
     phantom : `LinearSpaceVector`
-        Returns an element in ``discr_space``
+        Returns an element in ``space``
 
     Examples
     --------
@@ -140,9 +140,9 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
         raise ValueError('`scale_structures` ({}) is not in (0, 1]'
                          ''.format(scale_structures))
 
-    assert discr_space.ndim == 3
+    assert space.ndim == 3
 
-    shape = discr_space.shape
+    shape = space.shape
     phan = np.zeros(shape)
     shape = np.array(shape) - 1
     cen = np.round(0.5 * shape)
@@ -169,7 +169,7 @@ def indicate_proj_axis(discr_space, scale_structures=0.5):
     z = (cen - dx)[2]
     phan[x0:x1, y:y1, z:-z] = 1
 
-    return discr_space.element(phan)
+    return space.element(phan)
 
 if __name__ == '__main__':
     # Show the phantoms

@@ -47,10 +47,10 @@ def test_chambolle_pock_solver_simple_space():
     """Test for the Chambolle-Pock algorithm."""
 
     # Create a discretized image space
-    discr_space = odl.uniform_discr(0, 1, DATA.size)
+    space = odl.uniform_discr(0, 1, DATA.size)
 
     # Operator
-    op = odl.IdentityOperator(discr_space)
+    op = odl.IdentityOperator(space)
 
     # Starting point (image)
     discr_vec = op.domain.element(DATA)
@@ -62,7 +62,7 @@ def test_chambolle_pock_solver_simple_space():
     discr_dual = op.range.zero()
 
     # Proximal operator, use same the factory function for F^* and G
-    prox = proximal_zero(discr_space)
+    prox = proximal_zero(space)
 
     # Run the algorithm
     chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
@@ -134,10 +134,10 @@ def test_chambolle_pock_solver_produce_space():
     """Test the Chambolle-Pock algorithm using a product space operator."""
 
     # Create a discretized image space
-    discr_space = odl.uniform_discr(0, 1, DATA.size)
+    space = odl.uniform_discr(0, 1, DATA.size)
 
     # Operator
-    identity = odl.IdentityOperator(discr_space)
+    identity = odl.IdentityOperator(space)
 
     # Create broadcasting operator
     prod_op = odl.BroadcastOperator(identity, -2 * identity)
