@@ -5,11 +5,17 @@ print_usage_and_quit() {
     exit 1
 }
 
+if [ ! -f "setup.py" ]; then
+    echo "This script must be run in the directory where the setup.py file lies."
+    exit 1
+fi
+
 # Process command line args
 if [ "$#" -eq 0 ]; then
     print_usage_and_quit
 fi
 
+# This is for debugging ("set -x" enables verbose printing)
 set +x
 
 PACKAGE_NAME="odl"
@@ -36,17 +42,30 @@ else
 fi
 
 
+if [ ! -d "dist" ]; then
+    echo 'The `dist` directory does not exist.'
+    echo 'You need to run `python setup.py sdist` and `python setup.py bdist_wheel` to build the distribution.'
+    exit 1
+fi
+
+
 ### PyPI upload
 
 PYPI_USER=odlgroup
 TWINE=$(which twine)
 if [ -z $TWINE ]; then
-    echo 'Error: twine was not found. Please install it (e.g. via "pip install twine)".'
+    echo 'Error: twine was not found. Please install it (e.g. via `pip install twine`).'
     exit 1
 fi
 
 PYPI_DIST_DIR=$(cd dist && echo "$PWD")  # Absolute path
-PYPI_DIST_FILES="$(ls -1 $PYPI_DIST_DIR/${PACKAGE_NAME}-${VERSION}*)"
+PYPI_DIST_FILES="$(ls -1a $PYPI_DIST_DIR | grep ${PACKAGE_NAME}-${VERSION})"
+
+if [ -z $PYPI_DIST_FILES ]; then
+    echo 'No distribution files found in the `dist` directory.'
+    echo 'You need to run `python setup.py sdist` and `python setup.py bdist_wheel` first to build the distribution.'
+    exit 1
+fi
 
 if [ $DRY_RUN -eq 1 ]; then
     echo "The following files would be uploaded to PyPI:"
