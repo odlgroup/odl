@@ -361,7 +361,7 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         --------
         >>> space = odl.rn((2, 3))
         >>> x = space.element([[1, 2, 3],
-                               [4, 5, 6]])
+        ...                    [4, 5, 6]])
         >>> y = x.copy()
         >>> y == x
         True
@@ -455,7 +455,7 @@ class NumpyGeneralizedTensor(GeneralizedTensor):
         )
         >>> import numpy as np
         >>> x[:] = np.array([[0, 0, 0],
-                             [1, 1, 1]])
+        ...                  [1, 1, 1]])
         >>> x
         rn((2, 3)).element(
         [[0.0, 0.0, 0.0],
@@ -764,8 +764,12 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         See also
         --------
-        NumpyTensorSpaceArrayWeighting
-        NumpyTensorSpaceConstWeighting
+        rn : constructor for real tensor spaces
+        cn : constructor for complex tensor spaces
+        tensor_space :
+            constructor for tensor spaces of arbitrary scalar
+            data type
+
 
         Notes
         -----
@@ -804,6 +808,20 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
           * :math:`\\langle sx + y, z\\rangle = s \\langle x, z\\rangle +
             \\langle y, z\\rangle`,
           * :math:`\\langle x, x\\rangle = 0 \Leftrightarrow x = 0`.
+
+        Examples
+        --------
+        >>> tspace = odl.tensor_space((2, 3), dtype='float64')
+        >>> tspace
+        rn((2, 3))
+
+        >>> tspace = odl.tensor_space((2, 3), dtype='complex64')
+        >>> tspace
+        cn((2, 3), 'complex64')
+
+        >>> tspace = odl.tensor_space((2, 3), dtype='int64')
+        >>> tspace
+        tensor_space((2, 3), 'int')
         """
         NumpyTensorSet.__init__(self, shape, dtype, order)
         TensorSpace.__init__(self, shape, dtype, order)
@@ -829,18 +847,21 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
             if isinstance(weighting, Weighting):
                 self.__weighting = weighting
             else:
-                self.__weighting = _weighting(weighting, exponent,
-                                             dist_using_inner=dist_using_inner)
+                self.__weighting = _weighting(
+                    weighting, exponent, dist_using_inner=dist_using_inner)
             if isinstance(self.weighting, NumpyTensorSpaceArrayWeighting):
                 if self.weighting.array.dtype == object:
-                    raise ValueError('invalid `weighting` argument {}'
+                    raise ValueError('invalid `weighting` argument: {}'
                                      ''.format(weighting))
                 if self.weighting.array.ndim != self.ndim:
                     raise ValueError('array-like weights must have {} '
                                      'dimensions, got a {}-dim. array'
-                                     ''.format(self.weighting.array.ndim))
+                                     ''.format(self.ndim,
+                                               self.weighting.array.ndim))
+
                 for i, (n_a, n_s) in enumerate(zip(self.weighting.array.shape,
                                                    self.shape)):
+                    # TODO: document (implement??) this possibility
                     if n_a not in (1, n_s):
                         raise ValueError('in axis {}: expected shape 1 or '
                                          '{}, got {}'.format(i, n_s, n_a))
@@ -1155,41 +1176,31 @@ class NumpyTensorSpace(TensorSpace, NumpyTensorSet):
 
         Examples
         --------
-        >>> from numpy.linalg import norm
-        >>> def dist(x, y, ord):
-        ...     return norm(x - y, ord)
+        >>> import odl
+        >>> tspace = odl.rn((2, 3))
+        >>> same_tspace = odl.rn((2, 3), exponent=2)
+        >>> same_tspace == tspace
+        True
 
-        >>> from functools import partial
-        >>> dist2 = partial(dist, ord=2)
-        >>> c3 = Cn(3, dist=dist2)
-        >>> c3_same = Cn(3, dist=dist2)
-        >>> c3  == c3_same
+        Different `shape`, `exponent` or `dtype` all result in
+        different spaces:
 
+        >>> diff_tspace = odl.rn((2, 3, 4))
+        >>> diff_tspace == tspace
+        False
+        >>> diff_tspace = odl.rn((2, 3), exponent=1)
+        >>> diff_tspace == tspace
+        False
+        >>> diff_tspace = odl.rn((2, 3), dtype='float32')
+        >>> diff_tspace == tspace
+        False
 
-        Different ``dist`` functions result in different spaces - the
-        same applies for ``norm`` and ``inner``:
-
-        >>> dist1 = partial(dist, ord=1)
-        >>> c3_1 = Cn(3, dist=dist1)
-        >>> c3_2 = Cn(3, dist=dist2)
-        >>> c3_1 == c3_2
-
-
-        Be careful with Lambdas - they result in non-identical function
-        objects:
-
-        >>> c3_lambda1 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
-        >>> c3_lambda2 = Cn(3, dist=lambda x, y: norm(x-y, ord=1))
-        >>> c3_lambda1 == c3_lambda2
-
-
-        An `Fn` space with the same data type is considered
+        A `NumpyTensorSpace` with the same properties is considered
         equal:
 
-        >>> c3 = Cn(3)
-        >>> f3_cdouble = Fn(3, dtype='complex128')
-        >>> c3 == f3_cdouble
-
+        >>> same_tspace = odl.NumpyTensorSpace((2, 3), dtype='float64')
+        >>> same_tspace == tspace
+        True
         """
         if other is self:
             return True
@@ -1236,15 +1247,20 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
         Returns
         -------
         real : `NumpyTensor`
-            Real part this element as an element of a `NumpyTensorSpace`
-            with real data type.
+            Real part of this element as a member of a
+            `NumpyTensorSpace` with corresponding real data type.
 
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> import odl
+        >>> tspace = odl.cn((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
         >>> x.real
-
+        rn((2, 3)).element(
+        [[1.0, 2.0, 3.0],
+         [4.0, 5.0, 6.0]]
+        )
         """
         real_space = self.space.astype(self.space.real_dtype)
         return real_space.element(self.data.real)
@@ -1262,21 +1278,33 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([5+1j, 3, 2-2j])
-        >>> a = Rn(3).element([0, 0, 0])
-        >>> x.real = a
+        >>> import odl
+        >>> tspace = odl.cn((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
+        >>> zero = odl.rn((2, 3)).zero()
+        >>> x.real = zero
         >>> x
-
+        cn((2, 3)).element(
+        [[1j, 0j, -3j],
+         [0j, -5j, 0j]]
+        )
 
         Other array-like types and broadcasting:
 
         >>> x.real = 1.0
         >>> x
-
-        >>> x.real = [0, 2, -1]
+        cn((2, 3)).element(
+        [[(1+1j), (1+0j), (1-3j)],
+         [(1+0j), (1-5j), (1+0j)]]
+        )
+        >>> x.real = [[2, 3, 4],
+        ...           [5, 6, 7]]
         >>> x
-
+        cn((2, 3)).element(
+        [[(2+1j), (3+0j), (4-3j)],
+         [(5+0j), (6-5j), (7+0j)]]
+        )
         """
         self.real.data[:] = newreal
 
@@ -1292,10 +1320,15 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> c3 = Cn(3)
-        >>> x = c3.element([5+1j, 3, 2-2j])
+        >>> import odl
+        >>> tspace = odl.cn((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
         >>> x.imag
-
+        rn((2, 3)).element(
+        [[1.0, 0.0, -3.0],
+         [0.0, -5.0, 0.0]]
+        )
         """
         real_space = self.space.astype(self.space.real_dtype)
         return real_space.element(self.data.imag)
@@ -1313,17 +1346,33 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> x = Cn(3).element([5+1j, 3, 2-2j])
-        >>> a = Rn(3).element([0, 0, 0])
-        >>> x.imag = a; print(x)
-
+        >>> import odl
+        >>> tspace = odl.cn((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
+        >>> zero = odl.rn((2, 3)).zero()
+        >>> x.imag = zero
+        >>> x
+        cn((2, 3)).element(
+        [[(1+0j), (2+0j), (3+0j)],
+         [(4+0j), (5+0j), (6+0j)]]
+        )
 
         Other array-like types and broadcasting:
 
-        >>> x.imag = 1.0; print(x)
-
-        >>> x.imag = [0, 2, -1]; print(x)
-
+        >>> x.imag = 1.0
+        >>> x
+        cn((2, 3)).element(
+        [[(1+1j), (2+1j), (3+1j)],
+         [(4+1j), (5+1j), (6+1j)]]
+        )
+        >>> x.imag = [[2, 3, 4],
+        ...           [5, 6, 7]]
+        >>> x
+        cn((2, 3)).element(
+        [[(1+2j), (2+3j), (3+4j)],
+         [(4+5j), (5+6j), (6+7j)]]
+        )
         """
         self.imag.data[:] = newimag
 
@@ -1344,24 +1393,36 @@ class NumpyTensor(Tensor, NumpyGeneralizedTensor):
 
         Examples
         --------
-        >>> x = Cn(3).element([5+1j, 3, 2-2j])
-        >>> y = x.conj(); print(y)
-
+        >>> import odl
+        >>> tspace = odl.cn((2, 3))
+        >>> x = tspace.element([[1 + 1j, 2, 3 - 3j],
+        ...                     [4, 5 - 5j, 6]])
+        >>> x.conj()
+        cn((2, 3)).element(
+        [[(1-1j), (2-0j), (3+3j)],
+         [(4-0j), (5+5j), (6-0j)]]
+        )
 
         The out parameter allows you to avoid a copy
 
-        >>> z = Cn(3).element()
-        >>> z_out = x.conj(out=z); print(z)
+        >>> y = tspace.element()
+        >>> y_out = x.conj(out=y)
+        >>> y
+        cn((2, 3)).element(
+        [[(1-1j), (2-0j), (3+3j)],
+         [(4-0j), (5+5j), (6-0j)]]
+        )
+        >>> y_out is y
+        True
 
-        >>> z_out is z
+        It can also be used for in-place conjugation:
 
-
-        It can also be used for in-place conj
-
-        >>> x_out = x.conj(out=x); print(x)
-
-        >>> x_out is x
-
+        >>> x_out = x.conj(out=x)
+        >>> x
+        cn((2, 3)).element(
+        [[(1-1j), (2-0j), (3+3j)],
+         [(4-0j), (5+5j), (6-0j)]]
+        )
         """
         if out is None:
             return self.space.element(self.data.conj())
@@ -1780,7 +1841,7 @@ class NumpyTensorSpaceConstWeighting(ConstWeighting):
         dist : float
             The distance between the tensors.
         """
-        if self._dist_using_inner:
+        if self.dist_using_inner:
             dist_squared = (_norm_default(x1) ** 2 + _norm_default(x2) ** 2 -
                             2 * _inner_default(x1, x2).real)
             if dist_squared < 0.0:  # Compensate for numerical error
