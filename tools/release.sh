@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function print_usage_and_quit {
+print_usage_and_quit() {
     echo "Usage: $0 <version> [--dry-run]"
     exit 1
 }
@@ -15,16 +15,16 @@ set +x
 PACKAGE_NAME="odl"
 
 # Clumsy parsing of command line arguments
-if [ "$#" == 1 ]; then
-    if [ "$1" == "--dry-run" ]; then
+if [ "$#" = 1 ]; then
+    if [ "$1" = "--dry-run" ]; then
         print_usage_and_quit
     fi
     DRY_RUN=0
     VERSION=$1
-elif [ "$#" == 2 ]; then
-    if [ "$1" == "--dry-run" ]; then
+elif [ "$#" = 2 ]; then
+    if [ "$1" = "--dry-run" ]; then
         VERSION=$2
-    elif [ "$2" == "--dry-run" ]; then
+    elif [ "$2" = "--dry-run" ]; then
         VERSION=$1
     else
         print_usage_and_quit
