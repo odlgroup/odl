@@ -24,43 +24,36 @@ standard_library.install_aliases()
 
 import numpy as np
 import odl
-from odl.tomo.operators.spect_trafo import AttenuatedRayTransform
+from odl.tomo import AttenuatedRayTransform
 
 
 # Create SPECT geometry and reconstruction domain
-det_nx_pix = 64
-det_ny_pix = 64
-det_nx_mm = 2
-det_radius = 200
-n_proj = 64
-det_param = det_nx_mm * det_nx_pix / 2
-dpart = odl.uniform_partition([-det_param, -det_param],
-                              [det_param, det_param],
-                              [det_nx_pix, det_ny_pix])
+dpart = odl.uniform_partition([-64, -64], [64, 64], [64, 64])
 
-apart = odl.uniform_partition(0, 2 * np.pi, n_proj)
+apart = odl.uniform_partition(0, 2 * np.pi, 64)
 geometry = odl.tomo.geometry.ParallelHoleCollimatorGeometry(
-    apart, dpart, det_rad=det_radius)
+    apart, dpart, det_rad=200)
 
-domain = odl.uniform_discr([-20] * 3, [20] * 3, [det_nx_pix] * 3)
+domain = odl.uniform_discr([-20] * 3, [20] * 3, [64] * 3)
 
 # Create phantoms
 vol = odl.util.phantom.derenzo_sources(domain)
 vol *= 100
-attenuation = odl.util.phantom.derenzo_sources(domain)
-attenuation *= 0.02
-psf = np.ones((3, 3, det_nx_pix))
+derenzo_attenuation = odl.util.phantom.derenzo_sources(domain)
+derenzo_attenuation *= 0.02
+psf = np.ones((3, 3, 64))
 
 # Create a SPECT projector
 projector = AttenuatedRayTransform(
-    domain, geometry, attenuation=attenuation, impl='niftyrec_cpu', psf=psf)
+    domain, geometry, attenuation=derenzo_attenuation, impl='niftyrec_cpu',
+    psf=psf)
 
 # Calculate projections
 data = projector(vol)
 
 # Calculate operator norm for landweber
-op_norm_est_squared = projector.adjoint(data).norm() / vol.norm()
-omega = 0.5 / op_norm_est_squared
+op_norm = projector.adjoint(data).norm() / vol.norm()
+omega = 0.5 / op_norm
 
 # Reconstruct using ODL
 recon = domain.one()

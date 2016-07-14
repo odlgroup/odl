@@ -23,3 +23,7 @@ __all__ = ()
 from . import ray_trafo
 from .ray_trafo import *
 __all__ += ray_trafo.__all__
+
+from . import spect_trafo
+from .spect_trafo import *
+__all__ += spect_trafo.__all__
