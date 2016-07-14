@@ -243,6 +243,44 @@ def as_scipy_operator(op):
                                               rmatvec=rmatvec,
                                               dtype=dtype)
 
+
+def as_cvx_operator(op, norm_bound=None):
+    """Wrap ``op`` as a ``proximal.BlackBox``.
+
+    This is intended to be used with the cvx solvers.
+
+    Parameters
+    ----------
+    op : `Operator`
+        A linear operator that should be wrapped.
+    norm_bound : float, optional
+        An upper bound on the spectral norm of the operator.
+
+    Returns
+    -------
+    ``proximal.BlackBox`` : cvx_operator
+        The wrapped operator
+
+    Notes
+    -----
+    If the data representation of ``op``'s domain and range is of type
+    `NumpyFn` this incurs no significant overhead. If the data type is `CudaFn`
+    or other nonlocal type, the overhead is significant.
+    """
+
+    def forward(inp, out):
+        out[:] = op(inp).asarray()
+
+    def adjoint(inp, out):
+        out[:] = op.adjoint(inp).asarray()
+
+    import proximal
+    return proximal.LinOpFactory(input_shape=op.domain.shape,
+                                 output_shape=op.range.shape,
+                                 forward=forward,
+                                 adjoint=adjoint,
+                                 norm_bound=norm_bound)
+
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
