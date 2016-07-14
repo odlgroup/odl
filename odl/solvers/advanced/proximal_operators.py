@@ -32,12 +32,10 @@ from builtins import super
 
 import numpy as np
 
-from odl.operator.operator import Operator
-from odl.operator.default_ops import (IdentityOperator, ScalingOperator,
-                                      ConstantOperator, ResidualOperator)
-from odl.operator.pspace_ops import DiagonalOperator
-from odl.space.pspace import ProductSpace
-from odl.set.space import LinearSpaceVector
+from odl.operator import (Operator, IdentityOperator, ScalingOperator,
+                          ConstantOperator, ResidualOperator, DiagonalOperator)
+from odl.space import ProductSpace
+from odl.set import LinearSpaceVector
 
 
 __all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',

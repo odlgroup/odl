@@ -22,8 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from odl.operator.default_ops import IdentityOperator
-from odl.operator.operator import OperatorComp, OperatorSum
+from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',

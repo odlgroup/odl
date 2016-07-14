@@ -38,7 +38,7 @@ from odl.discr import (RegularGrid, DiscreteLp,
                        discr_sequence_space, uniform_partition_fromgrid,
                        uniform_discr_frompartition)
 from odl.operator import Operator
-from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.set import RealNumbers, ComplexNumbers
 from odl.util import (fast_1d_tensor_mult, is_real_dtype, is_scalar_dtype,
                       is_real_floating_dtype, is_complex_floating_dtype,
                       dtype_repr, conj_exponent, TYPE_MAP_R2C,

@@ -32,8 +32,8 @@ import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
-from odl.operator.operator import Operator
-from odl.set.sets import RealNumbers, ComplexNumbers
+from odl.operator import Operator
+from odl.set import RealNumbers, ComplexNumbers
 from odl.space.base_ntuples import (
     NtuplesBase, NtuplesBaseVector, FnBase, FnBaseVector)
 from odl.space.weighting import (
@@ -41,9 +41,7 @@ from odl.space.weighting import (
     ConstWeightingBase, NoWeightingBase,
     CustomInnerProductBase, CustomNormBase, CustomDistBase)
 from odl.util.ufuncs import NumpyNtuplesUFuncs
-from odl.util.utility import (
-    dtype_repr, is_real_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype)
+from odl.util.utility import dtype_repr, is_real_dtype
 
 
 __all__ = ('NumpyNtuples', 'NumpyNtuplesVector', 'NumpyFn', 'NumpyFnVector',

@@ -25,7 +25,7 @@ from builtins import object
 
 from copy import copy, deepcopy
 
-from odl.set.sets import Field
+from odl.set import Field
 from odl.diagnostics.examples import samples
 from odl.util.testutils import FailCounter
 

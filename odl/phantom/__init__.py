@@ -19,7 +19,7 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
+__all__ = ('phantom_utils',)
 
 from . import phantom_utils
 

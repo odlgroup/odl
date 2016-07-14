@@ -54,8 +54,8 @@ try:
 except ImportError:
     STIR_AVAILABLE = False
 
-from odl.discr.lp_discr import uniform_discr
-from odl.operator.operator import Operator
+from odl.discr import uniform_discr
+from odl.operator import Operator
 
 
 __all__ = ('ForwardProjectorByBinWrapper',

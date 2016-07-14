@@ -32,7 +32,7 @@ from builtins import object, range, super, zip
 import numpy as np
 
 from odl.discr.grid import TensorGrid, RegularGrid, uniform_sampling_fromintv
-from odl.set.domain import IntervalProd
+from odl.set import IntervalProd
 from odl.util.normalize import normalized_index_expression
 
 

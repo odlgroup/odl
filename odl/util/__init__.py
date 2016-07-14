@@ -19,7 +19,7 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
+__all__ = ('ufuncs',)
 
 from .testutils import *
 __all__ += testutils.__all__

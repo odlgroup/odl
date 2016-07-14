@@ -19,28 +19,23 @@
 
 from __future__ import absolute_import
 
-__all__ = ()
+__all__ = ('base_ntuples', 'weighting')
 
 from . import base_ntuples
 
 from . import weighting
 
-from . import npy_ntuples
 from .npy_ntuples import *
 __all__ += npy_ntuples.__all__
 
-from . import pspace
 from .pspace import *
 __all__ += pspace.__all__
 
-from . import fspace
 from .fspace import *
 __all__ += fspace.__all__
 
-from . import entry_points
 from .entry_points import *
 __all__ += entry_points.__all__
 
-from . import space_utils
 from .space_utils import *
 __all__ += space_utils.__all__

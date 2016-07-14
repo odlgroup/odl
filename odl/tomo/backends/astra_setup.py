@@ -46,7 +46,7 @@ except ImportError:
     ASTRA_AVAILABLE = False
 import numpy as np
 
-from odl.discr.lp_discr import DiscreteLp, DiscreteLpVector
+from odl.discr import DiscreteLp, DiscreteLpVector
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, DivergentBeamGeometry, ParallelGeometry,
     FlatDetector)

@@ -30,8 +30,8 @@ try:
 except ImportError:
     PYWAVELETS_AVAILABLE = False
 
-from odl.discr.lp_discr import DiscreteLp
-from odl.operator.operator import Operator
+from odl.discr import DiscreteLp
+from odl.operator import Operator
 
 
 __all__ = ('WaveletTransform', 'WaveletTransformInverse',

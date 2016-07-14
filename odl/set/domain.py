@@ -27,7 +27,7 @@ standard_library.install_aliases()
 import numpy as np
 
 from odl.set.sets import Set
-from odl.util.utility import array1d_repr, is_real_dtype
+from odl.util.utility import array1d_repr
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid)
 

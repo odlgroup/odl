@@ -33,8 +33,7 @@ from odl.discr.discr_mappings import (
     PerAxisInterpolation)
 from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
-from odl.set.sets import RealNumbers, ComplexNumbers
-from odl.set.domain import IntervalProd
+from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.space import FunctionSpace, FN_IMPLS

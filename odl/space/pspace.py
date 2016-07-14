@@ -28,7 +28,7 @@ from numbers import Integral
 from itertools import product
 import numpy as np
 
-from odl.set.space import LinearSpace, LinearSpaceVector
+from odl.set import LinearSpace, LinearSpaceVector
 from odl.space.weighting import (
     WeightingBase, VectorWeightingBase, ConstWeightingBase, NoWeightingBase,
     CustomInnerProductBase, CustomNormBase, CustomDistBase)
