@@ -304,7 +304,7 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
 
 def resize_array(arr, newshp, frac_left=None, num_left=None,
-                 pad_mode='constant', pad_const=0.0, out=None):
+                 pad_mode='constant', pad_const=0, out=None):
     """Return the resized version of ``arr`` with shape ``newshp``.
 
     In axes where ``newshp > arr.shape``, padding is applied according
@@ -485,7 +485,10 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
     if pad_mode not in _SUPPORTED_PAD_MODES:
         raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
 
-    if pad_mode == 'constant' and not np.can_cast(pad_const, out.dtype):
+    if (pad_mode == 'constant' and
+        not np.can_cast(pad_const, out.dtype) and
+        any(n_new > n_orig
+            for n_orig, n_new in zip(arr.shape, out.shape))):
         raise ValueError('`pad_const` {} cannot be safely cast to the data '
                          'type {} of the output array'
                          ''.format(pad_const, out.dtype))
