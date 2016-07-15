@@ -152,8 +152,8 @@ def test_matrix_representation_not_linear_op():
         def __init__(self):
             super().__init__(domain=odl.rn(3), range=odl.rn(4), linear=False)
 
-        def _call(self, x, out):
-            return odl.rn(np.random.rand(4))
+        def _call(self, x):
+            return x
 
     nonlin_op = small_nonlin_op()
     with pytest.raises(ValueError):
@@ -232,9 +232,41 @@ def test_power_method_opnorm_nonsymm():
 
     # Start close to the correct eigenvector, converges very fast
     xstart = odl.rn(2).element([-0.8, 0.5])
-    opnorm_est = power_method_opnorm(op, niter=5, xstart=xstart)
+    opnorm_est = power_method_opnorm(op, niter=6, xstart=xstart)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
+
+def test_power_method_opnorm_exceptions():
+    # Test the exceptions
+
+    space = odl.rn(2)
+    op = odl.IdentityOperator(space)
+
+    with pytest.raises(ValueError):
+        # Too small number of iterates
+        power_method_opnorm(op, niter=0)
+
+    with pytest.raises(ValueError):
+        # Negative number of iterates
+        power_method_opnorm(op, niter=-5)
+
+    with pytest.raises(ValueError):
+        # Input vector is zero
+        power_method_opnorm(op, niter=2, xstart=space.zero())
+
+    with pytest.raises(ValueError):
+        # Input vector in the nullspace
+        op = odl.MatVecOperator([[0., 1.],
+                                 [0., 0.]])
+
+        power_method_opnorm(op, niter=2, xstart=op.domain.one())
+
+    with pytest.raises(ValueError):
+        # Uneven number of iterates for non square operator
+        op = odl.MatVecOperator([[1., 2., 3.],
+                                 [4., 5., 6.]])
+
+        power_method_opnorm(op, niter=1, xstart=op.domain.one())
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
