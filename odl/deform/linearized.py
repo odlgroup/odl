@@ -67,10 +67,14 @@ def _linear_deform(template, displacement, out=None):
 
 class LinDeformFixedTempl(Operator):
 
-    """Operator mapping a displacement field to corresponding deformed template.
+    """Deformation operator with fixed template acting on displacement field.
 
     The operator has a fixed template ``I`` and maps a displacement
     field ``v`` to the new function ``x --> I(x + v(x))``.
+
+    See Also
+    --------
+    LinDeformFixedDisp : Deformation with a fixed displacement.
     """
 
     def __init__(self, template, domain=None):
@@ -79,16 +83,14 @@ class LinDeformFixedTempl(Operator):
         Parameters
         ----------
         template : `DiscreteLpVector` or element-like
-            Fixed template that is to be deformed.
-            If ``domain`` is not given, ``template`` must
-            be a `DiscreteLpVector`, and the domain of this operator
-            is inferred from ``template.space``. If ``domain`` is
-            given, ``template`` can be anything that is understood
-            by the ``domain[0].element()`` method.
-        domain : product space of `DiscreteLp`, optional
-            Space of displacement fields on which this operator
-            acts, i.e. the operator domain. If not given, it is
-            inferred from ``template.space``.
+            Fixed template that is to be deformed. If ``domain`` is not
+            given, ``template`` must be a `DiscreteLpVector`, and the domain
+            of this operator is inferred from ``template.space``. If ``domain``
+            is given, ``template`` can be anything that is understood by
+            the ``domain[0].element()`` method.
+        domain : `ProductSpace` of `DiscreteLp`, optional
+            Space of displacement fields on which this operator acts, i.e. the
+            operator domain. Defalt: inferred from ``template.space``.
 
         Examples
         --------
@@ -116,10 +118,6 @@ class LinDeformFixedTempl(Operator):
         >>> disp_field = [[0, 0, 0, -0.1, 0]]
         >>> print(op(disp_field))
         [0.0, 0.0, 1.0, 0.5, 0.0]
-
-        See Also
-        --------
-        LinDeformFixedDisp : Deformation with a fixed displacement.
         """
         if domain is None:
             if not isinstance(template, DiscreteLpVector):
@@ -204,8 +202,12 @@ class LinDeformFixedDisp(Operator):
 
     """Deformation operator with fixed displacement acting on template.
 
-    The operator has a fixed displacement field ``v`` and
-    maps a template ``I`` to the new function ``x --> I(x + v(x))``.
+    The operator has a fixed displacement field ``v`` and maps a template ``I``
+    to the new function ``x --> I(x + v(x))``.
+
+    See Also
+    --------
+    LinDeformFixedTempl : Deformation with a fixed template.
     """
 
     def __init__(self, displacement, domain=None):
@@ -215,18 +217,18 @@ class LinDeformFixedDisp(Operator):
         ----------
         displacement : `ProductSpace` element-like
             Fixed displacement field used in the linearized deformation.
-            If ``domain`` is not given, ``displacement`` must
-            be a `ProductSpace` element, and the domain of this operator
-            is inferred from ``displacement[0].space``. If ``domain`` is
-            given, ``displacement`` can be anything that is understood
-            by the ``domain.tangent_space.element()`` method.
+            If ``domain`` is not given, ``displacement`` must be a
+            `ProductSpace` element, and the domain of this operator is
+            inferred from ``displacement[0].space``. If ``domain`` is given,
+            ``displacement`` can be anything that is understood by the
+            ``domain.tangent_space.element()`` method.
         domain : `DiscreteLp`, optional
             Space of templates on which this operator acts, i.e. the operator
             domain. If not given, ``displacement[0].space`` is used as domain.
 
         Examples
         --------
-        Create a given deformation and use it to deform a function.
+        Create a given deformation and use it to deform a template.
 
         Where the deformation field is zero we expect to get the same output
         as the input. In the 4:th point, the deformation is non-zero and hence
@@ -250,10 +252,6 @@ class LinDeformFixedDisp(Operator):
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op(template))
         [0.0, 0.0, 1.0, 0.5, 0.0]
-
-        See Also
-        --------
-        LinDeformFixedTempl : Deformation with a fixed template.
         """
         if domain is None:
             if not isinstance(displacement.space, ProductSpace):
