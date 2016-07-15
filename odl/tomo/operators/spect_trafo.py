@@ -25,6 +25,12 @@ from builtins import super
 try:
     from NiftyPy import NiftyRec
     NIFTYREC_AVAILABLE = True
+    if len(NiftyRec.gpu_list()) >= 1:
+        NIFTYREC_GPU_AVAILABLE = NiftyRec.gpu_exists(
+            NiftyRec.gpu_list()[0]['id'])
+    else:
+        NIFTYREC_GPU_AVAILABLE = False
+
 except ImportError:
     NIFTYREC_AVAILABLE = False
 
@@ -37,7 +43,7 @@ from odl.tomo.geometry.spect import ParallelHoleCollimatorGeometry
 
 
 __all__ = ('AttenuatedRayTransform', 'AttenuatedRayBackprojection',
-           'NIFTYREC_AVAILABLE')
+           'NIFTYREC_AVAILABLE', 'NIFTYREC_GPU_AVAILABLE')
 _SUPPORTED_IMPL = ('niftyrec_cpu', 'niftyrec_gpu')
 
 
@@ -100,6 +106,8 @@ class AttenuatedRayTransform(Operator):
         if impl.startswith('niftyrec'):
             if not NIFTYREC_AVAILABLE:
                 raise ValueError('NiftyRec back-end not available')
+            if impl == 'niftyrec_gpu' and not NIFTYREC_GPU_AVAILABLE:
+                raise ValueError("'niftyrec_gpu' back-end not available")
             if impl == 'niftyrec_gpu' and dom.shape != (128, 128, 128):
                 raise NotImplementedError("'niftyrec_gpu' back-end only "
                                           "supports volume size "
@@ -237,6 +245,8 @@ class AttenuatedRayBackprojection(Operator):
         if impl.startswith('niftyrec'):
             if not NIFTYREC_AVAILABLE:
                 raise ValueError('NiftyRec back-end not available')
+            if impl == 'niftyrec_gpu' and not NIFTYREC_GPU_AVAILABLE:
+                raise ValueError("'niftyrec_gpu' back-end not available")
             if impl == 'niftyrec_gpu' and ran.shape != (128, 128, 128):
                 raise NotImplementedError('`niftyrec_gpu` back-end only '
                                           'supports volume size '
