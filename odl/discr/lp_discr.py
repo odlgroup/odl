@@ -233,10 +233,10 @@ class DiscreteLp(DiscretizedSpace):
         return self.__exponent
 
     @property
-    def tangent_space(self):
-        """Tangent space."""
-        real_space = self.astype(self._real_dtype)
-        return ProductSpace(real_space, self.ndim)
+    def vector_field_space(self):
+        """vector field space."""
+        self.real_space = self.astype(self._real_dtype)
+        return ProductSpace(self.real_space, self.ndim)
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
