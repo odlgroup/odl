@@ -125,7 +125,7 @@ class LinDeformFixedTempl(Operator):
                                 'instance if `domain` is None, got {!r}'
                                 ''.format(template))
 
-            domain = template.space.tangent_space
+            domain = template.space.vector_field_space
         else:
             if not isinstance(domain, ProductSpace):
                 raise TypeError('`domain` {!r} not a `ProductSpace`'
@@ -170,7 +170,7 @@ class LinDeformFixedTempl(Operator):
             The derivative evaluated at ``displacement``.
         """
         # To implement the complex case we need to be able to embed the real
-        # tangent space into the range of the gradient. Issue #59.
+        # vector field space into the range of the gradient. Issue #59.
         if not self.range.is_rn:
             raise NotImplementedError('derivative not implemented for complex '
                                       'spaces.')
@@ -188,7 +188,7 @@ class LinDeformFixedTempl(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.domain == self._template.space.tangent_space:
+        if self.domain == self._template.space.vector_field_space:
             domain_repr = ''
         else:
             domain_repr = ', domain={!r}'.format(self.domain)
@@ -221,7 +221,7 @@ class LinDeformFixedDisp(Operator):
             `ProductSpace` element, and the domain of this operator is
             inferred from ``displacement[0].space``. If ``domain`` is given,
             ``displacement`` can be anything that is understood by the
-            ``domain.tangent_space.element()`` method.
+            ``domain.vector_field_space.element()`` method.
         domain : `DiscreteLp`, optional
             Space of templates on which this operator acts, i.e. the operator
             domain. Default: ``displacement[0].space`` is used as domain.
@@ -236,7 +236,7 @@ class LinDeformFixedDisp(Operator):
 
         >>> import odl
         >>> space = odl.uniform_discr(0, 1, 5)
-        >>> disp_field = space.tangent_space.element([[0, 0, 0, -0.2, 0]])
+        >>> disp_field = space.vector_field_space.element([[0, 0, 0, -0.2, 0]])
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op([0, 0, 1, 0, 0]))
@@ -247,7 +247,7 @@ class LinDeformFixedDisp(Operator):
         points, 0.1, we expect to get the mean of the values.
 
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
-        >>> disp_field = space.tangent_space.element([[0, 0, 0, -0.1, 0]])
+        >>> disp_field = space.vector_field_space.element([[0, 0, 0, -0.1, 0]])
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op(template))
@@ -270,7 +270,7 @@ class LinDeformFixedDisp(Operator):
                 raise TypeError('`displacement[0]` {!r} not an `DiscreteLp`'
                                 ''.format(displacement[0]))
 
-            displacement = domain.tangent_space.element(displacement)
+            displacement = domain.vector_field_space.element(displacement)
 
         Operator.__init__(self, domain, domain, linear=True)
 

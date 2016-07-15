@@ -235,8 +235,8 @@ class DiscreteLp(DiscretizedSpace):
         return self._exponent
 
     @property
-    def tangent_space(self):
-        """Tangent space."""
+    def vector_field_space(self):
+        """vector field space."""
         real_space = self.astype(self._real_dtype)
         return ProductSpace(real_space, self.ndim)
 
