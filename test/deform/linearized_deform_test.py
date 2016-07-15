@@ -182,10 +182,12 @@ def test_fixed_templ_init():
     template = space.element(template_function)
 
     # Valid input
-    print(LinDeformFixedTempl(template, space.tangent_space))
-    print(LinDeformFixedTempl(template_function, domain=space.tangent_space))
-    print(LinDeformFixedTempl(template, domain=space.tangent_space))
-    print(LinDeformFixedTempl(template=template, domain=space.tangent_space))
+    print(LinDeformFixedTempl(template, space.vector_field_space))
+    print(LinDeformFixedTempl(template_function,
+                              domain=space.vector_field_space))
+    print(LinDeformFixedTempl(template, domain=space.vector_field_space))
+    print(LinDeformFixedTempl(template=template,
+                              domain=space.vector_field_space))
 
     # Non-valid input
     with pytest.raises(TypeError):  # domain not product space
@@ -244,7 +246,8 @@ def test_fixed_templ_deriv(space):
 def test_fixed_disp_init():
     """Verify that the init method and checks work properly."""
     space = odl.uniform_discr(0, 1, 5)
-    disp_field = space.tangent_space.element(disp_field_factory(space.ndim))
+    disp_field = space.vector_field_space.element(
+        disp_field_factory(space.ndim))
 
     # Valid input
     print(LinDeformFixedDisp(disp_field, space))
@@ -254,7 +257,7 @@ def test_fixed_disp_init():
 
     # Non-valid input
     with pytest.raises(TypeError):  # domain not DiscreteLp
-        LinDeformFixedDisp(disp_field, space.tangent_space)
+        LinDeformFixedDisp(disp_field, space.vector_field_space)
     with pytest.raises(TypeError):  # domain wrong type of product space
         bad_pspace = odl.ProductSpace(space, odl.rn(3))
         LinDeformFixedDisp(disp_field, bad_pspace)
@@ -269,7 +272,8 @@ def test_fixed_disp_init():
 def test_fixed_disp_call(space):
     """Verify that LinDeformFixedDisp produces the correct deformation."""
     template = space.element(template_function)
-    disp_field = space.tangent_space.element(disp_field_factory(space.ndim))
+    disp_field = space.vector_field_space.element(
+        disp_field_factory(space.ndim))
 
     # Calculate result and exact result
     fixed_disp_op = LinDeformFixedDisp(disp_field, domain=space)
@@ -286,7 +290,8 @@ def test_fixed_disp_adj(space):
     """Verify that the adjoint of LinDeformFixedDisp is correct."""
     # Set up template and displacement field
     template = space.element(template_function)
-    disp_field = space.tangent_space.element(disp_field_factory(space.ndim))
+    disp_field = space.vector_field_space.element(
+        disp_field_factory(space.ndim))
 
     # Calculate result
     fixed_disp_op = LinDeformFixedDisp(disp_field, domain=space)
