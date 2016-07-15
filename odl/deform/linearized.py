@@ -90,7 +90,7 @@ class LinDeformFixedTempl(Operator):
             the ``domain[0].element()`` method.
         domain : `ProductSpace` of `DiscreteLp`, optional
             Space of displacement fields on which this operator acts, i.e. the
-            operator domain. Defalt: inferred from ``template.space``.
+            operator domain. Default: inferred from ``template.space``.
 
         Examples
         --------
@@ -224,7 +224,7 @@ class LinDeformFixedDisp(Operator):
             ``domain.tangent_space.element()`` method.
         domain : `DiscreteLp`, optional
             Space of templates on which this operator acts, i.e. the operator
-            domain. If not given, ``displacement[0].space`` is used as domain.
+            domain. Default: ``displacement[0].space`` is used as domain.
 
         Examples
         --------
