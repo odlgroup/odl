@@ -30,7 +30,9 @@ import numpy as np
 import odl
 from odl.tomo.operators.spect_trafo import AttenuatedRayTransform
 from odl.util.testutils import (skip_if_no_niftyrec,
-                                almost_equal, all_equal)
+                                almost_equal, all_equal,
+                                all_almost_equal)
+from odl.tomo.util.testutils import skip_if_no_astra_cuda
 
 
 @skip_if_no_niftyrec
@@ -76,6 +78,7 @@ def test_spect_projector():
     assert almost_equal(result_AxAx, result_xAtAx, places=places)
 
 
+@skip_if_no_astra_cuda
 @skip_if_no_niftyrec
 def test_attenuation():
     det_nx_pix = 16
@@ -84,37 +87,50 @@ def test_attenuation():
     det_radius = 20
     n_proj = 1
     det_param = det_nx_mm * det_nx_pix
+
+    domain = odl.uniform_discr([-1] * 3, [1] * 3, [det_nx_pix] * 3,
+                               dtype='float32')
+
     dpart = odl.uniform_partition([-det_param / 2, -det_param / 2],
                                   [det_param / 2, det_param / 2],
                                   [det_nx_pix, det_ny_pix])
 
     apart = odl.uniform_partition(0, 2 * np.pi, n_proj)
-    geometry = odl.tomo.geometry.ParallelHoleCollimatorGeometry(
-        apart, dpart, det_rad=det_radius)
 
-    # Create a discrete domain and a phantom as an element of the domain
-    domain = odl.uniform_discr([-1] * 3, [1] * 3, [det_nx_pix] * 3)
+    geometry_nifty = odl.tomo.geometry.ParallelHoleCollimatorGeometry(
+        apart, dpart, det_rad=det_radius)
+    geometry_astra = odl.tomo.geometry.Parallel3dAxisGeometry(
+        apart, dpart)
+
+    projector_nifty = AttenuatedRayTransform(
+        domain, geometry_nifty, impl='niftyrec_cpu')
+    projector_astra = odl.tomo.RayTransform(
+        domain, geometry_astra, impl='astra_cuda')
 
     vol = np.zeros([det_nx_pix] * 3)
     vol[0, 0, 0] = 100
-
     vol_element = domain.element(vol)
-    projector = AttenuatedRayTransform(
-        domain, geometry, attenuation=None, impl='niftyrec_cpu')
-    proj_no_att = projector(vol_element)
+
+    proj_nifty_noatt = projector_nifty(vol_element)
+    proj_astra = projector_astra(vol_element)
+
     # Accept 0.1 % error
     places = 3
-    assert almost_equal(np.max(proj_no_att), 100 * det_param / det_ny_pix,
-                        places=places)
+    # Without attenuation this should correcpond to
+    # parallel 3D X-ray tomography
+    assert all_almost_equal(proj_astra, proj_nifty_noatt, places=places)
 
-    attenuation = np.zeros((16, 16, 16))
+    attenuation = np.zeros_like(vol)
     attenuation[0, 0, 0] = 0.2
-    projector_att = AttenuatedRayTransform(
-        domain, geometry, attenuation=attenuation, impl='niftyrec_cpu')
-    proj_att = projector_att(vol_element)
+    projector_nifty_att = AttenuatedRayTransform(
+        domain, geometry_nifty, attenuation=attenuation, impl='niftyrec_cpu')
+    proj_nifty_att = projector_nifty_att(vol_element)
 
-    value = 100 * det_param / det_ny_pix * np.exp(-0.2 * det_nx_mm)
-    assert almost_equal(np.max(proj_att), value, places=places)
+    attenuated_ray_sum = 100 * domain.cell_sides[0] * np.exp(
+        -0.2 * domain.cell_sides[0])
+    attenuated_ray_sum_nifty = np.sum(proj_nifty_att.asarray()[0, -1, :])
+    assert almost_equal(attenuated_ray_sum_nifty, attenuated_ray_sum,
+                        places=places)
 
 
 if __name__ == '__main__':
