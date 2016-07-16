@@ -30,7 +30,8 @@ from odl.operator.operator import (
 from odl.operator.default_ops import (ResidualOperator, IdentityOperator,
                                       ConstantOperator)
 from odl.set.space import LinearSpaceVector
-from odl.solvers.advanced import proximal_arg_scaling, proximal_translation
+from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
+                                  proximal_quadratic_perturbation)
 
 
 __all__ = ('Functional', 'ConvexConjugateArgScaling',
@@ -1012,21 +1013,23 @@ class ConvexConjugateTranslation(Functional):
         """
         return self.orig_convex_conj_f.gradient + ConstantOperator(self.y)
 
-    # TODO: Add this when the proximal is added to the functional
-#        def proximal(self, sigma=1.0):
-#            """Return the proximal operator of the functional.
-#
-#            Parameters
-#            ----------
-#            sigma : positive float, optional
-#                Regularization parameter of the proximal operator
-#
-#            Returns
-#            -------
-#            out : Operator
-#                Domain and range equal to domain of functional
-#            """
-#            raise NotImplementedError
+    # TODO: Add test for this proximal
+    def proximal(self, sigma=1.0):
+        """Return the proximal operator of the ConvexConjugateTranslation
+        functional.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
+        """
+        return proximal_quadratic_perturbation(
+            self.orig_convex_conj_f.proximal, a=0, u=self.y)(sigma)
 
     # TODO: Add this when convex conjugate of a linear perturbation has
     # been added. THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
@@ -1128,21 +1131,23 @@ class ConvexConjugateFuncScaling(Functional):
         """
         return self.orig_convex_conj_f.gradient * (1/self.scaling)
 
-    # TODO: Add when the proximal frame-work is added to the functional
-#        def proximal(self, sigma=1.0):
-#            """Return the proximal operator of the functional.
-#
-#            Parameters
-#            ----------
-#            sigma : positive float, optional
-#                Regularization parameter of the proximal operator
-#
-#            Returns
-#            -------
-#            out : Operator
-#                Domain and range equal to domain of functional
-#            """
-#            raise NotImplementedError
+    # TODO: Add test for this prox
+    def proximal(self, sigma=1.0):
+        """Return the proximal operator of the ConvexConjugateFuncScaling
+        functional.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
+        """
+        return proximal_arg_scaling(self.orig_convex_conj_f.proximal,
+                                    scaling=1/self.scaling)(self.scaling*sigma)
 
     # TODO: Add this
     # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
@@ -1241,21 +1246,23 @@ class ConvexConjugateArgScaling(Functional):
         return ((1/self.scaling) * self.orig_convex_conj_f.gradient *
                 (1/self.scaling))
 
-    # TODO: Add when the proximal frame-work is added to the functional
-#        def proximal(self, sigma=1.0):
-#            """Return the proximal operator of the functional.
-#
-#            Parameters
-#            ----------
-#            sigma : positive float, optional
-#                Regularization parameter of the proximal operator
-#
-#            Returns
-#            -------
-#            out : Operator
-#                Domain and range equal to domain of functional
-#            """
-#            raise NotImplementedError
+    # TODO: Add test for this prox
+    def proximal(self, sigma=1.0):
+        """Return the proximal operator of the ConvexConjugateArgScaling
+        functional.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
+        """
+        return proximal_arg_scaling(self.orig_convex_conj_f.proximal,
+                                    scaling=1/self.scaling)(sigma)
 
     # TODO: Add this
     # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
@@ -1355,21 +1362,23 @@ class ConvexConjugateLinearPerturb(Functional):
         return (self.orig_convex_conj_f.gradient *
                 ResidualOperator(IdentityOperator(self.domain), -self.y))
 
-    # TODO: Add when the proximal frame-work is added to the functional
-#        def proximal(self, sigma=1.0):
-#            """Return the proximal operator of the functional.
-#
-#            Parameters
-#            ----------
-#            sigma : positive float, optional
-#                Regularization parameter of the proximal operator
-#
-#            Returns
-#            -------
-#            out : Operator
-#                Domain and range equal to domain of functional
-#            """
-#            raise NotImplementedError
+    # TODO: Add test for this prox
+    def proximal(self, sigma=1.0):
+        """Return the proximal operator of the ConvexConjugateLinearPerturb
+        functional.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
+        """
+        return proximal_translation(self.orig_convex_conj_f.proximal,
+                                    self.y)(sigma)
 
     # TODO: Add this
     # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
