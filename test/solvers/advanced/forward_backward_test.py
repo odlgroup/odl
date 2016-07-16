@@ -214,8 +214,8 @@ def test_forward_backward_with_li_and_h():
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
                         sigma=[1.0], niter=20, grad_cc_l=grad_cc_ls)
 
-    expected_result = space.element(-0.5)
-    assert almost_equal(x.data, expected_result.data, places=LOW_ACCURACY)
+    expected_result = -0.5
+    assert almost_equal(x[0], expected_result, places=LOW_ACCURACY)
 
 
 if __name__ == '__main__':

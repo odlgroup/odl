@@ -32,8 +32,7 @@ import odl
 image = np.rot90(scipy.misc.ascent()[::2, ::2], 3)
 
 # Reading the size
-n = image.shape[0]
-m = image.shape[1]
+n, m = image.shape
 
 # Create a space
 space = odl.uniform_discr([0, 0], [n, m], [n, m])

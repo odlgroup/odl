@@ -50,7 +50,7 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
         ``(g @ l)(x) = inf_y { g(y) + l(x-y) }``.
 
-    Note that the strong convetiy of ``l_i`` makes the convex conjugate
+    Note that the strong convexity of ``l_i`` makes the convex conjugate
     ``l_i^*`` differentialbe; see the Notes section for more information on
     this.
 
@@ -61,13 +61,13 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     prox_f : `callable`
         `Proximal factory` for the functional ``f``.
     prox_cc_g : `sequence` of `callable`'s
-        Sequence of `proximal factories` for the convex conjuates of the
+        Sequence of `proximal factorie`'s for the convex conjuates of the
         functionals ``g_i``.
     grad_h : `Operator`
         Operator representing the gradient of  ``h``.
     L : `sequence` of `Operator`
-        Sequence with as many elements as ``prox_cc_gs`` of linear operators
-        ``L_i``.
+        Sequence of linear operators ``L_i``, with as many elements as
+        ``prox_cc_gs``.
     tau : `float`
         Step size-like parameter for ``prox_f``.
     sigma : `sequence` of  `float`
@@ -100,7 +100,7 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
     The exact conditions on the involved functionals are as follows: :math:`f`
     and :math:`g_i` are proper, convex and lower semicontinuous, and :math:`h`
-    is convex and differentialbe with :math:`\\eta^{-1}`-Lipschitz continuous
+    is convex and differentiable with :math:`\\eta^{-1}`-Lipschitz continuous
     gradient, :math:`\\eta > 0`.
 
     The optional operators :math:`\\nabla l_i^*` need to be
