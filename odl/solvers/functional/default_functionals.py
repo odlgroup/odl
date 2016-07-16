@@ -36,59 +36,137 @@ __all__ = ('L1Norm', 'L2Norm', 'L2NormSquare', 'ZeroFunctional',
 
 
 class L1Norm(Functional):
+    """The functional corresponding to L1-norm."""
+
     def __init__(self, domain):
+        """Initalizes an instance of the L1-norm functional.
+
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            Set of elements on which the functional can be evaluat
+        """
         super().__init__(domain=domain, linear=False, convex=True,
                          concave=False, smooth=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
+        """Applies the functional to the given point.
+
+        Returns
+        -------
+        `self(x)` : `element` in the `field`of the ``domain``.
+            Evaluation of the functional.
+        """
         return np.abs(x).inner(self.domain.one())
 
     @property
     def gradient(x):
+        """Gradient operator of the L1-functional."""
         raise NotImplementedError
 
     def proximal(self, sigma=1.0):
+        """Return the proximal operator of the L1-functional.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
+        """
         functional = self
 
         class L1Proximal(Operator):
+            """The proximal operator of the L1-functional"""
             def __init__(self):
+                """Initialize a new instance of the L1Proximal."""
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
                 self.sigma = sigma
 
             # TODO: Check that this works for complex x
             def _call(self, x):
+                """Applies the proximal operator to the given point.
+
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional to which the
+                    proximal operator is applied.
+
+                Returns
+                -------
+                `self(x)` : `LinearSpaceVector`
+                    Evaluation of the proximal operator. An element in the
+                    domain of the functional.
+                """
                 return np.maximum(np.abs(x)-sigma, 0)*np.sign(x)
 
         return L1Proximal()
 
     @property
     def conjugate_functional(self):
+        """The convex conjugate functional of the L1-norm."""
         functional = self
 
-        class L1Conjugate_functional(Functional):
+        class L1ConjugateFunctional(Functional):
+            """The convex conjugate functional of the L1-norm."""
             def __init__(self):
+                """Initialize a new instance of the L1ConjugateFunctional."""
                 super().__init__(functional.domain, linear=False)
 
             def _call(self, x):
+                """Applies the convex conjugate functional of the L1-norm to
+                the given point.
+
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional.
+
+                Returns
+                -------
+                `self(x)` : `element` in the `field`of the ``domain``.
+                    Evaluation of the functional.
+                """
                 if np.max(np.abs(x)) > 1:
                     return np.inf
                 else:
                     return 0
 
-        return L1Conjugate_functional()
+        return L1ConjugateFunctional()
 
 
 class L2Norm(Functional):
+    """The functional corresponding to the L2-norm."""
+
     def __init__(self, domain):
+        """Initalizes an instance of the L2-norm functional.
+
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            Set of elements on which the functional can be evaluat
+        """
         super().__init__(domain=domain, linear=False, convex=True,
                          concave=False, smooth=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
+        """Applies the functional to the given point.
+
+        Returns
+        -------
+        `self(x)` : `element` in the `field`of the ``domain``.
+            Evaluation of the functional.
+        """
         return np.sqrt(np.abs(x).inner(np.abs(x)))
 
     @property
     def gradient(self):
+        """Gradient operator of the L2-functional."""
         functional = self
 
         class L2Gradient(Operator):
@@ -96,6 +174,7 @@ class L2Norm(Functional):
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
 
+            # TODO: This won't work for x = 0...
             def _call(self, x):
                 return x/x.norm()
 
@@ -248,20 +327,35 @@ class ConstantFunctional(Functional):
         return ZeroOperator(self.domain)
 
     def proximal(self, sigma=1.0):
-        """something...
+        """Return the proximal operator of the constant functional.
+
+        The proximal operator for the constant functional is the identity
+        operator.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
         """
-        # TODO: Update doc above
 
         return IdentityOperator(self.domain)
 
     @property
     def conjugate_functional(self):
+        """Convex conjugate functional of the constant functional.
+
+        This functional ``f^*``  is such that it maps the zero element to zero,
+        the rest to infinity.
+        """
         functional = self
 
         class ConstantFunctionalConjugateFunctional(Functional):
-            """something...
-            """
-            # TODO: Update doc above
+            """The convex conjugate functional to the constant functional."""
 
             def __init__(self):
                 """Initialize a  ConstantFunctionalConjugateFunctional

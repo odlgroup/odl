@@ -990,7 +990,7 @@ class ConvexConjugateTranslation(Functional):
 
         Returns
         -------
-        `self(x)` : `float`
+        `self(x)` : `element` in the `field`of the ``domain``.
             Evaluation of the functional.
         """
         return self.orig_convex_conj_f(x) + x.inner(self.y)
