@@ -842,8 +842,8 @@ class ConstantOperator(Operator):
         if domain is None or range is None:
             if not isinstance(vector, LinearSpaceVector):
                 # TODO: rewirte error!
-                raise TypeError('`vector` {!r} not a LinearSpaceVector instance'
-                                ''.format(vector))
+                raise TypeError('`vector` {!r} not a LinearSpaceVector'
+                                ' instance'.format(vector))
 
         if domain is None:
             domain = vector.space

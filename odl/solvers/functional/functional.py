@@ -413,7 +413,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
                                 smooth=func.is_smooth,
                                 concave=func.is_concave,
                                 convex=func.is_convex,
-                                grad_lipschitz=scalar*func.grad_lipschitz)
+                                grad_lipschitz=(scalar * func.grad_lipschitz))
         elif scalar == 0:
             Functional.__init__(self, domain=func.domain,
                                 linear=True,
@@ -426,7 +426,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
                                 smooth=func.is_smooth,
                                 concave=func.is_convex,
                                 convex=func.is_concave,
-                                grad_lipschitz=-scalar*func.grad_lipschitz)
+                                grad_lipschitz=(-scalar * func.grad_lipschitz))
         else:
             # It should not be possible to get here
             raise TypeError('comparison with scalar {} failed'.format(scalar))
@@ -478,7 +478,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
                     The gradient in the point ``x``. An element in the doimain
                     of the operator.
                 """
-                return functional._scalar*functional._func.gradient(x)
+                return functional._scalar * functional._func.gradient(x)
 
         return LeftScalarMultGradient()
 
@@ -504,7 +504,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             Domain and range equal to domain of functional.
         """
         sigma = float(sigma)
-        return self._func.proximal(sigma*self._scalar)
+        return self._func.proximal(sigma * self._scalar)
 
 
 class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
@@ -590,7 +590,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
                     of the operator.
                 """
                 return (functional._scalar *
-                        functional._func.gradient(functional._scalar*x))
+                        functional._func.gradient(functional._scalar * x))
 
         return RightScalarMultGradient()
 
@@ -1111,7 +1111,7 @@ class ConvexConjugateFuncScaling(Functional):
         `self(x)` : `float`
             Evaluation of the functional.
         """
-        return self.scaling * self.orig_convex_conj_f(x * (1/self.scaling))
+        return self.scaling * self.orig_convex_conj_f(x * (1 / self.scaling))
 
     @property
     def gradient(self):
@@ -1129,7 +1129,7 @@ class ConvexConjugateFuncScaling(Functional):
         derivatives in a direction :math:`d` by
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
-        return self.orig_convex_conj_f.gradient * (1/self.scaling)
+        return self.orig_convex_conj_f.gradient * (1 / self.scaling)
 
     # TODO: Add test for this prox
     def proximal(self, sigma=1.0):
@@ -1147,7 +1147,8 @@ class ConvexConjugateFuncScaling(Functional):
             Domain and range equal to domain of functional
         """
         return proximal_arg_scaling(self.orig_convex_conj_f.proximal,
-                                    scaling=1/self.scaling)(self.scaling*sigma)
+                                    scaling=(1 / self.scaling)
+                                    )(self.scaling * sigma)
 
     # TODO: Add this
     # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
@@ -1225,7 +1226,7 @@ class ConvexConjugateArgScaling(Functional):
         `self(x)` : `float`
             Evaluation of the functional.
         """
-        return self.orig_convex_conj_f(x * (1/self.scaling))
+        return self.orig_convex_conj_f(x * (1 / self.scaling))
 
     @property
     def gradient(self):
@@ -1243,8 +1244,8 @@ class ConvexConjugateArgScaling(Functional):
         derivatives in a direction :math:`d` by
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
-        return ((1/self.scaling) * self.orig_convex_conj_f.gradient *
-                (1/self.scaling))
+        return ((1 / self.scaling) * self.orig_convex_conj_f.gradient *
+                (1 / self.scaling))
 
     # TODO: Add test for this prox
     def proximal(self, sigma=1.0):
@@ -1262,7 +1263,7 @@ class ConvexConjugateArgScaling(Functional):
             Domain and range equal to domain of functional
         """
         return proximal_arg_scaling(self.orig_convex_conj_f.proximal,
-                                    scaling=1/self.scaling)(sigma)
+                                    scaling=(1 / self.scaling))(sigma)
 
     # TODO: Add this
     # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
