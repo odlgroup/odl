@@ -170,106 +170,277 @@ class L2Norm(Functional):
         functional = self
 
         class L2Gradient(Operator):
+            """The gradient operator for the L2-functional."""
             def __init__(self):
+                """Initialize and instance of the gradient operator for the
+                L2-functional.
+                """
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
 
-            # TODO: This won't work for x = 0...
             def _call(self, x):
-                return x / x.norm()
+                """Applies the gradient operator to the given point.
+
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional to which the
+                    gradient operator is applied. The element must have a
+                    non-zero norm
+
+                Returns
+                -------
+                `self(x)` : `LinearSpaceVector`
+                    Evaluation of the gradient operator. An element in the
+                    domain of the functional.
+                """
+                norm_of_x = x.norm()
+                if norm_of_x == 0:
+                    # The derivative is not defined for such a point.
+                    raise ValueError('The gradient of the L2 functional is '
+                                     'not defined for elements x {} with norm '
+                                     '0.'.format(x))
+                else:
+                    return x / x.norm()
 
         return L2Gradient()
 
     def proximal(self, sigma=1.0):
+        """Return the proximal operator of the L2-functional.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
+        """
         functional = self
 
         class L2Proximal(Operator):
+            """The proximal operator of the L2-functional."""
             def __init__(self):
+                """Initialize a new instance of the L2Proximal."""
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
                 self.sigma = sigma
 
             # TODO: Check that this works for complex x
             def _call(self, x):
+                """Applies the proximal operator to the given point.
+
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional to which the
+                    proximal operator is applied.
+
+                Returns
+                -------
+                `self(x)` : `LinearSpaceVector`
+                    Evaluation of the proximal operator. An element in the
+                    domain of the functional.
+                """
                 return np.maximum(x.norm() - sigma, 0) * (x / x.norm())
 
         return L2Proximal()
 
     @property
     def conjugate_functional(self):
+        """The convex conjugate functional of the L2-norm."""
         functional = self
 
-        class L2Conjugate_functional(Functional):
+        class L2ConjugateFunctional(Functional):
+            """The convex conjugate functional of the L2-norm."""
             def __init__(self):
+                """Initialize a new instance of the L2ConjugateFunctional."""
                 super().__init__(functional.domain, linear=False)
 
             def _call(self, x):
+                """Applies the convex conjugate functional of the L2-norm to
+                the given point.
+
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional.
+
+                Returns
+                -------
+                `self(x)` : `element` in the `field`of the ``domain``.
+                    Evaluation of the functional.
+                """
                 if x.norm() > 1:
                     return np.inf
                 else:
                     return 0
 
-        return L2Conjugate_functional()
+        return L2ConjugateFunctional()
 
 
 class L2NormSquare(Functional):
+    """The functional corresponding to the squared L2-norm."""
+
     def __init__(self, domain):
+        """Initalizes an instance of the squared L2-norm functional.
+
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            Set of elements on which the functional can be evaluat
+        """
         super().__init__(domain=domain, linear=False, convex=True,
                          concave=False, smooth=True, grad_lipschitz=2)
 
     def _call(self, x):
+        """Applies the functional to the given point.
+
+        Returns
+        -------
+        `self(x)` : `element` in the `field`of the ``domain``.
+            Evaluation of the functional.
+        """
         return np.abs(x).inner(np.abs(x))
 
     @property
     def gradient(self):
+        """Gradient operator of the squared L2-functional."""
         functional = self
 
         class L2SquareGradient(Operator):
+            """Gradient operator of the squared L2-functional."""
             def __init__(self):
+                """Initialize and instance of the gradient operator for the
+                squared L2-functional.
+                """
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
 
             def _call(self, x):
+                """Applies the gradient operator to the given point.
+
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional to which the
+                    gradient operator is applied.
+
+                Returns
+                -------
+                `self(x)` : `LinearSpaceVector`
+                    Evaluation of the gradient operator. An element in the
+                    domain of the functional.
+                """
                 return 2.0 * x
 
         return L2SquareGradient()
 
     def proximal(self, sigma=1.0):
+        """Return the proximal operator of the squared L2-functional.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
+        """
         functional = self
 
         class L2SquareProximal(Operator):
+            """The proximal operator of the squared L2-functional."""
             def __init__(self):
+                """Initialize a new instance of the squared L2-functional."""
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
                 self.sigma = sigma
 
             # TODO: Check that this works for complex x
             def _call(self, x):
+                """Applies the proximal operator to the given point.
+
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional to which the
+                    proximal operator is applied.
+
+                Returns
+                -------
+                `self(x)` : `LinearSpaceVector`
+                    Evaluation of the proximal operator. An element in the
+                    domain of the functional.
+                """
                 return x * (1.0 / 3.0)
 
         return L2SquareProximal()
 
     @property
     def conjugate_functional(self):
+        """The convex conjugate functional of the squared L2-norm."""
         functional = self
 
         class L2SquareConjugateFunctional(Functional):
+            """The convex conjugate functional of the squared L2-norm."""
             def __init__(self):
+                """Initialize a new instance of L2SquareConjugateFunctional."""
                 super().__init__(functional.domain, linear=False)
 
             def _call(self, x):
+                """Applies the convex conjugate functional of the squared
+                L2-norm to the given point.
+
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional.
+
+                Returns
+                -------
+                `self(x)` : `element` in the `field`of the ``domain``.
+                    Evaluation of the functional.
+                """
                 return x.norm()**2 * (1.0 / 4.0)
 
             @property
             def gradient(self):
+                """Gradient operator of the convex conjugate of the squared
+                L2-norm.
+                """
                 functional = self
 
                 class L2CCSquareGradient(Operator):
+                    """Gradient operator of the convex conjugate of the convex
+                    conjugate of the squared L2-norm.
+                    """
                     def __init__(self):
+                        """Initialize and instance of the gradient operator for
+                        the convex conjugate of the squared L2-norm.
+                        """
                         super().__init__(functional.domain, functional.domain,
                                          linear=False)
 
                     def _call(self, x):
+                        """Applies the gradient operator to the given point.
+
+                        Parameters
+                        ----------
+                        x : `LinearSpaceVector`
+                            Element in the domain of the functional to which
+                            the gradient operator is applied.
+
+                        Returns
+                        -------
+                        `self(x)` : `LinearSpaceVector`
+                            Evaluation of the gradient operator. An element in
+                            the domain of the functional.
+                        """
                         return x * (1.0 / 2.0)
 
                 return L2CCSquareGradient()

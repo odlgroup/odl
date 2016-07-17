@@ -87,7 +87,8 @@ def test_scalar_multiplication_call():
     assert all_almost_equal((scal * F).gradient(x), scal * (F.gradient(x)),
                             places=PLACES)
 
-    assert all_almost_equal((F * scal).gradient(x), scal * (F.gradient(scal*x)),
+    assert all_almost_equal((F * scal).gradient(x),
+                            scal * (F.gradient(scal * x)),
                             places=PLACES)
 
 
@@ -139,7 +140,7 @@ def test_scalar_multiplication_proximal():
 
     assert all_almost_equal(((F * scal).proximal(step_len))(x),
                             ((1 / scal) *
-                                (F.proximal(step_len * scal**2)))(x*scal),
+                                (F.proximal(step_len * scal**2)))(x * scal),
                             places=PLACES)
 
 
