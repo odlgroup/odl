@@ -51,9 +51,9 @@ def test_derivative():
     F = odl.solvers.functional.L2Norm(space)
 
     # Numerical test of gradient
-    assert all_almost_equal((F(x+epsK*y)-F(x))/epsK,
+    assert all_almost_equal((F(x + epsK * y) - F(x)) / epsK,
                             y.inner(F.gradient(x)),
-                            places=PLACES/2)
+                            places=PLACES / 2)
 
     # Check that derivative and gradient is consistent
     assert all_almost_equal(F.derivative(x)(y),
@@ -77,17 +77,17 @@ def test_scalar_multiplication_call():
     F = odl.solvers.functional.L2Norm(space)
 
     # Evaluation of right and left scalar multiplication
-    assert all_almost_equal((F*scal)(x), (F)(scal*x),
+    assert all_almost_equal((F * scal)(x), (F)(scal * x),
                             places=PLACES)
 
-    assert all_almost_equal((scal*F)(x), scal*(F(x)),
+    assert all_almost_equal((scal * F)(x), scal * (F(x)),
                             places=PLACES)
 
     # Test gradient of right and left scalar multiplication
-    assert all_almost_equal((scal*F).gradient(x), scal*(F.gradient(x)),
+    assert all_almost_equal((scal * F).gradient(x), scal * (F.gradient(x)),
                             places=PLACES)
 
-    assert all_almost_equal((F*scal).gradient(x), scal*(F.gradient(scal*x)),
+    assert all_almost_equal((F * scal).gradient(x), scal * (F.gradient(scal*x)),
                             places=PLACES)
 
 
@@ -107,12 +107,12 @@ def test_scalar_multiplication_conjugate_functional():
 
     F = odl.solvers.functional.L2Norm(space)
 
-    assert all_almost_equal((scal*F).conjugate_functional(x),
-                            scal*(F.conjugate_functional(x/scal)),
+    assert all_almost_equal((scal * F).conjugate_functional(x),
+                            scal * (F.conjugate_functional(x / scal)),
                             places=PLACES)
 
-    assert all_almost_equal((F*scal).conjugate_functional(x),
-                            (F.conjugate_functional(x/scal)),
+    assert all_almost_equal((F * scal).conjugate_functional(x),
+                            (F.conjugate_functional(x / scal)),
                             places=PLACES)
 
 
@@ -133,12 +133,13 @@ def test_scalar_multiplication_proximal():
 
     F = odl.solvers.functional.L2Norm(space)
 
-    assert all_almost_equal(((scal*F).proximal(step_len))(x),
-                            (F.proximal(step_len*scal))(x),
+    assert all_almost_equal(((scal * F).proximal(step_len))(x),
+                            (F.proximal(step_len * scal))(x),
                             places=PLACES)
 
-    assert all_almost_equal(((F*scal).proximal(step_len))(x),
-                            1/scal*(F.proximal(step_len*scal**2))(x*scal),
+    assert all_almost_equal(((F * scal).proximal(step_len))(x),
+                            ((1 / scal) *
+                                (F.proximal(step_len * scal**2)))(x*scal),
                             places=PLACES)
 
 
@@ -175,12 +176,12 @@ def test_convex_conjugate_translation():
 
     # Test for evaluation of the functional
     # Explicit computation: 1/4 * ||x||^2 + <x,translation>
-    expected_result = 1.0/4.0 * x.norm()**2 + x.inner(translation)
+    expected_result = 1.0 / 4.0 * x.norm()**2 + x.inner(translation)
     assert all_almost_equal(cc_translated(x), expected_result, places=PLACES)
 
     # Test for the gradient
     # Explicit computation: x/2 + translation
-    expected_result = 1.0/2.0 * x + translation
+    expected_result = 1.0 / 2.0 * x + translation
     cc_translated_gradient = cc_translated.gradient
     assert all_almost_equal(cc_translated_gradient(x), expected_result,
                             places=PLACES)
@@ -189,7 +190,7 @@ def test_convex_conjugate_translation():
     p = example_element(space)
 
     # Explicit computation in point x, in direction p: <x/2 + translation, p>
-    expected_result = p.inner(1.0/2.0 * x + translation)
+    expected_result = p.inner(1.0 / 2.0 * x + translation)
     assert all_almost_equal(cc_translated.derivative(x)(p), expected_result,
                             places=PLACES)
 
@@ -221,12 +222,12 @@ def test_convex_conjugate_arg_scaling():
 
     # Test for evaluation of the functional
     # Explicit computation: 1/(4*scaling^2) * ||x||^2
-    expected_result = 1.0/(4.0 * scaling**2) * x.norm()**2
+    expected_result = 1.0 / (4.0 * scaling**2) * x.norm()**2
     assert all_almost_equal(cc_arg_scaled(x), expected_result, places=PLACES)
 
     # Test for the gradient
     # Explicit computation: x/(2*scaling^2)
-    expected_result = 1.0/(2.0*scaling**2) * x
+    expected_result = 1.0 / (2.0 * scaling**2) * x
     cc_scaled_gradient = cc_arg_scaled.gradient
     assert all_almost_equal(cc_scaled_gradient(x), expected_result,
                             places=PLACES)
@@ -235,7 +236,7 @@ def test_convex_conjugate_arg_scaling():
     p = example_element(space)
 
     # Explicit computation in point x, in direction p: <x/(2*scaling^2), p>
-    expected_result = p.inner(1.0/(2.0*scaling**2) * x)
+    expected_result = p.inner(1.0 / (2.0 * scaling**2) * x)
     assert all_almost_equal(cc_arg_scaled.derivative(x)(p), expected_result,
                             places=PLACES)
 
@@ -267,13 +268,13 @@ def test_convex_conjugate_functional_scaling():
 
     # Test for evaluation of the functional
     # Explicit computation: 1/(4*scaling) * ||x||^2
-    expected_result = 1.0/(4.0 * scaling) * x.norm()**2
+    expected_result = 1.0 / (4.0 * scaling) * x.norm()**2
     assert all_almost_equal(cc_functional_scaled(x), expected_result,
                             places=PLACES)
 
     # Test for the gradient
     # Explicit computation: x/(2*scaling)
-    expected_result = 1.0/(2.0*scaling) * x
+    expected_result = 1.0 / (2.0 * scaling) * x
     cc_scaled_gradient = cc_functional_scaled.gradient
     assert all_almost_equal(cc_scaled_gradient(x), expected_result,
                             places=PLACES)
@@ -282,7 +283,7 @@ def test_convex_conjugate_functional_scaling():
     p = example_element(space)
 
     # Explicit computation in point x, in direction p: <x/(2*scaling), p>
-    expected_result = p.inner(1.0/(2.0*scaling) * x)
+    expected_result = p.inner(1.0 / (2.0 * scaling) * x)
     assert all_almost_equal(cc_functional_scaled.derivative(x)(p),
                             expected_result, places=PLACES)
 
@@ -326,14 +327,14 @@ def test_convex_conjugate_linear_perturbation():
 
     # Test for evaluation of the functional
     # Explicit computation: ||x||^2/2 - ||x-y||^2/4 + ||y||^2/2 - <x,y>
-    expected_result = (x.norm()**2/2.0 - (x-perturbation).norm()**2/4.0 +
-                       perturbation.norm()**2/2.0 - x.inner(perturbation))
+    expected_result = (x.norm()**2 / 2.0 - (x - perturbation).norm()**2 / 4.0 +
+                       perturbation.norm()**2 / 2.0 - x.inner(perturbation))
     assert all_almost_equal(cc_functional_perturbed(x), expected_result,
                             places=PLACES)
 
     # Test for the gradient
     # Explicit computation: x/2 + y/2
-    expected_result = 1.0/2.0 * x + 1.0/2.0 * perturbation
+    expected_result = 1.0 / 2.0 * x + 1.0 / 2.0 * perturbation
     cc_perturbed_gradient = cc_functional_perturbed.gradient
     assert all_almost_equal(cc_perturbed_gradient(x), expected_result,
                             places=PLACES)
@@ -343,7 +344,7 @@ def test_convex_conjugate_linear_perturbation():
 
     # Explicit computation in point x, in direction p:
     # <1.0/2.0 * x + 1.0/2.0 * perturbation, p>
-    expected_result = p.inner(1.0/2.0 * x + 1.0/2.0 * perturbation)
+    expected_result = p.inner(1.0 / 2.0 * x + 1.0 / 2.0 * perturbation)
     assert all_almost_equal(cc_functional_perturbed.derivative(x)(p),
                             expected_result, places=PLACES)
 
@@ -351,7 +352,8 @@ def test_convex_conjugate_linear_perturbation():
 
 # TODO: implement translation for prox and conjugate functionals + tests
 
-# TODO: Test that prox and conjugate functionals are not returned for negative left scaling.
+# TODO: Test that prox and conjugate functionals are not returned for negative
+# left scaling.
 
 # TODO: Test flags for positive/negative scalar multiplication
 # TODO: Test flags for translations etc.

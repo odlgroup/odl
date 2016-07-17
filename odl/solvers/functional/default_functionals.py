@@ -103,7 +103,7 @@ class L1Norm(Functional):
                     Evaluation of the proximal operator. An element in the
                     domain of the functional.
                 """
-                return np.maximum(np.abs(x)-sigma, 0)*np.sign(x)
+                return np.maximum(np.abs(x) - sigma, 0) * np.sign(x)
 
         return L1Proximal()
 
@@ -176,7 +176,7 @@ class L2Norm(Functional):
 
             # TODO: This won't work for x = 0...
             def _call(self, x):
-                return x/x.norm()
+                return x / x.norm()
 
         return L2Gradient()
 
@@ -191,7 +191,7 @@ class L2Norm(Functional):
 
             # TODO: Check that this works for complex x
             def _call(self, x):
-                return np.maximum(x.norm()-sigma, 0)*(x/x.norm())
+                return np.maximum(x.norm() - sigma, 0) * (x / x.norm())
 
         return L2Proximal()
 
@@ -230,7 +230,7 @@ class L2NormSquare(Functional):
                                  linear=False)
 
             def _call(self, x):
-                return 2.0*x
+                return 2.0 * x
 
         return L2SquareGradient()
 
@@ -245,7 +245,7 @@ class L2NormSquare(Functional):
 
             # TODO: Check that this works for complex x
             def _call(self, x):
-                return x/3
+                return x * (1.0 / 3.0)
 
         return L2SquareProximal()
 
@@ -258,7 +258,7 @@ class L2NormSquare(Functional):
                 super().__init__(functional.domain, linear=False)
 
             def _call(self, x):
-                return x.norm()**2 * 1/4
+                return x.norm()**2 * (1.0 / 4.0)
 
             @property
             def gradient(self):
@@ -270,7 +270,7 @@ class L2NormSquare(Functional):
                                          linear=False)
 
                     def _call(self, x):
-                        return x*(1.0/2.0)
+                        return x * (1.0 / 2.0)
 
                 return L2CCSquareGradient()
 

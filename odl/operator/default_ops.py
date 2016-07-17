@@ -759,7 +759,6 @@ class ConstantOperator(Operator):
 
         Parameters
         ----------
-<<<<<<< 65607450bfb21ebce3b5f9c948decd1ebb02ba61
         vector : `LinearSpaceElement`
             The constant space element to be returned.
         domain : `LinearSpace`, optional
