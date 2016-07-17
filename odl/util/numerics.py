@@ -454,7 +454,7 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
         arr = np.asarray(arr)
         out = np.empty(newshp, dtype=arr.dtype)
         if len(newshp) != arr.ndim:
-            raise ValueError('`number of axes of `arr` and `len(newshp)` do '
+            raise ValueError('number of axes of `arr` and `len(newshp)` do '
                              'not match ({} != {})'
                              ''.format(arr.ndim, len(newshp)))
 
@@ -474,7 +474,7 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
                                                      out.shape)]
         for i, (fl, fl_in) in enumerate(zip(frac_left, frac_left_in)):
             if not 0.0 <= fl <= 1.0:
-                raise ValueError('in axis {}: `frac_l` must lie between 0 '
+                raise ValueError('in axis {}: `frac_left` must lie between 0 '
                                  'and 1, got {}'.format(i, fl_in))
     else:
         num_left = normalized_scalar_param_list(
@@ -520,6 +520,11 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
             n_pad_r = len(range(istop, n_new))
 
             # Handle some error scenarios with illegal lengths
+            if pad_mode == 'order0' and n_orig == 0:
+                raise ValueError('in axis {}: need at least 1 value for '
+                                 'order 0 padding, got 0'
+                                 ''.format(i))
+
             if pad_mode == 'order1' and n_orig == 1:
                 raise ValueError('in axis {}: need at least 2 values for '
                                  'order 1 padding, got 1'
