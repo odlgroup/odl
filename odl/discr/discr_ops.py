@@ -36,14 +36,15 @@ __all__ = ('Resampling', 'ResizingOperator')
 
 class Resampling(Operator):
 
-    """An operator that resamples a vector on another grid.
+    """An operator that resamples on a different grid in the same set.
 
     The operator uses the underlying `DiscretizedSet.sampling` and
     `DiscretizedSet.interpolation` operators to achieve this.
 
     The spaces need to have the same `DiscretizedSet.uspace` in order
-    for this to work. The data space types may be different, although
-    performance may vary drastically.
+    for this to work. The data space implementations may be different,
+    although performance may suffer drastically due to translation
+    steps.
     """
 
     def __init__(self, domain, range):
@@ -51,10 +52,10 @@ class Resampling(Operator):
 
         Parameters
         ----------
-        domain : `LinearSpace`
-            Space that should be cast from.
-        range : `LinearSpace`
-            Space that should be cast to.
+        domain : `DiscretizedSet`
+            Set of elements that are to be resampled.
+        range : `DiscretizedSet`
+            Set in which the resampled elements lie.
 
         Examples
         --------
@@ -62,9 +63,13 @@ class Resampling(Operator):
         operator.
 
         >>> import odl
-        >>> X = odl.uniform_discr(0, 1, 3)
-        >>> Y = odl.uniform_discr(0, 1, 6)
-        >>> resampling = Resampling(X, Y)
+        >>> coarse_discr = odl.uniform_discr(0, 1, 3)
+        >>> fine_discr = odl.uniform_discr(0, 1, 6)
+        >>> resampling = odl.Resampling(coarse_discr, fine_discr)
+        >>> resampling.domain
+        uniform_discr(0.0, 1.0, 3)
+        >>> resampling.range
+        uniform_discr(0.0, 1.0, 6)
         """
         if domain.uspace != range.uspace:
             raise ValueError('`domain.uspace` ({}) does not match '
@@ -81,18 +86,18 @@ class Resampling(Operator):
 
         Examples
         --------
-        Create two spaces with different number of points and create resampling
-        operator. Apply operator to vector.
+        Create two spaces with different number of points and apply the
+        corresponding resampling operator to an element:
 
         >>> import odl
-        >>> X = odl.uniform_discr(0, 1, 3)
-        >>> Y = odl.uniform_discr(0, 1, 6)
-        >>> resampling = Resampling(X, Y)
+        >>> coarse_discr = odl.uniform_discr(0, 1, 3)
+        >>> fine_discr = odl.uniform_discr(0, 1, 6)
+        >>> resampling = odl.Resampling(coarse_discr, fine_discr)
         >>> print(resampling([0, 1, 0]))
         [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
 
         The result depends on the interpolation chosen for the underlying
-        spaces.
+        spaces:
 
         >>> Z = odl.uniform_discr(0, 1, 3, interp='linear')
         >>> linear_resampling = Resampling(Z, Y)
@@ -106,16 +111,14 @@ class Resampling(Operator):
 
     @property
     def inverse(self):
-        """Return an (approximate) inverse.
+        """An (approximate) inverse of this resampling operator.
 
-        Returns
-        -------
-        inverse : Resampling
-            The resampling operator defined in the inverse direction.
+        The returned operator is resampling defined in the opposite
+        direction.
 
         See Also
         --------
-        adjoint : resampling is unitary, so adjoint is inverse.
+        adjoint : resampling is unitary, so the adjoint is the inverse.
         """
         return Resampling(self.range, self.domain)
 
@@ -123,26 +126,26 @@ class Resampling(Operator):
     def adjoint(self):
         """Return an (approximate) adjoint.
 
-        The result is only exact if the interpolation and sampling operators
-        of the underlying spaces match exactly.
+        The result is only exact if the interpolation and sampling
+        operators of the underlying spaces match exactly.
 
         Returns
         -------
         adjoint : Resampling
-            The resampling operator defined in the inverse direction.
+            Resampling operator defined in the opposite direction.
 
         Examples
         --------
-        Create resampling operator and inverse
+        Create resampling operator and inverse:
 
         >>> import odl
-        >>> X = odl.uniform_discr(0, 1, 3)
-        >>> Y = odl.uniform_discr(0, 1, 6)
-        >>> resampling = Resampling(X, Y)
+        >>> coarse_discr = odl.uniform_discr(0, 1, 3)
+        >>> fine_discr = odl.uniform_discr(0, 1, 6)
+        >>> resampling = odl.Resampling(coarse_discr, fine_discr)
         >>> resampling_inv = resampling.inverse
 
         The inverse is proper left inverse if the resampling goes from a
-        lower sampling to a higher sampling
+        coarser to a finer sampling:
 
         >>> x = [0.0, 1.0, 0.0]
         >>> print(resampling_inv(resampling(x)))
@@ -169,6 +172,9 @@ class ResizingOperator(Operator):
     By default, the `Operator.range` is a uniformly discretized space
     with  the same properties as `Operator.domain`, except for changed
     shape.
+
+    All resizing operator variants are linear, except constant padding
+    with constant != 0.
     """
 
     def __init__(self, domain, range=None, ran_shp=None, **kwargs):
@@ -242,6 +248,7 @@ class ResizingOperator(Operator):
 
             num_left = normalized_scalar_param_list(
                 num_left, domain.ndim, param_conv=safe_int_conv)
+            self.__num_left = tuple(num_left)
 
             range = _resize_discr(domain, ran_shp, num_left, discr_kwargs)
 
@@ -250,10 +257,16 @@ class ResizingOperator(Operator):
                 raise ValueError('`num_left` can only be combined with '
                                  '`ran_shp`')
 
+            if not np.allclose(range.cell_sides, domain.cell_sides):
+                raise ValueError(
+                    'cell sides of domain and range differ significantly '
+                    '(difference {})'
+                    ''.format(range.cell_sides - domain.cell_sides))
+
+            self.__num_left = self._num_left_from_spaces(domain, range)
+
         else:
             raise ValueError('cannot combine `range` with `ran_shape`')
-
-        self.__num_left = num_left
 
         pad_mode = kwargs.pop('pad_mode', 'constant')
         self.__pad_mode = str(pad_mode).lower()
@@ -310,8 +323,24 @@ class ResizingOperator(Operator):
         corresponding restriction. In restriction axes, the adjoint
         performs zero-padding.
         """
+        if not self.is_linear:
+            raise NotImplementedError('this operator is not linear and '
+                                      'thus has no adjoint')
         return ResizingOperator(domain=self.range, range=self.domain,
                                 pad_mode='constant', pad_const=0.0)
+
+    # TODO: inverse
+
+    @staticmethod
+    def _num_left_from_spaces(dom, ran):
+        """Return num_left corresponding to given spaces."""
+        diff_l = np.abs(ran.grid.min() - dom.grid.min())
+        num_left_float = diff_l / dom.cell_sides
+        num_left = np.around(num_left_float).astype(int)
+        if not np.allclose(num_left, num_left_float):
+            raise ValueError('range is shifted relative to domain by a '
+                             'non-multiple of cell_sides')
+        return tuple(num_left)
 
 
 def _resize_discr(discr, newshp, num_left, discr_kwargs):
@@ -327,19 +356,19 @@ def _resize_discr(discr, newshp, num_left, discr_kwargs):
             newshp, num_left):
 
         n_diff = n_new - n_orig
-        print(n_diff)
+#        print(n_diff)
         if num_l is None:
             num_r = n_diff // 2
             num_l = n_diff - num_r
         else:
             num_r = n_diff - num_l
 
-        print(num_l, num_r)
+#        print(num_l, num_r)
 
         new_begin.append(b_orig - num_l * cs)
         new_end.append(e_orig + num_r * cs)
 
-    print(new_begin, new_end)
+#    print(new_begin, new_end)
 
     return uniform_discr(new_begin, new_end, newshp, **discr_kwargs)
 
