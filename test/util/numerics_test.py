@@ -26,8 +26,11 @@ import pytest
 import numpy as np
 
 # Internal
-from odl.util.numerics import apply_on_boundary, fast_1d_tensor_mult
+from odl.util import apply_on_boundary, fast_1d_tensor_mult, resize_array
 from odl.util.testutils import all_equal
+
+
+# --- apply_on_boundary --- #
 
 
 def test_apply_on_boundary_default():
@@ -102,6 +105,9 @@ def test_apply_on_boundary_axis_order_2d():
     assert all_equal(result, [[3, 2, 2, 2, 3],
                               [3, 1, 1, 1, 3],
                               [3, 2, 2, 2, 3]])
+
+
+# --- fast_1d_tensor_mult --- #
 
 
 def test_fast_1d_tensor_mult():
@@ -215,6 +221,113 @@ def test_fast_1d_tensor_mult_error():
     with pytest.raises(ValueError):
         fast_1d_tensor_mult(test_arr, [x, y, np.ones((4, 2))], (-2, -3, -4))
 
+
+# --- resize_array --- #
+
+
+def test_resize_array_corner_cases():
+    # Test extreme cases of resizing that are still valid
+
+    # Resize to 0 total size
+    arr = np.arange(12).reshape((3, 4))
+    squashed_arr = resize_array(arr, (3, 0))
+    assert squashed_arr.size == 0
+
+    squashed_arr = resize_array(arr, (0, 0))
+    assert squashed_arr.size == 0
+
+    # Resize with periodic padding, using all values from the original
+    # array on both sides
+    max_per_shape = (9, 12)
+    res_arr = resize_array(arr, max_per_shape, pad_mode='periodic')
+    assert np.array_equal(res_arr, np.tile(arr, (3, 3)))
+
+    # Symmetric padding, maximum number is one less compared to periodic
+    # padding since the boundary value is not repeated
+    arr = np.arange(6).reshape((2, 3))
+    max_sym_shape = (4, 7)
+    res_arr = resize_array(arr, max_sym_shape, pad_mode='symmetric')
+    true_arr = np.array(
+        [[5, 4, 3, 4, 5, 4, 3],
+         [2, 1, 0, 1, 2, 1, 0],
+         [5, 4, 3, 4, 5, 4, 3],
+         [2, 1, 0, 1, 2, 1, 0]])
+    assert np.array_equal(res_arr, true_arr)
+
+
+def test_resize_array_raise():
+
+    arr_1d = np.arange(6)
+    arr_2d = np.arange(6).reshape((2, 3))
+
+    # Shape not a sequence
+    with pytest.raises(TypeError):
+        resize_array(arr_1d, 19)
+
+    # out given, but not an ndarray
+    with pytest.raises(TypeError):
+        resize_array(arr_1d, (10,), out=[])
+
+    # out has wrong shape
+    with pytest.raises(ValueError):
+        out = np.empty((4, 5))
+        resize_array(arr_2d, (5, 5), out=out)
+
+    # Input and output arrays differ in dimensionality
+    with pytest.raises(ValueError):
+        out = np.empty((4, 5))
+        resize_array(arr_1d, (4, 5))
+    with pytest.raises(ValueError):
+        out = np.empty((4, 5))
+        resize_array(arr_1d, (4, 5), out=out)
+
+    # Both frac_left and num_left given
+    with pytest.raises(ValueError):
+        resize_array(arr_1d, (10,), frac_left=0.3, num_left=3)
+
+    # frac_left invalid
+    with pytest.raises(ValueError):
+        resize_array(arr_1d, (10,), frac_left=-0.1)
+    with pytest.raises(ValueError):
+        resize_array(arr_1d, (10,), frac_left=1.1)
+
+    # invalid pad mode
+    with pytest.raises(ValueError):
+        resize_array(arr_1d, (10,), pad_mode='my_madeup_mode')
+
+    # padding constant cannot be cast to output data type
+    with pytest.raises(ValueError):
+        resize_array(arr_1d, (10,), pad_const=1.0)  # arr_1d has dtype int
+    with pytest.raises(ValueError):
+        arr_1d_float = arr_1d.astype(float)
+        resize_array(arr_1d_float, (10,), pad_const=1.0j)
+
+    # Too few entries for order 0 or 1 padding modes
+    empty_arr = np.ones((3, 0))
+    with pytest.raises(ValueError):
+        resize_array(empty_arr, (3, 1), pad_mode='order0')
+
+    small_arr = np.ones((3, 1))
+    with pytest.raises(ValueError):
+        resize_array(small_arr, (3, 3), pad_mode='order1')
+
+    # Too large padding sizes for symmetric
+    small_arr = np.ones((3, 1))
+    with pytest.raises(ValueError):
+        resize_array(small_arr, (3, 3), pad_mode='symmetric')
+    with pytest.raises(ValueError):
+        resize_array(arr_2d, (5, 3), pad_mode='symmetric')
+    with pytest.raises(ValueError):
+        resize_array(arr_2d, (4, 3), frac_left=0, pad_mode='symmetric')
+
+    # Too large padding sizes for periodic
+    small_arr = np.ones((3, 1))
+    with pytest.raises(ValueError):
+        resize_array(small_arr, (3, 4), pad_mode='periodic')
+    with pytest.raises(ValueError):
+        resize_array(arr_2d, (7, 3), pad_mode='periodic')
+    with pytest.raises(ValueError):
+        resize_array(arr_2d, (5, 3), frac_left=0, pad_mode='symmetric')
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
