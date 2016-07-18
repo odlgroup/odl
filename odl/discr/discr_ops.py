@@ -221,10 +221,6 @@ class ResizingOperator(Operator):
             the first derivative). This requires at least 2 values along
             each axis where padding is applied.
 
-            Note that for ``'symmetric'`` and ``'periodic'`` padding, the
-            number of added values on each side of the array cannot exceed
-            the original size.
-
         pad_const : scalar, optional
             Value to be used in the ``'constant'`` padding mode.
 
@@ -326,10 +322,21 @@ class ResizingOperator(Operator):
         if not self.is_linear:
             raise NotImplementedError('this operator is not linear and '
                                       'thus has no adjoint')
+        # TODO: this is not correct, fix it
         return ResizingOperator(domain=self.range, range=self.domain,
                                 pad_mode='constant', pad_const=0.0)
 
-    # TODO: inverse
+    @property
+    def inverse(self):
+        """(Pseudo-)Inverse of this operator.
+
+        Note that in axes where ``self`` extends, the returned operator
+        acts as left inverse, while in restriction axes, it is a
+        right inverse.
+        """
+        return ResizingOperator(domain=self.range, range=self.domain,
+                                pad_mode=self.pad_mode,
+                                pad_const=self.pad_const)
 
     @staticmethod
     def _num_left_from_spaces(dom, ran):
