@@ -498,7 +498,7 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
     for i, (n_orig, n_new, num_l) in enumerate(zip(arr.shape, out.shape,
                                                    num_left)):
         if n_new < n_orig:
-            # Simple case: remove according to fraction
+            # Simple case: remove according to num_left
             n_remove = n_orig - n_new
             istart = num_l
             istop = n_orig - (n_remove - istart)
@@ -699,6 +699,123 @@ def _apply_padding(arr, slc_l, slc_r, axis, pad_mode, const):
                             slope_arr_l * arange_l[arange_indcs])
         arr[arr_indcs_r] = (arr[bdry_indcs_r] +
                             slope_arr_r * arange_r[arange_indcs])
+
+
+def _resize_array_adj(arr, out, num_left, pad_mode='constant', pad_const=0):
+    """Adjoint operation to `resize_array`.
+
+    Parameters
+    ----------
+    arr : array-like
+        Array to be resized.
+    out : `numpy.ndarray`
+        Array to write the result to. Must be able to hold the data type
+        of the input array.
+    num_left : sequence of int
+        Specifies how many entries were added to/removed from the left
+        side of ``arr``.
+    pad_mode : str, optional
+        Method that was used to fill in missing values in ``arr``.
+    pad_const : scalar, optional
+        Value used in the ``'constant'`` padding mode.
+    """
+    # Handle arrays
+    if not isinstance(out, np.ndarray):
+        raise TypeError('`out` must be a `numpy.ndarray` instance, got '
+                        '{!r}'.format(out))
+    arr = np.asarray(arr, dtype=out.dtype)
+    if arr.ndim != out.ndim:
+        raise ValueError('number of axes of `arr` and `out` do not match '
+                         '({} != {})'.format(arr.ndim, out.ndim))
+
+    # Handle num_left
+    num_left = normalized_scalar_param_list(
+        num_left, out.ndim, param_conv=safe_int_conv, keep_none=False)
+
+    # Handle padding
+    pad_mode, pad_mode_in = str(pad_mode), pad_mode
+    if pad_mode not in _SUPPORTED_PAD_MODES:
+        raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
+
+    if (pad_mode == 'constant' and
+        not np.can_cast(pad_const, out.dtype) and
+        any(n_new > n_orig
+            for n_orig, n_new in zip(arr.shape, out.shape))):
+        raise ValueError('`pad_const` {} cannot be safely cast to the data '
+                         'type {} of the output array'
+                         ''.format(pad_const, out.dtype))
+
+    # TODO: continue here
+    # Calculate the slices for the inner and outer parts
+    arr_slc, out_slc, pad_l_slc, pad_r_slc = [], [], [], []
+    for i, (n_orig, n_new, num_l) in enumerate(zip(arr.shape, out.shape,
+                                                   num_left)):
+        if n_new < n_orig:
+            # Simple case: remove according to num_left
+            n_remove = n_orig - n_new
+            istart = num_l
+            istop = n_orig - (n_remove - istart)
+            arr_slc.append(slice(istart, istop))
+            out_slc.append(slice(None))
+
+            # Make trivial entries for padding slice lists
+            pad_l_slc.append(slice(0))
+            pad_r_slc.append(slice(0))
+
+        elif n_new > n_orig:
+            # Padding case: calculate start and stop indices for the
+            # bigger new array, together with the padding slices
+            n_add = n_new - n_orig
+            istart = num_l
+            istop = n_new - (n_add - istart)
+
+            n_pad_l = len(range(istart))
+            n_pad_r = len(range(istop, n_new))
+
+            # Handle some error scenarios with illegal lengths
+            if pad_mode == 'order0' and n_orig == 0:
+                raise ValueError('in axis {}: need at least 1 value for '
+                                 'order 0 padding, got 0'
+                                 ''.format(i))
+
+            if pad_mode == 'order1' and n_orig == 1:
+                raise ValueError('in axis {}: need at least 2 values for '
+                                 'order 1 padding, got 1'
+                                 ''.format(i))
+
+            for lr, pad_len in [('left', n_pad_l), ('right', n_pad_r)]:
+                if pad_mode == 'periodic' and pad_len > n_orig:
+                    raise ValueError('in axis {}: {} padding length {} '
+                                     'exceeds original array size {}; this is '
+                                     'not allowed for periodic padding'
+                                     ''.format(i, lr, pad_len, n_orig))
+
+                elif pad_mode == 'symmetric' and pad_len >= n_orig:
+                    raise ValueError('in axis {}: {} padding length {} '
+                                     'larger or equal to the original array '
+                                     'size {}; this is not allowed for '
+                                     'symmetric padding'
+                                     ''.format(i, lr, pad_len, n_orig))
+
+            arr_slc.append(slice(None))
+            out_slc.append(slice(istart, istop))
+            pad_l_slc.append(slice(istart))
+            pad_r_slc.append(slice(istop, None))
+
+        else:
+            arr_slc.append(slice(None))
+            out_slc.append(slice(None))
+            pad_l_slc.append(slice(0))
+            pad_r_slc.append(slice(0))
+
+    # Set the "inner" part
+    out[tuple(out_slc)] = arr[tuple(arr_slc)]
+
+    # Perform the padding
+    for i, (slc_l, slc_r) in enumerate(zip(pad_l_slc, pad_r_slc)):
+        _apply_padding(out, slc_l, slc_r, i, pad_mode, pad_const)
+
+    return out
 
 
 if __name__ == '__main__':
