@@ -28,14 +28,28 @@ import pytest
 
 # Internal
 import odl
-from odl.util.testutils import all_almost_equal, example_element
+from odl.util.testutils import all_almost_equal, almost_equal, example_element
 
 # Places for the accepted error when comparing results
 PLACES = 8
 
+# TODO: make some tests that check that prox work.
+
+# TODO: Test that prox and conjugate functionals are not returned for negative
+# left scaling.
+
+# TODO: Test flags for positive/negative scalar multiplication
+
+# TODO: Test flags for translations etc.
+
 
 def test_derivative():
-    # Verify that the derivative does indeed work as expected
+    """Test for the derivative of a functional.
+
+    The test checks that the directional derivative in a point is the same as
+    the inner product of the gradient and the direction, if the gradient is
+    defined.
+    """
 
     # Discretization parameters
     n = 3
@@ -61,9 +75,8 @@ def test_derivative():
                             places=PLACES)
 
 
-def test_scalar_multiplication_call():
-    # Verify that the left and right scalar multiplication does
-    # indeed work as expected
+def test_scalar_multiplication():
+    """Test for right and left multiplication of a functional with a scalar."""
 
     # Discretization parameters
     n = 3
@@ -91,22 +104,12 @@ def test_scalar_multiplication_call():
                             scal * (F.gradient(scal * x)),
                             places=PLACES)
 
+    # Test conjugate functional. This requiers positive scaling to work
+    scal = np.random.rand()
+    neg_scal = -np.random.rand()
 
-def test_scalar_multiplication_conjugate_functional():
-    # Verify that conjugate functional of right and left scalar multiplication
-    # work as intended
-
-    # Discretization parameters
-    n = 3
-
-    # Discretized spaces
-    space = odl.uniform_discr([0, 0], [1, 1], [n, n])
-
-    x = space.element(np.random.standard_normal((n, n)))
-
-    scal = np.abs(np.random.standard_normal())
-
-    F = odl.solvers.functional.L2Norm(space)
+    with pytest.raises(ValueError):
+        (neg_scal * F).conjugate_functional
 
     assert all_almost_equal((scal * F).conjugate_functional(x),
                             scal * (F.conjugate_functional(x / scal)),
@@ -116,24 +119,12 @@ def test_scalar_multiplication_conjugate_functional():
                             (F.conjugate_functional(x / scal)),
                             places=PLACES)
 
+    # Test proximal operator. This requiers sigma*scaling to be positive.
+    sigma = 1.0
+    with pytest.raises(ValueError):
+        (neg_scal * F).proximal(sigma)
 
-def test_scalar_multiplication_proximal():
-    # Verify that conjugate functional of right and left scalar multiplication
-    # work as intended
-
-    # Discretization parameters
-    n = 3
-
-    # Discretized spaces
-    space = odl.uniform_discr([0, 0], [1, 1], [n, n])
-
-    x = space.element(np.random.standard_normal((n, n)))
-
-    scal = np.abs(np.random.standard_normal())
     step_len = np.random.rand()
-
-    F = odl.solvers.functional.L2Norm(space)
-
     assert all_almost_equal(((scal * F).proximal(step_len))(x),
                             (F.proximal(step_len * scal))(x),
                             places=PLACES)
@@ -144,6 +135,130 @@ def test_scalar_multiplication_proximal():
                             places=PLACES)
 
 
+def test_functional_sum():
+    """Test for the sum of two functionals."""
+
+    space = odl.uniform_discr(0, 1, 10)
+
+    func1 = odl.solvers.L2NormSquare(space)
+    func2 = odl.solvers.L2Norm(space)
+
+    # Test for sum where one is not a functional
+    op = odl.operator.IdentityOperator(space)
+    with pytest.raises(TypeError):
+        func1 + op
+
+    # Test for different domain of the functionals
+    wrong_space = odl.uniform_discr(1, 2, 10)
+    func_wrong_domain = odl.solvers.L1Norm(wrong_space)
+    with pytest.raises(TypeError):
+        func1 + func_wrong_domain
+
+    func_sum = func1 + func2
+    x = example_element(space)
+
+    # Test evaluation of the functionals
+    expected_result = func1(x) + func2(x)
+    assert almost_equal(func_sum(x), expected_result, places=PLACES)
+
+    # Test for the gradient
+    expected_result = func1.gradient(x) + func2.gradient(x)
+    assert all_almost_equal(func_sum.gradient(x), expected_result,
+                            places=PLACES)
+
+    # Test that prox and convex conjugate is not known
+    with pytest.raises(NotImplementedError):
+        func_sum.proximal()
+    with pytest.raises(NotImplementedError):
+        func_sum.conjugate_functional()
+
+
+def test_functional_composition():
+    """Test composition of functional.
+
+    This test tests composition, both from the right and from the left, with an
+    operator, which gives a functional, and with a vector, which returns an
+    operator."""
+
+    space = odl.uniform_discr(0, 1, 10)
+
+    func = odl.solvers.L2Norm(space)
+
+    # Test composition with operator from the right
+    scalar = np.random.rand()
+    wrong_space = odl.uniform_discr(1, 2, 10)
+    op_from_right_wrong = odl.operator.ScalingOperator(wrong_space, scalar)
+
+    with pytest.raises(TypeError):
+        func * op_from_right_wrong
+
+    op_from_right = odl.operator.ScalingOperator(space, scalar)
+    composition = func * op_from_right
+    assert isinstance(composition, odl.solvers.Functional)
+
+    x = example_element(space)
+    op_in_x = op_from_right(x)
+    expected_result = func(op_in_x)
+    assert almost_equal(composition(x), expected_result, places=PLACES)
+
+    # TODO: Write derivative test. But the derivative seems wrongly implemeted
+
+
+
+def test_translation_of_functional():
+    """Test for the translation of a functional: (f(. - y))^*"""
+
+    space = odl.uniform_discr(0, 1, 10)
+
+    # The translation; an element in the domain
+    translation = example_element(space)
+
+    # Creating the functional ||x||_2^2
+    test_functional = odl.solvers.L2NormSquare(space)
+
+    # Testing that translation belonging to the wrong space gives TypeError
+    wrong_space = odl.uniform_discr(1, 2, 10)
+    wrong_translation = example_element(wrong_space)
+    with pytest.raises(TypeError):
+        test_functional.translate(wrong_translation)
+
+    # Create translated functional
+    translated_functional = test_functional.translate(translation)
+
+    # Create an element in the space, in which to evaluate
+    x = example_element(space)
+
+    # Test for evaluation of the functional
+    expected_result = test_functional(x - translation)
+    assert all_almost_equal(translated_functional(x), expected_result,
+                            places=PLACES)
+
+    # Test for the gradient
+    expected_result = test_functional.gradient(x - translation)
+    translated_gradient = translated_functional.gradient
+    assert all_almost_equal(translated_gradient(x), expected_result,
+                            places=PLACES)
+
+    # TODO: Add test for the proximal
+
+    # TODO: Add test for the conjugate functional
+
+    # Test for derivative in direction p
+    p = example_element(space)
+
+    # Explicit computation in point x, in direction p: <x/2 + translation, p>
+    expected_result = p.inner(test_functional.gradient(x - translation))
+    assert all_almost_equal(translated_functional.derivative(x)(p),
+                            expected_result,
+                            places=PLACES)
+
+
+
+
+
+
+
+# BELOW ARE TESTS FOR CONVEX CONJUGATE THINGS
 def test_convex_conjugate_translation():
     """Test for the convex conjugate of a translation: (f(. - y))^*"""
 
@@ -349,15 +464,6 @@ def test_convex_conjugate_linear_perturbation():
     assert all_almost_equal(cc_functional_perturbed.derivative(x)(p),
                             expected_result, places=PLACES)
 
-# TODO: make some tests that check that prox work.
-
-# TODO: implement translation for prox and conjugate functionals + tests
-
-# TODO: Test that prox and conjugate functionals are not returned for negative
-# left scaling.
-
-# TODO: Test flags for positive/negative scalar multiplication
-# TODO: Test flags for translations etc.
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

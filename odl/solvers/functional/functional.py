@@ -73,7 +73,6 @@ class Functional(Operator):
             The Lipschitz constant of the gradient.
         """
 
-        # TODO: use super() instead? However, that does not seem to work? Why?
         Operator.__init__(self, domain=domain,
                           range=domain.field, linear=linear)
         self._is_smooth = bool(smooth)
@@ -504,6 +503,9 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             Domain and range equal to domain of functional.
         """
         sigma = float(sigma)
+        if sigma * self._scalar < 0:
+            raise ValueError('The step lengt {} times the scalar {} needs to '
+                             'be nonnegative.'.format(sigma, self._scalar))
         return self._func.proximal(sigma * self._scalar)
 
 
@@ -714,7 +716,7 @@ class FunctionalSum(Functional, OperatorSum):
         if not isinstance(func2, Functional):
             raise TypeError('functional 2 {!r} is not a Functional instance.'
                             ''.format(func2))
-        # Is this needed, or should it be left for OperatorSum to handle?
+        # TODO: Is this needed, or should it be left for OperatorSum to handle?
         if func1.range != func2.range:
             raise TypeError('the ranges of the functionals {!r} and {!r} do '
                             'not match'.format(func1.range, func2.range))
@@ -722,7 +724,7 @@ class FunctionalSum(Functional, OperatorSum):
             raise TypeError('the domains of the functionals {!r} and {!r} do '
                             'not match'.format(func1.range, func2.range))
 
-        Functional.__init__(domain=func1.domain,
+        Functional.__init__(self, domain=func1.domain,
                             linear=(func1.is_linear and func2.is_linear),
                             smooth=(func1.is_smooth and func2.is_smooth),
                             concave=(func1.is_concave and func2.is_concave),
@@ -733,18 +735,10 @@ class FunctionalSum(Functional, OperatorSum):
         OperatorSum.__init__(self, func1, func2, tmp_ran=None,
                              tmp_dom=tmp_dom)
 
-    # TODO: Isn't gradient supposed to be a property that returns an operator?
-    def gradient(self, x, out=None):
-        """Evaluate the gradient of the functional sum."""
-        if out is None:
-            return self._op1.gradient(x) + self._op2.gradient(x)
-        else:
-            tmp = (self._tmp_dom if self._tmp_dom is not None
-                   else self.domain.element())
-            self._op1.gradient(x, out=out)
-            self._op2.gradient(x, out=tmp)
-            out += tmp
-            return out
+    @property
+    def gradient(self):
+        """Gradient operator of functional sum."""
+        return self._op1.gradient + self._op2.gradient
 
 
 class FunctionalScalarSum(Functional, OperatorSum):
@@ -760,7 +754,8 @@ class FunctionalScalarSum(Functional, OperatorSum):
         func : `Functional`
             Functional to which the scalar is added.
         scalar :
-        tmp_dom : `LinearSpaceVector`
+        tmp_dom : `LinearSpaceVector`, optional
+            ...
         """
 
         # TODO: Update doc. What is the type of ``scalar``?
@@ -850,6 +845,21 @@ class TranslatedFunctional(Functional):
         self._original_func = func
         self._translation = translation
 
+    def _call(self, x):
+        """Evaluates the functional in a point ``x``.
+
+        Parameters
+        ----------
+        x : `LinearSpaceVector`
+            Element in the domain of the functional.
+
+        Returns
+        -------
+        `self(x)` : `float`
+            Evaluation of the functional, which is a constant.
+        """
+        return self._original_func(x - self._translation)
+
     @property
     def gradient(self):
         """Gradient operator of the translated.
@@ -866,8 +876,8 @@ class TranslatedFunctional(Functional):
                                  linear=(translated_func.is_concave and
                                          translated_func.is_convex))
 
-                self.original_grad = translated_func._original_func.gradient
-                self.translation = translation
+                self._original_grad = translated_func._original_func.gradient
+                self._translation = translation
 
             def _call(self, x):
                 """Evaluates the gradient in a point ``x``.
@@ -883,7 +893,7 @@ class TranslatedFunctional(Functional):
                     The gradient in the point ``x``. An element in the doimain
                     of the operator.
                 """
-                return self.original_grad(x - self._translation)
+                return self._original_grad(x - self._translation)
 
         return TranslatedGradientOperator(self, self._translation)
 
