@@ -146,7 +146,35 @@ def test_resizing_op_deriv():
     assert res_op_deriv.pad_const == 0.0
 
 
-# TODO: adjoint and inverse
+pad_modes = [('constant', 0), ('constant', 1), 'symmetric', 'periodic',
+             'order0', 'order1']
+pad_mode_ids = [' constant=0 ', ' constant=1 ', ' symmetric ', ' periodic ',
+                ' order0 ', ' order1 ']
+
+
+@pytest.fixture(scope="module", params=pad_modes, ids=pad_mode_ids)
+def pad_mode(request):
+    return request.param
+
+
+def test_resizing_op_inverse(pad_mode):
+
+    if isinstance(pad_mode, tuple):
+        pad_mode, pad_const = pad_mode
+    else:
+        pad_const = 0.0
+
+    space = odl.uniform_discr([0, -1], [1, 1], (4, 5))
+    res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7))
+    res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
+                                  pad_const=pad_const)
+
+    # Only left inverse if the operator extentds in all axes
+    x = space.element(np.arange(space.size).reshape(space.shape))
+    assert res_op.inverse(res_op(x)) == x
+
+
+# TODO: adjoint
 
 
 if __name__ == '__main__':
