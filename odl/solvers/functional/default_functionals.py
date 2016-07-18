@@ -472,6 +472,11 @@ class ConstantFunctional(Functional):
     def _call(self, x):
         """Applies the functional to the given point.
 
+        Parameters
+        ----------
+        x : `LinearSpaceVector`
+            Element in the domain of the functional.
+
         Returns
         -------
         `self(x)` : `float`
