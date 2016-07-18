@@ -304,7 +304,8 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
 
 def resize_array(arr, newshp, frac_left=None, num_left=None,
-                 pad_mode='constant', pad_const=0, out=None):
+                 pad_mode='constant', pad_const=0, direction='forward',
+                 out=None):
     """Return the resized version of ``arr`` with shape ``newshp``.
 
     In axes where ``newshp > arr.shape``, padding is applied according
@@ -356,6 +357,16 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
 
     pad_const : scalar, optional
         Value to be used in the ``'constant'`` padding mode.
+    direction : {'forward', 'adjoint'}
+        Determines which variant of the resizing is applied.
+
+        'forward' : in axes where ``out`` is larger than ``arr``,
+        apply padding. Otherwise, restrict to the smaller size.
+
+        'adjoint' : in axes where ``out`` is larger than ``arr``,
+        apply zero-padding. Otherwise, restrict to the smaller size
+        and add the outside contributions according to ``pad_mode``.
+
     out : `numpy.ndarray`, optional
         Array to write the result to. Must have shape ``newshp`` and
         be able to hold the data type of the input array.
@@ -498,7 +509,7 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
     for i, (n_orig, n_new, num_l) in enumerate(zip(arr.shape, out.shape,
                                                    num_left)):
         if n_new < n_orig:
-            # Simple case: remove according to fraction
+            # Simple case: remove according to num_left
             n_remove = n_orig - n_new
             istart = num_l
             istop = n_orig - (n_remove - istart)
