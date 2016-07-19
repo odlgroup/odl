@@ -39,9 +39,6 @@ __all__ = ('Functional', 'ConvexConjugateArgScaling',
            'ConvexConjugateTranslation', 'TranslatedFunctional')
 
 
-# TODO: What if derivative is implemeted and not gradient?
-# In this case we would like to use this in scalar-multiplication, etc.
-
 class Functional(Operator):
     """Implementation of a functional class."""
 
@@ -1082,8 +1079,8 @@ class ConvexConjugateTranslation(Functional):
                          concave=convex_conj_f.is_concave,
                          convex=convex_conj_f.is_convex)
 
-        self.orig_convex_conj_f = convex_conj_f
-        self.y = y
+        self._orig_convex_conj_f = convex_conj_f
+        self._y = y
 
         # TODO:
         # The Lipschitz constant for the gradient can be bounded, by using
@@ -1097,7 +1094,7 @@ class ConvexConjugateTranslation(Functional):
         `self(x)` : `element` in the `field`of the ``domain``.
             Evaluation of the functional.
         """
-        return self.orig_convex_conj_f(x) + x.inner(self.y)
+        return self._orig_convex_conj_f(x) + x.inner(self._y)
 
     @property
     def gradient(self):
@@ -1115,7 +1112,7 @@ class ConvexConjugateTranslation(Functional):
         derivatives in a direction :math:`d` by
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
-        return self.orig_convex_conj_f.gradient + ConstantOperator(self.y)
+        return self._orig_convex_conj_f.gradient + ConstantOperator(self._y)
 
     # TODO: Add test for this proximal
     def proximal(self, sigma=1.0):
@@ -1133,7 +1130,7 @@ class ConvexConjugateTranslation(Functional):
             Domain and range equal to domain of functional
         """
         return proximal_quadratic_perturbation(
-            self.orig_convex_conj_f.proximal, a=0, u=self.y)(sigma)
+            self._orig_convex_conj_f.proximal, a=0, u=self._y)(sigma)
 
     # TODO: Add this when convex conjugate of a linear perturbation has
     # been added. THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
@@ -1204,8 +1201,8 @@ class ConvexConjugateFuncScaling(Functional):
                          concave=convex_conj_f.is_concave,
                          convex=convex_conj_f.is_convex)
 
-        self.orig_convex_conj_f = convex_conj_f
-        self.scaling = scaling
+        self._orig_convex_conj_f = convex_conj_f
+        self._scaling = scaling
 
     def _call(self, x):
         """Applies the functional to the given point.
@@ -1215,7 +1212,8 @@ class ConvexConjugateFuncScaling(Functional):
         `self(x)` : `float`
             Evaluation of the functional.
         """
-        return self.scaling * self.orig_convex_conj_f(x * (1 / self.scaling))
+        return self._scaling * self._orig_convex_conj_f(x *
+                                                        (1 / self._scaling))
 
     @property
     def gradient(self):
@@ -1233,7 +1231,7 @@ class ConvexConjugateFuncScaling(Functional):
         derivatives in a direction :math:`d` by
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
-        return self.orig_convex_conj_f.gradient * (1 / self.scaling)
+        return self._orig_convex_conj_f.gradient * (1 / self._scaling)
 
     # TODO: Add test for this prox
     def proximal(self, sigma=1.0):
@@ -1250,9 +1248,9 @@ class ConvexConjugateFuncScaling(Functional):
         out : Operator
             Domain and range equal to domain of functional
         """
-        return proximal_arg_scaling(self.orig_convex_conj_f.proximal,
-                                    scaling=(1 / self.scaling)
-                                    )(self.scaling * sigma)
+        return proximal_arg_scaling(self._orig_convex_conj_f.proximal,
+                                    scaling=(1 / self._scaling)
+                                    )(self._scaling * sigma)
 
     # TODO: Add this
     # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
@@ -1319,8 +1317,8 @@ class ConvexConjugateArgScaling(Functional):
                          concave=convex_conj_f.is_concave,
                          convex=convex_conj_f.is_convex)
 
-        self.orig_convex_conj_f = convex_conj_f
-        self.scaling = float(scaling)
+        self._orig_convex_conj_f = convex_conj_f
+        self._scaling = float(scaling)
 
     def _call(self, x):
         """Applies the functional to the given point.
@@ -1330,7 +1328,7 @@ class ConvexConjugateArgScaling(Functional):
         `self(x)` : `float`
             Evaluation of the functional.
         """
-        return self.orig_convex_conj_f(x * (1 / self.scaling))
+        return self._orig_convex_conj_f(x * (1 / self._scaling))
 
     @property
     def gradient(self):
@@ -1348,8 +1346,8 @@ class ConvexConjugateArgScaling(Functional):
         derivatives in a direction :math:`d` by
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
-        return ((1 / self.scaling) * self.orig_convex_conj_f.gradient *
-                (1 / self.scaling))
+        return ((1 / self._scaling) * self._orig_convex_conj_f.gradient *
+                (1 / self._scaling))
 
     # TODO: Add test for this prox
     def proximal(self, sigma=1.0):
@@ -1366,8 +1364,8 @@ class ConvexConjugateArgScaling(Functional):
         out : Operator
             Domain and range equal to domain of functional
         """
-        return proximal_arg_scaling(self.orig_convex_conj_f.proximal,
-                                    scaling=(1 / self.scaling))(sigma)
+        return proximal_arg_scaling(self._orig_convex_conj_f.proximal,
+                                    scaling=(1 / self._scaling))(sigma)
 
     # TODO: Add this
     # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
@@ -1435,8 +1433,8 @@ class ConvexConjugateLinearPerturb(Functional):
                          concave=convex_conj_f.is_concave,
                          convex=convex_conj_f.is_convex)
 
-        self.orig_convex_conj_f = convex_conj_f
-        self.y = y
+        self._orig_convex_conj_f = convex_conj_f
+        self._y = y
 
     def _call(self, x):
         """Applies the functional to the given point.
@@ -1446,7 +1444,7 @@ class ConvexConjugateLinearPerturb(Functional):
         `self(x)` : `float`
             Evaluation of the functional.
         """
-        return self.orig_convex_conj_f(x - self.y)
+        return self._orig_convex_conj_f(x - self._y)
 
     @property
     def gradient(self):
@@ -1464,8 +1462,8 @@ class ConvexConjugateLinearPerturb(Functional):
         derivatives in a direction :math:`d` by
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
-        return (self.orig_convex_conj_f.gradient *
-                ResidualOperator(IdentityOperator(self.domain), -self.y))
+        return (self._orig_convex_conj_f.gradient *
+                ResidualOperator(IdentityOperator(self.domain), -self._y))
 
     # TODO: Add test for this prox
     def proximal(self, sigma=1.0):
@@ -1482,8 +1480,8 @@ class ConvexConjugateLinearPerturb(Functional):
         out : Operator
             Domain and range equal to domain of functional
         """
-        return proximal_translation(self.orig_convex_conj_f.proximal,
-                                    self.y)(sigma)
+        return proximal_translation(self._orig_convex_conj_f.proximal,
+                                    self._y)(sigma)
 
     # TODO: Add this
     # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
