@@ -508,9 +508,37 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
                              'be nonnegative.'.format(sigma, self._scalar))
         return self._func.proximal(sigma * self._scalar)
 
+    def derivative(self, point):
+        """Returns the derivative operator in the given point.
+
+        This function returns the linear operator
+
+            ``x --> <x, grad_f(point)>``,
+
+        where ``grad_f(point)`` is the gradient of the functional in the point
+        ``point``.
+
+        Parameters
+        ----------
+        point : `LinearSpaceVector`
+            The point in which the gradient is evaluated.
+
+        Returns
+        -------
+        out : `DerivativeOperator`
+            The linear operator that maps ``x --> <x, grad_f(point)>``.
+        """
+        return self._scalar * self._func.derivative(point)
+
 
 class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
-    """Scalar multiplication of the argument of functional."""
+    """Scalar multiplication of the argument of functional.
+
+    Given a functional ``f`` and a scalar ``scalar``, this represents the
+    functional
+
+        ``(f * scalar)(x) = f(scalar * x)``.
+    """
 
     def __init__(self, func, scalar):
         """Initialize a FunctionalRightScalarMult instance.
@@ -618,6 +646,28 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         sigma = float(sigma)
         return (proximal_arg_scaling(self._func.proximal, self._scalar))(sigma)
 
+    def derivative(self, point):
+        """Returns the derivative operator in the given point.
+
+        This function returns the linear operator
+
+            ``x --> <x, grad_f(point)>``,
+
+        where ``grad_f(point)`` is the gradient of the functional in the point
+        ``point``.
+
+        Parameters
+        ----------
+        point : `LinearSpaceVector`
+            The point in which the gradient is evaluated.
+
+        Returns
+        -------
+        out : `DerivativeOperator`
+            The linear operator that maps ``x --> <x, grad_f(point)>``.
+        """
+        return self._func.derivative(point) * self._scalar
+
 
 class FunctionalComp(Functional, OperatorComp):
     """Composition of a functional with an operator."""
@@ -691,6 +741,29 @@ class FunctionalComp(Functional, OperatorComp):
 
             self._right.derivative(x).adjoint(tmp_dom, out=out)
 
+    def derivative(self, point):
+        """Returns the derivative operator in the given point.
+
+        This function returns the linear operator
+
+            ``x --> <x, grad_f(point)>``,
+
+        where ``grad_f(point)`` is the gradient of the functional in the point
+        ``point``.
+
+        Parameters
+        ----------
+        point : `LinearSpaceVector`
+            The point in which the gradient is evaluated.
+
+        Returns
+        -------
+        out : `DerivativeOperator`
+            The linear operator that maps ``x --> <x, grad_f(point)>``.
+        """
+        return self._right.derivative(point).adjoint(
+                self._left.derivative(self._right(point)))
+
 
 class FunctionalSum(Functional, OperatorSum):
     """Expression type for the sum of functionals.
@@ -740,6 +813,28 @@ class FunctionalSum(Functional, OperatorSum):
         """Gradient operator of functional sum."""
         return self._op1.gradient + self._op2.gradient
 
+    def derivative(self, point):
+        """Returns the derivative operator in the given point.
+
+        This function returns the linear operator
+
+            ``x --> <x, grad_f(point)>``,
+
+        where ``grad_f(point)`` is the gradient of the functional in the point
+        ``point``.
+
+        Parameters
+        ----------
+        point : `LinearSpaceVector`
+            The point in which the gradient is evaluated.
+
+        Returns
+        -------
+        out : `DerivativeOperator`
+            The linear operator that maps ``x --> <x, grad_f(point)>``.
+        """
+        return self._op1.derivative(point) + self._op2.derivative(point)
+
 
 class FunctionalScalarSum(Functional, OperatorSum):
     """Expression type for the sum of a functional and a scalar.
@@ -778,7 +873,6 @@ class FunctionalScalarSum(Functional, OperatorSum):
                                               range=func.range),
                              tmp_ran=None, tmp_dom=tmp_dom)
 
-        self.original_func = func
         self.scalar = scalar
 
         @property
@@ -787,7 +881,7 @@ class FunctionalScalarSum(Functional, OperatorSum):
 
             This is the same as the gradient of the original functional.
             """
-            return self.original_func.gradient
+            return self._op1.gradient
 
         def proximal(self, sigma=1.0):
             """Proximal operator of the FunctionalScalarSum.
@@ -810,7 +904,7 @@ class FunctionalScalarSum(Functional, OperatorSum):
         @property
         def conjugate_functional(self):
             """Convex conjugate functional of FunctionalScalarSum."""
-            return self.original_func.conjugate_functional - self.scalar
+            return self._op1.conjugate_functional - self.scalar
 
         def derivative(self, point):
             """Returns the derivative operator of FunctionalScalarSum.
@@ -825,7 +919,7 @@ class FunctionalScalarSum(Functional, OperatorSum):
             out : `DerivativeOperator`
                 The linear operator that maps ``x --> <x, grad_f(point)>``.
             """
-            return self.original_func.derivative(point)
+            return self._op1.derivative(point)
 
 
 class TranslatedFunctional(Functional):
