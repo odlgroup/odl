@@ -104,6 +104,16 @@ def test_scalar_multiplication():
                             scal * (F.gradient(scal * x)),
                             places=PLACES)
 
+    # Test derivative of right and left scalar multiplication
+    p = example_element(space)
+    assert all_almost_equal(((scal * F).derivative(x))(p),
+                            scal * ((F.derivative(x))(p)),
+                            places=PLACES)
+
+    assert all_almost_equal(((F * scal).derivative(x))(p),
+                            scal * (F.derivative(scal * x))(p),
+                            places=PLACES)
+
     # Test conjugate functional. This requiers positive scaling to work
     scal = np.random.rand()
     neg_scal = -np.random.rand()
@@ -130,8 +140,47 @@ def test_scalar_multiplication():
                             places=PLACES)
 
     assert all_almost_equal(((F * scal).proximal(step_len))(x),
-                            ((1 / scal) *
+                            ((1.0 / scal) *
                                 (F.proximal(step_len * scal**2)))(x * scal),
+                            places=PLACES)
+
+
+def test_functional_composition():
+    """Test composition of functional.
+
+    This test tests composition, both from the right and from the left, with an
+    operator, which gives a functional, and with a vector, which returns an
+    operator."""
+
+    space = odl.uniform_discr(0, 1, 10)
+
+    func = odl.solvers.L2Norm(space)
+
+    # Test composition with operator from the right
+    scalar = np.random.rand()
+    wrong_space = odl.uniform_discr(1, 2, 10)
+    op_from_right_wrong = odl.operator.ScalingOperator(wrong_space, scalar)
+
+    with pytest.raises(TypeError):
+        func * op_from_right_wrong
+
+    op_from_right = odl.operator.ScalingOperator(space, scalar)
+    composition = func * op_from_right
+    assert isinstance(composition, odl.solvers.Functional)
+
+    x = example_element(space)
+    op_in_x = op_from_right(x)
+    expected_result = func(op_in_x)
+    assert almost_equal(composition(x), expected_result, places=PLACES)
+
+    # Test gradient and derivative with composition from the right
+    grad_x = (op_from_right.adjoint * func.gradient *
+              op_from_right)(x)
+    assert all_almost_equal((composition.gradient)(x), grad_x, places=PLACES)
+
+    p = example_element(space)
+    expected_result = grad_x.inner(p)
+    assert all_almost_equal(composition.derivative(x)(p), expected_result,
                             places=PLACES)
 
 
@@ -173,35 +222,33 @@ def test_functional_sum():
         func_sum.conjugate_functional()
 
 
-def test_functional_composition():
-    """Test composition of functional.
-
-    This test tests composition, both from the right and from the left, with an
-    operator, which gives a functional, and with a vector, which returns an
-    operator."""
-
+def test_functional_plus_scalar():
+    """Test for sum of functioanl and scalar."""
     space = odl.uniform_discr(0, 1, 10)
 
-    func = odl.solvers.L2Norm(space)
+    func = odl.solvers.L2NormSquare(space)
+    scalar = np.random.randn()
 
-    # Test composition with operator from the right
-    scalar = np.random.rand()
-    wrong_space = odl.uniform_discr(1, 2, 10)
-    op_from_right_wrong = odl.operator.ScalingOperator(wrong_space, scalar)
-
+    # Test for scalar not in the field (field of unifor_discr is RealNumbers)
+    complex_scalar = np.random.randn() + np.random.randn() * 1j
     with pytest.raises(TypeError):
-        func * op_from_right_wrong
+        func + complex_scalar
 
-    op_from_right = odl.operator.ScalingOperator(space, scalar)
-    composition = func * op_from_right
-    assert isinstance(composition, odl.solvers.Functional)
-
+    func_scalar_sum = func + scalar
     x = example_element(space)
-    op_in_x = op_from_right(x)
-    expected_result = func(op_in_x)
-    assert almost_equal(composition(x), expected_result, places=PLACES)
+    p = example_element(space)
 
-    # TODO: Write derivative test. But the derivative seems wrongly implemeted
+    # Test for evaluation
+    expected_result = func(x) + scalar
+    assert almost_equal(func_scalar_sum(x), expected_result, places=PLACES)
+
+    # Test for derivative and gradient
+    grad_x = func.gradient(x)
+    assert almost_equal(func_scalar_sum.gradient(x), grad_x, places=PLACES)
+
+    expected_result = grad_x.inner(p)
+    assert almost_equal(func_scalar_sum.derivative(x)(p), expected_result,
+                        places=PLACES)
 
 
 
