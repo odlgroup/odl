@@ -33,6 +33,7 @@ try:
 
 except ImportError:
     NIFTYREC_AVAILABLE = False
+    NIFTYREC_GPU_AVAILABLE = False
 
 import numpy as np
 
@@ -43,7 +44,7 @@ from odl.tomo.geometry.spect import ParallelHoleCollimatorGeometry
 
 
 __all__ = ('AttenuatedRayTransform', 'AttenuatedRayBackprojection',
-           'NIFTYREC_AVAILABLE', 'NIFTYREC_GPU_AVAILABLE')
+           'NIFTYREC_AVAILABLE', 'NIFTYREC_GPU_AVAILABLE',)
 _SUPPORTED_IMPL = ('niftyrec_cpu', 'niftyrec_gpu')
 
 
