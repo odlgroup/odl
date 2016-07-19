@@ -663,7 +663,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         out : `DerivativeOperator`
             The linear operator that maps ``x --> <x, grad_f(point)>``.
         """
-        return self._func.derivative(point) * self._scalar
+        return self._scalar * self._func.derivative(self._scalar * point)
 
 
 class FunctionalComp(Functional, OperatorComp):
@@ -704,62 +704,41 @@ class FunctionalComp(Functional, OperatorComp):
                             ''.format(tmp2, self._left.domain))
         self._tmp2 = tmp2
 
-    # Should this one really take an x-argument? Isn't it suppose to return the
-    # operator itself?
-    def gradient(self, x, out=None):
-        """Gradient of the compositon according to the chain rule.
+    @property
+    def gradient(self):
+        """Gradient of the compositon according to the chain rule."""
 
-        Parameters
-        ----------
-        x : domain element-like
-            Point in which to evaluate the gradient
-        out : domain element, optional
-            Element into which the result is written
+        func = self._left
+        op = self._right
 
-        Returns
-        -------
-        out : domain element
-            Result of the gradient calcuation. If ``out`` was given,
-            the returned object is a reference to it.
-        """
-        if out is None:
-            return self._right.derivative(x).adjoint(
-                self._left.gradient(self._right(x)))
-        else:
-            if self._tmp is not None:
-                tmp_op_ran = self._right(x, out=self._tmp)
-            else:
-                tmp_op_ran = self._right(x)
+        class CompositGradient(Operator):
+            """Gradient of the compositon according to the chain rule."""
+            def __init__(self):
+                """Creates an instance of CompositGradient."""
+                super().__init__(func.domain, func.domain, linear=False)
+                self._func = func
+                self._op = op
 
-            if self._tmp2 is not None:
-                tmp_dom = self._left.gradient(tmp_op_ran, out=self._tmp2)
-            else:
-                tmp_dom = self._left.gradient(tmp_op_ran)
+            def _call(self, x):
+                """Applies the gradient operator to the given point.
 
-            self._right.derivative(x).adjoint(tmp_dom, out=out)
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional to which the
+                    gradient operator is applied. The element must have a
+                    non-zero norm
 
-    def derivative(self, point):
-        """Returns the derivative operator in the given point.
+                Returns
+                -------
+                `self(x)` : `LinearSpaceVector`
+                    Evaluation of the gradient operator. An element in the
+                    domain of the functional.
+                """
+                return self._op.derivative(x).adjoint(
+                    self._func.gradient(self._op(x)))
 
-        This function returns the linear operator
-
-            ``x --> <x, grad_f(point)>``,
-
-        where ``grad_f(point)`` is the gradient of the functional in the point
-        ``point``.
-
-        Parameters
-        ----------
-        point : `LinearSpaceVector`
-            The point in which the gradient is evaluated.
-
-        Returns
-        -------
-        out : `DerivativeOperator`
-            The linear operator that maps ``x --> <x, grad_f(point)>``.
-        """
-        return self._right.derivative(point).adjoint(
-                self._left.derivative(self._right(point)))
+        return CompositGradient()
 
 
 class FunctionalSum(Functional, OperatorSum):
@@ -859,7 +838,7 @@ class FunctionalScalarSum(Functional, OperatorSum):
             raise TypeError('the scalar {} is not in the range of the'
                             'functional {!r}'.format(scalar, func))
 
-        Functional.__init__(domain=func.domain, linear=func.is_linear,
+        Functional.__init__(self, domain=func.domain, linear=func.is_linear,
                             smooth=func.is_smooth, concave=func.is_concave,
                             convex=func.is_convex,
                             grad_lipschitz=func.grad_lipschitz)
