@@ -39,7 +39,8 @@ import os
 import re
 
 __all__ = ('read_clintec_CT_reconstruction', 'linear_attenuation_from_HU',
-           'read_clintec_raw_spect_data', 'DICOM_AVAILABLE')
+           'read_clintec_raw_spect_data', 'spect_clintec_geometries_from_file',
+           'DICOM_AVAILABLE')
 
 
 def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):

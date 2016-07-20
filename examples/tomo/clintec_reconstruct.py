@@ -67,7 +67,7 @@ ct_hu, ct_header = read_clintec_CT_reconstruction(ct_path)
 # Coefficients to convert Houndsfield units to linear
 # attenuation map for SPECT
 a = (0.152, 0.150)
-b = (0.155*10**-3, 0.115*10**-3)
+b = (0.155 * 10 ** -3, 0.115 * 10 ** -3)
 # Convert from Houndsfields to linear attenuation map
 mu_map = linear_attenuation_from_HU(ct_hu, a, b)
 
