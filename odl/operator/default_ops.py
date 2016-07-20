@@ -801,7 +801,10 @@ class ConstantOperator(Operator):
     def _call(self, x, out=None):
         """Return the constant vector or assign it to ``out``."""
         if out is None:
-            return self.range.element(self.__vector.copy())
+            if isinstance(self.__vector, float):
+                return self.range.element(self.__vector)
+            else:
+                return self.range.element(self.__vector.copy())
         else:
             out.assign(self.__vector)
 

@@ -27,9 +27,20 @@ import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
+from odl.solvers.advanced.proximal_operators import (proximal_cconj,
+                                                     proximal_l1,
+                                                     proximal_cconj_l1,
+                                                     proximal_l2,
+                                                     proximal_cconj_l2,
+                                                     proximal_l2_squared,
+                                                     proximal_cconj_l2_squared)
 
 from odl import (ZeroOperator, IdentityOperator)
 
+# TODO: Import correct proximals from the already existing library
+
+# TODO: Add weights to all existing functionals (e.g., a * ||x||_2). This is
+# important, as it might change the proximal and the cc in nontrivial ways
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquare', 'ZeroFunctional',
            'ConstantFunctional')
@@ -356,7 +367,9 @@ class L2NormSquare(Functional):
         class L2SquareProximal(Operator):
             """The proximal operator of the squared L2-functional."""
             def __init__(self):
-                """Initialize a new instance of the squared L2-functional."""
+                """Initialize a new instance of the proximal operator for the
+                squared L2-functional.
+                """
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
                 self.sigma = sigma
@@ -377,7 +390,7 @@ class L2NormSquare(Functional):
                     Evaluation of the proximal operator. An element in the
                     domain of the functional.
                 """
-                return x * (1.0 / 3.0)
+                return x * (1.0 / (2 * self.sigma + 1))
 
         return L2SquareProximal()
 
@@ -444,6 +457,64 @@ class L2NormSquare(Functional):
                         return x * (1.0 / 2.0)
 
                 return L2CCSquareGradient()
+
+            def proximal(self, sigma=1.0):
+                """Return the proximal operator of the convex conjugate
+                functional of the squared L2-functional.
+
+                Parameters
+                ----------
+                sigma : positive float, optional
+                    Regularization parameter of the proximal operator
+
+                Returns
+                -------
+                out : Operator
+                    Domain and range equal to domain of functional
+                """
+
+                func = self
+
+                # Note: this implementation is take from proximal_operatros,
+                # however soomewhat simplified to a less general case (to
+                # start with).
+                class ProximalCConjL2Squared(Operator):
+                    """Proximal operator of the convex conj of the squared
+                    l2-norm/dist.
+                    """
+
+                    def __init__(self, sigma):
+                        """Initialize a new instance.
+
+                        Parameters
+                        ----------
+                        sigma : positive `float`
+                            Step size parameter
+                        """
+                        self.sigma = float(sigma)
+                        super().__init__(domain=func.domain,
+                                         range=func.domain)
+
+                    def _call(self, x, out=None):
+                        """Applies the proximal operator to the given point.
+
+                        Parameters
+                        ----------
+                        x : `LinearSpaceVector`
+                            Element in the domain of the functional to which
+                            the proximal operator is applied.
+
+                        Returns
+                        -------
+                        `self(x)` : `LinearSpaceVector`
+                            Evaluation of the proximal operator. An element in
+                            the domain of the functional.
+                        """
+
+                        sig = self.sigma
+                        return x * 1.0 / (1 + 0.5 * sig)
+
+                return ProximalCConjL2Squared(sigma)
 
         return L2SquareConjugateFunctional()
 
