@@ -42,6 +42,8 @@ PLACES = 8
 
 # TODO: Test flags for translations etc.
 
+# TODO: Add test for composition, both from letf and right, with a vector
+
 
 def test_derivative():
     """Test for the derivative of a functional.
