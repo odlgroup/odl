@@ -109,3 +109,34 @@ def loglikelihood(op, x, data, noise='poisson'):
     else:
         raise NotImplemented('implemented for poisson noise, got {}'
                              ''.format(noise))
+
+
+def gradient_poisson_loglikelihood(op, x, data, noise='poisson'):
+    """Evaluate the derivative of the log-likelihood at x.
+
+    Parameters
+    ----------
+    op : `Operator`
+        Forward operator of the given problem, the operator in
+        the inverse problem. It has to have adjoint that is called
+        via `op.adjoint`
+
+    x : `element` of the domain of ``op``
+        A point where the gradient of the log-likelihood is evaluated
+
+    data : `element` of the range of ``op``
+        Right-hand side of the equation defining the inverse problem
+
+    noise : `str`, optional
+        Implementation back-end for the noise.
+    """
+    noise = str(noise).lower()
+
+    if noise.startswith('poisson'):
+        projection = op(x)
+        sino_per_proj = data / np.maximum(projection, 1e-8)
+        grad = op.adjoint(sino_per_proj) - op.adjoint(op.range.one())
+        return grad
+    else:
+        raise NotImplemented('implemented for poisson noise, got {}'
+                             ''.format(noise))
