@@ -244,12 +244,27 @@ def test_functional_plus_scalar():
 
     # Test for derivative and gradient
     grad_x = func.gradient(x)
-    assert almost_equal(func_scalar_sum.gradient(x), grad_x, places=PLACES)
+    assert all_almost_equal(func_scalar_sum.gradient(x), grad_x, places=PLACES)
 
     expected_result = grad_x.inner(p)
     assert almost_equal(func_scalar_sum.derivative(x)(p), expected_result,
                         places=PLACES)
 
+    # Test proximal operator
+    sigma = np.random.rand()
+    expected_result = func.proximal(sigma)(x)
+    assert all_almost_equal(func_scalar_sum.proximal(sigma)(x),
+                            expected_result, places=PLACES)
+
+    # Test convex conjugate functional
+    cc_func = func.conjugate_functional
+    cc_func_scalar_sum = func_scalar_sum.conjugate_functional
+    expected_result = cc_func(x) - scalar
+    assert almost_equal(cc_func_scalar_sum(x), expected_result, places=PLACES)
+
+    expected_result = cc_func.gradient(x)
+    assert all_almost_equal(cc_func_scalar_sum.gradient(x), expected_result,
+                            places=PLACES)
 
 
 def test_translation_of_functional():
@@ -286,9 +301,20 @@ def test_translation_of_functional():
     assert all_almost_equal(translated_gradient(x), expected_result,
                             places=PLACES)
 
-    # TODO: Add test for the proximal
+    # Test for proximal
+    sigma = np.random.rand()
+    # The helper function below is tested explicitly in proximal_utils_test
+    expected_result = odl.solvers.proximal_translation(
+        test_functional.proximal, translation)(sigma)(x)
+    assert all_almost_equal(translated_functional.proximal(sigma)(x),
+                            expected_result, places=PLACES)
 
-    # TODO: Add test for the conjugate functional
+    # Test for conjugate functional
+    # The helper function below is tested explicitly further down in this file
+    expected_result = odl.solvers.ConvexConjugateTranslation(
+        test_functional.conjugate_functional, translation)(x)
+    assert all_almost_equal(translated_functional.conjugate_functional(x),
+                            expected_result, places=PLACES)
 
     # Test for derivative in direction p
     p = example_element(space)
@@ -300,12 +326,6 @@ def test_translation_of_functional():
                             places=PLACES)
 
 
-
-
-
-
-
-# BELOW ARE TESTS FOR CONVEX CONJUGATE THINGS
 def test_convex_conjugate_translation():
     """Test for the convex conjugate of a translation: (f(. - y))^*"""
 
@@ -357,6 +377,18 @@ def test_convex_conjugate_translation():
     assert all_almost_equal(cc_translated.derivative(x)(p), expected_result,
                             places=PLACES)
 
+    # Test for the proximal operator
+    sigma = np.random.rand()
+    # Explicit computation gives (x - sigma * translation)/(sigma/2 + 1)
+    expected_result = (x - sigma * translation) / (sigma / 2.0 + 1.0)
+
+    assert all_almost_equal(cc_translated.proximal(sigma)(x), expected_result,
+                            places=PLACES)
+
+    assert all_almost_equal(odl.solvers.proximal_quadratic_perturbation(
+        cc_test_functional.proximal, 0, u=translation)(sigma)(x),
+        cc_translated.proximal(sigma)(x), places=PLACES)
+
 
 def test_convex_conjugate_arg_scaling():
     """Test for the convex conjugate of a scaling: (f(. scaling))^*"""
@@ -402,6 +434,13 @@ def test_convex_conjugate_arg_scaling():
     expected_result = p.inner(1.0 / (2.0 * scaling**2) * x)
     assert all_almost_equal(cc_arg_scaled.derivative(x)(p), expected_result,
                             places=PLACES)
+
+    # Test for proximal operator
+    sigma = np.random.rand()
+    # Explicit computations: x / (sigma / (2 * scaling**2) + 1)
+    expected_result = x / (sigma / (2.0 * scaling**2) + 1.0)
+    assert all_almost_equal(cc_arg_scaled.proximal(sigma)(x),
+                            expected_result, places=PLACES)
 
 
 def test_convex_conjugate_functional_scaling():
@@ -450,9 +489,16 @@ def test_convex_conjugate_functional_scaling():
     assert all_almost_equal(cc_functional_scaled.derivative(x)(p),
                             expected_result, places=PLACES)
 
+    # Test for proximal operator
+    sigma = np.random.rand()
+    # Explicit computations: x / (sigma / (2 * scaling) + 1)
+    expected_result = x / (sigma / (2.0 * scaling) + 1.0)
+    assert all_almost_equal(cc_functional_scaled.proximal(sigma)(x),
+                            expected_result, places=PLACES)
+
 
 def test_convex_conjugate_linear_perturbation():
-    """Test for the convex conjugate of a scaling: (f(.) - <y,.>)^*"""
+    """Test for the convex conjugate of a scaling: (f(.) + <y,.>)^*"""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
@@ -476,10 +522,6 @@ def test_convex_conjugate_linear_perturbation():
         odl.solvers.ConvexConjugateLinearPerturb(cc_test_functional,
                                                  wrong_perturbation)
 
-    # Creating the functional ||x||_2^2
-    test_functional = odl.solvers.L2NormSquare(space)
-    cc_test_functional = test_functional.conjugate_functional
-
     # Create translated convex conjugate functional
     cc_functional_perturbed = odl.solvers.ConvexConjugateLinearPerturb(
                                cc_test_functional,
@@ -496,8 +538,8 @@ def test_convex_conjugate_linear_perturbation():
                             places=PLACES)
 
     # Test for the gradient
-    # Explicit computation: x/2 + y/2
-    expected_result = 1.0 / 2.0 * x + 1.0 / 2.0 * perturbation
+    # Explicit computation: x/2 - y/2
+    expected_result = 1.0 / 2.0 * x - 1.0 / 2.0 * perturbation
     cc_perturbed_gradient = cc_functional_perturbed.gradient
     assert all_almost_equal(cc_perturbed_gradient(x), expected_result,
                             places=PLACES)
@@ -507,8 +549,15 @@ def test_convex_conjugate_linear_perturbation():
 
     # Explicit computation in point x, in direction p:
     # <1.0/2.0 * x + 1.0/2.0 * perturbation, p>
-    expected_result = p.inner(1.0 / 2.0 * x + 1.0 / 2.0 * perturbation)
+    expected_result = p.inner(1.0 / 2.0 * x - 1.0 / 2.0 * perturbation)
     assert all_almost_equal(cc_functional_perturbed.derivative(x)(p),
+                            expected_result, places=PLACES)
+
+    # Test for proximal operator
+    sigma = np.random.rand()
+    # Explicit computations: (2 * x + sigma * perturbation) / (sigma + 2)
+    expected_result = (2.0 * x + sigma * perturbation) / (sigma + 2.0)
+    assert all_almost_equal(cc_functional_perturbed.proximal(sigma)(x),
                             expected_result, places=PLACES)
 
 
