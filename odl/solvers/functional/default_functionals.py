@@ -41,6 +41,8 @@ __all__ = ('L1Norm', 'L2Norm', 'L2NormSquare', 'ZeroFunctional',
            'ConstantFunctional')
 
 
+# TODO: Implement some of the missing gradients
+
 class L1Norm(Functional):
     """The functional corresponding to L1-norm."""
 
@@ -73,6 +75,7 @@ class L1Norm(Functional):
     @property
     def gradient(x):
         """Gradient operator of the L1-functional."""
+        # It does not exist on all of the space
         raise NotImplementedError
 
     def proximal(self, sigma=1.0):
@@ -101,6 +104,7 @@ class L1Norm(Functional):
             def __init__(self):
                 """Initialize a new instance of the L1ConjugateFunctional."""
                 super().__init__(functional.domain, linear=False)
+                self._orig_func = functional
 
             def _call(self, x):
                 """Applies the convex conjugate functional of the L1-norm to
@@ -126,9 +130,23 @@ class L1Norm(Functional):
                 """Gradient operator of the conjugate functional of the
                 L1-norm.
                 """
+                # It does not exist on all of the space, only for ||x|| < 1
+                # where it is the ZeroOperator
                 raise NotImplementedError
 
-            # TODO: Add conjugate functional.
+            @property
+            def conjugate_functional(self):
+                """The conjugate functional of the conjugate functional of the
+                L1-norm.
+
+                Notes
+                -----
+                Since the L1-norm is proper, convex and lower-semicontinuous,
+                by the Fenchel–Moreau theorem the convex conjugate functional
+                of the convex conjugate functional, also know as the
+                biconjugate, is the functional itself [BC2011]_.
+                """
+                return self._orig_func
 
             def proximal(self, sigma=1.0):
                 """Return the proximal operator of the conjugate functional of
@@ -246,6 +264,7 @@ class L2Norm(Functional):
             def __init__(self):
                 """Initialize a new instance of the L2ConjugateFunctional."""
                 super().__init__(functional.domain, linear=False)
+                self._orig_func = functional
 
             def _call(self, x):
                 """Applies the convex conjugate functional of the L2-norm to
@@ -266,13 +285,32 @@ class L2Norm(Functional):
                 else:
                     return 0
 
-            # TODO: Add conjugate functional.
+            @property
+            def conjugate_functional(self):
+                """The conjugate functional of the conjugate functional of the
+                L2-norm.
 
-            # TODO: Add derivative
+                Notes
+                -----
+                Since the L2-norm is proper, convex and lower-semicontinuous,
+                by the Fenchel–Moreau theorem the convex conjugate functional
+                of the convex conjugate functional, also know as the
+                biconjugate, is the functional itself [BC2011]_.
+                """
+                return self._orig_func
+
+            @property
+            def gradient(x):
+                """Gradient operator of the conjugate functional of the
+                constant functional.
+                """
+                # It does not exist on all of the space, only for ||x|| < 1
+                # where it is the ZeroOperator.
+                raise NotImplementedError
 
             def proximal(self, sigma=1.0):
                 """Return the proximal operator of the conjugate functional of
-                the L1-norm.
+                the L2-norm.
 
                 Parameters
                 ----------
@@ -377,6 +415,7 @@ class L2NormSquare(Functional):
             def __init__(self):
                 """Initialize a new instance of L2SquareConjugateFunctional."""
                 super().__init__(functional.domain, linear=False)
+                self._orig_func = functional
 
             def _call(self, x):
                 """Applies the convex conjugate functional of the squared
@@ -431,7 +470,19 @@ class L2NormSquare(Functional):
 
                 return L2CCSquareGradient()
 
-            # TODO: Add convex conjugate
+            @property
+            def conjugate_functional(self):
+                """The convex conjugate functional of the conjugate functional
+                of squared L2-norm.
+
+                Notes
+                -----
+                Since the squared L2-norm is proper, convex and
+                lower-semicontinuous, by the Fenchel–Moreau theorem the convex
+                conjugate functional of the convex conjugate functional, also
+                know as the biconjugate, is the functional itself [BC2011]_.
+                """
+                return self._orig_func
 
             def proximal(self, sigma=1.0):
                 """Return the proximal operator of the convex conjugate
@@ -543,6 +594,7 @@ class ConstantFunctional(Functional):
                 """
                 super().__init__(functional.domain, linear=False, convex=True)
                 self.zero_element = self.domain.zero()
+                self._constant = functional.constant
 
             def _call(self, x):
                 """Applies the functional to the given point.
@@ -559,9 +611,50 @@ class ConstantFunctional(Functional):
                 """
 
                 if x == self.zero_element:
-                    return 0
+                    return -self._constant
                 else:
                     return np.inf
+
+            @property
+            def gradient(x):
+                """Gradient operator of the conjugate functional of the
+                constant functional.
+                """
+                # It does not exist anywhere
+                raise NotImplementedError
+
+            @property
+            def conjugate_functional(self):
+                """The conjugate functional of the conjugate functional of the
+                constant functional.
+
+                Notes
+                -----
+                Since the constant functional is proper, convex and
+                lower-semicontinuous, by the Fenchel–Moreau theorem the convex
+                conjugate functional of the convex conjugate functional, also
+                know as the biconjugate, is the functional itself [BC2011]_.
+                """
+                return ConstantFunctional(self.domain, self._constant)
+
+            def proximal(self, sigma=1.0):
+                """Return the proximal operator of the conjugate functional of
+                the constant functional.
+
+                Note that this is the zero-operator
+
+                Parameters
+                ----------
+                sigma : positive float, optional
+                    Regularization parameter of the proximal operator
+
+                Returns
+                -------
+                out : Operator
+                    Domain and range equal to domain of functional
+                """
+
+                return ZeroOperator(self.domain)
 
         return ConstantFunctionalConjugateFunctional()
 

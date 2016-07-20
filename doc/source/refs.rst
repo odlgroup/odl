@@ -7,6 +7,9 @@ References
    gradient methods*. IMA Journal of Numerical Analysis, 8 (1988),
    pp 141--148.
 
+.. [BC2011] Bauschke, H H, and Combettes, P L. *Convex analysis and
+   monotone operator theory in Hilbert spaces*. Springer, 2011.
+
 .. [BC2015] Bot, R I, and Csetnek, E R. *On the convergence rate of
    a forward-backward type primal-dual splitting algorithm for convex
    optimization problems*. Optimization, 64.1 (2015), pp 5--23.

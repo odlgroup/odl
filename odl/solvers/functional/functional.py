@@ -40,7 +40,31 @@ __all__ = ('Functional', 'ConvexConjugateArgScaling',
 
 
 class Functional(Operator):
-    """Implementation of a functional class."""
+    """Implementation of a functional class.
+
+    Notes
+    -----
+    Note that the implementation of the functional class has assued that the
+    functionals are defined on a Hilbert space, i.e., that we consider
+    functionals
+
+    .. math::
+
+            f : X \\to F,
+
+    where :math:`X` is a Hilbert space and :math:`F` is a field of scalars
+    associated with :math:`X`. This has been done in order to simplyfy the
+    concept of *convex conjugate functional*. Since Hilbert spaces as selfdual
+    the convex conjugate functional is defined as
+
+    .. math::
+
+            f^* : X \\to F,
+
+            f^*(x^*) = \\sup_{x} \{ \\langle x^*,x \\rangle - f(x)  \}.
+
+    See, e.g., [Lue1969]_, [Roc1970]_ and [BC2011]_.
+    """
 
     # TODO: Update doc above. What to write?
 
@@ -125,7 +149,7 @@ class Functional(Operator):
 
         .. math::
 
-            f^*(x^*) = \\sup_{x} \{ \\langle x^*,y \\rangle - f(x)  \}.
+            f^*(x^*) = \\sup_{x} \{ \\langle x^*,x \\rangle - f(x)  \}.
 
         See, e.g., [Lue1969]_, [Roc1970]_.
         """
@@ -1116,21 +1140,11 @@ class ConvexConjugateTranslation(Functional):
 
     # TODO: Should it be added?
     # Note: This would only be valide when f is proper convex and lower-
-    # semincontinuous. (and only straight forward to define on Hilbert spaces..
-    # but I think the entire functional structure uses that assumption).
-#        def conjugate_functional(self):
-#            """Convex conjugate functional of the functional.
-#
-#            Parameters
-#            ----------
-#            none
-#
-#            Returns
-#            -------
-#            out : Functional
-#                Domain equal to domain of functional
-#            """
-#            raise NotImplementedError
+    # semincontinuous.
+    @property
+    def conjugate_functional(self):
+        """Convex conjugate functional of the functional."""
+        raise NotImplementedError
 
 
 class ConvexConjugateFuncScaling(Functional):
@@ -1236,21 +1250,11 @@ class ConvexConjugateFuncScaling(Functional):
 
     # TODO: Should it be added?
     # Note: This would only be valide when f is proper convex and lower-
-    # semincontinuous. (and only straight forward to define on Hilbert spaces..
-    # but I think the entire functional structure uses that assumption).
-#        def conjugate_functional(self):
-#            """Convex conjugate functional of the functional.
-#
-#            Parameters
-#            ----------
-#            none
-#
-#            Returns
-#            -------
-#            out : Functional
-#                Domain equal to domain of functional
-#            """
-#            raise NotImplementedError
+    # semincontinuous.
+    @property
+    def conjugate_functional(self):
+        """Convex conjugate functional of the functional."""
+        raise NotImplementedError
 
 
 class ConvexConjugateArgScaling(Functional):
@@ -1351,21 +1355,11 @@ class ConvexConjugateArgScaling(Functional):
 
     # TODO: Should it be added?
     # Note: This would only be valide when f is proper convex and lower-
-    # semincontinuous. (and only straight forward to define on Hilbert spaces..
-    # but I think the entire functional structure uses that assumption).
-#        def conjugate_functional(self):
-#            """Convex conjugate functional of the functional.
-#
-#            Parameters
-#            ----------
-#            none
-#
-#            Returns
-#            -------
-#            out : Functional
-#                Domain equal to domain of functional
-#            """
-#            raise NotImplementedError
+    # semincontinuous.
+    @property
+    def conjugate_functional(self):
+        """Convex conjugate functional of the functional."""
+        raise NotImplementedError
 
 
 class ConvexConjugateLinearPerturb(Functional):
@@ -1467,18 +1461,8 @@ class ConvexConjugateLinearPerturb(Functional):
 
     # TODO: Should it be added?
     # Note: This would only be valide when f is proper convex and lower-
-    # semincontinuous. (and only straight forward to define on Hilbert spaces..
-    # but I think the entire functional structure uses that assumption).
-#        def conjugate_functional(self):
-#            """Convex conjugate functional of the functional.
-#
-#            Parameters
-#            ----------
-#            none
-#
-#            Returns
-#            -------
-#            out : Functional
-#                Domain equal to domain of functional
-#            """
-#            raise NotImplementedError
+    # semincontinuous.
+    @property
+    def conjugate_functional(self):
+        """Convex conjugate functional of the functional."""
+        raise NotImplementedError
