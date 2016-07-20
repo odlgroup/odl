@@ -935,6 +935,9 @@ class TranslatedFunctional(Functional):
     # translation?
     def __init__(self, func, translation):
         """Initialize a TranslatedFunctional instnace."""
+
+        # TODO: Add checks that func is a functional and that y is in the dom
+
         super().__init__(domain=func.domain, linear=False,
                          smooth=func.is_smooth,
                          concave=func.is_concave,

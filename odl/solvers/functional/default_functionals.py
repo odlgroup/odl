@@ -142,8 +142,8 @@ class L1Norm(Functional):
                 Notes
                 -----
                 Since the L1-norm is proper, convex and lower-semicontinuous,
-                by the Fenchel–Moreau theorem the convex conjugate functional
-                of the convex conjugate functional, also know as the
+                by the Fenchel-Moreau theorem the convex conjugate functional
+                of the convex conjugate functional, also known as the
                 biconjugate, is the functional itself [BC2011]_.
                 """
                 return self._orig_func
@@ -293,8 +293,8 @@ class L2Norm(Functional):
                 Notes
                 -----
                 Since the L2-norm is proper, convex and lower-semicontinuous,
-                by the Fenchel–Moreau theorem the convex conjugate functional
-                of the convex conjugate functional, also know as the
+                by the Fenchel-Moreau theorem the convex conjugate functional
+                of the convex conjugate functional, also known as the
                 biconjugate, is the functional itself [BC2011]_.
                 """
                 return self._orig_func
@@ -478,9 +478,9 @@ class L2NormSquare(Functional):
                 Notes
                 -----
                 Since the squared L2-norm is proper, convex and
-                lower-semicontinuous, by the Fenchel–Moreau theorem the convex
+                lower-semicontinuous, by the Fenchel-Moreau theorem the convex
                 conjugate functional of the convex conjugate functional, also
-                know as the biconjugate, is the functional itself [BC2011]_.
+                known as the biconjugate, is the functional itself [BC2011]_.
                 """
                 return self._orig_func
 
@@ -639,9 +639,9 @@ class ConstantFunctional(Functional):
                 Notes
                 -----
                 Since the constant functional is proper, convex and
-                lower-semicontinuous, by the Fenchel–Moreau theorem the convex
+                lower-semicontinuous, by the Fenchel-Moreau theorem the convex
                 conjugate functional of the convex conjugate functional, also
-                know as the biconjugate, is the functional itself [BC2011]_.
+                known as the biconjugate, is the functional itself [BC2011]_.
                 """
                 return ConstantFunctional(self.domain, self._constant)
 
