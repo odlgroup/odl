@@ -504,6 +504,10 @@ class L2NormSquare(Functional):
 
 
 class ConstantFunctional(Functional):
+    """The constant functional.
+
+    This functional maps all elements in the domain to a given, constant value.
+    """
     def __init__(self, domain, constant):
         """Initialize a ConstantFunctional instance.
 
@@ -523,6 +527,10 @@ class ConstantFunctional(Functional):
                             ''.format(constant, self.range))
 
         self._constant = constant
+
+    @property
+    def constant(self):
+        return self._constant
 
     def _call(self, x):
         """Applies the functional to the given point.
@@ -594,7 +602,7 @@ class ConstantFunctional(Functional):
                 """
                 super().__init__(functional.domain, linear=False, convex=True)
                 self.zero_element = self.domain.zero()
-                self._constant = functional.constant
+                self._constant = functional._constant
 
             def _call(self, x):
                 """Applies the functional to the given point.
@@ -672,4 +680,4 @@ class ZeroFunctional(ConstantFunctional):
         domain : `LinearSpace`
             The space of elements which the functional is acting on.
         """
-        super().__init__(self, domain=domain, constant=0)
+        super().__init__(domain=domain, constant=0)
