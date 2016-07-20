@@ -27,8 +27,7 @@ import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
-from odl.solvers.advanced.proximal_operators import (proximal_cconj,
-                                                     proximal_l1,
+from odl.solvers.advanced.proximal_operators import (proximal_l1,
                                                      proximal_cconj_l1,
                                                      proximal_l2,
                                                      proximal_cconj_l2,
@@ -37,10 +36,6 @@ from odl.solvers.advanced.proximal_operators import (proximal_cconj,
 
 from odl import (ZeroOperator, IdentityOperator)
 
-# TODO: Import correct proximals from the already existing library
-
-# TODO: Add weights to all existing functionals (e.g., a * ||x||_2). This is
-# important, as it might change the proximal and the cc in nontrivial ways
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquare', 'ZeroFunctional',
            'ConstantFunctional')
@@ -63,9 +58,14 @@ class L1Norm(Functional):
     def _call(self, x):
         """Applies the functional to the given point.
 
+        Parameters
+        ----------
+        x : `LinearSpaceVector`
+            Element in the domain of the functional.
+
         Returns
         -------
-        `self(x)` : `element` in the `field`of the ``domain``.
+        `self(x)` : `element` in the `field` of the ``domain``.
             Evaluation of the functional.
         """
         return np.abs(x).inner(self.domain.one())
@@ -88,35 +88,8 @@ class L1Norm(Functional):
         out : Operator
             Domain and range equal to domain of functional
         """
-        functional = self
 
-        class L1Proximal(Operator):
-            """The proximal operator of the L1-functional"""
-            def __init__(self):
-                """Initialize a new instance of the L1Proximal."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
-                self.sigma = sigma
-
-            # TODO: Check that this works for complex x
-            def _call(self, x):
-                """Applies the proximal operator to the given point.
-
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the functional to which the
-                    proximal operator is applied.
-
-                Returns
-                -------
-                `self(x)` : `LinearSpaceVector`
-                    Evaluation of the proximal operator. An element in the
-                    domain of the functional.
-                """
-                return np.maximum(np.abs(x) - sigma, 0) * np.sign(x)
-
-        return L1Proximal()
+        return proximal_l1(space=self.domain)(sigma)
 
     @property
     def conjugate_functional(self):
@@ -140,13 +113,39 @@ class L1Norm(Functional):
 
                 Returns
                 -------
-                `self(x)` : `element` in the `field`of the ``domain``.
+                `self(x)` : `element` in the `field` of the ``domain``.
                     Evaluation of the functional.
                 """
                 if np.max(np.abs(x)) > 1:
                     return np.inf
                 else:
                     return 0
+
+            @property
+            def gradient(x):
+                """Gradient operator of the conjugate functional of the
+                L1-norm.
+                """
+                raise NotImplementedError
+
+            # TODO: Add conjugate functional.
+
+            def proximal(self, sigma=1.0):
+                """Return the proximal operator of the conjugate functional of
+                the L1-norm.
+
+                Parameters
+                ----------
+                sigma : positive float, optional
+                    Regularization parameter of the proximal operator
+
+                Returns
+                -------
+                out : Operator
+                    Domain and range equal to domain of functional
+                """
+
+                return proximal_cconj_l1(space=self.domain)(sigma)
 
         return L1ConjugateFunctional()
 
@@ -168,9 +167,14 @@ class L2Norm(Functional):
     def _call(self, x):
         """Applies the functional to the given point.
 
+        Parameters
+        ----------
+        x : `LinearSpaceVector`
+            Element in the domain of the functional.
+
         Returns
         -------
-        `self(x)` : `element` in the `field`of the ``domain``.
+        `self(x)` : `element` in the `field` of the ``domain``.
             Evaluation of the functional.
         """
         return np.sqrt(np.abs(x).inner(np.abs(x)))
@@ -229,35 +233,8 @@ class L2Norm(Functional):
         out : Operator
             Domain and range equal to domain of functional
         """
-        functional = self
 
-        class L2Proximal(Operator):
-            """The proximal operator of the L2-functional."""
-            def __init__(self):
-                """Initialize a new instance of the L2Proximal."""
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
-                self.sigma = sigma
-
-            # TODO: Check that this works for complex x
-            def _call(self, x):
-                """Applies the proximal operator to the given point.
-
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the functional to which the
-                    proximal operator is applied.
-
-                Returns
-                -------
-                `self(x)` : `LinearSpaceVector`
-                    Evaluation of the proximal operator. An element in the
-                    domain of the functional.
-                """
-                return np.maximum(x.norm() - sigma, 0) * (x / x.norm())
-
-        return L2Proximal()
+        return proximal_l2(space=self.domain)(sigma)
 
     @property
     def conjugate_functional(self):
@@ -281,13 +258,34 @@ class L2Norm(Functional):
 
                 Returns
                 -------
-                `self(x)` : `element` in the `field`of the ``domain``.
+                `self(x)` : `element` in the `field` of the ``domain``.
                     Evaluation of the functional.
                 """
                 if x.norm() > 1:
                     return np.inf
                 else:
                     return 0
+
+            # TODO: Add conjugate functional.
+
+            # TODO: Add derivative
+
+            def proximal(self, sigma=1.0):
+                """Return the proximal operator of the conjugate functional of
+                the L1-norm.
+
+                Parameters
+                ----------
+                sigma : positive float, optional
+                    Regularization parameter of the proximal operator
+
+                Returns
+                -------
+                out : Operator
+                    Domain and range equal to domain of functional
+                """
+
+                return proximal_cconj_l2(space=self.domain)(sigma)
 
         return L2ConjugateFunctional()
 
@@ -309,9 +307,14 @@ class L2NormSquare(Functional):
     def _call(self, x):
         """Applies the functional to the given point.
 
+        Parameters
+        ----------
+        x : `LinearSpaceVector`
+            Element in the domain of the functional.
+
         Returns
         -------
-        `self(x)` : `element` in the `field`of the ``domain``.
+        `self(x)` : `element` in the `field` of the ``domain``.
             Evaluation of the functional.
         """
         return np.abs(x).inner(np.abs(x))
@@ -362,37 +365,7 @@ class L2NormSquare(Functional):
         out : Operator
             Domain and range equal to domain of functional
         """
-        functional = self
-
-        class L2SquareProximal(Operator):
-            """The proximal operator of the squared L2-functional."""
-            def __init__(self):
-                """Initialize a new instance of the proximal operator for the
-                squared L2-functional.
-                """
-                super().__init__(functional.domain, functional.domain,
-                                 linear=False)
-                self.sigma = sigma
-
-            # TODO: Check that this works for complex x
-            def _call(self, x):
-                """Applies the proximal operator to the given point.
-
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the functional to which the
-                    proximal operator is applied.
-
-                Returns
-                -------
-                `self(x)` : `LinearSpaceVector`
-                    Evaluation of the proximal operator. An element in the
-                    domain of the functional.
-                """
-                return x * (1.0 / (2 * self.sigma + 1))
-
-        return L2SquareProximal()
+        return proximal_l2_squared(space=self.domain)(sigma)
 
     @property
     def conjugate_functional(self):
@@ -416,7 +389,7 @@ class L2NormSquare(Functional):
 
                 Returns
                 -------
-                `self(x)` : `element` in the `field`of the ``domain``.
+                `self(x)` : `element` in the `field` of the ``domain``.
                     Evaluation of the functional.
                 """
                 return x.norm()**2 * (1.0 / 4.0)
@@ -458,6 +431,8 @@ class L2NormSquare(Functional):
 
                 return L2CCSquareGradient()
 
+            # TODO: Add convex conjugate
+
             def proximal(self, sigma=1.0):
                 """Return the proximal operator of the convex conjugate
                 functional of the squared L2-functional.
@@ -472,49 +447,7 @@ class L2NormSquare(Functional):
                 out : Operator
                     Domain and range equal to domain of functional
                 """
-
-                func = self
-
-                # Note: this implementation is take from proximal_operatros,
-                # however soomewhat simplified to a less general case (to
-                # start with).
-                class ProximalCConjL2Squared(Operator):
-                    """Proximal operator of the convex conj of the squared
-                    l2-norm/dist.
-                    """
-
-                    def __init__(self, sigma):
-                        """Initialize a new instance.
-
-                        Parameters
-                        ----------
-                        sigma : positive `float`
-                            Step size parameter
-                        """
-                        self.sigma = float(sigma)
-                        super().__init__(domain=func.domain,
-                                         range=func.domain)
-
-                    def _call(self, x, out=None):
-                        """Applies the proximal operator to the given point.
-
-                        Parameters
-                        ----------
-                        x : `LinearSpaceVector`
-                            Element in the domain of the functional to which
-                            the proximal operator is applied.
-
-                        Returns
-                        -------
-                        `self(x)` : `LinearSpaceVector`
-                            Evaluation of the proximal operator. An element in
-                            the domain of the functional.
-                        """
-
-                        sig = self.sigma
-                        return x * 1.0 / (1 + 0.5 * sig)
-
-                return ProximalCConjL2Squared(sigma)
+                return proximal_cconj_l2_squared(space=self.domain)(sigma)
 
         return L2SquareConjugateFunctional()
 
@@ -605,7 +538,7 @@ class ConstantFunctional(Functional):
             """The convex conjugate functional to the constant functional."""
 
             def __init__(self):
-                """Initialize a  ConstantFunctionalConjugateFunctional
+                """Initialize a ConstantFunctionalConjugateFunctional
                 instance.
                 """
                 super().__init__(functional.domain, linear=False, convex=True)
@@ -613,6 +546,11 @@ class ConstantFunctional(Functional):
 
             def _call(self, x):
                 """Applies the functional to the given point.
+
+                Parameters
+                ----------
+                x : `LinearSpaceVector`
+                    Element in the domain of the functional.
 
                 Returns
                 -------
@@ -628,11 +566,11 @@ class ConstantFunctional(Functional):
         return ConstantFunctionalConjugateFunctional()
 
 
-# TODO: Remove this one and simply make it a ConstantFunctional with constant
-# 0. In doing so ZeroFunctional should inherite from ConstantFunctional, and
-# init simply call super().__init__(domain, 0). However, what if 0 is not in
-# domain.field?
-class ZeroFunctional(Functional):
+class ZeroFunctional(ConstantFunctional):
+    """The zero-functional.
+
+    The zero-functional maps all elements in the domain to zero
+    """
     def __init__(self, domain):
         """Initialize a ZeroFunctional instance.
 
@@ -641,71 +579,4 @@ class ZeroFunctional(Functional):
         domain : `LinearSpace`
             The space of elements which the functional is acting on.
         """
-        super().__init__(domain=domain, linear=True, convex=True,
-                         concave=True, smooth=True, grad_lipschitz=0)
-
-    def _call(self, x):
-        """Applies the functional to the given point.
-
-        Returns
-        -------
-        `self(x)` : `float`
-            Evaluation of the functional, which is always zero.
-        """
-        return 0
-
-    @property
-    def gradient(self):
-        """Gradient operator of the functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluated
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
-        return ZeroOperator(self.domain)
-
-    def proximal(self, sigma=1.0):
-        """something...
-        """
-        # TODO: Update doc above
-
-        return IdentityOperator(self.domain)
-
-    @property
-    def conjugate_functional(self):
-        functional = self
-
-        class ZeroFunctionalConjugateFunctional(Functional):
-            """something...
-            """
-            # TODO: Update doc above
-
-            def __init__(self):
-                """Initialize a ZeroFunctionalConjugateFunctional instance.
-                """
-                super().__init__(functional.domain, linear=False, convex=True)
-                self.zero_element = self.domain.zero()
-
-            def _call(self, x):
-                """Applies the functional to the given point.
-
-                Returns
-                -------
-                `self(x)` : `float`
-                    Evaluation of the functional.
-                """
-
-                if x == self.zero_element:
-                    return 0
-                else:
-                    return np.inf
-
-        return ZeroFunctionalConjugateFunctional()
+        super().__init__(self, domain=domain, constant=0)

@@ -42,7 +42,7 @@ __all__ = ('Functional', 'ConvexConjugateArgScaling',
 class Functional(Operator):
     """Implementation of a functional class."""
 
-    # TODO: Update doc above.
+    # TODO: Update doc above. What to write?
 
     def __init__(self, domain, linear=False, smooth=False, concave=False,
                  convex=False, grad_lipschitz=np.inf):
@@ -484,7 +484,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         # The helper function only allows positive scaling parameters.
         # Otherwise it gives an error.
         return ConvexConjugateFuncScaling(
-                self._func.conjugate_functional, self._scalar)
+            self._func.conjugate_functional, self._scalar)
 
     def proximal(self, sigma=1.0):
         """Return the proximal operator of the scaled functional.
@@ -759,6 +759,7 @@ class FunctionalSum(Functional, OperatorSum):
             Used to avoid the creation of a temporary when applying the
             gradient.
         """
+        # TODO: Tmp_dom, what is it used for?
         if not isinstance(func1, Functional):
             raise TypeError('functional 1 {!r} is not a Functional instance.'
                             ''.format(func1))
@@ -824,13 +825,13 @@ class FunctionalScalarSum(Functional, OperatorSum):
         ----------
         func : `Functional`
             Functional to which the scalar is added.
-        scalar :
+        scalar : `element` in the `field` of the ``domain``
+            The scalar to be added to the functional. The `field` of the
+            ``domain`` is the range of the functional.
         tmp_dom : `LinearSpaceVector`, optional
             ...
         """
-
-        # TODO: Update doc. What is the type of ``scalar``?
-        # Also: what is tmp_dom used for?
+        # TODO: what is tmp_dom used for?
         if not isinstance(func, Functional):
             raise TypeError('functional {!r} is no a Functional instance'
                             ''.format(func))
@@ -905,6 +906,9 @@ class TranslatedFunctional(Functional):
     ``f``, this corresponds to the functional ``f(. - translation)``.
     """
     # TODO: this will be linear if the "total" translation is zero...
+    # Should we check instance type of func, and if it is TranslatedFunctional
+    # try to combined to only one TranslatedFunctional with a total
+    # translation?
     def __init__(self, func, translation):
         """Initialize a TranslatedFunctional instnace."""
         super().__init__(domain=func.domain, linear=False,
@@ -1070,7 +1074,7 @@ class ConvexConjugateTranslation(Functional):
 
         Returns
         -------
-        `self(x)` : `element` in the `field`of the ``domain``.
+        `self(x)` : `element` in the `field` of the ``domain``.
             Evaluation of the functional.
         """
         return self._orig_convex_conj_f(x) + x.inner(self._y)
@@ -1110,9 +1114,10 @@ class ConvexConjugateTranslation(Functional):
         return proximal_quadratic_perturbation(
             self._orig_convex_conj_f.proximal, a=0, u=self._y)(sigma)
 
-    # TODO: Add this when convex conjugate of a linear perturbation has
-    # been added. THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
-    # LSC AND THIS WOULD HAVE TO BE THE BIDUAL!
+    # TODO: Should it be added?
+    # Note: This would only be valide when f is proper convex and lower-
+    # semincontinuous. (and only straight forward to define on Hilbert spaces..
+    # but I think the entire functional structure uses that assumption).
 #        def conjugate_functional(self):
 #            """Convex conjugate functional of the functional.
 #
@@ -1229,9 +1234,10 @@ class ConvexConjugateFuncScaling(Functional):
                                     scaling=(1 / self._scaling)
                                     )(self._scaling * sigma)
 
-    # TODO: Add this
-    # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
-    # LSC AND THIS WOULD HAVE TO BE THE BIDUAL!
+    # TODO: Should it be added?
+    # Note: This would only be valide when f is proper convex and lower-
+    # semincontinuous. (and only straight forward to define on Hilbert spaces..
+    # but I think the entire functional structure uses that assumption).
 #        def conjugate_functional(self):
 #            """Convex conjugate functional of the functional.
 #
@@ -1343,9 +1349,10 @@ class ConvexConjugateArgScaling(Functional):
         return proximal_arg_scaling(self._orig_convex_conj_f.proximal,
                                     scaling=(1 / self._scaling))(sigma)
 
-    # TODO: Add this
-    # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
-    # LSC AND THIS WOULD HAVE TO BE THE BIDUAL!
+    # TODO: Should it be added?
+    # Note: This would only be valide when f is proper convex and lower-
+    # semincontinuous. (and only straight forward to define on Hilbert spaces..
+    # but I think the entire functional structure uses that assumption).
 #        def conjugate_functional(self):
 #            """Convex conjugate functional of the functional.
 #
@@ -1458,9 +1465,10 @@ class ConvexConjugateLinearPerturb(Functional):
         return proximal_translation(self._orig_convex_conj_f.proximal,
                                     self._y)(sigma)
 
-    # TODO: Add this
-    # THIS WOULD ONLY BE VALIDE WHEN f IS PROPER, CONVEX AND
-    # LSC AND THIS WOULD HAVE TO BE THE BIDUAL!
+    # TODO: Should it be added?
+    # Note: This would only be valide when f is proper convex and lower-
+    # semincontinuous. (and only straight forward to define on Hilbert spaces..
+    # but I think the entire functional structure uses that assumption).
 #        def conjugate_functional(self):
 #            """Convex conjugate functional of the functional.
 #
