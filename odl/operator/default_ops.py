@@ -887,7 +887,10 @@ class ConstantOperator(Operator):
         rn(3).element([1.0, 2.0, 3.0])
         """
         if out is None:
-            return self.range.element(self.__vector.copy())
+            if isinstance(self.__vector, float):
+                return self.range.element(self.__vector)
+            else:
+                return self.range.element(self.__vector.copy())
         else:
             out.assign(self.__vector)
 

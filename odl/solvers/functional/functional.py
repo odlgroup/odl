@@ -427,7 +427,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             # It should not be possible to get here
             raise TypeError('comparison with scalar {} failed'.format(scalar))
 
-        OperatorLeftScalarMult.__init__(self, op=func, scalar=scalar)
+        OperatorLeftScalarMult.__init__(self, operator=func, scalar=scalar)
 
         self._func = func
         self._scalar = scalar
@@ -568,7 +568,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
             # It should not be possible to get here
             raise TypeError('comparison with scalar {} failed'.format(scalar))
 
-        OperatorRightScalarMult.__init__(self, op=func, scalar=scalar)
+        OperatorRightScalarMult.__init__(self, operator=func, scalar=scalar)
 
         self._func = func
         self._scalar = scalar
@@ -708,8 +708,8 @@ class FunctionalComp(Functional, OperatorComp):
     def gradient(self):
         """Gradient of the compositon according to the chain rule."""
 
-        func = self._left
-        op = self._right
+        func = self.left
+        op = self.right
 
         class CompositGradient(Operator):
             """Gradient of the compositon according to the chain rule."""
@@ -787,7 +787,7 @@ class FunctionalSum(Functional, OperatorSum):
     @property
     def gradient(self):
         """Gradient operator of functional sum."""
-        return self._op1.gradient + self._op2.gradient
+        return self.left.gradient + self.right.gradient
 
     def derivative(self, point):
         """Returns the derivative operator in the given point.
@@ -843,59 +843,59 @@ class FunctionalScalarSum(Functional, OperatorSum):
                             convex=func.is_convex,
                             grad_lipschitz=func.grad_lipschitz)
 
-        OperatorSum.__init__(self, func,
-                             ConstantOperator(vector=scalar,
-                                              domain=func.domain,
-                                              range=func.range),
+        OperatorSum.__init__(self, left=func,
+                             right=ConstantOperator(vector=scalar,
+                                                    domain=func.domain,
+                                                    range=func.range),
                              tmp_ran=None, tmp_dom=tmp_dom)
 
         self.scalar = scalar
 
-        @property
-        def gradient(self):
-            """Gradient operator of the FunctionalScalarSum.
+    @property
+    def gradient(self):
+        """Gradient operator of the FunctionalScalarSum.
 
-            This is the same as the gradient of the original functional.
-            """
-            return self._op1.gradient
+        This is the same as the gradient of the original functional.
+        """
+        return self.left.gradient
 
-        def proximal(self, sigma=1.0):
-            """Proximal operator of the FunctionalScalarSum.
+    def proximal(self, sigma=1.0):
+        """Proximal operator of the FunctionalScalarSum.
 
-            This is the same as the proximal operator of the original
-            functional.
+        This is the same as the proximal operator of the original
+        functional.
 
-            Parameters
-            ----------
-            sigma : positive float, optional
-                Regularization parameter of the proximal operator.
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator.
 
-            Returns
-            -------
-            out : `Operator`
-                Domain and range equal to domain of functional.
-            """
-            return self.original_func.proximal(sigma)
+        Returns
+        -------
+        out : `Operator`
+            Domain and range equal to domain of functional.
+        """
+        return self.left.proximal(sigma)
 
-        @property
-        def conjugate_functional(self):
-            """Convex conjugate functional of FunctionalScalarSum."""
-            return self._op1.conjugate_functional - self.scalar
+    @property
+    def conjugate_functional(self):
+        """Convex conjugate functional of FunctionalScalarSum."""
+        return self.left.conjugate_functional - self.scalar
 
-        def derivative(self, point):
-            """Returns the derivative operator of FunctionalScalarSum.
+    def derivative(self, point):
+        """Returns the derivative operator of FunctionalScalarSum.
 
-            Parameters
-            ----------
-            point : `LinearSpaceVector`
-                The point in which the gradient is evaluated.
+        Parameters
+        ----------
+        point : `LinearSpaceVector`
+            The point in which the gradient is evaluated.
 
-            Returns
-            -------
-            out : `DerivativeOperator`
-                The linear operator that maps ``x --> <x, grad_f(point)>``.
-            """
-            return self._op1.derivative(point)
+        Returns
+        -------
+        out : `DerivativeOperator`
+            The linear operator that maps ``x --> <x, grad_f(point)>``.
+        """
+        return self.left.derivative(point)
 
 
 class TranslatedFunctional(Functional):
@@ -1093,7 +1093,6 @@ class ConvexConjugateTranslation(Functional):
         """
         return self._orig_convex_conj_f.gradient + ConstantOperator(self._y)
 
-    # TODO: Add test for this proximal
     def proximal(self, sigma=1.0):
         """Return the proximal operator of the ConvexConjugateTranslation
         functional.
@@ -1212,7 +1211,6 @@ class ConvexConjugateFuncScaling(Functional):
         """
         return self._orig_convex_conj_f.gradient * (1 / self._scaling)
 
-    # TODO: Add test for this prox
     def proximal(self, sigma=1.0):
         """Return the proximal operator of the ConvexConjugateFuncScaling
         functional.
@@ -1328,7 +1326,6 @@ class ConvexConjugateArgScaling(Functional):
         return ((1 / self._scaling) * self._orig_convex_conj_f.gradient *
                 (1 / self._scaling))
 
-    # TODO: Add test for this prox
     def proximal(self, sigma=1.0):
         """Return the proximal operator of the ConvexConjugateArgScaling
         functional.
@@ -1442,9 +1439,8 @@ class ConvexConjugateLinearPerturb(Functional):
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
         return (self._orig_convex_conj_f.gradient *
-                ResidualOperator(IdentityOperator(self.domain), -self._y))
+                ResidualOperator(IdentityOperator(self.domain), self._y))
 
-    # TODO: Add test for this prox
     def proximal(self, sigma=1.0):
         """Return the proximal operator of the ConvexConjugateLinearPerturb
         functional.
