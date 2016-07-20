@@ -408,9 +408,8 @@ def test_convex_conjugate_arg_scaling():
         odl.solvers.ConvexConjugateArgScaling(cc_test_functional, 0)
 
     # Create scaled convex conjugate functional
-    cc_arg_scaled = odl.solvers.ConvexConjugateArgScaling(
-                     cc_test_functional,
-                     scaling)
+    cc_arg_scaled = odl.solvers.ConvexConjugateArgScaling(cc_test_functional,
+                                                          scaling)
 
     # Create an element in the space, in which to evaluate
     x = example_element(space)
@@ -462,8 +461,8 @@ def test_convex_conjugate_functional_scaling():
 
     # Create scaled convex conjugate functional
     cc_functional_scaled = odl.solvers.ConvexConjugateFuncScaling(
-                            cc_test_functional,
-                            scaling)
+        cc_test_functional,
+        scaling)
 
     # Create an element in the space, in which to evaluate
     x = example_element(space)
@@ -524,8 +523,8 @@ def test_convex_conjugate_linear_perturbation():
 
     # Create translated convex conjugate functional
     cc_functional_perturbed = odl.solvers.ConvexConjugateLinearPerturb(
-                               cc_test_functional,
-                               perturbation)
+        cc_test_functional,
+        perturbation)
 
     # Create an element in the space, in which to evaluate
     x = example_element(space)

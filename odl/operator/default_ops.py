@@ -841,17 +841,17 @@ class ConstantOperator(Operator):
         """
         if domain is None or range is None:
             if not isinstance(vector, LinearSpaceVector):
-                # TODO: rewirte error!
-                raise TypeError('`vector` {!r} not a LinearSpaceVector'
-                                ' instance'.format(vector))
+                raise TypeError('If either domain or range is unspecified, '
+                                '`vector` {!r} has to be a LinearSpaceVector '
+                                'instance'.format(vector))
 
         if domain is None:
             domain = vector.space
         if range is None:
             range = vector.space
         if vector not in range:
-            # TODO: rewirte error!
-            raise TypeError('')
+            raise TypeError('`vector` {!r} in not in the range {}.'
+                            ''.format(vector, range))
 
         self.__vector = vector
         super().__init__(domain, range)
