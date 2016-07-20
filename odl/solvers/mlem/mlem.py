@@ -78,3 +78,34 @@ def mlem_poisson(op, x, data, iter=1, noise='poisson', callback=None):
                              ''.format(noise))
 
     return x
+
+
+def loglikelihood(op, x, data, noise='poisson'):
+    """Evaluate a log-likelihood at a given point.
+
+    Parameters
+    ----------
+    op : `Operator`
+        Forward operator of the given problem, the operator in
+        the inverse problem.
+
+    x : `element` of the domain of ``op``
+        A point where the logarithm of the likelihood density is evaluated
+
+    data : `element` of the range of ``op``
+        Right-hand side of the equation defining the inverse problem
+    '
+    noise : `str`, optional
+        Implementation back-end for the noise.
+    """
+    noise = str(noise).lower()
+
+    if noise.startswith('poisson'):
+        projection = op(x)
+        projection += 1e-8
+        log_proj = np.log(projection)
+        return np.sum(data * log_proj - projection)
+
+    else:
+        raise NotImplemented('implemented for poisson noise, got {}'
+                             ''.format(noise))
