@@ -111,7 +111,7 @@ def test_L2_norm():
     # The proximal operator
     sigma = np.random.rand()
     # Explicit computation: x * (1 - sigma/||x||) if ||x|| > 1, 0 else
-    norm_less_than_sigma = 0.9 * sigma/n * space.one()
+    norm_less_than_sigma = 0.9 * sigma / n * space.one()
     assert all_almost_equal(func.proximal(sigma)(norm_less_than_sigma),
                             space.zero(), places=PLACES)
 
@@ -129,7 +129,7 @@ def test_L2_norm():
     norm_larger_than_one = 2.0 * space.one()
     assert cc_func(norm_larger_than_one) == np.inf
 
-    norm_less_than_one = 0.9 * 1.0/n * space.one()
+    norm_less_than_one = 0.9 * 1.0 / n * space.one()
     assert cc_func(norm_less_than_one) == 0
 
     # The gradient of the convex conjugate (not implemeted)
