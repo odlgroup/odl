@@ -15,29 +15,29 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Basic examples on how to use the fucntional class.
+"""Basic examples on how to use the fucntional class together with solvers.
 
-This file contains two basic examples on how to use the functional class. It
-contains one example of how to use the default functionals, and how they can be
-used in connection to solvers. It also contains one example on how to
-implement a new functional.
+This file shows an example of how to set up and solve an optimization problem
+using the default functionals. The problem we will solve is to minimize
+1/2 * ||x - g||_2^2 + lam*||x||_1, for some vector g and some constant lam,
+subject to that all components in x are greater than or equal to 0. The
+theoretical optimal solution to this problem is x = (g - lam)_+, where ( )+
+denotes the positive part of (i.e., (z)_+ = z if z >= 0, 0 otherwise).
 """
 
 import numpy as np
 import odl
 
-# First we show how the default functionals can be used in order to set up and
-# solve an optimization problem. The problem we will solve is to minimize
-# 1/2 * ||x - g||_2^2 + lam*||x||_1, for some vector g and some constant lam,
-# subject to that all components in x are greater than or equal to 0.
-
-# Create a space with dimensiona n.
+# Create a space with dimensiona n=10.
 n = 10
 space = odl.rn(n)
 
 # Create parameters. First half of g are ones, second half are minus ones.
 g = space.element(np.hstack((np.ones(n/2), -np.ones(n/2))))
 lam = 0.5
+
+# Note that with the values above, the optimal solution is given by a vector
+# with fires half of the elements equal to 0.5, the second half equal to 0.
 
 # Create the L1-norm functional and multiplyit with the constant lam.
 lam_l1_func = lam * odl.solvers.L1Norm(space)
@@ -81,6 +81,4 @@ odl.solvers.chambolle_pock_solver(
     op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
     proximal_dual=proximal_dual, niter=niter, callback=callback)
 
-# The theoretical optimal solution to this problem is x = (g - lam)_+, where
-# ( )+ denotes the positive part of (i.e., (z)_+ = z if z >= 0, 0 otherwise).
 print(x.asarray())
