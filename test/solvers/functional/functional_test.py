@@ -33,7 +33,6 @@ from odl.util.testutils import all_almost_equal, almost_equal, example_element
 # Places for the accepted error when comparing results
 PLACES = 8
 
-# TODO: make some tests that check that prox work.
 
 # TODO: Test that prox and conjugate functionals are not returned for negative
 # left scaling.
@@ -41,8 +40,6 @@ PLACES = 8
 # TODO: Test flags for positive/negative scalar multiplication
 
 # TODO: Test flags for translations etc.
-
-# TODO: Add test for composition, both from letf and right, with a vector
 
 
 def test_derivative():
@@ -188,7 +185,6 @@ def test_functional_composition():
 
 def test_functional_sum():
     """Test for the sum of two functionals."""
-
     space = odl.uniform_discr(0, 1, 10)
 
     func1 = odl.solvers.L2NormSquare(space)
@@ -271,7 +267,6 @@ def test_functional_plus_scalar():
 
 def test_translation_of_functional():
     """Test for the translation of a functional: (f(. - y))^*"""
-
     space = odl.uniform_discr(0, 1, 10)
 
     # The translation; an element in the domain
@@ -328,10 +323,49 @@ def test_translation_of_functional():
                             places=PLACES)
 
 
+def test_multiplication_with_vector():
+    """Test for multiplying a functional with a vector, both left and right."""
+
+    space = odl.uniform_discr(0, 1, 10)
+
+    x = example_element(space)
+    y = example_element(space)
+    func = odl.solvers.L1Norm(space)
+
+    wrong_space = odl.uniform_discr(1, 2, 10)
+    y_other_space = example_element(wrong_space)
+
+    # Multiplication from the right. Make sure it is a OperatorRightVectorMult
+    func_times_y = func * y
+    assert isinstance(func_times_y, odl.OperatorRightVectorMult)
+
+    expected_result = func(y*x)
+    assert almost_equal((func*y)(x), expected_result, places=PLACES)
+
+    # Make sure that right muliplication is not allowed with vector from
+    # another space
+    with pytest.raises(TypeError):
+        func * y_other_space
+
+    # Multiplication from the left. Make sure it is a FunctionalLeftVectorMult
+    y_times_func = y * func
+    assert isinstance(y_times_func, odl.FunctionalLeftVectorMult)
+
+    expected_result = y * func(x)
+    assert all_almost_equal(y_times_func(x), expected_result, places=PLACES)
+
+    # Now, multiplication with vector from another space is ok (since it is the
+    # same as scaling that vector with the scalar returned by the functional).
+    y_other_times_func = y_other_space * func
+    assert isinstance(y_other_times_func, odl.FunctionalLeftVectorMult)
+
+    expected_result = y_other_space * func(x)
+    assert all_almost_equal(y_other_times_func(x), expected_result,
+                            places=PLACES)
+
+
 def test_convex_conjugate_translation():
     """Test for the convex conjugate of a translation: (f(. - y))^*"""
-
-    # Image space
     space = odl.uniform_discr(0, 1, 10)
 
     # The translation; an element in the domain
@@ -394,8 +428,6 @@ def test_convex_conjugate_translation():
 
 def test_convex_conjugate_arg_scaling():
     """Test for the convex conjugate of a scaling: (f(. scaling))^*"""
-
-    # Image space
     space = odl.uniform_discr(0, 1, 10)
 
     # The scaling parameter
@@ -446,8 +478,6 @@ def test_convex_conjugate_arg_scaling():
 
 def test_convex_conjugate_functional_scaling():
     """Test for the convex conjugate of a scaling: (scaling * f(.))^*"""
-
-    # Image space
     space = odl.uniform_discr(0, 1, 10)
 
     # The scaling parameter
@@ -500,8 +530,6 @@ def test_convex_conjugate_functional_scaling():
 
 def test_convex_conjugate_linear_perturbation():
     """Test for the convex conjugate of a scaling: (f(.) + <y,.>)^*"""
-
-    # Image space
     space = odl.uniform_discr(0, 1, 10)
 
     # The perturbation; an element in the domain (which is the same as the dual
