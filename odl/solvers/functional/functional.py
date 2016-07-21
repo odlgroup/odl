@@ -273,7 +273,7 @@ class Functional(Operator):
             else:
                 return FunctionalRightScalarMult(self, other)
         else:
-            super().__mul__(self, other)
+            return super().__mul__(other)
 
     def __rmul__(self, other):
         """Return ``other * self``.
@@ -318,18 +318,18 @@ class Functional(Operator):
         rmul : {`Functional`, `Operator`}
             Multiplication result
 
-            If ``other`` is an `Operator`, ``mul`` is a `OperatorComp`.
+            If ``other`` is an `Operator`, ``rmul`` is a `OperatorComp`.
 
-            If ``other`` is a scalar, ``mul`` is a
+            If ``other`` is a scalar, ``rmul`` is a
             `FunctionalLeftScalarMult`.
 
-            If ``other`` is a vector, ``mul`` is a
+            If ``other`` is a vector, ``rmul`` is a
             `OperatorLeftVectorMult`.
         """
         if other in self.domain.field:
             return FunctionalLeftScalarMult(self, other)
         else:
-            super().__rmul__(self, other)
+            return super().__rmul__(other)
 
     def __add__(self, other):
         """Return ``self + other``.
