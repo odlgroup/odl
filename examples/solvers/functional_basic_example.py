@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Basic examples on how to write a fucntional.
+"""Basic example on how to write a functional.
 
 When defining a new functional, there are a few standard methods and properties
 that can be implemeted. These are:
@@ -32,8 +32,8 @@ that can be implemeted. These are:
     operator ``x --> <x, grad_f(y)>``. Note that this has a default
     implemetation that uses the gradient in order to achieve this.
 
-Below follows an example of implementing the functional ``||x||_2^2 + <x,y>,
-for some parameter y.``
+Below follows an example of implementing the functional ``||x||_2^2 + <x,y>``,
+for some parameter ``y.``
 """
 
 # Imports for common Python 2/3 codebase
@@ -64,7 +64,7 @@ class MyFunctional(odl.solvers.Functional):
         self._y = y
 
     # Now we define a propert which returns y, so that the user can see which
-    # translation is used in a particular instance of the class.
+    # value is used in a particular instance of the class.
     @property
     def y(self):
         return self._y
@@ -80,16 +80,12 @@ class MyFunctional(odl.solvers.Functional):
         # defined anywhere and just returned here, but in this example we will
         # also define it here.
 
-        # In order for the initialization of the operator to know which
-        # functional it comes from.
-        this_functional = self
-
         class MyGradientOperator(odl.Operator):
 
             # Define an __init__ method for this operator
             def __init__(self, functional):
-                super().__init__(domain=this_functional.domain,
-                                 range=this_functional.domain)
+                super().__init__(domain=functional.domain,
+                                 range=functional.domain)
 
                 self._functional = functional
 
@@ -97,7 +93,7 @@ class MyFunctional(odl.solvers.Functional):
             def _call(self, x):
                 return 2.0 * x + self._functional.y
 
-        return MyGradientOperator(functional=this_functional)
+        return MyGradientOperator(functional=self)
 
     # Next we define the convex conjugate functional
     @property
@@ -108,7 +104,7 @@ class MyFunctional(odl.solvers.Functional):
 
 # Here is the conjugate functional
 class MyFunctionalConjugate(odl.solvers.Functional):
-    """Hand calculations give that this funtional has the analytic expression
+    """Calculations give that this funtional has the analytic expression
     f^*(x) = ||x||^2/2 - ||x-y||^2/4 + ||y||^2/2 - <x,y>.
     """
     def __init__(self, domain, y):
@@ -164,7 +160,7 @@ p = space.element(np.random.randn(n))
 my_deriv = my_func.derivative(x)
 
 if my_deriv(p) == my_gradient(x).inner(p):
-    print('The default implementation of the gradient works as intended.')
+    print('The default implementation of the derivative works as intended.')
 else:
     print('There is a bug in the implementation of the derivative')
 

@@ -339,8 +339,8 @@ def test_multiplication_with_vector():
     func_times_y = func * y
     assert isinstance(func_times_y, odl.OperatorRightVectorMult)
 
-    expected_result = func(y*x)
-    assert almost_equal((func*y)(x), expected_result, places=PLACES)
+    expected_result = func(y * x)
+    assert almost_equal((func * y)(x), expected_result, places=PLACES)
 
     # Make sure that right muliplication is not allowed with vector from
     # another space
