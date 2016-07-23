@@ -31,10 +31,9 @@ from odl.solvers.advanced.proximal_operators import (proximal_l1,
                                                      proximal_cconj_l1,
                                                      proximal_l2,
                                                      proximal_cconj_l2,
-                                                     proximal_l2_squared,
-                                                     proximal_cconj_l2_squared)
+                                                     proximal_l2_squared)
 
-from odl import (ZeroOperator, IdentityOperator)
+from odl.operator.default_ops import (ZeroOperator, IdentityOperator)
 
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquare', 'ZeroFunctional',
@@ -52,7 +51,7 @@ class L1Norm(Functional):
         Parameters
         ----------
         domain : `LinearSpace`
-            Set of elements on which the functional can be evaluat
+            Domain of the functional.
         """
         super().__init__(domain=domain, linear=False, convex=True,
                          concave=False, smooth=False, grad_lipschitz=np.inf)
@@ -97,75 +96,88 @@ class L1Norm(Functional):
     @property
     def conjugate_functional(self):
         """The convex conjugate functional of the L1-norm."""
-        functional = self
+        return IndicatorLinftyUnitBall(self.domain)
 
-        class L1ConjugateFunctional(Functional):
-            """The convex conjugate functional of the L1-norm."""
-            def __init__(self):
-                """Initialize a new instance of the L1ConjugateFunctional."""
-                super().__init__(functional.domain, linear=False)
-                self._orig_func = functional
 
-            def _call(self, x):
-                """Applies the convex conjugate functional of the L1-norm to
-                the given point.
+class IndicatorLinftyUnitBall(Functional):
+    """The indicator function on the unit ball, in the L-infinity norm.
 
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the functional.
+    This functional is defined as
 
-                Returns
-                -------
-                `self(x)` : `element` in the `field` of the ``domain``.
-                    Evaluation of the functional.
-                """
-                if np.max(np.abs(x)) > 1:
-                    return np.inf
-                else:
-                    return 0
+        ``f(x) = 0 if ||x||_infty <= 1, infty else,``
 
-            @property
-            def gradient(x):
-                """Gradient operator of the conjugate functional of the
-                L1-norm.
-                """
-                # It does not exist on all of the space, only for ||x|| < 1
-                # where it is the ZeroOperator
-                raise NotImplementedError
+    where ``||x||_infty`` is the infinity norm
 
-            @property
-            def conjugate_functional(self):
-                """The conjugate functional of the conjugate functional of the
-                L1-norm.
+        ``||x||_infty = max(|x|)``.
 
-                Notes
-                -----
-                Since the L1-norm is proper, convex and lower-semicontinuous,
-                by the Fenchel-Moreau theorem the convex conjugate functional
-                of the convex conjugate functional, also known as the
-                biconjugate, is the functional itself [BC2011]_.
-                """
-                return self._orig_func
+    Notes
+    -----
+    This functional is the convex conjugate functional of the L1-norm.
+    """
+    def __init__(self, domain):
+        """Initialize a new instance of the IndicatorLinftyUnitBall.
 
-            def proximal(self, sigma=1.0):
-                """Return the proximal operator of the conjugate functional of
-                the L1-norm.
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            Domain of the functional.
+        """
+        super().__init__(domain=domain, linear=False)
 
-                Parameters
-                ----------
-                sigma : positive float, optional
-                    Regularization parameter of the proximal operator
+    def _call(self, x):
+        """Applies the functional the given point.
 
-                Returns
-                -------
-                out : Operator
-                    Domain and range equal to domain of functional
-                """
+        Parameters
+        ----------
+        x : `LinearSpaceVector`
+            Element in the domain of the functional.
 
-                return proximal_cconj_l1(space=self.domain)(sigma)
+        Returns
+        -------
+        `self(x)` : `element` in the `field` of the ``domain``.
+            Evaluation of the functional.
+        """
+        if np.max(np.abs(x)) > 1:
+            return np.inf
+        else:
+            return 0
 
-        return L1ConjugateFunctional()
+    @property
+    def gradient(x):
+        """Gradient operator of IndicatorLinftyUnitBall."""
+        # It does not exist on all of the space, only for ||x|| < 1
+        # where it is the ZeroOperator
+        raise NotImplementedError
+
+    @property
+    def conjugate_functional(self):
+        """The conjugate functional of IndicatorLinftyUnitBall.
+
+        Notes
+        -----
+        Since the functional is the conjugate functional of the L1-norm, and
+        since the L1-norm is proper, convex and lower-semicontinuous,
+        by the Fenchel-Moreau theorem the convex conjugate functional
+        of the convex conjugate functional of IndicatorLinftyUnitBall, also
+        known as the biconjugate of the L1-norm, is the L1-norm [BC2011]_.
+        """
+        return L1Norm(domain=self.domain)
+
+    def proximal(self, sigma=1.0):
+        """Return the proximal operator of IndicatorLinftyUnitBall.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
+        """
+
+        return proximal_cconj_l1(space=self.domain)(sigma)
 
 
 class L2Norm(Functional):
@@ -177,7 +189,7 @@ class L2Norm(Functional):
         Parameters
         ----------
         domain : `LinearSpace`
-            Set of elements on which the functional can be evaluat
+            Domain of the functional.
         """
         super().__init__(domain=domain, linear=False, convex=True,
                          concave=False, smooth=False, grad_lipschitz=np.inf)
@@ -234,7 +246,7 @@ class L2Norm(Functional):
                                      'not defined for elements x {} with norm '
                                      '0.'.format(x))
                 else:
-                    return x / x.norm()
+                    return x / norm_of_x
 
         return L2Gradient()
 
@@ -257,75 +269,86 @@ class L2Norm(Functional):
     @property
     def conjugate_functional(self):
         """The convex conjugate functional of the L2-norm."""
-        functional = self
+        return IndicatorL2UnitBall(self.domain)
 
-        class L2ConjugateFunctional(Functional):
-            """The convex conjugate functional of the L2-norm."""
-            def __init__(self):
-                """Initialize a new instance of the L2ConjugateFunctional."""
-                super().__init__(functional.domain, linear=False)
-                self._orig_func = functional
 
-            def _call(self, x):
-                """Applies the convex conjugate functional of the L2-norm to
-                the given point.
+class IndicatorL2UnitBall(Functional):
+    """The indicator function on the unit ball, in the L2-norm.
 
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the functional.
+    This functional is defined as
 
-                Returns
-                -------
-                `self(x)` : `element` in the `field` of the ``domain``.
-                    Evaluation of the functional.
-                """
-                if x.norm() > 1:
-                    return np.inf
-                else:
-                    return 0
+        ``f(x) = 0 if ||x||_2 <= 1, infty else,``
 
-            @property
-            def conjugate_functional(self):
-                """The conjugate functional of the conjugate functional of the
-                L2-norm.
+    where ``||x||_2`` is the L2-norm.
 
-                Notes
-                -----
-                Since the L2-norm is proper, convex and lower-semicontinuous,
-                by the Fenchel-Moreau theorem the convex conjugate functional
-                of the convex conjugate functional, also known as the
-                biconjugate, is the functional itself [BC2011]_.
-                """
-                return self._orig_func
+    Notes
+    -----
+    This functional is the convex conjugate functional of the L2-norm.
+    """
+    def __init__(self, domain):
+        """Initialize a new instance of the IndicatorL2UnitBall.
 
-            @property
-            def gradient(x):
-                """Gradient operator of the conjugate functional of the
-                constant functional.
-                """
-                # It does not exist on all of the space, only for ||x|| < 1
-                # where it is the ZeroOperator.
-                raise NotImplementedError
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            Domain of the functional.
+        """
+        super().__init__(domain=domain, linear=False)
 
-            def proximal(self, sigma=1.0):
-                """Return the proximal operator of the conjugate functional of
-                the L2-norm.
+    def _call(self, x):
+        """Applies the functional to the given point.
 
-                Parameters
-                ----------
-                sigma : positive float, optional
-                    Regularization parameter of the proximal operator
+        Parameters
+        ----------
+        x : `LinearSpaceVector`
+            Element in the domain of the functional.
 
-                Returns
-                -------
-                out : Operator
-                    Domain and range equal to domain of functional
-                """
+        Returns
+        -------
+        `self(x)` : `element` in the `field` of the ``domain``.
+            Evaluation of the functional.
+        """
+        if x.norm() > 1:
+            return np.inf
+        else:
+            return 0
 
-                return proximal_cconj_l2(space=self.domain)(sigma)
+    @property
+    def conjugate_functional(self):
+        """The conjugate functional of IndicatorL2UnitBall.
 
-        return L2ConjugateFunctional()
+        Notes
+        -----
+        Since IndicatorL2UnitBall is the convex conjugate functional of the
+        L2-norm, and since the L2-norm is proper, convex and
+        lower-semicontinuous, by the Fenchel-Moreau theorem the convex
+        conjugate functional of IndicatorL2UnitBall, also known as the
+        biconjugate of the L2-norm, is the L2-norm [BC2011]_.
+        """
+        return L2Norm(domain=self.domain)
+
+    @property
+    def gradient(x):
+        """Gradient operator of IndicatorL2UnitBall."""
+        # It does not exist on all of the space, only for ||x|| < 1
+        # where it is the ZeroOperator.
+        raise NotImplementedError
+
+    def proximal(self, sigma=1.0):
+        """Return the proximal operator of IndicatorL2UnitBall.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator
+
+        Returns
+        -------
+        out : Operator
+            Domain and range equal to domain of functional
+        """
+
+        return proximal_cconj_l2(space=self.domain)(sigma)
 
 
 class L2NormSquare(Functional):
@@ -337,7 +360,7 @@ class L2NormSquare(Functional):
         Parameters
         ----------
         domain : `LinearSpace`
-            Set of elements on which the functional can be evaluat
+            Domain of the functional.
         """
         super().__init__(domain=domain, linear=False, convex=True,
                          concave=False, smooth=True, grad_lipschitz=2)
@@ -359,17 +382,17 @@ class L2NormSquare(Functional):
 
     @property
     def gradient(self):
-        """Gradient operator of the squared L2-functional."""
+        """Gradient operator of the squared L2-norm."""
         functional = self
 
         class L2SquareGradient(Operator):
-            """Gradient operator of the squared L2-functional."""
+            """Gradient operator of the squared L2-norm."""
             def __init__(self):
                 """Initialize and instance of the gradient operator for the
-                squared L2-functional.
+                squared L2-norm.
                 """
                 super().__init__(functional.domain, functional.domain,
-                                 linear=False)
+                                 linear=True)
 
             def _call(self, x):
                 """Applies the gradient operator to the given point.
@@ -407,100 +430,14 @@ class L2NormSquare(Functional):
 
     @property
     def conjugate_functional(self):
-        """The convex conjugate functional of the squared L2-norm."""
-        functional = self
+        """The convex conjugate functional of the squared L2-norm.
 
-        class L2SquareConjugateFunctional(Functional):
-            """The convex conjugate functional of the squared L2-norm."""
-            def __init__(self):
-                """Initialize a new instance of L2SquareConjugateFunctional."""
-                super().__init__(functional.domain, linear=False)
-                self._orig_func = functional
-
-            def _call(self, x):
-                """Applies the convex conjugate functional of the squared
-                L2-norm to the given point.
-
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the functional.
-
-                Returns
-                -------
-                `self(x)` : `element` in the `field` of the ``domain``.
-                    Evaluation of the functional.
-                """
-                return x.norm()**2 * (1.0 / 4.0)
-
-            @property
-            def gradient(self):
-                """Gradient operator of the convex conjugate of the squared
-                L2-norm.
-                """
-                functional = self
-
-                class L2CCSquareGradient(Operator):
-                    """Gradient operator of the convex conjugate of the convex
-                    conjugate of the squared L2-norm.
-                    """
-                    def __init__(self):
-                        """Initialize and instance of the gradient operator for
-                        the convex conjugate of the squared L2-norm.
-                        """
-                        super().__init__(functional.domain, functional.domain,
-                                         linear=False)
-
-                    def _call(self, x):
-                        """Applies the gradient operator to the given point.
-
-                        Parameters
-                        ----------
-                        x : `LinearSpaceVector`
-                            Element in the domain of the functional to which
-                            the gradient operator is applied.
-
-                        Returns
-                        -------
-                        `self(x)` : `LinearSpaceVector`
-                            Evaluation of the gradient operator. An element in
-                            the domain of the functional.
-                        """
-                        return x * (1.0 / 2.0)
-
-                return L2CCSquareGradient()
-
-            @property
-            def conjugate_functional(self):
-                """The convex conjugate functional of the conjugate functional
-                of squared L2-norm.
-
-                Notes
-                -----
-                Since the squared L2-norm is proper, convex and
-                lower-semicontinuous, by the Fenchel-Moreau theorem the convex
-                conjugate functional of the convex conjugate functional, also
-                known as the biconjugate, is the functional itself [BC2011]_.
-                """
-                return self._orig_func
-
-            def proximal(self, sigma=1.0):
-                """Return the proximal operator of the convex conjugate
-                functional of the squared L2-functional.
-
-                Parameters
-                ----------
-                sigma : positive float, optional
-                    Regularization parameter of the proximal operator
-
-                Returns
-                -------
-                out : Operator
-                    Domain and range equal to domain of functional
-                """
-                return proximal_cconj_l2_squared(space=self.domain)(sigma)
-
-        return L2SquareConjugateFunctional()
+        Notes
+        -----
+        The conjugate functional of :math:`\|x\|_2^2` is
+        :math:`\\frac{1}{4}\|x\|_2^2`
+        """
+        return 1.0 / 4.0 * L2NormSquare(domain=self.domain)
 
 
 class ConstantFunctional(Functional):
@@ -514,7 +451,7 @@ class ConstantFunctional(Functional):
         Parameters
         ----------
         domain : `LinearSpace`
-            The space of elements which the functional is acting on.
+            Domain of the functional.
         constant : element in `domain.field`
             The constant value of the functional
         """
@@ -588,12 +525,13 @@ class ConstantFunctional(Functional):
     def conjugate_functional(self):
         """Convex conjugate functional of the constant functional.
 
-        This functional ``f^*``  is such that it maps the zero element to zero,
-        the rest to infinity.
+        This functional is defined as
+
+            ``f^*(x) = -constant if x=0, infty else``.
         """
         functional = self
 
-        class ConstantFunctionalConjugateFunctional(Functional):
+        class ConjugateToConstantFunctional(Functional):
             """The convex conjugate functional to the constant functional."""
 
             def __init__(self):
@@ -601,8 +539,15 @@ class ConstantFunctional(Functional):
                 instance.
                 """
                 super().__init__(functional.domain, linear=False, convex=True)
-                self.zero_element = self.domain.zero()
+                self._zero_element = self.domain.zero()
                 self._constant = functional._constant
+
+            @property
+            def constant(self):
+                """Returns the constant that the constant functional maps
+                to.
+                """
+                return self._constant
 
             def _call(self, x):
                 """Applies the functional to the given point.
@@ -618,7 +563,7 @@ class ConstantFunctional(Functional):
                     Evaluation of the functional.
                 """
 
-                if x == self.zero_element:
+                if x == self._zero_element:
                     return -self._constant
                 else:
                     return np.inf
@@ -664,7 +609,7 @@ class ConstantFunctional(Functional):
 
                 return ZeroOperator(self.domain)
 
-        return ConstantFunctionalConjugateFunctional()
+        return ConjugateToConstantFunctional()
 
 
 class ZeroFunctional(ConstantFunctional):
@@ -678,6 +623,6 @@ class ZeroFunctional(ConstantFunctional):
         Parameters
         ----------
         domain : `LinearSpace`
-            The space of elements which the functional is acting on.
+            Domain of the functional.
         """
         super().__init__(domain=domain, constant=0)

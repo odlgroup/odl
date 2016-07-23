@@ -15,14 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Basic examples on how to use the fucntional class together with solvers.
+"""Basic example on how to use the functional class together with solvers.
 
 This file shows an example of how to set up and solve an optimization problem
 using the default functionals. The problem we will solve is to minimize
 1/2 * ||x - g||_2^2 + lam*||x||_1, for some vector g and some constant lam,
 subject to that all components in x are greater than or equal to 0. The
 theoretical optimal solution to this problem is x = (g - lam)_+, where ( )+
-denotes the positive part of (i.e., (z)_+ = z if z >= 0, 0 otherwise).
+denotes the positive part of the element, i.e., (z_i)_+ = z_i if z_i >= 0, and
+0 otherwise.
 """
 
 import numpy as np
@@ -46,9 +47,37 @@ lam_l1_func = lam * odl.solvers.L1Norm(space)
 l2_func = 1.0 / 2.0 * odl.solvers.L2NormSquare(space)
 trans_l2_func = l2_func.translate(g)
 
-# The problem will be solved using the Chambolle-Pock algorithm. Here we create
-# the necessary proximal factories of the conjugate functionals (see the
-# Chambolle-Pock algorithm and examples on this for more information).
+# The problem will be solved using the forward-backward primal-dual algorithm.
+# In this setting we let f = nonnegativity contraint, g = l1-norm, and h =
+# the squared l2-norm. Here we create necessary proximal and gradient operators
+# from the functionals.
+prox_f = odl.solvers.proximal_nonnegativity(space)
+prox_cc_g = lam_l1_func.conjugate_functional.proximal
+L = odl.IdentityOperator(space)
+grad_h = trans_l2_func.gradient
+
+# Some solver parameters
+niter = 50
+tau = 0.5
+sigma = 0.5
+
+# Starting point, and also updated inplace in the solver
+x_fbpd = space.zero()
+
+# Optional: pass callback objects to solver
+callback = (odl.solvers.CallbackPrintIteration())
+
+# Run the algorithm
+odl.solvers.forward_backward_pd(x=x_fbpd, prox_f=prox_f, prox_cc_g=[prox_cc_g],
+                                L=[L], grad_h=grad_h, tau=tau, sigma=[sigma],
+                                niter=niter, callback=callback)
+
+print(x_fbpd.asarray())
+
+
+# The problem can also be solved using, e.g., the Chambolle-Pock algorithm.
+# Here we create the necessary proximal factories of the conjugate functionals
+# (see the Chambolle-Pock algorithm and examples on this for more information).
 prox_cc_l2 = trans_l2_func.conjugate_functional.proximal
 prox_cc_l1 = lam_l1_func.conjugate_functional.proximal
 
@@ -62,11 +91,11 @@ op = odl.BroadcastOperator(odl.IdentityOperator(space),
 # Create the proximal operator for the constraint
 proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
 
-# The operator norm is 1, since only identity operators are used
-op_norm = 1
+# The operator norm is sqrt(2), since only identity operators are used
+op_norm = np.sqrt(2)
 
 # Some solver parameters
-niter = 100  # Number of iterations
+niter = 50  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
 
@@ -74,11 +103,12 @@ sigma = 1.0 / op_norm  # Step size for the dual variable
 callback = (odl.solvers.CallbackPrintIteration())
 
 # Starting point, and also updated inplace in the solver
-x = op.domain.zero()
+x_cp = op.domain.zero()
 
 # Run the algorithm
-odl.solvers.chambolle_pock_solver(
-    op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
-    proximal_dual=proximal_dual, niter=niter, callback=callback)
+odl.solvers.chambolle_pock_solver(op=op, x=x_cp, tau=tau, sigma=sigma,
+                                  proximal_primal=proximal_primal,
+                                  proximal_dual=proximal_dual, niter=niter,
+                                  callback=callback)
 
-print(x.asarray())
+print(x_cp.asarray())
