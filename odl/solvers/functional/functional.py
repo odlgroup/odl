@@ -35,10 +35,12 @@ from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
 
 
 # TODO: Add missing functionals here
-__all__ = ('Functional', 'ConvexConjugateArgScaling',
-           'FunctionalLeftScalarMult',
-           'ConvexConjugateFuncScaling', 'ConvexConjugateLinearPerturb',
-           'ConvexConjugateTranslation', 'TranslatedFunctional')
+__all__ = ('Functional', 'FunctionalLeftScalarMult',
+           'FunctionalRightScalarMult', 'FunctionalComp',
+           'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
+           'TranslatedFunctional', 'ConvexConjugateTranslation',
+           'ConvexConjugateFuncScaling', 'ConvexConjugateArgScaling',
+           'ConvexConjugateLinearPerturb')
 
 
 class Functional(Operator):
@@ -278,6 +280,8 @@ class Functional(Operator):
                 return FunctionalLeftScalarMult(self, other)
             else:
                 return FunctionalRightScalarMult(self, other)
+        elif isinstance(other, LinearSpaceVector) and other in self.domain:
+            return FunctionalRightVectorMult(self, other)
         else:
             return super().__mul__(other)
 
@@ -726,6 +730,104 @@ class FunctionalComp(Functional, OperatorComp):
                     self._func.gradient(self._op(x)))
 
         return CompositGradient()
+
+
+class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
+
+    """Expression type for the functional right vector multiplication.
+
+    Given a functional ``func`` and a vector ``y`` in the domain of ``func``,
+    this corresponds to the functional
+
+        ``(func * y)(x) = func(y*x)``.
+    """
+
+    def __init__(self, func, vector):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        func : `Functional`
+            The domain of ``func`` must be a ``vector.space``.
+        vector : `LinearSpaceVector` in ``func.domain``
+            The vector to multiply by.
+        """
+        if not isinstance(func, Functional):
+            raise TypeError('functional {!r} is not a Functional instance.'
+                            ''.format(func))
+
+        OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
+
+        # TODO: can some of the parameters convex, etc. be decided?
+        Functional.__init__(self, domain=func.domain)
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The operator that corresponds to the mapping
+
+        .. math::
+
+            x \\to \\nabla f(x)
+
+        where :math:`\\nabla f(x)` is the element used to evaluate
+        derivatives in a direction :math:`d` by
+        :math:`\\langle \\nabla f(x), d \\rangle`.
+        """
+        return self.vector * self.operator.gradient * self.vector
+
+    # TODO: can this be computed?
+    def proximal(self, sigma=1.0):
+        """Return the proximal operator of the functional.
+
+        Parameters
+        ----------
+        sigma : positive float, optional
+            Regularization parameter of the proximal operator.
+
+        Returns
+        -------
+        out : `Operator`
+            Domain and range equal to domain of functional.
+
+        Notes
+        -----
+        The nonsmooth solvers that make use of proximal operators in order to
+        solve a given optimization problem, see for example
+        `forward_backward_pd`, take a `proximal factory` as input. Note that
+        ``Functional.proximal`` is in fact a `proximal factory`.
+        """
+        raise NotImplementedError('there is no known expression for this')
+
+    @property
+    def conjugate_functional(self):
+        """Convex conjugate functional of the functional.
+
+        Notes
+        -----
+        The convex conjugate functional of a convex functional :math:`f(x)`,
+        defined on a Hilber space, is defined as the functional
+
+        .. math::
+
+            f^*(x^*) = \\sup_{x} \{ \\langle x^*,x \\rangle - f(x)  \}.
+
+        The concept is also known as the Legendre transformation.
+
+        References
+        ----------
+        Wikipedia article on `Convex conjugate
+        <https://en.wikipedia.org/wiki/Convex_conjugate>`_.
+
+        Wikipedia article on `Legendre transformation
+        https://en.wikipedia.org/wiki/Legendre_transformation
+
+        For literature references see, e.g., [Lue1969]_, [Roc1970]_.
+        """
+        return self.operator.conjugate_functional * (1.0 / self.vector)
 
 
 class FunctionalSum(Functional, OperatorSum):

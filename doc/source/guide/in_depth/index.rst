@@ -12,3 +12,4 @@ This is a more in depth guide to the different parts of ODL.
     vectorization_guide
     numpy_guide
     chambolle_pock_guide
+    functional_guide

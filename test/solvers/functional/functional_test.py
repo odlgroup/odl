@@ -330,17 +330,30 @@ def test_multiplication_with_vector():
 
     x = example_element(space)
     y = example_element(space)
-    func = odl.solvers.L1Norm(space)
+    func = odl.solvers.L2NormSquare(space)
 
     wrong_space = odl.uniform_discr(1, 2, 10)
     y_other_space = example_element(wrong_space)
 
-    # Multiplication from the right. Make sure it is a OperatorRightVectorMult
+    # Multiplication from the right. Make sure it is a
+    # FunctionalRightVectorMult
     func_times_y = func * y
-    assert isinstance(func_times_y, odl.OperatorRightVectorMult)
+    assert isinstance(func_times_y, odl.solvers.FunctionalRightVectorMult)
 
     expected_result = func(y * x)
-    assert almost_equal((func * y)(x), expected_result, places=PLACES)
+    assert almost_equal(func_times_y(x), expected_result, places=PLACES)
+
+    # Test for the gradient.
+    # Explicit calculations: 2*y*y*x
+    expected_result = 2.0 * y * y * x
+    assert all_almost_equal(func_times_y.gradient(x), expected_result,
+                            places=PLACES)
+
+    # Test for conjugate_functional
+    cc_func_times_y = func_times_y.conjugate_functional
+    # Explicit calculations: 1/4 * ||x/y||_2^2
+    expected_result = 1.0 / 4.0 * (x / y).norm()**2
+    assert almost_equal(cc_func_times_y(x), expected_result, places=PLACES)
 
     # Make sure that right muliplication is not allowed with vector from
     # another space
