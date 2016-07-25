@@ -492,7 +492,7 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
             num_left, out.ndim, param_conv=safe_int_conv, keep_none=False)
 
     # Handle padding
-    pad_mode, pad_mode_in = str(pad_mode), pad_mode
+    pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
     if pad_mode not in _SUPPORTED_PAD_MODES:
         raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
 
@@ -503,6 +503,12 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
         raise ValueError('`pad_const` {} cannot be safely cast to the data '
                          'type {} of the output array'
                          ''.format(pad_const, out.dtype))
+
+    # Direction
+    direction, direction_in = str(direction).lower(), direction
+    if direction not in ('forward', 'adjoint'):
+        raise ValueError("`direction` '{}' not understood"
+                         "".format(direction_in))
 
     # Calculate the slices for the inner and outer parts
     arr_slc, out_slc, pad_l_slc, pad_r_slc = [], [], [], []
@@ -571,40 +577,16 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
 
     # Perform the padding
     for i, (slc_l, slc_r) in enumerate(zip(pad_l_slc, pad_r_slc)):
-        _apply_padding(out, slc_l, slc_r, i, pad_mode, pad_const)
+        if direction == 'forward':
+            _apply_padding(out, slc_l, slc_r, i, pad_mode, pad_const)
+        else:  # direction == 'adjoint'
+            _apply_adjoint_padding(arr, out, slc_l, slc_r, i, pad_mode)
 
     return out
 
 
-def _apply_padding(arr, slc_l, slc_r, axis, pad_mode, const):
-    """Apply padding of given mode to ``arr``.
-
-    ``slc[l,r]`` must be slices with step size 1.
-
-    ``const`` is only used for constant padding.
-
-    The following assignment is performed, depending on ``par_mode``
-    (semantically, the slices appear in the location indexed by
-    ``axis``; ``slc`` is either ``slc_l`` or ``slc_r``):
-
-    ``'constant'``: ``arr[..., slc, ...] = const``.
-
-    ``'symmetric'``: ``arr[..., slc, ...] = arr[..., sym_slc, ...]``.
-    Here, ``sym_slc`` is the symmetric counterpart to ``slc``.
-
-    ``'periodic'``: ``arr[..., slc, ...] = arr[..., per_slc, ...]``.
-    Here, ``per_slc`` is the periodic counterpart to ``slc``.
-
-    ``'order0'``: ``arr[..., slc, ...] = arr[..., bdry_slc, ...]``.
-    Here, ``bdry_idx`` is a slice for the boundary in ``axis``.
-
-    ``'order1'``: ``arr[..., slc, ...] = val[..., bdry_slc, ...] +
-    lin_arr``.
-    Here, ``bdry_idx`` is as above, and ``lin_arr = h * arange``
-    is the array with constant slope ``h`` along ``axis``.
-    """
-    ax_len = arr.shape[axis]
-    ndim = arr.ndim
+def _slice_dict(axis, ax_len, ndim, slc_l, slc_r):
+    """Return dictionary of slices for all padding variants."""
 
     def slice_tuple(length, idx, at_idx, at_other_idcs):
         """Return tuple for slicing.
@@ -632,25 +614,99 @@ def _apply_padding(arr, slc_l, slc_r, axis, pad_mode, const):
     if sym_r_stop == -1:  # This will not yield the correct slice (0 last)
         sym_r_stop = None  # Fix
     sym_slc_r = slice(start_r - 2, sym_r_stop, -1)
+    # Build indexing tuples with the sym_slc slices in position `axis`
+    sym_indcs_l = slice_tuple(ndim, axis, sym_slc_l, slice(None))
+    sym_indcs_r = slice_tuple(ndim, axis, sym_slc_r, slice(None))
 
     # Periodic left: n_l forward, ending at start_r - 1
     per_slc_l = slice(start_r - n_l, start_r)
     # Periodic right: n_r forward, starting at stop_l
     per_slc_r = slice(stop_l, stop_l + n_r)
+    # Similar to symmetric
+    per_indcs_l = slice_tuple(ndim, axis, per_slc_l, slice(None))
+    per_indcs_r = slice_tuple(ndim, axis, per_slc_r, slice(None))
 
     # Boundary indices
     bdry_idx_l = stop_l
     bdry_idx_r = start_r - 1
+    # Avoid squeezing by using a length-1 slice. This allows broadcasting
+    # along `axis` in the final assignments.
+    bdry_indcs_l = slice_tuple(ndim, axis,
+                               slice(bdry_idx_l, bdry_idx_l + 1),
+                               slice(None))
+    bdry_indcs_r = slice_tuple(ndim, axis,
+                               slice(bdry_idx_r, bdry_idx_r + 1),
+                               slice(None))
+    # Next-to-boundary slices
+    bdry_indcs2_l = slice_tuple(ndim, axis,
+                                slice(bdry_idx_l + 1, bdry_idx_l + 2),
+                                slice(None))
+    bdry_indcs2_r = slice_tuple(ndim, axis,
+                                slice(bdry_idx_r - 1, bdry_idx_r),
+                                slice(None))
+
+    # Slope indexing tuple for order 1
+    slope_indcs_l = slice_tuple(ndim, axis,
+                                slice(bdry_idx_l, bdry_idx_l + 2),
+                                slice(None))
+    slope_indcs_r = slice_tuple(ndim, axis,
+                                slice(bdry_idx_r - 1, bdry_idx_r + 1),
+                                slice(None))
+    arange_indcs = slice_tuple(ndim, axis, slice(None), None)
+
+    return {'arr': (arr_indcs_l, arr_indcs_r),
+            'sym': (sym_indcs_l, sym_indcs_r),
+            'per': (per_indcs_l, per_indcs_r),
+            'bdry': (bdry_indcs_l, bdry_indcs_r),
+            'bdry2': (bdry_indcs2_l, bdry_indcs2_r),
+            'slope': (slope_indcs_l, slope_indcs_r),
+            'arange': (arange_indcs, n_l, n_r)}
+
+
+def _apply_padding(arr, slc_l, slc_r, axis, pad_mode, const):
+    """Apply padding of given mode to ``arr``.
+
+    ``slc_[l,r]`` must be slices with step size 1.
+
+    ``const`` is only used for constant padding.
+
+    The following assignment is performed, depending on ``par_mode``
+    (semantically, the slices appear in the location indexed by
+    ``axis``; ``slc`` is either ``slc_l`` or ``slc_r``):
+
+    ``'constant'``: ``arr[..., slc, ...] = const``.
+
+    ``'symmetric'``: ``arr[..., slc, ...] = arr[..., sym_slc, ...]``.
+    Here, ``sym_slc`` is the symmetric counterpart to ``slc``.
+
+    ``'periodic'``: ``arr[..., slc, ...] = arr[..., per_slc, ...]``.
+    Here, ``per_slc`` is the periodic counterpart to ``slc``.
+
+    ``'order0'``: ``arr[..., slc, ...] = arr[..., bdry_slc, ...]``.
+    Here, ``bdry_idx`` is a slice for the boundary in ``axis``.
+
+    ``'order1'``: ``arr[..., slc, ...] = val[..., bdry_slc, ...] +
+    lin_arr``.
+    Here, ``bdry_idx`` is as above, and ``lin_arr = h * arange``
+    is the array with constant slope ``h`` along ``axis``.
+    """
+    ax_len = arr.shape[axis]
+    ndim = arr.ndim
+
+    slice_dict = _slice_dict(axis, ax_len, ndim, slc_l, slc_r)
+
+    arr_indcs_l, arr_indcs_r = slice_dict['arr']
+    sym_indcs_l, sym_indcs_r = slice_dict['sym']
+    per_indcs_l, per_indcs_r = slice_dict['per']
+    bdry_indcs_l, bdry_indcs_r = slice_dict['bdry']
+    slope_indcs_l, slope_indcs_r = slice_dict['slope']
+    arange_indcs, n_l, n_r = slice_dict['arange']
 
     if pad_mode == 'constant':
-        # Just assign here
         arr[arr_indcs_l] = const
         arr[arr_indcs_r] = const
 
     elif pad_mode == 'symmetric':
-        # Build indexing tuples with the sym_slc slices in position `axis`
-        sym_indcs_l = slice_tuple(ndim, axis, sym_slc_l, slice(None))
-        sym_indcs_r = slice_tuple(ndim, axis, sym_slc_r, slice(None))
         l_view = arr[sym_indcs_l]
         r_view = arr[sym_indcs_r]
         if l_view.shape[axis]:
@@ -659,21 +715,10 @@ def _apply_padding(arr, slc_l, slc_r, axis, pad_mode, const):
             arr[arr_indcs_r] = r_view
 
     elif pad_mode == 'periodic':
-        # Similar to symmetric
-        per_indcs_l = slice_tuple(ndim, axis, per_slc_l, slice(None))
-        per_indcs_r = slice_tuple(ndim, axis, per_slc_r, slice(None))
         arr[arr_indcs_l] = arr[per_indcs_l]
         arr[arr_indcs_r] = arr[per_indcs_r]
 
     elif pad_mode == 'order0':
-        # Avoid squeezing by using a length-1 slice. This allows broadcasting
-        # along `axis` in the final assignments.
-        bdry_indcs_l = slice_tuple(ndim, axis,
-                                   slice(bdry_idx_l, bdry_idx_l + 1),
-                                   slice(None))
-        bdry_indcs_r = slice_tuple(ndim, axis,
-                                   slice(bdry_idx_r, bdry_idx_r + 1),
-                                   slice(None))
         arr[arr_indcs_l] = arr[bdry_indcs_l]
         arr[arr_indcs_r] = arr[bdry_indcs_r]
 
@@ -681,20 +726,7 @@ def _apply_padding(arr, slc_l, slc_r, axis, pad_mode, const):
         # Create arrays of slopes along `axis` using two boundary indices.
         # This is done by slicing into `arr` with a length-2 slice in `axis`
         # and taking the difference in the same axis.
-        bdry_indcs_l = slice_tuple(ndim, axis,
-                                   slice(bdry_idx_l, bdry_idx_l + 1),
-                                   slice(None))
-        slope_indcs_l = slice_tuple(ndim, axis,
-                                    slice(bdry_idx_l, bdry_idx_l + 2),
-                                    slice(None))
         slope_arr_l = np.diff(arr[slope_indcs_l], axis=axis)
-
-        bdry_indcs_r = slice_tuple(ndim, axis,
-                                   slice(bdry_idx_r, bdry_idx_r + 1),
-                                   slice(None))
-        slope_indcs_r = slice_tuple(ndim, axis,
-                                    slice(bdry_idx_r - 1, bdry_idx_r + 1),
-                                    slice(None))
         slope_arr_r = np.diff(arr[slope_indcs_r], axis=axis)
 
         # Create linear index arrays, reversed for the left boundary since
@@ -704,12 +736,88 @@ def _apply_padding(arr, slc_l, slc_r, axis, pad_mode, const):
         arange_r = np.arange(1, n_r + 1)
 
         # Broadcast the 1D arange arrays in all axes except `axis`
-        arange_indcs = slice_tuple(ndim, axis, slice(None), None)
-
         arr[arr_indcs_l] = (arr[bdry_indcs_l] +
                             slope_arr_l * arange_l[arange_indcs])
         arr[arr_indcs_r] = (arr[bdry_indcs_r] +
                             slope_arr_r * arange_r[arange_indcs])
+
+
+def _apply_adjoint_padding(arr, out, slc_l, slc_r, axis, pad_mode):
+    """Add values from ``arr`` to ``out`` according to padding mode.
+
+    ``slc_[l,r]`` must be slices with step size 1.
+
+    The following addition is performed, depending on ``par_mode``
+    (semantically, the slices appear in the location indexed by
+    ``axis``; ``slc`` is either ``slc_l`` or ``slc_r``):
+
+    ``'symmetric'``: ``out[..., sym_slc, ...] += arr[..., slc, ...]``.
+    Here, ``sym_slc`` is the symmetric counterpart to ``slc``.
+
+    ``'periodic'``: ``arr[..., per_slc, ...] += arr[..., slc, ...]``.
+    Here, ``per_slc`` is the periodic counterpart to ``slc``.
+
+    ``'order0'``: ``arr[..., bdry_slc, ...] += sum(arr[..., slc, ...])``.
+    Here, ``bdry_idx`` is a slice for the boundary in ``axis``, and
+    the summation is perfomred along ``axis``.
+
+    ``'order1'``: ``arr[..., bdry_slc, ...] +=
+    sum(val[..., bdry_slc, ...]) + sum(lin_arr)``.
+    Here, ``bdry_idx`` is as above, and ``lin_arr = h * arange``
+    is the array with constant slope ``h`` along ``axis``. The
+    summation is performed along ``axis``.
+    """
+    ax_len = arr.shape[axis]
+    ndim = arr.ndim
+
+    slice_dict = _slice_dict(axis, ax_len, ndim, slc_l, slc_r)
+
+    arr_indcs_l, arr_indcs_r = slice_dict['arr']
+    sym_indcs_l, sym_indcs_r = slice_dict['sym']
+    per_indcs_l, per_indcs_r = slice_dict['per']
+    bdry_indcs_l, bdry_indcs_r = slice_dict['bdry']
+    bdry_indcs2_l, bdry_indcs2_r = slice_dict['bdry2']
+    slope_indcs_l, slope_indcs_r = slice_dict['slope']
+    arange_indcs, n_l, n_r = slice_dict['arange']
+
+    if pad_mode == 'symmetric':
+        l_view = out[sym_indcs_l]
+        r_view = out[sym_indcs_r]
+        if l_view.shape[axis]:
+            l_view += arr[arr_indcs_l]
+        if r_view.shape[axis]:
+            r_view += arr[arr_indcs_r]
+
+    elif pad_mode == 'periodic':
+        out[per_indcs_l] += arr[arr_indcs_l]
+        out[per_indcs_r] += arr[arr_indcs_r]
+
+    elif pad_mode == 'order0':
+        moment_0_l = np.sum(arr[arr_indcs_l], axis=axis)
+        moment_0_r = np.sum(arr[arr_indcs_r], axis=axis)
+        out[bdry_indcs_l] += moment_0_l
+        out[bdry_indcs_r] += moment_0_r
+
+    elif pad_mode == 'order1':
+        # order 0 moments
+        moment_0_l = np.sum(arr[arr_indcs_l], axis=axis)
+        moment_0_r = np.sum(arr[arr_indcs_r], axis=axis)
+        out[bdry_indcs_l] += moment_0_l
+        out[bdry_indcs_r] += moment_0_r
+
+        # order 1 moments
+        slope_arr_l = np.diff(arr[slope_indcs_l], axis=axis)
+        slope_arr_r = np.diff(arr[slope_indcs_r], axis=axis)
+        arange_l = -np.arange(n_l, 0, -1)
+        arange_r = np.arange(1, n_r + 1)
+        moment_1_l = np.sum(slope_arr_l * arange_l[arange_indcs], axis=axis)
+        moment_1_r = np.sum(slope_arr_r * arange_r[arange_indcs], axis=axis)
+
+        # +moment_1 at index 0 and n-2, -moment_1 at index 1 and n-1
+        out[bdry_indcs_l] -= moment_1_l
+        out[bdry_indcs2_l] += moment_1_l
+        out[bdry_indcs_r] -= moment_1_r
+        out[bdry_indcs2_r] += moment_1_r
 
 
 if __name__ == '__main__':
