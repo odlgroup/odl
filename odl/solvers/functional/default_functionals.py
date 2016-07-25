@@ -27,11 +27,9 @@ import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
-from odl.solvers.advanced.proximal_operators import (proximal_l1,
-                                                     proximal_cconj_l1,
-                                                     proximal_l2,
-                                                     proximal_cconj_l2,
-                                                     proximal_l2_squared)
+from odl.solvers.advanced.proximal_operators import (
+    proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
+    proximal_l2_squared)
 
 from odl.operator.default_ops import (ZeroOperator, IdentityOperator)
 
@@ -43,10 +41,19 @@ __all__ = ('L1Norm', 'L2Norm', 'L2NormSquare', 'ZeroFunctional',
 # TODO: Implement some of the missing gradients
 
 class L1Norm(Functional):
-    """The functional corresponding to L1-norm."""
+
+    """The functional corresponding to L1-norm.
+
+    The L1-norm, ``||x||_1``,  is defined as the integral/sum of ``|x|``.
+
+    References
+    ----------
+    Wikipedia article on `Norms
+        <https://en.wikipedia.org/wiki/Norm_(mathematics)>`_.
+    """
 
     def __init__(self, domain):
-        """Initalizes an instance of the L1-norm functional.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -66,24 +73,37 @@ class L1Norm(Functional):
 
         Returns
         -------
-        `self(x)` : `element` in the `field` of the ``domain``.
-            Evaluation of the functional.
+        out : `field` element
+            Result of the evaluation.
         """
         return np.abs(x).inner(self.domain.one())
 
     @property
     def gradient(x):
-        """Gradient operator of the L1-functional."""
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The operator that corresponds to the mapping
+
+        .. math::
+
+            x \\to \\nabla f(x)
+
+        where :math:`\\nabla f(x)` is the element used to evaluate
+        derivatives in a direction :math:`d` by
+        :math:`\\langle \\nabla f(x), d \\rangle`.
+        """
         # It does not exist on all of the space
-        raise NotImplementedError
+        raise NotImplementedError('functional not differential.')
 
     def proximal(self, sigma=1.0):
-        """Return the proximal operator of the L1-functional.
+        """Return the proximal operator of the functional.
 
         Parameters
         ----------
         sigma : positive float, optional
-            Regularization parameter of the proximal operator
+            Step size-like parameter
 
         Returns
         -------
@@ -100,6 +120,7 @@ class L1Norm(Functional):
 
 
 class IndicatorLinftyUnitBall(Functional):
+
     """The indicator function on the unit ball, in the L-infinity norm.
 
     This functional is defined as
@@ -114,8 +135,9 @@ class IndicatorLinftyUnitBall(Functional):
     -----
     This functional is the convex conjugate functional of the L1-norm.
     """
+
     def __init__(self, domain):
-        """Initialize a new instance of the IndicatorLinftyUnitBall.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -134,8 +156,8 @@ class IndicatorLinftyUnitBall(Functional):
 
         Returns
         -------
-        `self(x)` : `element` in the `field` of the ``domain``.
-            Evaluation of the functional.
+        out : `field` element
+            Result of the evaluation.
         """
         if np.max(np.abs(x)) > 1:
             return np.inf
@@ -144,10 +166,23 @@ class IndicatorLinftyUnitBall(Functional):
 
     @property
     def gradient(x):
-        """Gradient operator of IndicatorLinftyUnitBall."""
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The operator that corresponds to the mapping
+
+        .. math::
+
+            x \\to \\nabla f(x)
+
+        where :math:`\\nabla f(x)` is the element used to evaluate
+        derivatives in a direction :math:`d` by
+        :math:`\\langle \\nabla f(x), d \\rangle`.
+        """
         # It does not exist on all of the space, only for ||x|| < 1
         # where it is the ZeroOperator
-        raise NotImplementedError
+        raise NotImplementedError('functional not differential.')
 
     @property
     def conjugate_functional(self):
@@ -164,12 +199,12 @@ class IndicatorLinftyUnitBall(Functional):
         return L1Norm(domain=self.domain)
 
     def proximal(self, sigma=1.0):
-        """Return the proximal operator of IndicatorLinftyUnitBall.
+        """Return the proximal operator of the functional.
 
         Parameters
         ----------
         sigma : positive float, optional
-            Regularization parameter of the proximal operator
+            Step size-like parameter
 
         Returns
         -------
@@ -181,10 +216,20 @@ class IndicatorLinftyUnitBall(Functional):
 
 
 class L2Norm(Functional):
-    """The functional corresponding to the L2-norm."""
+
+    """The functional corresponding to the L2-norm.
+
+    The L2-norm, ``||x||_2``,  is defined as the square-root out of the
+    integral/sum of ``x^2``.
+
+    References
+    ----------
+    Wikipedia article on `Norms
+        <https://en.wikipedia.org/wiki/Norm_(mathematics)>`_.
+        """
 
     def __init__(self, domain):
-        """Initalizes an instance of the L2-norm functional.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -204,22 +249,35 @@ class L2Norm(Functional):
 
         Returns
         -------
-        `self(x)` : `element` in the `field` of the ``domain``.
-            Evaluation of the functional.
+        out : `field` element
+            Result of the evaluation.
         """
-        return np.sqrt(np.abs(x).inner(np.abs(x)))
+        return np.sqrt(x.inner(x))
 
     @property
     def gradient(self):
-        """Gradient operator of the L2-functional."""
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The operator that corresponds to the mapping
+
+        .. math::
+
+            x \\to \\nabla f(x)
+
+        where :math:`\\nabla f(x)` is the element used to evaluate
+        derivatives in a direction :math:`d` by
+        :math:`\\langle \\nabla f(x), d \\rangle`.
+        """
         functional = self
 
         class L2Gradient(Operator):
-            """The gradient operator for the L2-functional."""
+
+            """The gradient operator of this functional."""
+
             def __init__(self):
-                """Initialize and instance of the gradient operator for the
-                L2-functional.
-                """
+                """Initialize a new instance."""
                 super().__init__(functional.domain, functional.domain,
                                  linear=False)
 
@@ -235,9 +293,9 @@ class L2Norm(Functional):
 
                 Returns
                 -------
-                `self(x)` : `LinearSpaceVector`
-                    Evaluation of the gradient operator. An element in the
-                    domain of the functional.
+                out : `LinearSpaceVector`
+                    Result of the evaluation of the gradient operator. An
+                    element in the domain of the functional.
                 """
                 norm_of_x = x.norm()
                 if norm_of_x == 0:
@@ -251,12 +309,12 @@ class L2Norm(Functional):
         return L2Gradient()
 
     def proximal(self, sigma=1.0):
-        """Return the proximal operator of the L2-functional.
+        """Return the proximal operator of the functional.
 
         Parameters
         ----------
         sigma : positive float, optional
-            Regularization parameter of the proximal operator
+            Step size-like parameter
 
         Returns
         -------
@@ -273,6 +331,7 @@ class L2Norm(Functional):
 
 
 class IndicatorL2UnitBall(Functional):
+
     """The indicator function on the unit ball, in the L2-norm.
 
     This functional is defined as
@@ -285,8 +344,9 @@ class IndicatorL2UnitBall(Functional):
     -----
     This functional is the convex conjugate functional of the L2-norm.
     """
+
     def __init__(self, domain):
-        """Initialize a new instance of the IndicatorL2UnitBall.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -305,8 +365,8 @@ class IndicatorL2UnitBall(Functional):
 
         Returns
         -------
-        `self(x)` : `element` in the `field` of the ``domain``.
-            Evaluation of the functional.
+        out : `field` element
+            Result of the evaluation.
         """
         if x.norm() > 1:
             return np.inf
@@ -329,18 +389,31 @@ class IndicatorL2UnitBall(Functional):
 
     @property
     def gradient(x):
-        """Gradient operator of IndicatorL2UnitBall."""
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The operator that corresponds to the mapping
+
+        .. math::
+
+            x \\to \\nabla f(x)
+
+        where :math:`\\nabla f(x)` is the element used to evaluate
+        derivatives in a direction :math:`d` by
+        :math:`\\langle \\nabla f(x), d \\rangle`.
+        """
         # It does not exist on all of the space, only for ||x|| < 1
         # where it is the ZeroOperator.
-        raise NotImplementedError
+        raise NotImplementedError('functional not differential.')
 
     def proximal(self, sigma=1.0):
-        """Return the proximal operator of IndicatorL2UnitBall.
+        """Return the proximal operator of the functional.
 
         Parameters
         ----------
         sigma : positive float, optional
-            Regularization parameter of the proximal operator
+            Step size-like parameter
 
         Returns
         -------
@@ -352,10 +425,19 @@ class IndicatorL2UnitBall(Functional):
 
 
 class L2NormSquare(Functional):
-    """The functional corresponding to the squared L2-norm."""
+
+    """The functional corresponding to the squared L2-norm.
+
+    The squared L2-norm, ``||x||_2^2``,  is defined as the integral/sum of
+    ``x^2``.
+
+    References
+    ----------
+    Wikipedia article on `Norms
+        <https://en.wikipedia.org/wiki/Norm_(mathematics)>`_."""
 
     def __init__(self, domain):
-        """Initalizes an instance of the squared L2-norm functional.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -375,22 +457,35 @@ class L2NormSquare(Functional):
 
         Returns
         -------
-        `self(x)` : `element` in the `field` of the ``domain``.
-            Evaluation of the functional.
+        out : `field` element
+            Result of the evaluation.
         """
-        return np.abs(x).inner(np.abs(x))
+        return x.inner(x)
 
     @property
     def gradient(self):
-        """Gradient operator of the squared L2-norm."""
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The operator that corresponds to the mapping
+
+        .. math::
+
+            x \\to \\nabla f(x)
+
+        where :math:`\\nabla f(x)` is the element used to evaluate
+        derivatives in a direction :math:`d` by
+        :math:`\\langle \\nabla f(x), d \\rangle`.
+        """
         functional = self
 
         class L2SquareGradient(Operator):
-            """Gradient operator of the squared L2-norm."""
+
+            """Gradient operator of this functional."""
+
             def __init__(self):
-                """Initialize and instance of the gradient operator for the
-                squared L2-norm.
-                """
+                """Initialize a new instance."""
                 super().__init__(functional.domain, functional.domain,
                                  linear=True)
 
@@ -405,21 +500,21 @@ class L2NormSquare(Functional):
 
                 Returns
                 -------
-                `self(x)` : `LinearSpaceVector`
-                    Evaluation of the gradient operator. An element in the
-                    domain of the functional.
+                out : `LinearSpaceVector`
+                    Result of the evaluation of the gradient operator. An
+                    element in the domain of the functional.
                 """
                 return 2.0 * x
 
         return L2SquareGradient()
 
     def proximal(self, sigma=1.0):
-        """Return the proximal operator of the squared L2-functional.
+        """Return the proximal operator of the functional.
 
         Parameters
         ----------
         sigma : positive float, optional
-            Regularization parameter of the proximal operator
+            Step size-like parameter
 
         Returns
         -------
@@ -441,12 +536,14 @@ class L2NormSquare(Functional):
 
 
 class ConstantFunctional(Functional):
+
     """The constant functional.
 
     This functional maps all elements in the domain to a given, constant value.
     """
+
     def __init__(self, domain, constant):
-        """Initialize a ConstantFunctional instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -455,7 +552,6 @@ class ConstantFunctional(Functional):
         constant : element in `domain.field`
             The constant value of the functional
         """
-
         super().__init__(domain=domain, linear=True, convex=True,
                          concave=True, smooth=True, grad_lipschitz=0)
 
@@ -479,8 +575,8 @@ class ConstantFunctional(Functional):
 
         Returns
         -------
-        `self(x)` : `float`
-            Evaluation of the functional, which is a constant.
+        out : `field` element
+            Result of the evaluation.
         """
         return self._constant
 
@@ -496,14 +592,14 @@ class ConstantFunctional(Functional):
 
             x \\to \\nabla f(x)
 
-        where :math:`\\nabla f(x)` is the element used to evaluated
+        where :math:`\\nabla f(x)` is the element used to evaluate
         derivatives in a direction :math:`d` by
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
         return ZeroOperator(self.domain)
 
     def proximal(self, sigma=1.0):
-        """Return the proximal operator of the constant functional.
+        """Return the proximal operator of the functional.
 
         The proximal operator for the constant functional is the identity
         operator.
@@ -511,7 +607,7 @@ class ConstantFunctional(Functional):
         Parameters
         ----------
         sigma : positive float, optional
-            Regularization parameter of the proximal operator
+            Step size-like parameter
 
         Returns
         -------
@@ -532,12 +628,11 @@ class ConstantFunctional(Functional):
         functional = self
 
         class ConjugateToConstantFunctional(Functional):
-            """The convex conjugate functional to the constant functional."""
+
+            """The convex conjugate functional of this functional."""
 
             def __init__(self):
-                """Initialize a ConstantFunctionalConjugateFunctional
-                instance.
-                """
+                """Initialize a new instance."""
                 super().__init__(functional.domain, linear=False, convex=True)
                 self._zero_element = self.domain.zero()
                 self._constant = functional._constant
@@ -559,8 +654,8 @@ class ConstantFunctional(Functional):
 
                 Returns
                 -------
-                `self(x)` : `float`
-                    Evaluation of the functional.
+                out : `field` element
+                    Result of the evaluation.
                 """
 
                 if x == self._zero_element:
@@ -570,11 +665,22 @@ class ConstantFunctional(Functional):
 
             @property
             def gradient(x):
-                """Gradient operator of the conjugate functional of the
-                constant functional.
+                """Gradient operator of the functional.
+
+                Notes
+                -----
+                The operator that corresponds to the mapping
+
+                .. math::
+
+                    x \\to \\nabla f(x)
+
+                where :math:`\\nabla f(x)` is the element used to evaluate
+                derivatives in a direction :math:`d` by
+                :math:`\\langle \\nabla f(x), d \\rangle`.
                 """
                 # It does not exist anywhere
-                raise NotImplementedError
+                raise NotImplementedError('functional not differential.')
 
             @property
             def conjugate_functional(self):
@@ -591,15 +697,14 @@ class ConstantFunctional(Functional):
                 return ConstantFunctional(self.domain, self._constant)
 
             def proximal(self, sigma=1.0):
-                """Return the proximal operator of the conjugate functional of
-                the constant functional.
+                """Return the proximal operator of the functional.
 
                 Note that this is the zero-operator
 
                 Parameters
                 ----------
                 sigma : positive float, optional
-                    Regularization parameter of the proximal operator
+                    Step size-like parameter
 
                 Returns
                 -------
@@ -613,12 +718,14 @@ class ConstantFunctional(Functional):
 
 
 class ZeroFunctional(ConstantFunctional):
+
     """The zero-functional.
 
-    The zero-functional maps all elements in the domain to zero
+    The zero-functional maps all elements in the domain to zero.
     """
+
     def __init__(self, domain):
-        """Initialize a ZeroFunctional instance.
+        """Initialize a new instance.
 
         Parameters
         ----------

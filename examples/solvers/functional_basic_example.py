@@ -45,11 +45,11 @@ from builtins import super
 import numpy as np
 import odl
 
+
 # Here we define the functional
 class MyFunctional(odl.solvers.Functional):
     """This is my functional: ||x||_2^2 + <x, y>."""
 
-    # Defining the __init__ function
     def __init__(self, domain, y):
         # This comand calls the init of Functional and sets a number of
         # parameters associated with a functional. All but domain have default
@@ -63,8 +63,7 @@ class MyFunctional(odl.solvers.Functional):
             raise TypeError('y is not in the domain!')
         self._y = y
 
-    # Now we define a propert which returns y, so that the user can see which
-    # value is used in a particular instance of the class.
+    # Property that returns the linear term.
     @property
     def y(self):
         return self._y
@@ -76,35 +75,36 @@ class MyFunctional(odl.solvers.Functional):
     # Next we define the gradient. Note that this is a property.
     @property
     def gradient(self):
-        # Inside this property, we define the gradient operator. This can be
-        # defined anywhere and just returned here, but in this example we will
-        # also define it here.
 
+        # The class corresponding to the gradient operator.
         class MyGradientOperator(odl.Operator):
+            """Class that implements the gradient operator of the functional
+            ``||x||_2^2 + <x,y>``.
+            """
 
-            # Define an __init__ method for this operator
             def __init__(self, functional):
                 super().__init__(domain=functional.domain,
                                  range=functional.domain)
 
                 self._functional = functional
 
-            # Define a _call method for this operator
             def _call(self, x):
                 return 2.0 * x + self._functional.y
 
         return MyGradientOperator(functional=self)
 
-    # Next we define the convex conjugate functional
+    # Next we define the convex conjugate functional.
     @property
     def conjugate_functional(self):
-        # This functional is implemented below
+        # This functional is implemented below.
         return MyFunctionalConjugate(domain=self.domain, y=self.y)
 
 
-# Here is the conjugate functional
+# Here is the conjugate functional.
 class MyFunctionalConjugate(odl.solvers.Functional):
-    """Calculations give that this funtional has the analytic expression
+    """Conjugate functional to ``||x||_2^2 + <x,y>``.
+
+    Calculations give that this funtional has the analytic expression
     f^*(x) = ||x||^2/2 - ||x-y||^2/4 + ||y||^2/2 - <x,y>.
     """
     def __init__(self, domain, y):

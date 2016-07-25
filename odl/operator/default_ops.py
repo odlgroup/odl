@@ -826,24 +826,22 @@ class ConstantOperator(Operator):
     """
 
     def __init__(self, vector, domain=None, range=None):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
         vector : `LinearSpaceVector`
             The vector constant to be returned
         domain : `LinearSpace`, optional
-            default is vector.space
-            The domain of the operator.
+            Domain of the operator. Default: ``vector.space``
         range : `LinearSpace`, optional
-            default : vector.space
-            The range of the operator.
+            Range of the operator. Default: ``vector.space``
         """
-        if domain is None or range is None:
-            if not isinstance(vector, LinearSpaceVector):
-                raise TypeError('If either domain or range is unspecified, '
-                                '`vector` {!r} has to be a LinearSpaceVector '
-                                'instance'.format(vector))
+        if ((domain is None or range is None) and
+                not isinstance(vector, LinearSpaceVector)):
+                raise TypeError('If either domain or range is unspecified '
+                                '`vector` must be LinearSpaceVector, got {!r}.'
+                                ''.format(vector))
 
         if domain is None:
             domain = vector.space
