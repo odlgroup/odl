@@ -72,8 +72,12 @@ length :math:`m` when starting at index :math:`p`.
 
 It should be noted that all extension operators mentioned here are of the above form
 :math:`R^* + P` with :math:`P` acting on the "outer" indices only. Hence they all act as a right
-inverse for the restriction operator. This property can also be read as the fact that all extension
-operators are left-inverted by the restriction operator.
+inverses for the restriction operator. This property can also be read as the fact that all extension
+operators are left-inverted by the restriction operator :math:`R`.
+
+Moreover, the "mixed" case, i.e. the combination of restriction and extension which would occur e.g.
+for a constant index shift :math:`x \mapsto (0, \dots, 0, x_0, \dots, x_{n-p-1})`, is not considered
+here. It can be represented by a combination of the two "pure" operations.
 
 
 Zero padding
@@ -119,7 +123,7 @@ and :math:`m - (p + n) \leq n` ("right" padding amount). The periodic padding op
 defined as
 
 .. math::
-    E_{\mathrm{p}} \colon \mathbb{R}^n \to \mathbb{R}^m, \quad E_{\mathrm{p}}(x)_j :=
+    E_{\mathrm{p}}(x)_j :=
     \begin{cases}
     x_{j-p + n}, & \text{if } 0 \leq j \leq p - 1,     \\
     x_{j-p},     & \text{if } p \leq j \leq p + n - 1, \\
@@ -131,7 +135,7 @@ Hence, one can at most get 3 full periods with :math:`m = 3n` and :math:`p = n`.
 can be written as :math:`E_{\mathrm{p}} = E_{\mathrm{z}} + P_{\mathrm{p}}` with an operator
 
 .. math::
-    P_{\mathrm{p}} \colon \mathbb{R}^n \to \mathbb{R}^m, \quad P_{\mathrm{p}}(x)_j :=
+    P_{\mathrm{p}}(x)_j :=
     \begin{cases}
     x_{j-p + n}, & \text{if } 0 \leq j \leq p - 1,     \\
     0,           & \text{if } p \leq j \leq p + n - 1, \\
@@ -165,7 +169,7 @@ and
     \end{cases}
 
 In practice, this means that that besides copying the values from the indices :math:`p, \dots, p+n-1`
-of a vector :math:`y \in \mathbb{R}^m` to a new vector :math:`x \in \mathbb{R}^n`, some of the values
+of a vector :math:`y \in \mathbb{R}^m` to a new vector :math:`x \in \mathbb{R}^n`, the values
 corresponding to the other indices are added to the vector :math:`x` as follows. The *first*
 :math:`m - n - p - 1` entries of :math:`y` (negative means 0) are added to the *last*
 :math:`m - n - p - 1` entries of :math:`x`, in the same ascending order. The *last* :math:`p` entries
@@ -184,7 +188,7 @@ numbers :math:`n`, :math:`m` and :math:`p` need to fulfill the relations
 amount). Now the symmetric padding operator is defined as
 
 .. math::
-    E_{\mathrm{s}} \colon \mathbb{R}^n \to \mathbb{R}^m, \quad E_{\mathrm{s}}(x)_j :=
+    E_{\mathrm{s}}(x)_j :=
     \begin{cases}
     x_{p-j},      & \text{if } 0 \leq j \leq p - 1,      \\
     x_{j-p},      & \text{if } p \leq j \leq p + n - 1,  \\
@@ -195,7 +199,7 @@ amount). Now the symmetric padding operator is defined as
 This operator is the sum of the zero-padding operator :math:`E_{\mathrm{z}}` and
 
 .. math::
-    P_{\mathrm{s}} \colon \mathbb{R}^n \to \mathbb{R}^m, \quad P_{\mathrm{s}}(x)_j :=
+    P_{\mathrm{s}}(x)_j :=
     \begin{cases}
     x_{p-j},      & \text{if } 0 \leq j \leq p - 1,      \\
     0,            & \text{if } p \leq j \leq p + n - 1,  \\
@@ -247,7 +251,7 @@ Order 0 padding
 Padding with order 0 consistency means continuing the vector constantly beyond its boundaries, i.e.
 
 .. math::
-    E_{\mathrm{o0}} \colon \mathbb{R}^n \to \mathbb{R}^m, \quad E_{\mathrm{o0}}(x)_j :=
+    E_{\mathrm{o0}}(x)_j :=
     \begin{cases}
     x_0,     & \text{if } 0 \leq j \leq p - 1,      \\
     x_{j-p}, & \text{if } p \leq j \leq p + n - 1,  \\
@@ -300,8 +304,7 @@ Order 1 padding
 In this padding mode, a given vector is continued with constant slope instead of constant value, i.e.
 
 .. math::
- E_{\mathrm{o1}} &\colon \mathbb{R}^n \to \mathbb{R}^m, \notag \\
- E_{\mathrm{o1}}(x)_j &:=
+ E_{\mathrm{o1}}(x)_j :=
  \begin{cases}
   x_0 + (j - p)(x_1 - x_0),                     & \text{if } 0 \leq j \leq p - 1,      \\
   x_{j-p},                                      & \text{if } p \leq j \leq p + n - 1,  \\
