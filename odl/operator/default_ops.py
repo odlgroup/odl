@@ -755,17 +755,16 @@ class ConstantOperator(Operator):
     """
 
     def __init__(self, vector, domain=None, range=None):
-        """Initialize an instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
         vector : `LinearSpaceElement`
             The constant space element to be returned.
         domain : `LinearSpace`, optional
-            Domain of the operator. Default : ``vector.space``.
+            Domain of the operator. Default: ``vector.space``
         range : `LinearSpace`, optional
-            default : vector.space
-            The range of the operator.
+            Range of the operator. Default: ``vector.space``
 
         Examples
         --------
@@ -777,10 +776,11 @@ class ConstantOperator(Operator):
         rn(3).element([1.0, 2.0, 3.0])
         """
 
-        if domain is None or range is None:
-            if not isinstance(vector, LinearSpaceElement):
-                raise TypeError('`vector` {!r} not a LinearSpaceElement '
-                                'instance'.format(vector))
+        if ((domain is None or range is None) and
+                not isinstance(vector, LinearSpaceElement)):
+                raise TypeError('If either domain or range is unspecified '
+                                '`vector` must be LinearSpaceVector, got {!r}.'
+                                ''.format(vector))
 
         if domain is None:
             domain = vector.space
