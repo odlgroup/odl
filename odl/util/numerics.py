@@ -30,8 +30,8 @@ from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 __all__ = ('apply_on_boundary', 'fast_1d_tensor_mult', 'resize_array')
 
 
-_SUPPORTED_PAD_MODES = ('constant', 'symmetric', 'periodic',
-                        'order0', 'order1')
+_SUPPORTED_RESIZE_PAD_MODES = ('constant', 'symmetric', 'periodic',
+                               'order0', 'order1')
 
 
 def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
@@ -303,9 +303,8 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     return out
 
 
-def resize_array(arr, newshp, frac_left=None, num_left=None,
-                 pad_mode='constant', pad_const=0, direction='forward',
-                 out=None):
+def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
+                 direction='forward', out=None):
     """Return the resized version of ``arr`` with shape ``newshp``.
 
     In axes where ``newshp > arr.shape``, padding is applied according
@@ -319,18 +318,9 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
         Array to be resized.
     newshp : sequence of int
         Desired shape of the output array.
-    frac_left : float or sequence of float, optional
-        Number between 0 and 1 (inclusive) that determines which fraction
-        of the addition/removal is performed on the "left" side. If
-        ``frac_left`` times the shape difference is not integer, the
-        number of entries added to the left is gained by rounding to the
-        nearest integer. The default ``None`` is equivalent to 0.5.
-        This option can be specified per axis with a sequence.
-        Cannot be combined with ``num_left``.
-    num_left : sequence of int, optional
-        Specifies how many entries are added to/removed from the left
-        side of ``arr``.
-        Cannot be combined with ``frac_left``.
+    offset: sequence of int, optional
+        Specifies how many entries are added to/removed from the "left"
+        side (corresponding to low indices) of ``arr``.
     pad_mode : str, optional
         Method to be used to fill in missing values in an enlarged array.
 
@@ -352,8 +342,8 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
         each axis where padding is applied.
 
         Note that for ``'symmetric'`` and ``'periodic'`` padding, the
-        number of added values on each side of the array cannot exceed
-        the original size.
+        number of added entries on each side of the array (in a given
+        axis) cannot exceed the original size.
 
     pad_const : scalar, optional
         Value to be used in the ``'constant'`` padding mode.
@@ -380,44 +370,33 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
     Examples
     --------
     The input can be shrunk by simply providing a smaller size.
-    The left/right distribution of removed entries is ananogous to
-    the case of array enlargement, see below.
+    By default, values are removed from the right. When enlarging,
+    zero-padding is applied by default, and the zeros are added to
+    the right side. That behavior can be changed with the ``offset``
+    parameter:
 
     >>> from odl.util.numerics import resize_array
     >>> resize_array([1, 2, 3], (1,))
-    array([2])
-    >>> resize_array([1, 2, 3], (2,))
-    array([1, 2])
-
-    When enlarging, zero-padding is applied by default, and half of the
-    zeros are added to each side (with preference for the left side in
-    case of ambiguity):
-
+    array([1])
+    >>> resize_array([1, 2, 3], (1,), offset=2)
+    array([3])
     >>> resize_array([1, 2, 3], (6,))
-    array([0, 0, 1, 2, 3, 0])
-    >>> resize_array([1, 2, 3], (7,))
+    array([1, 2, 3, 0, 0, 0])
+    >>> resize_array([1, 2, 3], (7,), offset=2)
     array([0, 0, 1, 2, 3, 0, 0])
-
-    One of the ``frac_left`` and ``num_left`` parameters can be
-    supplied to change the default distribution of the extra values:
-
-    >>> resize_array([1, 2, 3], (7,), frac_left=0.25)
-    array([0, 1, 2, 3, 0, 0, 0])
-    >>> resize_array([1, 2, 3], (7,), num_left=1)
-    array([0, 1, 2, 3, 0, 0, 0])
 
     The padding constant can be changed, as well as the padding
     mode:
 
-    >>> resize_array([1, 2, 3], (7,), pad_const=-1)
+    >>> resize_array([1, 2, 3], (7,), pad_const=-1, offset=2)
     array([-1, -1,  1,  2,  3, -1, -1])
-    >>> resize_array([1, 2, 3], (7,), pad_mode='periodic')
+    >>> resize_array([1, 2, 3], (7,), pad_mode='periodic', offset=2)
     array([2, 3, 1, 2, 3, 1, 2])
-    >>> resize_array([1, 2, 3], (7,), pad_mode='symmetric')
+    >>> resize_array([1, 2, 3], (7,), pad_mode='symmetric', offset=2)
     array([3, 2, 1, 2, 3, 2, 1])
-    >>> resize_array([1, 2, 3], (7,), pad_mode='order0')
+    >>> resize_array([1, 2, 3], (7,), pad_mode='order0', offset=2)
     array([1, 1, 1, 2, 3, 3, 3])
-    >>> resize_array([1, 2, 3], (7,), pad_mode='order1')
+    >>> resize_array([1, 2, 3], (7,), pad_mode='order1', offset=2)
     array([-1,  0,  1,  2,  3,  4,  5])
 
     Everything works for arbitrary number of dimensions:
@@ -425,7 +404,8 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
     >>> # Take the middle two columns and extend rows symmetrically
     >>> resize_array([[1, 2, 3, 4],
     ...               [5, 6, 7, 8],
-    ...               [9, 10, 11, 12]], (5, 2), pad_mode='symmetric')
+    ...               [9, 10, 11, 12]],
+    ...               (5, 2), pad_mode='symmetric', offset=[1, 1])
     array([[ 6,  7],
            [ 2,  3],
            [ 6,  7],
@@ -436,7 +416,7 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
     >>> resize_array([[1, 2, 3, 4],
     ...               [5, 6, 7, 8],
     ...               [9, 10, 11, 12]], (5, 2), pad_mode='symmetric',
-    ...              frac_left=[0, 1])
+    ...              offset=[0, 2])
     array([[ 3,  4],
            [ 7,  8],
            [11, 12],
@@ -469,31 +449,16 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
                              'not match ({} != {})'
                              ''.format(arr.ndim, len(newshp)))
 
-    # Handle frac_left and num_left parameters
-    if frac_left is not None and num_left is not None:
-        raise ValueError('the options `frac_left` and `num_left` cannot be '
-                         'combined')
-    if num_left is None:
-        # Compute num_left from frac_left
-        if frac_left is None:
-            frac_left = 0.5
-        frac_left, frac_left_in = normalized_scalar_param_list(
-            frac_left, out.ndim, param_conv=float, keep_none=False,
-            return_nonconv=True)
-        num_left = [round(frac_l * abs(n_orig - n_new))
-                    for frac_l, n_orig, n_new in zip(frac_left, arr.shape,
-                                                     out.shape)]
-        for i, (fl, fl_in) in enumerate(zip(frac_left, frac_left_in)):
-            if not 0.0 <= fl <= 1.0:
-                raise ValueError('in axis {}: `frac_left` must lie between 0 '
-                                 'and 1, got {}'.format(i, fl_in))
+    # Handle offset
+    if offset is None:
+        offset = [0] * out.ndim
     else:
-        num_left = normalized_scalar_param_list(
-            num_left, out.ndim, param_conv=safe_int_conv, keep_none=False)
+        offset = normalized_scalar_param_list(
+            offset, out.ndim, param_conv=safe_int_conv, keep_none=False)
 
     # Handle padding
-    pad_mode, pad_mode_in = str(pad_mode), pad_mode
-    if pad_mode not in _SUPPORTED_PAD_MODES:
+    pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
+    if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
         raise ValueError("`pad_mode` '{}' not understood".format(pad_mode_in))
 
     if (pad_mode == 'constant' and
@@ -504,212 +469,340 @@ def resize_array(arr, newshp, frac_left=None, num_left=None,
                          'type {} of the output array'
                          ''.format(pad_const, out.dtype))
 
-    # Calculate the slices for the inner and outer parts
-    arr_slc, out_slc, pad_l_slc, pad_r_slc = [], [], [], []
-    for i, (n_orig, n_new, num_l) in enumerate(zip(arr.shape, out.shape,
-                                                   num_left)):
-        if n_new < n_orig:
-            # Simple case: remove according to num_left
-            n_remove = n_orig - n_new
-            istart = num_l
-            istop = n_orig - (n_remove - istart)
-            arr_slc.append(slice(istart, istop))
-            out_slc.append(slice(None))
+    # Handle direction
+    direction, direction_in = str(direction).lower(), direction
+    if direction not in ('forward', 'adjoint'):
+        raise ValueError("`direction` '{}' not understood"
+                         "".format(direction_in))
 
-            # Make trivial entries for padding slice lists
-            pad_l_slc.append(slice(0))
-            pad_r_slc.append(slice(0))
+    if direction == 'adjoint' and pad_const != 0.0:
+        raise ValueError("`pad_const` must be 0 for 'adjoint' direction, "
+                         "got {}".format(pad_const))
 
-        elif n_new > n_orig:
-            # Padding case: calculate start and stop indices for the
-            # bigger new array, together with the padding slices
-            n_add = n_new - n_orig
-            istart = num_l
-            istop = n_new - (n_add - istart)
-
-            n_pad_l = len(range(istart))
-            n_pad_r = len(range(istop, n_new))
-
-            # Handle some error scenarios with illegal lengths
-            if pad_mode == 'order0' and n_orig == 0:
-                raise ValueError('in axis {}: need at least 1 value for '
-                                 'order 0 padding, got 0'
-                                 ''.format(i))
-
-            if pad_mode == 'order1' and n_orig == 1:
-                raise ValueError('in axis {}: need at least 2 values for '
-                                 'order 1 padding, got 1'
-                                 ''.format(i))
-
-            for lr, pad_len in [('left', n_pad_l), ('right', n_pad_r)]:
-                if pad_mode == 'periodic' and pad_len > n_orig:
-                    raise ValueError('in axis {}: {} padding length {} '
-                                     'exceeds original array size {}; this is '
-                                     'not allowed for periodic padding'
-                                     ''.format(i, lr, pad_len, n_orig))
-
-                elif pad_mode == 'symmetric' and pad_len >= n_orig:
-                    raise ValueError('in axis {}: {} padding length {} '
-                                     'larger or equal to the original array '
-                                     'size {}; this is not allowed for '
-                                     'symmetric padding'
-                                     ''.format(i, lr, pad_len, n_orig))
-
-            arr_slc.append(slice(None))
-            out_slc.append(slice(istart, istop))
-            pad_l_slc.append(slice(istart))
-            pad_r_slc.append(slice(istop, None))
-
+    # Perform the resizing
+    if direction == 'forward':
+        if pad_mode == 'constant':
+            # Constant padding does not require the helper function
+            out.fill(pad_const)
+            _assign_intersection(out, arr, offset)
         else:
-            arr_slc.append(slice(None))
-            out_slc.append(slice(None))
-            pad_l_slc.append(slice(0))
-            pad_r_slc.append(slice(0))
-
-    # Set the "inner" part
-    out[tuple(out_slc)] = arr[tuple(arr_slc)]
-
-    # Perform the padding
-    for i, (slc_l, slc_r) in enumerate(zip(pad_l_slc, pad_r_slc)):
-        _apply_padding(out, slc_l, slc_r, i, pad_mode, pad_const)
+            # First copy the inner part and use it for padding
+            _assign_intersection(out, arr, offset)
+            _apply_padding(out, arr, offset, pad_mode, 'forward')
+    else:
+        if pad_mode == 'constant':
+            # Skip the padding helper
+            _assign_intersection(out, arr, offset)
+        else:
+            # Apply adjoint padding to a copy of the input and copy the inner
+            # part when finished
+            tmp = arr.copy()
+            _apply_padding(tmp, arr, offset, pad_mode, 'adjoint')
+            _assign_intersection(out, tmp, offset)
 
     return out
 
 
-def _apply_padding(arr, slc_l, slc_r, axis, pad_mode, const):
-    """Apply padding of given mode to ``arr``.
+def _intersection_slice_tuples(lhs_arr, rhs_arr, offset):
+    """Return tuples to yield the intersecting part of both given arrays.
 
-    ``slc[l,r]`` must be slices with step size 1.
-
-    ``const`` is only used for constant padding.
-
-    The following assignment is performed, depending on ``par_mode``
-    (semantically, the slices appear in the location indexed by
-    ``axis``; ``slc`` is either ``slc_l`` or ``slc_r``):
-
-    ``'constant'``: ``arr[..., slc, ...] = const``.
-
-    ``'symmetric'``: ``arr[..., slc, ...] = arr[..., sym_slc, ...]``.
-    Here, ``sym_slc`` is the symmetric counterpart to ``slc``.
-
-    ``'periodic'``: ``arr[..., slc, ...] = arr[..., per_slc, ...]``.
-    Here, ``per_slc`` is the periodic counterpart to ``slc``.
-
-    ``'order0'``: ``arr[..., slc, ...] = arr[..., bdry_slc, ...]``.
-    Here, ``bdry_idx`` is a slice for the boundary in ``axis``.
-
-    ``'order1'``: ``arr[..., slc, ...] = val[..., bdry_slc, ...] +
-    lin_arr``.
-    Here, ``bdry_idx`` is as above, and ``lin_arr = h * arange``
-    is the array with constant slope ``h`` along ``axis``.
+    The returned slices ``lhs_slc`` and ``rhs_slc`` are such that
+    ``lhs_arr[lhs_slc]`` and ``rhs_arr[rhs_slc]`` have the same shape.
+    The ``offset`` parameter determines how much is skipped/added on the
+    "left" side (small indices).
     """
-    ax_len = arr.shape[axis]
-    ndim = arr.ndim
+    lhs_slc, rhs_slc = [], []
+    for istart, n_lhs, n_rhs in zip(offset, lhs_arr.shape, rhs_arr.shape):
 
-    def slice_tuple(length, idx, at_idx, at_other_idcs):
-        """Return tuple for slicing.
+        # Slice for the inner part in the larger array corresponding to the
+        # small one, offset by the given amount
+        istop = istart + min(n_lhs, n_rhs)
+        inner_slc = slice(istart, istop)
 
-        Create a tuple of given ``length`` with entries ``at_other_idcs``
-        except at index ``idx``, where the entry is ``at_idx``.
-        """
-        return ((at_other_idcs,) * idx + (at_idx,) +
-                (at_other_idcs,) * (length - 1 - idx))
+        if n_lhs > n_rhs:
+            # Extension
+            lhs_slc.append(inner_slc)
+            rhs_slc.append(slice(None))
+        elif n_lhs < n_rhs:
+            # Restriction
+            lhs_slc.append(slice(None))
+            rhs_slc.append(inner_slc)
+        else:
+            # Same size, so full slices for both
+            lhs_slc.append(slice(None))
+            rhs_slc.append(slice(None))
 
-    # For indexing on the left hand side of the assignment, use the slices
-    # in `axis` and everything in the other axes.
-    arr_indcs_l = slice_tuple(ndim, axis, slc_l, slice(None))
-    arr_indcs_r = slice_tuple(ndim, axis, slc_r, slice(None))
+    return tuple(lhs_slc), tuple(rhs_slc)
 
-    start_l, stop_l, _ = slc_l.indices(ax_len)
-    n_l = stop_l - start_l
-    start_r, stop_r, _ = slc_r.indices(ax_len)
-    n_r = stop_r - start_r
 
-    # Symmetric left: n_l backward, ending at stop_l + 1
-    sym_slc_l = slice(stop_l + n_l, stop_l, -1)
-    # Symmetric right: n_r backward, starting at start_r - 2
-    sym_r_stop = start_r - 2 - n_r
-    if sym_r_stop == -1:  # This will not yield the correct slice (0 last)
-        sym_r_stop = None  # Fix
-    sym_slc_r = slice(start_r - 2, sym_r_stop, -1)
+def _assign_intersection(lhs_arr, rhs_arr, offset):
+    """Assign the intersecting region from ``rhs_arr`` to ``lhs_arr``."""
+    lhs_slc, rhs_slc = _intersection_slice_tuples(lhs_arr, rhs_arr, offset)
+    lhs_arr[lhs_slc] = rhs_arr[rhs_slc]
 
-    # Periodic left: n_l forward, ending at start_r - 1
-    per_slc_l = slice(start_r - n_l, start_r)
-    # Periodic right: n_r forward, starting at stop_l
-    per_slc_r = slice(stop_l, stop_l + n_r)
 
-    # Boundary indices
-    bdry_idx_l = stop_l
-    bdry_idx_r = start_r - 1
+def _padding_slices_outer(lhs_arr, rhs_arr, axis, offset):
+    """Return slices into the outer array part where padding is applied.
 
-    if pad_mode == 'constant':
-        # Just assign here
-        arr[arr_indcs_l] = const
-        arr[arr_indcs_r] = const
+    When padding is performed, these slices yield the outer (excess) part
+    of the larger array that is to be filled with values. Slices for
+    both sides of the arrays in a given ``axis`` are returned.
+
+    The same slices are used also in the adjoint padding correction,
+    however in a different way.
+
+    See `the online documentation
+    <https://odl.readthedocs.io/math/resizing_ops.html>`_
+    on resizing operators for details.
+    """
+    # TODO: check link
+    istart_inner = offset[axis]
+    istop_inner = istart_inner + min(lhs_arr.shape[axis], rhs_arr.shape[axis])
+    return slice(istart_inner), slice(istop_inner, None)
+
+
+def _padding_slices_inner(lhs_arr, rhs_arr, axis, offset, pad_mode):
+    """Return slices into the inner array part for a given ``pad_mode``.
+
+    When performing padding, these slices yield the values from the inner
+    part of a larger array that are to be assigned to the excess part
+    of the same array. Slices for both sides ("left", "right") of
+    the arrays in a given ``axis`` are returned.
+    """
+    # TODO: check link
+
+    # Calculate the start and stop indices for the inner part
+    istart_inner = offset[axis]
+    n_large = max(lhs_arr.shape[axis], rhs_arr.shape[axis])
+    n_small = min(lhs_arr.shape[axis], rhs_arr.shape[axis])
+    istop_inner = istart_inner + n_small
+    # Number of values padded to left and right
+    n_pad_l = istart_inner
+    n_pad_r = n_large - istop_inner
+
+    if pad_mode == 'periodic':
+        # left: n_pad_l forward, ending at istop_inner - 1
+        pad_slc_l = slice(istop_inner - n_pad_l, istop_inner)
+        # right: n_pad_r forward, starting at istart_inner
+        pad_slc_r = slice(istart_inner, istart_inner + n_pad_r)
 
     elif pad_mode == 'symmetric':
-        # Build indexing tuples with the sym_slc slices in position `axis`
-        sym_indcs_l = slice_tuple(ndim, axis, sym_slc_l, slice(None))
-        sym_indcs_r = slice_tuple(ndim, axis, sym_slc_r, slice(None))
-        l_view = arr[sym_indcs_l]
-        r_view = arr[sym_indcs_r]
-        if l_view.shape[axis]:
-            arr[arr_indcs_l] = l_view
-        if r_view.shape[axis]:
-            arr[arr_indcs_r] = r_view
+        # left: n_pad_l backward, ending at istart_inner + 1
+        pad_slc_l = slice(istart_inner + n_pad_l, istart_inner, -1)
+        # right: n_pad_r backward, starting at istop_inner - 2
+        # For the corner case that the stopping index is -1, we need to
+        # replace it with None, since -1 as stopping index is equivalent
+        # to the last index, which is not what we want (0 as last index).
+        istop_r = istop_inner - 2 - n_pad_r
+        if istop_r == -1:
+            istop_r = None
+        pad_slc_r = slice(istop_inner - 2, istop_r, -1)
 
-    elif pad_mode == 'periodic':
-        # Similar to symmetric
-        per_indcs_l = slice_tuple(ndim, axis, per_slc_l, slice(None))
-        per_indcs_r = slice_tuple(ndim, axis, per_slc_r, slice(None))
-        arr[arr_indcs_l] = arr[per_indcs_l]
-        arr[arr_indcs_r] = arr[per_indcs_r]
+    elif pad_mode in ('order0', 'order1'):
+        # left: only the first entry, using a slice to avoid squeezing
+        pad_slc_l = slice(istart_inner, istart_inner + 1)
+        # right: only last entry
+        pad_slc_r = slice(istop_inner - 1, istop_inner)
 
-    elif pad_mode == 'order0':
-        # Avoid squeezing by using a length-1 slice. This allows broadcasting
-        # along `axis` in the final assignments.
-        bdry_indcs_l = slice_tuple(ndim, axis,
-                                   slice(bdry_idx_l, bdry_idx_l + 1),
-                                   slice(None))
-        bdry_indcs_r = slice_tuple(ndim, axis,
-                                   slice(bdry_idx_r, bdry_idx_r + 1),
-                                   slice(None))
-        arr[arr_indcs_l] = arr[bdry_indcs_l]
-        arr[arr_indcs_r] = arr[bdry_indcs_r]
+    else:
+        # Slices are not used, returning trivial ones. The function should not
+        # be used for other modes anyway.
+        pad_slc_l, pad_slc_r = slice(0), slice(0)
 
-    elif pad_mode == 'order1':
-        # Create arrays of slopes along `axis` using two boundary indices.
-        # This is done by slicing into `arr` with a length-2 slice in `axis`
-        # and taking the difference in the same axis.
-        bdry_indcs_l = slice_tuple(ndim, axis,
-                                   slice(bdry_idx_l, bdry_idx_l + 1),
-                                   slice(None))
-        slope_indcs_l = slice_tuple(ndim, axis,
-                                    slice(bdry_idx_l, bdry_idx_l + 2),
-                                    slice(None))
-        slope_arr_l = np.diff(arr[slope_indcs_l], axis=axis)
+    return pad_slc_l, pad_slc_r
 
-        bdry_indcs_r = slice_tuple(ndim, axis,
-                                   slice(bdry_idx_r, bdry_idx_r + 1),
-                                   slice(None))
-        slope_indcs_r = slice_tuple(ndim, axis,
-                                    slice(bdry_idx_r - 1, bdry_idx_r + 1),
-                                    slice(None))
-        slope_arr_r = np.diff(arr[slope_indcs_r], axis=axis)
 
-        # Create linear index arrays, reversed for the left boundary since
-        # we computed the "forward" slope. The arrays are used to create the
-        # "sloped lines" along `axis`.
-        arange_l = -np.arange(n_l, 0, -1)
-        arange_r = np.arange(1, n_r + 1)
+def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
+    """Apply padding to ``lhs_arr`` according to ``pad_mode``.
 
-        # Broadcast the 1D arange arrays in all axes except `axis`
-        arange_indcs = slice_tuple(ndim, axis, slice(None), None)
+    This helper assigns the values in the excess parts (if existent)
+    of ``lhs_arr`` according to the provided padding mode.
 
-        arr[arr_indcs_l] = (arr[bdry_indcs_l] +
-                            slope_arr_l * arange_l[arange_indcs])
-        arr[arr_indcs_r] = (arr[bdry_indcs_r] +
-                            slope_arr_r * arange_r[arange_indcs])
+    This applies to the following values for ``pad_mode``:
+    ``periodic``, ``symmetric``, ``order0``, ``order1``
+
+    See `the online documentation
+    <https://odl.readthedocs.io/math/resizing_ops.html>`_
+    on resizing operators for details.
+    """
+    if pad_mode not in ('periodic', 'symmetric', 'order0', 'order1'):
+        return
+
+    full_slc = [slice(None)] * lhs_arr.ndim
+    intersec_slc, _ = _intersection_slice_tuples(lhs_arr, rhs_arr, offset)
+
+    if direction == 'forward':
+        working_slc = list(intersec_slc)
+    else:
+        working_slc = list(full_slc)
+
+    # TODO: order axes according to padding size for optimization (largest
+    # last)? Axis strides could be important, too.
+    for axis, (n_lhs, n_rhs) in enumerate(zip(lhs_arr.shape, rhs_arr.shape)):
+
+        if n_lhs <= n_rhs:
+            continue  # restriction, nothing to do
+
+        n_pad_l = offset[axis]
+        n_pad_r = n_lhs - n_rhs - n_pad_l
+
+        # Error scenarios with illegal lengths
+        if pad_mode == 'order0' and n_rhs == 0:
+            raise ValueError('in axis {}: the smaller array must have size '
+                             '>= 1 for order 0 padding, got 0'
+                             ''.format(axis))
+
+        if pad_mode == 'order1' and n_rhs < 2:
+            raise ValueError('in axis {}: the smaller array must have size '
+                             '>= 2 for order 1 padding, got {}'
+                             ''.format(axis, n_rhs))
+
+        for lr, pad_len in [('left', n_pad_l), ('right', n_pad_r)]:
+            if pad_mode == 'periodic' and pad_len > n_rhs:
+                raise ValueError('in axis {}: {} padding length {} exceeds '
+                                 'the size {} of the smaller array; this is '
+                                 'not allowed for periodic padding'
+                                 ''.format(axis, lr, pad_len, n_rhs))
+
+            elif pad_mode == 'symmetric' and pad_len >= n_rhs:
+                raise ValueError('in axis {}: {} padding length {} is larger '
+                                 'or equal to the size {} of the smaller '
+                                 'array; this is not allowed for symmetric '
+                                 'padding'
+                                 ''.format(axis, lr, pad_len, n_rhs))
+
+        # Slice tuples used to index LHS and RHS for left and right padding,
+        # respectively. Since `lhs_arr` is used on both sides of the
+        # assignments, full slices are used in all axes except `axis`.
+        # TODO: change comment
+
+        # TODO: use working_slc instead of full_slc
+        lhs_slc_l, lhs_slc_r = full_slc.copy(), full_slc.copy()
+        rhs_slc_l, rhs_slc_r = full_slc.copy(), full_slc.copy()
+
+        # We're always using the outer (excess) parts involved in padding
+        # on the LHS of the assignment, so we set them here.
+        # TODO: change comment
+        pad_slc_outer_l, pad_slc_outer_r = _padding_slices_outer(
+            lhs_arr, rhs_arr, axis, offset)
+
+        if direction == 'forward':
+            lhs_slc_l[axis] = pad_slc_outer_l
+            lhs_slc_r[axis] = pad_slc_outer_r
+        else:
+            rhs_slc_l[axis] = pad_slc_outer_l
+            rhs_slc_r[axis] = pad_slc_outer_r
+
+        if pad_mode in ('periodic', 'symmetric'):
+            pad_slc_inner_l, pad_slc_inner_r = _padding_slices_inner(
+                lhs_arr, rhs_arr, axis, offset, pad_mode)
+
+            # Using `lhs_arr` on both sides of the assignment such that the
+            # shapes match and the "corner" blocks are properly assigned
+            # or used in the addition for the adjoint, respectively.
+            if direction == 'forward':
+                rhs_slc_l[axis] = pad_slc_inner_l
+                rhs_slc_r[axis] = pad_slc_inner_r
+
+                lhs_arr[tuple(lhs_slc_l)] = lhs_arr[tuple(rhs_slc_l)]
+                lhs_arr[tuple(lhs_slc_r)] = lhs_arr[tuple(rhs_slc_r)]
+            else:
+                lhs_slc_l[axis] = pad_slc_inner_l
+                lhs_slc_r[axis] = pad_slc_inner_r
+
+                lhs_arr[tuple(lhs_slc_l)] += lhs_arr[tuple(rhs_slc_l)]
+                lhs_arr[tuple(lhs_slc_r)] += lhs_arr[tuple(rhs_slc_r)]
+
+        elif pad_mode == 'order0':
+            # The `_padding_slices_inner` helper returns the slices for the
+            # boundary values.
+            left_slc, right_slc = _padding_slices_inner(
+                lhs_arr, rhs_arr, axis, offset, pad_mode)
+
+            if direction == 'forward':
+                rhs_slc_l[axis] = left_slc
+                rhs_slc_r[axis] = right_slc
+
+                lhs_arr[tuple(lhs_slc_l)] = lhs_arr[tuple(rhs_slc_l)]
+                lhs_arr[tuple(lhs_slc_r)] = lhs_arr[tuple(rhs_slc_r)]
+            else:
+                lhs_slc_l[axis] = left_slc
+                lhs_slc_r[axis] = right_slc
+
+                lhs_arr[tuple(lhs_slc_l)] += np.sum(lhs_arr[tuple(rhs_slc_l)],
+                                                    axis=axis, keepdims=True)
+                lhs_arr[tuple(lhs_slc_r)] += np.sum(lhs_arr[tuple(rhs_slc_r)],
+                                                    axis=axis, keepdims=True)
+
+        elif pad_mode == 'order1':
+            # Some extra work necessary: need to compute the derivative at
+            # the boundary and use that to continue with constant derivative.
+
+            # Slice for broadcasting of a 1D array along `axis`
+            bcast_slc = [None] * lhs_arr.ndim
+            bcast_slc[axis] = slice(None)
+
+            # Slices for the boundary in `axis`
+            left_slc, right_slc = _padding_slices_inner(
+                lhs_arr, rhs_arr, axis, offset, pad_mode)
+
+            # Create slice tuples for indexing of the boundary values
+            bdry_slc_l = full_slc.copy()
+            bdry_slc_l[axis] = left_slc
+            bdry_slc_r = full_slc.copy()
+            bdry_slc_r[axis] = right_slc
+
+            # For the slope at the boundary, we need two neighboring points.
+            # We create the corresponding slices from the boundary slices.
+            slope_slc_l = full_slc.copy()
+            slope_slc_l[axis] = slice(left_slc.start, left_slc.stop + 1)
+            slope_slc_r = full_slc.copy()
+            slope_slc_r[axis] = slice(right_slc.start - 1, right_slc.stop)
+
+            # The `np.arange`s, broadcast along `axis`, are used to create the
+            # constant-slope continuation (forward) or to calculate the
+            # first order moments (adjoint).
+            arange_l = np.arange(-n_pad_l, 0,
+                                 dtype=lhs_arr.dtype)[bcast_slc]
+            arange_r = np.arange(1, n_pad_r + 1,
+                                 dtype=lhs_arr.dtype)[bcast_slc]
+
+            if direction == 'forward':
+                # Take first order difference to get the derivative
+                # along `axis`.
+                slope_l = np.diff(lhs_arr[slope_slc_l], n=1, axis=axis)
+                slope_r = np.diff(lhs_arr[slope_slc_r], n=1, axis=axis)
+
+                # Finally assign the constant slope values
+                lhs_arr[tuple(lhs_slc_l)] = (
+                    lhs_arr[tuple(bdry_slc_l)] + arange_l * slope_l)
+                lhs_arr[tuple(lhs_slc_r)] = (
+                    lhs_arr[tuple(bdry_slc_r)] + arange_r * slope_r)
+            else:
+                # Same as in 'order0'
+                lhs_arr[tuple(bdry_slc_l)] += np.sum(lhs_arr[tuple(rhs_slc_l)],
+                                                     axis=axis, keepdims=True)
+                lhs_arr[tuple(bdry_slc_r)] += np.sum(lhs_arr[tuple(rhs_slc_r)],
+                                                     axis=axis, keepdims=True)
+
+                # Calculate the order 1 moments
+                moment1_l = np.sum(arange_l * lhs_arr[tuple(rhs_slc_l)],
+                                   axis=axis, keepdims=True)
+                moment1_r = np.sum(arange_r * lhs_arr[tuple(rhs_slc_r)],
+                                   axis=axis, keepdims=True)
+
+                # Add moment1 at the "width-2 boundary layers", with the sign
+                # corresponding to the sign in the derivative calculation
+                # of the forward padding.
+                sign_l = np.array([-1, 1])[bcast_slc]
+                lhs_arr[slope_slc_l] += moment1_l * sign_l
+                sign_r = np.array([1, -1])[bcast_slc]
+                lhs_arr[slope_slc_r] += moment1_r * sign_r
+
+        if direction == 'forward':
+            working_slc[axis] = full_slc[axis]
+        else:
+            working_slc[axis] = intersec_slc[axis]
 
 
 if __name__ == '__main__':
