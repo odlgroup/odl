@@ -98,7 +98,7 @@ def mayo_projector_from_folder(reco_space, folder, nr_start=1, nr_end=-1):
     pixel_size = np.array([datasets[0].DetectorElementTransverseSpacing,
                            datasets[0].DetectorElementAxialSpacing])
 
-    maxp = (np.array(datasets[0].DetectorCentralElement) - [0.5, 0.5]) * pixel_size
+    maxp = (np.array(datasets[0].DetectorCentralElement) - 0.5) * pixel_size
     minp = maxp - shape * pixel_size
 
     # Create partition for detector
@@ -117,15 +117,20 @@ def mayo_projector_from_folder(reco_space, folder, nr_start=1, nr_end=-1):
 
     # Get flying focal spot data
     offset_axial = np.array([d.SourceAxialPositionShift for d in datasets])
-    offset_angular = -np.array([d.SourceAngularPositionShift for d in datasets])
+    offset_angular = np.array([d.SourceAngularPositionShift for d in datasets])
     offset_radial = np.array([d.SourceRadialDistanceShift for d in datasets])
 
-    offset_x = np.cos(angles + offset_angular) * (-(src_radius + offset_radial)) - np.cos(angles) * (-src_radius)
-    offset_y =  np.sin(angles + offset_angular) * (-(src_radius + offset_radial)) - np.sin(angles) * (-src_radius)
+    angles_offset = angles - offset_angular
+    src_rad_offset = src_radius + offset_radial
+    offset_x = (np.cos(angles_offset) * (-src_rad_offset) -
+                np.cos(angles) * (-src_radius))
+    offset_y = (np.sin(angles_offset) * (-src_rad_offset) -
+                np.sin(angles) * (-src_radius))
     offset_z = offset_axial
 
     source_offsets = np.array([offset_x, offset_y, offset_z]).T
 
+    # Assemble geometry
     geometry = HelicalConeFlatGeometry(angle_partition,
                                        detector_partition,
                                        src_radius=src_radius,
