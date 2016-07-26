@@ -303,6 +303,76 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     return out
 
 
+def _compute_slices(arr1, arr2, num_left, pad_mode, direction):
+    if direction == 'forward':
+        arr_lhs, arr_rhs = arr1, arr2
+    else:
+        arr_lhs, arr_rhs = arr2, arr1
+
+    # Calculate the slices for the inner and outer parts
+    lhs_slc, rhs_slc, pad_l_slc, pad_r_slc = [], [], [], []
+    # TODO: continue here
+    for i, (n_orig, n_new, num_l) in enumerate(zip(arr.shape, out.shape,
+                                                   num_left)):
+        if n_new < n_orig:
+            # Simple case: remove according to num_left
+            n_remove = n_orig - n_new
+            istart = num_l
+            istop = n_orig - (n_remove - istart)
+            arr_slc.append(slice(istart, istop))
+            out_slc.append(slice(None))
+
+            # Make trivial entries for padding slice lists
+            pad_l_slc.append(slice(0))
+            pad_r_slc.append(slice(0))
+
+        elif n_new > n_orig:
+            # Padding case: calculate start and stop indices for the
+            # bigger new array, together with the padding slices
+            n_add = n_new - n_orig
+            istart = num_l
+            istop = n_new - (n_add - istart)
+
+            n_pad_l = len(range(istart))
+            n_pad_r = len(range(istop, n_new))
+
+            # Handle some error scenarios with illegal lengths
+            if pad_mode == 'order0' and n_orig == 0:
+                raise ValueError('in axis {}: need at least 1 value for '
+                                 'order 0 padding, got 0'
+                                 ''.format(i))
+
+            if pad_mode == 'order1' and n_orig == 1:
+                raise ValueError('in axis {}: need at least 2 values for '
+                                 'order 1 padding, got 1'
+                                 ''.format(i))
+
+            for lr, pad_len in [('left', n_pad_l), ('right', n_pad_r)]:
+                if pad_mode == 'periodic' and pad_len > n_orig:
+                    raise ValueError('in axis {}: {} padding length {} '
+                                     'exceeds original array size {}; this is '
+                                     'not allowed for periodic padding'
+                                     ''.format(i, lr, pad_len, n_orig))
+
+                elif pad_mode == 'symmetric' and pad_len >= n_orig:
+                    raise ValueError('in axis {}: {} padding length {} '
+                                     'larger or equal to the original array '
+                                     'size {}; this is not allowed for '
+                                     'symmetric padding'
+                                     ''.format(i, lr, pad_len, n_orig))
+
+            arr_slc.append(slice(None))
+            out_slc.append(slice(istart, istop))
+            pad_l_slc.append(slice(istart))
+            pad_r_slc.append(slice(istop, None))
+
+        else:
+            arr_slc.append(slice(None))
+            out_slc.append(slice(None))
+            pad_l_slc.append(slice(0))
+            pad_r_slc.append(slice(0))
+
+
 def resize_array(arr, newshp, frac_left=None, num_left=None,
                  pad_mode='constant', pad_const=0, direction='forward',
                  out=None):
