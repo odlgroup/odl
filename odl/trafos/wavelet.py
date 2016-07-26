@@ -33,6 +33,7 @@ except ImportError:
 
 from odl.discr import DiscreteLp
 from odl.operator import Operator
+from odl.util.numerics import matrix_mul_axis
 
 
 __all__ = ('WaveletTransform', 'WaveletTransformInverse',
@@ -43,66 +44,29 @@ __all__ = ('WaveletTransform', 'WaveletTransformInverse',
 _SUPPORTED_IMPL = ('pywt',)
 
 
-def matrix_mul_axis(matrix, array, axis):
-    """Return the matrix-vector product along an axis in ``array``.
+def symm_matrices(filter):
+    filter = np.asarray(filter)
+    k = filter.size
+    nrows, ncols = k - 1, k - 1
+    top = np.zeros((nrows, ncols))
+    bot = top.copy()
 
-    This function computes the usual matrix-vector product of ``matrix``
-    with ``array``, where the summation is performed along the
-    given ``axis``.
+    for row in range(nrows):
+        top[row, :ncols - row] = filter[row + 1:]
+        bot[row, ::-1][:row + 1] = filter[:row + 1][::-1]
 
-    Parameters
-    ----------
-    matrix : array-like
-        Array with shape ``(m, n)``, acting as the matrix in the
-        product.
-    array : array-like
-        Array with ``array.ndim >= 1``, acting as right operand in
-        the product. It must fulfill ``array.shape[axis] == n``.
-    axis : int
-        Axis along which the summation in the matrix-vector product is
-        performed. It must fulfill ``-array.ndim - 1 <= axis < array.ndim``,
-        where negative values are interpreted in the usual "backwards
-        indexing" sense.
+    return top, bot
 
-    Returns
-    -------
-    prod : `numpy.ndarray`
-        Matrix-vector product along the given axis. Its shape is
-        ``(..., m, ...)``, where the value ``m`` appears at the index
-        ``axis`` and the other values are the same as in ``array.shape``.
-    """
-    matrix = np.asarray(matrix)
-    array = np.asarray(array)
-    axis, axis_in = int(axis), axis
 
-    if array.ndim == 0:
-        raise ValueError('`array` must have at least 1 dimension')
+def downsample_top(mat, data_len):
+    return mat[:, 1::2]
 
-    if matrix.ndim != 2:
-        raise ValueError('`matrix` must have 2 dimensions, got ndim == {}'
-                         ''.format(matrix.ndim))
 
-    if axis != axis_in:
-        raise ValueError('`axis` {} is not integer'.format(axis_in))
-
-    if not -array.ndim <= axis < array.ndim:
-        raise ValueError('`axis` {} not in the valid range {} -> {}'
-                         ''.format(axis, -array.ndim, array.ndim - 1))
-
-    if array.shape[axis] != matrix.shape[1]:
-        raise ValueError('`array.shape[axis]` == {} and `matrix.shape[1] '
-                         '== {} do not match'.format(array.shape[axis],
-                                                     matrix.shape[1]))
-
-    out_arr = np.tensordot(matrix, array, axes=[[1], [axis]])
-    try:
-        # np.moveaxis was added in Numpy 1.11
-        return np.moveaxis(out_arr, 0, axis)
-    except AttributeError:
-        # Fallback for older Numpy versions
-        newshape = list(range(1, array.ndim))
-        newshape.insert(axis, 0)
-        return np.transpose(out_arr, newshape)
+def downsample_bot(mat, data_len):
+    if data_len % 2 == 0:
+        return mat[:, 1::2]
+    else:
+        return mat[:, ::2]
 
 
 def corr_one_level(rec, coeffs, top_matrices, bottom_matrices, axis):
