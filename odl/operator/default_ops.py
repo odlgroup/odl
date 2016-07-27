@@ -23,6 +23,8 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
+from copy import copy
+
 from odl.operator.operator import Operator
 from odl.space import ProductSpace
 from odl.set import LinearSpace, LinearSpaceVector, Field, RealNumbers
@@ -847,12 +849,9 @@ class ConstantOperator(Operator):
             domain = vector.space
         if range is None:
             range = vector.space
-        if vector not in range:
-            raise TypeError('`vector` {!r} in not in the range {}.'
-                            ''.format(vector, range))
 
-        self.__vector = vector
         super().__init__(domain, range)
+        self.__vector = self.__vector = self.range.element(vector)
 
     @property
     def vector(self):
@@ -885,12 +884,9 @@ class ConstantOperator(Operator):
         rn(3).element([1.0, 2.0, 3.0])
         """
         if out is None:
-            if isinstance(self.__vector, float):
-                return self.range.element(self.__vector)
-            else:
-                return self.range.element(self.__vector.copy())
+            return self.range.element(copy(self.vector))
         else:
-            out.assign(self.__vector)
+            out.assign(self.vector)
 
     def derivative(self, point):
         """Derivative of this operator, always zero.

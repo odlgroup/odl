@@ -48,9 +48,9 @@ import odl
 
 # Here we define the functional
 class MyFunctional(odl.solvers.Functional):
-    """This is my functional: ||x||_2^2 + <x, y>."""
+    """This is my functional: ||x||_2^2 + <x, linear_term>."""
 
-    def __init__(self, domain, y):
+    def __init__(self, domain, linear_term):
         # This comand calls the init of Functional and sets a number of
         # parameters associated with a functional. All but domain have default
         # values if not set.
@@ -59,20 +59,20 @@ class MyFunctional(odl.solvers.Functional):
 
         # We need to check that y is in the domain. Then we store the value of
         # y for future use.
-        if y not in domain:
+        if linear_term not in domain:
             raise TypeError('y is not in the domain!')
-        self._y = y
+        self._linear_term = linear_term
 
     # Property that returns the linear term.
     @property
-    def y(self):
-        return self._y
+    def linear_term(self):
+        return self._linear_term
 
     # Defining the _call function
     def _call(self, x):
-        return x.norm()**2 + x.inner(self.y)
+        return x.norm()**2 + x.inner(self.linear_term)
 
-    # Next we define the gradient. Note that this is a property.
+    # Defining the gradient. Note that this is a property.
     @property
     def gradient(self):
 
@@ -89,7 +89,7 @@ class MyFunctional(odl.solvers.Functional):
                 self._functional = functional
 
             def _call(self, x):
-                return 2.0 * x + self._functional.y
+                return 2.0 * x + self._functional.linear_term
 
         return MyGradientOperator(functional=self)
 
@@ -97,156 +97,64 @@ class MyFunctional(odl.solvers.Functional):
     @property
     def conjugate_functional(self):
         # This functional is implemented below.
-        return MyFunctionalConjugate(domain=self.domain, y=self.y)
+        return MyFunctionalConjugate(domain=self.domain,
+                                     linear_term=self.linear_term)
 
 
 # Here is the conjugate functional.
 class MyFunctionalConjugate(odl.solvers.Functional):
-    """Conjugate functional to ``||x||_2^2 + <x,y>``.
+    """Conjugate functional to ``||x||_2^2 + <x,linear_term>``.
 
     Calculations give that this funtional has the analytic expression
-    f^*(x) = ||x||^2/2 - ||x-y||^2/4 + ||y||^2/2 - <x,y>.
+    f^*(x) = ||x||^2/2 - ||x-linear_term||^2/4 + ||linear_term||^2/2 -
+    <x,linear_term>.
     """
-    def __init__(self, domain, y):
+    def __init__(self, domain, linear_term):
         super().__init__(domain=domain, linear=False, convex=True,
                          concave=False, smooth=True, grad_lipschitz=2)
 
-        if y not in domain:
+        if linear_term not in domain:
             raise TypeError('y is not in the domain!')
-        self._y = y
+        self._linear_term = linear_term
 
     @property
-    def y(self):
-        return self._y
+    def linear_term(self):
+        return self._linear_term
 
     def _call(self, x):
-        return (x.norm()**2 / 2.0 - (x - self.y).norm()**2 / 4.0 +
-                self.y.norm()**2 / 2.0 - x.inner(self.y))
+        return (x.norm()**2 / 2.0 - (x - self.linear_term).norm()**2 / 4.0 +
+                self.linear_term.norm()**2 / 2.0 - x.inner(self.linear_term))
 
 
-# Now we test the functional. First we create an instance of the functional
+# Now we create an instance of the functional and test some basic parts of it.
 n = 10
 space = odl.rn(n)
-y = space.element(np.random.randn(n))
-my_func = MyFunctional(domain=space, y=y)
+linear_term = space.element(np.random.randn(n))
+my_func = MyFunctional(domain=space, linear_term=linear_term)
 
-# Now we evaluate it, and see that it returns the expected value
+# The functional evaluates correctly
 x = space.element(np.random.randn(n))
+print(my_func(x) == x.norm()**2 + x.inner(linear_term))
 
-if my_func(x) == x.norm()**2 + x.inner(y):
-    print('My functional evaluates corretly.')
-else:
-    print('There is a bug in the evaluation of my functional.')
-
-# Next we create the gradient
+# The gradient works
 my_gradient = my_func.gradient
+print(my_gradient(x) == 2.0 * x + linear_term)
 
-# Frist we test that it is indeed an odl Operator
-if isinstance(my_gradient, odl.Operator):
-    print('The gradient is an operator, as it should be.')
-else:
-    print('There is an error in the gradient; it is not an operator.')
-
-# Second, we test that it evaluates correctly
-if my_gradient(x) == 2.0 * x + y:
-    print('The gradient evaluates correctly.')
-else:
-    print('There is an error in the evaluation of the gradient.')
-
-# Since we have not implemented the (directional) derivative, but we have
-# implemeted the gradient, the default implementation will use this in order to
-# evaluate the derivative. We test this behaviour.
+# The standard implementation of the directional derivative works
 p = space.element(np.random.randn(n))
 my_deriv = my_func.derivative(x)
+print(my_deriv(p) == my_gradient(x).inner(p))
 
-if my_deriv(p) == my_gradient(x).inner(p):
-    print('The default implementation of the derivative works as intended.')
-else:
-    print('There is a bug in the implementation of the derivative')
-
-# Since the proximal operator was not implemented it will raise a
-# NotImplementedError
-try:
-    my_func.proximal()
-except NotImplementedError:
-    print('As expected we caught a NotImplementedError when trying to create '
-          'the proximal operator')
-else:
-    print('There should have been an error, but it did not occure.')
-
-# We now create the conjugate functional and test a call to it
+# The conjugate functional works
 my_func_conj = my_func.conjugate_functional
+print(my_func_conj(x) == (x.norm()**2 / 2.0 -
+                          (x - my_func.linear_term).norm()**2 / 4.0 +
+                          my_func.linear_term.norm()**2 / 2.0 -
+                          x.inner(my_func.linear_term)))
 
-if my_func_conj(x) == (x.norm()**2 / 2.0 - (x - my_func.y).norm()**2 / 4.0 +
-                       my_func.y.norm()**2 / 2.0 - x.inner(my_func.y)):
-    print('The conjugate functional evaluates correctly.')
-else:
-    print('There is an error in the evaluation of the conjugate functional.')
-
-# Nothing else has been implemented in the conjugate functional. For example,
-# there is no gradient.
-try:
-    my_func_conj.gradient
-except NotImplementedError:
-    print('As expected we caught a NotImplementedError when trying to access '
-          'the gradient operator.')
-else:
-    print('There should have been an error, but it did not occure.')
-
-# There is no derivative either.
-try:
-    my_func_conj.derivative(x)(p)
-except NotImplementedError:
-    print('As expected we caught a NotImplementedError when trying to '
-          'evaluate the derivative.')
-else:
-    print('There should have been an error, but it did not occure.')
-
-# We now test some general properties that exists for all functionals. We can
-# add two functioanls, scale it by multiplying with a scalar from the left,
-# scale the argument by multiplying with a scalar from the right, and also
-# translate the argument. Except for the sum of two functional, the other
-# operations will apply corrections in order to evaluate gradients, etc.,
-# in a correct way.
-
-# Scaling the functional
-func_scal = np.random.rand()
-my_func_scaled = func_scal * my_func
-
-if my_func_scaled(x) == func_scal * (my_func(x)):
-    print('Scaling of functional works.')
-else:
-    print('There is an error in the scaling of functionals.')
-
-my_func_scaled_grad = my_func_scaled.gradient
-if my_func_scaled_grad(x) == func_scal * (my_func.gradient(x)):
-    print('Scaling of functional evaluates gradient correctly.')
-else:
-    print('There is an error in evaluating the gradient in the scaling of '
-          'functionals.')
-
-# Scaling of the argument
-arg_scal = np.random.rand()
-my_func_arg_scaled = my_func * arg_scal
-
-if my_func_arg_scaled(x) == my_func(arg_scal * x):
-    print('Scaling of functional argument works.')
-else:
-    print('There is an error in the scaling of functional argument.')
-
-# Sum of two functionals
-y_2 = space.element(np.random.randn(n))
-my_func_2 = MyFunctional(domain=space, y=y_2)
-my_funcs_sum = my_func + my_func_2
-
-if my_funcs_sum(x) == my_func(x) + my_func_2(x):
-    print('Summing two functionals works.')
-else:
-    print('There is an error in the summation of functionals.')
-
-# Translation of the functional, i.e., creating the functional f(. - y).
-my_func_translated = my_func.translate(y_2)
-if my_func_translated(x) == my_func(x - y_2):
-    print('Translation of functional works.')
-else:
-    print('There is an error in the translation of functional.')
+# As a final test, we check that the a scaled and translated version of the
+# functional evalutes the gradient correctly
+scal = np.random.rand()
+transl = space.element(np.random.randn(n))
+scal_and_transl_func_gradient = (scal * my_func.translate(transl)).gradient
+print(scal_and_transl_func_gradient(x) == scal * my_func.gradient(x - transl))
