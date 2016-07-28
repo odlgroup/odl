@@ -34,7 +34,6 @@ from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
                                   proximal_quadratic_perturbation)
 
 
-# TODO: Add missing functionals here
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
@@ -47,28 +46,19 @@ class Functional(Operator):
 
     """Implementation of a functional class.
 
+    A functional is an operator ``f`` that maps from some domain ``X`` to the
+    field of scalars ``F`` associated with the domain:
+
+        ``f : X -> F``.
+
     Notes
     -----
-    Note that the implementation of the functional class has assued that the
-    functionals are defined on a Hilbert space, i.e., that we consider
-    functionals
-
-    .. math::
-
-            f : X \\to F,
-
-    where :math:`X` is a Hilbert space and :math:`F` is a field of scalars
-    associated with :math:`X`. This has been done in order to simplify the
-    concept of *convex conjugate functional*. Since Hilbert spaces as selfdual
-    the convex conjugate functional is defined as
-
-    .. math::
-
-            f^* : X \\to F,
-
-            f^*(x^*) = \\sup_{x} \{ \\langle x^*,x \\rangle - f(x)  \}.
-
-    See, e.g., [Lue1969]_, [Roc1970]_ and [BC2011]_.
+    The implementation of the functional class assumes that the domain
+    :math:`X` is a Hilbert space and that the field of scalars :math:`F` is a
+    is the real numbers. It is possible to create functions that do not fulfil
+    these assumptions, however some mathematical results might not be valide in
+    this case. For more information, see
+    http://odl.readthedocs.io/guide/in_depth/functional_guide.html.
     """
 
     # TODO: Update doc above. What to write?
@@ -1092,7 +1082,6 @@ class TranslatedFunctional(Functional):
         :math:`\\langle \\nabla f(x), d \\rangle`.
         """
 
-        # TODO: Update doc below.
         class TranslatedGradientOperator(Operator):
 
             """The gradient operator for a translated functional."""
