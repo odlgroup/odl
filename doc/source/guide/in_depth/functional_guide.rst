@@ -12,14 +12,18 @@ A *functional* is an operator ``f`` that maps from some vector space ``X`` to th
 
 In the ODL solver package, functionals are implemented in the `Functional` class, a subclass to `Operator`.
 
-From a mathematical presepective, the above is a valide definition of a functional. However, since the purpose of these functionals are primarely to be used for solving optimization problems, the following assumptions are made:
+From a mathematical presepective, the above is a valide definition of a functional.
+However, since the purpose of these functionals are primarely to be used for solving optimization problems, the following assumptions are made:
 
  * the vector space ``X`` is a Hilbert space.
  * the field of scalars ``F`` are the real numbers.
 
-The first assumption is made in order to simplify the concept of *convex conjugate functional*, see ``conjugate_functional`` under :ref:`implementation` for more details or the Wikipedia articles on `convex conjugate`_ or `Legendre transformation`_.
+The first assumption is made in order to simplify the concept of *convex conjugate functional*, see ``conjugate_functional`` under :ref:`implementation` for more details, or the Wikipedia articles on `convex conjugates`_ and `Legendre transformations`_.
 
-The second assumption is made in order to guarantee that the optimization problem, in some way, makes sense. For example, if the field is not (totally) ordered (like for example the complex numbers) one cannot define optimization over it in a meaningful way. Or if the field does not have the least-upper-bound property, then attainment of an optimal solution cannot be guaranteed. See, for example, the Wikipedia articles on `field`_, `ordered field`_ and `least-upper-bound property`_.
+The second assumption is made in order to guarantee that the optimization problem, in some way, makes sense.
+For example, if the field is not (totally) ordered (like for example the complex numbers) one cannot define optimization over it in a meaningful way.
+Or if the field does not have the least-upper-bound property, then attainment of an optimal solution cannot be guaranteed.
+See, for example, the Wikipedia articles on `field`_, `ordered field`_ and `least-upper-bound property`_.
 
 Note that it is possible to use the class without fulfilling these assumtptions, however in this case some of the mathematical results might not hold.
 
@@ -48,7 +52,7 @@ Since `Functional` is a subclass of `Operator`, it has the *abstract method* ``d
 Moreover, there are several optional parameters associated with a functional. These are
 
 ``linear``: `bool`, optional
-    If `True`, the functional is considered as linear. In this case, ``domain`` and ``range`` have to be instances of `LinearSpace`, or `Field`.
+    If `True`, the functional is considered as linear.
     Default: ``False``
 ``smooth``: `bool`, optional
     If `True`, assume that the functional is continuously differentiable.
@@ -63,19 +67,50 @@ Moreover, there are several optional parameters associated with a functional. Th
     The Lipschitz constant of the gradient.
     Default: infinity
 
-A functional also has a number of optional methods and properties associated with it. The default value of these are all to raise a `NotImplemetedError`. The properties are:
+A functional also has a number of optional methods and properties associated with it.
+The default value of these are all to raise a `NotImplemetedError`.
+The properties are:
 
- * ``gradient``. This returns the gradient operator of the functional, i.e., the operator that corresponds to the mapping :math:`x \to \nabla f(x)`, where :math:`\nabla f(x)` is the element used to evaluate derivatives in a direction :math:`d` by :math:`\langle \nabla f(x), d \rangle`.
- * ``conjugate_functional``. This is the convex conjugate functional, also known as the Legendre transform or Fenchel conjugate. It is defined as :math:`f^*(x^*) = \sup_{x \in X} \{ \langle x^*,x \rangle - f(x)  \}`, where the element :math:`x^*` lives in the space :math:`X^*`, the (continuous/normed) dual space of :math:`X`, i.e., the space of all continuous linear functionals defined on :math:`X`. Moreover, the notation :math:`\langle x^*,x \rangle` is the "dual pairing" between :math:`X` and :math:`X^*`, i.e., the evaluation of the linear functional :math:`x^*` in the point :math:`x`. However, Hilbert spaces are self-dual, meaning :math:`X^* = X`, and :math:`\langle x^*,x \rangle` is then the inner product.
+ * ``gradient``. This returns the gradient operator of the functional, i.e., the operator that corresponds to the mapping
+
+   .. math::
+
+      x \to \nabla f(x),
+
+   where :math:`\nabla f(x)` is the element used to evaluate the (directional) derivative in a direction :math:`d` by :math:`\langle \nabla f(x), d \rangle`.
+
+ * ``conjugate_functional``. This is the convex conjugate functional, also known as the Legendre transform or Fenchel conjugate.
+   It is defined as
+
+   .. math::
+
+      f^*(x^*) = \sup_{x \in X} \{ \langle x^*,x \rangle - f(x)  \},
+
+   where the element :math:`x^*` lives in the space :math:`X^*`, the (continuous/normed) dual space of :math:`X`, i.e., the space of all continuous linear functionals defined on :math:`X`.
+   Moreover, the notation :math:`\langle x^*,x \rangle` is the "dual pairing" between :math:`X` and :math:`X^*`, i.e., the evaluation of the linear functional :math:`x^*` in the point :math:`x`.
+   However, Hilbert spaces are self-dual, meaning :math:`X^* = X`, and :math:`\langle x^*,x \rangle` is then the inner product.
 
 The optional method is:
 
- * ``proximal(sigma)``. This returns the proximal operator of the functional, where ``sigma`` is a nonnegative step-size like parameter. The proximal operator is defined as :math:`\text{prox}_{\sigma f}(x) = \text{arg min}_{y \in X} \{ f(y) + \frac{1}{2\sigma} \|y - x\|_2^2 \}`. 
+ * ``proximal(sigma)``. This returns the proximal operator of the functional, where ``sigma`` is a nonnegative step-size like parameter.
+   The proximal operator is defined as
+
+   .. math::
+
+      \text{prox}_{\sigma f}(x) = \text{arg min}_{y \in X} \{ f(y) + \frac{1}{2\sigma} \|y - x\|_2^2 \}. 
 
 The `Functional` class also contains two default implementations of two help functions:
 
-* ``derivative(point)``. Given an implementation of the gradient, this method return the (directional) derivative operator in ``point``. This is the linear operator :math:`x \to \langle x, \nabla f(point) \rangle`, where :math:`\nabla f(point)` is the gradient of the functional in the point :math:`point`.
-* ``translate(shift)``. Give a functional :math:`f(.)`, this method creates the functional :math:`f(. - shift)`
+ * ``derivative(point)``. Given an implementation of the gradient, this method return the (directional) derivative operator in ``point``.
+   This is the linear operator
+
+   .. math::
+
+      x \to \langle x, \nabla f(point) \rangle,
+
+   where :math:`\nabla f(point)` is the gradient of the functional in the point :math:`point`.
+
+ * ``translate(shift)``. Give a functional :math:`f(.)`, this method creates the functional :math:`f(. - shift)`
 
 
 Functional arithmetics
@@ -135,7 +170,8 @@ All available functional arithmetic, including which properties and methods that
 
 Code example
 ============
-This section contains an example of an implementation of a functional, namely the functional :math:`\|x\|_2^2 + \langle x, y \rangle`. The code is found in the file `functional_basic_example.py`, and more implementations of other functionals can be found in `default_functionals.py`. ::
+This section contains an example of an implementation of a functional, namely the functional :math:`\|x\|_2^2 + \langle x, y \rangle`.
+Another example can be found `functional_basic_example.py`, and more implementations of other functionals can be found in `default_functionals.py`. ::
 
     # Here we define the functional
     class MyFunctional(odl.solvers.Functional):

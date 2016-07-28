@@ -1586,13 +1586,13 @@ class ConvexConjugateLinearPerturb(Functional):
         y : `LinearSpaceVector`
             Element in domain of ``F^*``.
         """
-        if y is not None and not isinstance(y, LinearSpaceVector):
-            raise TypeError('vector {!r} not None or a LinearSpaceVector'
-                            ' instance.'.format(y))
+        if not isinstance(y, LinearSpaceVector):
+            raise TypeError('vector {!r} not a LinearSpaceVector instance.'
+                            ''.format(y))
 
         if y not in convex_conj_f.domain:
-            raise TypeError('vector {} not in the domain of the functional {}.'
-                            ''.format(y, convex_conj_f.domain))
+            raise TypeError('vector {!r} not in the domain of the functional '
+                            '{!r}.'.format(y, convex_conj_f.domain))
 
         super().__init__(domain=convex_conj_f.domain,
                          linear=convex_conj_f.is_linear,
