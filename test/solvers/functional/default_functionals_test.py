@@ -193,19 +193,20 @@ def test_L2_norm_squared():
     assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result,
                             places=PLACES)
 
-    # TODO: update this test. After removing the L2SquaredConjugate class,
-    # since (||x||_2^2)^* = 1/4 * ||x||_2^2, this test does not work as
-    # intended. Go through and design a new one.
-
-    # The biconjugate, which is a scaled version of the functional itself,
-    # since it is proper, convex and lower-semicontinuous
-    expected_functional = odl.solvers.L2NormSquare(space)
+    # The biconjugate, which is the functional itself since it is proper,
+    # convex and lower-semicontinuous
     cc_cc_func = cc_func.conjugate_functional
-    assert isinstance(cc_cc_func, odl.solvers.ConvexConjugateFuncScaling)
-    assert isinstance(cc_cc_func._orig_convex_conj_f,
-                      odl.solvers.FunctionalLeftScalarMult)
+
+    # Modulo scaling back and forth, check that it is in fact squared L2-norm
     assert isinstance(cc_cc_func.orig_convex_conj_f.operator,
-                      type(expected_functional))
+                      odl.solvers.L2NormSquare)
+
+    # Check that they evaluate the same
+    assert almost_equal(cc_cc_func(x), func(x), places=PLACES)
+
+    # Check that they evaluate the gradient the same
+    assert all_almost_equal(cc_cc_func.gradient(x), func.gradient(x),
+                            places=PLACES)
 
 
 def test_constant_functional():
