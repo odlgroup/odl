@@ -34,13 +34,13 @@ import odl
 discr_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100), interp='linear')
 
 # Create a product space for displacement field
-disp_field_space = odl.ProductSpace(discr_space, discr_space.ndim)
+disp_field_space = discr_space.vector_field_space
 
-# Create a template
+# Create a template, and set the template as an offset rectangle
 template = odl.phantom.cuboid(discr_space, [-0.5, -0.5], [-0.25, 0])
 
-# Define a displacement field that shifts an image by hx
-# to the right and by hy upwards. Then it rotates clockwise by theta.
+# Define a displacement field that rotates an image clockwise by theta. Then it
+# shifts the image by hx to the right and by hy upwards.
 hx = -0.5
 hy = -0.5
 theta = np.pi / 4

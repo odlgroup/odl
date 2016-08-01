@@ -41,7 +41,7 @@ def _linear_deform(template, displacement, out=None):
     ----------
     template : `DiscreteLpVector`
         Template to be deformed by a displacement field.
-    displacement : `ProductSpace` element
+    displacement : `ProductSpace` of `DiscreteLp` element
         The vector field (displacement field) used in the linearized
         deformation.
 
@@ -51,17 +51,35 @@ def _linear_deform(template, displacement, out=None):
 
     Examples
     --------
+    Create a template and a displacement field, and deform the given template
+    with the given displacement field.
+
+    Where the displacement field is zero we expect to get the same output
+    as the input. In the 4:th point, the displacement is non-zero and hence
+    we expect to get the value of the point 0.2 to the left, that is 1.0.
+
     >>> import odl
     >>> space = odl.uniform_discr(0, 1, 5)
-    >>> disp_field_space = odl.ProductSpace(space, space.ndim)
+    >>> disp_field_space = space.vector_field_space
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
     >>> _linear_deform(template, displacement_field)
     array([ 0.,  0.,  1.,  1.,  0.])
+
+    The result depends on the chosen interpolation. If we chose 'linear'
+    interpolation and offset the point half the distance between two
+    points, 0.1, we expect to get the mean of the values.
+
+    >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
+    >>> disp_field_space = space.vector_field_space
+    >>> template = space.element([0, 0, 1, 0, 0])
+    >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.1, 0]])
+    >>> _linear_deform(template, displacement_field)
+    array([ 0. ,  0. ,  1. ,  0.5,  0. ])
     """
     image_pts = template.space.points()
     for i, vi in enumerate(displacement):
-        image_pts[:, i] += vi.asarray().ravel()
+        image_pts[:, i] += vi.ntuple.asarray()
     return template.interpolation(image_pts.T, out=out, bounds_check=False)
 
 
@@ -82,7 +100,7 @@ class LinDeformFixedTempl(Operator):
 
         Parameters
         ----------
-        template : `DiscreteLpVector` or element-like
+        template : `DiscreteLpVector` element-like
             Fixed template that is to be deformed. If ``domain`` is not
             given, ``template`` must be a `DiscreteLpVector`, and the domain
             of this operator is inferred from ``template.space``. If ``domain``
@@ -94,10 +112,10 @@ class LinDeformFixedTempl(Operator):
 
         Examples
         --------
-        Create a template and deform it with a given deformation field.
+        Create a template and deform it with a given displacement field.
 
-        Where the deformation field is zero we expect to get the same output
-        as the input. In the 4:th point, the deformation is non-zero and hence
+        Where the displacement field is zero we expect to get the same output
+        as the input. In the 4:th point, the displacement is non-zero and hence
         we expect to get the value of the point 0.2 to the left, that is 1.0.
 
         >>> import odl
@@ -215,7 +233,7 @@ class LinDeformFixedDisp(Operator):
 
         Parameters
         ----------
-        displacement : `ProductSpace` element-like
+        displacement : `ProductSpace` of `DiscreteLp` element-like
             Fixed displacement field used in the linearized deformation.
             If ``domain`` is not given, ``displacement`` must be a
             `ProductSpace` element, and the domain of this operator is
@@ -228,10 +246,10 @@ class LinDeformFixedDisp(Operator):
 
         Examples
         --------
-        Create a given deformation and use it to deform a template.
+        Create a given displacement field and use it to deform a template.
 
-        Where the deformation field is zero we expect to get the same output
-        as the input. In the 4:th point, the deformation is non-zero and hence
+        Where the displacement field is zero we expect to get the same output
+        as the input. In the 4:th point, the displacement is non-zero and hence
         we expect to get the value of the point 0.2 to the left, that is 1.0.
 
         >>> import odl
@@ -274,7 +292,7 @@ class LinDeformFixedDisp(Operator):
 
         Operator.__init__(self, domain, domain, linear=True)
 
-        self._displacement = displacement
+        self.__displacement = displacement
 
     def _call(self, template, out=None):
         """Implementation of ``self(template)``.
@@ -285,7 +303,7 @@ class LinDeformFixedDisp(Operator):
             Given template that is to be deformed by the fixed
             displacement field.
         """
-        return _linear_deform(template, self._displacement, out)
+        return _linear_deform(template, self.__displacement, out)
 
     @property
     def adjoint(self):
@@ -298,22 +316,23 @@ class LinDeformFixedDisp(Operator):
         """
 
         # TODO allow users to select what method to use here.
-        div_op = Divergence(domain=self._displacement.space, method='forward',
+        div_op = Divergence(domain=self.__displacement.space, method='forward',
                             padding_method='symmetric')
-        jacobian_det = self.domain.element(np.exp(-div_op(self._displacement)))
-        deformation = LinDeformFixedDisp(-self._displacement,
+        jacobian_det = self.domain.element(
+            np.exp(-div_op(self.__displacement)))
+        deformation = LinDeformFixedDisp(-self.__displacement,
                                          domain=self.domain)
         return jacobian_det * deformation
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        if self.domain == self._displacement.space[0]:
+        if self.domain == self.__displacement.space[0]:
             domain_repr = ''
         else:
             domain_repr = ', domain={!r}'.format(self.domain)
 
         return '{}({!r}{})'.format(self.__class__.__name__,
-                                   self._displacement,
+                                   self.__displacement,
                                    domain_repr)
 
 

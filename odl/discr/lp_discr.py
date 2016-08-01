@@ -237,8 +237,8 @@ class DiscreteLp(DiscretizedSpace):
     @property
     def vector_field_space(self):
         """vector field space."""
-        real_space = self.astype(self._real_dtype)
-        return ProductSpace(real_space, self.ndim)
+        self.real_space = self.astype(self._real_dtype)
+        return ProductSpace(self.real_space, self.ndim)
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
