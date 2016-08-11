@@ -74,6 +74,11 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     -------
     `None`
     """
+
+    if x not in grad.domain:
+        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
+                        ''.format(x, grad.domain))
+
     hess = ident = IdentityOperator(grad.range)
     grad_x = grad(x)
     for _ in range(niter):

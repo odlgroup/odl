@@ -148,13 +148,13 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     """
     # Forward operator
     if not isinstance(op, Operator):
-        raise TypeError('`op` {} is not an instance of {}'
-                        ''.format(op, Operator))
+        raise TypeError('`op` {!r} is not an `Operator` instance'
+                        ''.format(op))
 
     # Starting point
     if x not in op.domain:
-        raise TypeError('`x` {} is not in the domain of `op` {}'
-                        ''.format(x.space, op.domain))
+        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
+                        ''.format(x, op.domain))
 
     # Step size parameter
     tau, tau_in = float(tau), tau

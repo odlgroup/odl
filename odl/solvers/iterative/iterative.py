@@ -102,6 +102,10 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     """
     # TODO: add a book reference
 
+    if x not in op.domain:
+        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
+                        ''.format(x, op.domain))
+
     # Reusable temporaries
     tmp_ran = op.range.element()
     tmp_dom = op.domain.element()
@@ -165,6 +169,10 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
 
     if op.domain != op.range:
         raise ValueError('operator needs to be self-adjoint')
+
+    if x not in op.domain:
+        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
+                        ''.format(x, op.domain))
 
     r = op(x)
     r.lincomb(1, rhs, -1, r)       # r = rhs - A x
@@ -249,6 +257,10 @@ Conjugate_gradient_on_the_normal_equations>`_.
     """
     # TODO: add a book reference
     # TODO: update doc
+
+    if x not in op.domain:
+        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
+                        ''.format(x, op.domain))
 
     d = op(x)
     d.lincomb(1, rhs, -1, d)               # d = rhs - A x
@@ -351,9 +363,13 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     -------
     None
     """
+    if x not in op.domain:
+        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
+                        ''.format(x, op.domain))
+
     x0 = x.copy()
     id_op = IdentityOperator(op.domain)
-    dx = x.space.zero()
+    dx = op.domain.zero()
 
     tmp_dom = op.domain.element()
     u = op.domain.element()
