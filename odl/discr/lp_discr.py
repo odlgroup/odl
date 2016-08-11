@@ -110,14 +110,14 @@ class DiscreteLp(DiscretizedSpace):
             if interp not in _SUPPORTED_INTERP:
                 raise ValueError("`interp` type '{}' not understood"
                                  "".format(interp_in))
-            self._interp_by_axis = [interp] * partition.ndim
+            self.__interp_by_axis = [interp] * partition.ndim
         except TypeError:
             # Got sequence of strings
             if len(interp) != partition.ndim:
                 raise ValueError('expected {} (ndim) entries in interp, '
                                  'got {}'.format(partition.ndim, len(interp)))
 
-            self._interp_by_axis = [str(s).lower() for s in interp]
+            self.__interp_by_axis = [str(s).lower() for s in interp]
             if any(s not in _SUPPORTED_INTERP for s in self.interp_by_axis):
                 raise ValueError('interp sequence {} contains illegal '
                                  'values'.format(interp))
@@ -161,7 +161,7 @@ class DiscreteLp(DiscretizedSpace):
     @property
     def interp_by_axis(self):
         """Interpolation by axis type of this discretization."""
-        return self._interp_by_axis
+        return self.__interp_by_axis
 
     @property
     def min_corner(self):
@@ -235,8 +235,8 @@ class DiscreteLp(DiscretizedSpace):
     @property
     def vector_field_space(self):
         """vector field space."""
-        self.real_space = self.astype(self._real_dtype)
-        return ProductSpace(self.real_space, self.ndim)
+        real_space = self.astype(self._real_dtype)
+        return ProductSpace(real_space, self.ndim)
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.

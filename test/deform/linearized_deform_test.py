@@ -22,8 +22,9 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import pytest
 import numpy as np
+import pytest
+
 import odl
 from odl.deform import LinDeformFixedTempl, LinDeformFixedDisp
 
@@ -108,7 +109,7 @@ def disp_field_factory(n):
         return lambda x: EPS * x[i]
 
     lst = [lambda x: EPS * prod(x)]
-    lst += [coordinate_projection_i(i) for i in range(1, n)]
+    lst.extend(coordinate_projection_i(i) for i in range(1, n))
     return lst
 
 
@@ -173,7 +174,7 @@ def inv_deform_template(x):
     return template_function(disp_x)
 
 
-# Test implementations start here
+# --- LinDeformFixedTempl --- #
 
 
 def test_fixed_templ_init():
@@ -182,25 +183,12 @@ def test_fixed_templ_init():
     template = space.element(template_function)
 
     # Valid input
-    print(LinDeformFixedTempl(template, space.vector_field_space))
-    print(LinDeformFixedTempl(template_function,
-                              domain=space.vector_field_space))
-    print(LinDeformFixedTempl(template, domain=space.vector_field_space))
-    print(LinDeformFixedTempl(template=template,
-                              domain=space.vector_field_space))
+    print(LinDeformFixedTempl(template))
 
-    # Non-valid input
-    with pytest.raises(TypeError):  # domain not product space
-        LinDeformFixedTempl(template, space)
-    with pytest.raises(TypeError):  # domain wrong type of product space
-        bad_pspace = odl.ProductSpace(space, odl.rn(3))
-        LinDeformFixedTempl(template, bad_pspace)
-    with pytest.raises(TypeError):  # domain product space of non DiscreteLp
-        bad_pspace = odl.ProductSpace(odl.rn(2), 1)
-        LinDeformFixedTempl(template, bad_pspace)
-    with pytest.raises(TypeError):  # wrong dtype on domain
-        wrong_dtype = odl.ProductSpace(space.astype(complex), 1)
-        LinDeformFixedTempl(template, wrong_dtype)
+    # Invalid input
+    with pytest.raises(TypeError):
+        # template not a DiscreteLpVector
+        LinDeformFixedTempl(template_function)
 
 
 def test_fixed_templ_call(space):
@@ -243,6 +231,9 @@ def test_fixed_templ_deriv(space):
     assert rlt_err < error_bound(space.interp)
 
 
+# --- LinDeformFixedDisp --- #
+
+
 def test_fixed_disp_init():
     """Verify that the init method and checks work properly."""
     space = odl.uniform_discr(0, 1, 5)
@@ -250,23 +241,26 @@ def test_fixed_disp_init():
         disp_field_factory(space.ndim))
 
     # Valid input
-    print(LinDeformFixedDisp(disp_field, space))
-    print(LinDeformFixedDisp(disp_field, domain=space))
-    print(LinDeformFixedDisp(disp_field_factory(space.ndim), domain=space))
-    print(LinDeformFixedDisp(displacement=disp_field, domain=space))
+    print(LinDeformFixedDisp(disp_field))
+    print(LinDeformFixedDisp(disp_field, templ_space=space))
 
     # Non-valid input
-    with pytest.raises(TypeError):  # domain not DiscreteLp
+    with pytest.raises(TypeError):  # displacement not ProductSpaceVector
+        LinDeformFixedDisp(space.one())
+    with pytest.raises(TypeError):  # templ_space not DiscreteLp
         LinDeformFixedDisp(disp_field, space.vector_field_space)
-    with pytest.raises(TypeError):  # domain wrong type of product space
+    with pytest.raises(TypeError):  # templ_space not a power space
         bad_pspace = odl.ProductSpace(space, odl.rn(3))
         LinDeformFixedDisp(disp_field, bad_pspace)
-    with pytest.raises(TypeError):  # domain product space of non DiscreteLp
+    with pytest.raises(TypeError):  # templ_space not based on DiscreteLp
         bad_pspace = odl.ProductSpace(odl.rn(2), 1)
         LinDeformFixedDisp(disp_field, bad_pspace)
-    with pytest.raises(TypeError):  # wrong dtype on domain
+    with pytest.raises(TypeError):  # wrong dtype on templ_space
         wrong_dtype = odl.ProductSpace(space.astype(complex), 1)
         LinDeformFixedDisp(disp_field, wrong_dtype)
+    with pytest.raises(ValueError):  # vector field spaces don't match
+        bad_space = odl.uniform_discr(0, 1, 10)
+        LinDeformFixedDisp(disp_field, bad_space)
 
 
 def test_fixed_disp_call(space):
@@ -276,7 +270,7 @@ def test_fixed_disp_call(space):
         disp_field_factory(space.ndim))
 
     # Calculate result and exact result
-    fixed_disp_op = LinDeformFixedDisp(disp_field, domain=space)
+    fixed_disp_op = LinDeformFixedDisp(disp_field, templ_space=space)
     deform_templ_comp = fixed_disp_op(template)
     deform_templ_exact = space.element(deform_template)
 
@@ -294,7 +288,7 @@ def test_fixed_disp_adj(space):
         disp_field_factory(space.ndim))
 
     # Calculate result
-    fixed_disp_op = LinDeformFixedDisp(disp_field, domain=space)
+    fixed_disp_op = LinDeformFixedDisp(disp_field, templ_space=space)
     fixed_disp_adj_comp = fixed_disp_op.adjoint(template)
 
     # Calculate the analytic result
@@ -312,6 +306,7 @@ def test_fixed_disp_adj(space):
     adj1 = disp_template.inner(template)
     adj2 = template.inner(fixed_disp_adj_comp)
     assert odl.util.testutils.almost_equal(adj1, adj2, places=1)
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
