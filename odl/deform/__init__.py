@@ -23,6 +23,5 @@ from __future__ import absolute_import
 __all__ = ()
 
 
-from . import linearized
 from .linearized import *
 __all__ += linearized.__all__
