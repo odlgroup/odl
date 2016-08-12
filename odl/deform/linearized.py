@@ -28,7 +28,7 @@ import numpy as np
 from odl.discr import (DiscreteLp, DiscreteLpVector, Gradient, Divergence,
                        PointwiseInner)
 from odl.operator.operator import Operator
-from odl.space import ProductSpace, ProductSpaceVector
+from odl.space import ProductSpaceVector
 
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp')
@@ -73,7 +73,7 @@ def _linear_deform(template, displacement, out=None):
     >>> _linear_deform(template, displacement_field)
     array([ 0.,  0.,  1.,  1.,  0.])
 
-    The result depends on the chosen interpolation. If we chose 'linear'
+    The result depends on the chosen interpolation. If we choose 'linear'
     interpolation and offset the point half the distance between two
     points, 0.1, we expect to get the mean of the values.
 
@@ -114,15 +114,26 @@ class LinDeformFixedTempl(Operator):
 
     i.e., :math:`W_I(v)(x) = I(x + v(x))`.
 
-    Note that this operator is non-linear. Its derivative is given by
+    Note that this operator is non-linear. Its derivative at :math:`v` is
+    an operator that maps :math:`V` into :math:`X`:
 
     .. math::
 
-        W_I'(v)(u) = \\big< \\nabla I(\cdot + v(\cdot)),
-        u \\big>_{\mathbb{R}^d},
+        W_I'(v) : V \\to X, \quad W_I'(v)(u) =
+        \\big< \\nabla I(\cdot + v(\cdot)), u \\big>_{\mathbb{R}^d},
+
+    i.e., :math:`W_I'(v)(u)(x) = \\nabla I(x + v(x))^T u(x)`,
 
     which is to be understood as a point-wise inner product, resulting
-    in a function in :math:`X`.
+    in a function in :math:`X`. And the adjoint of the preceding derivative
+    is also an operator that maps :math:`X` into :math:`V`:
+
+    .. math::
+
+        W_I'(v)^* : X \\to V, \quad W_I'(v)^*(J) =
+        J \, \\nabla I(\cdot + v(\cdot)),
+
+    i.e., :math:`W_I'(v)^*(J)(x) = J(x) \, \\nabla I(x + v(x))`.
     """
 
     def __init__(self, template):
@@ -149,7 +160,7 @@ class LinDeformFixedTempl(Operator):
         >>> print(op(disp_field))
         [0.0, 0.0, 1.0, 1.0, 0.0]
 
-        The result depends on the chosen interpolation. If we chose 'linear'
+        The result depends on the chosen interpolation. If we choose 'linear'
         interpolation and offset the point half the distance between two
         points, 0.1, we expect to get the mean of the values.
 
@@ -228,8 +239,8 @@ class LinDeformFixedDisp(Operator):
     -----
     For :math:`\Omega \subset \mathbb{R}^d`, we take :math:`V := X^d`
     to be the space of displacement fields, where :math:`X = L^p(\Omega)`
-    is the template space. Hence the deformation operator with fixed
-    deformation :math:`v \\in X^d` maps :math:`X` into :math:`X`:
+    is the template space. Hence the deformation operator with the fixed
+    displacement field :math:`v \\in V` maps :math:`X` into :math:`X`:
 
     .. math::
 
@@ -237,13 +248,15 @@ class LinDeformFixedDisp(Operator):
 
     i.e., :math:`W_v(I)(x) = I(x + v(x))`.
 
-    This operator is linear, but it may not be bounded and may thus not
-    have a formal adjoint. For "small" :math:`v`, though, one can
-    approximate the adjoint by
+    This operator is linear, so its derivative is itself, but it may not be
+    bounded and may thus not have a formal adjoint. For "small" :math:`v`,
+    though, one can approximate the adjoint by
 
     .. math::
 
-        W_v^*(I) \\approx \exp(-\mathrm{div}\, v) \, I(\cdot + v(\cdot)).
+        W_v^*(I) \\approx \exp(-\mathrm{div}\, v) \, I(\cdot - v(\cdot)),
+
+    i.e., :math:`W_v^*(I)(x) \\approx \exp(-\mathrm{div}\,v(x))\, I(x - v(x))`.
     """
 
     def __init__(self, displacement, templ_space=None):
@@ -276,7 +289,7 @@ class LinDeformFixedDisp(Operator):
         >>> print(op([0, 0, 1, 0, 0]))
         [0.0, 0.0, 1.0, 1.0, 0.0]
 
-        The result depends on the chosen interpolation. If we chose 'linear'
+        The result depends on the chosen interpolation. If we choose 'linear'
         interpolation and offset the point half the distance between two
         points, 0.1, we expect to get the mean of the values.
 
@@ -323,8 +336,7 @@ class LinDeformFixedDisp(Operator):
 
     @property
     def adjoint(self):
-        """Adjoint of the linear operator that maps a template ``I`` to
-        the new function ``x --> exp(-div(v(x))) * I(x - v(x))``.
+        """Adjoint of the linear operator.
 
         Note that this implementation uses an approximation that is only
         valid for small displacements.
