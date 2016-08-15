@@ -229,7 +229,7 @@ def test_fspace_vector_eval_real():
     with pytest.raises(TypeError):  # ValueError: invalid vectorized input
         f_vec_oop(points[0])
 
-    # In-place only
+    # In-place-only
     out_arr = np.empty((5,), dtype='float64')
     out_mg = np.empty((2, 3), dtype='float64')
 
@@ -287,7 +287,7 @@ def test_fspace_vector_eval_complex():
     with pytest.raises(TypeError):  # ValueError: invalid vectorized input
         f_vec_oop(points[0])
 
-    # In-place only
+    # In-place-only
     out_arr = np.empty((5,), dtype='complex128')
     out_mg = np.empty((2, 3), dtype='complex128')
 

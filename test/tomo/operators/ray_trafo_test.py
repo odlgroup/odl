@@ -155,7 +155,14 @@ def projector(request):
         raise ValueError('geom not valid')
 
 
-def test_projector(projector):
+@pytest.fixture(scope="module",
+                params=[True, False],
+                ids=[' in-place ', ' out-of-place '])
+def in_place(request):
+    return request.param
+
+
+def test_projector(projector, in_place):
     """Test discrete Ray transform forward projection."""
 
     # TODO: this needs to be improved
@@ -166,7 +173,11 @@ def test_projector(projector):
     vol = projector.domain.one()
 
     # Calculate projection
-    proj = projector(vol)
+    if in_place:
+        proj = projector.range.zero()
+        projector(vol, out=proj)
+    else:
+        proj = projector(vol)
 
     # We expect maximum value to be along diagonal
     expected_max = projector.domain.partition.extent()[0] * np.sqrt(2)

@@ -998,7 +998,7 @@ class _PerAxisInterpolator(_Interpolator):
             # TODO: determine best summation order from array strides
             for lh, w_lo, w_hi in zip(lo_hi, low_weights, high_weights):
 
-                # We don't multiply in place to exploit the cheap operations
+                # We don't multiply in-place to exploit the cheap operations
                 # in the beginning: sizes grow gradually as following:
                 # (n, 1, 1, ...) -> (n, m, 1, ...) -> ...
                 # Hence, it is faster to build up the weight array instead

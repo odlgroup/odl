@@ -239,12 +239,12 @@ def test_linear_adjoint():
     xvec = Aop.range.element(x)
     outvec = Aop.domain.element()
 
-    # Using inplace adjoint
+    # Using in-place adjoint
     Aop.adjoint(xvec, outvec)
     np.dot(A.T, x, out)
     assert all_almost_equal(out, outvec)
 
-    # Using out of place method
+    # Using out-of-place method
     assert all_almost_equal(Aop.adjoint(xvec), np.dot(A.T, x))
 
 

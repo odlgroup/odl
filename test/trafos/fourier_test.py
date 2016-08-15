@@ -348,8 +348,8 @@ def test_dft_preprocess_data(sign):
         correct_arr.append((1 + 1j) * (1 - 2 * ((i + j + k) % 2)))
 
     arr = np.ones(shape, dtype='complex64') * (1 + 1j)
-    preproc = dft_preprocess_data(arr, shift=True, sign=sign)  # out of place
-    dft_preprocess_data(arr, shift=True, out=arr, sign=sign)  # in place
+    preproc = dft_preprocess_data(arr, shift=True, sign=sign)  # out-of-place
+    dft_preprocess_data(arr, shift=True, out=arr, sign=sign)  # in-place
 
     assert all_almost_equal(preproc.ravel(), correct_arr)
     assert all_almost_equal(arr.ravel(), correct_arr)
@@ -387,10 +387,10 @@ def test_dft_preprocess_data_halfcomplex(sign):
         correct_arr.append(1 - 2 * ((i + j + k) % 2))
 
     arr = np.ones(shape, dtype='float64')
-    preproc = dft_preprocess_data(arr, shift=True, sign=sign)  # out of place
+    preproc = dft_preprocess_data(arr, shift=True, sign=sign)  # out-of-place
     out = np.empty_like(arr)
-    dft_preprocess_data(arr, shift=True, out=out, sign=sign)  # in place
-    dft_preprocess_data(arr, shift=True, out=arr, sign=sign)  # in place
+    dft_preprocess_data(arr, shift=True, out=out, sign=sign)  # in-place
+    dft_preprocess_data(arr, shift=True, out=arr, sign=sign)  # in-place
     assert all_almost_equal(preproc.ravel(), correct_arr)
     assert all_almost_equal(arr.ravel(), correct_arr)
     assert all_almost_equal(out.ravel(), correct_arr)
