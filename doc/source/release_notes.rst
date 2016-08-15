@@ -6,21 +6,58 @@
 Release Notes
 #############
 
+ODL 0.3.1 Release Notes (2016-08-15)
+====================================
+
+This release mainly fixes an issue that made it impossible to ``pip install odl`` with version 0.3.0.
+It also adds the first really advanced solvers based on forward-backward and Douglas-Rachford
+splitting.
+
+New features
+------------
+- New solvers based on the Douglas-Rachford and forward-backward splitting schemes. (`PR 478`_, 
+  `PR 480`_)
+- ``NormOperator`` and ``DistOperator`` added. (`PR 487`_)
+- Single-element ``NtuplesBase`` vectors can now be converted to ``float``, ``complex`` etc.
+  (`PR 493`_)
+
+
+Improvements
+------------
+- ``DiscreteLp.element()`` now allows non-vectorized and 1D scalar functions as input. (`PR 476`_)
+- Speed improvements in the unit tests. (`PR 479`_)
+- Uniformization of ``__init__()`` docstrings and many further documentation and naming improvements.
+  (`PR 489`_, `PR 482`_, `PR 491`_)
+- Clearer separation between attributes that are intended as part of the subclassing API and those
+  that are not. (`PR 471`_)
+- Chambolle-Pock solver accepts also non-linear operators and has better documentation now. 
+  (`PR 490`_)
+- Clean-up of imports. (`PR 492`_)
+- All solvers now check that the given start value ``x`` is in ``op.domain``. (`PR 502`_)
+- Added test for in-place evaluation of the ray transform. (`PR 500`_)
+
+Bugfixes
+--------
+- Axes in ``show()`` methods of several classes now use the correct corner coordinates, the old ones
+  were off by half a grid cell in some situations. (`PR 477`_).
+- Catch case in ``power_method_opnorm()`` when iteration goes to zero. (`PR 495`_)
+
+
 ODL 0.3.0 Release Notes (2016-06-29)
 ====================================
 
-This release marks the removal of odlpp from the core library. It has instead been moved to a separate library, odlcuda.
+This release marks the removal of ``odlpp`` from the core library. It has instead been moved to a separate library, ``odlcuda``.
 
 New features
 ------------
 - To enable cuda backends for the odl spaces, an entry point ``'odl.space'`` has been added where external libraries can hook in to add `FnBase` and `NtuplesBase` type spaces.
 - Add pytest fixtures ``'fn_impl'`` and ``'ntuple_impl'`` to the test config ``conf.py``. These can now be accessed from any test.
-- Allow creation of general spaces using the ``fn``, ``cn`` and ``rn`` methods. This functions now take an ``impl`` parameter which defaults to ``'numpy'`` but with odlcuda installed it may also be set to ``'cuda'``. The old numpy specific ``Fn``, ``Cn`` and ``Rn`` functions have been removed.
+- Allow creation of general spaces using the ``fn``, ``cn`` and ``rn`` factories. These functions now take an ``impl`` parameter which defaults to ``'numpy'`` but with odlcuda installed it may also be set to ``'cuda'``. The old numpy specific ``Fn``, ``Cn`` and ``Rn`` functions have been removed.
 
 Changes
 -------
 - Moved all CUDA specfic code out of the library into odlcuda. This means that ``cu_ntuples.py`` and related files have been removed.
-- rename ``ntuples.py`` to ``npy_ntuples.py``.
+- Rename ``ntuples.py`` to ``npy_ntuples.py``.
 - Added ``Numpy`` to the numy based spaces. They are now named ``NumpyFn`` and ``NumpyNtuples``.
 - Prepended ``npy_`` to all methods specific to ``ntuples`` such as weightings.
 
