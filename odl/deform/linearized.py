@@ -44,9 +44,9 @@ def _linear_deform(template, displacement, out=None):
     ----------
     template : `DiscreteLpVector`
         Template to be deformed by a displacement field.
-    displacement : `ProductSpace` of `DiscreteLp` element
-        The vector field (displacement field) used in the linearized
-        deformation.
+    displacement : element of power space of `DiscreteLp`
+        The vector field (displacement field) used to deform the
+        template.
     out : `numpy.ndarray`, optional
         Array to which the function values of the deformed template
         are written. It must have the same shape as ``template`` and
@@ -60,10 +60,11 @@ def _linear_deform(template, displacement, out=None):
 
     Examples
     --------
-    We create a simple 1D template and a corresponding displacement
-    field. Where the displacement is zero, we expect that the output
-    value is the same as the input value. In the 4-th point, the value
-    is taken from 0.2 (one cell) to the left, i.e. 1.0.
+    Create a simple 1D template to initialize the operator and
+    apply it to a displacement field. Where the displacement is zero,
+    the output value is the same as the input value.
+    In the 4-th point, the value is taken from 0.2 (one cell) to the
+    left, i.e. 1.0.
 
     >>> import odl
     >>> space = odl.uniform_discr(0, 1, 5)
@@ -73,9 +74,9 @@ def _linear_deform(template, displacement, out=None):
     >>> _linear_deform(template, displacement_field)
     array([ 0.,  0.,  1.,  1.,  0.])
 
-    The result depends on the chosen interpolation. If we choose 'linear'
-    interpolation and offset the point half the distance between two
-    points, 0.1, we expect to get the mean of the values.
+    The result depends on the chosen interpolation. With 'linear'
+    interpolation and an offset equal to half the distance between two
+    points, 0.1, one gets the mean of the values.
 
     >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
     >>> disp_field_space = space.vector_field_space
@@ -146,9 +147,9 @@ class LinDeformFixedTempl(Operator):
 
         Examples
         --------
-        We create a simple 1D template to initialize the operator and
+        Create a simple 1D template to initialize the operator and
         apply it to a displacement field. Where the displacement is zero,
-        we expect that the output value is the same as the input value.
+        the output value is the same as the input value.
         In the 4-th point, the value is taken from 0.2 (one cell) to the
         left, i.e. 1.0.
 
@@ -160,9 +161,9 @@ class LinDeformFixedTempl(Operator):
         >>> print(op(disp_field))
         [0.0, 0.0, 1.0, 1.0, 0.0]
 
-        The result depends on the chosen interpolation. If we choose 'linear'
-        interpolation and offset the point half the distance between two
-        points, 0.1, we expect to get the mean of the values.
+        The result depends on the chosen interpolation. With 'linear'
+        interpolation and an offset equal to half the distance between two
+        points, 0.1, one gets the mean of the values.
 
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
         >>> template = space.element([0, 0, 1, 0, 0])
@@ -275,9 +276,9 @@ class LinDeformFixedDisp(Operator):
 
         Examples
         --------
-        We create a simple 1D displacement field to initialize the operator
-        and apply it to a template. Where the displacement is zero,
-        we expect that the output value is the same as the input value.
+        Create a simple 1D template to initialize the operator and
+        apply it to a displacement field. Where the displacement is zero,
+        the output value is the same as the input value.
         In the 4-th point, the value is taken from 0.2 (one cell) to the
         left, i.e. 1.0.
 
@@ -289,9 +290,9 @@ class LinDeformFixedDisp(Operator):
         >>> print(op([0, 0, 1, 0, 0]))
         [0.0, 0.0, 1.0, 1.0, 0.0]
 
-        The result depends on the chosen interpolation. If we choose 'linear'
-        interpolation and offset the point half the distance between two
-        points, 0.1, we expect to get the mean of the values.
+        The result depends on the chosen interpolation. With 'linear'
+        interpolation and an offset equal to half the distance between two
+        points, 0.1, one gets the mean of the values.
 
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
         >>> disp_field = space.vector_field_space.element([[0, 0, 0, -0.1, 0]])
@@ -306,12 +307,12 @@ class LinDeformFixedDisp(Operator):
         if not displacement.space.is_power_space:
             raise TypeError('`displacement.space` must be a power space, '
                             'got {!r}'.format(displacement.space))
-        if not isinstance(displacement[0].space, DiscreteLp):
-            raise TypeError('`displacement[0].space` must be a `DiscreteLp` '
-                            'instance, got {!r}'.format(displacement[0]))
+        if not isinstance(displacement.space[0], DiscreteLp):
+            raise TypeError('`displacement.space[0]` must be a `DiscreteLp` '
+                            'instance, got {!r}'.format(displacement.space[0]))
 
         if templ_space is None:
-            templ_space = displacement[0].space
+            templ_space = displacement.space[0]
         else:
             if not isinstance(templ_space, DiscreteLp):
                 raise TypeError('`templ_space` must be a `DiscreteLp` '
@@ -335,6 +336,15 @@ class LinDeformFixedDisp(Operator):
         return _linear_deform(template, self.displacement, out)
 
     @property
+    def inverse(self):
+        """Inverse deformation using ``-v`` as displacement.
+
+        Note that this implementation uses an approximation that is only
+        valid for small displacements.
+        """
+        return LinDeformFixedDisp(-self.displacement, templ_space=self.domain)
+
+    @property
     def adjoint(self):
         """Adjoint of the linear operator.
 
@@ -346,9 +356,8 @@ class LinDeformFixedDisp(Operator):
                             padding_method='symmetric')
         jacobian_det = self.domain.element(
             np.exp(-div_op(self.displacement)))
-        deformation = LinDeformFixedDisp(-self.displacement,
-                                         templ_space=self.domain)
-        return jacobian_det * deformation
+
+        return jacobian_det * self.inverse
 
     def __repr__(self):
         """Return ``repr(self)``."""

@@ -19,9 +19,9 @@
 
 The linearized deformation operator with fixed displacement ``v`` maps
 a given template ``I`` to the function ``x --> I(x + v(x))``.
-This operator is linear.
+This operator is linear (in ``I``).
 
-Here, we consider a 2D example, where the displacement field ``v``
+This example considers a 2D case, where the displacement field ``v``
 is a Gaussian in each component, with positive sign in the first and
 negative sign in the second component. Note that in the deformed image,
 the value at ``x`` is **taken from** the original image at ``x + v(x)``,
@@ -42,9 +42,9 @@ import odl
 
 # Template space: discretized functions on the rectangle [-1, 1]^2 with
 # 100 samples per dimension.
-templ_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100), interp='linear')
+templ_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100))
 
-# We use a rectangle as template
+# The template is a rectangle of size 1.0 x 0.5
 template = odl.phantom.cuboid(templ_space, [-0.5, -0.25], [0.5, 0.25])
 
 # Create a product space for displacement field

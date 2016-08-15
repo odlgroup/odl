@@ -20,7 +20,7 @@
 The linearized deformation operator with fixed template (image) ``I`` maps
 a given displacement field ``v`` to the function ``x --> I(x + v(x))``.
 
-Here, we consider a 2D example, where the displacement field ``v``
+This example consider a 2D case, where the displacement field ``v``
 is a Gaussian in each component, with positive sign in the first and
 negative sign in the second component. Note that in the deformed image,
 the value at ``x`` is **taken from** the original image at ``x + v(x)``,
@@ -28,8 +28,8 @@ hence the values are moved by ``-v(x)`` when comparing deformed and
 original templates.
 
 The derivative and its adjoint are based on the deformation of the
-gradient of the template, hence we expect to see some kind of edge image
-and an "edge vector field".
+gradient of the template, hence the result is expected to be some kind of
+edge image or "edge vector field", respectively.
 """
 
 import numpy as np
@@ -40,10 +40,11 @@ import odl
 
 
 # Template space: discretized functions on the rectangle [-1, 1]^2 with
-# 100 samples per dimension.
+# 100 samples per dimension. Usage of 'linear' interpolation ensures that
+# the template gradient is well-defined.
 templ_space = odl.uniform_discr([-1, -1], [1, 1], (100, 100), interp='linear')
 
-# We use a rectangle as template
+# The template is a rectangle of size 1.0 x 0.5
 template = odl.phantom.cuboid(templ_space, [-0.5, -0.25], [0.5, 0.25])
 
 # Create a product space for displacement field
