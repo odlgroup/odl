@@ -79,6 +79,10 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
         Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``
     """
 
+    if x not in grad.domain:
+        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
+                        ''.format(x, grad.domain))
+
     if not callable(line_search):
         step = float(line_search)
         smart_line_search = False

@@ -78,6 +78,10 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
     solved using the conjugate gradient method.
     """
     # TODO: update doc
+    if x not in op.domain:
+        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
+                        ''.format(x, op.domain))
+
     if cg_iter is None:
         # Motivated by that if it is Ax = b, x and b in Rn, it takes at most n
         # iterations to solve with cg
@@ -91,12 +95,12 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
 
         # Compute hessian (as operator) and gradient in the current point
         hessian = op.derivative(x)
-        deriv_in_point = op(x).copy()
+        deriv_in_point = op(x)
 
         # Solving A*x = b for x, in this case f'(x)*p = -f(x)
         # TODO: Let the user provide/choose method for how to solve this?
         conjugate_gradient(hessian, search_direction,
-                           -1 * deriv_in_point, cg_iter)
+                           -deriv_in_point, cg_iter)
 
         # Computing step length
         dir_deriv = search_direction.inner(deriv_in_point)
