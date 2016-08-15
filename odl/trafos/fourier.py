@@ -1259,7 +1259,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
         out[:] = arr
 
     if is_real_dtype(out.dtype) and not shift:
-        raise ValueError('cannot pre-process real input in place without '
+        raise ValueError('cannot pre-process real input in-place without '
                          'shift')
 
     if sign == '-':
@@ -2176,7 +2176,7 @@ class FourierTransform(FourierTransformBase):
             Result of the transform
         """
         # Pre-processing before calculating the DFT
-        # Note: since the FFT call is out of place, it does not matter if
+        # Note: since the FFT call is out-of-place, it does not matter if
         # preprocess produces real or complex output in the R2C variant.
         # There is no significant time difference between (full) R2C and
         # C2C DFT in Numpy.
@@ -2505,7 +2505,7 @@ class FourierTransformInverse(FourierTransformBase):
             fft_arr /= np.prod(np.take(self.domain.shape, self.axes))
 
         # Post-processing in IFT = pre-processing in FT. In-place for
-        # C2C and HC2R. For C2R, this is out of place and discards the
+        # C2C and HC2R. For C2R, this is out-of-place and discards the
         # imaginary part.
         self._postprocess(fft_arr, out=out)
         return out

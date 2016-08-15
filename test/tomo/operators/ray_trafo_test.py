@@ -157,12 +157,12 @@ def projector(request):
 
 @pytest.fixture(scope="module",
                 params=[True, False],
-                ids=[' inplace ', ' out of place '])
-def inplace(request):
+                ids=[' in-place ', ' out-of-place '])
+def in_place(request):
     return request.param
 
 
-def test_projector(projector, inplace):
+def test_projector(projector, in_place):
     """Test discrete Ray transform forward projection."""
 
     # TODO: this needs to be improved
@@ -173,7 +173,7 @@ def test_projector(projector, inplace):
     vol = projector.domain.one()
 
     # Calculate projection
-    if inplace:
+    if in_place:
         proj = projector.range.zero()
         projector(vol, out=proj)
     else:

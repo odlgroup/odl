@@ -67,7 +67,7 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
     projection : `callable`, optional
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
-        argument and modify it inplace.
+        argument and modify it in-place.
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 

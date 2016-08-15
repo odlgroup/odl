@@ -391,7 +391,7 @@ class Operator(object):
 
     **Dual-use evaluation:** ``_call(self, x, out=None[, **kwargs])``
 
-    Evaluate in place if ``out`` is given, otherwise out of place.
+    Evaluate in-place if ``out`` is given, otherwise out-of-place.
 
     **Parameters:**
 
@@ -434,7 +434,7 @@ class Operator(object):
             # Dual-use _call
             cls._call_in_place = cls._call_out_of_place = cls._call
         else:
-            # In-place only _call
+            # In-place-only _call
             cls._call_in_place = cls._call
             cls._call_out_of_place = _default_call_out_of_place
 
@@ -519,7 +519,7 @@ class Operator(object):
 
         - If you just write a quick implementation or are not too
           worried about efficiency, it may be easiest to write the
-          evaluation *out of place*.
+          evaluation *out-of-place*.
         - We recommend advanced and performance-aware users to implement
           the *in-place* pattern if the wrapped code supports it.
           In-place evaluation is usually significantly faster since it
@@ -1069,7 +1069,7 @@ class OperatorSum(Operator):
         >>> op = odl.IdentityOperator(r3)
         >>> x = r3.element([1, 2, 3])
         >>> out = r3.element()
-        >>> OperatorSum(op, op)(x, out)  # In place, returns out
+        >>> OperatorSum(op, op)(x, out)  # In-place, returns out
         rn(3).element([2.0, 4.0, 6.0])
         >>> out
         rn(3).element([2.0, 4.0, 6.0])
@@ -2121,7 +2121,7 @@ def simple_operator(call=None, inv=None, deriv=None, domain=None, range=None,
         attrs['_call_in_place'] = _call
         attrs['_call_out_of_place'] = _call
     else:
-        # In-place only _call
+        # In-place-only _call
 
         def _call(self, x, out):
             return call(x, out)

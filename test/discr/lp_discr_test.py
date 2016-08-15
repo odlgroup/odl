@@ -763,7 +763,7 @@ def test_ufunc(fn_impl, ufunc):
     assert isinstance(data_vector.ufunc,
                       odl.util.ufuncs.DiscreteLpUFuncs)
 
-    # Out of place:
+    # Out-of-place:
     np_result = ufunc(*in_arrays)
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*in_vectors)
@@ -776,20 +776,20 @@ def test_ufunc(fn_impl, ufunc):
         for i in range(n_out):
             assert isinstance(odl_result[i], space.element_type)
 
-    # In place:
+    # In-place:
     np_result = ufunc(*(in_arrays + out_arrays))
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*(in_vectors + out_vectors))
     assert all_almost_equal(np_result, odl_result)
 
-    # Test inplace actually holds:
+    # Test in-place actually holds:
     if n_out == 1:
         assert odl_result is out_vectors[0]
     elif n_out > 1:
         for i in range(n_out):
             assert odl_result[i] is out_vectors[i]
 
-    # Test out of place with np data
+    # Test out-of-place with np data
     np_result = ufunc(*in_arrays)
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*in_arrays[1:])

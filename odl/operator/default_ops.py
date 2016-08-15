@@ -84,11 +84,11 @@ class ScalingOperator(Operator):
         >>> vec = r3.element([1, 2, 3])
         >>> out = r3.element()
         >>> op = ScalingOperator(r3, 2.0)
-        >>> op(vec, out)  # In place, Returns out
+        >>> op(vec, out)  # In-place, Returns out
         rn(3).element([2.0, 4.0, 6.0])
         >>> out
         rn(3).element([2.0, 4.0, 6.0])
-        >>> op(vec)  # Out of place
+        >>> op(vec)  # Out-of-place
         rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:

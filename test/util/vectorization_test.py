@@ -250,7 +250,7 @@ def test_vectorize_2d_dtype():
                       [1, 1, 1, 1, 1],
                       [1, 1, 1, 1, 1]]
 
-    # Out of place
+    # Out-of-place
     out = simple_func(arr)
     assert isinstance(out, np.ndarray)
     assert out.dtype == np.dtype('int')
@@ -298,7 +298,7 @@ def test_vectorize_2d_lazy():
                       [1, 1, 1, 1, 1],
                       [1, 1, 1, 1, 1]]
 
-    # Out of place
+    # Out-of-place
     out = simple_func(arr)
     assert isinstance(out, np.ndarray)
     assert is_int_dtype(out.dtype)

@@ -388,7 +388,7 @@ def test_power_lincomb():
     assert all_almost_equal(z, expected)
 
 
-def test_power_inplace_modify():
+def test_power_in_place_modify():
     H = odl.rn(2)
     HxH = odl.ProductSpace(H, 2)
 

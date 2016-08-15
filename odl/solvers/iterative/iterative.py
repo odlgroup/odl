@@ -92,7 +92,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     projection : `callable`, optional
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
-        argument and modify it in place.
+        argument and modify it in-place.
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 

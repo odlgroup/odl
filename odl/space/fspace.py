@@ -260,7 +260,7 @@ class FunctionSetVector(Operator):
         self._call_out_optional = call_out_optional
 
         if not call_has_out:
-            # Out-of-place only
+            # Out-of-place-only
             self._call_in_place = preload_first_arg(self, 'in-place')(
                 _default_in_place)
             self._call_out_of_place = fcall
@@ -268,7 +268,7 @@ class FunctionSetVector(Operator):
             # Dual-use
             self._call_in_place = self._call_out_of_place = fcall
         else:
-            # In-place only
+            # In-place-only
             self._call_in_place = fcall
             self._call_out_of_place = preload_first_arg(self, 'out-of-place')(
                 _default_out_of_place)

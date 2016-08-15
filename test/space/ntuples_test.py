@@ -1718,7 +1718,7 @@ def test_ufuncs(fn, ufunc):
     in_vectors = vectors[1:n_args]
     out_vectors = vectors[n_args:]
 
-    # Out of place:
+    # Out-of-place:
     np_result = npufunc(*in_arrays)
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*in_vectors)
@@ -1731,13 +1731,13 @@ def test_ufuncs(fn, ufunc):
         for i in range(n_out):
             assert isinstance(odl_result[i], fn.element_type)
 
-    # In place:
+    # In-place:
     np_result = npufunc(*(in_arrays + out_arrays))
     vec_fun = getattr(data_vector.ufunc, name)
     odl_result = vec_fun(*(in_vectors + out_vectors))
     assert all_almost_equal(np_result, odl_result)
 
-    # Test inplace actually holds:
+    # Test in-place actually holds:
     if n_out == 1:
         assert odl_result is out_vectors[0]
     elif n_out > 1:
