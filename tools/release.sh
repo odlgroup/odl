@@ -110,6 +110,10 @@ else
         echo 'anaconda was not found. Skipping upload to Anaconda Cloud.'
         exit 0
     else
+        if [ -z $CONDA_DIST_FILES ]; then
+            echo "Nothing to upload. Exiting."
+            exit 0
+        fi
         $ANACONDA login --username $CONDA_USER || exit 1
         $ANACONDA upload $CONDA_DIST_FILES || exit 1
         $ANACONDA logout
