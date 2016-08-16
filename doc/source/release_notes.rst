@@ -9,6 +9,10 @@ Release Notes
 Next release
 ============
 
+New features
+------------
+- First implementation of a deformation model based on linearized deformations using displacement
+  vector fields. (`PR 488`)
 
 ODL 0.3.1 Release Notes (2016-08-15)
 ====================================

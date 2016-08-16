@@ -34,9 +34,9 @@ from odl.discr.discr_mappings import (
 from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
+from odl.space import FunctionSpace, ProductSpace, FN_IMPLS
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
-from odl.space import FunctionSpace, FN_IMPLS
 from odl.util.numerics import apply_on_boundary
 from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
@@ -110,15 +110,15 @@ class DiscreteLp(DiscretizedSpace):
             if interp not in _SUPPORTED_INTERP:
                 raise ValueError("`interp` type '{}' not understood"
                                  "".format(interp_in))
-            self.__interp = [interp] * partition.ndim
+            self.__interp_by_axis = [interp] * partition.ndim
         except TypeError:
             # Got sequence of strings
             if len(interp) != partition.ndim:
                 raise ValueError('expected {} (ndim) entries in interp, '
                                  'got {}'.format(partition.ndim, len(interp)))
 
-            self.__interp = [str(s).lower() for s in interp]
-            if any(s not in _SUPPORTED_INTERP for s in self.interp):
+            self.__interp_by_axis = [str(s).lower() for s in interp]
+            if any(s not in _SUPPORTED_INTERP for s in self.interp_by_axis):
                 raise ValueError('interp sequence {} contains illegal '
                                  'values'.format(interp))
 
@@ -131,15 +131,16 @@ class DiscreteLp(DiscretizedSpace):
         self.__partition = partition
         sampling = PointCollocation(fspace, self.partition, dspace,
                                     order=self.order)
-        if all(s == 'nearest' for s in self.interp):
+        if all(s == 'nearest' for s in self.interp_by_axis):
             interpol = NearestInterpolation(fspace, self.partition, dspace,
                                             order=self.order)
-        elif all(s == 'linear' for s in self.interp):
+        elif all(s == 'linear' for s in self.interp_by_axis):
             interpol = LinearInterpolation(fspace, self.partition, dspace,
                                            order=self.order)
         else:
             interpol = PerAxisInterpolation(
-                fspace, self.partition, dspace, self.interp, order=self.order)
+                fspace, self.partition, dspace, self.interp_by_axis,
+                order=self.order)
 
         DiscretizedSpace.__init__(self, fspace, dspace, sampling, interpol)
         self.__exponent = float(exponent)
@@ -147,6 +148,20 @@ class DiscreteLp(DiscretizedSpace):
                 self.exponent != dspace.exponent):
             raise ValueError('`exponent` {} not equal to data space exponent '
                              '{}'.format(self.exponent, dspace.exponent))
+
+    @property
+    def interp(self):
+        """Interpolation type of this discretization."""
+        if all(interp == self.interp_by_axis[0]
+               for interp in self.interp_by_axis):
+            return self.interp_by_axis[0]
+        else:
+            return self.interp_by_axis
+
+    @property
+    def interp_by_axis(self):
+        """Interpolation by axis type of this discretization."""
+        return self.__interp_by_axis
 
     @property
     def min_corner(self):
@@ -218,9 +233,9 @@ class DiscreteLp(DiscretizedSpace):
         return self.__exponent
 
     @property
-    def interp(self):
-        """Interpolation type of this discretization."""
-        return self.__interp
+    def vector_field_space(self):
+        """Space of vector fields based on ``self``."""
+        return ProductSpace(self.real_space, self.ndim)
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
@@ -411,7 +426,7 @@ class DiscreteLp(DiscretizedSpace):
                 arg_fstr += ', exponent={exponent}'
             if self.dtype != default_dtype:
                 arg_fstr += ', dtype={dtype}'
-            if not all(s == 'nearest' for s in self.interp):
+            if not all(s == 'nearest' for s in self.interp_by_axis):
                 arg_fstr += ', interp={interp!r}'
             if impl != 'numpy':
                 arg_fstr += ', impl={impl!r}'

@@ -99,10 +99,11 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
                          ndim=proj_space.ndim)
 
     # Create projector
-    if not all(s == vol_data.space.interp[0] for s in vol_data.space.interp):
+    if not all(s == vol_data.space.interp_by_axis[0]
+               for s in vol_data.space.interp_by_axis):
         raise ValueError('volume interpolation must be the same in each '
                          'dimension, got {}'.format(vol_data.space.interp))
-    vol_interp = vol_data.space.interp[0]
+    vol_interp = vol_data.space.interp
     proj_id = astra_projector(vol_interp, vol_geom, proj_geom, ndim,
                               impl='cpu')
 
@@ -182,10 +183,12 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
 
     # Create projector
     # TODO: implement with different schemes for angles and detector
-    if not all(s == proj_data.space.interp[0] for s in proj_data.space.interp):
+    if not all(s == proj_data.space.interp_by_axis[0]
+               for s in proj_data.space.interp_by_axis):
         raise ValueError('data interpolation must be the same in each '
-                         'dimension, got {}'.format(proj_data.space.interp))
-    proj_interp = proj_data.space.interp[0]
+                         'dimension, got {}'
+                         ''.format(proj_data.space.interp_by_axis))
+    proj_interp = proj_data.space.interp
     proj_id = astra_projector(proj_interp, vol_geom, proj_geom, ndim,
                               impl='cpu')
 
