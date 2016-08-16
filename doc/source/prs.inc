@@ -52,6 +52,7 @@
 .. _PR 480: https://github.com/odlgroup/odl/pull/480
 .. _PR 482: https://github.com/odlgroup/odl/pull/482
 .. _PR 487: https://github.com/odlgroup/odl/pull/487
+.. _PR 488: https://github.com/odlgroup/odl/pull/488
 .. _PR 489: https://github.com/odlgroup/odl/pull/489
 .. _PR 490: https://github.com/odlgroup/odl/pull/490
 .. _PR 491: https://github.com/odlgroup/odl/pull/491
