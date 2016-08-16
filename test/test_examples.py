@@ -40,10 +40,11 @@ matplotlib.use('Agg')  # To avoid the backend freezing
 import matplotlib.pyplot as plt
 
 
-# Simply modify exp_params to modify the fixture
+# Make a fixture for all examples
+this_file_path = os.path.dirname(os.path.abspath(__file__))
 example_ids = []
 example_params = []
-for dirpath, dirnames, filenames in os.walk("../examples/"):
+for dirpath, dirnames, filenames in os.walk(this_file_path + "/../examples/"):
     for filename in [f for f in filenames if f.endswith(".py") and
                      not f.startswith('__init__')]:
         example_params.append(os.path.join(dirpath, filename))
@@ -58,7 +59,6 @@ def example(request):
 @pytest.mark.skipif("not pytest.config.getoption('--examples')",
                     reason='Need --examples option to run')
 def test_example(example):
-    print(example)
     imp.load_source('tmp', example)
     plt.close("all")
 

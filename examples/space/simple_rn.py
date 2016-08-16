@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""An example of a very simple space, the space Rn.
+"""An example of a very simple space, the space rn.
 
 Including some benchmarks with an optimized version.
 """
@@ -94,7 +94,7 @@ r5 = SimpleRn(5)
 n = 10**7
 iterations = 10
 
-# Perform some benchmarks with Rn adn CudaRn
+# Perform some benchmarks with rn
 opt_spc = odl.rn(n)
 simple_spc = SimpleRn(n)
 

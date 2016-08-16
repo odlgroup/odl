@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""An example of a very simple operator on Rn."""
+"""An example of a very simple operator on rn."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -29,14 +29,14 @@ import odl
 
 class AddOp(odl.Operator):
     def __init__(self, size, add_this):
-        super().__init__(domain=odl.Rn(size), range=odl.Rn(size))
+        super().__init__(domain=odl.rn(size), range=odl.rn(size))
         self.value = add_this
 
     def _call(self, x, out):
         out[:] = x.data + self.value
 
 size = 3
-rn = odl.Rn(size)
+rn = odl.rn(size)
 x = rn.element([1, 2, 3])
 
 op = AddOp(size, add_this=10)

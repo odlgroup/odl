@@ -68,16 +68,16 @@ discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 data = ray_trafo(discr_phantom)
 data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
-# Optionally pass partial to the solver to display intermediate results
-partial = (odl.solvers.PrintIterationPartial() &
-           odl.solvers.ShowPartial())
+# Optionally pass callback to the solver to display intermediate results
+callback = (odl.solvers.CallbackPrintIteration() &
+            odl.solvers.CallbackShow())
 
 # Choose a starting point
 x = ray_trafo.domain.zero()
 
 # Run the algorithm
 odl.solvers.conjugate_gradient_normal(
-    ray_trafo, x, data, niter=20, partial=partial)
+    ray_trafo, x, data, niter=20, callback=callback)
 
 # Display images
 discr_phantom.show(title='original image')
