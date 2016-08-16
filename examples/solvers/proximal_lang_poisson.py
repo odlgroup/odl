@@ -47,15 +47,15 @@ rhs = laplacian(phantom)
 rhs += odl.phantom.white_noise(space) * np.std(rhs) * 0.1
 rhs.show('rhs')
 
-# Convert laplacian to cvx operator
-cvx_laplacian = odl.as_proximal_lang_operator(laplacian)
+# Convert laplacian to ProxImaL operator
+proximal_lang_laplacian = odl.as_proximal_lang_operator(laplacian)
 
 # Convert to array
 rhs_arr = rhs.asarray()
 
 # Set up optimization problem
 x = proximal.Variable(space.shape)
-funcs = [10 * proximal.sum_squares(cvx_laplacian(x) - rhs_arr),
+funcs = [10 * proximal.sum_squares(proximal_lang_laplacian(x) - rhs_arr),
          proximal.norm1(proximal.grad(x))]
 
 # Solve the problem

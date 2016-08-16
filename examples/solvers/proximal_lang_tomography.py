@@ -63,7 +63,7 @@ impl = 'astra_cuda'
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 
 # Convert ray transform to proximal language operator
-cvx_ray_trafo = odl.as_proximal_lang_operator(ray_trafo)
+proximal_lang_ray_trafo = odl.as_proximal_lang_operator(ray_trafo)
 
 # Create sinogram of forward projected phantom with noise
 phantom = odl.phantom.shepp_logan(reco_space, modified=True)
@@ -79,7 +79,7 @@ rhs_arr = data.asarray()
 # Note that proximal is not aware of the problem scaling in ODL, hence the norm
 # does not match the norm in the space.
 x = proximal.Variable(reco_space.shape)
-funcs = [proximal.sum_squares(cvx_ray_trafo(x) - rhs_arr),
+funcs = [proximal.sum_squares(proximal_lang_ray_trafo(x) - rhs_arr),
          0.2 * proximal.norm1(proximal.grad(x)),
          proximal.nonneg(x),
          proximal.nonneg(1 - x)]
