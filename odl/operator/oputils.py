@@ -159,7 +159,8 @@ def power_method_opnorm(op, niter, xstart=None):
                 ValueError('a starting element must be defined in case the '
                            'operator domain has no `one()`'), exc)
     else:
-        x = op.domain.element(xstart)
+        # copy to ensure xstart is not modified
+        x = op.domain.element(xstart).copy()
 
     x_norm = x.norm()
     if x_norm == 0:

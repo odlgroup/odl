@@ -19,7 +19,7 @@
 
 import odl
 
-spc = odl.Rn(5)
+spc = odl.rn(5)
 vec = spc.element([1, 2, 3, 4, 5])
 
 vec.show(show=True)

@@ -38,6 +38,9 @@ def pytest_addoption(parser):
     parser.addoption('--benchmark', action='store_true',
                      help='Run benchmarks')
 
+    parser.addoption('--examples', action='store_true',
+                     help='Run examples')
+
 
 # reusable fixtures
 fn_impl_params = odl.FN_IMPLS.keys()
