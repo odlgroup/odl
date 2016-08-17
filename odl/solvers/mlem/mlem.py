@@ -24,14 +24,22 @@ standard_library.install_aliases()
 
 import numpy as np
 
-__all__ = ('mlem_poisson',)
+__all__ = ('mlem',)
 
 
-def mlem_poisson(op, x, data, iter=1, noise='poisson', callback=None):
+AVAILABLE_MLEM_NOISE = ('poisson',)
 
-    """Implementation of Maximum Likelihood Expectation Maximation algorithm.
 
-    This method computes the MLEM estimates for Poisson noise.
+def mlem(op, x, rhs, iter=1, noise='poisson', callback=None):
+
+    """Maximum Likelihood Expectation Maximation algorithm.
+
+    Attempts to solve::
+
+        min_x L(x | rhs)
+
+    where ``L(x, | rhs)`` is the likelihood of ``x`` given data ``rhs``. The
+    likelihood depends on the underlying noise model and the forward operator.
 
     Parameters
     ----------
@@ -39,45 +47,55 @@ def mlem_poisson(op, x, data, iter=1, noise='poisson', callback=None):
         Operator in the inverse problem. It has to have adjoint that is called
         via `op.adjoint`
 
-    x : `element` of the domain of ``op``
+    x : ``element`` of the domain of ``op``
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
         The initial value of `x` should be non negative.
 
-    data : `element` of the range of ``op``
+    rhs : ``element`` of the range of ``op``
         Right-hand side of the equation defining the inverse problem
 
     niter : `int`, optional
-        Maximum number of iterations
+        Number of iterations.
+
+    noise : {'poisson'}, optional
+        Implementation back-end for the noise.
 
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate
 
-    noise : `str`, optional
-        Implementation back-end for the noise.
+    Notes
+    -----
+    For poisson noise the
     """
     if x <= 0:
         raise ValueError('Initial value of x needs to be positive')
 
-    noise = str(noise).lower()
+    noise, noise_in = str(noise).lower(), noise
+    if noise not in AVAILABLE_MLEM_NOISE:
+        raise NotImplemented("noise '{}' not understood"
+                             ''.format(noise_in))
 
-    if noise.startswith('poisson'):
-        norm = op.adjoint(op.range.one())
+    if noise == 'poisson':
         eps = 1e-8
+        norm = np.maximum(op.adjoint(op.range.one()), eps)
+        tmp_dom = op.domain.element()
+        tmp_ran = op.range.element()
+
         for _ in range(iter):
-            projection = op(x)
-            sino_per_proj = data / np.maximum(projection, eps)
-            update = op.adjoint(sino_per_proj)
-            x = (x * update) / np.maximum(norm, eps)
+            op(x, out=tmp_ran)
+            np.maximum(tmp_ran, eps, out=tmp_ran)
+
+            op.adjoint(tmp_ran, out=tmp_dom)
+            tmp_dom /= norm
+
+            x *= tmp_dom
 
             if callback is not None:
                 callback(x)
     else:
-        raise NotImplemented('implemented for poisson noise, got {}'
-                             ''.format(noise))
-
-    return x
+        raise RuntimeError('unknown noise model')
 
 
 def loglikelihood(op, x, data, noise='poisson'):
@@ -95,48 +113,18 @@ def loglikelihood(op, x, data, noise='poisson'):
     data : `element` of the range of ``op``
         Right-hand side of the equation defining the inverse problem
     '
-    noise : `str`, optional
+    noise : {'poisson'}, optional
         Implementation back-end for the noise.
     """
-    noise = str(noise).lower()
+    noise, noise_in = str(noise).lower(), noise
+    if noise not in AVAILABLE_MLEM_NOISE:
+        raise NotImplemented("noise '{}' not understood"
+                             ''.format(noise_in))
 
-    if noise.startswith('poisson'):
+    if noise == 'poisson':
         projection = op(x)
         projection += 1e-8
         log_proj = np.log(projection)
         return np.sum(data * log_proj - projection)
-
     else:
-        raise NotImplemented('implemented for poisson noise, got {}'
-                             ''.format(noise))
-
-
-def gradient_poisson_loglikelihood(op, x, data, noise='poisson'):
-    """Evaluate the derivative of the log-likelihood at x.
-
-    Parameters
-    ----------
-    op : `Operator`
-        Forward operator of the given problem, the operator in
-        the inverse problem. It has to have adjoint that is called
-        via `op.adjoint`
-
-    x : `element` of the domain of ``op``
-        A point where the gradient of the log-likelihood is evaluated
-
-    data : `element` of the range of ``op``
-        Right-hand side of the equation defining the inverse problem
-
-    noise : `str`, optional
-        Implementation back-end for the noise.
-    """
-    noise = str(noise).lower()
-
-    if noise.startswith('poisson'):
-        projection = op(x)
-        sino_per_proj = data / np.maximum(projection, 1e-8)
-        grad = op.adjoint(sino_per_proj) - op.adjoint(op.range.one())
-        return grad
-    else:
-        raise NotImplemented('implemented for poisson noise, got {}'
-                             ''.format(noise))
+        raise RuntimeError('unknown noise model')
