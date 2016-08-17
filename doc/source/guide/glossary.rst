@@ -81,7 +81,7 @@ Glossary
 
                 \text{prox}_f(v) = \arg\min_x f(x) + (1/2)||x - v||_2^2
 
-        proximal is also occationally used instead of ProxImaL, then refering to the proximal
+        proximal is also occasionally used instead of ProxImaL, then refering to the proximal
         modelling language for the solution of convex optimization problems.
 
     proximal factory

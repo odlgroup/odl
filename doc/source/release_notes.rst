@@ -9,8 +9,16 @@ Release Notes
 Next release
 ============
 
+
+ODL 0.4.0 Release Notes (2016-08-17)
+====================================
+
+This release marks the addition of the ``deform`` package to ODL, adding functionality for the deformation
+of ``DiscreteLp`` elements.
+
 New features
 ------------
+- Add ``deform`` package with linearized deformations (`PR 488`)
 - Add option to interface with ProxImaL solvers using ODL operators. (`PR 494`)
 
 ODL 0.3.1 Release Notes (2016-08-15)
