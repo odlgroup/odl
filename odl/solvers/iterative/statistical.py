@@ -24,13 +24,13 @@ standard_library.install_aliases()
 
 import numpy as np
 
-__all__ = ('mlem',)
+__all__ = ('mlem', 'loglikelihood')
 
 
 AVAILABLE_MLEM_NOISE = ('poisson',)
 
 
-def mlem(op, x, rhs, iter=1, noise='poisson', callback=None):
+def mlem(op, x, rhs, niter=1, noise='poisson', callback=None):
 
     """Maximum Likelihood Expectation Maximation algorithm.
 
@@ -79,13 +79,16 @@ def mlem(op, x, rhs, iter=1, noise='poisson', callback=None):
 
     if noise == 'poisson':
         eps = 1e-8
-        norm = np.maximum(op.adjoint(op.range.one()), eps)
+        range_one = op.range.one()
+
+        norm = np.maximum(op.adjoint(range_one), eps)
         tmp_dom = op.domain.element()
         tmp_ran = op.range.element()
 
-        for _ in range(iter):
+        for _ in range(niter):
             op(x, out=tmp_ran)
-            np.maximum(tmp_ran, eps, out=tmp_ran)
+            tmp_ran.ufunc.maximum(eps, out=tmp_ran)
+            tmp_ran.divide(rhs, tmp_ran)
 
             op.adjoint(tmp_ran, out=tmp_dom)
             tmp_dom /= norm

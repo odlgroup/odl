@@ -32,9 +32,6 @@ __all__ += iterative.__all__
 from .linear import *
 __all__ += linear.__all__
 
-from .mlem import *
-__all__ += mlem.__all__
-
 from .scalar import *
 __all__ += scalar.__all__
 

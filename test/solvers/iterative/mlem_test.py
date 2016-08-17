@@ -33,8 +33,7 @@ import numpy as np
                 params=['steepest_descent',
                         'landweber',
                         'conjugate_gradient',
-                        'conjugate_gradient_normal',
-                        'mlem'])
+                        'conjugate_gradient_normal'])
 def iterative_solver(request):
     """Return a solver given by a name with interface solve(op, x, rhs)."""
     solver_name = request.param
@@ -57,51 +56,24 @@ def iterative_solver(request):
     elif solver_name == 'conjugate_gradient_normal':
         def solver(op, x, rhs):
             odl.solvers.conjugate_gradient_normal(op, x, rhs, niter=10)
-    elif solver_name == 'mlem':
-        def solver(op, x, rhs):
-            odl.solvers.mlem(op, x, rhs, niter=10)
     else:
         raise ValueError('solver not valid')
 
     return solver
 
 
-# Define some interesting problems
-@pytest.fixture(scope="module",
-                params=['MatVec  ',
-                        'Identity'])
-def optimization_problem(request):
-    problem_name = request.param
-
-    if problem_name == 'MatVec  ':
-        # Define problem
-        op_arr = np.eye(5) * 5 + np.ones([5, 5])
-        op = odl.MatVecOperator(op_arr)
-
-        # Simple right hand side
-        rhs = op.range.one()
-
-        return op, rhs
-    elif problem_name == 'Identity':
-        # Define problem
-        space = odl.uniform_discr(0, 1, 5)
-        op = odl.IdentityOperator(space)
-
-        # Simple right hand side
-        rhs = op.range.element([0, 0, 1, 0, 0])
-
-        return op, rhs
-    else:
-        raise ValueError('problem not valid')
-
-
-def test_solver(optimization_problem, iterative_solver):
-    """Test iterative solver for solving some simple problems."""
+def test_solver(iterative_solver):
+    """Test discrete Ray transform using ASTRA for reconstruction."""
 
     # Solve within 1%
     places = 2
 
-    op, rhs = optimization_problem
+    # Define problem
+    op_arr = np.eye(5) * 5 + np.ones([5, 5])
+    op = odl.MatVecOperator(op_arr)
+
+    # Simple right hand side
+    rhs = op.range.one()
 
     # Solve problem
     x = op.domain.one()
@@ -109,7 +81,6 @@ def test_solver(optimization_problem, iterative_solver):
 
     # Assert residual is small
     assert all_almost_equal(op(x), rhs, places)
-
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
