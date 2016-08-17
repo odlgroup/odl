@@ -273,8 +273,8 @@ def as_scipy_operator(op):
 def as_proximal_lang_operator(op, norm_bound=None):
     """Wrap ``op`` as a ``proximal.BlackBox``.
 
-    This is intended to be used with the `proximal language solvers.
-    <https://github.com/comp-imaging/ProxImaL>`_
+    This is intended to be used with the `ProxImaL language solvers.
+    <https://github.com/comp-imaging/proximal>`_
 
     Parameters
     ----------
@@ -283,7 +283,7 @@ def as_proximal_lang_operator(op, norm_bound=None):
         ``shape``, and elements in these need to implement ``asarray``.
     norm_bound : float, optional
         An upper bound on the spectral norm of the operator. Note that this is
-        the norm as defined by proximal, and hence use the unweighted spaces.
+        the norm as defined by ProxImaL, and hence use the unweighted spaces.
 
     Returns
     -------

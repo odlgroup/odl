@@ -39,7 +39,7 @@ Norms in ODL are scaled according to the underlying function space. Hence a sequ
    >>> 1 / np.sqrt(3)  # exact result
    0.577350269189
 
-this is not the case in proximal, where the norm depends on the number of discretization points. Hence a scaling that is correct for a problem in ODL needs not be correct in proximal. This also changes the definition of things like the operator norm.
+this is not the case in ProxImaL, where the norm depends on the number of discretization points. Hence a scaling that is correct for a problem in ODL needs not be correct in proximal. This also changes the definition of things like the operator norm.
 
 This also has the added effect of changing the definition of derived features, like the spectral norm of operators.
 
@@ -49,4 +49,4 @@ ODL can represent some complicated spaces, like :math:`\mathbb{R}^3 \times \math
 
    >>> space = odl.ProductSpace(odl.rn(3), odl.cn(2))
 
-This can then be used in solvers and other structures.
+This can then be used in solvers and other structures. ProxImaL currently lacks an equivalent structure.
