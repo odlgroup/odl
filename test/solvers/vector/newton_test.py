@@ -34,7 +34,7 @@ from odl.util.testutils import all_almost_equal
 # Example problem of the form min f(x) = 0, for f(x) the non-convex
 # Rosenbrock function often used in optimization (see e.g.
 # https://en.wikipedia.org/wiki/Rosenbrock_function). In this case a = 1 and
-# b = 100, giving a globally optimal solution (a,a**2) = (1,1). """
+# b = 100, giving a globally optimal solution (a, a ** 2) = (1,1). """
 
 
 def rosenbrock_function(x):

@@ -67,10 +67,19 @@ def mlem(op, x, rhs, niter=1, noise='poisson', callback=None):
 
     Notes
     -----
-    For poisson noise the
+    Given a forward model :math:`A`, data :math:`g` and poisson noise the
+    algorithm is given by:
+
+    .. math::
+
+       x_{n+1} = \\frac{x_n}{A^* 1} A^* (g / A(x_n))
+
+    See Also
+    --------
+    loglikelihood : Function for calculating the logarithm of the likelihood
     """
-    if x <= 0:
-        raise ValueError('Initial value of x needs to be positive')
+    if np.any(np.less(x, 0)):
+        raise ValueError('`x` must be non-negative')
 
     noise, noise_in = str(noise).lower(), noise
     if noise not in AVAILABLE_MLEM_NOISE:
@@ -79,9 +88,8 @@ def mlem(op, x, rhs, niter=1, noise='poisson', callback=None):
 
     if noise == 'poisson':
         eps = 1e-8
-        range_one = op.range.one()
 
-        norm = np.maximum(op.adjoint(range_one), eps)
+        norm = np.maximum(op.adjoint(op.range.one()), eps)
         tmp_dom = op.domain.element()
         tmp_ran = op.range.element()
 

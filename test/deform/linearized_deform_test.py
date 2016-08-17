@@ -93,7 +93,7 @@ def template_grad_factory(n):
     """Gradient of the gaussian."""
     def template_grad_i(i):
         # Indirection for lambda capture
-        return lambda x: -2 * x[i] / SIGMA**2 * template_function(x)
+        return lambda x: -2 * x[i] / SIGMA ** 2 * template_function(x)
     return [template_grad_i(i) for i in range(n)]
 
 
