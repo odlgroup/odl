@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Total variation tomography using the proximal solver.
+"""Tomography with TV regularization using the ProxImaL solver.
 
 Solves the optimization problem
 
@@ -24,11 +24,6 @@ Solves the optimization problem
 Where ``A`` is a parallel beam forward projector, ``grad`` the spatial
 gradient and ``g`` is given noisy data.
 """
-
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
 import numpy as np
 import odl
@@ -54,12 +49,12 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # The implementation of the ray transform to use, options:
 # 'scikit'                    Requires scikit-image (can be installed by
 #                             running ``pip install scikit-image``).
-# 'astra_cpu', 'astra_cuda'   Require astra tomography to be installed.
+# 'astra_cpu', 'astra_cuda'   Requires astra tomography to be installed.
 #                             Astra is much faster than scikit. Webpage:
 #                             https://github.com/astra-toolbox/astra-toolbox
 impl = 'astra_cuda'
 
-# Ray transform aka forward projection.
+# Initialize the ray transform (forward projection).
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 
 # Convert ray transform to proximal language operator
@@ -72,22 +67,23 @@ data = ray_trafo(phantom)
 data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 data.show('noisy data')
 
-# Convert to array
+# Convert to array for ProxImaL
 rhs_arr = data.asarray()
 
 # Set up optimization problem
-# Note that proximal is not aware of the problem scaling in ODL, hence the norm
-# does not match the norm in the space.
+# Note that proximal is not aware of the underlying space and only works with
+# matrices. Hence the norm in proximal does not match the norm in the ODL space
+# exactly.
 x = proximal.Variable(reco_space.shape)
 funcs = [proximal.sum_squares(proximal_lang_ray_trafo(x) - rhs_arr),
          0.2 * proximal.norm1(proximal.grad(x)),
          proximal.nonneg(x),
          proximal.nonneg(1 - x)]
 
-# Solve the problem
+# Solve the problem using ProxImaL
 prob = proximal.Problem(funcs)
 prob.solve(verbose=True)
 
 # Convert back to odl and display result
 result_odl = reco_space.element(x.value)
-result_odl.show('result')
+result_odl.show('ProxImaL result')

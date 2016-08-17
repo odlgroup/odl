@@ -239,7 +239,7 @@ def as_scipy_operator(op):
     -----
     If the data representation of ``op``'s domain and range is of type
     `NumpyFn` this incurs no significant overhead. If the data type is `CudaFn`
-    or other nonlocal type, the overhead is significant.
+    or some other nonlocal type, the overhead is significant.
     """
     if not op.is_linear:
         raise ValueError('`op` needs to be linear')
@@ -273,12 +273,14 @@ def as_scipy_operator(op):
 def as_proximal_lang_operator(op, norm_bound=None):
     """Wrap ``op`` as a ``proximal.BlackBox``.
 
-    This is intended to be used with the proximal language solvers.
+    This is intended to be used with the `proximal language solvers.
+    <https://github.com/comp-imaging/ProxImaL>`_
 
     Parameters
     ----------
     op : `Operator`
-        A linear operator that should be wrapped.
+        Linear operator to be wrapped. Its domain and range must implement
+        ``shape``, and elements in these need to implement ``asarray``.
     norm_bound : float, optional
         An upper bound on the spectral norm of the operator. Note that this is
         the norm as defined by proximal, and hence use the unweighted spaces.
@@ -292,7 +294,7 @@ def as_proximal_lang_operator(op, norm_bound=None):
     -----
     If the data representation of ``op``'s domain and range is of type
     `NumpyFn` this incurs no significant overhead. If the data type is `CudaFn`
-    or other nonlocal type, the overhead is significant.
+    or some other nonlocal type, the overhead is significant.
 
     References
     ----------

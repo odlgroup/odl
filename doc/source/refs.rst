@@ -42,7 +42,7 @@ References
 .. [GNS2009] Griva, I, Nash, S G, and Sofer, A. *Linear and nonlinear
    optimization*. Siam, 2009.
 
-.. [Hei+2016] Heide F. et. al. *ProxImaL: Efficient Image Optimization using
+.. [Hei+2016] Heide, F et al. *ProxImaL: Efficient Image Optimization using
    Proximal Algorithms*. ACM Transactions on Graphics (TOG), 2016.
 
 .. [Kva1991] Kvaalen, E. *A faster Broyden method*. BIT Numerical
