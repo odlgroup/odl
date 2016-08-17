@@ -138,7 +138,8 @@ setup(
         'fftw': 'pyfftw',
         'pywavelets': 'Pywavelets',
         'scikit' : 'scikit-image',
-        'all': test_requires + ['matplotlib', 'pyfftw', 'Pywavelets', 'scikit-image']
+        'proximal' : 'proximal',
+        'all': test_requires + ['matplotlib', 'pyfftw', 'Pywavelets', 'scikit-image', 'proximal']
     },
 
     cmdclass={'test': PyTest},

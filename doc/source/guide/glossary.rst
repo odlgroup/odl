@@ -76,17 +76,20 @@ Glossary
 
     proximal
         Given a closed proper convex function :math:`f`, the proximal operator is defined by
-        
+
             .. math::
-                
+
                 \text{prox}_f(v) = \arg\min_x f(x) + (1/2)||x - v||_2^2
-        
+
+        proximal is also occationally used instead of ProxImaL, then refering to the proximal
+        modelling language for the solution of convex optimization problems.
+
     proximal factory
-        A proximal factory associated with a function :math:`f` is a `callable`, 
+        A proximal factory associated with a function :math:`f` is a `callable`,
         which returns the proximal of the scaled function :math:`\sigma f` when called with a
-        scalar :math:`\sigma`. This is used due to the fact that optimization methods often use 
+        scalar :math:`\sigma`. This is used due to the fact that optimization methods often use
         :math:`\text{prox}_{\sigma f}` for varying :math:`\sigma`.
-        
+
     range
         Set of elements to which an operator maps, i.e. in which the result of
         an operator evaluation lies.

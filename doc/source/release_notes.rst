@@ -11,8 +11,7 @@ Next release
 
 New features
 ------------
-- First implementation of a deformation model based on linearized deformations using displacement
-  vector fields. (`PR 488`)
+- Add option to interface with ProxImaL solvers using ODL operators. (`PR 494`)
 
 ODL 0.3.1 Release Notes (2016-08-15)
 ====================================
@@ -23,7 +22,7 @@ splitting.
 
 New features
 ------------
-- New solvers based on the Douglas-Rachford and forward-backward splitting schemes. (`PR 478`_, 
+- New solvers based on the Douglas-Rachford and forward-backward splitting schemes. (`PR 478`_,
   `PR 480`_)
 - ``NormOperator`` and ``DistOperator`` added. (`PR 487`_)
 - Single-element ``NtuplesBase`` vectors can now be converted to ``float``, ``complex`` etc.
@@ -38,7 +37,7 @@ Improvements
   (`PR 489`_, `PR 482`_, `PR 491`_)
 - Clearer separation between attributes that are intended as part of the subclassing API and those
   that are not. (`PR 471`_)
-- Chambolle-Pock solver accepts also non-linear operators and has better documentation now. 
+- Chambolle-Pock solver accepts also non-linear operators and has better documentation now.
   (`PR 490`_)
 - Clean-up of imports. (`PR 492`_)
 - All solvers now check that the given start value ``x`` is in ``op.domain``. (`PR 502`_)

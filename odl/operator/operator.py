@@ -538,7 +538,7 @@ class Operator(object):
         pattern.
 
         See the `documentation
-        <https://odl.readthedocs.org/guide/in_depth/operator_guide.html>`_
+        <https://odl.readthedocs.io/guide/in_depth/operator_guide.html>`_
         for more info on in-place vs. out-of-place evaluation.
 
         Parameters

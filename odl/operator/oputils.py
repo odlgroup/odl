@@ -28,7 +28,8 @@ import numpy as np
 from odl.space.base_ntuples import FnBase
 from odl.space import ProductSpace
 
-__all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator')
+__all__ = ('matrix_representation', 'power_method_opnorm', 'as_scipy_operator',
+           'as_proximal_lang_operator')
 
 
 def matrix_representation(op):
@@ -238,7 +239,7 @@ def as_scipy_operator(op):
     -----
     If the data representation of ``op``'s domain and range is of type
     `NumpyFn` this incurs no significant overhead. If the data type is `CudaFn`
-    or other nonlocal type, the overhead is significant.
+    or some other nonlocal type, the overhead is significant.
     """
     if not op.is_linear:
         raise ValueError('`op` needs to be linear')
@@ -267,6 +268,53 @@ def as_scipy_operator(op):
                                               matvec=matvec,
                                               rmatvec=rmatvec,
                                               dtype=dtype)
+
+
+def as_proximal_lang_operator(op, norm_bound=None):
+    """Wrap ``op`` as a ``proximal.BlackBox``.
+
+    This is intended to be used with the `ProxImaL language solvers.
+    <https://github.com/comp-imaging/proximal>`_
+
+    Parameters
+    ----------
+    op : `Operator`
+        Linear operator to be wrapped. Its domain and range must implement
+        ``shape``, and elements in these need to implement ``asarray``.
+    norm_bound : float, optional
+        An upper bound on the spectral norm of the operator. Note that this is
+        the norm as defined by ProxImaL, and hence use the unweighted spaces.
+
+    Returns
+    -------
+    ``proximal.BlackBox`` : proximal_lang_operator
+        The wrapped operator.
+
+    Notes
+    -----
+    If the data representation of ``op``'s domain and range is of type
+    `NumpyFn` this incurs no significant overhead. If the data type is `CudaFn`
+    or some other nonlocal type, the overhead is significant.
+
+    References
+    ----------
+    For documentation on the proximal language (ProxImaL) see [Hei+2016]_.
+    """
+
+    # TODO: use out parameter once "as editable array" is added
+
+    def forward(inp, out):
+        out[:] = op(inp).asarray()
+
+    def adjoint(inp, out):
+        out[:] = op.adjoint(inp).asarray()
+
+    import proximal
+    return proximal.LinOpFactory(input_shape=op.domain.shape,
+                                 output_shape=op.range.shape,
+                                 forward=forward,
+                                 adjoint=adjoint,
+                                 norm_bound=norm_bound)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
