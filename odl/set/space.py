@@ -756,23 +756,23 @@ class LinearSpaceVector(object):
         """
         return self.space.inner(self, other)
 
-    def multiply(self, x, y):
-        """Implement ``self = x * y`` without creating new vectors.
+    def multiply(self, other, out=None):
+        """Implement ``out = self * other`` without creating new vectors.
 
         See also
         --------
         LinearSpace.multiply
         """
-        return self.space.multiply(x, y, out=self)
+        return self.space.multiply(self, other, out=out)
 
-    def divide(self, x, y):
-        """Implement ``self = x / y`` without creating new vectors.
+    def divide(self, other, out=None):
+        """Implement ``out = self / other`` without creating new vectors.
 
         See also
         --------
         LinearSpace.divide
         """
-        return self.space.divide(x, y, out=self)
+        return self.space.divide(self, other, out=out)
 
     @property
     def T(self):
