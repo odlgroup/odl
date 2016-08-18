@@ -475,15 +475,19 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
         raise ValueError("`direction` '{}' not understood"
                          "".format(direction_in))
 
-    if direction == 'adjoint' and pad_const != 0.0:
+    if direction == 'adjoint' and pad_mode == 'constant' and pad_const != 0:
         raise ValueError("`pad_const` must be 0 for 'adjoint' direction, "
                          "got {}".format(pad_const))
+
+    if direction == 'forward' and pad_mode == 'constant' and pad_const != 0:
+        out.fill(pad_const)
+    else:
+        out.fill(0)
 
     # Perform the resizing
     if direction == 'forward':
         if pad_mode == 'constant':
             # Constant padding does not require the helper function
-            out.fill(pad_const)
             _assign_intersection(out, arr, offset)
         else:
             # First copy the inner part and use it for padding
@@ -497,7 +501,7 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
             # Apply adjoint padding to a copy of the input and copy the inner
             # part when finished
             tmp = arr.copy()
-            _apply_padding(tmp, arr, offset, pad_mode, 'adjoint')
+            _apply_padding(tmp, out, offset, pad_mode, 'adjoint')
             _assign_intersection(out, tmp, offset)
 
     return out
@@ -794,10 +798,9 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 # Add moment1 at the "width-2 boundary layers", with the sign
                 # corresponding to the sign in the derivative calculation
                 # of the forward padding.
-                sign_l = np.array([-1, 1])[bcast_slc]
-                lhs_arr[slope_slc_l] += moment1_l * sign_l
-                sign_r = np.array([1, -1])[bcast_slc]
-                lhs_arr[slope_slc_r] += moment1_r * sign_r
+                sign = np.array([-1, 1])[bcast_slc]
+                lhs_arr[slope_slc_l] += moment1_l * sign
+                lhs_arr[slope_slc_r] += moment1_r * sign
 
         if direction == 'forward':
             working_slc[axis] = full_slc[axis]
