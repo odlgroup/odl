@@ -9,6 +9,13 @@ Release Notes
 Next release
 ============
 
+Changes
+--------
+- Changed definition of ``LinearSpaceVector.multiply`` to match the definition used by numpy (:pull:`509`)
+
+Bugfixes
+--------
+- Fixed ``python -c "import odl; odl.test()"`` not working on windows (:pull:`508`)
 
 ODL 0.4.0 Release Notes (2016-08-17)
 ====================================
