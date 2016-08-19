@@ -312,6 +312,10 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     Where ``newshp < arr.shape``, the array is cropped to the new
     size.
 
+    See `the online documentation
+    <https://odl.readthedocs.io/math/resizing_ops.html>`_
+    on resizing operators for mathematical details.
+
     Parameters
     ----------
     arr : array-like
