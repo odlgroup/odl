@@ -7,34 +7,27 @@ Resizing Operators
 
 Introduction
 ============
-Resizing can be described in a continuous as well as in a fully discrete setting. In the
-continuous case, resizing corresponds to changing the domain of a function space, and the restriction
-and extension operations are well-defined.
+In ODL, resizing of a discretized function is understood as the operation of shrinking or enlarging its domain in such a way that the size of the partition cells do not change.
+This "constant cell size" restriction is intentional since it ensures that the underlying operation can be implemented as array resizing without resampling, thus keeping those two functionalities separate.
 
-However, due to practical reasons, it makes sense to investigate resizing in a discretized setting,
-mainly to make it reflect the resizing of an array directly. This means, for example, that in
-uniformly discretized spaces, the side lengths of the unit cell are not changed, which implies that
-no resampling is performed. In this way, resampling and resizing can be kept separate, with the
-possibility to chain them whenever necessary.
 
-Let now :math:`\mathbb{R}^n` with :math:`n \in \mathbb{N}` be the space of one-dimensional real
-vectors encoding values of a function defined on an interval :math:`[a, b] \subset \mathbb{R}`.
+Basic setting
+=============
+Let now :math:`\mathbb{R}^n` with :math:`n \in \mathbb{N}` be the space of one-dimensional real vectors encoding values of a function defined on an interval :math:`[a, b] \subset \mathbb{R}`.
 Since values are not manipulated, the generalization to complex-valued functions is straightforward.
-Further, since all operations completely separate with respect to different dimensions, the results
-can easily applied to the multi-dimensional case.
+Further, since all operations completely separate with respect to different dimensions, the results can easily applied to the multi-dimensional case.
 
 
 Restriction operator
 ====================
-We consider the space :math:`\mathbb{R}^m` for an :math:`m < n \in \mathbb{N}` and define the
-restriction operator
+We consider the space :math:`\mathbb{R}^m` for an :math:`m < n \in \mathbb{N}` and define the restriction operator
 
 .. math::
     R : \mathbb{R}^n \to \mathbb{R}^m, \quad R(x) := (x_p, \dots, x_{p+m-1})
     :label: def_restrict_op
 
-with a given index :math:`0 \leq p \leq n - m - 1`. Its adjoint with respect to the standard inner
-product is easy to determine:
+with a given index :math:`0 \leq p \leq n - m - 1`.
+Its adjoint with respect to the standard inner product is easy to determine:
 
 .. math::
     \langle R(x), y \rangle_{\mathbb{R}^m}
@@ -53,37 +46,29 @@ with the zero-padding operator
     \end{cases}
     :label: zero_pad_as_restr_adj
 
-In practice, this means that a new zero vector of size :math:`n` is created, and the values
-:math:`y` are filled in from index :math:`p` onwards. It is also clear that the operator :math:`R`
-is right-invertible by :math:`R^*`, i.e. :math:`R R^* = \mathrm{Id}_{\mathbb{R}^m}`. In fact, any
-operator of the form :math:`R^* + P`, where :math:`P` is linear and :math:`P(x)_i = 0` for
-:math:`i \not \in \{p, \dots, p+m-1\}` acts as a right inverse for :math:`R`. On the other hand,
-:math:`R` has no left inverse since it has a non-trivial kernel
-:math:`\mathrm{ker} R = \{x \in \mathbb{R}^n\,|\,x_i = 0 \text{ for } i = p, \dots, p+m-1\}`.
+In practice, this means that a new zero vector of size :math:`n` is created, and the values :math:`y` are filled in from index :math:`p` onwards.
+It is also clear that the operator :math:`R` is right-invertible by :math:`R^*`, i.e. :math:`R R^* = \mathrm{Id}_{\mathbb{R}^m}`.
+In fact, any operator of the form :math:`R^* + P`, where :math:`P` is linear and :math:`P(x)_i = 0` for :math:`i \not \in \{p, \dots, p+m-1\}` acts as a right inverse for :math:`R`.
+On the other hand, :math:`R` has no left inverse since it has a non-trivial kernel (null space) :math:`\mathrm{ker} R = \{x \in \mathbb{R}^n\,|\,x_i = 0 \text{ for } i = p, \dots, p+m-1\}`.
 
 
 Extension operators
 ===================
-Now we study the opposite case of resizing, namely extending a vector. We thus choose :math:`m > n`
-and consider different cases of enlarging a given vector :math:`x \in \mathbb{R}^n` to a vector in
-:math:`\mathbb{R}^m`. The start index is again denoted by :math:`p` and needs to fulfill
-:math:`0 \leq p \leq m - n - 1`, such that a vector of length :math:`n` "fits into" a vector of
-length :math:`m` when starting at index :math:`p`.
+Now we study the opposite case of resizing, namely extending a vector.
+We thus choose :math:`m > n` and consider different cases of enlarging a given vector :math:`x \in \mathbb{R}^n` to a vector in :math:`\mathbb{R}^m`.
+The start index is again denoted by :math:`p` and needs to fulfill :math:`0 \leq p \leq m - n - 1`, such that a vector of length :math:`n` "fits into" a vector of length :math:`m` when starting at index :math:`p`.
 
-It should be noted that all extension operators mentioned here are of the above form
-:math:`R^* + P` with :math:`P` acting on the "outer" indices only. Hence they all act as a right
-inverses for the restriction operator. This property can also be read as the fact that all extension
-operators are left-inverted by the restriction operator :math:`R`.
+It should be noted that all extension operators mentioned here are of the above form :math:`R^* + P` with :math:`P` acting on the "outer" indices only.
+Hence they all act as a right inverses for the restriction operator.
+This property can also be read as the fact that all extension operators are left-inverted by the restriction operator :math:`R`.
 
-Moreover, the "mixed" case, i.e. the combination of restriction and extension which would occur e.g.
-for a constant index shift :math:`x \mapsto (0, \dots, 0, x_0, \dots, x_{n-p-1})`, is not considered
-here. It can be represented by a combination of the two "pure" operations.
+Moreover, the "mixed" case, i.e. the combination of restriction and extension which would occur e.g. for a constant index shift :math:`x \mapsto (0, \dots, 0, x_0, \dots, x_{n-p-1})`, is not considered here.
+It can be represented by a combination of the two "pure" operations.
 
 
 Zero padding
 ------------
-In this most basic padding variant, one fills the missing values in the target vector with zeros,
-yielding the operator
+In this most basic padding variant, one fills the missing values in the target vector with zeros, yielding the operator
 
 .. math::
     E_{\mathrm{z}} : \mathbb{R}^n \to \mathbb{R}^m, \quad E_{\mathrm{z}}(x)_j :=
@@ -99,9 +84,8 @@ Hence, its adjoint is given by the restriction, :math:`E_{\mathrm{z}}^* = R`.
 
 Constant padding
 ----------------
-In constant padding with constant :math:`c`, the extra zeros in :eq:`def_zero_pad_op` are replaced
-with :math:`c`. Hence, the operator performing constant padding can be written as
-:math:`E_{\mathrm{c}} = E_{\mathrm{z}} + P_{\mathrm{c}}`, where the second summand is given by
+In constant padding with constant :math:`c`, the extra zeros in :eq:`def_zero_pad_op` are replaced with :math:`c`.
+Hence, the operator performing constant padding can be written as :math:`E_{\mathrm{c}} = E_{\mathrm{z}} + P_{\mathrm{c}}`, where the second summand is given by
 
 .. math::
     P_{\mathrm{c}}(x) =
@@ -110,17 +94,14 @@ with :math:`c`. Hence, the operator performing constant padding can be written a
     c      , & \text{else}.
     \end{cases}
 
-Note that this operator is not linear, and its derivative is the zero operator, hence the derivative
-of the constant padding operator is :math:`E_{\mathrm{c}}' = E_{\mathrm{z}}`.
+Note that this operator is not linear, and its derivative is the zero operator, hence the derivative of the constant padding operator is :math:`E_{\mathrm{c}}' = E_{\mathrm{z}}`.
 
 
 Periodic padding
 ----------------
-This padding mode continues the original vector :math:`x` periodically in both directions. For
-reasons of practicability, at most one whole copy is allowed on both sides, which means that the
-numbers :math:`n`, :math:`m` and :math:`p` need to fulfill :math:`p \leq n` ("left" padding amount)
-and :math:`m - (p + n) \leq n` ("right" padding amount). The periodic padding operator is then
-defined as
+This padding mode continues the original vector :math:`x` periodically in both directions.
+For reasons of practicability, at most one whole copy is allowed on both sides, which means that the numbers :math:`n`, :math:`m` and :math:`p` need to fulfill :math:`p \leq n` ("left" padding amount) and :math:`m - (p + n) \leq n` ("right" padding amount).
+The periodic padding operator is then defined as
 
 .. math::
     E_{\mathrm{p}}(x)_j :=
@@ -131,8 +112,8 @@ defined as
     \end{cases}
     :label: def_per_pad_op
 
-Hence, one can at most get 3 full periods with :math:`m = 3n` and :math:`p = n`. Again, this operator
-can be written as :math:`E_{\mathrm{p}} = E_{\mathrm{z}} + P_{\mathrm{p}}` with an operator
+Hence, one can at most get 3 full periods with :math:`m = 3n` and :math:`p = n`.
+Again, this operator can be written as :math:`E_{\mathrm{p}} = E_{\mathrm{z}} + P_{\mathrm{p}}` with an operator
 
 .. math::
     P_{\mathrm{p}}(x)_j :=
@@ -168,24 +149,18 @@ and
     0,         & \text{else}.
     \end{cases}
 
-In practice, this means that that besides copying the values from the indices :math:`p, \dots, p+n-1`
-of a vector :math:`y \in \mathbb{R}^m` to a new vector :math:`x \in \mathbb{R}^n`, the values
-corresponding to the other indices are added to the vector :math:`x` as follows. The *first*
-:math:`m - n - p - 1` entries of :math:`y` (negative means 0) are added to the *last*
-:math:`m - n - p - 1` entries of :math:`x`, in the same ascending order. The *last* :math:`p` entries
-of :math:`y` are added to the *first* :math:`p` entries of :math:`x`, again keeping the order. This
-procedure can be interpreted as "folding back" the periodized structure of :math:`y` into a single
-period :math:`x` by adding the values from the two side periods.
+In practice, this means that that besides copying the values from the indices :math:`p, \dots, p+n-1` of a vector :math:`y \in \mathbb{R}^m` to a new vector :math:`x \in \mathbb{R}^n`, the values corresponding to the other indices are added to the vector :math:`x` as follows.
+The *first* :math:`m - n - p - 1` entries of :math:`y` (negative means 0) are added to the *last* :math:`m - n - p - 1` entries of :math:`x`, in the same ascending order.
+The *last* :math:`p` entries of :math:`y` are added to the *first* :math:`p` entries of :math:`x`, again keeping the order.
+This procedure can be interpreted as "folding back" the periodized structure of :math:`y` into a single period :math:`x` by adding the values from the two side periods.
 
 
 Symmetric padding
 -----------------
-In symmetric padding mode, a given vector is extended by mirroring at the outmost nodes to the
-desired extent. By convention, the outmost values are not repeated, and as in periodic mode, the
-input vector is re-used at most once on both sides. Since the outmost values are not doubled, the
-numbers :math:`n`, :math:`m` and :math:`p` need to fulfill the relations
-:math:`p \leq n - 1` ("left" padding amount) and :math:`m - (p + n) \leq n - 1` ("right" padding
-amount). Now the symmetric padding operator is defined as
+In symmetric padding mode, a given vector is extended by mirroring at the outmost nodes to the desired extent.
+By convention, the outmost values are not repeated, and as in periodic mode, the input vector is re-used at most once on both sides.
+Since the outmost values are not doubled, the numbers :math:`n`, :math:`m` and :math:`p` need to fulfill the relations :math:`p \leq n - 1` ("left" padding amount) and :math:`m - (p + n) \leq n - 1` ("right" padding amount).
+Now the symmetric padding operator is defined as
 
 .. math::
     E_{\mathrm{s}}(x)_j :=
@@ -232,18 +207,12 @@ and
     0,            & \text{else}.
     \end{cases}
 
-Note that the index condition :math:`m - (p + n) \leq n - 1` is equivalent to
-:math:`2n - 1 + p - m \geq 0`, hence the index range in the definition of
-:math:`P_{\mathrm{s},2}^*` is well-defined.
+Note that the index condition :math:`m - (p + n) \leq n - 1` is equivalent to :math:`2n - 1 + p - m \geq 0`, hence the index range in the definition of :math:`P_{\mathrm{s},2}^*` is well-defined.
 
-Practically, the evaluation of :math:`E_{\mathrm{s}}^*` consists in copying the "main" part of
-:math:`y \in \mathbb{R}^m` corresponding to the indices :math:`p, \dots, p + n - 1` to
-:math:`x \in \mathbb{R}^n` and updating the vector additively as follows. The values at indices 1 to
-:math:`p` are updated with the values of :math:`y` mirrored at the index position :math:`p`, i.e. in
-reversed order. The values at the indices :math:`2n - 1 + p - m` to :math:`n - 2` are updated with
-the values of :math:`y` mirrored at the position :math:`2n + 2 - p`, again in reversed order. This
-procedure can be interpreted as "mirroring back" the outer two parts of the vector :math:`y` at the
-indices :math:`p` and :math:`2n + 2 - p`, adding those parts to the "main" vector.
+Practically, the evaluation of :math:`E_{\mathrm{s}}^*` consists in copying the "main" part of :math:`y \in \mathbb{R}^m` corresponding to the indices :math:`p, \dots, p + n - 1` to :math:`x \in \mathbb{R}^n` and updating the vector additively as follows.
+The values at indices 1 to :math:`p` are updated with the values of :math:`y` mirrored at the index position :math:`p`, i.e. in reversed order.
+The values at the indices :math:`2n - 1 + p - m` to :math:`n - 2` are updated with the values of :math:`y` mirrored at the position :math:`2n + 2 - p`, again in reversed order.
+This procedure can be interpreted as "mirroring back" the outer two parts of the vector :math:`y` at the indices :math:`p` and :math:`2n + 2 - p`, adding those parts to the "main" vector.
 
 
 Order 0 padding
@@ -272,15 +241,15 @@ This operator is the sum of the zero-padding operator and
 We calculate the adjoint of :math:`P_{\mathrm{o0}}`:
 
 .. math::
- \langle P_{\mathrm{o0}}(x), y \rangle_{\mathbb{R}^m}
- &= \sum_{j=0}^{p-1} x_0\, y_j + \sum_{j=p+n}^{m-1} x_{n-1}\, y_j \\
- &= x_0 \sum_{j=0}^{p-1} y_j + x_{n-1} \sum_{j=p+n}^{m-1} y_j \\
- &= x_0 M_{\mathrm{l},0}(y) + x_{n-1} M_{\mathrm{r},0}(y)
+    \langle P_{\mathrm{o0}}(x), y \rangle_{\mathbb{R}^m}
+    &= \sum_{j=0}^{p-1} x_0\, y_j + \sum_{j=p+n}^{m-1} x_{n-1}\, y_j \\
+    &= x_0 \sum_{j=0}^{p-1} y_j + x_{n-1} \sum_{j=p+n}^{m-1} y_j \\
+    &= x_0 M_{\mathrm{l},0}(y) + x_{n-1} M_{\mathrm{r},0}(y)
 
 with the zero'th order moments
 
 .. math::
- M_{\mathrm{l},0}(y) := \sum_{j=0}^{p-1} y_j, \quad M_{\mathrm{r},0}(y) := \sum_{j=p+n}^{m-1} y_j.
+    M_{\mathrm{l},0}(y) := \sum_{j=0}^{p-1} y_j, \quad M_{\mathrm{r},0}(y) := \sum_{j=p+n}^{m-1} y_j.
 
 Hence, we get
 
@@ -292,11 +261,8 @@ Hence, we get
     0,                   & \text{else},
     \end{cases}
 
-with the convention that the sum of the two values is taken in the case that $n = 1$, i.e. both first
-cases are the same. Hence, after constructing the restriction :math:`x \in \mathbb{R}^n` of a vector
-:math:`y \in \mathbb{R}^m` to the main part :math:`p, \dots, p + n - 1`, the sum of the entries to
-the left are added to :math:`x_0`, and the sum of the entries to the right are added to
-:math:`x_{n-1}`.
+with the convention that the sum of the two values is taken in the case that $n = 1$, i.e. both first cases are the same.
+Hence, after constructing the restriction :math:`x \in \mathbb{R}^n` of a vector :math:`y \in \mathbb{R}^m` to the main part :math:`p, \dots, p + n - 1`, the sum of the entries to the left are added to :math:`x_0`, and the sum of the entries to the right are added to :math:`x_{n-1}`.
 
 
 Order 1 padding
@@ -312,8 +278,7 @@ In this padding mode, a given vector is continued with constant slope instead of
  \end{cases}
  :label: def_order1_pad_op
 
-We can write this operator as :math:`E_{\mathrm{o1}} = E_{\mathrm{o0}} + S_{\mathrm{o1}}` with the
-order-1 specific part
+We can write this operator as :math:`E_{\mathrm{o1}} = E_{\mathrm{o0}} + S_{\mathrm{o1}}` with the order-1 specific part
 
 .. math::
     S_{\mathrm{o1}}(x)_j :=
@@ -350,7 +315,5 @@ Hence, the order-1 specific operator has the adjoint
     0,                  & \text{else},
     \end{cases}
 
-with the convention of summing values for overlapping cases, i.e. if :math:`i \in \{1, 2\}`. In
-practice, the adjoint for the order 1 padding case is applied by computing the zero'th and first
-order moments of :math:`y` and adding them to the two outmost entries of :math:`x` according to the
-above rule.
+with the convention of summing values for overlapping cases, i.e. if :math:`i \in \{1, 2\}`.
+In practice, the adjoint for the order 1 padding case is applied by computing the zero'th and first order moments of :math:`y` and adding them to the two outmost entries of :math:`x` according to the above rule.
