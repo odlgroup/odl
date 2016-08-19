@@ -299,7 +299,7 @@ def test_multiply(fn):
     [x_arr, y_arr, out_arr], [x, y, out] = example_vectors(fn, 3)
     out_arr = x_arr * y_arr
 
-    out.multiply(x, y)
+    x.multiply(y, out=out)
     assert all_almost_equal([x_arr, y_arr, out_arr], [x, y, out])
 
 

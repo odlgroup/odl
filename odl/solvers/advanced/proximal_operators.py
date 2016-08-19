@@ -892,7 +892,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
                 tmp = diff[0] ** 2
                 sq_tmp = x[0].space.element()
                 for x_i in diff[1:]:
-                    sq_tmp.multiply(x_i, x_i)
+                    x_i.multiply(x_i, out=sq_tmp)
                     tmp += sq_tmp
                 tmp.ufunc.sqrt(out=tmp)
 
@@ -904,7 +904,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
                 # Pointwise division
                 for out_i, x_i in zip(out, diff):
-                    out_i.divide(x_i, tmp)
+                    x_i.divide(tmp, out=out_i)
 
             else:
                 # Calculate |x| = pointwise 2-norm of x
@@ -917,7 +917,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
                 out /= lam
 
                 # Pointwise division
-                out.divide(diff, out)
+                diff.divide(out, out=out)
 
     return ProximalCConjL1
 

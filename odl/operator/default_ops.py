@@ -323,6 +323,8 @@ class MultiplyOperator(Operator):
         Multiply by vector
 
         >>> op = MultiplyOperator(x)
+        >>> op(x)
+        rn(3).element([1.0, 4.0, 9.0])
         >>> out = r3.element()
         >>> op(x, out)
         rn(3).element([1.0, 4.0, 9.0])
@@ -330,6 +332,8 @@ class MultiplyOperator(Operator):
         Multiply by scalar
 
         >>> op2 = MultiplyOperator(x, domain=r3.field)
+        >>> op2(3)
+        rn(3).element([3.0, 6.0, 9.0])
         >>> out = r3.element()
         >>> op2(3, out)
         rn(3).element([3.0, 6.0, 9.0])
@@ -340,7 +344,7 @@ class MultiplyOperator(Operator):
             if self.__domain_is_field:
                 out.lincomb(x, self.multiplicand)
             else:
-                out.multiply(x, self.multiplicand)
+                x.multiply(self.multiplicand, out=out)
         else:
             raise ValueError('can only use `out` with `LinearSpace` range')
 

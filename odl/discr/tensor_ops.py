@@ -314,7 +314,7 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         """Compute |F_i(x)|^p point-wise and write to ``out``."""
         # Optimization for a very common case
         if self.exponent == 2.0 and self.base_space.field == RealNumbers():
-            out.multiply(fi, fi)
+            fi.multiply(fi, out=out)
         else:
             fi.ufunc.absolute(out=out)
             out.ufunc.power(self.exponent, out=out)
@@ -546,9 +546,9 @@ class PointwiseInner(PointwiseInnerBase):
     def _call(self, vf, out):
         """Implement ``self(vf, out)``."""
         if self.domain.field == ComplexNumbers():
-            out.multiply(vf[0], self._vecfield[0].conj())
+            vf[0].multiply(self._vecfield[0].conj(), out=out)
         else:
-            out.multiply(vf[0], self._vecfield[0])
+            vf[0].multiply(self._vecfield[0], out=out)
 
         if self.is_weighted:
             out *= self.weights[0]
@@ -561,9 +561,9 @@ class PointwiseInner(PointwiseInnerBase):
                                self.weights[1:]):
 
             if self.domain.field == ComplexNumbers():
-                tmp.multiply(vfi, gi.conj())
+                vfi.multiply(gi.conj(), out=tmp)
             else:
-                tmp.multiply(vfi, gi)
+                vfi.multiply(gi, out=tmp)
 
             if self.is_weighted:
                 tmp *= wi
@@ -653,7 +653,7 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
         """Implement ``self(vf, out)``."""
         for vfi, oi, ran_wi, dom_wi in zip(self.vecfield, out,
                                            self._ran_weights, self.weights):
-            oi.multiply(vfi, f)
+            vfi.multiply(f, out=oi)
             if not np.isclose(ran_wi, dom_wi):
                 oi *= dom_wi / ran_wi
 
