@@ -461,7 +461,7 @@ def test(arguments=''):
     import pytest
     this_dir = os.path.dirname(__file__)
     odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
-    base_args = '-x {odl_root}/odl {odl_root}/test '.format(odl_root=odl_root)
+    base_args = '-x {root}/odl {root}/test '.format(root=repr(odl_root))
     pytest.main(base_args + arguments)
 
 
