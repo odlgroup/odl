@@ -250,7 +250,7 @@ class ResizingOperatorBase(Operator):
                     '(difference {})'
                     ''.format(range.cell_sides - domain.cell_sides))
 
-            self.__offset = self._offset_from_spaces(domain, range)
+            self.__offset = _offset_from_spaces(domain, range)
 
         else:
             raise ValueError('cannot combine `range` with `ran_shape`')
@@ -281,17 +281,6 @@ class ResizingOperatorBase(Operator):
     def pad_const(self):
         """Constant used by this operator in case of constant padding."""
         return self.__pad_const
-
-    @staticmethod
-    def _offset_from_spaces(dom, ran):
-        """Return index offset corresponding to given spaces."""
-        diff_l = np.abs(ran.grid.min() - dom.grid.min())
-        offset_float = diff_l / dom.cell_sides
-        offset = np.around(offset_float).astype(int)
-        if not np.allclose(offset, offset_float):
-            raise ValueError('range is shifted relative to domain by a '
-                             'non-multiple of cell_sides')
-        return tuple(offset)
 
 
 class ResizingOperator(ResizingOperatorBase):
@@ -342,6 +331,43 @@ class ResizingOperator(ResizingOperatorBase):
         if not self.is_linear:
             raise NotImplementedError('this operator is not linear and '
                                       'thus has no adjoint')
+
+        forward_op = self
+
+        class ResizingOperatorAdjoint(ResizingOperatorBase):
+
+            """Adjoint of `ResizingOperator`.
+
+            See `the online documentation
+            <https://odl.readthedocs.io/math/resizing_ops.html>`_
+            on resizing operators for mathematical details.
+            """
+
+            def _call(self, x, out):
+                """Implement ``self(x, out)``."""
+                # TODO: simplify once context manager is available
+                out[:] = resize_array(
+                    x.asarray(), self.range.shape, offset=self.offset,
+                    pad_mode=self.pad_mode, pad_const=0, direction='adjoint',
+                    out=out.asarray())
+
+            @property
+            def adjoint(self):
+                """Adjoint of the adjoint, i.e. the original operator."""
+                return forward_op
+
+            @property
+            def inverse(self):
+                """(Pseudo-)Inverse of this operator.
+
+                Note that in axes where ``self`` extends, the returned operator
+                acts as a proper inverse, while in restriction axes, the
+                operation is not invertible.
+                """
+                return ResizingOperatorAdjoint(
+                    domain=self.range, range=self.domain,
+                    pad_mode=self.pad_mode)
+
         return ResizingOperatorAdjoint(domain=self.range, range=self.domain,
                                        pad_mode=self.pad_mode)
 
@@ -358,80 +384,15 @@ class ResizingOperator(ResizingOperatorBase):
                                 pad_const=self.pad_const)
 
 
-class ResizingOperatorAdjoint(ResizingOperatorBase):
-
-    """Adjoint of `ResizingOperator`.
-
-    See `the online documentation
-    <https://odl.readthedocs.io/math/resizing_ops.html>`_
-    on resizing operators for mathematical details.
-    """
-
-    def __init__(self, domain, range=None, ran_shp=None, **kwargs):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        domain : uniform `DiscreteLp`
-            Uniformly discretized space, the operator can be applied
-            to its elements.
-        range : uniform `DiscreteLp`, optional
-            Uniformly discretized space in which the result of the
-            application of this operator lies.
-            For the default ``None``, a space with the same attributes
-            as ``domain`` is used, except for its shape, which is set
-            to ``ran_shp``.
-        ran_shp : sequence of int
-            Shape of the range of this operator. This can be provided
-            instead of ``range`` and is mandatory if ``range`` is
-            ``None``.
-        offset : int or sequence of int, optional
-            Number of cells to add to/remove from the left of
-            ``domain.partition``. By default, the difference is
-            distributed evenly, with preference for left in case of
-            ambiguity.
-            This option is can only be used together with ``ran_shp``.
-        pad_mode : str, optional
-            Method to be used to fill in missing values in an enlarged array.
-
-            ``'constant'``: Fill with zeros.
-
-            ``'symmetric'``: Reflect at the boundaries, not doubling the
-            outmost values. This requires left and right padding sizes
-            to be strictly smaller than the original array shape.
-
-            ``'periodic'``: Fill in values from the other side, keeping
-            the order. This requires left and right padding sizes to be
-            at most as large as the original array shape.
-
-            ``'order0'``: Extend constantly with the outmost values
-            (ensures continuity).
-
-            ``'order1'``: Extend with constant slope (ensures continuity of
-            the first derivative). This requires at least 2 values along
-            each axis where padding is applied.
-
-        discr_kwargs: dict, optional
-            Keyword arguments passed to the `uniform_discr` constructor.
-        """
-        # Catch pad_const so it's not silently ignored
-        if 'pad_const' in kwargs:
-            raise TypeError("got invalid argument 'pad_const'")
-        super().__init__(domain, range, ran_shp, **kwargs)
-
-    def _call(self, x, out):
-        """Implement ``self(x, out)``."""
-        # TODO: simplify once context manager is available
-        out[:] = resize_array(x.asarray(), self.range.shape,
-                              offset=self.offset, pad_mode=self.pad_mode,
-                              pad_const=0, direction='adjoint',
-                              out=out.asarray())
-
-    @property
-    def adjoint(self):
-        """Adjoint of this operator."""
-        return ResizingOperator(domain=self.range, range=self.domain,
-                                pad_mode=self.pad_mode, pad_const=0.0)
+def _offset_from_spaces(dom, ran):
+    """Return index offset corresponding to given spaces."""
+    diff_l = np.abs(ran.grid.min() - dom.grid.min())
+    offset_float = diff_l / dom.cell_sides
+    offset = np.around(offset_float).astype(int)
+    if not np.allclose(offset, offset_float):
+        raise ValueError('range is shifted relative to domain by a '
+                         'non-multiple of cell_sides')
+    return tuple(offset)
 
 
 def _resize_discr(discr, newshp, offset, discr_kwargs):

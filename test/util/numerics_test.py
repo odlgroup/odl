@@ -257,7 +257,6 @@ def resize_setup(request):
                 [5, 6, 7, 8],
                 [9, 10, 11, 12]]
 
-    print(request.param)
     pad_mode, variant = request.param
     pad_const = 0
 
@@ -382,13 +381,6 @@ def test_resize_array_adj(resize_setup, dtype):
     resized_adj = resize_array(other_arr, array.shape, offset, pad_mode,
                                pad_const, direction='adjoint')
 
-    print(resized)
-    print(other_arr)
-    print(np.vdot(resized.ravel(), other_arr.ravel()))
-
-    print(resized_adj)
-    print(array)
-    print(np.vdot(resized_adj.ravel(), array.ravel()))
     assert almost_equal(np.vdot(resized.ravel(), other_arr.ravel()),
                         np.vdot(array.ravel(), resized_adj.ravel()))
 
