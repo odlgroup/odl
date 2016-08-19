@@ -345,10 +345,6 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
         the first derivative). This requires at least 2 values along
         each axis where padding is applied.
 
-        Note that for ``'symmetric'`` and ``'periodic'`` padding, the
-        number of added entries on each side of the array (in a given
-        axis) cannot exceed the original size.
-
     pad_const : scalar, optional
         Value to be used in the ``'constant'`` padding mode.
     direction : {'forward', 'adjoint'}
@@ -441,13 +437,15 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
             raise ValueError('`out` must have shape {}, got {}'
                              ''.format(newshp, out.shape))
 
-        arr = np.asarray(arr, dtype=out.dtype)
+        order = 'C' if out.flags.c_contiguous else 'F'
+        arr = np.asarray(arr, dtype=out.dtype, order=order)
         if arr.ndim != out.ndim:
             raise ValueError('number of axes of `arr` and `out` do not match '
                              '({} != {})'.format(arr.ndim, out.ndim))
     else:
         arr = np.asarray(arr)
-        out = np.empty(newshp, dtype=arr.dtype)
+        order = 'C' if arr.flags.c_contiguous else 'F'
+        out = np.empty(newshp, dtype=arr.dtype, order=order)
         if len(newshp) != arr.ndim:
             raise ValueError('number of axes of `arr` and `len(newshp)` do '
                              'not match ({} != {})'
@@ -563,7 +561,6 @@ def _padding_slices_outer(lhs_arr, rhs_arr, axis, offset):
     <https://odl.readthedocs.io/math/resizing_ops.html>`_
     on resizing operators for details.
     """
-    # TODO: check link
     istart_inner = offset[axis]
     istop_inner = istart_inner + min(lhs_arr.shape[axis], rhs_arr.shape[axis])
     return slice(istart_inner), slice(istop_inner, None)
@@ -577,8 +574,6 @@ def _padding_slices_inner(lhs_arr, rhs_arr, axis, offset, pad_mode):
     of the same array. Slices for both sides ("left", "right") of
     the arrays in a given ``axis`` are returned.
     """
-    # TODO: check link
-
     # Calculate the start and stop indices for the inner part
     istart_inner = offset[axis]
     n_large = max(lhs_arr.shape[axis], rhs_arr.shape[axis])
@@ -685,8 +680,8 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
         # TODO: change comment
 
         # TODO: use working_slc instead of full_slc
-        lhs_slc_l, lhs_slc_r = full_slc.copy(), full_slc.copy()
-        rhs_slc_l, rhs_slc_r = full_slc.copy(), full_slc.copy()
+        lhs_slc_l, lhs_slc_r = list(working_slc), list(working_slc)
+        rhs_slc_l, rhs_slc_r = list(working_slc), list(working_slc)
 
         # We're always using the outer (excess) parts involved in padding
         # on the LHS of the assignment, so we set them here.
@@ -755,16 +750,16 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 lhs_arr, rhs_arr, axis, offset, pad_mode)
 
             # Create slice tuples for indexing of the boundary values
-            bdry_slc_l = full_slc.copy()
+            bdry_slc_l = list(working_slc)
             bdry_slc_l[axis] = left_slc
-            bdry_slc_r = full_slc.copy()
+            bdry_slc_r = list(working_slc)
             bdry_slc_r[axis] = right_slc
 
             # For the slope at the boundary, we need two neighboring points.
             # We create the corresponding slices from the boundary slices.
-            slope_slc_l = full_slc.copy()
+            slope_slc_l = list(working_slc)
             slope_slc_l[axis] = slice(left_slc.start, left_slc.stop + 1)
-            slope_slc_r = full_slc.copy()
+            slope_slc_r = list(working_slc)
             slope_slc_r[axis] = slice(right_slc.start - 1, right_slc.stop)
 
             # The `np.arange`s, broadcast along `axis`, are used to create the
