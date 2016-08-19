@@ -86,6 +86,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
+    'sphinx.ext.extlinks',
     'numpydoc'
 ]
 # Use newer 'imgmath' extension if possible
@@ -93,6 +94,14 @@ if StrictVersion(sphinx.__version__) >= '1.4':
     extensions.append('sphinx.ext.imgmath')
 else:
     extensions.append('sphinx.ext.pngmath')
+
+# Add external links to GitHub
+extlinks = {
+    'pull': ('https://github.com/odlgroup/odl/pull/%s', 'PR '),
+    'issue': ('https://github.com/odlgroup/odl/issues/%s', 'issue '),
+    'commit': ('https://github.com/odlgroup/odl/commit/%s', 'commit ')
+}
+
 
 if not on_rtd:
     # TODO: fix this once RTD updates their intersphinx version

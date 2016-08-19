@@ -18,8 +18,8 @@ of ``DiscreteLp`` elements.
 
 New features
 ------------
-- Add ``deform`` package with linearized deformations (`PR 488`)
-- Add option to interface with ProxImaL solvers using ODL operators. (`PR 494`)
+- Add ``deform`` package with linearized deformations (:pull:`488`)
+- Add option to interface with ProxImaL solvers using ODL operators. (:pull:`494`)
 
 ODL 0.3.1 Release Notes (2016-08-15)
 ====================================
@@ -30,32 +30,32 @@ splitting.
 
 New features
 ------------
-- New solvers based on the Douglas-Rachford and forward-backward splitting schemes. (`PR 478`_,
-  `PR 480`_)
-- ``NormOperator`` and ``DistOperator`` added. (`PR 487`_)
+- New solvers based on the Douglas-Rachford and forward-backward splitting schemes. (:pull:`478`,
+  :pull:`480`)
+- ``NormOperator`` and ``DistOperator`` added. (:pull:`487`)
 - Single-element ``NtuplesBase`` vectors can now be converted to ``float``, ``complex`` etc.
-  (`PR 493`_)
+  (:pull:`493`)
 
 
 Improvements
 ------------
-- ``DiscreteLp.element()`` now allows non-vectorized and 1D scalar functions as input. (`PR 476`_)
-- Speed improvements in the unit tests. (`PR 479`_)
+- ``DiscreteLp.element()`` now allows non-vectorized and 1D scalar functions as input. (:pull:`476`)
+- Speed improvements in the unit tests. (:pull:`479`)
 - Uniformization of ``__init__()`` docstrings and many further documentation and naming improvements.
-  (`PR 489`_, `PR 482`_, `PR 491`_)
+  (:pull:`489`, :pull:`482`, :pull:`491`)
 - Clearer separation between attributes that are intended as part of the subclassing API and those
-  that are not. (`PR 471`_)
+  that are not. (:pull:`471`)
 - Chambolle-Pock solver accepts also non-linear operators and has better documentation now.
-  (`PR 490`_)
-- Clean-up of imports. (`PR 492`_)
-- All solvers now check that the given start value ``x`` is in ``op.domain``. (`PR 502`_)
-- Added test for in-place evaluation of the ray transform. (`PR 500`_)
+  (:pull:`490`)
+- Clean-up of imports. (:pull:`492`)
+- All solvers now check that the given start value ``x`` is in ``op.domain``. (:pull:`502`)
+- Added test for in-place evaluation of the ray transform. (:pull:`500`)
 
 Bugfixes
 --------
 - Axes in ``show()`` methods of several classes now use the correct corner coordinates, the old ones
-  were off by half a grid cell in some situations. (`PR 477`_).
-- Catch case in ``power_method_opnorm()`` when iteration goes to zero. (`PR 495`_)
+  were off by half a grid cell in some situations. (:pull:`477`).
+- Catch case in ``power_method_opnorm()`` when iteration goes to zero. (:pull:`495`)
 
 
 ODL 0.3.0 Release Notes (2016-06-29)
@@ -81,19 +81,19 @@ ODL 0.2.4 Release Notes (2016-06-28)
 
 New features
 ------------
-- Add ``uniform_discr_fromdiscr`` (`PR 467`).
-- Add conda build files (`commit 86ff166`).
+- Add ``uniform_discr_fromdiscr`` (:pull:`467`).
+- Add conda build files (:commit:`86ff166`).
 
 Bugfixes
 --------
-- Fix bug in submarine phantom with non-centered space (`PR 469`).
-- Fix crash when plotting in 1d (`commit 3255fa3`).
+- Fix bug in submarine phantom with non-centered space (:pull:`469`).
+- Fix crash when plotting in 1d (:commit:`3255fa3`).
 
 Changes
 -------
-- Move phantoms to new module odl.phantom (`PR 469`).
+- Move phantoms to new module odl.phantom (:pull:`469`).
 - Rename ``RectPartition.is_uniform`` to ``RectPartition.is_uniform``
-  (`PR 468`).
+  (:pull:`468`).
 
 ODL 0.2.3 Release Notes (2016-06-12)
 ====================================
@@ -101,88 +101,88 @@ ODL 0.2.3 Release Notes (2016-06-12)
 New features
 ------------
 - ``uniform_sampling`` now supports the ``nodes_on_bdry`` option introduced in ``RectPartition``
-  (`PR 308`_).
+  (:pull:`308`).
 - ``DiscreteLpVector.show`` has a new ``coords`` option that allows to slice by coordinate instead
-  of by index (`PR 309`_).
+  of by index (:pull:`309`).
 - New ``uniform_discr_fromintv`` to discretize an existing ``IntervalProd`` instance
-  (`PR 318`_).
+  (:pull:`318`).
 - The ``operator.oputils`` module has a new function ``as_scipy_operator`` which exposes a linear
   ODL operator as a ``scipy.sparse.linalg.LinearOperator``. This way, an ODL operator can be used
-  seamlessly in SciPy's sparse solvers (`PR 324`_).
-- New ``Resampling`` operator to resample data between different discretizations (`PR 328`_).
-- New ``PowerOperator`` taking the power of an input function (`PR 338`_).
+  seamlessly in SciPy's sparse solvers (:pull:`324`).
+- New ``Resampling`` operator to resample data between different discretizations (:pull:`328`).
+- New ``PowerOperator`` taking the power of an input function (:pull:`338`).
 - First pointwise operators acting on vector fields: ``PointwiseInner`` and ``PointwiseNorm``
-  (`PR 346`_).
-- Examples for FBP reconstruction (`PR 364`_) and TV regularization using the Chambolle-Pock
-  method (`PR 352`_).
+  (:pull:`346`).
+- Examples for FBP reconstruction (:pull:`364`) and TV regularization using the Chambolle-Pock
+  method (:pull:`352`).
 - New ``scikit-image`` based implementation of ``RayTransform`` for 2D parallel beam tomography
-  (`PR 352`_).
-- ``RectPartition`` has a new method ``append`` for simple extension (`PR 370`_).
-- The ODL unit tests can now be run with ``odl.test()`` (`PR 373`_).
-- Proximal of the Kullback-Leibler data discrepancy functional (`PR 289`_).
-- Support for SPECT using ``ParallelHoleCollimatorGeometry`` (`PR 304`_).
-- A range of new proximal operators (`PR 401`_) and some calculus rules (`PR 422`_) have been added,
+  (:pull:`352`).
+- ``RectPartition`` has a new method ``append`` for simple extension (:pull:`370`).
+- The ODL unit tests can now be run with ``odl.test()`` (:pull:`373`).
+- Proximal of the Kullback-Leibler data discrepancy functional (:pull:`289`).
+- Support for SPECT using ``ParallelHoleCollimatorGeometry`` (:pull:`304`).
+- A range of new proximal operators (:pull:`401`) and some calculus rules (:pull:`422`) have been added,
   e.g. the proximal of the convex conjugate or of a translated functional.
 - Functions with parameters can now be sampled by passing the parameter values to the sampling
-  operator. The same is true for the ``element`` method of a discrete function space (`PR 406`_).
+  operator. The same is true for the ``element`` method of a discrete function space (:pull:`406`).
 - ``ProducSpaceOperator`` can now be indexed directly, returning the operator component(s)
-  corresponding to the index (`PR 407`_).
+  corresponding to the index (:pull:`407`).
 - ``RectPartition`` now supports "almost-fancy" indexing, i.e. indexing via integer, slice, tuple
-  or list in the style of NumPy (`PR 386`_).
+  or list in the style of NumPy (:pull:`386`).
 - When evaluating a ``FunctionSetVector``, the result is tried to be broadcast if necessary
-  (`PR 438`_).
+  (:pull:`438`).
 - ``uniform_partition`` now has a more flexible way of initialization using ``begin``, ``end``,
-  ``num_nodes`` and ``cell_sides`` (3 of 4 required) (`PR 444`_).
+  ``num_nodes`` and ``cell_sides`` (3 of 4 required) (:pull:`444`).
 
 Improvements
 ------------
 - Product spaces now utilize the same weighting class hierarchy as ``Rn`` type spaces, which makes
-  the weight handling much more transparent and robust (`PR 320`_).
+  the weight handling much more transparent and robust (:pull:`320`).
 - Major refactor of the ``diagnostics`` module, with better output, improved derivative test and
-  a simpler and more extensible way to generate example vectors in spaces (`PR 338`_).
+  a simpler and more extensible way to generate example vectors in spaces (:pull:`338`).
 - 3D Shepp-Logan phantom sliced in the middle is now exactly the same as the 2D Shepp-Logan phantom
-  (`PR 368`_).
+  (:pull:`368`).
 - Improved usage of test parametrization, making decoration of each test function obsolete. Also
-  the printed messages are better (`PR 371`_).
-- ``OperatorLeftScalarMult`` and ``OperatorRightScalarMult`` now have proper inverses (`PR 388`_).
-- Better behavior of display methods if arrays contain ``inf`` or ``NaN`` (`PR 376`_).
-- Adjoints of Fourier transform operators are now correctly handled (`PR 396`_).
-- Differential operators now have consistent boundary behavior (`PR 405`_).
+  the printed messages are better (:pull:`371`).
+- ``OperatorLeftScalarMult`` and ``OperatorRightScalarMult`` now have proper inverses (:pull:`388`).
+- Better behavior of display methods if arrays contain ``inf`` or ``NaN`` (:pull:`376`).
+- Adjoints of Fourier transform operators are now correctly handled (:pull:`396`).
+- Differential operators now have consistent boundary behavior (:pull:`405`).
 - Repeated scalar multiplication with an operator accumulates the scalars instead of creating a new
-  operator each time (`PR 429`_).
-- Examples have undergone a major cleanup (`PR 431`_).
-- Addition of ``__len__`` at several places where it was missing (`PR 425`_).
+  operator each time (:pull:`429`).
+- Examples have undergone a major cleanup (:pull:`431`).
+- Addition of ``__len__`` at several places where it was missing (:pull:`425`).
 
 Bugfixes
 --------
 - The result of the evaluation of a ``FunctionSpaceVector`` is now automatically cast to the correct
-  output data type (`PR 331`_).
-- ``inf`` values are now properly treated in ``BacktrackingLineSearch`` (`PR 348`_).
-- Fix for result not being written to a CUDA array in interpolation (`PR 361`_).
+  output data type (:pull:`331`).
+- ``inf`` values are now properly treated in ``BacktrackingLineSearch`` (:pull:`348`).
+- Fix for result not being written to a CUDA array in interpolation (:pull:`361`).
 - Evaluation of ``FunctionSpaceVector`` now works properly in the one-dimensional case
-  (`PR 362`_).
+  (:pull:`362`).
 - Rotation by 90 degrees / wrong orientation of 2D parallel and fan beam projectors
-  and back-projectors fixed (`PR 436`_).
+  and back-projectors fixed (:pull:`436`).
 
 Changes
 -------
-- ``odl.set.pspace`` was moved to ``odl.space.pspace`` (`PR 320`_)
-- Parameter ``ord`` in norms etc. has been renamed to ``exponent`` (`PR 320`_)
+- ``odl.set.pspace`` was moved to ``odl.space.pspace`` (:pull:`320`)
+- Parameter ``ord`` in norms etc. has been renamed to ``exponent`` (:pull:`320`)
 - ``restriction`` and ``extension`` operators and parameters have been renamed to ``sampling``
-  and ``interpolation``, respectively (`PR 337`_).
+  and ``interpolation``, respectively (:pull:`337`).
 - Differential operators like ``Gradient`` and ``Laplacian`` have been moved from
-  ``odl.discr.discr_ops`` to ``odl.discr.diff_ops`` (`PR 377`_)
+  ``odl.discr.discr_ops`` to ``odl.discr.diff_ops`` (:pull:`377`)
 - The initialization patterns of ``Gradient`` and ``Divergence`` were unified to allow specification
-  of domain or range or both (`PR 377`_).
+  of domain or range or both (:pull:`377`).
 - ``RawDiscretization`` and ``Discretization`` were renamed to ``DiscretizedSet`` and
-  ``DiscretizedSpace``, resp. (`PR 406`_).
+  ``DiscretizedSpace``, resp. (:pull:`406`).
 - Diagonal "operator matrices" are now implemented with a class ``DiagonalOperator`` instead of
-  the factory function ``diagonal_operator`` (`PR 407`_).
+  the factory function ``diagonal_operator`` (:pull:`407`).
 - The ``...Partial`` classes have been renamed to ``Callback...``. Parameters of solvers are now
-  ``callback`` instead of ``partial`` (`PR 430`_).
+  ``callback`` instead of ``partial`` (:pull:`430`).
 - Occurrences of ``dom`` and ``ran`` as initialization parameters of operators have been changed
-  to ``domain`` and ``range`` throughout (`PR 433`_).
-- Assignments ``x = x.space.element(x)`` are now required to be no-ops (`PR 439`_)
+  to ``domain`` and ``range`` throughout (:pull:`433`).
+- Assignments ``x = x.space.element(x)`` are now required to be no-ops (:pull:`439`)
 
 
 ODL 0.2.2 Release Notes (2016-03-11)
