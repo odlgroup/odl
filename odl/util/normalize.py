@@ -145,7 +145,7 @@ def normalized_scalar_param_list(param, length, param_conv=None,
                          ''.format(len(nonconv_list), length))
 
     if param_conv is None:
-        out_list = nonconv_list.copy()
+        out_list = list(nonconv_list)
     else:
         out_list = []
         for p in nonconv_list:
