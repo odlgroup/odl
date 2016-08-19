@@ -26,7 +26,8 @@ import pytest
 import numpy as np
 
 import odl
-from odl.discr.discr_ops import _SUPPORTED_PAD_MODES
+from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
+from odl.util.testutils import almost_equal, example_element
 
 
 # --- ResizingOperator --- #
@@ -41,7 +42,7 @@ def test_resizing_op_init():
 
     odl.ResizingOperator(space, res_space)
     odl.ResizingOperator(space, ran_shp=(20, 15))
-    odl.ResizingOperator(space, ran_shp=(20, 15), num_left=(0, 5))
+    odl.ResizingOperator(space, ran_shp=(20, 15), offset=(0, 5))
     odl.ResizingOperator(space, ran_shp=(20, 15), pad_mode='symmetric')
     odl.ResizingOperator(space, ran_shp=(20, 15), pad_const=1.0)
     odl.ResizingOperator(space, ran_shp=(20, 15), pad_const=1.0,
@@ -79,11 +80,11 @@ def test_resizing_op_raise():
     with pytest.raises(ValueError):
         odl.ResizingOperator(space)
 
-    # num_left cannot be combined with range
+    # offset cannot be combined with range
     space = odl.uniform_discr([0, -1], [1, 1], (10, 5))
     res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15))
     with pytest.raises(ValueError):
-        odl.ResizingOperator(space, res_space, num_left=(0, 0))
+        odl.ResizingOperator(space, res_space, offset=(0, 0))
 
     # bad pad_mode
     with pytest.raises(ValueError):
@@ -99,15 +100,15 @@ def test_resizing_op_properties():
 
     assert res_op.domain == space
     assert res_op.range == res_space
-    assert res_op.num_left == (0, 5)
+    assert res_op.offset == (0, 5)
     assert res_op.pad_mode == 'constant'
     assert res_op.pad_const == 0.0
     assert res_op.is_linear
 
-    # Implicit range via ran_shp and num_left
-    res_op = odl.ResizingOperator(space, ran_shp=(20, 15), num_left=[0, 5])
+    # Implicit range via ran_shp and offset
+    res_op = odl.ResizingOperator(space, ran_shp=(20, 15), offset=[0, 5])
     assert res_op.range == res_space
-    assert res_op.num_left == (0, 5)
+    assert res_op.offset == (0, 5)
 
     # Different padding mode
     res_op = odl.ResizingOperator(space, res_space, pad_const=1)
@@ -157,15 +158,26 @@ def pad_mode(request):
     return request.param
 
 
-def test_resizing_op_inverse(pad_mode):
+dtype_params = ['float64', 'complex64']
+dtype_ids = [' dtype = {} '.format(p) for p in dtype_params]
+
+
+@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
+def dtype(request):
+    return request.param
+
+
+def test_resizing_op_inverse(pad_mode, dtype, fn_impl):
 
     if isinstance(pad_mode, tuple):
         pad_mode, pad_const = pad_mode
     else:
         pad_const = 0.0
 
-    space = odl.uniform_discr([0, -1], [1, 1], (4, 5))
-    res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7))
+    space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
+                              impl=fn_impl)
+    res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7), dtype=dtype,
+                                  impl=fn_impl)
     res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
                                   pad_const=pad_const)
 
@@ -174,7 +186,29 @@ def test_resizing_op_inverse(pad_mode):
     assert res_op.inverse(res_op(x)) == x
 
 
-# TODO: adjoint
+def test_resizing_op_adjoint(pad_mode, dtype, fn_impl):
+
+    if isinstance(pad_mode, tuple):
+        pad_mode, pad_const = pad_mode
+    else:
+        pad_const = 0.0
+
+    space = odl.uniform_discr([0, -1], [1, 1], (4, 5), dtype=dtype,
+                              impl=fn_impl)
+    res_space = odl.uniform_discr([0, -1.4], [1.5, 1.4], (6, 7), dtype=dtype,
+                                  impl=fn_impl)
+    res_op = odl.ResizingOperator(space, res_space, pad_mode=pad_mode,
+                                  pad_const=pad_const)
+
+    if pad_const != 0.0:
+        with pytest.raises(NotImplementedError):
+            res_op.adjoint
+        return
+
+    elem = example_element(space)
+    res_elem = example_element(res_space)
+    assert almost_equal(res_op(elem).inner(res_elem),
+                        elem.inner(res_op.adjoint(res_elem)))
 
 
 if __name__ == '__main__':
