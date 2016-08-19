@@ -63,11 +63,11 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     prox_cc_g : `sequence` of `callable`'s
         Sequence of `proximal factorie`'s for the convex conjuates of the
         functionals ``g_i``.
-    grad_h : `Operator`
-        Operator representing the gradient of  ``h``.
     L : `sequence` of `Operator`
         Sequence of linear operators ``L_i``, with as many elements as
         ``prox_cc_gs``.
+    grad_h : `Operator`
+        Operator representing the gradient of  ``h``.
     tau : `float`
         Step size-like parameter for ``prox_f``.
     sigma : `sequence` of  `float`
