@@ -8,14 +8,13 @@ Resizing Operators
 Introduction
 ============
 In ODL, resizing of a discretized function is understood as the operation of shrinking or enlarging its domain in such a way that the size of the partition cells do not change.
-This "constant cell size" restriction is intentional since it ensures that the underlying operation can be implemented as array resizing without resampling, thus keeping those two functionalities separate.
+This "constant cell size" restriction is intentional since it ensures that the underlying operation can be implemented as array resizing without resampling, thus keeping those two functionalities separate (see `Resampling`).
 
 
 Basic setting
 =============
-Let now :math:`\mathbb{R}^n` with :math:`n \in \mathbb{N}` be the space of one-dimensional real vectors encoding values of a function defined on an interval :math:`[a, b] \subset \mathbb{R}`.
+Let now :math:`\mathbb{R}^n` with :math:`n \in \mathbb{N}` be the space of one-dimensional real vectors encoding values of a function defined on an interval :math:`[a, b] \subset \mathbb{R}` (see :ref:`discretizations` for details).
 Since values are not manipulated, the generalization to complex-valued functions is straightforward.
-Further, since all operations completely separate with respect to different dimensions, the results can easily applied to the multi-dimensional case.
 
 
 Restriction operator
@@ -317,3 +316,26 @@ Hence, the order-1 specific operator has the adjoint
 
 with the convention of summing values for overlapping cases, i.e. if :math:`i \in \{1, 2\}`.
 In practice, the adjoint for the order 1 padding case is applied by computing the zero'th and first order moments of :math:`y` and adding them to the two outmost entries of :math:`x` according to the above rule.
+
+
+Generalization to arbitrary dimension
+=====================================
+Fortunately, all operations are completely separable with respect to (coordinate) axes, i.e. resizing in higher-dimensional spaces can be written as a series of one-dimensional resizing operations.
+One particular issue should be mentioned with the extension operators and their adjoints, though.
+When extending a small, e.g., two-dimensional array to a larger size, there is an ambiguity in how the corner blocks should be handled.
+One possibility would be use the small array size for the extension in both axes, which would leave the corner blocks untouched (initialized to 0 usually):
+
+.. image:: images/resize_small.svg
+   :width: 100%
+
+However, this is not the behavior one would often want in practice.
+Instead, it is much more reasonable to also fill the corners in the same way the "inner" parts have been extended:
+
+.. image:: images/resize_large.svg
+   :width: 100%
+
+This latter behavior is implemented in the resizing operators in ODL.
+
+The adjoint operators of these "corner-filling" resizing operator are given by reversing the unfolding pattern, i.e. by "folding in" the large array axis by axis according to the adjoint formula for the given padding mode.
+This way, the corners also contribute to the final result, which leads to the correct adjoint of the 2D resizing operator.
+Of course, the same principle can easily be generalized to arbitrary dimension.
