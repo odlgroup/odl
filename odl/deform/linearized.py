@@ -213,7 +213,7 @@ class LinDeformFixedTempl(Operator):
 
         # TODO: allow users to select what method to use here.
         grad = Gradient(domain=self.range, method='central',
-                        padding_method='symmetric')
+                        pad_mode='symmetric')
         grad_templ = grad(self.template)
         def_grad = self.domain.element(
             [_linear_deform(gf, displacement) for gf in grad_templ])
@@ -353,7 +353,7 @@ class LinDeformFixedDisp(Operator):
         """
         # TODO allow users to select what method to use here.
         div_op = Divergence(domain=self.displacement.space, method='forward',
-                            padding_method='symmetric')
+                            pad_mode='symmetric')
         jacobian_det = self.domain.element(
             np.exp(-div_op(self.displacement)))
 

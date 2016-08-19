@@ -71,9 +71,9 @@ def test_finite_diff_invalid_args():
 
     # central differences and zero padding use second-order accurate edges
     with pytest.raises(ValueError):
-        finite_diff(DATA_1D, method='central', padding_method=0, edge_order=1)
+        finite_diff(DATA_1D, method='central', pad_mode=0, edge_order=1)
     with pytest.raises(ValueError):
-        finite_diff(DATA_1D, method='forward', padding_method=0, edge_order=2)
+        finite_diff(DATA_1D, method='forward', pad_mode=0, edge_order=2)
 
     # at least a two-element array is required
     with pytest.raises(ValueError):
@@ -108,12 +108,12 @@ def test_finite_diff_explicit():
     diff_ex[1:-1] = (arr[2:] - arr[:-2]) / 2.0
 
     # default: out=None, axis=0, dx=1.0, zero_padding=None, method='forward'
-    diff = finite_diff(arr, out=None, axis=0, dx=1.0, padding_method=None)
+    diff = finite_diff(arr, out=None, axis=0, dx=1.0, pad_mode=None)
     assert all_equal(diff, finite_diff(arr))
 
     # boundary: one-sided second-order accurate forward/backward difference
     diff = finite_diff(arr, out=None, axis=0, dx=1.0, method='central',
-                       padding_method=None)
+                       pad_mode=None)
     diff_ex[0] = -(3 * arr[0] - 4 * arr[1] + arr[2]) / 2.0
     diff_ex[-1] = (3 * arr[-1] - 4 * arr[-2] + arr[-3]) / 2.0
     assert all_equal(diff, diff_ex)
@@ -124,8 +124,8 @@ def test_finite_diff_explicit():
     assert all_equal(diff, diff_ex / dx)
 
     # boundary: second-order accurate central differences with zero padding
-    diff = finite_diff(arr, method='central', padding_method='constant',
-                       padding_value=0)
+    diff = finite_diff(arr, method='central', pad_mode='constant',
+                       pad_const=0)
     diff_ex[0] = arr[1] / 2.0
     diff_ex[-1] = -arr[-2] / 2.0
     assert all_equal(diff, diff_ex)
@@ -172,11 +172,11 @@ def test_finite_diff_symmetric_padding():
     # Using replicate padding forward and backward differences have zero
     # derivative at the upper or lower endpoint, respectively
     assert finite_diff(DATA_1D, method='forward',
-                       padding_method='symmetric')[-1] == 0
+                       pad_mode='symmetric')[-1] == 0
     assert finite_diff(DATA_1D, method='backward',
-                       padding_method='symmetric')[0] == 0
+                       pad_mode='symmetric')[0] == 0
 
-    diff = finite_diff(DATA_1D, method='central', padding_method='symmetric')
+    diff = finite_diff(DATA_1D, method='central', pad_mode='symmetric')
     assert diff[0] == (DATA_1D[1] - DATA_1D[0]) / 2
     assert diff[-1] == (DATA_1D[-1] - DATA_1D[-2]) / 2
 
@@ -184,46 +184,46 @@ def test_finite_diff_symmetric_padding():
 def test_finite_diff_constant_padding():
     """Finite difference using constant padding."""
 
-    for padding_value in [-1, 0, 1]:
+    for pad_const in [-1, 0, 1]:
         diff_forward = finite_diff(DATA_1D, method='forward',
-                                   padding_method='constant',
-                                   padding_value=padding_value)
+                                   pad_mode='constant',
+                                   pad_const=pad_const)
 
         assert diff_forward[0] == DATA_1D[1] - DATA_1D[0]
-        assert diff_forward[-1] == padding_value - DATA_1D[-1]
+        assert diff_forward[-1] == pad_const - DATA_1D[-1]
 
         diff_backward = finite_diff(DATA_1D, method='backward',
-                                    padding_method='constant',
-                                    padding_value=padding_value)
+                                    pad_mode='constant',
+                                    pad_const=pad_const)
 
-        assert diff_backward[0] == DATA_1D[0] - padding_value
+        assert diff_backward[0] == DATA_1D[0] - pad_const
         assert diff_backward[-1] == DATA_1D[-1] - DATA_1D[-2]
 
         diff_central = finite_diff(DATA_1D, method='central',
-                                   padding_method='constant',
-                                   padding_value=padding_value)
+                                   pad_mode='constant',
+                                   pad_const=pad_const)
 
-        assert diff_central[0] == (DATA_1D[1] - padding_value) / 2
-        assert diff_central[-1] == (padding_value - DATA_1D[-2]) / 2
+        assert diff_central[0] == (DATA_1D[1] - pad_const) / 2
+        assert diff_central[-1] == (pad_const - DATA_1D[-2]) / 2
 
 
 def test_finite_diff_periodic_padding():
     """Finite difference using periodic padding."""
 
     diff_forward = finite_diff(DATA_1D, method='forward',
-                               padding_method='periodic')
+                               pad_mode='periodic')
 
     assert diff_forward[0] == DATA_1D[1] - DATA_1D[0]
     assert diff_forward[-1] == DATA_1D[0] - DATA_1D[-1]
 
     diff_backward = finite_diff(DATA_1D, method='backward',
-                                padding_method='periodic')
+                                pad_mode='periodic')
 
     assert diff_backward[0] == DATA_1D[0] - DATA_1D[-1]
     assert diff_backward[-1] == DATA_1D[-1] - DATA_1D[-2]
 
     diff_central = finite_diff(DATA_1D, method='central',
-                               padding_method='periodic')
+                               pad_mode='periodic')
 
     assert diff_central[0] == (DATA_1D[1] - DATA_1D[-1]) / 2
     assert diff_central[-1] == (DATA_1D[0] - DATA_1D[-2]) / 2
@@ -239,9 +239,9 @@ def test_part_deriv(fn_impl, method, padding):
         PartialDerivative(odl.rn(1))
 
     if isinstance(padding, tuple):
-        padding_method, padding_value = padding
+        pad_mode, pad_const = padding
     else:
-        padding_method, padding_value = padding, None
+        pad_mode, pad_const = padding, None
 
     # discretized space
     space = odl.uniform_discr([0, 0], [2, 1], DATA_2D.shape, impl=fn_impl)
@@ -250,14 +250,14 @@ def test_part_deriv(fn_impl, method, padding):
     # operator
     for axis in range(space.ndim):
         partial = PartialDerivative(space, axis=axis, method=method,
-                                    padding_method=padding_method,
-                                    padding_value=padding_value)
+                                    pad_mode=pad_mode,
+                                    pad_const=pad_const)
 
         # Compare to helper function
         dx = space.cell_sides[axis]
         diff = finite_diff(DATA_2D, axis=axis, dx=dx, method=method,
-                           padding_method=padding_method,
-                           padding_value=padding_value)
+                           pad_mode=pad_mode,
+                           pad_const=pad_const)
 
         partial_vec = partial(dom_vec)
         assert all_almost_equal(partial_vec.asarray(), diff)
@@ -286,9 +286,9 @@ def test_gradient(method, fn_impl, padding):
         Gradient(odl.rn(1), method=method)
 
     if isinstance(padding, tuple):
-        padding_method, padding_value = padding
+        pad_mode, pad_const = padding
     else:
-        padding_method, padding_value = padding, None
+        pad_mode, pad_const = padding, None
 
     # DiscreteLp Vector
     space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
@@ -297,16 +297,16 @@ def test_gradient(method, fn_impl, padding):
     # computation of gradient components with helper function
     dx0, dx1 = space.cell_sides
     diff_0 = finite_diff(DATA_2D, axis=0, dx=dx0, method=method,
-                         padding_method=padding_method,
-                         padding_value=padding_value)
+                         pad_mode=pad_mode,
+                         pad_const=pad_const)
     diff_1 = finite_diff(DATA_2D, axis=1, dx=dx1, method=method,
-                         padding_method=padding_method,
-                         padding_value=padding_value)
+                         pad_mode=pad_mode,
+                         pad_const=pad_const)
 
     # gradient
     grad = Gradient(space, method=method,
-                    padding_method=padding_method,
-                    padding_value=padding_value)
+                    pad_mode=pad_mode,
+                    pad_const=pad_const)
     grad_vec = grad(dom_vec)
     assert len(grad_vec) == DATA_2D.ndim
     assert all_almost_equal(grad_vec[0].asarray(), diff_0)
@@ -334,8 +334,8 @@ def test_gradient(method, fn_impl, padding):
 
         # gradient
         grad = Gradient(space, method=method,
-                        padding_method=padding_method,
-                        padding_value=padding_value)
+                        pad_mode=pad_mode,
+                        pad_const=pad_const)
         grad(dom_vec)
 
 
@@ -350,17 +350,17 @@ def test_divergence(method, fn_impl, padding):
         Divergence(range=odl.rn(1), method=method)
 
     if isinstance(padding, tuple):
-        padding_method, padding_value = padding
+        pad_mode, pad_const = padding
     else:
-        padding_method, padding_value = padding, None
+        pad_mode, pad_const = padding, None
 
     # DiscreteLp
     space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
 
     # Operator instance
     div = Divergence(range=space, method=method,
-                     padding_method=padding_method,
-                     padding_value=padding_value)
+                     pad_mode=pad_mode,
+                     pad_const=pad_const)
 
     # Apply operator
     dom_vec = div.domain.element([DATA_2D, DATA_2D])
@@ -369,11 +369,11 @@ def test_divergence(method, fn_impl, padding):
     # computation of divergence with helper function
     dx0, dx1 = space.cell_sides
     diff_0 = finite_diff(dom_vec[0].asarray(), axis=0, dx=dx0, method=method,
-                         padding_method=padding_method,
-                         padding_value=padding_value)
+                         pad_mode=pad_mode,
+                         pad_const=pad_const)
     diff_1 = finite_diff(dom_vec[1].asarray(), axis=1, dx=dx1, method=method,
-                         padding_method=padding_method,
-                         padding_value=padding_value)
+                         pad_mode=pad_mode,
+                         pad_const=pad_const)
 
     assert all_almost_equal(diff_0 + diff_1, div_dom_vec.asarray())
 
@@ -398,9 +398,8 @@ def test_divergence(method, fn_impl, padding):
         space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
 
         # Divergence
-        div = Divergence(range=space, method=method,
-                         padding_method=padding_method,
-                         padding_value=padding_value)
+        div = Divergence(range=space, method=method, pad_mode=pad_mode,
+                         pad_const=pad_const)
         dom_vec = odl.phantom.cuboid(space, [0.2] * ndim, [0.8] * ndim)
         div([dom_vec] * ndim)
 
@@ -413,17 +412,17 @@ def test_laplacian(fn_impl, padding):
         Divergence(range=odl.rn(1))
 
     if isinstance(padding, tuple):
-        padding_method, padding_value = padding
+        pad_mode, pad_const = padding
     else:
-        padding_method, padding_value = padding, None
+        pad_mode, pad_const = padding, None
 
     # DiscreteLp
     space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
 
     # Operator instance
     lap = Laplacian(space,
-                    padding_method=padding_method,
-                    padding_value=padding_value)
+                    pad_mode=pad_mode,
+                    pad_const=pad_const)
 
     # Apply operator
     dom_vec = lap.domain.element(DATA_2D)
@@ -435,13 +434,11 @@ def test_laplacian(fn_impl, padding):
     expected_result = np.zeros(space.shape)
     for axis, dx in enumerate(space.cell_sides):
         diff_f = finite_diff(dom_vec.asarray(), axis=axis, dx=dx ** 2,
-                             method='forward',
-                             padding_method=padding_method,
-                             padding_value=padding_value)
+                             method='forward', pad_mode=pad_mode,
+                             pad_const=pad_const)
         diff_b = finite_diff(dom_vec.asarray(), axis=axis, dx=dx ** 2,
-                             method='backward',
-                             padding_method=padding_method,
-                             padding_value=padding_value)
+                             method='backward', pad_mode=pad_mode,
+                             pad_const=pad_const)
         expected_result += diff_f - diff_b
 
     assert all_almost_equal(expected_result, div_dom_vec.asarray())
