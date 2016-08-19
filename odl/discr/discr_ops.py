@@ -256,10 +256,12 @@ class ResizingOperatorBase(Operator):
             raise ValueError('cannot combine `range` with `ran_shape`')
 
         pad_mode = kwargs.pop('pad_mode', 'constant')
-        self.__pad_mode = str(pad_mode).lower()
-        if self.pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
-            raise ValueError("`pad_mode` '{}' not understood".format(pad_mode))
+        pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
+        if pad_mode not in _SUPPORTED_RESIZE_PAD_MODES:
+            raise ValueError("`pad_mode` '{}' not understood"
+                             "".format(pad_mode_in))
 
+        self.__pad_mode = pad_mode
         self.__pad_const = float(kwargs.pop('pad_const', 0.0))
 
         # padding mode 'constant' with `pad_const != 0` is not linear
@@ -285,12 +287,12 @@ class ResizingOperatorBase(Operator):
 
 class ResizingOperator(ResizingOperatorBase):
 
-    """Operator mapping a discrete function to a new domain.
+    """Operator mapping a discretized function to a new domain.
 
-    This operator is a mapping between uniformly discretized spaces with
-    the same `DiscreteLp.cell_sides` but different `DiscreteLp.shape`.
-    The underlying operation is array resizing, i.e. no resampling is
-    performed.
+    This operator is a mapping between uniformly discretized
+    `DiscreteLp` spaces with the same `DiscreteLp.cell_sides`,
+    but different `DiscreteLp.shape`. The underlying operation is array
+    resizing, i.e. no resampling is performed.
     In axes where the domain is enlarged, the new entries are filled
     ("padded") according to a provided parameter ``pad_mode``.
 
@@ -396,11 +398,15 @@ def _offset_from_spaces(dom, ran):
 
 
 def _resize_discr(discr, newshp, offset, discr_kwargs):
-    """Return ``discr`` resized to ``newshp``.
+    """Return a space based on ``discr`` and ``newshp``.
 
-    Resize to ``newshp``, using ``offset`` added/removed points to
-    the left (per axis). In axes where ``offset`` is ``None``, the
-    points are distributed evenly.
+    Use the domain of ``discr`` and its partition to create a new
+    uniformly discretized space with ``newshp`` as shape. In axes where
+    ``offset`` is given, it determines the number of added/removed cells to
+    the left. Where ``offset`` is ``None``, the points are distributed
+    evenly to left and right. The ``discr_kwargs`` parameter is passed
+    to `uniform_discr` for further specification of discretization
+    parameters.
     """
     new_begin, new_end = [], []
     for b_orig, e_orig, n_orig, cs, n_new, num_l in zip(
