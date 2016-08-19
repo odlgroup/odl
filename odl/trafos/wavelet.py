@@ -41,7 +41,7 @@ __all__ = ('WaveletTransform', 'WaveletTransformInverse',
 _SUPPORTED_IMPL = ('pywt',)
 
 
-def coeff_size_list(shape, nscales, wbasis, mode):
+def coeff_size_list(shape, nscales, wbasis, pad_mode):
     """Construct a size list from given wavelet coefficients.
 
     Related to 1D, 2D and 3D multidimensional wavelet transforms that utilize
@@ -67,7 +67,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         `PyWavelets documentation on wavelet bases
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
 
-    mode : `str`
+    pad_mode : `str`
         Signal extention mode. Possible extension modes are
 
         'zpd': zero-padding -- signal is extended by adding zero samples
@@ -124,7 +124,8 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
     # - until n = nscales
     size_list = [shape]
     for scale in range(nscales):
-        shp = tuple(pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len, mode=mode)
+        shp = tuple(pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
+                                       mode=pad_mode)
                     for n in size_list[scale])
         size_list.append(shp)
 
@@ -346,7 +347,7 @@ def array_to_pywt_coeff(coeff, size_list):
     return coeff_list
 
 
-def wavelet_decomposition3d(x, wbasis, mode, nscales):
+def wavelet_decomposition3d(x, wbasis, pad_mode, nscales):
     """Discrete 3D multiresolution wavelet decomposition.
 
     Compute the discrete 3D multiresolution wavelet decomposition
@@ -364,7 +365,7 @@ def wavelet_decomposition3d(x, wbasis, mode, nscales):
         `PyWavelets documentation on wavelet bases
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
 
-    mode : `str`
+    pad_mode : `str`
         Signal extention mode. For possible extensions see the
         `Pywavelets documentation on signal extenstion modes
         <http://www.pybytes.com/pywavelets/ref/\
@@ -403,7 +404,7 @@ signal-extension-modes.html>`_.
          ``N`` = the number of scaling levels
     """
 
-    wcoeffs = pywt.dwtn(x, wbasis, mode)
+    wcoeffs = pywt.dwtn(x, wbasis, pad_mode)
     aaa = wcoeffs['aaa']
     aad = wcoeffs['aad']
     ada = wcoeffs['ada']
@@ -418,7 +419,7 @@ signal-extension-modes.html>`_.
     coeff_list.append(details)
 
     for _ in range(1, nscales):
-        wcoeffs = pywt.dwtn(aaa, wbasis, mode)
+        wcoeffs = pywt.dwtn(aaa, wbasis, pad_mode)
         aaa = wcoeffs['aaa']
         aad = wcoeffs['aad']
         ada = wcoeffs['ada']
@@ -436,7 +437,7 @@ signal-extension-modes.html>`_.
     return coeff_list
 
 
-def wavelet_reconstruction3d(coeff_list, wbasis, mode, nscales):
+def wavelet_reconstruction3d(coeff_list, wbasis, pad_mode, nscales):
     """Discrete 3D multiresolution wavelet reconstruction
 
     Compute a discrete 3D multiresolution wavelet reconstruction
@@ -478,7 +479,7 @@ def wavelet_reconstruction3d(coeff_list, wbasis, mode, nscales):
         For more information see PyWavelet `documentation
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
 
-    mode : `str`
+    pad_mode : `str`
         Signal extention mode. For possible extensions see the
         `signal extenstion modes
         <http://www.pybytes.com/pywavelets/ref/\
@@ -498,12 +499,12 @@ signal-extension-modes.html>`_
     coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
                   'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
     for tpl in coeff_list[2:]:
-        aaa = pywt.idwtn(coeff_dict, wbasis, mode)
+        aaa = pywt.idwtn(coeff_dict, wbasis, pad_mode)
         (aad, ada, add, daa, dad, dda, ddd) = tpl
         coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
                       'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
 
-    x = pywt.idwtn(coeff_dict, wbasis, mode)
+    x = pywt.idwtn(coeff_dict, wbasis, pad_mode)
     return x
 
 
@@ -511,7 +512,7 @@ class WaveletTransform(Operator):
 
     """Discrete wavelet trafo between discrete L2 spaces."""
 
-    def __init__(self, domain, nscales, wbasis, mode):
+    def __init__(self, domain, nscales, wbasis, pad_mode):
         """Initialize a new instance.
 
         Parameters
@@ -552,7 +553,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
             Discrete FIR approximation of Meyer wavelet (``dmey``)
 
-        mode : `str`
+        pad_mode : `str`
              Signal extention modes as defined by ``pywt.MODES.modes``
              http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
 
@@ -578,12 +579,12 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         >>> wbasis = pywt.Wavelet('db1')
         >>> discr_domain = odl.uniform_discr([0, 0], [1, 1], (16, 16))
         >>> op = WaveletTransform(discr_domain, nscales=1,
-        ...                               wbasis=wbasis, mode='per')
+        ...                               wbasis=wbasis, pad_mode='per')
         >>> op.is_biorthogonal
         True
         """
         self.nscales = int(nscales)
-        self.mode = str(mode).lower()
+        self.pad_mode = str(pad_mode).lower()
 
         if isinstance(wbasis, pywt.Wavelet):
             self.wbasis = wbasis
@@ -607,7 +608,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                              'got {}'.format(max_level, self.nscales))
 
         self.size_list = coeff_size_list(domain.shape, self.nscales,
-                                         self.wbasis, self.mode)
+                                         self.wbasis, self.pad_mode)
 
         ran_size = np.prod(self.size_list[0])
 
@@ -653,17 +654,19 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             be transformed and on the chosen wavelet basis.
         """
         if x.space.ndim == 1:
-            coeff_list = pywt.wavedec(x, self.wbasis, self.mode, self.nscales)
+            coeff_list = pywt.wavedec(x, self.wbasis, self.pad_mode,
+                                      self.nscales)
             coeff_arr = pywt_coeff_to_array(coeff_list, self.size_list)
             return self.range.element(coeff_arr)
 
         if x.space.ndim == 2:
-            coeff_list = pywt.wavedec2(x, self.wbasis, self.mode, self.nscales)
+            coeff_list = pywt.wavedec2(x, self.wbasis, self.pad_mode,
+                                       self.nscales)
             coeff_arr = pywt_coeff_to_array(coeff_list, self.size_list)
             return self.range.element(coeff_arr)
 
         if x.space.ndim == 3:
-            coeff_dict = wavelet_decomposition3d(x, self.wbasis, self.mode,
+            coeff_dict = wavelet_decomposition3d(x, self.wbasis, self.pad_mode,
                                                  self.nscales)
             coeff_arr = pywt_coeff_to_array(coeff_dict, self.size_list)
 
@@ -703,14 +706,14 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         """
         return WaveletTransformInverse(
             range=self.domain, nscales=self.nscales, wbasis=self.wbasis,
-            mode=self.mode)
+            pad_mode=self.pad_mode)
 
 
 class WaveletTransformInverse(Operator):
 
     """Discrete inverse wavelet trafo between discrete L2 spaces."""
 
-    def __init__(self, range, nscales, wbasis, mode):
+    def __init__(self, range, nscales, wbasis, pad_mode):
         """Initialize a new instance.
 
          Parameters
@@ -750,7 +753,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
             Discrete FIR approximation of Meyer wavelet (``dmey``)
 
-        mode : `str`
+        pad_mode : `str`
              Signal extention modes as defined by ``pywt.MODES.modes``
              http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
 
@@ -772,7 +775,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         """
         self.nscales = int(nscales)
         self.wbasis = wbasis
-        self.mode = str(mode).lower()
+        self.pad_mode = str(pad_mode).lower()
 
         if not isinstance(range, DiscreteLp):
             raise TypeError('range {!r} is not a `DiscreteLp` instance'
@@ -791,7 +794,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
                              'got {}'.format(max_level, self.nscales))
 
         self.size_list = coeff_size_list(range.shape, self.nscales,
-                                         self.wbasis, self.mode)
+                                         self.wbasis, self.pad_mode)
 
         dom_size = np.prod(self.size_list[0])
         if range.ndim == 1:
@@ -835,16 +838,16 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         """
         if len(self.range.shape) == 1:
             coeff_list = array_to_pywt_coeff(coeff, self.size_list)
-            x = pywt.waverec(coeff_list, self.wbasis, self.mode)
+            x = pywt.waverec(coeff_list, self.wbasis, self.pad_mode)
             return self.range.element(x)
         elif len(self.range.shape) == 2:
             coeff_list = array_to_pywt_coeff(coeff, self.size_list)
-            x = pywt.waverec2(coeff_list, self.wbasis, self.mode)
+            x = pywt.waverec2(coeff_list, self.wbasis, self.pad_mode)
             return self.range.element(x)
         elif len(self.range.shape) == 3:
             coeff_dict = array_to_pywt_coeff(coeff, self.size_list)
-            x = wavelet_reconstruction3d(coeff_dict, self.wbasis, self.mode,
-                                         self.nscales)
+            x = wavelet_reconstruction3d(coeff_dict, self.wbasis,
+                                         self.pad_mode, self.nscales)
             return self.range.element(x)
 
     @property
@@ -884,7 +887,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         adjoint
         """
         return WaveletTransform(domain=self.range, nscales=self.nscales,
-                                wbasis=self.wbasis, mode=self.mode)
+                                wbasis=self.wbasis, pad_mode=self.pad_mode)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
