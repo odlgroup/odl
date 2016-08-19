@@ -99,8 +99,8 @@ class Resampling(Operator):
         The result depends on the interpolation chosen for the underlying
         spaces:
 
-        >>> Z = odl.uniform_discr(0, 1, 3, interp='linear')
-        >>> linear_resampling = Resampling(Z, Y)
+        >>> coarse_discr = odl.uniform_discr(0, 1, 3, interp='linear')
+        >>> linear_resampling = odl.Resampling(coarse_discr, fine_discr)
         >>> print(linear_resampling([0, 1, 0]))
         [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
         """
