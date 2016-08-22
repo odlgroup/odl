@@ -1,13 +1,17 @@
 package:
     name: odl
-    version: "0.2.3"
+    version: "0.4.0"
 
 source:
-    fn: odl-0.2.3.tar.gz
-    url: https://pypi.python.org/packages/c2/23/b208c56d0c25ec647cab9f164f050205c4792f5129deaf6b7a9cd3b99b1c/odl-0.2.3.tar.gz
-    md5: c8008ecf717b2b97ed72f8163e2ec805
+    fn: odl-0.4.0.tar.gz
+    url: https://pypi.python.org/packages/4d/f4/f7e0dbc1162d7286a306cd5a985a4d1f705a3bc1d892c5991b86037c2cb6/odl-0.4.0.tar.gz
+    md5: aba2e6b826aae1ff8f95bf495b67034b
     # git_url: https://github.com/odlgroup/odl
-    # git_rev: v0.2.3
+    # git_rev: v0.4.0
+
+# This currently crashes conda-build, would make sense though.
+# build:
+#     noarch_python: True
 
 requirements:
     build:
@@ -27,20 +31,14 @@ requirements:
 test:
     imports:
         - odl
-    
-    requires:
-        - pytest
-    
+
 about:
     home: https://github.com/odlgroup/odl
     license: GPLv3+
     license_file: LICENSE
     summary: "Operator Discretization Library - a versatile Python framework for rapid prototyping in Inverse Problems and related fields"
-    
+
 extra:
     maintainers:
         - Jonas Adler (@adler-j)
         - Holger Kohr (@kohr-h)
-        - Ozan Öktem (@ozanoktem)
-
-
