@@ -39,12 +39,36 @@ __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
 
 
 def _places(a, b, default=None):
-    """Return 3 if one dtype is 'float32' or 'complex64', else 5."""
+    """Return number of expected correct digits between ``a`` and ``b``.
+
+    Returned numbers if one of ``a.dtype`` and ``b.dtype`` is as below:
+        2 -- for ``np.float16``
+
+        3 -- for ``np.float32`` or ``np.complex64``
+
+        5 -- for all other cases
+    """
     dtype1 = getattr(a, 'dtype', object)
     dtype2 = getattr(b, 'dtype', object)
-    small_dtypes = [np.float32, np.complex64]
+    return min(dtype_places(dtype1, default), dtype_places(dtype2, default))
 
-    if dtype1 in small_dtypes or dtype2 in small_dtypes:
+
+def dtype_places(dtype, default=None):
+    """Return number of correct digits expected for given dtype.
+
+    Returned numbers:
+        1 -- for ``np.float16``
+
+        3 -- for ``np.float32`` or ``np.complex64``
+
+        5 -- for all other cases
+    """
+    small_dtypes = [np.float32, np.complex64]
+    tiny_dtypes = [np.float16]
+
+    if dtype in tiny_dtypes:
+        return 1
+    elif dtype in small_dtypes:
         return 3
     else:
         return default if default is not None else 5
