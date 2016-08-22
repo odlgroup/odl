@@ -732,10 +732,12 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                 lhs_slc_l[axis] = left_slc
                 lhs_slc_r[axis] = right_slc
 
-                lhs_arr[tuple(lhs_slc_l)] += np.sum(lhs_arr[tuple(rhs_slc_l)],
-                                                    axis=axis, keepdims=True)
-                lhs_arr[tuple(lhs_slc_r)] += np.sum(lhs_arr[tuple(rhs_slc_r)],
-                                                    axis=axis, keepdims=True)
+                lhs_arr[tuple(lhs_slc_l)] += np.sum(
+                    lhs_arr[tuple(rhs_slc_l)],
+                    axis=axis, keepdims=True, dtype=lhs_arr.dtype)
+                lhs_arr[tuple(lhs_slc_r)] += np.sum(
+                    lhs_arr[tuple(rhs_slc_r)],
+                    axis=axis, keepdims=True, dtype=lhs_arr.dtype)
 
         elif pad_mode == 'order1':
             # Some extra work necessary: need to compute the derivative at
@@ -783,16 +785,20 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
                     lhs_arr[tuple(bdry_slc_r)] + arange_r * slope_r)
             else:
                 # Same as in 'order0'
-                lhs_arr[tuple(bdry_slc_l)] += np.sum(lhs_arr[tuple(rhs_slc_l)],
-                                                     axis=axis, keepdims=True)
-                lhs_arr[tuple(bdry_slc_r)] += np.sum(lhs_arr[tuple(rhs_slc_r)],
-                                                     axis=axis, keepdims=True)
+                lhs_arr[tuple(bdry_slc_l)] += np.sum(
+                    lhs_arr[tuple(rhs_slc_l)],
+                    axis=axis, keepdims=True, dtype=lhs_arr.dtype)
+                lhs_arr[tuple(bdry_slc_r)] += np.sum(
+                    lhs_arr[tuple(rhs_slc_r)],
+                    axis=axis, keepdims=True, dtype=lhs_arr.dtype)
 
                 # Calculate the order 1 moments
                 moment1_l = np.sum(arange_l * lhs_arr[tuple(rhs_slc_l)],
-                                   axis=axis, keepdims=True)
+                                   axis=axis, keepdims=True,
+                                   dtype=lhs_arr.dtype)
                 moment1_r = np.sum(arange_r * lhs_arr[tuple(rhs_slc_r)],
-                                   axis=axis, keepdims=True)
+                                   axis=axis, keepdims=True,
+                                   dtype=lhs_arr.dtype)
 
                 # Add moment1 at the "width-2 boundary layers", with the sign
                 # corresponding to the sign in the derivative calculation

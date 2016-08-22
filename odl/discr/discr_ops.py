@@ -182,7 +182,7 @@ class ResizingOperatorBase(Operator):
             For the default ``None``, a space with the same attributes
             as ``domain`` is used, except for its shape, which is set
             to ``ran_shp``.
-        ran_shp : sequence of int
+        ran_shp : sequence of int, optional
             Shape of the range of this operator. This can be provided
             instead of ``range`` and is mandatory if ``range`` is
             ``None``.
@@ -320,7 +320,9 @@ class ResizingOperatorBase(Operator):
                              "".format(pad_mode_in))
 
         self.__pad_mode = pad_mode
-        self.__pad_const = float(kwargs.pop('pad_const', 0.0))
+        # Store constant in a way that ensures safe casting (one-element array)
+        self.__pad_const = np.array(kwargs.pop('pad_const', 0),
+                                    dtype=range.dtype)
 
         # padding mode 'constant' with `pad_const != 0` is not linear
         linear = (self.pad_mode != 'constant' or self.pad_const == 0.0)
@@ -371,7 +373,7 @@ class ResizingOperator(ResizingOperatorBase):
                               out=out.asarray())
 
     def derivative(self, point):
-        """Derivative of this operator.
+        """Derivative of this operator at ``point``.
 
         For the particular case of constant padding with non-zero
         constant, the derivative is the corresponding zero-padding
@@ -451,7 +453,8 @@ def _offset_from_spaces(dom, ran):
     offset = np.around(offset_float).astype(int)
     if not np.allclose(offset, offset_float):
         raise ValueError('range is shifted relative to domain by a '
-                         'non-multiple of cell_sides')
+                         'non-multiple {} of cell_sides'
+                         ''.format(offset_float - offset))
     return tuple(offset)
 
 
@@ -477,6 +480,11 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
                          ''.format(len(nodes_on_bdry), discr.ndim))
 
     dtype = discr_kwargs.pop('dtype', discr.dtype)
+    impl = discr_kwargs.pop('impl', discr.impl)
+    exponent = discr_kwargs.pop('exponent', discr.exponent)
+    interp = discr_kwargs.pop('interp', discr.interp)
+    order = discr_kwargs.pop('order', discr.order)
+    weighting = discr_kwargs.pop('weighting', discr.weighting)
 
     grid_min, grid_max = discr.grid.min(), discr.grid.max()
     cell_size = discr.cell_sides
@@ -509,8 +517,9 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
         else:
             new_maxpt.append(grid_max[axis] + (num_r + 0.5) * cell_size[axis])
 
-    return uniform_discr(new_minpt, new_maxpt, newshp, dtype=dtype,
-                         **discr_kwargs)
+    return uniform_discr(new_minpt, new_maxpt, newshp, dtype=dtype, impl=impl,
+                         exponent=exponent, interp=interp, order=order,
+                         weighting=weighting, nodes_on_bdry=nodes_on_bdry)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

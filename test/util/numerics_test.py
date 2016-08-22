@@ -21,7 +21,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from itertools import product
 import numpy as np
 import pytest
 
@@ -234,45 +233,53 @@ def dtype(request):
     return request.param
 
 
-pad_mode_params = list(_SUPPORTED_RESIZE_PAD_MODES)
-pad_mode_params.remove('constant')
-pad_mode_params.extend(['constant 0', 'constant 1'])
-pad_mode_ids = [" pad_mode = '{}' ".format(p) for p in pad_mode_params]
+paddings = list(_SUPPORTED_RESIZE_PAD_MODES)
+paddings.remove('constant')
+paddings.extend([('constant', 0), ('constant', 1)])
+padding_ids = [" pad_mode = '{}' {} ".format(*p)
+               if isinstance(p, tuple)
+               else " pad_mode = '{}' ".format(p)
+               for p in paddings]
 
 
-@pytest.fixture(scope="module", ids=pad_mode_ids, params=pad_mode_params)
-def pad_mode(request):
-    return request.param
+@pytest.fixture(scope="module", ids=padding_ids, params=paddings)
+def padding(request):
+    if isinstance(request.param, tuple):
+        pad_mode, pad_const = request.param
+    else:
+        pad_mode = request.param
+        pad_const = 0
+
+    return pad_mode, pad_const
 
 
 variants = ['extend', 'restrict', 'mixed']
-setup_params = list(product(pad_mode_params, variants))
-setup_ids = [" pad_mode = '{}', variant = '{}' ".format(*p)
-             for p in setup_params]
+variant_ids = [" variant = '{}' ".format(v) for v in variants]
 
 
-@pytest.fixture(scope="module", ids=setup_ids, params=setup_params)
-def resize_setup(request):
+@pytest.fixture(scope="module", ids=variant_ids, params=variants)
+def variant(request):
+    return request.param
+
+
+@pytest.fixture(scope="module")
+def resize_setup(padding, variant):
     array_in = [[1, 2, 3, 4],
                 [5, 6, 7, 8],
                 [9, 10, 11, 12]]
 
-    pad_mode, variant = request.param
-    pad_const = 0
+    pad_mode, pad_const = padding
 
     if variant == 'extend':
         newshp = (4, 7)
         offset = (1, 2)
 
-        if pad_mode == 'constant 0':
-            pad_mode = 'constant'
+        if pad_mode == 'constant' and pad_const == 0:
             true_out = [[0, 0, 0, 0, 0, 0, 0],
                         [0, 0, 1, 2, 3, 4, 0],
                         [0, 0, 5, 6, 7, 8, 0],
                         [0, 0, 9, 10, 11, 12, 0]]
-        elif pad_mode == 'constant 1':
-            pad_mode = 'constant'
-            pad_const = 1
+        elif pad_mode == 'constant' and pad_const == 1:
             true_out = [[1, 1, 1, 1, 1, 1, 1],
                         [1, 1, 1, 2, 3, 4, 1],
                         [1, 1, 5, 6, 7, 8, 1],
@@ -305,23 +312,14 @@ def resize_setup(request):
         true_out = [[7],
                     [11]]
 
-        if pad_mode == 'constant 0':
-            pad_mode = 'constant'
-        elif pad_mode == 'constant 1':
-            pad_mode = 'constant'
-            pad_const = 1
-
     elif variant == 'mixed':
         newshp = (2, 7)
         offset = (1, 2)
 
-        if pad_mode == 'constant 0':
-            pad_mode = 'constant'
+        if pad_mode == 'constant' and pad_const == 0:
             true_out = [[0, 0, 5, 6, 7, 8, 0],
                         [0, 0, 9, 10, 11, 12, 0]]
-        elif pad_mode == 'constant 1':
-            pad_mode = 'constant'
-            pad_const = 1
+        elif pad_mode == 'constant' and pad_const == 1:
             true_out = [[1, 1, 5, 6, 7, 8, 1],
                         [1, 1, 9, 10, 11, 12, 1]]
         elif pad_mode == 'periodic':
@@ -385,13 +383,11 @@ def test_resize_array_adj(resize_setup, dtype):
                         np.vdot(array.ravel(), resized_adj.ravel()))
 
 
-def test_resize_array_corner_cases(dtype, pad_mode):
+def test_resize_array_corner_cases(dtype, padding):
     # Test extreme cases of resizing that are still valid for several
     # `pad_mode`s
 
-    if pad_mode.startswith('constant'):
-        pad_mode, pad_const = pad_mode.split()
-        pad_const = int(pad_const)
+    pad_mode, pad_const = padding
 
     # Test array
     arr = np.arange(12, dtype=dtype).reshape((3, 4))
