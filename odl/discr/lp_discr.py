@@ -35,6 +35,7 @@ from odl.discr.partition import (
     RectPartition, uniform_partition_fromintv, uniform_partition)
 from odl.set import RealNumbers, ComplexNumbers, IntervalProd
 from odl.space import FunctionSpace, ProductSpace, FN_IMPLS
+from odl.space.weighting import WeightingBase
 from odl.util.normalize import (
     normalized_scalar_param_list, safe_int_conv, normalized_nodes_on_bdry)
 from odl.util.numerics import apply_on_boundary
@@ -908,14 +909,18 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     order = kwargs.pop('order', 'C')
 
     weighting = kwargs.pop('weighting', 'const')
-    weighting, weighting_in = str(weighting).lower(), weighting
-    if weighting == 'none' or float(exponent) == float('inf'):
-        weight = None
-    elif weighting == 'const':
-        weight = partition.cell_volume
+    if isinstance(weighting, WeightingBase):
+        # TODO: harmonize names, should be 'weighting' across the board
+        weight = weighting
     else:
-        raise ValueError("`weighting` '{}' not understood"
-                         "".format(weighting_in))
+        weighting, weighting_in = str(weighting).lower(), weighting
+        if weighting == 'none' or float(exponent) == float('inf'):
+            weight = None
+        elif weighting == 'const':
+            weight = partition.cell_volume
+        else:
+            raise ValueError("`weighting` '{}' not understood"
+                             "".format(weighting_in))
 
     if dtype is not None:
         dspace = ds_type(partition.size, dtype=dtype, impl=impl, weight=weight,
