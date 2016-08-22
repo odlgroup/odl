@@ -91,11 +91,20 @@ def test_resizing_op_raise():
         odl.ResizingOperator(space, res_space, pad_mode='something')
 
 
-def test_resizing_op_properties():
+dtype_params = ['float64', 'complex64']
+dtype_ids = [' dtype = {} '.format(p) for p in dtype_params]
+
+
+@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
+def dtype(request):
+    return request.param
+
+
+def test_resizing_op_properties(dtype):
 
     # Explicit range, rest default
-    space = odl.uniform_discr([0, -1], [1, 1], (10, 5))
-    res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15))
+    space = odl.uniform_discr([0, -1], [1, 1], (10, 5), dtype=dtype)
+    res_space = odl.uniform_discr([0, -3], [2, 3], (20, 15), dtype=dtype)
     res_op = odl.ResizingOperator(space, res_space)
 
     assert res_op.domain == space
@@ -109,6 +118,8 @@ def test_resizing_op_properties():
     res_op = odl.ResizingOperator(space, ran_shp=(20, 15), offset=[0, 5])
     assert np.allclose(res_op.range.min_corner, res_space.min_corner)
     assert np.allclose(res_op.range.max_corner, res_space.max_corner)
+    assert np.allclose(res_op.range.cell_sides, res_space.cell_sides)
+    assert res_op.range.dtype == res_space.dtype
     assert res_op.offset == (0, 5)
 
     # Different padding mode
@@ -156,15 +167,6 @@ pad_mode_ids = [' constant=0 ', ' constant=1 ', ' symmetric ', ' periodic ',
 
 @pytest.fixture(scope="module", params=pad_modes, ids=pad_mode_ids)
 def pad_mode(request):
-    return request.param
-
-
-dtype_params = ['float64', 'complex64']
-dtype_ids = [' dtype = {} '.format(p) for p in dtype_params]
-
-
-@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
-def dtype(request):
     return request.param
 
 

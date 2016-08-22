@@ -217,6 +217,64 @@ class ResizingOperatorBase(Operator):
 
         discr_kwargs: dict, optional
             Keyword arguments passed to the `uniform_discr` constructor.
+
+        Examples
+        --------
+        The simplest way of initializing a resizing operator is by
+        providing ``ran_shp`` and, optionally, parameters for the padding
+        variant to be used. The range is inferred from ``domain`` and
+        the supplied parameters. If no ``offset`` is given, the difference
+        in size is evenly distributed to both sides:
+
+        >>> import odl
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (2, 4))
+        >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
+        >>> resize_op.range
+        uniform_discr([-0.5, 0.0], [1.5, 1.0], [4, 4])
+
+        Testing different padding methods in the first axis (zero padding
+        is the default):
+
+        >>> x = [[1, 2, 3, 4],
+        ...      [5, 6, 7, 8]]
+        >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
+        >>> print(resize_op(x))
+        [[0.0, 0.0, 0.0, 0.0],
+         [1.0, 2.0, 3.0, 4.0],
+         [5.0, 6.0, 7.0, 8.0],
+         [0.0, 0.0, 0.0, 0.0]]
+        >>>
+        >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4),
+        ...                                  offset=(0, 0),
+        ...                                  pad_mode='periodic')
+        >>> print(resize_op(x))
+        [[1.0, 2.0, 3.0, 4.0],
+         [5.0, 6.0, 7.0, 8.0],
+         [1.0, 2.0, 3.0, 4.0],
+         [5.0, 6.0, 7.0, 8.0]]
+        >>>
+        >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4),
+        ...                                  offset=(0, 0),
+        ...                                  pad_mode='order0')
+        >>> print(resize_op(x))
+        [[1.0, 2.0, 3.0, 4.0],
+         [5.0, 6.0, 7.0, 8.0],
+         [5.0, 6.0, 7.0, 8.0],
+         [5.0, 6.0, 7.0, 8.0]]
+
+        Alternatively, the range of the operator can be provided directly.
+        This requires that the partitions match, i.e. that the cell sizes
+        are the same and there is no shift:
+
+        >>> # Same space as in the first example, see above
+        >>> large_spc = odl.uniform_discr([-0.5, 0], [1.5, 1], (4, 4))
+        >>> resize_op = odl.ResizingOperator(space, large_spc,
+        ...                                  pad_mode='periodic')
+        >>> print(resize_op(x))
+        [[5.0, 6.0, 7.0, 8.0],
+         [1.0, 2.0, 3.0, 4.0],
+         [5.0, 6.0, 7.0, 8.0],
+         [1.0, 2.0, 3.0, 4.0]]
         """
         if not isinstance(domain, DiscreteLp):
             raise TypeError('`domain` must be a `DiscreteLp` instance, '
@@ -234,10 +292,10 @@ class ResizingOperatorBase(Operator):
                                  'given')
 
             offset = normalized_scalar_param_list(
-                offset, domain.ndim, param_conv=safe_int_conv)
-            self.__offset = tuple(offset)
+                offset, domain.ndim, param_conv=safe_int_conv, keep_none=True)
 
             range = _resize_discr(domain, ran_shp, offset, discr_kwargs)
+            self.__offset = tuple(_offset_from_spaces(domain, range))
 
         elif ran_shp is None:
             if offset is not None:
@@ -408,22 +466,51 @@ def _resize_discr(discr, newshp, offset, discr_kwargs):
     to `uniform_discr` for further specification of discretization
     parameters.
     """
-    new_begin, new_end = [], []
-    for b_orig, e_orig, n_orig, cs, n_new, num_l in zip(
-            discr.min_corner, discr.max_corner, discr.shape, discr.cell_sides,
-            newshp, offset):
+    nodes_on_bdry = discr_kwargs.get('nodes_on_bdry', False)
+    if np.shape(nodes_on_bdry) == ():
+        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] *
+                         discr.ndim)
+    elif discr.ndim == 1 and len(nodes_on_bdry) == 2:
+        nodes_on_bdry = [nodes_on_bdry]
+    elif len(nodes_on_bdry) != discr.ndim:
+        raise ValueError('`nodes_on_bdry` has length {}, expected {}'
+                         ''.format(len(nodes_on_bdry), discr.ndim))
+
+    dtype = discr_kwargs.pop('dtype', discr.dtype)
+
+    grid_min, grid_max = discr.grid.min(), discr.grid.max()
+    cell_size = discr.cell_sides
+    new_minpt, new_maxpt = [], []
+
+    for axis, (n_orig, n_new, off, on_bdry) in enumerate(zip(
+            discr.shape, newshp, offset, nodes_on_bdry)):
 
         n_diff = n_new - n_orig
-        if num_l is None:
+        if off is None:
             num_r = n_diff // 2
             num_l = n_diff - num_r
         else:
-            num_r = n_diff - num_l
+            num_r = n_diff - off
+            num_l = off
 
-        new_begin.append(b_orig - num_l * cs)
-        new_end.append(e_orig + num_r * cs)
+        try:
+            on_bdry_l, on_bdry_r = on_bdry
+        except TypeError:
+            on_bdry_l = on_bdry
+            on_bdry_r = on_bdry
 
-    return uniform_discr(new_begin, new_end, newshp, **discr_kwargs)
+        if on_bdry_l:
+            new_minpt.append(grid_min[axis] - num_l * cell_size[axis])
+        else:
+            new_minpt.append(grid_min[axis] - (num_l + 0.5) * cell_size[axis])
+
+        if on_bdry_r:
+            new_maxpt.append(grid_max[axis] + num_r * cell_size[axis])
+        else:
+            new_maxpt.append(grid_max[axis] + (num_r + 0.5) * cell_size[axis])
+
+    return uniform_discr(new_minpt, new_maxpt, newshp, dtype=dtype,
+                         **discr_kwargs)
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
