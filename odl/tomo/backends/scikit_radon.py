@@ -144,7 +144,7 @@ def scikit_radon_back_projector(sinogram, geometry, range, out=None):
                     output_size=range.shape[0], filter=None)
 
     # Empirically determined value, gives correct scaling
-    scale = 4.0
+    scale = 4.0 * float(geometry.motion_params.length) / (2 * np.pi)
     out *= scale
 
     return out
