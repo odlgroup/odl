@@ -150,4 +150,4 @@ def test_normalized_scalar_param_list_error():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

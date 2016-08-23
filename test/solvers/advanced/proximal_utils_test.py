@@ -169,4 +169,4 @@ def test_proximal_quadratic_perturbation_linear_and_quadratic():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

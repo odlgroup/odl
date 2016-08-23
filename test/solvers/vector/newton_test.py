@@ -108,4 +108,4 @@ def test_newton_solver_rosenbrock():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

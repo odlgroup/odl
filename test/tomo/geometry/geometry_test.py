@@ -276,4 +276,4 @@ def test_helical_cone_flat():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -vs')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

@@ -96,4 +96,4 @@ def test_astra_cpu_projector_fanflat():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

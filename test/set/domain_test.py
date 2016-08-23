@@ -452,4 +452,4 @@ def test_cuboid_init():
         Cuboid([1, 2, 3, 4], [4, 5, 6, 7])
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

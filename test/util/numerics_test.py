@@ -217,4 +217,4 @@ def test_fast_1d_tensor_mult_error():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

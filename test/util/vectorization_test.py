@@ -316,4 +316,4 @@ def test_vectorize_2d_lazy():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

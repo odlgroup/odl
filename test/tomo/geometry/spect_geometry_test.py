@@ -51,4 +51,4 @@ def test_spect():
     assert all_equal(geom.det_radius, det_radius)
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -vs')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])
