@@ -32,7 +32,7 @@ import odl
 from odl import (Operator, OperatorSum, OperatorComp,
                  OperatorLeftScalarMult, OperatorRightScalarMult,
                  FunctionalLeftVectorMult, OperatorRightVectorMult,
-                 MatVecOperator,
+                 MatVecOperator, OperatorLeftVectorMult,
                  OpDomainError, OpRangeError)
 from odl.operator.operator import _signature_from_spec, _dispatch_call_args
 from odl.util.testutils import almost_equal, all_almost_equal
@@ -76,6 +76,17 @@ def test_nonlinear_op():
     assert all_almost_equal(Aop(xvec), mult_sq_np(A, x))
 
 
+def evaluate(operator, point, expected):
+    """Assert that operator(point) == expected."""
+
+    assert all_almost_equal(operator(point), expected)
+
+    out = operator.range.element()
+    operator(point, out=out)
+
+    assert all_almost_equal(out, expected)
+
+
 def test_nonlinear_addition():
     # Test operator addition
     A = np.random.rand(4, 3)
@@ -91,12 +102,10 @@ def test_nonlinear_addition():
 
     assert not C.is_linear
 
-    assert all_almost_equal(C(xvec),
-                            mult_sq_np(A, x) + mult_sq_np(B, x))
+    evaluate(C, xvec, mult_sq_np(A, x) + mult_sq_np(B, x))
 
     # Using operator overloading
-    assert all_almost_equal((Aop + Bop)(xvec),
-                            mult_sq_np(A, x) + mult_sq_np(B, x))
+    evaluate(Aop + Bop, xvec, mult_sq_np(A, x) + mult_sq_np(B, x))
 
     # Verify that unmatched operators domains fail
     C = np.random.rand(4, 4)
@@ -123,16 +132,13 @@ def test_nonlinear_scale():
         assert not lscaled.is_linear
         assert not rscaled.is_linear
 
-        assert all_almost_equal(lscaled(xvec),
-                                scale * mult_sq_np(A, x))
-        assert all_almost_equal(rscaled(xvec),
-                                mult_sq_np(A, scale * x))
+        # Explicit
+        evaluate(lscaled, xvec, scale * mult_sq_np(A, x))
+        evaluate(rscaled, xvec, mult_sq_np(A, scale * x))
 
         # Using operator overloading
-        assert all_almost_equal((scale * Aop)(xvec),
-                                scale * mult_sq_np(A, x))
-        assert all_almost_equal((Aop * scale)(xvec),
-                                mult_sq_np(A, scale * x))
+        evaluate(scale * Aop, xvec, scale * mult_sq_np(A, x))
+        evaluate(Aop * scale, xvec, mult_sq_np(A, scale * x))
 
     # Fail when scaling by wrong scalar type (A complex number)
     wrongscalars = [1j, [1, 2], (1, 2)]
@@ -150,24 +156,28 @@ def test_nonlinear_scale():
             print(wrongscalar * Aop)
 
 
-def test_nonlinear_right_vector_mult():
+def test_nonlinear_vector_mult():
     A = np.random.rand(4, 3)
 
     Aop = MultiplyAndSquareOp(A)
-    vec = Aop.domain.element([1, 2, 3])
+    rvec = Aop.domain.element([1, 2, 3])
+    lvec = Aop.range.element([1, 2, 3, 4])
     x = Aop.domain.element([4, 5, 6])
 
     # Test a range of scalars (scalar multiplication could implement
     # optimizations for (-1, 0, 1).
-    C = OperatorRightVectorMult(Aop, vec)
+    rmult = OperatorRightVectorMult(Aop, rvec)
+    lmult = OperatorLeftVectorMult(Aop, lvec)
 
-    assert not C.is_linear
+    assert not rmult.is_linear
+    assert not lmult.is_linear
 
-    assert all_almost_equal(C(x), mult_sq_np(A, vec * x))
+    evaluate(rmult, x, mult_sq_np(A, rvec * x))
+    evaluate(lmult, x, lvec * mult_sq_np(A, x))
 
     # Using operator overloading
-    assert all_almost_equal((Aop * vec)(x),
-                            mult_sq_np(A, vec * x))
+    evaluate(Aop * rvec, x, mult_sq_np(A, rvec * x))
+    evaluate(lvec * Aop, x, lvec * mult_sq_np(A, x))
 
 
 def test_nonlinear_composition():
@@ -183,7 +193,7 @@ def test_nonlinear_composition():
 
     assert not C.is_linear
 
-    assert all_almost_equal(C(xvec), mult_sq_np(A, mult_sq_np(B, x)))
+    evaluate(C, xvec, mult_sq_np(A, mult_sq_np(B, x)))
 
     # Verify that incorrect order fails
     with pytest.raises(TypeError):

@@ -1959,7 +1959,7 @@ class OperatorRightVectorMult(Operator):
             return self.operator(x * self.vector)
         else:
             tmp = self.domain.element()
-            tmp.multiply(self.vector, x)
+            x.multiply(self.vector, out=tmp)
             self.operator(tmp, out=out)
 
     @property
