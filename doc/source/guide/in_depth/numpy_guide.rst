@@ -19,7 +19,7 @@ ODL vectors are stored in an abstract way, enabling storage on the CPU, GPU, or 
 
 To cast a NumPy array to an ODL vector, you simply need to call the `LinearSpace.element` method in an appropriate space::
 
-   >>> r3 = odl.Rn(3)
+   >>> r3 = odl.rn(3)
    >>> arr = np.array([1, 2, 3])
    >>> x = r3.element(arr)
 
@@ -55,15 +55,15 @@ Using ODL vectors with NumPy functions
 A very convenient feature of ODL is its seamless interaction with NumPy functions. For universal functions (`ufuncs
 <http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_) this is supported both via method of the ODL vector and by direct application of the NumPy functions. For example, using NumPy::
 
-   >>> r3 = odl.Rn(3)
+   >>> r3 = odl.rn(3)
    >>> x = r3.element([1, 2, 3])
    >>> np.negative(x)
-   Rn(3).element([-1.0, -2.0, -3.0])
+   rn(3).element([-1.0, -2.0, -3.0])
 
 This method of using NumPy always uses the NumPy implementation, which can involve overhead in case the data is not stored in a CPU space. To always enable optimized code, users can call the member `NtuplesBaseVector.ufunc`::
 
    >>> x.ufunc.negative()
-   Rn(3).element([-1.0, -2.0, -3.0])
+   rn(3).element([-1.0, -2.0, -3.0])
 
 For other arbitrary functions, ODL vectors are generally accepted as input, but the output is often of `numpy.ndarray` type::
 
@@ -99,13 +99,13 @@ This could then be called as an ODL Operator::
 
    >>> op = MyConvolution(x)
    >>> op(x)
-   Rn(3).element([4.0, 10.0, 12.])
+   rn(3).element([4.0, 10.0, 12.])
 
 Since this is an ODL Operator, it can be used with any of the ODL functionalities such as multiplication with scalar, composition, etc::
 
    >>> scaled_op = 2 * op  # scale by scalar
    >>> scaled_op(x)
-   Rn(3).element([8.0, 20.0, 24.])
+   rn(3).element([8.0, 20.0, 24.])
    >>> y = r3.element([1, 1, 1])
    >>> inner_product_op = odl.InnerProductOperator(y)
    >>> composed_op = inner_product_op * op  # create composition with inner product with vector [1, 1, 1]

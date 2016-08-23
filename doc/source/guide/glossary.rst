@@ -36,7 +36,7 @@ Glossary
 
     element-like
         Any data structure which can be converted into an :term:`element` of a `Set` by
-        the `Set.element` method. For example, an ``Rn(3) element-like`` is any :term:`array-like`
+        the `Set.element` method. For example, an ``rn(3) element-like`` is any :term:`array-like`
         object with 3 real entries.
 
         Example: ```DiscreteLp` element-like`` means that

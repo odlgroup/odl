@@ -25,7 +25,7 @@ following, a few are shown by example.
 Set
 ===
 
-A `Set` is the fundamental building block of ODL objects. It mirrors the mathematical concept of a 
+A `Set` is the fundamental building block of ODL objects. It mirrors the mathematical concept of a
 `set`_ in that it can tell if an object belongs to it or not:
 
     >>> interv = odl.Interval(0, 1)
@@ -34,9 +34,9 @@ A `Set` is the fundamental building block of ODL objects. It mirrors the mathema
     >>> 2.0 in interv
     False
 
-The most commonly used sets in ODL are `RealNumbers` (set of all `real numbers`_) and 
+The most commonly used sets in ODL are `RealNumbers` (set of all `real numbers`_) and
 `IntervalProd` ("Interval product", `rectangular boxes`_ of arbitrary dimension).
-For the typical use cases in 1, 2 and 3 dimensions, there are convenience functions 
+For the typical use cases in 1, 2 and 3 dimensions, there are convenience functions
 `Interval`,  `Rectangle` and `Cuboid`:
 
     >>> rect = odl.Rectangle([0, -1], [1, 1])
@@ -72,7 +72,7 @@ Function spaces
 
 A `function space`_ is a set of functions :math:`f: \mathcal{X} \to \mathcal{Y}` with fixed domain
 and range (more accurately: `codomain`_), where :math:`\mathcal{Y}` is a vector space. The ODL
-implementation `FunctionSpace` covers only the cases :math:`\mathcal{Y} = \mathbb{R}` or 
+implementation `FunctionSpace` covers only the cases :math:`\mathcal{Y} = \mathbb{R}` or
 :math:`\mathbb{C}` since the general case has large overlaps with `Operator`. Note that we do
 not make a distinction between different types of function spaces with respect to regularity,
 integrability etc. on an *abstract* level since there is no obvious way to check it.
@@ -90,7 +90,7 @@ As linear spaces, function spaces support some interesting operations:
     >>> ratio_func = exp_plus_one / exp  # x -> exp(x) / (exp(x) + 1)
     >>> ratio_func(np.log(2))  # 3 / 2
     1.5
-    
+
 A big advantage of the function space implementation in ODL is that the evaluation of functions
 is `vectorized`_, i.e. that the values of a function can be computed from an array of input data
 "at once", without looping in Python (which is slow, in general). What follows is a simple example,
@@ -152,13 +152,13 @@ We use `Landweber's method`_ to get a least-squares solution and plot the interm
 The method needs a relaxation :math:`\lambda < 2 / \lVert A\rvert^2` to converge - in our case, the
 right-hand side is 0.14, so we choose 0.1.
 
-    >>> matrix = np.array([[1.0, 3.0, 2.0], 
+    >>> matrix = np.array([[1.0, 3.0, 2.0],
                            [2.0, -1.0, 1.0]])
     >>> matrix_op = odl.MatVecOperator(matrix)  # operator defined by the matrix
     >>> matrix_op.domain
-    Rn(3)
+    rn(3)
     >>> matrix_op.range
-    Rn(2)
+    rn(2)
     >>> data = np.array([1.0, -1.0])
     >>> niter = 5
     >>> reco = matrix_op.domain.zero()  # starting with the zero vector

@@ -34,8 +34,8 @@ for a matrix :math:`A\in \mathbb{R}^{n\times m}` as follows::
     class MatVecOperator(odl.Operator):
         def __init__(self, matrix):
             self.matrix = matrix
-            dom = odl.Rn(matrix.shape[1])
-            ran = odl.Rn(matrix.shape[0])
+            dom = odl.rn(matrix.shape[1])
+            ran = odl.rn(matrix.shape[0])
             super().__init__(dom, ran)
 
 In addition, an `Operator` needs at least one way of
@@ -78,8 +78,8 @@ avoided*.
 
     matrix = np.array([[1, 0], [0, 1], [1, 1]])
     operator = MatVecOperator(matrix)
-    x = odl.Rn(2).one()
-    y = odl.Rn(3).element()
+    x = odl.rn(2).one()
+    y = odl.rn(3).element()
 
     # Out-of-place evaluation
     y = operator(x)
