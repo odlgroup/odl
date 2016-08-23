@@ -227,7 +227,6 @@ def as_scipy_operator(op):
     --------
     Wrap operator and solve simple problem (here toy problem ``Ix = b``)
 
-    >>> import odl
     >>> op = odl.IdentityOperator(odl.rn(3))
     >>> scipy_op = as_scipy_operator(op)
     >>> import scipy.sparse.linalg as sl

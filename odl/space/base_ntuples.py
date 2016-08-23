@@ -87,13 +87,12 @@ class NtuplesBase(Set):
 
         Examples
         --------
-        >>> from odl import ntuples
-        >>> long_3 = ntuples(3, dtype='int64')
+        >>> long_3 = odl.ntuples(3, dtype='int64')
         >>> long_3.element() in long_3
         True
-        >>> long_3.element() in ntuples(3, dtype='int32')
+        >>> long_3.element() in odl.ntuples(3, dtype='int32')
         False
-        >>> long_3.element() in ntuples(3, dtype='float64')
+        >>> long_3.element() in odl.ntuples(3, dtype='float64')
         False
         """
         return getattr(other, 'space', None) == self
@@ -109,23 +108,22 @@ class NtuplesBase(Set):
 
         Examples
         --------
-        >>> from odl import ntuples
-        >>> int_3 = ntuples(3, dtype=int)
+        >>> int_3 = odl.ntuples(3, dtype=int)
         >>> int_3 == int_3
         True
 
         Equality is not identity:
 
-        >>> int_3a, int_3b = ntuples(3, int), ntuples(3, int)
+        >>> int_3a, int_3b = odl.ntuples(3, int), odl.ntuples(3, int)
         >>> int_3a == int_3b
         True
         >>> int_3a is int_3b
         False
 
-        >>> int_3, int_4 = ntuples(3, int), ntuples(4, int)
+        >>> int_3, int_4 = odl.ntuples(3, int), odl.ntuples(4, int)
         >>> int_3 == int_4
         False
-        >>> int_3, str_3 = ntuples(3, 'int'), ntuples(3, 'S2')
+        >>> int_3, str_3 = odl.ntuples(3, 'int'), odl.ntuples(3, 'S2')
         >>> int_3 == str_3
         False
         """

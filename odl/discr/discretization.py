@@ -345,9 +345,6 @@ class DiscretizedSetVector(NtuplesBaseVector):
 
         Examples
         --------
-        >>> import odl
-        >>> import numpy as np
-
         Create discretization
 
         >>> X = odl.uniform_discr(0, 1, 5)
@@ -377,9 +374,6 @@ class DiscretizedSetVector(NtuplesBaseVector):
 
         Examples
         --------
-        >>> import odl
-        >>> import numpy as np
-
         Create continuous version of a discrete 1d function with nearest
         neighbour interpolation:
 

@@ -66,7 +66,6 @@ def _linear_deform(template, displacement, out=None):
     In the 4-th point, the value is taken from 0.2 (one cell) to the
     left, i.e. 1.0.
 
-    >>> import odl
     >>> space = odl.uniform_discr(0, 1, 5)
     >>> disp_field_space = space.vector_field_space
     >>> template = space.element([0, 0, 1, 0, 0])
@@ -153,7 +152,6 @@ class LinDeformFixedTempl(Operator):
         In the 4-th point, the value is taken from 0.2 (one cell) to the
         left, i.e. 1.0.
 
-        >>> import odl
         >>> space = odl.uniform_discr(0, 1, 5, interp='nearest')
         >>> template = space.element([0, 0, 1, 0, 0])
         >>> op = LinDeformFixedTempl(template)
@@ -282,7 +280,6 @@ class LinDeformFixedDisp(Operator):
         In the 4-th point, the value is taken from 0.2 (one cell) to the
         left, i.e. 1.0.
 
-        >>> import odl
         >>> space = odl.uniform_discr(0, 1, 5)
         >>> disp_field = space.vector_field_space.element([[0, 0, 0, -0.2, 0]])
         >>> op = LinDeformFixedDisp(disp_field)

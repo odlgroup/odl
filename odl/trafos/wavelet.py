@@ -575,11 +575,9 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
         Examples
         --------
-        >>> import odl, pywt
-        >>> wbasis = pywt.Wavelet('db1')
-        >>> discr_domain = odl.uniform_discr([0, 0], [1, 1], (16, 16))
-        >>> op = WaveletTransform(discr_domain, nscales=1,
-        ...                               wbasis=wbasis, pad_mode='per')
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (16, 16))
+        >>> op = WaveletTransform(space, nscales=1,
+        ...                       wbasis='db1', pad_mode='per')
         >>> op.is_biorthogonal
         True
         """

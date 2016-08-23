@@ -162,7 +162,6 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
         standard point-wise norm operator on that space. The operator
         maps a vector field to a scalar function:
 
-        >>> import odl
         >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
         >>> vfspace = odl.ProductSpace(spc, 2)
         >>> pw_norm = PointwiseNorm(vfspace)
@@ -509,7 +508,6 @@ class PointwiseInner(PointwiseInnerBase):
         point-wise inner product operator with a fixed vector field.
         The operator maps a vector field to a scalar function:
 
-        >>> import odl
         >>> spc = odl.uniform_discr([-1, -1], [1, 1], (1, 2))
         >>> vfspace = odl.ProductSpace(spc, 2)
         >>> fixed_vf = np.array([[[0, 1]],
