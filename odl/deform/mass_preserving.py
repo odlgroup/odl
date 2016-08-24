@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Operators and functions for mass-preserving deformation."""
+"""Operators and functions for general and mass-preserving deformation."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -23,18 +23,13 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-import numpy as np
-
-from odl.discr import (DiscreteLp, DiscreteLpVector, Gradient, Divergence,
-                       PointwiseInner)
+from odl.discr import DiscreteLp, DiscreteLpVector
 from odl.operator.operator import Operator
-from odl.space import ProductSpaceVector
+from odl.space import ProductSpaceVector, ProductSpace
 
 
-__all__ = ('MassPreservingLinearDeformation',
-           'MassPreservingDeformationOperator',
-           'GeneralDeformFixedTempl',
-           'GeneralDeformFixedDeform')
+__all__ = ('GeneralDeformFixedTempl', 'GeneralDeformFixedDeform',
+           'MassPresvDeformFixedTempl', 'MassPresvDeformFixedDeform')
 
 
 def _general_deform(template, deformation, out=None):
@@ -92,21 +87,22 @@ def _general_deform(template, deformation, out=None):
     return template.interpolation(image_pts.T, out=out, bounds_check=False)
 
 
-def _mass_presv_deform(template, *args):
-    """Deform a template with a deformation field and its Jacobian determinant.
+def _mass_presv_deform(template, mass_presv_dfield, out=None):
+    """Deform a template with a mass-preserving deformation field.
 
-    The function maps a given template ``I``, a given deformation
-    field ``phi`` and its Jacobian determinant to the new function
-    ``x --> |Dphi(x)|I(phi(x))``.
+    The function maps a given template ``I``, a mass-preserving deformation
+    field, i.e., a given deformation field ``phi`` and its Jacobian
+    determinant to the new function ``x --> |Dphi(x)|I(phi(x))``.
 
     Parameters
     ----------
     template : `DiscreteLpVector`
         Template to be deformed by a deformation field.
-    deformation : element of power space of `DiscreteLp`
-        The deformation field used to deform the template.
-    det_jac_deformation : `DiscreteLpVector`
-        The Jacobian determinant of the deformation.
+    mass_presv_dfield : element of power space of power space and `DiscreteLp`
+        The mass-preserving deformation field used to deform the template.
+        It contains the deformation, i.e., an element of power space
+        of `DiscreteLp`, and the Jacobian determinant of the deformation,
+        i.e., a `DiscreteLpVector`.
     out : `numpy.ndarray`, optional
         Array to which the function values of the deformed template
         are written. It must have the same shape as ``template`` and
@@ -130,18 +126,22 @@ def _mass_presv_deform(template, *args):
 
 
     >>> import odl
+    >>> import numpy as np
     >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
     >>> vspace = space.vector_field_space
+    >>> pspace = odl.ProductSpace(vspace, space)
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> deform_field = vspace.element([np.sin(space.points() * np.pi / 2.0)])
     >>> det = space.element(np.cos(space.points() * np.pi / 2.0) * np.pi / 2.0)
-    >>> _mass_presv_deform(template, deform_field, det)
+    >>> mass_presv_field = pspace.element()
+    >>> mass_presv_field[0] = deform_field
+    >>> mass_presv_field[1] = det
+    >>> _mass_presv_deform(template, mass_presv_field)
     uniform_discr(0.0, 1.0, 5, interp=u'linear').element([0.0,
     1.0776176446789727, 0.0, 0.0, 0.0])
     """
-    # TODO: How to add `out=None` as an argument.
-    general_deform_template = _general_deform(template, args[0])
-    return args[1] * general_deform_template
+    general_deform_template = _general_deform(template, mass_presv_dfield[0])
+    return mass_presv_dfield[1] * general_deform_template
 
 
 class GeneralDeformFixedTempl(Operator):
@@ -338,7 +338,7 @@ class GeneralDeformFixedDeform(Operator):
             domain_repr = ', domain={!r}'.format(self.domain)
 
         return '{}({!r}{})'.format(self.__class__.__name__,
-                                   self.__deformation,
+                                   self.deformation,
                                    domain_repr)
 
 
@@ -346,15 +346,15 @@ class MassPresvDeformFixedTempl(Operator):
 
     """Mass-preserving deformation operator with fixed template.
 
-    The operator has a fixed template ``I`` and maps a deformation
-    field ``phi`` and its Jacobian determinant to the new function
-    ``x --> |Dphi(x)|I(phi(x))``.
+    The operator has a fixed template ``I`` and maps a mass-preserving
+    deformation field, i.e., a deformation field ``phi`` and its Jacobian
+    determinant to the new function ``x --> |Dphi(x)|I(phi(x))``.
 
 
     See Also
     --------
     MassPresvDeformFixedDeform : Mass-preserving deformation with fixed
-    deformation and its Jacobian determinant.
+    mass-preserving deformation field.
 
     Notes
     -----
@@ -380,40 +380,42 @@ class MassPresvDeformFixedTempl(Operator):
 
         Examples
         --------
-        Create a simple 1D template to initialize the operator and
-        apply it to a deformation field. Where the deformation is identity,
-        the output value is the same as the input value.
-        In the 4-th point, the value is taken from 0.2 (one cell) to the
-        left, i.e. 1.0.
+        Create a simple 1D template ``I`` over ``[0, 1]`` to initialize the
+        operator and apply it to a mass-preserving deformation field, i.e.,
+        a deffeomorphic deformation field and its Jacobian determinant.
+        If the deffeomorphism ``phi`` is ``sin(x*pi/2)``, its Jacobian
+        determinant should be ``cos(x*pi/2)*pi/2`` and the output value is
+        ``cos(x*pi/2)*pi/2*I(sin(x*pi/2))``. A mass-preserving deformation
+        is obtained, namely, the integration of ``I(x)`` over ``[0, 1]``
+        equals to the integration of ``|Dphi(x)|I(phi(x))`` over ``[0, 1]``.
 
         >>> import odl
-        >>> space = odl.uniform_discr(0, 1, 5, interp='nearest')
-        >>> template = space.element([0, 0, 1, 0, 0])
-        >>> op = GeneralDeformFixedTempl(template)
-        >>> deform_field_space = space.vector_field_space
-        >>> deform = deform_field_space.element([[0.1, 0.3, 0.5, 0.5, 0.9]])
-        >>> print(op(deform))
-        [0.0, 0.0, 1.0, 1.0, 0.0]
-
-        The result depends on the chosen interpolation. With 'linear'
-        interpolation and an offset equal to half the distance between two
-        points, 0.1, one gets the mean of the values.
-
+        >>> import numpy as np
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
+        >>> vspace = space.vector_field_space
+        >>> pspace = ProductSpace(vspace, space)
         >>> template = space.element([0, 0, 1, 0, 0])
-        >>> op = GeneralDeformFixedTempl(template)
-        >>> deform_field_space = space.vector_field_space
-        >>> deform = deform_field_space.element([[0.1, 0.3, 0.5, 0.6, 0.9]])
-        >>> print(op(deform))
-        [0.0, 0.0, 1.0, 0.5, 0.0]
+        >>> op = MassPresvDeformFixedTempl(template)
+        >>> img_pts = space.points()
+        >>> deform_field = vspace.element([np.sin(img_pts * np.pi / 2.0)])
+        >>> det = space.element(np.cos(img_pts * np.pi / 2.0) * np.pi / 2.0)
+        >>> mass_presv_deform = pspace.element()
+        >>> mass_presv_deform[0] = deform_field
+        >>> mass_presv_deform[1] = det
+        >>> op(mass_presv_deform)
+        uniform_discr(0.0, 1.0, 5, interp=u'linear').element([0.0,
+        1.0776176446789727, 0.0, 0.0, 0.0])
         """
         if not isinstance(template, DiscreteLpVector):
             raise TypeError('`template` must be a `DiscreteLpVector`'
                             'instance, got {!r}'.format(template))
 
         self.__template = template
-        # TODO: the `domain` need to be fixed.
-        super().__init__(domain=self.template.space.vector_field_space,
+
+        pspace = ProductSpace(self.template.space.vector_field_space,
+                              self.template.space)
+
+        super().__init__(domain=pspace,
                          range=self.template.space, linear=False)
 
     @property
@@ -421,191 +423,127 @@ class MassPresvDeformFixedTempl(Operator):
         """Fixed template of this deformation operator."""
         return self.__template
 
-    def _call(self, *args):
+    def _call(self, mass_presv_dfield, out=None):
         """Implementation of ``self(deformation[, out])``."""
-        return _mass_presv_deform(self.template, *args)
+        return _mass_presv_deform(self.template, mass_presv_dfield)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r})'.format(self.__class__.__name__, self.template)
-#
-#
-#class MassPreservingDeformationOperator(Operator):
-#    """
-#    Mass-preserving deformation operator mapping parameters to a
-#    deformed template. It is a left action given by pushforward.
-#    This operator computes the deformed template
-#    for a fixed template ``I``:
-#        (jacdetinvdef, invdef) --> jacdetinvdef * I(invdef)
-#    where ``invdef`` is the inverse of deformation mapping:
-#        y --> invdef(y)
-#    and ``jacdetinvdef`` is the Jacobian determinant of ``invdef``:
-#        y --> jacdetinvdef(y)
-#    Here, ``y`` is an element in the domain of target.
-#    In diffeomorphic sense,  the domain of ``I`` is the same
-#    as the target.
-#    """
-#
-#    def __init__(self, template):
-#        """Initialize a new instance.
-#        Parameters
-#        ----------
-#        template : `DiscreteLpVector`
-#            Fixed template deformed by the vector field.
-#        """
-#        self.template = template
-#        self.domain_space = odl.ProductSpace(self.template.space,
-#                                             self.template.space.ndim + 1)
-#        self.invdef_pts = np.empty([self.template.space.ndim,
-#                                    self.template.size])
-#
-#        super().__init__(self.domain_space, self.template.space, linear=False)
-#
-#    def _call(self, jacdetinvdef_invdef):
-#        """Implementation of ``self(jacdetinvdef_invdef)``.
-#        Parameters
-#        ----------
-#        jacdetinvdef_invdef : 'ProductSpaceVector'
-#                R^{n} --> R^{1} times R^{n}
-#            The ``jacdetinvdef_invdef`` is defined on a product
-#            space ``R^{1} times R^{n}`` for ``jacdetinvdef`` and
-#            ``invdef``, respectively, where
-#            jacdetinvdef : 'DiscreteLpVector'
-#                    R^{n} --> R^{1}
-#                The Jacobian determinant of the inverse deformation.
-#                The ``jacdetinvdef`` equals to ``jacdetinvdef_invdef[0]``.
-#            invdef : `ProductSpaceVector`
-#                    R^{n} --> R^{n}
-#                General inverse deformation for image grid points.
-#                The ``invdef`` equals to ``jacdetinvdef_invdef[1:n]``.
-#        """
-#        for i in range(self.template.space.ndim):
-#            self.invdef_pts[i] = \
-#                jacdetinvdef_invdef[i+1].ntuple.asarray()
-#        return jacdetinvdef_invdef[0] * self.template.space.element(
-#            self.template.interpolation(self.invdef_pts, bounds_check=False))
-#
-#    def mp_deform(self, template, jacdetinvdef_invdef):
-#        """Implementation of ``self(template, jacdetinvdef_invdef)``.
-#        This function computes the deformed template for a given
-#        template ``I``, and a given inverse deformation ``invdef``
-#        and its Jacobian determinant ``jacdetinvdef``:
-#            (I, jacdetinvdef, invdef) --> jacdetinvdef * I(invdef)
-#        Parameters
-#        ----------
-#        template : `DiscreteLpVector`
-#            Fixed template deformed by the vector field.
-#        jacdetinvdef_invdef : 'ProductSpaceVector'
-#                R^{n} --> R^{1} times R^{n}
-#            The ``jacdetinvdef_invdef`` is defined on a product
-#            space ``R^{1} times R^{n}`` for ``jacdetinvdef`` and
-#            ``invdef``, respectively, where
-#            jacdetinvdef : 'DiscreteLpVector'
-#                    R^{n} --> R^{1}
-#                The Jacobian determinant of the inverse deformation.
-#                The ``jacdetinvdef`` equals to ``jacdetinvdef_invdef[0]``.
-#            invdef : `ProductSpaceVector`
-#                    R^{n} --> R^{n}
-#                General inverse deformation for image grid points.
-#                The ``invdef`` equals to ``jacdetinvdef_invdef[1:n]``.
-#        """
-#        invdef_pts = np.empty([template.space.ndim, template.size])
-#        for i in range(template.space.ndim):
-#            invdef_pts[i] = jacdetinvdef_invdef[i+1].ntuple.asarray()
-#        return jacdetinvdef_invdef[0] * template.space.element(
-#            template.interpolation(invdef_pts, bounds_check=False))
-#
-#
-#class MassPreservingLinearDeformation(Operator):
-#    def __init__(self, offsets, vector_field_jacobian, divergence=None):
-#        """Initialize a linear deformation
-#        Parameters
-#        ----------
-#        vector_field : `ProductSpace` of `DiscreteLp` spaces
-#            The (small) deformation field.
-#        vector_field_jacobian : `DiscreteLp`
-#            The determinant of the jacobian of the deformation.
-#        divergence : `Operator`
-#            The divergence operator used in composition.
-#            Default:
-#            Divergence(range=vector_field_jacobian.space, method='central')
-#        Examples
-#        --------
-#        Identity deformation:
-#        >>> import odl
-#        >>> space = odl.uniform_discr(0, 1, 5)
-#        >>> pspace = ProductSpace(space, space.ndim)
-#        >>> vector_field = pspace.element(space.points().T)
-#        >>> jacobian = space.zero()
-#        >>> deformation = MassPreservingLinearDeformation(vector_field,
-#        ...                                               jacobian)
-#        """
-#
-#        assert isinstance(offsets.space, odl.ProductSpace)
-#        assert offsets.space.is_power_space
-#        assert isinstance(offsets.space[0], DiscreteLp)
-#        assert vector_field_jacobian in offsets.space[0]
-#
-#        ndim = offsets.space.size
-#        space = offsets.space[0]
-#
-#        interp_points = space.points().T
-#        for i in range(ndim):
-#            interp_points[i] += offsets[i].ntuple.asarray()
-#
-#        self.interp_points = interp_points
-#        self.offsets = offsets
-#        self.vector_field_jacobian = vector_field_jacobian
-#
-#        # offsets.show('offsets')
-#
-#        if divergence is None:
-#            self.divergence = Divergence(range=space, method='central')
-#
-#        Operator.__init__(self,
-#                          domain=space,
-#                          range=space,
-#                          linear=True)
-#
-#    def _call(self, x):
-#        result = x.interpolation(self.interp_points, bounds_check=False)
-#        result = self.range.element(result)
-#        result *= self.vector_field_jacobian
-#        return result
-#
-#    def compose(self, linear_deformation):
-#        assert isinstance(linear_deformation, LinearDeformation)
-#
-#        # Find the deformations for the output field
-#        out_offsets = self.offsets.space.element()
-#
-#        for i in range(self.interp_points.shape[0]):
-#            as_element = self.domain.element(self.interp_points[i])
-#            interpolated = as_element.interpolation(
-#                linear_deformation.interp_points, bounds_check=False)
-#            out_offsets[i][:] = interpolated - self.domain.points().T[i]
-#
-#        # Find the jacobian
-#        out_jacobian = self.domain.element(
-#            self.vector_field_jacobian.interpolation(
-#                linear_deformation.interp_points, bounds_check=False))
-#
-#        # Weighting
-#        div = self.divergence(linear_deformation.offsets)
-#        out_jacobian *= np.exp(div)
-#
-#        # out_jacobian = self.domain.one()
-#        return MassPreservingLinearDeformation(out_offsets, out_jacobian)
-#
-#    @staticmethod
-#    def identity(space):
-#        """Create the identity transformation on a space."""
-#        pspace = odl.ProductSpace(space, space.ndim)
-#        vector_field = pspace.zero()
-#        jacobian = space.one()
-#        deformation = MassPreservingLinearDeformation(vector_field,
-#                                                      jacobian)
-#        return deformation
+
+
+class MassPresvDeformFixedDeform(Operator):
+
+    """Mass-preserving deformation operator with fixed deformation.
+
+    The operator has a fixed mass-preserving deformation field, i.e.,
+    a deformation field ``phi`` and its Jacobean determinant ``|Dphi|``,
+    and maps a template ``I`` to the new function ``x --> |Dphi(x)|I(phi(x))``.
+
+
+    See Also
+    --------
+    MassPresvDeformFixedTempl : Mass-preserving deformation with fixed
+    template.
+
+    Notes
+    -----
+    For :math:`\Omega \subset \mathbb{R}^d`, we take :math:`G := X^d`
+    to be the space of deformation fields, where :math:`X = L^p(\Omega)`
+    is the template space. Hence the deformation operator with the fixed
+    deformation field :math:`\phi \\in G` maps :math:`X` into :math:`X`:
+
+    .. math::
+
+        W_{\phi} : X \\to X, \quad W_{\phi}(I) := |D\phi(\cdot)|I(\phi(\cdot)),
+
+    i.e., :math:`W_{\phi}(I)(x) = |D\phi(x)|I(\phi(x))`.
+    """
+
+    def __init__(self, mass_presv_deform, templ_space=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        template : `DiscreteLpVector`
+            Fixed template that is to be deformed.
+
+        Examples
+        --------
+        Create a simple 1D template ``I`` over ``[0, 1]`` to initialize the
+        operator and apply it to a mass-preserving deformation field, i.e.,
+        a deffeomorphic deformation field and its Jacobian determinant.
+        If the deffeomorphism ``phi`` is ``sin(x*pi/2)``, its Jacobian
+        determinant should be ``cos(x*pi/2)*pi/2`` and the output value is
+        ``cos(x*pi/2)*pi/2*I(sin(x*pi/2))``. A mass-preserving deformation
+        is obtained, namely, the integration of ``I(x)`` over ``[0, 1]``
+        equals to the integration of ``|Dphi(x)|I(phi(x))`` over ``[0, 1]``.
+
+        >>> import odl
+        >>> import numpy as np
+        >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
+        >>> vspace = space.vector_field_space
+        >>> pspace = ProductSpace(vspace, space)
+        >>> img_pts = space.points()
+        >>> deform_field = vspace.element([np.sin(img_pts * np.pi / 2.0)])
+        >>> det = space.element(np.cos(img_pts * np.pi / 2.0) * np.pi / 2.0)
+        >>> mass_presv_deform = pspace.element()
+        >>> mass_presv_deform[0] = deform_field
+        >>> mass_presv_deform[1] = det
+        >>> op = MassPresvDeformFixedDeform(mass_presv_deform)
+        >>> template = space.element([0, 0, 1, 0, 0])
+        >>> op(template)
+        uniform_discr(0.0, 1.0, 5, interp=u'linear').element([0.0,
+        1.0776176446789727, 0.0, 0.0, 0.0])
+        """
+        if not isinstance(mass_presv_deform[0], ProductSpaceVector):
+            raise TypeError('`mass_presv_deform[0] must be '
+                            'a `ProductSpaceVector` instance, '
+                            'got {!r}'.format(mass_presv_deform[0]))
+        if not mass_presv_deform.space[0].is_power_space:
+            raise TypeError('`mass_presv_deform.space[0]` must be '
+                            'a power space, '
+                            'got {!r}'.format(mass_presv_deform.space[0]))
+        if not isinstance(mass_presv_deform.space[1], DiscreteLp):
+            raise TypeError('`mass_presv_deform.space[1]` must be '
+                            'a `DiscreteLp` instance, '
+                            'got {!r}'.format(mass_presv_deform.space[1]))
+
+        if templ_space is None:
+            templ_space = mass_presv_deform.space[1]
+        else:
+            if not isinstance(templ_space, DiscreteLp):
+                raise TypeError('`templ_space` must be a `DiscreteLp` '
+                                'instance, got {!r}'.format(templ_space))
+            if templ_space.vector_field_space != mass_presv_deform.space[0]:
+                raise ValueError('`templ_space.vector_field_space` not equal '
+                                 'to `mass_presv_deform.space[0]` ({} != {})'
+                                 ''.format(templ_space.vector_field_space,
+                                           mass_presv_deform.space[0]))
+
+        self.__mass_presv_dfield = mass_presv_deform
+        super().__init__(domain=templ_space, range=templ_space, linear=True)
+
+    @property
+    def mass_presv_deformation(self):
+        """Fixed deformation field of this deformation operator."""
+        return self.__mass_presv_dfield
+
+    def _call(self, template, out=None):
+        """Implementation of ``self(template[, out])``."""
+        return _mass_presv_deform(template, self.mass_presv_deformation)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        if self.domain == self.mass_presv_deformation.space[1]:
+            domain_repr = ''
+        else:
+            domain_repr = ', domain={!r}'.format(self.domain)
+
+        return '{}({!r}{})'.format(self.__class__.__name__,
+                                   self.mass_presv_deformation,
+                                   domain_repr)
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
