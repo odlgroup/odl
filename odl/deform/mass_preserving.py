@@ -28,11 +28,12 @@ from odl.operator.operator import Operator
 from odl.space import ProductSpaceVector, ProductSpace
 
 
-__all__ = ('GeometricDeformFixedTempl', 'GeometricDeformFixedDeform',
+__all__ = ('geometric_deform', 'mass_presv_deform',
+           'GeometricDeformFixedTempl', 'GeometricDeformFixedDeform',
            'MassPresvDeformFixedTempl', 'MassPresvDeformFixedDeform')
 
 
-def _geometric_deform(template, deformation, out=None):
+def geometric_deform(template, deformation, out=None):
     """Deform a template with a general deformation field.
 
     The function maps a given template ``I`` and a given deformation
@@ -67,7 +68,7 @@ def _geometric_deform(template, deformation, out=None):
     >>> deform_field_space = space.vector_field_space
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> deform_field = deform_field_space.element([[0.1, 0.3, 0.5, 0.5, 0.9]])
-    >>> _geometric_deform(template, deform_field)
+    >>> geometric_deform(template, deform_field)
     array([ 0.,  0.,  1.,  1.,  0.])
 
     The result depends on the chosen interpolation. With 'linear'
@@ -78,7 +79,7 @@ def _geometric_deform(template, deformation, out=None):
     >>> deform_field_space = space.vector_field_space
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> deform_field = deform_field_space.element([[0.1, 0.3, 0.5, 0.6, 0.9]])
-    >>> _geometric_deform(template, deform_field)
+    >>> geometric_deform(template, deform_field)
     array([ 0. ,  0. ,  1. ,  0.5,  0. ])
     """
     image_pts = template.space.points()
@@ -87,7 +88,7 @@ def _geometric_deform(template, deformation, out=None):
     return template.interpolation(image_pts.T, out=out, bounds_check=False)
 
 
-def _mass_presv_deform(template, mass_presv_dfield, out=None):
+def mass_presv_deform(template, mass_presv_dfield, out=None):
     """Deform a template with a mass-preserving deformation field.
 
     The function maps a given template ``I``, a mass-preserving deformation
@@ -141,10 +142,11 @@ def _mass_presv_deform(template, mass_presv_dfield, out=None):
     >>> mass_presv_dfield = pspace.element([deform_field, det])
 
     Output result
-    >>> print(_mass_presv_deform(template, mass_presv_dfield))
+    >>> print(mass_presv_deform(template, mass_presv_dfield))
     [0.0, 1.07761764468, 0.0, 0.0, 0.0]
     """
-    general_deform_template = _geometric_deform(template, mass_presv_dfield[0])
+    general_deform_template = template.space.element(
+        geometric_deform(template, mass_presv_dfield[0]))
     return mass_presv_dfield[1] * general_deform_template
 
 
@@ -225,7 +227,7 @@ class GeometricDeformFixedTempl(Operator):
 
     def _call(self, deformation, out=None):
         """Implementation of ``self(deformation[, out])``."""
-        return _geometric_deform(self.template, deformation, out)
+        return geometric_deform(self.template, deformation, out)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -332,7 +334,7 @@ class GeometricDeformFixedDeform(Operator):
 
     def _call(self, template, out=None):
         """Implementation of ``self(template[, out])``."""
-        return _geometric_deform(template, self.deformation, out)
+        return geometric_deform(template, self.deformation, out)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -434,7 +436,7 @@ class MassPresvDeformFixedTempl(Operator):
 
     def _call(self, mass_presv_dfield, out=None):
         """Implementation of ``self(deformation[, out])``."""
-        return _mass_presv_deform(self.template, mass_presv_dfield)
+        return mass_presv_deform(self.template, mass_presv_dfield)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -545,7 +547,7 @@ class MassPresvDeformFixedDeform(Operator):
 
     def _call(self, template, out=None):
         """Implementation of ``self(template[, out])``."""
-        return _mass_presv_deform(template, self.mass_presv_deformation)
+        return mass_presv_deform(template, self.mass_presv_deformation)
 
     def __repr__(self):
         """Return ``repr(self)``."""
