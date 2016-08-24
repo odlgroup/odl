@@ -29,7 +29,7 @@ __all__ = ('normalized_index_expression', 'normalized_scalar_param_list')
 
 
 def normalized_scalar_param_list(param, length, param_conv=None,
-                                 keep_none=True):
+                                 keep_none=True, return_nonconv=False):
     """Return a list of given length from a scalar parameter.
 
     The typical use case is when a single value or a sequence of
@@ -62,11 +62,17 @@ def normalized_scalar_param_list(param, length, param_conv=None,
         Conversion applied to each list element. None means no conversion.
     keep_none : bool, optional
         If True, None is not converted.
+    return_nonconv : bool, optional
+        If True, return also the list where no conversion has been
+        applied.
 
     Returns
     -------
     plist : list
         Input parameter turned into a list of length ``length``.
+    nonconv : list
+        The same as ``plist``, but without conversion. This is only
+        returned if ``return_nonconv == True``.
 
     Examples
     --------
@@ -113,39 +119,45 @@ def normalized_scalar_param_list(param, length, param_conv=None,
     try:
         # TODO: always use this when numpy >= 1.10 can be assumed
         param = np.array(param, dtype=object, copy=True, ndmin=1)
-        out_list = list(np.broadcast_to(param, (length,)))
+        nonconv_list = list(np.broadcast_to(param, (length,)))
     except AttributeError:
         # numpy.broadcast_to not available
         if np.isscalar(param):
             # Try this first, will work better with iterable input like '10'
-            out_list = [param] * length
+            nonconv_list = [param] * length
         else:
             try:
                 param_len = len(param)
             except TypeError:
                 # Not a sequence -> single parameter
-                out_list = [param] * length
+                nonconv_list = [param] * length
             else:
                 if param_len == 1:
-                    out_list = list(param) * length
+                    nonconv_list = list(param) * length
                 elif param_len == length:
-                    out_list = list(param)
+                    nonconv_list = list(param)
                 else:
                     raise ValueError('sequence `param` has length {}, '
                                      'expected {}'.format(param_len, length))
 
-    if len(out_list) != length:
+    if len(nonconv_list) != length:
         raise ValueError('sequence `param` has length {}, expected {}'
-                         ''.format(len(out_list), length))
+                         ''.format(len(nonconv_list), length))
 
-    if param_conv is not None:
-        for i, p in enumerate(out_list):
+    if param_conv is None:
+        out_list = list(nonconv_list)
+    else:
+        out_list = []
+        for p in nonconv_list:
             if p is None and keep_none:
-                pass
+                out_list.append(p)
             else:
-                out_list[i] = param_conv(p)
+                out_list.append(param_conv(p))
 
-    return out_list
+    if return_nonconv:
+        return out_list, nonconv_list
+    else:
+        return out_list
 
 
 def normalized_index_expression(indices, shape, int_to_slice=False):

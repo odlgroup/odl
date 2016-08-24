@@ -9,6 +9,10 @@ Release Notes
 Next release
 ============
 
+New features
+------------
+- Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
+
 Changes
 --------
 - Changed definition of ``LinearSpaceVector.multiply`` to match the definition used by numpy (:pull:`509`)
