@@ -136,9 +136,8 @@ def _mass_presv_deform(template, mass_presv_dfield, out=None):
     >>> mass_presv_field = pspace.element()
     >>> mass_presv_field[0] = deform_field
     >>> mass_presv_field[1] = det
-    >>> _mass_presv_deform(template, mass_presv_field)
-    uniform_discr(0.0, 1.0, 5, interp=u'linear').element([0.0,
-    1.0776176446789727, 0.0, 0.0, 0.0])
+    >>> print(_mass_presv_deform(template, mass_presv_field))
+    [0.0, 1.07761764468, 0.0, 0.0, 0.0]
     """
     general_deform_template = _general_deform(template, mass_presv_dfield[0])
     return mass_presv_dfield[1] * general_deform_template
@@ -402,9 +401,8 @@ class MassPresvDeformFixedTempl(Operator):
         >>> mass_presv_deform = pspace.element()
         >>> mass_presv_deform[0] = deform_field
         >>> mass_presv_deform[1] = det
-        >>> op(mass_presv_deform)
-        uniform_discr(0.0, 1.0, 5, interp=u'linear').element([0.0,
-        1.0776176446789727, 0.0, 0.0, 0.0])
+        >>> print(op(mass_presv_deform))
+        [0.0, 1.07761764468, 0.0, 0.0, 0.0]
         """
         if not isinstance(template, DiscreteLpVector):
             raise TypeError('`template` must be a `DiscreteLpVector`'
@@ -492,9 +490,8 @@ class MassPresvDeformFixedDeform(Operator):
         >>> mass_presv_deform[1] = det
         >>> op = MassPresvDeformFixedDeform(mass_presv_deform)
         >>> template = space.element([0, 0, 1, 0, 0])
-        >>> op(template)
-        uniform_discr(0.0, 1.0, 5, interp=u'linear').element([0.0,
-        1.0776176446789727, 0.0, 0.0, 0.0])
+        >>> print(op(template))
+        [0.0, 1.07761764468, 0.0, 0.0, 0.0]
         """
         if not isinstance(mass_presv_deform[0], ProductSpaceVector):
             raise TypeError('`mass_presv_deform[0] must be '
