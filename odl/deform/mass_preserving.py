@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Operators and functions for general and mass-preserving deformation."""
+"""Operators and functions for geometric and mass-preserving deformations."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -28,11 +28,11 @@ from odl.operator.operator import Operator
 from odl.space import ProductSpaceVector, ProductSpace
 
 
-__all__ = ('GeneralDeformFixedTempl', 'GeneralDeformFixedDeform',
+__all__ = ('GeometricDeformFixedTempl', 'GeometricDeformFixedDeform',
            'MassPresvDeformFixedTempl', 'MassPresvDeformFixedDeform')
 
 
-def _general_deform(template, deformation, out=None):
+def _geometric_deform(template, deformation, out=None):
     """Deform a template with a general deformation field.
 
     The function maps a given template ``I`` and a given deformation
@@ -67,7 +67,7 @@ def _general_deform(template, deformation, out=None):
     >>> deform_field_space = space.vector_field_space
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> deform_field = deform_field_space.element([[0.1, 0.3, 0.5, 0.5, 0.9]])
-    >>> _general_deform(template, deform_field)
+    >>> _geometric_deform(template, deform_field)
     array([ 0.,  0.,  1.,  1.,  0.])
 
     The result depends on the chosen interpolation. With 'linear'
@@ -78,7 +78,7 @@ def _general_deform(template, deformation, out=None):
     >>> deform_field_space = space.vector_field_space
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> deform_field = deform_field_space.element([[0.1, 0.3, 0.5, 0.6, 0.9]])
-    >>> _general_deform(template, deform_field)
+    >>> _geometric_deform(template, deform_field)
     array([ 0. ,  0. ,  1. ,  0.5,  0. ])
     """
     image_pts = template.space.points()
@@ -92,17 +92,18 @@ def _mass_presv_deform(template, mass_presv_dfield, out=None):
 
     The function maps a given template ``I``, a mass-preserving deformation
     field, i.e., a given deformation field ``phi`` and its Jacobian
-    determinant to the new function ``x --> |Dphi(x)|I(phi(x))``.
+    determinant ``|Dphi(x)|`` to the new function ``x --> |Dphi(x)|I(phi(x))``.
 
     Parameters
     ----------
     template : `DiscreteLpVector`
         Template to be deformed by a deformation field.
-    mass_presv_dfield : element of power space of power space and `DiscreteLp`
+    mass_presv_dfield : element of product space of vector field space
+        and `DiscreteLp`
         The mass-preserving deformation field used to deform the template.
-        It contains the deformation, i.e., an element of power space
-        of `DiscreteLp`, and the Jacobian determinant of the deformation,
-        i.e., a `DiscreteLpVector`.
+        It contains the deformation, i.e., an element of vector field space
+        or power space of `DiscreteLp`, and the Jacobian determinant of
+        the deformation, i.e., a `DiscreteLpVector`.
     out : `numpy.ndarray`, optional
         Array to which the function values of the deformed template
         are written. It must have the same shape as ``template`` and
@@ -118,32 +119,36 @@ def _mass_presv_deform(template, mass_presv_dfield, out=None):
     --------
     Create a simple 1D template ``I`` over ``[0, 1]``, a deffeomorphic
     deformation field and its Jacobian determinant.
-    If the deffeomorphism ``phi`` is ``sin(x*pi/2)``, its Jacobian determinant
+    If the diffeomorphism ``phi`` is ``sin(x*pi/2)``, its Jacobian determinant
     should be ``cos(x*pi/2)*pi/2`` and the output value is
     ``cos(x*pi/2)*pi/2*I(sin(x*pi/2))``. A mass-preserving deformation
     is obtained, namely, the integration of ``I(x)`` over ``[0, 1]``
     equals to the integration of ``|Dphi(x)|I(phi(x))`` over ``[0, 1]``.
 
-
+    Create relevant spaces
     >>> import odl
     >>> import numpy as np
     >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
     >>> vspace = space.vector_field_space
     >>> pspace = odl.ProductSpace(vspace, space)
+
+    Create template to be deformed
     >>> template = space.element([0, 0, 1, 0, 0])
-    >>> deform_field = vspace.element([np.sin(space.points() * np.pi / 2.0)])
-    >>> det = space.element(np.cos(space.points() * np.pi / 2.0) * np.pi / 2.0)
-    >>> mass_presv_field = pspace.element()
-    >>> mass_presv_field[0] = deform_field
-    >>> mass_presv_field[1] = det
-    >>> print(_mass_presv_deform(template, mass_presv_field))
+
+    Create mass-preserving deformation field
+    >>> deform_field = vspace.element([lambda x: np.sin(x * np.pi / 2.0)])
+    >>> det = space.element(lambda x: np.cos(x * np.pi / 2.0) * np.pi / 2.0)
+    >>> mass_presv_dfield = pspace.element([deform_field, det])
+
+    Output result
+    >>> print(_mass_presv_deform(template, mass_presv_dfield))
     [0.0, 1.07761764468, 0.0, 0.0, 0.0]
     """
-    general_deform_template = _general_deform(template, mass_presv_dfield[0])
+    general_deform_template = _geometric_deform(template, mass_presv_dfield[0])
     return mass_presv_dfield[1] * general_deform_template
 
 
-class GeneralDeformFixedTempl(Operator):
+class GeometricDeformFixedTempl(Operator):
 
     """Deformation operator with fixed template acting on deformation fields.
 
@@ -152,7 +157,7 @@ class GeneralDeformFixedTempl(Operator):
 
     See Also
     --------
-    GeneralDeformFixedDeform : Deformation with a fixed deformation.
+    GeometricDeformFixedDeform : Geometric deformation with fixed deformation.
 
     Notes
     -----
@@ -187,7 +192,7 @@ class GeneralDeformFixedTempl(Operator):
         >>> import odl
         >>> space = odl.uniform_discr(0, 1, 5, interp='nearest')
         >>> template = space.element([0, 0, 1, 0, 0])
-        >>> op = GeneralDeformFixedTempl(template)
+        >>> op = GeometricDeformFixedTempl(template)
         >>> deform_field_space = space.vector_field_space
         >>> deform = deform_field_space.element([[0.1, 0.3, 0.5, 0.5, 0.9]])
         >>> print(op(deform))
@@ -199,7 +204,7 @@ class GeneralDeformFixedTempl(Operator):
 
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
         >>> template = space.element([0, 0, 1, 0, 0])
-        >>> op = GeneralDeformFixedTempl(template)
+        >>> op = GeometricDeformFixedTempl(template)
         >>> deform_field_space = space.vector_field_space
         >>> deform = deform_field_space.element([[0.1, 0.3, 0.5, 0.6, 0.9]])
         >>> print(op(deform))
@@ -220,14 +225,14 @@ class GeneralDeformFixedTempl(Operator):
 
     def _call(self, deformation, out=None):
         """Implementation of ``self(deformation[, out])``."""
-        return _general_deform(self.template, deformation, out)
+        return _geometric_deform(self.template, deformation, out)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r})'.format(self.__class__.__name__, self.template)
 
 
-class GeneralDeformFixedDeform(Operator):
+class GeometricDeformFixedDeform(Operator):
 
     """Deformation operator with fixed deformation acting on templates.
 
@@ -236,7 +241,7 @@ class GeneralDeformFixedDeform(Operator):
 
     See Also
     --------
-    GeneralDeformFixedTempl : Deformation with a fixed template.
+    GeometricDeformFixedTempl : Geometric deformation with fixed template.
 
     Notes
     -----
@@ -278,7 +283,7 @@ class GeneralDeformFixedDeform(Operator):
         >>> space = odl.uniform_discr(0, 1, 5, interp='nearest')
         >>> deform_field_space = space.vector_field_space
         >>> deform = deform_field_space.element([[0.1, 0.3, 0.5, 0.5, 0.9]])
-        >>> op = GeneralDeformFixedDeform(deform)
+        >>> op = GeometricDeformFixedDeform(deform)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op(template))
         [0.0, 0.0, 1.0, 1.0, 0.0]
@@ -290,7 +295,7 @@ class GeneralDeformFixedDeform(Operator):
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
         >>> deform_field_space = space.vector_field_space
         >>> deform = deform_field_space.element([[0.1, 0.3, 0.5, 0.6, 0.9]])
-        >>> op = GeneralDeformFixedDeform(deform)
+        >>> op = GeometricDeformFixedDeform(deform)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op(template))
         [0.0, 0.0, 1.0, 0.5, 0.0]
@@ -327,7 +332,7 @@ class GeneralDeformFixedDeform(Operator):
 
     def _call(self, template, out=None):
         """Implementation of ``self(template[, out])``."""
-        return _general_deform(template, self.deformation, out)
+        return _geometric_deform(template, self.deformation, out)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -382,26 +387,32 @@ class MassPresvDeformFixedTempl(Operator):
         Create a simple 1D template ``I`` over ``[0, 1]`` to initialize the
         operator and apply it to a mass-preserving deformation field, i.e.,
         a deffeomorphic deformation field and its Jacobian determinant.
-        If the deffeomorphism ``phi`` is ``sin(x*pi/2)``, its Jacobian
+        If the diffeomorphism ``phi`` is ``sin(x*pi/2)``, its Jacobian
         determinant should be ``cos(x*pi/2)*pi/2`` and the output value is
         ``cos(x*pi/2)*pi/2*I(sin(x*pi/2))``. A mass-preserving deformation
         is obtained, namely, the integration of ``I(x)`` over ``[0, 1]``
         equals to the integration of ``|Dphi(x)|I(phi(x))`` over ``[0, 1]``.
 
+        Create relevant spaces
         >>> import odl
         >>> import numpy as np
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
         >>> vspace = space.vector_field_space
         >>> pspace = ProductSpace(vspace, space)
+
+        Create template to be deformed
         >>> template = space.element([0, 0, 1, 0, 0])
+
+        Create mass-preserving deformation operator by fixed template
         >>> op = MassPresvDeformFixedTempl(template)
-        >>> img_pts = space.points()
-        >>> deform_field = vspace.element([np.sin(img_pts * np.pi / 2.0)])
-        >>> det = space.element(np.cos(img_pts * np.pi / 2.0) * np.pi / 2.0)
-        >>> mass_presv_deform = pspace.element()
-        >>> mass_presv_deform[0] = deform_field
-        >>> mass_presv_deform[1] = det
-        >>> print(op(mass_presv_deform))
+
+        Create mass-preserving deformation field
+        >>> deform_field = vspace.element([lambda x: np.sin(x * np.pi / 2.0)])
+        >>> det = space.element(lambda x: np.cos(x * np.pi / 2.0) * np.pi / 2.)
+        >>> mass_presv_dfield = pspace.element([deform_field, det])
+
+        Output result
+        >>> print(op(mass_presv_dfield))
         [0.0, 1.07761764468, 0.0, 0.0, 0.0]
         """
         if not isinstance(template, DiscreteLpVector):
@@ -435,7 +446,7 @@ class MassPresvDeformFixedDeform(Operator):
     """Mass-preserving deformation operator with fixed deformation.
 
     The operator has a fixed mass-preserving deformation field, i.e.,
-    a deformation field ``phi`` and its Jacobean determinant ``|Dphi|``,
+    a deformation field ``phi`` and its Jacobian determinant ``|Dphi|``,
     and maps a template ``I`` to the new function ``x --> |Dphi(x)|I(phi(x))``.
 
 
@@ -471,25 +482,31 @@ class MassPresvDeformFixedDeform(Operator):
         Create a simple 1D template ``I`` over ``[0, 1]`` to initialize the
         operator and apply it to a mass-preserving deformation field, i.e.,
         a deffeomorphic deformation field and its Jacobian determinant.
-        If the deffeomorphism ``phi`` is ``sin(x*pi/2)``, its Jacobian
+        If the diffeomorphism ``phi`` is ``sin(x*pi/2)``, its Jacobian
         determinant should be ``cos(x*pi/2)*pi/2`` and the output value is
         ``cos(x*pi/2)*pi/2*I(sin(x*pi/2))``. A mass-preserving deformation
         is obtained, namely, the integration of ``I(x)`` over ``[0, 1]``
         equals to the integration of ``|Dphi(x)|I(phi(x))`` over ``[0, 1]``.
 
+        Create relevant spaces
         >>> import odl
         >>> import numpy as np
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
         >>> vspace = space.vector_field_space
         >>> pspace = ProductSpace(vspace, space)
-        >>> img_pts = space.points()
-        >>> deform_field = vspace.element([np.sin(img_pts * np.pi / 2.0)])
-        >>> det = space.element(np.cos(img_pts * np.pi / 2.0) * np.pi / 2.0)
-        >>> mass_presv_deform = pspace.element()
-        >>> mass_presv_deform[0] = deform_field
-        >>> mass_presv_deform[1] = det
-        >>> op = MassPresvDeformFixedDeform(mass_presv_deform)
+
+        Create mass-preserving deformation field
+        >>> deform_field = vspace.element([lambda x: np.sin(x * np.pi / 2.0)])
+        >>> det = space.element(lambda x: np.cos(x * np.pi / 2.0) * np.pi / 2.)
+        >>> mass_presv_dfield = pspace.element([deform_field, det])
+
+        Create mass-preserving deformation operator by fixed deformation field
+        >>> op = MassPresvDeformFixedDeform(mass_presv_dfield)
+
+        Create template to be deformd
         >>> template = space.element([0, 0, 1, 0, 0])
+
+        Output result
         >>> print(op(template))
         [0.0, 1.07761764468, 0.0, 0.0, 0.0]
         """
