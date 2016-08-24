@@ -56,7 +56,6 @@ class Resampling(Operator):
         Create two spaces with different number of points and a resampling
         operator.
 
-        >>> import odl
         >>> X = odl.uniform_discr(0, 1, 3)
         >>> Y = odl.uniform_discr(0, 1, 6)
         >>> resampling = Resampling(X, Y)
@@ -79,7 +78,6 @@ class Resampling(Operator):
         Create two spaces with different number of points and create resampling
         operator. Apply operator to vector.
 
-        >>> import odl
         >>> X = odl.uniform_discr(0, 1, 3)
         >>> Y = odl.uniform_discr(0, 1, 6)
         >>> resampling = Resampling(X, Y)
@@ -130,7 +128,6 @@ class Resampling(Operator):
         --------
         Create resampling operator and inverse
 
-        >>> import odl
         >>> X = odl.uniform_discr(0, 1, 3)
         >>> Y = odl.uniform_discr(0, 1, 6)
         >>> resampling = Resampling(X, Y)

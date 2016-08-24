@@ -206,9 +206,8 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> from math import sqrt
         >>> rbox1 = IntervalProd(0, 0.5)
-        >>> rbox2 = IntervalProd(0, sqrt(0.5)**2)
+        >>> rbox2 = IntervalProd(0, np.sqrt(0.5)**2)
         >>> rbox1.approx_equals(rbox2, atol=0)  # Num error
         False
         >>> rbox1.approx_equals(rbox2, atol=1e-15)
@@ -242,13 +241,12 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> from math import sqrt
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(b, e)
         >>> # Numerical error
-        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], atol=0)
+        >>> rbox.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=0)
         False
-        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], atol=1e-9)
+        >>> rbox.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=1e-9)
         True
         """
         try:
@@ -348,7 +346,6 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> import odl
         >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(b, e)
 
@@ -361,11 +358,10 @@ class IntervalProd(Set):
 
         Implicit meshgrids defined by coordinate vectors
 
-        >>> from odl.discr.grid import sparse_meshgrid
         >>> vec1 = (-1, -0.9, -0.7)
         >>> vec2 = (0, 0, 0)
         >>> vec3 = (2.5, 2.75, 3)
-        >>> mg = sparse_meshgrid(vec1, vec2, vec3)
+        >>> mg = odl.discr.grid.sparse_meshgrid(vec1, vec2, vec3)
         >>> rbox.contains_all(mg)
         True
 

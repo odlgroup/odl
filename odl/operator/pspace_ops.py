@@ -114,7 +114,6 @@ class ProductSpaceOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> X = odl.ProductSpace(r3, r3)
         >>> I = odl.IdentityOperator(r3)
@@ -221,7 +220,6 @@ class ProductSpaceOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> X = odl.ProductSpace(r3, r3)
         >>> I = odl.IdentityOperator(r3)
@@ -290,7 +288,6 @@ class ProductSpaceOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> X = odl.ProductSpace(r3, r3)
         >>> I = odl.IdentityOperator(r3)
@@ -357,7 +354,6 @@ class ProductSpaceOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> X = odl.ProductSpace(r3, r3)
         >>> I = odl.IdentityOperator(r3)
@@ -424,7 +420,6 @@ class ComponentProjection(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r1 = odl.rn(1)
         >>> r2 = odl.rn(2)
         >>> r3 = odl.rn(3)
@@ -468,7 +463,6 @@ class ComponentProjection(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r1 = odl.rn(1)
         >>> r2 = odl.rn(2)
         >>> r3 = odl.rn(3)
@@ -535,7 +529,6 @@ class ComponentProjectionAdjoint(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r1 = odl.rn(1)
         >>> r2 = odl.rn(2)
         >>> r3 = odl.rn(3)
@@ -579,7 +572,6 @@ class ComponentProjectionAdjoint(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r1 = odl.rn(1)
         >>> r2 = odl.rn(2)
         >>> r3 = odl.rn(3)
@@ -676,7 +668,6 @@ class BroadcastOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> I = odl.IdentityOperator(odl.rn(3))
         >>> op = BroadcastOperator(I, 2 * I)
         >>> x = [1, 2, 3]
@@ -704,10 +695,8 @@ class BroadcastOperator(Operator):
 
         Examples
         --------
-
         Example with affine operator
 
-        >>> import odl
         >>> I = odl.IdentityOperator(odl.rn(3))
         >>> residual_op = odl.ResidualOperator(I, I.domain.element([1, 1, 1]))
         >>> op = BroadcastOperator(residual_op, 2 * residual_op)
@@ -742,7 +731,6 @@ class BroadcastOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> I = odl.IdentityOperator(odl.rn(3))
         >>> op = BroadcastOperator(I, 2 * I)
         >>> op.adjoint([[1, 2, 3], [2, 3, 4]])
@@ -808,7 +796,6 @@ class ReductionOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> I = odl.IdentityOperator(odl.rn(3))
         >>> op = ReductionOperator(I, 2 * I)
         >>> op([[1.0, 2.0, 3.0], [4.0, 6.0, 8.0]])
@@ -835,7 +822,6 @@ class ReductionOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> I = odl.IdentityOperator(r3)
         >>> x = r3.element([1.0, 2.0, 3.0])
@@ -877,7 +863,6 @@ class ReductionOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> I = odl.IdentityOperator(odl.rn(3))
         >>> op = ReductionOperator(I, 2 * I)
         >>> op.adjoint([1, 2, 3])

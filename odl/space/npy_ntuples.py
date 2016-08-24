@@ -852,9 +852,8 @@ class NumpyFn(FnBase, NumpyNtuples):
         If the user has given another dist function, that one is used instead.
         For example, the 2-norm can be given explicitly:
 
-        >>> from numpy.linalg import norm
         >>> c2_2 = NumpyFn(2, dtype=complex,
-        ...                dist=lambda x, y: norm(x - y, ord=2))
+        ...                dist=lambda x, y: np.linalg.norm(x - y, ord=2))
         >>> x = c2_2.element([3+1j, 4])
         >>> y = c2_2.element([1j, 4-4j])
         >>> c2_2.dist(x, y)
@@ -863,7 +862,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         Likewise, the 1-norm can be given
 
         >>> c2_1 = NumpyFn(2, dtype=complex,
-        ...                dist=lambda x, y: norm(x - y, ord=1))
+        ...                dist=lambda x, y: np.linalg.norm(x - y, ord=1))
         >>> x = c2_1.element([3+1j, 4])
         >>> y = c2_1.element([1j, 4-4j])
         >>> c2_1.dist(x, y)
@@ -886,19 +885,17 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Examples
         --------
-        >>> from numpy.linalg import norm
-
         2-norm
 
-        >>> c2_2 =  NumpyFn(2, dtype=complex, norm=norm)
+        >>> c2_2 =  NumpyFn(2, dtype=complex, norm=np.linalg.norm)
         >>> x = c2_2.element([3+1j, 1-5j])
         >>> c2_2.norm(x)
         6.0
 
         1-norm
 
-        >>> from functools import partial
-        >>> c2_1 = NumpyFn(2, dtype=complex, norm=partial(norm, ord=1))
+        >>> c2_1 = NumpyFn(2, dtype=complex,
+        ...                norm=lambda x: np.linalg.norm(x, ord=1))
         >>> x = c2_1.element([3-4j, 12+5j])
         >>> c2_1.norm(x)
         18.0
@@ -920,7 +917,6 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Examples
         --------
-        >>> import numpy as np
         >>> c3 = NumpyFn(2, dtype=complex, inner=lambda x, y: np.vdot(y, x))
         >>> x = c3.element([5+1j, -2j])
         >>> y = c3.element([1, 1+1j])
@@ -1008,9 +1004,8 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Examples
         --------
-        >>> from numpy.linalg import norm
         >>> def dist(x, y, ord):
-        ...     return norm(x - y, ord)
+        ...     return np.linalg.norm(x - y, ord)
 
         >>> from functools import partial
         >>> dist2 = partial(dist, ord=2)

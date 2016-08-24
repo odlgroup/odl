@@ -184,4 +184,4 @@ def test_proximal_defintion(proximal_and_function):
         assert f_prox_x <= f_y
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v --largescale'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])

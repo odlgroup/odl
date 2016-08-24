@@ -648,7 +648,6 @@ class Operator(object):
 
         Examples
         --------
-        >>> import odl
         >>> rn = odl.rn(3)
         >>> op = odl.ScalingOperator(rn, 2.0)
         >>> x = rn.element([1, 2, 3])
@@ -765,7 +764,6 @@ class Operator(object):
 
         Examples
         --------
-        >>> import odl
         >>> rn = odl.rn(3)
         >>> op = odl.IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -848,7 +846,6 @@ class Operator(object):
 
         Examples
         --------
-        >>> import odl
         >>> rn = odl.rn(3)
         >>> op = odl.IdentityOperator(rn)
         >>> x = rn.element([1, 2, 3])
@@ -900,7 +897,6 @@ class Operator(object):
 
         Examples
         --------
-        >>> import odl
         >>> rn = odl.rn(3)
         >>> op = odl.ScalingOperator(rn, 3)
         >>> x = rn.element([1, 2, 3])
@@ -943,7 +939,6 @@ class Operator(object):
 
         Examples
         --------
-        >>> import odl
         >>> rn = odl.rn(3)
         >>> op = odl.IdentityOperator(rn)
         >>> x = rn.element([3, 6, 9])
@@ -1064,7 +1059,6 @@ class OperatorSum(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> op = odl.IdentityOperator(r3)
         >>> x = r3.element([1, 2, 3])
@@ -1378,7 +1372,6 @@ class OperatorLeftScalarMult(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> operator = odl.IdentityOperator(space)
         >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
@@ -1415,7 +1408,6 @@ class OperatorLeftScalarMult(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> operator = odl.IdentityOperator(space)
         >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
@@ -1446,7 +1438,6 @@ class OperatorLeftScalarMult(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> operator = odl.ResidualOperator(odl.IdentityOperator(space),
         ...                                 [1, 1, 1])
@@ -1477,7 +1468,6 @@ class OperatorLeftScalarMult(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> operator = odl.IdentityOperator(space)
         >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
@@ -1560,7 +1550,6 @@ class OperatorRightScalarMult(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> operator = odl.IdentityOperator(space)
         >>> left_mul_op = OperatorRightScalarMult(operator, 3)
@@ -1602,7 +1591,6 @@ class OperatorRightScalarMult(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> operator = odl.IdentityOperator(space)
         >>> left_mul_op = OperatorRightScalarMult(operator, 3)
@@ -1630,7 +1618,6 @@ class OperatorRightScalarMult(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> operator = odl.ResidualOperator(odl.IdentityOperator(space),
         ...                                 [1, 1, 1])
@@ -1658,7 +1645,6 @@ class OperatorRightScalarMult(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> operator = odl.IdentityOperator(space)
         >>> left_mul_op = OperatorRightScalarMult(operator, 3)
@@ -1734,7 +1720,6 @@ class FunctionalLeftVectorMult(Operator):
         --------
         Create the operator ``(x * x^T)(y) = x * <x, y>``
 
-        >>> import odl
         >>> space = odl.rn(3)
         >>> x = space.element([1, 2, 3])
         >>> functional = odl.InnerProductOperator(x)

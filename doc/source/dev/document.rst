@@ -86,6 +86,7 @@ Some short tips
   ```numpy.ndarray```).
 * Make sure that the first line is short and descriptive.
 * Examples are often better than long descriptions.
+* Numpy and ODL are both imported by default in doctests, so there is no need for ``import numpy as np`` or ``import odl``.
 
 Quick summary of `PEP257`_
 --------------------------

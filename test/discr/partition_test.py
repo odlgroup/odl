@@ -421,4 +421,4 @@ def test_uniform_partition():
             begin=begin, end=end, num_nodes=nsamp, cell_sides=[0.25, 0.2001])
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

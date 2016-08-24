@@ -83,10 +83,9 @@ spc_params = [odl.rn(10, np.float64), odl.rn(10, np.float32),
               odl.cn(10, np.complex128), odl.cn(10, np.complex64),
               odl.rn(100)]
 spc_ids = [' {!r} '.format(spc) for spc in spc_params]
-spc_fixture = pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
 
 
-@spc_fixture
+@pytest.fixture(scope="module", ids=spc_ids, params=spc_params)
 def fn(request):
     return request.param
 
@@ -94,10 +93,9 @@ def fn(request):
 # Simply modify exp_params to modify the fixture
 exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
 exp_ids = [' p = {} '.format(p) for p in exp_params]
-exp_fixture = pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
 
 
-@exp_fixture
+@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
 def exponent(request):
     return request.param
 
@@ -1745,20 +1743,15 @@ def test_ufuncs(fn, ufunc):
             assert odl_result[i] is out_vectors[i]
 
 
-def _impl_test_reduction(fn, name):
+def test_reductions(fn, reduction):
+    name, _ = reduction
+
     ufunc = getattr(np, name)
 
     # Create some data
     x_arr, x = example_vectors(fn, 1)
 
     assert ufunc(x_arr) == getattr(x.ufunc, name)()
-
-
-def test_reductions():
-    fn = odl.rn(3)
-
-    for name, _ in REDUCTIONS:
-        yield _impl_test_reduction, fn, name
 
 
 def test_ufunc_reduction_docs_notempty():
@@ -1770,4 +1763,4 @@ def test_ufunc_reduction_docs_notempty():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

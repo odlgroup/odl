@@ -83,4 +83,4 @@ def test_solver(iterative_solver):
     assert all_almost_equal(op(x), rhs, places)
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

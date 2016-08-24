@@ -118,7 +118,6 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         Examples
         --------
-        >>> import odl
         >>> data = np.array([[ 0.,  1.,  2.,  3.,  4.],
         ...                  [ 0.,  2.,  4.,  6.,  8.]])
         >>> discr = odl.uniform_discr([0, 0], [2, 1], data.shape)
@@ -219,7 +218,6 @@ class Gradient(PointwiseTensorFieldOperator):
 
         Examples
         --------
-        >>> import odl
         >>> dom = odl.uniform_discr([0, 0], [1, 1], (10, 20))
         >>> ran = odl.ProductSpace(dom, dom.ndim)  # 2-dimensional
         >>> grad_op = Gradient(dom)
@@ -273,10 +271,9 @@ class Gradient(PointwiseTensorFieldOperator):
 
         Examples
         --------
-        >>> from odl import uniform_discr
         >>> data = np.array([[ 0., 1., 2., 3., 4.],
         ...                  [ 0., 2., 4., 6., 8.]])
-        >>> discr = uniform_discr([0, 0], [2, 5], data.shape)
+        >>> discr = odl.uniform_discr([0, 0], [2, 5], data.shape)
         >>> f = discr.element(data)
         >>> grad = Gradient(discr)
         >>> grad_f = grad(f)
@@ -400,7 +397,6 @@ class Divergence(PointwiseTensorFieldOperator):
 
         Examples
         --------
-        >>> import odl
         >>> ran = odl.uniform_discr([0, 0], [1, 1], (10, 20))
         >>> dom = odl.ProductSpace(ran, ran.ndim)  # 2-dimensional
         >>> div_op = Divergence(dom)
@@ -455,11 +451,10 @@ class Divergence(PointwiseTensorFieldOperator):
 
         Examples
         --------
-        >>> from odl import uniform_discr
         >>> data = np.array([[0., 1., 2., 3., 4.],
         ...                  [1., 2., 3., 4., 5.],
         ...                  [2., 3., 4., 5., 6.]])
-        >>> space = uniform_discr([0, 0], [3, 5], data.shape)
+        >>> space = odl.uniform_discr([0, 0], [3, 5], data.shape)
         >>> div = Divergence(range=space)
         >>> f = div.domain.element([data, data])
         >>> div_f = div(f)
@@ -591,11 +586,10 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         Examples
         --------
-        >>> from odl import uniform_discr
         >>> data = np.array([[ 0., 0., 0.],
         ...                  [ 0., 1., 0.],
         ...                  [ 0., 0., 0.]])
-        >>> space = uniform_discr([0, 0], [3, 3], data.shape)
+        >>> space = odl.uniform_discr([0, 0], [3, 3], data.shape)
         >>> f = space.element(data)
         >>> lap = Laplacian(space)
         >>> print(lap(f))

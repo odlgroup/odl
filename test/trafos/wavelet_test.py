@@ -277,4 +277,4 @@ def test_dwt():
     assert all_almost_equal(reconstruction2, disc_phantom)
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

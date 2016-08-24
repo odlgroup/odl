@@ -131,7 +131,7 @@ setup(
     package_dir={'odl': 'odl'},
 
     install_requires=[requires],
-    tests_require=['pytest'],
+    tests_require=['pytest>3.0'],
     extras_require={
         'testing': test_requires,
         'show': 'matplotlib',

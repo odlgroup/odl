@@ -236,13 +236,11 @@ vectorization_guide.html>`_ for a detailed introduction.
         Define a set of functions from the rectangle [1, 3] x [2, 5]
         to the real numbers:
 
-        >>> from odl import FunctionSpace, Rectangle
-        >>> rect = Rectangle([1, 3], [2, 5])
-        >>> funcset = FunctionSpace(rect)
+        >>> rect = odl.Rectangle([1, 3], [2, 5])
+        >>> funcset = odl.FunctionSpace(rect)
 
         Partition the rectangle by a tensor grid:
 
-        >>> import odl
         >>> rect = odl.Rectangle([1, 3], [2, 5])
         >>> grid = odl.TensorGrid([1, 2], [3, 4, 5])
         >>> partition = odl.RectPartition(rect, grid)
@@ -398,22 +396,19 @@ class NearestInterpolation(FunctionSetMapping):
         We test nearest neighbor interpolation with a non-scalar
         data type in 2d:
 
-        >>> import numpy as np
-        >>> from odl import Rectangle, Strings, FunctionSet
-        >>> rect = Rectangle([0, 0], [1, 1])
-        >>> strings = Strings(1)  # 1-char strings
-        >>> space = FunctionSet(rect, strings)
+        >>> rect = odl.Rectangle([0, 0], [1, 1])
+        >>> strings = odl.Strings(1)  # 1-char strings
+        >>> space = odl.FunctionSet(rect, strings)
 
         Partitioning the domain uniformly with no nodes on the boundary
         (will shift the grid points):
 
-        >>> from odl import uniform_partition_fromintv, ntuples
-        >>> part = uniform_partition_fromintv(rect, [4, 2],
-        ...                                   nodes_on_bdry=False)
+        >>> part = odl.uniform_partition_fromintv(rect, [4, 2],
+        ...                                       nodes_on_bdry=False)
         >>> part.grid.coord_vectors
         (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
 
-        >>> dspace = ntuples(part.size, dtype='U1')
+        >>> dspace = odl.ntuples(part.size, dtype='U1')
 
         Now we initialize the operator and test it with some points:
 

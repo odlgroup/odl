@@ -48,7 +48,6 @@ def cuboid(space, begin=None, end=None):
 
     Examples
     --------
-    >>> import odl
     >>> space = odl.uniform_discr(0, 1, 6, dtype='float32')
     >>> print(cuboid(space, 0.5, 1))
     [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
@@ -105,7 +104,6 @@ def indicate_proj_axis(space, scale_structures=0.5):
 
     Examples
     --------
-    >>> import odl
     >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
     >>> phan = indicate_proj_axis(space).asarray()
     >>> print(np.sum(phan, 0))
