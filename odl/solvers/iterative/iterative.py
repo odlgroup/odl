@@ -58,7 +58,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
     where :math:`\partial \mathcal{A}(x)` is the Frechet derivativ
     of :math:`\mathcal{A}` at :math:`x` and :math:`\omega` is a
     relaxation parameter. For linear problems, a choice
-    :math:`0 < \omega < 2/\\lVert \mathcal{A}\\rVert` guarantees
+    :math:`0 < \omega < 2/\\lVert \mathcal{A}^2\\rVert` guarantees
     convergence, where :math:`\\lVert\mathcal{A}\\rVert` stands for the
     operator norm of :math:`\mathcal{A}`.
 
