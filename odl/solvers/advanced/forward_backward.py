@@ -91,8 +91,9 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
         \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x) + h(x),
 
-     where :math:`L_i` are linear functionals and the infimal convolution
-     :math:`g \Box l` is defined by
+    where :math:`f`, :math:`g_i`, :math:`l_i` and :math:`h` are functionals and
+    :math:`L_i` are linear operators. The infimal convolution :math:`g \Box l`
+    is defined by
 
      .. math::
 
@@ -116,8 +117,8 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     are the zero functionals, and hence the corresponding gradients are the
     zero operators.
 
-    To guarantee convergence, the parameters ``tau``, ``sigma`` and
-    ``L`` need to satisfy
+    To guarantee convergence, the parameters :math:`\\tau`, :math:`\\sigma` and
+    :math:`L_i` need to satisfy
 
     .. math::
 
@@ -128,6 +129,15 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     where, if the simpler problem is considered, all :math:`\\nu_i` can be
     considered to be :math:`\\infty`.
 
+    See Also
+    --------
+    chambolle_pock_solver : Solver for similar problems.
+    douglas_rachford_pd : Solver for similar problems but can additionaly
+                          handle infimal convolutions and multiple forward
+                          operators.
+
+    References
+    ----------
     For reference on the forward-backward primal-dual algorithm, see [BC2015]_.
 
     For more on convex analysis including convex conjugates and
