@@ -53,8 +53,11 @@ class OperatorTest(object):
             can be estimated otherwise.
         """
         self.operator = operator
-        self.operator_norm = operator_norm
-        self.verbose = True
+        if operator_norm is None:
+            self.operator_norm = self._opnorm_est(self.operator.domain.one())
+        else:
+            self.operator_norm = float(operator_norm)
+        self.verbose = bool(verbose)
 
     def norm(self):
         """Estimate the operator norm of the operator.
@@ -79,15 +82,18 @@ class OperatorTest(object):
 
         operator_norm = 0.0
         for _, x in samples(self.operator.domain):
-            result = self.operator(x)
-            x_norm = x.norm()
-            estimate = 0 if x_norm == 0 else result.norm() / x_norm
-
-            operator_norm = max(operator_norm, estimate)
+            operator_norm = max(operator_norm, self._opnorm_est(x))
 
         print('Norm is at least: {}'.format(operator_norm))
         self.operator_norm = operator_norm
         return operator_norm
+
+    def _opnorm_est(self, elem):
+        """Helper to calcualte an operator norm estimate."""
+        elem_norm = elem.norm()
+        op_result = self.operator(elem)
+        estimate = 0 if elem_norm == 0 else op_result.norm() / elem_norm
+        return estimate
 
     def self_adjoint(self):
         """Verify (Ax, y) = (x, Ay)."""
@@ -206,7 +212,7 @@ class OperatorTest(object):
             domain_range_ok = False
 
         if domain_range_ok:
-            print('Domain and range of adjoint is OK.')
+            print('Domain and range of adjoint are OK.')
         else:
             print('Domain and range of adjoint not OK exiting.')
             return
