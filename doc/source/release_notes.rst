@@ -13,6 +13,10 @@ New features
 ------------
 - Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
 
+Improvements
+------------
+- Add intelligence to ``power_method_opnorm`` so it can terminate early by checking if consecutive iterates are close. (:pull:`527`)
+
 Changes
 --------
 - Changed definition of ``LinearSpaceVector.multiply`` to match the definition used by numpy (:pull:`509`)
@@ -305,5 +309,3 @@ First official release.
 .. _Fourier Transform: https://en.wikipedia.org/wiki/Fourier_transform
 .. _Numpy's FFTPACK based transform: http://docs.scipy.org/doc/numpy/reference/routines.fft.html
 .. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
-
-.. include:: prs.inc

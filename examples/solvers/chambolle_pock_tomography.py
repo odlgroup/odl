@@ -102,7 +102,7 @@ proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op, 6)
+op_norm = 1.1 * odl.power_method_opnorm(op, rtol=0.01)
 
 niter = 400  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
