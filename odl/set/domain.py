@@ -32,7 +32,7 @@ from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid)
 
 
-__all__ = ('IntervalProd', 'Interval', 'Rectangle', 'Cuboid')
+__all__ = ('IntervalProd',)
 
 
 class IntervalProd(Set):
@@ -504,9 +504,9 @@ class IntervalProd(Set):
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]
         >>> rbox = IntervalProd(min_pt, max_pt)
         >>> rbox.collapse(1, 0)
-        Cuboid([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
+        IntervalProd([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
-        Cuboid([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
+        IntervalProd([-1.0, 0.0, 2.5], [-0.5, 0.0, 2.5])
         """
         indices = np.atleast_1d(indices).astype('int64', casting='safe')
         values = np.atleast_1d(values)
@@ -553,9 +553,9 @@ class IntervalProd(Set):
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]
         >>> rbox = IntervalProd(min_pt, max_pt)
         >>> rbox.collapse(1, 0).squeeze()
-        Rectangle([-1.0, 2.0], [-0.5, 3.0])
+        IntervalProd([-1.0, 2.0], [-0.5, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5]).squeeze()
-        Interval(-1.0, -0.5)
+        IntervalProd(-1.0, -0.5)
         >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
         IntervalProd([], [])
         """
@@ -632,8 +632,8 @@ class IntervalProd(Set):
         Examples
         --------
         >>> rbox = IntervalProd([-1, 2], [-0.5, 3])
-        >>> rbox.append(Interval(-1.0, 0.0))
-        Cuboid([-1.0, 2.0, -1.0], [-0.5, 3.0, 0.0])
+        >>> rbox.append(IntervalProd(-1.0, 0.0))
+        IntervalProd([-1.0, 2.0, -1.0], [-0.5, 3.0, 0.0])
 
         See Also
         --------
@@ -716,19 +716,19 @@ class IntervalProd(Set):
         Indexing by integer selects single axes:
 
         >>> rbox[0]
-        Interval(-1.0, -0.5)
+        IntervalProd(-1.0, -0.5)
 
         With slices, multiple axes can be selected:
 
         >>> rbox[:]
-        Cuboid([-1.0, 2.0, 0.0], [-0.5, 3.0, 0.5])
+        IntervalProd([-1.0, 2.0, 0.0], [-0.5, 3.0, 0.5])
         >>> rbox[::2]
-        Rectangle([-1.0, 0.0], [-0.5, 0.5])
+        IntervalProd([-1.0, 0.0], [-0.5, 0.5])
 
         A list of integers can be used for free combinations of axes:
 
         >>> rbox[[0, 1, 0]]
-        Cuboid([-1.0, 2.0, -1.0], [-0.5, 3.0, -0.5])
+        IntervalProd([-1.0, 2.0, -1.0], [-0.5, 3.0, -0.5])
         """
         return IntervalProd(self.min_pt[indices], self.max_pt[indices])
 
@@ -807,14 +807,9 @@ class IntervalProd(Set):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.ndim == 1:
-            return 'Interval({!r}, {!r})'.format(self.min_pt[0],
-                                                 self.max_pt[0])
-        elif self.ndim == 2:
-            return 'Rectangle({!r}, {!r})'.format(list(self.min_pt),
-                                                  list(self.max_pt))
-        elif self.ndim == 3:
-            return 'Cuboid({!r}, {!r})'.format(list(self.min_pt),
-                                               list(self.max_pt))
+            return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                           self.min_pt[0],
+                                           self.max_pt[0])
         else:
             return '{}({}, {})'.format(self.__class__.__name__,
                                        array1d_repr(self.min_pt),

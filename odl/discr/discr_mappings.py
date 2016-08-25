@@ -236,14 +236,14 @@ vectorization_guide.html>`_ for a detailed introduction.
         Define a set of functions from the rectangle [1, 3] x [2, 5]
         to the real numbers:
 
-        >>> from odl import FunctionSpace, Rectangle
-        >>> rect = Rectangle([1, 3], [2, 5])
+        >>> from odl import FunctionSpace, IntervalProd
+        >>> rect = IntervalProd([1, 3], [2, 5])
         >>> funcset = FunctionSpace(rect)
 
         Partition the rectangle by a tensor grid:
 
         >>> import odl
-        >>> rect = odl.Rectangle([1, 3], [2, 5])
+        >>> rect = odl.IntervalProd([1, 3], [2, 5])
         >>> grid = odl.TensorGrid([1, 2], [3, 4, 5])
         >>> partition = odl.RectPartition(rect, grid)
         >>> rn = odl.rn(grid.size)
@@ -399,8 +399,8 @@ class NearestInterpolation(FunctionSetMapping):
         data type in 2d:
 
         >>> import numpy as np
-        >>> from odl import Rectangle, Strings, FunctionSet
-        >>> rect = Rectangle([0, 0], [1, 1])
+        >>> from odl import IntervalProd, Strings, FunctionSet
+        >>> rect = IntervalProd([0, 0], [1, 1])
         >>> strings = Strings(1)  # 1-char strings
         >>> space = FunctionSet(rect, strings)
 

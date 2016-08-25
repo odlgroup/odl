@@ -24,7 +24,7 @@ import timeit
 
 def performace_example():
     # Create a space of functions on the interval [0, 1].
-    fspace = odl.FunctionSpace(odl.Interval(0, 1))
+    fspace = odl.FunctionSpace(odl.IntervalProd(0, 1))
 
     # Simple function, already supports vectorization.
     f_vec = fspace.element(lambda x: x ** 2)
@@ -85,7 +85,7 @@ def numba_example():
 
     # Create (continuous) functions in the space of function defined
     # on the rectangle [0, 1] x [0, 1].
-    fspace = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    fspace = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
     f_default = fspace.element(myfunc, vectorized=False)
     f_numba = fspace.element(myfunc_vec)
     f_native = fspace.element(myfunc_native_vec, vectorized=True)

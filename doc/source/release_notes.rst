@@ -31,6 +31,9 @@ Changes
 - Expose ``ellipse_phantom`` and ``shepp_logan_ellipses`` to ``odl.phantom``. (:pull:`529`)
 - Unify the names of minimum (``min_pt``), maximum (``max_pt``) and middle (``mid_pt``) points as well as number of points (``shape``) in grids, interval products and factory functions for discretized spaces. (:pull:`541`)
 - Removed ``simple_operator`` since it was never used and did not follow the ODL style. (:pull:`543`)
+  The parameter ``padding_value`` is now called ``pad_const``.
+- Removed ``Interval``, ``Rectangle`` and ``Cuboid`` since they were confusing (Capitalized name but not a Cunction) and
+  barely ever used. Users should instead use ``IntervalProd`` in all cases. (:pull:537)
 
 Bugfixes
 --------
