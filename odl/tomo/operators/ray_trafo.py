@@ -66,6 +66,11 @@ class RayTransform(Operator):
             Interpolation type for the discretization of the operator
             range.
             Default: 'nearest'
+
+        Notes
+        -----
+        The ASTRA backend is faster if data is given with ``dtype`` 'float32'
+        and storage order 'C'. Otherwise copies will be needed.
         """
         if not isinstance(discr_domain, DiscreteLp):
             raise TypeError('`discr_domain` {!r} is not a `DiscreteLp`'
@@ -87,9 +92,6 @@ class RayTransform(Operator):
                 raise ValueError("'astra' back-end not available")
             if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
                 raise ValueError("'astra_cuda' back-end not available")
-            if discr_domain.dspace.dtype not in (np.float32, np.complex64):
-                raise ValueError('ASTRA support is limited to `float32` for '
-                                 'real and `complex64` for complex data')
             if not np.allclose(discr_domain.partition.cell_sides[1:],
                                discr_domain.partition.cell_sides[:-1]):
                 raise ValueError('ASTRA does not support different voxel '
@@ -244,9 +246,6 @@ class RayBackProjection(Operator):
                 raise ValueError("'astra' backend not available")
             if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
                 raise ValueError("'astra_cuda' backend not available")
-            if discr_range.dspace.dtype not in (np.float32, np.complex64):
-                raise ValueError('ASTRA support is limited to `float32` for '
-                                 'real and `complex64` for complex data')
             if not np.allclose(discr_range.partition.cell_sides[1:],
                                discr_range.partition.cell_sides[:-1]):
                 raise ValueError('ASTRA does not support different voxel '

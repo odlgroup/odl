@@ -33,6 +33,13 @@ from odl.util.testutils import skip_if_no_largescale
 from odl.tomo.util.testutils import (skip_if_no_astra, skip_if_no_astra_cuda,
                                      skip_if_no_scikit)
 
+
+@pytest.fixture(scope="module", params=['float32', 'float64'],
+                ids=[' dtype=float32 ', ' dtype=float64 '])
+def dtype(request):
+    return request.param
+
+
 # Find the valid projectors
 projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra('par2d astra_cpu nonuniform'),
@@ -66,7 +73,7 @@ projectors = [pytest.mark.skipif(p.args[0] + largescale, p.args[1])
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
-def projector(request):
+def projector(request, dtype):
 
     n_angles = 200
 
@@ -95,7 +102,7 @@ def projector(request):
     if geom == 'par2d':
         # Discrete reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                             [100, 100], dtype='float32')
+                                             [100, 100], dtype=dtype)
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 200)
@@ -108,7 +115,7 @@ def projector(request):
     elif geom == 'par3d':
         # Discrete reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                                             [100, 100, 100], dtype='float32')
+                                             [100, 100, 100], dtype=dtype)
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
@@ -121,7 +128,7 @@ def projector(request):
     elif geom == 'cone2d':
         # Discrete reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20], [20, 20],
-                                             [100, 100], dtype='float32')
+                                             [100, 100], dtype=dtype)
 
         # Geometry
         dpart = odl.uniform_partition(-30, 30, 200)
@@ -135,7 +142,7 @@ def projector(request):
     elif geom == 'cone3d':
         # Discrete reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, -20], [20, 20, 20],
-                                             [100, 100, 100], dtype='float32')
+                                             [100, 100, 100], dtype=dtype)
 
         # Geometry
         dpart = odl.uniform_partition([-30, -30], [30, 30], [200, 200])
@@ -149,7 +156,7 @@ def projector(request):
     elif geom == 'helical':
         # Discrete reconstruction space
         discr_reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
-                                             [100, 100, 100], dtype='float32')
+                                             [100, 100, 100], dtype=dtype)
 
         # Geometry
         # TODO: angles
