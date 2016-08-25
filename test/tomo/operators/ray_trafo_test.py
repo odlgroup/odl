@@ -42,6 +42,7 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra('cone2d astra_cpu nonuniform'),
               skip_if_no_astra('cone2d astra_cpu random'),
               skip_if_no_astra_cuda('par2d astra_cuda uniform'),
+              skip_if_no_astra_cuda('par2d astra_cuda half_uniform'),
               skip_if_no_astra_cuda('par2d astra_cuda nonuniform'),
               skip_if_no_astra_cuda('par2d astra_cuda random'),
               skip_if_no_astra_cuda('cone2d astra_cuda uniform'),
@@ -54,7 +55,8 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_astra_cuda('cone3d astra_cuda nonuniform'),
               skip_if_no_astra_cuda('cone3d astra_cuda random'),
               skip_if_no_astra_cuda('helical astra_cuda uniform'),
-              skip_if_no_scikit('par2d scikit uniform')]
+              skip_if_no_scikit('par2d scikit uniform'),
+              skip_if_no_scikit('par2d scikit half_uniform')]
 
 projector_ids = ['geom={}, impl={}, angles={}'
                  ''.format(*p.args[1].split()) for p in projectors]
@@ -70,6 +72,8 @@ def projector(request):
 
     if angle == 'uniform':
         apart = odl.uniform_partition(0, 2 * np.pi, n_angles)
+    elif angle == 'half_uniform':
+        apart = odl.uniform_partition(0, np.pi, n_angles)
     elif angle == 'random':
         # Linearly spaced with random noise
         min_pt = 2 * (2.0 * np.pi) / n_angles
