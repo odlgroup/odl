@@ -26,6 +26,7 @@ from builtins import object
 import numpy as np
 
 from odl.diagnostics.examples import samples
+from odl.operator import power_method_opnorm
 from odl.util.testutils import FailCounter
 
 
@@ -53,10 +54,12 @@ class OperatorTest(object):
             can be estimated otherwise.
         """
         self.operator = operator
+        self.verbose = False
         if operator_norm is None:
-            self.operator_norm = self._opnorm_est(self.operator.domain.one())
+            self.operator_norm = self.norm()
         else:
             self.operator_norm = float(operator_norm)
+
         self.verbose = bool(verbose)
 
     def norm(self):
@@ -78,22 +81,18 @@ class OperatorTest(object):
         Wikipedia article on `Operator norm
         <https://en.wikipedia.org/wiki/Operator_norm>`_.
         """
-        print('\n== Calculating operator norm ==\n')
+        if self.verbose:
+            print('\n== Calculating operator norm ==\n')
 
-        operator_norm = 0.0
-        for _, x in samples(self.operator.domain):
-            operator_norm = max(operator_norm, self._opnorm_est(x))
+        operator_norm = max(power_method_opnorm(self.operator, niter=2,
+                                                xstart=x)
+                            for name, x in samples(self.operator.domain)
+                            if name != 'Zero')
 
-        print('Norm is at least: {}'.format(operator_norm))
+        if self.verbose:
+            print('Norm is at least: {}'.format(operator_norm))
         self.operator_norm = operator_norm
         return operator_norm
-
-    def _opnorm_est(self, elem):
-        """Helper to calcualte an operator norm estimate."""
-        elem_norm = elem.norm()
-        op_result = self.operator(elem)
-        estimate = 0 if elem_norm == 0 else op_result.norm() / elem_norm
-        return estimate
 
     def self_adjoint(self):
         """Verify (Ax, y) = (x, Ay)."""
@@ -102,8 +101,9 @@ class OperatorTest(object):
         left_inner_vals = []
         right_inner_vals = []
 
-        with FailCounter(name, 'error = ||(Ax, y) - (x, Ay)|| / '
-                         '||A|| ||x|| ||y||') as counter:
+        quiet = not self.verbose
+        with FailCounter(name, 'error = |(Ax, y) - (x, Ay)| / '
+                         '||A|| ||x|| ||y||', quiet=quiet) as counter:
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.range):
                 x_norm = x.norm()
@@ -123,8 +123,9 @@ class OperatorTest(object):
                 right_inner_vals.append(r_inner)
 
         scale = np.polyfit(left_inner_vals, right_inner_vals, 1)[0]
-        print('\nThe adjoint seems to be scaled according to:')
-        print('(x, Ay) / (Ax, y) = {}. Should be 1.0'.format(scale))
+        if self.verbose:
+            print('\nThe adjoint seems to be scaled according to:')
+            print('(x, Ay) / (Ax, y) = {}. Should be 1.0'.format(scale))
 
     def _adjoint_definition(self):
         """Verify (Ax, y) = (x, A^T y)."""
@@ -154,8 +155,9 @@ class OperatorTest(object):
                 right_inner_vals.append(r_inner)
 
         scale = np.polyfit(left_inner_vals, right_inner_vals, 1)[0]
-        print('\nThe adjoint seems to be scaled according to:')
-        print('(x, A^T y) / (Ax, y) = {}. Should be 1.0'.format(scale))
+        if self.verbose:
+            print('\nThe adjoint seems to be scaled according to:')
+            print('(x, A^T y) / (Ax, y) = {}. Should be 1.0'.format(scale))
 
     def _adjoint_of_adjoint(self):
         """Verify (A^*)^* = A"""
@@ -171,8 +173,9 @@ class OperatorTest(object):
 
         name = '\nVerifying the identity Ax = (A^T)^T x'
 
+        quiet = not self.verbose
         with FailCounter(name, 'error = ||Ax - (A^T)^T x|| /'
-                         '||A|| ||x||') as counter:
+                         '||A|| ||x||', quiet=quiet) as counter:
             for [name_x, x] in self.operator.domain.examples:
                 opx = self.operator(x)
                 op_adj_adj_x = self.operator.adjoint.adjoint(x)
@@ -200,7 +203,8 @@ class OperatorTest(object):
             print('Operator has no adjoint')
             return
 
-        print('\n== Verifying adjoint of operator ==\n')
+        if self.verbose:
+            print('\n== Verifying adjoint of operator ==\n')
 
         domain_range_ok = True
         if self.operator.domain != self.operator.adjoint.range:
@@ -212,7 +216,8 @@ class OperatorTest(object):
             domain_range_ok = False
 
         if domain_range_ok:
-            print('Domain and range of adjoint are OK.')
+            if self.verbose:
+                print('Domain and range of adjoint are OK.')
         else:
             print('Domain and range of adjoint not OK exiting.')
             return
@@ -223,8 +228,10 @@ class OperatorTest(object):
     def _derivative_convergence(self):
         name = 'Testing derivative is linear approximation'
 
+        quiet = not self.verbose
         with FailCounter(name, "Error = "
-                         "inf_c ||A(x+c*p)-A(x)-A'(x)(c*p)|| / c") as counter:
+                         "inf_c ||A(x+c*p)-A(x)-A'(x)(c*p)|| / c",
+                         quiet=quiet) as counter:
             for [name_x, x], [name_dx, dx] in samples(self.operator.domain,
                                                       self.operator.domain):
                 # Precompute some values
@@ -264,7 +271,8 @@ class OperatorTest(object):
         <https://en.wikipedia.org/wiki/Fr%C3%A9chet_derivative>`_.
         """
 
-        print('\n==Verifying derivative of operator ==')
+        if self.verbose:
+            print('\n==Verifying derivative of operator ==')
         try:
             deriv = self.operator.derivative(self.operator.domain.zero())
 
@@ -276,7 +284,8 @@ class OperatorTest(object):
             return
 
         if self.operator.is_linear and deriv is self.operator:
-            print('A is linear and A.derivative is A')
+            if self.verbose:
+                print('A is linear and A.derivative is A')
             return
 
         self._derivative_convergence()
@@ -285,8 +294,9 @@ class OperatorTest(object):
         name = "Calculating invariance under scaling"
 
         # Test scaling
+        quiet = not self.verbose
         with FailCounter(name, 'error = ||A(c*x)-c*A(x)|| / '
-                         '|c| ||A|| ||x||') as counter:
+                         '|c| ||A|| ||x||', quiet=quiet) as counter:
             for [name_x, x], [_, scale] in samples(self.operator.domain,
                                                    self.operator.domain.field):
                 opx = self.operator(x)
@@ -304,8 +314,9 @@ class OperatorTest(object):
         name = "Calculating invariance under addition"
 
         # Test addition
+        quiet = not self.verbose
         with FailCounter(name, 'error = ||A(x+y) - A(x) - A(y)|| / '
-                         '||A||(||x|| + ||y||)') as counter:
+                         '||A||(||x|| + ||y||)', quiet=quiet) as counter:
             for [name_x, x], [name_y, y] in samples(self.operator.domain,
                                                     self.operator.domain):
                 opx = self.operator(x)
@@ -326,24 +337,24 @@ class OperatorTest(object):
             print('Operator is not linear')
             return
 
-        if self.operator_norm is None:
-            print('Cannot do tests before norm is calculated, run test.norm() '
-                  'or give norm as a parameter')
-            return
-
-        print('\n== Verifying linearity of operator ==\n')
+        if self.verbose:
+            print('\n== Verifying linearity of operator ==\n')
 
         # Test zero gives zero
         result = self.operator(self.operator.domain.zero())
-        print("||A(0)||={:6.5f}. Should be 0.0000".format(result.norm()))
+
+        result_norm = result.norm()
+        if result_norm != 0.0:
+            print("||A(0)||={:6.5f}. Should be 0.0000".format(result_norm))
 
         self._scale_invariance()
         self._addition_invariance()
 
     def run_tests(self):
         """Run all tests on this operator."""
-        print('\n== RUNNING ALL TESTS ==')
-        print('Operator = {}'.format(self.operator))
+        if self.verbose:
+            print('\n== RUNNING ALL TESTS ==')
+            print('Operator = {}'.format(self.operator))
 
         self.norm()
 
