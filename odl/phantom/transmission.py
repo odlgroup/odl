@@ -22,14 +22,18 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from odl.phantom.phantom_utils import ellipse_phantom
+from odl.phantom.geometric import ellipse_phantom
 
 
-__all__ = ('shepp_logan',)
+__all__ = ('shepp_logan_ellipses', 'shepp_logan')
 
 
 def _shepp_logan_ellipse_2d():
-    """Return ellipse parameters for a 2d Shepp-Logan phantom."""
+    """Return ellipse parameters for a 2d Shepp-Logan phantom.
+
+    This assumes that the ellipses are contained in the square
+    [-1, -1]x[-1, -1].
+    """
     #       value  axisx  axisy     x       y  rotation
     return [[2.00, .6900, .9200, 0.0000, 0.0000, 0],
             [-.98, .6624, .8740, 0.0000, -.0184, 0],
@@ -44,7 +48,11 @@ def _shepp_logan_ellipse_2d():
 
 
 def _shepp_logan_ellipse_3d():
-    """Return ellipse parameters for a 3d Shepp-Logan phantom."""
+    """Return ellipse parameters for a 3d Shepp-Logan phantom.
+
+    This assumes that the ellipses are contained in the cube
+    [-1, -1, -1]x[1, 1, 1].
+    """
     #       value  axisx  axisy  axisz,  x        y      z    rotation
     return [[2.00, .6900, .9200, .810, 0.0000, 0.0000, 0.00, 0.0, 0, 0],
             [-.98, .6624, .8740, .780, 0.0000, -.0184, 0.00, 0.0, 0, 0],
@@ -65,8 +73,44 @@ def _modified_shepp_logan_ellipses(ellipses):
     """
     intensities = [1.0, -0.8, -0.2, -0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
 
+    assert len(ellipses) == len(intensities)
+
     for ellipse, intensity in zip(ellipses, intensities):
         ellipse[0] = intensity
+
+
+def shepp_logan_ellipses(ndim, modified=False):
+    """Ellipses for the standard `Shepp-Logan phantom`_ in 2 or 3 dimensions.
+
+    Parameters
+    ----------
+    ndim : {2, 3}
+        Dimension of the space the ellipses should be in.
+    modified : `bool`, optional
+        True if the modified Shepp-Logan phantom should be given.
+        The modified phantom has greatly amplified contrast to aid
+        visualization.
+
+    See Also
+    --------
+    ellipse_phantom : Function for creating arbitrary ellipse phantoms
+    shepp_logan : Create a phantom with these ellipses
+
+    References
+    ----------
+    .. _Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
+    """
+    if ndim == 2:
+        ellipses = _shepp_logan_ellipse_2d()
+    elif ndim == 3:
+        ellipses = _shepp_logan_ellipse_3d()
+    else:
+        raise ValueError('dimension not 2 or 3, no phantom available')
+
+    if modified:
+        _modified_shepp_logan_ellipses(ellipses)
+
+    return ellipses
 
 
 def shepp_logan(space, modified=False):
@@ -75,25 +119,22 @@ def shepp_logan(space, modified=False):
     Parameters
     ----------
     space : `DiscreteLp`
-        The 2/3 dimension space that the phantom should be created in.
+        Space in which the phantom is created, must be 2- or 3-dimensional.
     modified : `bool`, optional
         True if the modified Shepp-Logan phantom should be given.
-        The modified phantom has greatly amplified contrast to aid in
+        The modified phantom has greatly amplified contrast to aid
         visualization.
+
+    See Also
+    --------
+    shepp_logan_ellipses : Get the parameters that define this phantom
+    ellipse_phantom : Function for creating arbitrary ellipse phantoms
 
     References
     ----------
     .. Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
     """
-    if space.ndim == 2:
-        ellipses = _shepp_logan_ellipse_2d()
-    elif space.ndim == 3:
-        ellipses = _shepp_logan_ellipse_3d()
-    else:
-        raise ValueError('dimension not 2 or 3, no phantom available')
-
-    if modified:
-        _modified_shepp_logan_ellipses(ellipses)
+    ellipses = shepp_logan_ellipses(space.ndim, modified)
 
     return ellipse_phantom(space, ellipses)
 

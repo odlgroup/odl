@@ -22,7 +22,8 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from odl.phantom.phantom_utils import ellipse_phantom, cylinders_from_ellipses
+from odl.phantom.geometric import ellipse_phantom
+from odl.phantom.phantom_utils import cylinders_from_ellipses
 
 
 __all__ = ('derenzo_sources',)
