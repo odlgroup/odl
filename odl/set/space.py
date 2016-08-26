@@ -605,36 +605,37 @@ class LinearSpaceVector(object):
 
     __rdiv__ = __rtruediv__
 
-    def __ipow__(self, n):
-        """``n``-th power in-place.
+    def __ipow__(self, p):
+        """Implement ``self ** p``.
 
-        This is only defined for integer ``n``."""
-        if n < 0:
-            self **= -n
+        This is only defined for integer ``p``."""
+        p, p_in = int(p), p
+        if p != p_in:
+            raise ValueError('expected integer `p`, got {}'.format(p_in))
+        if p < 0:
+            self **= -p
             self.space.divide(self.space.one(), self, out=self)
             return self
-        elif n == 0:
+        elif p == 0:
             self.assign(self.space.one())
             return self
-        elif n == 1:
+        elif p == 1:
             return self
-        elif n % 2 == 0:
+        elif p % 2 == 0:
             self.space.multiply(self, self, out=self)
-            self **= n // 2
+            self **= p // 2
             return self
         else:
             tmp = self.copy()
-            for _ in range(n - 2):
+            for _ in range(p - 2):
                 self.space.multiply(tmp, self, out=tmp)
             self.space.multiply(tmp, self, out=self)
             return self
 
-    def __pow__(self, n):
-        """``n``-th power.
-
-        This is only defined for integer ``n``."""
+    def __pow__(self, p):
+        """Return ``self ** p``."""
         tmp = self.copy()
-        tmp **= n
+        tmp.__ipow__(p)
         return tmp
 
     def __neg__(self):
