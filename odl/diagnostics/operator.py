@@ -42,16 +42,23 @@ class OperatorTest(object):
     definition of the derivative.
     """
 
-    def __init__(self, operator, operator_norm=None, verbose=True):
+    def __init__(self, operator, operator_norm=None, verbose=True, tol=1e-5):
         """Initialize a new instance.
 
         Parameters
         ----------
         operator : `Operator`
             The operator to run tests on
-        operator_norm : `float`
-            The norm of the operator, used for error estimates
-            can be estimated otherwise.
+        operator_norm : float, optional
+            The norm of the operator, used for error estimates. If
+            ``None`` is given, the norm is estimated during
+            initialization.
+        verbose : bool, optional
+            If ``True``, print additional info text.
+        tol : float, optional
+            Tolerance parameter used as a base for the actual tolerance
+            in the tests. Depending on the expected accuracy, the actual
+            tolerance used in a test can be a factor times this number.
         """
         self.operator = operator
         self.verbose = False
@@ -61,6 +68,7 @@ class OperatorTest(object):
             self.operator_norm = float(operator_norm)
 
         self.verbose = bool(verbose)
+        self.tol = float(tol)
 
     def log(self, message):
         """Print message if ``self.verbose == True``."""
@@ -118,8 +126,7 @@ class OperatorTest(object):
                 denom = self.operator_norm * x_norm * y_norm
                 error = 0 if denom == 0 else abs(l_inner - r_inner) / denom
 
-                # TODO: allow specification of tolerance
-                if error > 0.00001:
+                if error > self.tol:
                     counter.fail('x={:25s} y={:25s} : error={:6.5f}'
                                  ''.format(name_x, name_y, error))
 
@@ -151,8 +158,7 @@ class OperatorTest(object):
                 denom = self.operator_norm * x_norm * y_norm
                 error = 0 if denom == 0 else abs(l_inner - r_inner) / denom
 
-                # TODO: allow specification of tolerance
-                if error > 0.00001:
+                if error > self.tol:
                     counter.fail('x={:25s} y={:25s} : error={:6.5f}'
                                  ''.format(name_x, name_y, error))
 
@@ -188,8 +194,8 @@ class OperatorTest(object):
                     error = 0
                 else:
                     error = (opx - op_adj_adj_x).norm() / denom
-                # TODO: allow specification of tolerance
-                if error > 0.00001:
+
+                if error > self.tol:
                     counter.fail('x={:25s} : error={:6.5f}'
                                  ''.format(name_x, error))
 
@@ -257,8 +263,10 @@ class OperatorTest(object):
                     expected_step = c * derivdx
                     err = (exact_step - expected_step).norm() / c
 
-                    # TODO: allow specification of tolerance
-                    if err < 1e-4:
+                    # Need to be slightly more generous here due to possible
+                    # numerical instabilities.
+                    # TODO: perform more tests to find a good threshold here.
+                    if err < 10 * self.tol:
                         derivative_ok = True
                         break
                     else:
@@ -319,8 +327,7 @@ class OperatorTest(object):
                 error = (0 if denom == 0
                          else (scaled_opx - opx * scale).norm() / denom)
 
-                # TODO: allow specification of tolerance
-                if error > 0.00001:
+                if error > self.tol:
                     counter.fail('x={:25s} scale={:7.2f} error={:6.5f}'
                                  ''.format(name_x, scale, error))
 
@@ -341,8 +348,7 @@ class OperatorTest(object):
                 error = (0 if denom == 0
                          else (opxy - opx - opy).norm() / denom)
 
-                # TODO: allow specification of tolerance
-                if error > 0.00001:
+                if error > self.tol:
                     counter.fail('x={:25s} y={:25s} error={:6.5f}'
                                  ''.format(name_x, name_y, error))
 
