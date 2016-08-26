@@ -22,6 +22,7 @@ Changes
 Bugfixes
 --------
 - Fixed ``python -c "import odl; odl.test()"`` not working on windows (:pull:`508`)
+- Fixed a ``TypeError`` being raised in ``OperatorTest`` when running ``optest.ajoint()`` without specifying an operator norm. (:pull:`525`)
 
 ODL 0.4.0 Release Notes (2016-08-17)
 ====================================
