@@ -25,6 +25,7 @@ from builtins import super
 
 import numpy as np
 import scipy as sp
+from numbers import Integral
 
 from odl.operator.operator import Operator
 from odl.space import ProductSpace
@@ -39,6 +40,12 @@ class ProductSpaceOperator(Operator):
 
     """A "matrix of operators" on product spaces.
 
+    For example a matrix of operators can act on a vector by::
+
+    ProductSpaceOperator([[A, B], [C, D]])([x, y]) = [A(x) + B(y), C(x) + D(y)]
+
+    Notes
+    -----
     This is intended for the case where an operator can be decomposed
     as a linear combination of "sub-operators", e.g.
 
@@ -83,17 +90,11 @@ class ProductSpaceOperator(Operator):
 
         :math:`[\mathcal{A}(x)]_i = \sum_{j=1}^m \mathcal{A}_{ij}(x_j)`.
 
-    Notes
-    -----
-    In many cases it is of interest to have an operator from a `ProductSpace`
-    to any `LinearSpace`. It that case this operator can be used with a slight
-    modification, simply run
-
-    ``prod_op = ProductSpaceOperator(prod_space, ProductSpace(linear_space))``
-
-    The same can be done for operators `LinearSpace` -> `ProductSpace`
-
-    ``prod_op = ProductSpaceOperator(ProductSpace(linear_space), prod_space)``
+    See Also
+    --------
+    BroadcastOperator : Case when a single argument is used by several ops.
+    ReductionOperator : Calculates sum of operator results.
+    DiagonalOperator : Case where the 'matrix' is diagonal.
     """
 
     def __init__(self, operators, domain=None, range=None):
@@ -209,9 +210,9 @@ class ProductSpaceOperator(Operator):
         Parameters
         ----------
         x : domain `element`
-            input vector to be evaluated
+            Input vector to be evaluated.
         out : range `element`, optional
-            output vector to write result to
+            Output vector to write the result to.
 
         Returns
         -------
@@ -254,6 +255,8 @@ class ProductSpaceOperator(Operator):
             [1.0, 2.0, 3.0]
         ])
         """
+        # TODO: add optimization in case an operator appears repeatedly in a
+        # row
         if out is None:
             out = self.range.zero()
             for i, j, op in zip(self.ops.row, self.ops.col, self.ops.data):
@@ -456,9 +459,9 @@ class ComponentProjection(Operator):
         Parameters
         ----------
         x : domain `element`
-            input vector to be projected
+            Input vector to be projected.
         out : range `element`, optional
-            output vector to write result to
+            Output vector to write the result to.
 
         Returns
         -------
@@ -567,9 +570,9 @@ class ComponentProjectionAdjoint(Operator):
         Parameters
         ----------
         x : domain `element`
-            Input vector to be extended
+            Input vector to be extended.
         out : range `element`, optional
-            output vector to write result to
+            Output vector to write the result to.
 
         Returns
         -------
@@ -631,13 +634,59 @@ class BroadcastOperator(Operator):
     """Broadcast argument to set of operators.
 
     An argument is broadcast by evaluating several operators in the same
-    point
+    point::
 
-        ``BroadcastOperator(op1, op2)(x) = [op1(x), op2(x)]``
+        BroadcastOperator(op1, op2)(x) = [op1(x), op2(x)]
 
-    It is implemented using a `ProductSpaceOperator`.
+    See Also
+    --------
+    ProductSpaceOperator : More general case, used as backend.
+    ReductionOperator : Calculates sum of operator results.
+    DiagonalOperator : Case where each operator should have its own argument.
     """
     def __init__(self, *operators):
+        """Initialize a new instance
+
+        Parameters
+        ----------
+        operator1,...,operatorN : `Operator` or `int`
+            The individual operators that should be evaluated.
+            Can also be given as ``operator, n`` with ``n`` integer,
+            in which case ``operator`` is repeated ``n`` times.
+
+        Examples
+        --------
+        Initialize an operator:
+
+        >>> import odl
+        >>> I = odl.IdentityOperator(odl.rn(3))
+        >>> op = BroadcastOperator(I, 2 * I)
+        >>> op.domain
+        rn(3)
+        >>> op.range
+        ProductSpace(rn(3), 2)
+
+        Evaluate the operator:
+
+        >>> x = [1, 2, 3]
+        >>> op(x)
+        ProductSpace(rn(3), 2).element([
+            [1.0, 2.0, 3.0],
+            [2.0, 4.0, 6.0]
+        ])
+
+        Can also initialize by calling an operator repeatedly:
+
+        >>> I = odl.IdentityOperator(odl.rn(3))
+        >>> op = BroadcastOperator(I, 2)
+        >>> op.operators
+        (IdentityOperator(rn(3)), IdentityOperator(rn(3)))
+        """
+        if (len(operators) == 2 and
+                isinstance(operators[0], Operator) and
+                isinstance(operators[1], Integral)):
+            operators = (operators[0],) * operators[1]
+
         self.__operators = operators
         self.__prod_op = ProductSpaceOperator([[op] for op in operators])
 
@@ -665,26 +714,14 @@ class BroadcastOperator(Operator):
         Parameters
         ----------
         x : domain element
-            Input vector to be evaluated by operators
+            Input vector to be evaluated by operators.
         out : range element, optional
-            output vector to write result to
+            Output vector to write the result to.
 
         Returns
         -------
         out : range element
             Values of operators evaluated in point
-
-        Examples
-        --------
-        >>> import odl
-        >>> I = odl.IdentityOperator(odl.rn(3))
-        >>> op = BroadcastOperator(I, 2 * I)
-        >>> x = [1, 2, 3]
-        >>> op(x)
-        ProductSpace(rn(3), 2).element([
-            [1.0, 2.0, 3.0],
-            [2.0, 4.0, 6.0]
-        ])
         """
         wrapped_x = self.prod_op.domain.element([x], cast=False)
         return self.prod_op(wrapped_x, out=out)
@@ -755,13 +792,53 @@ class ReductionOperator(Operator):
     """Reduce argument over set of operators.
 
     An argument is reduced by evaluating several operators and summing the
-    result
+    result::
 
-        ``ReductionOperator(op1, op2)(x) = op1(x[0]) + op2(x[1])``
+        ReductionOperator(op1, op2)(x) = op1(x[0]) + op2(x[1])
 
-    It is implemented using a `ProductSpaceOperator`.
+    See Also
+    --------
+    ProductSpaceOperator : More general case, used as backend.
+    BroadcastOperator : Calls several operators with same argument.
+    DiagonalOperator : Case where each operator should have its own argument.
     """
     def __init__(self, *operators):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        operator1,...,operatorN : `Operator` or `int`
+            The individual operators that should be evaluated and summed.
+            Can also be given as ``operator, n`` with ``n`` integer,
+            in which case ``operator`` is repeated ``n`` times.
+
+        Examples
+        --------
+        >>> import odl
+        >>> I = odl.IdentityOperator(odl.rn(3))
+        >>> op = ReductionOperator(I, 2 * I)
+        >>> op.domain
+        ProductSpace(rn(3), 2)
+        >>> op.range
+        rn(3)
+
+        Evaluating in a point gives sum:
+
+        >>> op([[1.0, 2.0, 3.0],
+        ...     [4.0, 6.0, 8.0]])
+        rn(3).element([9.0, 14.0, 19.0])
+
+        Can also be created using a multiple of a single operator:
+
+        >>> op = ReductionOperator(I, 2)
+        >>> op.operators
+        (IdentityOperator(rn(3)), IdentityOperator(rn(3)))
+        """
+        if (len(operators) == 2 and
+                isinstance(operators[0], Operator) and
+                isinstance(operators[1], Integral)):
+            operators = (operators[0],) * operators[1]
+
         self.__operators = operators
         self.__prod_op = ProductSpaceOperator([operators])
 
@@ -776,7 +853,7 @@ class ReductionOperator(Operator):
 
     @property
     def operators(self):
-        """A tuple of sub-operators."""
+        """`tuple` of sub-operators."""
         return self.__operators
 
     def __getitem__(self, index):
@@ -788,31 +865,23 @@ class ReductionOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
-            Input vector that should be used in the reduction
-        out : range element, optional
-            output vector to write result to
+        x : `domain` element
+            Input vector that should be used in the reduction.
+        out : `range` element, optional
+            Output vector to write the result to.
 
 
         Parameters
         ----------
         x : domain element
-            Input vector to be evaluated by operators
+            Input vector to be evaluated by operators.
         out : range element, optional
-            output vector to write result to
+            Output vector to write the result to.
 
         Returns
         -------
         out : range element
-            Sum of operators evaluated in point
-
-        Examples
-        --------
-        >>> import odl
-        >>> I = odl.IdentityOperator(odl.rn(3))
-        >>> op = ReductionOperator(I, 2 * I)
-        >>> op([[1.0, 2.0, 3.0], [4.0, 6.0, 8.0]])
-        rn(3).element([9.0, 14.0, 19.0])
+            Sum of operators evaluated in ``x``.
         """
         if out is None:
             return self.prod_op(x)[0]
@@ -825,21 +894,20 @@ class ReductionOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
-            The point to take the derivative in
+        x : `domain` element
+            The point to take the derivative in.
 
         Returns
         -------
-        adjoint : linear `BroadcastOperator`
-            The derivative
+        derivative : linear `BroadcastOperator`
 
         Examples
         --------
         >>> import odl
         >>> r3 = odl.rn(3)
         >>> I = odl.IdentityOperator(r3)
-        >>> x = r3.element([1.0, 2.0, 3.0])
-        >>> y = r3.element([4.0, 6.0, 8.0])
+        >>> x = [1.0, 2.0, 3.0]
+        >>> y = [4.0, 6.0, 8.0]
 
         Example with linear operator (derivative is itself)
 
@@ -890,13 +958,23 @@ class ReductionOperator(Operator):
 
 
 class DiagonalOperator(ProductSpaceOperator):
-    """Diagonal 'matrix' of operators
+    """Diagonal 'matrix' of operators.
 
-    For example, if A and B are operators
+    For example, if A and B are operators the DiagonalOperator can be seen as a
+    matrix of operators::
 
         [[A, 0],
          [0, B]]
 
+    When evaluated it gives::
+
+         DiagonalOperator(op1, op2)(x) = [op1(x), op2(x)]
+
+    See Also
+    --------
+    ProductSpaceOperator : Case when the 'matrix' is full.
+    BroadcastOperator : Case when a single argument is used by several ops.
+    ReductionOperator : Calculates sum of operator results.
     """
 
     def __init__(self, *operators, **kwargs):
@@ -904,14 +982,45 @@ class DiagonalOperator(ProductSpaceOperator):
 
         Parameters
         ----------
-        operators : sequence of `Operator`'s
-            The operators along the diagonal.
+        operator1,...,operatorN : `Operator` or `int`
+            The individual operators in the diagonal.
+            Can also be given as ``operator, n`` with ``n`` integer,
+            in which case the diagonal operator with ``n`` multiples of
+            ``operator`` is created.
+        kwargs :
+            Keyword arguments passed to the `ProductSpaceOperator` backend.
 
-
-        See Also
+        Examples
         --------
-        ProductSpaceOperator.__init__
+        >>> import odl
+        >>> I = odl.IdentityOperator(odl.rn(3))
+        >>> op = DiagonalOperator(I, 2 * I)
+        >>> op.domain
+        ProductSpace(rn(3), 2)
+        >>> op.range
+        ProductSpace(rn(3), 2)
+
+        Evaluation is distributed so each argument is given to one operator.
+        The argument order is the same as the order of the operators:
+
+        >>> op([[1, 2, 3],
+        ...     [4, 5, 6]])
+        ProductSpace(rn(3), 2).element([
+            [1.0, 2.0, 3.0],
+            [8.0, 10.0, 12.0]
+        ])
+
+        Can also be created using a multiple of a single operator
+
+        >>> op = DiagonalOperator(I, 2)
+        >>> op.operators
+        (IdentityOperator(rn(3)), IdentityOperator(rn(3)))
         """
+        if (len(operators) == 2 and
+                isinstance(operators[0], Operator) and
+                isinstance(operators[1], Integral)):
+            operators = (operators[0],) * operators[1]
+
         indices = [range(len(operators)), range(len(operators))]
         shape = (len(operators), len(operators))
         op_matrix = sp.sparse.coo_matrix((operators, indices), shape)
@@ -968,12 +1077,12 @@ class DiagonalOperator(ProductSpaceOperator):
     def adjoint(self):
         """Adjoint of this operator.
 
-        For example, if A and B are operators
+        For example, if A and B are operators::
 
             [[A, 0],
              [0, B]]
 
-        The adjoint is given by:
+        The adjoint is given by::
 
             [[A^*, 0],
              [0, B^*]]
@@ -997,12 +1106,12 @@ class DiagonalOperator(ProductSpaceOperator):
     def inverse(self):
         """Inverse of this operator.
 
-        For example, if A and B are operators
+        For example, if A and B are operators::
 
             [[A, 0],
              [0, B]]
 
-        The inverse is given by:
+        The inverse is given by::
 
             [[A^-1, 0],
              [0, B^-1]]
