@@ -298,12 +298,12 @@ class FailCounter(object):
     ``*** FAILED 1 TEST CASE(S) ***``
     """
 
-    def __init__(self, test_name, err_msg=None, verbose=True):
+    def __init__(self, test_name, err_msg=None, logger=print):
         self.num_failed = 0
         self.test_name = test_name
         self.err_msg = err_msg
         self.fail_strings = []
-        self.verbose = bool(verbose)
+        self.log = logger
 
     def __enter__(self):
         return self
@@ -318,9 +318,8 @@ class FailCounter(object):
 
     def __exit__(self, type, value, traceback):
         if self.num_failed == 0:
-            if self.verbose:
-                print('{:<70}: Completed all test cases.'
-                      ''.format(self.test_name))
+            self.log('{:<70}: Completed all test cases.'
+                     ''.format(self.test_name))
         else:
             print(self.test_name)
 
