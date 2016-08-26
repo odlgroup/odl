@@ -867,6 +867,38 @@ def test_reduction(fn_impl, reduction):
     assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
 
 
+powers = [1.0, 2.0, 0.5, -0.5, -1.0, -2.0]
+power_ids = [' power = {} '.format(p) for p in powers]
+
+
+@pytest.fixture(scope='module', ids=power_ids, params=powers)
+def power(request):
+    return request.param
+
+
+def test_power(fn_impl, power):
+    space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=fn_impl)
+
+    x_arr, x = example_vectors(space, 1)
+    if int(power) != power:
+        # Make input positive to get real result
+        x_arr = np.abs(x_arr) + 0.1
+        x = np.abs(x) + 0.1
+
+    true_pow = np.power(x_arr, power)
+
+    if int(power) != power and fn_impl == 'cuda':
+        with pytest.raises(ValueError):
+            x ** power
+        with pytest.raises(ValueError):
+            x **= power
+    else:
+        assert all_almost_equal(x ** power, true_pow)
+
+        x **= power
+        assert all_almost_equal(x, true_pow)
+
+
 def test_norm_interval(exponent):
     # Test the function f(x) = x^2 on the interval (0, 1). Its
     # L^p-norm is (1 + 2*p)^(-1/p) for finite p and 1 for p=inf

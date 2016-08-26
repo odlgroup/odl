@@ -397,12 +397,11 @@ class PowerOperator(Operator):
 
     """Power of a vector or scalar.
 
-    ``MultiplyOperator(n)(x) <==> x ** n``
+    ``PowerOperator(p)(x) <==> x ** p``
 
-    Here, ``x`` is a `LinearSpaceVector` or `Field` element and
-    ``y`` is a number.
-    Hence, this operator can be defined either on a `LinearSpace` or on
-    a `Field`.
+    Here, ``x`` is a `LinearSpaceVector` or `Field` element and ``p`` is
+    a number. Hence, this operator can be defined either on a
+    `LinearSpace` or on a `Field`.
     """
 
     def __init__(self, domain, exponent):
@@ -410,10 +409,10 @@ class PowerOperator(Operator):
 
         Parameters
         ----------
-        exponent : Number
-            Power to take.
         domain : `LinearSpace` or `Field`, optional
-            Set to take values in.
+            Set of elements on which the operator can be applied.
+        exponent : float
+            Exponent parameter of the power function applied to an element.
         """
 
         self.__exponent = float(exponent)

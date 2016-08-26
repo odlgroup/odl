@@ -543,6 +543,13 @@ class DiscretizedSpaceVector(DiscretizedSetVector, FnBaseVector):
         assert isinstance(space, DiscretizedSpace)
         DiscretizedSetVector.__init__(self, space, data)
 
+    def __ipow__(self, p):
+        """Implement ``self **= p``."""
+        # Falls back to `LinearSpaceVector.__ipow__` if `self.ntuple`
+        # has no own `__ipow__`. The fallback only works for integer `p`.
+        self.ntuple.__ipow__(p)
+        return self
+
 
 def dspace_type(space, impl, dtype=None):
     """Select the correct corresponding n-tuples space.
