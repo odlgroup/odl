@@ -880,23 +880,32 @@ def test_power(fn_impl, power):
     space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=fn_impl)
 
     x_arr, x = example_vectors(space, 1)
+    x_pos_arr = np.abs(x_arr)
+    x_neg_arr = -x_pos_arr
+    x_pos = np.abs(x)
+    x_neg = -x_pos
+
     if int(power) != power:
         # Make input positive to get real result
-        x_arr = np.abs(x_arr) + 0.1
-        x = np.abs(x) + 0.1
+        for y in [x_pos_arr, x_neg_arr, x_pos, x_neg]:
+            y += 0.1
 
-    true_pow = np.power(x_arr, power)
+    true_pos_pow = np.power(x_pos_arr, power)
+    true_neg_pow = np.power(x_neg_arr, power)
 
     if int(power) != power and fn_impl == 'cuda':
         with pytest.raises(ValueError):
-            x ** power
+            x_pos ** power
         with pytest.raises(ValueError):
-            x **= power
+            x_pos **= power
     else:
-        assert all_almost_equal(x ** power, true_pow)
+        assert all_almost_equal(x_pos ** power, true_pos_pow)
+        assert all_almost_equal(x_neg ** power, true_neg_pow)
 
-        x **= power
-        assert all_almost_equal(x, true_pow)
+        x_pos **= power
+        x_neg **= power
+        assert all_almost_equal(x_pos, true_pos_pow)
+        assert all_almost_equal(x_neg, true_neg_pow)
 
 
 def test_norm_interval(exponent):
