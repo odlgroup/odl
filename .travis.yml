@@ -2,13 +2,12 @@ language: python
 python:
   - "2.7"
   - "3.5"
-  
+
 # Setup numpy + scipy using miniconda
 # See http://conda.pydata.org/docs/travis.html
 install:
   - sudo apt-get update
-  # We do this conditionally because it saves us some downloading if the
-  # version is the same.
+  # We do this conditionally because it saves us some downloading if the version is the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
     else
@@ -22,16 +21,30 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  # Install dependencies, use python 2.7 to test our lower requirements still hold, python3 does not work with scipy 0.14
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION libgfortran numpy scipy matplotlib
+  # Install dependencies and our package
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib
   - source activate test-environment
   - pip install -e .
+
+  # Sphinx doc integration
+  - pip install --user travis-sphinx
+
 before_script:
   - pip install -r test_requirements.txt
-  
-# command to run tests
-script: 
+
+script:
+  # Run tests, producing a coverage report and
   - py.test --doctest-modules --cov --cov-report term-missing --pep8
-  
+  # Build the Sphinx doc
+  - travis-sphinx build
+
 after_success:
+  # Push coverage report to coveralls
   - coveralls
+  # Deploy the Sphinx doc to gh-pages if the push was to the master branch (and not a PR)
+  #- if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then
+  #      travis-sphinx deploy
+  #  fi
+
+  # FOR TESTING, REMOVE WHEN DONE
+  - travis-sphinx deploy
