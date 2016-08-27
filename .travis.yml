@@ -45,8 +45,10 @@ script:
   # Run tests, including PEP8 check, and produce a coverage report
   - py.test --doctest-modules --cov --cov-report term-missing --pep8
   # Build the Sphinx doc
-  - cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -
-  - travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
+      cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -;
+      travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build;
+    fi
 
 after_success:
   # Push coverage report to coveralls
