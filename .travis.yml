@@ -22,7 +22,7 @@ install:
   - conda info -a
 
   # Install dependencies and our package
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy nomkl
   - source activate test-environment
   - pip install -e .
 
