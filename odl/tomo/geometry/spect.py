@@ -39,6 +39,7 @@ class ParallelHoleCollimatorGeometry(Parallel3dAxisGeometry):
     def __init__(self, apart, dpart, det_rad, axis=[0, 0, 1],
                  **kwargs):
         """Initialize a new instance.
+
         Parameters
         ----------
         apart : 1-dim. `RectPartition`

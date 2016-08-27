@@ -7,7 +7,13 @@ python:
 # See http://conda.pydata.org/docs/travis.html
 install:
   - sudo apt-get update
-  # We do this conditionally because it saves us some downloading if the version is the same.
+
+  # Install LaTeX to render the math formulas in the docs
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" ]]; then
+      sudo apt-get install texlive-latex-base texlive-latex-recommended texlive-latex-extra dvipng;
+    fi
+
+  # Install miniconda according to Python version of the build (saves downloading if versions match)
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
     else
@@ -21,30 +27,32 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  # Install dependencies and our package
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy nomkl
+  # Install dependencies and enter test environment
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy future nomkl sphinx sphinx_rtd_theme
   - source activate test-environment
-  - pip install -e .
 
   # Sphinx doc integration
-  - pip install --user travis-sphinx
+  - pip install travis-sphinx
+
+  # Install our package
+  - pip install -e .
+
 
 before_script:
   - pip install -r test_requirements.txt
 
 script:
-  # Run tests, producing a coverage report and
+  # Run tests, including PEP8 check, and produce a coverage report
   - py.test --doctest-modules --cov --cov-report term-missing --pep8
   # Build the Sphinx doc
-  - travis-sphinx build
+  - cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -
+  - travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build
 
 after_success:
   # Push coverage report to coveralls
   - coveralls
-  # Deploy the Sphinx doc to gh-pages if the push was to the master branch (and not a PR)
-  #- if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then
-  #      travis-sphinx deploy
-  #  fi
-
-  # FOR TESTING, REMOVE WHEN DONE
-  - travis-sphinx deploy
+  # Deploy the Sphinx doc to gh-pages (only for master branch and one Python version)
+  # See https://github.com/Syntaf/travis-sphinx
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" ]]; then
+      travis-sphinx deploy;
+    fi
