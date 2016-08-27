@@ -35,10 +35,12 @@ standard_library.install_aliases()
 import os
 import imp
 import pytest
-import matplotlib
-matplotlib.use('Agg')  # To avoid the backend freezing
-import matplotlib.pyplot as plt
-
+try:
+    import matplotlib
+    matplotlib.use('Agg')  # To avoid the backend freezing
+    import matplotlib.pyplot as plt
+except ImportError:
+    pass
 
 # Make a fixture for all examples
 this_file_path = os.path.dirname(os.path.abspath(__file__))
