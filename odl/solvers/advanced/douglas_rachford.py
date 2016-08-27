@@ -51,29 +51,29 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     ----------
     x : `LinearSpaceElement`
         Initial point, updated in-place.
-    prox_f : `callable`
+    prox_f : callable
         `proximal factory` for the function ``f``.
-    prox_cc_g : `sequence` of `callable`'s
+    prox_cc_g : sequence of callable
         Sequence of `proximal factory` for the convex conjuates of the
         functions ``g_i``.
-    L : `sequence` of `Operator`'s
-        Sequence of `Opeartor`s` with as many elements as ``prox_cc_gs``.
-    tau : float
+    L : sequence of `Operator`'s
+        Sequence of operators with as many elements as ``prox_cc_gs``.
+    tau : `float`
         Step size parameter for ``prox_f``.
-    sigma : `sequence` of floats
+    sigma : sequence of floats
         Step size parameters for the ``prox_cc_g``s.
     niter : int
         Number of iterations.
-    callback : `callable`, optional
+    callback : callable, optional
         Function called with the current iterate after each iteration.
 
     Other Parameters
     ----------------
-    prox_cc_l : `sequence` of `callable`'s, optional
+    prox_cc_l : sequence of callable, optional
         Sequence of `proximal factory` for the convex conjuates of the
         functions ``l_i``.
         If omitted, the simpler problem without ``l_i``  will be considered.
-    lam : float or `callable`, optional
+    lam : float or callable, optional
         Overrelaxation step size. If callable, should take an index (zero
         indexed) and return the corresponding step size.
 

@@ -41,7 +41,7 @@ def normalized_scalar_param_list(param, length, param_conv=None,
     following rules are applied:
 
     * If ``param`` is not a sequence, it is treated as a single
-    parameter (e.g. ``1``).
+      parameter (e.g. ``1``).
     * If ``len(param) == length == 1``, then ``param`` is interpreted
       as a single parameter (e.g. ``[1]`` or ``'1'``).
     * If ``len(param) == length != 1``, then ``param`` is interpreted as

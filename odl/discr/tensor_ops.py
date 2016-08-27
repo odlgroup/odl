@@ -472,7 +472,7 @@ class PointwiseInner(PointwiseInnerBase):
 
     This operator takes the (weighted) inner product
 
-        ``<F(x), G(x)> = sum_j ( w_j * F_j(x) * conj(G_j(x)) )
+        ``<F(x), G(x)> = sum_j ( w_j * F_j(x) * conj(G_j(x)) )``
 
     for a given vector field ``G``, where ``F`` is the vector field
     acting as a variable to this operator.
