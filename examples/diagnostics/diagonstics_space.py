@@ -17,11 +17,6 @@
 
 """Run the standardized diagonstics suite on some of the spaces."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import odl
 
 print('\n\n TESTING FOR Lp SPACE \n\n')
@@ -45,4 +40,4 @@ if 'cuda' in odl.FN_IMPLS:
     print('\n\n TESTING FOR CUDA rn SPACE \n\n')
 
     spc = odl.rn(10, impl='cuda')
-    odl.diagnostics.SpaceTest(spc, eps=0.0001).run_tests()
+    odl.diagnostics.SpaceTest(spc, tol=0.0001).run_tests()
