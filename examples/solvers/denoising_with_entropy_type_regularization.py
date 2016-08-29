@@ -89,7 +89,7 @@ callback = (odl.solvers.CallbackPrintIteration() &
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op, 100)
+op_norm = 1.1 * odl.power_method_opnorm(op)
 tau = 10.0 / op_norm  # Step size for the primal variable
 sigma = 0.1 / op_norm  # Step size for the dual variable
 
