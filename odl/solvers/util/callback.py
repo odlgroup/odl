@@ -44,7 +44,7 @@ class SolverCallback(object):
 
         Returns
         -------
-        `None`
+        None
         """
 
     def __and__(self, other):
@@ -120,11 +120,11 @@ class CallbackStore(SolverCallback):
 
         Parameters
         ----------
-        results : `list`, optional
+        results : list, optional
             List in which to store the iterates.
             Default: new list (``[]``)
         results : `callable`, optional
-            Function to be called on all incomming results before storage.
+            Function to be called on all incoming results before storage.
             Default: copy
 
         Examples
@@ -223,7 +223,7 @@ class CallbackPrintIteration(SolverCallback):
 
         Parameters
         ----------
-        text : `str`
+        text : string
             Text to display before the iteration count. Default: 'iter ='
         """
         self.text = text if text is not None else self._default_text
@@ -295,7 +295,7 @@ class CallbackShow(SolverCallback):
 
         Parameters
         ----------
-        display_step : positive `int`, optional
+        display_step : positive int, optional
             Number of iterations between plots. Default: 1
 
         Other Parameters

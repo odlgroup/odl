@@ -60,11 +60,11 @@ class FanFlatGeometry(DivergentBeamGeometry):
             Partition of the angle interval
         dpart : 1-dim. `RectPartition`
             Partition of the detector parameter interval
-        src_radius : nonnegative `float`
+        src_radius : nonnegative float
             Radius of the source circle
-        det_radius : nonnegative `float`
+        det_radius : nonnegative float
             Radius of the detector circle
-        src_to_det_init : `array-like`, shape ``(2,)``, optional
+        src_to_det_init : `array-like` (shape ``(2,)``), optional
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
             Default: ``(1, 0)``.
@@ -130,7 +130,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 
@@ -161,7 +161,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 
@@ -194,7 +194,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 

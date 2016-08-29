@@ -68,7 +68,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             Parameter value where to evaluate the function
 
         Returns
@@ -113,7 +113,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns
@@ -135,12 +135,12 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns
         -------
-        measure : `float`
+        measure : float
             The density value at the given parameter
 
         .. _Arc length:
@@ -168,12 +168,12 @@ class FlatDetector(Detector):
 
         Parameters
         ----------
-        param : element of `params`, optional
+        param : `params` element, optional
             Parameter value where to evaluate the function
 
         Returns
         -------
-        measure : `float`
+        measure : float
             Constant density 1.0
         """
         if param not in self.params:
@@ -234,7 +234,7 @@ class Flat1dDetector(FlatDetector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns
@@ -254,7 +254,7 @@ class Flat1dDetector(FlatDetector):
 
         Parameters
         ----------
-        param : element of `params`, optional
+        param : `params` element, optional
             The parameter value where to evaluate the function
 
         Returns
@@ -293,7 +293,7 @@ class Flat2dDetector(FlatDetector):
         part : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
             pixels
-        axes : 2-tuple of `array-like` (shape ``(3,)``)
+        axes : 2-tuple of `array-like`'s (shape ``(3,)``)
             Principal axes of the detector, e.g.
             ``[(0, 1, 0), (0, 0, 1)]``
         """
@@ -340,7 +340,7 @@ class Flat2dDetector(FlatDetector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns
@@ -360,12 +360,12 @@ class Flat2dDetector(FlatDetector):
 
         Parameters
         ----------
-        param : element of `params`, optional
+        param : `params` element, optional
             The parameter value where to evaluate the function
 
         Returns
         -------
-        derivatives : 2-tuple of `numpy.ndarray` (shape ``(3,)``)
+        derivatives : 2-tuple of `numpy.ndarray`'s (shape ``(3,)``)
             The constant partial derivatives given by the detector axes
         """
         if param is not None and param not in self.params:
@@ -404,7 +404,7 @@ class CircleSectionDetector(Detector):
         part : 1-dim. `RectPartition`
             Partition of the parameter interval, corresponding to the
             angle sections along the line
-        circ_rad : positive `float`
+        circ_rad : positive float
             Radius of the circle along which the detector is curved
         """
         super().__init__(part)
@@ -427,7 +427,7 @@ class CircleSectionDetector(Detector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
         """
         if param in self.params or self.params.contains_all(param):
@@ -442,7 +442,7 @@ class CircleSectionDetector(Detector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
         """
         if param in self.params or self.params.contains_all(param):
@@ -456,12 +456,12 @@ class CircleSectionDetector(Detector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns
         -------
-        measure : `float`
+        measure : float
             The constant density ``r``, equal to the length of the
             tangent to the detector circle at any point
         """

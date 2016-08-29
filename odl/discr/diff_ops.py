@@ -60,12 +60,12 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         ----------
         space : `DiscreteLp`
             Space of elements which the operator is acting on.
-        axis : `int`, optional
+        axis : int, optional
             Axis along which the partial derivative is evaluated.
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method which is used in the interior of the
             domain of ``f``.
-        pad_mode : {'constant', 'symmetric', 'periodic', None}, optional
+        pad_mode : {'constant', 'symmetric', 'periodic', ``None``}, optional
 
             'constant' : Pads values outside the domain of ``f`` with a
             constant value given by ``pad_const``.
@@ -75,16 +75,15 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
             'periodic' : Pads with the values from the other side of the array.
 
-            If `None` is given, one-sided forward or backward differences
-            are used at the boundary.
+            ``None`` : Use one-sided forward or backward differences at
+            the boundary.
 
-        pad_const : `float`, optional
-            If ``pad_mode`` is 'constant', ``f`` assumes
+        pad_const : float, optional
+            For ``pad_mode == 'constant'``, ``f`` assumes
             ``pad_const`` for indices outside the domain of ``f``
         edge_order : {1, 2}, optional
-            Edge-order accuracy at the boundaries if no padding is used. If
-            `None` the edge-order accuracy at endpoints corresponds to the
-            accuracy in the interior.
+            Edge-order accuracy at the boundaries if no padding is used.
+            Default: Same order as in the interior.
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
@@ -105,15 +104,15 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        x : ``domain`` `element`
-            Input vector to which the operator is applied to
-        out : ``range`` element, optional
-            Output vector to which the result is written
+        x : `domain` element
+            Input vector to which the operator is applied.
+        out : `range` element, optional
+            Output vector to which the result is written.
 
         Returns
         -------
-        out : ``range`` `element`
-            Result of the evaluation. If ``out`` is provided, the
+        out : `range` element
+            Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
         Examples
@@ -152,7 +151,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        point : ``domain`` element, optional
+        point : `domain` `element-like`, optional
             The point to take the derivative in. Does not change the result
             since the operator is affine.
         """
@@ -213,9 +212,9 @@ class Gradient(PointwiseTensorFieldOperator):
 
             'periodic' : Pads with the values from the other side of the array.
 
-        pad_const : `float`, optional
-            If ``pad_mode`` is 'constant', ``f`` assumes
-            ``pad_const`` for indices outside the domain of ``f``.
+        pad_const : float, optional
+            For ``pad_mode == 'constant'``, ``f`` assumes
+            ``pad_const`` for indices outside the domain of ``f``
 
         Examples
         --------
@@ -260,15 +259,15 @@ class Gradient(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        x : ``domain`` `element`
-            Input vector to which the `Gradient` operator is applied
-        out : ``range`` `element`, optional
-            Output vector to which the result is written
+        x : `domain` element
+            Input vector to which the `Gradient` operator is applied.
+        out : `range` element, optional
+            Output vector to which the result is written.
 
         Returns
         -------
-        out : ``range`` `element`
-            Result of the evaluation. If ``out`` is provided, the returned
+        out : `range` element
+            Result of the evaluation. If ``out`` was provided, the returned
             object is a reference to it.
 
         Examples
@@ -325,7 +324,7 @@ class Gradient(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        point : ``domain`` element, optional
+        point : `domain` element, optional
             The point to take the derivative in. Does not change the result
             since the operator is affine.
         """
@@ -394,9 +393,9 @@ class Divergence(PointwiseTensorFieldOperator):
 
             'periodic' : Pads with the values from the other side of the array.
 
-        pad_const : `float`, optional
-            If ``pad_mode`` is 'constant', ``f`` assumes
-            ``pad_const`` for indices outside the domain of ``f``.
+        pad_const : float, optional
+            For ``pad_mode == 'constant'``, ``f`` assumes
+            ``pad_const`` for indices outside the domain of ``f``
 
         Examples
         --------
@@ -441,16 +440,16 @@ class Divergence(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        x : ``domain`` `element`
+        x : `domain` element
             `ProductSpaceVector` to which the divergence operator
-            is applied
-        out : ``range`` `element`, optional
-            Output vector to which the result is written
+            is applied.
+        out : `range` element, optional
+            Output vector to which the result is written.
 
         Returns
         -------
-        out : ``range`` `element`
-            Result of the evaluation. If ``out`` is provided, the returned
+        out : `range` element
+            Result of the evaluation. If ``out`` was provided, the returned
             object is a reference to it.
 
         Examples
@@ -506,7 +505,7 @@ class Divergence(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        point : ``domain`` element, optional
+        point : `domain` element, optional
             The point to take the derivative in. Does not change the result
             since the operator is affine.
         """
@@ -561,9 +560,9 @@ class Laplacian(PointwiseTensorFieldOperator):
 
             'periodic' : Pads with the values from the other side of the array.
 
-        pad_const : `float`, optional
-            If ``pad_mode`` is 'constant', ``f`` assumes
-            ``pad_const`` for indices outside the domain of ``f``.
+        pad_const : float, optional
+            For ``pad_mode == 'constant'``, ``f`` assumes
+            ``pad_const`` for indices outside the domain of ``f``
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
@@ -577,16 +576,16 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        x : ``domain`` `element`
+        x : `domain` element
             Input vector to which the `Laplacian` operator is
             applied
-        out : ``range`` `element`, optional
+        out : `range` element, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` `element`
-            Result of the evaluation. If ``out`` is provided, the returned
+        out : `range` element
+            Result of the evaluation. If ``out`` was provided, the returned
             object is a reference to it.
 
         Examples
@@ -688,14 +687,18 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     ----------
     f : `array-like`
          An N-dimensional array.
-    axis : `int`, optional
+    axis : int, optional
         The axis along which the partial derivative is evaluated.
-    dx : `float`, optional
+    dx : float, optional
         Scalar specifying the distance between sampling points along ``axis``.
     method : {'central', 'forward', 'backward'}, optional
         Finite difference method which is used in the interior of the domain
          of ``f``.
-    pad_mode : {'constant', 'symmetric', 'periodic', None}, optional
+    out : `numpy.ndarray`, optional
+         An N-dimensional array to which the output is written. Has to have
+         the same shape as the input array ``f``.
+
+    pad_mode : {'constant', 'symmetric', 'periodic', ``None``}, optional
 
         'constant' : Pads values outside the domain of ``f`` with a constant
         value given by ``pad_const``.
@@ -705,24 +708,21 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
 
         'periodic' : Pads with the values from the other side of the array.
 
-        If `None` is given, one-sided forward or backward differences
-        are used at the boundary.
+        ``None`` : Use one-sided forward or backward differences at
+        the boundary.
 
-    pad_const : `float`, optional
-        If ``pad_mode`` is 'constant', ``f`` assumes ``pad_const``
-        for indices outside the domain of ``f``.
+    pad_const : float, optional
+        For ``pad_mode == 'constant'``, ``f`` assumes ``pad_const`` for
+        indices outside the domain of ``f``
+
     edge_order : {1, 2}, optional
-        Edge-order accuracy at the boundaries if no padding is used. If
-        `None` the edge-order accuracy at endpoints corresponds to the
-        accuracy in the interior. Default: `None`
-    out : `numpy.ndarray`, optional
-         An N-dimensional array to which the output is written. Has to have
-         the same shape as the input array ``f``. Default: `None`
+        Edge-order accuracy at the boundaries if no padding is used.
+        Default: Same order as in the interior.
 
     Returns
     -------
     out : `numpy.ndarray`
-        N-dimensional array of the same shape as ``f``. If ``out`` is
+        N-dimensional array of the same shape as ``f``. If ``out`` was
         provided, the returned object is a reference to it.
 
     Notes

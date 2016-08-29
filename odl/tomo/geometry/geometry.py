@@ -56,7 +56,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        ndim : positive `int`
+        ndim : positive int
             Number of dimensions of this geometry, i.e. dimensionality
             of the physical space in which this geometry is embedded
         motion_part : `RectPartition`
@@ -153,7 +153,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters
+        mpar : `motion_params` element
             Motion parameter for which to calculate the detector
             reference point
 
@@ -170,7 +170,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter for which to calculate the detector
             reference rotation
 
@@ -190,12 +190,12 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter at which to evaluate
-        dpar : element of detector parameters `det_params`
+        dpar : `det_params` element
             Detector parameter at which to evaluate
-        normalized : `bool`, optional
-            If `True`, return a normalized (unit) vector. Default: `True`
+        normalized : bool, optional
+            If ``True``, return a normalized (unit) vector.
 
         Returns
         -------
@@ -209,15 +209,15 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter at which to evaluate
-        dpar : element of detector parameters `det_params`
+        dpar : `det_params` element
             Detector parameter at which to evaluate
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape (`ndim`,)
-            Source position, a `ndim`-dimensional vector
+        pos : `numpy.ndarray` (shape (`ndim`,))
+            Source position, an `ndim`-dimensional vector
         """
         # TODO: check and write test
         return np.asarray(
@@ -233,7 +233,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        implementations : `dict`
+        implementations : dict
         """
         return self._implementation_cache
 
@@ -254,13 +254,13 @@ class DivergentBeamGeometry(Geometry):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter for which to calculate the source position
 
         Returns
         -------
-        pos : `numpy.ndarray`, shape (`ndim`,)
-            Source position, a `ndim`-dimensional vector
+        pos : `numpy.ndarray` (shape (`ndim`,))
+            Source position, an `ndim`-dimensional vector
         """
 
     def det_to_src(self, mpar, dpar, normalized=True):
@@ -274,12 +274,12 @@ class DivergentBeamGeometry(Geometry):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter at which to evaluate
-        dpar : element of detector parameters `det_params`
+        dpar : `det_params` element
             Detector parameter at which to evaluate
-        normalized : `bool`, optional
-            If `True`, return a normalized (unit) vector.
+        normalized : bool, optional
+            If ``True``, return a normalized (unit) vector.
 
         Returns
         -------
@@ -311,7 +311,7 @@ class AxisOrientedGeometry(object):
 
         Parameters
         ----------
-        axis : 3-element `array-like`
+        axis : `array-like` (shape ``(3,)``)
             Vector defining the fixed rotation axis after normalization
         """
         if np.linalg.norm(axis) <= 1e-10:
@@ -340,7 +340,7 @@ class AxisOrientedGeometry(object):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             The motion parameter given in radian. It must be
             contained in this geometry's `motion_params`.
 

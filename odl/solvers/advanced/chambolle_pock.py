@@ -61,13 +61,13 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     ----------
     op : `Operator`
         Forward operator, the operator ``K`` in the problem formulation.
-    x : element in the domain of ``op``
+    x : ``op.domain`` element
         Starting point of the iteration, updated in-place.
-    tau : positive `float`
+    tau : positive float
         Step size parameter for the update of the primal variable.
         Controls the extent to which ``proximal_primal`` maps points
         towards the minimum of G.
-    sigma : positive `float`
+    sigma : positive float
         Step size parameter for the update of the dual variable. Controls
         the extent to which ``proximal_dual`` maps points towards the
         minimum of ``F^*``.
@@ -75,26 +75,30 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         `proximal factory` for the functional ``G``.
     proximal_dual : `callable`
         `proximal factory` for the functional ``F^*``.
-    niter : non-negative `int`, optional
+    niter : non-negative int, optional
         Number of iterations.
 
     Other Parameters
     ----------------
     callback : `callable`, optional
         Function called with the current iterate after each iteration.
-    theta : `float` in [0, 1], optional
-        Relaxation parameter. Default: 1
-    gamma : non-negative `float`, optional
-        Acceleration parameter. If not `None`, overwrites ``theta`` and uses
-        variable relaxation parameter and step sizes with ``tau`` and
-        ``sigma`` as initial values. Requires G or F^* to be uniformly
-        convex. Default: `None`
-    x_relax : element in the domain of ``op``, optional
-        Required to resume iteration. If `None` it is a copy of the primal
-        variable x. Default: `None`
-    y : element in the range of ``op``, optional
-        Required to resume iteration. If `None` it is set to a zero element
-        in Y which is the range of ``op``. Default: `None`
+    theta : float, optional
+        Relaxation parameter, required to fulfill ``0 <= theta <= 1``.
+        Default: 1
+    gamma : non-negative float, optional
+        Acceleration parameter. If not ``None``, it overrides ``theta`` and
+        causes variable relaxation parameter and step sizes to be used,
+        with ``tau`` and ``sigma`` as initial values. Requires ``G`` or
+        ``F^*`` to be uniformly convex.
+        Default: ``None``
+    x_relax : ``op.domain`` element, optional
+        Required to resume iteration. For ``None``, a copy of the primal
+        variable ``x`` is used.
+        Default: ``None``
+    y : ``op.range`` element, optional
+        Required to resume iteration. For ``None``, ``op.range.zero()``
+        is used.
+        Default: ``None``
 
     Notes
     -----
@@ -194,7 +198,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
-        raise TypeError('`callback` {} is not `callable`'
+        raise TypeError('`callback` {} is not callable'
                         ''.format(callback))
 
     # Initialize the relaxation variable

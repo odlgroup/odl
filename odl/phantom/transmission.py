@@ -86,7 +86,7 @@ def shepp_logan_ellipses(ndim, modified=False):
     ----------
     ndim : {2, 3}
         Dimension of the space the ellipses should be in.
-    modified : `bool`, optional
+    modified : bool, optional
         True if the modified Shepp-Logan phantom should be given.
         The modified phantom has greatly amplified contrast to aid
         visualization.

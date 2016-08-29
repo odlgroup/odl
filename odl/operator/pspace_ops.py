@@ -120,15 +120,16 @@ class ProductSpaceOperator(Operator):
         >>> X = odl.ProductSpace(r3, r3)
         >>> I = odl.IdentityOperator(r3)
 
-        Sum of elements
+        Sum of elements as product space operator:
 
         >>> prod_op = ProductSpaceOperator([I, I])
 
-        Diagonal operator, 0 or None means ignore, or the implicit zero op.
+        Diagonal operator -- 0 or ``None`` means ignore, or the implicit
+        zero operator:
 
         >>> prod_op = ProductSpaceOperator([[I, 0], [None, I]])
 
-        Complicated combinations also possible
+        Complicated combinations also possible:
 
         >>> prod_op = ProductSpaceOperator([[I, I], [I, 0]])
         """
@@ -209,14 +210,14 @@ class ProductSpaceOperator(Operator):
 
         Parameters
         ----------
-        x : domain `element`
+        x : `domain` element
             Input vector to be evaluated.
-        out : range `element`, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range `element`
+        out : `range` element
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -236,7 +237,7 @@ class ProductSpaceOperator(Operator):
             [5.0, 7.0, 9.0]
         ])
 
-        Diagonal operator -- 0 or `None` means ignore, or the implicit
+        Diagonal operator -- 0 or ``None`` means ignore, or the implicit
         zero operator:
 
         >>> prod_op = ProductSpaceOperator([[I, 0], [0, I]])
@@ -283,7 +284,7 @@ class ProductSpaceOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             The point to take the derivative in
 
         Returns
@@ -420,10 +421,9 @@ class ComponentProjection(Operator):
         ----------
         space : `ProductSpace`
             Space to project from.
-        index : `int`, `slice`, or `iterable` [int]
-            Indices defining the subspace. If ``index`` is not
-            and `int`, the `Operator.range` of this
-            operator is also a `ProductSpace`.
+        index : int, slice, or iterable
+            Indices defining the subspace. If ``index`` is not an integer,
+            the `Operator.range` of this operator is also a `ProductSpace`.
 
         Examples
         --------
@@ -458,16 +458,16 @@ class ComponentProjection(Operator):
 
         Parameters
         ----------
-        x : domain `element`
+        x : `domain` element
             Input vector to be projected.
-        out : range `element`, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range `element`
-            Projection of x onto subspace. If ``out`` was provided, the
-            returned object is a reference to it.
+        out : `range` element
+            Projection of ``x`` onto the subspace. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Examples
         --------
@@ -533,7 +533,7 @@ class ComponentProjectionAdjoint(Operator):
         ----------
         space : `ProductSpace`
             Space to project to.
-        index : `int`, `slice`, or `iterable` [int]
+        index : int, slice, or iterable
             Indexes to project from.
 
         Examples
@@ -569,16 +569,16 @@ class ComponentProjectionAdjoint(Operator):
 
         Parameters
         ----------
-        x : domain `element`
+        x : `domain` element
             Input vector to be extended.
-        out : range `element`, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range `element`
-            Extension of x to superspace. If ``out`` was provided, the
-            returned object is a reference to it.
+        out : `range` element
+            Extension of ``x`` to the superspace. If ``out`` was provided,
+            the returned object is a reference to it.
 
         Examples
         --------
@@ -701,7 +701,7 @@ class BroadcastOperator(Operator):
 
     @property
     def operators(self):
-        """A tuple of sub-operators."""
+        """Tuple of sub-operators that comprise ``self``."""
         return self.__operators
 
     def __getitem__(self, index):
@@ -713,14 +713,14 @@ class BroadcastOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             Input vector to be evaluated by operators.
-        out : range element, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range element
+        out : `range` element
             Values of operators evaluated in point
         """
         wrapped_x = self.prod_op.domain.element([x], cast=False)
@@ -731,7 +731,7 @@ class BroadcastOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             The point to take the derivative in
 
         Returns
@@ -853,7 +853,7 @@ class ReductionOperator(Operator):
 
     @property
     def operators(self):
-        """`tuple` of sub-operators."""
+        """Tuple of sub-operators that comprise ``self``."""
         return self.__operators
 
     def __getitem__(self, index):
@@ -873,14 +873,14 @@ class ReductionOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             Input vector to be evaluated by operators.
-        out : range element, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range element
+        out : `range` element
             Sum of operators evaluated in ``x``.
         """
         if out is None:
@@ -960,8 +960,8 @@ class ReductionOperator(Operator):
 class DiagonalOperator(ProductSpaceOperator):
     """Diagonal 'matrix' of operators.
 
-    For example, if A and B are operators the DiagonalOperator can be seen as a
-    matrix of operators::
+    For example, if ``A`` and ``B`` are operators, the diagonal operator
+    can be seen as a matrix of operators::
 
         [[A, 0],
          [0, B]]
@@ -972,7 +972,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     See Also
     --------
-    ProductSpaceOperator : Case when the 'matrix' is full.
+    ProductSpaceOperator : Case when the 'matrix' is dense.
     BroadcastOperator : Case when a single argument is used by several ops.
     ReductionOperator : Calculates sum of operator results.
     """
@@ -982,9 +982,9 @@ class DiagonalOperator(ProductSpaceOperator):
 
         Parameters
         ----------
-        operator1,...,operatorN : `Operator` or `int`
+        operator1,...,operatorN : `Operator` or int
             The individual operators in the diagonal.
-            Can also be given as ``operator, n`` with ``n`` integer,
+            Can be specified as ``operator, n`` with ``n`` integer,
             in which case the diagonal operator with ``n`` multiples of
             ``operator`` is created.
         kwargs :
@@ -1031,7 +1031,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def operators(self):
-        """A tuple of sub-operators."""
+        """Tuple of sub-operators that comprise ``self``."""
         return self.__operators
 
     def __getitem__(self, index):

@@ -19,9 +19,9 @@
 
 Attributes
 ----------
-TYPE_MAP_R2C : `dict`
+TYPE_MAP_R2C : dict
     Dictionary mapping real dtypes to complex dtypes
-TYPE_MAP_C2R : `dict`
+TYPE_MAP_C2R : dict
     Dictionary mapping complex dtypes to real dtypes
 """
 
@@ -59,7 +59,7 @@ def array1d_repr(array, nprint=6):
 
     Parameters
     ----------
-    array : array-like
+    array : `array-like`
         The array to print
     nprint : int
         Maximum number of elements to print
@@ -78,7 +78,7 @@ def array1d_str(array, nprint=6):
 
     Parameters
     ----------
-    array : array-like
+    array : `array-like`
         The array to print
     nprint : int
         Maximum number of elements to print
@@ -99,7 +99,7 @@ def arraynd_repr(array, nprint=None):
 
     Parameters
     ----------
-    array : array-like
+    array : `array-like`
         The array to print
     nprint : int
         Maximum number of elements to print.
@@ -177,7 +177,7 @@ def arraynd_str(array, nprint=None):
 
 
 def dtype_repr(dtype):
-    """Stringification of data type with default for `int` and `float`."""
+    """Stringification of data type with default for int and float."""
     if dtype == np.dtype(int):
         return "'int'"
     elif dtype == np.dtype(float):
@@ -229,32 +229,32 @@ def with_metaclass(meta, *bases):
 
 
 def is_scalar_dtype(dtype):
-    """`True` if ``dtype`` is scalar, else `False`."""
+    """Return ``True`` if ``dtype`` is a scalar type."""
     return np.issubsctype(dtype, np.number)
 
 
 def is_int_dtype(dtype):
-    """`True` if ``dtype`` is integer, else `False`."""
+    """Return ``True`` if ``dtype`` is an integer type."""
     return np.issubsctype(dtype, np.integer)
 
 
 def is_floating_dtype(dtype):
-    """`True` if ``dtype`` is floating-point, else `False`."""
+    """Return ``True`` if ``dtype`` is a floating point type."""
     return is_real_floating_dtype(dtype) or is_complex_floating_dtype(dtype)
 
 
 def is_real_dtype(dtype):
-    """`True` if ``dtype`` is real (including integer), else `False`."""
+    """Return ``True`` if ``dtype`` is a real (including integer) type."""
     return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
 def is_real_floating_dtype(dtype):
-    """`True` if ``dtype`` is real floating-point, else `False`."""
+    """Return ``True`` if ``dtype`` is a real floating point type."""
     return np.issubsctype(dtype, np.floating)
 
 
 def is_complex_floating_dtype(dtype):
-    """`True` if ``dtype`` is complex floating-point, else `False`."""
+    """Return ``True`` if ``dtype`` is a complex floating point type."""
     return np.issubsctype(dtype, np.complexfloating)
 
 
@@ -263,13 +263,13 @@ def conj_exponent(exp):
 
     Parameters
     ----------
-    exp : positive `float` or inf
+    exp : positive float or inf
         Exponent for which to calculate the conjugate. Must be
         at least 1.0.
 
     Returns
     -------
-    conj : positive `float` or inf
+    conj : positive float or inf
         Conjugate exponent. For ``exp=1``, return ``float('inf')``,
         for ``exp=float('inf')`` return 1. In all other cases, return
         ``exp / (exp - 1)``.

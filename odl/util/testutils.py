@@ -75,7 +75,7 @@ def dtype_places(dtype, default=None):
 
 
 def almost_equal(a, b, places=None):
-    """`True` if scalars a and b are almost equal."""
+    """Return ``True`` if the scalars ``a`` and ``b`` are almost equal."""
     if a is None and b is None:
         return True
 
@@ -103,7 +103,7 @@ def almost_equal(a, b, places=None):
 
 
 def all_equal(iter1, iter2):
-    """`True` if all elements in ``a`` and ``b`` are equal."""
+    """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
     # Direct comparison for scalars, tuples or lists
     try:
         if iter1 == iter2:
@@ -160,7 +160,7 @@ def all_almost_equal_array(v1, v2, places):
 
 
 def all_almost_equal(iter1, iter2, places=None):
-    """`True` if all elements in ``a`` and ``b`` are almost equal."""
+    """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
     try:
         if iter1 is iter2 or iter1 == iter2:
             return True
@@ -197,7 +197,7 @@ def all_almost_equal(iter1, iter2, places=None):
 
 
 def is_subdict(subdict, dictionary):
-    """`True` if all items of ``subdict`` are in ``dictionary``."""
+    """Return ``True`` if all items of ``subdict`` are in ``dictionary``."""
     return all(item in dictionary.items() for item in subdict.items())
 
 

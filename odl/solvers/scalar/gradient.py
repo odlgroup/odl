@@ -57,9 +57,9 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
     grad : `Operator`
         Gradient of the objective function,
         :math:`x \mapsto \\nabla f(x)`
-    x : `element` of the domain of ``deriv``
+    x : ``grad.range`` element
         Starting point of the iteration
-    niter : `int`, optional
+    niter : int, optional
         Number of iterations
     line_search : float or `LineSearch`, optional
         Strategy to choose the step length. If a float is given, uses it as a

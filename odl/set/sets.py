@@ -49,15 +49,15 @@ class Set(with_metaclass(ABCMeta, object)):
     **Membership test:** ``__contains__(self, other)``
 
     Test if ``other`` is a member of this set. This function provides
-    the operator overload for `in`.
+    the operator overload for ``in``.
 
     **Parameters:**
-        other : `object`
-            The object to be tested for membership
+        other :
+            Object to be tested for membership
 
     **Returns:**
-        contains : `bool`
-            `True` if ``other`` is a member of this set, `False`
+        contains : bool
+            ``True`` if ``other`` is a member of this set, ``False``
             otherwise.
 
 
@@ -68,13 +68,13 @@ class Set(with_metaclass(ABCMeta, object)):
     provides the operator overload for ``==``.
 
     **Parameters:**
-        other : `object`
-            The object to be tested for equality.
+        other :
+            Object to be tested for equality.
 
     **Returns:**
-        equals : `bool`
-            `True` if both sets are of the same type and contain the
-            same elements, `False` otherwise.
+        equals : bool
+            ``True`` if both sets are of the same type and contain the
+            same elements, ``False`` otherwise.
 
     A default implementation of the operator overload for ``!=`` via
     ``__ne__(self, other)`` is provided as ``not self.__eq__(other)``.
@@ -85,12 +85,12 @@ class Set(with_metaclass(ABCMeta, object)):
     input parameter.
 
     **Parameters:**
-        inp : `object`, optional
-            The object from which to create the new element
+        inp : optional
+            Object from which to create the new element
 
     **Returns:**
         element : member of this set
-            If ``inp`` is `None`, return an arbitrary element.
+            If ``inp`` is None, return an arbitrary element.
             Otherwise, return the element created from ``inp``.
     """
 
@@ -101,15 +101,29 @@ class Set(with_metaclass(ABCMeta, object)):
     def contains_set(self, other):
         """Test if ``other`` is a subset of this set.
 
-        Implementing this method is optional. Default it tests for equality.
+        This is a default implementation that simply tests for equality.
+        It should be overridden by subclasses.
+
+        Returns
+        -------
+        set_contained : bool
+            ``True`` if ``other`` is contained in this set, ``False``
+            otherwise.
         """
         return self == other
 
     def contains_all(self, other):
-        """Test if all points in ``other`` are contained in this set.
+        """Test if all elements in ``other`` are contained in this set.
 
-        This is a default implementation and should be overridden by
-        subclasses.
+        This is a default implementation that assumes ``other`` to be
+        a sequence and tests each elment of ``other`` sequentially.
+        This method should be overridden by subclasses.
+
+        Returns
+        -------
+        all_contained : bool
+            ``True`` if all elements of ``other`` are contained in this
+            set, ``False`` otherwise
         """
         return all(x in self for x in other)
 
@@ -124,36 +138,46 @@ class Set(with_metaclass(ABCMeta, object)):
     def element(self, inp=None):
         """Return an element from ``inp`` or from scratch.
 
-        Implementing this method is optional.
+        This method should be overridden by subclasses.
         """
         raise NotImplementedError('`element` method not implemented')
 
     @property
     def examples(self):
-        """Return a `generator` with elements in the set as name-value pairs.
+        """Generator creating name-value pairs of set elements.
 
-        Can return a finite set of examples or an infinite set.
+        This method is mainly intended for diagnostics and yields elements,
+        either a finite number of times or indefinitely.
 
-        Optional to implement, intended to be used for diagnostics.
-        By default, the generator yields ``('element()', self.element())``.
+        This default implementation returns
+        ``('element()', self.element())`` and should be overridden by
+        subclasses.
         """
         yield ('element()', self.element())
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}()'.format(self.__class__.__name__)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return '{}'.format(self.__class__.__name__)
 
 
 class EmptySet(Set):
 
-    """Set with no member elements (except `None`).
+    """Set with no member elements (except ``None``).
 
-    `None` is considered as "no element", i.e.
-    ``None in EmptySet()`` is `True`
+    ``None`` is considered as "no element", i.e. ``None in EmptySet()``
+    is the only test that evaluates to ``True``.
     """
 
     def __contains__(self, other):
-        """Test if ``other`` is `None`."""
+        """Return ``other in self``, always ``False`` except for ``None``."""
         return other is None
 
     def contains_set(self, other):
-        """Return `True` for the empty set, otherwise `False`."""
+        """Return ``True`` for the empty set, ``False`` otherwise."""
         return isinstance(other, EmptySet)
 
     def __eq__(self, other):
@@ -161,16 +185,8 @@ class EmptySet(Set):
         return isinstance(other, EmptySet)
 
     def element(self, inp=None):
-        """Return `None`."""
+        """Return None."""
         return None
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return "EmptySet"
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return "EmptySet()"
 
 
 class UniversalSet(Set):
@@ -181,11 +197,11 @@ class UniversalSet(Set):
     """
 
     def __contains__(self, other):
-        """Return `True`."""
+        """Return ``other in self``, always ``True``."""
         return True
 
     def contains_set(self, other):
-        """Return `True` for any set."""
+        """Return ``True`` for any set."""
         return isinstance(other, Set)
 
     def __eq__(self, other):
@@ -195,14 +211,6 @@ class UniversalSet(Set):
     def element(self, inp=None):
         """Return ``inp`` in any case."""
         return inp
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return "UniversalSet"
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return "UniversalSet()"
 
 
 class Strings(Set):
@@ -214,33 +222,36 @@ class Strings(Set):
 
         Parameters
         ----------
-        length : `int`
-            The fixed length of the strings in this set. Must be
-            positive.
+        length : positive int
+            Fixed length of the strings in this set.
         """
-        length_ = int(length)
-        if length_ <= 0:
+        length, length_in = int(length), length
+        if length <= 0:
             raise ValueError('`length` must be positive, got {}'
-                             ''.format(length))
-        self.__length = length_
+                             ''.format(length_in))
+        self.__length = length
 
     @property
     def length(self):
-        """Length of the strings."""
+        """Fixed length of the strings in this set."""
         return self.__length
 
     def __contains__(self, other):
         """Return ``other in self``.
 
-        `True` if ``other`` is a string of at max `length`
-        characters, `False` otherwise."""
+        Returns
+        -------
+        contained : bool
+            ``True`` if ``other`` is a string of exactly `length`
+            characters, ``False`` otherwise.
+        """
         return isinstance(other, basestring) and len(other) == self.length
 
-    def contains_all(self, array):
-        """Test if `array` is an array of strings with correct length."""
-        dtype = getattr(array, 'dtype', None)
+    def contains_all(self, other):
+        """Return ``True`` if all strings in ``other`` have size `length`."""
+        dtype = getattr(other, 'dtype', None)
         if dtype is None:
-            dtype = np.result_type(*array)
+            dtype = np.result_type(*other)
         dtype_str = np.dtype('S{}'.format(self.length))
         dtype_uni = np.dtype('<U{}'.format(self.length))
         return dtype in (dtype_str, dtype_uni)
@@ -250,7 +261,7 @@ class Strings(Set):
         return isinstance(other, Strings) and other.length == self.length
 
     def element(self, inp=None):
-        """Return a string from ``inp`` or from scratch."""
+        """Return an element from ``inp`` or from scratch."""
         if inp is not None:
             s = str(inp)[:self.length]
             s += ' ' * (self.length - len(s))
@@ -260,12 +271,12 @@ class Strings(Set):
 
     @property
     def examples(self):
-        """Return example strings 'hello', 'world'."""
-        return [('hello', 'hello'), ('world', 'world')]
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return 'Strings({})'.format(self.length)
+        """Return example strings 'hello', 'world' (size adapted)."""
+        hello_str = 'hello'[:self.length]
+        hello_str += ' ' * (self.length - len(hello_str))
+        world_str = 'world'[:self.length]
+        world_str += ' ' * (self.length - len(world_str))
+        return [('hello', hello_str), ('world', world_str)]
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -273,10 +284,15 @@ class Strings(Set):
 
 
 class Field(Set):
-    """Any set that satisfies the field axioms
 
-    For example `RealNumbers`, `ComplexNumbers` or
+    """A set that satisfies the field axioms.
+
+    Examples: `RealNumbers`, `ComplexNumbers` or
     the finite field :math:`F_2`.
+
+    See `the Wikipedia entry on fields
+    <https://en.wikipedia.org/wiki/Field_%28mathematics%29>`_ for
+    further information.
     """
 
     @property
@@ -285,8 +301,8 @@ class Field(Set):
 
         Notes
         -----
-        This is a hack for this to work with duck-typing
-        with `LinearSpace`'s.
+        This is a hack to make fields to work via duck-typing with
+        `LinearSpace`'s.
         """
         return self
 
@@ -296,22 +312,22 @@ class ComplexNumbers(Field):
     """Set of complex numbers."""
 
     def __contains__(self, other):
-        """Test if ``other`` is a complex number."""
+        """Return ``other in self``."""
         return isinstance(other, Complex)
 
     def contains_set(self, other):
-        """Test if ``other`` is a subset of the complex numbers
+        """Return ``True`` if ``other`` is a subset of the complex numbers.
 
         Returns
         -------
-        contained : `bool`
-            `True` if other is `ComplexNumbers`,
-            `RealNumbers` or `Integers`, `False` else.
+        contained : bool
+            ``True`` if  ``other`` is an instance of `ComplexNumbers`,
+            `RealNumbers` or `Integers`, ``False`` otherwise.
 
         Examples
         --------
-        >>> C = ComplexNumbers()
-        >>> C.contains_set(RealNumbers())
+        >>> complex_numbers = ComplexNumbers()
+        >>> complex_numbers.contains_set(RealNumbers())
         True
         """
         if other is self:
@@ -321,11 +337,11 @@ class ComplexNumbers(Field):
                 isinstance(other, RealNumbers) or
                 isinstance(other, Integers))
 
-    def contains_all(self, array):
-        """Test if `array` is an array of real or complex numbers."""
-        dtype = getattr(array, 'dtype', None)
+    def contains_all(self, other):
+        """Return ``True`` if ``other`` is a sequence of complex numbers."""
+        dtype = getattr(other, 'dtype', None)
         if dtype is None:
-            dtype = np.result_type(*array)
+            dtype = np.result_type(*other)
         return is_scalar_dtype(dtype)
 
     def __eq__(self, other):
@@ -348,36 +364,28 @@ class ComplexNumbers(Field):
         numbers = [-1.0, 0.5, 0.0 + 2.0j, 0.0, 0.01, 1.0 + 1.0j, 1.0j, 1.0]
         return [(str(x), x) for x in numbers]
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return "ComplexNumbers"
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return "ComplexNumbers()"
-
 
 class RealNumbers(Field):
 
     """Set of real numbers."""
 
     def __contains__(self, other):
-        """Test if ``other`` is a real number."""
+        """Return ``other in self``."""
         return isinstance(other, Real)
 
     def contains_set(self, other):
-        """Test if ``other`` is a subset of the real numbers
+        """Return ``True`` if ``other`` is a subset of the real numbers.
 
         Returns
         -------
-        contained : `bool`
-            `True` if other is `RealNumbers` or
-            `Integers` `False` else.
+        contained : bool
+            ``True`` if other is an instance of `RealNumbers` or
+            `Integers` False otherwise.
 
         Examples
         --------
-        >>> R = RealNumbers()
-        >>> R.contains_set(RealNumbers())
+        >>> real_numbers = RealNumbers()
+        >>> real_numbers.contains_set(RealNumbers())
         True
         """
         if other is self:
@@ -413,14 +421,6 @@ class RealNumbers(Field):
         numbers = [-1.0, 0.5, 0.0, 0.01, 1.0]
         return [(str(x), x) for x in numbers]
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return "RealNumbers"
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return "RealNumbers()"
-
 
 class Integers(Set):
 
@@ -434,21 +434,22 @@ class Integers(Set):
         return isinstance(other, Integers)
 
     def __contains__(self, other):
-        """Test if ``other`` is an integer."""
+        """Return ``other in self``."""
         return isinstance(other, Integral)
 
     def contains_set(self, other):
-        """Test if ``other`` is a subset of the real numbers
+        """Test if ``other`` is a subset of the integers.
 
         Returns
         -------
-        contained : `bool`
-            `True` if other is `Integers`, `False` otherwise.
+        contained : bool
+            ``True`` if  other is an instance of `Integers`,
+            ``False`` otherwise.
 
         Examples
         --------
-        >>> Z = Integers()
-        >>> Z.contains_set(RealNumbers())
+        >>> integers = Integers()
+        >>> integers.contains_set(RealNumbers())
         False
         """
         if other is self:
@@ -456,11 +457,11 @@ class Integers(Set):
 
         return isinstance(other, Integers)
 
-    def contains_all(self, array):
-        """Test if `array` is an array of integers."""
-        dtype = getattr(array, 'dtype', None)
+    def contains_all(self, other):
+        """Return ``True`` if ``other`` is a sequence of integers."""
+        dtype = getattr(other, 'dtype', None)
         if dtype is None:
-            dtype = np.result_type(*array)
+            dtype = np.result_type(*other)
         return is_int_dtype(dtype)
 
     def element(self, inp=None):
@@ -476,49 +477,45 @@ class Integers(Set):
         numbers = [-1, 0, 1]
         return [(str(x), x) for x in numbers]
 
-    def __str__(self):
-        """Return ``str(self)``."""
-        return "Integers"
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return "Integers()"
-
 
 class CartesianProduct(Set):
 
-    """Cartesian product of ``n`` sets.
+    """Cartesian product of a finite number of sets.
 
-    The elements of this set are ``n``-tuples where the i-th entry
+    The elements of this set are tuples where the i-th entry
     is an element of the i-th set.
     """
 
     def __init__(self, *sets):
         """Initialize a new instance."""
-        if not all(isinstance(set_, Set) for set_ in sets):
-            wrong = [set_ for set_ in sets
-                     if not isinstance(set_, Set)]
-            raise TypeError('{!r} not Set instance(s)'.format(wrong))
+        for set_ in sets:
+            if not isinstance(set_, Set):
+                raise TypeError('{!r} is not a Set instance.'.format(set_))
 
         self.__sets = tuple(sets)
 
     @property
     def sets(self):
-        """Factors (sets) as a `tuple`."""
+        """Factors (sets) as a tuple."""
         return self.__sets
 
     def __contains__(self, other):
-        """Test if ``other`` is contained in this set.
+        """Return ``other in self``.
+
+        Parameters
+        ----------
+        other :
+            Object to be tested for membership
 
         Returns
         -------
-        contains : `bool`
-            `True` if ``other`` has the same length as this Cartesian
-            product and each entry is contained in the set with
-            corresponding index, `False` otherwise.
+        contains : bool
+            ``True`` if ``other`` is a sequence with same length as this
+            Cartesian product, and each entry is contained in the set with
+            corresponding index, ``False`` otherwise.
         """
         try:
-            iter(other)
+            len(other)
         except TypeError:
             return False
         return (len(other) == len(self) and
@@ -529,10 +526,10 @@ class CartesianProduct(Set):
 
         Returns
         -------
-        equals : `bool`
-            `True` if ``other`` is a `CartesianProduct` instance,
+        equals : bool
+            ``True`` if ``other`` is a `CartesianProduct` instance,
             has the same length as this Cartesian product and all sets
-            with the same index are equal, `False` otherwise.
+            with the same index are equal, ``False`` otherwise.
         """
         return (isinstance(other, CartesianProduct) and
                 len(other) == len(self) and
@@ -543,14 +540,14 @@ class CartesianProduct(Set):
 
         Parameters
         ----------
-        inp : `iterable`, optional
+        inp : iterable, optional
             Collection of input values for the
             `LinearSpace.element` methods
             of all sets in the Cartesian product.
 
         Returns
         -------
-        element : `tuple`
+        element : tuple
             A tuple of the given input
         """
         if inp is None:
@@ -569,8 +566,8 @@ class CartesianProduct(Set):
         """Return ``len(self)``."""
         return len(self.sets)
 
-    def __getitem__(self, indcs):
-        """Return ``self[indcs]``.
+    def __getitem__(self, indices):
+        """Return ``self[indices]``.
 
         Examples
         --------
@@ -581,26 +578,19 @@ class CartesianProduct(Set):
         >>> prod[2:4]
         CartesianProduct(UniversalSet(), EmptySet())
         """
-        if isinstance(indcs, slice):
-            return CartesianProduct(*self.sets[indcs])
+        if isinstance(indices, slice):
+            return CartesianProduct(*self.sets[indices])
         else:
-            return self.sets[indcs]
+            return self.sets[indices]
 
     def __str__(self):
         """Return ``str(self)``."""
         return ' x '.join(str(set_) for set_ in self.sets)
 
     def __repr__(self):
-        """Return ``repr(self)``.
-
-        Examples
-        --------
-        >>> emp, univ = EmptySet(), UniversalSet()
-        >>> CartesianProduct(emp, univ)
-        CartesianProduct(EmptySet(), UniversalSet())
-        """
+        """Return ``repr(self)``."""
         sets_str = ', '.join(repr(set_) for set_ in self.sets)
-        return 'CartesianProduct({})'.format(sets_str)
+        return '{}({})'.format(self.__class__.__name__, sets_str)
 
 
 if __name__ == '__main__':

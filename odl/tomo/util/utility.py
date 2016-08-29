@@ -35,7 +35,7 @@ def euler_matrix(*angles):
 
     Parameters
     ----------
-    angle1,...,angleN : `float`
+    angle1,...,angleN : float
         One angle results in a (2x2) matrix representing a
         counter-clockwise rotation. Two or three angles result in a
         (3x3) matrix and are interpreted as Euler angles of a 3d
@@ -99,11 +99,11 @@ def axis_rotation(axis, angle, vectors):
 
     Parameters
     ----------
-    axis : array-like, shape (3,)
+    axis : `array-like`, shape ``(3,)``
         The rotation axis, assumed to be a unit vector
-    angle : `float`
+    angle : float
         The rotation angle
-    vectors : array-like, shape ``(3,)`` or ``(N, 3)``
+    vectors : `array-like`, shape ``(3,)`` or ``(N, 3)``
         The vector(s) to be rotated
 
     Returns
@@ -151,9 +151,9 @@ def axis_rotation_matrix(axis, angle):
 
     Parameters
     ----------
-    axis : array-like, shape ``(3,)``
+    axis : `array-like`, shape ``(3,)``
         The rotation axis, assumed to be a unit vector
-    angle : `float`
+    angle : float
         The rotation angle
 
     Returns

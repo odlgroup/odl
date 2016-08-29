@@ -58,12 +58,12 @@ def normalized_scalar_param_list(param, length, param_conv=None,
         Input parameter to turn into a list.
     length : positive int
         Desired length of the output list.
-    param_conv : callable, optional
-        Conversion applied to each list element. None means no conversion.
+    param_conv : `callable`, optional
+        Conversion applied to each list element. ``None`` means no conversion.
     keep_none : bool, optional
-        If True, None is not converted.
+        If ``True``, ``None`` is not converted.
     return_nonconv : bool, optional
-        If True, return also the list where no conversion has been
+        If ``True``, return also the list where no conversion has been
         applied.
 
     Returns
@@ -94,7 +94,7 @@ def normalized_scalar_param_list(param, length, param_conv=None,
     [None, None, None]
 
     List entries can be explicitly converted using ``param_conv``. If
-    ``None`` should be kept, set ``keep_none`` to True:
+    ``None`` should be kept, set ``keep_none`` to ``True``:
 
     >>> normalized_scalar_param_list(1, 3, param_conv=float)
     [1.0, 1.0, 1.0]
@@ -174,17 +174,17 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
 
     Parameters
     ----------
-    indices : int, slice, Ellipsis or sequence of these
-        Index expression to be normalized
-    shape : sequence of int
+    indices : int, `slice`, `Ellipsis` or `sequence` of these
+        Index expression to be normalized.
+    shape : `sequence` of ints
         Target shape for error checking of out-of-bounds indices.
         Also needed to determine the number of axes.
     int_to_slice : bool, optional
-        If True, turn integers into corresponding slice objects.
+        If ``True``, turn integers into corresponding slice objects.
 
     Returns
     -------
-    normalized : tuple of int or slice
+    normalized : tuple of ints or `slice`'s
         Normalized index expression
 
     Examples

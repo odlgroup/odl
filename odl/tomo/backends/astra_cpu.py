@@ -52,14 +52,15 @@ def astra_cpu_forward_projector(vol_data, geometry, proj_space, out=None):
         Geometry defining the tomographic setup
     proj_space : `DiscreteLp`
         Space to which the calling operator maps
-    out : `DiscreteLpVector`, optional
+    out : ``proj_space`` element, optional
         Vector in the projection space to which the result is written. If
-        `None` creates an element in the projection space ``proj_space``
+        ``None``, an element in ``proj_space`` is created.
 
     Returns
     -------
-    out : ``proj_space`` `element`
-        Projection data resulting from the application of the projector
+    out : ``proj_space`` element
+        Projection data resulting from the application of the projector.
+        If ``out`` was provided, the returned object is a reference to it.
     """
     if not isinstance(vol_data, DiscreteLpVector):
         raise TypeError('volume data {!r} is not a `DiscreteLpVector` '
@@ -137,15 +138,16 @@ def astra_cpu_back_projector(proj_data, geometry, reco_space, out=None):
         Geometry defining the tomographic setup
     reco_space : `DiscreteLp`
         Space to which the calling operator maps
-    out : `DiscreteLpVector` or `None`, optional
-        Vector in the reconstruction space to which the result is written. If
-        `None` creates an element in the reconstruction space ``reco_space``
+    out : ``reco_space`` element, optional
+        Vector in the reconstruction space to which the result is written.
+        If ``None``, an element in ``reco_space`` is created.
 
     Returns
     -------
     out : ``reco_space`` element
         Reconstruction data resulting from the application of the backward
-        projector
+        projector. If ``out`` was provided, the returned object is a
+        reference to it.
     """
     if not isinstance(proj_data, DiscreteLpVector):
         raise TypeError('projection data {!r} is not a DiscreteLpVector '

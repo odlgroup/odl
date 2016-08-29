@@ -46,13 +46,13 @@ def _default_call_out_of_place(op, x, **kwargs):
 
     Parameters
     ----------
-    x : ``domain`` `element`
+    x : `domain` element
         An object in the operator domain. The operator is applied
         to it.
 
     Returns
     -------
-    out : ``range`` `element`
+    out : `range` element
         An object in the operator range. The result of an operator
         evaluation.
     """
@@ -66,17 +66,17 @@ def _default_call_in_place(op, x, out, **kwargs):
 
     Parameters
     ----------
-    x : ``domain`` `element`
+    x : `domain` element
         An object in the operator domain. The operator is applied
         to it.
 
-    out : ``range`` `element`
+    out : `range` element
         An object in the operator range. The result of an operator
         evaluation.
 
     Returns
     -------
-    `None`
+    None
     """
     out.assign(op.range.element(op._call_out_of_place(x, **kwargs)))
 
@@ -91,7 +91,7 @@ def _signature_from_spec(func):
 
     Returns
     -------
-    sig : `str`
+    sig : string
         Signature of the function
     """
     py3 = (sys.version_info.major > 2)
@@ -159,7 +159,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
         - ``_call(self, out, x)`` -- ``out`` as second argument
         - ``_call(self, *x)`` -- Variable arguments
         - ``_call(self, x, y, out=None)`` -- more positional arguments
-        - ``_call(self, x, out=False)`` -- default other than `None` for
+        - ``_call(self, x, out=False)`` -- default other than None for
           ``out``
 
     In particular, static or class methods are not allowed.
@@ -173,14 +173,14 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
         Check this bound method instead of ``cls``
     unbound_call: `callable`, optional
         Check this unbound function instead of ``cls``
-    attr : `string`, optional
+    attr : string, optional
         Check this attribute instead of ``_call``, e.g. ``__call__``
 
     Returns
     -------
-    has_out : `bool`
+    has_out : bool
         Whether the call has an ``out`` argument
-    out_is_optional : `bool`
+    out_is_optional : bool
         Whether the ``out`` argument is optional
     spec : `inspect.ArgSpec` or `inspect.FullArgSpec`
         Argument specification of the checked call function
@@ -291,7 +291,7 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
             if pos_defaults and pos_defaults[-1] is not None:
                 raise ValueError("bad signature '{}': `out` can only "
                                  "default to `None`, got '{}'"
-                                 " ".format(signature, pos_defaults[-1]) +
+                                 "".format(signature, pos_defaults[-1]) +
                                  spec_msg)
 
     else:  # Too many positional args
@@ -355,17 +355,17 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` `element`
+    x : `Operator.domain` element
         An object in the operator domain to which the operator is
         applied
 
-    out : `Operator.range` `element`
+    out : `Operator.range` element
         An object in the operator range to which the result of the
         operator evaluation is written.
 
     **Returns:**
 
-    `None` (return value is ignored)
+    None (return value is ignored)
 
 
     **Out-of-place-only evaluation:** ``_call(self, x[, **kwargs])``
@@ -378,7 +378,7 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` `element`
+    x : `Operator.domain` element
         An object in the operator domain to which the operator is
         applied
 
@@ -395,17 +395,17 @@ class Operator(object):
 
     **Parameters:**
 
-    x : `Operator.domain` `element`
+    x : `Operator.domain` element
         An object in the operator domain to which the operator is
         applied
 
-    out : `Operator.range` `element`, optional
+    out : `Operator.range` element, optional
         An object in the operator range to which the result of the
         operator evaluation is written
 
     **Returns:**
 
-    `None` (return value is ignored)
+    None (return value is ignored)
 
 
     Notes
@@ -451,8 +451,8 @@ class Operator(object):
         range : `Set`
             The range of this operator, i.e., the set this operator
             maps to
-        linear : `bool`
-            If `True`, the operator is considered as linear. In this
+        linear : bool
+            If ``True``, the operator is considered as linear. In this
             case, ``domain`` and ``range`` have to be instances of
             `LinearSpace`, or `Field`.
         """
@@ -543,14 +543,14 @@ class Operator(object):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             Element to which the operator is applied
-        out : `Operator.range` `element`, optional
+        out : `range` element, optional
             Element to which the result is written
 
         Returns
         -------
-        out : `Operator.range` `element-like`
+        out : `range` `element-like`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
         """
@@ -571,12 +571,12 @@ class Operator(object):
 
     @property
     def is_linear(self):
-        """`True` if this operator is linear."""
+        """``True`` if this operator is linear."""
         return self.__is_linear
 
     @property
     def is_functional(self):
-        """`True` if the this operator's range is a `Field`."""
+        """``True`` if this operator's range is a `Field`."""
         return self.__is_functional
 
     @property
@@ -628,21 +628,21 @@ class Operator(object):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             An object which can be converted into an element of this
             operator's domain with the ``self.domain.element`` method.
             The operator is applied to this object, which is treated
             as immutable, hence it is not modified during evaluation.
-        out : `Operator.range` `element`, optional
+        out : `range` element, optional
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
-        kwargs : Further arguments to the function, optional
-            Passed on to the underlying implementation in `_call`
+        kwargs :
+            Passed on to the underlying implementation in `_call`.
 
         Returns
         -------
-        out : `Operator.range` `element`
+        out : `range` element
             Result of the operator evaluation. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -734,7 +734,7 @@ class Operator(object):
 
         Parameters
         ----------
-        other : {`Operator`, `LinearSpaceVector`, scalar}
+        other : `Operator`, `LinearSpaceVector` or scalar
             `Operator`:
                 The `Operator.domain` of ``other`` must match this
                 operator's `Operator.range`.
@@ -889,7 +889,7 @@ class Operator(object):
 
         Parameters
         ----------
-        n : positive `int`
+        n : positive int
             The power the operator should be taken to.
 
         Returns
@@ -983,7 +983,7 @@ class Operator(object):
     def __str__(self):
         """Return ``str(self)``.
 
-        The default `str` implementation. Should be overridden by
+        The default string implementation. Should be overridden by
         subclasses.
         """
         return self.__class__.__name__
@@ -1018,10 +1018,10 @@ class OperatorSum(Operator):
         right : `Operator`
             Second summand. Must have the same `Operator.domain` and
             `Operator.range` as ``left``.
-        tmp_ran : `Operator.range` `element`, optional
+        tmp_ran : `Operator.range` element, optional
             Used to avoid the creation of a temporary when applying the
             operator.
-        tmp_dom : `Operator.domain` `element`, optional
+        tmp_dom : `Operator.domain` element, optional
             Used to avoid the creation of a temporary when applying the
             operator adjoint.
         """
@@ -1093,7 +1093,7 @@ class OperatorSum(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             Evaluation point of the derivative
         """
         return OperatorSum(self.left.derivative(x), self.right.derivative(x),
@@ -1154,7 +1154,7 @@ class OperatorComp(Operator):
         right : `Operator`
             The right ("inner") operator. Its range must coincide with the
             domain of ``left``.
-        tmp : `element` of the range of ``right``, optional
+        tmp : element of the range of ``right``, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
@@ -1218,7 +1218,7 @@ class OperatorComp(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             Evaluation point of the derivative. Needs to be usable as
             input for the ``right`` operator.
         """
@@ -1341,9 +1341,9 @@ class OperatorLeftScalarMult(Operator):
         Parameters
         ----------
         operator : `Operator`
-            The range of ``op`` must be a `LinearSpace`
-            or `Field`.
-        scalar : ``op.range.field`` `element`
+            Operator in the scalar multiplication. Its `range` must be
+            a `LinearSpace` or `Field`.
+        scalar : ``operator.range.field`` element
             A real or complex number, depending on the field of
             the range.
         """
@@ -1437,7 +1437,7 @@ class OperatorLeftScalarMult(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             Evaluation point of the derivative
 
         Returns
@@ -1516,12 +1516,12 @@ class OperatorRightScalarMult(Operator):
         Parameters
         ----------
         operator : `Operator`
-            The domain of ``op`` must be a `LinearSpace` or
-            `Field`.
-        scalar : ``op.range.field`` `element`
+            Operator in the scalar multiplication. Its `domain` must
+            be a `LinearSpace` or `Field`.
+        scalar : ``operator.range.field`` element
             A real or complex number, depending on the field of
             the operator domain.
-        tmp : domain `element`, optional
+        tmp : `domain` element, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
@@ -1625,8 +1625,8 @@ class OperatorRightScalarMult(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
-            Evaluation point of the derivative
+        x : `domain` `element-like`
+            Evaluation point of the derivative.
 
         Examples
         --------
@@ -1699,10 +1699,11 @@ class FunctionalLeftVectorMult(Operator):
         Parameters
         ----------
         functional : `Operator`
-            The range of ``functional`` must be a `Field`.
-        vector : ``operator`` range `element-like`
+            Functional in the vector multiplication. Its `range` must
+            be a `Field`.
+        vector : ``functional.range`` `element-like`
             The vector to multiply by. Its space's `LinearSpace.field` must be
-            the same as ``op.range``
+            the same as ``functional.range``
         """
         if not isinstance(vector, LinearSpaceVector):
             raise TypeError('`vector` {!r} not is not a LinearSpaceVector'
@@ -2079,9 +2080,8 @@ def simple_operator(call=None, inv=None, deriv=None, domain=None, range=None,
     range : `Set`, optional
         The range of the operator
         Default: `UniversalSpace` if linear, else `UniversalSet`
-    linear : `bool`, optional
-        `True` if the operator is linear
-        Default: `False`
+    linear : bool, optional
+        If ``True``, the operator is considered to be linear.
 
     Returns
     -------

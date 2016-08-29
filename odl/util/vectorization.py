@@ -262,7 +262,7 @@ class _NumpyVectorizeWrapper(object):
 
         Parameters
         ----------
-        x : `array-like` or `sequence` of `array-like`
+        x : `array-like` or `sequence` of `array-like`'s
             Input argument(s) to the wrapped function
         out : `numpy.ndarray`, optional
             Appropriately sized array to write to
