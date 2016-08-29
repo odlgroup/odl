@@ -22,6 +22,7 @@ Changes
 - Changed definition of ``LinearSpaceVector.multiply`` to match the definition used by numpy (:pull:`509`)
 - The parameters ``padding_method`` in ``diff_ops.py`` and ``mode`` in ``wavelet.py`` have been renamed to ``pad_mode``.
   The parameter ``padding_value`` is now called ``pad_const``.
+- Expose ``ellipse_phantom`` and ``shepp_logan_ellipses`` to ``odl.phantom``
 
 Bugfixes
 --------
