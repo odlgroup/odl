@@ -62,20 +62,20 @@ def _colorbar_format(minval, maxval):
 def _axes_info(grid, npoints=5):
     result = []
 
-    min_corner = grid.min()
-    max_corner = grid.max()
+    min_pt = grid.min()
+    max_pt = grid.max()
     for axis in range(grid.ndim):
-        minv = min_corner[axis]
-        maxv = max_corner[axis]
+        xmin = min_pt[axis]
+        xmax = max_pt[axis]
 
-        points = np.linspace(minv, maxv, npoints)
+        points = np.linspace(xmin, xmax, npoints)
         indices = np.linspace(0, grid.shape[axis] - 1, npoints, dtype=int)
         tick_values = grid.coord_vectors[axis][indices]
 
         # Do not use corner point in case of a partition, use outer corner
-        tick_values[[0, -1]] = minv, maxv
+        tick_values[[0, -1]] = xmin, xmax
 
-        format_str = '{:.' + str(_digits(minv, maxv)) + 'f}'
+        format_str = '{:.' + str(_digits(xmin, xmax)) + 'f}'
         tick_labels = [format_str.format(f) for f in tick_values]
 
         result += [(points, tick_labels)]

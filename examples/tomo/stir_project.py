@@ -15,24 +15,32 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example projection and back-projection with stir."""
+"""Example for projection and back-projection with STIR.
+
+This example computes projection and back-projection using the 'stir'
+backend. It requires an installation of
+`STIR <http://stir.sourceforge.net/>`_ and its Python bindings.
+
+TODO: which modality? CT? PET?
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import os.path as pth
+from os import path
 import stir
 import odl
 
 # Load STIR input files with data
-base = pth.join(pth.join(pth.dirname(pth.abspath(__file__)), 'data'), 'stir')
+base = path.join(
+    path.join(path.dirname(path.abspath(__file__)), 'data'), 'stir')
 
-volume_file = str(pth.join(base, 'initial.hv'))
+volume_file = str(path.join(base, 'initial.hv'))
 volume = stir.FloatVoxelsOnCartesianGrid.read_from_file(volume_file)
 
-projection_file = str(pth.join(base, 'small.hs'))
+projection_file = str(path.join(base, 'small.hs'))
 proj_data_in = stir.ProjData.read_from_file(projection_file)
 proj_data = stir.ProjDataInMemory(proj_data_in.get_exam_info(),
                                   proj_data_in.get_proj_data_info())

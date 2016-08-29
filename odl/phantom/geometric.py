@@ -27,61 +27,73 @@ import numpy as np
 __all__ = ('cuboid', 'ellipse_phantom', 'indicate_proj_axis')
 
 
-def cuboid(space, begin=None, end=None):
+def cuboid(space, min_pt=None, max_pt=None):
     """Rectangular cuboid.
 
     Parameters
     ----------
     space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created.
-    begin : `array-like` of length ``space.ndim``
-        The lower left corner of the cuboid within the space.
-        Default: A quarter of the volume from the minimum corner
-    end : `array-like` of length ``space.ndim``
-        The upper right corner of the cuboid within the space.
-        Default: A quarter of the volume from the maximum corner
+    min_pt : array-like of shape ``(space.ndim,)``, optional
+        Lower left corner of the cuboid. If ``None`` is given, a quarter
+        of the extent from ``space.min_pt`` towards the inside is chosen.
+    min_pt : array-like of shape ``(space.ndim,)``, optional
+        Upper right corner of the cuboid. If ``None`` is given, ``min_pt``
+        plus half the extent is chosen.
 
     Returns
     -------
-    phantom : ``space`` element
-        Cuboid phantom in ``space``.
+    phantom : `LinearSpaceVector`
+        The generated cuboid phantom in ``space``.
 
     Examples
     --------
+    If both ``min_pt`` and ``max_pt`` are omitted, the cuboid lies in the
+    middle of the space domain and extends halfway towards all sides:
+
     >>> import odl
-    >>> space = odl.uniform_discr(0, 1, 6, dtype='float32')
-    >>> print(cuboid(space, 0.5, 1))
-    [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
-    >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6], dtype='float32')
-    >>> print(cuboid(space, [0.25, 0], [0.75, 0.5]))
+    >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6])
+    >>> print(odl.phantom.cuboid(space))
+    [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+     [0.0, 1.0, 1.0, 1.0, 1.0, 0.0],
+     [0.0, 1.0, 1.0, 1.0, 1.0, 0.0],
+     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+
+    By specifying the corners, the cuboid can be arbitrarily shaped:
+
+    >>> print(odl.phantom.cuboid(space, [0.25, 0], [0.75, 0.5]))
     [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
      [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
      [1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
      [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
     """
-    minp = np.asarray(space.domain.min())
-    maxp = np.asarray(space.domain.max())
+    dom_min_pt = np.asarray(space.domain.min())
+    dom_max_pt = np.asarray(space.domain.max())
 
-    if begin is None:
-        begin = minp * 0.75 + maxp * 0.25
-    if end is None:
-        end = begin * 0.25 + maxp * 0.75
+    if min_pt is None:
+        min_pt = dom_min_pt * 0.75 + dom_max_pt * 0.25
+    if max_pt is None:
+        max_pt = dom_min_pt * 0.25 + dom_max_pt * 0.75
 
-    begin = np.atleast_1d(begin)
-    end = np.atleast_1d(end)
+    min_pt = np.atleast_1d(min_pt)
+    max_pt = np.atleast_1d(max_pt)
 
-    assert begin.size == space.ndim
-    assert end.size == space.ndim
+    if min_pt.shape != (space.ndim,):
+        raise ValueError('shape of `min_pt` must be {}, got {}'
+                         ''.format((space.ndim,), min_pt.shape))
+    if max_pt.shape != (space.ndim,):
+        raise ValueError('shape of `max_pt` must be {}, got {}'
+                         ''.format((space.ndim,), max_pt.shape))
 
-    def phan(x):
+    def phantom(x):
         result = True
 
-        for xp, minv, maxv in zip(x, begin, end):
+        for xi, xmin, xmax in zip(x, min_pt, max_pt):
             result = (result &
-                      np.less_equal(minv, xp) & np.less_equal(xp, maxv))
+                      np.less_equal(xmin, xi) & np.less_equal(xi, xmax))
         return result
 
-    return space.element(phan)
+    return space.element(phantom)
 
 
 def indicate_proj_axis(space, scale_structures=0.5):

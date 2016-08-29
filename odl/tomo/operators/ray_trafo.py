@@ -105,10 +105,10 @@ class RayTransform(Operator):
                 raise TypeError("'scikit' backend only supports 2d parallel "
                                 'geometries')
 
-            midp = discr_domain.domain.midpoint
-            if not all(midp == [0, 0]):
+            mid_pt = discr_domain.domain.mid_pt
+            if not all(mid_pt == [0, 0]):
                 raise ValueError('`discr_domain.domain` needs to be '
-                                 'centered on [0, 0], got {}'.format(midp))
+                                 'centered on [0, 0], got {}'.format(mid_pt))
 
             shape = discr_domain.shape
             if shape[0] != shape[1]:

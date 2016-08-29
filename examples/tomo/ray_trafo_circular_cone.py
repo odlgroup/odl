@@ -29,8 +29,8 @@ import odl
 # Discrete reconstruction space: discretized functions on the cube
 # [-20, 20]^3 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_corner=[-20, -20, -20], max_corner=[20, 20, 20],
-    nsamples=[300, 300, 300], dtype='float32')
+    min_pt=[-20, -20, -20], max_pt=[20, 20, 20], shape=[300, 300, 300],
+    dtype='float32')
 
 # Make a circular cone beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
@@ -41,7 +41,7 @@ geometry = odl.tomo.CircularConeFlatGeometry(
     angle_partition, detector_partition, src_radius=1000, det_radius=100,
     axis=[1, 0, 0])
 
-# ray transform aka forward projection. We use ASTRA CUDA backend.
+# Ray transform (= forward projection). We use the ASTRA CUDA backend.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create a discrete Shepp-Logan phantom (modified version)

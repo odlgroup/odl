@@ -102,7 +102,7 @@ def direction(request):
 
 def test_reciprocal_1d_odd():
 
-    grid = odl.uniform_sampling(0, 1, num_nodes=11)
+    grid = odl.uniform_sampling(0, 1, shape=11)
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -116,7 +116,7 @@ def test_reciprocal_1d_odd():
     assert all_almost_equal(rgrid.stride, true_recip_stride)
     # Should be symmetric
     assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
-    assert all_almost_equal(rgrid.center, 0)
+    assert all_almost_equal(rgrid.mid_pt, 0)
     # Zero should be at index n // 2
     assert all_almost_equal(rgrid[n // 2], 0)
 
@@ -137,7 +137,7 @@ def test_reciprocal_1d_odd():
 
 def test_reciprocal_1d_odd_halfcomplex():
 
-    grid = odl.uniform_sampling(0, 1, num_nodes=11)
+    grid = odl.uniform_sampling(0, 1, shape=11)
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -169,7 +169,7 @@ def test_reciprocal_1d_odd_halfcomplex():
 
 def test_reciprocal_1d_even():
 
-    grid = odl.uniform_sampling(0, 1, num_nodes=10)
+    grid = odl.uniform_sampling(0, 1, shape=10)
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -183,7 +183,7 @@ def test_reciprocal_1d_even():
     assert all_almost_equal(rgrid.stride, true_recip_stride)
     # Should be symmetric
     assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
-    assert all_almost_equal(rgrid.center, 0)
+    assert all_almost_equal(rgrid.mid_pt, 0)
     # No point should be closer to 0 than half a recip stride
     atol = 0.999 * true_recip_stride / 2
     assert not rgrid.approx_contains(0, atol=atol)
@@ -204,7 +204,7 @@ def test_reciprocal_1d_even():
 
 def test_reciprocal_1d_even_halfcomplex():
 
-    grid = odl.uniform_sampling(0, 1, num_nodes=10)
+    grid = odl.uniform_sampling(0, 1, shape=10)
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -236,7 +236,7 @@ def test_reciprocal_1d_even_halfcomplex():
 
 def test_reciprocal_nd():
 
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, num_nodes=(3, 4, 5))
+    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
 
@@ -256,7 +256,7 @@ def test_reciprocal_nd():
 
 def test_reciprocal_nd_shift_list():
 
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, num_nodes=(3, 4, 5))
+    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
     shift = [False, True, False]
@@ -279,7 +279,7 @@ def test_reciprocal_nd_shift_list():
 
 def test_reciprocal_nd_axes():
 
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, num_nodes=(3, 4, 5))
+    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
     axes_list = [[1, -1], [0], 0, [0, 2, 1], [2, 0]]
@@ -310,7 +310,7 @@ def test_reciprocal_nd_axes():
 
 def test_reciprocal_nd_halfcomplex():
 
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, num_nodes=(3, 4, 5))
+    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
     stride_last = 2 * pi / (s[-1] * n[-1])

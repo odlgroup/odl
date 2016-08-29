@@ -54,9 +54,9 @@ def _discrete_domain(ndim, interp):
     """
     max_pt = np.arange(1, ndim + 1)
     min_pt = - max_pt
-    nsamples = np.arange(1, ndim + 1) * 10
+    shape = np.arange(1, ndim + 1) * 10
 
-    return odl.uniform_discr(min_pt, max_pt, nsamples=nsamples, interp=interp,
+    return odl.uniform_discr(min_pt, max_pt, shape=shape, interp=interp,
                              dtype='float32')
 
 
@@ -77,9 +77,9 @@ def _discrete_domain_anisotropic(ndim, interp):
     """
     min_pt = [-1] * ndim
     max_pt = [1] * ndim
-    nsamples = np.arange(1, ndim + 1) * 10
+    shape = np.arange(1, ndim + 1) * 10
 
-    return odl.uniform_discr(min_pt, max_pt, nsamples=nsamples, interp=interp,
+    return odl.uniform_discr(min_pt, max_pt, shape=shape, interp=interp,
                              dtype='float32')
 
 

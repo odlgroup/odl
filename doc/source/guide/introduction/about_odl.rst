@@ -40,7 +40,7 @@ For the typical use cases in 1, 2 and 3 dimensions, there are convenience functi
 `Interval`,  `Rectangle` and `Cuboid`:
 
     >>> rect = odl.Rectangle([0, -1], [1, 1])
-    >>> rect.begin
+    >>> rect.min_pt
     array([ 0., -1.])
     >>> rect[0]
     Interval(0.0, 1.0)

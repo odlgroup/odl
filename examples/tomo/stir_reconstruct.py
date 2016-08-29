@@ -15,7 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example reconstruction with stir."""
+"""Example reconstruction using the 'stir' backend.
+
+This example computes projections and uses them as input data for
+reconstruction using the 'stir' backend. It requires an installation of
+`STIR <http://stir.sourceforge.net/>`_ and its Python bindings.
+
+TODO: which modality? CT? PET?
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
