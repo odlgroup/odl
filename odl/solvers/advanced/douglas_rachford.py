@@ -86,7 +86,8 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
        \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x),
 
     where :math:`f`, :math:`g_i`, :math:`l_i` are proper, convex and lower
-    semicontinuous. The infimal convolution :math:`g \Box l` is defined by
+    semicontinuous and :math:`L_i` are linear operators. The infimal
+    convolution :math:`g \Box l` is defined by
 
     .. math::
 
@@ -114,7 +115,10 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
     See Also
     --------
-    chambolle_pock : Solver for similar problems.
+    chambolle_pock_solver : Solver for similar problems.
+    forward_backward_pd : Solver for similar problems but can additionaly
+                          handle infimal convolutions, multiple forward
+                          operators and a differentiable term.
 
     References
     ----------
