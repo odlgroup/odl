@@ -831,11 +831,8 @@ def Interval(min_pt, max_pt):
 
     Parameters
     ----------
-    min_pt : `array-like`, shape ``(1,)``, or `float`
-        The lower ends of the intervals in the product
-    max_pt : `array-like`, shape ``(1,)``, or `float`
-        The upper ends of the intervals in the product
-
+    min_pt, max_pt : float or `array-like`, shape ``(1,)``
+        Lower/upper ends of the interval.
     """
     interval = IntervalProd(min_pt, max_pt)
     if interval.ndim != 1:
@@ -849,10 +846,8 @@ def Rectangle(min_pt, max_pt):
 
     Parameters
     ----------
-    min_pt : `array-like`, shape ``(2,)``
-        The lower ends of the intervals in the product
-    max_pt : `array-like`, shape ``(2,)``
-        The upper ends of the intervals in the product
+    min_pt, max_pt : `array-like`, shape ``(2,)``
+        Lower/upper ends of the intervals in the product.
     """
     rectangle = IntervalProd(min_pt, max_pt)
     if rectangle.ndim != 2:
@@ -866,10 +861,8 @@ def Cuboid(min_pt, max_pt):
 
     Parameters
     ----------
-    min_pt : `array-like`, shape ``(3,)``
-        The lower ends of the intervals in the product
-    max_pt : `array-like`, shape ``(3,)``
-        The upper ends of the intervals in the product
+    min_pt, max_pt : `array-like`, shape ``(3,)``
+        Lower/upper ends of the intervals in the product.
     """
     cuboid = IntervalProd(min_pt, max_pt)
     if cuboid.ndim != 3:

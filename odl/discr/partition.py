@@ -578,7 +578,7 @@ def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
         an entry may consist in a single bool or a 2-tuple of
         bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
-        sequence must be ``array.ndim``.
+        sequence must be ``intv_prod.ndim``.
 
         A single boolean is interpreted as a global choice for all
         boundaries.
@@ -640,12 +640,12 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
     ----------
     grid : `TensorGrid`
         Grid on which the partition is based
-    min_pt, max_pt : `array-like` or dict
-        Spatial points defining the lower and upper limits of the intervals
+    min_pt, max_pt : float, `sequence` of float, or dict
+        Spatial points defining the lower/upper limits of the intervals
         to be partitioned. The points can be specified in two ways:
 
-        array-like: These values are used directly as ``min_pt`` and/or
-        ``max_pt``.
+        float or sequence: The values are used directly as ``min_pt``
+        and/or ``max_pt``.
 
         dict: Index-value pairs specifying an axis and a spatial
         coordinate to be used in that axis. In axes which are not a key
@@ -678,7 +678,7 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
     >>> part.cell_boundary_vecs
     (array([-0.25,  0.25,  0.75,  1.25]),)
 
-    ``min_pt`` and ``max_pt`` can be given explicitly as array-like:
+    ``min_pt`` and ``max_pt`` can be given explicitly:
 
     >>> part = uniform_partition_fromgrid(grid, min_pt=0, max_pt=1)
     >>> part.cell_boundary_vecs
@@ -739,20 +739,20 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
     return RectPartition(IntervalProd(min_pt_vec, max_pt_vec), grid)
 
 
-def uniform_partition(min_pt=None, max_pt=None, shape=None,
-                      cell_sides=None, nodes_on_bdry=False):
+def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
+                      nodes_on_bdry=False):
     """Return a partition with equally sized cells.
 
     Parameters
     ----------
-    min_pt, max_pt : float or array-like, optional
-        Vectors defining the lower and upper limits of intervals in an
+    min_pt, max_pt : float or `sequence` of float, optional
+        Vectors defining the lower/upper limits of the intervals in an
         `IntervalProd` (a rectangular box). ``None`` entries mean
         "compute the value".
     shape : int or `sequence` of ints, optional
         Number of nodes per axis. ``None`` entries mean
         "compute the value".
-    cell_sides : float or `array-like`, optional
+    cell_sides : float or `sequence` of float, optional
         Side length of the partition cells per axis. ``None`` entries mean
         "compute the value".
     nodes_on_bdry : bool or `sequence`, optional

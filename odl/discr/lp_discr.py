@@ -961,14 +961,20 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
 
     Other Parameters
     ----------------
-    nodes_on_bdry : bool or boolean `array-like`, optional
-        If ``True``, place the outermost grid points at the boundary. For
-        ``False``, they are shifted by half a cell size to the 'inner'.
-        If an array-like object is given, it must have shape ``(ndim, 2)``,
-        where ``ndim`` is the number of dimensions. It defines per axis
-        whether the leftmost (first column) and rightmost (second column)
-        nodes node lie on the boundary.
-        Default: ``False``
+    nodes_on_bdry : bool or `sequence`, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (``True``) or shift it
+        by half a cell size into the interior (``False``). In each axis,
+        an entry may consist in a single bool or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``len(shape)``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
+
+        Default: ``False``.
+
     order : {'C', 'F'}, optional
         Axis ordering in the data storage. Default: 'C'
     dtype : dtype, optional
@@ -977,9 +983,9 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
     weighting : {'const', 'none'}, optional
         Weighting of the discretized space functions.
 
-            'const' : weight is a constant, the cell volume (default)
+            'const' : Weight is a constant, the cell volume (default).
 
-            'none' : no weighting
+            'none' : No weighting.
 
     Returns
     -------
@@ -1126,15 +1132,14 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
                                    **kwargs)
 
 
-def uniform_discr(min_pt, max_pt, shape,
-                  exponent=2.0, interp='nearest', impl='numpy', **kwargs):
+def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
+                  impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
     Parameters
     ----------
     min_pt, max_pt: float or `sequence` of floats
-        Minimum/maximum corners of the domain of the resulting spatial
-        domain.
+        Minimum/maximum corners of the desired function domain.
     shape : int or `sequence` of ints
         Number of samples per axis.
     exponent : positive float, optional
@@ -1157,11 +1162,12 @@ def uniform_discr(min_pt, max_pt, shape,
         an entry may consist in a single bool or a 2-tuple of
         bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
-        sequence must be ``array.ndim``.
+        sequence must be ``len(shape)``.
 
         A single boolean is interpreted as a global choice for all
         boundaries.
-        Default: ``False``
+
+        Default: ``False``.
 
     dtype : dtype, optional
         Data type for the discretized space
@@ -1279,8 +1285,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     discr : `DiscreteLp`
         Uniformly discretized space used as a template.
     min_pt, max_pt: float or `sequence` of floats
-        Minimum/maximum corners of the domain of the resulting spatial
-        domain.
+        Minimum/maximum corners of the desired function domain.
     shape : int or `sequence` of ints
         Number of samples per axis.
     exponent : positive float, optional
@@ -1310,7 +1315,8 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
         A single boolean is interpreted as a global choice for all
         boundaries.
-        Default: ``False``
+
+        Default: ``False``.
 
     dtype : optional
         Data type for the discretized space.

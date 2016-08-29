@@ -832,25 +832,27 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        min_pt : `array-like` or float
-            Grid point with minimum coordinates, can be a single float
-            for 1D grids
-        max_pt : `array-like` or float
-            Grid point with maximum coordinates, can be a single float
-            for 1D grids
-        shape : `array-like` or int
-            The number of grid points per axis, can be an integer for
-            1D grids
+        min_pt, max_pt : float or `sequence` of floats
+            Points defining the minimum/maximum grid coordinates.
+        shape : int or `sequence` of ints
+            Number of grid points per axis.
 
         Examples
         --------
-        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
+        >>> import odl
+        >>> rg = odl.RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg
         RegularGrid([-1.5, -1.0], [-0.5, 3.0], (2, 3))
         >>> rg.coord_vectors
         (array([-1.5, -0.5]), array([-1.,  1.,  3.]))
         >>> rg.ndim, rg.size
         (2, 6)
+
+        In 1D, we don't need sequences:
+
+        >>> rg = odl.RegularGrid(0, 1, 10)
+        >>> rg.shape
+        (10,)
         """
         min_pt = np.atleast_1d(min_pt).astype('float64')
         max_pt = np.atleast_1d(max_pt).astype('float64')
@@ -1275,7 +1277,7 @@ def uniform_sampling(min_pt, max_pt, shape, nodes_on_bdry=True):
 
     Parameters
     ----------
-    min_pt, max_pt : float or `array-like`
+    min_pt, max_pt : float or `sequence` of float
         Vectors of lower/upper ends of the intervals in the product.
     shape : int or `sequence` of ints
         Number of nodes per axis. Entries corresponding to degenerate axes
@@ -1302,16 +1304,23 @@ def uniform_sampling(min_pt, max_pt, shape, nodes_on_bdry=True):
 
     Examples
     --------
-    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], (3, 3))
+    >>> import odl
+    >>> grid = odl.uniform_sampling([-1.5, 2], [-0.5, 3], (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
 
     To have the nodes in the "middle", use ``nodes_on_bdry=False``:
 
-    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], (2, 2),
-    ...                         nodes_on_bdry=False)
+    >>> grid = odl.uniform_sampling([-1.5, 2], [-0.5, 3], (2, 2),
+    ...                             nodes_on_bdry=False)
     >>> grid.coord_vectors
     (array([-1.25, -0.75]), array([ 2.25,  2.75]))
+
+    In 1D, we don't need sequences:
+
+    >>> grid = odl.uniform_sampling(0, 1, 3)
+    >>> grid.coord_vectors
+    (array([ 0. ,  0.5,  1. ]),)
     """
     return uniform_sampling_fromintv(IntervalProd(min_pt, max_pt), shape,
                                      nodes_on_bdry=nodes_on_bdry)
