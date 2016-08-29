@@ -2,18 +2,18 @@
 Getting started
 ###############
 
-Welcome to the ODL users guide, this guide is intended to give you a simple introduction to
-ODL and how to work with it. If you need help on a specific function you should look at its
-documentation.
+Welcome to the ODL getting started guide. This guide is intended to give you a simple introduction to
+ODL and how to work with it. If you need help with a specific function you should look at the `odl API reference<
+https://odl.readthedocs.io/odl.html>`_.
 
-The best way to get started with ODL as a user is generally to find one (or more) examples
-that are relevant to whatver problem you are studying. These are available in the `examples folder on GitHub <https://github.com/odlgroup/odl/tree/master/examples>`_. They are mostly written to be copy-paste friendly
-and show how to use the respective operators, solvers and spaces in a correct manner.
+The best way to get started with ODL as a user is generally to find one (or more) examples that are relevant to whatver problem you are studying. 
+These are available in the `examples folder on GitHub <https://github.com/odlgroup/odl/tree/master/examples>`_. 
+They are mostly written to be copy-paste friendly and show how to use the respective operators, solvers and spaces in a correct manner.
 
 Example: Solving an inverse problem
 ===================================
-In what follows, we will give an example of the workflow one might have when solving an inverse problem as
-it is encountered "in real life". The problem we want to solve is
+In what follows, we will give an example of the workflow one might have when solving an inverse problem as it is encountered "in real life". 
+The problem we want to solve is
 
 .. math::
    
@@ -25,9 +25,13 @@ Where :math:`A` is the `convolution <https://en.wikipedia.org/wiki/Convolution>`
    
    (Af)(x) = \int f(x) k(x-y) dy
 
-where :math:`k` is the convolution kernel, :math:`f` is the solution and :math:`g` is known data. As is typical in applications, the convolution operator may not be available in ODL (we'll pretend it's not), so we will need to implement it.
+where :math:`k` is the convolution kernel, :math:`f` is the unknown solution and :math:`g` is known data. 
+As is typical in applications, the convolution operator may not be available in ODL (we'll pretend it's not), 
+so we will need to implement it.
 
-We start by finding a nice implementation of the convolution operator, `scipy happens to have one <http://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.fftconvolve.html>`_, and create a wrapping `Operator` for it in ODL.
+We start by finding a nice implementation of the convolution operator --
+`SciPy happens to have one <http://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.fftconvolve.html>`_ --
+and create a wrapping `Operator` for it in ODL.
 
 .. code-block:: python
 
@@ -35,9 +39,9 @@ We start by finding a nice implementation of the convolution operator, `scipy ha
    import scipy
    
    class Convolution(odl.Operator):
-       """Operator calculating the convolution of a kernel with a vector.
+       """Operator calculating the convolution of a kernel with a function.
    
-       The operator inherits from ``odl.Operator`` to be able to be used with odl.
+       The operator inherits from ``odl.Operator`` to be able to be used with ODL.
        """
    
        def __init__(self, kernel):
@@ -56,19 +60,32 @@ We start by finding a nice implementation of the convolution operator, `scipy ha
            """Implement calling the operator by calling scipy."""
            return scipy.signal.convolve(self.kernel, x, mode='same')
    
-We can verify that our operator works by calling it on some data. This can either come from some outside source, or from simulations. ODL also provides a nice range of standard phantoms such as the `cuboid` and `shepp_logan` phantoms:
+We can verify that our operator works by calling it on some data. 
+This can either come from an outside source, or from simulations. 
+ODL also provides a nice range of standard phantoms such as the `cuboid` and `shepp_logan` phantoms:
 
 .. code-block:: python
 
+   # Define the space the problem should be solved on. 
+   # Here the square [-1, 1] x [-1, 1] discretized on a 100x100 grid.
    space = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
+
+   # Convolution kernel, a small centered rectangle.
    kernel = odl.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
-   conv = Convolution(kernel)
+
+   # Create convolution operator
+   A = Convolution(kernel)
+
+   # Create phantom (the "unknown" solution)
    phantom = odl.phantom.shepp_logan(space, modified=True)
-   data = conv(phantom)
-   
+
+   # Apply convolution to phantom to create data
+   g = A(phantom)
+  
+   # Display the results using the show method
    kernel.show('kernel')
    phantom.show('phantom')
-   data.show('convolved phantom')
+   g.show('convolved phantom')
 
 .. image:: figures/getting_started_kernel.png
 
@@ -76,7 +93,23 @@ We can verify that our operator works by calling it on some data. This can eithe
 
 .. image:: figures/getting_started_convolved.png
 
-We can use this data to try to solve the inverse problem. To solve that, we need further properties of the operator. Specifically, we need an `Operator.adjoint`. Luckily, the convolution operator is self adjoint if the kernel is symmetric, so we can add: 
+We can use this as right-hand side in our inverse problem.
+We try one of the most simple solvers, the `landweber` solver.
+The Landweber solver is an iterative solver that solves
+
+.. math::
+
+   f_{i+1} = f_i - \omega A^* (A(f_i) - g)
+
+where :math:`\omega < 2/\|A\|` is a constant and :math:`A^*` is the `adjoint <https://en.wikipedia.org/wiki/Hermitian_adjoint>`_ operator associated with :math:`A`.
+The adjoint is a generalization of the transpose of a matrix and defined as the (unique) operator such that
+
+.. math::
+    \langle Ax, y \rangle = \langle x, A^*y \rangle
+
+where :math:`\langle x, y \rangle` is the inner product.
+It is implemented in odl as `Operator.adjoint`. 
+Luckily, the convolution operator is self adjoint if the kernel is symmetric, so we can add: 
 
 .. code-block:: python
 
@@ -85,205 +118,138 @@ We can use this data to try to solve the inverse problem. To solve that, we need
 
        @property  # making the adjoint a property lets users access it as conv.adjoint
        def adjoint(self):
-           return self  # the adjoint is the same as the operator
-   
-Now lets try with the simple `landweber` solver:
+           return self  # the adjoint is the same as this operator
+
+With this addition we are ready to try solving the inverse problem using the `landweber` solver:
 
 .. code-block:: python
 
    # Need operator norm for step length (omega)
-   opnorm = odl.power_method_opnorm(conv, niter=10)
+   opnorm = odl.power_method_opnorm(A)
    
-   x = space.zero()
-   odl.solvers.landweber(conv, x, data, niter=100, omega=1/opnorm**2)
-   x.show('landweber solution')
+   f = space.zero()
+   odl.solvers.landweber(A, f, g, niter=100, omega=1/opnorm**2)
+   f.show('landweber')
    
 .. image:: figures/getting_started_landweber.png
 
 This solution is not very good, mostly due to the ill-posedness of the convolution operator. 
-Other solvers, like the `conjugate_gradient` solver give similar results:
+Other solvers like `conjugate gradient on the normal equations <https://en.wikipedia.org/wiki/Conjugate_gradient_method#Conjugate_gradient_on_the_normal_equations>`_ (`conjugate_gradient_normal`) give similar results:
 
 .. code-block:: python
 
-   x = space.zero()
-   odl.solvers.conjugate_gradient(conv, x, data, niter=100)
-   x.show('conjugate gradient solution')
+   f = space.zero()
+   odl.solvers.conjugate_gradient_normal(A, f, g, niter=100)
+   f.show('conjugate gradient')
 
 .. image:: figures/getting_started_conjugate_gradient.png
 
-A method to remedy this problem is to instead consider a regularized problem. One of the classic regularizers is `Tikhonov regularization <https://en.wikipedia.org/wiki/Tikhonov_regularization>`_ where we instead study the problem
+A method to remedy this problem is to instead consider a regularized problem.
+One of the classic regularizers is `Tikhonov regularization <https://en.wikipedia.org/wiki/Tikhonov_regularization>`_ where we add regularization to the problem formulation,
+i.e. slightly change the problem such that the obtained solutions have better regularity properties.
+We instead study the problem
 
 .. math::
    
-   \min_f ||Af - g||_2 + ||Bf||_2
+   \min_f \|Af - g\|_2^2 + a \|Bf\|_2^2,
 
-Where :math:`B` is a regularizer. To solve this with the above solvers, we can find the first order optimality conditions
+where :math:`B` is a "roughening' operator and :math:`a` is a regularization parameter that determines how strong the regularization should be.
+Basically one wants that :math:`Bf` is less smooth than :math:`f` so that the optimum solution is more smooth.
+To solve it with the above solvers, we can find the first order optimality conditions
 
 .. math::
  
-   2 A^* (Af - g) + 2 B^* B f =0
+   2 A^* (Af - g) + 2 a B^* B f =0
 
-Where :math:`A^*` is the adjoint of :math:`A`. This can be rewritten on the form :math:`Ax=b`:
+This can be rewritten on the form :math:`Tf=b`:
 
 .. math::
 
-   (A^* A + B^* B) f = A^* g
+   \underbrace{(A^* A + a B^* B)}_T f = \underbrace{A^* g}_b
 
-We can try solving this with :math:`B` as the `IdentityOperator` using ODL:
+We first use a multiple of the `IdentityOperator` in ODL as :math:`B`, 
+which is also known as 'classical' Tikhonov regularization.
+Note that since the operator :math:`T` above is self-adjoint we can use the classical `conjugate_gradient` method instead of `conjugate_gradient_normal`.
+This improves both computation time and numerical stability.
 
 .. code-block:: python
 
-   I = odl.IdentityOperator(space)
-   reg_op = conv.adjoint * conv + 0.1 * I.adjoint * I
-   rhs = conv.adjoint(data)
+   B = odl.IdentityOperator(space)
+   a = 0.1
+   T = A.adjoint * A + a * B.adjoint * B
+   b = A.adjoint(g)
    
-   x = space.zero()
-   odl.solvers.conjugate_gradient(reg_op, x, rhs, niter=100)
-   x.show('Tikhonov identity conjugate gradient solution')
+   f = space.zero()
+   odl.solvers.conjugate_gradient(T, f, b, niter=100)
+   f.show('Tikhonov identity conjugate gradient')
 
 .. image:: figures/getting_started_tikhonov_identity_conjugate_gradient.png
 
-Slightly better, but no major upgrade. What about letting :math:`B` be the `Gradient`?
+Slightly better, but no major improvement.
+What about letting :math:`B` be the `Gradient`?
 
 .. code-block:: python
 
-   grad = odl.Gradient(space)
-   reg_op = conv.adjoint * conv + 0.0001 * grad.adjoint * grad
-   rhs = conv.adjoint(data)
+   B = odl.Gradient(space)
+   a = 0.0001
+   T = A.adjoint * A + a * B.adjoint * B
+   b = A.adjoint(g)
    
-   x = space.zero()
-   odl.solvers.conjugate_gradient(reg_op, x, rhs, niter=100)
-   x.show('Tikhonov gradient conjugate gradient solution')
+   f = space.zero()
+   odl.solvers.conjugate_gradient(T, f, b, niter=100)
+   f.show('Tikhonov gradient conjugate gradient')
 
 .. image:: figures/getting_started_tikhonov_gradient_conjugate_gradient.png
 
-Perhaps a bit better, but far from excellent. Lets try more modern methods, like TV regularization. Here we want to solve the problem
+Perhaps a bit better, but far from excellent.
+
+Let's try more modern methods, like `TV regularization <https://en.wikipedia.org/wiki/Total_variation_denoising>`_.
+Here we want to solve the problem
+
 
 .. math::
 
-   \min_{0 \leq f \leq 1} ||Af - g||_2 + ||\nabla f||_1
+   \min_{0 \leq f \leq 1} \|Af - g\|_2^2 + a \|\nabla f\|_1
 
-Since this is a non-differentiable problem we need more advanced solvers to solve this problem. One of the stronger solvers in ODL is the Douglas-Rachford Primal-Dual solver (`douglas_rachford_pd`) which uses :ref:`proximal_operators` to solve the optimization problem. Several examples of this and similar solvers (`forward_backward_pd`, `chambolle_pock_solver`, etc) are available in the ODL examples folder.
+Since this is a non-differentiable problem we need more advanced solvers to solve it.
+One of the stronger solvers in ODL is the Douglas-Rachford Primal-Dual method (`douglas_rachford_pd`) which uses :ref:`proximal_operators` to solve the optimization problem.
+There are several examples available using this solver as well as similar optimization methods,
+e.g. `forward_backward_pd`, `chambolle_pock_solver`, etc in the ODL `examples/solvers <https://github.com/odlgroup/odl/tree/master/examples/solvers>`_ folder.
 
 .. code-block:: python
 
-   # Assemble all operators
+   # Assemble all operators into a list.
    grad = odl.Gradient(space)
-   lin_ops = [conv, grad]
+   lin_ops = [A, grad]
+   a = 0.001
    
-   # Create proximals as needed
-   prox_cc_g = [odl.solvers.proximal_cconj_l2(space, g=data),
-                odl.solvers.proximal_cconj_l1(grad.range, lam=0.001)]
+   # Create proximals operators corresponding to the convex conjugate (cconj)
+   # of the l2 squared and l1 norms.
+   prox_cc_g = [odl.solvers.proximal_cconj_l2_squared(space, g=g),
+                odl.solvers.proximal_cconj_l1(grad.range, lam=a)]
+
+   # Proximal of the bound constraint 0 <= f <= 1
    prox_f = odl.solvers.proximal_box_constraint(space, 0, 1)
    
-   # Find scaling constants
-   opnorm_conv = odl.power_method_opnorm(conv, niter=10, xstart=data)
-   opnorm_grad = odl.power_method_opnorm(grad, niter=10, xstart=data)
-   sigma = [1 / opnorm_conv**2, 1 / opnorm_grad**2]
+   # Find scaling constants so that the solver converges.
+   # See the douglas_rachford_pd documentation for more information.
+   opnorm_A = odl.power_method_opnorm(A, xstart=g)
+   opnorm_grad = odl.power_method_opnorm(grad, xstart=g)
+   sigma = [1 / opnorm_A**2, 1 / opnorm_grad**2]
+   tau = 1.0
    
-   # Solve
+   # Solve using the Douglas-Rachford Primal-Dual method
    x = space.zero()
    odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
-                                   tau=1.0, sigma=sigma, niter=100)
-   x.show('TV douglas rachford solution')
+                                   tau=tau, sigma=sigma, niter=100)
+   x.show('TV Douglas-Rachford')
 
 .. image:: figures/getting_started_TV_douglas_rachford.png
 
 This solution is almost perfect, and we can happily go on to solving more advanced problems!
 
-Full code in this example available below
+The full code in this example is available below.
 
-.. code-block:: python
+.. literalinclude:: code/getting_started_convolution.py
+   :language: python
 
-   import odl
-   import scipy
-   
-   
-   class Convolution(odl.Operator):
-       """Operator calculating the convolution of a kernel with a vector.
-   
-       The operator inherits from ``odl.Operator`` to be able to be used with odl.
-       """
-   
-       def __init__(self, kernel):
-           """Initialize a convolution operator with a known kernel."""
-   
-           # Store the kernel
-           self.kernel = kernel
-           odl.Operator.__init__(self, domain=kernel.space, range=kernel.space,
-                                 linear=True)
-   
-       def _call(self, x):
-           return scipy.signal.fftconvolve(self.kernel, x, mode='same')
-   
-       @property
-       def adjoint(self):
-           return self
-   
-   space = odl.uniform_discr([-1, -1], [1, 1], [100, 100])
-   kernel = odl.phantom.cuboid(space, [-0.05, -0.05], [0.05, 0.05])
-   conv = Convolution(kernel)
-   phantom = odl.phantom.shepp_logan(space, modified=True)
-   data = conv(phantom)
-   
-   kernel.show('kernel')
-   phantom.show('phantom')
-   data.show('convolved phantom')
-   
-   # Landweber
-   
-   # Need operator norm for step length (omega)
-   opnorm = odl.power_method_opnorm(conv, niter=10)
-   
-   x = space.zero()
-   odl.solvers.landweber(conv, x, data, niter=100, omega=1/opnorm**2)
-   x.show('landweber solution')
-   
-   # Conjugate gradient
-   
-   x = space.zero()
-   odl.solvers.conjugate_gradient(conv, x, data, niter=100)
-   x.show('conjugate gradient solution')
-   
-   # Tikhonov with identity
-   
-   I = odl.IdentityOperator(space)
-   reg_op = conv.adjoint * conv + 0.1 * I.adjoint * I
-   rhs = conv.adjoint(data)
-   
-   x = space.zero()
-   odl.solvers.conjugate_gradient(reg_op, x, rhs, niter=100)
-   x.show('Tikhonov identity conjugate gradient solution')
-   
-   # Tikhonov with gradient
-   
-   grad = odl.Gradient(space)
-   reg_op = conv.adjoint * conv + 0.0001 * grad.adjoint * grad
-   rhs = conv.adjoint(data)
-   
-   x = space.zero()
-   odl.solvers.conjugate_gradient(reg_op, x, rhs, niter=100)
-   x.show('Tikhonov gradient conjugate gradient solution')
-   
-   # douglas rachford
-   
-   # Assemble all operators
-   grad = odl.Gradient(space)
-   lin_ops = [conv, grad]
-   
-   # Create proximals as needed
-   prox_cc_g = [odl.solvers.proximal_cconj_l2(space, g=data),
-                odl.solvers.proximal_cconj_l1(grad.range, lam=0.001)]
-   prox_f = odl.solvers.proximal_box_constraint(space, 0, 1)
-   
-   # Find scaling constants
-   opnorm_conv = odl.power_method_opnorm(conv, niter=10, xstart=data)
-   opnorm_grad = odl.power_method_opnorm(grad, niter=10, xstart=data)
-   sigma = [1 / opnorm_conv**2, 1 / opnorm_grad**2]
-   
-   # Solve
-   x = space.zero()
-   odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
-                                   tau=1.0, sigma=sigma, niter=100)
-   x.show('TV Douglas-Rachford solution')
-   
