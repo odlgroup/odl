@@ -36,6 +36,7 @@ from odl.tomo.backends.astra_setup import (
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, FanFlatGeometry, Parallel3dAxisGeometry,
     HelicalConeFlatGeometry)
+from odl.util.utility import writable_array
 
 
 __all__ = ('astra_cuda_forward_projector', 'astra_cuda_back_projector',
@@ -93,34 +94,45 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
 
     # In the case dim == 3, we need to swap axes, so can't perform the FP
     # in-place
-    if out is None and ndim == 2:
-        out = proj_space.element()
-
-    vol_id = astra_data(vol_geom, datatype='volume', data=vol_data)
-
-    # needs to be improved, cuda does not use out anyway
-    data_out = out if ndim == 2 else None
-    sino_id = astra_data(proj_geom, datatype='projection', data=data_out,
-                         ndim=proj_space.ndim)
+    vol_id = astra_data(vol_geom, datatype='volume', data=vol_data,
+                        allow_copy=True)
 
     # Create projector
     proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
                               impl='cuda')
 
-    # Create algorithm
-    algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
-                              proj_id=proj_id, impl='cuda')
+    if ndim == 2:
+        if out is None:
+            out = proj_space.element()
 
-    # Run algorithm
-    astra.algorithm.run(algo_id)
+        # Wrap the array in correct dtype etc if needed
+        with writable_array(out, dtype='float32', order='C') as arr:
+            sino_id = astra_data(proj_geom, datatype='projection', data=arr)
 
-    # Wrap data
-    if ndim == 3:
+            # Create algorithm
+            algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
+                                      proj_id=proj_id, impl='cuda')
+
+            # Run algorithm
+            astra.algorithm.run(algo_id)
+    elif ndim == 3:
+        sino_id = astra_data(proj_geom, datatype='projection',
+                             ndim=proj_space.ndim)
+
+        # Create algorithm
+        algo_id = astra_algorithm('forward', ndim, vol_id, sino_id,
+                                  proj_id=proj_id, impl='cuda')
+
+        # Run algorithm
+        astra.algorithm.run(algo_id)
+
         if out is None:
             out = proj_space.element(np.rollaxis(astra.data3d.get(sino_id),
                                                  0, 3))
         else:
             out[:] = np.rollaxis(astra.data3d.get(sino_id), 0, 3)
+    else:
+        raise RuntimeError('unknown ndim')
 
     # Fix inconsistent scaling
     if isinstance(geometry, Parallel2dGeometry):
@@ -185,13 +197,6 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
     vol_geom = astra_volume_geometry(reco_space)
     proj_geom = astra_projection_geometry(geometry)
 
-    # Create data structures
-    if out is None:
-        out = reco_space.element()
-
-    vol_id = astra_data(vol_geom, datatype='volume', data=out,
-                        ndim=reco_space.ndim)
-
     if ndim == 2:
         swapped_proj_data = proj_data
     else:
@@ -199,18 +204,26 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
             np.rollaxis(proj_data.asarray(), 2, 0))
 
     sino_id = astra_data(proj_geom, datatype='projection',
-                         data=swapped_proj_data)
+                         data=swapped_proj_data, allow_copy=True)
 
     # Create projector
     proj_id = astra_projector('nearest', vol_geom, proj_geom, ndim,
                               impl='cuda')
 
-    # Create algorithm
-    algo_id = astra_algorithm('backward', ndim, vol_id, sino_id,
-                              proj_id=proj_id, impl='cuda')
+    # Reconstruction volume
+    if out is None:
+        out = reco_space.element()
 
-    # Run algorithm
-    astra.algorithm.run(algo_id)
+    # Wrap the array in correct dtype etc if needed
+    with writable_array(out, dtype='float32', order='C') as arr:
+        vol_id = astra_data(vol_geom, datatype='volume', data=arr,
+                            ndim=reco_space.ndim)
+        # Create algorithm
+        algo_id = astra_algorithm('backward', ndim, vol_id, sino_id,
+                                  proj_id=proj_id, impl='cuda')
+
+        # Run algorithm
+        astra.algorithm.run(algo_id)
 
     # Angular integration weighting factor
     # angle interval weight by approximate cell volume

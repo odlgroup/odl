@@ -12,6 +12,10 @@ Next release
 New features
 ------------
 - Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
+- Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on. This is
+  intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists.
+  (:pull:`524`)
+- Allow ASTRA backend to be used with arbitrary dtypes. (:pull:`524`)
 
 Improvements
 ------------

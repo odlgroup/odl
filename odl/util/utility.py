@@ -38,7 +38,8 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr', 'conj_exponent',
            'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype', 'TYPE_MAP_R2C', 'TYPE_MAP_C2R')
+           'is_complex_floating_dtype', 'TYPE_MAP_R2C', 'TYPE_MAP_C2R',
+           'writable_array')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
@@ -357,6 +358,88 @@ def preload_first_arg(instance, mode):
             raise ValueError('bad mode {!r}'.format(mode))
 
     return decorator
+
+
+class writable_array(object):
+    """Context manager that casts obj to a `numpy.array` and saves changes."""
+
+    def __init__(self, obj, *args, **kwargs):
+        """initialize a new instance.
+
+        Parameters
+        ----------
+        obj : `array-like`
+            Object that should be cast to an array, must be usable with
+            `numpy.asarray` and be set-able with ``obj[:] = arr``.
+        args, kwargs :
+            Arguments that should be passed to `numpy.asarray`.
+
+        Examples
+        --------
+        Convert list to array and use with numpy
+
+        >>> lst = [1, 2, 3]
+        >>> with writable_array(lst) as arr:
+        ...    arr *= 2
+        >>> lst
+        [2, 4, 6]
+
+        Also usable with ODL vectors
+
+        >>> import odl
+        >>> space = odl.uniform_discr(0, 1, 3)
+        >>> x = space.element([1, 2, 3])
+        >>> with writable_array(x) as arr:
+        ...    arr += [1, 1, 1]
+        >>> x
+        uniform_discr(0.0, 1.0, 3).element([2.0, 3.0, 4.0])
+
+        Can also be called with arguments to `numpy.asarray`
+
+        >>> lst = [1, 2, 3]
+        >>> with writable_array(lst, dtype='complex') as arr:
+        ...    arr  # print array
+        array([ 1.+0.j,  2.+0.j,  3.+0.j])
+
+        Note that the changes are only saved once the context manger exits,
+        before, the input vector is in general unchanged
+
+        >>> lst = [1, 2, 3]
+        >>> with writable_array(lst) as arr:
+        ...    arr *= 2
+        ...    lst  # print content of lst before exiting
+        [1, 2, 3]
+        >>> lst  # print content of lst after exit
+        [2, 4, 6]
+        """
+        self.obj = obj
+        self.args = args
+        self.kwargs = kwargs
+        self.arr = None
+
+    def __enter__(self):
+        """called by ``with writable_array(obj):``.
+
+        Returns
+        -------
+        arr : `numpy.ndarray`
+            Array representing ``self.obj``, created by calling
+            ``numpy.asarray``. Any changes to ``arr`` will be passed through
+            to ``self.obj`` after the context manager exits.
+        """
+        self.arr = np.asarray(self.obj, *self.args, **self.kwargs)
+        return self.arr
+
+    def __exit__(self, type, value, traceback):
+        """called when ``with writable_array(obj):`` ends.
+
+        Saves any changes to ``self.arr`` to ``self.obj``, also "frees"
+        self.arr in case the manager is used multiple times.
+
+        Extra arguments are ignored, any exceptions are passed through.
+        """
+        self.obj[:] = self.arr
+        self.arr = None
 
 
 if __name__ == '__main__':

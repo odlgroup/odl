@@ -58,15 +58,17 @@ projectors = [skip_if_no_astra('par2d astra_cpu uniform'),
               skip_if_no_scikit('par2d scikit uniform'),
               skip_if_no_scikit('par2d scikit half_uniform')]
 
+
 projector_ids = ['geom={}, impl={}, angles={}'
                  ''.format(*p.args[1].split()) for p in projectors]
 
 
 @pytest.fixture(scope="module", params=projectors, ids=projector_ids)
 def projector(request):
-    n_voxels = 100
+    n = 100
+    m = 100
     n_angles = 100
-    n_pixels = 100
+    dtype = 'float32'
 
     geom, impl, angle = request.param.split()
 
@@ -94,22 +96,22 @@ def projector(request):
 
     if geom == 'par2d':
         # Discrete reconstruction space
-        reco_space = odl.uniform_discr([-20] * 2, [20] * 2, [n_voxels] * 2,
-                                       dtype='float32')
+        reco_space = odl.uniform_discr([-20] * 2, [20] * 2, [n] * 2,
+                                       dtype=dtype)
 
         # Geometry
-        dpart = odl.uniform_partition(-30, 30, n_pixels)
+        dpart = odl.uniform_partition(-30, 30, m)
         geom = tomo.Parallel2dGeometry(apart, dpart)
 
         return tomo.RayTransform(reco_space, geom, impl=impl)
 
     elif geom == 'par3d':
         # Discrete reconstruction space
-        reco_space = odl.uniform_discr([-20] * 3, [20] * 3, [n_voxels] * 3,
-                                       dtype='float32')
+        reco_space = odl.uniform_discr([-20] * 3, [20] * 3, [n] * 3,
+                                       dtype=dtype)
 
         # Geometry
-        dpart = odl.uniform_partition([-30] * 2, [30] * 2, [n_pixels] * 2)
+        dpart = odl.uniform_partition([-30] * 2, [30] * 2, [n] * 2)
         geom = tomo.Parallel3dAxisGeometry(apart, dpart)
 
         # Ray transform
@@ -117,11 +119,11 @@ def projector(request):
 
     elif geom == 'cone2d':
         # Discrete reconstruction space
-        reco_space = odl.uniform_discr([-20] * 2, [20] * 2, [n_voxels] * 2,
-                                       dtype='float32')
+        reco_space = odl.uniform_discr([-20] * 2, [20] * 2, [n] * 2,
+                                       dtype=dtype)
 
         # Geometry
-        dpart = odl.uniform_partition(-30, 30, n_pixels)
+        dpart = odl.uniform_partition(-30, 30, m)
         geom = tomo.FanFlatGeometry(apart, dpart, src_radius=200,
                                     det_radius=100)
 
@@ -130,11 +132,11 @@ def projector(request):
 
     elif geom == 'cone3d':
         # Discrete reconstruction space
-        reco_space = odl.uniform_discr([-20] * 3, [20] * 3, [n_voxels] * 3,
-                                       dtype='float32')
+        reco_space = odl.uniform_discr([-20] * 3, [20] * 3, [n] * 3,
+                                       dtype=dtype)
 
         # Geometry
-        dpart = odl.uniform_partition([-60] * 2, [60] * 2, [n_pixels] * 2)
+        dpart = odl.uniform_partition([-60] * 2, [60] * 2, [m] * 2)
 
         geom = tomo.CircularConeFlatGeometry(apart, dpart, src_radius=200,
                                              det_radius=100)
@@ -145,11 +147,11 @@ def projector(request):
     elif geom == 'helical':
         # Discrete reconstruction space
         reco_space = odl.uniform_discr([-20, -20, 0], [20, 20, 40],
-                                       [n_voxels] * 3, dtype='float32')
+                                       [n] * 3, dtype=dtype)
 
         # overwrite angle
         apart = odl.uniform_partition(0, 8 * 2 * np.pi, n_angles)
-        dpart = odl.uniform_partition([-30, -3], [30, 3], [n_pixels] * 2)
+        dpart = odl.uniform_partition([-30, -3], [30, 3], [m] * 2)
         geom = tomo.HelicalConeFlatGeometry(apart, dpart, pitch=5.0,
                                             src_radius=200, det_radius=100)
 

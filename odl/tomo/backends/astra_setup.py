@@ -393,7 +393,7 @@ def astra_projection_geometry(geometry):
     return proj_geom
 
 
-def astra_data(astra_geom, datatype, data=None, ndim=2):
+def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
     """Create an ASTRA data structure.
 
     Parameters
@@ -409,6 +409,10 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
     ndim : {2, 3}, optional
         Dimension of the data. If ``data`` is not `None`, this parameter
         has no effect.
+    allow_copy : `bool`, optional
+        True if copying ``data`` should be allowed. This means that anything
+        written by ASTRA to the returned structure will not be written to
+        ``data``.
 
     Returns
     -------
@@ -446,15 +450,19 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
 
     # ASTRA checks if data is c-contiguous and aligned
     if data is not None:
-        if isinstance(data, np.ndarray):
-            return link(astra_dtype_str, astra_geom, data)
-        elif data.ntuple.impl == 'numpy':
-            return link(astra_dtype_str, astra_geom, data.asarray())
+        if allow_copy:
+            data_array = np.asarray(data, dtype='float32', order='C')
+            return link(astra_dtype_str, astra_geom, data_array)
         else:
-            # Something else than NumPy data representation
-            raise NotImplementedError('ASTRA supports data wrapping only for '
-                                      'numpy.ndarray instances, got {!r}'
-                                      ''.format(data))
+            if isinstance(data, np.ndarray):
+                return link(astra_dtype_str, astra_geom, data)
+            elif data.ntuple.impl == 'numpy':
+                return link(astra_dtype_str, astra_geom, data.asarray())
+            else:
+                # Something else than NumPy data representation
+                raise NotImplementedError('ASTRA supports data wrapping only '
+                                          'for numpy.ndarray instances, got '
+                                          '{!r}'.format(data))
     else:
         return create(astra_dtype_str, astra_geom)
 
