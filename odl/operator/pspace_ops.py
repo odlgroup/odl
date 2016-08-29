@@ -210,14 +210,14 @@ class ProductSpaceOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             Input vector to be evaluated.
-        out : range element, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range element
+        out : `range` element
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -284,7 +284,7 @@ class ProductSpaceOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             The point to take the derivative in
 
         Returns
@@ -458,14 +458,14 @@ class ComponentProjection(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             Input vector to be projected.
-        out : range element, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range element
+        out : `range` element
             Projection of ``x`` onto the subspace. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -569,14 +569,14 @@ class ComponentProjectionAdjoint(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             Input vector to be extended.
-        out : range element, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range element
+        out : `range` element
             Extension of ``x`` to the superspace. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -713,14 +713,14 @@ class BroadcastOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             Input vector to be evaluated by operators.
-        out : range element, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range element
+        out : `range` element
             Values of operators evaluated in point
         """
         wrapped_x = self.prod_op.domain.element([x], cast=False)
@@ -731,7 +731,7 @@ class BroadcastOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             The point to take the derivative in
 
         Returns
@@ -873,14 +873,14 @@ class ReductionOperator(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             Input vector to be evaluated by operators.
-        out : range element, optional
+        out : `range` element, optional
             Output vector to write the result to.
 
         Returns
         -------
-        out : range element
+        out : `range` element
             Sum of operators evaluated in ``x``.
         """
         if out is None:

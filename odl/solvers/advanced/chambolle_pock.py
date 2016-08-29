@@ -61,7 +61,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     ----------
     op : `Operator`
         Forward operator, the operator ``K`` in the problem formulation.
-    x : element in the domain of ``op``
+    x : ``op.domain`` element
         Starting point of the iteration, updated in-place.
     tau : positive float
         Step size parameter for the update of the primal variable.

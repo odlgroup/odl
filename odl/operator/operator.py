@@ -46,13 +46,13 @@ def _default_call_out_of_place(op, x, **kwargs):
 
     Parameters
     ----------
-    x : ``domain`` element
+    x : `domain` element
         An object in the operator domain. The operator is applied
         to it.
 
     Returns
     -------
-    out : ``range`` element
+    out : `range` element
         An object in the operator range. The result of an operator
         evaluation.
     """
@@ -66,11 +66,11 @@ def _default_call_in_place(op, x, out, **kwargs):
 
     Parameters
     ----------
-    x : ``domain`` element
+    x : `domain` element
         An object in the operator domain. The operator is applied
         to it.
 
-    out : ``range`` element
+    out : `range` element
         An object in the operator range. The result of an operator
         evaluation.
 
@@ -543,14 +543,14 @@ class Operator(object):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             Element to which the operator is applied
-        out : `Operator.range` element, optional
+        out : `range` element, optional
             Element to which the result is written
 
         Returns
         -------
-        out : `Operator.range` `element-like`
+        out : `range` `element-like`
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
         """
@@ -628,21 +628,21 @@ class Operator(object):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             An object which can be converted into an element of this
             operator's domain with the ``self.domain.element`` method.
             The operator is applied to this object, which is treated
             as immutable, hence it is not modified during evaluation.
-        out : `Operator.range` element, optional
+        out : `range` element, optional
             An object in the operator range to which the result of the
             operator evaluation is written. The result is independent
             of the initial state of this object.
-        kwargs : Further arguments to the function, optional
-            Passed on to the underlying implementation in `_call`
+        kwargs :
+            Passed on to the underlying implementation in `_call`.
 
         Returns
         -------
-        out : `Operator.range` element
+        out : `range` element
             Result of the operator evaluation. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -734,7 +734,7 @@ class Operator(object):
 
         Parameters
         ----------
-        other : {`Operator`, `LinearSpaceVector`, scalar}
+        other : `Operator`, `LinearSpaceVector` or scalar
             `Operator`:
                 The `Operator.domain` of ``other`` must match this
                 operator's `Operator.range`.
@@ -1093,7 +1093,7 @@ class OperatorSum(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             Evaluation point of the derivative
         """
         return OperatorSum(self.left.derivative(x), self.right.derivative(x),
@@ -1218,7 +1218,7 @@ class OperatorComp(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             Evaluation point of the derivative. Needs to be usable as
             input for the ``right`` operator.
         """
@@ -1341,9 +1341,9 @@ class OperatorLeftScalarMult(Operator):
         Parameters
         ----------
         operator : `Operator`
-            The range of ``op`` must be a `LinearSpace`
-            or `Field`.
-        scalar : ``op.range.field`` element
+            Operator in the scalar multiplication. Its `range` must be
+            a `LinearSpace` or `Field`.
+        scalar : ``operator.range.field`` element
             A real or complex number, depending on the field of
             the range.
         """
@@ -1437,7 +1437,7 @@ class OperatorLeftScalarMult(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
+        x : `domain` `element-like`
             Evaluation point of the derivative
 
         Returns
@@ -1516,12 +1516,12 @@ class OperatorRightScalarMult(Operator):
         Parameters
         ----------
         operator : `Operator`
-            The domain of ``op`` must be a `LinearSpace` or
-            `Field`.
-        scalar : ``op.range.field`` element
+            Operator in the scalar multiplication. Its `domain` must
+            be a `LinearSpace` or `Field`.
+        scalar : ``operator.range.field`` element
             A real or complex number, depending on the field of
             the operator domain.
-        tmp : domain element, optional
+        tmp : `domain` element, optional
             Used to avoid the creation of a temporary when applying the
             operator.
         """
@@ -1625,8 +1625,8 @@ class OperatorRightScalarMult(Operator):
 
         Parameters
         ----------
-        x : `Operator.domain` `element-like`
-            Evaluation point of the derivative
+        x : `domain` `element-like`
+            Evaluation point of the derivative.
 
         Examples
         --------
@@ -1699,10 +1699,11 @@ class FunctionalLeftVectorMult(Operator):
         Parameters
         ----------
         functional : `Operator`
-            The range of ``functional`` must be a `Field`.
-        vector : ``operator`` range `element-like`
+            Functional in the vector multiplication. Its `range` must
+            be a `Field`.
+        vector : ``functional.range`` `element-like`
             The vector to multiply by. Its space's `LinearSpace.field` must be
-            the same as ``op.range``
+            the same as ``functional.range``
         """
         if not isinstance(vector, LinearSpaceVector):
             raise TypeError('`vector` {!r} not is not a LinearSpaceVector'

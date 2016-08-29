@@ -68,7 +68,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             Parameter value where to evaluate the function
 
         Returns
@@ -113,7 +113,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns
@@ -135,7 +135,7 @@ class Detector(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns
@@ -168,7 +168,7 @@ class FlatDetector(Detector):
 
         Parameters
         ----------
-        param : element of `params`, optional
+        param : `params` element, optional
             Parameter value where to evaluate the function
 
         Returns
@@ -234,7 +234,7 @@ class Flat1dDetector(FlatDetector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns
@@ -254,7 +254,7 @@ class Flat1dDetector(FlatDetector):
 
         Parameters
         ----------
-        param : element of `params`, optional
+        param : `params` element, optional
             The parameter value where to evaluate the function
 
         Returns
@@ -340,7 +340,7 @@ class Flat2dDetector(FlatDetector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns
@@ -360,7 +360,7 @@ class Flat2dDetector(FlatDetector):
 
         Parameters
         ----------
-        param : element of `params`, optional
+        param : `params` element, optional
             The parameter value where to evaluate the function
 
         Returns
@@ -427,7 +427,7 @@ class CircleSectionDetector(Detector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
         """
         if param in self.params or self.params.contains_all(param):
@@ -442,7 +442,7 @@ class CircleSectionDetector(Detector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
         """
         if param in self.params or self.params.contains_all(param):
@@ -456,7 +456,7 @@ class CircleSectionDetector(Detector):
 
         Parameters
         ----------
-        param : element of `params`
+        param : `params` element
             The parameter value where to evaluate the function
 
         Returns

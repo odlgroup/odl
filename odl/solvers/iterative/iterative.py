@@ -79,11 +79,11 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
         property, which returns a new operator which in turn has an
         `Operator.adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
         well-defined for ``x`` in the operator domain.
-    x : element of the domain of ``op``
+    x : ``op.domain`` element
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of ``op``
+    rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
@@ -145,11 +145,11 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
         Operator in the inverse problem. It must be linear and
         self-adjoint. This implies in particular that its domain and
         range are equal.
-    x : element of the domain of ``op``
+    x : ``op.domain`` element
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of ``op``
+    rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
@@ -236,11 +236,11 @@ Conjugate_gradient_on_the_normal_equations>`_.
         an implementation of `Operator.derivative`, which
         in turn must implement `Operator.adjoint`, i.e.
         the call ``op.derivative(x).adjoint`` must be valid.
-    x : element of the domain of ``op``
+    x : ``op.domain`` element
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of ``op``
+    rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
@@ -345,11 +345,11 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
         an implementation of `Operator.derivative`, which
         in turn must implement `Operator.adjoint`, i.e.
         the call ``op.derivative(x).adjoint`` must be valid.
-    x : element of the domain of ``op``
+    x : ``op.domain`` element
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-    rhs : element of the range of ``op``
+    rhs : ``op.range`` element
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations

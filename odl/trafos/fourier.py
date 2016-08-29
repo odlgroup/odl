@@ -641,9 +641,9 @@ class DiscreteFourierTransformBase(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             Discretized function to be transformed
-        out : range element
+        out : `range` element
             Element to which the output is written
 
         Notes
@@ -1105,10 +1105,10 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
 
         Parameters
         ----------
-        x : domain element
-            Input vector to be transformed
-        out : range element
-            Output vector storing the result
+        x : `domain` element
+            Input vector to be transformed.
+        out : `range` element
+            Output vector storing the result.
         flags : `sequence` of strings, optional
             Flags for the transform. ``'FFTW_UNALIGNED'`` is not
             supported, and ``'FFTW_DESTROY_INPUT'`` is enabled by
@@ -1124,7 +1124,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
 
         Returns
         -------
-        out : `DiscreteLpVector`
+        out : `range` element
             Result of the transform. If ``out`` was given, the returned
             object is a reference to it.
 
@@ -1756,9 +1756,9 @@ class FourierTransformBase(Operator):
 
         Parameters
         ----------
-        x : domain element
+        x : `domain` element
             Discretized function to be transformed
-        out : range element
+        out : `range` element
             Element to which the output is written
 
         Notes

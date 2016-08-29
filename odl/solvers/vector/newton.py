@@ -51,7 +51,7 @@ def newtons_method(op, x, line_search, num_iter=10, cg_iter=None,
     ----------
     op : `Operator`
         Gradient of the objective function, ``x --> grad f(x)``
-    x : element in the domain of ``op``
+    x : ``op.domain`` element
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length

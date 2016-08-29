@@ -298,7 +298,7 @@ class FunctionSetVector(Operator):
 
         Parameters
         ----------
-        x : domain `element-like`, `meshgrid` or `numpy.ndarray`
+        x : `domain` `element-like`, `meshgrid` or `numpy.ndarray`
             Input argument for the function evaluation. Conditions
             on ``x`` depend on its type:
 

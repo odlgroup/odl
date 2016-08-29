@@ -57,7 +57,7 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
         Geometry defining the tomographic setup
     proj_space : `DiscreteLp`
         Space to which the calling operator maps
-    out : `DiscreteLpVector`, optional
+    out : ``proj_space`` element, optional
         Vector in the projection space to which the result is written. If
         ``None``, an element in ``proj_space`` is created.
 
@@ -163,7 +163,7 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         Geometry defining the tomographic setup
     reco_space : `DiscreteLp`
         Space to which the calling operator maps
-    out : `DiscreteLpVector`, optional
+    out : ``reco_space`` element, optional
         Vector in the reconstruction space to which the result is written.
         If ``None``, an element in ``reco_space`` is created.
 

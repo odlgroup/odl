@@ -1101,7 +1101,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Returns
         -------
-        dtype : type
+        dtype : `numpy.dtype`
             Numpy data type specifier. The returned defaults are:
 
             ``RealNumbers()`` : ``np.dtype('float64')``

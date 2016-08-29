@@ -167,14 +167,14 @@ class RayTransform(Operator):
 
         Parameters
         ----------
-        x : `DiscreteLpVector`
-           Element in the domain of the operator to be forward projected
-        out : `DiscreteLpVector`, optional
+        x : `domain` element
+           Element in the domain of the operator to be forward projected.
+        out : `range` element, optional
             Vector in the projection space to which the result is written.
 
         Returns
         -------
-        out : `DiscreteLpVector`
+        out : `range` element
             Element in the projection space holding the result. If ``out``
             was provided, the returned object is a reference to it.
         """
@@ -291,15 +291,15 @@ class RayBackProjection(Operator):
 
         Parameters
         ----------
-        x : `DiscreteLpVector`
-           Element in the domain of the operator which is back-projected
-        out : `DiscreteLpVector`, optional
+        x : `domain` element
+           Element in the domain of the operator which is back-projected.
+        out : `range` element, optional
             Element in the reconstruction space to which the result is
             written.
 
         Returns
         -------
-        out : `DiscreteLpVector`
+        out : `range` element
             Element in the projection space holding the result. If ``out``
             was provided, the returned object is a reference to it.
         """

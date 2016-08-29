@@ -153,7 +153,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters
+        mpar : `motion_params` element
             Motion parameter for which to calculate the detector
             reference point
 
@@ -170,7 +170,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter for which to calculate the detector
             reference rotation
 
@@ -190,9 +190,9 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter at which to evaluate
-        dpar : element of detector parameters `det_params`
+        dpar : `det_params` element
             Detector parameter at which to evaluate
         normalized : bool, optional
             If ``True``, return a normalized (unit) vector.
@@ -209,9 +209,9 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter at which to evaluate
-        dpar : element of detector parameters `det_params`
+        dpar : `det_params` element
             Detector parameter at which to evaluate
 
         Returns
@@ -254,7 +254,7 @@ class DivergentBeamGeometry(Geometry):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter for which to calculate the source position
 
         Returns
@@ -274,9 +274,9 @@ class DivergentBeamGeometry(Geometry):
 
         Parameters
         ----------
-        mpar : element of motion parameters `motion_params`
+        mpar : `motion_params` element
             Motion parameter at which to evaluate
-        dpar : element of detector parameters `det_params`
+        dpar : `det_params` element
             Detector parameter at which to evaluate
         normalized : bool, optional
             If ``True``, return a normalized (unit) vector.

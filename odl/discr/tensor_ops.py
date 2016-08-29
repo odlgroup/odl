@@ -333,13 +333,13 @@ class PointwiseNorm(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        vf : domain `element-like`
-            Vector field ``F`` at which to evaluate the derivative
+        vf : `domain` `element-like`
+            Vector field ``F`` at which to evaluate the derivative.
 
         Returns
         -------
         deriv : `PointwiseInner`
-            Derivative operator at the given point ``vf``
+            Derivative operator at the given point ``vf``.
 
         Raises
         ------
@@ -390,7 +390,7 @@ class PointwiseInnerBase(PointwiseTensorFieldOperator):
             Space of vector fields on which the operator acts.
             It has to be a product space of identical spaces, i.e. a
             power space.
-        vecfield : domain `element-like`
+        vecfield : ``vfspace`` `element-like`
             Vector field with which to calculate the point-wise inner
             product of an input vector field
         weight : `array-like` or float, optional
@@ -492,7 +492,7 @@ class PointwiseInner(PointwiseInnerBase):
             Space of vector fields on which the operator acts.
             It has to be a product space of identical spaces, i.e. a
             power space.
-        vecfield : domain `element-like`
+        vecfield : ``vfspace`` `element-like`
             Vector field with which to calculate the point-wise inner
             product of an input vector field
         weight : `array-like` or float, optional
@@ -609,7 +609,7 @@ class PointwiseInnerAdjoint(PointwiseInnerBase):
         ----------
         sspace : `LinearSpace`
             "Scalar" space on which the operator acts
-        vecfield : domain `element-like`
+        vecfield : `range` `element-like`
             Vector field of the point-wise inner product operator
         vfspace : `ProductSpace`, optional
             Space of vector fields to which the operator maps. It must

@@ -44,7 +44,8 @@ def submarine(space, smooth=True, taper=20.0):
 
     Returns
     -------
-    phantom : ``discr`` element
+    phantom : ``space`` element
+        The submarine phantom in ``space``.
     """
     if space.ndim == 2:
         if smooth:

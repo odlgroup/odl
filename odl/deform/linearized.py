@@ -44,8 +44,8 @@ def _linear_deform(template, displacement, out=None):
     ----------
     template : `DiscreteLpVector`
         Template to be deformed by a displacement field.
-    displacement : element of power space of `DiscreteLp`
-        The vector field (displacement field) used to deform the
+    displacement : element of power space of ``template.space``
+        Vector field (displacement field) used to deform the
         template.
     out : `numpy.ndarray`, optional
         Array to which the function values of the deformed template

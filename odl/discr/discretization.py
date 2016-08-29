@@ -563,7 +563,7 @@ def dspace_type(space, impl, dtype=None):
         consistent with it.
     impl : string
         Implementation backend for the data space
-    dtype : type, optional
+    dtype : `numpy.dtype`, optional
         Data type which the space is supposed to use. If ``None``, the
         space type is purely determined from ``space`` and
         ``impl``. If given, it must be compatible with the

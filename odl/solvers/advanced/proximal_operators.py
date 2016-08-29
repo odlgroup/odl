@@ -332,7 +332,7 @@ def proximal_composition(proximal, operator, mu):
         proximal operator of ``F``
     operator : `Operator`
         The operator to compose the functional with
-    mu : `Operator.field` element
+    mu : ``operator.field`` element
         Scalar such that ``(operator.adjoint * operator)(x) = mu * x``
 
     Returns

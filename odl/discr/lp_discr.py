@@ -266,7 +266,7 @@ class DiscreteLp(DiscretizedSpace):
 
         Returns
         -------
-        element : `DiscretizedSetVector`
+        element : `DiscreteLpVector`
             The discretized element, calculated as ``sampling(inp)`` or
             ``dspace.element(inp)``, tried in this order.
 

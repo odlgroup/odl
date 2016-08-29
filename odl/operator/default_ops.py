@@ -45,7 +45,7 @@ class ScalingOperator(Operator):
         ----------
         space : `LinearSpace`
             Space of elements on which this operator acts.
-        scalar : `LinearSpace.field` `element-like`
+        scalar : ``space.field`` element
             Fixed scaling factor of this operator.
         """
         if not isinstance(space, LinearSpace):
@@ -65,14 +65,14 @@ class ScalingOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : `domain` element
             input vector to be scaled
-        out : ``range`` element, optional
+        out : `range` element, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element
+        out : `range` element
             Result of the scaling. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -202,7 +202,7 @@ class LinCombOperator(Operator):
         ----------
         space : `LinearSpace`
             Space of elements which the operator is acting on.
-        a, b : scalar
+        a, b : ``space.field`` elements
             Scalars to multiply ``x[0]`` and ``x[1]`` with, respectively.
         """
         domain = ProductSpace(space, space)
@@ -215,15 +215,15 @@ class LinCombOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : `domain` element
             An element of the operator domain (2-tuple of space
             elements) whose linear combination is calculated
-        out : ```range`` element
+        out : `range` element
             Vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element
+        out : `range` element
             Result of the linear combination. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -276,9 +276,10 @@ class MultiplyOperator(Operator):
         multiplicand : `LinearSpaceVector` or `Number`
             Value to multiply by.
         domain : `LinearSpace` or `Field`, optional
-            Set to take values in. Default: ``x.space``.
+            Set to which the operator can be applied.
+            Default: ``multiplicand.space``.
         range : `LinearSpace` or `Field`, optional
-            Set to map to. Default: ``x.space``.
+            Set to which the operator maps. Default: ``multiplicand.space``.
         """
         if domain is None:
             domain = multiplicand.space
@@ -301,15 +302,15 @@ class MultiplyOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : `domain` element
             An element in the operator domain whose elementwise product is
             calculated.
-        out : ``range`` element, optional
+        out : `range` element, optional
             Vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element
+        out : `range` element
             Result of the multiplication. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -428,15 +429,15 @@ class PowerOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : `domain` element
             An element in the operator domain (2-tuple of space
             elements) whose elementwise product is calculated
-        out : ``range`` element, optional
+        out : `range` element, optional
             Vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element
+        out : `range` element
             Result of the multiplication. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -470,7 +471,7 @@ class PowerOperator(Operator):
 
         Parameters
         ----------
-        point : ``domain`` element
+        point : `domain` element
             The point in which to take the derivative
 
         Returns
@@ -544,12 +545,12 @@ class InnerProductOperator(Operator):
 
         Parameters
         ----------
-        x : ``vector.space`` element
+        x : `domain` element
             An element in the space of the vector
 
         Returns
         -------
-        out : ``field`` element
+        out : `field` element
             Result of the inner product calculation
 
         Examples
@@ -667,7 +668,7 @@ class NormOperator(Operator):
 
         Parameters
         ----------
-        x : `domain` `element-like`
+        point : `domain` `element-like`
             Point in which to take the derivative.
 
         Returns
@@ -835,8 +836,8 @@ class ConstantOperator(Operator):
         vector : `LinearSpaceVector`
             The vector constant to be returned
 
-        domain : `LinearSpace`, default : vector.space
-            The domain of the operator.
+        domain : `LinearSpace`, optional
+            Domain of the operator. Default : ``vector.space``.
         """
         if not isinstance(vector, LinearSpaceVector):
             raise TypeError('`vector` {!r} not a LinearSpaceVector instance'
@@ -858,14 +859,14 @@ class ConstantOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : `domain` element
             An element of the domain
-        out : ``range`` element
+        out : `range` element
             Vector that gets assigned to the constant vector
 
         Returns
         -------
-        out : ``range`` element
+        out : `range` element
             Result of the assignment. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -926,7 +927,7 @@ class ResidualOperator(Operator):
         operator : `Operator`
             Operator to be used in the residual expression. Its
             `Operator.range` must be a `LinearSpace`.
-        vector : `Operator.range` `element-like`
+        vector : ``operator.range`` `element-like`
             Vector to be subtracted from the operator result.
         """
         if not isinstance(operator, Operator):
@@ -956,14 +957,14 @@ class ResidualOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : `domain` element
             Any element of the domain
-        out : ``range`` element
+        out : `range` element
             Vector that gets assigned to the constant vector
 
         Returns
         -------
-        out : ``range`` element
+        out : `range` element
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
@@ -995,7 +996,7 @@ class ResidualOperator(Operator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        point : `domain` element
             Any element in the domain where the derivative should be taken
 
         Examples

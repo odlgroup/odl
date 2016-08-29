@@ -129,7 +129,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         range does not coincide with its `Operator.domain`, an
         `Operator.adjoint` must be defined (which implies that the
         operator must be linear).
-    xstart : `Operator.domain` `element`, optional
+    xstart : ``op.domain`` `element-like`, optional
         Starting point of the iteration. By default, the ``one``
         element of the `Operator.domain` is used.
     maxiter : positive int, optional

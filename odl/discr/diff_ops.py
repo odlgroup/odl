@@ -104,15 +104,15 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        x : ``domain`` element
-            Input vector to which the operator is applied to
-        out : ``range`` element, optional
-            Output vector to which the result is written
+        x : `domain` element
+            Input vector to which the operator is applied.
+        out : `range` element, optional
+            Output vector to which the result is written.
 
         Returns
         -------
-        out : ``range`` element
-            Result of the evaluation. If ``out`` is provided, the
+        out : `range` element
+            Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
 
         Examples
@@ -151,7 +151,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        point : ``domain`` element, optional
+        point : `domain` `element-like`, optional
             The point to take the derivative in. Does not change the result
             since the operator is affine.
         """
@@ -259,15 +259,15 @@ class Gradient(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        x : ``domain`` element
-            Input vector to which the `Gradient` operator is applied
-        out : ``range`` element, optional
-            Output vector to which the result is written
+        x : `domain` element
+            Input vector to which the `Gradient` operator is applied.
+        out : `range` element, optional
+            Output vector to which the result is written.
 
         Returns
         -------
-        out : ``range`` element
-            Result of the evaluation. If ``out`` is provided, the returned
+        out : `range` element
+            Result of the evaluation. If ``out`` was provided, the returned
             object is a reference to it.
 
         Examples
@@ -324,7 +324,7 @@ class Gradient(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        point : ``domain`` element, optional
+        point : `domain` element, optional
             The point to take the derivative in. Does not change the result
             since the operator is affine.
         """
@@ -440,16 +440,16 @@ class Divergence(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : `domain` element
             `ProductSpaceVector` to which the divergence operator
-            is applied
-        out : ``range`` element, optional
-            Output vector to which the result is written
+            is applied.
+        out : `range` element, optional
+            Output vector to which the result is written.
 
         Returns
         -------
-        out : ``range`` element
-            Result of the evaluation. If ``out`` is provided, the returned
+        out : `range` element
+            Result of the evaluation. If ``out`` was provided, the returned
             object is a reference to it.
 
         Examples
@@ -505,7 +505,7 @@ class Divergence(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        point : ``domain`` element, optional
+        point : `domain` element, optional
             The point to take the derivative in. Does not change the result
             since the operator is affine.
         """
@@ -576,16 +576,16 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         Parameters
         ----------
-        x : ``domain`` element
+        x : `domain` element
             Input vector to which the `Laplacian` operator is
             applied
-        out : ``range`` element, optional
+        out : `range` element, optional
             Output vector to which the result is written
 
         Returns
         -------
-        out : ``range`` element
-            Result of the evaluation. If ``out`` is provided, the returned
+        out : `range` element
+            Result of the evaluation. If ``out`` was provided, the returned
             object is a reference to it.
 
         Examples
@@ -722,7 +722,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     Returns
     -------
     out : `numpy.ndarray`
-        N-dimensional array of the same shape as ``f``. If ``out`` is
+        N-dimensional array of the same shape as ``f``. If ``out`` was
         provided, the returned object is a reference to it.
 
     Notes

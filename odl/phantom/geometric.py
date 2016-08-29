@@ -43,8 +43,8 @@ def cuboid(space, begin=None, end=None):
 
     Returns
     -------
-    phantom : `LinearSpaceVector`
-        Returns an element in ``space``
+    phantom : ``space`` element
+        Cuboid phantom in ``space``.
 
     Examples
     --------
@@ -100,8 +100,8 @@ def indicate_proj_axis(space, scale_structures=0.5):
 
     Returns
     -------
-    phantom : `LinearSpaceVector`
-        Returns an element in ``space``
+    phantom : ``space`` element
+        Projection helper phantom in ``space``.
 
     Examples
     --------
@@ -199,8 +199,8 @@ def _ellipse_phantom_2d(space, ellipses):
 
     Returns
     -------
-    phantom : `DiscreteLpVector`
-        The phantom
+    phantom : ``space`` element
+        2D ellipse phantom in ``space``.
 
     See Also
     --------
@@ -313,8 +313,8 @@ def _ellipse_phantom_3d(space, ellipses):
 
     Returns
     -------
-    phantom : `DiscreteLpVector`
-        The phantom
+    phantom : ``space`` element
+        3D ellipse phantom in ``space``.
 
     See Also
     --------

@@ -644,7 +644,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
         Parameters
         ----------
-        x : `DiscreteLpVector`
+        x : `domain` element
 
         Returns
         -------
@@ -829,11 +829,13 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
         Parameters
         ----------
-        coeff : `DiscreteLpVector`
+        coeff : `domain` element
+            Wavelet coefficients supplied to the wavelet reconstruction.
 
         Returns
         -------
-        arr : `DiscreteLpVector`
+        arr : `numpy.ndarray`
+            Result of the wavelet reconstruction.
 
         """
         if len(self.range.shape) == 1:
@@ -848,7 +850,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             coeff_dict = array_to_pywt_coeff(coeff, self.size_list)
             x = wavelet_reconstruction3d(coeff_dict, self.wbasis,
                                          self.pad_mode, self.nscales)
-            return self.range.element(x)
+            return x
 
     @property
     def adjoint(self):
