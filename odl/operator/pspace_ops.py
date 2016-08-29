@@ -102,7 +102,7 @@ class ProductSpaceOperator(Operator):
 
         Parameters
         ----------
-        operators : array-like
+        operators : `array-like`
             An array of `Operator`'s
         domain : `ProductSpace`, optional
             Domain of the operator. If not provided, it is tried to be
@@ -120,15 +120,16 @@ class ProductSpaceOperator(Operator):
         >>> X = odl.ProductSpace(r3, r3)
         >>> I = odl.IdentityOperator(r3)
 
-        Sum of elements
+        Sum of elements as product space operator:
 
         >>> prod_op = ProductSpaceOperator([I, I])
 
-        Diagonal operator, 0 or None means ignore, or the implicit zero op.
+        Diagonal operator -- 0 or ``None`` means ignore, or the implicit
+        zero operator:
 
         >>> prod_op = ProductSpaceOperator([[I, 0], [None, I]])
 
-        Complicated combinations also possible
+        Complicated combinations also possible:
 
         >>> prod_op = ProductSpaceOperator([[I, I], [I, 0]])
         """
@@ -236,7 +237,7 @@ class ProductSpaceOperator(Operator):
             [5.0, 7.0, 9.0]
         ])
 
-        Diagonal operator -- 0 or None means ignore, or the implicit
+        Diagonal operator -- 0 or ``None`` means ignore, or the implicit
         zero operator:
 
         >>> prod_op = ProductSpaceOperator([[I, 0], [0, I]])
@@ -700,7 +701,7 @@ class BroadcastOperator(Operator):
 
     @property
     def operators(self):
-        """A tuple of sub-operators."""
+        """Tuple of sub-operators that comprise ``self``."""
         return self.__operators
 
     def __getitem__(self, index):
@@ -852,7 +853,7 @@ class ReductionOperator(Operator):
 
     @property
     def operators(self):
-        """`tuple` of sub-operators."""
+        """Tuple of sub-operators that comprise ``self``."""
         return self.__operators
 
     def __getitem__(self, index):
@@ -959,8 +960,8 @@ class ReductionOperator(Operator):
 class DiagonalOperator(ProductSpaceOperator):
     """Diagonal 'matrix' of operators.
 
-    For example, if A and B are operators the DiagonalOperator can be seen as a
-    matrix of operators::
+    For example, if ``A`` and ``B`` are operators, the diagonal operator
+    can be seen as a matrix of operators::
 
         [[A, 0],
          [0, B]]
@@ -971,7 +972,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     See Also
     --------
-    ProductSpaceOperator : Case when the 'matrix' is full.
+    ProductSpaceOperator : Case when the 'matrix' is dense.
     BroadcastOperator : Case when a single argument is used by several ops.
     ReductionOperator : Calculates sum of operator results.
     """
@@ -981,9 +982,9 @@ class DiagonalOperator(ProductSpaceOperator):
 
         Parameters
         ----------
-        operator1,...,operatorN : `Operator` or `int`
+        operator1,...,operatorN : `Operator` or int
             The individual operators in the diagonal.
-            Can also be given as ``operator, n`` with ``n`` integer,
+            Can be specified as ``operator, n`` with ``n`` integer,
             in which case the diagonal operator with ``n`` multiples of
             ``operator`` is created.
         kwargs :
@@ -1030,7 +1031,7 @@ class DiagonalOperator(ProductSpaceOperator):
 
     @property
     def operators(self):
-        """A tuple of sub-operators."""
+        """Tuple of sub-operators that comprise ``self``."""
         return self.__operators
 
     def __getitem__(self, index):

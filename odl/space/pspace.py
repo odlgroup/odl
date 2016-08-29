@@ -80,13 +80,13 @@ class ProductSpace(LinearSpace):
             Use weighted inner product, norm, and dist. The following
             types are supported as ``weight``:
 
-            None : no weighting (default)
+            ``None`` : no weighting (default)
 
             `WeightingBase` : weighting class, used directly. Such a
             class instance can be retrieved from the space by the
             `ProductSpace.weighting` property.
 
-            array-like : weigh each component with one entry from the
+            `array-like` : weigh each component with one entry from the
             array. The array must be one-dimensional and have the same
             length as the number of spaces.
 
@@ -94,7 +94,7 @@ class ProductSpace(LinearSpace):
 
         Other Parameters
         ----------------
-        dist : callable, optional
+        dist : `callable`, optional
             The distance function defining a metric on the space.
             It must accept two `ProductSpaceVector` arguments and
             fulfill the following mathematical conditions for any
@@ -111,7 +111,7 @@ class ProductSpace(LinearSpace):
 
             Cannot be combined with: ``weight, norm, inner``
 
-        norm : callable, optional
+        norm : `callable`, optional
             The norm implementation. It must accept an
             `ProductSpaceVector` argument, return a float and satisfy the
             following conditions for all vectors ``x, y`` and scalars
@@ -126,7 +126,7 @@ class ProductSpace(LinearSpace):
 
             Cannot be combined with: ``weight, dist, inner``
 
-        inner : callable, optional
+        inner : `callable`, optional
             The inner product implementation. It must accept two
             `ProductSpaceVector` arguments, return a element from
             the field of the space (real or complex number) and
@@ -150,7 +150,7 @@ class ProductSpace(LinearSpace):
 
             This option can only be used if ``exponent`` is 2.0.
 
-            Default: False.
+            Default: ``False``.
 
             Cannot be combined with: ``dist``
 
@@ -322,12 +322,12 @@ class ProductSpace(LinearSpace):
 
     @property
     def is_power_space(self):
-        """True if all member spaces are equal."""
+        """``True`` if all member spaces are equal."""
         return all(spc == self.spaces[0] for spc in self.spaces[1:])
 
     @property
     def exponent(self):
-        """Exponent of the product space norm/dist, None for custom."""
+        """Exponent of the product space norm/dist, ``None`` for custom."""
         return self.weighting.exponent
 
     @property
@@ -337,7 +337,7 @@ class ProductSpace(LinearSpace):
 
     @property
     def is_weighted(self):
-        """Return True if the weighting is not `ProductSpaceNoWeighting`."""
+        """Return ``True`` if weighting is not `ProductSpaceNoWeighting`."""
         return not isinstance(self.weighting, ProductSpaceNoWeighting)
 
     def element(self, inp=None, cast=True):
@@ -346,14 +346,16 @@ class ProductSpace(LinearSpace):
         Parameters
         ----------
         inp : optional
-            If ``inp`` is None, a new element is created from
+            If ``inp`` is ``None``, a new element is created from
             scratch by allocation in the spaces. If ``inp`` is
             already an element of this space, it is re-wrapped.
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
         cast : bool
-            True if casting should be allowed
+            If ``True``, casting is allowed. Otherwise, a ``TypeError``
+            is raised for input that is not a sequence of elements of
+            the spaces that make up this product space.
 
         Returns
         -------
@@ -505,8 +507,8 @@ class ProductSpace(LinearSpace):
         Returns
         -------
         equals : bool
-            True if ``other`` is a `ProductSpace` instance, has
-            the same length and the same factors. False otherwise.
+            ``True`` if ``other`` is a `ProductSpace` instance, has
+            the same length and the same factors. ``False`` otherwise.
 
         Examples
         --------
@@ -859,7 +861,7 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
 
         Parameters
         ----------
-        vector : 1-dim. array-like
+        vector : 1-dim. `array-like`
             Weighting vector of the inner product
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
@@ -1146,7 +1148,7 @@ class ProductSpaceCustomInnerProduct(CustomInnerProductBase):
 
         Parameters
         ----------
-        inner : callable
+        inner : `callable`
             The inner product implementation. It must accept two
             `ProductSpaceVector` arguments, return a element from
             the field of the space (real or complex number) and
@@ -1184,7 +1186,7 @@ class ProductSpaceCustomNorm(CustomNormBase):
 
         Parameters
         ----------
-        norm : callable
+        norm : `callable`
             The norm implementation. It must accept a
             `ProductSpaceVector` argument, return a float and satisfy
             the following conditions for all vectors
@@ -1210,7 +1212,7 @@ class ProductSpaceCustomDist(CustomDistBase):
 
         Parameters
         ----------
-        dist : callable
+        dist : `callable`
             The distance function defining a metric on
             `ProductSpace`. It must accept two `ProductSpaceVector`
             arguments and fulfill the following mathematical conditions

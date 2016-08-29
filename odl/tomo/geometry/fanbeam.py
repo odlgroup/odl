@@ -68,7 +68,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
             Initial state of the vector pointing from source to detector
             reference point. The zero vector is not allowed.
             Default: ``(1, 0)``.
-        det_init_axis : array-like (shape ``(2,)``), optional
+        det_init_axis : `array-like` (shape ``(2,)``), optional
             Initial axis defining the detector orientation.
             By default, a normalized `perpendicular_vector` to
             ``src_to_det_init`` is used.
@@ -136,7 +136,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Returns
         -------
-        point : numpy.ndarray, shape ``(2,)``
+        point : `numpy.ndarray`, shape ``(2,)``
             Source position corresponding to the given angle
         """
         if angle not in self.motion_params:
@@ -167,7 +167,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Returns
         -------
-        point : numpy.ndarray, shape (2,)
+        point : `numpy.ndarray`, shape (2,)
             Detector reference point corresponding to the given angle
 
         See also
@@ -200,7 +200,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
 
         Returns
         -------
-        rot : numpy.ndarray, shape (2, 2)
+        rot : `numpy.ndarray`, shape (2, 2)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,

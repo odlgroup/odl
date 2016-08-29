@@ -159,7 +159,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        point : numpy.ndarray, shape (`ndim`,)
+        point : `numpy.ndarray`, shape (`ndim`,)
             The reference point, an `ndim`-dimensional vector
         """
 
@@ -176,7 +176,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        rot : numpy.ndarray, shape (`ndim`, `ndim`)
+        rot : `numpy.ndarray`, shape (`ndim`, `ndim`)
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,
@@ -195,11 +195,11 @@ class Geometry(with_metaclass(ABCMeta, object)):
         dpar : element of detector parameters `det_params`
             Detector parameter at which to evaluate
         normalized : bool, optional
-            If True, return a normalized (unit) vector. Default: True
+            If ``True``, return a normalized (unit) vector.
 
         Returns
         -------
-        vec : numpy.ndarray, shape (`ndim`,)
+        vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
         raise NotImplementedError
@@ -216,7 +216,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        pos : ``numpy.ndarray`` (shape (`ndim`,))
+        pos : `numpy.ndarray` (shape (`ndim`,))
             Source position, an `ndim`-dimensional vector
         """
         # TODO: check and write test
@@ -233,7 +233,7 @@ class Geometry(with_metaclass(ABCMeta, object)):
 
         Returns
         -------
-        implementations : `dict`
+        implementations : dict
         """
         return self._implementation_cache
 
@@ -259,7 +259,7 @@ class DivergentBeamGeometry(Geometry):
 
         Returns
         -------
-        pos : ``numpy.ndarray`` (shape (`ndim`,))
+        pos : `numpy.ndarray` (shape (`ndim`,))
             Source position, an `ndim`-dimensional vector
         """
 
@@ -279,11 +279,11 @@ class DivergentBeamGeometry(Geometry):
         dpar : element of detector parameters `det_params`
             Detector parameter at which to evaluate
         normalized : bool, optional
-            If True, return a normalized (unit) vector.
+            If ``True``, return a normalized (unit) vector.
 
         Returns
         -------
-        vec : numpy.ndarray, shape (`ndim`,)
+        vec : `numpy.ndarray`, shape (`ndim`,)
             (Unit) vector pointing from the detector to the source
         """
         if mpar not in self.motion_params:
@@ -311,7 +311,7 @@ class AxisOrientedGeometry(object):
 
         Parameters
         ----------
-        axis : 3-element array-like
+        axis : `array-like` (shape ``(3,)``)
             Vector defining the fixed rotation axis after normalization
         """
         if np.linalg.norm(axis) <= 1e-10:
@@ -346,7 +346,7 @@ class AxisOrientedGeometry(object):
 
         Returns
         -------
-        rot_mat : numpy.ndarray, shape ``(3, 3)``
+        rot_mat : `numpy.ndarray`, shape ``(3, 3)``
             The rotation matrix mapping the standard basis vectors in
             the fixed ("lab") coordinate system to the basis vectors of
             the local coordinate system of the detector reference point,

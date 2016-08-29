@@ -64,16 +64,16 @@ class NumpyNtuples(NtuplesBase):
 
         Parameters
         ----------
-        inp : array-like, optional
+        inp : `array-like`, optional
             Input to initialize the new element.
 
-            If ``inp`` is None, an empty element is created with no
+            If ``inp`` is ``None``, an empty element is created with no
             guarantee of its state (memory allocation only).
 
-            If ``inp`` is a numpy.ndarray of shape ``(size,)``
+            If ``inp`` is a `numpy.ndarray` of shape ``(size,)``
             and the same data type as this space, the array is wrapped,
             not copied.
-            Other array-like objects are copied.
+            Other `array-like` objects are copied.
 
         Returns
         -------
@@ -210,7 +210,7 @@ class NumpyNtuplesVector(NtuplesBaseVector):
 
     @property
     def data(self):
-        """Raw ``numpy.ndarray`` representing the data."""
+        """Raw Numpy array representing the data."""
         return self.__data
 
     def asarray(self, start=None, stop=None, step=None, out=None):
@@ -219,19 +219,19 @@ class NumpyNtuplesVector(NtuplesBaseVector):
         Parameters
         ----------
         start : int, optional
-            Start position. None means the first element.
-        start : int, optional
+            Start position. ``None`` means the first element.
+        stop : int, optional
             One element past the last element to be extracted.
-            None means the last element.
-        start : int, optional
-            Step length. None means 1.
-        out : numpy.ndarray, optional
-            Array in which the result should be written in-place.
-            Has to be contiguous and of the correct dtype.
+            ``None`` means the last element.
+        step : int, optional
+            Step length. ``None`` is equivalent to 1.
+        out : `numpy.ndarray`, optional
+            Array to which the result should be written.
+            Has to be contiguous and of the correct data type.
 
         Returns
         -------
-        asarray : numpy.ndarray
+        asarray : `numpy.ndarray`
             Numpy array of the same type as the space.
 
         Examples
@@ -286,8 +286,8 @@ class NumpyNtuplesVector(NtuplesBaseVector):
         Returns
         -------
         equals : bool
-            True if all entries of other are equal to this
-            vector's entries, False otherwise.
+            ``True`` if all entries of other are equal to this
+            vector's entries, ``False`` otherwise.
 
         Notes
         -----
@@ -347,7 +347,7 @@ class NumpyNtuplesVector(NtuplesBaseVector):
 
         Parameters
         ----------
-        indices : int or slice
+        indices : int or `slice`
             The position(s) that should be accessed
 
         Returns
@@ -377,7 +377,7 @@ class NumpyNtuplesVector(NtuplesBaseVector):
 
         Parameters
         ----------
-        indices : int or slice
+        indices : int or `slice`
             The position(s) that should be set
         values : scalar or `array-like`
             The value(s) that are to be assigned.
@@ -640,7 +640,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         Other Parameters
         ----------------
 
-        dist : callable, optional
+        dist : `callable`, optional
             The distance function defining a metric on the space.
             It must accept two `FnVector` arguments and
             fulfill the following mathematical conditions for any
@@ -658,7 +658,7 @@ class NumpyFn(FnBase, NumpyNtuples):
             This option cannot be combined with ``weight``,
             ``norm`` or ``inner``.
 
-        norm : callable, optional
+        norm : `callable`, optional
             The norm implementation. It must accept an
             `FnVector` argument, return a float and satisfy the
             following conditions for all vectors ``x, y`` and scalars
@@ -674,7 +674,7 @@ class NumpyFn(FnBase, NumpyNtuples):
             This option cannot be combined with ``weight``,
             ``dist`` or ``inner``.
 
-        inner : callable, optional
+        inner : `callable`, optional
             The inner product implementation. It must accept two
             `FnVector` arguments, return a element from
             the field of the space (real or complex number) and
@@ -699,7 +699,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
             This option can only be used if ``exponent`` is 2.0.
 
-            Default: False.
+            Default: ``False``.
 
         kwargs :
             Further keyword arguments are passed to the weighting
@@ -791,7 +791,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
     @property
     def is_weighted(self):
-        """True if the weighting is not `NumpyFnNoWeighting`."""
+        """``True`` if the weighting is not `NumpyFnNoWeighting`."""
         return not isinstance(self.weighting, NumpyFnNoWeighting)
 
     def _lincomb(self, a, x1, b, x2, out):
@@ -1001,10 +1001,9 @@ class NumpyFn(FnBase, NumpyNtuples):
         Returns
         -------
         equals : bool
-            True if other is an instance of this space's type
-            with the same
-            `NtuplesBase.size` and `NtuplesBase.dtype`,
-            and identical distance function, False otherwise.
+            ``True`` if ``other`` is an instance of this space's type
+            with the same `NtuplesBase.size` and `NtuplesBase.dtype`,
+            and identical distance function, ``False`` otherwise.
 
         Examples
         --------
@@ -1102,7 +1101,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Returns
         -------
-        dtype : `type`
+        dtype : type
             Numpy data type specifier. The returned defaults are:
 
             ``RealNumbers()`` : ``np.dtype('float64')``
@@ -1165,7 +1164,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
         Parameters
         ----------
-        newreal : array-like or scalar
+        newreal : `array-like` or scalar
             The new real part for this vector.
 
         Examples
@@ -1304,7 +1303,7 @@ class MatVecOperator(Operator):
 
         Parameters
         ----------
-        matrix : array-like or  ``scipy.sparse.spmatrix``
+        matrix : `array-like` or  ``scipy.sparse.spmatrix``
             Matrix representing the linear operator. Its shape must be
             ``(m, n)``, where ``n`` is the size of ``domain`` and ``m`` the
             size of ``range``. Its dtype must be castable to the range
@@ -1431,14 +1430,14 @@ def npy_weighted_inner(weight):
 
     Parameters
     ----------
-    weight : scalar or array-like
+    weight : scalar or `array-like`
         Weight of the inner product. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
 
     Returns
     -------
-    inner : callable
+    inner : `callable`
         Inner product function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1455,7 +1454,7 @@ def npy_weighted_norm(weight, exponent=2.0):
 
     Parameters
     ----------
-    weight : scalar or array-like
+    weight : scalar or `array-like`
         Weight of the norm. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
@@ -1465,7 +1464,7 @@ def npy_weighted_norm(weight, exponent=2.0):
 
     Returns
     -------
-    norm : callable
+    norm : `callable`
         Norm function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1482,7 +1481,7 @@ def npy_weighted_dist(weight, exponent=2.0, use_inner=False):
 
     Parameters
     ----------
-    weight : scalar or array-like
+    weight : scalar or `array-like`
         Weight of the distance. A scalar is interpreted as a
         constant weight, a 1-dim. array as a weighting vector and a
         2-dimensional array as a weighting matrix.
@@ -1502,7 +1501,7 @@ def npy_weighted_dist(weight, exponent=2.0, use_inner=False):
 
     Returns
     -------
-    dist : callable
+    dist : `callable`
         Distance function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1594,7 +1593,7 @@ class NumpyFnMatrixWeighting(MatrixWeightingBase):
 
         Parameters
         ----------
-        matrix :  ``scipy.sparse.spmatrix`` or array-like, 2-dim.
+        matrix :  ``scipy.sparse.spmatrix`` or `array-like`, 2-dim.
             Square weighting matrix of the inner product
         exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
@@ -1612,14 +1611,14 @@ class NumpyFnMatrixWeighting(MatrixWeightingBase):
 
             This option can only be used if ``exponent`` is 2.0.
         precomp_mat_pow : bool, optional
-            If True, precompute the matrix power ``W ** (1/p)``
+            If ``True``, precompute the matrix power ``W ** (1/p)``
             during initialization. This has no effect if ``exponent``
             is 1.0, 2.0 or ``inf``.
 
             Default: False
 
         cache_mat_pow : bool, optional
-            If True, cache the matrix power ``W ** (1/p)``. This can
+            If ``True``, cache the matrix power ``W ** (1/p)``. This can
             happen either during initialization or in the first call to
             ``norm`` or ``dist``, resp. This has no effect if
             ``exponent`` is 1.0, 2.0 or ``inf``.
@@ -1627,7 +1626,7 @@ class NumpyFnMatrixWeighting(MatrixWeightingBase):
             Default: True
 
         cache_mat_decomp : bool, optional
-            If True, cache the eigenbasis decomposition of the
+            If ``True``, cache the eigenbasis decomposition of the
             matrix. This can happen either during initialization or in
             the first call to ``norm`` or ``dist``, resp. This has no
             effect if ``exponent`` is 1.0, 2.0 or ``inf``.
@@ -1757,7 +1756,7 @@ class NumpyFnVectorWeighting(VectorWeightingBase):
 
         Parameters
         ----------
-        vector : array-like, one-dim.
+        vector : `array-like`, one-dim.
             Weighting vector of the inner product, norm and distance
         exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
@@ -2016,7 +2015,7 @@ class NumpyFnCustomInnerProduct(CustomInnerProductBase):
 
         Parameters
         ----------
-        inner : callable
+        inner : `callable`
             The inner product implementation. It must accept two
             `FnVector` arguments, return an element from their space's
             field (real or complex number) and satisfy the following
@@ -2051,7 +2050,7 @@ class NumpyFnCustomNorm(CustomNormBase):
 
         Parameters
         ----------
-        norm : callable
+        norm : `callable`
             The norm implementation. It must accept an `FnVector`
             argument, return a float and satisfy the following
             conditions for all vectors ``x, y`` and scalars ``s``:
@@ -2076,7 +2075,7 @@ class NumpyFnCustomDist(CustomDistBase):
 
         Parameters
         ----------
-        dist : callable
+        dist : `callable`
             The distance function defining a metric on `NumpyFn`. It must
             accept two `FnVector` arguments, return a float and
             fulfill the following mathematical conditions for any three

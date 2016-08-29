@@ -68,18 +68,18 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
         ``prox_cc_gs``.
     grad_h : `Operator`
         Operator representing the gradient of  ``h``.
-    tau : `float`
+    tau : float
         Step size-like parameter for ``prox_f``.
-    sigma : `sequence` of  `float`
+    sigma : `sequence` of floats
         Sequence of step size-like parameters for the sequence ``prox_cc_g``.
-    niter : `int`
+    niter : int
         Number of iterations.
     callback : `callable`, optional
         Function called with the current iterate after each iteration.
 
     Other Parameters
     ----------------
-    grad_cc_l : `sequence` of `Operator`, optional
+    grad_cc_l : `sequence` of `Operator`'s, optional
         Sequence of operators representing the gradients of  ``l_i^*``.
         If omitted, the simpler problem without ``l_i``  will be considered.
 

@@ -52,10 +52,10 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        begin : array-like or float
+        begin : `array-like` or float
             The lower ends of the intervals. A float can be used in
             one dimension.
-        end : array-like or float
+        end : `array-like` or float
             The upper ends of the intervals. A float can be used in
             one dimension.
 
@@ -161,12 +161,12 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        inp : float or array-like, optional
+        inp : float or `array-like`, optional
             Point to be cast to an element.
 
         Returns
         -------
-        element : numpy.ndarray or float
+        element : `numpy.ndarray` or float
             Array (ndim > 1) or float version of ``inp`` if provided,
             otherwise ``self.midpoint``.
 
@@ -225,7 +225,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        point : array-like or float
+        point : `array-like` or float
             Point to be tested. Its length must be equal to `ndim`.
             In the 1d case, ``point`` can be given as a float.
         atol : float
@@ -324,14 +324,14 @@ class IntervalProd(Set):
             Collection of points to be tested. Can be given as a single
             point, a ``(d, N)`` array-like where ``d`` is the
             number of dimensions, or a length-``d`` `meshgrid` tuple.
-        atol : `float`, optional
+        atol : float, optional
             The maximum allowed distance in 'inf'-norm between the
             other set and this interval product.
 
         Returns
         -------
         contains : bool
-            True if all points are contained, False otherwise.
+            ``True`` if all points are contained, ``False`` otherwise.
 
         Examples
         --------
@@ -402,7 +402,7 @@ class IntervalProd(Set):
         Parameters
         ----------
         ndim : int, optional
-            Dimension of the measure to apply. None is interpreted
+            Dimension of the measure to apply. ``None`` is interpreted
             as `true_ndim`, which always results in a finite and
             positive result (unless the set is a single point).
 
@@ -438,7 +438,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        point : array-like or float
+        point : `array-like` or float
             Point whose distance to calculate. Its length must be equal
             to the set's dimension. Can be a float in the 1d case.
         exponent : non-zero float or ``float('inf')``, optional
@@ -491,9 +491,9 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        indices : int or tuple of int
+        indices : int or `sequence` of ints
             The indices of the dimensions along which to collapse.
-        values : array-like or float
+        values : `array-like` or float
             The values to which to collapse. Must have the same
             length as ``indices``. Values must lie within the interval
             boundaries.
@@ -657,7 +657,7 @@ class IntervalProd(Set):
 
         Returns
         -------
-        corners : numpy.ndarray
+        corners : `numpy.ndarray`
             Array containing the corner coordinates. The size of the
             array is ``2^m x ndim``, where ``m`` is the number of
             non-degenerate axes, i.e. the corners are stored as rows.
@@ -832,9 +832,9 @@ def Interval(begin, end):
 
     Parameters
     ----------
-    begin : array-like with shape ``(1,)`` or float
+    begin : `array-like` with shape ``(1,)`` or float
         Lower end of the interval.
-    end : array-like with shape ``(1,)`` or float
+    end : `array-like` with shape ``(1,)`` or float
         Upper end of the interval.
 
     """
@@ -850,9 +850,9 @@ def Rectangle(begin, end):
 
     Parameters
     ----------
-    begin : array-like with shape ``(2,)``
+    begin : `array-like` with shape ``(2,)``
         Lower ends of the intervals in the product.
-    end : array-like with shape ``(2,)``
+    end : `array-like` with shape ``(2,)``
         Upper ends of the intervals in the product.
     """
     rectangle = IntervalProd(begin, end)
@@ -867,9 +867,9 @@ def Cuboid(begin, end):
 
     Parameters
     ----------
-    begin : array-like with shape ``(3,)``
+    begin : `array-like` with shape ``(3,)``
         Lower ends of the intervals in the product.
-    end : array-like with shape ``(3,)``
+    end : `array-like` with shape ``(3,)``
         Upper ends of the intervals in the product.
     """
     cuboid = IntervalProd(begin, end)

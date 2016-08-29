@@ -89,7 +89,7 @@ def show_discrete_data(values, grid, title=None, method='',
 
     Parameters
     ----------
-    values : numpy.ndarray
+    values : `numpy.ndarray`
         The values to visualize
     grid : `TensorGrid` or `RectPartition`
         Grid of the values

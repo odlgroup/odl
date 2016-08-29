@@ -34,10 +34,10 @@ def cuboid(space, begin=None, end=None):
     ----------
     space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created.
-    begin : array-like of length ``space.ndim``
+    begin : `array-like` of length ``space.ndim``
         The lower left corner of the cuboid within the space.
         Default: A quarter of the volume from the minimum corner
-    end : array-like of length ``space.ndim``
+    end : `array-like` of length ``space.ndim``
         The upper right corner of the cuboid within the space.
         Default: A quarter of the volume from the maximum corner
 
@@ -95,7 +95,7 @@ def indicate_proj_axis(space, scale_structures=0.5):
     ----------
     space : `DiscretizedSpace`
         Discretized space in which the phantom is supposed to be created
-    scale_structures : positive `float` in (0, 1]
+    scale_structures : positive float in (0, 1]
         Scales objects (cube, cuboids)
 
     Returns
@@ -419,7 +419,7 @@ def ellipse_phantom(space, ellipses):
     ----------
     space : `DiscreteLp`
         Space in which the phantom is created, must be 2- or 3-dimensional.
-    ellipses : `sequence` of `sequence`
+    ellipses : `sequence` of `sequence`'s
         If ``space`` is 2-dimensional each row should contain:
 
         'value', 'axis_1', 'axis_2', 'center_x', 'center_y', 'rotation'

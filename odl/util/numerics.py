@@ -42,37 +42,37 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
 
     Parameters
     ----------
-    array : array-like
+    array : `array-like`
         Modify the boundary of this array
-    func : callable or sequence
+    func : `callable` or `sequence` of `callable`'s
         If a single function is given, assign
         ``array[slice] = func(array[slice])`` on the boundary slices,
         e.g. use ``lamda x: x / 2`` to divide values by 2.
-        A sequence of functions is applied per axis separately. It
+        A `sequence` of functions is applied per axis separately. It
         must have length ``array.ndim`` and may consist of one function
         or a 2-tuple of functions per axis.
-        None entries in a sequence cause the axis (side) to be
+        ``None`` entries in a sequence cause the axis (side) to be
         skipped.
     only_once : bool, optional
-        If True, ensure that each boundary point appears in exactly
+        If ``True``, ensure that each boundary point appears in exactly
         one slice. If ``func`` is a list of functions, the
         ``axis_order`` determines which functions are applied to nodes
         which appear in multiple slices, according to the principle
         "first-come, first-served".
-    which_boundaries : sequence, optional
+    which_boundaries : `sequence`, optional
         If provided, this sequence determines per axis whether to
         apply the function at the boundaries in each axis. The entry
         in each axis may consist in a single bool or a 2-tuple of
         bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
-        sequence must be ``array.ndim``. None is interpreted as
-        'all boundaries'.
-    axis_order : sequence of int, optional
+        sequence must be ``array.ndim``. ``None`` is interpreted as
+        "all boundaries".
+    axis_order : `sequence` of ints, optional
         Permutation of ``range(array.ndim)`` defining the order in which
         to process the axes. If combined with ``only_once`` and a
         function list, this determines which function is evaluated in
         the points that are potentially processed multiple times.
-    out : numpy.ndarray, optional
+    out : `numpy.ndarray`, optional
         Location in which to store the result, can be the same as ``array``.
         Default: copy of ``array``
 
@@ -85,7 +85,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
            [ 0.5,  1. ,  0.5],
            [ 0.5,  0.5,  0.5]])
 
-    If called with ``only_once=False``, applies function repeatedly
+    If called with ``only_once=False``, the function is applied repeatedly:
 
     >>> apply_on_boundary(arr, lambda x: x / 2, only_once=False)
     array([[ 0.25,  0.5 ,  0.25],
@@ -98,7 +98,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
            [ 0.5,  1. ,  0.5],
            [ 0.5,  1. ,  0.5]])
 
-    Also accepts out parameter:
+    Use the ``out`` parameter to store the result in an existing array:
 
     >>> out = np.empty_like(arr)
     >>> result = apply_on_boundary(arr, lambda x: x / 2, out=out)
@@ -217,20 +217,20 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
 
     Parameters
     ----------
-    ndarr : array-like
+    ndarr : `array-like`
         Array to multiply to
-    onedim_arrs : sequence of array-like
+    onedim_arrs : `sequence` of `array-like`'s
         One-dimensional arrays to be multiplied with ``ndarr``. The
         sequence may not be longer than ``ndarr.ndim``.
-    axes : sequence of int, optional
-        Take the 1d transform along these axes. None corresponds to
+    axes : `sequence` of ints, optional
+        Take the 1d transform along these axes. ``None`` corresponds to
         the last ``len(onedim_arrs)`` axes, in ascending order.
-    out : numpy.ndarray, optional
+    out : `numpy.ndarray`, optional
         Array in which the result is stored
 
     Returns
     -------
-    out : numpy.ndarray
+    out : `numpy.ndarray`
         Result of the modification. If ``out`` was given, the returned
         object is a reference to it.
     """
@@ -318,14 +318,14 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
 
     Parameters
     ----------
-    arr : array-like
+    arr : `array-like`
         Array to be resized.
-    newshp : sequence of int
+    newshp : `sequence` of ints
         Desired shape of the output array.
-    offset: sequence of int, optional
+    offset: `sequence` of ints, optional
         Specifies how many entries are added to/removed from the "left"
         side (corresponding to low indices) of ``arr``.
-    pad_mode : str, optional
+    pad_mode : string, optional
         Method to be used to fill in missing values in an enlarged array.
 
         ``'constant'``: Fill with ``pad_const``.

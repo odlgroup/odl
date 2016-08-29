@@ -67,7 +67,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         `PyWavelets documentation on wavelet bases
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
 
-    pad_mode : str
+    pad_mode : string
         Signal extention mode. Possible extension modes are
 
         'zpd': zero-padding -- signal is extended by adding zero samples
@@ -215,7 +215,7 @@ def pywt_coeff_to_array(coeff, size_list):
 
     Returns
     -------
-    arr : numpy.ndarray
+    arr : `numpy.ndarray`
         Flattened and concatenated coefficient array
         The length of the array depends on the size of input image to
         be transformed and on the chosen wavelet basis.
@@ -365,7 +365,7 @@ def wavelet_decomposition3d(x, wbasis, pad_mode, nscales):
         `PyWavelets documentation on wavelet bases
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
 
-    pad_mode : str
+    pad_mode : string
         Signal extention mode. For possible extensions see the
         `Pywavelets documentation on signal extenstion modes
         <http://www.pybytes.com/pywavelets/ref/\
@@ -479,7 +479,7 @@ def wavelet_reconstruction3d(coeff_list, wbasis, pad_mode, nscales):
         For more information see PyWavelet `documentation
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
 
-    pad_mode : str
+    pad_mode : string
         Signal extention mode. For possible extensions see the
         `signal extenstion modes
         <http://www.pybytes.com/pywavelets/ref/\
@@ -491,7 +491,7 @@ signal-extension-modes.html>`_
 
     Returns
     -------
-    x : numpy.ndarray.
+    x : `numpy.ndarray`
         A wavalet reconstruction.
     """
     aaa = coeff_list[0]
@@ -553,7 +553,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
             Discrete FIR approximation of Meyer wavelet (``dmey``)
 
-        pad_mode : str
+        pad_mode : string
              Signal extention modes as defined by ``pywt.MODES.modes``
              http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
 
@@ -648,7 +648,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
         Returns
         -------
-        arr : numpy.ndarray
+        arr : `numpy.ndarray`
             Flattened and concatenated coefficient array
             The length of the array depends on the size of input image to
             be transformed and on the chosen wavelet basis.
@@ -753,7 +753,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
             Discrete FIR approximation of Meyer wavelet (``dmey``)
 
-        pad_mode : str
+        pad_mode : string
              Signal extention modes as defined by ``pywt.MODES.modes``
              http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
 

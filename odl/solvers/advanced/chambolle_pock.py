@@ -71,16 +71,16 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         Step size parameter for the update of the dual variable. Controls
         the extent to which ``proximal_dual`` maps points towards the
         minimum of ``F^*``.
-    proximal_primal : callable
+    proximal_primal : `callable`
         `proximal factory` for the functional ``G``.
-    proximal_dual : callable
+    proximal_dual : `callable`
         `proximal factory` for the functional ``F^*``.
     niter : non-negative int, optional
         Number of iterations.
 
     Other Parameters
     ----------------
-    callback : callable, optional
+    callback : `callable`, optional
         Function called with the current iterate after each iteration.
     theta : float, optional
         Relaxation parameter, required to fulfill ``0 <= theta <= 1``.
@@ -198,7 +198,7 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     # Callback object
     callback = kwargs.pop('callback', None)
     if callback is not None and not callable(callback):
-        raise TypeError('`callback` {} is not `callable`'
+        raise TypeError('`callback` {} is not callable'
                         ''.format(callback))
 
     # Initialize the relaxation variable

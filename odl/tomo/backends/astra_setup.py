@@ -81,7 +81,7 @@ def astra_volume_geometry(discr_reco):
 
     Returns
     -------
-    astra_geom : `dict`
+    astra_geom : dict
         The ASTRA volume geometry
 
     Raises
@@ -173,7 +173,7 @@ def astra_conebeam_3d_geom_to_vec(geometry):
 
     Returns
     -------
-    vectors : numpy.ndarray
+    vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 12)``
     """
 
@@ -228,7 +228,7 @@ def astra_conebeam_2d_geom_to_vec(geometry):
 
     Returns
     -------
-    vectors : numpy.ndarray
+    vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 6)``
     """
 
@@ -283,7 +283,7 @@ def astra_parallel_3d_geom_to_vec(geometry):
 
     Returns
     -------
-    vectors : numpy.ndarray
+    vectors : `numpy.ndarray`
         Numpy array of shape ``(number of angles, 12)``
     """
 
@@ -331,7 +331,7 @@ def astra_projection_geometry(geometry):
 
     Returns
     -------
-    proj_geom : `dict`
+    proj_geom : dict
         Dictionary defining the ASTRA projection geometry.
     """
     if not isinstance(geometry, Geometry):
@@ -398,16 +398,16 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
 
     Parameters
     ----------
-    astra_geom : `dict`
+    astra_geom : dict
         ASTRA geometry object for the data creator, must correspond to the
         given data type
     datatype : {'volume', 'projection'}
         Type of the data container
     data : `DiscreteLpVector`, optional
-        Data for the initialization of the data structure. If None creates
-        an ASTRA data object filled with zeros
+        Data for the initialization of the data structure. If ``None``,
+        an ASTRA data object filled with zeros is created.
     ndim : {2, 3}, optional
-        Dimension of the data. If ``data`` is not None, this parameter
+        Dimension of the data. If ``data`` is not ``None``, this parameter
         has no effect.
     allow_copy : `bool`, optional
         True if copying ``data`` should be allowed. This means that anything
@@ -426,7 +426,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
             ndim = data.ndim
         else:
             raise TypeError('`data` {!r} is neither DiscreteLp.Vector '
-                            'instance or a numpy.ndarray'.format(data))
+                            'instance nor a `numpy.ndarray`'.format(data))
     else:
         ndim = int(ndim)
 
@@ -461,7 +461,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
             else:
                 # Something else than NumPy data representation
                 raise NotImplementedError('ASTRA supports data wrapping only '
-                                          'for numpy.ndarray instances, got '
+                                          'for `numpy.ndarray` instances, got '
                                           '{!r}'.format(data))
     else:
         return create(astra_dtype_str, astra_geom)
@@ -474,9 +474,9 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     ----------
     vol_interp : {'nearest', 'linear'}
         Interpolation type of the volume discretization
-    astra_vol_geom : `dict`
+    astra_vol_geom : dict
         ASTRA volume geometry dictionary
-    astra_proj_geom : `dict`
+    astra_proj_geom : dict
         ASTRA projection geometry dictionary
     ndim : {2, 3}
         Number of dimensions of the projector

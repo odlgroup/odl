@@ -65,7 +65,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method which is used in the interior of the
             domain of ``f``.
-        pad_mode : {'constant', 'symmetric', 'periodic', None}, optional
+        pad_mode : {'constant', 'symmetric', 'periodic', ``None``}, optional
 
             'constant' : Pads values outside the domain of ``f`` with a
             constant value given by ``pad_const``.
@@ -75,16 +75,15 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
             'periodic' : Pads with the values from the other side of the array.
 
-            If None is given, one-sided forward or backward differences
-            are used at the boundary.
+            ``None`` : Use one-sided forward or backward differences at
+            the boundary.
 
         pad_const : float, optional
             For ``pad_mode == 'constant'``, ``f`` assumes
             ``pad_const`` for indices outside the domain of ``f``
         edge_order : {1, 2}, optional
-            Edge-order accuracy at the boundaries if no padding is used. If
-            None the edge-order accuracy at endpoints corresponds to the
-            accuracy in the interior.
+            Edge-order accuracy at the boundaries if no padding is used.
+            Default: Same order as in the interior.
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
@@ -686,7 +685,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
 
     Parameters
     ----------
-    f : array-like
+    f : `array-like`
          An N-dimensional array.
     axis : int, optional
         The axis along which the partial derivative is evaluated.
@@ -695,7 +694,11 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     method : {'central', 'forward', 'backward'}, optional
         Finite difference method which is used in the interior of the domain
          of ``f``.
-    pad_mode : {'constant', 'symmetric', 'periodic', None}, optional
+    out : `numpy.ndarray`, optional
+         An N-dimensional array to which the output is written. Has to have
+         the same shape as the input array ``f``.
+
+    pad_mode : {'constant', 'symmetric', 'periodic', ``None``}, optional
 
         'constant' : Pads values outside the domain of ``f`` with a constant
         value given by ``pad_const``.
@@ -705,24 +708,20 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
 
         'periodic' : Pads with the values from the other side of the array.
 
-        If None is given, one-sided forward or backward differences
-        are used at the boundary.
+        ``None`` : Use one-sided forward or backward differences at
+        the boundary.
 
     pad_const : float, optional
-        For ``pad_mode == 'constant'``, ``f`` assumes
-        ``pad_const`` for indices outside the domain of ``f``
+        For ``pad_mode == 'constant'``, ``f`` assumes ``pad_const`` for
+        indices outside the domain of ``f``
 
     edge_order : {1, 2}, optional
-        Edge-order accuracy at the boundaries if no padding is used. If
-        None the edge-order accuracy at endpoints corresponds to the
-        accuracy in the interior. Default: None
-    out : numpy.ndarray, optional
-         An N-dimensional array to which the output is written. Has to have
-         the same shape as the input array ``f``. Default: None
+        Edge-order accuracy at the boundaries if no padding is used.
+        Default: Same order as in the interior.
 
     Returns
     -------
-    out : numpy.ndarray
+    out : `numpy.ndarray`
         N-dimensional array of the same shape as ``f``. If ``out`` is
         provided, the returned object is a reference to it.
 

@@ -647,7 +647,7 @@ class NormOperator(Operator):
 
         Returns
         -------
-        norm : `float`
+        norm : float
             Norm of ``x``.
 
         Examples
@@ -749,7 +749,7 @@ class DistOperator(Operator):
 
         Returns
         -------
-        out : `float`
+        out : float
             Distance from of ``x`` to ``self.vector``.
 
         Examples

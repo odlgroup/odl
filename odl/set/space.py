@@ -159,8 +159,8 @@ class LinearSpace(Set):
         Returns
         -------
         contains : bool
-            True if ``other`` is a `LinearSpaceVector` instance and
-            ``other.space`` is equal to this space, False otherwise.
+            ``True`` if ``other`` is a `LinearSpaceVector` instance and
+            ``other.space`` is equal to this space, ``False`` otherwise.
 
         Notes
         -----
@@ -644,7 +644,7 @@ class LinearSpaceVector(object):
         Returns
         -------
         equals : bool
-            True if the vectors are equal, else False.
+            ``True`` if the vectors are equal ``False`` otherwise.
 
         See also
         --------
@@ -864,14 +864,14 @@ class UniversalSpace(LinearSpace):
     def __eq__(self, other):
         """Return ``self == other``.
 
-        Dummy check, True for any `LinearSpace`.
+        Dummy check, ``True`` for any `LinearSpace`.
         """
         return isinstance(other, LinearSpace)
 
     def __contains__(self, other):
         """Return ``other in self``.
 
-        Dummy membership check, True for any `LinearSpaceVector`.
+        Dummy membership check, ``True`` for any `LinearSpaceVector`.
         """
         return isinstance(other, LinearSpaceVector)
 

@@ -160,7 +160,7 @@ class RectPartition(object):
     # TensorGrid related pass-through methods and derived properties
     @property
     def is_uniform(self):
-        """True if ``self.grid`` is a `RegularGrid`."""
+        """``True`` if ``self.grid`` is a `RegularGrid`."""
         return isinstance(self.grid, RegularGrid)
 
     @property
@@ -225,7 +225,7 @@ class RectPartition(object):
 
         Returns
         -------
-        on_bdry : tuple of 2-tuple of float
+        on_bdry : tuple of 2-tuples of floats
             Each 2-tuple contains the fraction of the leftmost
             (first entry) and rightmost (second entry) cell in the
             partitioned set in the corresponding dimension.
@@ -274,7 +274,7 @@ class RectPartition(object):
 
         Returns
         -------
-        csizes : tuple of numpy.ndarray
+        csizes : tuple of `numpy.ndarray`'s
             The cell sizes per axis. The length of the vectors is the
             same as the corresponding ``grid.coord_vectors``.
             For axes with 1 grid point, cell size is set to 0.0.
@@ -360,14 +360,14 @@ class RectPartition(object):
         return float(np.prod(self.cell_sides))
 
     def approx_equals(self, other, atol):
-        """Return True in case of approximate equality.
+        """Return ``True`` in case of approximate equality.
 
         Returns
         -------
         approx_eq : bool
-            True if ``other`` is a `RectPartition` instance with
+            ``True`` if ``other`` is a `RectPartition` instance with
             ``self.set == other.set`` up to ``atol`` and
-            ``self.grid == other.other`` up to ``atol``.
+            ``self.grid == other.other`` up to ``atol``, ``False`` otherwise.
         """
         if other is self:
             return True
@@ -389,7 +389,7 @@ class RectPartition(object):
         ----------
         indices : index expression
             Object determining which parts of the partition to extract.
-            None (new axis) and empty axes are not supported.
+            ``None`` (new axis) and empty axes are not supported.
 
         Examples
         --------
@@ -565,13 +565,13 @@ def uniform_partition_fromintv(intv_prod, num_nodes, nodes_on_bdry=False):
     ----------
     intv_prod : `IntervalProd`
         Interval product to be partitioned
-    num_nodes : int or sequence of int
+    num_nodes : int or `sequence` of ints
         Number of nodes per axis. For 1d intervals, a single integer
         can be specified.
-    nodes_on_bdry : bool or sequence, optional
+    nodes_on_bdry : bool or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (True) or shift it
-        by half a cell size into the interior (False). In each axis,
+        place the last grid point on the boundary (``True``) or shift it
+        by half a cell size into the interior (``False``). In each axis,
         an entry may consist in a single bool or a 2-tuple of
         bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
@@ -638,7 +638,7 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
     ----------
     grid : `TensorGrid`
         Grid on which the partition is based
-    begin, end : array-like or dict
+    begin, end : `array-like` or dict
         Spatial points defining the begin and end of an interval
         product to be partitioned. The points can be specified in
         two ways:
@@ -657,7 +657,7 @@ def uniform_partition_fromgrid(grid, begin=None, end=None):
 
         In general, ``begin`` may not be larger than ``grid.min_pt``,
         and ``end`` not smaller than ``grid.max_pt`` in any component.
-        None is equivalent to an empty dictionary, i.e. the values
+        ``None`` is equivalent to an empty dictionary, i.e. the values
         are calculated in each dimension.
 
     See also
@@ -742,21 +742,21 @@ def uniform_partition(begin=None, end=None, num_nodes=None,
 
     Parameters
     ----------
-    begin, end : float or array-like, optional
+    begin, end : float or `array-like`, optional
         Vectors defining the begin end end points of an `IntervalProd`
         (a rectangular box). For one-dimensional partitions, single
         floats can be provided. ``None`` entries mean "compute the value".
-    num_nodes : int or sequence of int, optional
+    num_nodes : int or `sequence` of ints, optional
         Number of nodes per axis. For 1d intervals, a single integer
         can be specified. ``None`` entries mean "compute the value".
-    cell_sides : float or array-like, optional
+    cell_sides : float or `array-like`, optional
         Side length of the partition cells per axis. For 1d intervals,
         a single integer can be specified. ``None`` entries mean
         "compute the value".
-    nodes_on_bdry : bool or sequence, optional
+    nodes_on_bdry : bool or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (True) or shift it
-        by half a cell size into the interior (False). In each axis,
+        place the last grid point on the boundary (``True``) or shift it
+        by half a cell size into the interior (``False``). In each axis,
         an entry may consist in a single bool or a 2-tuple of
         bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
@@ -795,7 +795,7 @@ def uniform_partition(begin=None, end=None, num_nodes=None,
     (array([ 0. ,  0.5,  1. ,  1.5,  2. ]),)
 
     In higher dimensions, the parameters can be given differently in
-    each axis. Where None is given, the value will be computed:
+    each axis. Where ``None`` is given, the value will be computed:
 
     >>> part = uniform_partition(begin=[0, 0], end=[1, 2],
     ...                          num_nodes=[4, 2])

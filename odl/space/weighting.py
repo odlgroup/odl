@@ -103,7 +103,7 @@ class WeightingBase(object):
 
     @property
     def dist_using_inner(self):
-        """True if the distance should be calculated using inner."""
+        """``True`` if the distance should be calculated using inner."""
         return self.__dist_using_inner
 
     def __eq__(self, other):
@@ -112,7 +112,7 @@ class WeightingBase(object):
         Returns
         -------
         equal : bool
-            True if ``other`` is a the same weighting, False
+            ``True`` if ``other`` is a the same weighting, ``False``
             otherwise.
 
         Notes
@@ -134,9 +134,9 @@ class WeightingBase(object):
         Returns
         -------
         equivalent : bool
-            True if ``other`` is a `WeightingBase` instance which
+            ``True`` if ``other`` is a `WeightingBase` instance which
             yields the same result as this inner product for any
-            input, False otherwise.
+            input, ``False`` otherwise.
         """
         return self == other
 
@@ -217,7 +217,7 @@ class MatrixWeightingBase(WeightingBase):
 
         Parameters
         ----------
-        matrix :  ``scipy.sparse.spmatrix`` or array-like, 2-dim.
+        matrix :  ``scipy.sparse.spmatrix`` or 2-dim. `array-like`
             Square weighting matrix of the inner product
         impl : string
             Specifier for the implementation backend
@@ -237,27 +237,27 @@ class MatrixWeightingBase(WeightingBase):
 
             This option can only be used if ``exponent`` is 2.0.
         precomp_mat_pow : bool, optional
-            If True, precompute the matrix power ``W ** (1/p)``
+            If ``True``, precompute the matrix power ``W ** (1/p)``
             during initialization. This has no effect if ``exponent``
             is 1.0, 2.0 or ``inf``.
 
-            Default: False
+            Default: ``False``
 
         cache_mat_pow : bool, optional
-            If True, cache the matrix power ``W ** (1/p)``. This can
+            If ``True``, cache the matrix power ``W ** (1/p)``. This can
             happen either during initialization or in the first call to
             ``norm`` or ``dist``, resp. This has no effect if
             ``exponent`` is 1.0, 2.0 or ``inf``.
 
-            Default: True
+            Default: ``True``
 
         cache_mat_decomp : bool, optional
-            If True, cache the eigenbasis decomposition of the
+            If ``True``, cache the eigenbasis decomposition of the
             matrix. This can happen either during initialization or in
             the first call to ``norm`` or ``dist``, resp. This has no
             effect if ``exponent`` is 1.0, 2.0 or ``inf``.
 
-            Default: False
+            Default: ``False``
 
         Notes
         -----
@@ -349,15 +349,15 @@ class MatrixWeightingBase(WeightingBase):
         Parameters
         ----------
         cache : bool or None, optional
-            If True, store the decomposition internally. For None,
+            If ``True``, store the decomposition internally. For None,
             the ``cache_mat_decomp`` from class initialization is used.
 
         Returns
         -------
-        eigval : numpy.ndarray
+        eigval : `numpy.ndarray`
             One-dimensional array of eigenvalues. Its length is equal
             to the number of matrix rows.
-        eigvec : numpy.ndarray
+        eigvec : `numpy.ndarray`
             Two-dimensional array of eigenvectors. It has the same shape
             as the decomposed matrix.
 
@@ -394,8 +394,8 @@ class MatrixWeightingBase(WeightingBase):
         Returns
         -------
         equals : bool
-            True if other is a `MatrixWeightingBase` instance
-            with **identical** matrix, False otherwise.
+            ``True`` if other is a `MatrixWeightingBase` instance
+            with **identical** matrix, ``False`` otherwise.
 
         See also
         --------
@@ -413,9 +413,9 @@ class MatrixWeightingBase(WeightingBase):
         Returns
         -------
         equivalent : bool
-            True if other is a `WeightingBase` instance with the same
+            ``True`` if other is a `WeightingBase` instance with the same
             `WeightingBase.impl`, which yields the same result as this
-            weighting for any input, False otherwise. This is checked
+            weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/vectors/constants.
         """
         # Optimization for equality
@@ -533,7 +533,7 @@ class VectorWeightingBase(WeightingBase):
 
         Parameters
         ----------
-        vector : array-like, one-dim.
+        vector : 1-dim. `array-like`
             Weighting vector of the inner product
         impl : string
             Specifier for the implementation backend
@@ -583,8 +583,8 @@ class VectorWeightingBase(WeightingBase):
         Returns
         -------
         equals : bool
-            True if other is a `VectorWeightingBase` instance with
-            **identical** vector, False otherwise.
+            ``True`` if other is a `VectorWeightingBase` instance with
+            **identical** vector, ``False`` otherwise.
 
         See also
         --------
@@ -602,9 +602,9 @@ class VectorWeightingBase(WeightingBase):
         Returns
         -------
         equivalent : bool
-            True if other is a `WeightingBase` instance with the same
+            ``True`` if other is a `WeightingBase` instance with the same
             `WeightingBase.impl`, which yields the same result as this
-            weighting for any input, False otherwise. This is checked
+            weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/vectors/constants.
         """
         # Optimization for equality
@@ -699,8 +699,8 @@ class ConstWeightingBase(WeightingBase):
         Returns
         -------
         equal : bool
-            True if other is a `ConstWeightingBase` instance with the
-            same constant, False otherwise.
+            ``True`` if other is a `ConstWeightingBase` instance with the
+            same constant, ``False`` otherwise.
         """
         if other is self:
             return True
@@ -714,9 +714,9 @@ class ConstWeightingBase(WeightingBase):
         Returns
         -------
         equivalent : bool
-            True if other is a `WeightingBase` instance with the same
+            ``True`` if other is a `WeightingBase` instance with the same
             `WeightingBase.impl`, which yields the same result as this
-            weighting for any input, False otherwise. This is checked
+            weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/vectors/constants.
         """
         if isinstance(other, ConstWeightingBase):
@@ -823,7 +823,7 @@ class CustomInnerProductBase(WeightingBase):
 
         Parameters
         ----------
-        inner : callable
+        inner : `callable`
             The inner product implementation. It must accept two
             `LinearSpaceVector` arguments, return an element from
             their space's field (real or complex number) and
@@ -866,8 +866,8 @@ class CustomInnerProductBase(WeightingBase):
         Returns
         -------
         equal : bool
-            True if other is a `CustomInnerProductBase`
-            instance with the same inner product, False otherwise.
+            ``True`` if other is a `CustomInnerProductBase`
+            instance with the same inner product, ``False`` otherwise.
         """
         return super().__eq__(other) and self.inner == other.inner
 
@@ -903,7 +903,7 @@ class CustomNormBase(WeightingBase):
 
         Parameters
         ----------
-        norm : callable
+        norm : `callable`
             The norm implementation. It must accept a
             `LinearSpaceVector` argument, return a float and satisfy
             the following conditions for all vectors
@@ -938,8 +938,8 @@ class CustomNormBase(WeightingBase):
         Returns
         -------
         equal : bool
-            True if other is a `CustomNormBase` instance with the same
-            norm, False otherwise.
+            ``True`` if other is a `CustomNormBase` instance with the same
+            norm, ``False`` otherwise.
         """
         return super().__eq__(other) and self.norm == other.norm
 
@@ -972,7 +972,7 @@ class CustomDistBase(WeightingBase):
 
         Parameters
         ----------
-        dist : callable
+        dist : `callable`
             The distance function defining a metric on a `LinearSpace`.
             It must accept two `LinearSpaceVector` arguments, return a
             float and and fulfill the following mathematical conditions
@@ -1011,8 +1011,8 @@ class CustomDistBase(WeightingBase):
         Returns
         -------
         equal : bool
-            True if other is a `CustomDistBase` instance with the same
-            dist, False otherwise.
+            ``True`` if other is a `CustomDistBase` instance with the same
+            dist, ``False`` otherwise.
         """
         return super().__eq__(other) and self.dist == other.dist
 

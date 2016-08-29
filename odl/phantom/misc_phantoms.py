@@ -35,10 +35,10 @@ def submarine(space, smooth=True, taper=20.0):
     ----------
     space : `DiscreteLp`
         Discretized space in which the phantom is supposed to be created.
-    smooth : `bool`, optional
-        If `True`, the boundaries are smoothed out. Otherwise, the
+    smooth : bool, optional
+        If ``True``, the boundaries are smoothed out. Otherwise, the
         function steps from 0 to 1 at the boundaries.
-    taper : `float`, optional
+    taper : float, optional
         Tapering parameter for the boundary smoothing. Larger values
         mean faster taper, i.e. sharper boundaries.
 

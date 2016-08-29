@@ -206,10 +206,11 @@ class DiscretizedSet(NtuplesBase):
         Returns
         -------
         equals : bool
-            True if ``other`` is a `DiscretizedSet`
+            ``True`` if ``other`` is a `DiscretizedSet`
             instance and all attributes `uspace`, `dspace`,
             `DiscretizedSet.sampling` and `DiscretizedSet.interpolation`
-            of ``other`` and this discretization are equal, False otherwise.
+            of ``other`` and this discretization are equal, ``False``
+            otherwise.
         """
         if other is self:
             return True
@@ -281,7 +282,7 @@ class DiscretizedSetVector(NtuplesBaseVector):
 
         Parameters
         ----------
-        out : numpy.ndarray, optional
+        out : `numpy.ndarray`, optional
             Array in which the result should be written in-place.
             Has to be contiguous and of the correct dtype.
         """
@@ -293,8 +294,8 @@ class DiscretizedSetVector(NtuplesBaseVector):
         Returns
         -------
         equals : bool
-            True if all entries of ``other`` are equal to this
-            vector's entries, False otherwise.
+            ``True`` if all entries of ``other`` are equal to this
+            vector's entries, ``False`` otherwise.
         """
         return (other in self.space and
                 self.ntuple == other.ntuple)
@@ -304,7 +305,7 @@ class DiscretizedSetVector(NtuplesBaseVector):
 
         Parameters
         ----------
-        indices : int or slice
+        indices : int or `slice`
             The position(s) that should be accessed
 
         Returns
@@ -319,9 +320,9 @@ class DiscretizedSetVector(NtuplesBaseVector):
 
         Parameters
         ----------
-        indices : int or slice
+        indices : int or `slice`
             The position(s) that should be set
-        values : scalar, array-like or `NtuplesBaseVector`
+        values : scalar, `array-like` or `NtuplesBaseVector`
             The value(s) that are to be assigned.
 
             If ``index`` is an int, ``value`` must be single value.
@@ -488,7 +489,7 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
 
     @property
     def is_weighted(self):
-        """Return True if the ``dspace`` is weighted."""
+        """``True`` if the ``dspace`` is weighted."""
         return getattr(self.dspace, 'is_weighted', False)
 
     def _lincomb(self, a, x1, b, x2, out):
@@ -560,10 +561,10 @@ def dspace_type(space, impl, dtype=None):
         Template space from which to infer an adequate data space. If
         it has a `LinearSpace.field` attribute, ``dtype`` must be
         consistent with it.
-    impl : `str`
+    impl : string
         Implementation backend for the data space
-    dtype : `type`, optional
-        Data type which the space is supposed to use. If None, the
+    dtype : type, optional
+        Data type which the space is supposed to use. If ``None``, the
         space type is purely determined from ``space`` and
         ``impl``. If given, it must be compatible with the
         field of ``space``.

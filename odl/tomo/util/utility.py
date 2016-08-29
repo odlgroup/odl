@@ -44,7 +44,7 @@ def euler_matrix(*angles):
 
     Returns
     -------
-    mat : numpy.ndarray, shape ``(2, 2)`` or ``(3, 3)``
+    mat : `numpy.ndarray`, shape ``(2, 2)`` or ``(3, 3)``
         The rotation matrix
 
     .. _Euler angles:
@@ -99,16 +99,16 @@ def axis_rotation(axis, angle, vectors):
 
     Parameters
     ----------
-    axis : array-like, shape (3,)
+    axis : `array-like`, shape ``(3,)``
         The rotation axis, assumed to be a unit vector
     angle : float
         The rotation angle
-    vectors : array-like, shape ``(3,)`` or ``(N, 3)``
+    vectors : `array-like`, shape ``(3,)`` or ``(N, 3)``
         The vector(s) to be rotated
 
     Returns
     -------
-    rot_vec : numpy.ndarray
+    rot_vec : `numpy.ndarray`
         The rotated vector(s)
 
     .. _Rodriguez' rotation formula:
@@ -151,14 +151,14 @@ def axis_rotation_matrix(axis, angle):
 
     Parameters
     ----------
-    axis : array-like, shape ``(3,)``
+    axis : `array-like`, shape ``(3,)``
         The rotation axis, assumed to be a unit vector
     angle : float
         The rotation angle
 
     Returns
     -------
-    mat : numpy.ndarray, shape ``(3, 3)``
+    mat : `numpy.ndarray`, shape ``(3, 3)``
         The axis rotation matrix
 
     .. _Rodriguez' rotation formula:
@@ -252,12 +252,12 @@ def perpendicular_vector(vec):
 
     Parameters
     ----------
-    vec : array-like
+    vec : `array-like`
         Vector of arbitrary length
 
     Returns
     -------
-    perp_vec : numpy.ndarray
+    perp_vec : `numpy.ndarray`
         Array of same size such that ``<vec, perp_vec> == 0``
 
     Examples

@@ -57,7 +57,7 @@ class Set(with_metaclass(ABCMeta, object)):
 
     **Returns:**
         contains : bool
-            True if ``other`` is a member of this set, False
+            ``True`` if ``other`` is a member of this set, ``False``
             otherwise.
 
 
@@ -73,8 +73,8 @@ class Set(with_metaclass(ABCMeta, object)):
 
     **Returns:**
         equals : bool
-            True if both sets are of the same type and contain the
-            same elements, False otherwise.
+            ``True`` if both sets are of the same type and contain the
+            same elements, ``False`` otherwise.
 
     A default implementation of the operator overload for ``!=`` via
     ``__ne__(self, other)`` is provided as ``not self.__eq__(other)``.
@@ -107,7 +107,8 @@ class Set(with_metaclass(ABCMeta, object)):
         Returns
         -------
         set_contained : bool
-            True if ``other`` is contained in this set, False otherwise
+            ``True`` if ``other`` is contained in this set, ``False``
+            otherwise.
         """
         return self == other
 
@@ -121,8 +122,8 @@ class Set(with_metaclass(ABCMeta, object)):
         Returns
         -------
         all_contained : bool
-            True if all elements of ``other`` are contained in this
-            set, False otherwise
+            ``True`` if all elements of ``other`` are contained in this
+            set, ``False`` otherwise
         """
         return all(x in self for x in other)
 
@@ -165,18 +166,18 @@ class Set(with_metaclass(ABCMeta, object)):
 
 class EmptySet(Set):
 
-    """Set with no member elements (except `None`).
+    """Set with no member elements (except ``None``).
 
-    None is considered as "no element", i.e. ``None in EmptySet()``
-    is the only test that evaluates to True.
+    ``None`` is considered as "no element", i.e. ``None in EmptySet()``
+    is the only test that evaluates to ``True``.
     """
 
     def __contains__(self, other):
-        """Return ``other in self``."""
+        """Return ``other in self``, always ``False`` except for ``None``."""
         return other is None
 
     def contains_set(self, other):
-        """Return True for the empty set, False otherwise."""
+        """Return ``True`` for the empty set, ``False`` otherwise."""
         return isinstance(other, EmptySet)
 
     def __eq__(self, other):
@@ -196,11 +197,11 @@ class UniversalSet(Set):
     """
 
     def __contains__(self, other):
-        """Return ``other in self``."""
+        """Return ``other in self``, always ``True``."""
         return True
 
     def contains_set(self, other):
-        """Return True for any set."""
+        """Return ``True`` for any set."""
         return isinstance(other, Set)
 
     def __eq__(self, other):
@@ -315,7 +316,7 @@ class ComplexNumbers(Field):
         return isinstance(other, Complex)
 
     def contains_set(self, other):
-        """Return True if ``other`` is a subset of the complex numbers.
+        """Return ``True`` if ``other`` is a subset of the complex numbers.
 
         Returns
         -------
@@ -337,7 +338,7 @@ class ComplexNumbers(Field):
                 isinstance(other, Integers))
 
     def contains_all(self, other):
-        """Return True if ``other`` is a sequence complex numbers."""
+        """Return ``True`` if ``other`` is a sequence of complex numbers."""
         dtype = getattr(other, 'dtype', None)
         if dtype is None:
             dtype = np.result_type(*other)
@@ -373,12 +374,12 @@ class RealNumbers(Field):
         return isinstance(other, Real)
 
     def contains_set(self, other):
-        """Return True if ``other`` is a subset of the real numbers.
+        """Return ``True`` if ``other`` is a subset of the real numbers.
 
         Returns
         -------
         contained : bool
-            True if other is an instance of `RealNumbers` or
+            ``True`` if other is an instance of `RealNumbers` or
             `Integers` False otherwise.
 
         Examples
@@ -457,7 +458,7 @@ class Integers(Set):
         return isinstance(other, Integers)
 
     def contains_all(self, other):
-        """Test if ``other`` is a sequence of integers."""
+        """Return ``True`` if ``other`` is a sequence of integers."""
         dtype = getattr(other, 'dtype', None)
         if dtype is None:
             dtype = np.result_type(*other)
@@ -509,9 +510,9 @@ class CartesianProduct(Set):
         Returns
         -------
         contains : bool
-            True if ``other`` is a sequence with same length as this
+            ``True`` if ``other`` is a sequence with same length as this
             Cartesian product, and each entry is contained in the set with
-            corresponding index, False otherwise.
+            corresponding index, ``False`` otherwise.
         """
         try:
             len(other)
@@ -526,9 +527,9 @@ class CartesianProduct(Set):
         Returns
         -------
         equals : bool
-            True if ``other`` is a `CartesianProduct` instance,
+            ``True`` if ``other`` is a `CartesianProduct` instance,
             has the same length as this Cartesian product and all sets
-            with the same index are equal, False otherwise.
+            with the same index are equal, ``False`` otherwise.
         """
         return (isinstance(other, CartesianProduct) and
                 len(other) == len(self) and

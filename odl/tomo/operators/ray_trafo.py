@@ -171,12 +171,12 @@ class RayTransform(Operator):
            Element in the domain of the operator to be forward projected
         out : `DiscreteLpVector`, optional
             Vector in the projection space to which the result is written.
-            If None creates an element in the range of the operator.
 
         Returns
         -------
         out : `DiscreteLpVector`
-            Returns an element in the projection space
+            Element in the projection space holding the result. If ``out``
+            was provided, the returned object is a reference to it.
         """
         if self.impl.startswith('astra'):
             backend, data_impl = self.impl.split('_')
@@ -295,13 +295,13 @@ class RayBackProjection(Operator):
            Element in the domain of the operator which is back-projected
         out : `DiscreteLpVector`, optional
             Element in the reconstruction space to which the result is
-            written. If None an element in the range of the operator is
-            created.
+            written.
 
         Returns
         -------
         out : `DiscreteLpVector`
-            Returns an element in the projection space
+            Element in the projection space holding the result. If ``out``
+            was provided, the returned object is a reference to it.
         """
 
         if self.impl.startswith('astra'):

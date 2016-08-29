@@ -42,7 +42,7 @@ def matrix_representation(op):
 
     Returns
     ----------
-    matrix : numpy.ndarray
+    matrix : `numpy.ndarray`
         The matrix representation of the operator.
 
     Notes
@@ -134,8 +134,8 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         element of the `Operator.domain` is used.
     maxiter : positive int, optional
         Number of iterations to perform. If the domain and range of ``op``
-        do not match, it needs to be an even number. If None is given, iterate
-        until convergence.
+        do not match, it needs to be an even number. If ``None`` is given,
+        iterate until convergence.
     rtol : float, optional
         Relative tolerance parameter (see Notes).
     atol : float, optional

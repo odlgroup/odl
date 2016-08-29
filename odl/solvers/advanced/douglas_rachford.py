@@ -58,11 +58,11 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
         functions ``g_i``.
     L : `sequence` of `Operator`'s
         Sequence of `Opeartor`s` with as many elements as ``prox_cc_gs``.
-    tau : `float`
+    tau : float
         Step size parameter for ``prox_f``.
-    sigma : `sequence` of  `float`
+    sigma : `sequence` of floats
         Step size parameters for the ``prox_cc_g``s.
-    niter : `int`
+    niter : int
         Number of iterations.
     callback : `callable`, optional
         Function called with the current iterate after each iteration.
@@ -73,7 +73,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
         Sequence of `proximal factory` for the convex conjuates of the
         functions ``l_i``.
         If omitted, the simpler problem without ``l_i``  will be considered.
-    lam : `float` or `callable`, optional
+    lam : float or `callable`, optional
         Overrelaxation step size. If callable, should take an index (zero
         indexed) and return the corresponding step size.
 
@@ -148,7 +148,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
     lam_in = kwargs.pop('lam', 1.0)
     if not callable(lam_in) and not (0 < lam_in < 2):
-        raise ValueError('`lam` must `callable` or `float` between 0 and 2')
+        raise ValueError('`lam` must callable or a number between 0 and 2')
     lam = lam_in if callable(lam_in) else lambda _: lam_in
 
     # Check for unused parameters

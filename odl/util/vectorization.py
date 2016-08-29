@@ -168,12 +168,12 @@ class OptionalArgDecorator(object):
 
         Parameters
         ----------
-        func : callable
+        func : `callable`
             Original function to be wrapped
 
         Returns
         -------
-        wrapped : callable
+        wrapped : `callable`
             The wrapped function
         """
         return self._wrapper(func, *self.wrapper_args, **self.wrapper_kwargs)
@@ -245,7 +245,7 @@ class _NumpyVectorizeWrapper(object):
 
         Parameters
         ----------
-        func : callable
+        func : `callable`
             Python function or method to be wrapped
         vect_args :
             positional arguments for `numpy.vectorize`
@@ -262,14 +262,14 @@ class _NumpyVectorizeWrapper(object):
 
         Parameters
         ----------
-        x : array-like or sequence of array-like
+        x : `array-like` or `sequence` of `array-like`'s
             Input argument(s) to the wrapped function
-        out : numpy.ndarray, optional
+        out : `numpy.ndarray`, optional
             Appropriately sized array to write to
 
         Returns
         -------
-        out : numpy.ndarray
+        out : `numpy.ndarray`
             Result of the vectorized function evaluation. If ``out``
             was given, the returned object is a reference to it.
         """

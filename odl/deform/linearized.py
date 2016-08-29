@@ -195,7 +195,7 @@ class LinDeformFixedTempl(Operator):
 
         Parameters
         ----------
-        displacement : `domain` element-like
+        displacement : `domain` `element-like`
             Point at which the derivative is computed.
 
         Returns

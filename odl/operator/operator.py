@@ -169,9 +169,9 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     cls : `class`, optional
         The ``_call()`` method of this class is checked. If omitted,
         provide ``unbound_call`` instead to check directly.
-    bound_call: callable, optional
+    bound_call: `callable`, optional
         Check this bound method instead of ``cls``
-    unbound_call: callable, optional
+    unbound_call: `callable`, optional
         Check this unbound function instead of ``cls``
     attr : string, optional
         Check this attribute instead of ``_call``, e.g. ``__call__``
@@ -452,7 +452,7 @@ class Operator(object):
             The range of this operator, i.e., the set this operator
             maps to
         linear : bool
-            If True, the operator is considered as linear. In this
+            If ``True``, the operator is considered as linear. In this
             case, ``domain`` and ``range`` have to be instances of
             `LinearSpace`, or `Field`.
         """
@@ -571,12 +571,12 @@ class Operator(object):
 
     @property
     def is_linear(self):
-        """True if this operator is linear."""
+        """``True`` if this operator is linear."""
         return self.__is_linear
 
     @property
     def is_functional(self):
-        """True if this operator's range is a `Field`."""
+        """``True`` if this operator's range is a `Field`."""
         return self.__is_functional
 
     @property
@@ -2067,7 +2067,7 @@ def simple_operator(call=None, inv=None, deriv=None, domain=None, range=None,
 
     Parameters
     ----------
-    call : callable
+    call : `callable`
         Function with valid call signature, see `Operator`
     inv : `Operator`, optional
         The operator inverse
@@ -2080,8 +2080,7 @@ def simple_operator(call=None, inv=None, deriv=None, domain=None, range=None,
         The range of the operator
         Default: `UniversalSpace` if linear, else `UniversalSet`
     linear : bool, optional
-        True if the operator is linear
-        Default: False
+        If ``True``, the operator is considered to be linear.
 
     Returns
     -------

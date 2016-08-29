@@ -58,7 +58,7 @@ def normalized_scalar_param_list(param, length, param_conv=None,
         Input parameter to turn into a list.
     length : positive int
         Desired length of the output list.
-    param_conv : callable, optional
+    param_conv : `callable`, optional
         Conversion applied to each list element. ``None`` means no conversion.
     keep_none : bool, optional
         If ``True``, ``None`` is not converted.
@@ -174,9 +174,9 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
 
     Parameters
     ----------
-    indices : int, slice, Ellipsis or sequence of these
+    indices : int, `slice`, `Ellipsis` or `sequence` of these
         Index expression to be normalized.
-    shape : sequence of int
+    shape : `sequence` of ints
         Target shape for error checking of out-of-bounds indices.
         Also needed to determine the number of axes.
     int_to_slice : bool, optional
@@ -184,7 +184,7 @@ def normalized_index_expression(indices, shape, int_to_slice=False):
 
     Returns
     -------
-    normalized : tuple of int or slice
+    normalized : tuple of ints or `slice`'s
         Normalized index expression
 
     Examples
