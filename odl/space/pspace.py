@@ -259,6 +259,8 @@ class ProductSpace(LinearSpace):
 
         # Assign spaces and field
         self.__spaces = tuple(spaces)
+        self.__is_power_space = all(spc == self.spaces[0]
+                                    for spc in self.spaces[1:])
         self.__size = len(spaces)
         if field is None:
             if self.size == 0:
@@ -322,7 +324,7 @@ class ProductSpace(LinearSpace):
     @property
     def is_power_space(self):
         """``True`` if all member spaces are equal."""
-        return all(spc == self.spaces[0] for spc in self.spaces[1:])
+        return self.__is_power_space
 
     @property
     def exponent(self):
@@ -628,6 +630,57 @@ class ProductSpaceElement(LinearSpaceElement):
         except TypeError:
             for i, index in enumerate(indices):
                 self.parts[index] = values[i]
+
+    def _broadcast_arithmetic(self, other, operator):
+        result = getattr(LinearSpaceVector, operator)(self, other)
+        if (result is NotImplemented and self.space.is_power_space and
+                other in self.space[0]):
+            return self.space.element([getattr(xi, operator)(other)
+                                       for xi in self])
+        else:
+            return result
+
+    def __add__(self, other):
+        """Implement broadcasting addition.
+
+        Examples
+        --------
+        Add two vectors with the same underlying space:
+
+        >>> import odl
+        >>> space = odl.rn(3)
+        >>> pspace = ProductSpace(space, 2)
+        >>> x = space.one()
+        >>> y = pspace.one()
+        >>> x + y
+        ProductSpace(rn(3), 2).element([
+            [2.0, 2.0, 2.0],
+            [2.0, 2.0, 2.0]
+        ])
+        """
+        return self._broadcast_arithmetic(other, '__add__')
+
+    __radd__ = __add__
+
+    def __mul__(self, other):
+        """Implement broadcasting multiplication.
+
+        Examples
+        --------
+        Add two vectors with the same underlying space:
+
+        >>> import odl
+        >>> space = odl.rn(3)
+        >>> pspace = ProductSpace(space, 2)
+        >>> x = space.element([3, 4, 5])
+        >>> y = pspace.one()
+        >>> x * y
+        ProductSpace(rn(3), 2).element([
+            [3.0, 4.0, 5.0],
+            [3.0, 4.0, 5.0]
+        ])
+        """
+        return self._broadcast_arithmetic(other, '__mul__')
 
     @property
     def ufunc(self):
