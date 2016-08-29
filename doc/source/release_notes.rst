@@ -12,6 +12,7 @@ Next release
 New features
 ------------
 - Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
+<<<<<<< HEAD
 - Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on. This is
   intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists.
   (:pull:`524`)
@@ -20,6 +21,10 @@ New features
 Improvements
 ------------
 - Add intelligence to ``power_method_opnorm`` so it can terminate early by checking if consecutive iterates are close. (:pull:`527`)
+=======
+- Add ``BroadcastOperator(op, n)``, ``ReductionOperator(op, n)`` and ``DiagonalOperator(op, n)`` syntax.
+  This is equivalent to ``BroadcastOperator(*([op] * n))`` etc, i.e. create ``n`` copies of the operator.
+>>>>>>> ENH: allow syntax (op, n) in the ProductSpaceOperators, closes #517
 
 Changes
 --------
