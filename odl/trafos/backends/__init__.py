@@ -24,3 +24,6 @@ __all__ = ()
 
 from . pyfftw_bindings import *
 __all__ += pyfftw_bindings.__all__
+
+from . pywt_bindings import *
+__all__ += pywt_bindings.__all__

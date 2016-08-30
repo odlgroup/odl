@@ -25,8 +25,8 @@ __all__ = ()
 from . import util
 
 from . import backends
-from .backends.pyfftw_bindings import PYFFTW_AVAILABLE
-__all__ += (PYFFTW_AVAILABLE,)
+from .backends import PYFFTW_AVAILABLE, PYWAVELETS_AVAILABLE
+__all__ += (PYFFTW_AVAILABLE, PYWAVELETS_AVAILABLE)
 
 from .fourier import *
 __all__ += fourier.__all__

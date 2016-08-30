@@ -21,7 +21,6 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
 import pytest
 import numpy as np
 try:
@@ -29,52 +28,50 @@ try:
 except ImportError:
     pass
 
-# ODL imports
 import odl
-from odl.trafos.wavelet import (
-    coeff_size_list, pywt_coeff_to_array,
-    array_to_pywt_coeff, wavelet_decomposition3d,
-    wavelet_reconstruction3d, WaveletTransform)
+from odl.trafos.backends.pywt_bindings import (
+    pywt_coeff_shape_list, pywt_coeff_to_array,
+    array_to_pywt_coeff, _wavedec3, _waverec3)
+from odl.trafos import WaveletTransform
 from odl.util.testutils import (all_almost_equal, all_equal,
                                 skip_if_no_pywavelets)
 
 
 @skip_if_no_pywavelets
-def test_coeff_size_list():
+def test_pywt_coeff_shape_list():
     # Verify that the helper function does indeed work as expected
     shape = (16,)
-    nscale = 3
+    nscales = 3
     wbasis = pywt.Wavelet('db1')
-    mode = 'per'
-    size_list1d = coeff_size_list(shape, nscale, wbasis, mode)
+    pad_mode = 'pywt_periodic'
+    shape_list1d = pywt_coeff_shape_list(shape, wbasis, nscales, pad_mode)
     S1d = [(2,), (2,), (4,), (8,), (16,)]
     shape = (16, 16)
-    size_list2d = coeff_size_list(shape, nscale, wbasis, mode)
+    shape_list2d = pywt_coeff_shape_list(shape, wbasis, nscales, pad_mode)
     S2d = [(2, 2), (2, 2), (4, 4), (8, 8), (16, 16)]
     shape = (16, 16, 16)
-    size_list3d = coeff_size_list(shape, nscale, wbasis, mode)
+    shape_list3d = pywt_coeff_shape_list(shape, wbasis, nscales, pad_mode)
     S3d = [(2, 2, 2), (2, 2, 2), (4, 4, 4), (8, 8, 8), (16, 16, 16)]
-    assert all_equal(size_list1d, S1d)
-    assert all_equal(size_list2d, S2d)
-    assert all_equal(size_list3d, S3d)
+    assert all_equal(shape_list1d, S1d)
+    assert all_equal(shape_list2d, S2d)
+    assert all_equal(shape_list3d, S3d)
 
 
 @skip_if_no_pywavelets
-def test_wavelet_decomposition3d_and_reconstruction3d():
+def test_wavedec3_waverec3():
     # Test 3D wavelet decomposition and reconstruction and verify that
     # they perform as expected
     x = np.random.rand(16, 16, 16)
     mode = 'sym'
     wbasis = pywt.Wavelet('db5')
     nscales = 1
-    wavelet_coeffs = wavelet_decomposition3d(x, wbasis, mode, nscales)
+    wavelet_coeffs = _wavedec3(x, wbasis, mode, nscales)
     aaa = wavelet_coeffs[0]
     reference = pywt.dwtn(x, wbasis, mode)
     aaa_reference = reference['aaa']
     assert all_almost_equal(aaa, aaa_reference)
 
-    reconstruction = wavelet_reconstruction3d(wavelet_coeffs, wbasis, mode,
-                                              nscales)
+    reconstruction = _waverec3(wavelet_coeffs, wbasis, mode, nscales)
     reconstruction_reference = pywt.idwtn(reference, wbasis, mode)
     assert all_almost_equal(reconstruction, reconstruction_reference)
     assert all_almost_equal(reconstruction, x)
@@ -82,12 +79,11 @@ def test_wavelet_decomposition3d_and_reconstruction3d():
 
     wbasis = pywt.Wavelet('db1')
     nscales = 3
-    wavelet_coeffs = wavelet_decomposition3d(x, wbasis, mode, nscales)
+    wavelet_coeffs = _wavedec3(x, wbasis, mode, nscales)
     shape_true = (nscales + 1, )
     assert all_equal(np.shape(wavelet_coeffs), shape_true)
 
-    reconstruction = wavelet_reconstruction3d(wavelet_coeffs, wbasis, mode,
-                                              nscales)
+    reconstruction = _waverec3(wavelet_coeffs, wbasis, mode, nscales)
     assert all_almost_equal(reconstruction, x)
 
 
@@ -95,52 +91,51 @@ def test_wavelet_decomposition3d_and_reconstruction3d():
 def test_pywt_coeff_to_array_and_array_to_pywt_coeff():
     # Verify that the helper function does indeed work as expected
     wbasis = pywt.Wavelet('db1')
-    mode = 'zpd'
+    pad_mode = 'constant'
     nscales = 2
     n = 16
     # 1D test
-    size_list = coeff_size_list((n,), nscales, wbasis, mode)
+    shape_list = pywt_coeff_shape_list((n,), wbasis, nscales, pad_mode)
     x = np.random.rand(n)
-    coeff_list = pywt.wavedec(x, wbasis, mode, nscales)
-    coeff_arr = pywt_coeff_to_array(coeff_list, size_list)
+    coeff_list = pywt.wavedec(x, wbasis, pad_mode, nscales)
+    coeff_arr = pywt_coeff_to_array(coeff_list, shape_list)
     assert isinstance(coeff_arr, (np.ndarray))
-    length_of_array = np.prod(size_list[0])
-    length_of_array += sum(np.prod(shape) for shape in size_list[1:-1])
+    length_of_array = np.prod(shape_list[0])
+    length_of_array += sum(np.prod(shape) for shape in shape_list[1:-1])
     assert all_equal(len(coeff_arr), length_of_array)
 
-    coeff_list2 = array_to_pywt_coeff(coeff_arr, size_list)
+    coeff_list2 = array_to_pywt_coeff(coeff_arr, shape_list)
     assert all_equal(coeff_list, coeff_list2)
-    reconstruction = pywt.waverec(coeff_list2, wbasis, mode)
+    reconstruction = pywt.waverec(coeff_list2, wbasis, pad_mode)
     assert all_almost_equal(reconstruction, x)
 
     # 2D test
-    size_list = coeff_size_list((n, n), nscales, wbasis, mode)
+    shape_list = pywt_coeff_shape_list((n, n), wbasis, nscales, pad_mode)
     x = np.random.rand(n, n)
-    coeff_list = pywt.wavedec2(x, wbasis, mode, nscales)
-    coeff_arr = pywt_coeff_to_array(coeff_list, size_list)
+    coeff_list = pywt.wavedec2(x, wbasis, pad_mode, nscales)
+    coeff_arr = pywt_coeff_to_array(coeff_list, shape_list)
     assert isinstance(coeff_arr, (np.ndarray))
-    length_of_array = np.prod(size_list[0])
-    length_of_array += sum(3 * np.prod(shape) for shape in size_list[1:-1])
+    length_of_array = np.prod(shape_list[0])
+    length_of_array += sum(3 * np.prod(shape) for shape in shape_list[1:-1])
     assert all_equal(len(coeff_arr), length_of_array)
 
-    coeff_list2 = array_to_pywt_coeff(coeff_arr, size_list)
+    coeff_list2 = array_to_pywt_coeff(coeff_arr, shape_list)
     assert all_equal(coeff_list, coeff_list2)
-    reconstruction = pywt.waverec2(coeff_list2, wbasis, mode)
+    reconstruction = pywt.waverec2(coeff_list2, wbasis, pad_mode)
     assert all_almost_equal(reconstruction, x)
 
     # 3D test
-    size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
+    shape_list = pywt_coeff_shape_list((n, n, n), wbasis, nscales, pad_mode)
     x = np.random.rand(n, n, n)
-    coeff_dict = wavelet_decomposition3d(x, wbasis, mode, nscales)
-    coeff_arr = pywt_coeff_to_array(coeff_dict, size_list)
+    coeff_dict = _wavedec3(x, wbasis, pad_mode, nscales)
+    coeff_arr = pywt_coeff_to_array(coeff_dict, shape_list)
     assert isinstance(coeff_arr, (np.ndarray))
-    length_of_array = np.prod(size_list[0])
-    length_of_array += sum(7 * np.prod(shape) for shape in size_list[1:-1])
+    length_of_array = np.prod(shape_list[0])
+    length_of_array += sum(7 * np.prod(shape) for shape in shape_list[1:-1])
     assert len(coeff_arr) == length_of_array
 
-    coeff_dict2 = array_to_pywt_coeff(coeff_arr, size_list)
-    reconstruction = wavelet_reconstruction3d(coeff_dict2, wbasis, mode,
-                                              nscales)
+    coeff_dict2 = array_to_pywt_coeff(coeff_arr, shape_list)
+    reconstruction = _waverec3(coeff_dict2, wbasis, pad_mode, nscales)
     assert all_equal(coeff_dict, coeff_dict)
     assert all_almost_equal(reconstruction, x)
 
@@ -152,10 +147,10 @@ def test_dwt():
     n = 16
     x = np.zeros(n)
     x[5:10] = 1
-    wbasis = pywt.Wavelet('db1')
+    wbasis = 'db1'
     nscales = 2
-    mode = 'sym'
-    size_list = coeff_size_list((n,), nscales, wbasis, mode)
+    pad_mode = 'symmetric'
+    shape_list = pywt_coeff_shape_list((n,), wbasis, nscales, pad_mode)
 
     # Define a discretized domain
     domain = odl.FunctionSpace(odl.IntervalProd([-1], [1]))
@@ -165,15 +160,15 @@ def test_dwt():
 
     # Create the discrete wavelet transform operator.
     # Only the domain of the operator needs to be defined
-    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode)
+    Wop = WaveletTransform(disc_domain, wbasis, nscales, pad_mode)
 
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
 
     # Determine the correct range for Wop and verify that coeffs
     # is an element of it
-    ran_size = np.prod(size_list[0])
-    ran_size += sum(np.prod(shape) for shape in size_list[1:-1])
+    ran_size = np.prod(shape_list[0])
+    ran_size += sum(np.prod(shape) for shape in shape_list[1:-1])
     disc_range = disc_domain.dspace_type(ran_size, dtype=disc_domain.dtype)
     assert coeffs in disc_range
 
@@ -196,10 +191,10 @@ def test_dwt():
     n = 16
     x = np.zeros((n, n))
     x[5:10, 5:10] = 1
-    wbasis = pywt.Wavelet('db1')
+    wbasis = 'db1'
     nscales = 2
-    mode = 'sym'
-    size_list = coeff_size_list((n, n), nscales, wbasis, mode)
+    pad_mode = 'symmetric'
+    shape_list = pywt_coeff_shape_list((n, n), wbasis, nscales, pad_mode)
 
     # Define a discretized domain
     domain = odl.FunctionSpace(odl.IntervalProd([-1, -1], [1, 1]))
@@ -209,15 +204,15 @@ def test_dwt():
 
     # Create the discrete wavelet transform operator.
     # Only the domain of the operator needs to be defined
-    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode)
+    Wop = WaveletTransform(disc_domain, wbasis, nscales, pad_mode)
 
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
 
     # Determine the correct range for Wop and verify that coeffs
     # is an element of it
-    ran_size = np.prod(size_list[0])
-    ran_size += sum(3 * np.prod(shape) for shape in size_list[1:-1])
+    ran_size = np.prod(shape_list[0])
+    ran_size += sum(3 * np.prod(shape) for shape in shape_list[1:-1])
     disc_range = disc_domain.dspace_type(ran_size, dtype=disc_domain.dtype)
     assert coeffs in disc_range
 
@@ -240,10 +235,10 @@ def test_dwt():
     n = 16
     x = np.zeros((n, n, n))
     x[5:10, 5:10, 5:10] = 1
-    wbasis = pywt.Wavelet('db2')
+    wbasis = 'db2'
     nscales = 1
-    mode = 'per'
-    size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
+    pad_mode = 'pywt_periodic'
+    shape_list = pywt_coeff_shape_list((n, n, n), wbasis, nscales, pad_mode)
 
     # Define a discretized domain
     domain = odl.FunctionSpace(odl.IntervalProd([-1, -1, -1], [1, 1, 1]))
@@ -252,13 +247,13 @@ def test_dwt():
     disc_phantom = disc_domain.element(x)
 
     # Create the discrete wavelet transform operator related to 3D transform.
-    Wop = WaveletTransform(disc_domain, nscales, wbasis, mode)
+    Wop = WaveletTransform(disc_domain, wbasis, nscales, pad_mode)
     # Compute the discrete wavelet transform of discrete imput image
     coeffs = Wop(disc_phantom)
     # Determine the correct range for Wop and verify that coeffs
     # is an element of it
-    ran_size = np.prod(size_list[0])
-    ran_size += sum(7 * np.prod(shape) for shape in size_list[1:-1])
+    ran_size = np.prod(shape_list[0])
+    ran_size += sum(7 * np.prod(shape) for shape in shape_list[1:-1])
     disc_range = disc_domain.dspace_type(ran_size, dtype=disc_domain.dtype)
     assert coeffs in disc_range
 
