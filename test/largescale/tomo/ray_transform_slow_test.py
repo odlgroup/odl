@@ -88,14 +88,14 @@ def projector(request, dtype):
         points = np.linspace(min_pt, max_pt, n_angles)
         points += np.random.rand(n_angles) * (max_pt - min_pt) / (5 * n_angles)
         agrid = odl.TensorGrid(points)
-        apart = odl.RectPartition(odl.Interval(0, 2 * np.pi), agrid)
+        apart = odl.RectPartition(odl.IntervalProd(0, 2 * np.pi), agrid)
     elif angle == 'nonuniform':
         # Angles spaced quadratically
         min_pt = 2 * (2.0 * np.pi) / n_angles
         max_pt = (2.0 * np.pi) - 2 * (2.0 * np.pi) / n_angles
         points = np.linspace(min_pt ** 0.5, max_pt ** 0.5, n_angles) ** 2
         agrid = odl.TensorGrid(points)
-        apart = odl.RectPartition(odl.Interval(0, 2 * np.pi), agrid)
+        apart = odl.RectPartition(odl.IntervalProd(0, 2 * np.pi), agrid)
     else:
         raise ValueError('angle not valid')
 

@@ -1270,7 +1270,8 @@ def test_fourier_trafo_scaling():
     def char_interval_ft(x):
         return np.exp(-1j * x / 2) * sinc(x / 2) / np.sqrt(2 * np.pi)
 
-    fspace = odl.FunctionSpace(odl.Interval(-2, 2), field=odl.ComplexNumbers())
+    fspace = odl.FunctionSpace(odl.IntervalProd(-2, 2),
+                               field=odl.ComplexNumbers())
     discr = odl.uniform_discr_fromspace(fspace, 40, impl='numpy')
     dft = FourierTransform(discr)
 

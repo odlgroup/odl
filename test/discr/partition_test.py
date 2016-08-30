@@ -40,14 +40,14 @@ def test_partition_init():
     max_pt = [10, 4]
 
     # Simply test if code runs
-    odl.RectPartition(odl.Rectangle(min_pt, max_pt),
+    odl.RectPartition(odl.IntervalProd(min_pt, max_pt),
                       odl.TensorGrid(vec1, vec2))
-    odl.RectPartition(odl.Interval(min_pt[0], max_pt[0]),
+    odl.RectPartition(odl.IntervalProd(min_pt[0], max_pt[0]),
                       odl.TensorGrid(vec1))
 
     # Degenerate dimensions should work, too
     vec2 = np.array([1.0])
-    odl.RectPartition(odl.Rectangle(min_pt, max_pt),
+    odl.RectPartition(odl.IntervalProd(min_pt, max_pt),
                       odl.TensorGrid(vec1, vec2))
 
 

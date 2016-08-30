@@ -47,20 +47,20 @@ def exponent(request):
 
 def test_init(exponent):
     # Validate that the different init patterns work and do not crash.
-    space = odl.FunctionSpace(odl.Interval(0, 1))
+    space = odl.FunctionSpace(odl.IntervalProd(0, 1))
     part = odl.uniform_partition_fromintv(space.domain, 10)
     rn = odl.rn(10, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent, interp='linear')
 
     # Normal discretization of unit interval with complex
-    complex_space = odl.FunctionSpace(odl.Interval(0, 1),
+    complex_space = odl.FunctionSpace(odl.IntervalProd(0, 1),
                                       field=odl.ComplexNumbers())
 
     cn = odl.cn(10, exponent=exponent)
     odl.DiscreteLp(complex_space, part, cn, exponent=exponent)
 
-    space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    space = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
     part = odl.uniform_partition_fromintv(space.domain, (10, 10))
     rn = odl.rn(100, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent,
@@ -912,7 +912,7 @@ def test_norm_interval(exponent):
     # Test the function f(x) = x^2 on the interval (0, 1). Its
     # L^p-norm is (1 + 2*p)^(-1/p) for finite p and 1 for p=inf
     p = exponent
-    fspace = odl.FunctionSpace(odl.Interval(0, 1))
+    fspace = odl.FunctionSpace(odl.IntervalProd(0, 1))
     lpdiscr = odl.uniform_discr_fromspace(fspace, 10, exponent=p)
 
     testfunc = fspace.element(lambda x: x ** 2)
@@ -930,7 +930,7 @@ def test_norm_rectangle(exponent):
     # L^p-norm is ((1 + 2*p) * (1 + 3 * p) / 2)^(-1/p) for finite p
     # and 1 for p=inf
     p = exponent
-    fspace = odl.FunctionSpace(odl.Rectangle([0, -1], [1, 1]))
+    fspace = odl.FunctionSpace(odl.IntervalProd([0, -1], [1, 1]))
     lpdiscr = odl.uniform_discr_fromspace(fspace, (20, 30), exponent=p)
 
     testfunc = fspace.element(lambda x: x[0] ** 2 * x[1] ** 3)
@@ -951,7 +951,7 @@ def test_norm_rectangle_boundary(fn_impl, exponent):
         pytest.xfail('inf-norm not implemented in CUDA')
 
     dtype = 'float32'
-    rect = odl.Rectangle([-1, -2], [1, 2])
+    rect = odl.IntervalProd([-1, -2], [1, 2])
     fspace = odl.FunctionSpace(rect, out_dtype=dtype)
 
     # Standard case

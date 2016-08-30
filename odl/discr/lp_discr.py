@@ -994,8 +994,8 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
 
     Examples
     --------
-    >>> from odl import Interval, FunctionSpace
-    >>> intv = Interval(0, 1)
+    >>> from odl import IntervalProd, FunctionSpace
+    >>> intv = IntervalProd(0, 1)
     >>> space = FunctionSpace(intv)
     >>> uniform_discr_fromspace(space, 10)
     uniform_discr(0.0, 1.0, 10)
@@ -1110,8 +1110,8 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
 
     Examples
     --------
-    >>> from odl import Interval
-    >>> intv = Interval(0, 1)
+    >>> from odl import IntervalProd
+    >>> intv = IntervalProd(0, 1)
     >>> uniform_discr_fromintv(intv, 10)
     uniform_discr(0.0, 1.0, 10)
 

@@ -37,7 +37,7 @@ from odl.util.testutils import (
 
 
 def test_nearest_interpolation_1d_complex(fn_impl):
-    intv = odl.Interval(0, 1)
+    intv = odl.IntervalProd(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
@@ -70,7 +70,7 @@ def test_nearest_interpolation_1d_complex(fn_impl):
 
 
 def test_nearest_interpolation_1d_variants():
-    intv = odl.Interval(0, 1)
+    intv = odl.IntervalProd(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
@@ -98,7 +98,7 @@ def test_nearest_interpolation_1d_variants():
 
 
 def test_nearest_interpolation_2d_float():
-    rect = odl.Rectangle([0, 0], [1, 1])
+    rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2], nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
@@ -131,7 +131,7 @@ def test_nearest_interpolation_2d_float():
 
 
 def test_nearest_interpolation_2d_string():
-    rect = odl.Rectangle([0, 0], [1, 1])
+    rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2], nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
@@ -165,7 +165,7 @@ def test_nearest_interpolation_2d_string():
 
 
 def test_linear_interpolation_1d():
-    intv = odl.Interval(0, 1)
+    intv = odl.IntervalProd(0, 1)
     part = odl.uniform_partition_fromintv(intv, 5, nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.1, 0.3, 0.5, 0.7, 0.9]
@@ -187,7 +187,7 @@ def test_linear_interpolation_1d():
 
 
 def test_linear_interpolation_2d():
-    rect = odl.Rectangle([0, 0], [1, 1])
+    rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2], nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
@@ -256,7 +256,7 @@ def test_linear_interpolation_2d():
 
 
 def test_per_axis_interpolation():
-    rect = odl.Rectangle([0, 0], [1, 1])
+    rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2], nodes_on_bdry=False)
     # Coordinate vectors are:
     # [0.125, 0.375, 0.625, 0.875], [0.25, 0.75]
@@ -315,7 +315,7 @@ def test_per_axis_interpolation():
 def test_collocation_interpolation_identity():
     # Check if interpolation followed by collocation on the same grid
     # is the identity
-    rect = odl.Rectangle([0, 0], [1, 1])
+    rect = odl.IntervalProd([0, 0], [1, 1])
     part = odl.uniform_partition_fromintv(rect, [4, 2])
     space = odl.FunctionSpace(rect)
     dspace = odl.rn(part.size)

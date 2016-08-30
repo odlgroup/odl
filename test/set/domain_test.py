@@ -27,7 +27,7 @@ import numpy as np
 
 # ODL imports
 from odl.discr.grid import sparse_meshgrid
-from odl.set.domain import IntervalProd, Interval, Rectangle, Cuboid
+from odl.set.domain import IntervalProd
 from odl.util.testutils import almost_equal, all_equal
 
 
@@ -335,7 +335,7 @@ def test_dist():
 
 # Set arithmetic
 def test_pos():
-    interv = Interval(1, 2)
+    interv = IntervalProd(1, 2)
     assert +interv == interv
 
     interv = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
@@ -343,8 +343,8 @@ def test_pos():
 
 
 def test_neg():
-    interv = Interval(1, 2)
-    assert -interv == Interval(-2, -1)
+    interv = IntervalProd(1, 2)
+    assert -interv == IntervalProd(-2, -1)
 
     interv = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
     assert -interv == IntervalProd([-2, -3, -4, -5, -6],
@@ -352,11 +352,11 @@ def test_neg():
 
 
 def test_add():
-    interv1 = Interval(1, 2)
-    interv2 = Interval(3, 4)
+    interv1 = IntervalProd(1, 2)
+    interv2 = IntervalProd(3, 4)
 
-    assert interv1 + 2.0 == Interval(3, 4)
-    assert interv1 + interv2 == Interval(4, 6)
+    assert interv1 + 2.0 == IntervalProd(3, 4)
+    assert interv1 + interv2 == IntervalProd(4, 6)
 
     interv1 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
     interv2 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
@@ -366,11 +366,11 @@ def test_add():
 
 
 def test_sub():
-    interv1 = Interval(1, 2)
-    interv2 = Interval(3, 4)
+    interv1 = IntervalProd(1, 2)
+    interv2 = IntervalProd(3, 4)
 
-    assert interv1 - 2.0 == Interval(-1, 0)
-    assert interv1 - interv2 == Interval(-3, -1)
+    assert interv1 - 2.0 == IntervalProd(-1, 0)
+    assert interv1 - interv2 == IntervalProd(-3, -1)
 
     interv1 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
     interv2 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
@@ -380,11 +380,11 @@ def test_sub():
 
 
 def test_mul():
-    interv1 = Interval(1, 2)
-    interv2 = Interval(3, 4)
+    interv1 = IntervalProd(1, 2)
+    interv2 = IntervalProd(3, 4)
 
-    assert interv1 * 2.0 == Interval(2, 4)
-    assert interv1 * interv2 == Interval(3, 8)
+    assert interv1 * 2.0 == IntervalProd(2, 4)
+    assert interv1 * interv2 == IntervalProd(3, 8)
 
     interv1 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
     interv2 = IntervalProd([1, 2, 3, 4, 5], [2, 3, 4, 5, 6])
@@ -394,14 +394,14 @@ def test_mul():
 
 
 def test_div():
-    interv1 = Interval(1, 2)
-    interv2 = Interval(3, 4)
+    interv1 = IntervalProd(1, 2)
+    interv2 = IntervalProd(3, 4)
 
-    assert interv1 / 2.0 == Interval(1 / 2.0, 2 / 2.0)
-    assert 2.0 / interv1 == Interval(2 / 2.0, 2 / 1.0)
-    assert interv1 / interv2 == Interval(1 / 4.0, 2.0 / 3.0)
+    assert interv1 / 2.0 == IntervalProd(1 / 2.0, 2 / 2.0)
+    assert 2.0 / interv1 == IntervalProd(2 / 2.0, 2 / 1.0)
+    assert interv1 / interv2 == IntervalProd(1 / 4.0, 2.0 / 3.0)
 
-    interv_with_zero = Interval(-1, 1)
+    interv_with_zero = IntervalProd(-1, 1)
     with pytest.raises(ValueError):
         interv1 / interv_with_zero
 
@@ -413,44 +413,17 @@ def test_div():
     assert (interv1 / interv2).approx_equals(quotient, atol=1e-10)
 
 
-def test_interval_init():
-    Interval(1, 2)
-    Interval([1], [2])
-
-    with pytest.raises(ValueError):
-        Interval([1, 2], [3, 4])
-
-
 def test_interval_length():
-    set_ = Interval(1, 2)
+    set_ = IntervalProd(1, 2)
     assert set_.length == set_.volume
     assert set_.length == 1
 
 
-def test_rectangle_init():
-    Rectangle([1, 2], [2, 3])
-
-    with pytest.raises(ValueError):
-        Rectangle(1, 2)
-
-    with pytest.raises(ValueError):
-        Rectangle([1, 2, 3], [4, 5, 6])
-
-
 def test_rectangle_area():
-    set_ = Rectangle([1, 2], [3, 4])
+    set_ = IntervalProd([1, 2], [3, 4])
     assert set_.area == set_.volume
     assert set_.area == (3 - 1) * (4 - 2)
 
-
-def test_cuboid_init():
-    Cuboid([1, 2, 3], [2, 3, 4])
-
-    with pytest.raises(ValueError):
-        Cuboid(1, 2)
-
-    with pytest.raises(ValueError):
-        Cuboid([1, 2, 3, 4], [4, 5, 6, 7])
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
