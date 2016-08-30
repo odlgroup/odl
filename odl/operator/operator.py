@@ -36,7 +36,7 @@ __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
            'OperatorLeftScalarMult', 'OperatorRightScalarMult',
            'FunctionalLeftVectorMult',
            'OperatorLeftVectorMult', 'OperatorRightVectorMult',
-           'OperatorPointwiseProduct', 'simple_operator',
+           'OperatorPointwiseProduct',
            'OpTypeError', 'OpDomainError', 'OpRangeError',
            'OpNotImplementedError')
 
@@ -2058,82 +2058,6 @@ class OpNotImplementedError(NotImplementedError):
     These are raised when a method in `LinearSpace` that has not been
     defined in a specific space is called.
     """
-
-
-def simple_operator(call=None, inv=None, deriv=None, domain=None, range=None,
-                    linear=False):
-    """Create a simple operator.
-
-    Mostly intended for simple prototyping rather than final use.
-
-    Parameters
-    ----------
-    call : `callable`
-        Function with valid call signature, see `Operator`
-    inv : `Operator`, optional
-        The operator inverse
-    deriv : `Operator`, optional
-        The operator derivative, linear
-    domain : `Set`, optional
-        The domain of the operator
-        Default: `UniversalSpace` if linear, else `UniversalSet`
-    range : `Set`, optional
-        The range of the operator
-        Default: `UniversalSpace` if linear, else `UniversalSet`
-    linear : bool, optional
-        If ``True``, the operator is considered to be linear.
-
-    Returns
-    -------
-    op : `Operator`
-        An operator with the provided attributes and methods.
-
-    Examples
-    --------
-    >>> A = simple_operator(lambda x: 3*x)
-    >>> A(5)
-    15
-    """
-    if domain is None:
-        domain = UniversalSpace() if linear else UniversalSet()
-
-    if range is None:
-        range = UniversalSpace() if linear else UniversalSet()
-
-    call_has_out, call_out_optional, _ = _dispatch_call_args(unbound_call=call)
-
-    attrs = {'inverse': inv, 'derivative': deriv}
-
-    if not call_has_out:
-        # Out-of-place _call
-
-        def _call(self, x):
-            return call(x)
-
-        attrs['_call_in_place'] = _default_call_in_place
-        attrs['_call_out_of_place'] = _call
-    elif call_out_optional:
-        # Dual-use _call
-
-        def _call(self, x, out=None):
-            return call(x, out=out)
-
-        attrs['_call_in_place'] = _call
-        attrs['_call_out_of_place'] = _call
-    else:
-        # In-place-only _call
-
-        def _call(self, x, out):
-            return call(x, out)
-
-        attrs['_call_in_place'] = _call
-        attrs['_call_out_of_place'] = _default_call_out_of_place
-
-    attrs['_call'] = _call
-
-    SimpleOperator = type('SimpleOperator', (Operator,), attrs)
-    return SimpleOperator(domain, range, linear)
-
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

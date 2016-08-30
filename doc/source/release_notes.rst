@@ -12,8 +12,9 @@ Next release
 New features
 ------------
 - Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
-- Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on.
-  This is intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists. (:pull:`524`)
+- Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on. This is
+  intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists.
+  (:pull:`524`)
 - Allow ASTRA backend to be used with arbitrary dtypes. (:pull:`524`)
 
 Improvements
@@ -29,6 +30,7 @@ Changes
   The parameter ``padding_value`` is now called ``pad_const``. (:pull:`511`)
 - Expose ``ellipse_phantom`` and ``shepp_logan_ellipses`` to ``odl.phantom``. (:pull:`529`)
 - Unify the names of minimum (``min_pt``), maximum (``max_pt``) and middle (``mid_pt``) points as well as number of points (``shape``) in grids, interval products and factory functions for discretized spaces. (:pull:`541`)
+- Removed ``simple_operator`` since it was never used and did not follow the ODL style. (:pull:`543`)
 
 Bugfixes
 --------
