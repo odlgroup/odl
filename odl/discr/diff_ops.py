@@ -84,6 +84,19 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         edge_order : {1, 2}, optional
             Edge-order accuracy at the boundaries if no padding is used.
             Default: Same order as in the interior.
+
+        Examples
+        --------
+        >>> import odl
+        >>> data = np.array([[ 0.,  1.,  2.,  3.,  4.],
+        ...                  [ 0.,  2.,  4.,  6.,  8.]])
+        >>> discr = odl.uniform_discr([0, 0], [2, 1], data.shape)
+        >>> par_deriv = PartialDerivative(discr)
+        >>> f = par_deriv.domain.element(data)
+        >>> par_div_f = par_deriv(f)
+        >>> print(par_div_f)
+        [[0.0, 1.0, 2.0, 3.0, 4.0],
+         [0.0, 1.0, 2.0, 3.0, 4.0]]
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
@@ -114,19 +127,6 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         out : `range` element
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
-
-        Examples
-        --------
-        >>> import odl
-        >>> data = np.array([[ 0.,  1.,  2.,  3.,  4.],
-        ...                  [ 0.,  2.,  4.,  6.,  8.]])
-        >>> discr = odl.uniform_discr([0, 0], [2, 1], data.shape)
-        >>> par_deriv = PartialDerivative(discr)
-        >>> f = par_deriv.domain.element(data)
-        >>> par_div_f = par_deriv(f)
-        >>> print(par_div_f)
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [0.0, 1.0, 2.0, 3.0, 4.0]]
         """
         if out is None:
             out = self.range.element()
@@ -232,6 +232,29 @@ class Gradient(PointwiseTensorFieldOperator):
         True
         >>> grad_op3.range == ran
         True
+
+        >>> data = np.array([[ 0., 1., 2., 3., 4.],
+        ...                  [ 0., 2., 4., 6., 8.]])
+        >>> discr = odl.uniform_discr([0, 0], [2, 5], [2, 5])
+        >>> f = discr.element(data)
+        >>> grad = Gradient(discr)
+        >>> grad_f = grad(f)
+        >>> print(grad_f[0])
+        [[0.0, 1.0, 2.0, 3.0, 4.0],
+         [0.0, -2.0, -4.0, -6.0, -8.0]]
+        >>> print(grad_f[1])
+        [[1.0, 1.0, 1.0, 1.0, -4.0],
+         [2.0, 2.0, 2.0, 2.0, -8.0]]
+
+        Verify adjoint:
+
+        >>> g = grad.range.element((data, data ** 2))
+        >>> adj_g = grad.adjoint(g)
+        >>> print(adj_g)
+        [[0.0, -2.0, -5.0, -8.0, -11.0],
+         [0.0, -5.0, -14.0, -23.0, -32.0]]
+        >>> g.inner(grad_f) / f.inner(adj_g)
+        1.0
         """
         if domain is None and range is None:
             raise ValueError('either `domain` or `range` must be specified')
@@ -269,32 +292,6 @@ class Gradient(PointwiseTensorFieldOperator):
         out : `range` element
             Result of the evaluation. If ``out`` was provided, the returned
             object is a reference to it.
-
-        Examples
-        --------
-        >>> from odl import uniform_discr
-        >>> data = np.array([[ 0., 1., 2., 3., 4.],
-        ...                  [ 0., 2., 4., 6., 8.]])
-        >>> discr = uniform_discr([0, 0], [2, 5], data.shape)
-        >>> f = discr.element(data)
-        >>> grad = Gradient(discr)
-        >>> grad_f = grad(f)
-        >>> print(grad_f[0])
-        [[0.0, 1.0, 2.0, 3.0, 4.0],
-         [0.0, -2.0, -4.0, -6.0, -8.0]]
-        >>> print(grad_f[1])
-        [[1.0, 1.0, 1.0, 1.0, -4.0],
-         [2.0, 2.0, 2.0, 2.0, -8.0]]
-
-        Verify adjoint:
-
-        >>> g = grad.range.element((data, data ** 2))
-        >>> adj_g = grad.adjoint(g)
-        >>> print(adj_g)
-        [[0.0, -2.0, -5.0, -8.0, -11.0],
-         [0.0, -5.0, -14.0, -23.0, -32.0]]
-        >>> g.inner(grad_f) / f.inner(adj_g)
-        1.0
         """
         if out is None:
             out = self.range.element()
@@ -413,6 +410,25 @@ class Divergence(PointwiseTensorFieldOperator):
         True
         >>> div_op3.range == ran
         True
+
+        >>> data = np.array([[0., 1., 2., 3., 4.],
+        ...                  [1., 2., 3., 4., 5.],
+        ...                  [2., 3., 4., 5., 6.]])
+        >>> space = odl.uniform_discr([0, 0], [3, 5], [3, 5])
+        >>> div = Divergence(range=space)
+        >>> f = div.domain.element([data, data])
+        >>> div_f = div(f)
+        >>> print(div_f)
+        [[2.0, 2.0, 2.0, 2.0, -3.0],
+         [2.0, 2.0, 2.0, 2.0, -4.0],
+         [-1.0, -2.0, -3.0, -4.0, -12.0]]
+
+        Verify adjoint:
+
+        >>> g = div.range.element(data ** 2)
+        >>> adj_div_g = div.adjoint(g)
+        >>> g.inner(div_f) / f.inner(adj_div_g)
+        1.0
         """
         if domain is None and range is None:
             raise ValueError('either `domain` or `range` must be specified')
@@ -451,28 +467,6 @@ class Divergence(PointwiseTensorFieldOperator):
         out : `range` element
             Result of the evaluation. If ``out`` was provided, the returned
             object is a reference to it.
-
-        Examples
-        --------
-        >>> from odl import uniform_discr
-        >>> data = np.array([[0., 1., 2., 3., 4.],
-        ...                  [1., 2., 3., 4., 5.],
-        ...                  [2., 3., 4., 5., 6.]])
-        >>> space = uniform_discr([0, 0], [3, 5], data.shape)
-        >>> div = Divergence(range=space)
-        >>> f = div.domain.element([data, data])
-        >>> div_f = div(f)
-        >>> print(div_f)
-        [[2.0, 2.0, 2.0, 2.0, -3.0],
-         [2.0, 2.0, 2.0, 2.0, -4.0],
-         [-1.0, -2.0, -3.0, -4.0, -12.0]]
-
-        Verify adjoint:
-
-        >>> g = div.range.element(data ** 2)
-        >>> adj_div_g = div.adjoint(g)
-        >>> g.inner(div_f) / f.inner(adj_div_g)
-        1.0
         """
         if out is None:
             out = self.range.element()
@@ -563,6 +557,20 @@ class Laplacian(PointwiseTensorFieldOperator):
         pad_const : float, optional
             For ``pad_mode == 'constant'``, ``f`` assumes
             ``pad_const`` for indices outside the domain of ``f``
+
+        Examples
+        --------
+        >>> import odl
+        >>> data = np.array([[ 0., 0., 0.],
+        ...                  [ 0., 1., 0.],
+        ...                  [ 0., 0., 0.]])
+        >>> space = odl.uniform_discr([0, 0], [3, 3], [3, 3])
+        >>> f = space.element(data)
+        >>> lap = Laplacian(space)
+        >>> print(lap(f))
+        [[0.0, 1.0, 0.0],
+         [1.0, -4.0, 1.0],
+         [0.0, 1.0, 0.0]]
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
@@ -587,20 +595,6 @@ class Laplacian(PointwiseTensorFieldOperator):
         out : `range` element
             Result of the evaluation. If ``out`` was provided, the returned
             object is a reference to it.
-
-        Examples
-        --------
-        >>> from odl import uniform_discr
-        >>> data = np.array([[ 0., 0., 0.],
-        ...                  [ 0., 1., 0.],
-        ...                  [ 0., 0., 0.]])
-        >>> space = uniform_discr([0, 0], [3, 3], data.shape)
-        >>> f = space.element(data)
-        >>> lap = Laplacian(space)
-        >>> print(lap(f))
-        [[0.0, 1.0, 0.0],
-         [1.0, -4.0, 1.0],
-         [0.0, 1.0, 0.0]]
         """
         if out is None:
             out = self.range.zero()

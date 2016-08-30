@@ -1024,6 +1024,20 @@ class OperatorSum(Operator):
         tmp_dom : `Operator.domain` element, optional
             Used to avoid the creation of a temporary when applying the
             operator adjoint.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> op = odl.IdentityOperator(r3)
+        >>> x = r3.element([1, 2, 3])
+        >>> out = r3.element()
+        >>> OperatorSum(op, op)(x, out)  # In-place, returns out
+        rn(3).element([2.0, 4.0, 6.0])
+        >>> out
+        rn(3).element([2.0, 4.0, 6.0])
+        >>> OperatorSum(op, op)(x)
+        rn(3).element([2.0, 4.0, 6.0])
         """
         if left.range != right.range:
             raise TypeError('operator ranges {!r} and {!r} do not match'
@@ -1060,22 +1074,7 @@ class OperatorSum(Operator):
         return self.__right
 
     def _call(self, x, out=None):
-        """Implement ``self(x[, out])``.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> op = odl.IdentityOperator(r3)
-        >>> x = r3.element([1, 2, 3])
-        >>> out = r3.element()
-        >>> OperatorSum(op, op)(x, out)  # In-place, returns out
-        rn(3).element([2.0, 4.0, 6.0])
-        >>> out
-        rn(3).element([2.0, 4.0, 6.0])
-        >>> OperatorSum(op, op)(x)
-        rn(3).element([2.0, 4.0, 6.0])
-        """
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self.left(x) + self.right(x)
         else:
@@ -1346,6 +1345,15 @@ class OperatorLeftScalarMult(Operator):
         scalar : ``operator.range.field`` element
             A real or complex number, depending on the field of
             the range.
+
+        Examples
+        --------
+        >>> import odl
+        >>> space = odl.rn(3)
+        >>> operator = odl.IdentityOperator(space)
+        >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
+        >>> left_mul_op([1, 2, 3])
+        rn(3).element([3.0, 6.0, 9.0])
         """
         if not isinstance(operator.range, (LinearSpace, Field)):
             raise TypeError('range {!r} not a `LinearSpace` or `Field` '
@@ -1374,17 +1382,7 @@ class OperatorLeftScalarMult(Operator):
         return self.__scalar
 
     def _call(self, x, out=None):
-        """Implement ``self(x[, out])``.
-
-        Examples
-        --------
-        >>> import odl
-        >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space)
-        >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
-        >>> left_mul_op([1, 2, 3])
-        rn(3).element([3.0, 6.0, 9.0])
-        """
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self.scalar * self.operator(x)
         else:
@@ -1524,6 +1522,15 @@ class OperatorRightScalarMult(Operator):
         tmp : `domain` element, optional
             Used to avoid the creation of a temporary when applying the
             operator.
+
+        Examples
+        --------
+        >>> import odl
+        >>> space = odl.rn(3)
+        >>> operator = odl.IdentityOperator(space)
+        >>> left_mul_op = OperatorRightScalarMult(operator, 3)
+        >>> left_mul_op([1, 2, 3])
+        rn(3).element([3.0, 6.0, 9.0])
         """
         if not isinstance(operator.domain, (LinearSpace, Field)):
             raise TypeError('domain {!r} not a `LinearSpace` or `Field` '
@@ -1556,17 +1563,7 @@ class OperatorRightScalarMult(Operator):
         return self.__scalar
 
     def _call(self, x, out=None):
-        """Implement ``self(x[, out])``.
-
-        Examples
-        --------
-        >>> import odl
-        >>> space = odl.rn(3)
-        >>> operator = odl.IdentityOperator(space)
-        >>> left_mul_op = OperatorRightScalarMult(operator, 3)
-        >>> left_mul_op([1, 2, 3])
-        rn(3).element([3.0, 6.0, 9.0])
-        """
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self.operator(self.scalar * x)
         else:
@@ -1703,7 +1700,19 @@ class FunctionalLeftVectorMult(Operator):
             be a `Field`.
         vector : ``functional.range`` `element-like`
             The vector to multiply by. Its space's `LinearSpace.field` must be
-            the same as ``functional.range``
+            the same as ``functional.range``.
+
+        Examples
+        --------
+        Create the operator ``(x * x^T)(y) = x * <x, y>``
+
+        >>> import odl
+        >>> space = odl.rn(3)
+        >>> x = space.element([1, 2, 3])
+        >>> functional = odl.InnerProductOperator(x)
+        >>> left_mul_op = FunctionalLeftVectorMult(functional, x)
+        >>> left_mul_op([1, 2, 3])
+        rn(3).element([14.0, 28.0, 42.0])
         """
         if not isinstance(vector, LinearSpaceVector):
             raise TypeError('`vector` {!r} not is not a LinearSpaceVector'
@@ -1729,20 +1738,7 @@ class FunctionalLeftVectorMult(Operator):
         return self.__vector
 
     def _call(self, x, out=None):
-        """Implement ``self(x[, out])``.
-
-        Examples
-        --------
-        Create the operator ``(x * x^T)(y) = x * <x, y>``
-
-        >>> import odl
-        >>> space = odl.rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> functional = odl.InnerProductOperator(x)
-        >>> left_mul_op = FunctionalLeftVectorMult(functional, x)
-        >>> left_mul_op([1, 2, 3])
-        rn(3).element([14.0, 28.0, 42.0])
-        """
+        """Implement ``self(x[, out])``."""
         if out is None:
             return self.vector * self.functional(x)
         else:

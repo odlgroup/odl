@@ -821,51 +821,6 @@ class IntervalProd(Set):
                           for xmin, xmax in zip(self.min_pt, self.max_pt))
 
 
-def Interval(min_pt, max_pt):
-    """One-dimensional interval product.
-
-    Parameters
-    ----------
-    min_pt, max_pt : float or `array-like`, shape ``(1,)``
-        Lower/upper ends of the interval.
-    """
-    interval = IntervalProd(min_pt, max_pt)
-    if interval.ndim != 1:
-        raise ValueError('cannot make an interval from `min_pt` {} and '
-                         '`max_pt` {}'.format(min_pt, max_pt))
-    return interval
-
-
-def Rectangle(min_pt, max_pt):
-    """Two-dimensional interval product.
-
-    Parameters
-    ----------
-    min_pt, max_pt : `array-like`, shape ``(2,)``
-        Lower/upper ends of the intervals in the product.
-    """
-    rectangle = IntervalProd(min_pt, max_pt)
-    if rectangle.ndim != 2:
-        raise ValueError('cannot make a rectangle from `min_pt` {} and '
-                         '`max_pt` {}'.format(min_pt, max_pt))
-    return rectangle
-
-
-def Cuboid(min_pt, max_pt):
-    """Three-dimensional interval product.
-
-    Parameters
-    ----------
-    min_pt, max_pt : `array-like`, shape ``(3,)``
-        Lower/upper ends of the intervals in the product.
-    """
-    cuboid = IntervalProd(min_pt, max_pt)
-    if cuboid.ndim != 3:
-        raise ValueError('cannot make a cuboid from `min_pt` {} and '
-                         '`max_pt` {}'.format(min_pt, max_pt))
-    return cuboid
-
-
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
