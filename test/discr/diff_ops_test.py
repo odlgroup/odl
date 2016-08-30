@@ -41,8 +41,10 @@ def method(request):
     return request.param
 
 
-paddings = [('constant', 0), ('constant', 1), 'symmetric', 'periodic']
-padding_ids = [' constant=0 ', ' constant=1 ', ' symmetric ', ' periodic ']
+paddings = [('constant', 0), ('constant', 1), 'symmetric', 'periodic',
+            'order0', 'order1', 'order2']
+padding_ids = [' constant=0 ', ' constant=1 ', ' symmetric ', ' periodic ',
+               ' order0 ', ' order1 ', '  order2 ']
 
 
 @pytest.fixture(scope="module", params=paddings, ids=padding_ids)
@@ -54,7 +56,8 @@ def padding(request):
 DATA_1D = np.array([0.5, 1, 3.5, 2, -.5, 3, -1, -1, 0, 3])
 DATA_2D = np.array([[0., 1., 2., 3., 4.],
                     [1., 2., 3., 4., 5.],
-                    [2., 3., 4., 5., 6.]])
+                    [2., 3., 4., 5., 5.],
+                    [0., 1., 2., 3., 4.]])
 
 
 # --- finite_diff --- #
@@ -63,17 +66,11 @@ DATA_2D = np.array([[0., 1., 2., 3., 4.],
 def test_finite_diff_invalid_args():
     """Test finite difference function for invalid arguments."""
 
-    # edge order in {1,2}
+    # Test that old "edge order" argument fails.
     with pytest.raises(ValueError):
         finite_diff(DATA_1D, edge_order=0)
     with pytest.raises(ValueError):
         finite_diff(DATA_1D, edge_order=3)
-
-    # central differences and zero padding use second-order accurate edges
-    with pytest.raises(ValueError):
-        finite_diff(DATA_1D, method='central', pad_mode=0, edge_order=1)
-    with pytest.raises(ValueError):
-        finite_diff(DATA_1D, method='forward', pad_mode=0, edge_order=2)
 
     # at least a two-element array is required
     with pytest.raises(ValueError):
@@ -108,19 +105,20 @@ def test_finite_diff_explicit():
     diff_ex[1:-1] = (arr[2:] - arr[:-2]) / 2.0
 
     # default: out=None, axis=0, dx=1.0, zero_padding=None, method='forward'
-    diff = finite_diff(arr, out=None, axis=0, dx=1.0, pad_mode=None)
+    diff = finite_diff(arr, out=None, axis=0, dx=1.0, pad_mode='constant')
     assert all_equal(diff, finite_diff(arr))
 
     # boundary: one-sided second-order accurate forward/backward difference
     diff = finite_diff(arr, out=None, axis=0, dx=1.0, method='central',
-                       pad_mode=None)
+                       pad_mode='order2')
     diff_ex[0] = -(3 * arr[0] - 4 * arr[1] + arr[2]) / 2.0
     diff_ex[-1] = (3 * arr[-1] - 4 * arr[-2] + arr[-3]) / 2.0
     assert all_equal(diff, diff_ex)
 
     # non-unit step length
     dx = 0.5
-    diff = finite_diff(arr, dx=dx, method='central')
+    diff = finite_diff(arr, out=None, axis=0, dx=dx, method='central',
+                       pad_mode='order2')
     assert all_equal(diff, diff_ex / dx)
 
     # boundary: second-order accurate central differences with zero padding
@@ -132,14 +130,14 @@ def test_finite_diff_explicit():
 
     # boundary: one-sided first-order forward/backward difference without zero
     # padding
-    diff = finite_diff(arr, method='central', edge_order=1)
+    diff = finite_diff(arr, method='central', pad_mode='order1')
     diff_ex[0] = arr[1] - arr[0]  # 1st-order accurate forward difference
     diff_ex[-1] = arr[-1] - arr[-2]  # 1st-order accurate backward diff.
     assert all_equal(diff, diff_ex)
 
     # different edge order really differ
-    df1 = finite_diff(arr, method='central', edge_order=1)
-    df2 = finite_diff(arr, method='central', edge_order=2)
+    df1 = finite_diff(arr, method='central', pad_mode='order1')
+    df2 = finite_diff(arr, method='central', pad_mode='order2')
     assert all_equal(df1[1:-1], diff_ex[1:-1])
     assert all_equal(df2[1:-1], diff_ex[1:-1])
     assert df1[0] != df2[0]
@@ -152,16 +150,19 @@ def test_finite_diff_explicit():
     assert out is not finite_diff(arr)
 
     # axis
-    arr = np.array([[0., 1., 2., 3., 4.],
-                    [1., 2., 3., 4., 5.]])
-    df0 = finite_diff(arr, axis=0)
-    df1 = finite_diff(arr, axis=1)
-    assert all_equal(df0, df1)
+    arr = np.array([[0., 2., 4., 6., 8.],
+                    [1., 3., 5., 7., 9.]])
+    df0 = finite_diff(arr, axis=0, pad_mode='order1')
+    darr0 = 1 * np.ones(arr.shape)
+    assert all_equal(df0, darr0)
+    darr1 = 2 * np.ones(arr.shape)
+    df1 = finite_diff(arr, axis=1, pad_mode='order1')
+    assert all_equal(df1, darr1)
 
     # complex arrays
     arr = np.array([0., 1., 2., 3., 4.]) + 1j * np.array([10., 9., 8., 7.,
                                                           6.])
-    diff = finite_diff(arr)
+    diff = finite_diff(arr, pad_mode='order1')
     assert all(diff.real == 1)
     assert all(diff.imag == -1)
 
@@ -241,7 +242,7 @@ def test_part_deriv(fn_impl, method, padding):
     if isinstance(padding, tuple):
         pad_mode, pad_const = padding
     else:
-        pad_mode, pad_const = padding, None
+        pad_mode, pad_const = padding, 0
 
     # discretized space
     space = odl.uniform_discr([0, 0], [2, 1], DATA_2D.shape, impl=fn_impl)
@@ -288,7 +289,7 @@ def test_gradient(method, fn_impl, padding):
     if isinstance(padding, tuple):
         pad_mode, pad_const = padding
     else:
-        pad_mode, pad_const = padding, None
+        pad_mode, pad_const = padding, 0
 
     # DiscreteLpElement
     space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
@@ -352,7 +353,7 @@ def test_divergence(method, fn_impl, padding):
     if isinstance(padding, tuple):
         pad_mode, pad_const = padding
     else:
-        pad_mode, pad_const = padding, None
+        pad_mode, pad_const = padding, 0
 
     # DiscreteLp
     space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
@@ -414,7 +415,7 @@ def test_laplacian(fn_impl, padding):
     if isinstance(padding, tuple):
         pad_mode, pad_const = padding
     else:
-        pad_mode, pad_const = padding, None
+        pad_mode, pad_const = padding, 0
 
     # DiscreteLp
     space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
@@ -460,4 +461,4 @@ def test_laplacian(fn_impl, padding):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])
