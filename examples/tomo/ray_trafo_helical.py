@@ -17,14 +17,8 @@
 
 """Example using the ray transform with helical cone beam geometry."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
 import odl
-
 
 # Discrete reconstruction space: discretized functions on the cube
 # [-20, 20]^2 x [0, 40] with 300 samples per dimension.

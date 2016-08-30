@@ -20,25 +20,17 @@
 Including some benchmarks with an optimized version.
 """
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super, range
-
-# External
 import numpy as np
-
-# Internal
 import odl
+from odl.space.base_ntuples import FnBase, FnBaseVector
 from odl.util.testutils import Timer
 
 
-class SimpleRn(odl.space.base_ntuples.FnBase):
+class SimpleRn(FnBase):
     """The real space R^n, non-optimized implmentation."""
 
     def __init__(self, size):
-        super().__init__(size, np.float)
+        FnBase.__init__(self, size, np.float)
 
     def zero(self):
         return self.element(np.zeros(self.size))
@@ -63,7 +55,7 @@ class SimpleRn(odl.space.base_ntuples.FnBase):
             return self.element(np.empty(self.size))
         if isinstance(args[0], np.ndarray):
             if args[0].shape == (self.size,):
-                return SimpleRn.Vector(self, args[0])
+                return RnVector(self, args[0])
             else:
                 raise ValueError('input array {} is of shape {}, expected '
                                  'shape ({},).'.format(args[0], args[0].shape,
@@ -73,19 +65,21 @@ class SimpleRn(odl.space.base_ntuples.FnBase):
                 *args, **kwargs).astype(np.float64, copy=False))
         return self.element(np.empty(self.dim, dtype=np.float64))
 
-    class Vector(odl.space.base_ntuples.FnBaseVector):
-        def __init__(self, space, data):
-            super().__init__(space)
-            self.data = data
 
-        def __getitem__(self, index):
-            return self.data.__getitem__(index)
+class RnVector(FnBaseVector):
+    def __init__(self, space, data):
+        FnBaseVector.__init__(self, space)
+        self.data = data
 
-        def __setitem__(self, index, value):
-            return self.data.__setitem__(index, value)
+    def __getitem__(self, index):
+        return self.data.__getitem__(index)
 
-        def asarray(self, *args):
-            return self.data(*args)
+    def __setitem__(self, index, value):
+        return self.data.__setitem__(index, value)
+
+    def asarray(self, *args):
+        return self.data(*args)
+
 
 r5 = SimpleRn(5)
 #odl.diagnostics.SpaceTest(r5).run_tests()

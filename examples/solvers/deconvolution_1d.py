@@ -17,21 +17,10 @@
 
 """Example of a deconvolution problem with different solvers (CPU)."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
-
-# External
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
-
-# ODL
 import odl
-import odl.solvers as solvers
-from odl.util.testutils import Timer
 
 
 class Convolution(odl.Operator):
@@ -39,9 +28,9 @@ class Convolution(odl.Operator):
         self.kernel = kernel
         self.adjkernel = (adjkernel if adjkernel is not None
                           else kernel.space.element(kernel[::-1].copy()))
-        self.space = kernel.space
         self.norm = float(np.sum(np.abs(self.kernel.ntuple)))
-        super().__init__(self.space, self.space, linear=True)
+        odl.Operator.__init__(self, domain=kernel.space, range=kernel.space,
+                              linear=True)
 
     def _call(self, rhs, out):
         ndimage.convolve(rhs.ntuple.data, self.kernel.ntuple.data,
@@ -75,28 +64,18 @@ iterations = 100
 omega = 1 / conv.opnorm() ** 2
 
 # Display callback
-callback = solvers.CallbackApply(lambda result: plt.plot(conv(result)))
+callback = odl.solvers.CallbackApply(lambda result: plt.plot(conv(result)))
 
 # Test CGN
 plt.figure()
 plt.plot(phantom)
-solvers.conjugate_gradient_normal(conv, discr_space.zero(), phantom,
-                                  iterations, callback)
+odl.solvers.conjugate_gradient_normal(conv, discr_space.zero(), phantom,
+                                      iterations, callback)
 
 # Landweber
 plt.figure()
 plt.plot(phantom)
-solvers.landweber(conv, discr_space.zero(), phantom,
-                  iterations, omega, callback)
-
-# testTimingCG
-with Timer("Optimized CG"):
-    solvers.conjugate_gradient_normal(conv, discr_space.zero(), phantom,
-                                      iterations)
-
-# Landweber timing
-with Timer("Optimized LW"):
-    solvers.landweber(conv, discr_space.zero(), phantom,
-                      iterations, omega)
+odl.solvers.landweber(conv, discr_space.zero(), phantom,
+                      iterations, omega, callback)
 
 plt.show()

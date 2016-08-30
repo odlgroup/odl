@@ -17,19 +17,12 @@
 
 """An example of a very simple operator on rn."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
-
-# Internal
 import odl
 
 
 class AddOp(odl.Operator):
     def __init__(self, size, add_this):
-        super().__init__(domain=odl.rn(size), range=odl.rn(size))
+        odl.Operator.__init__(self, domain=odl.rn(size), range=odl.rn(size))
         self.value = add_this
 
     def _call(self, x, out):

@@ -25,15 +25,9 @@ For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
 references therein.
 """
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
 import scipy
 import odl
-
 
 # Read test image:
 # convert integer values to float, and rotate to get the image upright

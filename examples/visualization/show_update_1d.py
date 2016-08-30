@@ -17,10 +17,6 @@
 
 """Example on using show and updating the figure in real time in 1d."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 import odl
 import matplotlib.pyplot as plt
 import numpy as np
