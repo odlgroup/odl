@@ -112,7 +112,8 @@ if not on_rtd:
         'python': ('http://python.readthedocs.org/en/latest/', None),
         'numpy': ('http://numpy.readthedocs.org/en/latest/', None),
         'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-        'matplotlib': ('http://matplotlib.sourceforge.net/', None)}
+        'matplotlib': ('http://matplotlib.sourceforge.net/', None),
+        'pywt': ('https://pywavelets.readthedocs.io/en/latest/', None)}
 
 # Stop autodoc from skipping __init__
 

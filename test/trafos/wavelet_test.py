@@ -44,8 +44,8 @@ def test_coeff_size_list():
     # Verify that the helper function does indeed work as expected
     shape = (16,)
     nscale = 3
-    wbasis = pywt.Wavelet('db1')
-    mode = 'per'
+    wbasis = 'db1'
+    mode = 'periodic'
     size_list1d = coeff_size_list(shape, nscale, wbasis, mode)
     S1d = [(2,), (2,), (4,), (8,), (16,)]
     shape = (16, 16)
@@ -64,8 +64,8 @@ def test_wavelet_decomposition3d_and_reconstruction3d():
     # Test 3D wavelet decomposition and reconstruction and verify that
     # they perform as expected
     x = np.random.rand(16, 16, 16)
-    mode = 'sym'
-    wbasis = pywt.Wavelet('db5')
+    mode = 'symmetric'
+    wbasis = 'db5'
     nscales = 1
     wavelet_coeffs = wavelet_decomposition3d(x, wbasis, mode, nscales)
     aaa = wavelet_coeffs[0]
@@ -80,7 +80,7 @@ def test_wavelet_decomposition3d_and_reconstruction3d():
     assert all_almost_equal(reconstruction, x)
     assert all_almost_equal(reconstruction_reference, x)
 
-    wbasis = pywt.Wavelet('db1')
+    wbasis = 'db1'
     nscales = 3
     wavelet_coeffs = wavelet_decomposition3d(x, wbasis, mode, nscales)
     shape_true = (nscales + 1, )
@@ -94,8 +94,8 @@ def test_wavelet_decomposition3d_and_reconstruction3d():
 @skip_if_no_pywavelets
 def test_pywt_coeff_to_array_and_array_to_pywt_coeff():
     # Verify that the helper function does indeed work as expected
-    wbasis = pywt.Wavelet('db1')
-    mode = 'zpd'
+    wbasis = 'db1'
+    mode = 'constant'
     nscales = 2
     n = 16
     # 1D test
@@ -152,9 +152,9 @@ def test_dwt():
     n = 16
     x = np.zeros(n)
     x[5:10] = 1
-    wbasis = pywt.Wavelet('db1')
+    wbasis = 'db1'
     nscales = 2
-    mode = 'sym'
+    mode = 'symmetric'
     size_list = coeff_size_list((n,), nscales, wbasis, mode)
 
     # Define a discretized domain
@@ -196,9 +196,9 @@ def test_dwt():
     n = 16
     x = np.zeros((n, n))
     x[5:10, 5:10] = 1
-    wbasis = pywt.Wavelet('db1')
+    wbasis = 'db1'
     nscales = 2
-    mode = 'sym'
+    mode = 'symmetric'
     size_list = coeff_size_list((n, n), nscales, wbasis, mode)
 
     # Define a discretized domain
@@ -240,9 +240,9 @@ def test_dwt():
     n = 16
     x = np.zeros((n, n, n))
     x[5:10, 5:10, 5:10] = 1
-    wbasis = pywt.Wavelet('db2')
+    wbasis = 'db2'
     nscales = 1
-    mode = 'per'
+    mode = 'periodic'
     size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
 
     # Define a discretized domain
