@@ -15,13 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example reconstruction using the 'stir' backend.
+"""Example PET reconstruction using STIR.
 
-This example computes projections and uses them as input data for
-reconstruction using the 'stir' backend. It requires an installation of
+This example computes projections from the ODL Shepp-Logan phantom
+and uses them as input data for reconstruction in STIR. Definition
+of the acquisition geometry and computations are done entirely in STIR,
+where the communication between ODL and STIR is realized with files
+via hard disk.
+
+Note that running this example requires an installation of
 `STIR <http://stir.sourceforge.net/>`_ and its Python bindings.
-
-TODO: which modality? CT? PET?
 """
 
 # Imports for common Python 2/3 codebase
@@ -29,29 +32,29 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import os.path as pth
+from os import path
 import odl
 
 # Set path to input files
-base = pth.join(pth.dirname(pth.abspath(__file__)), 'data', 'stir')
-volume_file = str(pth.join(base, 'initial.hv'))
-projection_file = str(pth.join(base, 'small.hs'))
+base = path.join(path.dirname(path.abspath(__file__)), 'data', 'stir')
+volume_file = str(path.join(base, 'initial.hv'))
+projection_file = str(path.join(base, 'small.hs'))
 
 # Create a STIR projector from file data.
 proj = odl.tomo.backends.stir_bindings.stir_projector_from_file(
     volume_file, projection_file)
 
-# Create shepp-logan phantom
+# Create Shepp-Logan phantom
 vol = odl.phantom.shepp_logan(proj.domain, modified=True)
 
-# Project data
+# Project data. Note that this delegates computations to STIR.
 projections = proj(vol)
 
-# Calculate operator norm for landweber
+# Calculate operator norm required for Landweber's method
 op_norm_est_squared = proj.adjoint(projections).norm() / vol.norm()
 omega = 0.5 / op_norm_est_squared
 
-# Reconstruct using ODL
+# Reconstruct using the STIR forward projector in the ODL reconstruction scheme
 recon = proj.domain.zero()
 odl.solvers.landweber(proj, recon, projections, niter=50, omega=omega)
 recon.show()
