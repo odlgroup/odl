@@ -21,623 +21,255 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range, str, super
+from builtins import str, super
 
 import numpy as np
-try:
-    import pywt
-    PYWAVELETS_AVAILABLE = True
-except ImportError:
-    PYWAVELETS_AVAILABLE = False
 
 from odl.discr import DiscreteLp
 from odl.operator import Operator
+from odl.trafos.backends.pywt_bindings import (
+    pywt_wbasis, pywt_max_level, pywt_wavelet_decomp,
+    pywt_wavelet_recon, pywt_coeff_shape_list, PYWT_SUPPORTED_PAD_MODES,
+    PYWAVELETS_AVAILABLE)
 
+__all__ = ('WaveletTransform', 'WaveletTransformInverse')
 
-__all__ = ('WaveletTransform', 'WaveletTransformInverse',
-           'PYWAVELETS_AVAILABLE')
 
+_SUPPORTED_WAVELET_IMPL = ()
+if PYWAVELETS_AVAILABLE:
+    _SUPPORTED_WAVELET_IMPL += ('pywt',)
 
-_SUPPORTED_IMPL = ('pywt',)
 
+class WaveletTransformBase(Operator):
 
-def coeff_size_list(shape, nscales, wbasis, pad_mode):
-    """Construct a size list from given wavelet coefficients.
+    """Base class for discrete wavelet transforms.
 
-    Related to 1D, 2D and 3D multidimensional wavelet transforms that utilize
-    `PyWavelets
-    <http://www.pybytes.com/pywavelets/>`_.
-
-    Parameters
-    ----------
-    shape : tuple
-        Number of pixels/voxels in the image. Its length must be 1, 2 or 3.
-
-    nscales : int
-        Number of scales in the multidimensional wavelet
-        transform.  This parameter is checked against the maximum number of
-        scales returned by ``pywt.dwt_max_level``. For more information
-        see the `PyWavelets documentation on the maximum level of scales
-        <http://www.pybytes.com/pywavelets/ref/\
-dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
--dwt-max-level>`_.
-
-    wbasis : ``pywt.Wavelet``
-        Selected wavelet basis. For more information see the
-        `PyWavelets documentation on wavelet bases
-        <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
-
-    pad_mode : string
-        Signal extention mode. Possible extension modes are
-
-        'zpd': zero-padding -- signal is extended by adding zero samples
-
-        'cpd': constant padding -- border values are replicated
-
-        'sym': symmetric padding -- signal extension by mirroring samples
-
-        'ppd': periodic padding -- signal is trated as a periodic one
-
-        'sp1': smooth padding -- signal is extended according to the
-        first derivatives calculated on the edges (straight line)
-
-        'per': periodization -- like periodic-padding but gives the
-        smallest possible number of decomposition coefficients.
-
-    Returns
-    -------
-    size_list : list
-        A list containing the sizes of the wavelet (approximation
-        and detail) coefficients at different scaling levels:
-
-        ``size_list[0]`` = size of approximation coefficients at
-        the coarsest level
-
-        ``size_list[1]`` = size of the detail coefficients at the
-        coarsest level
-
-        ...
-
-        ``size_list[N]`` = size of the detail coefficients at the
-        finest level
-
-        ``size_list[N+1]`` = size of the original image
-
-        ``N`` = number of scaling levels = nscales
-    """
-    if len(shape) not in (1, 2, 3):
-        raise ValueError('shape must have length 1, 2 or 3, got {}'
-                         ''.format(len(shape)))
-
-    max_level = pywt.dwt_max_level(shape[0], filter_len=wbasis.dec_len)
-    if nscales > max_level:
-        raise ValueError('too many scaling levels, got {}, maximum useful '
-                         'level is {}'
-                         ''.format(nscales, max_level))
-
-    # dwt_coeff_len calculates the number of coefficients at the next
-    # scaling level given the input size, the length of the filter and
-    # the applied mode.
-    # We use this in the following way (per dimension):
-    # - length[0] = original data length
-    # - length[n+1] = dwt_coeff_len(length[n], ...)
-    # - until n = nscales
-    size_list = [shape]
-    for scale in range(nscales):
-        shp = tuple(pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
-                                       mode=pad_mode)
-                    for n in size_list[scale])
-        size_list.append(shp)
-
-    # Add a duplicate of the last entry for the approximation coefficients
-    size_list.append(size_list[-1])
-
-    # We created the list in reversed order compared to what pywt expects
-    size_list.reverse()
-    return size_list
-
-
-def pywt_coeff_to_array(coeff, size_list):
-    """Convert a Pywavelets coefficient list into a flat array.
-
-    Related to 1D, 2D and 3D multilevel discrete wavelet transforms.
-
-    Parameters
-    ----------
-    coeff : ordered list
-        Coefficient are organized in the list in the following way:
-
-        In 1D:
-
-        ``[aN, (dN), ..., (d1)]``
-
-        The abbreviations refer to
-
-        ``a`` = approximation,
-
-        ``d`` = detail
-
-        In 2D:
-
-        ``[aaN, (adN, daN, ddN), ..., (ad1, da1, dd1)]``
-
-        The abbreviations refer to
-
-        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
-
-        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
-
-        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
-
-        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
-
-        In 3D:
-
-        ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
-
-        The abbreviations refer to
-
-        ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
-
-        ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
-
-        ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
-
-        ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
-
-        ``N`` refers to the number of scaling levels
-
-    size_list : list
-        A list containing the sizes of the wavelet (approximation
-        and detail) coefficients at different scaling levels.
-
-        ``size_list[0]`` = size of approximation coefficients at
-        the coarsest level,
-
-        ``size_list[1]`` = size of the detailed coefficients at
-        the coarsest level,
-
-        ``size_list[N]`` = size of the detailed coefficients at
-        the finest level,
-
-        ``size_list[N+1]`` = size of original image,
-
-        ``N`` =  the number of scaling levels
-
-    Returns
-    -------
-    arr : `numpy.ndarray`
-        Flattened and concatenated coefficient array
-        The length of the array depends on the size of input image to
-        be transformed and on the chosen wavelet basis.
-      """
-    flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-    ndim = len(size_list[0])
-    dcoeffs_per_scale = 2 ** ndim - 1
-
-    flat_total_size = flat_sizes[0] + dcoeffs_per_scale * sum(flat_sizes[1:])
-    flat_coeff = np.empty(flat_total_size)
-
-    start = 0
-    stop = flat_sizes[0]
-    flat_coeff[start:stop] = coeff[0].ravel()
-
-    for fsize, detail_coeffs in zip(flat_sizes[1:], coeff[1:]):
-        if dcoeffs_per_scale == 1:
-            start, stop = stop, stop + fsize
-            flat_coeff[start:stop] = detail_coeffs.ravel()
-        else:
-            for dcoeff in detail_coeffs:
-                start, stop = stop, stop + fsize
-                flat_coeff[start:stop] = dcoeff.ravel()
-
-    return flat_coeff
-
-
-def array_to_pywt_coeff(coeff, size_list):
-    """Convert a flat array into a `pywt
-    <http://www.pybytes.com/pywavelets/>`_ coefficient list.
-
-    For multilevel 1D, 2D and 3D discrete wavelet transforms.
-
-    Parameters
-    ----------
-    coeff : `DiscreteLpElement`
-        A flat coefficient vector containing the approximation,
-        and detail coefficients in the following order
-        [aaaN, aadN, adaN, addN, daaN, dadN, ddaN, dddN, ...
-        aad1, ada1, add1, daa1, dad1, dda1, ddd1]
-
-    size_list : list
-       A list of coefficient sizes such that,
-
-       ``size_list[0]`` = size of approximation coefficients at the coarsest
-                          level,
-
-       ``size_list[1]`` = size of the detailedetails at the coarsest level,
-
-       ``size_list[N]`` = size of the detailed coefficients at the finest
-                          level,
-
-       ``size_list[N+1]`` = size of original image,
-
-       ``N`` =  the number of scaling levels
-
-    Returns
-    -------
-    coeff : ordered list
-        Coefficient are organized in the list in the following way:
-
-        In 1D:
-
-        ``[aN, (dN), ... (d1)]``
-
-        The abbreviations refer to
-
-        ``a`` = approximation,
-
-        ``d`` = detail,
-
-        In 2D:
-
-        ``[aaN, (adN, daN, ddN), ... (ad1, da1, dd1)]``
-
-        The abbreviations refer to
-
-        ``aa`` = approx. on 1st dim, approx. on 2nd dim (approximation),
-
-        ``ad`` = approx. on 1st dim, detail on 2nd dim (horizontal),
-
-        ``da`` = detail on 1st dim, approx. on 2nd dim (vertical),
-
-        ``dd`` = detail on 1st dim, detail on 2nd dim (diagonal),
-
-        In 3D:
-
-        ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
-
-        The abbreviations refer to
-
-        ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
-
-        ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
-
-        ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
-
-        ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
-
-        ``N`` refers to the number of scaling levels
-
-    """
-    flat_sizes = [np.prod(shp) for shp in size_list[:-1]]
-    start = 0
-    stop = flat_sizes[0]
-    coeff_list = [np.asarray(coeff)[start:stop].reshape(size_list[0])]
-    ndim = len(size_list[0])
-    dcoeffs_per_scale = 2 ** ndim - 1
-
-    for fsize, shape in zip(flat_sizes[1:], size_list[1:]):
-        start, stop = stop, stop + dcoeffs_per_scale * fsize
-        if dcoeffs_per_scale == 1:
-            detail_coeffs = np.asarray(coeff)[start:stop]
-        else:
-            detail_coeffs = tuple(c.reshape(shape) for c in
-                                  np.split(np.asarray(coeff)[start:stop],
-                                           dcoeffs_per_scale))
-        coeff_list.append(detail_coeffs)
-
-    return coeff_list
-
-
-def wavelet_decomposition3d(x, wbasis, pad_mode, nscales):
-    """Discrete 3D multiresolution wavelet decomposition.
-
-    Compute the discrete 3D multiresolution wavelet decomposition
-    at the given level (nscales) for a given 3D image.
-    Utilizes a `n-dimensional PyWavelet
-    <http://www.pybytes.com/pywavelets/ref/other-functions.html>`_
-    function ``pywt.dwtn``.
-
-    Parameters
-    ----------
-    x : `DiscreteLpElement`
-
-    wbasis : ``pywt.Wavelet``
-        Selected wavelet basis. For more information see the
-        `PyWavelets documentation on wavelet bases
-        <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
-
-    pad_mode : string
-        Signal extention mode. For possible extensions see the
-        `Pywavelets documentation on signal extenstion modes
-        <http://www.pybytes.com/pywavelets/ref/\
-signal-extension-modes.html>`_.
-
-
-    nscales : int
-       Number of scales in the coefficient list.
-
-    Returns
-    -------
-    coeff_list : list
-
-        A list of coefficient organized in the following way
-         ```[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-         (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``` .
-
-         The abbreviations refer to
-
-         ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-         ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-         ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
-
-         ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
-
-         ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-         ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-         ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
-
-         ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
-
-         ``N`` = the number of scaling levels
+    This abstract class is intended to share code between the forward,
+    inverse and adjoint wavelet transforms.
     """
 
-    wcoeffs = pywt.dwtn(x, wbasis, pad_mode)
-    aaa = wcoeffs['aaa']
-    aad = wcoeffs['aad']
-    ada = wcoeffs['ada']
-    add = wcoeffs['add']
-    daa = wcoeffs['daa']
-    dad = wcoeffs['dad']
-    dda = wcoeffs['dda']
-    ddd = wcoeffs['ddd']
-
-    details = (aad, ada, add, daa, dad, dda, ddd)
-    coeff_list = []
-    coeff_list.append(details)
-
-    for _ in range(1, nscales):
-        wcoeffs = pywt.dwtn(aaa, wbasis, pad_mode)
-        aaa = wcoeffs['aaa']
-        aad = wcoeffs['aad']
-        ada = wcoeffs['ada']
-        add = wcoeffs['add']
-        daa = wcoeffs['daa']
-        dad = wcoeffs['dad']
-        dda = wcoeffs['dda']
-        ddd = wcoeffs['ddd']
-        details = (aad, ada, add, daa, dad, dda, ddd)
-        coeff_list.append(details)
-
-    coeff_list.append(aaa)
-    coeff_list.reverse()
-
-    return coeff_list
-
-
-def wavelet_reconstruction3d(coeff_list, wbasis, pad_mode, nscales):
-    """Discrete 3D multiresolution wavelet reconstruction
-
-    Compute a discrete 3D multiresolution wavelet reconstruction
-    from a given wavelet coefficient list.
-    Utilizes a `PyWavelet
-    <http://www.pybytes.com/pywavelets/ref/other-functions.html>`_
-    function ``pywt.dwtn``
-
-    Parameters
-    ----------
-    coeff_list : list
-        A list of wavelet approximation and detail coefficients
-        organized in the following way
-        ```[caaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]```.
-
-        The abbreviations refer to
-
-        ``aaa`` = approx. on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``aad`` = approx. on 1st dim, approx. on 2nd dim, detail on3rd dim,
-
-        ``ada`` = approx. on 1st dim, detail on 3nd dim, approx. on 3rd dim,
-
-        ``add`` = approx. on 1st dim, detail on 3nd dim, detail on 3rd dim,
-
-        ``daa`` = detail on 1st dim, approx. on 2nd dim, approx. on 3rd dim,
-
-        ``dad`` = detail on 1st dim, approx. on 2nd dim, detail on 3rd dim,
-
-        ``dda`` = detail on 1st dim, detail on 2nd dim, approx. on 3rd dim,
-
-        ``ddd`` = detail on 1st dim, detail on 2nd dim, detail on 3rd dim,
-
-        ``N`` = the number of scaling levels
-
-    wbasis :  ``_pywt.Wavelet``
-        Describes properties of a selected wavelet basis.
-        For more information see PyWavelet `documentation
-        <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
-
-    pad_mode : string
-        Signal extention mode. For possible extensions see the
-        `signal extenstion modes
-        <http://www.pybytes.com/pywavelets/ref/\
-signal-extension-modes.html>`_
-        of PyWavelets.
-
-    nscales : int
-        Number of scales in the coefficient list.
-
-    Returns
-    -------
-    x : `numpy.ndarray`
-        A wavalet reconstruction.
-    """
-    aaa = coeff_list[0]
-    (aad, ada, add, daa, dad, dda, ddd) = coeff_list[1]
-    coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
-                  'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
-    for tpl in coeff_list[2:]:
-        aaa = pywt.idwtn(coeff_dict, wbasis, pad_mode)
-        (aad, ada, add, daa, dad, dda, ddd) = tpl
-        coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
-                      'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
-
-    x = pywt.idwtn(coeff_dict, wbasis, pad_mode)
-    return x
-
-
-class WaveletTransform(Operator):
-
-    """Discrete wavelet trafo between discrete L2 spaces."""
-
-    def __init__(self, domain, nscales, wbasis, pad_mode):
+    def __init__(self, space, wbasis, nscales, variant, pad_mode='constant',
+                 pad_const=0, impl='pywt'):
         """Initialize a new instance.
 
         Parameters
         ----------
-        domain : `DiscreteLp`
-            Domain of the wavelet transform (the "image domain").
-            The exponent :math:`p` of the discrete :math:`L^p`
-            space must be equal to 2.0.
-
-        nscales : int
-            Number of scales in the coefficient list.
-            The maximum number of usable scales can be determined
-            by ``pywt.dwt_max_level``. For more information see
-            the corresponding `documentation of PyWavelets
-            <http://www.pybytes.com/pywavelets/ref/\
-dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
--dwt-max-level>`_ .
-
-        wbasis :  {string, ``pywt.Wavelet``}
-            If a string is given, converts to a ``pywt.Wavelet``.
-            Describes properties of a selected wavelet basis.
-            See PyWavelet `documentation
+        space : `DiscreteLp`
+            Domain of the forward wavelet transform (the "image domain").
+            In the case of ``variant in ('inverse', 'adjoint')``, this
+            space is the range of the operator.
+        wbasis :  string or `pywt.Wavelet`
+            Specification of the wavelet to be used in the transform.
+            If a string is given, it is converted to a `pywt.Wavelet`.
+            For more information see the `wavelets
             <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
+            page of the PyWavelets documentation.
 
             Possible wavelet families are:
 
-            Haar (``haar``)
+            'Haar': Haar
 
-            Daubechies (``db``)
+            'db': Daubechies
 
-            Symlets (``sym``)
+            'sym' : Symlets
 
-            Coiflets (``coif``)
+            'coif': Coiflets
 
-            Biorthogonal (``bior``)
+            'bior': Biorthogonal
 
-            Reverse biorthogonal (``rbio``)
+            'rbio': Reverse biorthogonal
 
-            Discrete FIR approximation of Meyer wavelet (``dmey``)
+            'dmey': Discrete FIR approximation of the Meyer wavelet
 
-        pad_mode : string
-             Signal extention modes as defined by ``pywt.MODES.modes``
-             http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
+        nscales : int
+            Number of scaling levels to be used in the transform.
+            The maximum number of usable scales can be determined
+            by `pywt.dwt_max_level`.
+        variant : {'forward', 'inverse', 'adjoint'}
+            Wavelet transform variant to be created.
 
-             Possible extension modes are:
+        pad_mode : string, optional
+            Signal extention mode. Possible extension modes are:
 
-            'zpd': zero-padding -- signal is extended by adding zero samples
+            ``'constant'``: Fill with ``pad_const``.
 
-            'cpd': constant padding -- border values are replicated
+            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            outmost values.
 
-            'sym': symmetric padding -- signal extension by mirroring samples
+            ``'periodic'``: Fill in values from the other side, keeping
+            the order.
 
-            'ppd': periodic padding -- signal is trated as a periodic one
+            ``'order0'``: Extend constantly with the outmost values
+            (ensures continuity).
 
-            'sp1': smooth padding -- signal is extended according to the
-            first derivatives calculated on the edges (straight line)
+            ``'order1'``: Extend with constant slope (ensures continuity of
+            the first derivative). This requires at least 2 values along
+            each axis where padding is applied.
 
-            'per': periodization -- like periodic-padding but gives the
-            smallest possible number of decomposition coefficients.
+            ``'pywt_per'``:  like ``'periodic'``-padding but gives the smallest
+            possible number of decomposition coefficients.
+            Only available with ``impl='pywt'``, See `pywt.MODES.modes`.
+
+        pad_const : float, optional
+            Constant value to use if ``pad_mode == 'constant'``. Ignored
+            otherwise.
+
+        impl : {'pywt'}, optional
+            Backend for the wavelet transform.
 
         Examples
         --------
-        >>> import odl, pywt
-        >>> wbasis = pywt.Wavelet('db1')
+        >>> import odl
         >>> discr_domain = odl.uniform_discr([0, 0], [1, 1], (16, 16))
-        >>> op = WaveletTransform(discr_domain, nscales=1,
-        ...                               wbasis=wbasis, pad_mode='per')
+        >>> op = odl.trafos.WaveletTransform(discr_domain, nscales=1,
+        ...                                  wbasis='db1')
         >>> op.is_biorthogonal
         True
         """
-        self.nscales = int(nscales)
-        self.pad_mode = str(pad_mode).lower()
+        if not isinstance(space, DiscreteLp):
+            raise TypeError('`space` {!r} is not a `DiscreteLp` instance.'
+                            ''.format(space))
+        if space.ndim > 3:
+            raise ValueError('`space` can be at most 3-dimensional, got '
+                             'ndim={}'.format(space.ndim))
 
-        if isinstance(wbasis, pywt.Wavelet):
-            self.wbasis = wbasis
-        else:
-            self.wbasis = pywt.Wavelet(wbasis)
+        self.pywt_wbasis = pywt_wbasis(wbasis)
 
-        if not isinstance(domain, DiscreteLp):
-            raise TypeError('`domain` {!r} is not a `DiscreteLp` instance.'
-                            ''.format(domain))
+        max_level = pywt_max_level(min(space.shape),
+                                   filter_len=self.pywt_wbasis.dec_len)
 
-        if domain.exponent != 2.0:
-            raise ValueError('`domain` Lp exponent is {} instead of 2.0.'
-                             ''.format(domain.exponent))
-
-        max_level = pywt.dwt_max_level(domain.shape[0],
-                                       filter_len=self.wbasis.dec_len)
-        # TODO: maybe the error message could tell how to calculate the
-        # max number of levels
-        if self.nscales > max_level:
+        nscales, nscales_in = int(nscales), nscales
+        if nscales > max_level:
             raise ValueError('cannot use more than {} scaling levels, '
-                             'got {}'.format(max_level, self.nscales))
+                             'got {}'.format(max_level, nscales_in))
+        self.nscales = nscales
 
-        self.size_list = coeff_size_list(domain.shape, self.nscales,
-                                         self.wbasis, self.pad_mode)
+        impl, impl_in = str(impl).lower(), impl
+        if impl not in _SUPPORTED_WAVELET_IMPL:
+            raise ValueError("`impl` '{}' not supported".format(impl_in))
+        self.impl = impl
 
-        ran_size = np.prod(self.size_list[0])
+        pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
+        if pad_mode not in PYWT_SUPPORTED_PAD_MODES:
+            raise ValueError("`pad_mode` '{}' not supported for `impl` "
+                             "'{}'".format(pad_mode_in, self.impl))
+        self.pad_mode = pad_mode
 
-        if domain.ndim == 1:
-            ran_size += sum(np.prod(shape) for shape in
-                            self.size_list[1:-1])
-        elif domain.ndim == 2:
-            ran_size += sum(3 * np.prod(shape) for shape in
-                            self.size_list[1:-1])
-        elif domain.ndim == 3:
-            ran_size += sum(7 * np.prod(shape) for shape in
-                            self.size_list[1:-1])
+        # TODO: move pywt specific check to the backend
+        pad_const, pad_const_in = space.field.element(pad_const), pad_const
+        if impl == 'pywt' and pad_mode == 'constant' and pad_const != 0:
+            raise ValueError("non-zero `pad_const` {} not supported for "
+                             "`impl` '{}'".format(pad_const_in, impl))
+        self.pad_const = pad_const
+
+        self.shape_list = pywt_coeff_shape_list(
+            space.shape, self.pywt_wbasis, self.nscales, self.pad_mode)
+
+        # 1 x approx coeff and (2**n - 1) * detail coeff
+        coeff_size = (np.prod(self.shape_list[0]) +
+                      sum((2 ** space.ndim - 1) * np.prod(shape)
+                          for shape in self.shape_list[1:-1]))
+
+        coeff_space = space.dspace_type(coeff_size, dtype=space.dtype)
+
+        variant, variant_in = str(variant).lower(), variant
+        if variant not in ('forward', 'inverse', 'adjoint'):
+            raise ValueError("`variant` '{}' not understood"
+                             "".format(variant_in))
+
+        if variant == 'forward':
+            super().__init__(domain=space, range=coeff_space, linear=True)
         else:
-            raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                      ''.format(len(domain.ndim)))
-
-        # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
-        range = domain.dspace_type(ran_size, dtype=domain.dtype)
-        super().__init__(domain, range, linear=True)
+            super().__init__(domain=coeff_space, range=space, linear=True)
 
     @property
     def is_orthogonal(self):
         """Whether or not the wavelet basis is orthogonal."""
-        return self.wbasis.orthogonal
+        return self.pywt_wbasis.orthogonal
 
     @property
     def is_biorthogonal(self):
         """Whether or not the wavelet basis is bi-orthogonal."""
-        return self.wbasis.biorthogonal
+        return self.pywt_wbasis.biorthogonal
+
+
+class WaveletTransform(WaveletTransformBase):
+
+    """Discrete wavelet trafo between discretized Lp spaces."""
+
+    def __init__(self, domain, wbasis, nscales, pad_mode='constant',
+                 pad_const=0, impl='pywt'):
+        """Initialize a new instance.
+        Parameters
+        ----------
+        domain : `DiscreteLp`
+            Domain of the wavelet transform (the "image domain").
+        wbasis :  string or `pywt.Wavelet`
+            Specification of the wavelet to be used in the transform.
+            If a string is given, it is converted to a `pywt.Wavelet`.
+            For more information see the `wavelets
+            <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
+            page of the PyWavelets documentation.
+
+            Possible wavelet families are:
+
+            'Haar': Haar
+
+            'db': Daubechies
+
+            'sym' : Symlets
+
+            'coif': Coiflets
+
+            'bior': Biorthogonal
+
+            'rbio': Reverse biorthogonal
+
+            'dmey': Discrete FIR approximation of the Meyer wavelet
+
+        nscales : int
+            Number of scaling levels to be used in the transform.
+            The maximum number of usable scales can be determined
+            by `pywt.dwt_max_level`.
+        pad_mode : string, optional
+            Signal extention mode. Possible extension modes are:
+
+            ``'constant'``: Fill with ``pad_const``.
+
+            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            outmost values.
+
+            ``'periodic'``: Fill in values from the other side, keeping
+            the order.
+
+            ``'order0'``: Extend constantly with the outmost values
+            (ensures continuity).
+
+            ``'order1'``: Extend with constant slope (ensures continuity of
+            the first derivative). This requires at least 2 values along
+            each axis where padding is applied.
+
+            ``'pywt_per'``:  like ``'periodic'``-padding but gives the smallest
+            possible number of decomposition coefficients.
+            Only available with ``impl='pywt'``, See `pywt.MODES.modes`.
+
+        pad_const : float, optional
+            Constant value to use if ``pad_mode == 'constant'``. Ignored
+            otherwise.
+
+        impl : {'pywt'}, optional
+            Backend for the wavelet transform.
+
+        Examples
+        --------
+        >>> import odl
+        >>> discr_domain = odl.uniform_discr([0, 0], [1, 1], (16, 16))
+        >>> op = WaveletTransform(discr_domain, nscales=1, wbasis='db1')
+        >>> op.is_biorthogonal
+        True
+        """
+        super().__init__(domain, wbasis, nscales, 'forward', pad_mode,
+                         pad_const, impl)
 
     def _call(self, x):
         """Compute the discrete wavelet transform.
@@ -653,24 +285,11 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             The length of the array depends on the size of input image to
             be transformed and on the chosen wavelet basis.
         """
-        if x.space.ndim == 1:
-            coeff_list = pywt.wavedec(x, self.wbasis, self.pad_mode,
-                                      self.nscales)
-            coeff_arr = pywt_coeff_to_array(coeff_list, self.size_list)
-            return self.range.element(coeff_arr)
-
-        if x.space.ndim == 2:
-            coeff_list = pywt.wavedec2(x, self.wbasis, self.pad_mode,
-                                       self.nscales)
-            coeff_arr = pywt_coeff_to_array(coeff_list, self.size_list)
-            return self.range.element(coeff_arr)
-
-        if x.space.ndim == 3:
-            coeff_dict = wavelet_decomposition3d(x, self.wbasis, self.pad_mode,
-                                                 self.nscales)
-            coeff_arr = pywt_coeff_to_array(coeff_dict, self.size_list)
-
-            return self.range.element(coeff_arr)
+        if self.impl == 'pywt':
+            return pywt_wavelet_decomp(x, self.pywt_wbasis, self.pad_mode,
+                                       self.nscales, self.shape_list)
+        else:
+            raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
     @property
     def adjoint(self):
@@ -684,7 +303,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         Raises
         ------
         OpNotImplementedError
-            If `is_orthogonal` is not true, the adjoint is not implemented.
+            if `is_orthogonal` is not ``True``
         """
         if self.is_orthogonal:
             return self.inverse
@@ -705,124 +324,85 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         adjoint
         """
         return WaveletTransformInverse(
-            range=self.domain, nscales=self.nscales, wbasis=self.wbasis,
-            pad_mode=self.pad_mode)
+            range=self.domain, nscales=self.nscales, wbasis=self.pywt_wbasis,
+            pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl)
 
 
-class WaveletTransformInverse(Operator):
+class WaveletTransformInverse(WaveletTransformBase):
 
-    """Discrete inverse wavelet trafo between discrete L2 spaces."""
+    """Discrete inverse wavelet trafo between discrete L2 spaces.
 
-    def __init__(self, range, nscales, wbasis, pad_mode):
+    See Also
+    --------
+    WaveletTransform
+    """
+
+    def __init__(self, range, nscales, wbasis, pad_mode='constant',
+                 pad_const=0, impl='pywt'):
         """Initialize a new instance.
 
          Parameters
         ----------
         range : `DiscreteLp`
-            Domain of the wavelet transform (the "image domain").
-            The exponent :math:`p` of the discrete :math:`L^p`
-            space must be equal to 2.0.
-
-        nscales : int
-            Number of scales in the coefficient list.
-            The maximum number of usable scales can be determined
-            by ``pywt.dwt_max_level``. For more information see
-            the corresponding `documentation of PyWavelets
-            <http://www.pybytes.com/pywavelets/ref/\
-dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
--dwt-max-level>`_ .
-
-        wbasis :  ``pywt.Wavelet``
-            Describes properties of a selected wavelet basis.
-            See PyWavelet `documentation
+            Domain of the forward wavelet transform (the "image domain").
+        wbasis :  string or `pywt.Wavelet`
+            Specification of the wavelet to be used in the transform.
+            If a string is given, it is converted to a `pywt.Wavelet`.
+            For more information see the `wavelets
             <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
+            page of the PyWavelets documentation.
 
             Possible wavelet families are:
 
-            Haar (``haar``)
+            'Haar': Haar
 
-            Daubechies (``db``)
+            'db': Daubechies
 
-            Symlets (``sym``)
+            'sym' : Symlets
 
-            Coiflets (``coif``)
+            'coif': Coiflets
 
-            Biorthogonal (``bior``)
+            'bior': Biorthogonal
 
-            Reverse biorthogonal (``rbio``)
+            'rbio': Reverse biorthogonal
 
-            Discrete FIR approximation of Meyer wavelet (``dmey``)
+            'dmey': Discrete FIR approximation of the Meyer wavelet
 
-        pad_mode : string
-             Signal extention modes as defined by ``pywt.MODES.modes``
-             http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
+        nscales : int
+            Number of scaling levels to be used in the transform.
+            The maximum number of usable scales can be determined
+            by `pywt.dwt_max_level`.
+        pad_mode : string, optional
+            Signal extention mode. Possible extension modes are:
 
-             Possible extension modes are:
+            ``'constant'``: Fill with ``pad_const``.
 
-            'zpd': zero-padding -- signal is extended by adding zero samples
+            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            outmost values.
 
-            'cpd': constant padding -- border values are replicated
+            ``'periodic'``: Fill in values from the other side, keeping
+            the order.
 
-            'sym': symmetric padding -- signal extension by mirroring samples
+            ``'order0'``: Extend constantly with the outmost values
+            (ensures continuity).
 
-            'ppd': periodic padding -- signal is trated as a periodic one
+            ``'order1'``: Extend with constant slope (ensures continuity of
+            the first derivative). This requires at least 2 values along
+            each axis where padding is applied.
 
-            'sp1': smooth padding -- signal is extended according to the
-            first derivatives calculated on the edges (straight line)
+            ``'pywt_per'``:  like ``'periodic'``-padding but gives the smallest
+            possible number of decomposition coefficients.
+            Only available with ``impl='pywt'``, See `pywt.MODES.modes`.
 
-            'per': periodization -- like periodic-padding but gives the
-            smallest possible number of decomposition coefficients.
+        pad_const : float, optional
+            Constant value to use if ``pad_mode == 'constant'``. Ignored
+            otherwise.
+
+        impl : {'pywt'}, optional
+            Backend for the wavelet transform.
         """
-        self.nscales = int(nscales)
-        self.wbasis = wbasis
-        self.pad_mode = str(pad_mode).lower()
-
-        if not isinstance(range, DiscreteLp):
-            raise TypeError('range {!r} is not a `DiscreteLp` instance'
-                            ''.format(range))
-
-        if range.exponent != 2.0:
-            raise ValueError('range Lp exponent should be 2.0, got {}'
-                             ''.format(range.exponent))
-
-        max_level = pywt.dwt_max_level(range.shape[0],
-                                       filter_len=self.wbasis.dec_len)
-        # TODO: maybe the error message could tell how to calculate the
-        # max number of levels
-        if self.nscales > max_level:
-            raise ValueError('cannot use more than {} scaling levels, '
-                             'got {}'.format(max_level, self.nscales))
-
-        self.size_list = coeff_size_list(range.shape, self.nscales,
-                                         self.wbasis, self.pad_mode)
-
-        dom_size = np.prod(self.size_list[0])
-        if range.ndim == 1:
-            dom_size += sum(np.prod(shape) for shape in
-                            self.size_list[1:-1])
-        elif range.ndim == 2:
-            dom_size += sum(3 * np.prod(shape) for shape in
-                            self.size_list[1:-1])
-        elif range.ndim == 3:
-            dom_size += sum(7 * np.prod(shape) for shape in
-                            self.size_list[1:-1])
-        else:
-            raise NotImplementedError('ndim {} not 1, 2 or 3'
-                                      ''.format(range.ndim))
-
-        # TODO: Maybe allow other ranges like Besov spaces (yet to be created)
-        domain = range.dspace_type(dom_size, dtype=range.dtype)
-        super().__init__(domain, range, linear=True)
-
-    @property
-    def is_orthogonal(self):
-        """Whether or not the wavelet basis is orthogonal."""
-        return self.wbasis.orthogonal
-
-    @property
-    def is_biorthogonal(self):
-        """Whether or not the wavelet basis is bi-orthogonal."""
-        return self.wbasis.biorthogonal
+        super().__init__(range, wbasis, nscales, 'inverse', pad_mode,
+                         pad_const, impl)
 
     def _call(self, coeff):
         """Compute the discrete 1D, 2D or 3D inverse wavelet transform.
@@ -837,19 +417,11 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         arr : `numpy.ndarray`
             Result of the wavelet reconstruction.
         """
-        if len(self.range.shape) == 1:
-            coeff_list = array_to_pywt_coeff(coeff, self.size_list)
-            x = pywt.waverec(coeff_list, self.wbasis, self.pad_mode)
-            return self.range.element(x)
-        elif len(self.range.shape) == 2:
-            coeff_list = array_to_pywt_coeff(coeff, self.size_list)
-            x = pywt.waverec2(coeff_list, self.wbasis, self.pad_mode)
-            return self.range.element(x)
-        elif len(self.range.shape) == 3:
-            coeff_dict = array_to_pywt_coeff(coeff, self.size_list)
-            x = wavelet_reconstruction3d(coeff_dict, self.wbasis,
-                                         self.pad_mode, self.nscales)
-            return x
+        if self.impl == 'pywt':
+            return pywt_wavelet_recon(coeff, self.pywt_wbasis, self.pad_mode,
+                                      self.shape_list)
+        else:
+            raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
     @property
     def adjoint(self):
@@ -863,7 +435,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         Raises
         ------
         OpNotImplementedError
-            If `is_orthogonal` is not true, the adjoint is not implemented.
+            if `is_orthogonal` is not ``True``
 
         See Also
         --------
@@ -887,8 +459,10 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         --------
         adjoint
         """
-        return WaveletTransform(domain=self.range, nscales=self.nscales,
-                                wbasis=self.wbasis, pad_mode=self.pad_mode)
+        return WaveletTransform(
+            domain=self.range, nscales=self.nscales, wbasis=self.pywt_wbasis,
+            pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl)
+
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
