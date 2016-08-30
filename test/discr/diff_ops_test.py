@@ -56,7 +56,7 @@ def padding(request):
 def space(request, fn_impl):
     ndim = request.param
 
-    return odl.uniform_discr([0]*ndim, [1]*ndim, [5]*ndim, impl=fn_impl)
+    return odl.uniform_discr([0] * ndim, [1] * ndim, [5] * ndim, impl=fn_impl)
 
 
 # Test data
@@ -405,6 +405,9 @@ def test_laplacian(space, padding):
         pad_mode, pad_const = padding
     else:
         pad_mode, pad_const = padding, 0
+
+    if pad_mode in ('order1', 'order2'):
+        return  # these pad modes not supported for laplacian
 
     # Operator instance
     lap = Laplacian(space, pad_mode=pad_mode, pad_const=pad_const)

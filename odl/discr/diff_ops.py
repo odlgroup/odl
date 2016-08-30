@@ -121,11 +121,20 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         # Method is affine if nonzero padding is given.
         linear = not (pad_mode == 'constant' and pad_const != 0)
         super().__init__(domain=space, range=space, linear=linear)
-        self.axis = axis
+        self.axis = int(axis)
         self.dx = space.cell_sides[axis]
-        self.method = method
-        self.pad_mode = pad_mode
-        self.pad_const = pad_const
+
+        self.method, method_in = str(method).lower(), method
+        if method not in _SUPPORTED_DIFF_METHODS:
+            raise ValueError('`method` {} not understood'
+                             ''.format(method_in))
+
+        self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
+        if pad_mode not in _SUPPORTED_PADDING_METHODS:
+            raise ValueError('`pad_mode` {} not understood'
+                             ''.format(pad_mode_in))
+
+        self.pad_const = space.field.element(pad_const)
 
     def _call(self, x, out=None):
         """Apply gradient operator to ``x`` and store result in ``out``.
@@ -303,9 +312,18 @@ class Gradient(PointwiseTensorFieldOperator):
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
         super().__init__(domain, range, linear=linear)
-        self.method = method
-        self.pad_mode = pad_mode
-        self.pad_const = pad_const
+
+        self.method, method_in = str(method).lower(), method
+        if method not in _SUPPORTED_DIFF_METHODS:
+            raise ValueError('`method` {} not understood'
+                             ''.format(method_in))
+
+        self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
+        if pad_mode not in _SUPPORTED_PADDING_METHODS:
+            raise ValueError('`pad_mode` {} not understood'
+                             ''.format(pad_mode_in))
+
+        self.pad_const = domain.field.element(pad_const)
 
     def _call(self, x, out=None):
         """Calculate the spatial gradient of ``x``.
@@ -490,9 +508,18 @@ class Divergence(PointwiseTensorFieldOperator):
 
         linear = not (pad_mode == 'constant' and pad_const != 0)
         super().__init__(domain, range, linear=linear)
-        self.method = method
-        self.pad_mode = pad_mode
-        self.pad_const = pad_const
+
+        self.method, method_in = str(method).lower(), method
+        if method not in _SUPPORTED_DIFF_METHODS:
+            raise ValueError('`method` {} not understood'
+                             ''.format(method_in))
+
+        self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
+        if pad_mode not in _SUPPORTED_PADDING_METHODS:
+            raise ValueError('`pad_mode` {} not understood'
+                             ''.format(pad_mode_in))
+
+        self.pad_const = range.field.element(pad_const)
 
     def _call(self, x, out=None):
         """Calculate the divergence of ``x``.
@@ -631,8 +658,18 @@ class Laplacian(PointwiseTensorFieldOperator):
             raise TypeError('`space` {!r} is not a DiscreteLp instance'
                             ''.format(space))
         super().__init__(domain=space, range=space, linear=True)
-        self.pad_mode = pad_mode
-        self.pad_const = pad_const
+
+        self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
+        if pad_mode not in _SUPPORTED_PADDING_METHODS:
+            raise ValueError('`pad_mode` {} not understood'
+                             ''.format(pad_mode_in))
+        if pad_mode in ('order1', 'order1_adjoint',
+                        'order2', 'order2_adjoint'):
+            # TODO: Add these pad modes
+            raise ValueError('`pad_mode` {} not implemented for Laplacian.'
+                             ''.format(pad_mode_in))
+
+        self.pad_const = space.field.element(pad_const)
 
     def _call(self, x, out=None):
         """Calculate the spatial Laplacian of ``x``.
