@@ -87,22 +87,22 @@ def test_fspace_equality():
 
 
 def _points(domain, num):
-    beg = domain.begin
-    end = domain.end
+    min_pt = domain.min_pt
+    max_pt = domain.max_pt
     ndim = domain.ndim
     points = np.random.uniform(low=0, high=1, size=(ndim, num))
     for i in range(ndim):
-        points[i, :] = beg[i] + (end[i] - beg[i]) * points[i]
+        points[i, :] = min_pt[i] + (max_pt[i] - min_pt[i]) * points[i]
     return points
 
 
 def _meshgrid(domain, shape):
-    beg = domain.begin
-    end = domain.end
+    min_pt = domain.min_pt
+    max_pt = domain.max_pt
     ndim = domain.ndim
     coord_vecs = []
     for i in range(ndim):
-        vec = np.random.uniform(low=beg[i], high=end[i], size=shape[i])
+        vec = np.random.uniform(low=min_pt[i], high=max_pt[i], size=shape[i])
         vec.sort()
         coord_vecs.append(vec)
     return sparse_meshgrid(*coord_vecs)

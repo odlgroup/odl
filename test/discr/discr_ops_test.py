@@ -142,8 +142,8 @@ def test_resizing_op_properties(fn_impl, padding):
         # Implicit range via ran_shp and offset
         res_op = odl.ResizingOperator(space, ran_shp=(20, 15), offset=[0, 5],
                                       pad_mode=pad_mode, pad_const=pad_const)
-        assert np.allclose(res_op.range.min_corner, res_space.min_corner)
-        assert np.allclose(res_op.range.max_corner, res_space.max_corner)
+        assert np.allclose(res_op.range.min_pt, res_space.min_pt)
+        assert np.allclose(res_op.range.max_pt, res_space.max_pt)
         assert np.allclose(res_op.range.cell_sides, res_space.cell_sides)
         assert res_op.range.dtype == res_space.dtype
         assert res_op.offset == (0, 5)

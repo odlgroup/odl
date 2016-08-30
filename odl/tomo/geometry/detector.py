@@ -182,7 +182,7 @@ class FlatDetector(Detector):
         # TODO: apart from being constant, there is no big simplification
         # in this method compared to parent. Consider removing FlatDetector
         # altogether.
-        return super().surface_measure(self.params.begin)
+        return super().surface_measure(self.params.min_pt)
 
 
 class Flat1dDetector(FlatDetector):

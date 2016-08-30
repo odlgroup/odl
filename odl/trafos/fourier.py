@@ -1556,8 +1556,8 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     # Make a partition with nodes on the boundary in the last transform axis
     # if `halfcomplex == True`, otherwise a standard partition.
     if halfcomplex:
-        end = {axes[-1]: recip_grid.max_pt[axes[-1]]}
-        part = uniform_partition_fromgrid(recip_grid, end=end)
+        max_pt = {axes[-1]: recip_grid.max_pt[axes[-1]]}
+        part = uniform_partition_fromgrid(recip_grid, max_pt=max_pt)
     else:
         part = uniform_partition_fromgrid(recip_grid)
 

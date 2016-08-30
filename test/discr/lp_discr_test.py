@@ -1016,42 +1016,42 @@ def test_uniform_discr_fromdiscr_one_attr():
     discr = odl.uniform_discr([0, -1], [1, 1], [10, 5])
     # csides = [0.1, 0.4]
 
-    # min_corner -> translate, keep cells
-    new_min_corner = [3, 7]
-    true_new_end = [4, 9]
+    # min_pt -> translate, keep cells
+    new_min_pt = [3, 7]
+    true_new_max_pt = [4, 9]
 
-    new_discr = odl.uniform_discr_fromdiscr(discr, min_corner=new_min_corner)
-    assert all_almost_equal(new_discr.min_corner, new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_end)
+    new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=new_min_pt)
+    assert all_almost_equal(new_discr.min_pt, new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, discr.cell_sides)
 
-    # max_corner -> translate, keep cells
-    new_max_corner = [3, 7]
-    true_new_begin = [2, 5]
+    # max_pt -> translate, keep cells
+    new_max_pt = [3, 7]
+    true_new_min_pt = [2, 5]
 
-    new_discr = odl.uniform_discr_fromdiscr(discr, max_corner=new_max_corner)
-    assert all_almost_equal(new_discr.min_corner, true_new_begin)
-    assert all_almost_equal(new_discr.max_corner, new_max_corner)
+    new_discr = odl.uniform_discr_fromdiscr(discr, max_pt=new_max_pt)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, discr.cell_sides)
 
-    # nsamples -> resize cells, keep corners
-    new_nsamples = (5, 20)
+    # shape -> resize cells, keep corners
+    new_shape = (5, 20)
     true_new_csides = [0.2, 0.1]
-    new_discr = odl.uniform_discr_fromdiscr(discr, nsamples=new_nsamples)
-    assert all_almost_equal(new_discr.min_corner, discr.min_corner)
-    assert all_almost_equal(new_discr.max_corner, discr.max_corner)
-    assert all_equal(new_discr.shape, new_nsamples)
+    new_discr = odl.uniform_discr_fromdiscr(discr, shape=new_shape)
+    assert all_almost_equal(new_discr.min_pt, discr.min_pt)
+    assert all_almost_equal(new_discr.max_pt, discr.max_pt)
+    assert all_equal(new_discr.shape, new_shape)
     assert all_almost_equal(new_discr.cell_sides, true_new_csides)
 
     # cell_sides -> resize cells, keep corners
     new_csides = [0.5, 0.2]
-    true_new_nsamples = (2, 10)
+    true_new_shape = (2, 10)
     new_discr = odl.uniform_discr_fromdiscr(discr, cell_sides=new_csides)
-    assert all_almost_equal(new_discr.min_corner, discr.min_corner)
-    assert all_almost_equal(new_discr.max_corner, discr.max_corner)
-    assert all_equal(new_discr.shape, true_new_nsamples)
+    assert all_almost_equal(new_discr.min_pt, discr.min_pt)
+    assert all_almost_equal(new_discr.max_pt, discr.max_pt)
+    assert all_equal(new_discr.shape, true_new_shape)
     assert all_almost_equal(new_discr.cell_sides, new_csides)
 
 
@@ -1061,53 +1061,53 @@ def test_uniform_discr_fromdiscr_two_attrs():
     discr = odl.uniform_discr([0, -1], [1, 1], [10, 5])
     # csides = [0.1, 0.4]
 
-    new_min_corner = [-2, 1]
-    new_max_corner = [4, 2]
+    new_min_pt = [-2, 1]
+    new_max_pt = [4, 2]
     true_new_csides = [0.6, 0.2]
-    new_discr = odl.uniform_discr_fromdiscr(discr, min_corner=new_min_corner,
-                                            max_corner=new_max_corner)
-    assert all_almost_equal(new_discr.min_corner, new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, new_max_corner)
+    new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=new_min_pt,
+                                            max_pt=new_max_pt)
+    assert all_almost_equal(new_discr.min_pt, new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, true_new_csides)
 
-    new_min_corner = [-2, 1]
-    new_nsamples = (5, 20)
-    true_new_max_corner = [-1.5, 9]
-    new_discr = odl.uniform_discr_fromdiscr(discr, min_corner=new_min_corner,
-                                            nsamples=new_nsamples)
-    assert all_almost_equal(new_discr.min_corner, new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_max_corner)
-    assert all_equal(new_discr.shape, new_nsamples)
+    new_min_pt = [-2, 1]
+    new_shape = (5, 20)
+    true_new_max_pt = [-1.5, 9]
+    new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=new_min_pt,
+                                            shape=new_shape)
+    assert all_almost_equal(new_discr.min_pt, new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
+    assert all_equal(new_discr.shape, new_shape)
     assert all_almost_equal(new_discr.cell_sides, discr.cell_sides)
 
-    new_min_corner = [-2, 1]
+    new_min_pt = [-2, 1]
     new_csides = [0.6, 0.2]
-    true_new_max_corner = [4, 2]
-    new_discr = odl.uniform_discr_fromdiscr(discr, min_corner=new_min_corner,
+    true_new_max_pt = [4, 2]
+    new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=new_min_pt,
                                             cell_sides=new_csides)
-    assert all_almost_equal(new_discr.min_corner, new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_max_corner)
+    assert all_almost_equal(new_discr.min_pt, new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, new_csides)
 
-    new_max_corner = [4, 2]
-    new_nsamples = (5, 20)
-    true_new_min_corner = [3.5, -6]
-    new_discr = odl.uniform_discr_fromdiscr(discr, max_corner=new_max_corner,
-                                            nsamples=new_nsamples)
-    assert all_almost_equal(new_discr.min_corner, true_new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, new_max_corner)
-    assert all_equal(new_discr.shape, new_nsamples)
+    new_max_pt = [4, 2]
+    new_shape = (5, 20)
+    true_new_min_pt = [3.5, -6]
+    new_discr = odl.uniform_discr_fromdiscr(discr, max_pt=new_max_pt,
+                                            shape=new_shape)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, new_max_pt)
+    assert all_equal(new_discr.shape, new_shape)
     assert all_almost_equal(new_discr.cell_sides, discr.cell_sides)
 
-    new_max_corner = [4, 2]
+    new_max_pt = [4, 2]
     new_csides = [0.6, 0.2]
-    true_new_min_corner = [-2, 1]
-    new_discr = odl.uniform_discr_fromdiscr(discr, max_corner=new_max_corner,
+    true_new_min_pt = [-2, 1]
+    new_discr = odl.uniform_discr_fromdiscr(discr, max_pt=new_max_pt,
                                             cell_sides=new_csides)
-    assert all_almost_equal(new_discr.min_corner, true_new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, new_max_corner)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, new_csides)
 
@@ -1117,42 +1117,42 @@ def test_uniform_discr_fromdiscr_per_axis():
     discr = odl.uniform_discr([0, -1], [1, 1], [10, 5])
     # csides = [0.1, 0.4]
 
-    new_min_corner = [-2, None]
-    new_max_corner = [4, 2]
-    new_nsamples = (None, 20)
+    new_min_pt = [-2, None]
+    new_max_pt = [4, 2]
+    new_shape = (None, 20)
     new_csides = [None, None]
 
-    true_new_min_corner = [-2, -6]
-    true_new_max_corner = [4, 2]
-    true_new_nsamples = (10, 20)
+    true_new_min_pt = [-2, -6]
+    true_new_max_pt = [4, 2]
+    true_new_shape = (10, 20)
     true_new_csides = [0.6, 0.4]
 
     new_discr = odl.uniform_discr_fromdiscr(
-        discr, min_corner=new_min_corner, max_corner=new_max_corner,
-        nsamples=new_nsamples, cell_sides=new_csides)
+        discr, min_pt=new_min_pt, max_pt=new_max_pt,
+        shape=new_shape, cell_sides=new_csides)
 
-    assert all_almost_equal(new_discr.min_corner, true_new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_max_corner)
-    assert all_equal(new_discr.shape, true_new_nsamples)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
+    assert all_equal(new_discr.shape, true_new_shape)
     assert all_almost_equal(new_discr.cell_sides, true_new_csides)
 
-    new_min_corner = None
-    new_max_corner = [None, 2]
-    new_nsamples = (5, None)
+    new_min_pt = None
+    new_max_pt = [None, 2]
+    new_shape = (5, None)
     new_csides = [None, 0.2]
 
-    true_new_min_corner = [0, 1]
-    true_new_max_corner = [1, 2]
-    true_new_nsamples = (5, 5)
+    true_new_min_pt = [0, 1]
+    true_new_max_pt = [1, 2]
+    true_new_shape = (5, 5)
     true_new_csides = [0.2, 0.2]
 
     new_discr = odl.uniform_discr_fromdiscr(
-        discr, min_corner=new_min_corner, max_corner=new_max_corner,
-        nsamples=new_nsamples, cell_sides=new_csides)
+        discr, min_pt=new_min_pt, max_pt=new_max_pt,
+        shape=new_shape, cell_sides=new_csides)
 
-    assert all_almost_equal(new_discr.min_corner, true_new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_max_corner)
-    assert all_equal(new_discr.shape, true_new_nsamples)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
+    assert all_equal(new_discr.shape, true_new_shape)
     assert all_almost_equal(new_discr.cell_sides, true_new_csides)
 
 

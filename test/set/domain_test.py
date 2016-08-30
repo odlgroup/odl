@@ -33,7 +33,8 @@ from odl.util.testutils import almost_equal, all_equal
 
 def random_point(set_):
     if isinstance(set_, IntervalProd):
-        return np.random.rand(set_.ndim) * (set_.end - set_.begin) + set_.begin
+        return (set_.min_pt +
+                np.random.rand(set_.ndim) * (set_.max_pt - set_.min_pt))
     else:
         raise NotImplementedError("unknown type")
 
@@ -57,32 +58,32 @@ def test_init():
         IntervalProd((1, 2, 3), (1, 2, 0))
 
 
-def test_begin():
+def test_min_pt():
     set_ = IntervalProd(1, 2)
-    assert almost_equal(set_.begin, 1)
+    assert almost_equal(set_.min_pt, 1)
 
     set_ = IntervalProd(-np.inf, 0)
-    assert almost_equal(set_.begin, -np.inf)
+    assert almost_equal(set_.min_pt, -np.inf)
 
     set_ = IntervalProd([1], [2])
-    assert almost_equal(set_.begin, 1)
+    assert almost_equal(set_.min_pt, 1)
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert all_equal(set_.begin, [1, 2, 3])
+    assert all_equal(set_.min_pt, [1, 2, 3])
 
 
-def test_end():
+def test_max_pt():
     set_ = IntervalProd(1, 2)
-    assert almost_equal(set_.end, 2)
+    assert almost_equal(set_.max_pt, 2)
 
     set_ = IntervalProd(0, np.inf)
-    assert almost_equal(set_.end, np.inf)
+    assert almost_equal(set_.max_pt, np.inf)
 
     set_ = IntervalProd([1], [2])
-    assert almost_equal(set_.end, 2)
+    assert almost_equal(set_.max_pt, 2)
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert all_equal(set_.end, [5, 6, 7])
+    assert all_equal(set_.max_pt, [5, 6, 7])
 
 
 def test_ndim():
@@ -156,15 +157,15 @@ def test_volume():
     assert almost_equal(set_.volume, (5 - 1) * (6 - 2) * (7 - 3))
 
 
-def test_modpoint():
+def test_mid_pt():
     set_ = IntervalProd(1, 2)
-    assert set_.midpoint == 1.5
+    assert set_.mid_pt == 1.5
 
     set_ = IntervalProd(0, np.inf)
-    assert set_.midpoint == np.inf
+    assert set_.mid_pt == np.inf
 
     set_ = IntervalProd([1, 2, 3], [5, 6, 7])
-    assert all_equal(set_.midpoint, [3, 4, 5])
+    assert all_equal(set_.mid_pt, [3, 4, 5])
 
 
 def test_element():
@@ -294,24 +295,24 @@ def test_insert():
     intvp2 = IntervalProd(1, 3)
 
     intvp = intvp1.insert(0, intvp2)
-    true_begin = [1, 0, 0]
-    true_end = [3, 1, 2]
-    assert intvp == IntervalProd(true_begin, true_end)
+    true_min_pt = [1, 0, 0]
+    true_max_pt = [3, 1, 2]
+    assert intvp == IntervalProd(true_min_pt, true_max_pt)
 
     intvp = intvp1.insert(1, intvp2)
-    true_begin = [0, 1, 0]
-    true_end = [1, 3, 2]
-    assert intvp == IntervalProd(true_begin, true_end)
+    true_min_pt = [0, 1, 0]
+    true_max_pt = [1, 3, 2]
+    assert intvp == IntervalProd(true_min_pt, true_max_pt)
 
     intvp = intvp1.insert(2, intvp2)
-    true_begin = [0, 0, 1]
-    true_end = [1, 2, 3]
-    assert intvp == IntervalProd(true_begin, true_end)
+    true_min_pt = [0, 0, 1]
+    true_max_pt = [1, 2, 3]
+    assert intvp == IntervalProd(true_min_pt, true_max_pt)
 
     intvp = intvp1.insert(-1, intvp2)  # same as 1
-    true_begin = [0, 1, 0]
-    true_end = [1, 3, 2]
-    assert intvp == IntervalProd(true_begin, true_end)
+    true_min_pt = [0, 1, 0]
+    true_max_pt = [1, 3, 2]
+    assert intvp == IntervalProd(true_min_pt, true_max_pt)
 
     with pytest.raises(IndexError):
         intvp1.insert(3, intvp2)
@@ -326,8 +327,8 @@ def test_dist():
         assert set_.dist(interior) == 0.0
 
     for exterior in [0.0, 2.0, np.inf]:
-        assert set_.dist(exterior) == min(abs(set_.begin - exterior),
-                                          abs(exterior - set_.end))
+        assert set_.dist(exterior) == min(abs(set_.min_pt - exterior),
+                                          abs(exterior - set_.max_pt))
 
     assert set_.dist(np.NaN) == np.inf
 

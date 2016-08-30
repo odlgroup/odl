@@ -33,8 +33,7 @@ import odl
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_corner=[-20, -20], max_corner=[20, 20], nsamples=[300, 300],
-    dtype='float32')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
 
 # Angles: uniformly spaced, n = 1000, min = 0, max = pi
 angle_partition = odl.uniform_partition(0, np.pi, 1000)
@@ -49,7 +48,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # --- Create FilteredBackProjection (FBP) operator --- #
 
 
-# Ray transform aka forward projection. We use the ASTRA CUDA backend.
+# Ray transform (= forward projection). We use the ASTRA CUDA backend.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Fourier transform in detector direction

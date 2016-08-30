@@ -47,61 +47,59 @@ class IntervalProd(Set):
     return a new instance.
     """
 
-    def __init__(self, begin, end):
+    def __init__(self, min_pt, max_pt):
         """Initialize a new instance.
 
         Parameters
         ----------
-        begin : `array-like` or float
-            The lower ends of the intervals. A float can be used in
-            one dimension.
-        end : `array-like` or float
-            The upper ends of the intervals. A float can be used in
-            one dimension.
+        min_pt, max_pt : float or `array-like`
+            Vectors of lower/upper ends of the intervals in the product.
 
         Examples
         --------
-        >>> b, e = [-1, 2.5, 70, 80], [-0.5, 10, 75, 90]
-        >>> rbox = IntervalProd(b, e)
+        >>> import odl
+        >>> min_pt, max_pt = [-1, 2.5, 70, 80], [-0.5, 10, 75, 90]
+        >>> rbox = odl.IntervalProd(min_pt, max_pt)
         >>> rbox
         IntervalProd([-1.0, 2.5, 70.0, 80.0], [-0.5, 10.0, 75.0, 90.0])
         """
-        self.__begin = np.atleast_1d(begin).astype('float64')
-        self.__end = np.atleast_1d(end).astype('float64')
+        self.__min_pt = np.atleast_1d(min_pt).astype('float64')
+        self.__max_pt = np.atleast_1d(max_pt).astype('float64')
 
-        if self.begin.ndim > 1:
-            raise ValueError('`begin` must be 1-dimensional, got an array '
-                             'with {} axes'.format(self.begin.ndim))
-        if self.end.ndim > 1:
-            raise ValueError('`end` must be 1-dimensional, got an array '
-                             'with {} axes'.format(self.begin.ndim))
-        if len(self.begin) != len(self.end):
-            raise ValueError('`begin` and `end` have different lengths '
+        if self.min_pt.ndim > 1:
+            raise ValueError('`min_pt` must be 1-dimensional, got an array '
+                             'with {} axes'.format(self.min_pt.ndim))
+        if self.max_pt.ndim > 1:
+            raise ValueError('`max_pt` must be 1-dimensional, got an array '
+                             'with {} axes'.format(self.max_pt.ndim))
+        if len(self.min_pt) != len(self.max_pt):
+            raise ValueError('`min_pt` and `max_pt` have different lengths '
                              '({} != {})'
-                             ''.format(len(self.begin), len(self.end)))
-        for i, (beg, end) in enumerate(zip(self.begin, self.end)):
-            if beg > end:
-                raise ValueError('in axis {}: `begin` is larger than `end` '
-                                 '({} > {})'.format(i, beg, end))
+                             ''.format(len(self.min_pt), len(self.max_pt)))
 
-        self.__ideg = np.where(self.begin == self.end)[0]
-        self.__inondeg = np.where(self.begin != self.end)[0]
+        for axis, (xmin, xmax) in enumerate(zip(self.min_pt, self.max_pt)):
+            if xmax < xmin:
+                raise ValueError('in axis {}: upper end smaller than lower '
+                                 'end ({} < {})'.format(axis, xmax, xmin))
+
+        self.__ideg = np.where(self.min_pt == self.max_pt)[0]
+        self.__inondeg = np.where(self.min_pt != self.max_pt)[0]
         super().__init__()
 
     @property
-    def begin(self):
-        """Left interval boundary/boundaries."""
-        return self.__begin
+    def min_pt(self):
+        """Left interval boundaries of this interval product."""
+        return self.__min_pt
 
     @property
-    def end(self):
-        """Right interval boundary/boundaries."""
-        return self.__end
+    def max_pt(self):
+        """Right interval boundaries of this interval product."""
+        return self.__max_pt
 
     @property
     def ndim(self):
         """Number of intervals in the product."""
-        return len(self.begin)
+        return len(self.min_pt)
 
     @property
     def true_ndim(self):
@@ -128,10 +126,10 @@ class IntervalProd(Set):
         return self.volume
 
     @property
-    def midpoint(self):
+    def mid_pt(self):
         """Midpoint of this interval product."""
-        midp = (self.end + self.begin) / 2.
-        midp[self.ideg] = self.begin[self.ideg]
+        midp = (self.max_pt + self.min_pt) / 2.
+        midp[self.ideg] = self.min_pt[self.ideg]
         return midp
 
     @property
@@ -146,11 +144,11 @@ class IntervalProd(Set):
 
     def min(self):
         """Return the minimum point of this interval product."""
-        return self.begin
+        return self.min_pt
 
     def max(self):
         """Return the maximum point of this interval product."""
-        return self.end
+        return self.max_pt
 
     def extent(self):
         """Return the vector of interval lengths per axis."""
@@ -167,8 +165,8 @@ class IntervalProd(Set):
         Returns
         -------
         element : `numpy.ndarray` or float
-            Array (ndim > 1) or float version of ``inp`` if provided,
-            otherwise ``self.midpoint``.
+            Array (`ndim` > 1) or float version of ``inp`` if provided,
+            otherwise ``self.mid_pt``.
 
         Examples
         --------
@@ -177,7 +175,7 @@ class IntervalProd(Set):
         0.5
         """
         if inp is None:
-            return self.midpoint
+            return self.mid_pt
         elif inp in self:
             if self.ndim == 1:
                 return float(inp)
@@ -200,9 +198,8 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> from math import sqrt
         >>> rbox1 = IntervalProd(0, 0.5)
-        >>> rbox2 = IntervalProd(0, sqrt(0.5)**2)
+        >>> rbox2 = IntervalProd(0, np.sqrt(0.5)**2)
         >>> rbox1.approx_equals(rbox2, atol=0)  # Numerical error
         False
         >>> rbox1.approx_equals(rbox2, atol=1e-15)
@@ -213,8 +210,8 @@ class IntervalProd(Set):
         elif not isinstance(other, IntervalProd):
             return False
 
-        return (np.allclose(self.begin, other.begin, atol=atol, rtol=0.0) and
-                np.allclose(self.end, other.end, atol=atol, rtol=0.0))
+        return (np.allclose(self.min_pt, other.min_pt, atol=atol, rtol=0.0) and
+                np.allclose(self.max_pt, other.max_pt, atol=atol, rtol=0.0))
 
     def __eq__(self, other):
         """Return ``self == other``."""
@@ -234,13 +231,12 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> from math import sqrt
-        >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]
+        >>> rbox = IntervalProd(min_pt, max_pt)
         >>> # Numerical error
-        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], atol=0)
+        >>> rbox.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=0)
         False
-        >>> rbox.approx_contains([-1 + sqrt(0.5)**2, 0., 2.9], atol=1e-9)
+        >>> rbox.approx_contains([-1 + np.sqrt(0.5)**2, 0., 2.9], atol=1e-9)
         True
         """
         try:
@@ -275,7 +271,7 @@ class IntervalProd(Set):
 
         if point.shape != (self.ndim,):
             return False
-        return (self.begin <= point).all() and (point <= self.end).all()
+        return (self.min_pt <= point).all() and (point <= self.max_pt).all()
 
     def contains_set(self, other, atol=0.0):
         """Return ``True`` if ``other`` is (almost) contained in this set.
@@ -295,10 +291,10 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> b1, e1 = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox1 = IntervalProd(b1, e1)
-        >>> b2, e2 = [-0.6, 0, 2.1], [-0.5, 0, 2.5]
-        >>> rbox2 = IntervalProd(b2, e2)
+        >>> min_pt1, max_pt1 = [-1, 0, 2], [-0.5, 0, 3]
+        >>> rbox1 = IntervalProd(min_pt1, max_pt1)
+        >>> min_pt2, max_pt2 = [-0.6, 0, 2.1], [-0.5, 0, 2.5]
+        >>> rbox2 = IntervalProd(min_pt2, max_pt2)
         >>> rbox1.contains_set(rbox2)
         True
         >>> rbox2.contains_set(rbox1)
@@ -336,10 +332,10 @@ class IntervalProd(Set):
         Examples
         --------
         >>> import odl
-        >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]
+        >>> rbox = IntervalProd(min_pt, max_pt)
 
-        Arrays are expected in (ndim, npoints) shape:
+        Arrays are expected in ``(ndim, npoints)`` shape:
 
         >>> arr = np.array([[-1, 0, 2],   # defining one point at a time
         ...                 [-0.5, 0, 2]])
@@ -363,9 +359,9 @@ class IntervalProd(Set):
         ...                    [2, 2]])
         True
 
-        And with grids:
+        Grids are also accepted as input:
 
-        >>> agrid = odl.uniform_sampling(rbox.begin, rbox.end, [3, 1, 3])
+        >>> agrid = odl.uniform_sampling(rbox.min_pt, rbox.max_pt, [3, 1, 3])
         >>> rbox.contains_all(agrid)
         True
         """
@@ -380,8 +376,8 @@ class IntervalProd(Set):
             vecs = tuple(vec.squeeze() for vec in other)
             mins = np.fromiter((np.min(vec) for vec in vecs), dtype=float)
             maxs = np.fromiter((np.max(vec) for vec in vecs), dtype=float)
-            return (np.all(mins >= self.begin - atol) and
-                    np.all(maxs <= self.end + atol))
+            return (np.all(mins >= self.min_pt - atol) and
+                    np.all(maxs <= self.max_pt + atol))
 
         # Convert to array and check each element
         other = np.asarray(other)
@@ -392,7 +388,7 @@ class IntervalProd(Set):
             else:
                 mins = np.min(other, axis=1)
                 maxs = np.max(other, axis=1)
-            return np.all(mins >= self.begin) and np.all(maxs <= self.end)
+            return np.all(mins >= self.min_pt) and np.all(maxs <= self.max_pt)
         else:
             return False
 
@@ -408,8 +404,8 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> b, e = [-1, 2.5, 0], [-0.5, 10, 0]
-        >>> rbox = IntervalProd(b, e)
+        >>> min_pt, max_pt = [-1, 2.5, 0], [-0.5, 10, 0]
+        >>> rbox = IntervalProd(min_pt, max_pt)
         >>> rbox.measure()
         3.75
         >>> rbox.measure(ndim=3)
@@ -431,7 +427,7 @@ class IntervalProd(Set):
         elif ndim > self.true_ndim:
             return 0.0
         else:
-            return np.prod((self.end - self.begin)[self.inondeg])
+            return np.prod((self.max_pt - self.min_pt)[self.inondeg])
 
     def dist(self, point, exponent=2.0):
         """Return the distance of ``point`` to this set.
@@ -457,8 +453,8 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> b, e = [-1, 0, 2], [-0.5, 0, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]
+        >>> rbox = IntervalProd(min_pt, max_pt)
         >>> rbox.dist([-5, 3, 2])
         5.0
         >>> rbox.dist([-5, 3, 2], exponent=float('inf'))
@@ -472,16 +468,16 @@ class IntervalProd(Set):
         if np.any(np.isnan(point)):
             return float('inf')
 
-        i_larger = np.where(point > self.end)
-        i_smaller = np.where(point < self.begin)
+        i_larger = np.where(point > self.max_pt)
+        i_smaller = np.where(point < self.min_pt)
 
         # Access [0] since np.where returns a tuple.
         if len(i_larger[0]) == 0 and len(i_smaller[0]) == 0:
             return 0.0
         else:
             proj = np.concatenate((point[i_larger], point[i_smaller]))
-            border = np.concatenate((self.end[i_larger],
-                                     self.begin[i_smaller]))
+            border = np.concatenate((self.max_pt[i_larger],
+                                     self.min_pt[i_smaller]))
             return np.linalg.norm(proj - border, ord=exponent)
 
     def collapse(self, indices, values):
@@ -505,8 +501,8 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]
+        >>> rbox = IntervalProd(min_pt, max_pt)
         >>> rbox.collapse(1, 0)
         Cuboid([-1.0, 0.0, 2.0], [-0.5, 0.0, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5])
@@ -525,19 +521,19 @@ class IntervalProd(Set):
                 raise IndexError('in axis {}: index {} out of range 0 --> {}'
                                  ''.format(axis, index, self.ndim - 1))
 
-        if np.any(values < self.begin[indices]):
+        if np.any(values < self.min_pt[indices]):
             raise ValueError('values {} not above the lower interval '
                              'boundaries {}'
-                             ''.format(values, self.begin[indices]))
+                             ''.format(values, self.min_pt[indices]))
 
-        if np.any(values > self.end[indices]):
+        if np.any(values > self.max_pt[indices]):
             raise ValueError('values {} not below the upper interval '
                              'boundaries {}'
-                             ''.format(values, self.end[indices]))
+                             ''.format(values, self.max_pt[indices]))
 
-        b_new = self.begin.copy()
+        b_new = self.min_pt.copy()
         b_new[indices] = values
-        e_new = self.end.copy()
+        e_new = self.max_pt.copy()
         e_new[indices] = values
 
         return IntervalProd(b_new, e_new)
@@ -554,8 +550,8 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> b, e = [-1, 0, 2], [-0.5, 1, 3]
-        >>> rbox = IntervalProd(b, e)
+        >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 1, 3]
+        >>> rbox = IntervalProd(min_pt, max_pt)
         >>> rbox.collapse(1, 0).squeeze()
         Rectangle([-1.0, 2.0], [-0.5, 3.0])
         >>> rbox.collapse([1, 2], [0, 2.5]).squeeze()
@@ -563,8 +559,8 @@ class IntervalProd(Set):
         >>> rbox.collapse([0, 1, 2], [-1, 0, 2.5]).squeeze()
         IntervalProd([], [])
         """
-        b_new = self.begin[self.inondeg]
-        e_new = self.end[self.inondeg]
+        b_new = self.min_pt[self.inondeg]
+        e_new = self.max_pt[self.inondeg]
         return IntervalProd(b_new, e_new)
 
     def insert(self, index, other):
@@ -607,18 +603,18 @@ class IntervalProd(Set):
         if index < 0:
             index += self.ndim
 
-        new_beg = np.empty(self.ndim + other.ndim)
-        new_end = np.empty(self.ndim + other.ndim)
+        new_min_pt = np.empty(self.ndim + other.ndim)
+        new_max_pt = np.empty(self.ndim + other.ndim)
 
-        new_beg[: index] = self.begin[: index]
-        new_end[: index] = self.end[: index]
-        new_beg[index: index + other.ndim] = other.begin
-        new_end[index: index + other.ndim] = other.end
+        new_min_pt[: index] = self.min_pt[: index]
+        new_max_pt[: index] = self.max_pt[: index]
+        new_min_pt[index: index + other.ndim] = other.min_pt
+        new_max_pt[index: index + other.ndim] = other.max_pt
         if index < self.ndim:  # Avoid IndexError
-            new_beg[index + other.ndim:] = self.begin[index:]
-            new_end[index + other.ndim:] = self.end[index:]
+            new_min_pt[index + other.ndim:] = self.min_pt[index:]
+            new_max_pt[index + other.ndim:] = self.max_pt[index:]
 
-        return IntervalProd(new_beg, new_end)
+        return IntervalProd(new_min_pt, new_max_pt)
 
     def append(self, other):
         """Insert at the end.
@@ -688,9 +684,9 @@ class IntervalProd(Set):
 
         minmax_vecs = [0] * self.ndim
         for axis in self.ideg:
-            minmax_vecs[axis] = self.begin[axis]
+            minmax_vecs[axis] = self.min_pt[axis]
         for axis in self.inondeg:
-            minmax_vecs[axis] = (self.begin[axis], self.end[axis])
+            minmax_vecs[axis] = (self.min_pt[axis], self.max_pt[axis])
 
         minmax_grid = TensorGrid(*minmax_vecs)
         return minmax_grid.points(order=order)
@@ -711,7 +707,7 @@ class IntervalProd(Set):
         Returns
         -------
         subinterval : `IntervalProd`
-            Interval product corresponding to the indices.
+            Interval product corresponding to the given indices.
 
         Examples
         --------
@@ -734,7 +730,7 @@ class IntervalProd(Set):
         >>> rbox[[0, 1, 0]]
         Cuboid([-1.0, 2.0, -1.0], [-0.5, 3.0, -0.5])
         """
-        return IntervalProd(self.begin[indices], self.end[indices])
+        return IntervalProd(self.min_pt[indices], self.max_pt[indices])
 
     def __pos__(self):
         """Return ``+self``."""
@@ -742,7 +738,7 @@ class IntervalProd(Set):
 
     def __neg__(self):
         """Return ``-self``."""
-        return type(self)(-self.end, -self.begin)
+        return type(self)(-self.max_pt, -self.min_pt)
 
     def __add__(self, other):
         """Return ``self + other``."""
@@ -751,9 +747,10 @@ class IntervalProd(Set):
                 raise ValueError('addition not possible for {} and {}: '
                                  'dimension mismatch ({} != {})'
                                  ''.format(self, other, self.ndim, other.ndim))
-            return type(self)(self.begin + other.begin, self.end + other.end)
+            return type(self)(self.min_pt + other.min_pt,
+                              self.max_pt + other.max_pt)
         elif np.isscalar(other):
-            return type(self)(self.begin + other, self.end + other)
+            return type(self)(self.min_pt + other, self.max_pt + other)
         else:
             return NotImplemented
 
@@ -770,16 +767,16 @@ class IntervalProd(Set):
                                  ''.format(self, other, self.ndim, other.ndim))
 
             comp_mat = np.empty([self.ndim, 4])
-            comp_mat[:, 0] = self.begin * other.begin
-            comp_mat[:, 1] = self.begin * other.end
-            comp_mat[:, 2] = self.end * other.begin
-            comp_mat[:, 3] = self.end * other.end
-            new_beg = np.min(comp_mat, axis=1)
-            new_end = np.max(comp_mat, axis=1)
-            return type(self)(new_beg, new_end)
+            comp_mat[:, 0] = self.min_pt * other.min_pt
+            comp_mat[:, 1] = self.min_pt * other.max_pt
+            comp_mat[:, 2] = self.max_pt * other.min_pt
+            comp_mat[:, 3] = self.max_pt * other.max_pt
+            new_min_pt = np.min(comp_mat, axis=1)
+            new_max_pt = np.max(comp_mat, axis=1)
+            return type(self)(new_min_pt, new_max_pt)
         elif np.isscalar(other):
-            vec1 = self.begin * other
-            vec2 = self.end * other
+            vec1 = self.min_pt * other
+            vec2 = self.max_pt * other
             return type(self)(np.minimum(vec1, vec2), np.maximum(vec1, vec2))
         else:
             return NotImplemented
@@ -793,13 +790,14 @@ class IntervalProd(Set):
     def __rdiv__(self, other):
         """Return ``other / self``."""
         if np.isscalar(other):
-            for axis, (b, e) in enumerate(zip(self.begin, self.end)):
-                if b <= 0 and e >= 0:
-                    raise ValueError('division not possible: interval product'
-                                     'contains 0 in axis {}'.format(axis))
+            for axis, (xmin, xmax) in enumerate(zip(self.min_pt, self.max_pt)):
+                if xmin <= 0 and xmax >= 0:
+                    raise ValueError('in axis {}: interval {} contains 0, '
+                                     'division not possible'
+                                     .format(axis, [xmin, xmax]))
 
-            vec1 = other / self.begin
-            vec2 = other / self.end
+            vec1 = other / self.min_pt
+            vec2 = other / self.max_pt
             return type(self)(np.minimum(vec1, vec2), np.maximum(vec1, vec2))
         else:
             return NotImplemented
@@ -809,73 +807,67 @@ class IntervalProd(Set):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.ndim == 1:
-            return 'Interval({!r}, {!r})'.format(self.begin[0], self.end[0])
+            return 'Interval({!r}, {!r})'.format(self.min_pt[0],
+                                                 self.max_pt[0])
         elif self.ndim == 2:
-            return 'Rectangle({!r}, {!r})'.format(list(self.begin),
-                                                  list(self.end))
+            return 'Rectangle({!r}, {!r})'.format(list(self.min_pt),
+                                                  list(self.max_pt))
         elif self.ndim == 3:
-            return 'Cuboid({!r}, {!r})'.format(list(self.begin),
-                                               list(self.end))
+            return 'Cuboid({!r}, {!r})'.format(list(self.min_pt),
+                                               list(self.max_pt))
         else:
             return '{}({}, {})'.format(self.__class__.__name__,
-                                       array1d_repr(self.begin),
-                                       array1d_repr(self.end))
+                                       array1d_repr(self.min_pt),
+                                       array1d_repr(self.max_pt))
 
     def __str__(self):
         """Return ``str(self)``."""
-        return ' x '.join('[{}, {}]'.format(b, e)
-                          for (b, e) in zip(self.begin, self.end))
+        return ' x '.join('[{}, {}]'.format(xmin, xmax)
+                          for xmin, xmax in zip(self.min_pt, self.max_pt))
 
 
-def Interval(begin, end):
+def Interval(min_pt, max_pt):
     """One-dimensional interval product.
 
     Parameters
     ----------
-    begin : `array-like` with shape ``(1,)`` or float
-        Lower end of the interval.
-    end : `array-like` with shape ``(1,)`` or float
-        Upper end of the interval.
-
+    min_pt, max_pt : float or `array-like`, shape ``(1,)``
+        Lower/upper ends of the interval.
     """
-    interval = IntervalProd(begin, end)
+    interval = IntervalProd(min_pt, max_pt)
     if interval.ndim != 1:
-        raise ValueError('cannot make an interval from `begin` {} and '
-                         '`end` {}'.format(begin, end))
+        raise ValueError('cannot make an interval from `min_pt` {} and '
+                         '`max_pt` {}'.format(min_pt, max_pt))
     return interval
 
 
-def Rectangle(begin, end):
+def Rectangle(min_pt, max_pt):
     """Two-dimensional interval product.
 
     Parameters
     ----------
-    begin : `array-like` with shape ``(2,)``
-        Lower ends of the intervals in the product.
-    end : `array-like` with shape ``(2,)``
-        Upper ends of the intervals in the product.
+    min_pt, max_pt : `array-like`, shape ``(2,)``
+        Lower/upper ends of the intervals in the product.
     """
-    rectangle = IntervalProd(begin, end)
+    rectangle = IntervalProd(min_pt, max_pt)
     if rectangle.ndim != 2:
-        raise ValueError('cannot make a rectangle from `begin` {} and '
-                         '`end` {}'.format(begin, end))
+        raise ValueError('cannot make a rectangle from `min_pt` {} and '
+                         '`max_pt` {}'.format(min_pt, max_pt))
     return rectangle
 
 
-def Cuboid(begin, end):
+def Cuboid(min_pt, max_pt):
     """Three-dimensional interval product.
 
     Parameters
     ----------
-    begin : `array-like` with shape ``(3,)``
-        Lower ends of the intervals in the product.
-    end : `array-like` with shape ``(3,)``
-        Upper ends of the intervals in the product.
+    min_pt, max_pt : `array-like`, shape ``(3,)``
+        Lower/upper ends of the intervals in the product.
     """
-    cuboid = IntervalProd(begin, end)
+    cuboid = IntervalProd(min_pt, max_pt)
     if cuboid.ndim != 3:
-        raise ValueError('cannot make a cuboid from `begin` {} and '
-                         '`end` {}'.format(begin, end))
+        raise ValueError('cannot make a cuboid from `min_pt` {} and '
+                         '`max_pt` {}'.format(min_pt, max_pt))
     return cuboid
 
 

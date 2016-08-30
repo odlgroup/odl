@@ -98,8 +98,8 @@ def astra_volume_geometry(discr_reco):
         raise ValueError('`discr_reco` {} is not uniformly discretized')
 
     vol_shp = discr_reco.partition.shape
-    vol_min = discr_reco.partition.begin
-    vol_max = discr_reco.partition.end
+    vol_min = discr_reco.partition.min_pt
+    vol_max = discr_reco.partition.max_pt
 
     if discr_reco.ndim == 2:
         # ASTRA does in principle support custom minimum and maximum
@@ -187,8 +187,8 @@ def astra_conebeam_3d_geom_to_vec(geometry):
         vectors[ang_idx, 0:3] = geometry.src_position(angle)
 
         # center of detector
-        midp = geometry.det_params.midpoint
-        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
+        mid_pt = geometry.det_params.mid_pt
+        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, mid_pt)
 
         # vector from detector pixel (0,0) to (0,1)
         unit_vecs = geometry.detector.axes
@@ -242,8 +242,8 @@ def astra_conebeam_2d_geom_to_vec(geometry):
         vectors[ang_idx, 0:2] = geometry.src_position(angle)
 
         # center of detector
-        midp = geometry.det_params.midpoint
-        vectors[ang_idx, 2:4] = geometry.det_point_position(angle, midp)
+        mid_pt = geometry.det_params.mid_pt
+        vectors[ang_idx, 2:4] = geometry.det_point_position(angle, mid_pt)
 
         # vector from detector pixel (0) to (1)
         unit_vec = geometry.detector.axis
@@ -293,13 +293,13 @@ def astra_parallel_3d_geom_to_vec(geometry):
     for ang_idx, angle in enumerate(angles):
         rot_matrix = geometry.rotation_matrix(angle)
 
-        midp = geometry.det_params.midpoint
+        mid_pt = geometry.det_params.mid_pt
 
         # source position
-        vectors[ang_idx, 0:3] = geometry.det_to_src(angle, midp)
+        vectors[ang_idx, 0:3] = geometry.det_to_src(angle, mid_pt)
 
         # center of detector
-        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
+        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, mid_pt)
 
         # vector from detector pixel (0,0) to (0,1)
         unit_vecs = geometry.detector.axes

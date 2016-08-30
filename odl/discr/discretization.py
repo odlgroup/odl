@@ -357,7 +357,7 @@ class DiscretizedSetVector(NtuplesBaseVector):
         Assign x according to continuous vector
 
         >>> x.sampling(lambda x: x)
-        >>> print(x) # Print values at gridpoints (which are centered)
+        >>> print(x)  # Print values at grid points (which are centered)
         [0.1, 0.3, 0.5, 0.7, 0.9]
 
         See Also
@@ -564,14 +564,14 @@ def dspace_type(space, impl, dtype=None):
     impl : string
         Implementation backend for the data space
     dtype : `numpy.dtype`, optional
-        Data type which the space is supposed to use. If ``None``, the
-        space type is purely determined from ``space`` and
-        ``impl``. If given, it must be compatible with the
+        Data type which the space is supposed to use. If ``None`` is
+        given, the space type is purely determined from ``space`` and
+        ``impl``. Otherwise, it must be compatible with the
         field of ``space``.
 
     Returns
     -------
-    stype : `type`
+    stype : type
         Space type selected after the space's field, the backend and
         the data type
     """

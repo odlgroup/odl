@@ -39,7 +39,7 @@ def test_scikit_radon_projector_parallel2d():
 
     # Create reco space and a phantom
     reco_space = odl.uniform_discr([-5, -5], [5, 5], (5, 5), dtype='float32')
-    phantom = odl.phantom.cuboid(reco_space, begin=[0, 0], end=[5, 5])
+    phantom = odl.phantom.cuboid(reco_space, min_pt=[0, 0], max_pt=[5, 5])
 
     # Create parallel geometry
     angle_part = odl.uniform_partition(0, 2 * np.pi, 8)

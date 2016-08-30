@@ -780,13 +780,13 @@ class TensorGrid(Set):
         Parameters
         ----------
         dtype : `numpy.dtype`
-            The numpy dtype of the result array. Default: float
+            The Numpy data type of the result array. ``None`` means `float`.
 
         Examples
         --------
         >>> g = TensorGrid([0, 1], [-2, 0, 2])
 
-        Convert to array
+        Convert to an array:
 
         >>> np.asarray(g)
         array([[ 0., -2.],
@@ -796,7 +796,7 @@ class TensorGrid(Set):
                [ 1.,  0.],
                [ 1.,  2.]])
 
-        Calculate midpoint
+        Calculate the midpoint:
 
         >>> np.mean(g, axis=0)
         array([ 0.5,  0. ])
@@ -832,25 +832,27 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        min_pt : `array-like` or float
-            Grid point with minimum coordinates, can be a single float
-            for 1D grids
-        max_pt : `array-like` or float
-            Grid point with maximum coordinates, can be a single float
-            for 1D grids
-        shape : `array-like` or int
-            The number of grid points per axis, can be an integer for
-            1D grids
+        min_pt, max_pt : float or `sequence` of floats
+            Points defining the minimum/maximum grid coordinates.
+        shape : int or `sequence` of ints
+            Number of grid points per axis.
 
         Examples
         --------
-        >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
+        >>> import odl
+        >>> rg = odl.RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg
         RegularGrid([-1.5, -1.0], [-0.5, 3.0], (2, 3))
         >>> rg.coord_vectors
         (array([-1.5, -0.5]), array([-1.,  1.,  3.]))
         >>> rg.ndim, rg.size
         (2, 6)
+
+        In 1D, we don't need sequences:
+
+        >>> rg = odl.RegularGrid(0, 1, 10)
+        >>> rg.shape
+        (10,)
         """
         min_pt = np.atleast_1d(min_pt).astype('float64')
         max_pt = np.atleast_1d(max_pt).astype('float64')
@@ -892,23 +894,23 @@ class RegularGrid(TensorGrid):
         coord_vecs = [np.linspace(mi, ma, num, endpoint=True, dtype=np.float64)
                       for mi, ma, num in zip(min_pt, max_pt, shape)]
         TensorGrid.__init__(self, *coord_vecs)
-        self.__center = (self.max_pt + self.min_pt) / 2
+        self.__mid_pt = (self.max_pt + self.min_pt) / 2
         self.__stride = np.zeros(len(shape), dtype='float64')
         idcs = np.where(shape > 1)
         self.__stride[idcs] = ((self.max_pt - self.min_pt)[idcs] /
                                (shape[idcs] - 1))
 
     @property
-    def center(self):
-        """Center of the grid. Not necessarily a grid point.
+    def mid_pt(self):
+        """Midpoint of the grid. Not necessarily a grid point.
 
         Examples
         --------
         >>> rg = RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
-        >>> rg.center
+        >>> rg.mid_pt
         array([-1.,  1.])
         """
-        return self.__center
+        return self.__mid_pt
 
     @property
     def stride(self):
@@ -1031,11 +1033,11 @@ class RegularGrid(TensorGrid):
                                  ''.format(self.ndim))
 
             new_shape = self.shape[:idx] + other.shape + self.shape[idx:]
-            new_minpt = (self.min_pt[:idx].tolist() + other.min_pt.tolist() +
-                         self.min_pt[idx:].tolist())
-            new_maxpt = (self.max_pt[:idx].tolist() + other.max_pt.tolist() +
-                         self.max_pt[idx:].tolist())
-            return RegularGrid(new_minpt, new_maxpt, new_shape)
+            new_min_pt = (list(self.min_pt[:idx]) + list(other.min_pt) +
+                          list(self.min_pt[idx:]))
+            new_max_pt = (list(self.max_pt[:idx]) + list(other.max_pt) +
+                          list(self.max_pt[idx:]))
+            return RegularGrid(new_min_pt, new_max_pt, new_shape)
 
         elif isinstance(other, TensorGrid):
             self_tg = TensorGrid(*self.coord_vectors)
@@ -1104,19 +1106,19 @@ class RegularGrid(TensorGrid):
                 (v[int(idx)] for idx, v in zip(indices, self.coord_vectors)),
                 dtype=float)
         else:
-            new_minpt = []
-            new_maxpt = []
+            new_min_pt = []
+            new_max_pt = []
             new_shape = []
 
-            for idx, minval, maxval, n, cvec in zip(
+            for idx, xmin, xmax, n, cvec in zip(
                     indices, self.min_pt, self.max_pt, self.shape,
                     self.coord_vectors):
                 if np.isscalar(idx):
                     idx = slice(idx, idx + 1)
 
                 if idx == slice(None):  # Take all along this axis
-                    new_minpt.append(minval)
-                    new_maxpt.append(maxval)
+                    new_min_pt.append(xmin)
+                    new_max_pt.append(xmax)
                     new_shape.append(n)
                 else:  # Slice
                     istart, istop, istep = idx.indices(n)
@@ -1128,11 +1130,11 @@ class RegularGrid(TensorGrid):
                         num = int(np.ceil((istop - istart) / istep))
                         last = istart + (num - 1) * istep
 
-                    new_minpt.append(cvec[istart])
-                    new_maxpt.append(cvec[last])
+                    new_min_pt.append(cvec[istart])
+                    new_max_pt.append(cvec[last])
                     new_shape.append(num)
 
-            return RegularGrid(new_minpt, new_maxpt, new_shape)
+            return RegularGrid(new_min_pt, new_max_pt, new_shape)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1146,11 +1148,11 @@ class RegularGrid(TensorGrid):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
+def uniform_sampling_fromintv(intv_prod, shape, nodes_on_bdry=True):
     """Sample an interval product uniformly.
 
-    The resulting grid will include ``begin`` and ``end`` of
-    ``intv_prod`` as grid points. If you want a subdivision into
+    The resulting grid will include ``intv_prod.min_pt`` and
+    ``intv_prod.max_pt`` as grid points. If you want a subdivision into
     equally sized cells with grid points in the middle, use
     `uniform_partition` instead.
 
@@ -1158,10 +1160,9 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     ----------
     intv_prod : `IntervalProd`
         Set to be sampled
-    num_nodes : int or `sequence` of ints
-        Number of nodes per axis. For dimension >= 2, a tuple
-        is required. All entries must be positive. Entries
-        corresponding to degenerate axes must be equal to 1.
+    shape : int or `sequence` of ints
+        Number of nodes per axis. Entries corresponding to degenerate axes
+        must be equal to 1.
     nodes_on_bdry : bool or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
@@ -1205,7 +1206,7 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     --------
     uniform_sampling : Sample an implicitly created `IntervalProd`
     """
-    num_nodes = np.atleast_1d(num_nodes).astype('int64', casting='safe')
+    shape = np.atleast_1d(shape).astype('int64', casting='safe')
 
     if not isinstance(intv_prod, IntervalProd):
         raise TypeError('{!r} is not an `IntervalProd` instance'
@@ -1220,7 +1221,7 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
         raise ValueError('`nodes_on_bdry` has length {}, expected {}'
                          ''.format(len(nodes_on_bdry), intv_prod.ndim))
     else:
-        num_nodes = tuple(int(n) for n in num_nodes)
+        shape = tuple(int(n) for n in shape)
 
     # We need to determine the placement of the grid minimum and maximum
     # points based on the choices in nodes_on_bdry. If in a given axis,
@@ -1246,8 +1247,8 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
     # gmin = a + (b - a) / (2 * n - 1).
 
     gmin, gmax = [], []
-    for n, beg, end, on_bdry in zip(num_nodes, intv_prod.begin, intv_prod.end,
-                                    nodes_on_bdry):
+    for n, xmin, xmax, on_bdry in zip(shape, intv_prod.min_pt,
+                                      intv_prod.max_pt, nodes_on_bdry):
 
         # Unpack the tuple if possible, else use bool globally for this axis
         try:
@@ -1256,34 +1257,31 @@ def uniform_sampling_fromintv(intv_prod, num_nodes, nodes_on_bdry=True):
             bdry_l = bdry_r = on_bdry
 
         if bdry_l and bdry_r:
-            gmin.append(beg)
-            gmax.append(end)
+            gmin.append(xmin)
+            gmax.append(xmax)
         elif bdry_l and not bdry_r:
-            gmin.append(beg)
-            gmax.append(end - (end - beg) / (2 * n - 1))
+            gmin.append(xmin)
+            gmax.append(xmax - (xmax - xmin) / (2 * n - 1))
         elif not bdry_l and bdry_r:
-            gmin.append(beg + (end - beg) / (2 * n - 1))
-            gmax.append(end)
+            gmin.append(xmin + (xmax - xmin) / (2 * n - 1))
+            gmax.append(xmax)
         else:
-            gmin.append(beg + (end - beg) / (2 * n))
-            gmax.append(end - (end - beg) / (2 * n))
+            gmin.append(xmin + (xmax - xmin) / (2 * n))
+            gmax.append(xmax - (xmax - xmin) / (2 * n))
 
-    return RegularGrid(gmin, gmax, num_nodes)
+    return RegularGrid(gmin, gmax, shape)
 
 
-def uniform_sampling(begin, end, num_nodes, nodes_on_bdry=True):
+def uniform_sampling(min_pt, max_pt, shape, nodes_on_bdry=True):
     """Sample an implicitly defined interval product uniformly.
 
     Parameters
     ----------
-    begin : `array-like` or float
-        The lower ends of the intervals in the product
-    end : `array-like` or float
-        The upper ends of the intervals in the product
-    num_nodes : int or `sequence` of ints
-        Number of nodes per axis. For dimension >= 2, a tuple
-        is required. All entries must be positive. Entries
-        corresponding to degenerate axes must be equal to 1.
+    min_pt, max_pt : float or `sequence` of float
+        Vectors of lower/upper ends of the intervals in the product.
+    shape : int or `sequence` of ints
+        Number of nodes per axis. Entries corresponding to degenerate axes
+        must be equal to 1.
     nodes_on_bdry : bool or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
@@ -1306,18 +1304,25 @@ def uniform_sampling(begin, end, num_nodes, nodes_on_bdry=True):
 
     Examples
     --------
-    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], (3, 3))
+    >>> import odl
+    >>> grid = odl.uniform_sampling([-1.5, 2], [-0.5, 3], (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
 
     To have the nodes in the "middle", use ``nodes_on_bdry=False``:
 
-    >>> grid = uniform_sampling([-1.5, 2], [-0.5, 3], (2, 2),
-    ...                         nodes_on_bdry=False)
+    >>> grid = odl.uniform_sampling([-1.5, 2], [-0.5, 3], (2, 2),
+    ...                             nodes_on_bdry=False)
     >>> grid.coord_vectors
     (array([-1.25, -0.75]), array([ 2.25,  2.75]))
+
+    In 1D, we don't need sequences:
+
+    >>> grid = odl.uniform_sampling(0, 1, 3)
+    >>> grid.coord_vectors
+    (array([ 0. ,  0.5,  1. ]),)
     """
-    return uniform_sampling_fromintv(IntervalProd(begin, end), num_nodes,
+    return uniform_sampling_fromintv(IntervalProd(min_pt, max_pt), shape,
                                      nodes_on_bdry=nodes_on_bdry)
 
 

@@ -12,31 +12,29 @@ Next release
 New features
 ------------
 - Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
-<<<<<<< HEAD
-- Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on. This is
-  intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists.
-  (:pull:`524`)
+- Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on.
+  This is intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists. (:pull:`524`)
 - Allow ASTRA backend to be used with arbitrary dtypes. (:pull:`524`)
 
 Improvements
 ------------
 - Add intelligence to ``power_method_opnorm`` so it can terminate early by checking if consecutive iterates are close. (:pull:`527`)
-=======
 - Add ``BroadcastOperator(op, n)``, ``ReductionOperator(op, n)`` and ``DiagonalOperator(op, n)`` syntax.
-  This is equivalent to ``BroadcastOperator(*([op] * n))`` etc, i.e. create ``n`` copies of the operator.
->>>>>>> ENH: allow syntax (op, n) in the ProductSpaceOperators, closes #517
+  This is equivalent to ``BroadcastOperator(*([op] * n))`` etc, i.e. create ``n`` copies of the operator. (:pull:`532`)
 
 Changes
 --------
-- Changed definition of ``LinearSpaceVector.multiply`` to match the definition used by numpy (:pull:`509`)
+- Changed definition of ``LinearSpaceVector.multiply`` to match the definition used by Numpy. (:pull:`509`)
 - The parameters ``padding_method`` in ``diff_ops.py`` and ``mode`` in ``wavelet.py`` have been renamed to ``pad_mode``.
-  The parameter ``padding_value`` is now called ``pad_const``.
-- Expose ``ellipse_phantom`` and ``shepp_logan_ellipses`` to ``odl.phantom``
+  The parameter ``padding_value`` is now called ``pad_const``. (:pull:`511`)
+- Expose ``ellipse_phantom`` and ``shepp_logan_ellipses`` to ``odl.phantom``. (:pull:`529`)
+- Unify the names of minimum (``min_pt``), maximum (``max_pt``) and middle (``mid_pt``) points as well as number of points (``shape``) in grids, interval products and factory functions for discretized spaces. (:pull:`541`)
 
 Bugfixes
 --------
-- Fixed ``python -c "import odl; odl.test()"`` not working on windows (:pull:`508`)
+- Fixed ``python -c "import odl; odl.test()"`` not working on Windows. (:pull:`508`)
 - Fixed a ``TypeError`` being raised in ``OperatorTest`` when running ``optest.ajoint()`` without specifying an operator norm. (:pull:`525`)
+
 
 ODL 0.4.0 Release Notes (2016-08-17)
 ====================================
@@ -48,6 +46,7 @@ New features
 ------------
 - Add ``deform`` package with linearized deformations (:pull:`488`)
 - Add option to interface with ProxImaL solvers using ODL operators. (:pull:`494`)
+
 
 ODL 0.3.1 Release Notes (2016-08-15)
 ====================================

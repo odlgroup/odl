@@ -613,15 +613,15 @@ def test_regulargrid_init_raise():
         RegularGrid(minpt, maxpt, bad_dim_shape)
 
 
-def test_regulargrid_center():
+def test_regulargrid_mid_pt():
     minpt = (0.75, 0, -5)
     maxpt = (1.25, 0, 1)
     shape = (2, 1, 3)
 
-    center = (1, 0, -2)
+    mid_pt = (1, 0, -2)
 
     grid = RegularGrid(minpt, maxpt, shape)
-    assert all_equal(grid.center, center)
+    assert all_equal(grid.mid_pt, mid_pt)
 
 
 def test_regulargrid_stride():
