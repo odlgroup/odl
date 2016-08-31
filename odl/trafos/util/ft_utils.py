@@ -36,12 +36,12 @@ from odl.util import (
     normalized_scalar_param_list)
 
 
-__all__ = ('reciprocal', 'inverse_reciprocal',
+__all__ = ('reciprocal_grid', 'realspace_grid',
            'reciprocal_space',
            'dft_preprocess_data', 'dft_postprocess_data')
 
 
-def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
+def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
     """Return the reciprocal of the given regular grid.
 
     This function calculates the reciprocal (Fourier/frequency space)
@@ -103,7 +103,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     Returns
     -------
     recip : `RegularGrid`
-        The reciprocal grid
+        The reciprocal grid.
     """
     if axes is None:
         axes = list(range(grid.ndim))
@@ -165,9 +165,9 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     return RegularGrid(rmin, rmax, rshape)
 
 
-def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
-                       halfcx_parity='even'):
-    """Return the inverse reciprocal of the given regular grid.
+def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
+                   halfcx_parity='even'):
+    """Return the real space grid from the given reciprocal grid.
 
     Given a reciprocal grid::
 
@@ -199,14 +199,14 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
 
     Parameters
     ----------
-    grid : `RegularGrid`
-        Original sampling grid
+    recip_grid : `RegularGrid`
+        Sampling grid in reciprocal space.
     x0 : `array-like`
-        Minimal point of the inverse reciprocal grid
+        Desired minimum point of the real space grid.
     axes : int or `sequence` of ints, optional
-        Dimensions in which to calculate the reciprocal. The sequence
+        Dimensions in which to calculate the real space grid. The sequence
         must have the same length as ``shift`` if the latter is given
-        as a sequence. ``None`` means all axes in ``grid``.
+        as a sequence. ``None`` means "all axes".
     halfcomplex : bool, optional
         If ``True``, interpret the given grid as the reciprocal as used
         in a half-complex FFT (see above). Otherwise, the grid is
@@ -221,15 +221,15 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
         The inverse reciprocal grid
     """
     if axes is None:
-        axes = list(range(grid.ndim))
+        axes = list(range(recip_grid.ndim))
     else:
         try:
             axes = [int(axes)]
         except TypeError:
             axes = list(axes)
 
-    rstride = grid.stride
-    rshape = grid.shape
+    rstride = recip_grid.stride
+    rshape = recip_grid.shape
 
     # Calculate shape of the output grid by adjusting in axes[-1]
     irshape = list(rshape)
@@ -632,8 +632,8 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
                              ''.format(dtype_repr(dtype)))
 
     # Calculate range
-    recip_grid = reciprocal(space.grid, shift=shift, halfcomplex=halfcomplex,
-                            axes=axes)
+    recip_grid = reciprocal_grid(space.grid, shift=shift,
+                                 halfcomplex=halfcomplex, axes=axes)
 
     # Make a partition with nodes on the boundary in the last transform axis
     # if `halfcomplex == True`, otherwise a standard partition.

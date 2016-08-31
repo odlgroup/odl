@@ -30,7 +30,7 @@ import pytest
 import odl
 from odl.trafos.backends import pyfftw_call
 from odl.trafos.util.ft_utils import (
-    reciprocal, inverse_reciprocal, dft_preprocess_data, dft_postprocess_data,
+    reciprocal_grid, realspace_grid, dft_preprocess_data, dft_postprocess_data,
     _interp_kernel_ft)
 from odl.trafos.fourier import (
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
@@ -97,10 +97,10 @@ def direction(request):
     return request.param
 
 
-# ---- reciprocal ---- #
+# ---- reciprocal_grid ---- #
 
 
-def test_reciprocal_1d_odd():
+def test_reciprocal_grid_1d_odd():
 
     grid = odl.uniform_sampling(0, 1, shape=11)
     s = grid.stride
@@ -109,7 +109,7 @@ def test_reciprocal_1d_odd():
     true_recip_stride = 2 * pi / (s * n)
 
     # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=False)
+    rgrid = reciprocal_grid(grid, shift=False, halfcomplex=False)
 
     # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, n)
@@ -121,7 +121,7 @@ def test_reciprocal_1d_odd():
     assert all_almost_equal(rgrid[n // 2], 0)
 
     # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=False)
+    rgrid = reciprocal_grid(grid, shift=True, halfcomplex=False)
 
     # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, n)
@@ -130,8 +130,8 @@ def test_reciprocal_1d_odd():
     atol = 0.999 * true_recip_stride / 2
     assert not rgrid.approx_contains(0, atol=atol)
 
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
+    # Inverting should give back the original
+    irgrid = realspace_grid(rgrid, grid.min_pt, halfcomplex=False)
     assert irgrid.approx_equals(grid, atol=1e-6)
 
 
@@ -144,7 +144,7 @@ def test_reciprocal_1d_odd_halfcomplex():
     true_recip_stride = 2 * pi / (s * n)
 
     # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=True)
+    rgrid = reciprocal_grid(grid, shift=False, halfcomplex=True)
 
     # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, (n + 1) / 2)
@@ -153,7 +153,7 @@ def test_reciprocal_1d_odd_halfcomplex():
     assert all_almost_equal(rgrid.max_pt, 0)
 
     # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=True)
+    rgrid = reciprocal_grid(grid, shift=True, halfcomplex=True)
 
     # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, (n + 1) / 2)
@@ -161,13 +161,13 @@ def test_reciprocal_1d_odd_halfcomplex():
     # Max point should be half a positive recip stride
     assert all_almost_equal(rgrid.max_pt, -true_recip_stride / 2)
 
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
-                                halfcx_parity='odd')
+    # Inverting should give back the original
+    irgrid = realspace_grid(rgrid, grid.min_pt, halfcomplex=True,
+                            halfcx_parity='odd')
     assert irgrid.approx_equals(grid, atol=1e-6)
 
 
-def test_reciprocal_1d_even():
+def test_reciprocal_grid_1d_even():
 
     grid = odl.uniform_sampling(0, 1, shape=10)
     s = grid.stride
@@ -176,7 +176,7 @@ def test_reciprocal_1d_even():
     true_recip_stride = 2 * pi / (s * n)
 
     # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=False)
+    rgrid = reciprocal_grid(grid, shift=False, halfcomplex=False)
 
     # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, n)
@@ -189,7 +189,7 @@ def test_reciprocal_1d_even():
     assert not rgrid.approx_contains(0, atol=atol)
 
     # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=False)
+    rgrid = reciprocal_grid(grid, shift=True, halfcomplex=False)
 
     # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, n)
@@ -197,12 +197,12 @@ def test_reciprocal_1d_even():
     # Zero should be at index n // 2
     assert all_almost_equal(rgrid[n // 2], 0)
 
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
+    # Inverting should give back the original
+    irgrid = realspace_grid(rgrid, grid.min_pt, halfcomplex=False)
     assert irgrid.approx_equals(grid, atol=1e-6)
 
 
-def test_reciprocal_1d_even_halfcomplex():
+def test_reciprocal_grid_1d_even_halfcomplex():
 
     grid = odl.uniform_sampling(0, 1, shape=10)
     s = grid.stride
@@ -211,7 +211,7 @@ def test_reciprocal_1d_even_halfcomplex():
     true_recip_stride = 2 * pi / (s * n)
 
     # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=True)
+    rgrid = reciprocal_grid(grid, shift=False, halfcomplex=True)
 
     # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, n / 2 + 1)
@@ -220,7 +220,7 @@ def test_reciprocal_1d_even_halfcomplex():
     assert all_almost_equal(rgrid.max_pt, true_recip_stride / 2)
 
     # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=True)
+    rgrid = reciprocal_grid(grid, shift=True, halfcomplex=True)
 
     # Independent of shift and halfcomplex, check anyway
     assert all_equal(rgrid.shape, n / 2 + 1)
@@ -228,13 +228,13 @@ def test_reciprocal_1d_even_halfcomplex():
     # Max should be zero
     assert all_almost_equal(rgrid.max_pt, 0)
 
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
-                                halfcx_parity='even')
+    # Inverting should give back the original
+    irgrid = realspace_grid(rgrid, grid.min_pt, halfcomplex=True,
+                            halfcx_parity='even')
     assert irgrid.approx_equals(grid, atol=1e-6)
 
 
-def test_reciprocal_nd():
+def test_reciprocal_grid_nd():
 
     grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
@@ -243,18 +243,18 @@ def test_reciprocal_nd():
     true_recip_stride = 2 * pi / (s * n)
 
     # Without shift altogether
-    rgrid = reciprocal(grid, shift=False, halfcomplex=False)
+    rgrid = reciprocal_grid(grid, shift=False, halfcomplex=False)
 
     assert all_equal(rgrid.shape, n)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
     assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
 
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
+    # Inverting should give back the original
+    irgrid = realspace_grid(rgrid, grid.min_pt, halfcomplex=False)
     assert irgrid.approx_equals(grid, atol=1e-6)
 
 
-def test_reciprocal_nd_shift_list():
+def test_reciprocal_grid_nd_shift_list():
 
     grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
@@ -264,7 +264,7 @@ def test_reciprocal_nd_shift_list():
     true_recip_stride = 2 * pi / (s * n)
 
     # Shift only the even dimension, then zero must be contained
-    rgrid = reciprocal(grid, shift=shift, halfcomplex=False)
+    rgrid = reciprocal_grid(grid, shift=shift, halfcomplex=False)
     noshift = np.where(np.logical_not(shift))
 
     assert all_equal(rgrid.shape, n)
@@ -272,12 +272,12 @@ def test_reciprocal_nd_shift_list():
     assert all_almost_equal(rgrid.min_pt[noshift], -rgrid.max_pt[noshift])
     assert all_almost_equal(rgrid[n // 2], [0] * 3)
 
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
+    # Inverting should give back the original
+    irgrid = realspace_grid(rgrid, grid.min_pt, halfcomplex=False)
     assert irgrid.approx_equals(grid, atol=1e-6)
 
 
-def test_reciprocal_nd_axes():
+def test_reciprocal_grid_nd_axes():
 
     grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
@@ -294,7 +294,8 @@ def test_reciprocal_nd_axes():
         true_recip_stride[inactive] = s[inactive]
 
         # Without shift altogether
-        rgrid = reciprocal(grid, shift=False, axes=axes, halfcomplex=False)
+        rgrid = reciprocal_grid(grid, shift=False, axes=axes,
+                                halfcomplex=False)
 
         assert all_equal(rgrid.shape, n)
         assert all_almost_equal(rgrid.stride, true_recip_stride)
@@ -302,13 +303,13 @@ def test_reciprocal_nd_axes():
         assert all_equal(rgrid.min_pt[inactive], grid.min_pt[inactive])
         assert all_equal(rgrid.max_pt[inactive], grid.max_pt[inactive])
 
-        # Inverting the reciprocal should give back the original
-        irgrid = inverse_reciprocal(rgrid, grid.min_pt, axes=axes,
-                                    halfcomplex=False)
+        # Inverting should give back the original
+        irgrid = realspace_grid(rgrid, grid.min_pt, axes=axes,
+                                halfcomplex=False)
         assert irgrid.approx_equals(grid, atol=1e-6)
 
 
-def test_reciprocal_nd_halfcomplex():
+def test_reciprocal_grid_nd_halfcomplex():
 
     grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
@@ -317,23 +318,23 @@ def test_reciprocal_nd_halfcomplex():
     n[-1] = n[-1] // 2 + 1
 
     # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=True)
+    rgrid = reciprocal_grid(grid, shift=False, halfcomplex=True)
     assert all_equal(rgrid.shape, n)
     assert rgrid.max_pt[-1] == 0  # last dim is odd
 
     # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=True)
+    rgrid = reciprocal_grid(grid, shift=True, halfcomplex=True)
     assert all_equal(rgrid.shape, n)
     assert rgrid.max_pt[-1] == -stride_last / 2
 
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
-                                halfcx_parity='odd')
+    # Inverting should give back the original
+    irgrid = realspace_grid(rgrid, grid.min_pt, halfcomplex=True,
+                            halfcx_parity='odd')
     assert irgrid.approx_equals(grid, atol=1e-6)
 
     with pytest.raises(ValueError):
-        inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
-                           halfcx_parity='+')
+        realspace_grid(rgrid, grid.min_pt, halfcomplex=True,
+                       halfcx_parity='+')
 
 # ---- dft_preprocess_data ---- #
 
@@ -1095,9 +1096,9 @@ def test_fourier_trafo_range(exponent, dtype):
     dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
     halfcomplex = True if is_real_dtype(dtype) else False
-    assert dft.range.grid == reciprocal(dft.domain.grid,
-                                        halfcomplex=halfcomplex,
-                                        shift=True)
+    assert dft.range.grid == reciprocal_grid(dft.domain.grid,
+                                             halfcomplex=halfcomplex,
+                                             shift=True)
     assert dft.range.exponent == conj_exponent(exponent)
 
     # 3D
@@ -1108,9 +1109,9 @@ def test_fourier_trafo_range(exponent, dtype):
     dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
     halfcomplex = True if is_real_dtype(dtype) else False
-    assert dft.range.grid == reciprocal(dft.domain.grid,
-                                        halfcomplex=halfcomplex,
-                                        shift=True)
+    assert dft.range.grid == reciprocal_grid(dft.domain.grid,
+                                             halfcomplex=halfcomplex,
+                                             shift=True)
     assert dft.range.exponent == conj_exponent(exponent)
 
     # shift must be True in the last axis
@@ -1491,8 +1492,8 @@ def test_fourier_trafo_completely():
     # "s" = shifted, "n" = not shifted
 
     # Reciprocal grids
-    recip_s = reciprocal(discr.grid, shift=True)
-    recip_n = reciprocal(discr.grid, shift=False)
+    recip_s = reciprocal_grid(discr.grid, shift=True)
+    recip_n = reciprocal_grid(discr.grid, shift=False)
     assert np.allclose(recip_s.coord_vectors[0],
                        np.linspace(-np.pi, np.pi / 2, 4))
     assert np.allclose(recip_n.coord_vectors[0],

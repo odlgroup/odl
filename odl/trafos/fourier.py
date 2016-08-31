@@ -32,7 +32,8 @@ from odl.set import RealNumbers, ComplexNumbers
 from odl.trafos.backends.pyfftw_bindings import (
     pyfftw_call, PYFFTW_AVAILABLE, _pyfftw_to_local)
 from odl.trafos.util import (
-    reciprocal, reciprocal_space, dft_preprocess_data, dft_postprocess_data)
+    reciprocal_grid, reciprocal_space,
+    dft_preprocess_data, dft_postprocess_data)
 from odl.util import (is_real_dtype, is_complex_floating_dtype,
                       dtype_repr, conj_exponent, TYPE_MAP_R2C,
                       normalized_scalar_param_list)
@@ -128,7 +129,7 @@ class DiscreteFourierTransformBase(Operator):
         self._sign = sign
 
         # Calculate the range
-        ran_shape = reciprocal(
+        ran_shape = reciprocal_grid(
             domain.grid, shift=False, halfcomplex=halfcomplex, axes=axes).shape
 
         if range is None:
