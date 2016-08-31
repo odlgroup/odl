@@ -30,14 +30,14 @@ from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
     pywt_wbasis, pywt_max_level, pywt_wavelet_decomp,
     pywt_wavelet_recon, pywt_coeff_shape_list, PYWT_SUPPORTED_PAD_MODES,
-    PYWAVELETS_AVAILABLE)
+    PYWT_AVAILABLE)
 
 __all__ = ('WaveletTransform', 'WaveletTransformInverse')
 
 
-_SUPPORTED_WAVELET_IMPL = ()
-if PYWAVELETS_AVAILABLE:
-    _SUPPORTED_WAVELET_IMPL += ('pywt',)
+_SUPPORTED_WAVELET_IMPLS = ()
+if PYWT_AVAILABLE:
+    _SUPPORTED_WAVELET_IMPLS += ('pywt',)
 
 
 class WaveletTransformBase(Operator):
@@ -145,7 +145,7 @@ class WaveletTransformBase(Operator):
         self.nscales = nscales
 
         impl, impl_in = str(impl).lower(), impl
-        if impl not in _SUPPORTED_WAVELET_IMPL:
+        if impl not in _SUPPORTED_WAVELET_IMPLS:
             raise ValueError("`impl` '{}' not supported".format(impl_in))
         self.impl = impl
 

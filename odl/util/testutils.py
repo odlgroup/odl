@@ -217,7 +217,7 @@ try:
     )
 
     skip_if_no_pywavelets = pytest.mark.skipif(
-        "not odl.trafos.PYWAVELETS_AVAILABLE",
+        "not odl.trafos.PYWT_AVAILABLE",
         reason='PyWavelets not available'
     )
 
