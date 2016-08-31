@@ -26,15 +26,15 @@ import numpy as np
 
 try:
     import pywt
-    PYWAVELETS_AVAILABLE = True
+    PYWT_AVAILABLE = True
 except ImportError:
-    PYWAVELETS_AVAILABLE = False
+    PYWT_AVAILABLE = False
 
 
 __all__ = ('pywt_wbasis', 'pywt_coeff_shape_list',
            'pywt_coeff_to_array', 'array_to_pywt_coeff',
            'PAD_MODES_ODL2PYWT', 'PAD_MODES_ODL2PYWT',
-           'PYWT_SUPPORTED_PAD_MODES', 'PYWAVELETS_AVAILABLE')
+           'PYWT_SUPPORTED_PAD_MODES', 'PYWT_AVAILABLE')
 
 
 PAD_MODES_ODL2PYWT = {'constant': 'zpd',

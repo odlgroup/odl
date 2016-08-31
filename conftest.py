@@ -24,11 +24,11 @@ standard_library.install_aliases()
 import pytest
 import operator
 import odl
-from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
+from odl.trafos.wavelet import PYWT_AVAILABLE
 
 collect_ignore = ['setup.py', 'run_tests.py']
 
-if not PYWAVELETS_AVAILABLE:
+if not PYWT_AVAILABLE:
     collect_ignore.append('odl/trafos/wavelet.py')
 
 
