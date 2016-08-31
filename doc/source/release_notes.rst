@@ -16,6 +16,7 @@ New features
   intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists.
   (:pull:`524`)
 - Allow ASTRA backend to be used with arbitrary dtypes. (:pull:`524`)
+- Add ``reset`` to ``SolverCallback`` that resets the callback to its initial state. (:issue:`552`)
 
 Improvements
 ------------
@@ -33,7 +34,7 @@ Changes
 - Removed ``simple_operator`` since it was never used and did not follow the ODL style. (:pull:`543`)
   The parameter ``padding_value`` is now called ``pad_const``.
 - Removed ``Interval``, ``Rectangle`` and ``Cuboid`` since they were confusing (Capitalized name but not a Cunction) and
-  barely ever used. Users should instead use ``IntervalProd`` in all cases. (:pull:537)
+  barely ever used. Users should instead use ``IntervalProd`` in all cases. (:pull:`537`)
 
 Bugfixes
 --------

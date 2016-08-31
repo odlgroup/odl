@@ -55,7 +55,7 @@ class SolverCallback(object):
         Parameters
         ----------
         other : `callable`
-            The other callback to compose with
+            The other callback to compose with.
 
         Returns
         -------
@@ -72,6 +72,13 @@ class SolverCallback(object):
         CallbackStore() & CallbackPrintIteration()
         """
         return _CallbackAnd(self, other)
+
+    def reset(self):
+        """Reset the callback to its initial state.
+
+        Should be overwritten by subclasses.
+        """
+        pass
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -99,6 +106,11 @@ class _CallbackAnd(SolverCallback):
         """Apply all callbacks to result."""
         for p in self.callbacks:
             p(result)
+
+    def reset(self):
+        """Reset all callbacks to their initial state."""
+        for callback in self.callbacks:
+            callback.reset()
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -157,6 +169,10 @@ class CallbackStore(SolverCallback):
             self._results.append(self._function(result))
         else:
             self._results.append(result.copy())
+
+    def reset(self):
+        """Clear the `results` list."""
+        self._results = []
 
     def __iter__(self):
         """Allow iteration over the results."""
@@ -234,6 +250,10 @@ class CallbackPrintIteration(SolverCallback):
         print("{} {}".format(self.text, self.iter))
         self.iter += 1
 
+    def reset(self):
+        """Sets `iter` to 0."""
+        self.iter = 0
+
     def __repr__(self):
         """Return ``repr(self)``."""
         textstr = '' if self.text == self._default_text else self.text
@@ -254,6 +274,10 @@ class CallbackPrintTiming(SolverCallback):
         print("Time elapsed = {:<5.03f} s".format(t - self.time))
         self.time = t
 
+    def reset(self):
+        """Sets `time` to the current time."""
+        self.time = time.time()
+
     def __repr__(self):
         """Return ``repr(self)``."""
         return 'CallbackPrintTiming()'
@@ -263,14 +287,9 @@ class CallbackPrintNorm(SolverCallback):
 
     """Print the current norm."""
 
-    def __init__(self):
-        """Initialize a new instance."""
-        self.iter = 0
-
     def __call__(self, result):
         """Print the current norm."""
         print("norm = {}".format(result.norm()))
-        self.iter += 1
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -315,6 +334,11 @@ class CallbackShow(SolverCallback):
             self.fig = x.show(*self.args, fig=self.fig, **self.kwargs)
 
         self.iter += 1
+
+    def reset(self):
+        """Sets `iter` to 0 and creates a new figure."""
+        self.iter = 0
+        self.fig = None
 
     def __repr__(self):
         """Return ``repr(self)``."""
