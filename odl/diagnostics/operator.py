@@ -96,7 +96,7 @@ class OperatorTest(object):
         """
         self.log('\n== Calculating operator norm ==\n')
 
-        operator_norm = max(power_method_opnorm(self.operator, niter=2,
+        operator_norm = max(power_method_opnorm(self.operator, maxiter=2,
                                                 xstart=x)
                             for name, x in samples(self.operator.domain)
                             if name != 'Zero')
