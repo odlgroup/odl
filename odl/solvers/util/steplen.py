@@ -192,7 +192,7 @@ class BacktrackingLineSearch(LineSearch):
             # direction
             alpha *= -1
 
-        if np.isnan(fx) or np.isinf(fx):
+        if not np.isfinite(fx):
             raise ValueError('function returned invalid value {} in starting '
                              'point ({})'.format(fx, x))
 

@@ -24,10 +24,10 @@ standard_library.install_aliases()
 
 from odl.operator import IdentityOperator, OperatorComp, OperatorSum
 from odl.util import normalized_scalar_param_list
-
+from odl.solvers.scalar import BacktrackingLineSearch
 
 __all__ = ('landweber', 'conjugate_gradient', 'conjugate_gradient_normal',
-           'gauss_newton', 'kaczmarz')
+           'conjugate_gradient_nonlinear', 'gauss_newton', 'kaczmarz')
 
 
 # TODO: update all docs
@@ -216,8 +216,6 @@ def conjugate_gradient_normal(op, x, rhs, niter=1, callback=None):
 
         A(x) = y
 
-    with a linear `Operator` ``A``.
-
     It uses a minimum amount of memory copies by applying re-usable
     temporaries and in-place evaluation.
 
@@ -247,6 +245,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
     See Also
     --------
     conjugate_gradient : Optimized solver for symmetric matrices
+    conjugate_gradient_normal : Equivalent solver but for nonlinear case
     """
     # TODO: add a book reference
     # TODO: update doc
@@ -281,6 +280,119 @@ Conjugate_gradient_on_the_normal_equations>`_.
 
         if callback is not None:
             callback(x)
+
+
+def conjugate_gradient_nonlinear(op, x, rhs, niter=1, niter_reset=None,
+                                 line_search=None, beta_method='FR',
+                                 callback=None):
+    """Optimized implementation of CG for the normal equations.
+
+    This method solves the inverse problem (of the first kind)
+
+    ``A(x) == rhs``
+
+    with a linear `Operator` ``A`` by looking at the normal equations
+
+    ``A.adjoint(A(x)) == A.adjoint(rhs)``
+
+    It uses a minimum amount of memory copies by applying re-usable
+    temporaries and in-place evaluation.
+
+    The method is described in a
+    `Wikipedia article
+    <https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method>`_.
+
+    Parameters
+    ----------
+    op : `Operator`
+        Operator in the inverse problem. If not linear, it must have
+        an implementation of `Operator.derivative`, which
+        in turn must implement `Operator.adjoint`, i.e.
+        the call ``op.derivative(x).adjoint`` must be valid.
+    x : ``op.domain`` element
+        Vector to which the result is written. Its initial value is
+        used as starting point of the iteration, and its values are
+        updated in each iteration step.
+    rhs : ``op.range`` element
+        Right-hand side of the equation defining the inverse problem
+    niter : int
+        Maximum number of iterations in total.
+    niter_reset : int, optional
+        Maximum number of iterations before reset. Default: no reset.
+    line_search : `LineSearch`, optional.
+        Line searching method to use. Default: `BacktrackingLineSearch`.
+    beta_method : {'FR', 'PR', 'HS', 'DY'}
+        Method to calculate ``beta`` in the iterates. TODO
+    callback : `callable`, optional
+        Object executing code per iteration, e.g. plotting each iterate
+
+    Returns
+    -------
+    None
+
+    See Also
+    --------
+    conjugate_gradient : Optimized solver for linear and symmetric case
+    conjugate_gradient_normal : Equivalent solver but for linear case
+    """
+    # TODO: add a book reference
+    # TODO: update doc
+
+    if x not in op.domain:
+        raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
+                        ''.format(x, op.domain))
+
+    if line_search is None:
+        def f(x):
+            return (op(x) - rhs).norm() ** 2
+        line_search = BacktrackingLineSearch(f, c=0.05)
+
+    def gradf(x):
+        return 2.0 * op.derivative(x).adjoint(op(x) - rhs)
+
+    if niter_reset is not None:
+        niter, niter_left = min(niter, niter_reset), niter - niter_reset
+    else:
+        niter_left = 0
+
+    dx = -gradf(x)
+    dir_derivative = -dx.inner(dx)
+    a = line_search(x, dx, dir_derivative)
+    x += a * dx
+
+    dx_old = dx
+    s = dx  # for 'HS' and 'DY' beta methods
+
+    for _ in range(niter):
+        dx, dx_old = -gradf(x), dx
+
+        if beta_method == 'FR':
+            beta = dx.inner(dx) / dx_old.inner(dx_old)
+        elif beta_method == 'PR':
+            beta = dx.inner(dx - dx_old) / dx_old.inner(dx_old)
+        elif beta_method == 'HS':
+            beta = dx.inner(dx - dx_old) / s.inner(dx - dx_old)
+        elif beta_method == 'DY':
+            beta = dx.inner(dx) / s.inner(dx - dx_old)
+        else:
+            raise ValueError('unknown ``beta_method``')
+
+        s = dx + beta * s
+        dir_derivative = -dx.inner(s)
+        a = line_search(x, s, dir_derivative)
+
+        x += a * s
+
+        if callback is not None:
+            callback(x)
+
+    if niter_left > 0:
+        # Recursive call in case we need more iters.
+        conjugate_gradient_nonlinear(op, x, rhs, niter=niter_left,
+                                     niter_reset=niter_reset,
+                                     line_search=line_search,
+                                     beta_method=beta_method,
+                                     callback=callback)
 
 
 def exp_zero_seq(base):
