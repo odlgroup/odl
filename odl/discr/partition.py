@@ -33,7 +33,9 @@ import numpy as np
 
 from odl.discr.grid import TensorGrid, RegularGrid, uniform_sampling_fromintv
 from odl.set import IntervalProd
-from odl.util.normalize import normalized_index_expression
+from odl.util.normalize import (
+    normalized_index_expression, normalized_nodes_on_bdry,
+    normalized_scalar_param_list, safe_int_conv)
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -970,21 +972,37 @@ def nonuniform_partition(*coord_vecs, **kwargs):
     >>> nonuniform_partition([0, 1, 2, 3], [1, 2])
     uniform_partition([-0.5, 0.5], [3.5, 2.5], [4, 2])
 
-    Can also perform nonuniform partitions. Note that the containing interval
-    is calculated by assuming that the points are in the middle of the sub
-    intervals:
+    If the points are not uniformly spaced a nonuniform partition is created.
+    Note that the containing interval is calculated by assuming that the points
+    are in the middle of the sub-intervals:
 
     >>> nonuniform_partition([0, 1, 3])
     RectPartition(
         IntervalProd(-0.5, 4.0),
         TensorGrid([0.0, 1.0, 3.0]))
 
-    If the endpoints should be on the outside, the ``nodes_on_bdry`` parameter
+    Higher dimensional partitions are created by specifying the gridpoints
+    along each dimension:
+
+    >>> nonuniform_partition([0, 1, 3], [1, 2])
+    RectPartition(
+        IntervalProd([-0.5, 0.5], [4.0, 2.5]),
+        TensorGrid([0.0, 1.0, 3.0], [1.0, 2.0]))
+
+    If the endpoints should be on the boundary, the ``nodes_on_bdry`` parameter
     can be used:
 
     >>> nonuniform_partition([0, 1, 3], nodes_on_bdry=True)
     RectPartition(
         IntervalProd(0.0, 3.0),
+        TensorGrid([0.0, 1.0, 3.0]))
+
+    Users can also manually specify the containing intervals dimensions by
+    using the ``min_pt`` and ``max_pt`` arguments:
+
+    >>> nonuniform_partition([0, 1, 3], min_pt=-2, max_pt=3)
+    RectPartition(
+        IntervalProd(-2.0, 3.0),
         TensorGrid([0.0, 1.0, 3.0]))
     """
     # Get parameters from kwargs
@@ -996,50 +1014,24 @@ def nonuniform_partition(*coord_vecs, **kwargs):
     sizes = [len(coord_vecs)] + [np.size(p) for p in (min_pt, max_pt)]
     ndim = int(np.max(sizes))
 
-    if ndim == 1:
-        min_pt = [min_pt]
-        max_pt = [max_pt]
-    else:
-        if min_pt is None:
-            min_pt = [None] * ndim
-        if max_pt is None:
-            max_pt = [None] * ndim
-
-        min_pt = list(min_pt)
-        max_pt = list(max_pt)
-        sizes = [len(p) for p in (min_pt, max_pt)]
-
-        if not all(s == ndim for s in sizes):
-            raise ValueError('inconsistent sizes {}, {} of '
-                             'arguments `min_pt`, `max_pt`'
-                             ''.format(*sizes))
-
-    # Normalize nodes_on_bdry
-    if np.shape(nodes_on_bdry) == ():
-        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] * ndim)
-    elif ndim == 1 and len(nodes_on_bdry) == 2:
-        nodes_on_bdry = [nodes_on_bdry]
-    elif len(nodes_on_bdry) != ndim:
-        raise ValueError('`nodes_on_bdry` has length {}, expected {}.'
-                         ''.format(len(nodes_on_bdry), ndim))
+    min_pt = normalized_scalar_param_list(min_pt, ndim, param_conv=float,
+                                          keep_none=True)
+    max_pt = normalized_scalar_param_list(max_pt, ndim, param_conv=float,
+                                          keep_none=True)
+    nodes_on_bdry = normalized_nodes_on_bdry(nodes_on_bdry, ndim)
 
     # Calculate the missing parameters in min_pt, max_pt
-    for i, (xmin, xmax, on_bdry, coords) in enumerate(
+    for i, (xmin, xmax, (bdry_l, bdry_r), coords) in enumerate(
             zip(min_pt, max_pt, nodes_on_bdry, coord_vecs)):
-        # Unpack the tuple if possible, else use bool globally for this axis
-        num_params = sum(p is not None for p in (xmin, xmax, on_bdry))
-        if num_params == 3:
-            raise ValueError('in axis {}: expected at most 2 of the '
-                             'parameters `min_pt`, `max_pt`, `nodes_on_bdry`, '
-                             'got {}'.format(i, num_params))
+        # Check input for redundancy
+        if xmin is not None and bdry_l:
+            raise ValueError('in axis {}: got both `min_pt` and '
+                             '`nodes_on_bdry=True`'.format(i))
+        if xmax is not None and bdry_r:
+            raise ValueError('in axis {}: got both `max_pt` and '
+                             '`nodes_on_bdry=True`'.format(i))
 
-        try:
-            bdry_l, bdry_r = on_bdry
-        except TypeError:
-            bdry_l = bdry_r = on_bdry
-
-        # For each node on the boundary, we subtract 1/2 from the number of
-        # full cells between min_pt and max_pt.
+        # Compute boundary position if not given by user
         if xmin is None:
             if bdry_l:
                 min_pt[i] = coords[0]
