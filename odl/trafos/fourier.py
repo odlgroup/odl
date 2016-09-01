@@ -25,7 +25,6 @@ from builtins import range, super
 range_seq = range  # avoid duplicate names
 from future.utils import raise_from
 
-from math import pi
 from multiprocessing import cpu_count
 import numpy as np
 try:
@@ -136,17 +135,17 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
     # Shifted axes (full length to avoid ugly double indexing)
     shifted = np.zeros(grid.ndim, dtype=bool)
     shifted[axes] = shift_list
-    rmin[shifted] = -pi / stride[shifted]
+    rmin[shifted] = -np.pi / stride[shifted]
     # Length min->max increases by double the shift, so we
     # have to compensate by a full stride
     rmax[shifted] = (-rmin[shifted] -
-                     2 * pi / (stride[shifted] * shape[shifted]))
+                     2 * np.pi / (stride[shifted] * shape[shifted]))
 
     # Non-shifted axes
     not_shifted = np.zeros(grid.ndim, dtype=bool)
     not_shifted[axes] = np.logical_not(shift_list)
     rmin[not_shifted] = ((-1.0 + 1.0 / shape[not_shifted]) *
-                         pi / stride[not_shifted])
+                         np.pi / stride[not_shifted])
     rmax[not_shifted] = -rmin[not_shifted]
 
     # Change last axis shape and max if halfcomplex
@@ -158,7 +157,7 @@ def reciprocal(grid, shift=True, axes=None, halfcomplex=False):
         # - Even and not shifted -> + stride / 2
         last_odd = shape[axes[-1]] % 2 == 1
         last_shifted = shift_list[-1]
-        half_rstride = pi / (shape[axes[-1]] * stride[axes[-1]])
+        half_rstride = np.pi / (shape[axes[-1]] * stride[axes[-1]])
 
         if last_odd:
             if last_shifted:
@@ -254,7 +253,7 @@ def inverse_reciprocal(grid, x0, axes=None, halfcomplex=False,
     irmin = np.asarray(x0)
     irshape = np.asarray(irshape)
     irstride = np.copy(rstride)
-    irstride[axes] = 2 * pi / (irshape[axes] * rstride[axes])
+    irstride[axes] = 2 * np.pi / (irshape[axes] * rstride[axes])
     irmax = irmin + (irshape - 1) * irstride
 
     return RegularGrid(irmin, irmax, irshape)
@@ -1277,7 +1276,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
             arr = -2 * np.mod(indices, 2) + 1.0
         else:
             indices = np.arange(length)
-            arr = np.exp(-imag * pi * indices * (1 - 1.0 / length))
+            arr = np.exp(-imag * np.pi * indices * (1 - 1.0 / length))
         return arr.astype(out.dtype, copy=False)
 
     onedim_arrs = []

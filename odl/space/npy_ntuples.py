@@ -26,7 +26,6 @@ from builtins import super
 
 import ctypes
 from functools import partial
-from math import sqrt
 from numbers import Integral
 import numpy as np
 import scipy.linalg as linalg
@@ -1685,7 +1684,7 @@ class NumpyFnMatrixWeighting(MatrixWeightingBase):
         """
         if self.exponent == 2.0:
             norm_squared = self.inner(x, x).real  # TODO: optimize?
-            return sqrt(norm_squared)
+            return np.sqrt(norm_squared)
 
         if self._mat_pow is None:
             # This case can only be reached if p != 1,2,inf
@@ -1816,7 +1815,7 @@ class NumpyFnVectorWeighting(VectorWeightingBase):
             norm_squared = self.inner(x, x).real  # TODO: optimize?!
             if norm_squared < 0:
                 norm_squared = 0.0  # Compensate for numerical error
-            return sqrt(norm_squared)
+            return np.sqrt(norm_squared)
         else:
             return float(_pnorm_diagweight(x, self.exponent, self.vector))
 
@@ -1911,7 +1910,7 @@ class NumpyFnConstWeighting(ConstWeightingBase):
             The norm of the vector
         """
         if self.exponent == 2.0:
-            return sqrt(self.const) * float(_norm_default(x))
+            return np.sqrt(self.const) * float(_norm_default(x))
         elif self.exponent == float('inf'):
             return self.const * float(_pnorm_default(x, self.exponent))
         else:
@@ -1936,9 +1935,9 @@ class NumpyFnConstWeighting(ConstWeightingBase):
                             2 * _inner_default(x1, x2).real)
             if dist_squared < 0.0:  # Compensate for numerical error
                 dist_squared = 0.0
-            return sqrt(self.const) * float(sqrt(dist_squared))
+            return np.sqrt(self.const) * float(np.sqrt(dist_squared))
         elif self.exponent == 2.0:
-            return sqrt(self.const) * _norm_default(x1 - x2)
+            return np.sqrt(self.const) * _norm_default(x1 - x2)
         elif self.exponent == float('inf'):
             return self.const * float(_pnorm_default(x1 - x2, self.exponent))
         else:

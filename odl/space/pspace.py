@@ -23,7 +23,6 @@ from builtins import range, str, super, zip
 from future import standard_library
 standard_library.install_aliases()
 
-from math import sqrt
 from numbers import Integral
 from itertools import product
 import numpy as np
@@ -923,7 +922,7 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
         """
         if self.exponent == 2.0:
             norm_squared = self.inner(x, x).real  # TODO: optimize?!
-            return sqrt(norm_squared)
+            return np.sqrt(norm_squared)
         else:
             norms = np.fromiter(
                 (xp.norm() for xp in x.parts), dtype=np.float64, count=len(x))
@@ -1031,7 +1030,7 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
         """
         if self.exponent == 2.0:
             norm_squared = self.inner(x, x).real  # TODO: optimize?!
-            return sqrt(norm_squared)
+            return np.sqrt(norm_squared)
         else:
             norms = np.fromiter(
                 (xp.norm() for xp in x.parts), dtype=np.float64, count=len(x))
@@ -1075,7 +1074,7 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
             dist_squared = norm1 ** 2 + norm2 ** 2 - 2 * inner_re
             if dist_squared < 0.0:  # Compensate for numerical error
                 dist_squared = 0.0
-            return sqrt(self.const) * float(sqrt(dist_squared))
+            return np.sqrt(self.const) * float(np.sqrt(dist_squared))
         else:
             dnorms = np.fromiter(
                 ((x1p - x2p).norm() for x1p, x2p in zip(x1.parts, x2.parts)),
