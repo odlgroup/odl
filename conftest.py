@@ -22,6 +22,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 import pytest
+import operator
 import odl
 from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
 
@@ -75,4 +76,23 @@ reduction_ids = [' reduction={} '.format(p[0]) for p in reduction_params]
 
 @pytest.fixture(scope="module", ids=reduction_ids, params=reduction_params)
 def reduction(request):
+    return request.param
+
+arithmetic_op_par = [operator.add,
+                     operator.div,
+                     operator.truediv,
+                     operator.mul,
+                     operator.sub,
+                     operator.iadd,
+                     operator.idiv,
+                     operator.itruediv,
+                     operator.imul,
+                     operator.isub]
+arithmetic_op_ids = [' + ', ' // ', ' / ', ' * ', ' - ',
+                     ' += ', ' //= ', ' /= ', ' *= ', ' -= ']
+
+
+@pytest.fixture(ids=arithmetic_op_ids, params=arithmetic_op_par)
+def arithmetic_op(request):
+    """An arithmetic operator, e.g. +, -, // etc."""
     return request.param
