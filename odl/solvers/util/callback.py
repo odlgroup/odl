@@ -76,7 +76,7 @@ class SolverCallback(object):
     def reset(self):
         """Reset the callback to its initial state.
 
-        Should be overwritten by subclasses.
+        Should be overridden by subclasses.
         """
         pass
 
@@ -251,7 +251,7 @@ class CallbackPrintIteration(SolverCallback):
         self.iter += 1
 
     def reset(self):
-        """Sets `iter` to 0."""
+        """Set `iter` to 0."""
         self.iter = 0
 
     def __repr__(self):
@@ -275,7 +275,7 @@ class CallbackPrintTiming(SolverCallback):
         self.time = t
 
     def reset(self):
-        """Sets `time` to the current time."""
+        """Set `time` to the current time."""
         self.time = time.time()
 
     def __repr__(self):
@@ -336,7 +336,7 @@ class CallbackShow(SolverCallback):
         self.iter += 1
 
     def reset(self):
-        """Sets `iter` to 0 and creates a new figure."""
+        """Set `iter` to 0 and create a new figure."""
         self.iter = 0
         self.fig = None
 
