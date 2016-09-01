@@ -34,14 +34,6 @@ from odl.util.testutils import all_almost_equal, almost_equal, example_element
 PLACES = 8
 
 
-# TODO: Test that prox and conjugate functionals are not returned for negative
-# left scaling.
-
-# TODO: Test flags for positive/negative scalar multiplication
-
-# TODO: Test flags for translations etc.
-
-
 def test_derivative():
     """Test for the derivative of a functional.
 
@@ -128,7 +120,7 @@ def test_scalar_multiplication():
                             (F.conjugate_functional(x / scal)),
                             places=PLACES)
 
-    # Test proximal operator. This requiers sigma*scaling to be positive.
+    # Test proximal operator. This requiers scaling to be positive.
     sigma = 1.0
     with pytest.raises(ValueError):
         (neg_scal * F).proximal(sigma)

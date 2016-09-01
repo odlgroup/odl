@@ -956,9 +956,6 @@ class TranslatedFunctional(Functional):
     ``f``, this corresponds to the functional ``f(. - translation)``.
     """
 
-    # TODO: Should we check type of func, and if it is TranslatedFunctional
-    # try to combined to only one TranslatedFunctional with a total
-    # translation?
     def __init__(self, func, translation):
         """Initialize a new instance.
 
@@ -1256,7 +1253,7 @@ class ConvexConjugateTranslation(Functional):
         conjugate is the functional itself, if and only if the functional is
         proper, convex, and lower semi-continuous.
 
-        Wikipedia article on the `Fenchel–Moreau theorem
+        Wikipedia article on the `Fenchel-Moreau theorem
         <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
         """
 
@@ -1395,7 +1392,7 @@ class ConvexConjugateFuncScaling(Functional):
         conjugate is the functional itself, if and only if the functional is
         proper, convex, and lower semi-continuous.
 
-        Wikipedia article on the `Fenchel–Moreau theorem
+        Wikipedia article on the `Fenchel-Moreau theorem
         <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
         """
 
@@ -1529,7 +1526,7 @@ class ConvexConjugateArgScaling(Functional):
         conjugate is the functional itself, if and only if the functional is
         proper, convex, and lower semi-continuous.
 
-        Wikipedia article on the `Fenchel–Moreau theorem
+        Wikipedia article on the `Fenchel-Moreau theorem
         <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
         """
 
@@ -1667,7 +1664,7 @@ class ConvexConjugateLinearPerturb(Functional):
         conjugate is the functional itself, if and only if the functional is
         proper, convex, and lower semi-continuous.
 
-        Wikipedia article on the `Fenchel–Moreau theorem
+        Wikipedia article on the `Fenchel-Moreau theorem
         <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
         """
 
