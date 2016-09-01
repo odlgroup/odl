@@ -1868,7 +1868,7 @@ class OperatorLeftVectorMult(Operator):
         ``OperatorLeftVectorMult(op, vector).derivative(x) <==>``
         ``OperatorLeftVectorMult(op.derivative(x), vector)``
 
-        See also
+        See Also
         --------
         OperatorLeftVectorMult : the result
         """
@@ -1984,7 +1984,7 @@ class OperatorRightVectorMult(Operator):
         ``OperatorRightVectorMult(op, vector).derivative(x) <==>
         OperatorRightVectorMult(op.derivative(x), vector)``
 
-        See also
+        See Also
         --------
         OperatorRightVectorMult : the result
         """

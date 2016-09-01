@@ -361,7 +361,7 @@ class MatrixWeightingBase(WeightingBase):
             Two-dimensional array of eigenvectors. It has the same shape
             as the decomposed matrix.
 
-        See also
+        See Also
         --------
         scipy.linalg.decomp.eigh :
             Implementation of the decomposition. Standard parameters
@@ -397,7 +397,7 @@ class MatrixWeightingBase(WeightingBase):
             ``True`` if other is a `MatrixWeightingBase` instance
             with **identical** matrix, ``False`` otherwise.
 
-        See also
+        See Also
         --------
         equiv : test for equivalent inner products
         """
@@ -586,7 +586,7 @@ class VectorWeightingBase(WeightingBase):
             ``True`` if other is a `VectorWeightingBase` instance with
             **identical** vector, ``False`` otherwise.
 
-        See also
+        See Also
         --------
         equiv : test for equivalent inner products
         """

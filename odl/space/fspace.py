@@ -151,7 +151,7 @@ class FunctionSet(Set):
         element : `FunctionSetVector`
             The new element, always supports vectorization
 
-        See also
+        See Also
         --------
         odl.discr.grid.TensorGrid.meshgrid : efficient grids for function
             evaluation

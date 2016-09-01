@@ -123,7 +123,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
     -------
     ntuple : `NtuplesBase`
 
-    See also
+    See Also
     --------
     fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar data
          type.
@@ -155,7 +155,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
     -------
     fn : `FnBase`
 
-    See also
+    See Also
     --------
     ntuples : n-tuples over a field `F` with arbitrary data type.
     """
@@ -195,7 +195,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
     -------
     cn : `FnBase`
 
-    See also
+    See Also
     --------
     fn : n-tuples over a field `F` with arbitrary scalar data type.
     """
@@ -237,7 +237,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
     -------
     rn : `FnBase`
 
-    See also
+    See Also
     --------
     fn : n-tuples over a field `F` with arbitrary scalar data type.
     """

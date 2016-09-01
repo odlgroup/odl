@@ -705,7 +705,7 @@ class NumpyFn(FnBase, NumpyNtuples):
             Further keyword arguments are passed to the weighting
             classes.
 
-        See also
+        See Also
         --------
         NumpyFnMatrixWeighting
         NumpyFnVectorWeighting
@@ -1442,7 +1442,7 @@ def npy_weighted_inner(weight):
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
 
-    See also
+    See Also
     --------
     NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting
     """
@@ -1469,7 +1469,7 @@ def npy_weighted_norm(weight, exponent=2.0):
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
 
-    See also
+    See Also
     --------
     NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting
     """
@@ -1506,7 +1506,7 @@ def npy_weighted_dist(weight, exponent=2.0, use_inner=False):
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
 
-    See also
+    See Also
     --------
     NumpyFnConstWeighting, NumpyFnVectorWeighting, NumpyFnMatrixWeighting
     """

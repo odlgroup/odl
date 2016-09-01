@@ -447,7 +447,7 @@ class IntervalProd(Set):
             Points strictly inside have distance ``0.0``, points with
             ``NaN`` have distance ``float('inf')``.
 
-        See also
+        See Also
         --------
         numpy.linalg.norm : norm used to compute the distance
 

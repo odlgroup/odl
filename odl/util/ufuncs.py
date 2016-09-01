@@ -71,7 +71,7 @@ for name in RAW_UFUNCS:
     descr = re.sub('`+', '``', descr)
     doc = descr + """
 
-See also
+See Also
 --------
 numpy.{}
 """.format(name)
@@ -86,7 +86,7 @@ REDUCTIONS = []
 for name, numpyname, descr in RAW_REDUCTIONS:
     doc = descr + """
 
-See also
+See Also
 --------
 numpy.{}
 """.format(numpyname)

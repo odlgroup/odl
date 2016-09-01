@@ -301,7 +301,7 @@ class DiscreteLp(DiscretizedSpace):
         >>> space.element(f, c=0.5)
         uniform_discr(-1.0, 1.0, 4).element([0.5, 0.5, 0.5, 0.75])
 
-        See also
+        See Also
         --------
         sampling : create a discrete element from an undiscretized one
         """
@@ -884,7 +884,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     >>> uniform_discr_frompartition(part)
     uniform_discr(0.0, 1.0, 10)
 
-    See also
+    See Also
     --------
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_fromspace : uniform Lp discretization from an existing
@@ -1000,7 +1000,7 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
     >>> uniform_discr_fromspace(space, 10)
     uniform_discr(0.0, 1.0, 10)
 
-    See also
+    See Also
     --------
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_frompartition : uniform Lp discretization using a given
@@ -1115,7 +1115,7 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
     >>> uniform_discr_fromintv(intv, 10)
     uniform_discr(0.0, 1.0, 10)
 
-    See also
+    See Also
     --------
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_frompartition : uniform Lp discretization using a given
@@ -1205,7 +1205,7 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
     >>> uniform_discr([0, 0], [1, 1], [10, 10], dtype='complex')
     uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10], dtype='complex')
 
-    See also
+    See Also
     --------
     uniform_discr_frompartition : uniform Lp discretization using a given
         uniform partition of a function domain
@@ -1366,7 +1366,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
         The underlying partition is uniquely determined by the new
         parameters. See `uniform_partition`.
 
-    See also
+    See Also
     --------
     uniform_partition : underlying domain partitioning scheme
 

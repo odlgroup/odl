@@ -136,7 +136,7 @@ class RectPartition(object):
     def min(self):
         """Return the minimum point of the partitioned set.
 
-        See also
+        See Also
         --------
         odl.set.domain.IntervalProd.min
         """
@@ -145,7 +145,7 @@ class RectPartition(object):
     def max(self):
         """Return the maximum point of the partitioned set.
 
-        See also
+        See Also
         --------
         odl.set.domain.IntervalProd.max
         """
@@ -233,7 +233,7 @@ class RectPartition(object):
             (first entry) and rightmost (second entry) cell in the
             partitioned set in the corresponding dimension.
 
-        See also
+        See Also
         --------
         cell_boundary_vecs
 
@@ -583,7 +583,7 @@ def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
         A single boolean is interpreted as a global choice for all
         boundaries.
 
-    See also
+    See Also
     --------
     uniform_partition_fromgrid
 
@@ -662,7 +662,7 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
         ``None`` is equivalent to an empty dictionary, i.e. the values
         are calculated in each dimension.
 
-    See also
+    See Also
     --------
     uniform_partition_fromintv
 
@@ -773,7 +773,7 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
     ``shape`` and ``cell_sides`` must be given. If all four are
     provided, they are checked for consistency.
 
-    See also
+    See Also
     --------
     uniform_partition_fromintv : partition an existing set
     uniform_partition_fromgrid : use an existing grid as basis

@@ -183,7 +183,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         point : `numpy.ndarray`, shape (3,)
             Detector reference point corresponding to the given angle
 
-        See also
+        See Also
         --------
         rotation_matrix
         """
@@ -226,7 +226,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         point : `numpy.ndarray`, shape (3,)
             Detector reference point corresponding to the given angle
 
-        See also
+        See Also
         --------
         rotation_matrix
         """

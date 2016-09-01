@@ -158,7 +158,7 @@ class ProductSpace(LinearSpace):
         -------
         prodspace : `ProductSpace`
 
-        See also
+        See Also
         --------
         ProductSpaceVectorWeighting
         ProductSpaceConstWeighting
@@ -683,7 +683,7 @@ class ProductSpaceVector(LinearSpaceVector):
         >>> result is y
         True
 
-        See also
+        See Also
         --------
         odl.util.ufuncs.NtuplesBaseUFuncs
             Base class for ufuncs in `NtuplesBase` spaces, sub spaces may

@@ -431,7 +431,7 @@ class LinearSpaceVector(object):
         x2 : `LinearSpaceVector`, optional
             Second vector in the linear combination.
 
-        See also
+        See Also
         --------
         LinearSpace.lincomb
         """
@@ -440,7 +440,7 @@ class LinearSpaceVector(object):
     def set_zero(self):
         """Set this vector to zero.
 
-        See also
+        See Also
         --------
         LinearSpace.zero
         """
@@ -646,7 +646,7 @@ class LinearSpaceVector(object):
         equals : bool
             ``True`` if the vectors are equal ``False`` otherwise.
 
-        See also
+        See Also
         --------
         LinearSpace.dist
 
@@ -704,7 +704,7 @@ class LinearSpaceVector(object):
     def __copy__(self):
         """Return a copy of this vector.
 
-        See also
+        See Also
         --------
         LinearSpace.copy
         """
@@ -713,7 +713,7 @@ class LinearSpaceVector(object):
     def __deepcopy__(self, memo):
         """Return a deep copy of this vector.
 
-        See also
+        See Also
         --------
         LinearSpace.copy
         """
@@ -722,7 +722,7 @@ class LinearSpaceVector(object):
     def norm(self):
         """Return the norm of this vector.
 
-        See also
+        See Also
         --------
         LinearSpace.norm
         """
@@ -731,7 +731,7 @@ class LinearSpaceVector(object):
     def dist(self, other):
         """Return the distance of ``self`` to ``other``.
 
-        See also
+        See Also
         --------
         LinearSpace.dist
         """
@@ -740,7 +740,7 @@ class LinearSpaceVector(object):
     def inner(self, other):
         """Return the inner product of ``self`` and ``other``.
 
-        See also
+        See Also
         --------
         LinearSpace.inner
         """
@@ -751,7 +751,7 @@ class LinearSpaceVector(object):
 
         If ``out`` is provided, the result is written to it.
 
-        See also
+        See Also
         --------
         LinearSpace.multiply
         """
@@ -762,7 +762,7 @@ class LinearSpaceVector(object):
 
         If ``out`` is provided, the result is written to it.
 
-        See also
+        See Also
         --------
         LinearSpace.divide
         """

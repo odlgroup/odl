@@ -226,7 +226,7 @@ class PointCollocation(FunctionSetMapping):
         <https://odl.readthedocs.org/guide/in_depth/\
 vectorization_guide.html>`_ for a detailed introduction.
 
-        See also
+        See Also
         --------
         odl.discr.grid.TensorGrid.meshgrid
         numpy.meshgrid
@@ -379,7 +379,7 @@ class NearestInterpolation(FunctionSetMapping):
             operator. If ``out`` was provided, the returned object
             is a reference to it.
 
-        See also
+        See Also
         --------
         LinearInterpolation : (bi-/tri-/...)linear interpolation
 

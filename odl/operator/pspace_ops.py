@@ -506,7 +506,7 @@ class ComponentProjection(Operator):
         The adjoint is given by extending along `ComponentProjection.index`,
         and setting zero along the others.
 
-        See also
+        See Also
         --------
         ComponentProjectionAdjoint
         """

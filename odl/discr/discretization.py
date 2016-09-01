@@ -187,7 +187,7 @@ class DiscretizedSet(NtuplesBase):
             The discretized element, calculated as ``sampling(inp)`` or
             ``dspace.element(inp)``, tried in this order.
 
-        See also
+        See Also
         --------
         sampling : create a discrete element from an undiscretized one
         """

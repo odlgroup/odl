@@ -51,7 +51,7 @@ def sparse_meshgrid(*x):
     meshgrid : tuple of `numpy.ndarray`'s
         Sparse coordinate vectors representing an N-dimensional grid
 
-    See also
+    See Also
     --------
     numpy.meshgrid : dense or sparse meshgrids
 
@@ -274,7 +274,7 @@ class TensorGrid(Set):
         kwargs
             For duck-typing with `numpy.amin`
 
-        See also
+        See Also
         --------
         max
         odl.set.domain.IntervalProd.min
@@ -306,7 +306,7 @@ class TensorGrid(Set):
         kwargs
             For duck-typing with `numpy.amax`
 
-        See also
+        See Also
         --------
         min
         odl.set.domain.IntervalProd.max
@@ -691,7 +691,7 @@ class TensorGrid(Set):
         meshgrid : tuple of `numpy.ndarray`'s
             Function evaluation grid with ``ndim`` axes
 
-        See also
+        See Also
         --------
         numpy.meshgrid
             Coordinate matrices from coordinate vectors.
@@ -1180,7 +1180,7 @@ def uniform_sampling_fromintv(intv_prod, shape, nodes_on_bdry=True):
     sampling : `RegularGrid`
         Uniform sampling grid for the interval product
 
-    See also
+    See Also
     --------
     uniform_sampling:
         sample an implicitly defined interval product
@@ -1202,7 +1202,7 @@ def uniform_sampling_fromintv(intv_prod, shape, nodes_on_bdry=True):
     (array([-1.25, -0.75]), array([ 2.25,  2.75]))
 
 
-    See also
+    See Also
     --------
     uniform_sampling : Sample an implicitly created `IntervalProd`
     """
@@ -1294,7 +1294,7 @@ def uniform_sampling(min_pt, max_pt, shape, nodes_on_bdry=True):
         A single boolean is interpreted as a global choice for all
         boundaries.
 
-    See also
+    See Also
     --------
     uniform_sampling_fromintv :
         sample a given interval product

@@ -170,7 +170,7 @@ class FanFlatGeometry(DivergentBeamGeometry):
         point : `numpy.ndarray`, shape (2,)
             Detector reference point corresponding to the given angle
 
-        See also
+        See Also
         --------
         rotation_matrix
         """

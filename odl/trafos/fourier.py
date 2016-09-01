@@ -652,7 +652,7 @@ class DiscreteFourierTransformBase(Operator):
         The parameters ``axes`` and ``halfcomplex`` cannot be
         overridden.
 
-        See also
+        See Also
         --------
         pyfftw_call : Call pyfftw backend directly
         """
@@ -807,7 +807,7 @@ class DiscreteFourierTransformBase(Operator):
         To save memory, clear the plan when the transform is no longer
         used (the plan stores 2 arrays).
 
-        See also
+        See Also
         --------
         clear_fftw_plan
         """
@@ -854,7 +854,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
     `Numpy FFT documentation`_, the `pyfftw API documentation`_ or
     `What FFTW really computes`_ for further information.
 
-    See also
+    See Also
     --------
     numpy.fft.fftn : n-dimensional FFT routine
     numpy.fft.rfftn : n-dimensional half-complex FFT
@@ -1002,7 +1002,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
     `Numpy FFT documentation`_, the `pyfftw API documentation`_ or
     `What FFTW really computes`_ for further information.
 
-    See also
+    See Also
     --------
     DiscreteFourierTransform
     FourierTransformInverse
@@ -1582,7 +1582,7 @@ class FourierTransformBase(Operator):
     The sign convention ('-' vs. '+') can be changed with the ``sign``
     parameter.
 
-    See also
+    See Also
     --------
     DiscreteFourierTransform
     FourierTransformInverse
@@ -1767,7 +1767,7 @@ class FourierTransformBase(Operator):
         The parameters ``axes`` and ``halfcomplex`` cannot be
         overridden.
 
-        See also
+        See Also
         --------
         pyfftw_call : Call pyfftw backend directly
         """
@@ -1891,7 +1891,7 @@ class FourierTransformBase(Operator):
         To save memory, clear the temporaries when the transform is
         no longer used.
 
-        See also
+        See Also
         --------
         clear_temporaries
         clear_fftw_plan : can also hold references to the temporaries
@@ -1943,7 +1943,7 @@ class FourierTransformBase(Operator):
         To save memory, clear the plan when the transform is no longer
         used (the plan stores 2 arrays).
 
-        See also
+        See Also
         --------
         clear_fftw_plan
         """
@@ -2034,7 +2034,7 @@ class FourierTransform(FourierTransformBase):
     The sign convention ('-' vs. '+') can be changed with the ``sign``
     parameter.
 
-    See also
+    See Also
     --------
     DiscreteFourierTransform
     FourierTransformInverse
@@ -2273,7 +2273,7 @@ class FourierTransformInverse(FourierTransformBase):
     the complex exponent. For the latter, use the ``sign`` parameter
     of the forward transform.
 
-    See also
+    See Also
     --------
     FourierTransform
     DiscreteFourierTransformInverse

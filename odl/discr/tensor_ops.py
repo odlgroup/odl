@@ -52,7 +52,7 @@ class PointwiseTensorFieldOperator(Operator):
     Currently, only vector fields, i.e. one-dimensional products of
     ``X``, are supported.
 
-    See also
+    See Also
     --------
     ProductSpace
     """
