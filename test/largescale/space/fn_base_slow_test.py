@@ -28,7 +28,7 @@ import numpy as np
 
 # ODL imports
 import odl
-from odl.util.testutils import all_almost_equal, almost_equal, example_vectors
+from odl.util.testutils import all_almost_equal, almost_equal, noise_vectors
 
 pytestmark = odl.util.skip_if_no_largescale
 
@@ -116,7 +116,7 @@ def fn_weighting(fn):
 def test_inner(fn):
     weighting = fn_weighting(fn)
 
-    [xarr, yarr], [x, y] = example_vectors(fn, 2)
+    [xarr, yarr], [x, y] = noise_vectors(fn, 2)
 
     correct_inner = np.vdot(yarr, xarr) * weighting
 
@@ -127,7 +127,7 @@ def test_inner(fn):
 def test_norm(fn):
     weighting = np.sqrt(fn_weighting(fn))
 
-    xarr, x = example_vectors(fn)
+    xarr, x = noise_vectors(fn)
 
     correct_norm = np.linalg.norm(xarr) * weighting
 
@@ -138,7 +138,7 @@ def test_norm(fn):
 def test_dist(fn):
     weighting = np.sqrt(fn_weighting(fn))
 
-    [xarr, yarr], [x, y] = example_vectors(fn, 2)
+    [xarr, yarr], [x, y] = noise_vectors(fn, 2)
 
     correct_dist = np.linalg.norm(xarr - yarr) * weighting
 
@@ -151,7 +151,7 @@ def _test_lincomb(fn, a, b):
     # data and given a,b
 
     # Unaliased arguments
-    [x_arr, y_arr, z_arr], [x, y, z] = example_vectors(fn, 3)
+    [x_arr, y_arr, z_arr], [x, y, z] = noise_vectors(fn, 3)
 
     z_arr[:] = a * x_arr + b * y_arr
     z.lincomb(a, x, b, y)
@@ -171,7 +171,7 @@ def _test_member_lincomb(spc, a):
     # Validates vector member lincomb against the result on host
 
     # Generate vectors
-    [x_host, y_host], [x_device, y_device] = example_vectors(spc, 2)
+    [x_host, y_host], [x_device, y_device] = noise_vectors(spc, 2)
 
     # Host side calculation
     y_host[:] = a * x_host
@@ -192,7 +192,7 @@ def test_member_lincomb(fn):
 def _test_unary_operator(spc, function):
     # Verify that the statement y=function(x) gives equivalent
     # results to Numpy.
-    x_arr, x = example_vectors(spc)
+    x_arr, x = noise_vectors(spc)
 
     y_arr = function(x_arr)
     y = function(x)
@@ -204,7 +204,7 @@ def _test_unary_operator(spc, function):
 def _test_binary_operator(spc, function):
     # Verify that the statement z=function(x,y) gives equivalent
     # results to Numpy.
-    [x_arr, y_arr], [x, y] = example_vectors(spc, 2)
+    [x_arr, y_arr], [x, y] = noise_vectors(spc, 2)
 
     z_arr = function(x_arr, y_arr)
     z = function(x, y)

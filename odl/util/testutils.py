@@ -249,37 +249,132 @@ except ImportError:
 
 
 # Helpers to generate data
-def example_array(space):
-    """Generate an example array that is compatible with ``space``."""
-    # Generate numpy vectors, real or complex or int
-    if np.issubdtype(space.dtype, np.floating):
-        arr = np.random.randn(space.size)
-    elif np.issubdtype(space.dtype, np.integer):
-        arr = np.random.randint(-10, 10, space.size)
+def noise_array(space):
+    """Generate a white noise array that is compatible with ``space``.
+
+    The array contains white noise with standard deviation 1 in the case of
+    floating point dtypes and uniformly spaced values between -10 and 10 in
+    the case of integer dtypes.
+
+    For product spaces the method is called recursively for all sub-spaces.
+
+    Notes
+    -----
+    This method is intended for internal testing purposes, for more explicit
+    example elements see `phantoms` and `LinearSpaceVector.examples`.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        The space to create vectors in. The `LinearSpace.element` method of the
+        space needs to accept input of `numpy.ndarray` type.
+
+    Returns
+    -------
+    noise_array : `numpy.ndarray` element
+        Array with white noise osuch that ``space.element``'s can be created
+        from it.
+
+    See Also
+    --------
+    noise_element
+    noise_vectors
+    LinearSpaceVector.examples : Examples of vectors typical to the space.
+    """
+    from odl.space import ProductSpace
+    if isinstance(space, ProductSpace):
+        return np.array([noise_array(si) for si in space])
     else:
-        arr = np.random.randn(space.size) + 1j * np.random.randn(space.size)
+        # Generate numpy vectors, real or complex or int
+        if np.issubdtype(space.dtype, np.floating):
+            arr = np.random.randn(space.size)
+        elif np.issubdtype(space.dtype, np.integer):
+            arr = np.random.randint(-10, 10, space.size)
+        else:
+            arr = (np.random.randn(space.size) +
+                   1j * np.random.randn(space.size)) / np.sqrt(2.0)
 
-    return arr.astype(space.dtype, copy=False)
+        return arr.astype(space.dtype, copy=False)
 
 
-def example_element(space):
-    return space.element(example_array(space))
+def noise_element(space):
+    """Creata a white noise element in ``space``
+
+    The element contains white noise with standard deviation 1 in the case of
+    floating point dtypes and uniformly spaced values between -10 and 10 in
+    the case of integer dtypes.
+
+    For product spaces the method is called recursively for all sub-spaces.
+
+    Notes
+    -----
+    This method is intended for internal testing purposes, for more explicit
+    example elements see `phantoms` and `LinearSpaceVector.examples`.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        The space to create vectors in. The `LinearSpace.element` method of the
+        space needs to accept input of `numpy.ndarray` type.
+
+    Returns
+    -------
+    noise_element : ``space`` element
+
+    See Also
+    --------
+    noise_array
+    noise_vectors
+    LinearSpaceVector.examples : Examples of vectors typical to the space.
+    """
+    return space.element(noise_array(space))
 
 
-def example_vectors(space, n=1):
+def noise_vectors(space, n=1):
     """Create a list of ``n`` arrays and vectors in ``space``.
 
-    First arrays, then vectors.
+    The arrays contain white noise with standard deviation 1 in the case of
+    floating point dtypes and uniformly spaced values between -10 and 10 in
+    the case of integer dtypes.
+
+    The returned vectors wrap the arrays.
+
+    For product spaces the method is called recursively for all sub-spaces.
+
+    Notes
+    -----
+    This method is intended for internal testing purposes, for more explicit
+    example elements see `phantoms` and `LinearSpaceVector.examples`.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        The space to create vectors in. The `LinearSpace.element` method of the
+        space needs to accept input of `numpy.ndarray` type.
+    n : int
+        The number of vectors to create.
+
+    Returns
+    -------
+    arrays : `numpy.ndarray`(s)
+        A single array if ``n == 1``, otherwise a tuple of arrays.
+    vectors : ``space`` element(s)
+        A single vector if ``n == 1``, otherwise a tuple of vector.
+
+    See Also
+    --------
+    noise_array
+    noise_element
     """
-    arrs = [example_array(space) for _ in range(n)]
+    arrs = tuple(noise_array(space) for _ in range(n))
 
     # Make Fn vectors
-    vecs = [space.element(arr) for arr in arrs]
+    vecs = tuple(space.element(arr.copy()) for arr in arrs)
 
     if n == 1:
         return arrs + vecs
     else:
-        return (arrs, vecs)
+        return arrs, vecs
 
 
 class FailCounter(object):
