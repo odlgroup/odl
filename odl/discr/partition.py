@@ -37,7 +37,8 @@ from odl.util.normalize import normalized_index_expression
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
-           'uniform_partition_fromgrid', 'uniform_partition')
+           'uniform_partition_fromgrid', 'uniform_partition',
+           'nonuniform_partition')
 
 
 class RectPartition(object):
@@ -926,6 +927,133 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
 
     return uniform_partition_fromintv(
         IntervalProd(min_pt, max_pt), shape, nodes_on_bdry)
+
+
+def nonuniform_partition(*coord_vecs, **kwargs):
+    """Return a partition with un-equally sized cells.
+
+    Parameters
+    ----------
+    coord_vecs1, ... coord_vecsN : `array-like`
+        Arrays of coordinates of the mid-points of the partition cells.
+    min_pt, max_pt : float or `sequence` of float, optional
+        Vectors defining the lower/upper limits of the intervals in an
+        `IntervalProd` (a rectangular box). ``None`` entries mean
+        "compute the value".
+    nodes_on_bdry : bool or `sequence`, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (``True``) or shift it
+        by half a cell size into the interior (``False``). In each axis,
+        an entry may consist in a single bool or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``array.ndim``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
+
+        Cannot be given with both min_pt and max_pt since they determine the
+        same thing.
+
+    See Also
+    --------
+    uniform_partition : uniformly spaced points
+    uniform_partition_fromintv : partition an existing set
+    uniform_partition_fromgrid : use an existing grid as basis
+
+    Examples
+    --------
+    With uniformly spaced points the result is the same as a uniform partition:
+
+    >>> nonuniform_partition([0, 1, 2, 3])
+    uniform_partition(-0.5, 3.5, 4)
+    >>> nonuniform_partition([0, 1, 2, 3], [1, 2])
+    uniform_partition([-0.5, 0.5], [3.5, 2.5], [4, 2])
+
+    Can also perform nonuniform partitions. Note that the containing interval
+    is calculated by assuming that the points are in the middle of the sub
+    intervals:
+
+    >>> nonuniform_partition([0, 1, 3])
+    RectPartition(
+        IntervalProd(-0.5, 4.0),
+        TensorGrid([0.0, 1.0, 3.0]))
+
+    If the endpoints should be on the outside, the ``nodes_on_bdry`` parameter
+    can be used:
+
+    >>> nonuniform_partition([0, 1, 3], nodes_on_bdry=True)
+    RectPartition(
+        IntervalProd(0.0, 3.0),
+        TensorGrid([0.0, 1.0, 3.0]))
+    """
+    # Get parameters from kwargs
+    min_pt = kwargs.pop('min_pt', None)
+    max_pt = kwargs.pop('max_pt', None)
+    nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
+
+    # np.size(None) == 1
+    sizes = [len(coord_vecs)] + [np.size(p) for p in (min_pt, max_pt)]
+    ndim = int(np.max(sizes))
+
+    if ndim == 1:
+        min_pt = [min_pt]
+        max_pt = [max_pt]
+    else:
+        if min_pt is None:
+            min_pt = [None] * ndim
+        if max_pt is None:
+            max_pt = [None] * ndim
+
+        min_pt = list(min_pt)
+        max_pt = list(max_pt)
+        sizes = [len(p) for p in (min_pt, max_pt)]
+
+        if not all(s == ndim for s in sizes):
+            raise ValueError('inconsistent sizes {}, {} of '
+                             'arguments `min_pt`, `max_pt`'
+                             ''.format(*sizes))
+
+    # Normalize nodes_on_bdry
+    if np.shape(nodes_on_bdry) == ():
+        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] * ndim)
+    elif ndim == 1 and len(nodes_on_bdry) == 2:
+        nodes_on_bdry = [nodes_on_bdry]
+    elif len(nodes_on_bdry) != ndim:
+        raise ValueError('`nodes_on_bdry` has length {}, expected {}.'
+                         ''.format(len(nodes_on_bdry), ndim))
+
+    # Calculate the missing parameters in min_pt, max_pt
+    for i, (xmin, xmax, on_bdry, coords) in enumerate(
+            zip(min_pt, max_pt, nodes_on_bdry, coord_vecs)):
+        # Unpack the tuple if possible, else use bool globally for this axis
+        num_params = sum(p is not None for p in (xmin, xmax, on_bdry))
+        if num_params == 3:
+            raise ValueError('in axis {}: expected at most 2 of the '
+                             'parameters `min_pt`, `max_pt`, `nodes_on_bdry`, '
+                             'got {}'.format(i, num_params))
+
+        try:
+            bdry_l, bdry_r = on_bdry
+        except TypeError:
+            bdry_l = bdry_r = on_bdry
+
+        # For each node on the boundary, we subtract 1/2 from the number of
+        # full cells between min_pt and max_pt.
+        if xmin is None:
+            if bdry_l:
+                min_pt[i] = coords[0]
+            else:
+                min_pt[i] = coords[0] - (coords[1] - coords[0]) / 2.0
+        if xmax is None:
+            if bdry_r:
+                max_pt[i] = coords[-1]
+            else:
+                max_pt[i] = coords[-1] + (coords[-1] - coords[-2]) / 2.0
+
+    interval = IntervalProd(min_pt, max_pt)
+    grid = TensorGrid(*coord_vecs)
+    return RectPartition(interval, grid)
 
 
 if __name__ == '__main__':
