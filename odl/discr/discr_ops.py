@@ -70,6 +70,19 @@ class Resampling(Operator):
         uniform_discr(0.0, 1.0, 3)
         >>> resampling.range
         uniform_discr(0.0, 1.0, 6)
+
+        Apply the  corresponding resampling operator to an element:
+
+        >>> print(resampling([0, 1, 0]))
+        [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+
+        The result depends on the interpolation chosen for the underlying
+        spaces:
+
+        >>> coarse_discr = odl.uniform_discr(0, 1, 3, interp='linear')
+        >>> linear_resampling = odl.Resampling(coarse_discr, fine_discr)
+        >>> print(linear_resampling([0, 1, 0]))
+        [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
         """
         if domain.uspace != range.uspace:
             raise ValueError('`domain.uspace` ({}) does not match '
@@ -83,26 +96,6 @@ class Resampling(Operator):
 
         The vector ``x`` is resampled using the sampling and interpolation
         operators of the underlying spaces.
-
-        Examples
-        --------
-        Create two spaces with different number of points and apply the
-        corresponding resampling operator to an element:
-
-        >>> import odl
-        >>> coarse_discr = odl.uniform_discr(0, 1, 3)
-        >>> fine_discr = odl.uniform_discr(0, 1, 6)
-        >>> resampling = odl.Resampling(coarse_discr, fine_discr)
-        >>> print(resampling([0, 1, 0]))
-        [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
-
-        The result depends on the interpolation chosen for the underlying
-        spaces:
-
-        >>> coarse_discr = odl.uniform_discr(0, 1, 3, interp='linear')
-        >>> linear_resampling = odl.Resampling(coarse_discr, fine_discr)
-        >>> print(linear_resampling([0, 1, 0]))
-        [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
         """
         if out is None:
             return x.interpolation

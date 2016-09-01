@@ -192,6 +192,43 @@ class PointCollocation(FunctionSetMapping):
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
             Default: 'C'
+
+        Examples
+        --------
+        Define a set of functions from the rectangle [1, 3] x [2, 5]
+        to the real numbers:
+
+        >>> from odl import FunctionSpace, IntervalProd
+        >>> rect = IntervalProd([1, 3], [2, 5])
+        >>> funcset = FunctionSpace(rect)
+
+        Partition the rectangle by a tensor grid:
+
+        >>> import odl
+        >>> rect = odl.IntervalProd([1, 3], [2, 5])
+        >>> grid = odl.TensorGrid([1, 2], [3, 4, 5])
+        >>> partition = odl.RectPartition(rect, grid)
+        >>> rn = odl.rn(grid.size)
+
+        Finally create the operator and test it on a function:
+
+        >>> coll_op = PointCollocation(funcset, partition, rn)
+        ...
+        ... # Properly vectorized function
+        >>> func_elem = funcset.element(lambda x: x[0] - x[1])
+        >>> coll_op(func_elem)
+        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        >>> coll_op(lambda x: x[0] - x[1])  # Works directly
+        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+        >>> out = odl.rn(6).element()
+        >>> coll_op(func_elem, out=out)  # In-place
+        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
+
+        Fortran ordering:
+
+        >>> coll_op = PointCollocation(funcset, partition, rn, order='F')
+        >>> coll_op(func_elem)
+        rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
         linear = isinstance(ip_fset, FunctionSpace)
         FunctionSetMapping.__init__(self, 'sampling', ip_fset, partition,
@@ -230,43 +267,6 @@ vectorization_guide.html>`_ for a detailed introduction.
         --------
         odl.discr.grid.TensorGrid.meshgrid
         numpy.meshgrid
-
-        Examples
-        --------
-        Define a set of functions from the rectangle [1, 3] x [2, 5]
-        to the real numbers:
-
-        >>> from odl import FunctionSpace, IntervalProd
-        >>> rect = IntervalProd([1, 3], [2, 5])
-        >>> funcset = FunctionSpace(rect)
-
-        Partition the rectangle by a tensor grid:
-
-        >>> import odl
-        >>> rect = odl.IntervalProd([1, 3], [2, 5])
-        >>> grid = odl.TensorGrid([1, 2], [3, 4, 5])
-        >>> partition = odl.RectPartition(rect, grid)
-        >>> rn = odl.rn(grid.size)
-
-        Finally create the operator and test it on a function:
-
-        >>> coll_op = PointCollocation(funcset, partition, rn)
-        ...
-        ... # Properly vectorized function
-        >>> func_elem = funcset.element(lambda x: x[0] - x[1])
-        >>> coll_op(func_elem)
-        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
-        >>> coll_op(lambda x: x[0] - x[1])  # Works directly
-        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
-        >>> out = odl.rn(6).element()
-        >>> coll_op(func_elem, out=out)  # In-place
-        rn(6).element([-2.0, -3.0, -4.0, -1.0, -2.0, -3.0])
-
-        Fortran ordering:
-
-        >>> coll_op = PointCollocation(funcset, partition, rn, order='F')
-        >>> coll_op(func_elem)
-        rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
         """
         mesh = self.grid.meshgrid
         if out is None:
@@ -342,6 +342,42 @@ class NearestInterpolation(FunctionSetMapping):
             vice versa for 'F'.
             Default: 'C'
 
+        Examples
+        --------
+        We test nearest neighbor interpolation with a non-scalar
+        data type in 2d:
+
+        >>> import numpy as np
+        >>> from odl import IntervalProd, Strings, FunctionSet
+        >>> rect = IntervalProd([0, 0], [1, 1])
+        >>> strings = Strings(1)  # 1-char strings
+        >>> space = FunctionSet(rect, strings)
+
+        Partitioning the domain uniformly with no nodes on the boundary
+        (will shift the grid points):
+
+        >>> from odl import uniform_partition_fromintv, ntuples
+        >>> part = uniform_partition_fromintv(rect, [4, 2],
+        ...                                   nodes_on_bdry=False)
+        >>> part.grid.coord_vectors
+        (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
+
+        >>> dspace = ntuples(part.size, dtype='U1')
+
+        Now we initialize the operator and test it with some points:
+
+        >>> interp_op = NearestInterpolation(space, part, dspace)
+        >>> values = np.array([c for c in 'mystring'])
+        >>> function = interp_op(values)
+        >>> print(function([0.3, 0.6]))  # closest to index (1, 1) -> 3
+        t
+        >>> out = np.empty(2, dtype='U1')
+        >>> pts = np.array([[0.3, 0.6],
+        ...                 [1.0, 1.0]])
+        >>> out = function(pts.T, out=out)  # returns original out
+        >>> all(out == ['t', 'g'])
+        True
+
         Notes
         -----
         The distinction between 'left' and 'right' variants is currently
@@ -392,42 +428,6 @@ class NearestInterpolation(FunctionSetMapping):
         Nearest neighbor interpolation is the only scheme which works
         with data of non-scalar type since it does not involve any
         arithmetic operations on the values.
-
-        Examples
-        --------
-        We test nearest neighbor interpolation with a non-scalar
-        data type in 2d:
-
-        >>> import numpy as np
-        >>> from odl import IntervalProd, Strings, FunctionSet
-        >>> rect = IntervalProd([0, 0], [1, 1])
-        >>> strings = Strings(1)  # 1-char strings
-        >>> space = FunctionSet(rect, strings)
-
-        Partitioning the domain uniformly with no nodes on the boundary
-        (will shift the grid points):
-
-        >>> from odl import uniform_partition_fromintv, ntuples
-        >>> part = uniform_partition_fromintv(rect, [4, 2],
-        ...                                   nodes_on_bdry=False)
-        >>> part.grid.coord_vectors
-        (array([ 0.125,  0.375,  0.625,  0.875]), array([ 0.25,  0.75]))
-
-        >>> dspace = ntuples(part.size, dtype='U1')
-
-        Now we initialize the operator and test it with some points:
-
-        >>> interp_op = NearestInterpolation(space, part, dspace)
-        >>> values = np.array([c for c in 'mystring'])
-        >>> function = interp_op(values)
-        >>> print(function([0.3, 0.6]))  # closest to index (1, 1) -> 3
-        t
-        >>> out = np.empty(2, dtype='U1')
-        >>> pts = np.array([[0.3, 0.6],
-        ...                 [1.0, 1.0]])
-        >>> out = function(pts.T, out=out)  # returns original out
-        >>> all(out == ['t', 'g'])
-        True
         """
         # TODO: pass reasonable options on to the interpolator
         def nearest(arg, out=None):

@@ -119,19 +119,34 @@ class ProductSpaceOperator(Operator):
         >>> r3 = odl.rn(3)
         >>> X = odl.ProductSpace(r3, r3)
         >>> I = odl.IdentityOperator(r3)
+        >>> x = X.element([[1, 2, 3], [4, 5, 6]])
 
-        Sum of elements as product space operator:
+        Sum of elements:
 
         >>> prod_op = ProductSpaceOperator([I, I])
+        >>> prod_op(x)
+        ProductSpace(rn(3), 1).element([
+            [5.0, 7.0, 9.0]
+        ])
 
         Diagonal operator -- 0 or ``None`` means ignore, or the implicit
         zero operator:
 
-        >>> prod_op = ProductSpaceOperator([[I, 0], [None, I]])
+        >>> prod_op = ProductSpaceOperator([[I, 0], [0, I]])
+        >>> prod_op(x)
+        ProductSpace(rn(3), 2).element([
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0]
+        ])
 
-        Complicated combinations also possible:
+        Complicated combinations:
 
         >>> prod_op = ProductSpaceOperator([[I, I], [I, 0]])
+        >>> prod_op(x)
+        ProductSpace(rn(3), 2).element([
+            [5.0, 7.0, 9.0],
+            [1.0, 2.0, 3.0]
+        ])
         """
 
         # Validate input data
@@ -220,41 +235,6 @@ class ProductSpaceOperator(Operator):
         out : `range` element
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> X = odl.ProductSpace(r3, r3)
-        >>> I = odl.IdentityOperator(r3)
-        >>> x = X.element([[1, 2, 3], [4, 5, 6]])
-
-        Sum of elements:
-
-        >>> prod_op = ProductSpaceOperator([I, I])
-        >>> prod_op(x)
-        ProductSpace(rn(3), 1).element([
-            [5.0, 7.0, 9.0]
-        ])
-
-        Diagonal operator -- 0 or ``None`` means ignore, or the implicit
-        zero operator:
-
-        >>> prod_op = ProductSpaceOperator([[I, 0], [0, I]])
-        >>> prod_op(x)
-        ProductSpace(rn(3), 2).element([
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0]
-        ])
-
-        Complicated combinations:
-
-        >>> prod_op = ProductSpaceOperator([[I, I], [I, 0]])
-        >>> prod_op(x)
-        ProductSpace(rn(3), 2).element([
-            [5.0, 7.0, 9.0],
-            [1.0, 2.0, 3.0]
-        ])
         """
         # TODO: add optimization in case an operator appears repeatedly in a
         # row
@@ -436,14 +416,20 @@ class ComponentProjection(Operator):
         Projection on n-th component
 
         >>> proj = odl.ComponentProjection(X, 0)
-        >>> proj.range
-        rn(1)
+        >>> x = [[1.0],
+        ...      [2.0, 3.0],
+        ...      [4.0, 5.0, 6.0]]
+        >>> proj(x)
+        rn(1).element([1.0])
 
         Projection on sub-space
 
         >>> proj = odl.ComponentProjection(X, [0, 2])
-        >>> proj.range
-        ProductSpace(rn(1), rn(3))
+        >>> proj(x)
+        ProductSpace(rn(1), rn(3)).element([
+            [1.0],
+            [4.0, 5.0, 6.0]
+        ])
         """
         self.__index = index
         super().__init__(space, space[index], linear=True)
@@ -468,30 +454,6 @@ class ComponentProjection(Operator):
         out : `range` element
             Projection of ``x`` onto the subspace. If ``out`` was provided,
             the returned object is a reference to it.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r1 = odl.rn(1)
-        >>> r2 = odl.rn(2)
-        >>> r3 = odl.rn(3)
-        >>> X = odl.ProductSpace(r1, r2, r3)
-        >>> x = X.element([[1], [2, 3], [4, 5, 6]])
-
-        Projection on n-th component
-
-        >>> proj = odl.ComponentProjection(X, 0)
-        >>> proj(x)
-        rn(1).element([1.0])
-
-        Projection on sub-space
-
-        >>> proj = odl.ComponentProjection(X, [0, 2])
-        >>> proj(x)
-        ProductSpace(rn(1), rn(3)).element([
-            [1.0],
-            [4.0, 5.0, 6.0]
-        ])
         """
         if out is None:
             out = x[self.index].copy()
@@ -543,18 +505,27 @@ class ComponentProjectionAdjoint(Operator):
         >>> r2 = odl.rn(2)
         >>> r3 = odl.rn(3)
         >>> X = odl.ProductSpace(r1, r2, r3)
+        >>> x = X.element([[1], [2, 3], [4, 5, 6]])
 
         Projection on n-th component
 
         >>> proj = odl.ComponentProjectionAdjoint(X, 0)
-        >>> proj.domain
-        rn(1)
+        >>> proj(x[0])
+        ProductSpace(rn(1), rn(2), rn(3)).element([
+            [1.0],
+            [0.0, 0.0],
+            [0.0, 0.0, 0.0]
+        ])
 
         Projection on sub-space
 
         >>> proj = odl.ComponentProjectionAdjoint(X, [0, 2])
-        >>> proj.domain
-        ProductSpace(rn(1), rn(3))
+        >>> proj(x[0, 2])
+        ProductSpace(rn(1), rn(2), rn(3)).element([
+            [1.0],
+            [0.0, 0.0],
+            [4.0, 5.0, 6.0]
+        ])
         """
         self.__index = index
         super().__init__(space[index], space, linear=True)
@@ -579,35 +550,6 @@ class ComponentProjectionAdjoint(Operator):
         out : `range` element
             Extension of ``x`` to the superspace. If ``out`` was provided,
             the returned object is a reference to it.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r1 = odl.rn(1)
-        >>> r2 = odl.rn(2)
-        >>> r3 = odl.rn(3)
-        >>> X = odl.ProductSpace(r1, r2, r3)
-        >>> x = X.element([[1], [2, 3], [4, 5, 6]])
-
-        Projection on n-th component
-
-        >>> proj = odl.ComponentProjectionAdjoint(X, 0)
-        >>> proj(x[0])
-        ProductSpace(rn(1), rn(2), rn(3)).element([
-            [1.0],
-            [0.0, 0.0],
-            [0.0, 0.0, 0.0]
-        ])
-
-        Projection on sub-space
-
-        >>> proj = odl.ComponentProjectionAdjoint(X, [0, 2])
-        >>> proj(x[0, 2])
-        ProductSpace(rn(1), rn(2), rn(3)).element([
-            [1.0],
-            [0.0, 0.0],
-            [4.0, 5.0, 6.0]
-        ])
         """
         if out is None:
             out = self.range.zero()

@@ -836,7 +836,6 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         -------
         arr : `numpy.ndarray`
             Result of the wavelet reconstruction.
-
         """
         if len(self.range.shape) == 1:
             coeff_list = array_to_pywt_coeff(coeff, self.size_list)

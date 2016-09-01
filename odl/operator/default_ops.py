@@ -47,6 +47,20 @@ class ScalingOperator(Operator):
             Space of elements on which this operator acts.
         scalar : ``space.field`` element
             Fixed scaling factor of this operator.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> vec = r3.element([1, 2, 3])
+        >>> out = r3.element()
+        >>> op = ScalingOperator(r3, 2.0)
+        >>> op(vec, out)  # In-place, Returns out
+        rn(3).element([2.0, 4.0, 6.0])
+        >>> out
+        rn(3).element([2.0, 4.0, 6.0])
+        >>> op(vec)  # Out-of-place
+        rn(3).element([2.0, 4.0, 6.0])
         """
         if not isinstance(space, LinearSpace):
             raise TypeError('`space` {!r} not a LinearSpace instance'
@@ -75,20 +89,6 @@ class ScalingOperator(Operator):
         out : `range` element
             Result of the scaling. If ``out`` was provided, the
             returned object is a reference to it.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> vec = r3.element([1, 2, 3])
-        >>> out = r3.element()
-        >>> op = ScalingOperator(r3, 2.0)
-        >>> op(vec, out)  # In-place, Returns out
-        rn(3).element([2.0, 4.0, 6.0])
-        >>> out
-        rn(3).element([2.0, 4.0, 6.0])
-        >>> op(vec)  # Out-of-place
-        rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:
             out = self.scalar * x
@@ -204,6 +204,19 @@ class LinCombOperator(Operator):
             Space of elements which the operator is acting on.
         a, b : ``space.field`` elements
             Scalars to multiply ``x[0]`` and ``x[1]`` with, respectively.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> r3xr3 = odl.ProductSpace(r3, r3)
+        >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
+        >>> z = r3.element()
+        >>> op = LinCombOperator(r3, 1.0, 1.0)
+        >>> op(xy, out=z)  # Returns z
+        rn(3).element([2.0, 4.0, 6.0])
+        >>> z
+        rn(3).element([2.0, 4.0, 6.0])
         """
         domain = ProductSpace(space, space)
         super().__init__(domain, space, linear=True)
@@ -226,19 +239,6 @@ class LinCombOperator(Operator):
         out : `range` element
             Result of the linear combination. If ``out`` was provided,
             the returned object is a reference to it.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> r3xr3 = odl.ProductSpace(r3, r3)
-        >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
-        >>> z = r3.element()
-        >>> op = LinCombOperator(r3, 1.0, 1.0)
-        >>> op(xy, out=z)  # Returns z
-        rn(3).element([2.0, 4.0, 6.0])
-        >>> z
-        rn(3).element([2.0, 4.0, 6.0])
         """
         if out is None:
             out = self.range.element()
@@ -280,6 +280,30 @@ class MultiplyOperator(Operator):
             Default: ``multiplicand.space``.
         range : `LinearSpace` or `Field`, optional
             Set to which the operator maps. Default: ``multiplicand.space``.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> x = r3.element([1, 2, 3])
+
+        Multiply by vector
+
+        >>> op = MultiplyOperator(x)
+        >>> op(x)
+        rn(3).element([1.0, 4.0, 9.0])
+        >>> out = r3.element()
+        >>> op(x, out)
+        rn(3).element([1.0, 4.0, 9.0])
+
+        Multiply by scalar
+
+        >>> op2 = MultiplyOperator(x, domain=r3.field)
+        >>> op2(3)
+        rn(3).element([3.0, 6.0, 9.0])
+        >>> out = r3.element()
+        >>> op2(3, out)
+        rn(3).element([3.0, 6.0, 9.0])
         """
         if domain is None:
             domain = multiplicand.space
@@ -313,30 +337,6 @@ class MultiplyOperator(Operator):
         out : `range` element
             Result of the multiplication. If ``out`` was provided, the
             returned object is a reference to it.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> x = r3.element([1, 2, 3])
-
-        Multiply by vector
-
-        >>> op = MultiplyOperator(x)
-        >>> op(x)
-        rn(3).element([1.0, 4.0, 9.0])
-        >>> out = r3.element()
-        >>> op(x, out)
-        rn(3).element([1.0, 4.0, 9.0])
-
-        Multiply by scalar
-
-        >>> op2 = MultiplyOperator(x, domain=r3.field)
-        >>> op2(3)
-        rn(3).element([3.0, 6.0, 9.0])
-        >>> out = r3.element()
-        >>> op2(3, out)
-        rn(3).element([3.0, 6.0, 9.0])
         """
         if out is None:
             return x * self.multiplicand
@@ -413,6 +413,21 @@ class PowerOperator(Operator):
             Set of elements on which the operator can be applied.
         exponent : float
             Exponent parameter of the power function applied to an element.
+
+        Examples
+        --------
+        Use with vectors
+
+        >>> import odl
+        >>> op = PowerOperator(odl.rn(3), exponent=2)
+        >>> op([1, 2, 3])
+        rn(3).element([1.0, 4.0, 9.0])
+
+        or scalars
+
+        >>> op = PowerOperator(odl.RealNumbers(), exponent=2)
+        >>> op(2.0)
+        4.0
         """
 
         self.__exponent = float(exponent)
@@ -440,21 +455,6 @@ class PowerOperator(Operator):
         out : `range` element
             Result of the multiplication. If ``out`` was provided, the
             returned object is a reference to it.
-
-        Examples
-        --------
-        Use with vectors
-
-        >>> import odl
-        >>> op = PowerOperator(odl.rn(3), exponent=2)
-        >>> op([1, 2, 3])
-        rn(3).element([1.0, 4.0, 9.0])
-
-        or scalars
-
-        >>> op = PowerOperator(odl.RealNumbers(), exponent=2)
-        >>> op(2.0)
-        4.0
         """
         if out is None:
             return x ** self.exponent
@@ -531,6 +531,15 @@ class InnerProductOperator(Operator):
         ----------
         vector : `LinearSpaceVector`
             The vector to take the inner product with
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = InnerProductOperator(x)
+        >>> op(r3.element([1, 2, 3]))
+        14.0
         """
         self.__vector = vector
         super().__init__(vector.space, vector.space.field, linear=True)
@@ -552,15 +561,6 @@ class InnerProductOperator(Operator):
         -------
         out : `field` element
             Result of the inner product calculation
-
-        Examples
-        --------
-        >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> op = InnerProductOperator(x)
-        >>> op(r3.element([1, 2, 3]))
-        14.0
         """
         return x.inner(self.vector)
 
@@ -635,6 +635,14 @@ class NormOperator(Operator):
         ----------
         space : `LinearSpace`
             Space to take the norm in.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r2 = odl.rn(2)
+        >>> op = NormOperator(r2)
+        >>> op([3, 4])
+        5.0
         """
         super().__init__(space, RealNumbers(), linear=False)
 
@@ -650,14 +658,6 @@ class NormOperator(Operator):
         -------
         norm : float
             Norm of ``x``.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r2 = odl.rn(2)
-        >>> op = NormOperator(r2)
-        >>> op([3, 4])
-        5.0
         """
         return x.norm()
 
@@ -736,6 +736,15 @@ class DistOperator(Operator):
         ----------
         vector : `LinearSpaceVector`
             Point to calculate the distance to.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r2 = odl.rn(2)
+        >>> x = r2.element([1, 1])
+        >>> op = DistOperator(x)
+        >>> op([4, 5])
+        5.0
         """
         self.vector = vector
         super().__init__(vector.space, RealNumbers(), linear=False)
@@ -752,15 +761,6 @@ class DistOperator(Operator):
         -------
         out : float
             Distance from of ``x`` to ``self.vector``.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r2 = odl.rn(2)
-        >>> x = r2.element([1, 1])
-        >>> op = DistOperator(x)
-        >>> op([4, 5])
-        5.0
         """
         return self.vector.dist(x)
 
@@ -835,9 +835,17 @@ class ConstantOperator(Operator):
         ----------
         vector : `LinearSpaceVector`
             The vector constant to be returned
-
         domain : `LinearSpace`, optional
             Domain of the operator. Default : ``vector.space``.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> x = r3.element([1, 2, 3])
+        >>> op = ConstantOperator(x)
+        >>> op(x, out=r3.element())
+        rn(3).element([1.0, 2.0, 3.0])
         """
         if not isinstance(vector, LinearSpaceVector):
             raise TypeError('`vector` {!r} not a LinearSpaceVector instance'
@@ -869,15 +877,6 @@ class ConstantOperator(Operator):
         out : `range` element
             Result of the assignment. If ``out`` was provided, the
             returned object is a reference to it.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> x = r3.element([1, 2, 3])
-        >>> op = ConstantOperator(x)
-        >>> op(x, out=r3.element())
-        rn(3).element([1.0, 2.0, 3.0])
         """
         if out is None:
             return self.range.element(self.vector.copy())
@@ -929,6 +928,17 @@ class ResidualOperator(Operator):
             `Operator.range` must be a `LinearSpace`.
         vector : ``operator.range`` `element-like`
             Vector to be subtracted from the operator result.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> vec = r3.element([1, 2, 3])
+        >>> op = IdentityOperator(r3)
+        >>> res = ResidualOperator(op, vec)
+        >>> x = r3.element([4, 5, 6])
+        >>> res(x, out=r3.element())
+        rn(3).element([3.0, 3.0, 3.0])
         """
         if not isinstance(operator, Operator):
             raise TypeError('`op` {!r} not a Operator instance'
@@ -967,17 +977,6 @@ class ResidualOperator(Operator):
         out : `range` element
             Result of the evaluation. If ``out`` was provided, the
             returned object is a reference to it.
-
-        Examples
-        --------
-        >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> vec = r3.element([1, 2, 3])
-        >>> op = IdentityOperator(r3)
-        >>> res = ResidualOperator(op, vec)
-        >>> x = r3.element([4, 5, 6])
-        >>> res(x, out=r3.element())
-        rn(3).element([3.0, 3.0, 3.0])
         """
         if out is None:
             out = self.operator(x)
