@@ -575,6 +575,39 @@ class ProductSpace(LinearSpace):
         return ProductSpaceElement
 
 
+def _broadcast_arithmetic(op, raises=False):
+    """Return self operator other with broadcasting
+
+    Parameters
+    ----------
+    op : string
+        Name of the operator, e.g. ``'__add__'``.
+    raises : bool
+        True if the method should raise on failure, otherwise returns
+        ``NotImplemented``.
+    """
+
+    def _broadcast_arithmetic_impl(self, other):
+        if (self.space.is_power_space and other in self.space[0]):
+            results = []
+            for xi in self:
+                res = getattr(xi, op)(other)
+                if res is NotImplemented:
+                    return NotImplemented
+                else:
+                    results.append(res)
+
+            return self.space.element(results)
+        else:
+            return getattr(ProductSpaceElement, op)(self, other)
+
+    # Set docstring
+    docstring = """Broadcasted {op}.""".format(op=op)
+    _broadcast_arithmetic_impl.__doc__ = docstring
+
+    return _broadcast_arithmetic_impl
+
+
 class ProductSpaceElement(LinearSpaceElement):
 
     """Elements of a `ProductSpace`."""
@@ -631,56 +664,21 @@ class ProductSpaceElement(LinearSpaceElement):
             for i, index in enumerate(indices):
                 self.parts[index] = values[i]
 
-    def _broadcast_arithmetic(self, other, operator):
-        result = getattr(LinearSpaceVector, operator)(self, other)
-        if (result is NotImplemented and self.space.is_power_space and
-                other in self.space[0]):
-            return self.space.element([getattr(xi, operator)(other)
-                                       for xi in self])
-        else:
-            return result
-
-    def __add__(self, other):
-        """Implement broadcasting addition.
-
-        Examples
-        --------
-        Add two vectors with the same underlying space:
-
-        >>> import odl
-        >>> space = odl.rn(3)
-        >>> pspace = ProductSpace(space, 2)
-        >>> x = space.one()
-        >>> y = pspace.one()
-        >>> x + y
-        ProductSpace(rn(3), 2).element([
-            [2.0, 2.0, 2.0],
-            [2.0, 2.0, 2.0]
-        ])
-        """
-        return self._broadcast_arithmetic(other, '__add__')
-
-    __radd__ = __add__
-
-    def __mul__(self, other):
-        """Implement broadcasting multiplication.
-
-        Examples
-        --------
-        Add two vectors with the same underlying space:
-
-        >>> import odl
-        >>> space = odl.rn(3)
-        >>> pspace = ProductSpace(space, 2)
-        >>> x = space.element([3, 4, 5])
-        >>> y = pspace.one()
-        >>> x * y
-        ProductSpace(rn(3), 2).element([
-            [3.0, 4.0, 5.0],
-            [3.0, 4.0, 5.0]
-        ])
-        """
-        return self._broadcast_arithmetic(other, '__mul__')
+    __add__ = _broadcast_arithmetic('__add__')
+    __radd__ = _broadcast_arithmetic('__radd__')
+    __iadd__ = _broadcast_arithmetic('__iadd__')
+    __sub__ = _broadcast_arithmetic('__sub__')
+    __rsub__ = _broadcast_arithmetic('__rsub__')
+    __isub__ = _broadcast_arithmetic('__isub__')
+    __mul__ = _broadcast_arithmetic('__mul__')
+    __rmul__ = _broadcast_arithmetic('__rmul__')
+    __imul__ = _broadcast_arithmetic('__imul__')
+    __div__ = _broadcast_arithmetic('__div__')
+    __rdiv__ = _broadcast_arithmetic('__rdiv__')
+    __idiv__ = _broadcast_arithmetic('__idiv__')
+    __truediv__ = _broadcast_arithmetic('__truediv__')
+    __rtruediv__ = _broadcast_arithmetic('__rtruediv__')
+    __itruediv__ = _broadcast_arithmetic('__itruediv__')
 
     @property
     def ufunc(self):
