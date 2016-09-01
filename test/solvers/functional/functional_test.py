@@ -143,6 +143,9 @@ def test_scalar_multiplication():
                                 (F.proximal(step_len * scal**2)))(x * scal),
                             places=PLACES)
 
+    # Test left multiplication with zero
+    assert isinstance(0 * F, odl.solvers.ZeroFunctional)
+
 
 def test_functional_composition():
     """Test composition of functional.

@@ -61,10 +61,7 @@ class Functional(Operator):
     http://odl.readthedocs.io/guide/in_depth/functional_guide.html.
     """
 
-    # TODO: Update doc above. What to write?
-
-    def __init__(self, domain, linear=False, smooth=False, concave=False,
-                 convex=False, grad_lipschitz=np.inf):
+    def __init__(self, domain, linear=False, grad_lipschitz=np.inf):
         """Initialize a new instance.
 
         Parameters
@@ -76,22 +73,12 @@ class Functional(Operator):
             If `True`, the functional is considered as linear. In this
             case, ``domain`` and ``range`` have to be instances of
             `LinearSpace`, or `Field`.
-        smooth : `bool`, optional
-            If `True`, assume that the functional is continuously
-            differentiable
-        concave : `bool`, optional
-            If `True`, assume that the functional is concave
-        convex : `bool`, optional
-            If `True`, assume that the functional is convex
         grad_lipschitz : 'float', optional
             The Lipschitz constant of the gradient.
         """
 
         Operator.__init__(self, domain=domain,
                           range=domain.field, linear=linear)
-        self._is_smooth = bool(smooth)
-        self._is_convex = bool(convex)
-        self._is_concave = bool(concave)
         self._grad_lipschitz = float(grad_lipschitz)
 
     @property
@@ -327,7 +314,12 @@ class Functional(Operator):
             `OperatorLeftVectorMult`.
         """
         if other in self.domain.field:
-            return FunctionalLeftScalarMult(self, other)
+            if other == 0:
+                from odl.solvers.functional.default_functionals import (
+                    ZeroFunctional)
+                return ZeroFunctional(self.domain)
+            else:
+                return FunctionalLeftScalarMult(self, other)
         else:
             return super().__rmul__(other)
 
@@ -375,26 +367,9 @@ class Functional(Operator):
         else:
             return NotImplemented
 
-    # TODO: Do we want this? What if one is a Functional? What happens then?
-    # What can we say?
     def __sub__(self, other):
         """Return ``self - other``."""
         return self.__add__(-1 * other)
-
-    @property
-    def is_smooth(self):
-        """`True` if this functional is continuously differentiable."""
-        return self._is_smooth
-
-    @property
-    def is_concave(self):
-        """`True` if this functional is concave."""
-        return self._is_concave
-
-    @property
-    def is_convex(self):
-        """`True` if this functional is convex."""
-        return self._is_convex
 
     @property
     def grad_lipschitz(self):
@@ -429,26 +404,16 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
         scalar = func.range.element(scalar)
 
-        if scalar > 0:
+        if scalar > 0 or scalar < 0:
             Functional.__init__(self, domain=func.domain,
                                 linear=func.is_linear,
-                                smooth=func.is_smooth,
-                                concave=func.is_concave,
-                                convex=func.is_convex,
-                                grad_lipschitz=(scalar * func.grad_lipschitz))
+                                grad_lipschitz=(
+                                    np.abs(scalar) * func.grad_lipschitz))
+
         elif scalar == 0:
-            Functional.__init__(self, domain=func.domain,
-                                linear=True,
-                                smooth=True,
-                                concave=True, convex=True,
+            Functional.__init__(self, domain=func.domain, linear=True,
                                 grad_lipschitz=0)
-        elif scalar < 0:
-            Functional.__init__(self, domain=func.domain,
-                                linear=func.is_linear,
-                                smooth=func.is_smooth,
-                                concave=func.is_convex,
-                                convex=func.is_concave,
-                                grad_lipschitz=(-scalar * func.grad_lipschitz))
+
         else:
             # It should not be possible to get here
             raise TypeError('comparison with scalar {} failed'.format(scalar))
@@ -495,18 +460,23 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             Domain and range equal to domain of functional.
         """
 
-        # TODO: This is a bit "to clever" (and potentially wrong... it assumes
-        # that you always start with a convex functional). If a convex
-        # functional is scaled with a negative scalar, we should not allow to
-        # call for proximal (raise a ValueError). However, should we check for
-        # convex here instead? FunctionalLeftScalarMult keeps track of convex
-        # when initialized, depending on sign of the scalar.
-
         sigma = float(sigma)
-        if sigma * self.scalar < 0:
-            raise ValueError('The step lengt {} times the scalar {} needs to '
-                             'be nonnegative.'.format(sigma, self.scalar))
-        return self.operator.proximal(sigma * self.scalar)
+
+        if self.scalar < 0:
+            raise ValueError('Proximal operator of functional scaled with a '
+                             'negative value {} is not well-defined'
+                             ''.format(self.scalar))
+
+        elif self.scalar == 0:
+            return IdentityOperator(self.domain)
+
+        elif self.scalar > 0:
+            return self.operator.proximal(sigma * self.scalar)
+
+        else:
+            # It should not be possible to get here
+            raise TypeError('comparison with scalar {} failed'
+                            ''.format(self.scalar))
 
     def derivative(self, point):
         """Returns the derivative operator in the given point.
@@ -560,12 +530,10 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
         if scalar == 0:
             Functional.__init__(self, domain=func.domain, linear=True,
-                                smooth=True, concave=True, convex=True,
                                 grad_lipschitz=0)
         elif scalar < 0 or scalar > 0:
             Functional.__init__(self, domain=func.domain,
-                                linear=func.is_linear, smooth=func.is_smooth,
-                                concave=func.is_concave, convex=func.is_convex,
+                                linear=func.is_linear,
                                 grad_lipschitz=(np.abs(scalar) *
                                                 func.grad_lipschitz))
         else:
@@ -672,11 +640,9 @@ class FunctionalComp(Functional, OperatorComp):
 
         OperatorComp.__init__(self, left=func, right=op, tmp=tmp1)
 
+        # TODO: can the Lipschitz constant of the gradient be estimated?
         Functional.__init__(self, domain=func.domain,
                             linear=(func.is_linear and op.is_linear),
-                            smooth=(func.is_smooth and op.is_linear),
-                            concave=(func.is_concave and op.is_linear),
-                            convex=(func.is_convex and op.is_linear),
                             grad_lipschitz=np.infty)
 
         if tmp2 is not None and tmp2 not in self._left.domain:
@@ -748,7 +714,6 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
 
-        # TODO: can some of the parameters convex, etc. be decided?
         Functional.__init__(self, domain=func.domain)
 
     @property
@@ -846,19 +811,9 @@ class FunctionalSum(Functional, OperatorSum):
         if not isinstance(func2, Functional):
             raise TypeError('functional 2 {!r} is not a Functional instance.'
                             ''.format(func2))
-        # TODO: Is this needed, or should it be left for OperatorSum to handle?
-        if func1.range != func2.range:
-            raise TypeError('the ranges of the functionals {!r} and {!r} do '
-                            'not match'.format(func1.range, func2.range))
-        if func1.domain != func2.domain:
-            raise TypeError('the domains of the functionals {!r} and {!r} do '
-                            'not match'.format(func1.domain, func2.domain))
 
         Functional.__init__(self, domain=func1.domain,
                             linear=(func1.is_linear and func2.is_linear),
-                            smooth=(func1.is_smooth and func2.is_smooth),
-                            concave=(func1.is_concave and func2.is_concave),
-                            convex=(func1.is_convex and func2.is_convex),
                             grad_lipschitz=(func1.grad_lipschitz +
                                             func2.grad_lipschitz))
 
@@ -922,8 +877,6 @@ class FunctionalScalarSum(Functional, OperatorSum):
                             'functional {!r}'.format(scalar, func))
 
         Functional.__init__(self, domain=func.domain, linear=func.is_linear,
-                            smooth=func.is_smooth, concave=func.is_concave,
-                            convex=func.is_convex,
                             grad_lipschitz=func.grad_lipschitz)
 
         OperatorSum.__init__(self, left=func,
@@ -932,7 +885,6 @@ class FunctionalScalarSum(Functional, OperatorSum):
                                                     range=func.range),
                              tmp_ran=None, tmp_dom=tmp_dom)
 
-    # TODO: Update this if ConstantOperator is updated.
     @property
     def scalar(self):
         return self.right.vector
@@ -1030,13 +982,16 @@ class TranslatedFunctional(Functional):
                             ''.format(translation.space, func.domain))
 
         super().__init__(domain=func.domain, linear=False,
-                         smooth=func.is_smooth,
-                         concave=func.is_concave,
-                         convex=func.is_convex,
                          grad_lipschitz=func.grad_lipschitz)
 
-        self._original_func = func
-        self._translation = translation
+    # TODO: Add case if we have translation -> scaling -> translation?
+        if isinstance(func, TranslatedFunctional):
+            self._original_func = func.original_func
+            self._translation = func.translation + translation
+
+        else:
+            self._original_func = func
+            self._translation = translation
 
     @property
     def original_func(self):
@@ -1098,10 +1053,10 @@ class TranslatedFunctional(Functional):
                     translated.
 
                 """
+                # TODO: is there a good way to see if this operator is linear?
                 super().__init__(domain=translated_func.domain,
                                  range=translated_func.domain,
-                                 linear=(translated_func.is_concave and
-                                         translated_func.is_convex))
+                                 linear=False)
 
                 self._original_grad = translated_func._original_func.gradient
                 self._translation = translation
@@ -1186,6 +1141,10 @@ class ConvexConjugateTranslation(Functional):
 
     Notes
     -----
+    The implementation assumes that the underlying  functional ``F`` is proper,
+    convex, and lower semi-continuous. Otherwise the convex conjugate of the
+    convex conjugate is not necessarily the functional itself.
+
     For reference on the identity used, see [KP2015]_.
     """
 
@@ -1201,6 +1160,10 @@ class ConvexConjugateTranslation(Functional):
             Element in domain of ``F^*``.
         """
 
+        if not isinstance(convex_conj_f, Functional):
+            raise TypeError('input {} is not a Functional instance'
+                            ''.format(convex_conj_f))
+
         if translation is not None and not isinstance(translation,
                                                       LinearSpaceVector):
             raise TypeError(
@@ -1213,10 +1176,12 @@ class ConvexConjugateTranslation(Functional):
                 ''.format(translation, convex_conj_f.domain))
 
         super().__init__(domain=convex_conj_f.domain,
-                         linear=convex_conj_f.is_linear,
-                         smooth=convex_conj_f.is_smooth,
-                         concave=convex_conj_f.is_concave,
-                         convex=convex_conj_f.is_convex)
+                         linear=convex_conj_f.is_linear)
+
+        # Only compute the grad_lipschitz if it is not inf
+        if not convex_conj_f.grad_lipschitz == np.inf:
+            self._grad_lipschitz = (convex_conj_f.grad_lipschitz +
+                                    translation.norm())
 
         self._orig_convex_conj_f = convex_conj_f
         self._translation = translation
@@ -1228,10 +1193,6 @@ class ConvexConjugateTranslation(Functional):
     @property
     def translation(self):
         return self._translation
-
-        # TODO:
-        # The Lipschitz constant for the gradient can be bounded, by using
-        # triangle inequality. However: is it the tightest bound?
 
     def _call(self, x):
         """Applies the functional to the given point.
@@ -1285,13 +1246,22 @@ class ConvexConjugateTranslation(Functional):
         return proximal_quadratic_perturbation(
             self.orig_convex_conj_f.proximal, a=0, u=self.translation)(sigma)
 
-    # TODO: Should it be added?
-    # Note: This would only be valide when f is proper convex and lower-
-    # semincontinuous.
     @property
     def conjugate_functional(self):
-        """Convex conjugate functional of the functional."""
-        raise NotImplementedError
+        """Convex conjugate functional of the functional.
+
+        Notes
+        -----
+        By the Fenchel-Moreau theorem, the convex conjugate of a convex
+        conjugate is the functional itself, if and only if the functional is
+        proper, convex, and lower semi-continuous.
+
+        Wikipedia article on the `Fenchel–Moreau theorem
+        <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
+        """
+
+        return self.orig_convex_conj_f.conjugate_functional.traslate(
+            self.translation)
 
 
 class ConvexConjugateFuncScaling(Functional):
@@ -1316,6 +1286,10 @@ class ConvexConjugateFuncScaling(Functional):
 
     Notes
     -----
+    The implementation assumes that the underlying  functional ``F`` is proper,
+    convex, and lower semi-continuous. Otherwise the convex conjugate of the
+    convex conjugate is not necessarily the functional itself.
+
     For reference on the identity used, see [KP2015]_.
     """
 
@@ -1331,8 +1305,13 @@ class ConvexConjugateFuncScaling(Functional):
             Positive scaling parameter.
         """
 
-        # TODO: scaling with zero gives the zero-functional. Should this be ok?
+        if not isinstance(convex_conj_f, Functional):
+            raise TypeError('input {} is not a Functional instance'
+                            ''.format(convex_conj_f))
+
         scaling = float(scaling)
+
+        # The case scaling = 0 is handeled in Functional.__rmul__
         if scaling <= 0:
             raise ValueError(
                 'Scaling with nonpositive values is not allowed. Current '
@@ -1340,9 +1319,8 @@ class ConvexConjugateFuncScaling(Functional):
 
         super().__init__(domain=convex_conj_f.domain,
                          linear=convex_conj_f.is_linear,
-                         smooth=convex_conj_f.is_smooth,
-                         concave=convex_conj_f.is_concave,
-                         convex=convex_conj_f.is_convex)
+                         grad_lipschitz=(np.abs(scaling) *
+                                         convex_conj_f.grad_lipschitz))
 
         self._orig_convex_conj_f = convex_conj_f
         self._scaling = scaling
@@ -1407,13 +1385,21 @@ class ConvexConjugateFuncScaling(Functional):
                                     scaling=(1.0 / self.scaling)
                                     )(self.scaling * sigma)
 
-    # TODO: Should it be added?
-    # Note: This would only be valide when f is proper convex and lower-
-    # semincontinuous.
     @property
     def conjugate_functional(self):
-        """Convex conjugate functional of the functional."""
-        raise NotImplementedError
+        """Convex conjugate functional of the functional.
+
+        Notes
+        -----
+        By the Fenchel-Moreau theorem, the convex conjugate of a convex
+        conjugate is the functional itself, if and only if the functional is
+        proper, convex, and lower semi-continuous.
+
+        Wikipedia article on the `Fenchel–Moreau theorem
+        <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
+        """
+
+        return self.scaling * self.orig_convex_conj_f.conjugate_functional
 
 
 class ConvexConjugateArgScaling(Functional):
@@ -1439,6 +1425,10 @@ class ConvexConjugateArgScaling(Functional):
 
     Notes
     -----
+    The implementation assumes that the underlying  functional ``F`` is proper,
+    convex, and lower semi-continuous. Otherwise the convex conjugate of the
+    convex conjugate is not necessarily the functional itself.
+
     For reference on the identity used, see [KP2015]_.
     """
 
@@ -1454,16 +1444,17 @@ class ConvexConjugateArgScaling(Functional):
             The scaling parameter.
         """
 
+        if not isinstance(convex_conj_f, Functional):
+            raise TypeError('input {} is not a Functional instance'
+                            ''.format(convex_conj_f))
+
         scaling = float(scaling)
         if scaling == 0:
             raise ValueError('Scaling with 0 is not allowed. Current value:'
                              ' {}.'.format(scaling))
 
         super().__init__(domain=convex_conj_f.domain,
-                         linear=convex_conj_f.is_linear,
-                         smooth=convex_conj_f.is_smooth,
-                         concave=convex_conj_f.is_concave,
-                         convex=convex_conj_f.is_convex)
+                         linear=convex_conj_f.is_linear)
 
         self._orig_convex_conj_f = convex_conj_f
         self._scaling = scaling
@@ -1528,13 +1519,21 @@ class ConvexConjugateArgScaling(Functional):
         return proximal_arg_scaling(self.orig_convex_conj_f.proximal,
                                     scaling=(1.0 / self.scaling))(sigma)
 
-    # TODO: Should it be added?
-    # Note: This would only be valide when f is proper convex and lower-
-    # semincontinuous.
     @property
     def conjugate_functional(self):
-        """Convex conjugate functional of the functional."""
-        raise NotImplementedError
+        """Convex conjugate functional of the functional.
+
+        Notes
+        -----
+        By the Fenchel-Moreau theorem, the convex conjugate of a convex
+        conjugate is the functional itself, if and only if the functional is
+        proper, convex, and lower semi-continuous.
+
+        Wikipedia article on the `Fenchel–Moreau theorem
+        <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
+        """
+
+        return self.orig_convex_conj_f.conjugate_functional * self.scaling
 
 
 class ConvexConjugateLinearPerturb(Functional):
@@ -1560,6 +1559,10 @@ class ConvexConjugateLinearPerturb(Functional):
 
     Notes
     -----
+    The implementation assumes that the underlying  functional ``F`` is proper,
+    convex, and lower semi-continuous. Otherwise the convex conjugate of the
+    convex conjugate is not necessarily the functional itself.
+
     For reference on the identity used, see [KP2015]_. Note that this is only
     valide for functionals with a domain that is a Hilbert space.
     """
@@ -1575,6 +1578,11 @@ class ConvexConjugateLinearPerturb(Functional):
         y : `LinearSpaceVector`
             Element in domain of ``F^*``.
         """
+
+        if not isinstance(convex_conj_f, Functional):
+            raise TypeError('input {} is not a Functional instance'
+                            ''.format(convex_conj_f))
+
         if not isinstance(y, LinearSpaceVector):
             raise TypeError('vector {!r} not a LinearSpaceVector instance.'
                             ''.format(y))
@@ -1584,10 +1592,7 @@ class ConvexConjugateLinearPerturb(Functional):
                             '{!r}.'.format(y, convex_conj_f.domain))
 
         super().__init__(domain=convex_conj_f.domain,
-                         linear=convex_conj_f.is_linear,
-                         smooth=convex_conj_f.is_smooth,
-                         concave=convex_conj_f.is_concave,
-                         convex=convex_conj_f.is_convex)
+                         linear=convex_conj_f.is_linear)
 
         self._orig_convex_conj_f = convex_conj_f
         self._y = y
@@ -1652,10 +1657,18 @@ class ConvexConjugateLinearPerturb(Functional):
         return proximal_translation(self.orig_convex_conj_f.proximal,
                                     self.y)(sigma)
 
-    # TODO: Should it be added?
-    # Note: This would only be valide when f is proper convex and lower-
-    # semincontinuous.
     @property
     def conjugate_functional(self):
-        """Convex conjugate functional of the functional."""
-        raise NotImplementedError
+        """Convex conjugate functional of the functional.
+
+        Notes
+        -----
+        By the Fenchel-Moreau theorem, the convex conjugate of a convex
+        conjugate is the functional itself, if and only if the functional is
+        proper, convex, and lower semi-continuous.
+
+        Wikipedia article on the `Fenchel–Moreau theorem
+        <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
+        """
+
+        return self.orig_convex_conj_f.conjugate_functional + self.y.T

@@ -60,8 +60,7 @@ class L1Norm(Functional):
         domain : `LinearSpace`
             Domain of the functional.
         """
-        super().__init__(domain=domain, linear=False, convex=True,
-                         concave=False, smooth=False, grad_lipschitz=np.inf)
+        super().__init__(domain=domain, linear=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
         """Applies the functional to the given point.
@@ -236,8 +235,7 @@ class L2Norm(Functional):
         domain : `LinearSpace`
             Domain of the functional.
         """
-        super().__init__(domain=domain, linear=False, convex=True,
-                         concave=False, smooth=False, grad_lipschitz=np.inf)
+        super().__init__(domain=domain, linear=False, grad_lipschitz=np.inf)
 
     def _call(self, x):
         """Applies the functional to the given point.
@@ -444,8 +442,7 @@ class L2NormSquare(Functional):
         domain : `LinearSpace`
             Domain of the functional.
         """
-        super().__init__(domain=domain, linear=False, convex=True,
-                         concave=False, smooth=True, grad_lipschitz=2)
+        super().__init__(domain=domain, linear=False, grad_lipschitz=2)
 
     def _call(self, x):
         """Applies the functional to the given point.
@@ -552,8 +549,7 @@ class ConstantFunctional(Functional):
         constant : element in `domain.field`
             The constant value of the functional
         """
-        super().__init__(domain=domain, linear=True, convex=True,
-                         concave=True, smooth=True, grad_lipschitz=0)
+        super().__init__(domain=domain, linear=True, grad_lipschitz=0)
 
         if constant not in self.range:
             raise TypeError('constant {} not in the range {}.'
@@ -633,7 +629,7 @@ class ConstantFunctional(Functional):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(functional.domain, linear=False, convex=True)
+                super().__init__(functional.domain, linear=False)
                 self._zero_element = self.domain.zero()
                 self._constant = functional._constant
 
