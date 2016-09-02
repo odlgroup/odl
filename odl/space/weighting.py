@@ -111,7 +111,7 @@ class WeightingBase(object):
         Notes
         -----
         This operation must be computationally cheap, i.e. no large
-        arrays may be compared element-wise. That is the task of the
+        arrays may be compared entry-wise. That is the task of the
         `equiv` method.
         """
         return (isinstance(other, WeightingBase) and

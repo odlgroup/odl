@@ -830,7 +830,7 @@ class ProductSpaceElementWeighting(VectorWeightingBase):
 
         <x, y>_w = <w * x, y>
 
-    with element-wise multiplication ``w * x``. For other exponents,
+    with component-wise multiplication ``w * x``. For other exponents,
     only ``norm`` and ```dist`` are defined. In the case of exponent
     ``inf``, the weighted norm is::
 

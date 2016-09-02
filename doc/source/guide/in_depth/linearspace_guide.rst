@@ -182,11 +182,11 @@ Pointwise multiplication (optional)
 ``_multiply(x1, x2, out)``
 
 A raw (not type-checking) private method multiplying two elements
-``x1`` and ``x2`` element-wise and storing the result in ``out``.
+``x1`` and ``x2`` point-wise and storing the result in ``out``.
 
 **Parameters:**
     x1, x2 : `LinearSpaceElement`
-        Elements whose element-wise product to calculate.
+        Elements whose point-wise product to calculate.
     out : `LinearSpaceElement`
         Element to store the result.
 
