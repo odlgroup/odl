@@ -33,7 +33,9 @@ import numpy as np
 
 from odl.discr.grid import TensorGrid, RegularGrid, uniform_sampling_fromintv
 from odl.set import IntervalProd
-from odl.util.normalize import normalized_index_expression
+from odl.util.normalize import (
+    normalized_index_expression, normalized_nodes_on_bdry,
+    normalized_scalar_param_list, safe_int_conv)
 
 
 __all__ = ('RectPartition', 'uniform_partition_fromintv',
@@ -848,40 +850,16 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
     sizes = [np.size(p) for p in (min_pt, max_pt, shape, cell_sides)]
     ndim = int(np.max(sizes))
 
-    if ndim == 1:
-        min_pt = [min_pt]
-        max_pt = [max_pt]
-        shape = [shape]
-        cell_sides = [cell_sides]
-    else:
-        if min_pt is None:
-            min_pt = [None] * ndim
-        if max_pt is None:
-            max_pt = [None] * ndim
-        if shape is None:
-            shape = [None] * ndim
-        if cell_sides is None:
-            cell_sides = [None] * ndim
+    min_pt = normalized_scalar_param_list(min_pt, ndim, param_conv=float,
+                                          keep_none=True)
+    max_pt = normalized_scalar_param_list(max_pt, ndim, param_conv=float,
+                                          keep_none=True)
+    shape = normalized_scalar_param_list(shape, ndim, param_conv=safe_int_conv,
+                                         keep_none=True)
+    cell_sides = normalized_scalar_param_list(cell_sides, ndim,
+                                              param_conv=float, keep_none=True)
 
-        min_pt = list(min_pt)
-        max_pt = list(max_pt)
-        shape = list(shape)
-        cell_sides = list(cell_sides)
-        sizes = [len(p) for p in (min_pt, max_pt, shape, cell_sides)]
-
-        if not all(s == ndim for s in sizes):
-            raise ValueError('inconsistent sizes {}, {}, {}, {} of '
-                             'arguments `min_pt`, `max_pt`, `shape`, '
-                             '`cell_sides`'.format(*sizes))
-
-    # Normalize nodes_on_bdry
-    if np.shape(nodes_on_bdry) == ():
-        nodes_on_bdry = ([(bool(nodes_on_bdry), bool(nodes_on_bdry))] * ndim)
-    elif ndim == 1 and len(nodes_on_bdry) == 2:
-        nodes_on_bdry = [nodes_on_bdry]
-    elif len(nodes_on_bdry) != ndim:
-        raise ValueError('nodes_on_bdry has length {}, expected {}.'
-                         ''.format(len(nodes_on_bdry), ndim))
+    nodes_on_bdry = normalized_nodes_on_bdry(nodes_on_bdry, ndim)
 
     # Calculate the missing parameters in min_pt, max_pt, shape
     for i, (xmin, xmax, n, dx, on_bdry) in enumerate(
