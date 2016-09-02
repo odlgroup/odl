@@ -94,7 +94,7 @@ class Resampling(Operator):
     def _call(self, x, out=None):
         """Apply resampling operator.
 
-        The vector ``x`` is resampled using the sampling and interpolation
+        The element ``x`` is resampled using the sampling and interpolation
         operators of the underlying spaces.
         """
         if out is None:

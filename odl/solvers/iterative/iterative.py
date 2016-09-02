@@ -80,7 +80,7 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
         `Operator.adjoint` property, i.e. ``op.derivative(x).adjoint`` must be
         well-defined for ``x`` in the operator domain.
     x : ``op.domain`` element
-        Vector to which the result is written. Its initial value is
+        Element to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
     rhs : ``op.range`` element
@@ -146,7 +146,7 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
         self-adjoint. This implies in particular that its domain and
         range are equal.
     x : ``op.domain`` element
-        Vector to which the result is written. Its initial value is
+        Element to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
     rhs : ``op.range`` element
@@ -237,7 +237,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         in turn must implement `Operator.adjoint`, i.e.
         the call ``op.derivative(x).adjoint`` must be valid.
     x : ``op.domain`` element
-        Vector to which the result is written. Its initial value is
+        Element to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
     rhs : ``op.range`` element
@@ -346,7 +346,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
         in turn must implement `Operator.adjoint`, i.e.
         the call ``op.derivative(x).adjoint`` must be valid.
     x : ``op.domain`` element
-        Vector to which the result is written. Its initial value is
+        Element to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
     rhs : ``op.range`` element

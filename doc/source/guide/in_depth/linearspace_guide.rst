@@ -24,27 +24,27 @@ Abstract methods
 ----------------
 In the following, the abstract methods are explained in detail.
 
-Element creation 
+Element creation
 ~~~~~~~~~~~~~~~~
 
 ``element(inp=None)``
 
 This public method is the factory for the inner
-`LinearSpaceVector` class. It creates a new element of the space,
+`LinearSpaceElement` class. It creates a new element of the space,
 either from scratch or from an existing data container. In the
 simplest possible case, it just delegates the construction to the
-`LinearSpaceVector` class.
+`LinearSpaceElement` class.
 
 If no data is provided, the new element is **merely allocated, not
 initialized**, thus it can contain *any* value.
 
 **Parameters:**
     inp : `object`, optional
-        A container for values for the element initialization
+        A container for values for the element initialization.
 
 **Returns:**
-    element : `LinearSpaceVector`
-        The new vector
+    element : `LinearSpaceElement`
+        The new element.
 
 Linear combination
 ~~~~~~~~~~~~~~~~~~
@@ -59,19 +59,19 @@ functions, see below.
 
 **Parameters:**
     a, b : scalars, must be members of the space's ``field``
-        Multiplicative scalar factors for input vector ``x1`` or ``x2``,
-        respectively
-    x1, x2 : `LinearSpaceVector`
-        Input vectors
-    out : `LinearSpaceVector`
-        Element to which the result of the computation is written
+        Multiplicative scalar factors for input element ``x1`` or ``x2``,
+        respectively.
+    x1, x2 : `LinearSpaceElement`
+        Input elements.
+    out : `LinearSpaceElement`
+        Element to which the result of the computation is written.
 
 **Returns:** `None`
 
 **Requirements:**
  * Aliasing of ``x1``, ``x2`` and ``out`` **must** be allowed.
- * The input vectors ``x1`` and ``x2`` **must not** be modified.
- * The initial state of the output vector ``out`` **must not**
+ * The input elements ``x1`` and ``x2`` **must not** be modified.
+ * The initial state of the output element ``out`` **must not**
    influence the result.
 
 Underlying scalar field
@@ -86,7 +86,7 @@ underlie the space. Can be instances of either `RealNumbers` or
 Should be implemented as a ``@property`` to make it immutable.
 
 Equality check
-~~~~~~~~~~~~~~ 
+~~~~~~~~~~~~~~
 
 ``__eq__(other)``
 
@@ -95,12 +95,12 @@ purpose is to check two `LinearSpace` instances for equality.
 
 **Parameters:**
     other : `object`
-        The object to compare to
+        The object to compare to.
 
 **Returns:**
     equals : `bool`
         `True` if ``other`` is the same `LinearSpace`, `False`
-        otherwise
+        otherwise.
 
 
 Distance (optional)
@@ -109,13 +109,13 @@ Distance (optional)
 ``_dist(x1, x2)``
 
 A raw (not type-checking) private method measuring the distance
-between two vectors ``x1`` and ``x2``.
+between two elements ``x1`` and ``x2``.
 
 A space with a distance is called a **metric space**.
 
 **Parameters:**
-    x1,x2 : `LinearSpaceVector`
-        Vectors whose mutual distance to calculate
+    x1,x2 : `LinearSpaceElement`
+        Elements whose mutual distance to calculate.
 
 **Returns:**
     distance : `float`
@@ -139,12 +139,12 @@ space element ``x``.
 A space with a norm is called a **normed space**.
 
 **Parameters:**
-    x : `LinearSpaceVector`
-        The vector to measure
+    x : `LinearSpaceElement`
+        The element to measure.
 
 **Returns:**
     norm : `float`
-        The length of ``x`` as measured in the space's norm
+        The length of ``x`` as measured in the space's norm.
 
 **Requirements:**
  * ``_norm(s * x) = |s| * _norm(x)`` for any scalar ``s``
@@ -161,8 +161,8 @@ A raw (not type-checking) private method calculating the inner
 product of two space elements ``x`` and ``y``.
 
 **Parameters:**
-    x,y : `LinearSpaceVector`
-        Vectors whose inner product to calculate
+    x,y : `LinearSpaceElement`
+        Elements whose inner product to calculate.
 
 **Returns:**
     inner : `float` or `complex`
@@ -181,14 +181,14 @@ Pointwise multiplication (optional)
 
 ``_multiply(x1, x2, out)``
 
-A raw (not type-checking) private method multiplying two vectors
+A raw (not type-checking) private method multiplying two elements
 ``x1`` and ``x2`` element-wise and storing the result in ``out``.
 
 **Parameters:**
-    x1, x2 : `LinearSpaceVector`
-        Vectors whose element-wise product to calculate
-    out : `LinearSpaceVector`
-        Vector to store the result
+    x1, x2 : `LinearSpaceElement`
+        Elements whose element-wise product to calculate.
+    out : `LinearSpaceElement`
+        Element to store the result.
 
 **Returns:** `None`
 

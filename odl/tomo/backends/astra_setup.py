@@ -46,7 +46,7 @@ except ImportError:
     ASTRA_AVAILABLE = False
 import numpy as np
 
-from odl.discr import DiscreteLp, DiscreteLpVector
+from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, DivergentBeamGeometry, ParallelGeometry,
     FlatDetector)
@@ -403,7 +403,7 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         given data type
     datatype : {'volume', 'projection'}
         Type of the data container
-    data : `DiscreteLpVector`, optional
+    data : `DiscreteLpElement`, optional
         Data for the initialization of the data structure. If ``None``,
         an ASTRA data object filled with zeros is created.
     ndim : {2, 3}, optional
@@ -420,12 +420,12 @@ def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
         ASTRA internal ID for the new data structure
     """
     if data is not None:
-        if isinstance(data, DiscreteLpVector):
+        if isinstance(data, DiscreteLpElement):
             ndim = data.space.ndim
         elif isinstance(data, np.ndarray):
             ndim = data.ndim
         else:
-            raise TypeError('`data` {!r} is neither DiscreteLp.Vector '
+            raise TypeError('`data` {!r} is neither DiscreteLpElement '
                             'instance nor a `numpy.ndarray`'.format(data))
     else:
         ndim = int(ndim)

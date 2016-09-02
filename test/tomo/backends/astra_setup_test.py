@@ -358,7 +358,7 @@ def test_astra_algorithm():
 
 
 def test_geom_to_vec():
-    """Create ASTRA projection geometries vectors using ODL geometries."""
+    """Create ASTRA projection geometry vectors using ODL geometries."""
 
     apart = odl.uniform_partition(0, 2 * np.pi, 5)
     dpart = odl.uniform_partition(-40, 40, 10)

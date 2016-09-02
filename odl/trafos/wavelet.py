@@ -251,7 +251,7 @@ def array_to_pywt_coeff(coeff, size_list):
 
     Parameters
     ----------
-    coeff : `DiscreteLpVector`
+    coeff : `DiscreteLpElement`
         A flat coefficient vector containing the approximation,
         and detail coefficients in the following order
         [aaaN, aadN, adaN, addN, daaN, dadN, ddaN, dddN, ...
@@ -358,7 +358,7 @@ def wavelet_decomposition3d(x, wbasis, pad_mode, nscales):
 
     Parameters
     ----------
-    x : `DiscreteLpVector`
+    x : `DiscreteLpElement`
 
     wbasis : ``pywt.Wavelet``
         Selected wavelet basis. For more information see the

@@ -243,7 +243,7 @@ class PointCollocation(FunctionSetMapping):
 
         Parameters
         ----------
-        func : `FunctionSetVector`
+        func : `FunctionSetElement`
             The function to be evaluated
         out : `NtuplesBaseVector`, optional
             Array to which the values are written. Its shape must be
@@ -409,12 +409,12 @@ class NearestInterpolation(FunctionSetMapping):
         ----------
         x : `NtuplesBaseVector`
             The array of values to be interpolated
-        out : `FunctionSetVector`, optional
-            Vector in which to store the interpolator
+        out : `FunctionSetElement`, optional
+            Element in which to store the interpolator
 
         Returns
         -------
-        out : `FunctionSetVector`
+        out : `FunctionSetElement`
             Nearest-neighbor interpolator for the grid of this
             operator. If ``out`` was provided, the returned object
             is a reference to it.
@@ -507,12 +507,12 @@ class LinearInterpolation(FunctionSetMapping):
         ----------
         x : `FnBaseVector`
             The array of values to be interpolated
-        out : `FunctionSpaceVector`, optional
-            Vector in which to store the interpolator
+        out : `FunctionSpaceElement`, optional
+            Element in which to store the interpolator
 
         Returns
         -------
-        out : `FunctionSpaceVector`
+        out : `FunctionSpaceElement`
             Linear interpolator for the grid of this operator. If
             ``out`` was provided, the returned object is a reference
             to it.
@@ -642,12 +642,12 @@ class PerAxisInterpolation(FunctionSetMapping):
         ----------
         x : `FnBaseVector`
             The array of values to be interpolated
-        out : `FunctionSpaceVector`, optional
-            Vector in which to store the interpolator
+        out : `FunctionSpaceElement`, optional
+            Element in which to store the interpolator
 
         Returns
         -------
-        out : `FunctionSpaceVector`
+        out : `FunctionSpaceElement`
             Per-axis interpolator for the grid of this operator. If
             ``out`` was provided, the returned object is a reference
             to it.

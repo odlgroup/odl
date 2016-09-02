@@ -40,7 +40,7 @@ image *= 100 / image.max()
 # Add noise
 noisy_image = np.random.poisson(1 + image)
 
-# Discretized spaces and vectors
+# Discretized spaces and elements
 space = odl.uniform_discr([0, 0], shape, shape)
 orig = space.element(image)
 noisy = space.element(noisy_image)

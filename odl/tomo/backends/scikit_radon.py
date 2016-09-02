@@ -74,7 +74,7 @@ def scikit_radon_forward(volume, geometry, range, out=None):
 
     Parameters
     ----------
-    volume : `DiscreteLpVector`
+    volume : `DiscreteLpElement`
         The volume to project
     geometry : `Geometry`
         The projection geometry to use
@@ -114,7 +114,7 @@ def scikit_radon_back_projector(sinogram, geometry, range, out=None):
 
     Parameters
     ----------
-    sinogram : `DiscreteLpVector`
+    sinogram : `DiscreteLpElement`
         Sinogram (projections) to backproject.
     geometry : `Geometry`
         The projection geometry to use.

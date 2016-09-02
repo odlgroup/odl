@@ -130,7 +130,7 @@ sampling of continuously defined functions. If we, for example, want to discreti
 
     >>> exp_discr = l2_discr.element(lambda x: np.exp(-x))
     >>> type(exp_discr)
-    odl.discr.lp_discr.DiscreteLpVector
+    odl.discr.lp_discr.DiscreteLpElement
     >>> exp_discr.shape
     (5,)
 

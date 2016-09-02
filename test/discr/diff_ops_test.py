@@ -290,7 +290,7 @@ def test_gradient(method, fn_impl, padding):
     else:
         pad_mode, pad_const = padding, None
 
-    # DiscreteLp Vector
+    # DiscreteLpElement
     space = odl.uniform_discr([0, 0], [1, 1], DATA_2D.shape, impl=fn_impl)
     dom_vec = space.element(DATA_2D)
 
@@ -328,7 +328,7 @@ def test_gradient(method, fn_impl, padding):
     lin_size = 3
     for ndim in [1, 3, 6]:
 
-        # DiscreteLp Vector
+        # DiscreteLpElement
         space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
         dom_vec = odl.phantom.cuboid(space, [0.2] * ndim, [0.8] * ndim)
 
@@ -393,7 +393,7 @@ def test_divergence(method, fn_impl, padding):
 
     # Higher dimensional arrays
     for ndim in range(1, 6):
-        # DiscreteLp Vector
+        # DiscreteLpElement
         lin_size = 3
         space = odl.uniform_discr([0.] * ndim, [1.] * ndim, [lin_size] * ndim)
 

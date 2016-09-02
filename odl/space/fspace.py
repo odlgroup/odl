@@ -28,7 +28,7 @@ import numpy as np
 
 from odl.operator.operator import Operator, _dispatch_call_args
 from odl.set import (RealNumbers, ComplexNumbers, Set, Field, LinearSpace,
-                     LinearSpaceVector)
+                     LinearSpaceElement)
 from odl.util.utility import (is_real_dtype, is_complex_floating_dtype,
                               preload_first_arg, dtype_repr,
                               TYPE_MAP_R2C, TYPE_MAP_C2R)
@@ -37,8 +37,8 @@ from odl.util.vectorization import (
     out_shape_from_array, out_shape_from_meshgrid, vectorize)
 
 
-__all__ = ('FunctionSet', 'FunctionSetVector',
-           'FunctionSpace', 'FunctionSpaceVector')
+__all__ = ('FunctionSet', 'FunctionSetElement',
+           'FunctionSpace', 'FunctionSpaceElement')
 
 
 def _default_in_place(func, x, out, **kwargs):
@@ -148,7 +148,7 @@ class FunctionSet(Set):
 
         Returns
         -------
-        element : `FunctionSetVector`
+        element : `FunctionSetElement`
             The new element, always supports vectorization
 
         See Also
@@ -189,8 +189,8 @@ class FunctionSet(Set):
         Returns
         -------
         equals : bool
-            ``True`` if ``other`` is a `FunctionSetVector`
-            whose `FunctionSetVector.space` attribute
+            ``True`` if ``other`` is a `FunctionSetElement`
+            whose `FunctionSetElement.space` attribute
             equals this space, ``False`` otherwise.
         """
         return (isinstance(other, self.element_type) and
@@ -208,11 +208,11 @@ class FunctionSet(Set):
 
     @property
     def element_type(self):
-        """`FunctionSetVector`"""
-        return FunctionSetVector
+        """`FunctionSetElement`"""
+        return FunctionSetElement
 
 
-class FunctionSetVector(Operator):
+class FunctionSetElement(Operator):
 
     """Representation of a `FunctionSet` element."""
 
@@ -232,7 +232,7 @@ class FunctionSetVector(Operator):
         super().__init__(self.space.domain, self.space.range, linear=False)
 
         # Determine which type of implementation fcall is
-        if isinstance(fcall, FunctionSetVector):
+        if isinstance(fcall, FunctionSetElement):
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 bound_call=fcall._call)
 
@@ -449,15 +449,14 @@ class FunctionSetVector(Operator):
         return self.range.element(out.ravel()[0]) if scalar_out else out
 
     def assign(self, other):
-        """Assign ``other`` to this vector.
+        """Assign ``other`` to ``self``.
 
         This is implemented without `FunctionSpace.lincomb` to ensure that
-        ``vec == other`` evaluates to True after
-        ``vec.assign(other)``.
+        ``self == other`` evaluates to True after ``self.assign(other)``.
         """
         if other not in self.space:
             raise TypeError('`other` {!r} is not an element of the space '
-                            '{} of this vector'
+                            '{} of this function'
                             ''.format(other, self.space))
         self._call_in_place = other._call_in_place
         self._call_out_of_place = other._call_out_of_place
@@ -465,7 +464,7 @@ class FunctionSetVector(Operator):
         self._call_out_optional = other._call_out_optional
 
     def copy(self):
-        """Create an identical (deep) copy of this vector."""
+        """Create an identical (deep) copy of this element."""
         result = self.space.element()
         result.assign(self)
         return result
@@ -476,15 +475,15 @@ class FunctionSetVector(Operator):
         Returns
         -------
         equals : bool
-            ``True`` if ``other`` is a `FunctionSetVector` with
-            ``other.space`` equal to this vector's space and evaluation
-            function of ``other`` and this vector is equal, ``False``
+            ``True`` if ``other`` is a `FunctionSetElement` with
+            ``other.space == self.space``, and the functions for evaluation
+            evaluation of ``self`` and ``other`` are the same, ``False``
             otherwise.
         """
         if other is self:
             return True
 
-        if not isinstance(other, FunctionSetVector):
+        if not isinstance(other, FunctionSetElement):
             return False
 
         # We cannot blindly compare since functions may have been wrapped
@@ -635,15 +634,15 @@ class FunctionSpace(FunctionSet, LinearSpace):
             It must return a `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
 
-            If fcall is a `FunctionSetVector`, it is wrapped
-            as a new `FunctionSpaceVector`.
+            If fcall is a `FunctionSetElement`, it is wrapped
+            as a new `FunctionSpaceElement`.
 
         vectorized : bool
             Whether ``fcall`` supports vectorized evaluation.
 
         Returns
         -------
-        element : `FunctionSpaceVector`
+        element : `FunctionSpaceElement`
             The new element, always supports vectorization
 
         Notes
@@ -1100,8 +1099,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     @property
     def element_type(self):
-        """`FunctionSpaceVector`"""
-        return FunctionSpaceVector
+        """`FunctionSpaceElement`"""
+        return FunctionSpaceElement
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1150,7 +1149,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
+class FunctionSpaceElement(LinearSpaceElement, FunctionSetElement):
 
     """Representation of a `FunctionSpace` element."""
 
@@ -1170,18 +1169,18 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
             raise TypeError('`fspace` {!r} not a `FunctionSpace` '
                             'instance'.format(fspace))
 
-        LinearSpaceVector.__init__(self, fspace)
-        FunctionSetVector.__init__(self, fspace, fcall)
+        LinearSpaceElement.__init__(self, fspace)
+        FunctionSetElement.__init__(self, fspace, fcall)
 
-    # Tradeoff: either we subclass LinearSpaceVector first and override the
-    # 3 methods in FunctionSetVector (as below) which LinearSpaceVector
+    # Tradeoff: either we subclass LinearSpaceElement first and override the
+    # 3 methods in FunctionSetElement (as below) which LinearSpaceElement
     # also has, or we switch inheritance order and need to override all magic
-    # methods from LinearSpaceVector which are not in-place. This is due to
-    # the fact that FunctionSetVector inherits from Operator which defines
+    # methods from LinearSpaceElement which are not in-place. This is due to
+    # the fact that FunctionSetElement inherits from Operator which defines
     # some of those magic methods, and those do not work in this case.
-    __eq__ = FunctionSetVector.__eq__
-    assign = FunctionSetVector.assign
-    copy = FunctionSetVector.copy
+    __eq__ = FunctionSetElement.__eq__
+    assign = FunctionSetElement.assign
+    copy = FunctionSetElement.copy
 
     # Power functions are more general than the ones in LinearSpace
     def __pow__(self, p):
@@ -1210,7 +1209,7 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'FunctionSpaceVector'
+        return 'FunctionSpaceElement'
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

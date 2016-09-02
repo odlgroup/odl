@@ -23,8 +23,8 @@ import numpy as np
 
 n = 100
 m = 20
-spc = odl.uniform_discr(0, 5, n)
-vec = spc.element(np.sin(spc.points()))
+space = odl.uniform_discr(0, 5, n)
+elem = space.element(np.sin)
 
 # Pre-create a plot and set some property, here the plot limits in the y axis.
 fig = plt.figure()
@@ -32,7 +32,7 @@ plt.ylim(-m, m)
 
 # Reuse the figure indefinitely
 for i in range(m):
-    fig = (vec * i).show(fig=fig)
+    fig = (elem * i).show(fig=fig)
     plt.pause(0.1)
 
 plt.show()

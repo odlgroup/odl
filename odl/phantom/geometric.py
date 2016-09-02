@@ -43,7 +43,7 @@ def cuboid(space, min_pt=None, max_pt=None):
 
     Returns
     -------
-    phantom : `LinearSpaceVector`
+    phantom : `DiscretizedSpaceElement`
         The generated cuboid phantom in ``space``.
 
     Examples

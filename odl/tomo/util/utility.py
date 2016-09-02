@@ -252,7 +252,7 @@ def perpendicular_vector(vec):
     Parameters
     ----------
     vec : `array-like`
-        Vector of arbitrary length
+        Vector of arbitrary length.
 
     Returns
     -------

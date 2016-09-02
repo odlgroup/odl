@@ -15,28 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Examples on using the vector.show() syntax
+"""Example for DiscreteLpElement.show() in 1D.
 
-NOTES
+Notes
 -----
 The behaviour of blocking shows etc in matplotlib is experimental and can cause
-issues with these examples.
+issues with this example.
 """
 
 import matplotlib.pyplot as plt
 import odl
 import numpy as np
 
-spc = odl.uniform_discr(0, 5, 100)
-vec = spc.element(np.sin)
+space = odl.uniform_discr(0, 5, 100)
+elem = space.element(np.sin)
 
 # Get figure object
-fig = vec.show(title='Sine functions')
+fig = elem.show(title='Sine functions')
 # Plot into the same figure
-fig = (vec / 2).show(fig=fig)
+fig = (elem / 2).show(fig=fig)
 
 # Plotting is deferred until show() is called
 plt.show()
 
-# Can also force "instant" plotting
-vec.show(show=True)
+# "Instant" plotting can be forced
+elem.show(show=True)

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example showing how to use vectorization of FunctionSpaceVector's."""
+"""Example showing how to use vectorization of ``FunctionSpaceElement``'s."""
 
 import numpy as np
 import odl
