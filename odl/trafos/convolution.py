@@ -325,9 +325,9 @@ class FourierSpaceConvolution(Convolution):
 
             kernel = kernel[slc]
             # Assuming uniform discretization
-            min_corner = -self.domain.cell_sides * self.domain.shape / 2
-            max_corner = self.domain.cell_sides * self.domain.shape / 2
-            space = uniform_discr(min_corner, max_corner, kernel.shape,
+            min_pt = -self.domain.cell_sides * self.domain.shape / 2
+            max_pt = self.domain.cell_sides * self.domain.shape / 2
+            space = uniform_discr(min_pt, max_pt, kernel.shape,
                                   self.domain.exponent, self.domain.interp,
                                   impl=self.domain.impl,
                                   dtype=self.domain.dspace.dtype,
@@ -537,10 +537,11 @@ class RealSpaceConvolution(Convolution):
         switched off with ``scale=False``:
 
         >>> kernel = [-1, 1]
-        >>> conv = RealSpaceConvolution(space, kernel)
+        >>> conv = odl.trafos.RealSpaceConvolution(space, kernel)
         >>> conv([0, 1, 2, 0, 0])
         uniform_discr(-5.0, 5.0, 5).element([0.0, -2.0, -2.0, 4.0, 0.0])
-        >>> conv_noscale = RealSpaceConvolution(space, kernel, scale=False)
+        >>> conv_noscale = odl.trafos.RealSpaceConvolution(space, kernel,
+        ...                                                scale=False)
         >>> conv_noscale([0, 1, 2, 0, 0])
         uniform_discr(-5.0, 5.0, 5).element([0.0, -1.0, -1.0, 2.0, 0.0])
 
@@ -550,7 +551,7 @@ class RealSpaceConvolution(Convolution):
 
         >>> kernel_space = odl.uniform_discr(0, 4, 2)  # midpoint 2.0
         >>> kernel = kernel_space.element([-1, 1])
-        >>> conv_shift = RealSpaceConvolution(space, kernel)
+        >>> conv_shift = odl.trafos.RealSpaceConvolution(space, kernel)
         >>> conv_shift.range  # Shifted by 2.0 in positive direction
         uniform_discr(-3.0, 7.0, 5)
         >>> conv_shift([0, 1, 2, 0, 0])
@@ -674,9 +675,9 @@ class RealSpaceConvolution(Convolution):
                                  ''.format(kernel.ndim, domain.ndim))
             # Set the range equal to the domain shifted by the midpoint of
             # the kernel space.
-            kernel_shift = kernel.space.partition.midpoint
+            kernel_shift = kernel.space.partition.mid_pt
             range = uniform_discr_fromdiscr(
-                domain, min_corner=domain.min_corner + kernel_shift)
+                domain, min_pt=domain.min_pt + kernel_shift)
             return kernel, range
 
         else:
@@ -685,7 +686,7 @@ class RealSpaceConvolution(Convolution):
                 # version of the domain.
                 extent = domain.partition.extent()
                 std_kernel_space = uniform_discr_fromdiscr(
-                    domain, min_corner=-extent / 2)
+                    domain, min_pt=-extent / 2)
                 kernel = std_kernel_space.element(kernel, **kernel_kwargs)
                 range = domain
                 return kernel, range
@@ -693,11 +694,10 @@ class RealSpaceConvolution(Convolution):
                 # Make a zero-centered space with the same cell sides as
                 # domain, but shape according to the kernel.
                 kernel = np.asarray(kernel, dtype=domain.dtype)
-                nsamples = kernel.shape
-                extent = domain.cell_sides * nsamples
+                shape = kernel.shape
+                extent = domain.cell_sides * shape
                 kernel_space = uniform_discr_fromdiscr(
-                    domain, min_corner=-extent / 2, max_corner=extent / 2,
-                    nsamples=nsamples)
+                    domain, min_pt=-extent / 2, shape=shape)
                 kernel = kernel_space.element(kernel)
                 range = domain
                 return kernel, range
@@ -770,11 +770,11 @@ class RealSpaceConvolution(Convolution):
     def adjoint(self):
         """Adjoint operator defined by the reversed kernel."""
         # Make space for the adjoint kernel, -S if S is the kernel space
-        adj_min_corner = -self._kernel.space.max_corner
-        adj_max_corner = -self._kernel.space.min_corner
+        adj_min_pt = -self._kernel.space.max_pt
+        adj_max_pt = -self._kernel.space.min_pt
         adj_ker_space = uniform_discr_fromdiscr(
             self._kernel.space,
-            min_corner=adj_min_corner, max_corner=adj_max_corner)
+            min_pt=adj_min_pt, max_pt=adj_max_pt)
 
         # Adjoint kernel is k_adj(x) = k(-x), i.e. the kernel array is
         # reversed in each axis.
@@ -817,9 +817,8 @@ def zero_centered_discr_fromdiscr(discr, shape=None):
                                              param_conv=safe_int_conv)
     else:
         shape = discr.shape
-    new_min_corner = -(discr.cell_sides * shape) / 2
-    return uniform_discr_fromdiscr(discr, min_corner=new_min_corner,
-                                   nsamples=shape)
+    new_min_pt = -(discr.cell_sides * shape) / 2
+    return uniform_discr_fromdiscr(discr, min_pt=new_min_pt, shape=shape)
 
 
 if __name__ == '__main__':
