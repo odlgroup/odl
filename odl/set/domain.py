@@ -218,8 +218,11 @@ class IntervalProd(Set):
         # Implemented separately for performance reasons
         if other is self:
             return True
+        elif not isinstance(other, IntervalProd):
+            return False
 
-        return self.approx_equals(other, atol=0.0)
+        return (np.all(self.min_pt == other.min_pt) and
+                np.all(self.max_pt == other.max_pt))
 
     def approx_contains(self, point, atol):
         """Return ``True`` if ``point`` is "almost" contained in this set.
