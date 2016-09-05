@@ -384,6 +384,10 @@ class RectPartition(object):
 
     def __eq__(self, other):
         """Return ``self == other``."""
+        # Implemented separately for performance reasons
+        if other is self:
+            return True
+
         # Optimized version for exact equality
         return self.set == other.set and self.grid == other.grid
 

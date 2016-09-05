@@ -215,6 +215,10 @@ class IntervalProd(Set):
 
     def __eq__(self, other):
         """Return ``self == other``."""
+        # Implemented separately for performance reasons
+        if other is self:
+            return True
+
         return self.approx_equals(other, atol=0.0)
 
     def approx_contains(self, point, atol):

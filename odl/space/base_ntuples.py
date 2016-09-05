@@ -246,6 +246,10 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             vector's entries, False otherwise.
         """
 
+    def __ne__(self, other):
+        """Return ``self != other``."""
+        return not self.__eq__(other)
+
     @property
     def space(self):
         """Space to which this vector belongs."""
@@ -322,10 +326,6 @@ class NtuplesBaseVector(with_metaclass(ABCMeta, object)):
             return self.space.field.element(obj)
         else:
             return self.space.element(obj)
-
-    def __ne__(self, other):
-        """Return ``self != other``."""
-        return not self.__eq__(other)
 
     def __int__(self):
         """Return ``int(self)``.
@@ -633,13 +633,8 @@ class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
     space, call the space's `LinearSpace.element` method instead.
     """
 
-    def __eq__(self, other):
-        """Return ``self == other``."""
-        return LinearSpaceVector.__eq__(self, other)
-
-    def copy(self):
-        """Return a (deep) copy of this vector."""
-        return LinearSpaceVector.copy(self)
+    __eq__ = LinearSpaceVector.__eq__
+    copy = LinearSpaceVector.copy
 
 
 if __name__ == '__main__':

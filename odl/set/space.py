@@ -670,14 +670,14 @@ class LinearSpaceVector(object):
         >>> x + x + x == z
         False
         """
-        if (not isinstance(other, LinearSpaceVector) or
+        if (other is self):
+            # Optimization for a common case
+            return True
+        elif (not isinstance(other, LinearSpaceVector) or
                 other.space != self.space):
             # Cannot use (if other not in self.space) since this is not
             # reflexive.
             return False
-        elif other is self:
-            # Optimization for a common case
-            return True
         else:
             return self.space.dist(self, other) == 0
 

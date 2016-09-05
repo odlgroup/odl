@@ -605,10 +605,10 @@ class ProductSpaceVector(LinearSpaceVector):
         numerical errors. This function checks equality per
         component.
         """
-        if other not in self.space:
-            return False
-        elif other is self:
+        if other is self:
             return True
+        elif other not in self.space:
+            return False
         else:
             return all(sp == op for sp, op in zip(self.parts, other.parts))
 

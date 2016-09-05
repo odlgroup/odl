@@ -125,12 +125,16 @@ class FunctionSetMapping(Operator):
             self.__order = str(order).upper()
 
     def __eq__(self, other):
-        return (isinstance(other, type(self)) and
-                isinstance(self, type(other)) and
-                self.domain == other.domain and
-                self.range == other.range and
-                self.partition == other.partition and
-                self.order == other.order)
+        """Return ``self == other``."""
+        if self is other:
+            return True
+        else:
+            return (isinstance(other, type(self)) and
+                    isinstance(self, type(other)) and
+                    self.domain == other.domain and
+                    self.range == other.range and
+                    self.partition == other.partition and
+                    self.order == other.order)
 
     @property
     def partition(self):
