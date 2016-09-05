@@ -129,8 +129,11 @@ class NtuplesBase(Set):
         >>> int_3 == str_3
         False
         """
+        # Optimization for simple cases
         if other is self:
             return True
+        elif other is None:
+            return False
 
         return ((isinstance(self, type(other)) or
                  isinstance(other, type(self))) and

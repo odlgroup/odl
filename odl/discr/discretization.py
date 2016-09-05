@@ -212,14 +212,17 @@ class DiscretizedSet(NtuplesBase):
             of ``other`` and this discretization are equal, ``False``
             otherwise.
         """
+        # Optimizations for simple cases
         if other is self:
             return True
-
-        return (NtuplesBase.__eq__(self, other) and
-                other.uspace == self.uspace and
-                other.dspace == self.dspace and
-                other.sampling == self.sampling and
-                other.interpolation == self.interpolation)
+        elif other is None:
+            return False
+        else:
+            return (NtuplesBase.__eq__(self, other) and
+                    other.uspace == self.uspace and
+                    other.dspace == self.dspace and
+                    other.sampling == self.sampling and
+                    other.interpolation == self.interpolation)
 
     @property
     def impl(self):

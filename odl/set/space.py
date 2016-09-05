@@ -670,7 +670,7 @@ class LinearSpaceVector(object):
         >>> x + x + x == z
         False
         """
-        if (other is self):
+        if other is self:
             # Optimization for a common case
             return True
         elif (not isinstance(other, LinearSpaceVector) or
