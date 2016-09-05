@@ -31,6 +31,7 @@ standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
+import scipy.special
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, ResidualOperator, DiagonalOperator)
@@ -45,7 +46,7 @@ __all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
            'proximal_l1', 'proximal_cconj_l1',
            'proximal_l2', 'proximal_cconj_l2',
            'proximal_l2_squared', 'proximal_cconj_l2_squared',
-           'proximal_cconj_kl')
+           'proximal_cconj_kl', 'proximal_cconj_kl_version_two')
 
 
 # TODO: remove diagonal op once available on master
@@ -989,7 +990,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
     that F is defined over whole X. The non-negativity thresholding pos is
     used to define F in the real numbers.
 
-    The proximal operator of the convex conjugate F^* of F is
+    The convex conjugate F^* of F is
 
         F^*(p) = sum_i (-g ln(pos(1_X - p))_i + ind_P(1_X - p)
 
@@ -999,7 +1000,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
     The proximal operator of the convex conjugate of F is
 
         prox[sigma * F^*](x) =
-            1/2 (lam + x - sqrt((x - lam)^2 + 4 lam sigma g)
+            1/2 (lam + x - sqrt((x - lam)^2 + 4 lam sigma g))
 
     with the step size parameter sigma and lam_X is an element of the space X
     with all components set to lam.
@@ -1075,6 +1076,91 @@ def proximal_cconj_kl(space, lam=1, g=None):
 
             # out = 1/2 * out
             out /= 2
+
+    return ProximalCConjKL
+
+
+def proximal_cconj_kl_version_two(space, lam=1, g=None):
+    """Proximal operator factory of the convex conjugate of the KL divergence.
+
+    Function returning the proximal operator of the convex conjugate of the
+    functional F where F is the entropy-type Kullback-Leibler (KL) divergence
+
+        F(x) = sum_i (xln(pos(x)) - xln(g) + g - x)_i + ind_P(x)
+
+    with x and g in X and g non-negative. The indicator function ind_P(x)
+    for the positive elements of x is used to restrict the domain of F such
+    that F is defined over whole X. The non-negativity thresholding pos is
+    used to define F in the real numbers.
+
+    The convex conjugate F^* of F is
+
+        F^*(p) = sum_i (g (exp(p) - 1))_i
+
+    where p is the variable dual to x.
+
+    The proximal operator of the convex conjugate of F is
+
+        prox[sigma * (lam*F)^*](x)_i =
+            x_i - lam W(1/lam sigma g_i exp(1/lam * x_i))
+
+    where sigma is the step size-like parameter, lam the weighting in from of
+    the function F, and W is the Lambert W function (see, for example, the
+    `Wikipedia article <https://en.wikipedia.org/wiki/Lambert_W_function>`_).
+
+    Parameters
+    ----------
+    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
+        Space X which is the domain of the functional F
+    g : ``space`` element
+        Data term.
+    lam : positive float
+        Scaling factor.
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator to be initialized.
+
+    Notes
+    -----
+    The functional is not well-defined without a prior g. Hence, if g is
+    omitted this will be interpreted as if g is equal to the one-element.
+
+    Write something about similarities and differences between the two
+    KL-versions?
+    """
+
+    # TODO: Update Notes-section in doc above.
+
+    lam = float(lam)
+
+    if g is not None and g not in space:
+        raise TypeError('{} is not an element of {}'.format(g, space))
+
+    class ProximalCConjKL(Operator):
+
+        """Proximal operator of the convex conjugate of the KL divergence."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float
+            """
+            self.sigma = float(sigma)
+            super().__init__(domain=space, range=space, linear=False)
+
+        def _call(self, x, out):
+            """Apply the operator to ``x`` and stores the result in ``out``."""
+
+            if g is None:
+                out.assign(x - lam * scipy.special.lambertw(
+                    1.0 / lam * self.sigma * np.exp(1.0 / lam * x)))
+            else:
+                out.assign(x - lam * scipy.special.lambertw(
+                    1.0 / lam * self.sigma * g * np.exp(1.0 / lam * x)))
 
     return ProximalCConjKL
 

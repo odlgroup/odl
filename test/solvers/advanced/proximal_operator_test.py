@@ -34,12 +34,14 @@ from odl.solvers.advanced.proximal_operators import (
     proximal_cconj_l1,
     proximal_l2,
     proximal_cconj_l2_squared,
-    proximal_cconj_kl)
+    proximal_cconj_kl, proximal_cconj_kl_version_two)
 from odl.util.testutils import all_almost_equal
 
+from scipy.special import lambertw
 
 # Places for the accepted error when comparing results
-PLACES = 8
+HIGH_ACC = 8
+LOW_ACC = 4
 
 
 def test_proximal_zero():
@@ -182,8 +184,8 @@ def test_proximal_l2_wo_data():
     x_small_opt = x_small * 0
     x_big_opt = (1 - lam * sigma / x_big.norm()) * x_big
 
-    assert all_almost_equal(prox(x_small), x_small_opt, PLACES)
-    assert all_almost_equal(prox(x_big), x_big_opt, PLACES)
+    assert all_almost_equal(prox(x_small), x_small_opt, HIGH_ACC)
+    assert all_almost_equal(prox(x_big), x_big_opt, HIGH_ACC)
 
 
 def test_proximal_l2_with_data():
@@ -215,8 +217,8 @@ def test_proximal_l2_with_data():
     const = lam * sigma / (x_big - g).norm()
     x_big_opt = (1 - const) * x_big + const * g
 
-    assert all_almost_equal(prox(x_small), x_small_opt, PLACES)
-    assert all_almost_equal(prox(x_big), x_big_opt, PLACES)
+    assert all_almost_equal(prox(x_small), x_small_opt, HIGH_ACC)
+    assert all_almost_equal(prox(x_big), x_big_opt, HIGH_ACC)
 
 
 def test_proximal_convconj_l2_sq_wo_data():
@@ -248,7 +250,7 @@ def test_proximal_convconj_l2_sq_wo_data():
     # Explicit computation: x / (1 + sigma / (2 * lambda))
     x_verify = x / (1 + sigma / (2 * lam))
 
-    assert all_almost_equal(x_out, x_verify, PLACES)
+    assert all_almost_equal(x_out, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l2_sq_with_data():
@@ -283,7 +285,7 @@ def test_proximal_convconj_l2_sq_with_data():
     # Explicit computation: (x - sigma * g) / (1 + sigma / (2 * lambda))
     x_verify = (x - sigma * g) / (1 + sigma / (2 * lam))
 
-    assert all_almost_equal(x_out, x_verify, PLACES)
+    assert all_almost_equal(x_out, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l1_simple_space_without_data():
@@ -314,7 +316,7 @@ def test_proximal_convconj_l1_simple_space_without_data():
     denom = np.maximum(lam, np.sqrt(x_arr ** 2))
     x_verify = lam * x_arr / denom
 
-    assert all_almost_equal(x_opt, x_verify, PLACES)
+    assert all_almost_equal(x_opt, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l1_simple_space_with_data():
@@ -347,7 +349,7 @@ def test_proximal_convconj_l1_simple_space_with_data():
     denom = np.maximum(lam, np.abs(x_arr - sigma * g_arr))
     x0_verify = lam * (x_arr - sigma * g_arr) / denom
 
-    assert all_almost_equal(x_opt, x0_verify, PLACES)
+    assert all_almost_equal(x_opt, x0_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l1_product_space():
@@ -421,7 +423,7 @@ def test_proximal_convconj_kl_simple_space():
     # Explicit computation:
     x_verify = (lam + x - np.sqrt((x - lam) ** 2 + 4 * lam * sigma * g)) / 2
 
-    assert all_almost_equal(x_opt, x_verify, PLACES)
+    assert all_almost_equal(x_opt, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_kl_product_space():
@@ -462,6 +464,77 @@ def test_proximal_convconj_kl_product_space():
 
     # Compare components
     assert all_almost_equal(x_verify, x_opt)
+
+
+def test_proximal_convconj_kl_version_two():
+    """Proximal factory of convex conjugate for 2nd version KL divergence."""
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # Element in image space where the proximal operator is evaluated
+    x = space.element(np.arange(-5, 5))
+
+    # Data
+    g = space.element(np.arange(10, 0, -1))
+
+    # Factory function returning the proximal operator
+    lam = 2
+    prox_factory = proximal_cconj_kl_version_two(space, lam=lam, g=g)
+
+    # Initialize the proximal operator of F^*
+    sigma = 0.25
+    prox = prox_factory(sigma)
+
+    assert isinstance(prox, odl.Operator)
+
+    # Allocate an output vector
+    x_opt = space.element()
+
+    # Apply the proximal operator returning its optimal point
+    prox(x, x_opt)
+
+    # Explicit computation:
+    x_verify = x - lam * lambertw(1.0 / lam * sigma * g * np.exp(
+        1.0 / lam * x))
+
+    assert all_almost_equal(x_opt, x_verify, HIGH_ACC)
+
+    # Numerically solving min_x KL(x | g)
+    id_op = odl.IdentityOperator(space)
+    lin_ops = [id_op]
+    prox_cc_g = [odl.solvers.proximal_cconj_kl_version_two(space, g=g)]
+    prox_f = odl.solvers.proximal_zero(space)
+
+    # Staring point
+    x_iter = x.copy()
+
+    odl.solvers.douglas_rachford_pd(x_iter, prox_f, prox_cc_g, lin_ops,
+                                    tau=3.0, sigma=[0.25], niter=50)
+
+    #  Explicit solution: x = g
+    x_verify = g
+    assert all_almost_equal(x_iter, x_verify, places=LOW_ACC)
+
+    # Numerically solving min_x KL(x) + 1/2||x-a||^2_2.
+    a = space.element(np.arange(4, 14, 1))
+
+    id_op = odl.IdentityOperator(space)
+    lin_ops = [id_op, id_op]
+    prox_cc_g = [odl.solvers.proximal_cconj_kl_version_two(space, g=g),
+                 odl.solvers.proximal_cconj_l2_squared(space, lam=1.0 / 2.0,
+                                                       g=a)]
+    prox_f = odl.solvers.proximal_zero(space)
+
+    # Staring point
+    x_iter = x.copy()
+
+    odl.solvers.douglas_rachford_pd(x_iter, prox_f, prox_cc_g, lin_ops,
+                                    tau=2.0, sigma=[0.5, 0.5], niter=50)
+
+    # Explicit solution: x = W(g * exp(a)), where W is the Lambert W function.
+    x_verify = lambertw(g * np.exp(a))
+    assert all_almost_equal(x_iter, x_verify, places=LOW_ACC)
 
 
 if __name__ == '__main__':
