@@ -717,17 +717,17 @@ class Operator(object):
         If ``other`` is an operator, this corresponds to
         operator composition:
 
-            ``left * right <==> (x --> left(right(x))``
+            ``(left * right)(x) == left(right(x))``
 
         If ``other`` is a scalar, this corresponds to scalar multiplication
         with the operator argument:
 
-            ``op * scalar <==> (x --> op(scalar * x))``
+            ``(op * scalar)(x) == op(scalar * x)``
 
         If ``other`` is an ``op.domain`` element, this corresponds to
         vector multiplication with the operator argument:
 
-            ``op * y <==> (x --> op(y * x))``
+            ``(op * y)(x) == op(y * x)``
 
         Note that left and right multiplications are generally
         different.
@@ -802,17 +802,17 @@ class Operator(object):
         If ``other`` is an `Operator`, this corresponds to
         operator composition:
 
-        ``left * right <==> (x --> left(right(x)))``
+            ``(left * right)(x) == left(right(x))``
 
         If ``other`` is a scalar, this corresponds to scalar multiplication
         with the operator evaluation result:
 
-        ``scalar * op <==> (x --> scalar * op(x))``
+            ``(scalar * op)(x) == scalar * op(x)``
 
         If ``other`` is an ``op.domain`` element, this corresponds to
         vector multiplication with the operator evaluation result:
 
-        ``y * op <==> (x --> y * op(x))``
+            ``(y * op)(x) == y * op(x)``
 
         Note that left and right multiplications are generally
         different.
@@ -878,14 +878,14 @@ class Operator(object):
         return self.__rmul__(other)
 
     def __pow__(self, n):
-        """Return ``op**s``.
+        """Return ``op ** n``.
 
         This corresponds to the power of an operator:
 
-        ``op ** 1 <==> (x --> op(x))``
-        ``op ** 2 <==> (x --> op(op(x)))``
-        ``op ** 3 <==> (x --> op(op(op(x))))``
-        ...
+            ``(op ** 1)(x) == op(x)``
+            ``(op ** 2)(x) == op(op(x))``
+            ``(op ** 3)(x) == op(op(op(x)))``
+            ...
 
         Parameters
         ----------
@@ -896,7 +896,7 @@ class Operator(object):
         -------
         pow : `Operator`
             The power of this operator. If ``n == 1``, ``pow`` is
-            this operator, for ``n > 1``, a `OperatorComp`
+            this operator, for ``n > 1``, an `OperatorComp`
 
         Examples
         --------
@@ -928,7 +928,7 @@ class Operator(object):
         If ``other`` is a scalar, this corresponds to right
         division of operators with scalars:
 
-        ``op / scalar <==> (x --> op(x / scalar))``
+            ``(op / scalar)(x) == op(x / scalar)``
 
         Parameters
         ----------
@@ -1000,7 +1000,7 @@ class OperatorSum(Operator):
 
     """Expression type for the sum of operators.
 
-    ``OperatorSum(left, right) <==> (x --> left(x) + right(x))``
+        ``OperatorSum(left, right)(x) == left(x) + right(x)``
 
     The sum is only well-defined for `Operator` instances where
     `Operator.range` is a `LinearSpace`.
@@ -1105,8 +1105,8 @@ class OperatorSum(Operator):
         The adjoint of the operator sum is the sum of the operator
         adjoints:
 
-        ``OperatorSum(left, right).adjoint ==
-        OperatorSum(left.adjoint, right.adjoint)``
+            ``OperatorSum(left, right).adjoint ==
+            OperatorSum(left.adjoint, right.adjoint)``
 
         Returns
         -------
@@ -1137,10 +1137,9 @@ class OperatorComp(Operator):
 
     """Expression type for the composition of operators.
 
-    ``OperatorComp(left, right) <==> (x --> left(right(x)))``
+        ``OperatorComp(left, right)(x) == left(right(x))``
 
-    The composition is only well-defined if
-    ``left.domain == right.range``.
+    The composition is only well-defined if ``left.domain == right.range``.
     """
 
     def __init__(self, left, right, tmp=None):
@@ -1200,8 +1199,8 @@ class OperatorComp(Operator):
         The inverse of the operator composition is the composition of
         the inverses in reverse order:
 
-        ``OperatorComp(left, right).inverse ==``
-        ``OperatorComp(right.inverse, left.inverse)``
+            ``OperatorComp(left, right).inverse ==``
+            ``OperatorComp(right.inverse, left.inverse)``
         """
         return OperatorComp(self.right.inverse, self.left.inverse,
                             self.__tmp)
@@ -1212,8 +1211,8 @@ class OperatorComp(Operator):
         The derivative of the operator composition follows the chain
         rule:
 
-        ``OperatorComp(left, right).derivative(x) ==
-        OperatorComp(left.derivative(right(x)), right.derivative(x))``
+            ``OperatorComp(left, right).derivative(y) ==
+            OperatorComp(left.derivative(right(y)), right.derivative(y))``
 
         Parameters
         ----------
@@ -1234,8 +1233,8 @@ class OperatorComp(Operator):
         The adjoint of the operator composition is the composition of
         the operator adjoints in reverse order:
 
-        ``OperatorComp(left, right).adjoint ==
-        OperatorComp(right.adjoint, left.adjoint)``
+            ``OperatorComp(left, right).adjoint ==
+            OperatorComp(right.adjoint, left.adjoint)``
 
         Returns
         -------
@@ -1266,7 +1265,7 @@ class OperatorPointwiseProduct(Operator):
 
     """Expression type for the pointwise operator mulitplication.
 
-    ``OperatorPointwiseProduct(left, right) <==> (x --> left(x) * right(x))``
+        ``OperatorPointwiseProduct(left, right)(x) == left(x) * right(x)``
     """
 
     def __init__(self, left, right):
@@ -1328,7 +1327,7 @@ class OperatorLeftScalarMult(Operator):
 
     """Expression type for the operator left scalar multiplication.
 
-    ``OperatorLeftScalarMult(op, scalar) <==> (x --> scalar * op(x))``
+        ``OperatorLeftScalarMult(op, s)(x) == s * op(x)``
 
     The scalar multiplication is well-defined only if ``op.range`` is
     a `LinearSpace`.
@@ -1408,8 +1407,8 @@ class OperatorLeftScalarMult(Operator):
         ``op.inverse * 1/scalar`` if ``scalar != 0``. If ``scalar == 0``,
         the inverse is not defined.
 
-        ``OperatorLeftScalarMult(op, scalar).inverse <==>``
-        ``OperatorRightScalarMult(op.inverse, 1.0/scalar)``
+            ``OperatorLeftScalarMult(op, s).inverse ==
+            OperatorRightScalarMult(op.inverse, 1/s)``
 
         Examples
         --------
@@ -1430,8 +1429,8 @@ class OperatorLeftScalarMult(Operator):
 
         Left scalar multiplication and derivative are commutative:
 
-        ``OperatorLeftScalarMult(op, scalar).derivative(x) <==>``
-        ``OperatorLeftScalarMult(op.derivative(x), scalar)``
+            ``OperatorLeftScalarMult(op, s).derivative(y) ==
+            OperatorLeftScalarMult(op.derivative(y), s)``
 
         Parameters
         ----------
@@ -1465,8 +1464,8 @@ class OperatorLeftScalarMult(Operator):
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
 
-        ``OperatorLeftScalarMult(op, scalar).adjoint ==``
-        ``OperatorLeftScalarMult(op.adjoint, scalar)``
+            ``OperatorLeftScalarMult(op, s).adjoint ==
+            OperatorLeftScalarMult(op.adjoint, s)``
 
         Raises
         ------
@@ -1502,7 +1501,7 @@ class OperatorRightScalarMult(Operator):
 
     """Expression type for the operator right scalar multiplication.
 
-    ``OperatorRightScalarMult(op, scalar) <==> (x --> op(scalar * x))``
+        ``OperatorRightScalarMult(op, s) == op(s * x)``
 
     The scalar multiplication is well-defined only if ``op.domain`` is
     a `LinearSpace`.
@@ -1594,8 +1593,8 @@ class OperatorRightScalarMult(Operator):
         ``1/scalar * op.inverse`` if ``scalar != 0``. If ``scalar == 0``,
         the inverse is not defined.
 
-        ``OperatorRightScalarMult(op, scalar).inverse <==>``
-        ``OperatorLeftScalarMult(op.inverse, 1.0/scalar)``
+            ``OperatorRightScalarMult(op, s).inverse ==
+            OperatorLeftScalarMult(op.inverse, 1/s)``
 
         Examples
         --------
@@ -1617,8 +1616,8 @@ class OperatorRightScalarMult(Operator):
         The derivative of the right scalar operator multiplication
         follows the chain rule:
 
-        ``OperatorRightScalarMult(op, scalar).derivative(x) <==>``
-        ``OperatorLeftScalarMult(op.derivative(scalar * x), scalar)``
+            ``OperatorRightScalarMult(op, s).derivative(y) ==
+            OperatorLeftScalarMult(op.derivative(s * y), s)``
 
         Parameters
         ----------
@@ -1645,8 +1644,8 @@ class OperatorRightScalarMult(Operator):
         The adjoint of the operator scalar multiplication is the
         scalar multiplication of the operator adjoint:
 
-        ``OperatorLeftScalarMult(op, scalar).adjoint ==``
-        ``OperatorLeftScalarMult(op.adjoint, scalar)``
+        ``OperatorLeftScalarMult(op, s).adjoint ==
+        OperatorLeftScalarMult(op.adjoint, s)``
 
         Raises
         ------
@@ -1687,7 +1686,7 @@ class FunctionalLeftVectorMult(Operator):
     resulting in an operator mapping from the `Operator.domain` to the
     element's `LinearSpaceElement.space`.
 
-    ``FunctionalLeftVectorMult(op, y)(x) <==> y * op(x)``
+        ``FunctionalLeftVectorMult(op, y)(x) == y * op(x)``
     """
 
     def __init__(self, functional, vector):
@@ -1704,13 +1703,13 @@ class FunctionalLeftVectorMult(Operator):
 
         Examples
         --------
-        Create the operator ``(x * x^T)(y) = x * <x, y>``
+        Create the operator ``(y * y^T)(x) = y * <x, y>``
 
         >>> import odl
         >>> space = odl.rn(3)
-        >>> x = space.element([1, 2, 3])
-        >>> functional = odl.InnerProductOperator(x)
-        >>> left_mul_op = FunctionalLeftVectorMult(functional, x)
+        >>> y = space.element([1, 2, 3])
+        >>> functional = odl.InnerProductOperator(y)
+        >>> left_mul_op = FunctionalLeftVectorMult(functional, y)
         >>> left_mul_op([1, 2, 3])
         rn(3).element([14.0, 28.0, 42.0])
         """
@@ -1750,8 +1749,8 @@ class FunctionalLeftVectorMult(Operator):
 
         Left scalar multiplication and derivative are commutative:
 
-        ``FunctionalLeftVectorMult(op, y).derivative(x) <==>``
-        ``FunctionalLeftVectorMult(op.derivative(x), y)``
+            ``FunctionalLeftVectorMult(op, y).derivative(z) ==
+            FunctionalLeftVectorMult(op.derivative(z), y)``
 
         Returns
         -------
@@ -1764,13 +1763,8 @@ class FunctionalLeftVectorMult(Operator):
     def adjoint(self):
         """Adjoint of this operator.
 
-        The adjoint of the operator scalar multiplication is the
-        scalar multiplication of the operator adjoint:
-
-        ``FunctionalLeftVectorMult(op, y).adjoint <==>
-        OperatorComp(op.adjoint, y.T)``
-
-        ``(x * A)^T = A^T * x^T``
+            ``FunctionalLeftVectorMult(op, y).adjoint ==
+            OperatorComp(op.adjoint, y.T)``
 
         Returns
         -------
@@ -1798,16 +1792,14 @@ class FunctionalLeftVectorMult(Operator):
 
 
 class OperatorLeftVectorMult(Operator):
+
     """Expression type for the operator left vector multiplication.
 
-    ``OperatorLeftVectorMult(op, y)(x) <==> y * op(x)``
-
-    The scalar multiplication is well-defined only if ``op.range`` is
-    a ``vector.space.field``.
+        ``OperatorLeftVectorMult(op, y)(x) <==> y * op(x)``
     """
 
     def __init__(self, operator, vector):
-        """Initialize a new Instance.
+        """Initialize a new instance.
 
         Parameters
         ----------
@@ -1850,8 +1842,8 @@ class OperatorLeftVectorMult(Operator):
         The inverse of ``y * op`` is given by
         ``op.inverse / y``.
 
-        ``OperatorLeftVectorMult(op, y).inverse <==>``
-        ``OperatorRightVectorMult(op.inverse, 1.0 / y)``
+        ``OperatorLeftVectorMult(op, y).inverse ==
+        OperatorRightVectorMult(op.inverse, 1/y)``
         """
 
         return self.operator.inverse * (1.0 / self.vector)
@@ -1861,8 +1853,8 @@ class OperatorLeftVectorMult(Operator):
 
         Left scalar multiplication and derivative are commutative:
 
-        ``OperatorLeftVectorMult(op, y).derivative(x) <==>``
-        ``OperatorLeftVectorMult(op.derivative(x), y)``
+            ``OperatorLeftVectorMult(op, y).derivative(z) ==
+            OperatorLeftVectorMult(op.derivative(z), y)``
 
         See Also
         --------
@@ -1877,10 +1869,8 @@ class OperatorLeftVectorMult(Operator):
         The adjoint of the operator vector multiplication is the
         vector multiplication of the operator adjoint:
 
-        ``OperatorLeftVectorMult(op, y).adjoint ==``
-        ``OperatorRightVectorMult(op.adjoint, y)``
-
-        ``(x * A)^T = A^T * x``
+            ``OperatorLeftVectorMult(op, y).adjoint ==
+            OperatorRightVectorMult(op.adjoint, y)``
 
         Returns
         -------
@@ -1911,7 +1901,7 @@ class OperatorRightVectorMult(Operator):
 
     """Expression type for the operator right vector multiplication.
 
-    ``OperatorRightVectorMult(op, y)(x) <==> op(y * x)``
+        ``OperatorRightVectorMult(op, y)(x) == op(y * x)``
 
     The scalar multiplication is well-defined only if ``y`` is in
     ``op.domain``.
@@ -1964,10 +1954,10 @@ class OperatorRightVectorMult(Operator):
         """Inverse of this operator.
 
         The inverse of ``op * y`` is given by
-        ``(1.0 / y) * op.inverse``.
+        ``(1/y) * op.inverse``.
 
-        ``OperatorRightVectorMult(op, y).inverse <==>``
-        ``OperatorLeftVectorMult(op.inverse, 1.0 / y)``
+            ``OperatorRightVectorMult(op, y).inverse ==
+            OperatorLeftVectorMult(op.inverse, 1/y)``
         """
         return (1.0 / self.vector) * self.operator.inverse
 
@@ -1992,10 +1982,8 @@ class OperatorRightVectorMult(Operator):
         The adjoint of the operator vector multiplication is the
         vector multiplication of the operator adjoint:
 
-        ``OperatorRightVectorMult(op, y).adjoint ==``
-        ``OperatorLeftVectorMult(op.adjoint, y)``
-
-        ``(A x)^T = x * A^T``
+            ``OperatorRightVectorMult(op, y).adjoint ==
+            OperatorLeftVectorMult(op.adjoint, y)``
 
         Returns
         -------

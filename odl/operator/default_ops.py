@@ -36,7 +36,10 @@ __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
 
 class ScalingOperator(Operator):
 
-    """Operator of multiplication with a scalar."""
+    """Operator of multiplication with a scalar.
+
+        ``ScalingOperator(s)(x) == s * x``
+    """
 
     def __init__(self, space, scalar):
         """Initialize a new instance.
@@ -119,7 +122,8 @@ class ScalingOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ScalingOperator({!r}, {!r})'.format(self.domain, self.scalar)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.scalar)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -128,7 +132,10 @@ class ScalingOperator(Operator):
 
 class ZeroOperator(ScalingOperator):
 
-    """Operator mapping each element to the zero element."""
+    """Operator mapping each element to the zero element.
+
+        ``ZeroOperator()(x) == 0``
+    """
 
     def __init__(self, space):
         """Initialize a new instance.
@@ -142,7 +149,7 @@ class ZeroOperator(ScalingOperator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'ZeroOperator({!r})'.format(self.domain)
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -151,7 +158,10 @@ class ZeroOperator(ScalingOperator):
 
 class IdentityOperator(ScalingOperator):
 
-    """Operator mapping each element to itself."""
+    """Operator mapping each element to itself.
+
+        ``IdentityOperator()(x) == x``
+    """
 
     def __init__(self, space):
         """Initialize a new instance.
@@ -176,9 +186,7 @@ class LinCombOperator(Operator):
 
     """Operator mapping two space elements to a linear combination.
 
-    This opertor calculates:
-
-    ``out = a*x[0] + b*x[1]``
+        ``LinCombOperator(a, b)(x, y) == a * x + b * y``
     """
 
     def __init__(self, space, a, b):
@@ -228,9 +236,9 @@ class LinCombOperator(Operator):
 
 class MultiplyOperator(Operator):
 
-    """Operator multiplying two elements.
+    """Operator multiplying by a fixed space or field element.
 
-    ``MultiplyOperator(y)(x) <==> x * y``
+        ``MultiplyOperator(y)(x) == x * y``
 
     Here, ``y`` is a `LinearSpaceElement` or `Field` element and
     ``x`` is a `LinearSpaceElement`.
@@ -342,7 +350,7 @@ class MultiplyOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'MultiplyOperator({!r})'.format(self.y)
+        return '{}({!r})'.format(self.__class__.__name__, self.multiplicand)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -351,9 +359,9 @@ class MultiplyOperator(Operator):
 
 class PowerOperator(Operator):
 
-    """Power of a space element or a scalar.
+    """Operator taking a fixed power of a space or field element.
 
-    ``PowerOperator(p)(x) <==> x ** p``
+        ``PowerOperator(p)(x) == x ** p``
 
     Here, ``x`` is a `LinearSpaceElement` or `Field` element and ``p`` is
     a number. Hence, this operator can be defined either on a
@@ -408,7 +416,7 @@ class PowerOperator(Operator):
     def derivative(self, point):
         """Derivative of this operator.
 
-        ``MultiplyOperator(n).derivative(x)(y) <==> n * x ** (n - 1) * y``
+            ``PowerOperator(p).derivative(y)(x) == p * y ** (p - 1) * x``
 
         Parameters
         ----------
@@ -455,7 +463,7 @@ class PowerOperator(Operator):
 class InnerProductOperator(Operator):
     """Operator taking the inner product with a fixed space element.
 
-    ``InnerProductOperator(vec)(x) <==> x.inner(vec)``
+        ``InnerProductOperator(y)(x) <==> y.inner(x)``
 
     This is only applicable in inner product spaces.
 
@@ -548,7 +556,7 @@ class NormOperator(Operator):
 
     """Vector space norm as an operator.
 
-    ``NormOperator(space)(x) <==> space.norm(x)``
+        ``NormOperator()(x) <==> x.norm()``
 
     This is only applicable in normed spaces.
 
@@ -583,6 +591,8 @@ class NormOperator(Operator):
     def derivative(self, point):
         """Derivative of this operator in ``point``.
 
+            ``NormOperator().derivative(y)(x) == (y / y.norm()).inner(x)``
+
         This is only applicable in inner product spaces.
 
         Parameters
@@ -607,7 +617,7 @@ class NormOperator(Operator):
 
         .. math::
 
-            (D ||.||)(x)(y) = < x / ||x||, y >
+            (D \|\cdot\|)(y)(x) = \langle y / \|y\|, x \\rangle
 
         Examples
         --------
@@ -638,7 +648,7 @@ class DistOperator(Operator):
 
     """Operator taking the distance to a fixed space element.
 
-    ``DistOperator(y)(x) <==> y.dist(x)``
+        ``DistOperator(y)(x) == y.dist(x)``
 
     This is only applicable in metric spaces.
 
@@ -680,6 +690,9 @@ class DistOperator(Operator):
     def derivative(self, point):
         """The derivative operator.
 
+            ``DistOperator(y).derivative(z)(x) ==
+            ((y - z) / y.dist(z)).inner(x)``
+
         This is only applicable in inner product spaces.
 
         Parameters
@@ -704,7 +717,7 @@ class DistOperator(Operator):
 
         .. math::
 
-            (D d(x, y))(y)(z) = < (x-y) / d(x, y), y >
+            (D d(\cdot, y))(z)(x) = \\langle (y-z) / d(y, z), x \\rangle
 
         Examples
         --------
@@ -738,7 +751,7 @@ class ConstantOperator(Operator):
 
     """Operator that always returns the same value.
 
-    ``ConstantOperator(y)(x) <==> (x --> y)``
+        ``ConstantOperator(y)(x) == y``
     """
 
     def __init__(self, vector, domain=None):
@@ -814,7 +827,7 @@ class ResidualOperator(Operator):
 
     """Operator that calculates the residual ``op(x) - y``.
 
-    ``ResidualOperator(op, y)(x) <==> (x --> op(x) - y)``
+        ``ResidualOperator(op, y)(x) == op(x) - y``
     """
 
     def __init__(self, operator, vector):
@@ -832,11 +845,11 @@ class ResidualOperator(Operator):
         --------
         >>> import odl
         >>> r3 = odl.rn(3)
-        >>> vec = r3.element([1, 2, 3])
-        >>> op = IdentityOperator(r3)
-        >>> res = ResidualOperator(op, vec)
+        >>> y = r3.element([1, 2, 3])
+        >>> ident_op = odl.IdentityOperator(r3)
+        >>> res_op = odl.ResidualOperator(ident_op, y)
         >>> x = r3.element([4, 5, 6])
-        >>> res(x, out=r3.element())
+        >>> res_op(x)
         rn(3).element([3.0, 3.0, 3.0])
         """
         if not isinstance(operator, Operator):
@@ -876,7 +889,7 @@ class ResidualOperator(Operator):
 
         It is equal to the derivative of the "inner" operator:
 
-        ``ResidualOperator(op, vec).derivative(x) <==> op.derivative(x)``
+            ``ResidualOperator(op, y).derivative(z) == op.derivative(z)``
 
         Parameters
         ----------
