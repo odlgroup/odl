@@ -31,9 +31,11 @@ import odl
 from odl.solvers.advanced.proximal_operators import (
     proximal_l1, proximal_cconj_l1,
     proximal_l2, proximal_cconj_l2,
-    proximal_l2_squared, proximal_cconj_l2_squared)
-from odl.util.testutils import noise_element
+    proximal_l2_squared, proximal_cconj_l2_squared,
+    proximal_cconj_kl, proximal_cconj_kl_version_two)
+from odl.util.testutils import (noise_element, all_almost_equal)
 
+from scipy.special import lambertw
 
 pytestmark = odl.util.skip_if_no_largescale
 
@@ -71,10 +73,10 @@ def make_offset(g, stepsize, convex_conjugate):
             assert False
     return offset_function
 
-
 prox_params = ['l1 ', 'l1_dual',
                'l2', 'l2_dual',
-               'l2^2', 'l2^2_dual']
+               'l2^2', 'l2^2_dual',
+               'kl_dual', 'kl_dual_second']
 prox_ids = [' f = {}'.format(p.ljust(10)) for p in prox_params]
 
 
@@ -145,6 +147,42 @@ def proximal_and_function(request, stepsize, offset):
 
         return prox(stepsize), l2_norm_squared_dual
 
+    elif name == 'kl_dual':
+        if g is not None:
+            g = np.abs(g)
+
+        def kl_divergence_dual(x):
+            if np.greater_equal(x, 1):
+                return np.Infinity
+            else:
+                one_element = x.space.one()
+                if g is None:
+                    return stepsize * one_element.inner(
+                        np.log(one_element - x))
+                else:
+                    return stepsize * one_element.inner(
+                        g * np.log(one_element - x))
+
+        prox = proximal_cconj_kl(space, g=g)
+
+        return prox(stepsize), kl_divergence_dual
+
+    elif name == 'kl_dual_second':
+        if g is not None:
+            g = np.abs(g)
+
+        def kl_divergence_second_kind_dual(x):
+            one_element = x.space.one()
+            if g is None:
+                return stepsize * one_element.inner(np.exp(x) - one_element)
+            else:
+                return stepsize * one_element.inner(
+                    g * (np.exp(x) - one_element))
+
+        prox = proximal_cconj_kl_version_two(space, g=g)
+
+        return prox(stepsize), kl_divergence_second_kind_dual
+
     else:
         assert False
 
@@ -163,7 +201,7 @@ def test_proximal_defintion(proximal_and_function):
 
         x* = prox[f](x)
 
-        f(x*) + 1/2 ||x*-y||^2 < f(y) + 1/2 ||x-y||^2
+        f(x*) + 1/2 ||x-x*||^2 < f(y) + 1/2 ||x-y||^2
     """
 
     proximal, function = proximal_and_function
@@ -182,6 +220,49 @@ def test_proximal_defintion(proximal_and_function):
         f_y = proximal_objective(function, x, y)
 
         assert f_prox_x <= f_y
+
+
+def test_proximal_convconj_kl_version_two_solving_opt_problem():
+    """Test for proximal operator of conjguate of 2nd kind KL-divergecen.
+
+    The test solves the problem
+
+        min_x lam*KL(x | g) + 1/2||x-a||^2_2,
+
+    where g is the nonnegative prior, and a is any vector.  Explicit solution
+    to this problem is given by
+
+        x = lam*W(g*e^(a/lam)/lam),
+
+    where W is the Lambert W function.
+    """
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # Data
+    g = space.element(np.arange(10, 0, -1))
+    a = space.element(np.arange(4, 14, 1))
+
+    # Creating and assembling linear operators and proximals
+    id_op = odl.IdentityOperator(space)
+    lin_ops = [id_op, id_op]
+    lam_kl = 2.3
+    prox_cc_g = [odl.solvers.proximal_cconj_kl_version_two(space, lam=lam_kl,
+                                                           g=g),
+                 odl.solvers.proximal_cconj_l2_squared(space, lam=1.0 / 2.0,
+                                                       g=a)]
+    prox_f = odl.solvers.proximal_zero(space)
+
+    # Staring point
+    x = space.zero()
+
+    odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
+                                    tau=2.1, sigma=[0.4, 0.4], niter=100)
+
+    # Explicit solution: x = W(g * exp(a)), where W is the Lambert W function.
+    x_verify = lam_kl * lambertw((1.0 / lam_kl) * g * np.exp(a / lam_kl))
+    assert all_almost_equal(x, x_verify, places=6)
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v --largescale'))

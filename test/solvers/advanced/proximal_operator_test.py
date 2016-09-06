@@ -393,7 +393,7 @@ def test_proximal_convconj_l1_product_space():
 
 
 def test_proximal_convconj_kl_simple_space():
-    """Proximal factory for the convex conjugate of KL divergence."""
+    """Test for proximal factory for the convex conjugate of KL divergence."""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
@@ -427,8 +427,7 @@ def test_proximal_convconj_kl_simple_space():
 
 
 def test_proximal_convconj_kl_product_space():
-    """Proximal factory for the convex conjugate of the KL divergence using
-    product spaces."""
+    """Test for product spaces in proximal for conjugate of KL divergence"""
 
     # Product space for matrix of operators
     op_domain = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
@@ -467,7 +466,7 @@ def test_proximal_convconj_kl_product_space():
 
 
 def test_proximal_convconj_kl_version_two():
-    """Proximal factory of convex conjugate for 2nd version KL divergence."""
+    """Test for proximal of the conjugate of the "2nd" kind KL divergence."""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
@@ -488,53 +487,19 @@ def test_proximal_convconj_kl_version_two():
 
     assert isinstance(prox, odl.Operator)
 
-    # Allocate an output vector
-    x_opt = space.element()
-
-    # Apply the proximal operator returning its optimal point
-    prox(x, x_opt)
+    prox_val = prox(x)
 
     # Explicit computation:
     x_verify = x - lam * lambertw(1.0 / lam * sigma * g * np.exp(
         1.0 / lam * x))
 
+    assert all_almost_equal(prox_val, x_verify, HIGH_ACC)
+
+    # Test inplace evaluation
+    x_opt = space.element()
+    prox(x, x_opt)
+
     assert all_almost_equal(x_opt, x_verify, HIGH_ACC)
-
-    # Numerically solving min_x KL(x | g)
-    id_op = odl.IdentityOperator(space)
-    lin_ops = [id_op]
-    prox_cc_g = [odl.solvers.proximal_cconj_kl_version_two(space, g=g)]
-    prox_f = odl.solvers.proximal_zero(space)
-
-    # Staring point
-    x_iter = x.copy()
-
-    odl.solvers.douglas_rachford_pd(x_iter, prox_f, prox_cc_g, lin_ops,
-                                    tau=3.0, sigma=[0.25], niter=50)
-
-    #  Explicit solution: x = g
-    x_verify = g
-    assert all_almost_equal(x_iter, x_verify, places=LOW_ACC)
-
-    # Numerically solving min_x KL(x) + 1/2||x-a||^2_2.
-    a = space.element(np.arange(4, 14, 1))
-
-    id_op = odl.IdentityOperator(space)
-    lin_ops = [id_op, id_op]
-    prox_cc_g = [odl.solvers.proximal_cconj_kl_version_two(space, g=g),
-                 odl.solvers.proximal_cconj_l2_squared(space, lam=1.0 / 2.0,
-                                                       g=a)]
-    prox_f = odl.solvers.proximal_zero(space)
-
-    # Staring point
-    x_iter = x.copy()
-
-    odl.solvers.douglas_rachford_pd(x_iter, prox_f, prox_cc_g, lin_ops,
-                                    tau=2.0, sigma=[0.5, 0.5], niter=50)
-
-    # Explicit solution: x = W(g * exp(a)), where W is the Lambert W function.
-    x_verify = lambertw(g * np.exp(a))
-    assert all_almost_equal(x_iter, x_verify, places=LOW_ACC)
 
 
 if __name__ == '__main__':
