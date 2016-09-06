@@ -33,11 +33,12 @@ from odl.space import ProductSpace
 __all__ = ('PartialDerivative', 'Gradient', 'Divergence', 'Laplacian')
 
 _SUPPORTED_DIFF_METHODS = ('central', 'forward', 'backward')
-_SUPPORTED_PADDING_METHODS = ('constant', 'symmetric', 'symmetric_adjoint',
-                              'periodic',
-                              'order0', 'order0_adjoint',
-                              'order1', 'order1_adjoint',
-                              'order2', 'order2_adjoint')
+_SUPPORTED_PAD_MODES = ('constant',
+                        'symmetric', 'symmetric_adjoint',
+                        'periodic',
+                        'order0', 'order0_adjoint',
+                        'order1', 'order1_adjoint',
+                        'order2', 'order2_adjoint')
 
 _ADJ_METHOD = {'central': 'central',
                'forward': 'backward',
@@ -63,7 +64,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
     Preserves the shape of the underlying grid.
     """
 
-    def __init__(self, space, axis=0, method='forward', pad_mode='constant',
+    def __init__(self, space, axis, method='forward', pad_mode='constant',
                  pad_const=0):
         """Initialize a new instance.
 
@@ -77,7 +78,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             Finite difference method which is used in the interior of the
             domain of ``f``.
         pad_mode : string, optional
-            The padding mode to use outside the domain
+            The padding mode to use outside the domain.
 
             ``'constant'``: Fill with ``pad_const``.
 
@@ -96,7 +97,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
             ``'order2'``: Extend with second order accuracy (ensures continuity
             of the second derivative). This requires at least 3 values along
-            each axis where padding is applied.
+            the ``axis`` where padding is applied.
 
         pad_const : float, optional
             For ``pad_mode == 'constant'``, ``f`` assumes
@@ -108,7 +109,7 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         >>> f = np.array([[ 0.,  1.,  2.,  3.,  4.],
         ...               [ 0.,  2.,  4.,  6.,  8.]])
         >>> discr = odl.uniform_discr([0, 0], [2, 1], f.shape)
-        >>> par_deriv = PartialDerivative(discr, pad_mode='order1')
+        >>> par_deriv = PartialDerivative(discr, axis=0, pad_mode='order1')
         >>> par_div_f = par_deriv(f)
         >>> print(par_div_f)
         [[0.0, 1.0, 2.0, 3.0, 4.0],
@@ -130,28 +131,14 @@ class PartialDerivative(PointwiseTensorFieldOperator):
                              ''.format(method_in))
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
-        if pad_mode not in _SUPPORTED_PADDING_METHODS:
+        if pad_mode not in _SUPPORTED_PAD_MODES:
             raise ValueError('`pad_mode` {} not understood'
                              ''.format(pad_mode_in))
 
         self.pad_const = space.field.element(pad_const)
 
     def _call(self, x, out=None):
-        """Apply gradient operator to ``x`` and store result in ``out``.
-
-        Parameters
-        ----------
-        x : `domain` element
-            Input element to which the operator is applied.
-        out : `range` element, optional
-            Output element to which the result is written.
-
-        Returns
-        -------
-        out : `range` element
-            Result of the evaluation. If ``out`` was provided, the
-            returned object is a reference to it.
-        """
+        """Calculate partial derivative of ``x``."""
         if out is None:
             out = self.range.element()
 
@@ -226,7 +213,7 @@ class Gradient(PointwiseTensorFieldOperator):
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method to be used
         pad_mode : string, optional
-            The padding mode to use outside the domain
+            The padding mode to use outside the domain.
 
             ``'constant'``: Fill with ``pad_const``.
 
@@ -245,7 +232,7 @@ class Gradient(PointwiseTensorFieldOperator):
 
             ``'order2'``: Extend with second order accuracy (ensures continuity
             of the second derivative). This requires at least 3 values along
-            each axis where padding is applied.
+            each axis.
 
         pad_const : float, optional
             For ``pad_mode == 'constant'``, ``f`` assumes
@@ -270,7 +257,7 @@ class Gradient(PointwiseTensorFieldOperator):
         >>> grad_op3.range == ran
         True
 
-        Calling the operator
+        Calling the operator:
 
         >>> data = np.array([[ 0., 1., 2., 3., 4.],
         ...                  [ 0., 2., 4., 6., 8.]])
@@ -319,28 +306,14 @@ class Gradient(PointwiseTensorFieldOperator):
                              ''.format(method_in))
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
-        if pad_mode not in _SUPPORTED_PADDING_METHODS:
+        if pad_mode not in _SUPPORTED_PAD_MODES:
             raise ValueError('`pad_mode` {} not understood'
                              ''.format(pad_mode_in))
 
         self.pad_const = domain.field.element(pad_const)
 
     def _call(self, x, out=None):
-        """Calculate the spatial gradient of ``x``.
-
-        Parameters
-        ----------
-        x : `domain` element
-            Input vector to which the `Gradient` operator is applied.
-        out : `range` element, optional
-            Output vector to which the result is written.
-
-        Returns
-        -------
-        out : `range` element
-            Result of the evaluation. If ``out`` was provided, the returned
-            object is a reference to it.
-        """
+        """Calculate the spatial gradient of ``x``."""
         if out is None:
             out = self.range.element()
 
@@ -429,7 +402,7 @@ class Divergence(PointwiseTensorFieldOperator):
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method to be used
         pad_mode : string, optional
-            The padding mode to use outside the domain
+            The padding mode to use outside the domain.
 
             ``'constant'``: Fill with ``pad_const``.
 
@@ -443,11 +416,11 @@ class Divergence(PointwiseTensorFieldOperator):
 
             ``'order1'``: Extend with constant slope (ensures continuity of
             the first derivative). This requires at least 2 values along
-            each axis where padding is applied.
+            each axis.
 
             ``'order2'``: Extend with second order accuracy (ensures continuity
             of the second derivative). This requires at least 3 values along
-            each axis where padding is applied.
+            each axis.
 
         pad_const : float, optional
             For ``pad_mode == 'constant'``, ``f`` assumes
@@ -515,29 +488,14 @@ class Divergence(PointwiseTensorFieldOperator):
                              ''.format(method_in))
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
-        if pad_mode not in _SUPPORTED_PADDING_METHODS:
+        if pad_mode not in _SUPPORTED_PAD_MODES:
             raise ValueError('`pad_mode` {} not understood'
                              ''.format(pad_mode_in))
 
         self.pad_const = range.field.element(pad_const)
 
     def _call(self, x, out=None):
-        """Calculate the divergence of ``x``.
-
-        Parameters
-        ----------
-        x : `domain` element
-            `ProductSpaceElement` to which the divergence operator
-            is applied.
-        out : `range` element, optional
-            Output vector to which the result is written.
-
-        Returns
-        -------
-        out : `range` element
-            Result of the evaluation. If ``out`` was provided, the returned
-            object is a reference to it.
-        """
+        """Calculate the divergence of ``x``."""
         if out is None:
             out = self.range.element()
 
@@ -615,7 +573,7 @@ class Laplacian(PointwiseTensorFieldOperator):
         space : `DiscreteLp`
             Space of elements which the operator is acting on.
         pad_mode : string, optional
-            The padding mode to use outside the domain
+            The padding mode to use outside the domain.
 
             ``'constant'``: Fill with ``pad_const``.
 
@@ -630,7 +588,7 @@ class Laplacian(PointwiseTensorFieldOperator):
 
             ``'order1'``: Extend with constant slope (ensures continuity of
             the first derivative). This requires at least 2 values along
-            each axis where padding is applied.
+            each axis.
 
             ``'order2'``: Extend with second order accuracy (ensures continuity
             of the second derivative). This requires at least 3 values along
@@ -660,7 +618,7 @@ class Laplacian(PointwiseTensorFieldOperator):
         super().__init__(domain=space, range=space, linear=True)
 
         self.pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
-        if pad_mode not in _SUPPORTED_PADDING_METHODS:
+        if pad_mode not in _SUPPORTED_PAD_MODES:
             raise ValueError('`pad_mode` {} not understood'
                              ''.format(pad_mode_in))
         if pad_mode in ('order1', 'order1_adjoint',
@@ -672,22 +630,7 @@ class Laplacian(PointwiseTensorFieldOperator):
         self.pad_const = space.field.element(pad_const)
 
     def _call(self, x, out=None):
-        """Calculate the spatial Laplacian of ``x``.
-
-        Parameters
-        ----------
-        x : `domain` element
-            Input vector to which the `Laplacian` operator is
-            applied
-        out : `range` element, optional
-            Output vector to which the result is written
-
-        Returns
-        -------
-        out : `range` element
-            Result of the evaluation. If ``out`` was provided, the returned
-            object is a reference to it.
-        """
+        """Calculate the spatial Laplacian of ``x``."""
         if out is None:
             out = self.range.zero()
         else:
@@ -749,7 +692,7 @@ class Laplacian(PointwiseTensorFieldOperator):
         return self
 
 
-def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
+def finite_diff(f, axis, dx=1.0, method='forward', out=None, **kwargs):
     """Calculate the partial derivative of ``f`` along a given ``axis``.
 
     In the interior of the domain of f, the partial derivative is computed
@@ -773,7 +716,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     ----------
     f : `array-like`
          An N-dimensional array.
-    axis : int, optional
+    axis : int
         The axis along which the partial derivative is evaluated.
     dx : float, optional
         Scalar specifying the distance between sampling points along ``axis``.
@@ -784,7 +727,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
          An N-dimensional array to which the output is written. Has to have
          the same shape as the input array ``f``.
     pad_mode : string, optional
-        The padding mode to use outside the domain
+        The padding mode to use outside the domain.
 
         ``'constant'``: Fill with ``pad_const``.
 
@@ -819,7 +762,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
     --------
     >>> f = np.array([ 0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
 
-    >>> finite_diff(f)
+    >>> finite_diff(f, axis=0)
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  -9.])
 
     Without arguments the above defaults to:
@@ -829,22 +772,22 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
 
     Parameters can be changed one by one:
 
-    >>> finite_diff(f, dx=0.5)
+    >>> finite_diff(f, axis=0, dx=0.5)
     array([ 2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  -18.])
-    >>> finite_diff(f, pad_mode='order1')
+    >>> finite_diff(f, axis=0, pad_mode='order1')
     array([ 1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1., 1.])
 
     Central differences and different edge orders:
 
-    >>> finite_diff(1/2*f**2, method='central', pad_mode='order1')
+    >>> finite_diff(0.5 * f**2, axis=0, method='central', pad_mode='order1')
     array([ 0.5,  1. ,  2. ,  3. ,  4. ,  5. ,  6. ,  7. ,  8. ,  8.5])
-    >>> finite_diff(1/2*f**2, method='central', pad_mode='order2')
+    >>> finite_diff(0.5 * f**2, axis=0, method='central', pad_mode='order2')
     array([-0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
 
     In-place evaluation:
 
     >>> out = f.copy()
-    >>> out is finite_diff(f, out=out)
+    >>> out is finite_diff(f, axis=0, out=out)
     True
     """
     f_arr = np.asarray(f)
@@ -869,7 +812,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
         raise ValueError('`method` {} was not understood'.format(method_in))
 
     pad_mode = kwargs.pop('pad_mode', 'constant')
-    if pad_mode not in _SUPPORTED_PADDING_METHODS:
+    if pad_mode not in _SUPPORTED_PAD_MODES:
         raise ValueError('`pad_mode` {} not understood'
                          ''.format(pad_mode))
     pad_const = float(kwargs.pop('pad_const', 0))
@@ -881,20 +824,24 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
             raise ValueError('expected output shape {}, got {}'
                              ''.format(f.shape, out.shape))
 
-    if f_arr.shape[axis] == 2 and pad_mode == 'order2':
-        raise ValueError("shape of array to small to use 'order2'")
+    if f_arr.shape[axis] < 2 and pad_mode == 'order1':
+        raise ValueError("size of array to small to use 'order1', needs at "
+                         "least 2 elements along axis {}.".format(axis))
+    if f_arr.shape[axis] < 3 and pad_mode == 'order2':
+        raise ValueError("size of array to small to use 'order2', needs at "
+                         "least 3 elements along axis {}.".format(axis))
 
     if kwargs:
         raise ValueError('unkown keyword argument(s): {}'.format(kwargs))
 
     # create slice objects: initially all are [:, :, ..., :]
 
-    # Swap axes so that the axis of interest is first
+    # Swap axes so that the axis of interest is first. This is a O(1)
+    # operation and is done to simplify the code below.
     out, out_in = np.swapaxes(out, 0, axis), out
     f_arr = np.swapaxes(f_arr, 0, axis)
 
     # Interior of the domain of f
-
     if method == 'central':
         # 1D equivalent: out[1:-1] = (f[2:] - f[:-2])/2.0
         np.subtract(f_arr[2:], f_arr[:-2], out=out[1:-1])
@@ -1013,7 +960,7 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
         # Values of f for indices outside the domain of f are linearly
         # extrapolated from the inside.
 
-        # independent on ``method``
+        # independent of ``method``
 
         out[0] = f_arr[1] - f_arr[0]
         out[-1] = f_arr[-1] - f_arr[-2]
