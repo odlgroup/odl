@@ -45,6 +45,7 @@ Changes
   * `DiscretizedSpaceVector` -> `DiscretizedSpaceElement`
   * `FunctionSetVector` -> `FunctionSetElement`
   * `FunctionSpaceVector` -> `FunctionSpaceElement`
+- Changed parameter style of differential operators from having a `pad_mode` and a separate `edge_order` argument that were mutually exclusive to a single `pad_mode` that covers all cases. Also Added several new pad modes to the differential operators. (:pull:`548`)
 
 Bugfixes
 --------
