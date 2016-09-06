@@ -15,12 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""CPU implementations of ``n``-dimensional Cartesian spaces.
-
-This is a default implementation of :math:`A^n` for an arbitrary set
-:math:`A` as well as the real and complex spaces :math:`R^n` and
-:math:`C^n`. The data is represented by NumPy arrays.
-"""
+"""Weightings for finite-dimensional spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -29,12 +24,10 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# External module imports
 import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
-# ODL imports
 from odl.space.base_ntuples import FnBaseVector
 from odl.util.utility import array1d_repr, arraynd_repr
 
@@ -118,7 +111,7 @@ class WeightingBase(object):
         Notes
         -----
         This operation must be computationally cheap, i.e. no large
-        arrays may be compared element-wise. That is the task of the
+        arrays may be compared entry-wise. That is the task of the
         `equiv` method.
         """
         return (isinstance(other, WeightingBase) and
@@ -141,53 +134,53 @@ class WeightingBase(object):
         return self == other
 
     def inner(self, x1, x2):
-        """Calculate the inner product of two vectors.
+        """Return the inner product of two elements.
 
         Parameters
         ----------
-        x1, x2 : `LinearSpaceVector`
-            Vectors whose inner product is calculated
+        x1, x2 : `LinearSpaceElement`
+            Elements whose inner product is calculated.
 
         Returns
         -------
         inner : float or complex
-            The inner product of the two provided vectors
+            The inner product of the two provided elements.
         """
         raise NotImplementedError
 
     def norm(self, x):
-        """Calculate the norm of a vector.
+        """Calculate the norm of an element.
 
         This is the standard implementation using `inner`.
         Subclasses should override it for optimization purposes.
 
         Parameters
         ----------
-        x1 : `LinearSpaceVector`
-            Vector whose norm is calculated
+        x1 : `LinearSpaceElement`
+            Element whose norm is calculated.
 
         Returns
         -------
         norm : float
-            The norm of the vector
+            The norm of the element.
         """
         return float(np.sqrt(self.inner(x, x).real))
 
     def dist(self, x1, x2):
-        """Calculate the distance between two vectors.
+        """Calculate the distance between two elements.
 
         This is the standard implementation using `norm`.
         Subclasses should override it for optimization purposes.
 
         Parameters
         ----------
-        x1, x2 : `LinearSpaceVector`
-            Vectors whose mutual distance is calculated
+        x1, x2 : `LinearSpaceElement`
+            Elements whose mutual distance is calculated.
 
         Returns
         -------
         dist : float
-            The distance between the vectors
+            The distance between the elements.
         """
         if self.dist_using_inner:
             dist_squared = (self.norm(x1) ** 2 + self.norm(x2) ** 2 -
@@ -534,9 +527,9 @@ class VectorWeightingBase(WeightingBase):
         Parameters
         ----------
         vector : 1-dim. `array-like`
-            Weighting vector of the inner product
+            Weighting vector of the inner product.
         impl : string
-            Specifier for the implementation backend
+            Specifier for the implementation backend.
         exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
@@ -545,7 +538,7 @@ class VectorWeightingBase(WeightingBase):
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -622,7 +615,7 @@ class VectorWeightingBase(WeightingBase):
 
     @property
     def repr_part(self):
-        """Return a string usable in a space's ``__repr__`` method."""
+        """String usable in a space's ``__repr__`` method."""
         part = 'weight={}'.format(array1d_repr(self.vector, nprint=10))
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
@@ -664,14 +657,14 @@ class ConstWeightingBase(WeightingBase):
         constant : positive float
             Weighting constant of the inner product.
         impl : string
-            Specifier for the implementation backend
+            Specifier for the implementation backend.
         exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -728,7 +721,7 @@ class ConstWeightingBase(WeightingBase):
 
     @property
     def repr_part(self):
-        """Return a string usable in a space's ``__repr__`` method."""
+        """String usable in a space's ``__repr__`` method."""
         sep = ''
         if self.const != 1.0:
             part = 'weight={:.4}'.format(self.const)
@@ -776,11 +769,11 @@ class NoWeightingBase(ConstWeightingBase):
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
         impl : string
-            Specifier for the implementation backend
+            Specifier for the implementation backend.
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -825,9 +818,9 @@ class CustomInnerProductBase(WeightingBase):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            `LinearSpaceVector` arguments, return an element from
+            `LinearSpaceElement` arguments, return an element from
             their space's field (real or complex number) and
-            satisfy the following conditions for all vectors
+            satisfy the following conditions for all space elements
             ``x, y, z`` and scalars ``s``:
 
             - ``<x, y> = conj(<y, x>)``
@@ -835,11 +828,11 @@ class CustomInnerProductBase(WeightingBase):
             - ``<x, x> = 0``  if and only if  ``x = 0``
 
         impl : string
-            Specifier for the implementation backend
+            Specifier for the implementation backend.
         dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -873,7 +866,7 @@ class CustomInnerProductBase(WeightingBase):
 
     @property
     def repr_part(self):
-        """Return a string usable in a space's ``__repr__`` method."""
+        """String usable in a space's ``__repr__`` method."""
         part = 'inner={}'.format(self.inner)
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
@@ -905,8 +898,8 @@ class CustomNormBase(WeightingBase):
         ----------
         norm : `callable`
             The norm implementation. It must accept a
-            `LinearSpaceVector` argument, return a float and satisfy
-            the following conditions for all vectors
+            `LinearSpaceElement` argument, return a float and satisfy
+            the following conditions for all space elements
             ``x, y`` and scalars ``s``:
 
             - ``||x|| >= 0``
@@ -974,9 +967,9 @@ class CustomDistBase(WeightingBase):
         ----------
         dist : `callable`
             The distance function defining a metric on a `LinearSpace`.
-            It must accept two `LinearSpaceVector` arguments, return a
+            It must accept two `LinearSpaceElement` arguments, return a
             float and and fulfill the following mathematical conditions
-            for any three vectors ``x, y, z``:
+            for any three space elements ``x, y, z``:
 
             - ``dist(x, y) >= 0``
             - ``dist(x, y) = 0``  if and only if  ``x = y``

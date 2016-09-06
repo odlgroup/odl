@@ -66,14 +66,16 @@ class PartialDerivative(PointwiseTensorFieldOperator):
             Finite difference method which is used in the interior of the
             domain of ``f``.
         pad_mode : {'constant', 'symmetric', 'periodic', ``None``}, optional
+            Method to be used to fill in missing values in an enlarged array.
 
-            'constant' : Pads values outside the domain of ``f`` with a
-            constant value given by ``pad_const``.
+            ``'constant'``: Fill with ``pad_const``.
 
-            'symmetric' : Pads with the reflection of the vector mirrored
-            along the edge of the array.
+            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            outmost values. This requires at least two entries along
+            ``axis``.
 
-            'periodic' : Pads with the values from the other side of the array.
+            ``'periodic'``: Fill in values from the other side, keeping
+            the order.
 
             ``None`` : Use one-sided forward or backward differences at
             the boundary.
@@ -118,9 +120,9 @@ class PartialDerivative(PointwiseTensorFieldOperator):
         Parameters
         ----------
         x : `domain` element
-            Input vector to which the operator is applied.
+            Input element to which the operator is applied.
         out : `range` element, optional
-            Output vector to which the result is written.
+            Output element to which the result is written.
 
         Returns
         -------
@@ -180,7 +182,7 @@ class Gradient(PointwiseTensorFieldOperator):
     """Spatial gradient operator for `DiscreteLp` spaces.
 
     Calls helper function `finite_diff` to calculate each component of the
-    resulting product space vector. For the adjoint of the `Gradient`
+    resulting product space element. For the adjoint of the `Gradient`
     operator, zero padding is assumed to match the negative `Divergence`
     operator
     """
@@ -203,14 +205,15 @@ class Gradient(PointwiseTensorFieldOperator):
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method to be used
         pad_mode : {'constant', 'symmetric', 'periodic'}, optional
+            Method to be used to fill in missing values in an enlarged array.
 
-            'constant' : Pads values outside the domain of ``f`` with a
-            constant value given by ``pad_const``.
+            ``'constant'``: Fill with ``pad_const``.
 
-            'symmetric' : Pads with the reflection of the vector mirrored
-            along the edge of the array.
+            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            outmost values..
 
-            'periodic' : Pads with the values from the other side of the array.
+            ``'periodic'``: Fill in values from the other side, keeping
+            the order.
 
         pad_const : float, optional
             For ``pad_mode == 'constant'``, ``f`` assumes
@@ -381,14 +384,15 @@ class Divergence(PointwiseTensorFieldOperator):
         method : {'central', 'forward', 'backward'}, optional
             Finite difference method to be used
         pad_mode : {'constant', 'symmetric', 'periodic'}, optional
+            Method to be used to fill in missing values in an enlarged array.
 
-            'constant' : Pads values outside the domain of ``f`` with a
-            constant value given by ``pad_const``.
+            ``'constant'``: Fill with ``pad_const``.
 
-            'symmetric' : Pads with the reflection of the vector mirrored
-            along the edge of the array.
+            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            outmost values..
 
-            'periodic' : Pads with the values from the other side of the array.
+            ``'periodic'``: Fill in values from the other side, keeping
+            the order.
 
         pad_const : float, optional
             For ``pad_mode == 'constant'``, ``f`` assumes
@@ -457,7 +461,7 @@ class Divergence(PointwiseTensorFieldOperator):
         Parameters
         ----------
         x : `domain` element
-            `ProductSpaceVector` to which the divergence operator
+            `ProductSpaceElement` to which the divergence operator
             is applied.
         out : `range` element, optional
             Output vector to which the result is written.
@@ -545,14 +549,18 @@ class Laplacian(PointwiseTensorFieldOperator):
         space : `DiscreteLp`
             Space of elements which the operator is acting on.
         pad_mode : {'constant', 'symmetric', 'periodic'}, optional
+            Method to be used to fill in missing values in an enlarged array.
 
-            'constant' : Pads values outside the domain of ``f`` with a
-            constant value given by ``pad_const``.
+            ``'constant'``: Fill with ``pad_const``.
 
-            'symmetric' : Pads with the reflection of the vector mirrored
-            along the edge of the array.
+            ``'symmetric'``: Reflect at the boundaries, not doubling the
+            outmost values..
 
-            'periodic' : Pads with the values from the other side of the array.
+            ``'periodic'``: Fill in values from the other side, keeping
+            the order.
+
+            ``None`` : Use one-sided forward or backward differences at
+            the boundary.
 
         pad_const : float, optional
             For ``pad_mode == 'constant'``, ``f`` assumes
@@ -693,14 +701,16 @@ def finite_diff(f, axis=0, dx=1.0, method='forward', out=None, **kwargs):
          the same shape as the input array ``f``.
 
     pad_mode : {'constant', 'symmetric', 'periodic', ``None``}, optional
+        Method to be used to fill in missing values in an enlarged array.
 
-        'constant' : Pads values outside the domain of ``f`` with a constant
-        value given by ``pad_const``.
+        ``'constant'``: Fill with ``pad_const``.
 
-        'symmetric' : Pads with the reflection of the vector mirrored
-        along the edge of the array.
+        ``'symmetric'``: Reflect at the boundaries, not doubling the
+        outmost values. This requires at least two entries along
+        ``axis``.
 
-        'periodic' : Pads with the values from the other side of the array.
+        ``'periodic'``: Fill in values from the other side, keeping
+        the order.
 
         ``None`` : Use one-sided forward or backward differences at
         the boundary.

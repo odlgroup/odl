@@ -40,16 +40,19 @@ class ProductSpaceOperator(Operator):
 
     """A "matrix of operators" on product spaces.
 
-    For example a matrix of operators can act on a vector by::
+    For example a matrix of operators can act on a vector by
 
-    ProductSpaceOperator([[A, B], [C, D]])([x, y]) = [A(x) + B(y), C(x) + D(y)]
+        ``ProductSpaceOperator([[A, B], [C, D]])([x, y]) =
+        [A(x) + B(y), C(x) + D(y)]``
 
     Notes
     -----
     This is intended for the case where an operator can be decomposed
     as a linear combination of "sub-operators", e.g.
 
-        :math:`\\left(
+    .. math::
+
+        \\left(
         \\begin{array}{ccc}
         A & B & 0 \\\\
         0 & C & 0 \\\\
@@ -67,7 +70,7 @@ class ProductSpaceOperator(Operator):
         A(x) + B(y) \\\\
         C(y) \\\\
         D(z)
-        \end{array}\\right)`
+        \end{array}\\right)
 
     Mathematically, a `ProductSpaceOperator` is an operator
 
@@ -221,21 +224,7 @@ class ProductSpaceOperator(Operator):
         super().__init__(domain=domain, range=range, linear=linear)
 
     def _call(self, x, out=None):
-        """Call the ProductSpace operators.
-
-        Parameters
-        ----------
-        x : `domain` element
-            Input vector to be evaluated.
-        out : `range` element, optional
-            Output vector to write the result to.
-
-        Returns
-        -------
-        out : `range` element
-            Result of the evaluation. If ``out`` was provided, the
-            returned object is a reference to it.
-        """
+        """Call the operators on the parts of ``x``."""
         # TODO: add optimization in case an operator appears repeatedly in a
         # row
         if out is None:
@@ -440,21 +429,7 @@ class ComponentProjection(Operator):
         return self.__index
 
     def _call(self, x, out=None):
-        """Project x onto subspace.
-
-        Parameters
-        ----------
-        x : `domain` element
-            Input vector to be projected.
-        out : `range` element, optional
-            Output vector to write the result to.
-
-        Returns
-        -------
-        out : `range` element
-            Projection of ``x`` onto the subspace. If ``out`` was provided,
-            the returned object is a reference to it.
-        """
+        """Project ``x`` onto the subspace."""
         if out is None:
             out = x[self.index].copy()
         else:
@@ -507,7 +482,7 @@ class ComponentProjectionAdjoint(Operator):
         >>> X = odl.ProductSpace(r1, r2, r3)
         >>> x = X.element([[1], [2, 3], [4, 5, 6]])
 
-        Projection on n-th component
+        Projection on the 0-th component:
 
         >>> proj = odl.ComponentProjectionAdjoint(X, 0)
         >>> proj(x[0])
@@ -517,7 +492,7 @@ class ComponentProjectionAdjoint(Operator):
             [0.0, 0.0, 0.0]
         ])
 
-        Projection on sub-space
+        Projection on a sub-space corresponding to indices 0 and 2:
 
         >>> proj = odl.ComponentProjectionAdjoint(X, [0, 2])
         >>> proj(x[0, 2])
@@ -536,21 +511,7 @@ class ComponentProjectionAdjoint(Operator):
         return self.__index
 
     def _call(self, x, out=None):
-        """Extend ``x`` from the subspace.
-
-        Parameters
-        ----------
-        x : `domain` element
-            Input vector to be extended.
-        out : `range` element, optional
-            Output vector to write the result to.
-
-        Returns
-        -------
-        out : `range` element
-            Extension of ``x`` to the superspace. If ``out`` was provided,
-            the returned object is a reference to it.
-        """
+        """Extend ``x`` from the subspace."""
         if out is None:
             out = self.range.zero()
         else:
@@ -651,20 +612,7 @@ class BroadcastOperator(Operator):
         return self.operators[index]
 
     def _call(self, x, out=None):
-        """Apply operators to ``x``.
-
-        Parameters
-        ----------
-        x : `domain` element
-            Input vector to be evaluated by operators.
-        out : `range` element, optional
-            Output vector to write the result to.
-
-        Returns
-        -------
-        out : `range` element
-            Values of operators evaluated in point
-        """
+        """Evaluate all operators in ``x`` and broadcast."""
         wrapped_x = self.prod_op.domain.element([x], cast=False)
         return self.prod_op(wrapped_x, out=out)
 
@@ -683,15 +631,14 @@ class BroadcastOperator(Operator):
 
         Examples
         --------
-
-        Example with affine operator
+        Example with an affine operator:
 
         >>> import odl
         >>> I = odl.IdentityOperator(odl.rn(3))
         >>> residual_op = odl.ResidualOperator(I, I.domain.element([1, 1, 1]))
         >>> op = BroadcastOperator(residual_op, 2 * residual_op)
 
-        Calling operator gives offset by [1, 1, 1]
+        Calling operator offsets by ``[1, 1, 1]``:
 
         >>> x = [1, 2, 3]
         >>> op(x)
@@ -700,7 +647,7 @@ class BroadcastOperator(Operator):
             [0.0, 2.0, 4.0]
         ])
 
-        Derivative of affine operator does not have this offset
+        The derivative of this affine operator does not have an offset:
 
         >>> op.derivative(x)(x)
         ProductSpace(rn(3), 2).element([
@@ -803,28 +750,7 @@ class ReductionOperator(Operator):
         return self.operators[index]
 
     def _call(self, x, out=None):
-        """Apply operators to ``x`` and sum.
-
-        Parameters
-        ----------
-        x : `domain` element
-            Input vector that should be used in the reduction.
-        out : `range` element, optional
-            Output vector to write the result to.
-
-
-        Parameters
-        ----------
-        x : `domain` element
-            Input vector to be evaluated by operators.
-        out : `range` element, optional
-            Output vector to write the result to.
-
-        Returns
-        -------
-        out : `range` element
-            Sum of operators evaluated in ``x``.
-        """
+        """Apply operators to ``x`` and sum."""
         if out is None:
             return self.prod_op(x)[0]
         else:

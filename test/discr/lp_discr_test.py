@@ -30,7 +30,7 @@ import odl
 from odl.discr.lp_discr import DiscreteLp
 from odl.space.base_ntuples import FnBase
 from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
-                                noise_vectors)
+                                noise_elements)
 
 # Pytest fixture
 
@@ -154,9 +154,9 @@ def test_element_1d(exponent):
     discr = odl.uniform_discr(0, 1, 3, impl='numpy', exponent=exponent)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
     dspace = odl.rn(3, exponent=exponent, weight=weight)
-    vec = discr.element()
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert vec.ntuple in dspace
+    elem = discr.element()
+    assert isinstance(elem, odl.DiscreteLpElement)
+    assert elem.ntuple in dspace
 
 
 def test_element_2d(exponent):
@@ -164,58 +164,58 @@ def test_element_2d(exponent):
                               impl='numpy', exponent=exponent)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
     dspace = odl.rn(9, exponent=exponent, weight=weight)
-    vec = discr.element()
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert vec.ntuple in dspace
+    elem = discr.element()
+    assert isinstance(elem, odl.DiscreteLpElement)
+    assert elem.ntuple in dspace
 
 
 def test_element_from_array_1d():
     discr = odl.uniform_discr(0, 1, 3, impl='numpy')
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert isinstance(vec.ntuple, odl.NumpyFnVector)
-    assert all_equal(vec.ntuple, [1, 2, 3])
+    assert isinstance(elem, odl.DiscreteLpElement)
+    assert isinstance(elem.ntuple, odl.NumpyFnVector)
+    assert all_equal(elem.ntuple, [1, 2, 3])
 
 
 def test_element_from_array_2d():
     # assert orderings work properly with 2d
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='numpy', order='C')
-    vec = discr.element([[1, 2],
+    elem = discr.element([[1, 2],
                          [3, 4]])
 
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert isinstance(vec.ntuple, odl.NumpyFnVector)
+    assert isinstance(elem, odl.DiscreteLpElement)
+    assert isinstance(elem.ntuple, odl.NumpyFnVector)
 
     # Check ordering
-    assert all_equal(vec.ntuple, [1, 2, 3, 4])
+    assert all_equal(elem.ntuple, [1, 2, 3, 4])
 
     # Linear creation works as well
-    linear_vec = discr.element([1, 2, 3, 4])
-    assert all_equal(vec.ntuple, [1, 2, 3, 4])
+    linear_elem = discr.element([1, 2, 3, 4])
+    assert all_equal(linear_elem.ntuple, [1, 2, 3, 4])
 
     # Fortran order
     discr = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl='numpy', order='F')
-    vec = discr.element([[1, 2],
+    elem = discr.element([[1, 2],
                          [3, 4]])
 
     # Check ordering
-    assert all_equal(vec.ntuple, [1, 3, 2, 4])
+    assert all_equal(elem.ntuple, [1, 3, 2, 4])
 
     # Linear creation works aswell
-    linear_vec = discr.element([1, 2, 3, 4])
-    assert all_equal(linear_vec.ntuple, [1, 2, 3, 4])
+    linear_elem = discr.element([1, 2, 3, 4])
+    assert all_equal(linear_elem.ntuple, [1, 2, 3, 4])
 
     # Using broadcasting
-    broadcast_vec = discr.element([[1, 2]])
+    broadcast_elem = discr.element([[1, 2]])
     broadcast_expected = discr.element([[1, 2],
                                         [1, 2]])
-    assert all_equal(broadcast_vec, broadcast_expected)
+    assert all_equal(broadcast_elem, broadcast_expected)
 
-    broadcast_vec = discr.element([[1], [2]])
+    broadcast_elem = discr.element([[1], [2]])
     broadcast_expected = discr.element([[1, 1],
                                         [2, 2]])
-    assert all_equal(broadcast_vec, broadcast_expected)
+    assert all_equal(broadcast_elem, broadcast_expected)
 
 
 def test_element_from_array_2d_shape():
@@ -340,17 +340,17 @@ def test_element_from_function_2d():
 
 def test_zero():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.zero()
+    zero = discr.zero()
 
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert isinstance(vec.ntuple, odl.NumpyFnVector)
-    assert all_equal(vec, [0, 0, 0])
+    assert isinstance(zero, odl.DiscreteLpElement)
+    assert isinstance(zero.ntuple, odl.NumpyFnVector)
+    assert all_equal(zero, [0, 0, 0])
 
 
 def _test_unary_operator(discr, function):
     # Verify that the statement y=function(x) gives equivalent results
     # to NumPy
-    x_arr, x = noise_vectors(discr)
+    x_arr, x = noise_elements(discr)
 
     y_arr = function(x_arr)
 
@@ -362,7 +362,7 @@ def _test_unary_operator(discr, function):
 def _test_binary_operator(discr, function):
     # Verify that the statement z=function(x,y) gives equivalent results
     # to NumPy
-    [x_arr, y_arr], [x, y] = noise_vectors(discr, 2)
+    [x_arr, y_arr], [x, y] = noise_elements(discr, 2)
 
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
@@ -480,138 +480,138 @@ def test_interp():
 
 def test_getitem():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    assert all_equal(vec, [1, 2, 3])
+    assert all_equal(elem, [1, 2, 3])
 
 
 def test_getslice():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    assert isinstance(vec[:], odl.NumpyFnVector)
-    assert all_equal(vec[:], [1, 2, 3])
+    assert isinstance(elem[:], odl.NumpyFnVector)
+    assert all_equal(elem[:], [1, 2, 3])
 
     discr = odl.uniform_discr(0, 1, 3, dtype='complex')
-    vec = discr.element([1 + 2j, 2 - 2j, 3])
+    elem = discr.element([1 + 2j, 2 - 2j, 3])
 
-    assert isinstance(vec[:], odl.NumpyFnVector)
-    assert all_equal(vec[:], [1 + 2j, 2 - 2j, 3])
+    assert isinstance(elem[:], odl.NumpyFnVector)
+    assert all_equal(elem[:], [1 + 2j, 2 - 2j, 3])
 
 
 def test_setitem():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
-    vec[0] = 4
-    vec[1] = 5
-    vec[2] = 6
+    elem = discr.element([1, 2, 3])
+    elem[0] = 4
+    elem[1] = 5
+    elem[2] = 6
 
-    assert all_equal(vec, [4, 5, 6])
+    assert all_equal(elem, [4, 5, 6])
 
 
 def test_setitem_nd():
 
     # 1D
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    vec[:] = [4, 5, 6]
-    assert all_equal(vec, [4, 5, 6])
+    elem[:] = [4, 5, 6]
+    assert all_equal(elem, [4, 5, 6])
 
-    vec[:] = np.array([3, 2, 1])
-    assert all_equal(vec, [3, 2, 1])
+    elem[:] = np.array([3, 2, 1])
+    assert all_equal(elem, [3, 2, 1])
 
-    vec[:] = 0
-    assert all_equal(vec, [0, 0, 0])
+    elem[:] = 0
+    assert all_equal(elem, [0, 0, 0])
 
-    vec[:] = [1]
-    assert all_equal(vec, [1, 1, 1])
-
-    with pytest.raises(ValueError):
-        vec[:] = [0, 0]  # bad shape
+    elem[:] = [1]
+    assert all_equal(elem, [1, 1, 1])
 
     with pytest.raises(ValueError):
-        vec[:] = [0, 0, 1, 2]  # bad shape
+        elem[:] = [0, 0]  # bad shape
+
+    with pytest.raises(ValueError):
+        elem[:] = [0, 0, 1, 2]  # bad shape
 
     # 2D
     discr = odl.uniform_discr([0, 0], [1, 1], [3, 2])
 
-    vec = discr.element([[1, 2],
+    elem = discr.element([[1, 2],
                          [3, 4],
                          [5, 6]])
 
-    vec[:] = [[-1, -2],
-              [-3, -4],
-              [-5, -6]]
-    assert all_equal(vec, [-1, -2, -3, -4, -5, -6])
+    elem[:] = [[-1, -2],
+               [-3, -4],
+               [-5, -6]]
+    assert all_equal(elem, [-1, -2, -3, -4, -5, -6])
 
     arr = np.arange(6, 12).reshape([3, 2])
-    vec[:] = arr
-    assert all_equal(vec, np.arange(6, 12))
+    elem[:] = arr
+    assert all_equal(elem, np.arange(6, 12))
 
-    vec[:] = 0
-    assert all_equal(vec, [0] * 6)
+    elem[:] = 0
+    assert all_equal(elem, [0] * 6)
 
-    vec[:] = [1]
-    assert all_equal(vec, [1] * 6)
-
-    with pytest.raises(ValueError):
-        vec[:] = [0, 0]  # bad shape
+    elem[:] = [1]
+    assert all_equal(elem, [1] * 6)
 
     with pytest.raises(ValueError):
-        vec[:] = [0, 0, 0]  # bad shape
+        elem[:] = [0, 0]  # bad shape
 
     with pytest.raises(ValueError):
-        vec[:] = np.arange(6)[:, np.newaxis]  # bad shape (6, 1)
+        elem[:] = [0, 0, 0]  # bad shape
+
+    with pytest.raises(ValueError):
+        elem[:] = np.arange(6)[:, np.newaxis]  # bad shape (6, 1)
 
     with pytest.raises(ValueError):
         arr = np.arange(6, 12).reshape([3, 2])
-        vec[:] = arr.T  # bad shape (2, 3)
+        elem[:] = arr.T  # bad shape (2, 3)
 
     # nD
     shape = (3,) * 3 + (4,) * 3
     discr = odl.uniform_discr([0] * 6, [1] * 6, shape)
     size = np.prod(shape)
-    vec = discr.element(np.zeros(shape))
+    elem = discr.element(np.zeros(shape))
 
     arr = np.arange(size).reshape(shape)
 
-    vec[:] = arr
-    assert all_equal(vec, np.arange(size))
+    elem[:] = arr
+    assert all_equal(elem, np.arange(size))
 
-    vec[:] = 0
-    assert all_equal(vec, np.zeros(size))
+    elem[:] = 0
+    assert all_equal(elem, np.zeros(size))
 
-    vec[:] = [1]
-    assert all_equal(vec, np.ones(size))
+    elem[:] = [1]
+    assert all_equal(elem, np.ones(size))
 
     with pytest.raises(ValueError):
         # Reversed shape -> bad
-        vec[:] = np.arange(size).reshape((4,) * 3 + (3,) * 3)
+        elem[:] = np.arange(size).reshape((4,) * 3 + (3,) * 3)
 
 
 def test_setslice():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    vec[:] = [4, 5, 6]
-    assert all_equal(vec, [4, 5, 6])
+    elem[:] = [4, 5, 6]
+    assert all_equal(elem, [4, 5, 6])
 
 
 def test_asarray_2d():
     discr_F = odl.uniform_discr([0, 0], [1, 1], [2, 2], order='F')
-    vec_F = discr_F.element([[1, 2],
+    elem_F = discr_F.element([[1, 2],
                              [3, 4]])
 
     # Verify that returned array equals input data
-    assert all_equal(vec_F.asarray(), [[1, 2],
-                                       [3, 4]])
+    assert all_equal(elem_F.asarray(), [[1, 2],
+                                        [3, 4]])
     # Check order of out array
-    assert vec_F.asarray().flags['F_CONTIGUOUS']
+    assert elem_F.asarray().flags['F_CONTIGUOUS']
 
     # test out parameter
     out_F = np.asfortranarray(np.empty([2, 2]))
-    result_F = vec_F.asarray(out=out_F)
+    result_F = elem_F.asarray(out=out_F)
     assert result_F is out_F
     assert all_equal(out_F, [[1, 2],
                              [3, 4]])
@@ -619,33 +619,33 @@ def test_asarray_2d():
     # Try discontinuous
     out_F_wrong = np.asfortranarray(np.empty([2, 2]))[::2, :]
     with pytest.raises(ValueError):
-        result_F = vec_F.asarray(out=out_F_wrong)
+        result_F = elem_F.asarray(out=out_F_wrong)
 
     # Try wrong shape
     out_F_wrong = np.asfortranarray(np.empty([2, 3]))
     with pytest.raises(ValueError):
-        result_F = vec_F.asarray(out=out_F_wrong)
+        result_F = elem_F.asarray(out=out_F_wrong)
 
     # Try wrong order
     out_F_wrong = np.empty([2, 2])
     with pytest.raises(ValueError):
-        vec_F.asarray(out=out_F_wrong)
+        elem_F.asarray(out=out_F_wrong)
 
     # Also check with C ordering
     discr_C = odl.uniform_discr([0, 0], [1, 1], (2, 2), order='C')
-    vec_C = discr_C.element([[1, 2],
+    elem_C = discr_C.element([[1, 2],
                              [3, 4]])
 
     # Verify that returned array equals input data
-    assert all_equal(vec_C.asarray(), [[1, 2],
-                                       [3, 4]])
+    assert all_equal(elem_C.asarray(), [[1, 2],
+                                        [3, 4]])
 
     # Check order of out array
-    assert vec_C.asarray().flags['C_CONTIGUOUS']
+    assert elem_C.asarray().flags['C_CONTIGUOUS']
 
     # test out parameter
     out_C = np.empty([2, 2])
-    result_C = vec_C.asarray(out=out_C)
+    result_C = elem_C.asarray(out=out_C)
     assert result_C is out_C
     assert all_equal(out_C, [[1, 2],
                              [3, 4]])
@@ -653,17 +653,17 @@ def test_asarray_2d():
     # Try discontinuous
     out_C_wrong = np.empty([4, 2])[::2, :]
     with pytest.raises(ValueError):
-        result_C = vec_C.asarray(out=out_C_wrong)
+        result_C = elem_C.asarray(out=out_C_wrong)
 
     # Try wrong shape
     out_C_wrong = np.empty([2, 3])
     with pytest.raises(ValueError):
-        result_C = vec_C.asarray(out=out_C_wrong)
+        result_C = elem_C.asarray(out=out_C_wrong)
 
     # Try wrong order
     out_C_wrong = np.asfortranarray(np.empty([2, 2]))
     with pytest.raises(ValueError):
-        vec_C.asarray(out=out_C_wrong)
+        elem_C.asarray(out=out_C_wrong)
 
 
 def test_transpose():
@@ -682,33 +682,33 @@ def test_transpose():
 def test_cell_sides():
     # Non-degenerated case, should be same as cell size
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
-    vec = discr.element()
+    elem = discr.element()
 
     assert all_equal(discr.cell_sides, [0.5] * 2)
-    assert all_equal(vec.cell_sides, [0.5] * 2)
+    assert all_equal(elem.cell_sides, [0.5] * 2)
 
     # Degenerated case, uses interval size in 1-point dimensions
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 1])
-    vec = discr.element()
+    elem = discr.element()
 
     assert all_equal(discr.cell_sides, [0.5, 1])
-    assert all_equal(vec.cell_sides, [0.5, 1])
+    assert all_equal(elem.cell_sides, [0.5, 1])
 
 
 def test_cell_volume():
     # Non-degenerated case
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
-    vec = discr.element()
+    elem = discr.element()
 
     assert discr.cell_volume == 0.25
-    assert vec.cell_volume == 0.25
+    assert elem.cell_volume == 0.25
 
     # Degenerated case, uses interval size in 1-point dimensions
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 1])
-    vec = discr.element()
+    elem = discr.element()
 
     assert discr.cell_volume == 0.5
-    assert vec.cell_volume == 0.5
+    assert elem.cell_volume == 0.5
 
 
 def test_astype():
@@ -752,7 +752,7 @@ def test_ufunc(fn_impl, ufunc):
     ufunc = getattr(np, name)
 
     # Create some data
-    arrays, vectors = noise_vectors(space, n_args + n_out)
+    arrays, vectors = noise_elements(space, n_args + n_out)
     in_arrays = arrays[:n_args]
     out_arrays = arrays[n_args:]
     data_vector = vectors[0]
@@ -863,7 +863,7 @@ def test_reduction(fn_impl, reduction):
     ufunc = getattr(np, name)
 
     # Create some data
-    x_arr, x = noise_vectors(space, 1)
+    x_arr, x = noise_elements(space, 1)
     assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
 
 
@@ -879,7 +879,7 @@ def power(request):
 def test_power(fn_impl, power):
     space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=fn_impl)
 
-    x_arr, x = noise_vectors(space, 1)
+    x_arr, x = noise_elements(space, 1)
     x_pos_arr = np.abs(x_arr)
     x_neg_arr = -x_pos_arr
     x_pos = np.abs(x)

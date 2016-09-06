@@ -56,7 +56,7 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
     Parameters
     ----------
-    x : `LinearSpaceVector`
+    x : `LinearSpaceElement`
         Initial point, updated in-place.
     prox_f : `callable`
         `Proximal factory` for the functional ``f``.

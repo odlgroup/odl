@@ -1727,7 +1727,7 @@ class NumpyFnVectorWeighting(VectorWeightingBase):
         <a, b>_w := <w * a, b> = b^H (w * a)
 
     with ``b^H`` standing for transposed complex conjugate and
-    ``w * a`` for element-wise multiplication.
+    ``w * a`` for entry-wise multiplication.
 
     For other exponents, only norm and dist are defined. In the case of
     exponent ``inf``, the weighted norm is

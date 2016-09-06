@@ -34,7 +34,7 @@ __all__ = ('SpaceTest',)
 
 
 def _approx_equal(x, y, eps):
-    """Test if vectors ``x`` and ``y`` are approximately equal.
+    """Test if elements ``x`` and ``y`` are approximately equal.
 
     ``eps`` is a given absolute tolerance.
     """
@@ -57,9 +57,8 @@ class SpaceTest(object):
 
     """Automated tests for `LinearSpace` instances.
 
-    This class allows users to automatically test various
-    features of an ``LinearSpace`` such as linearity and the
-    various operators.
+    This class allows users to automatically test various features of a
+    `LinearSpace` such as linearity and vector space operations.
     """
 
     def __init__(self, space, verbose=True, tol=1e-5):
@@ -85,7 +84,7 @@ class SpaceTest(object):
         if self.verbose:
             print(message)
 
-    def element(self):
+    def element_method(self):
         """Verify `LinearSpace.element`."""
         with FailCounter(test_name='Verifying element method',
                          logger=self.log) as counter:
@@ -272,9 +271,9 @@ class SpaceTest(object):
                                  ''.format(n_x, a, b))
 
     def _subtraction(self):
-        """Verify vector subtraction as addition of additive inverse."""
+        """Verify element subtraction as addition of additive inverse."""
         with FailCounter(
-                test_name='Verifying vector subtraction',
+                test_name='Verifying element subtraction',
                 err_msg='error = dist(x - y, x + (-1 * y))',
                 logger=self.log) as counter:
 
@@ -333,11 +332,11 @@ class SpaceTest(object):
 
         These properties include things such as associativity
 
-        ``x + y = y + x``
+            ``x + y = y + x``
 
         and identity of the `LinearSpace.zero` element
 
-        ``x + 0 = x``
+            ``x + 0 = x``
 
         References
         ----------
@@ -760,7 +759,7 @@ class SpaceTest(object):
                     counter.fail('failed with x={:25s} y={:25s} a={}'
                                  ''.format(n_x, n_y, a))
 
-    def _multiply_distributive_vec(self):
+    def _multiply_distributive_vector(self):
         """Verify distributivity of vector multiplication."""
         with FailCounter(
                 test_name='Verifying distributivity of vector multiplication '
@@ -817,7 +816,7 @@ class SpaceTest(object):
         self._multiply_commutative()
         self._multiply_associative()
         self._multiply_distributive_scalar()
-        self._multiply_distributive_vec()
+        self._multiply_distributive_vector()
 
     def equals(self):
         """Verify `LinearSpace.__eq__`."""
@@ -837,7 +836,7 @@ class SpaceTest(object):
             print('** space == deepcopy(space) failed***')
 
         with FailCounter(
-                test_name='Verify behavior of ``space == obj`` when ``obj`` '
+                test_name='Verify behavior of `space == obj` when `obj` '
                           'is not a space',
                 logger=self.log) as counter:
 
@@ -853,7 +852,7 @@ class SpaceTest(object):
     def contains(self):
         """Verify `LinearSpace.__contains__`."""
         with FailCounter(
-                test_name='Verify behavior of ``obj in space``',
+                test_name='Verify behavior of `obj in space`',
                 logger=self.log) as counter:
 
             for [n_x, x] in samples(self.space):
@@ -874,10 +873,10 @@ class SpaceTest(object):
                     counter.fail('not obj not in space,  with obj={}'
                                  ''.format(obj))
 
-    def vector_assign(self):
-        """Verify `LinearSpaceVector.assign`."""
+    def element_assign(self):
+        """Verify `LinearSpaceElement.assign`."""
         with FailCounter(
-                test_name='Verify behavior of ``LinearSpaceVector.assign()``',
+                test_name='Verify behavior of `LinearSpaceElement.assign`',
                 logger=self.log) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space,
@@ -888,10 +887,10 @@ class SpaceTest(object):
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
 
-    def vector_copy(self):
-        """Verify `LinearSpaceVector.copy`."""
+    def element_copy(self):
+        """Verify `LinearSpaceElement.copy`."""
         with FailCounter(
-                test_name='Verify behavior of ``LinearSpaceVector.copy()``',
+                test_name='Verify behavior of `LinearSpaceElement.copy`',
                 logger=self.log) as counter:
 
             for [n_x, x] in samples(self.space):
@@ -909,8 +908,8 @@ class SpaceTest(object):
                     counter.fail('modified y, x changed with x={:25s}'
                                  ''.format(n_x))
 
-    def vector_set_zero(self):
-        """Verify `LinearSpaceVector.set_zero`."""
+    def element_set_zero(self):
+        """Verify `LinearSpaceElement.set_zero`."""
         try:
             zero = self.space.zero()
         except NotImplementedError:
@@ -918,8 +917,7 @@ class SpaceTest(object):
             return
 
         with FailCounter(
-                test_name='Verify behavior of '
-                          '``LinearSpaceVector.set_zero()``',
+                test_name='Verify behavior of `LinearSpaceElement.set_zero`',
                 logger=self.log) as counter:
 
             for [n_x, x] in samples(self.space):
@@ -929,8 +927,8 @@ class SpaceTest(object):
                     counter.fail('failed with x={:25s}'
                                  ''.format(n_x))
 
-    def vector_equals(self):
-        """Verify `LinearSpaceVector.__eq__`."""
+    def element_equals(self):
+        """Verify `LinearSpaceElement.__eq__`."""
         try:
             zero = self.space.zero()
         except NotImplementedError:
@@ -944,7 +942,7 @@ class SpaceTest(object):
             return
 
         with FailCounter(
-                test_name='Verify behavior of ``vector1 == vector2``',
+                test_name='Verify behavior of `element1 == element2`',
                 logger=self.log) as counter:
 
             for [n_x, x], [n_y, y] in samples(self.space,
@@ -966,41 +964,40 @@ class SpaceTest(object):
                         counter.fail('failed x != y with x={:25s}, x={:25s}'
                                      ''.format(n_x, n_y))
 
-    def vector_space(self):
-        """Verify `LinearSpaceVector.space`."""
+    def element_space(self):
+        """Verify `LinearSpaceElement.space`."""
         with FailCounter(
-                test_name='Verify ``LinearSpaceVector.space``',
+                test_name='Verify `LinearSpaceElement.space`',
                 logger=self.log) as counter:
 
             for [n_x, x] in samples(self.space):
                 if x.space != self.space:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
-    def vector(self):
-        """Verify `LinearSpaceVector`."""
+    def element(self):
+        """Verify `LinearSpaceElement`."""
 
-        self.log('\n== Verifying Vector ==\n')
-        self.vector_assign()
-        self.vector_copy()
-        self.vector_set_zero()
-        self.vector_equals()
-        self.vector_space()
+        self.log('\n== Verifying element attributes ==\n')
+        self.element_assign()
+        self.element_copy()
+        self.element_set_zero()
+        self.element_equals()
+        self.element_space()
 
     def run_tests(self):
         """Run all tests on this space."""
         self.log('\n== RUNNING ALL TESTS ==\n')
         self.log('Space = {}'.format(self.space))
         self.field()
-        self.element()
+        self.element_method()
         self.linearity()
-        self.element()
         self.inner()
         self.norm()
         self.dist()
         self.multiply()
         self.equals()
         self.contains()
-        self.vector()
+        self.element()
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -1017,6 +1014,7 @@ class SpaceTest(object):
 
 
 if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
     from odl import rn, uniform_discr
     SpaceTest(rn(10), verbose=False).run_tests()
     SpaceTest(uniform_discr([0, 0], [1, 1], [5, 5])).run_tests()

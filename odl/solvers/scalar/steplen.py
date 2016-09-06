@@ -45,9 +45,9 @@ class StepLength(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        x : `LinearSpaceVector`
+        x : `LinearSpaceElement`
             The current point
-        direction : `LinearSpaceVector`
+        direction : `LinearSpaceElement`
             Search direction in which the line search should be computed
         dir_derivative : float
             Directional derivative along the ``direction``
@@ -69,9 +69,9 @@ class LineSearch(with_metaclass(ABCMeta, object)):
 
         Parameters
         ----------
-        x : `LinearSpaceVector`
+        x : `LinearSpaceElement`
             The current point
-        direction : `LinearSpaceVector`
+        direction : `LinearSpaceElement`
             Search direction in which the line search should be computed
         dir_derivative : float
             Directional derivative along the ``direction``
@@ -134,9 +134,9 @@ class BacktrackingLineSearch(LineSearch):
 
         Parameters
         ----------
-        x : `LinearSpaceVector`
+        x : `LinearSpaceElement`
             The current point
-        direction : `LinearSpaceVector`
+        direction : `LinearSpaceElement`
             Search direction in which the line search should be computed
         dir_derivative : float
             Directional derivative along the ``direction``
@@ -199,9 +199,9 @@ class ConstantLineSearch(LineSearch):
 
         Parameters
         ----------
-        x : `LinearSpaceVector`
+        x : `LinearSpaceElement`
             The current point
-        direction : `LinearSpaceVector`
+        direction : `LinearSpaceElement`
             Search direction in which the line search should be computed
         dir_derivative : float
             Directional derivative along the ``direction``
@@ -242,9 +242,9 @@ class BarzilaiBorweinStep(object):
 
         Parameters
         ----------
-        x : `LinearSpaceVector`
+        x : `LinearSpaceElement`
             The current point
-        x0 : `LinearSpaceVector`
+        x0 : `LinearSpaceElement`
             The previous point
 
         Returns

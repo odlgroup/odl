@@ -54,7 +54,7 @@ convolution = ft.inverse * gaussian * ft
 # Create phantom
 phantom = odl.phantom.shepp_logan(space, modified=True)
 
-# Create vector of convolved phantom
+# Create the convolved version of the phantom
 data = convolution(phantom)
 data.show('Convolved data')
 

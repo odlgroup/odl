@@ -27,7 +27,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from odl.set import (Set, RealNumbers, ComplexNumbers, LinearSpace,
-                     LinearSpaceVector)
+                     LinearSpaceElement)
 from odl.util.ufuncs import NtuplesBaseUFuncs
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
@@ -628,7 +628,7 @@ class FnBase(NtuplesBase, LinearSpace):
         raise NotImplementedError('abstract method')
 
 
-class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
+class FnBaseVector(NtuplesBaseVector, LinearSpaceElement):
 
     """Abstract class for `NtuplesBase` elements.
 
@@ -636,8 +636,8 @@ class FnBaseVector(NtuplesBaseVector, LinearSpaceVector):
     space, call the space's `LinearSpace.element` method instead.
     """
 
-    __eq__ = LinearSpaceVector.__eq__
-    copy = LinearSpaceVector.copy
+    __eq__ = LinearSpaceElement.__eq__
+    copy = LinearSpaceElement.copy
 
 
 if __name__ == '__main__':

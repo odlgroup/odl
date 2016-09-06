@@ -49,7 +49,6 @@ def matrix_representation(op):
     ----------
     The algorithm works by letting the operator act on all unit vectors, and
     stacking the output as a matrix.
-
     """
 
     if not op.is_linear:

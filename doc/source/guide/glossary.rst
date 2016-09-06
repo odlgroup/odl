@@ -31,7 +31,7 @@ Glossary
         Saying that ``x`` is an element of a given `Set` ``my_set`` means that ``x in my_set``
         evaluates to `True`. The term is typically used as "element of <set>" or "<set>" element.
         When referring to a `LinearSpace` like, e.g., `DiscreteLp`, an element is of the
-        corresponding type `LinearSpaceVector`, i.e. `DiscreteLpVector` in the above example.
+        corresponding type `LinearSpaceElement`, i.e. `DiscreteLpElement` in the above example.
         Elements of a set can be created by the `Set.element` method.
 
     element-like
@@ -40,7 +40,7 @@ Glossary
         object with 3 real entries.
 
         Example: ```DiscreteLp` element-like`` means that
-        `DiscreteLp.element` can create a `DiscreteLpVector` from the input.
+        `DiscreteLp.element` can create a `DiscreteLpElement` from the input.
 
     in-place evaluation
         Operator evaluation method which uses an existing data container to store

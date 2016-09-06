@@ -143,7 +143,7 @@ def test_combine_proximal():
     # Create an element in the domain of the operator
     x = prox_verify.domain.element([np.arange(-5, 5), np.arange(-5, 5)])
 
-    # Allocate output vector
+    # Allocate output element
     out = prox_verify.range.element()
 
     # Apply explicitly constructed and factory-function-combined proximal
@@ -239,7 +239,7 @@ def test_proximal_convconj_l2_sq_wo_data():
 
     assert isinstance(prox, odl.Operator)
 
-    # Allocate output vector
+    # Allocate output element
     x_out = space.element()
 
     # Optimal point returned by the proximal operator
@@ -274,7 +274,7 @@ def test_proximal_convconj_l2_sq_with_data():
 
     assert isinstance(prox, odl.Operator)
 
-    # Allocate output vector
+    # Allocate output element
     x_out = space.element()
 
     # Optimal point returned by the proximal operator
@@ -292,7 +292,7 @@ def test_proximal_convconj_l1_simple_space_without_data():
     # Image space
     space = odl.uniform_discr(0, 1, 10)
 
-    # Image vector
+    # Image element
     x_arr = np.arange(-5, 5)
     x = space.element(x_arr)
 
@@ -412,7 +412,7 @@ def test_proximal_convconj_kl_simple_space():
 
     assert isinstance(prox, odl.Operator)
 
-    # Allocate an output vector
+    # Allocate an output element
     x_opt = space.element()
 
     # Apply the proximal operator returning its optimal point
@@ -451,7 +451,7 @@ def test_proximal_convconj_kl_product_space():
 
     assert isinstance(prox, odl.Operator)
 
-    # Allocate an output vector
+    # Allocate an output element
     x_opt = op_domain.element()
 
     # Apply the proximal operator returning its optimal point

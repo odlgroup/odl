@@ -35,7 +35,7 @@ import numpy as np
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, ResidualOperator, DiagonalOperator)
 from odl.space import ProductSpace
-from odl.set import LinearSpaceVector
+from odl.set import LinearSpaceElement
 
 
 __all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
@@ -248,8 +248,8 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         c prox[s*f( . * c)]((x - s*u)*c)
 
     where ``c`` is the constant c = 1/sqrt(s*2*a + 1), ``a`` is the scaling
-    parameter belonging to the quadratic term, ``u`` is the vector defining the
-    linear functional, and ``s`` is the step size.
+    parameter belonging to the quadratic term, ``u`` is the space
+    element defining the linear functional, and ``s`` is the step size.
 
     Parameters
     ----------
@@ -259,8 +259,8 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
     a : non-negative float
         Scaling of the quadratic term
     u : Element in domain of F, optional
-        Defines the linear functional
-        Default: Treated as zero vector
+        Defines the linear functional. For ``None``, the zero element
+        is taken.
 
     Returns
     -------
@@ -279,8 +279,8 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         raise ValueError('scaling parameter muts be non-negative, got {}'
                          ''.format(a))
 
-    if u is not None and not isinstance(u, LinearSpaceVector):
-        raise TypeError('`u` must be `None` or a `LinearSpaceVector` '
+    if u is not None and not isinstance(u, LinearSpaceElement):
+        raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
                         'instance, got {!r}.'.format(u))
 
     def quadratic_perturbation_prox_factory(step_size):
@@ -825,7 +825,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
             lam (y - sigma g) / (max(lam, ||y - sigma g||_2)
 
     where max(.,.) thresholds the lower bound of ||y||_2 point-wise and
-    1 is a vector in the space of ||y||_2 with all components set
+    1 is a element of the space of ||y||_2 with all components set
     to 1.
 
     Parameters
@@ -993,15 +993,15 @@ def proximal_cconj_kl(space, lam=1, g=None):
 
         F^*(p) = sum_i (-g ln(pos(1_X - p))_i + ind_P(1_X - p)
 
-    where p is the variable dual to x, and 1_X is a vector in the space X with
-    all components set to 1.
+    where p is the variable dual to x, and 1_X is an element of the space
+    X with all components set to 1.
 
     The proximal operator of the convex conjugate of F is
 
         prox[sigma * F^*](x) =
             1/2 (lam + x - sqrt((x - lam)^2 + 4 lam sigma g)
 
-    with the step size parameter sigma and lam_X is a vector in the space X
+    with the step size parameter sigma and lam_X is an element of the space X
     with all components set to lam.
 
     Parameters

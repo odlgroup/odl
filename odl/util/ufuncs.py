@@ -324,9 +324,9 @@ def wrap_reduction_discretelp(name, doc):
 
 class DiscreteLpUFuncs(NtuplesBaseUFuncs):
 
-    """UFuncs for `DiscreteLpVector` objects.
+    """UFuncs for `DiscreteLpElement` objects.
 
-    Internal object, should not be created except in `DiscreteLpVector`.
+    Internal object, should not be created except in `DiscreteLpElement`.
     """
 
 
@@ -340,9 +340,9 @@ for name, doc in REDUCTIONS:
     setattr(DiscreteLpUFuncs, name, method)
 
 
-# Ufuncs for productspace vectors
+# Ufuncs for product space elements
 def wrap_ufunc_productspace(name, n_in, n_out, doc):
-    """Add ufunc methods to `ProductSpaceVector`."""
+    """Add ufunc methods to `ProductSpaceElement`."""
 
     if n_in == 1:
         if n_out == 0:
@@ -406,7 +406,7 @@ def wrap_ufunc_productspace(name, n_in, n_out, doc):
 
 
 def wrap_reduction_productspace(name, doc):
-    """Add reduction methods to `ProductSpaceVector`."""
+    """Add reduction methods to `ProductSpaceElement`."""
     def wrapper(self):
         results = [getattr(x.ufunc, name)() for x in self.vector]
         return getattr(np, name)(results)
@@ -418,9 +418,9 @@ def wrap_reduction_productspace(name, doc):
 
 class ProductSpaceUFuncs(object):
 
-    """UFuncs for `ProductSpaceVector` objects.
+    """UFuncs for `ProductSpaceElement` objects.
 
-    Internal object, should not be created except in `ProductSpaceVector`.
+    Internal object, should not be created except in `ProductSpaceElement`.
     """
     def __init__(self, vector):
         """Create ufunc wrapper for vector."""

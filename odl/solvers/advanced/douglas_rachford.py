@@ -49,7 +49,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
     Parameters
     ----------
-    x : `LinearSpaceVector`
+    x : `LinearSpaceElement`
         Initial point, updated in-place.
     prox_f : `callable`
         `proximal factory` for the function ``f``.

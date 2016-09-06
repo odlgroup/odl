@@ -143,7 +143,7 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal_array(v1, v2, places):
-    # Ravel if has order, only DiscreteLpVector has an order
+    # Ravel if has order, only DiscreteLpElement has an order
     if hasattr(v1, 'order'):
         v1 = v1.__array__().ravel(v1.order)
     else:
@@ -261,31 +261,30 @@ def noise_array(space):
     Notes
     -----
     This method is intended for internal testing purposes, for more explicit
-    example elements see `phantoms` and `LinearSpaceVector.examples`.
+    example elements see `phantoms` and `LinearSpaceElement.examples`.
 
     Parameters
     ----------
     space : `LinearSpace`
-        The space to create vectors in. The `LinearSpace.element` method of the
-        space needs to accept input of `numpy.ndarray` type.
+        Space from which to derive the array data type and size.
 
     Returns
     -------
     noise_array : `numpy.ndarray` element
-        Array with white noise osuch that ``space.element``'s can be created
+        Array with white noise such that ``space.element``'s can be created
         from it.
 
     See Also
     --------
     noise_element
-    noise_vectors
-    LinearSpaceVector.examples : Examples of vectors typical to the space.
+    noise_elements
+    LinearSpaceElement.examples : Examples of elements typical to the space.
     """
     from odl.space import ProductSpace
     if isinstance(space, ProductSpace):
         return np.array([noise_array(si) for si in space])
     else:
-        # Generate numpy vectors, real or complex or int
+        # Generate numpy space elements, real or complex or int
         if np.issubdtype(space.dtype, np.floating):
             arr = np.random.randn(space.size)
         elif np.issubdtype(space.dtype, np.integer):
@@ -298,7 +297,7 @@ def noise_array(space):
 
 
 def noise_element(space):
-    """Creata a white noise element in ``space``
+    """Create a white noise element in ``space``.
 
     The element contains white noise with standard deviation 1 in the case of
     floating point dtypes and uniformly spaced values between -10 and 10 in
@@ -309,13 +308,13 @@ def noise_element(space):
     Notes
     -----
     This method is intended for internal testing purposes, for more explicit
-    example elements see `phantoms` and `LinearSpaceVector.examples`.
+    example elements see `phantoms` and `LinearSpaceElement.examples`.
 
     Parameters
     ----------
     space : `LinearSpace`
-        The space to create vectors in. The `LinearSpace.element` method of the
-        space needs to accept input of `numpy.ndarray` type.
+        Space in which to create an element. The `LinearSpace.element`
+        method of the space needs to accept input of `numpy.ndarray` type.
 
     Returns
     -------
@@ -324,20 +323,20 @@ def noise_element(space):
     See Also
     --------
     noise_array
-    noise_vectors
-    LinearSpaceVector.examples : Examples of vectors typical to the space.
+    noise_elements
+    LinearSpaceElement.examples : Examples of elements typical to the space.
     """
     return space.element(noise_array(space))
 
 
-def noise_vectors(space, n=1):
-    """Create a list of ``n`` arrays and vectors in ``space``.
+def noise_elements(space, n=1):
+    """Create a list of ``n`` noise arrays and elements in ``space``.
 
     The arrays contain white noise with standard deviation 1 in the case of
     floating point dtypes and uniformly spaced values between -10 and 10 in
     the case of integer dtypes.
 
-    The returned vectors wrap the arrays.
+    The returned elements wrap the arrays.
 
     For product spaces the method is called recursively for all sub-spaces.
 
@@ -349,17 +348,17 @@ def noise_vectors(space, n=1):
     Parameters
     ----------
     space : `LinearSpace`
-        The space to create vectors in. The `LinearSpace.element` method of the
-        space needs to accept input of `numpy.ndarray` type.
+        Space to create elements in. The `LinearSpace.element` method
+        of the space needs to accept input of `numpy.ndarray` type.
     n : int
-        The number of vectors to create.
+        Number of elements to create.
 
     Returns
     -------
     arrays : `numpy.ndarray`(s)
         A single array if ``n == 1``, otherwise a tuple of arrays.
-    vectors : ``space`` element(s)
-        A single vector if ``n == 1``, otherwise a tuple of vector.
+    elements : ``space`` element(s)
+        A single element if ``n == 1``, otherwise a tuple of elements.
 
     See Also
     --------
@@ -368,13 +367,13 @@ def noise_vectors(space, n=1):
     """
     arrs = tuple(noise_array(space) for _ in range(n))
 
-    # Make Fn vectors
-    vecs = tuple(space.element(arr.copy()) for arr in arrs)
+    # Make space elements from arrays
+    elems = tuple(space.element(arr.copy()) for arr in arrs)
 
     if n == 1:
-        return arrs + vecs
+        return tuple(arrs + elems)
     else:
-        return arrs, vecs
+        return arrs, elems
 
 
 class FailCounter(object):

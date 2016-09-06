@@ -186,7 +186,7 @@ def test_fixed_templ_init():
 
     # Invalid input
     with pytest.raises(TypeError):
-        # template not a DiscreteLpVector
+        # template not a DiscreteLpElement
         LinDeformFixedTempl(template_function)
 
 
@@ -244,7 +244,7 @@ def test_fixed_disp_init():
     print(LinDeformFixedDisp(disp_field, templ_space=space))
 
     # Non-valid input
-    with pytest.raises(TypeError):  # displacement not ProductSpaceVector
+    with pytest.raises(TypeError):  # displacement not ProductSpaceElement
         LinDeformFixedDisp(space.one())
     with pytest.raises(TypeError):  # templ_space not DiscreteLp
         LinDeformFixedDisp(disp_field, space.vector_field_space)

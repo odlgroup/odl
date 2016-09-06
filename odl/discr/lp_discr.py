@@ -27,7 +27,7 @@ import numpy as np
 from numbers import Integral
 
 from odl.discr.discretization import (
-    DiscretizedSpace, DiscretizedSpaceVector, dspace_type)
+    DiscretizedSpace, DiscretizedSpaceElement, dspace_type)
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
@@ -43,7 +43,7 @@ from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr)
 
-__all__ = ('DiscreteLp', 'DiscreteLpVector',
+__all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
            'uniform_discr_fromintv', 'uniform_discr',
            'uniform_discr_fromdiscr', 'discr_sequence_space')
@@ -266,7 +266,7 @@ class DiscreteLp(DiscretizedSpace):
 
         Returns
         -------
-        element : `DiscreteLpVector`
+        element : `DiscreteLpElement`
             The discretized element, calculated as ``sampling(inp)`` or
             ``dspace.element(inp)``, tried in this order.
 
@@ -478,11 +478,11 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def element_type(self):
-        """`DiscreteLpVector`"""
-        return DiscreteLpVector
+        """`DiscreteLpElement`"""
+        return DiscreteLpElement
 
 
-class DiscreteLpVector(DiscretizedSpaceVector):
+class DiscreteLpElement(DiscretizedSpaceElement):
 
     """Representation of a `DiscreteLp` element."""
 
@@ -497,7 +497,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             shape.
         """
         if out is None:
-            return DiscretizedSpaceVector.asarray(self).reshape(
+            return DiscretizedSpaceElement.asarray(self).reshape(
                 self.shape, order=self.space.order)
         else:
             if out.shape not in (self.space.shape, (self.space.size,)):
@@ -579,14 +579,14 @@ class DiscreteLpVector(DiscretizedSpaceVector):
 
         Parameters
         ----------
-        out : `DiscreteLpVector`, optional
+        out : `DiscreteLpElement`, optional
             Element to which the complex conjugate is written.
-            Must be an element of this vector's space.
+            Must be an element of this element's space.
 
         Returns
         -------
-        out : `DiscreteLpVector`
-            The complex conjugate vector. If ``out`` is provided,
+        out : `DiscreteLpElement`
+            The complex conjugate element. If ``out`` is provided,
             the returned object is a reference to it.
 
         Examples
@@ -618,7 +618,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             return out
 
     def __setitem__(self, indices, values):
-        """Set values of this vector.
+        """Set values of this element.
 
         Parameters
         ----------
@@ -636,7 +636,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             shape is allowed as ``values``.
         """
         if values in self.space:
-            # For DiscretizedSetVector of the same type, use ntuple directly
+            # For DiscretizedSetElement of the same type, use ntuple directly
             self.ntuple[indices] = values.ntuple
         else:
             # Other sequence types are piped through a Numpy array. Equivalent

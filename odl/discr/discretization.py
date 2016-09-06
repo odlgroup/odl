@@ -33,8 +33,8 @@ from odl.util.utility import (
     is_real_floating_dtype, is_complex_floating_dtype, is_scalar_dtype)
 
 
-__all__ = ('DiscretizedSet', 'DiscretizedSetVector',
-           'DiscretizedSpace', 'DiscretizedSpaceVector')
+__all__ = ('DiscretizedSet', 'DiscretizedSetElement',
+           'DiscretizedSpace', 'DiscretizedSpaceElement')
 
 
 class DiscretizedSet(NtuplesBase):
@@ -138,7 +138,7 @@ class DiscretizedSet(NtuplesBase):
 
     @property
     def dspace(self):
-        """Space for the coefficients of the vectors in this space.
+        """Space for the coefficients of the elements of this space.
 
         Returns
         -------
@@ -183,7 +183,7 @@ class DiscretizedSet(NtuplesBase):
 
         Returns
         -------
-        element : `DiscretizedSetVector`
+        element : `DiscretizedSetElement`
             The discretized element, calculated as ``sampling(inp)`` or
             ``dspace.element(inp)``, tried in this order.
 
@@ -236,15 +236,15 @@ class DiscretizedSet(NtuplesBase):
 
     @property
     def element_type(self):
-        """`DiscretizedSetVector`"""
-        return DiscretizedSetVector
+        """`DiscretizedSetElement`"""
+        return DiscretizedSetElement
 
 
-class DiscretizedSetVector(NtuplesBaseVector):
+class DiscretizedSetElement(NtuplesBaseVector):
 
     """Representation of a `DiscretizedSet` element.
 
-    Basically only a wrapper class for dspace's vector class."""
+    Basically only a wrapper class for dspace's element class."""
 
     def __init__(self, space, ntuple):
         """Initialize a new instance."""
@@ -277,7 +277,7 @@ class DiscretizedSetVector(NtuplesBaseVector):
         return self.size
 
     def copy(self):
-        """Create an identical (deep) copy of this vector."""
+        """Create an identical (deep) copy of this element."""
         return self.space.element(self.ntuple.copy())
 
     def asarray(self, out=None):
@@ -292,13 +292,13 @@ class DiscretizedSetVector(NtuplesBaseVector):
         return self.ntuple.asarray(out=out)
 
     def __eq__(self, other):
-        """Return ``vec == other``.
+        """Return ``self == other``.
 
         Returns
         -------
         equals : bool
             ``True`` if all entries of ``other`` are equal to this
-            vector's entries, ``False`` otherwise.
+            element's entries, ``False`` otherwise.
         """
         return (other in self.space and
                 self.ntuple == other.ntuple)
@@ -338,7 +338,7 @@ class DiscretizedSetVector(NtuplesBaseVector):
         self.ntuple.__setitem__(indices, input_data)
 
     def sampling(self, ufunc, **kwargs):
-        """Restrict a continuous function and assign to this vector
+        """Restrict a continuous function and assign to this element.
 
         Parameters
         ----------
@@ -351,13 +351,10 @@ class DiscretizedSetVector(NtuplesBaseVector):
         --------
         >>> import odl
         >>> import numpy as np
-
-        Create discretization
-
         >>> X = odl.uniform_discr(0, 1, 5)
         >>> x = X.element()
 
-        Assign x according to continuous vector
+        Assign x according to a continuous function:
 
         >>> x.sampling(lambda x: x)
         >>> print(x)  # Print values at grid points (which are centered)
@@ -371,13 +368,13 @@ class DiscretizedSetVector(NtuplesBaseVector):
 
     @property
     def interpolation(self):
-        """Interpolation operator associated with this vector.
+        """Interpolation operator associated with this element.
 
         Returns
         -------
         interpolation_op : `FunctionSetMapping`
             Operatior representing a continuous interpolation of this
-            vector
+            element.
 
         Examples
         --------
@@ -478,11 +475,11 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
 
     # Pass-through attributes of the wrapped ``dspace``
     def zero(self):
-        """Create a vector of zeros."""
+        """Return the element of all zeros."""
         return self.element_type(self, self.dspace.zero())
 
     def one(self):
-        """Create a vector of ones."""
+        """Return the element of all ones."""
         return self.element_type(self, self.dspace.one())
 
     @property
@@ -500,56 +497,57 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
         self.dspace._lincomb(a, x1.ntuple, b, x2.ntuple, out.ntuple)
 
     def _dist(self, x1, x2):
-        """Raw distance between two vectors."""
+        """Raw distance between two elements."""
         return self.dspace._dist(x1.ntuple, x2.ntuple)
 
     def _norm(self, x):
-        """Raw norm of a vector."""
+        """Raw norm of an element."""
         return self.dspace._norm(x.ntuple)
 
     def _inner(self, x1, x2):
-        """Raw inner product of two vectors."""
+        """Raw inner product of two elements."""
         return self.dspace._inner(x1.ntuple, x2.ntuple)
 
     def _multiply(self, x1, x2, out):
-        """Raw pointwise multiplication of two vectors."""
+        """Raw pointwise multiplication of two elements."""
         self.dspace._multiply(x1.ntuple, x2.ntuple, out.ntuple)
 
     def _divide(self, x1, x2, out):
-        """Raw pointwise multiplication of two vectors."""
+        """Raw pointwise multiplication of two elements."""
         self.dspace._divide(x1.ntuple, x2.ntuple, out.ntuple)
 
     @property
     def examples(self):
         """Return example functions in the space.
 
-        These are created by discretizing the examples in the underlying uspace
+        These are created by discretizing the examples in the underlying
+        `uspace`.
 
         See Also
         --------
         FunctionSpace.examples
         """
-        for name, vector in self.uspace.examples:
-            yield (name, self.element(vector))
+        for name, elem in self.uspace.examples:
+            yield (name, self.element(elem))
 
     @property
     def element_type(self):
-        """`DiscretizedSpaceVector`"""
-        return DiscretizedSpaceVector
+        """`DiscretizedSpaceElement`"""
+        return DiscretizedSpaceElement
 
 
-class DiscretizedSpaceVector(DiscretizedSetVector, FnBaseVector):
+class DiscretizedSpaceElement(DiscretizedSetElement, FnBaseVector):
 
     """Representation of a `DiscretizedSpace` element."""
 
     def __init__(self, space, data):
         """Initialize a new instance."""
         assert isinstance(space, DiscretizedSpace)
-        DiscretizedSetVector.__init__(self, space, data)
+        DiscretizedSetElement.__init__(self, space, data)
 
     def __ipow__(self, p):
         """Implement ``self **= p``."""
-        # Falls back to `LinearSpaceVector.__ipow__` if `self.ntuple`
+        # Falls back to `LinearSpaceElement.__ipow__` if `self.ntuple`
         # has no own `__ipow__`. The fallback only works for integer `p`.
         self.ntuple.__ipow__(p)
         return self

@@ -1105,9 +1105,9 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
         Parameters
         ----------
         x : `domain` element
-            Input vector to be transformed.
+            Input element to be transformed.
         out : `range` element
-            Output vector storing the result.
+            Output element storing the result.
         flags : `sequence` of strings, optional
             Flags for the transform. ``'FFTW_UNALIGNED'`` is not
             supported, and ``'FFTW_DESTROY_INPUT'`` is enabled by
@@ -1637,13 +1637,13 @@ class FourierTransformBase(Operator):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_r : `DiscreteLpElement` or `numpy.ndarray`
             Temporary for calculations in the real space (domain of
             this transform). It is shared with the inverse.
 
             Variants using this: R2C, R2HC, C2R (inverse)
 
-        tmp_f : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_f : `DiscreteLpElement` or `numpy.ndarray`
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 
@@ -2082,13 +2082,13 @@ class FourierTransform(FourierTransformBase):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_r : `DiscreteLpElement` or `numpy.ndarray`
             Temporary for calculations in the real space (domain of
             this transform). It is shared with the inverse.
 
             Variants using this: R2C, R2HC, C2R (inverse)
 
-        tmp_f : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_f : `DiscreteLpElement` or `numpy.ndarray`
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 
@@ -2317,13 +2317,13 @@ class FourierTransformInverse(FourierTransformBase):
 
         Other Parameters
         ----------------
-        tmp_r : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_r : `DiscreteLpElement` or `numpy.ndarray`
             Temporary for calculations in the real space (range of
             this transform). It is shared with the inverse.
 
             Variants using this: C2R, R2C (forward), R2HC (forward)
 
-        tmp_f : `DiscreteLpVector` or `numpy.ndarray`
+        tmp_f : `DiscreteLpElement` or `numpy.ndarray`
             Temporary for calculations in the frequency (reciprocal)
             space. It is shared with the inverse.
 

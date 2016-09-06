@@ -19,12 +19,12 @@
 
 import odl
 
-disc = odl.uniform_discr(0, 1, 100)
+space_1d = odl.uniform_discr(0, 1, 100)
 
-for name, vec in disc.examples:
-    vec.show(name)
+for name, elem in space_1d.examples:
+    elem.show(name)
 
-disc = odl.uniform_discr([0, 0], [1, 1], [100, 100])
+space_2d = odl.uniform_discr([0, 0], [1, 1], [100, 100])
 
-for name, vec in disc.examples:
-    vec.show(name)
+for name, elem in space_2d.examples:
+    elem.show(name)

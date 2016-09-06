@@ -39,7 +39,7 @@ class SolverCallback(object):
 
         Parameters
         ----------
-        result : `LinearSpaceVector`
+        result : `LinearSpaceElement`
             Partial result after n iterations
 
         Returns
@@ -302,15 +302,14 @@ class CallbackShow(SolverCallback):
 
     See Also
     --------
-    DiscreteLpVector.show
+    DiscreteLpElement.show
     NtuplesBaseVector.show
     """
 
     def __init__(self, *args, **kwargs):
         """Initialize a new instance.
 
-        Parameters are passed through to the vectors show method. Additional
-        parameters included.
+        Additional parameters are passed through to the ``show`` method.
 
         Parameters
         ----------

@@ -29,7 +29,7 @@ import numpy as np
 from odl.set.sets import Field, Set, UniversalSet
 
 
-__all__ = ('LinearSpace', 'LinearSpaceVector', 'UniversalSpace',
+__all__ = ('LinearSpace', 'LinearSpaceElement', 'UniversalSpace',
            'LinearSpaceTypeError', 'LinearSpaceTypeError')
 
 
@@ -37,7 +37,7 @@ class LinearSpace(Set):
     """Abstract linear vector space.
 
     Its elements are represented as instances of the
-    `LinearSpaceVector` class.
+    `LinearSpaceElement` class.
     """
 
     def __init__(self, field):
@@ -62,7 +62,7 @@ class LinearSpace(Set):
 
     @abstractmethod
     def element(self, inp=None, **kwargs):
-        """Create a `LinearSpaceVector` from ``inp`` or from scratch.
+        """Create a `LinearSpaceElement` from ``inp`` or from scratch.
 
         If called without ``inp`` argument, an arbitrary element of the
         space is generated without guarantee of its state.
@@ -79,8 +79,8 @@ class LinearSpace(Set):
 
         Returns
         -------
-        element : `LinearSpaceVector`
-            A vector in this space.
+        element : `LinearSpaceElement`
+            A new element of this space.
         """
 
     @property
@@ -159,7 +159,7 @@ class LinearSpace(Set):
         Returns
         -------
         contains : bool
-            ``True`` if ``other`` is a `LinearSpaceVector` instance and
+            ``True`` if ``other`` is a `LinearSpaceElement` instance and
             ``other.space`` is equal to this space, ``False`` otherwise.
 
         Notes
@@ -179,33 +179,31 @@ class LinearSpace(Set):
 
         or, if ``b`` and ``y`` are given,
 
-            ``out = a * x1 + b * x2``
-
-        with error checking of types.
+            ``out = a * x1 + b * x2``.
 
         Parameters
         ----------
         a : `field` element
             Scalar to multiply ``x1`` with.
-        x1 : `LinearSpaceVector`
-            First vector in the linear combination.
+        x1 : `LinearSpaceElement`
+            First space element in the linear combination.
         b : `field` element, optional
             Scalar to multiply ``x2`` with. Required if ``x2`` is
             provided.
-        x2 : `LinearSpaceVector`, optional
-            Second vector in the linear combination.
-        out : `LinearSpaceVector`, optional
+        x2 : `LinearSpaceElement`, optional
+            Second space element in the linear combination.
+        out : `LinearSpaceElement`, optional
             Element to which the result is written.
 
         Returns
         -------
-        out : `LinearSpaceVector`
+        out : `LinearSpaceElement`
             Result of the linear combination. If ``out`` was provided,
             the returned object is a reference to it.
 
         Notes
         -----
-        The vectors ``out``, ``x1`` and ``x2`` may be aligned, thus a call
+        The elements ``out``, ``x1`` and ``x2`` may be aligned, thus a call
 
             ``space.lincomb(x, 2, x, 3.14, out=x)``
 
@@ -227,13 +225,13 @@ class LinearSpace(Set):
             raise LinearSpaceTypeError('`x1` {!r} is not an element of {!r}'
                                        ''.format(x1, self))
 
-        if b is None:  # Single vector
+        if b is None:  # Single element
             if x2 is not None:
                 raise ValueError('`x2` provided but not `b`')
             self._lincomb(a, x1, 0, x1, out)
             return out
 
-        else:  # Two vectors
+        else:  # Two elements
             if b not in self.field:
                 raise LinearSpaceTypeError('`b` {!r} not an element of the '
                                            'field {!r} of {!r}'
@@ -251,7 +249,7 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        x1, x2 : `LinearSpaceVector`
+        x1, x2 : `LinearSpaceElement`
             Elements whose distance to compute.
 
         Returns
@@ -273,7 +271,7 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        x : `LinearSpaceVector`
+        x : `LinearSpaceElement`
             Element whose norm to compute.
 
         Returns
@@ -292,7 +290,7 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        x1, x2 : `LinearSpaceVector`
+        x1, x2 : `LinearSpaceElement`
             Elements whose inner product to compute.
 
         Returns
@@ -314,14 +312,14 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        x1, x2 : `LinearSpaceVector`
+        x1, x2 : `LinearSpaceElement`
             Multiplicands in the product.
-        out : `LinearSpaceVector`, optional
+        out : `LinearSpaceElement`, optional
             Element to which the result is written.
 
         Returns
         -------
-        out : `LinearSpaceVector`
+        out : `LinearSpaceElement`
             Product of the elements. If ``out`` was provided, the
             returned object is a reference to it.
         """
@@ -346,16 +344,16 @@ class LinearSpace(Set):
 
         Parameters
         ----------
-        x1 : `LinearSpaceVector`
+        x1 : `LinearSpaceElement`
             Dividend in the quotient.
-        x2 : `LinearSpaceVector`
+        x2 : `LinearSpaceElement`
             Divisor in the quotient.
-        out : `LinearSpaceVector`, optional
+        out : `LinearSpaceElement`, optional
             Element to which the result is written.
 
         Returns
         -------
-        out : `LinearSpaceVector`
+        out : `LinearSpaceElement`
             Quotient of the elements. If ``out`` was provided, the
             returned object is a reference to it.
         """
@@ -377,11 +375,11 @@ class LinearSpace(Set):
 
     @property
     def element_type(self):
-        """Type of elements of this space (`LinearSpaceVector`)."""
-        return LinearSpaceVector
+        """Type of elements of this space (`LinearSpaceElement`)."""
+        return LinearSpaceElement
 
 
-class LinearSpaceVector(object):
+class LinearSpaceElement(object):
 
     """Abstract class for `LinearSpace` elements.
 
@@ -402,7 +400,7 @@ class LinearSpaceVector(object):
 
     @property
     def space(self):
-        """Space to which this vector belongs."""
+        """Space to which this element belongs."""
         return self.__space
 
     # Convenience functions
@@ -423,13 +421,13 @@ class LinearSpaceVector(object):
         ----------
         a : element of ``space.field``
             Scalar to multiply ``x1`` with.
-        x1 : `LinearSpaceVector`
-            First vector in the linear combination.
+        x1 : `LinearSpaceElement`
+            First space element in the linear combination.
         b : element of ``space.field``, optional
             Scalar to multiply ``x2`` with. Required if ``x2`` is
             provided.
-        x2 : `LinearSpaceVector`, optional
-            Second vector in the linear combination.
+        x2 : `LinearSpaceElement`, optional
+            Second space element in the linear combination.
 
         See Also
         --------
@@ -438,7 +436,7 @@ class LinearSpaceVector(object):
         return self.space.lincomb(a, x1, b, x2, out=self)
 
     def set_zero(self):
-        """Set this vector to zero.
+        """Set this element to zero.
 
         See Also
         --------
@@ -638,13 +636,13 @@ class LinearSpaceVector(object):
 
         Parameters
         ----------
-        other : `LinearSpaceVector`
+        other : `LinearSpaceElement`
             Element of this space.
 
         Returns
         -------
         equals : bool
-            ``True`` if the vectors are equal ``False`` otherwise.
+            ``True`` if the elements are equal ``False`` otherwise.
 
         See Also
         --------
@@ -673,8 +671,8 @@ class LinearSpaceVector(object):
         if other is self:
             # Optimization for a common case
             return True
-        elif (not isinstance(other, LinearSpaceVector) or
-                other.space != self.space):
+        elif (not isinstance(other, LinearSpaceElement) or
+              other.space != self.space):
             # Cannot use (if other not in self.space) since this is not
             # reflexive.
             return False
@@ -691,7 +689,7 @@ class LinearSpaceVector(object):
         This is a default implementation that does not print any
         information about the contents of the element.
         """
-        return str(self.space) + "Vector"
+        return str(self.space) + 'Element'
 
     def __repr__(self):
         """Return ``repr(self)``.
@@ -699,10 +697,10 @@ class LinearSpaceVector(object):
         This is a default implementation that does not print any
         information about the contents of the element.
         """
-        return repr(self.space) + "Vector"
+        return repr(self.space) + 'Element'
 
     def __copy__(self):
-        """Return a copy of this vector.
+        """Return a copy of this element.
 
         See Also
         --------
@@ -711,7 +709,7 @@ class LinearSpaceVector(object):
         return self.copy()
 
     def __deepcopy__(self, memo):
-        """Return a deep copy of this vector.
+        """Return a deep copy of this element.
 
         See Also
         --------
@@ -720,7 +718,7 @@ class LinearSpaceVector(object):
         return self.copy()
 
     def norm(self):
-        """Return the norm of this vector.
+        """Return the norm of this element.
 
         See Also
         --------
@@ -770,7 +768,7 @@ class LinearSpaceVector(object):
 
     @property
     def T(self):
-        """This vector's transpose, i.e. the functional ``<. , self>``.
+        """This element's transpose, i.e. the functional ``<. , self>``.
 
         Returns
         -------
@@ -796,8 +794,8 @@ class LinearSpaceVector(object):
         from odl.operator import InnerProductOperator
         return InnerProductOperator(self.copy())
 
-    # Give a `Vector` a higher priority than any NumPy array type. This
-    # forces the usage of `__op__` of `Vector` if the other operand
+    # Give an `Element` a higher priority than any NumPy array type. This
+    # forces the usage of `__op__` of `Element` if the other operand
     # is a NumPy object (applies also to scalars!).
     __array_priority__ = 1000000.0
 
@@ -871,9 +869,9 @@ class UniversalSpace(LinearSpace):
     def __contains__(self, other):
         """Return ``other in self``.
 
-        Dummy membership check, ``True`` for any `LinearSpaceVector`.
+        Dummy membership check, ``True`` for any `LinearSpaceElement`.
         """
-        return isinstance(other, LinearSpaceVector)
+        return isinstance(other, LinearSpaceElement)
 
 
 class LinearSpaceTypeError(TypeError):

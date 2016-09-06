@@ -44,12 +44,12 @@ def sparse_meshgrid(*x):
     Parameters
     ----------
     x1,...,xN : `array-like`
-        Input arrays to turn into sparse meshgrid vectors
+        Input arrays to turn into sparse meshgrid vectors.
 
     Returns
     -------
     meshgrid : tuple of `numpy.ndarray`'s
-        Sparse coordinate vectors representing an N-dimensional grid
+        Sparse coordinate vectors representing an N-dimensional grid.
 
     See Also
     --------

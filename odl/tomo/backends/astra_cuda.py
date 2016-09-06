@@ -29,7 +29,7 @@ try:
 except ImportError:
     ASTRA_CUDA_AVAILABLE = False
 
-from odl.discr import DiscreteLp, DiscreteLpVector
+from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.backends.astra_setup import (
     astra_projection_geometry, astra_volume_geometry, astra_projector,
     astra_data, astra_algorithm)
@@ -51,14 +51,14 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
 
     Parameters
     ----------
-    vol_data : `DiscreteLpVector`
+    vol_data : `DiscreteLpElement`
         Volume data to which the projector is applied
     geometry : `Geometry`
         Geometry defining the tomographic setup
     proj_space : `DiscreteLp`
         Space to which the calling operator maps
     out : ``proj_space`` element, optional
-        Vector in the projection space to which the result is written. If
+        Element of the projection space to which the result is written. If
         ``None``, an element in ``proj_space`` is created.
 
     Returns
@@ -67,8 +67,8 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
         Projection data resulting from the application of the projector.
         If ``out`` was provided, the returned object is a reference to it.
     """
-    if not isinstance(vol_data, DiscreteLpVector):
-        raise TypeError('volume data {!r} is not a DiscreteLpVector '
+    if not isinstance(vol_data, DiscreteLpElement):
+        raise TypeError('volume data {!r} is not a DiscreteLpElement '
                         'instance'.format(vol_data))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
@@ -81,9 +81,9 @@ def astra_cuda_forward_projector(vol_data, geometry, proj_space, out=None):
         raise TypeError('projection space {!r} is not a DiscreteLp '
                         'instance'.format(proj_space))
     if out is not None:
-        if not isinstance(out, DiscreteLpVector):
+        if not isinstance(out, DiscreteLpElement):
             raise TypeError('`out` {} is neither None nor a '
-                            'DiscreteLpVector instance'.format(out))
+                            'DiscreteLpElement instance'.format(out))
 
     ndim = vol_data.ndim
 
@@ -164,7 +164,7 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
     reco_space : `DiscreteLp`
         Space to which the calling operator maps
     out : ``reco_space`` element, optional
-        Vector in the reconstruction space to which the result is written.
+        Element of the reconstruction space to which the result is written.
         If ``None``, an element in ``reco_space`` is created.
 
     Returns
@@ -174,8 +174,8 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         projector. If ``out`` was provided, the returned object is a
         reference to it.
         """
-    if not isinstance(proj_data, DiscreteLpVector):
-        raise TypeError('projection data {!r} is not a DiscreteLpVector '
+    if not isinstance(proj_data, DiscreteLpElement):
+        raise TypeError('projection data {!r} is not a DiscreteLpElement '
                         'instance'.format(proj_data))
     if not isinstance(geometry, Geometry):
         raise TypeError('geometry  {!r} is not a Geometry instance'
@@ -188,9 +188,9 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
                          'geometry do not match'.format(reco_space.ndim,
                                                         geometry.ndim))
     if out is not None:
-        if not isinstance(out, DiscreteLpVector):
+        if not isinstance(out, DiscreteLpElement):
             raise TypeError('`out` {} is neither None nor a '
-                            'DiscreteLpVector instance'.format(out))
+                            'DiscreteLpElement instance'.format(out))
 
     ndim = proj_data.ndim
 
