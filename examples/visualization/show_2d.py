@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example for DiscreteLpElement.show() in 2D.
+"""Example for `DiscreteLpElement.show` in 2D.
 
 Notes
 -----

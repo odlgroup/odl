@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example for displaying n-tuples using show()."""
+"""Example for using `FnBaseVector.show`.
+
+The ``show`` method is implemented for all types of n-tuples and displays
+the data as a scatter plot.
+"""
 
 import odl
 

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example on using show with ProductSpace's."""
+"""Example on using `ProductSpaceElement.show`."""
 
 import odl
 import numpy as np
