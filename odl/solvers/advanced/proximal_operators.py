@@ -983,34 +983,18 @@ def proximal_cconj_kl(space, lam=1, g=None):
     Function returning the proximal operator of the convex conjugate of the
     functional F where F is the entropy-type Kullback-Leibler (KL) divergence
 
-        F(x) = sum_i (x - g + g ln(g) - g ln(pos(x)))_i + ind_P(x)
+        F(x) = sum_i (x_i - g_i + g_i ln(g_i) - g_i ln(pos(x_i))) + ind_P(x)
 
-    with x and g in X and g non-negative. The indicator function ind_P(x)
-    for the positive elements of x is used to restrict the domain of F such
-    that F is defined over whole X. The non-negativity thresholding pos is
-    used to define F in the real numbers.
-
-    The convex conjugate F^* of F is
-
-        F^*(p) = sum_i (-g ln(pos(1_X - p))_i + ind_P(1_X - p)
-
-    where p is the variable dual to x, and 1_X is an element of the space
-    X with all components set to 1.
-
-    The proximal operator of the convex conjugate of F is
-
-        prox[sigma * F^*](x) =
-            1/2 (lam + x - sqrt((x - lam)^2 + 4 lam sigma g))
-
-    with the step size parameter sigma and lam_X is an element of the space X
-    with all components set to lam.
+    with ``x`` and ``g`` elements in the linear space ``X``, and ``g``
+    non-negative. Here, ``pos`` denotes the nonnegative part, and ``ind_P`` is
+    the indicator function for nonnegativity.
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
+    space : `FnBase`
         Space X which is the domain of the functional F
-    g : ``space`` element
-        Data term.
+    g : ``space`` element, optional
+        Data term, positive. If None it is take as the one-element.
     lam : positive float
         Scaling factor.
 
@@ -1019,8 +1003,48 @@ def proximal_cconj_kl(space, lam=1, g=None):
     prox_factory : function
         Factory for the proximal operator to be initialized.
 
+    See Also
+    --------
+    proximal_cconj_kl_version_two : proximal for releated functional
+
     Notes
     -----
+    The functional is given by the expression
+
+     .. math::
+
+        F(x) = \\sum_i (x_i - g_i + g_i \\ln(g_i) - g_i \\ln(pos(x_i))) +
+        I_{x \\geq 0}(x)
+
+    The indicator function :math:`I_{x \geq 0}(x)` is used to restrict the
+    domain of :math:`F` such that :math:`F` is defined over whole space
+    :math:`X`. The non-negativity thresholding :math:`pos` is used to define
+    :math:`F` in the real numbers.
+
+    Note that the functional is not well-defined without a prior g. Hence, if g
+    is omitted this will be interpreted as if g is equal to the one-element.
+
+    The convex conjugate :math:`F^*` of :math:`F` is
+
+     .. math::
+
+        F^*(p) = \\sum_i (-g_i \\ln(pos({1_X}_i - p_i))) +
+        I_{1_X - p \geq 0}(p)
+
+    where :math:`p` is the variable dual to :math:`x`, and :math:`1_X` is an
+    element of the space :math:`X` with all components set to 1.
+
+    The proximal operator of the convex conjugate of F is
+
+     .. math::
+
+        prox[\\sigma * (\\lambda*F)^*](x) =
+            \\frac{\\lambda * 1_X + x - \\sqrt{(x -  \\lambda * 1_X)^2 +
+            4 \\lambda \\sigma g}}{2}
+
+    where :math:`\\sigma` is the step size-like parameter, and :math:`\\lambda`
+    is the weighting in front of the function :math:`F`.
+
     KL based objectives are common in MLEM optimization problems and are often
     used when data noise governed by a multivariate Poisson probability
     distribution is significant.
@@ -1062,7 +1086,10 @@ def proximal_cconj_kl(space, lam=1, g=None):
             out.ufunc.square(out=out)
 
             # out = out + 4 lam sigma g
-            if g is not None:
+            # If g is None, it is taken as the one element
+            if g is None:
+                out += 4.0 * lam * self.sigma
+            else:
                 out.lincomb(1, out, 4.0 * lam * self.sigma, g)
 
             # out = sqrt(out)
@@ -1081,39 +1108,23 @@ def proximal_cconj_kl(space, lam=1, g=None):
 
 
 def proximal_cconj_kl_version_two(space, lam=1, g=None):
-    """Proximal operator factory of the convex conjugate of the KL divergence.
+    """Convex conjugate proximal factory of the "second kind" KL divergence.
 
     Function returning the proximal operator of the convex conjugate of the
     functional F where F is the entropy-type Kullback-Leibler (KL) divergence
 
-        F(x) = sum_i (xln(pos(x)) - xln(g) + g - x)_i + ind_P(x)
+        F(x) = sum_i (x_i ln(pos(x_i)) - x_i ln(g_i) + g_i - x_i) + ind_P(x)
 
-    with x and g in X and g non-negative. The indicator function ind_P(x)
-    for the positive elements of x is used to restrict the domain of F such
-    that F is defined over whole X. The non-negativity thresholding pos is
-    used to define F in the real numbers.
-
-    The convex conjugate F^* of F is
-
-        F^*(p) = sum_i (g (exp(p) - 1))_i
-
-    where p is the variable dual to x.
-
-    The proximal operator of the convex conjugate of F is
-
-        prox[sigma * (lam*F)^*](x)_i =
-            x_i - lam W(1/lam sigma g_i exp(1/lam * x_i))
-
-    where sigma is the step size-like parameter, lam the weighting in from of
-    the function F, and W is the Lambert W function (see, for example, the
-    `Wikipedia article <https://en.wikipedia.org/wiki/Lambert_W_function>`_).
+    with ``x`` and ``g`` in the linear space ``X``, and ``g`` non-negative.
+    Here, ``pos`` denotes the nonnegative part, and ``ind_P`` is the indicator
+    function for nonnegativity.
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
+    space : `FnBase`
         Space X which is the domain of the functional F
-    g : ``space`` element
-        Data term.
+    g : ``space`` element, optional
+        Data term, positive. If None it is take as the one-element.
     lam : positive float
         Scaling factor.
 
@@ -1122,13 +1133,60 @@ def proximal_cconj_kl_version_two(space, lam=1, g=None):
     prox_factory : function
         Factory for the proximal operator to be initialized.
 
+
+    See Also
+    --------
+    proximal_cconj_kl : proximal for releated functional
+
     Notes
     -----
-    The functional is not well-defined without a prior g. Hence, if g is
-    omitted this will be interpreted as if g is equal to the one-element.
+    The functional is given by the expression
+
+     .. math::
+
+        F(x) = \\sum_i (x_i \\ln(pos(x_i)) - x_i \\ln(g_i) + g_i - x_i) +
+        I_{x \\geq 0}(x)
+
+    The indicator function :math:`I_{x \geq 0}(x)` is used to restrict the
+    domain of :math:`F` such that :math:`F` is defined over whole space
+    :math:`X`. The non-negativity thresholding :math:`pos` is used to define
+    :math:`F` in the real numbers.
+
+    Note that the functional is not well-defined without a prior g. Hence, if g
+    is omitted this will be interpreted as if g is equal to the one-element.
+
+    The convex conjugate :math:`F^*` of :math:`F` is
+
+    .. math::
+
+        F^*(p) = \\sum_i g_i (exp(p_i) - 1)
+
+    where :math:`p` is the variable dual to :math:`x`.
+
+    The proximal operator of the convex conjugate of :math:`F` is
+
+    .. math::
+
+        prox[\\sigma * (\\lambda*F)^*](x)_i = x_i - \\lambda
+        W(\\frac{\\sigma}{\\lambda} g_i e^{x_i/\\lambda})
+
+    where :math:`\\sigma` is the step size-like parameter, :math:`\\lambda` is
+    the weighting in front of the function :math:`F`, and :math:`W` is the
+    Lambert W function (see, for example, the
+    `Wikipedia article <https://en.wikipedia.org/wiki/Lambert_W_function>`_).
+
+    For real-valued input x, the Lambert :math:`W` function is defined only for
+    :math:`x \\geq -1/e`, and it has two branches for values
+    :math:`-1/e \\leq x < 0`. However, for inteneded use-cases, where
+    :math:`\\lambda` and :math:`g` are positive, the argument of :math:`W`
+    will always be positive.
 
     Write something about similarities and differences between the two
     KL-versions?
+
+    `Wikipedia article on Kullback Leibler divergence
+    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_
+
     """
 
     # TODO: Update Notes-section in doc above.
@@ -1138,9 +1196,9 @@ def proximal_cconj_kl_version_two(space, lam=1, g=None):
     if g is not None and g not in space:
         raise TypeError('{} is not an element of {}'.format(g, space))
 
-    class ProximalCConjKL(Operator):
+    class ProximalCConjKLSecondKind(Operator):
 
-        """Proximal operator of the convex conjugate of the KL divergence."""
+        """Proximal operator of convex conjugate of 2nd kind KL divergence."""
 
         def __init__(self, sigma):
             """Initialize a new instance.
@@ -1156,13 +1214,16 @@ def proximal_cconj_kl_version_two(space, lam=1, g=None):
             """Apply the operator to ``x`` and stores the result in ``out``."""
 
             if g is None:
+                # If g is None, it is taken as the one element
+                # Different branches of lambertw is not an issue, see Notes
                 out.assign(x - lam * scipy.special.lambertw(
-                    1.0 / lam * self.sigma * np.exp(1.0 / lam * x)))
+                    (self.sigma / lam) * np.exp(x / lam)))
             else:
+                # Different branches of lambertw is not an issue, see Notes
                 out.assign(x - lam * scipy.special.lambertw(
-                    1.0 / lam * self.sigma * g * np.exp(1.0 / lam * x)))
+                    ((self.sigma * g) / lam) * np.exp(x / lam)))
 
-    return ProximalCConjKL
+    return ProximalCConjKLSecondKind
 
 
 if __name__ == '__main__':
