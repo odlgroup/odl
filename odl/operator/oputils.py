@@ -86,6 +86,12 @@ def matrix_representation(op):
         num_dom = 1
         m = [op.domain.size]
 
+    def as_flat_array(x):
+        if hasattr(x, 'order'):
+            return x.asarray().ravel(x.order)
+        else:
+            return x.asarray().ravel()
+
     # Generate the matrix
     matrix = np.zeros([np.sum(n), np.sum(m)])
     tmp_ran = op.range.element()  # Store for reuse in loop
@@ -109,7 +115,7 @@ def matrix_representation(op):
                         tmp_ran[k])
                     tmp_idx += op.range[k].size
             else:
-                matrix[:, index] = tmp_ran.asarray()
+                matrix[:, index] = as_flat_array(tmp_ran)
             index += 1
             last_j = j
             last_i = i
