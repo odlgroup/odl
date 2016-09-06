@@ -30,7 +30,7 @@ import odl
 from odl.discr.lp_discr import DiscreteLp
 from odl.space.base_ntuples import FnBase
 from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
-                                example_vectors)
+                                noise_vectors)
 
 # Pytest fixture
 
@@ -350,7 +350,7 @@ def test_zero():
 def _test_unary_operator(discr, function):
     # Verify that the statement y=function(x) gives equivalent results
     # to NumPy
-    x_arr, x = example_vectors(discr)
+    x_arr, x = noise_vectors(discr)
 
     y_arr = function(x_arr)
 
@@ -362,7 +362,7 @@ def _test_unary_operator(discr, function):
 def _test_binary_operator(discr, function):
     # Verify that the statement z=function(x,y) gives equivalent results
     # to NumPy
-    [x_arr, y_arr], [x, y] = example_vectors(discr, 2)
+    [x_arr, y_arr], [x, y] = noise_vectors(discr, 2)
 
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
@@ -752,7 +752,7 @@ def test_ufunc(fn_impl, ufunc):
     ufunc = getattr(np, name)
 
     # Create some data
-    arrays, vectors = example_vectors(space, n_args + n_out)
+    arrays, vectors = noise_vectors(space, n_args + n_out)
     in_arrays = arrays[:n_args]
     out_arrays = arrays[n_args:]
     data_vector = vectors[0]
@@ -863,7 +863,7 @@ def test_reduction(fn_impl, reduction):
     ufunc = getattr(np, name)
 
     # Create some data
-    x_arr, x = example_vectors(space, 1)
+    x_arr, x = noise_vectors(space, 1)
     assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
 
 
@@ -879,7 +879,7 @@ def power(request):
 def test_power(fn_impl, power):
     space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=fn_impl)
 
-    x_arr, x = example_vectors(space, 1)
+    x_arr, x = noise_vectors(space, 1)
     x_pos_arr = np.abs(x_arr)
     x_neg_arr = -x_pos_arr
     x_pos = np.abs(x)

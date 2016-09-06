@@ -32,7 +32,7 @@ from odl.solvers.advanced.proximal_operators import (
     proximal_l1, proximal_cconj_l1,
     proximal_l2, proximal_cconj_l2,
     proximal_l2_squared, proximal_cconj_l2_squared)
-from odl.util.testutils import example_element
+from odl.util.testutils import noise_element
 
 
 pytestmark = odl.util.skip_if_no_largescale
@@ -86,7 +86,7 @@ def proximal_and_function(request, stepsize, offset):
     space = odl.uniform_discr(0, 1, 2)
 
     if offset:
-        g = example_element(space)
+        g = noise_element(space)
     else:
         g = None
 
@@ -170,7 +170,7 @@ def test_proximal_defintion(proximal_and_function):
 
     assert proximal.domain == proximal.range
 
-    x = example_element(proximal.domain) * 10
+    x = noise_element(proximal.domain) * 10
     f_x = proximal_objective(function, x, x)
     prox_x = proximal(x)
     f_prox_x = proximal_objective(function, x, prox_x)
@@ -178,7 +178,7 @@ def test_proximal_defintion(proximal_and_function):
     assert f_prox_x <= f_x
 
     for i in range(100):
-        y = example_element(proximal.domain)
+        y = noise_element(proximal.domain)
         f_y = proximal_objective(function, x, y)
 
         assert f_prox_x <= f_y

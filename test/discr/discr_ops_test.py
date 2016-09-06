@@ -27,7 +27,7 @@ import numpy as np
 
 import odl
 from odl.discr.discr_ops import _SUPPORTED_RESIZE_PAD_MODES
-from odl.util.testutils import almost_equal, example_element, dtype_places
+from odl.util.testutils import almost_equal, noise_element, dtype_places
 from odl.util.utility import is_scalar_dtype, is_real_floating_dtype
 
 
@@ -222,7 +222,7 @@ def test_resizing_op_inverse(padding, fn_impl):
                                       pad_const=pad_const)
 
         # Only left inverse if the operator extentds in all axes
-        x = example_element(space)
+        x = noise_element(space)
         assert res_op.inverse(res_op(x)) == x
 
 
@@ -245,8 +245,8 @@ def test_resizing_op_adjoint(padding, fn_impl):
                 res_op.adjoint
             return
 
-        elem = example_element(space)
-        res_elem = example_element(res_space)
+        elem = noise_element(space)
+        res_elem = noise_element(res_space)
         inner1 = res_op(elem).inner(res_elem)
         inner2 = elem.inner(res_op.adjoint(res_elem))
         assert almost_equal(inner1, inner2, places=dtype_places(dtype))

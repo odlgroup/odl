@@ -26,7 +26,7 @@ import pytest
 import odl
 from odl.solvers import douglas_rachford_pd
 
-from odl.util.testutils import all_almost_equal, example_element
+from odl.util.testutils import all_almost_equal, noise_element
 
 
 # Places for the accepted error when comparing results
@@ -46,7 +46,7 @@ def test_primal_dual_input_handling():
 
     # Check that the algorithm runs. With the above operators, the algorithm
     # returns the input.
-    x0 = example_element(space1)
+    x0 = noise_element(space1)
     x = x0.copy()
     niter = 3
 
@@ -71,7 +71,7 @@ def test_primal_dual_input_handling():
 
     # Test for correct space
     space2 = odl.uniform_discr(1, 2, 10)
-    x = example_element(space2)
+    x = noise_element(space2)
     with pytest.raises(ValueError):
         douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops, tau=1.0,
                             sigma=[1.0, 1.0], niter=niter)
@@ -94,8 +94,8 @@ def test_primal_dual_l1():
     L = [odl.IdentityOperator(space)]
 
     # Data
-    data_1 = odl.util.testutils.example_element(space)
-    data_2 = odl.util.testutils.example_element(space)
+    data_1 = odl.util.testutils.noise_element(space)
+    data_2 = odl.util.testutils.noise_element(space)
 
     # Proximals
     prox_f = odl.solvers.proximal_l1(space, g=data_1)
