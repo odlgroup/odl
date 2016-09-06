@@ -17,6 +17,8 @@ New features
   (:pull:`524`)
 - Allow ASTRA backend to be used with arbitrary dtypes. (:pull:`524`)
 - Add ``reset`` to ``SolverCallback`` that resets the callback to its initial state. (:issue:`552`)
+- Add ``nonuniform_partition`` utility that creates a partition with non-uniformly spaced points.
+  This is useful e.g. when the angles of a tomography problem are not exactly uniform.
 
 Improvements
 ------------
