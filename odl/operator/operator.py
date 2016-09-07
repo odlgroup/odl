@@ -704,8 +704,32 @@ class Operator(object):
         return out
 
     def __add__(self, other):
-        """Return ``self + other``."""
-        return OperatorSum(self, other)
+        """Return ``self + other``.
+
+        If other is an element in self.range, this corresponds to
+
+            ``self + other <==> (x --> self(x) + other)``
+
+        If other is an element in self.range.field, this corresponds to
+
+            ``self + other <==> (x --> self(x) + 1*other)``
+
+        where ``1`` is the one-element in self.range.
+
+        If other is an opertor, this corresponds to
+
+            ``self + other <==> (x --> self(x) + other(x))``
+        """
+        from odl.operator.default_ops import ConstantOperator
+
+        if other in self.range:
+            return self + ConstantOperator(other, self.domain, self.range)
+        elif other in self.range.field:
+            constant_vector = other * self.range.one()
+            return self + ConstantOperator(constant_vector, self.domain,
+                                           self.range)
+        else:
+            return OperatorSum(self, other)
 
     def __sub__(self, other):
         """Return ``self - other``."""
