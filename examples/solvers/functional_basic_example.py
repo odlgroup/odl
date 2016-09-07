@@ -41,8 +41,7 @@ class MyFunctional(odl.solvers.Functional):
         # This comand calls the init of Functional and sets a number of
         # parameters associated with a functional. All but domain have default
         # values if not set.
-        super().__init__(domain=domain, linear=False, convex=True,
-                         concave=False, smooth=True, grad_lipschitz=2)
+        super().__init__(domain=domain, linear=False, grad_lipschitz=2)
 
     def _call(self, x):
         # This is what is returned when calling my_func(x)
@@ -54,7 +53,7 @@ class MyFunctional(odl.solvers.Functional):
         return 2.0 * odl.IdentityOperator(self.domain)
 
     @property
-    def conjugate_functional(self):
+    def convex_conj(self):
         # Calculations give that this funtional has the analytic expression
         # f^*(x) = 1/4 * ||x||_2^2.
         return 1.0 / 4.0 * MyFunctional(self.domain)
@@ -79,7 +78,7 @@ my_deriv = my_func.derivative(x)
 print(my_deriv(p) == my_gradient(x).inner(p))
 
 # The conjugate functional works
-my_func_conj = my_func.conjugate_functional
+my_func_conj = my_func.convex_conj
 print(my_func_conj(x) == 1.0 / 4.0 * x.norm()**2)
 
 # As a final, a bit more advanced, test, this check that the a scaled and

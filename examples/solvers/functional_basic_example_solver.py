@@ -50,7 +50,7 @@ trans_l2_func = l2_func.translate(g)
 # the squared l2-norm. Here we create necessary proximal and gradient operators
 # from the functionals.
 prox_f = odl.solvers.proximal_nonnegativity(space)
-prox_cc_g = lam_l1_func.conjugate_functional.proximal
+prox_cc_g = lam_l1_func.convex_conj.proximal
 L = odl.IdentityOperator(space)
 grad_h = trans_l2_func.gradient
 
@@ -71,4 +71,4 @@ odl.solvers.forward_backward_pd(x=x, prox_f=prox_f, prox_cc_g=[prox_cc_g],
                                 L=[L], grad_h=grad_h, tau=tau, sigma=[sigma],
                                 niter=niter, callback=callback)
 
-print('Solution guess: x = {}'.format(x.asarray()))
+print('Solution found: x = {}'.format(x.asarray()))

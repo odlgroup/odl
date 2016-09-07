@@ -61,25 +61,22 @@ class Functional(Operator):
     http://odl.readthedocs.io/guide/in_depth/functional_guide.html.
     """
 
-    def __init__(self, domain, linear=False, grad_lipschitz=np.inf):
+    def __init__(self, space, linear=False, grad_lipschitz=np.inf):
         """Initialize a new instance.
 
         Parameters
         ----------
-        domain : `Set`
+        space : `LinearSpace`
             The domain of this functional, i.e., the set of elements to
-            which this functional can be applied
-        linear : `bool`
-            If `True`, the functional is considered as linear. In this
-            case, ``domain`` and ``range`` have to be instances of
-            `LinearSpace`, or `Field`.
-        grad_lipschitz : 'float', optional
+            which this functional can be applied.
+        linear : bool, optional
+            If `True`, the functional is considered as linear.
+        grad_lipschitz : float, optional
             The Lipschitz constant of the gradient.
         """
-
-        Operator.__init__(self, domain=domain,
-                          range=domain.field, linear=linear)
-        self._grad_lipschitz = float(grad_lipschitz)
+        Operator.__init__(self, domain=space,
+                          range=space.field, linear=linear)
+        self.__grad_lipschitz = float(grad_lipschitz)
 
     @property
     def gradient(self):
@@ -99,30 +96,22 @@ class Functional(Operator):
         """
         raise NotImplementedError
 
-    def proximal(self, sigma=1.0):
-        """Return the proximal operator of the functional.
-
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator.
-
-        Returns
-        -------
-        out : `Operator`
-            Domain and range equal to domain of functional.
+    @property
+    def proximal(self):
+        """Return the proximal proximal factory of the functional.
 
         Notes
         -----
         The nonsmooth solvers that make use of proximal operators in order to
-        solve a given optimization problem, see for example
-        `forward_backward_pd`, take a `proximal factory` as input. Note that
-        ``Functional.proximal`` is in fact a `proximal factory`.
+        solve a given optimization problem take a `proximal factory` as input,
+        i.e., a function returning a proximal operator. Note that
+        ``Functional.proximal`` is in fact a `proximal factory`. See for
+        example `forward_backward_pd`.
         """
         raise NotImplementedError
 
     @property
-    def conjugate_functional(self):
+    def convex_conj(self):
         """Convex conjugate functional of the functional.
 
         Notes
@@ -142,7 +131,7 @@ class Functional(Operator):
         <https://en.wikipedia.org/wiki/Convex_conjugate>`_.
 
         Wikipedia article on `Legendre transformation
-        https://en.wikipedia.org/wiki/Legendre_transformation
+        <https://en.wikipedia.org/wiki/Legendre_transformation>`_.
 
         For literature references see, e.g., [Lue1969]_, [Roc1970]_.
         """
@@ -151,12 +140,9 @@ class Functional(Operator):
     def derivative(self, point):
         """Return the derivative operator in the given point.
 
-        This function returns the linear operator
+        This function returns the linear operator given by
 
-            ``x --> <x, grad_f(point)>``,
-
-        where ``grad_f(point)`` is the gradient of the functional in the point
-        ``point``.
+            ``self.derivative(point)(x) == self.gradient(point).inner(x)``
 
         Parameters
         ----------
@@ -166,11 +152,10 @@ class Functional(Operator):
         Returns
         -------
         out : `Operator`
-            The linear operator that maps ``x --> <x, grad_f(point)>``.
         """
         return self.gradient(point).T
 
-    def translate(self, shift):
+    def translated(self, shift):
         """Return a translation of the functional.
 
         For a given functional ``f`` and an element ``translation`` in the
@@ -188,7 +173,7 @@ class Functional(Operator):
             The functional ``f(. - translation)``
         """
         if shift not in self.domain:
-            raise TypeError('the translation {} is not in the domain of the'
+            raise TypeError('the translation {} is not in the domain of the '
                             'functional {!r}'.format(shift, self))
 
         return TranslatedFunctional(self, shift)
@@ -196,28 +181,28 @@ class Functional(Operator):
     def __mul__(self, other):
         """Return ``self * other``.
 
-        If ``other`` is an operator, this corresponds to composition with the
+        If ``other`` is an `Operator`, this corresponds to composition with the
         operator:
 
-            ``func * op <==> (x --> func(op(x)))``
+            ``func * op == (x --> func(op(x)))``
 
         If ``other`` is a scalar, this corresponds to right multiplication of
         scalars with functionals:
 
-            ``func * scalar <==> (x --> func(scalar * x))``
+            ``func * scalar == (x --> func(scalar * x))``
 
         If ``other`` is a vector, this corresponds to right multiplication of
         vectors with functionals:
 
-            ``func * vector <==> (x --> func(vector * x))``
+            ``func * vector == (x --> func(vector * x))``
 
         Note that left and right multiplications are generally different.
 
         Parameters
         ----------
-        other : `Operator` or `LinearSpaceVector` or scalar
+        other : `Operator`, `LinearSpaceVector` or scalar
             `Operator`:
-            The `Operator.range` of ``other`` must match this functionals
+            The `Operator.range` of ``other`` must match this functional's
             `Functional.domain`.
 
             `LinearSpaceVector`:
@@ -233,7 +218,7 @@ class Functional(Operator):
         Returns
         -------
         mul : `Functional`
-            Multiplication result
+            Multiplication result.
 
             If ``other`` is an `Operator`, ``mul`` is a
             `FunctionalComp`.
@@ -244,9 +229,9 @@ class Functional(Operator):
             If ``other`` is a vector, ``mul`` is a
             `FunctionalRightVectorMult`.
 
-        Notes
-        -------
-        See also `Operator.__mul__`.
+        See Also
+        --------
+        Operator.__mul__ : implementation of __mul__ for Operators.
         """
         if isinstance(other, Operator):
             return FunctionalComp(self, other)
@@ -257,7 +242,7 @@ class Functional(Operator):
                 return FunctionalLeftScalarMult(self, other)
             else:
                 return FunctionalRightScalarMult(self, other)
-        elif isinstance(other, LinearSpaceVector) and other in self.domain:
+        elif isinstance(other, LinearSpaceVector):
             return FunctionalRightVectorMult(self, other)
         else:
             return super().__mul__(other)
@@ -265,10 +250,10 @@ class Functional(Operator):
     def __rmul__(self, other):
         """Return ``other * self``.
 
-        If ``other`` is an operator, since a functional is also an operator
+        If ``other`` is an `Operator`, since a functional is also an operator
         this corresponds to operator composition:
 
-            ``op * func <==> (x --> op(func(x))``
+            ``op * func == (x --> op(func(x))``
 
         If ``other`` is a scalar, this corresponds to left multiplication of
         scalars with functionals:
@@ -285,7 +270,7 @@ class Functional(Operator):
 
         Parameters
         ----------
-        other : `Operator` or `LinearSpaceVector` or scalar
+        other : `Operator`, `LinearSpaceVector` or scalar
             `Operator`:
             The `Operator.domain` of ``other`` must match this functional's
             `Functional.range`.
@@ -303,9 +288,9 @@ class Functional(Operator):
         Returns
         -------
         rmul : `Functional` or `Operator`
-            Multiplication result
+            Multiplication result.
 
-            If ``other`` is an `Operator`, ``rmul`` is a `OperatorComp`.
+            If ``other`` is an `Operator`, ``rmul`` is an `OperatorComp`.
 
             If ``other`` is a scalar, ``rmul`` is a
             `FunctionalLeftScalarMult`.
@@ -326,6 +311,15 @@ class Functional(Operator):
     def __add__(self, other):
         """Return ``self + other``.
 
+        If ``other`` is a `Functional`, this corresponds to
+
+            ``func1 + func2 == (x --> func1(x) + func2(x))``
+
+        If ``other`` is a scalar, this corresponds to adding a scalar to the
+        value of the functional:
+
+            ``func + scalar == (x --> func(x) + scalar)``
+
         Parameters
         ----------
         other : `Functional` or scalar
@@ -340,12 +334,16 @@ class Functional(Operator):
         Returns
         -------
         add : `Functional`
-            Addition result
+            Addition result.
 
             If ``other`` is in ``Functional.range``, ``add`` is a
             `FunctionalScalarSum`.
 
             If ``other`` is a `Functional`, ``add`` is a `FunctionalSum`.
+
+        See Also
+        --------
+        Operator.__add__ : implementation of __add__ for Operators.
         """
         if other in self.domain.field:
             return FunctionalScalarSum(self, other)
@@ -354,18 +352,8 @@ class Functional(Operator):
         else:
             return NotImplemented
 
-    def __radd__(self, other):
-        """Return ``other + self``.
-
-        Since addition is commutative, also for functionals, this is similar
-        to `Functional.__add__`.
-        """
-        if other in self.domain.field:
-            return FunctionalScalarSum(self, other)
-        elif isinstance(other, Functional):
-            return FunctionalSum(self, other)
-        else:
-            return NotImplemented
+    # Since addition is commutative, right and left addition is the same
+    __radd__ = __add__
 
     def __sub__(self, other):
         """Return ``self - other``."""
@@ -374,7 +362,7 @@ class Functional(Operator):
     @property
     def grad_lipschitz(self):
         """Lipschitz constant for the gradient of the functional"""
-        return self._grad_lipschitz
+        return self.__grad_lipschitz
 
 
 class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
@@ -384,7 +372,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
     Given a functional ``f`` and a scalar ``scalar``, this represents the
     functional
 
-        ``(scalar * f)(x) = scalar * f(x)``.
+        ``(scalar * f)(x) == scalar * f(x)``.
     """
 
     def __init__(self, func, scalar):
@@ -393,58 +381,45 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         Parameters
         ----------
         func : `Functional`
-            The functional that is to be scaled.
+            Functional to be scaled.
         scalar : `float`
-            The scalar with which the functional is scaled.
+            Number with which to scale the functional.
         """
-
         if not isinstance(func, Functional):
             raise TypeError('functional {!r} is not a Functional instance.'
                             ''.format(func))
 
         scalar = func.range.element(scalar)
 
-        if scalar > 0 or scalar < 0:
-            Functional.__init__(self, domain=func.domain,
+        if scalar == 0:
+            Functional.__init__(self, space=func.domain, linear=True,
+                                grad_lipschitz=0)
+
+        else:
+            Functional.__init__(self, space=func.domain,
                                 linear=func.is_linear,
                                 grad_lipschitz=(
                                     np.abs(scalar) * func.grad_lipschitz))
 
-        elif scalar == 0:
-            Functional.__init__(self, domain=func.domain, linear=True,
-                                grad_lipschitz=0)
-
-        else:
-            # It should not be possible to get here
-            raise TypeError('comparison with scalar {} failed'.format(scalar))
-
         OperatorLeftScalarMult.__init__(self, operator=func, scalar=scalar)
 
     @property
-    def gradient(self):
-        """Gradient operator of the functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluate
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
-        return self.scalar * self.operator.gradient
+    def functional(self):
+        """The functional which is scaled."""
+        return self.operator
 
     @property
-    def conjugate_functional(self):
+    def gradient(self):
+        """Gradient operator of the functional."""
+        return self.scalar * self.functional.gradient
+
+    @property
+    def convex_conj(self):
         """Convex conjugate functional of the scaled functional."""
         # The helper function only allows positive scaling parameters.
         # Otherwise it gives an error.
         return ConvexConjugateFuncScaling(
-            self.operator.conjugate_functional, self.scalar)
+            self.functional.convex_conj, self.scalar)
 
     def proximal(self, sigma=1.0):
         """Return the proximal operator of the scaled functional.
@@ -470,35 +445,8 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         elif self.scalar == 0:
             return IdentityOperator(self.domain)
 
-        elif self.scalar > 0:
-            return self.operator.proximal(sigma * self.scalar)
-
         else:
-            # It should not be possible to get here
-            raise TypeError('comparison with scalar {} failed'
-                            ''.format(self.scalar))
-
-    def derivative(self, point):
-        """Returns the derivative operator in the given point.
-
-        This function returns the linear operator
-
-            ``x --> <x, grad_f(point)>``,
-
-        where ``grad_f(point)`` is the gradient of the functional in the point
-        ``point``.
-
-        Parameters
-        ----------
-        point : `LinearSpaceVector`
-            The point in which the gradient is evaluated.
-
-        Returns
-        -------
-        out : `DerivativeOperator`
-            The linear operator that maps ``x --> <x, grad_f(point)>``.
-        """
-        return self.scalar * self.operator.derivative(point)
+            return self.functional.proximal(sigma * self.scalar)
 
 
 class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
@@ -508,7 +456,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
     Given a functional ``f`` and a scalar ``scalar``, this represents the
     functional
 
-        ``(f * scalar)(x) = f(scalar * x)``.
+        ``(f * scalar)(x) == f(scalar * x)``.
     """
 
     def __init__(self, func, scalar):
@@ -529,42 +477,29 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         scalar = func.range.element(scalar)
 
         if scalar == 0:
-            Functional.__init__(self, domain=func.domain, linear=True,
+            Functional.__init__(self, space=func.domain, linear=True,
                                 grad_lipschitz=0)
-        elif scalar < 0 or scalar > 0:
-            Functional.__init__(self, domain=func.domain,
+        else:
+            Functional.__init__(self, space=func.domain,
                                 linear=func.is_linear,
                                 grad_lipschitz=(np.abs(scalar) *
                                                 func.grad_lipschitz))
-        else:
-            # It should not be possible to get here
-            raise TypeError('comparison with scalar {} failed'.format(scalar))
 
         OperatorRightScalarMult.__init__(self, operator=func, scalar=scalar)
 
     @property
-    def gradient(self):
-        """Gradient operator of the functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluate
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
-        return (self.scalar * self.operator.gradient *
-                ScalingOperator(self.domain, self.scalar))
+    def functional(self):
+        return self.operator
 
     @property
-    def conjugate_functional(self):
+    def gradient(self):
+        """Gradient operator of the functional."""
+        return self.scalar * self.functional.gradient * self.scalar
+
+    @property
+    def convex_conj(self):
         """Convex conjugate functional of functional with scaled argument."""
-        return ConvexConjugateArgScaling(self.operator.conjugate_functional,
+        return ConvexConjugateArgScaling(self.functional.convex_conj,
                                          self.scalar)
 
     def proximal(self, sigma=1.0):
@@ -582,7 +517,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         """
         sigma = float(sigma)
         return(proximal_arg_scaling(
-            self.operator.proximal, self.scalar))(sigma)
+            self.functional.proximal, self.scalar))(sigma)
 
     def derivative(self, point):
         """Returns the derivative operator in the given point.
@@ -604,7 +539,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         out : `DerivativeOperator`
             The linear operator that maps ``x --> <x, grad_f(point)>``.
         """
-        return self.scalar * self.operator.derivative(self.scalar * point)
+        return self.scalar * self.functional.derivative(self.scalar * point)
 
 
 class FunctionalComp(Functional, OperatorComp):
@@ -615,7 +550,7 @@ class FunctionalComp(Functional, OperatorComp):
     the operator is equal to the domain of the functional, this corresponds to
     the functional
 
-        ``(func * op)(x) = func(op(x))``.
+        ``(func * op)(x) == func(op(x))``.
     """
 
     def __init__(self, func, op, tmp1=None, tmp2=None):
@@ -640,52 +575,35 @@ class FunctionalComp(Functional, OperatorComp):
 
         OperatorComp.__init__(self, left=func, right=op, tmp=tmp1)
 
-        # TODO: can the Lipschitz constant of the gradient be estimated?
-        Functional.__init__(self, domain=func.domain,
+        Functional.__init__(self, space=func.domain,
                             linear=(func.is_linear and op.is_linear),
                             grad_lipschitz=np.infty)
 
         if tmp2 is not None and tmp2 not in self._left.domain:
-            raise TypeError('second temporary {!r} not in the domain '
-                            '{!r} of the functional.'
+            raise TypeError('`tmp2` {!r} not in the domain '
+                            '{!r} of `func`.'
                             ''.format(tmp2, self._left.domain))
         self._tmp2 = tmp2
 
     @property
     def gradient(self):
         """Gradient of the compositon according to the chain rule."""
-
         func = self.left
         op = self.right
 
-        class CompositGradient(Operator):
+        class FunctionalCompositionGradient(Operator):
+
             """Gradient of the compositon according to the chain rule."""
+
             def __init__(self):
                 """Initialize a new instance."""
                 super().__init__(func.domain, func.domain, linear=False)
-                self._func = func
-                self._op = op
 
             def _call(self, x):
-                """Applies the gradient operator to the given point.
+                """Apply the gradient operator to the given point."""
+                return op.derivative(x).adjoint(func.gradient(op(x)))
 
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the functional to which the
-                    gradient operator is applied. The element must have a
-                    non-zero norm
-
-                Returns
-                -------
-                `self(x)` : `LinearSpaceVector`
-                    Evaluation of the gradient operator. An element in the
-                    domain of the functional.
-                """
-                return self._op.derivative(x).adjoint(
-                    self._func.gradient(self._op(x)))
-
-        return CompositGradient()
+        return FunctionalCompositionGradient()
 
 
 class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
@@ -695,7 +613,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
     Given a functional ``func`` and a vector ``y`` in the domain of ``func``,
     this corresponds to the functional
 
-        ``(func * y)(x) = func(y*x)``.
+        ``(func * y)(x) == func(y*x)``.
     """
 
     def __init__(self, func, vector):
@@ -714,85 +632,27 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
 
-        Functional.__init__(self, domain=func.domain)
+        Functional.__init__(self, space=func.domain)
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluate
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
+        """Gradient operator of the functional."""
         return self.vector * self.operator.gradient * self.vector
 
-    # TODO: can this be computed?
-    def proximal(self, sigma=1.0):
-        """Return the proximal operator of the functional.
-
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator.
-
-        Returns
-        -------
-        out : `Operator`
-            Domain and range equal to domain of functional.
-
-        Notes
-        -----
-        The nonsmooth solvers that make use of proximal operators in order to
-        solve a given optimization problem, see for example
-        `forward_backward_pd`, take a `proximal factory` as input. Note that
-        ``Functional.proximal`` is in fact a `proximal factory`.
-        """
-        raise NotImplementedError('there is no known expression for this')
-
     @property
-    def conjugate_functional(self):
-        """Convex conjugate functional of the functional.
-
-        Notes
-        -----
-        The convex conjugate functional of a convex functional :math:`f(x)`,
-        defined on a Hilber space, is defined as the functional
-
-        .. math::
-
-            f^*(x^*) = \\sup_{x} \{ \\langle x^*,x \\rangle - f(x)  \}.
-
-        The concept is also known as the Legendre transformation.
-
-        References
-        ----------
-        Wikipedia article on `Convex conjugate
-        <https://en.wikipedia.org/wiki/Convex_conjugate>`_.
-
-        Wikipedia article on `Legendre transformation
-        https://en.wikipedia.org/wiki/Legendre_transformation
-
-        For literature references see, e.g., [Lue1969]_, [Roc1970]_.
-        """
-        return self.operator.conjugate_functional * (1.0 / self.vector)
+    def convex_conj(self):
+        """Convex conjugate functional of the functional."""
+        return self.operator.convex_conj * (1.0 / self.vector)
 
 
 class FunctionalSum(Functional, OperatorSum):
 
     """Expression type for the sum of functionals.
 
-    ``FunctionalSum(func1, func2) <==> (x --> func1(x) + func2(x))``.
+    ``FunctionalSum(func1, func2) == (x --> func1(x) + func2(x))``.
     """
 
-    def __init__(self, func1, func2, tmp_dom=None):
+    def __init__(self, func1, func2):
         """Initialize a new instance.
 
         Parameters
@@ -800,62 +660,35 @@ class FunctionalSum(Functional, OperatorSum):
         func1, func2 : `Functional`
             The summands of the functional sum. Their `Operator.domain`
             and `Operator.range` must coincide.
-        tmp_dom : `Operator.domain` `element`, optional
-            Used to avoid the creation of a temporary when applying the
-            gradient.
         """
-        # TODO: Tmp_dom, what is it used for?
         if not isinstance(func1, Functional):
-            raise TypeError('functional 1 {!r} is not a Functional instance.'
+            raise TypeError('`func1` {!r} is not a `Functional` instance.'
                             ''.format(func1))
         if not isinstance(func2, Functional):
-            raise TypeError('functional 2 {!r} is not a Functional instance.'
+            raise TypeError('`func2` {!r} is not a `Functional` instance.'
                             ''.format(func2))
 
-        Functional.__init__(self, domain=func1.domain,
+        OperatorSum.__init__(self, func1, func2)
+
+        Functional.__init__(self, space=func1.domain,
                             linear=(func1.is_linear and func2.is_linear),
                             grad_lipschitz=(func1.grad_lipschitz +
                                             func2.grad_lipschitz))
-
-        OperatorSum.__init__(self, func1, func2, tmp_ran=None,
-                             tmp_dom=tmp_dom)
 
     @property
     def gradient(self):
         """Gradient operator of functional sum."""
         return self.left.gradient + self.right.gradient
 
-    def derivative(self, point):
-        """Returns the derivative operator in the given point.
 
-        This function returns the linear operator
-
-            ``x --> <x, grad_f(point)>``,
-
-        where ``grad_f(point)`` is the gradient of the functional in the point
-        ``point``.
-
-        Parameters
-        ----------
-        point : `LinearSpaceVector`
-            The point in which the gradient is evaluated.
-
-        Returns
-        -------
-        out : `DerivativeOperator`
-            The linear operator that maps ``x --> <x, grad_f(point)>``.
-        """
-        return self._op1.derivative(point) + self._op2.derivative(point)
-
-
-class FunctionalScalarSum(Functional, OperatorSum):
+class FunctionalScalarSum(FunctionalSum):
 
     """Expression type for the sum of a functional and a scalar.
 
-    ``FunctionalScalarSum(func, scalar) <==> (x --> func(x) + scalar)``
+    ``FunctionalScalarSum(func, scalar) == (x --> func(x) + scalar)``
     """
 
-    def __init__(self, func, scalar, tmp_dom=None):
+    def __init__(self, func, scalar):
         """Initialize a new instance.
 
         Parameters
@@ -865,10 +698,11 @@ class FunctionalScalarSum(Functional, OperatorSum):
         scalar : `element` in the `field` of the ``domain``
             The scalar to be added to the functional. The `field` of the
             ``domain`` is the range of the functional.
-        tmp_dom : `LinearSpaceVector`, optional
-            ...
         """
-        # TODO: what is tmp_dom used for?
+
+        from odl.solvers.functional.default_functionals import (
+            ConstantFunctional)
+
         if not isinstance(func, Functional):
             raise TypeError('functional {!r} is no a Functional instance'
                             ''.format(func))
@@ -876,61 +710,23 @@ class FunctionalScalarSum(Functional, OperatorSum):
             raise TypeError('the scalar {} is not in the range of the'
                             'functional {!r}'.format(scalar, func))
 
-        Functional.__init__(self, domain=func.domain, linear=func.is_linear,
-                            grad_lipschitz=func.grad_lipschitz)
-
-        OperatorSum.__init__(self, left=func,
-                             right=ConstantOperator(vector=scalar,
-                                                    domain=func.domain,
-                                                    range=func.range),
-                             tmp_ran=None, tmp_dom=tmp_dom)
+        FunctionalSum.__init__(self, func1=func,
+                               func2=ConstantFunctional(space=func.domain,
+                                                        constant=scalar))
 
     @property
     def scalar(self):
-        return self.right.vector
-
-    @property
-    def gradient(self):
-        """Gradient operator of the functional.
-
-        Note that this is the same as the gradient of the original functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluate
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
-        return self.left.gradient
+        """The scalar that is added to the functional"""
+        return self.right.constant
 
     def proximal(self, sigma=1.0):
-        """Proximal operator of the FunctionalScalarSum.
-
-        This is the same as the proximal operator of the original
-        functional.
-
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator.
-
-        Returns
-        -------
-        out : `Operator`
-            Domain and range equal to domain of functional.
-        """
+        """Proximal operator of the FunctionalScalarSum."""
         return self.left.proximal(sigma)
 
     @property
-    def conjugate_functional(self):
+    def convex_conj(self):
         """Convex conjugate functional of FunctionalScalarSum."""
-        return self.left.conjugate_functional - self.scalar
+        return self.left.convex_conj - self.scalar
 
     def derivative(self, point):
         """Returns the derivative operator of FunctionalScalarSum.
@@ -978,103 +774,37 @@ class TranslatedFunctional(Functional):
             raise TypeError('`translation` {!r} not in func.domain {!r}'
                             ''.format(translation.space, func.domain))
 
-        super().__init__(domain=func.domain, linear=False,
+        super().__init__(space=func.domain, linear=False,
                          grad_lipschitz=func.grad_lipschitz)
 
-    # TODO: Add case if we have translation -> scaling -> translation?
+        # TODO: Add case if we have translation -> scaling -> translation?
         if isinstance(func, TranslatedFunctional):
-            self._original_func = func.original_func
-            self._translation = func.translation + translation
+            self.__original_func = func.original_func
+            self.__translation = func.translation + translation
 
         else:
-            self._original_func = func
-            self._translation = translation
+            self.__original_func = func
+            self.__translation = translation
 
     @property
     def original_func(self):
-        return self._original_func
+        """The functional that has been translated."""
+        return self.__original_func
 
     @property
     def translation(self):
-        return self._translation
+        """The translation."""
+        return self.__translation
 
     def _call(self, x):
-        """Evaluates the functional in a point ``x``.
-
-        Parameters
-        ----------
-        x : `LinearSpaceVector`
-            Element in the domain of the functional.
-            The point in which the functional is evaluated
-
-        Returns
-        -------
-        `self(x)` : `float`
-            Evaluation of the functional, which is a constant.
-        """
-        return self._original_func(x - self._translation)
+        """Evaluate the functional in a point ``x``."""
+        return self.original_func(x - self.translation)
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
-
-        The operator is given by a transation of the gradient operator of the
-        original functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluate
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
-
-        class TranslatedGradientOperator(Operator):
-
-            """The gradient operator for a translated functional."""
-
-            def __init__(self, translated_func, translation):
-                """Initialize a new instance.
-
-                Parameters
-                ----------
-                translated_func : `Functional`
-                    Functional corresponding to ``F(. - translation)``
-                translation : `LinearSpaceVector`
-                    The translation with which ``translated_func`` has been
-                    translated.
-
-                """
-                # TODO: is there a good way to see if this operator is linear?
-                super().__init__(domain=translated_func.domain,
-                                 range=translated_func.domain,
-                                 linear=False)
-
-                self._original_grad = translated_func._original_func.gradient
-                self._translation = translation
-
-            def _call(self, x):
-                """Evaluates the gradient in a point ``x``.
-
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the operator.
-
-                Returns
-                -------
-                out : `LinearSpaceVector`
-                    The gradient in the point ``x``. An element in the doimain
-                    of the operator.
-                """
-                return self._original_grad(x - self._translation)
-
-        return TranslatedGradientOperator(self, self._translation)
+        """Gradient operator of the functional."""
+        return (self.original_func.gradient *
+                (IdentityOperator(self.domain) - self.translation))
 
     def proximal(self, sigma=1.0):
         """Return the proximal operator of the translated functional.
@@ -1089,31 +819,15 @@ class TranslatedFunctional(Functional):
         out : `Operator`
             Domain and range equal to domain of functional.
         """
-        return (proximal_translation(self._original_func.proximal,
-                                     self._translation))(sigma)
+        return (proximal_translation(self.original_func.proximal,
+                                     self.translation))(sigma)
 
     @property
-    def conjugate_functional(self):
+    def convex_conj(self):
         """Convex conjugate functional of the translated functional."""
         return ConvexConjugateTranslation(
-            self._original_func.conjugate_functional,
-            self._translation)
-
-    def derivative(self, point):
-        """Returns the derivative operator, evaluated in the point
-        ``point - translation``.
-
-        Parameters
-        ----------
-        point : `LinearSpaceVector`
-            The point in which the gradient is evaluated.
-
-        Returns
-        -------
-        out : `Operator`
-            The linear operator that maps ``x --> <x, grad_f(p)>``.
-        """
-        return self._original_func.derivative(point - self._translation)
+            self.original_func.convex_conj,
+            self.translation)
 
 
 class ConvexConjugateTranslation(Functional):
@@ -1124,17 +838,9 @@ class ConvexConjugateTranslation(Functional):
     translated function ``F(. - translation)``. It is calculated according to
     the rule
 
-        ``(F( . - translation))^* (x) = F^*(x) + <translation, x>``,
+        ``(F( . - translation))^* (x) == F^*(x) + <translation, x>``,
 
     where ``translation`` is the translation of the argument.
-
-    Parameters
-    ----------
-    convex_conj_f : `Functional`
-        Function corresponding to ``F^*``.
-
-    translation : `LinearSpaceVector`
-        Element in domain of ``F^*``..
 
     Notes
     -----
@@ -1161,18 +867,12 @@ class ConvexConjugateTranslation(Functional):
             raise TypeError('input {} is not a Functional instance'
                             ''.format(convex_conj_f))
 
-        if translation is not None and not isinstance(translation,
-                                                      LinearSpaceVector):
-            raise TypeError(
-                'vector {!r} not None or a LinearSpaceVector instance.'
-                ''.format(translation))
-
         if translation not in convex_conj_f.domain:
             raise TypeError(
                 'vector {} not in the domain of the functional {}.'
                 ''.format(translation, convex_conj_f.domain))
 
-        super().__init__(domain=convex_conj_f.domain,
+        super().__init__(space=convex_conj_f.domain,
                          linear=convex_conj_f.is_linear)
 
         # Only compute the grad_lipschitz if it is not inf
@@ -1180,49 +880,24 @@ class ConvexConjugateTranslation(Functional):
             self._grad_lipschitz = (convex_conj_f.grad_lipschitz +
                                     translation.norm())
 
-        self._orig_convex_conj_f = convex_conj_f
-        self._translation = translation
+        self.__orig_convex_conj_f = convex_conj_f
+        self.__translation = translation
 
     @property
     def orig_convex_conj_f(self):
-        return self._orig_convex_conj_f
+        return self.__orig_convex_conj_f
 
     @property
     def translation(self):
-        return self._translation
+        return self.__translation
 
     def _call(self, x):
-        """Applies the functional to the given point.
-
-        Parameters
-        ----------
-        x : `LinearSpaceVector`
-            Element in the domain of the functional.
-            The point in which the functional is evaluated
-
-        Returns
-        -------
-        `self(x)` : `element` in the `field` of the ``domain``.
-            Evaluation of the functional.
-        """
+        """Apply the functional to the given point."""
         return self.orig_convex_conj_f(x) + x.inner(self.translation)
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluate
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
+        """Gradient operator of the functional."""
         return (self.orig_convex_conj_f.gradient +
                 ConstantOperator(self.translation))
 
@@ -1244,7 +919,7 @@ class ConvexConjugateTranslation(Functional):
             self.orig_convex_conj_f.proximal, a=0, u=self.translation)(sigma)
 
     @property
-    def conjugate_functional(self):
+    def convex_conj(self):
         """Convex conjugate functional of the functional.
 
         Notes
@@ -1257,7 +932,7 @@ class ConvexConjugateTranslation(Functional):
         <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
         """
 
-        return self.orig_convex_conj_f.conjugate_functional.traslate(
+        return self.orig_convex_conj_f.convex_conj.traslate(
             self.translation)
 
 
@@ -1314,7 +989,7 @@ class ConvexConjugateFuncScaling(Functional):
                 'Scaling with nonpositive values is not allowed. Current '
                 'value: {}.'.format(scaling))
 
-        super().__init__(domain=convex_conj_f.domain,
+        super().__init__(space=convex_conj_f.domain,
                          linear=convex_conj_f.is_linear,
                          grad_lipschitz=(np.abs(scaling) *
                                          convex_conj_f.grad_lipschitz))
@@ -1383,7 +1058,7 @@ class ConvexConjugateFuncScaling(Functional):
                                     )(self.scaling * sigma)
 
     @property
-    def conjugate_functional(self):
+    def convex_conj(self):
         """Convex conjugate functional of the functional.
 
         Notes
@@ -1396,7 +1071,7 @@ class ConvexConjugateFuncScaling(Functional):
         <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
         """
 
-        return self.scaling * self.orig_convex_conj_f.conjugate_functional
+        return self.scaling * self.orig_convex_conj_f.convex_conj
 
 
 class ConvexConjugateArgScaling(Functional):
@@ -1450,7 +1125,7 @@ class ConvexConjugateArgScaling(Functional):
             raise ValueError('Scaling with 0 is not allowed. Current value:'
                              ' {}.'.format(scaling))
 
-        super().__init__(domain=convex_conj_f.domain,
+        super().__init__(space=convex_conj_f.domain,
                          linear=convex_conj_f.is_linear)
 
         self._orig_convex_conj_f = convex_conj_f
@@ -1517,7 +1192,7 @@ class ConvexConjugateArgScaling(Functional):
                                     scaling=(1.0 / self.scaling))(sigma)
 
     @property
-    def conjugate_functional(self):
+    def convex_conj(self):
         """Convex conjugate functional of the functional.
 
         Notes
@@ -1530,7 +1205,7 @@ class ConvexConjugateArgScaling(Functional):
         <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
         """
 
-        return self.orig_convex_conj_f.conjugate_functional * self.scaling
+        return self.orig_convex_conj_f.convex_conj * self.scaling
 
 
 class ConvexConjugateLinearPerturb(Functional):
@@ -1588,7 +1263,7 @@ class ConvexConjugateLinearPerturb(Functional):
             raise TypeError('vector {!r} not in the domain of the functional '
                             '{!r}.'.format(y, convex_conj_f.domain))
 
-        super().__init__(domain=convex_conj_f.domain,
+        super().__init__(space=convex_conj_f.domain,
                          linear=convex_conj_f.is_linear)
 
         self._orig_convex_conj_f = convex_conj_f
@@ -1655,7 +1330,7 @@ class ConvexConjugateLinearPerturb(Functional):
                                     self.y)(sigma)
 
     @property
-    def conjugate_functional(self):
+    def convex_conj(self):
         """Convex conjugate functional of the functional.
 
         Notes
@@ -1668,4 +1343,4 @@ class ConvexConjugateLinearPerturb(Functional):
         <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
         """
 
-        return self.orig_convex_conj_f.conjugate_functional + self.y.T
+        return self.orig_convex_conj_f.convex_conj + self.y.T

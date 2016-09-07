@@ -41,9 +41,10 @@ def test_L1_norm():
     expected_result = np.sum(np.abs(x))
     assert almost_equal(func(x), expected_result, places=PLACES)
 
-    # The gradient (not implemented)
-    with pytest.raises(NotImplementedError):
-        func.gradient
+    # The gradient is the sign-function
+    expected_result = np.sign(x)
+    assert all_almost_equal(func.gradient(x), expected_result,
+                            places=PLACES)
 
     # The proximal operator
     sigma = np.random.rand()
@@ -59,7 +60,7 @@ def test_L1_norm():
                             places=PLACES)
 
     # The convex conjugate functional
-    cc_func = func.conjugate_functional
+    cc_func = func.convex_conj
 
     # Evaluation of convex conjugate
     # Explicit calculation: 0 if |x|_1 < 1, infty else
@@ -82,7 +83,7 @@ def test_L1_norm():
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
     expected_functional = odl.solvers.L1Norm(space)
-    cc_cc_func = cc_func.conjugate_functional
+    cc_cc_func = cc_func.convex_conj
     assert isinstance(cc_cc_func, type(expected_functional))
 
 
@@ -122,7 +123,7 @@ def test_L2_norm():
                             expected_result, places=PLACES)
 
     # The convex conjugate functional
-    cc_func = func.conjugate_functional
+    cc_func = func.convex_conj
 
     # Evaluation of convex conjugate
     # Explicit calculation: 0 if ||x|| < 1, infty else
@@ -145,7 +146,7 @@ def test_L2_norm():
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
     expected_functional = odl.solvers.L2Norm(space)
-    cc_cc_func = cc_func.conjugate_functional
+    cc_cc_func = cc_func.convex_conj
     assert isinstance(cc_cc_func, type(expected_functional))
 
 
@@ -154,7 +155,7 @@ def test_L2_norm_squared():
 
     n = 10
     space = odl.rn(n)
-    func = odl.solvers.L2NormSquare(space)
+    func = odl.solvers.L2NormSquared(space)
     x = example_element(space)
 
     # Evaluation of the functional
@@ -174,7 +175,7 @@ def test_L2_norm_squared():
                             places=PLACES)
 
     # The convex conjugate functional
-    cc_func = func.conjugate_functional
+    cc_func = func.convex_conj
 
     # Evaluation of convex conjugate
     # Explicit calculation: ||x||^2 / 4
@@ -195,11 +196,11 @@ def test_L2_norm_squared():
 
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
-    cc_cc_func = cc_func.conjugate_functional
+    cc_cc_func = cc_func.convex_conj
 
     # Modulo scaling back and forth, check that it is in fact squared L2-norm
     assert isinstance(cc_cc_func.orig_convex_conj_f.operator,
-                      odl.solvers.L2NormSquare)
+                      odl.solvers.L2NormSquared)
 
     # Check that they evaluate the same
     assert almost_equal(cc_cc_func(x), func(x), places=PLACES)
@@ -235,7 +236,7 @@ def test_constant_functional():
     assert isinstance(func.proximal(sigma), odl.IdentityOperator)
 
     # The convex conjugate functional
-    cc_func = func.conjugate_functional
+    cc_func = func.convex_conj
 
     # Evaluation of convex conjugate
     # Explicit calculation: -constant if x=0, infty else
@@ -258,7 +259,7 @@ def test_constant_functional():
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
     expected_functional = odl.solvers.ConstantFunctional(space, constant)
-    cc_cc_func = cc_func.conjugate_functional
+    cc_cc_func = cc_func.convex_conj
     assert isinstance(cc_cc_func, type(expected_functional))
 
 
@@ -267,7 +268,7 @@ def test_zero_functional():
 
     n = 10
     space = odl.rn(n)
-    func = odl.solvers.ZeroFunctional(domain=space)
+    func = odl.solvers.ZeroFunctional(space)
     x = example_element(space)
 
     # Check that the constant is stored correctly in the ConstantFunctional
@@ -286,7 +287,7 @@ def test_zero_functional():
     assert isinstance(func.proximal(sigma), odl.IdentityOperator)
 
     # The convex conjugate functional
-    cc_func = func.conjugate_functional
+    cc_func = func.convex_conj
 
     # Evaluation of convex conjugate
     # Explicit calculation: 0 if x=0, infty else
@@ -309,7 +310,7 @@ def test_zero_functional():
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
     expected_functional = odl.solvers.ConstantFunctional(space, 0)
-    cc_cc_func = cc_func.conjugate_functional
+    cc_cc_func = cc_func.convex_conj
     assert (isinstance(cc_cc_func, type(expected_functional)) and
             cc_cc_func.constant == 0)
 

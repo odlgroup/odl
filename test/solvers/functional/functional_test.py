@@ -110,14 +110,14 @@ def test_scalar_multiplication():
     neg_scal = -np.random.rand()
 
     with pytest.raises(ValueError):
-        (neg_scal * F).conjugate_functional
+        (neg_scal * F).convex_conj
 
-    assert all_almost_equal((scal * F).conjugate_functional(x),
-                            scal * (F.conjugate_functional(x / scal)),
+    assert all_almost_equal((scal * F).convex_conj(x),
+                            scal * (F.convex_conj(x / scal)),
                             places=PLACES)
 
-    assert all_almost_equal((F * scal).conjugate_functional(x),
-                            (F.conjugate_functional(x / scal)),
+    assert all_almost_equal((F * scal).convex_conj(x),
+                            (F.convex_conj(x / scal)),
                             places=PLACES)
 
     # Test proximal operator. This requiers scaling to be positive.
@@ -182,7 +182,7 @@ def test_functional_sum():
     """Test for the sum of two functionals."""
     space = odl.uniform_discr(0, 1, 10)
 
-    func1 = odl.solvers.L2NormSquare(space)
+    func1 = odl.solvers.L2NormSquared(space)
     func2 = odl.solvers.L2Norm(space)
 
     # Test for sum where one is not a functional
@@ -212,14 +212,14 @@ def test_functional_sum():
     with pytest.raises(NotImplementedError):
         func_sum.proximal()
     with pytest.raises(NotImplementedError):
-        func_sum.conjugate_functional()
+        func_sum.convex_conj()
 
 
 def test_functional_plus_scalar():
     """Test for sum of functioanl and scalar."""
     space = odl.uniform_discr(0, 1, 10)
 
-    func = odl.solvers.L2NormSquare(space)
+    func = odl.solvers.L2NormSquared(space)
     scalar = np.random.randn()
 
     # Test for scalar not in the field (field of unifor_discr is RealNumbers)
@@ -250,8 +250,8 @@ def test_functional_plus_scalar():
                             expected_result, places=PLACES)
 
     # Test convex conjugate functional
-    cc_func = func.conjugate_functional
-    cc_func_scalar_sum = func_scalar_sum.conjugate_functional
+    cc_func = func.convex_conj
+    cc_func_scalar_sum = func_scalar_sum.convex_conj
     expected_result = cc_func(x) - scalar
     assert almost_equal(cc_func_scalar_sum(x), expected_result, places=PLACES)
 
@@ -268,16 +268,16 @@ def test_translation_of_functional():
     translation = example_element(space)
 
     # Creating the functional ||x||_2^2
-    test_functional = odl.solvers.L2NormSquare(space)
+    test_functional = odl.solvers.L2NormSquared(space)
 
     # Testing that translation belonging to the wrong space gives TypeError
     wrong_space = odl.uniform_discr(1, 2, 10)
     wrong_translation = example_element(wrong_space)
     with pytest.raises(TypeError):
-        test_functional.translate(wrong_translation)
+        test_functional.translated(wrong_translation)
 
     # Create translated functional
-    translated_functional = test_functional.translate(translation)
+    translated_functional = test_functional.translated(translation)
 
     # Create an element in the space, in which to evaluate
     x = example_element(space)
@@ -304,8 +304,8 @@ def test_translation_of_functional():
     # Test for conjugate functional
     # The helper function below is tested explicitly further down in this file
     expected_result = odl.solvers.ConvexConjugateTranslation(
-        test_functional.conjugate_functional, translation)(x)
-    assert all_almost_equal(translated_functional.conjugate_functional(x),
+        test_functional.convex_conj, translation)(x)
+    assert all_almost_equal(translated_functional.convex_conj(x),
                             expected_result, places=PLACES)
 
     # Test for derivative in direction p
@@ -325,7 +325,7 @@ def test_multiplication_with_vector():
 
     x = example_element(space)
     y = example_element(space)
-    func = odl.solvers.L2NormSquare(space)
+    func = odl.solvers.L2NormSquared(space)
 
     wrong_space = odl.uniform_discr(1, 2, 10)
     y_other_space = example_element(wrong_space)
@@ -344,8 +344,8 @@ def test_multiplication_with_vector():
     assert all_almost_equal(func_times_y.gradient(x), expected_result,
                             places=PLACES)
 
-    # Test for conjugate_functional
-    cc_func_times_y = func_times_y.conjugate_functional
+    # Test for convex_conj
+    cc_func_times_y = func_times_y.convex_conj
     # Explicit calculations: 1/4 * ||x/y||_2^2
     expected_result = 1.0 / 4.0 * (x / y).norm()**2
     assert almost_equal(cc_func_times_y(x), expected_result, places=PLACES)
@@ -380,8 +380,8 @@ def test_convex_conjugate_translation():
     translation = example_element(space)
 
     # Creating the functional ||x||_2^2
-    test_functional = odl.solvers.L2NormSquare(space)
-    cc_test_functional = test_functional.conjugate_functional
+    test_functional = odl.solvers.L2NormSquared(space)
+    cc_test_functional = test_functional.convex_conj
 
     # Testing that translation needs to be a 'LinearSpaceVector'
     with pytest.raises(TypeError):
@@ -442,8 +442,8 @@ def test_convex_conjugate_arg_scaling():
     scaling = np.random.rand()
 
     # Creating the functional ||x||_2^2
-    test_functional = odl.solvers.L2NormSquare(space)
-    cc_test_functional = test_functional.conjugate_functional
+    test_functional = odl.solvers.L2NormSquared(space)
+    cc_test_functional = test_functional.convex_conj
 
     # Testing that not accept scaling with 0
     with pytest.raises(ValueError):
@@ -492,8 +492,8 @@ def test_convex_conjugate_functional_scaling():
     scaling = np.random.rand()
 
     # Creating the functional ||x||_2^2
-    test_functional = odl.solvers.L2NormSquare(space)
-    cc_test_functional = test_functional.conjugate_functional
+    test_functional = odl.solvers.L2NormSquared(space)
+    cc_test_functional = test_functional.convex_conj
 
     # Testing that not accept scaling with 0
     with pytest.raises(ValueError):
@@ -545,8 +545,8 @@ def test_convex_conjugate_linear_perturbation():
     perturbation = example_element(space)
 
     # Creating the functional ||x||_2^2
-    test_functional = odl.solvers.L2NormSquare(space)
-    cc_test_functional = test_functional.conjugate_functional
+    test_functional = odl.solvers.L2NormSquared(space)
+    cc_test_functional = test_functional.convex_conj
 
     # Testing that translation needs to be a 'LinearSpaceVector'
     with pytest.raises(TypeError):

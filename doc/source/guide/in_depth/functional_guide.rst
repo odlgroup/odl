@@ -4,28 +4,32 @@
 Functional
 #####################
 
-A *functional* is an operator ``f`` that maps from some vector space ``X`` to the field of scalars ``F`` associated with the vector space:
+A *functional* is an operator :math:`S: X \to \mathbb{F}` that maps that maps from some vector space :math:`X` to the field of scalars :math:`F`.
 
-.. math::
-   
-   f : X \to F.
+In the ODL `solvers` package, functionals are implemented in the `Functional` class, a subclass to `Operator`.
 
-In the ODL solver package, functionals are implemented in the `Functional` class, a subclass to `Operator`.
+From a mathematical perspective, the above is a valid definition of a functional.
+However, since these functionals are primarily to be used for solving optimization problems, the following assumptions are made:
 
-From a mathematical presepective, the above is a valide definition of a functional.
-However, since the purpose of these functionals are primarely to be used for solving optimization problems, the following assumptions are made:
+ * the vector space :math:`X` is a Hilbert space.
+ * the field of scalars :math:`F` are the real numbers.
 
- * the vector space ``X`` is a Hilbert space.
- * the field of scalars ``F`` are the real numbers.
+The first assumption is made in order to simplify the concept of *convex conjugate functional*, see ``convex_conj`` under :ref:`implementation` for more details, or the Wikipedia articles on `convex conjugate`_ and `Legendre transformation`_.
 
-The first assumption is made in order to simplify the concept of *convex conjugate functional*, see ``conjugate_functional`` under :ref:`implementation` for more details, or the Wikipedia articles on `convex conjugates`_ and `Legendre transformations`_.
-
-The second assumption is made in order to guarantee that the optimization problem, in some way, makes sense.
-For example, if the field is not (totally) ordered (like for example the complex numbers) one cannot define optimization over it in a meaningful way.
-Or if the field does not have the least-upper-bound property, then attainment of an optimal solution cannot be guaranteed.
+The second assumption is made in order to guarantee that we use a well-ordered set (in contrast to e.g. the complex numbers) over which optimization problems can be meaningfully defined, and that optimal solutions are in fact obtained.
 See, for example, the Wikipedia articles on `field`_, `ordered field`_ and `least-upper-bound property`_.
 
-Note that it is possible to use the class without fulfilling these assumtptions, however in this case some of the mathematical results might not hold.
+Note that these conditions are not explicitly checked.
+However, using the class in violation to the above assumptions might lead to unknown behavior since some of the mathematical results might not hold.
+Also note that most of the theory, and most solvers, requires the functional to be convex.
+However this property is not stored or checked anywhere in the class.
+It is therefore the users responsibility to ensure that a functional has the properties required for a given optimization method.
+
+The intended use of the `Functional` class is, as mentioned above, to be used when formulating and solving optimization problems.
+One main difference with the `Operator` class is thus that it contains notions specially intended for optimization, such as *convex conjugate functional* and *proximal operator*.
+For more information on these concepts, see ``convex_conj`` and ``proximal`` under :ref:`implementation`.
+There is also a certain type of calculus associated with functionals, for more on this see :ref:`calculus`.
+
 
 .. _convex conjugate: https://en.wikipedia.org/wiki/Convex_conjugate
 .. _Legendre transformation: https://en.wikipedia.org/wiki/Legendre_transformation
@@ -39,56 +43,57 @@ Note that it is possible to use the class without fulfilling these assumtptions,
 Implementation of functionals
 =============================
 
-To define your own functional, you start by writing::
+To define your own functional, start by writing::
 
     class MyFunctional(odl.solvers.Functional):
+
+        """Docstring goes here."""
+    
+        def __init__(self, space):
+            # Sets `Operator.domain` to `space` and `Operator.range` to `space.field`
+            odl.solvers.Functional.__init__(self, space)
+
         ...
 
-Since `Functional` is a subclass of `Operator`, it has the *abstract method* ``domain`` which need to be explicitly overridden by any subclass.
+`Functional` needs to be provided with a domain, from which it infers the range.
 
-``domain``: `Set`
-    The domain of this functional, i.e., the set of elements to which this functional can be applied.
+.. automethod:: Functional.domain
 
-Moreover, there are several optional parameters associated with a functional. These are
+Moreover, there are two optional parameters associated with a functional.
+These are ``linear``, which indicates whether the functional is linear or not, and ``grad_lipschitz``, which is the Lipschitz constant of the gradient.
 
-``linear``: `bool`, optional
-    If `True`, the functional is considered as linear.
-    Default: ``False``
-``smooth``: `bool`, optional
-    If `True`, assume that the functional is continuously differentiable.
-    Default: ``False``
-``concave``: `bool`, optional
-    If `True`, assume that the functional is concave.
-    Default: ``False``
-``convex``: `bool`, optional
-    If `True`, assume that the functional is convex.
-    Default: ``False``
-``grad_lipschitz``: `float`, optional
-    The Lipschitz constant of the gradient.
-    Default: infinity
+.. automethod:: Functional.linear
 
-A functional also has a number of optional methods and properties associated with it.
-The default value of these are all to raise a `NotImplemetedError`.
+.. automethod:: Functional.grad_lipschitz
+
+A functional also has two optional properties and one optional method associated with it.
+The default behavior of them is to raise a ``NotImplemetedError``.
 The properties are:
 
- * ``gradient``. This returns the gradient operator of the functional, i.e., the operator that corresponds to the mapping
+ * ``functional.gradient``. This returns the gradient operator of the functional, i.e., the operator that corresponds to the mapping
 
    .. math::
 
-      x \to \nabla f(x),
+      x \to \nabla S(x),
 
-   where :math:`\nabla f(x)` is the element used to evaluate the (directional) derivative in a direction :math:`d` by :math:`\langle \nabla f(x), d \rangle`.
+   where :math:`\nabla S(x)` is the the space element representing the Frechet derivative (directional derivative) at the point :math:`x`
 
- * ``conjugate_functional``. This is the convex conjugate functional, also known as the Legendre transform or Fenchel conjugate.
+   .. math::
+
+      S'(x)(g) = \langle \nabla S(x), g \rangle \quad \text{for all } g \in X.
+
+   See also `Functional.derivative` and `Operator.derivative`.
+
+
+ * ``functional.convex_conj``. This is the convex conjugate functional, also known as the Legendre transform or Fenchel conjugate.
    It is defined as
 
    .. math::
 
-      f^*(x^*) = \sup_{x \in X} \{ \langle x^*,x \rangle - f(x)  \},
+      S^*(x^*) = \sup_{x \in X} \{ \langle x^*,x \rangle - S(x)  \},
 
-   where the element :math:`x^*` lives in the space :math:`X^*`, the (continuous/normed) dual space of :math:`X`, i.e., the space of all continuous linear functionals defined on :math:`X`.
-   Moreover, the notation :math:`\langle x^*,x \rangle` is the "dual pairing" between :math:`X` and :math:`X^*`, i.e., the evaluation of the linear functional :math:`x^*` in the point :math:`x`.
-   However, Hilbert spaces are self-dual, meaning :math:`X^* = X`, and :math:`\langle x^*,x \rangle` is then the inner product.
+   where :math:`x^*` is an element in :math:`X` and :math:`\langle x^*,x \rangle` is the inner product.
+   (Note that :math:`x^*` should lives in the space :math:`X^*`, the (continuous/normed) `dual space`_ of :math:`X`, however since we assume that :math:`X` is a Hilbert space we have :math:`X^* = X`).
 
 The optional method is:
 
@@ -97,75 +102,83 @@ The optional method is:
 
    .. math::
 
-      \text{prox}_{\sigma f}(x) = \text{arg min}_{y \in X} \{ f(y) + \frac{1}{2\sigma} \|y - x\|_2^2 \}. 
+      \text{prox}_{\sigma S}(x) = \text{arg min}_{y \in X} \{ S(y) + \frac{1}{2\sigma} \|y - x\|_2^2 \}. 
 
-The `Functional` class also contains two default implementations of two help functions:
+The `Functional` class also contains default implementations of two help functions:
 
- * ``derivative(point)``. Given an implementation of the gradient, this method return the (directional) derivative operator in ``point``.
+ * ``derivative(point)``. Given an implementation of the gradient, this method returns the (directional) derivative operator in ``point``.
    This is the linear operator
 
    .. math::
 
-      x \to \langle x, \nabla f(point) \rangle,
+      x \to \langle x, \nabla S(point) \rangle,
 
-   where :math:`\nabla f(point)` is the gradient of the functional in the point :math:`point`.
+   where :math:`\nabla S(point)` is the gradient of the functional in the point :math:`point`.
 
- * ``translate(shift)``. Give a functional :math:`f(.)`, this method creates the functional :math:`f(. - shift)`
+ * ``translate(shift)``. Given a functional :math:`S(.)`, this method creates the functional :math:`S(. - shift)`
 
 
-Functional arithmetics
-======================
-It is common in applications to perform arithmetic operations with functionals, for example adding two functionals :math:`f` and :math:`g`
+.. _dual space: https://en.wikipedia.org/wiki/Dual_space
 
-.. math::
-   [f+g](x) = f(x) + g(x),
+.. _calculus:
 
-or multiplication of a functional by a scalar
-
-.. math::
-   [\alpha f](x) = \alpha f (x).
-
-Another example is translating a functional with a vecotr :math:`y`
+Functional calculus
+===================
+It is common in applications to perform arithmetic operations with functionals, for example adding two functionals :math:`S` and :math:`T`:
 
 .. math::
-   f(x - y),
+   [S+T](x) = S(x) + T(x),
 
-or given an `Operator` :math:`A` whose range is the same as the domain of the functional we also have composition
+or multiplication of a functional by a scalar:
 
 .. math::
-    [f * A](x) = f(A(x)). 
+   [\alpha S](x) = \alpha S (x).
 
-In some of these cases, properties and methods such as ``gradient``, ``convex_conjugate`` and ``proximal`` can be calculated automatically given a default implementation of the corresponding property in :math:`f`.
+Another example is translating a functional with a vector :math:`y`:
 
-All available functional arithmetic, including which properties and methods that automatically can be calculated, is shown below. ``f``, ``g`` represent `Functional`'s, and ``A`` an `Operator` whose range is the same as the domain as the functional. ``a`` is a scalar in the field of the domain of ``f`` and ``g``, and ``y`` is a vector in the domain of ``f`` and ``g``.
+.. math::
+   translate(S(x), y) = S(x - y),
 
-+--------------------+-----------------+-------------------------------------------------+
-| Code               | Meaning         | Class                                           |
-+====================+=================+=================================================+
-| ``(f + g)(x)``     | ``f(x) + g(x)`` | `FunctionalSum`                                 |
-|                    |                 | - Retains `gradient`.                           |
-+--------------------+-----------------+-------------------------------------------------+
-| ``(f + a)(x)``     | ``f(x) + a``    | `FunctionalScalarSum`                           |
-|                    |                 | - Retains all properties.                       |
-+--------------------+-----------------+-------------------------------------------------+
-| ``(f * A)(x)``     | ``f(A(x))``     | `FunctionalComp`                                |
-|                    |                 | - Retains gradient                              |
-+--------------------+-----------------+-------------------------------------------------+
-| ``(a * f)(x)``     | ``a * f(x)``    | `FunctionalLeftScalarMult`                      |
-|                    |                 | - Retains all properties, if ``a`` is positive. |
-+--------------------+-----------------+-------------------------------------------------+
-| ``(f * a)(x)``     | ``f(a * x)``    | `FunctionalRightScalarMult`                     |
-|                    |                 | - Retains all properties                        |
-+--------------------+-----------------+-------------------------------------------------+
-| ``(v * f)(x)``     | ``v * f(x)``    | `FunctionalLeftVectorMult`                      |
-|                    |                 | - This is not a functional, but an operator     |
-+--------------------+-----------------+-------------------------------------------------+
-| ``(f * v)(x)``     | ``f(v * x)``    | `FunctionalRightVectorMult`                     |
-|                    |                 | - Retains gradient and convex conjugate.        |
-+--------------------+-----------------+-------------------------------------------------+
-| ``f.translate(y)`` | ``f(. - y)``    | `TranslatedFunctional`                          |
-|                    |                 | - Retains all properties.                       |
-+--------------------+-----------------+-------------------------------------------------+
+or given an `Operator` :math:`A` whose range is the same as the domain of the functional we also have composition:
+
+.. math::
+    [S * A](x) = S(A(x)). 
+
+In some of these cases, properties and methods such as ``gradient``, ``convex_conjugate`` and ``proximal`` can be calculated automatically given a default implementation of the corresponding property in :math:`S` and :math:`T`.
+
+All available functional arithmetic, including which properties and methods that automatically can be calculated, is shown below.
+``S``, ``T`` represent `Functional`'s with common domain and range, and ``A`` an `Operator` whose range is the same as the domain of the functional.
+``a`` is a scalar in the field of the domain of ``S`` and ``T``, and ``y`` is a vector in the domain of ``S`` and ``T``.
+
++--------------------+-----------------+--------------------------------------------------------------------------------+
+| Code               | Meaning         | Class                                                                          |
++====================+=================+================================================================================+
+| ``(S + T)(x)``     | ``S(x) + T(x)`` | `FunctionalSum`                                                                |
+|                    |                 | - Retains `Functional.gradient`.                                               |
++--------------------+-----------------+--------------------------------------------------------------------------------+
+| ``(S + a)(x)``     | ``S(x) + a``    | `FunctionalScalarSum`                                                          |
+|                    |                 | - Retains all properties.                                                      |
+|                    |                 | Note that this never means scaling of the argument.                            |
++--------------------+-----------------+--------------------------------------------------------------------------------+
+| ``(S * A)(x)``     | ``S(A(x))``     | `FunctionalComp`                                                               |
+|                    |                 | - Retains `Functional.gradient`.                                               |
++--------------------+-----------------+--------------------------------------------------------------------------------+
+| ``(a * S)(x)``     | ``a * S(x)``    | `FunctionalLeftScalarMult`                                                     |
+|                    |                 | - Retains all properties if ``a`` is positive.                                 |
+|                    |                 | Otherwise only `Functional.gradient` and `Functional.derivative` are retained. |
++--------------------+-----------------+--------------------------------------------------------------------------------+
+| ``(S * a)(x)``     | ``S(a * x)``    | `FunctionalRightScalarMult`                                                    |
+|                    |                 | - Retains all properties.                                                      |
++--------------------+-----------------+--------------------------------------------------------------------------------+
+| ``(v * S)(x)``     | ``v * S(x)``    | `FunctionalLeftVectorMult`                                                     |
+|                    |                 | - Results in an operator rather than a functional.                             |
++--------------------+-----------------+--------------------------------------------------------------------------------+
+| ``(S * v)(x)``     | ``S(v * x)``    | `FunctionalRightVectorMult`                                                    |
+|                    |                 | - Retains gradient and convex conjugate.                                       |
++--------------------+-----------------+--------------------------------------------------------------------------------+
+| ``f.translate(y)`` | ``f(. - y)``    | `TranslatedFunctional`                                                         |
+|                    |                 | - Retains all properties.                                                      |
++--------------------+-----------------+--------------------------------------------------------------------------------+
 
 
 Code example
@@ -173,85 +186,6 @@ Code example
 This section contains an example of an implementation of a functional, namely the functional :math:`\|x\|_2^2 + \langle x, y \rangle`.
 Another example can be found `functional_basic_example.py`, and more implementations of other functionals can be found in `default_functionals.py`. ::
 
-    # Here we define the functional
-    class MyFunctional(odl.solvers.Functional):
-        """This is my functional: ||x||_2^2 + <x, y>."""
-
-        def __init__(self, domain, y):
-            # This comand calls the init of Functional and sets a number of
-            # parameters associated with a functional. All but domain have default
-            # values if not set.
-            super().__init__(domain=domain, linear=False, convex=True,
-                             concave=False, smooth=True, grad_lipschitz=2)
-
-            # We need to check that y is in the domain. Then we store the value of
-            # y for future use.
-            if y not in domain:
-                raise TypeError('y is not in the domain!')
-            self._y = y
-
-        # Property that returns the linear term.
-        @property
-        def y(self):
-            return self._y
-
-        # Defining the _call function
-        def _call(self, x):
-            return x.norm()**2 + x.inner(self.y)
-
-        # Next we define the gradient. Note that this is a property.
-        @property
-        def gradient(self):
-
-            # The class corresponding to the gradient operator.
-            class MyGradientOperator(odl.Operator):
-                """Class that implements the gradient operator of the functional
-                ``||x||_2^2 + <x,y>``.
-                """
-
-                def __init__(self, functional):
-                    super().__init__(domain=functional.domain,
-                                     range=functional.domain)
-
-                    self._functional = functional
-
-                def _call(self, x):
-                    return 2.0 * x + self._functional.y
-
-            return MyGradientOperator(functional=self)
-
-        # Next we define the convex conjugate functional.
-        @property
-        def conjugate_functional(self):
-            # This functional is implemented below.
-            return MyFunctionalConjugate(domain=self.domain, y=self.y)
-
-
-    # Here is the conjugate functional.
-    class MyFunctionalConjugate(odl.solvers.Functional):
-        """Conjugate functional to ``||x||_2^2 + <x,y>``.
-
-        Calculations give that this funtional has the analytic expression
-        f^*(x) = ||x||^2/2 - ||x-y||^2/4 + ||y||^2/2 - <x,y>.
-        """
-        def __init__(self, domain, y):
-            super().__init__(domain=domain, linear=False, convex=True,
-                             concave=False, smooth=True, grad_lipschitz=2)
-
-            if y not in domain:
-                raise TypeError('y is not in the domain!')
-            self._y = y
-
-        @property
-        def y(self):
-            return self._y
-
-        def _call(self, x):
-            return (x.norm()**2 / 2.0 - (x - self.y).norm()**2 / 4.0 +
-                    self.y.norm()**2 / 2.0 - x.inner(self.y))
-
-With this code, one can now create things like the conjugate functional of a scaled and translated version::
-
-    my_func = MyFunctional(domain=space, linear_term=linear_term)
-    (scalar * my_func).translate(translation).conjugate_functional
+.. literalinclude:: code/functional_indepth_example.py
+   :language: python
 
