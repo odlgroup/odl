@@ -68,12 +68,12 @@ def iterative_solver(request):
 
 # Define some interesting problems
 @pytest.fixture(scope="module",
-                params=['MatVec  ',
+                params=['MatVec',
                         'Identity'])
 def optimization_problem(request):
     problem_name = request.param
 
-    if problem_name == 'MatVec  ':
+    if problem_name == 'MatVec':
         # Define problem
         op_arr = np.eye(5) * 5 + np.ones([5, 5])
         op = odl.MatVecOperator(op_arr)

@@ -30,45 +30,56 @@ __all__ = ('mlem', 'loglikelihood')
 AVAILABLE_MLEM_NOISE = ('poisson',)
 
 
-def mlem(op, x, rhs, niter=1, noise='poisson', callback=None):
+def mlem(op, x, data, niter=1, noise='poisson', callback=None):
 
     """Maximum Likelihood Expectation Maximation algorithm.
 
     Attempts to solve::
 
-        min_x L(x | rhs)
+        max_x L(data | x)
 
-    where ``L(x, | rhs)`` is the likelihood of ``x`` given data ``rhs``. The
-    likelihood depends on the underlying noise model and the forward operator.
+    where ``L(data, | x)`` is the likelihood of ``data`` given ``x``. The
+    likelihood depends on the forward operator ``op`` such that
+    (approximately)::
+
+        op(x) = data
+
+    With the precise form of *approximately* is determined by ``noise``.
 
     Parameters
     ----------
     op : `Operator`
-        Operator in the inverse problem. It has to have adjoint that is called
-        via `op.adjoint`
-
-    x : ``element`` of the domain of ``op``
+        Forward operator in the inverse problem.
+    x : ``op.domain`` element
         Vector to which the result is written. Its initial value is
         used as starting point of the iteration, and its values are
         updated in each iteration step.
-        The initial value of `x` should be non negative.
-
-    rhs : ``element`` of the range of ``op``
-        Right-hand side of the equation defining the inverse problem
-
+    data : ``op.range`` element
+        Right-hand side of the equation defining the inverse problem.
     niter : `int`, optional
         Number of iterations.
-
     noise : {'poisson'}, optional
-        Implementation back-end for the noise.
-
+        Noise model determining the variant of MLEM.
+        If noise is 'poisson', the initial value of `x` should be non negative.
     callback : `callable`, optional
-        Object executing code per iteration, e.g. plotting each iterate
+        Function called with the current iterate after each iteration.
 
     Notes
     -----
-    Given a forward model :math:`A`, data :math:`g` and poisson noise the
-    algorithm is given by:
+    Given a forward model :math:`A`, data :math:`g` and noise model :math:`X`,
+    the algorithm attempts find an :math:`x` that maximizes:
+
+    .. math::
+
+        P(g | g \\text{ is } X(A(x)) \\text{ distributed})
+
+    where the expectation of :math:`X(A(x))` satisfies
+
+    .. math::
+
+        \\mathbb{E}(X(A(x))) = A(x)
+
+    with 'poisson' noise the algorithm is given by:
 
     .. math::
 
@@ -78,15 +89,15 @@ def mlem(op, x, rhs, niter=1, noise='poisson', callback=None):
     --------
     loglikelihood : Function for calculating the logarithm of the likelihood
     """
-    if np.any(np.less(x, 0)):
-        raise ValueError('`x` must be non-negative')
-
     noise, noise_in = str(noise).lower(), noise
     if noise not in AVAILABLE_MLEM_NOISE:
         raise NotImplemented("noise '{}' not understood"
                              ''.format(noise_in))
 
     if noise == 'poisson':
+        if np.any(np.less(x, 0)):
+            raise ValueError('`x` must be non-negative')
+
         eps = 1e-8
 
         norm = np.maximum(op.adjoint(op.range.one()), eps)
@@ -96,7 +107,7 @@ def mlem(op, x, rhs, niter=1, noise='poisson', callback=None):
         for _ in range(niter):
             op(x, out=tmp_ran)
             tmp_ran.ufunc.maximum(eps, out=tmp_ran)
-            tmp_ran.divide(rhs, tmp_ran)
+            data.divide(tmp_ran, out=tmp_ran)
 
             op.adjoint(tmp_ran, out=tmp_dom)
             tmp_dom /= norm
@@ -109,23 +120,17 @@ def mlem(op, x, rhs, niter=1, noise='poisson', callback=None):
         raise RuntimeError('unknown noise model')
 
 
-def loglikelihood(op, x, data, noise='poisson'):
-    """Evaluate a log-likelihood at a given point.
+def loglikelihood(x, data, noise='poisson'):
+    """log-likelihood of ``data`` given noise parametrized by ``x``.
 
     Parameters
     ----------
-    op : `Operator`
-        Forward operator of the given problem, the operator in
-        the inverse problem.
-
-    x : `element` of the domain of ``op``
-        A point where the logarithm of the likelihood density is evaluated
-
-    data : `element` of the range of ``op``
-        Right-hand side of the equation defining the inverse problem
-    '
+    x : ``op.domain`` element
+        Value to condition the log-likelihood on.
+    data : ``op.range`` element
+        Data whose log-likelihood given ``x`` shall be calculated.
     noise : {'poisson'}, optional
-        Implementation back-end for the noise.
+        The type of noise.
     """
     noise, noise_in = str(noise).lower(), noise
     if noise not in AVAILABLE_MLEM_NOISE:
@@ -133,9 +138,9 @@ def loglikelihood(op, x, data, noise='poisson'):
                              ''.format(noise_in))
 
     if noise == 'poisson':
-        projection = op(x)
-        projection += 1e-8
-        log_proj = np.log(projection)
-        return np.sum(data * log_proj - projection)
+        if np.any(np.less(x, 0)):
+            raise ValueError('`x` must be non-negative')
+
+        return np.sum(data * np.log(x + 1e-8) - x)
     else:
         raise RuntimeError('unknown noise model')
