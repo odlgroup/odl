@@ -42,8 +42,8 @@ lam = 0.5
 lam_l1_func = lam * odl.solvers.L1Norm(space)
 
 # Create the squared L2-norm and translate it with g.
-l2_func = 1.0 / 2.0 * odl.solvers.L2NormSquare(space)
-trans_l2_func = l2_func.translate(g)
+l2_func = 1.0 / 2.0 * odl.solvers.L2NormSquared(space)
+trans_l2_func = l2_func.translated(g)
 
 # The problem will be solved using the forward-backward primal-dual algorithm.
 # In this setting we let f = nonnegativity contraint, g = l1-norm, and h =

@@ -199,7 +199,7 @@ def test_L2_norm_squared():
     cc_cc_func = cc_func.convex_conj
 
     # Modulo scaling back and forth, check that it is in fact squared L2-norm
-    assert isinstance(cc_cc_func.orig_convex_conj_f.operator,
+    assert isinstance(cc_cc_func.orig_cconj_f.operator,
                       odl.solvers.L2NormSquared)
 
     # Check that they evaluate the same

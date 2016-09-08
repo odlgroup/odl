@@ -6,16 +6,16 @@ class MyFunctional(odl.solvers.Functional):
 
     """This is my functional: ``||x||_2^2 + <x, y>``."""
 
-    def __init__(self, domain, linear_term):
+    def __init__(self, space, linear_term):
         """Initialize a new instance."""
         # This comand calls the init of Functional and sets a number of
         # parameters associated with a functional. All but domain have default
         # values if not set.
-        super().__init__(domain=domain, linear=False, grad_lipschitz=2)
+        super().__init__(space=space, linear=False, grad_lipschitz=2)
 
         # We need to check that linear_term is in the domain. Then we store the
         # value of linear_term for future use.
-        if linear_term not in domain:
+        if linear_term not in space:
             raise TypeError('linear_term is not in the domain!')
         self.linear_term = linear_term
 
@@ -58,7 +58,7 @@ class MyFunctional(odl.solvers.Functional):
     def convex_conj(self):
         """The convex conjugate functional."""
         # This functional is implemented below.
-        return MyFunctionalConjugate(domain=self.domain, y=self.linear_term)
+        return MyFunctionalConjugate(space=self.space, y=self.linear_term)
 
 
 # Here is the conjugate functional. Note that this is a separate class, in
@@ -76,11 +76,11 @@ class MyFunctionalConjugate(odl.solvers.Functional):
         ``f^*(x) = ||x||^2/2 - ||x-y||^2/4 + ||y||^2/2 - <x,y>``.
     """
 
-    def __init__(self, domain, y):
+    def __init__(self, space, y):
         """initialize a new instance."""
-        super().__init__(domain=domain, linear=False, grad_lipschitz=2)
+        super().__init__(space=space, linear=False, grad_lipschitz=2)
 
-        if y not in domain:
+        if y not in space:
             raise TypeError('y is not in the domain!')
         self.y = y
 
@@ -93,7 +93,7 @@ class MyFunctionalConjugate(odl.solvers.Functional):
 # Create a functional
 space = odl.uniform_discr(0, 1, 3)
 linear_term = space.element([1, -4, 7])
-my_func = MyFunctional(domain=space, linear_term=linear_term)
+my_func = MyFunctional(space=space, linear_term=linear_term)
 
 
 # Now we use the steepest-decent solver and backtracking linesearch in order to
@@ -121,4 +121,4 @@ print('Found value: {}'.format(x))
 # Create the convex conjugate functional of a scaled and translated functional
 scalar = 3.2
 translation = space.one()
-scal_trans_cc_func = (scalar * my_func).translate(translation).convex_conj
+scal_trans_cc_func = (scalar * my_func).translated(translation).convex_conj

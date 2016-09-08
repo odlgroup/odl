@@ -733,7 +733,7 @@ class Operator(object):
 
     def __sub__(self, other):
         """Return ``self - other``."""
-        return OperatorSum(self, -1 * other)
+        return self.__add__(-1 * other)
 
     def __mul__(self, other):
         """Return ``self * other``.

@@ -37,11 +37,11 @@ class MyFunctional(odl.solvers.Functional):
 
     """This is my functional: ||x||_2^2."""
 
-    def __init__(self, domain):
+    def __init__(self, space):
         # This comand calls the init of Functional and sets a number of
         # parameters associated with a functional. All but domain have default
         # values if not set.
-        super().__init__(domain=domain, linear=False, grad_lipschitz=2)
+        super().__init__(space=space, linear=False, grad_lipschitz=2)
 
     def _call(self, x):
         # This is what is returned when calling my_func(x)
@@ -62,7 +62,7 @@ class MyFunctional(odl.solvers.Functional):
 # Create an instance of the functional and test some basic parts of it.
 n = 10
 space = odl.rn(n)
-my_func = MyFunctional(domain=space)
+my_func = MyFunctional(space=space)
 
 # The functional evaluates correctly
 x = space.element(np.random.randn(n))
@@ -85,5 +85,5 @@ print(my_func_conj(x) == 1.0 / 4.0 * x.norm()**2)
 # translated version of the functional evalutes the gradient correctly
 scal = np.random.rand()
 transl = space.element(np.random.randn(n))
-scal_and_transl_func_gradient = (scal * my_func.translate(transl)).gradient
+scal_and_transl_func_gradient = (scal * my_func.translated(transl)).gradient
 print(scal_and_transl_func_gradient(x) == scal * my_func.gradient(x - transl))

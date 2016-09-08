@@ -28,7 +28,7 @@ It is therefore the users responsibility to ensure that a functional has the pro
 The intended use of the `Functional` class is, as mentioned above, to be used when formulating and solving optimization problems.
 One main difference with the `Operator` class is thus that it contains notions specially intended for optimization, such as *convex conjugate functional* and *proximal operator*.
 For more information on these concepts, see ``convex_conj`` and ``proximal`` under :ref:`implementation`.
-There is also a certain type of calculus associated with functionals, for more on this see :ref:`calculus`.
+There is also a certain type of arithmetics associated with functionals, for more on this see :ref:`arithmetic`.
 
 
 .. _convex conjugate: https://en.wikipedia.org/wiki/Convex_conjugate
@@ -66,7 +66,7 @@ These are ``linear``, which indicates whether the functional is linear or not, a
 
 .. automethod:: Functional.grad_lipschitz
 
-A functional also has two optional properties and one optional method associated with it.
+A functional also has three optional properties and one optional method associated with it.
 The default behavior of them is to raise a ``NotImplemetedError``.
 The properties are:
 
@@ -95,9 +95,7 @@ The properties are:
    where :math:`x^*` is an element in :math:`X` and :math:`\langle x^*,x \rangle` is the inner product.
    (Note that :math:`x^*` should lives in the space :math:`X^*`, the (continuous/normed) `dual space`_ of :math:`X`, however since we assume that :math:`X` is a Hilbert space we have :math:`X^* = X`).
 
-The optional method is:
-
- * ``proximal(sigma)``. This returns the proximal operator of the functional, where ``sigma`` is a nonnegative step-size like parameter.
+ * ``proximal``. This returns a `proximal factory` for the proximal operator of the functional.
    The proximal operator is defined as
 
    .. math::
@@ -115,15 +113,15 @@ The `Functional` class also contains default implementations of two help functio
 
    where :math:`\nabla S(point)` is the gradient of the functional in the point :math:`point`.
 
- * ``translate(shift)``. Given a functional :math:`S(.)`, this method creates the functional :math:`S(. - shift)`
+ * ``translated(shift)``. Given a functional :math:`S(.)`, this method creates the functional :math:`S(. - shift)`
 
 
 .. _dual space: https://en.wikipedia.org/wiki/Dual_space
 
 .. _calculus:
 
-Functional calculus
-===================
+Functional arithmetic
+=====================
 It is common in applications to perform arithmetic operations with functionals, for example adding two functionals :math:`S` and :math:`T`:
 
 .. math::

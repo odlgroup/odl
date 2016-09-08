@@ -31,15 +31,12 @@ from odl.solvers.advanced.proximal_operators import (
     proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
     proximal_l2_squared, proximal_zero)
 
-from odl.operator.default_ops import (ZeroOperator, IdentityOperator,
-                                      ScalingOperator)
+from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
 
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
            'ConstantFunctional')
 
-
-# TODO: Implement some of the missing gradients
 
 class L1Norm(Functional):
 
@@ -79,9 +76,6 @@ class L1Norm(Functional):
         """Return the L1-norm of ``x``."""
         return x.ufunc.absolute().inner(self.domain.one())
 
-        # TODO: Is this the right way to compute the functional? Update
-        # doc in init regarding space...
-
     @property
     def gradient(self):
         """Gradient operator of the functional."""
@@ -97,7 +91,7 @@ class L1Norm(Functional):
                                  linear=False)
 
             def _call(self, x):
-                """Applies the gradient operator to the given point."""
+                """Apply the gradient operator to the given point."""
                 return x.ufunc.sign()
 
         return L1Gradient()
@@ -115,75 +109,12 @@ class L1Norm(Functional):
     @property
     def convex_conj(self):
         """The convex conjugate functional of the L1-norm."""
-        return IndicatorLinftyUnitBall(self.domain)
-
-
-class IndicatorLinftyUnitBall(Functional):
-
-    """The indicator function on the unit ball, in the L-infinity norm.
-
-    It does not implement `gradient` since it is not differentiable everywhere.
-
-    Notes
-    -----
-    This functional is the convex conjugate functional of the L1-norm. It is
-    defined as
-
-        .. math::
-
-            f(x) = \\left\{ \\begin{array}{ll}
-            0 & \\text{if } ||x||_{\\infty} \\leq 1, \\\\
-            \\infty & \\text{else}
-            \\end{array} \\right.
-
-    where :math:`||x||_{\\infty}` is the infinity norm
-
-        .. math::
-
-            ||x||_{\\infty} = \max_x (|x|).
-    """
-
-    def __init__(self, space):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        space : `DiscreteLp` or `FnBase`
-            Domain of the functional.
-        """
-        super().__init__(space=space, linear=False)
-
-    def _call(self, x):
-        """Apply the functional to the given point."""
-        max_x = x.ufunc.absolute().ufunc.max()
-        if max_x > 1:
-            return np.inf
-        else:
-            return 0
-
-    @property
-    def convex_conj(self):
-        """The conjugate functional of IndicatorLinftyUnitBall.
-
-        By the Fenchel-Moreau theorem the convex conjugate functional is the
-        L1-norm [BC2011]_.
-        """
-        return L1Norm(self.domain)
-
-    @property
-    def proximal(self):
-        """Return the proximal factory of the functional.
-
-        See Also
-        -----
-        proximal_cconj_l1 : proximal factory for convex conjuagte of L1-norm.
-        """
-        return proximal_cconj_l1(space=self.domain)
+        return IndicatorLpUnitBall(self.domain, exponent=np.inf)
 
 
 class IndicatorLpUnitBall(Functional):
 
-    """The indicator function on the unit ball, in specified the Lp norm.
+    """The indicator function on the unit ball in given the ``Lp`` norm.
 
     It does not implement `gradient` since it is not differentiable everywhere.
 
@@ -225,6 +156,7 @@ class IndicatorLpUnitBall(Functional):
 
     @property
     def exponent(self):
+        """Exponent corresponding to the norm."""
         return self.__exponent
 
     def _call(self, x):
@@ -272,17 +204,12 @@ class IndicatorLpUnitBall(Functional):
         proximal_cconj_l1 : proximal factory for convex conjuagte of L1-norm.
         proximal_cconj_l2 : proximal factory for convex conjuagte of L2-norm.
         """
-        if self.exponent == np.inf
+        if self.exponent == np.inf:
             return proximal_cconj_l1(space=self.domain)
         elif self.exponent == 2:
             return proximal_cconj_l2(space=self.domain)
         else:
             raise NotImplementedError('currently not implemented')
-
-
-
-
-
 
 
 class L2Norm(Functional):
@@ -322,27 +249,15 @@ class L2Norm(Functional):
                                  linear=False)
 
             def _call(self, x):
-                """Applies the gradient operator to the given point.
+                """Apply the gradient operator to the given point.
 
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the functional to which the
-                    gradient operator is applied. The element must have a
-                    non-zero norm
-
-                Returns
-                -------
-                out : `LinearSpaceVector`
-                    Result of the evaluation of the gradient operator. An
-                    element in the domain of the functional.
+                The gradient is not defined in 0.
                 """
                 norm_of_x = x.norm()
                 if norm_of_x == 0:
                     # The derivative is not defined for 0.
                     raise ValueError('The gradient of the L2 functional is '
-                                     'not defined for the zero element: {}.'
-                                     ''.format(x))
+                                     'not defined for the zero element.')
                 else:
                     return x / norm_of_x
 
@@ -361,66 +276,7 @@ class L2Norm(Functional):
     @property
     def convex_conj(self):
         """The convex conjugate functional of the L2-norm."""
-        return IndicatorL2UnitBall(self.domain)
-
-
-class IndicatorL2UnitBall(Functional):
-
-    """The indicator function on the unit ball, in the L2-norm.
-
-    This functional is defined as
-
-        ``f(x) = 0 if ||x||_2 <= 1, infty else,``
-
-    where ``||x||_2`` is the L2-norm.
-
-    It does not implement `gradient` since it is not differentiable everywhere.
-
-    Notes
-    -----
-    This functional is the convex conjugate functional of the L2-norm.
-    """
-
-    def __init__(self, space):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        space : `DiscreteLp` or `FnBase`
-            Domain of the functional.
-        """
-        super().__init__(space=space, linear=False)
-
-    def _call(self, x):
-        """Apply the functional to the given point."""
-        if x.norm() > 1:
-            return np.inf
-        else:
-            return 0
-
-    @property
-    def convex_conj(self):
-        """The conjugate functional of IndicatorL2UnitBall.
-
-        Notes
-        -----
-        Since IndicatorL2UnitBall is the convex conjugate functional of the
-        L2-norm, and since the L2-norm is proper, convex and
-        lower-semicontinuous, by the Fenchel-Moreau theorem the convex
-        conjugate functional of IndicatorL2UnitBall, also known as the
-        biconjugate of the L2-norm, is the L2-norm [BC2011]_.
-        """
-        return L2Norm(self.domain)
-
-    @property
-    def proximal(self):
-        """Return the proximal factory of the functional.
-
-        See Also
-        -----
-        proximal_cconj_l2 : proximal factory for convex conjuagte of L2-norm.
-        """
-        return proximal_cconj_l2(space=self.domain)
+        return IndicatorLpUnitBall(self.domain, exponent=2)
 
 
 class L2NormSquared(Functional):
@@ -512,7 +368,7 @@ class ConstantFunctional(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal operator of the functional."""
+        """Return the proximal factory of the functional."""
         return proximal_zero(self.domain)
 
     # TODO: Update name for proximal_zero. It is the proximal for any constant
@@ -522,33 +378,33 @@ class ConstantFunctional(Functional):
     def convex_conj(self):
         """Convex conjugate functional of the constant functional.
 
+        Notes
+        -----
         This functional is defined as
 
-            ``f^*(x) = -constant if x=0, infty else``.
+         .. math::
+
+            f^*(x) = \\left\{ \\begin{array}{ll}
+            -constant & \\text{if } x = 0, \\\\
+            \\infty & \\text{else}
+            \\end{array} \\right.
         """
         functional = self
 
         class ConstantFunctionalConvexConj(Functional):
 
-            """The convex conjugate functional of this functional."""
+            """The convex conjugate functional of the constant functional.
+
+            It does not implement `gradient` since it is not differentiable
+            anywhere.
+            """
 
             def __init__(self):
                 """Initialize a new instance."""
                 super().__init__(functional.domain, linear=False)
 
             def _call(self, x):
-                """Applies the functional to the given point.
-
-                Parameters
-                ----------
-                x : `LinearSpaceVector`
-                    Element in the domain of the functional.
-
-                Returns
-                -------
-                out : `field` element
-                    Result of the evaluation.
-                """
+                """Apply the functional to the given point."""
 
                 if x.norm() == 0:
                     # In this case x is the zero-element.
@@ -557,41 +413,23 @@ class ConstantFunctional(Functional):
                     return np.inf
 
             @property
-            def gradient(x):
-                """Gradient operator of the functional."""
-                # It does not exist anywhere
-                raise NotImplementedError('functional not differential.')
-
-            @property
             def convex_conj(self):
-                """The conjugate functional of the conjugate functional of the
-                constant functional.
+                """The convex conjugate functional.
 
                 Notes
                 -----
-                Since the constant functional is proper, convex and
-                lower-semicontinuous, by the Fenchel-Moreau theorem the convex
-                conjugate functional of the convex conjugate functional, also
-                known as the biconjugate, is the functional itself [BC2011]_.
+                By the Fenchel-Moreau theorem the convex conjugate functional
+                is the constant functional [BC2011]_.
                 """
                 return functional
 
-            def proximal(self, sigma=1.0):
-                """Return the proximal operator of the functional.
+            @property
+            def proximal(self):
+                """Return the proximal factory of the functional.
 
-                Note that this is the zero-operator
-
-                Parameters
-                ----------
-                sigma : positive float, optional
-                    Step size-like parameter
-
-                Returns
-                -------
-                out : `Operator`
-                    Domain and range equal to domain of functional
+                This is the zero operator.
                 """
-                return ZeroOperator(self.domain)
+                return lambda sigma: ZeroOperator(self.domain)
 
         return ConstantFunctionalConvexConj()
 

@@ -28,10 +28,11 @@ from odl.operator.operator import (
     Operator, OperatorComp, OperatorLeftScalarMult, OperatorRightScalarMult,
     OperatorRightVectorMult, OperatorSum)
 from odl.operator.default_ops import (ResidualOperator, IdentityOperator,
-                                      ConstantOperator, ScalingOperator)
+                                      ConstantOperator)
 from odl.set.space import LinearSpaceVector
 from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
-                                  proximal_quadratic_perturbation)
+                                  proximal_quadratic_perturbation,
+                                  proximal_zero)
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
@@ -98,12 +99,12 @@ class Functional(Operator):
 
     @property
     def proximal(self):
-        """Return the proximal proximal factory of the functional.
+        """Return the proximal factory of the functional.
 
         Notes
         -----
-        The nonsmooth solvers that make use of proximal operators in order to
-        solve a given optimization problem take a `proximal factory` as input,
+        The nonsmooth solvers that make use of proximal operators to solve a
+        given optimization problem take a `proximal factory` as input,
         i.e., a function returning a proximal operator. Note that
         ``Functional.proximal`` is in fact a `proximal factory`. See for
         example `forward_backward_pd`.
@@ -173,7 +174,7 @@ class Functional(Operator):
             The functional ``f(. - translation)``
         """
         if shift not in self.domain:
-            raise TypeError('the translation {} is not in the domain of the '
+            raise TypeError('`shift` {} is not in the domain of the '
                             'functional {!r}'.format(shift, self))
 
         return TranslatedFunctional(self, shift)
@@ -258,12 +259,12 @@ class Functional(Operator):
         If ``other`` is a scalar, this corresponds to left multiplication of
         scalars with functionals:
 
-            ``scalar * func <==> (x --> scalar * func(x))``
+            ``scalar * func == (x --> scalar * func(x))``
 
         If ``other`` is a vector,  since a functional is also an operator this
         corresponds to left multiplication of vectors with operators:
 
-            ``vector * func <==> (x --> vector * func(x))``
+            ``vector * func == (x --> vector * func(x))``
 
         Note that left and right multiplications are generally
         different.
@@ -386,7 +387,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             Number with which to scale the functional.
         """
         if not isinstance(func, Functional):
-            raise TypeError('functional {!r} is not a Functional instance.'
+            raise TypeError('`func` {!r} is not a `Functional` instance.'
                             ''.format(func))
 
         scalar = func.range.element(scalar)
@@ -405,7 +406,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
     @property
     def functional(self):
-        """The functional which is scaled."""
+        """The original functional."""
         return self.operator
 
     @property
@@ -421,21 +422,14 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         return ConvexConjugateFuncScaling(
             self.functional.convex_conj, self.scalar)
 
-    def proximal(self, sigma=1.0):
-        """Return the proximal operator of the scaled functional.
+    @property
+    def proximal(self):
+        """Return the proximal factory of the scaled functional.
 
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator.
-
-        Returns
-        -------
-        out : `Operator`
-            Domain and range equal to domain of functional.
+        See Also
+        --------
+        proximal_zero
         """
-
-        sigma = float(sigma)
 
         if self.scalar < 0:
             raise ValueError('Proximal operator of functional scaled with a '
@@ -443,10 +437,10 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
                              ''.format(self.scalar))
 
         elif self.scalar == 0:
-            return IdentityOperator(self.domain)
+            return proximal_zero(self.domain)
 
         else:
-            return self.functional.proximal(sigma * self.scalar)
+            return lambda sigma: self.functional.proximal(sigma * self.scalar)
 
 
 class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
@@ -471,7 +465,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         """
 
         if not isinstance(func, Functional):
-            raise TypeError('functional {!r} is not a Functional instance.'
+            raise TypeError('`func` {!r} is not a `Functional` instance.'
                             ''.format(func))
 
         scalar = func.range.element(scalar)
@@ -489,6 +483,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
     @property
     def functional(self):
+        """The original functional."""
         return self.operator
 
     @property
@@ -502,44 +497,15 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         return ConvexConjugateArgScaling(self.functional.convex_conj,
                                          self.scalar)
 
+    @property
     def proximal(self, sigma=1.0):
-        """Return the proximal operator of the functional with scaled argument.
+        """Return the proximal factory of the functional.
 
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator.
-
-        Returns
-        -------
-        out : `Operator`
-            Domain and range equal to domain of functional.
+        See Also
+        --------
+        proximal_arg_scaling
         """
-        sigma = float(sigma)
-        return(proximal_arg_scaling(
-            self.functional.proximal, self.scalar))(sigma)
-
-    def derivative(self, point):
-        """Returns the derivative operator in the given point.
-
-        This function returns the linear operator
-
-            ``x --> <x, grad_f(point)>``,
-
-        where ``grad_f(point)`` is the gradient of the functional in the point
-        ``point``.
-
-        Parameters
-        ----------
-        point : `LinearSpaceVector`
-            The point in which the gradient is evaluated.
-
-        Returns
-        -------
-        out : `DerivativeOperator`
-            The linear operator that maps ``x --> <x, grad_f(point)>``.
-        """
-        return self.scalar * self.functional.derivative(self.scalar * point)
+        return proximal_arg_scaling(self.functional.proximal, self.scalar)
 
 
 class FunctionalComp(Functional, OperatorComp):
@@ -553,7 +519,7 @@ class FunctionalComp(Functional, OperatorComp):
         ``(func * op)(x) == func(op(x))``.
     """
 
-    def __init__(self, func, op, tmp1=None, tmp2=None):
+    def __init__(self, func, op):
         """Initialize a new instance.
 
         Parameters
@@ -570,20 +536,14 @@ class FunctionalComp(Functional, OperatorComp):
             gradient of ``func``
         """
         if not isinstance(func, Functional):
-            raise TypeError('functional {!r} is not a Functional instance.'
+            raise TypeError('`fun` {!r} is not a `Functional` instance.'
                             ''.format(func))
 
-        OperatorComp.__init__(self, left=func, right=op, tmp=tmp1)
+        OperatorComp.__init__(self, left=func, right=op)
 
         Functional.__init__(self, space=func.domain,
                             linear=(func.is_linear and op.is_linear),
                             grad_lipschitz=np.infty)
-
-        if tmp2 is not None and tmp2 not in self._left.domain:
-            raise TypeError('`tmp2` {!r} not in the domain '
-                            '{!r} of `func`.'
-                            ''.format(tmp2, self._left.domain))
-        self._tmp2 = tmp2
 
     @property
     def gradient(self):
@@ -627,7 +587,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
             The vector to multiply by.
         """
         if not isinstance(func, Functional):
-            raise TypeError('functional {!r} is not a Functional instance.'
+            raise TypeError('`fun` {!r} is not a `Functional` instance.'
                             ''.format(func))
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
@@ -676,6 +636,16 @@ class FunctionalSum(Functional, OperatorSum):
                                             func2.grad_lipschitz))
 
     @property
+    def left_func(self):
+        """The left functional in the sum."""
+        return self.left
+
+    @property
+    def right_func(self):
+        """The right functional in the sum."""
+        return self.right
+
+    @property
     def gradient(self):
         """Gradient operator of functional sum."""
         return self.left.gradient + self.right.gradient
@@ -699,16 +669,15 @@ class FunctionalScalarSum(FunctionalSum):
             The scalar to be added to the functional. The `field` of the
             ``domain`` is the range of the functional.
         """
-
         from odl.solvers.functional.default_functionals import (
             ConstantFunctional)
 
         if not isinstance(func, Functional):
-            raise TypeError('functional {!r} is no a Functional instance'
+            raise TypeError('`fun` {!r} is no a `Functional` instance'
                             ''.format(func))
         if scalar not in func.range:
-            raise TypeError('the scalar {} is not in the range of the'
-                            'functional {!r}'.format(scalar, func))
+            raise TypeError('`scalar` {} is not in the range of '
+                            '`func` {!r}'.format(scalar, func))
 
         FunctionalSum.__init__(self, func1=func,
                                func2=ConstantFunctional(space=func.domain,
@@ -717,31 +686,17 @@ class FunctionalScalarSum(FunctionalSum):
     @property
     def scalar(self):
         """The scalar that is added to the functional"""
-        return self.right.constant
+        return self.right_func.constant
 
-    def proximal(self, sigma=1.0):
-        """Proximal operator of the FunctionalScalarSum."""
-        return self.left.proximal(sigma)
+    @property
+    def proximal(self):
+        """Proximal factory of the FunctionalScalarSum."""
+        return self.left_func.proximal
 
     @property
     def convex_conj(self):
         """Convex conjugate functional of FunctionalScalarSum."""
         return self.left.convex_conj - self.scalar
-
-    def derivative(self, point):
-        """Returns the derivative operator of FunctionalScalarSum.
-
-        Parameters
-        ----------
-        point : `LinearSpaceVector`
-            The point in which the gradient is evaluated.
-
-        Returns
-        -------
-        out : `DerivativeOperator`
-            The linear operator that maps ``x --> <x, grad_f(point)>``.
-        """
-        return self.left.derivative(point)
 
 
 class TranslatedFunctional(Functional):
@@ -765,7 +720,6 @@ class TranslatedFunctional(Functional):
         translation : `LinearSpaceVector`
             Element in ``func.domain``, with which the argument is translated.
         """
-
         if not isinstance(func, Functional):
             raise TypeError('`func` {!r} not a `Functional` instance'
                             ''.format(func))
@@ -788,7 +742,7 @@ class TranslatedFunctional(Functional):
 
     @property
     def original_func(self):
-        """The functional that has been translated."""
+        """The original functional that has been translated."""
         return self.__original_func
 
     @property
@@ -806,21 +760,16 @@ class TranslatedFunctional(Functional):
         return (self.original_func.gradient *
                 (IdentityOperator(self.domain) - self.translation))
 
-    def proximal(self, sigma=1.0):
-        """Return the proximal operator of the translated functional.
+    @property
+    def proximal(self):
+        """Return the proximal factory of the translated functional.
 
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator.
-
-        Returns
-        -------
-        out : `Operator`
-            Domain and range equal to domain of functional.
+        See Also
+        --------
+        proximal_translation
         """
-        return (proximal_translation(self.original_func.proximal,
-                                     self.translation))(sigma)
+        return proximal_translation(self.original_func.proximal,
+                                    self.translation)
 
     @property
     def convex_conj(self):
@@ -851,88 +800,75 @@ class ConvexConjugateTranslation(Functional):
     For reference on the identity used, see [KP2015]_.
     """
 
-    def __init__(self, convex_conj_f, translation):
+    def __init__(self, cconj_f, translation):
         """Initialize a new instance.
 
         Parameters
         ----------
-        convex_conj_f : `Functional`
+        cconj_f : `Functional`
             Function corresponding to F^*.
 
         translation : `LinearSpaceVector`
             Element in domain of ``F^*``.
         """
+        if not isinstance(cconj_f, Functional):
+            raise TypeError('`cconj_f` {} is not a `Functional` instance'
+                            ''.format(cconj_f))
 
-        if not isinstance(convex_conj_f, Functional):
-            raise TypeError('input {} is not a Functional instance'
-                            ''.format(convex_conj_f))
-
-        if translation not in convex_conj_f.domain:
+        if translation not in cconj_f.domain:
             raise TypeError(
-                'vector {} not in the domain of the functional {}.'
-                ''.format(translation, convex_conj_f.domain))
+                '`translation` {} not in the domain of `cconj_f` {!r}.'
+                ''.format(translation, cconj_f.domain))
 
-        super().__init__(space=convex_conj_f.domain,
-                         linear=convex_conj_f.is_linear)
+        super().__init__(space=cconj_f.domain,
+                         linear=cconj_f.is_linear)
 
         # Only compute the grad_lipschitz if it is not inf
-        if not convex_conj_f.grad_lipschitz == np.inf:
-            self._grad_lipschitz = (convex_conj_f.grad_lipschitz +
-                                    translation.norm())
+        if not cconj_f.grad_lipschitz == np.inf:
+            self.__grad_lipschitz = (cconj_f.grad_lipschitz +
+                                     translation.norm())
 
-        self.__orig_convex_conj_f = convex_conj_f
+        self.__orig_cconj_f = cconj_f
         self.__translation = translation
 
     @property
-    def orig_convex_conj_f(self):
-        return self.__orig_convex_conj_f
+    def orig_cconj_f(self):
+        """The original convex conjugate functional."""
+        return self.__orig_cconj_f
 
     @property
     def translation(self):
+        """The translation."""
         return self.__translation
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return self.orig_convex_conj_f(x) + x.inner(self.translation)
+        return self.orig_cconj_f(x) + x.inner(self.translation)
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return (self.orig_convex_conj_f.gradient +
-                ConstantOperator(self.translation))
+        return self.orig_cconj_f.gradient + ConstantOperator(self.translation)
 
-    def proximal(self, sigma=1.0):
-        """Return the proximal operator of the ConvexConjugateTranslation
-        functional.
+    @property
+    def proximal(self):
+        """Return the proximal factory of the ConvexConjugateTranslation.
 
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator
-
-        Returns
-        -------
-        out : Operator
-            Domain and range equal to domain of functional
+        See Also
+        --------
+        proximal_quadratic_perturbation
         """
         return proximal_quadratic_perturbation(
-            self.orig_convex_conj_f.proximal, a=0, u=self.translation)(sigma)
+            self.orig_cconj_f.proximal, a=0, u=self.translation)
 
     @property
     def convex_conj(self):
         """Convex conjugate functional of the functional.
 
-        Notes
-        -----
-        By the Fenchel-Moreau theorem, the convex conjugate of a convex
-        conjugate is the functional itself, if and only if the functional is
-        proper, convex, and lower semi-continuous.
-
-        Wikipedia article on the `Fenchel-Moreau theorem
-        <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
+        By the Fenchel-Moreau theorem this a translation of the original
+        convex conjugate functional.
         """
-
-        return self.orig_convex_conj_f.convex_conj.traslate(
+        return self.orig_cconj_f.convex_conj.traslated(
             self.translation)
 
 
@@ -943,18 +879,10 @@ class ConvexConjugateFuncScaling(Functional):
     This is a functional representing the conjugate functional of the scaled
     function ``scaling * F(.)``. This is calculated according to the rule
 
-        ``(scaling * F(.))^* (x) = scaling * F^*(x/scaling)``,
+        ``(scaling * F(.))^* (x) == scaling * F^*(x/scaling)``,
 
     where ``scaling`` is the scaling parameter. Note that scaling is only
     allowed with strictly positive scaling parameters.
-
-    Parameters
-    ----------
-    convex_conj_f : `Functional`
-        Function corresponding to ``F^*``.
-
-    scaling : `float`, positive
-        Positive scaling parameter.
 
     Notes
     -----
@@ -965,21 +893,19 @@ class ConvexConjugateFuncScaling(Functional):
     For reference on the identity used, see [KP2015]_.
     """
 
-    def __init__(self, convex_conj_f, scaling):
+    def __init__(self, cconj_f, scaling):
         """Initialize a new instance.
 
         Parameters
         ----------
-        convex_conj_f : `Functional`
+        cconj_f : `Functional`
             Functional corresponding to ``F^*``.
-
         scaling : `float`, positive
             Positive scaling parameter.
         """
-
-        if not isinstance(convex_conj_f, Functional):
-            raise TypeError('input {} is not a Functional instance'
-                            ''.format(convex_conj_f))
+        if not isinstance(cconj_f, Functional):
+            raise TypeError('`cconj_f` {} is not a `Functional` instance'
+                            ''.format(cconj_f))
 
         scaling = float(scaling)
 
@@ -989,89 +915,52 @@ class ConvexConjugateFuncScaling(Functional):
                 'Scaling with nonpositive values is not allowed. Current '
                 'value: {}.'.format(scaling))
 
-        super().__init__(space=convex_conj_f.domain,
-                         linear=convex_conj_f.is_linear,
+        super().__init__(space=cconj_f.domain, linear=cconj_f.is_linear,
                          grad_lipschitz=(np.abs(scaling) *
-                                         convex_conj_f.grad_lipschitz))
+                                         cconj_f.grad_lipschitz))
 
-        self._orig_convex_conj_f = convex_conj_f
-        self._scaling = scaling
+        self.__orig_cconj_f = cconj_f
+        self.__scaling = scaling
 
     @property
-    def orig_convex_conj_f(self):
-        return self._orig_convex_conj_f
+    def orig_cconj_f(self):
+        """The original convex conjugate functional."""
+        return self.__orig_cconj_f
 
     @property
     def scaling(self):
-        return self._scaling
+        """The scaling."""
+        return self.__scaling
 
     def _call(self, x):
-        """Applies the functional to the given point.
-
-        Parameters
-        ----------
-        x : `LinearSpaceVector`
-            Element in the domain of the functional.
-            The point in which the functional is evaluated
-
-        Returns
-        -------
-        `self(x)` : `float`
-            Evaluation of the functional.
-        """
-        return self.scaling * self.orig_convex_conj_f(x * (1.0 / self.scaling))
+        """Apply the functional to the given point."""
+        return self.scaling * self.orig_cconj_f(x * (1.0 / self.scaling))
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
+        """Gradient operator of the functional."""
+        return self.orig_cconj_f.gradient * (1.0 / self.scaling)
 
-        Notes
-        -----
-        The operator that corresponds to the mapping
+    @property
+    def proximal(self):
+        """Return the proximal factory of the ConvexConjugateFuncScaling.
 
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluate
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
+        See Also
+        --------
+        proximal_arg_scaling
         """
-        return self.orig_convex_conj_f.gradient * (1.0 / self.scaling)
-
-    def proximal(self, sigma=1.0):
-        """Return the proximal operator of the ConvexConjugateFuncScaling
-        functional.
-
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator
-
-        Returns
-        -------
-        out : Operator
-            Domain and range equal to domain of functional
-        """
-        return proximal_arg_scaling(self.orig_convex_conj_f.proximal,
-                                    scaling=(1.0 / self.scaling)
-                                    )(self.scaling * sigma)
+        return lambda sigma: proximal_arg_scaling(self.orig_cconj_f.proximal,
+                                                  scaling=(1.0 / self.scaling)
+                                                  )(self.scaling * sigma)
 
     @property
     def convex_conj(self):
         """Convex conjugate functional of the functional.
 
-        Notes
-        -----
-        By the Fenchel-Moreau theorem, the convex conjugate of a convex
-        conjugate is the functional itself, if and only if the functional is
-        proper, convex, and lower semi-continuous.
-
-        Wikipedia article on the `Fenchel-Moreau theorem
-        <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
+        By the Fenchel-Moreau theorem this a scaling of the original
+        convex conjugate functional.
         """
-
-        return self.scaling * self.orig_convex_conj_f.convex_conj
+        return self.scaling * self.orig_cconj_f.convex_conj
 
 
 class ConvexConjugateArgScaling(Functional):
@@ -1104,7 +993,7 @@ class ConvexConjugateArgScaling(Functional):
     For reference on the identity used, see [KP2015]_.
     """
 
-    def __init__(self, convex_conj_f, scaling):
+    def __init__(self, cconj_f, scaling):
         """Initialize a new instance.
 
         Parameters
@@ -1115,97 +1004,60 @@ class ConvexConjugateArgScaling(Functional):
         scaling : 'float', nonzero
             The scaling parameter.
         """
-
-        if not isinstance(convex_conj_f, Functional):
-            raise TypeError('input {} is not a Functional instance'
-                            ''.format(convex_conj_f))
+        if not isinstance(cconj_f, Functional):
+            raise TypeError('`cconj_f` {} is not a `Functional` instance'
+                            ''.format(cconj_f))
 
         scaling = float(scaling)
         if scaling == 0:
             raise ValueError('Scaling with 0 is not allowed. Current value:'
                              ' {}.'.format(scaling))
 
-        super().__init__(space=convex_conj_f.domain,
-                         linear=convex_conj_f.is_linear)
+        super().__init__(space=cconj_f.domain,
+                         linear=cconj_f.is_linear)
 
-        self._orig_convex_conj_f = convex_conj_f
-        self._scaling = scaling
+        self.__orig_cconj_f = cconj_f
+        self.__scaling = scaling
 
     @property
-    def orig_convex_conj_f(self):
-        return self._orig_convex_conj_f
+    def orig_cconj_f(self):
+        """The original convex conjugate functional."""
+        return self.__orig_cconj_f
 
     @property
     def scaling(self):
-        return self._scaling
+        """The scaling."""
+        return self.__scaling
 
     def _call(self, x):
-        """Applies the functional to the given point.
-
-        Parameters
-        ----------
-        x : `LinearSpaceVector`
-            Element in the domain of the functional.
-            The point in which the functional is evaluated
-
-        Returns
-        -------
-        `self(x)` : `float`
-            Evaluation of the functional.
-        """
-        return self.orig_convex_conj_f(x * (1.0 / self.scaling))
+        """Apply the functional to the given point."""
+        return self.orig_cconj_f(x * (1.0 / self.scaling))
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluate
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
-        return ((1.0 / self.scaling) * self.orig_convex_conj_f.gradient *
+        """Gradient operator of the functional."""
+        return ((1.0 / self.scaling) * self.orig_cconj_f.gradient *
                 (1.0 / self.scaling))
 
-    def proximal(self, sigma=1.0):
-        """Return the proximal operator of the ConvexConjugateArgScaling
-        functional.
+    @property
+    def proximal(self):
+        """Return the proximal factory of the ConvexConjugateArgScaling.
 
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator
-
-        Returns
-        -------
-        out : Operator
-            Domain and range equal to domain of functional
+        See Also
+        --------
+        proximal_arg_scaling
         """
-        return proximal_arg_scaling(self.orig_convex_conj_f.proximal,
-                                    scaling=(1.0 / self.scaling))(sigma)
+        return proximal_arg_scaling(self.orig_cconj_f.proximal,
+                                    scaling=(1.0 / self.scaling))
 
     @property
     def convex_conj(self):
         """Convex conjugate functional of the functional.
 
-        Notes
-        -----
-        By the Fenchel-Moreau theorem, the convex conjugate of a convex
-        conjugate is the functional itself, if and only if the functional is
-        proper, convex, and lower semi-continuous.
-
-        Wikipedia article on the `Fenchel-Moreau theorem
-        <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
+        By the Fenchel-Moreau theorem this a scaling of the argument of the
+        original convex conjugate functional.
         """
-
-        return self.orig_convex_conj_f.convex_conj * self.scaling
+        return self.orig_cconj_f.convex_conj * self.scaling
 
 
 class ConvexConjugateLinearPerturb(Functional):
@@ -1239,7 +1091,7 @@ class ConvexConjugateLinearPerturb(Functional):
     valide for functionals with a domain that is a Hilbert space.
     """
 
-    def __init__(self, convex_conj_f, y):
+    def __init__(self, cconj_f, y):
         """Initialize a new instance.
 
         Parameters
@@ -1250,97 +1102,59 @@ class ConvexConjugateLinearPerturb(Functional):
         y : `LinearSpaceVector`
             Element in domain of ``F^*``.
         """
-
-        if not isinstance(convex_conj_f, Functional):
-            raise TypeError('input {} is not a Functional instance'
-                            ''.format(convex_conj_f))
+        if not isinstance(cconj_f, Functional):
+            raise TypeError('`cconj_f` {} is not a `Functional` instance'
+                            ''.format(cconj_f))
 
         if not isinstance(y, LinearSpaceVector):
-            raise TypeError('vector {!r} not a LinearSpaceVector instance.'
+            raise TypeError('`y` {!r} not a `LinearSpaceVector` instance.'
                             ''.format(y))
 
-        if y not in convex_conj_f.domain:
-            raise TypeError('vector {!r} not in the domain of the functional '
-                            '{!r}.'.format(y, convex_conj_f.domain))
+        if y not in cconj_f.domain:
+            raise TypeError('`y` {!r} not in the domain of `cconj_f` '
+                            '{!r}.'.format(y, cconj_f.domain))
 
-        super().__init__(space=convex_conj_f.domain,
-                         linear=convex_conj_f.is_linear)
+        super().__init__(space=cconj_f.domain,
+                         linear=cconj_f.is_linear)
 
-        self._orig_convex_conj_f = convex_conj_f
-        self._y = y
+        self.__orig_cconj_f = cconj_f
+        self.__y = y
 
     @property
-    def orig_convex_conj_f(self):
-        return self._orig_convex_conj_f
+    def orig_cconj_f(self):
+        """The original convex conjugate functional."""
+        return self.__orig_cconj_f
 
     @property
     def y(self):
-        return self._y
+        """The linear perturbation."""
+        return self.__y
 
     def _call(self, x):
-        """Applies the functional to the given point.
-
-        Parameters
-        ----------
-        x : `LinearSpaceVector`
-            Element in the domain of the functional.
-            The point in which the functional is evaluated
-
-        Returns
-        -------
-        `self(x)` : `float`
-            Evaluation of the functional.
-        """
-        return self.orig_convex_conj_f(x - self._y)
+        """Apply the functional to the given point."""
+        return self.orig_cconj_f(x - self.y)
 
     @property
     def gradient(self):
-        """Gradient operator of the functional.
-
-        Notes
-        -----
-        The operator that corresponds to the mapping
-
-        .. math::
-
-            x \\to \\nabla f(x)
-
-        where :math:`\\nabla f(x)` is the element used to evaluate
-        derivatives in a direction :math:`d` by
-        :math:`\\langle \\nabla f(x), d \\rangle`.
-        """
-        return (self.orig_convex_conj_f.gradient *
+        """Gradient operator of the functional."""
+        return (self.orig_cconj_f.gradient *
                 ResidualOperator(IdentityOperator(self.domain), self.y))
 
-    def proximal(self, sigma=1.0):
-        """Return the proximal operator of the ConvexConjugateLinearPerturb
-        functional.
+    @property
+    def proximal(self):
+        """Return the proximal factory of the ConvexConjugateLinearPerturb.
 
-        Parameters
-        ----------
-        sigma : positive float, optional
-            Regularization parameter of the proximal operator
-
-        Returns
-        -------
-        out : Operator
-            Domain and range equal to domain of functional
+        See Also
+        --------
+        proximal_translation
         """
-        return proximal_translation(self.orig_convex_conj_f.proximal,
-                                    self.y)(sigma)
+        return proximal_translation(self.orig_cconj_f.proximal, self.y)
 
     @property
     def convex_conj(self):
         """Convex conjugate functional of the functional.
 
-        Notes
-        -----
-        By the Fenchel-Moreau theorem, the convex conjugate of a convex
-        conjugate is the functional itself, if and only if the functional is
-        proper, convex, and lower semi-continuous.
-
-        Wikipedia article on the `Fenchel-Moreau theorem
-        <https://en.wikipedia.org/wiki/Fenchel%E2%80%93Moreau_theorem>`_.
+        By the Fenchel-Moreau theorem this a linear perturbation of the
+        original convex conjugate functional.
         """
-
-        return self.orig_convex_conj_f.convex_conj + self.y.T
+        return self.orig_cconj_f.convex_conj + self.y.T
