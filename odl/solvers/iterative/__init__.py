@@ -21,3 +21,6 @@ __all__ = ()
 
 from .iterative import *
 __all__ += iterative.__all__
+
+from .statistical import *
+__all__ += statistical.__all__

@@ -133,7 +133,7 @@ def test_forward_backward_with_lin_ops():
     x = noise_element(space)
 
     # Explicit solution: x_hat = (I^T * I + (alpha*I)^T * (alpha*I))^-1 * (I*b)
-    x_global_min = b / (1 + alpha**2)
+    x_global_min = b / (1 + alpha ** 2)
 
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
                         sigma=[1.0], niter=20)
@@ -175,8 +175,8 @@ def test_forward_backward_with_li():
     forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=0.5,
                         sigma=[1.0], niter=20, grad_cc_l=grad_cc_ls)
 
-    assert lower_lim - 10**(-LOW_ACCURACY) <= x[0]
-    assert x[0] <= upper_lim + 10**(-LOW_ACCURACY)
+    assert lower_lim - 10 ** (-LOW_ACCURACY) <= x[0]
+    assert x[0] <= upper_lim + 10 ** (-LOW_ACCURACY)
 
 
 def test_forward_backward_with_li_and_h():
