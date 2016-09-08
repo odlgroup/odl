@@ -28,7 +28,7 @@ import pytest
 
 # Internal
 import odl
-from odl.util.testutils import all_almost_equal, almost_equal, example_element
+from odl.util.testutils import all_almost_equal, almost_equal, noise_element
 
 # Places for the accepted error when comparing results
 PLACES = 8
@@ -96,7 +96,7 @@ def test_scalar_multiplication():
                             places=PLACES)
 
     # Test derivative of right and left scalar multiplication
-    p = example_element(space)
+    p = noise_element(space)
     assert all_almost_equal(((scal * F).derivative(x))(p),
                             scal * ((F.derivative(x))(p)),
                             places=PLACES)
@@ -162,7 +162,7 @@ def test_functional_composition():
     composition = func * op_from_right
     assert isinstance(composition, odl.solvers.Functional)
 
-    x = example_element(space)
+    x = noise_element(space)
     op_in_x = op_from_right(x)
     expected_result = func(op_in_x)
     assert almost_equal(composition(x), expected_result, places=PLACES)
@@ -172,7 +172,7 @@ def test_functional_composition():
               op_from_right)(x)
     assert all_almost_equal((composition.gradient)(x), grad_x, places=PLACES)
 
-    p = example_element(space)
+    p = noise_element(space)
     expected_result = grad_x.inner(p)
     assert all_almost_equal(composition.derivative(x)(p), expected_result,
                             places=PLACES)
@@ -197,7 +197,7 @@ def test_functional_sum():
         func1 + func_wrong_domain
 
     func_sum = func1 + func2
-    x = example_element(space)
+    x = noise_element(space)
 
     # Test evaluation of the functionals
     expected_result = func1(x) + func2(x)
@@ -228,8 +228,8 @@ def test_functional_plus_scalar():
         func + complex_scalar
 
     func_scalar_sum = func + scalar
-    x = example_element(space)
-    p = example_element(space)
+    x = noise_element(space)
+    p = noise_element(space)
 
     # Test for evaluation
     expected_result = func(x) + scalar
@@ -265,14 +265,14 @@ def test_translation_of_functional():
     space = odl.uniform_discr(0, 1, 10)
 
     # The translation; an element in the domain
-    translation = example_element(space)
+    translation = noise_element(space)
 
     # Creating the functional ||x||_2^2
     test_functional = odl.solvers.L2NormSquared(space)
 
     # Testing that translation belonging to the wrong space gives TypeError
     wrong_space = odl.uniform_discr(1, 2, 10)
-    wrong_translation = example_element(wrong_space)
+    wrong_translation = noise_element(wrong_space)
     with pytest.raises(TypeError):
         test_functional.translated(wrong_translation)
 
@@ -280,7 +280,7 @@ def test_translation_of_functional():
     translated_functional = test_functional.translated(translation)
 
     # Create an element in the space, in which to evaluate
-    x = example_element(space)
+    x = noise_element(space)
 
     # Test for evaluation of the functional
     expected_result = test_functional(x - translation)
@@ -309,7 +309,7 @@ def test_translation_of_functional():
                             expected_result, places=PLACES)
 
     # Test for derivative in direction p
-    p = example_element(space)
+    p = noise_element(space)
 
     # Explicit computation in point x, in direction p: <x/2 + translation, p>
     expected_result = p.inner(test_functional.gradient(x - translation))
@@ -323,12 +323,12 @@ def test_multiplication_with_vector():
 
     space = odl.uniform_discr(0, 1, 10)
 
-    x = example_element(space)
-    y = example_element(space)
+    x = noise_element(space)
+    y = noise_element(space)
     func = odl.solvers.L2NormSquared(space)
 
     wrong_space = odl.uniform_discr(1, 2, 10)
-    y_other_space = example_element(wrong_space)
+    y_other_space = noise_element(wrong_space)
 
     # Multiplication from the right. Make sure it is a
     # FunctionalRightVectorMult
@@ -377,7 +377,7 @@ def test_convex_conjugate_translation():
     space = odl.uniform_discr(0, 1, 10)
 
     # The translation; an element in the domain
-    translation = example_element(space)
+    translation = noise_element(space)
 
     # Creating the functional ||x||_2^2
     test_functional = odl.solvers.L2NormSquared(space)
@@ -389,7 +389,7 @@ def test_convex_conjugate_translation():
 
     # Testing that translation belonging to the wrong space gives TypeError
     wrong_space = odl.uniform_discr(1, 2, 10)
-    wrong_translation = example_element(wrong_space)
+    wrong_translation = noise_element(wrong_space)
     with pytest.raises(TypeError):
         odl.solvers.ConvexConjugateTranslation(cc_test_functional,
                                                wrong_translation)
@@ -399,7 +399,7 @@ def test_convex_conjugate_translation():
                                                            translation)
 
     # Create an element in the space, in which to evaluate
-    x = example_element(space)
+    x = noise_element(space)
 
     # Test for evaluation of the functional
     # Explicit computation: 1/4 * ||x||^2 + <x,translation>
@@ -414,7 +414,7 @@ def test_convex_conjugate_translation():
                             places=PLACES)
 
     # Test for derivative in direction p
-    p = example_element(space)
+    p = noise_element(space)
 
     # Explicit computation in point x, in direction p: <x/2 + translation, p>
     expected_result = p.inner(1.0 / 2.0 * x + translation)
@@ -454,7 +454,7 @@ def test_convex_conjugate_arg_scaling():
                                                           scaling)
 
     # Create an element in the space, in which to evaluate
-    x = example_element(space)
+    x = noise_element(space)
 
     # Test for evaluation of the functional
     # Explicit computation: 1/(4*scaling^2) * ||x||^2
@@ -469,7 +469,7 @@ def test_convex_conjugate_arg_scaling():
                             places=PLACES)
 
     # Test for derivative in direction p
-    p = example_element(space)
+    p = noise_element(space)
 
     # Explicit computation in point x, in direction p: <x/(2*scaling^2), p>
     expected_result = p.inner(1.0 / (2.0 * scaling**2) * x)
@@ -505,7 +505,7 @@ def test_convex_conjugate_functional_scaling():
         scaling)
 
     # Create an element in the space, in which to evaluate
-    x = example_element(space)
+    x = noise_element(space)
 
     # Test for evaluation of the functional
     # Explicit computation: 1/(4*scaling) * ||x||^2
@@ -521,7 +521,7 @@ def test_convex_conjugate_functional_scaling():
                             places=PLACES)
 
     # Test for derivative in direction p
-    p = example_element(space)
+    p = noise_element(space)
 
     # Explicit computation in point x, in direction p: <x/(2*scaling), p>
     expected_result = p.inner(1.0 / (2.0 * scaling) * x)
@@ -542,7 +542,7 @@ def test_convex_conjugate_linear_perturbation():
 
     # The perturbation; an element in the domain (which is the same as the dual
     # space of the domain, since we assume Hilbert space)
-    perturbation = example_element(space)
+    perturbation = noise_element(space)
 
     # Creating the functional ||x||_2^2
     test_functional = odl.solvers.L2NormSquared(space)
@@ -554,7 +554,7 @@ def test_convex_conjugate_linear_perturbation():
 
     # Testing that translation belonging to the wrong space gives TypeError
     wrong_space = odl.uniform_discr(1, 2, 10)
-    wrong_perturbation = example_element(wrong_space)
+    wrong_perturbation = noise_element(wrong_space)
     with pytest.raises(TypeError):
         odl.solvers.ConvexConjugateLinearPerturb(cc_test_functional,
                                                  wrong_perturbation)
@@ -565,7 +565,7 @@ def test_convex_conjugate_linear_perturbation():
         perturbation)
 
     # Create an element in the space, in which to evaluate
-    x = example_element(space)
+    x = noise_element(space)
 
     # Test for evaluation of the functional
     # Explicit computation: ||x||^2/2 - ||x-y||^2/4 + ||y||^2/2 - <x,y>
@@ -582,7 +582,7 @@ def test_convex_conjugate_linear_perturbation():
                             places=PLACES)
 
     # Test for derivative in direction p
-    p = example_element(space)
+    p = noise_element(space)
 
     # Explicit computation in point x, in direction p:
     # <1.0/2.0 * x + 1.0/2.0 * perturbation, p>

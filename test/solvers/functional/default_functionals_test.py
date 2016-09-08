@@ -23,7 +23,7 @@ import pytest
 
 # Internal
 import odl
-from odl.util.testutils import all_almost_equal, almost_equal, example_element
+from odl.util.testutils import all_almost_equal, almost_equal, noise_element
 
 # Places for the accepted error when comparing results
 PLACES = 8
@@ -35,7 +35,7 @@ def test_L1_norm():
     n = 10
     space = odl.rn(n)
     func = odl.solvers.L1Norm(space)
-    x = example_element(space)
+    x = noise_element(space)
 
     # Evaluation of the functional
     expected_result = np.sum(np.abs(x))
@@ -93,7 +93,7 @@ def test_L2_norm():
     n = 10
     space = odl.rn(n)
     func = odl.solvers.L2Norm(space)
-    x = example_element(space)
+    x = noise_element(space)
 
     # Evaluation of the functional
     expected_result = np.sqrt(np.sum(x**2))
@@ -156,7 +156,7 @@ def test_L2_norm_squared():
     n = 10
     space = odl.rn(n)
     func = odl.solvers.L2NormSquared(space)
-    x = example_element(space)
+    x = noise_element(space)
 
     # Evaluation of the functional
     expected_result = np.sum(x**2)
@@ -217,7 +217,7 @@ def test_constant_functional():
     space = odl.rn(n)
     constant = np.random.randn()
     func = odl.solvers.ConstantFunctional(space, constant=constant)
-    x = example_element(space)
+    x = noise_element(space)
 
     # Checking that constant is stored correctly
     assert func.constant == constant
@@ -269,7 +269,7 @@ def test_zero_functional():
     n = 10
     space = odl.rn(n)
     func = odl.solvers.ZeroFunctional(space)
-    x = example_element(space)
+    x = noise_element(space)
 
     # Check that the constant is stored correctly in the ConstantFunctional
     assert func.constant == 0

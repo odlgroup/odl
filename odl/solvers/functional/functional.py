@@ -29,7 +29,7 @@ from odl.operator.operator import (
     OperatorRightVectorMult, OperatorSum)
 from odl.operator.default_ops import (ResidualOperator, IdentityOperator,
                                       ConstantOperator)
-from odl.set.space import LinearSpaceVector
+from odl.set.space import LinearSpaceElement
 from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
                                   proximal_quadratic_perturbation,
                                   proximal_zero)
@@ -147,7 +147,7 @@ class Functional(Operator):
 
         Parameters
         ----------
-        point : `LinearSpaceVector`
+        point : `LinearSpaceElement`
             The point in which the gradient is evaluated.
 
         Returns
@@ -165,7 +165,7 @@ class Functional(Operator):
 
         Parameters
         ----------
-        translation : `LinearSpaceVector`
+        translation : `LinearSpaceElement`
             Element in the domain of the functional
 
         Returns
@@ -201,12 +201,12 @@ class Functional(Operator):
 
         Parameters
         ----------
-        other : `Operator`, `LinearSpaceVector` or scalar
+        other : `Operator`, `LinearSpaceElement` or scalar
             `Operator`:
             The `Operator.range` of ``other`` must match this functional's
             `Functional.domain`.
 
-            `LinearSpaceVector`:
+            `LinearSpaceElement`:
             ``other`` must be an element of this functionals's
             `Functional.domain`.
 
@@ -243,7 +243,7 @@ class Functional(Operator):
                 return FunctionalLeftScalarMult(self, other)
             else:
                 return FunctionalRightScalarMult(self, other)
-        elif isinstance(other, LinearSpaceVector):
+        elif isinstance(other, LinearSpaceElement):
             return FunctionalRightVectorMult(self, other)
         else:
             return super().__mul__(other)
@@ -271,12 +271,12 @@ class Functional(Operator):
 
         Parameters
         ----------
-        other : `Operator`, `LinearSpaceVector` or scalar
+        other : `Operator`, `LinearSpaceElement` or scalar
             `Operator`:
             The `Operator.domain` of ``other`` must match this functional's
             `Functional.range`.
 
-            `LinearSpaceVector`:
+            `LinearSpaceElement`:
             ``other`` must be an element of this functionals's
             `Functional.range`.
 
@@ -583,7 +583,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
         ----------
         func : `Functional`
             The domain of ``func`` must be a ``vector.space``.
-        vector : `LinearSpaceVector` in ``func.domain``
+        vector : `LinearSpaceElement` in ``func.domain``
             The vector to multiply by.
         """
         if not isinstance(func, Functional):
@@ -717,7 +717,7 @@ class TranslatedFunctional(Functional):
         ----------
         func : `Functional`
             Functional which is to be translated.
-        translation : `LinearSpaceVector`
+        translation : `LinearSpaceElement`
             Element in ``func.domain``, with which the argument is translated.
         """
         if not isinstance(func, Functional):
@@ -808,7 +808,7 @@ class ConvexConjugateTranslation(Functional):
         cconj_f : `Functional`
             Function corresponding to F^*.
 
-        translation : `LinearSpaceVector`
+        translation : `LinearSpaceElement`
             Element in domain of ``F^*``.
         """
         if not isinstance(cconj_f, Functional):
@@ -1078,7 +1078,7 @@ class ConvexConjugateLinearPerturb(Functional):
     convex_conj_f : `Functional`
         Function corresponding to ``F^*``.
 
-    y : `LinearSpaceVector`
+    y : `LinearSpaceElement`
         Element in domain of ``F^*``.
 
     Notes
@@ -1099,15 +1099,15 @@ class ConvexConjugateLinearPerturb(Functional):
         convex_conj_f : `Functional`
             Functional corresponding to ``F^*``.
 
-        y : `LinearSpaceVector`
+        y : `LinearSpaceElement`
             Element in domain of ``F^*``.
         """
         if not isinstance(cconj_f, Functional):
             raise TypeError('`cconj_f` {} is not a `Functional` instance'
                             ''.format(cconj_f))
 
-        if not isinstance(y, LinearSpaceVector):
-            raise TypeError('`y` {!r} not a `LinearSpaceVector` instance.'
+        if not isinstance(y, LinearSpaceElement):
+            raise TypeError('`y` {!r} not a `LinearSpaceElement` instance.'
                             ''.format(y))
 
         if y not in cconj_f.domain:
