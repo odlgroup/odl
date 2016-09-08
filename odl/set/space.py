@@ -217,10 +217,7 @@ class LinearSpace(Set):
         if out not in self:
             raise LinearSpaceTypeError('`out` {!r} is not an element of {!r}'
                                        ''.format(out, self))
-        if a not in self.field:
-            raise LinearSpaceTypeError('`a` {!r} not an element of the field '
-                                       '{!r} of {!r}'
-                                       ''.format(a, self.field, self))
+        a = self.field.element(a)
         if x1 not in self:
             raise LinearSpaceTypeError('`x1` {!r} is not an element of {!r}'
                                        ''.format(x1, self))
@@ -232,10 +229,7 @@ class LinearSpace(Set):
             return out
 
         else:  # Two elements
-            if b not in self.field:
-                raise LinearSpaceTypeError('`b` {!r} not an element of the '
-                                           'field {!r} of {!r}'
-                                           ''.format(b, self.field, self))
+            b = self.field.element(b)
             if x2 not in self:
                 raise LinearSpaceTypeError('`x2` {!r} is not an element of '
                                            '{!r}'.format(x2, self))

@@ -25,8 +25,8 @@ standard_library.install_aliases()
 import pytest
 
 # ODL imports
-from odl.set.sets import (EmptySet, UniversalSet, Strings, ComplexNumbers,
-                          RealNumbers, Integers)
+from odl.set.sets import (EmptySet, UniversalSet, Strings, ComplexNumbersSet,
+                          RealNumbersSet, Integers)
 
 
 def test_empty_set():
@@ -110,8 +110,8 @@ def test_strings():
 
 
 def test_complex():
-    C = ComplexNumbers()
-    R = RealNumbers()
+    C = ComplexNumbersSet()
+    R = RealNumbersSet()
     Z = Integers()
 
     # __contains__
@@ -143,8 +143,8 @@ def test_complex():
 
 
 def test_real():
-    C = ComplexNumbers()
-    R = RealNumbers()
+    C = ComplexNumbersSet()
+    R = RealNumbersSet()
     Z = Integers()
 
     # __contains__
@@ -175,8 +175,8 @@ def test_real():
 
 
 def test_integers():
-    C = ComplexNumbers()
-    R = RealNumbers()
+    C = ComplexNumbersSet()
+    R = RealNumbersSet()
     Z = Integers()
 
     # __contains__

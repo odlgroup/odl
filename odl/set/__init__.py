@@ -29,3 +29,6 @@ __all__ += domain.__all__
 
 from .space import *
 __all__ += space.__all__
+
+from .field_space import *
+__all__ += field_space.__all__
