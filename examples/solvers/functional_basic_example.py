@@ -17,7 +17,7 @@
 
 """Basic example on how to write a functional.
 
-This is an example of how to implemente the functional ``||x||_2^2``. For more
+This is an example of how to implement the functional ``||x||_2^2``. For more
 information on functionals, see
 http://odl.readthedocs.io/guide/in_depth/functional_guide.html
 """

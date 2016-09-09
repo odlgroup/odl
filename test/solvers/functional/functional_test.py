@@ -34,6 +34,7 @@ from odl.util.testutils import all_almost_equal, almost_equal, noise_element
 PLACES = 8
 
 
+# TODO: fixture for all functionals
 def test_derivative():
     """Test for the derivative of a functional.
 
@@ -48,9 +49,8 @@ def test_derivative():
     # Discretized spaces
     space = odl.uniform_discr([0, 0], [1, 1], [n, n])
 
-    x = space.element(np.random.standard_normal((n, n)))
-
-    y = space.element(np.random.standard_normal((n, n)))
+    x = noise_element(space)
+    y = noise_element(space)
     epsK = 1e-8
 
     F = odl.solvers.functional.L2Norm(space)
@@ -74,8 +74,7 @@ def test_scalar_multiplication():
 
     # Discretized spaces
     space = odl.uniform_discr([0, 0], [1, 1], [n, n])
-
-    x = space.element(np.random.standard_normal((n, n)))
+    x = noise_element(space)
 
     scal = np.random.standard_normal()
     F = odl.solvers.functional.L2Norm(space)
@@ -136,45 +135,45 @@ def test_scalar_multiplication():
                             places=PLACES)
 
     # Test left multiplication with zero
-    assert isinstance(0 * F, odl.solvers.ZeroFunctional)
+    zero_times_f = 0 * F
+    x = noise_element(space)
+    assert all_almost_equal(zero_times_f(x), space.zero(), places=PLACES)
+
+    # Proximal of the zero functional is the identity operator
+    sigma = np.random.rand()
+    zero_prox = zero_times_f.proximal(sigma)
+    x_verify = x.copy()
+    assert all_almost_equal(zero_prox(x), x_verify, places=PLACES)
 
 
 def test_functional_composition():
-    """Test composition of functional.
-
-    This test tests composition, both from the right and from the left, with an
-    operator, which gives a functional, and with a vector, which returns an
-    operator."""
+    """Test composition from the right with an operator."""
 
     space = odl.uniform_discr(0, 1, 10)
-
     func = odl.solvers.L2Norm(space)
 
     # Test composition with operator from the right
     scalar = np.random.rand()
     wrong_space = odl.uniform_discr(1, 2, 10)
-    op_from_right_wrong = odl.operator.ScalingOperator(wrong_space, scalar)
+    op_wrong = odl.operator.ScalingOperator(wrong_space, scalar)
 
     with pytest.raises(TypeError):
-        func * op_from_right_wrong
+        func * op_wrong
 
-    op_from_right = odl.operator.ScalingOperator(space, scalar)
-    composition = func * op_from_right
-    assert isinstance(composition, odl.solvers.Functional)
+    op = odl.operator.ScalingOperator(space, scalar)
+    assert isinstance(func * op, odl.solvers.Functional)
 
     x = noise_element(space)
-    op_in_x = op_from_right(x)
-    expected_result = func(op_in_x)
-    assert almost_equal(composition(x), expected_result, places=PLACES)
+    assert almost_equal((func * op)(x), func(op(x)), places=PLACES)
 
     # Test gradient and derivative with composition from the right
-    grad_x = (op_from_right.adjoint * func.gradient *
-              op_from_right)(x)
-    assert all_almost_equal((composition.gradient)(x), grad_x, places=PLACES)
+    assert all_almost_equal(((func * op).gradient)(x),
+                            (op.adjoint * func.gradient * op)(x),
+                            places=PLACES)
 
     p = noise_element(space)
-    expected_result = grad_x.inner(p)
-    assert all_almost_equal(composition.derivative(x)(p), expected_result,
+    assert all_almost_equal((func * op).derivative(x)(p),
+                            (op.adjoint * func.gradient * op)(x).inner(p),
                             places=PLACES)
 
 
@@ -192,27 +191,33 @@ def test_functional_sum():
 
     # Test for different domain of the functionals
     wrong_space = odl.uniform_discr(1, 2, 10)
-    func_wrong_domain = odl.solvers.L1Norm(wrong_space)
+    func_wrong_domain = odl.solvers.L2Norm(wrong_space)
     with pytest.raises(TypeError):
         func1 + func_wrong_domain
 
-    func_sum = func1 + func2
     x = noise_element(space)
+    p = noise_element(space)
 
     # Test evaluation of the functionals
-    expected_result = func1(x) + func2(x)
-    assert almost_equal(func_sum(x), expected_result, places=PLACES)
+    assert almost_equal((func1 + func2)(x),
+                        func1(x) + func2(x),
+                        places=PLACES)
 
-    # Test for the gradient
-    expected_result = func1.gradient(x) + func2.gradient(x)
-    assert all_almost_equal(func_sum.gradient(x), expected_result,
+    # Test for the gradient and derivative
+    assert all_almost_equal((func1 + func2).gradient(x),
+                            func1.gradient(x) + func2.gradient(x),
                             places=PLACES)
+
+    assert almost_equal((func1 + func2).derivative(x)(p),
+                        (func1.gradient(x).inner(p) +
+                            func2.gradient(x).inner(p)),
+                        places=PLACES)
 
     # Test that prox and convex conjugate is not known
     with pytest.raises(NotImplementedError):
-        func_sum.proximal()
+        (func1 + func2).proximal
     with pytest.raises(NotImplementedError):
-        func_sum.convex_conj()
+        (func1 + func2).convex_conj
 
 
 def test_functional_plus_scalar():
@@ -223,40 +228,35 @@ def test_functional_plus_scalar():
     scalar = np.random.randn()
 
     # Test for scalar not in the field (field of unifor_discr is RealNumbers)
-    complex_scalar = np.random.randn() + np.random.randn() * 1j
+    complex_scalar = 1j
     with pytest.raises(TypeError):
         func + complex_scalar
 
-    func_scalar_sum = func + scalar
     x = noise_element(space)
     p = noise_element(space)
 
     # Test for evaluation
-    expected_result = func(x) + scalar
-    assert almost_equal(func_scalar_sum(x), expected_result, places=PLACES)
+    assert almost_equal((func + scalar)(x), func(x) + scalar, places=PLACES)
 
     # Test for derivative and gradient
-    grad_x = func.gradient(x)
-    assert all_almost_equal(func_scalar_sum.gradient(x), grad_x, places=PLACES)
+    assert all_almost_equal((func + scalar).gradient(x),
+                            func.gradient(x), places=PLACES)
 
-    expected_result = grad_x.inner(p)
-    assert almost_equal(func_scalar_sum.derivative(x)(p), expected_result,
+    assert almost_equal((func + scalar).derivative(x)(p),
+                        func.gradient(x).inner(p),
                         places=PLACES)
 
     # Test proximal operator
     sigma = np.random.rand()
-    expected_result = func.proximal(sigma)(x)
-    assert all_almost_equal(func_scalar_sum.proximal(sigma)(x),
-                            expected_result, places=PLACES)
+    assert all_almost_equal((func + scalar).proximal(sigma)(x),
+                            func.proximal(sigma)(x), places=PLACES)
 
     # Test convex conjugate functional
-    cc_func = func.convex_conj
-    cc_func_scalar_sum = func_scalar_sum.convex_conj
-    expected_result = cc_func(x) - scalar
-    assert almost_equal(cc_func_scalar_sum(x), expected_result, places=PLACES)
+    assert almost_equal((func + scalar).convex_conj(x),
+                        func.convex_conj(x) - scalar, places=PLACES)
 
-    expected_result = cc_func.gradient(x)
-    assert all_almost_equal(cc_func_scalar_sum.gradient(x), expected_result,
+    assert all_almost_equal((func + scalar).convex_conj.gradient(x),
+                            func.convex_conj.gradient(x),
                             places=PLACES)
 
 
@@ -269,12 +269,6 @@ def test_translation_of_functional():
 
     # Creating the functional ||x||_2^2
     test_functional = odl.solvers.L2NormSquared(space)
-
-    # Testing that translation belonging to the wrong space gives TypeError
-    wrong_space = odl.uniform_discr(1, 2, 10)
-    wrong_translation = noise_element(wrong_space)
-    with pytest.raises(TypeError):
-        test_functional.translated(wrong_translation)
 
     # Create translated functional
     translated_functional = test_functional.translated(translation)

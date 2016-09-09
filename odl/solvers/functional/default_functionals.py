@@ -76,9 +76,14 @@ class L1Norm(Functional):
         """Return the L1-norm of ``x``."""
         return x.ufunc.absolute().inner(self.domain.one())
 
+    # TODO: remove inner class when ufunc operators are in place.
     @property
     def gradient(self):
-        """Gradient operator of the functional."""
+        """Gradient operator of the functional.
+
+        The functional is not differentiable in ``x=0``. However, when
+        evaluating the gradient operator in this point it will return 0.
+        """
         functional = self
 
         class L1Gradient(Operator):
@@ -126,15 +131,25 @@ class IndicatorLpUnitBall(Functional):
 
             f(x) = \\left\{ \\begin{array}{ll}
             0 & \\text{if } ||x||_{L_p} \\leq 1, \\\\
-            \\infty & \\text{else}
+            \\infty & \\text{else,}
             \\end{array} \\right.
 
-    where :math:`||x||_{L_p}` is the :math:`L_p`-norm, and for
-    :math:`p = \\infty` it is defined as
+    where :math:`||x||_{L_p}` is the :math:`L_p`-norm, which for finite values
+    of :math:`p` is defined as
+
+        .. math::
+
+            \| x \|_{L_p} = \\left( \\int_{\Omega} |x|^p dx \\right)^{1/p},
+
+    and for :math:`p = \\infty` it is defined as
 
         .. math::
 
             ||x||_{\\infty} = \max_x (|x|).
+
+    The functional also allows noninteger and nonpositive values of the
+    exponent :math:`p`, however in this case :math:`\| x \|_{L_p}` is not a
+    norm.
     """
 
     def __init__(self, space, exponent):
@@ -148,11 +163,7 @@ class IndicatorLpUnitBall(Functional):
             Specifies wich norm to use.
         """
         super().__init__(space=space, linear=False)
-
-        if exponent is not np.inf and not isinstance(exponent, int):
-            raise ValueError('exponent {} need to be either an int or '
-                             'infinity'.format(exponent))
-        self.__exponent = exponent
+        self.__exponent = float(exponent)
 
     @property
     def exponent(self):
@@ -193,6 +204,7 @@ class IndicatorLpUnitBall(Functional):
         elif self.exponent == 2:
             return L2Norm(self.domain)
         else:
+            # TODO: Add Lp-norm functional.
             raise NotImplementedError('currently not implemented')
 
     @property
@@ -345,7 +357,7 @@ class ConstantFunctional(Functional):
         constant : element in `domain.field`
             The constant value of the functional
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=0)
+        super().__init__(space=space, linear=(constant == 0), grad_lipschitz=0)
 
         if constant not in self.range:
             raise TypeError('constant {} not in the range {}.'
@@ -429,17 +441,23 @@ class ConstantFunctional(Functional):
 
                 This is the zero operator.
                 """
-                return lambda sigma: ZeroOperator(self.domain)
+                def zero_proximal(sigma=1.0):
+                    """Proximal factory for zero operator.
+
+                    Parameters
+                    ----------
+                    sigma : positive float
+                        Step size parameter. Default: 1.0"""
+                    return ZeroOperator(self.domain)
+
+                return zero_proximal
 
         return ConstantFunctionalConvexConj()
 
 
 class ZeroFunctional(ConstantFunctional):
 
-    """The zero-functional.
-
-    The zero-functional maps all elements in the domain to zero.
-    """
+    """Functional that maps all elements in the domain to zero."""
 
     def __init__(self, space):
         """Initialize a new instance.

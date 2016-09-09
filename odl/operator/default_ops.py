@@ -756,13 +756,15 @@ class ConstantOperator(Operator):
         ``ConstantOperator(y)(x) == y``
     """
 
-    def __init__(self, vector, domain=None, range=None):
+    def __init__(self, constant, domain=None, range=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        vector : `LinearSpaceElement`
-            The constant space element to be returned.
+        constant : `LinearSpaceElement` or ``range`` `element-like`
+            The constant space element to be returned. If ``range`` is not
+            provided, ``constant`` must be a `LinearSpaceElement` since the
+            operator range is then inferred from it.
         domain : `LinearSpace`, optional
             Domain of the operator. Default: ``vector.space``
         range : `LinearSpace`, optional
@@ -779,33 +781,30 @@ class ConstantOperator(Operator):
         """
 
         if ((domain is None or range is None) and
-                not isinstance(vector, LinearSpaceElement)):
+                not isinstance(constant, LinearSpaceElement)):
                 raise TypeError('If either domain or range is unspecified '
-                                '`vector` must be LinearSpaceVector, got {!r}.'
-                                ''.format(vector))
+                                '`constant` must be LinearSpaceVector, got '
+                                '{!r}.'.format(constant))
 
         if domain is None:
-            domain = vector.space
+            domain = constant.space
         if range is None:
-            range = vector.space
-        if vector not in range:
-            raise TypeError('`vector` {!r} not in range {}'
-                            ''.format(vector, range))
+            range = constant.space
 
         super().__init__(domain, range)
-        self.__vector = self.__vector = self.range.element(vector)
+        self.__constant = self.range.element(constant)
 
     @property
-    def vector(self):
+    def constant(self):
         """Constant space element returned by this operator."""
-        return self.__vector
+        return self.__constant
 
     def _call(self, x, out=None):
         """Return the constant vector or assign it to ``out``."""
         if out is None:
-            return self.range.element(copy(self.vector))
+            return self.range.element(copy(self.constant))
         else:
-            out.assign(self.vector)
+            out.assign(self.constant)
 
     def derivative(self, point):
         """Derivative of this operator, always zero.
@@ -828,11 +827,11 @@ class ConstantOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.vector)
+        return '{}({!r})'.format(self.__class__.__name__, self.constant)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return "{}".format(self.vector)
+        return "{}".format(self.constant)
 
 
 class ResidualOperator(Operator):

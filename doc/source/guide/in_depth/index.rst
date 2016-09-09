@@ -9,8 +9,8 @@ This is a more in depth guide to the different parts of ODL.
 
     operator_guide
     linearspace_guide
+    functional_guide
     vectorization_guide
     numpy_guide
     proximal_lang_guide
     chambolle_pock_guide
-    functional_guide

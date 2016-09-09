@@ -728,12 +728,14 @@ class Operator(object):
             constant_vector = other * self.range.one()
             return self + ConstantOperator(constant_vector, self.domain,
                                            self.range)
-        else:
+        elif isinstance(other, Operator):
             return OperatorSum(self, other)
+        else:
+            return NotImplemented
 
     def __sub__(self, other):
         """Return ``self - other``."""
-        return self.__add__(-1 * other)
+        return self + (-1) * other
 
     def __mul__(self, other):
         """Return ``self * other``.

@@ -38,7 +38,7 @@ from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
-           'TranslatedFunctional', 'ConvexConjugateTranslation',
+           'FunctionalTranslation', 'ConvexConjugateTranslation',
            'ConvexConjugateFuncScaling', 'ConvexConjugateArgScaling',
            'ConvexConjugateLinearPerturb')
 
@@ -62,7 +62,7 @@ class Functional(Operator):
     http://odl.readthedocs.io/guide/in_depth/functional_guide.html.
     """
 
-    def __init__(self, space, linear=False, grad_lipschitz=np.inf):
+    def __init__(self, space, linear=False, grad_lipschitz=np.nan):
         """Initialize a new instance.
 
         Parameters
@@ -73,11 +73,21 @@ class Functional(Operator):
         linear : bool, optional
             If `True`, the functional is considered as linear.
         grad_lipschitz : float, optional
-            The Lipschitz constant of the gradient.
+            The Lipschitz constant of the gradient. Default: ``nan``
         """
         Operator.__init__(self, domain=space,
                           range=space.field, linear=linear)
         self.__grad_lipschitz = float(grad_lipschitz)
+
+    @property
+    def grad_lipschitz(self):
+        """Lipschitz constant for the gradient of the functional"""
+        return self.__grad_lipschitz
+
+    @grad_lipschitz.setter
+    def grad_lipschitz(self, value):
+        "Setter for the Lipschitz constant for the gradient."""
+        self.__grad_lipschitz = float(value)
 
     @property
     def gradient(self):
@@ -99,15 +109,34 @@ class Functional(Operator):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the functional.
+        """Proximal factory of the functional.
 
         Notes
         -----
+        The proximal operator of a function :math:`f` is an operator defined as
+
+            .. math::
+
+                prox_{\\sigma f}(x) = \\sup_{y} \\left\{ f(y) -
+                \\frac{1}{2\\sigma} \| y-x \|_2^2 \\right\}.
+
+        Proximal operators are often used in different optimization algorithms,
+        especially when designed to handle nonsmooth functionals.
+
+        A `proximal factory` is a function that, when called with a step
+        length :math:`\\sigma`, returns the corresponding proximal operator.
+
         The nonsmooth solvers that make use of proximal operators to solve a
         given optimization problem take a `proximal factory` as input,
-        i.e., a function returning a proximal operator. Note that
-        ``Functional.proximal`` is in fact a `proximal factory`. See for
-        example `forward_backward_pd`.
+        i.e., a function returning a proximal operator. See for example
+        `forward_backward_pd`.
+
+        See Also
+        --------
+        proximal_l2 : proximal factory for l2 norm.
+        forward_backward_pd : forward-backward primal-dual solver.
+        douglas_rachford_pd : douglas-rachford primal-dual solver.
+        chambolle_pock_solver : chambolle-pock solver.
         """
         raise NotImplementedError
 
@@ -141,18 +170,18 @@ class Functional(Operator):
     def derivative(self, point):
         """Return the derivative operator in the given point.
 
-        This function returns the linear operator given by
+        This function returns the linear operator given by::
 
-            ``self.derivative(point)(x) == self.gradient(point).inner(x)``
+            self.derivative(point)(x) == self.gradient(point).inner(x)
 
         Parameters
         ----------
-        point : `LinearSpaceElement`
+        point : `domain` element
             The point in which the gradient is evaluated.
 
         Returns
         -------
-        out : `Operator`
+        derivative : `Operator`
         """
         return self.gradient(point).T
 
@@ -165,7 +194,7 @@ class Functional(Operator):
 
         Parameters
         ----------
-        translation : `LinearSpaceElement`
+        translation : `domain` element
             Element in the domain of the functional
 
         Returns
@@ -173,11 +202,7 @@ class Functional(Operator):
         out : `TranslatedFunctional`
             The functional ``f(. - translation)``
         """
-        if shift not in self.domain:
-            raise TypeError('`shift` {} is not in the domain of the '
-                            'functional {!r}'.format(shift, self))
-
-        return TranslatedFunctional(self, shift)
+        return FunctionalTranslation(self, shift)
 
     def __mul__(self, other):
         """Return ``self * other``.
@@ -185,36 +210,36 @@ class Functional(Operator):
         If ``other`` is an `Operator`, this corresponds to composition with the
         operator:
 
-            ``func * op == (x --> func(op(x)))``
+            ``(func * op)(x) == func(op(x))``
 
         If ``other`` is a scalar, this corresponds to right multiplication of
         scalars with functionals:
 
-            ``func * scalar == (x --> func(scalar * x))``
+            ``(func * scalar)(x) == func(scalar * x)``
 
         If ``other`` is a vector, this corresponds to right multiplication of
         vectors with functionals:
 
-            ``func * vector == (x --> func(vector * x))``
+            ``(func * vector) == func(vector * x)``
 
         Note that left and right multiplications are generally different.
 
         Parameters
         ----------
-        other : `Operator`, `LinearSpaceElement` or scalar
+        other : `Operator`, `domain` element or scalar
             `Operator`:
             The `Operator.range` of ``other`` must match this functional's
-            `Functional.domain`.
+            `domain`.
 
-            `LinearSpaceElement`:
+            `domain` element:
             ``other`` must be an element of this functionals's
             `Functional.domain`.
 
             scalar:
-            The `Functional.domain` of this functional must be a
-            `LinearSpace` and ``other`` must be an element of the ``field``
-            of this functional's `Functional.domain`. Note that this
-            ``field`` is also this functional's `Functional.range`.
+            The `domain` of this functional must be a
+            `LinearSpace` and ``other`` must be an element of the `field`
+            of this functional's `domain`. Note that this `field` is also this
+            functional's `range`.
 
         Returns
         -------
@@ -229,21 +254,17 @@ class Functional(Operator):
 
             If ``other`` is a vector, ``mul`` is a
             `FunctionalRightVectorMult`.
-
-        See Also
-        --------
-        Operator.__mul__ : implementation of __mul__ for Operators.
         """
         if isinstance(other, Operator):
             return FunctionalComp(self, other)
-        elif isinstance(other, Number):
+        elif other in self.range:
             # Left multiplication is more efficient, so we can use this in the
             # case of linear functional.
             if self.is_linear:
                 return FunctionalLeftScalarMult(self, other)
             else:
                 return FunctionalRightScalarMult(self, other)
-        elif isinstance(other, LinearSpaceElement):
+        elif other in self.domain:
             return FunctionalRightVectorMult(self, other)
         else:
             return super().__mul__(other)
@@ -254,20 +275,19 @@ class Functional(Operator):
         If ``other`` is an `Operator`, since a functional is also an operator
         this corresponds to operator composition:
 
-            ``op * func == (x --> op(func(x))``
+            ``(op * func)(x) == op(func(x))``
 
         If ``other`` is a scalar, this corresponds to left multiplication of
         scalars with functionals:
 
-            ``scalar * func == (x --> scalar * func(x))``
+            ``(scalar * func)(x) == scalar * func(x)``
 
         If ``other`` is a vector,  since a functional is also an operator this
         corresponds to left multiplication of vectors with operators:
 
-            ``vector * func == (x --> vector * func(x))``
+            ``(vector * func)(x) == vector * func(x)``
 
-        Note that left and right multiplications are generally
-        different.
+        Note that left and right multiplications are generally different.
 
         Parameters
         ----------
@@ -299,13 +319,9 @@ class Functional(Operator):
             If ``other`` is a vector, ``rmul`` is a
             `OperatorLeftVectorMult`.
         """
-        if other in self.domain.field:
-            if other == 0:
-                from odl.solvers.functional.default_functionals import (
-                    ZeroFunctional)
-                return ZeroFunctional(self.domain)
-            else:
-                return FunctionalLeftScalarMult(self, other)
+        if other in self.range:
+            # TODO: potentially optimize for when other == 0
+            return FunctionalLeftScalarMult(self, other)
         else:
             return super().__rmul__(other)
 
@@ -314,12 +330,12 @@ class Functional(Operator):
 
         If ``other`` is a `Functional`, this corresponds to
 
-            ``func1 + func2 == (x --> func1(x) + func2(x))``
+            ``(func1 + func2)(x) == func1(x) + func2(x)``
 
         If ``other`` is a scalar, this corresponds to adding a scalar to the
         value of the functional:
 
-            ``func + scalar == (x --> func(x) + scalar)``
+            ``(func + scalar)(x) == func(x) + scalar)``
 
         Parameters
         ----------
@@ -334,7 +350,7 @@ class Functional(Operator):
 
         Returns
         -------
-        add : `Functional`
+        sum : `Functional`
             Addition result.
 
             If ``other`` is in ``Functional.range``, ``add`` is a
@@ -351,7 +367,7 @@ class Functional(Operator):
         elif isinstance(other, Functional):
             return FunctionalSum(self, other)
         else:
-            return NotImplemented
+            return super().__add__(other)
 
     # Since addition is commutative, right and left addition is the same
     __radd__ = __add__
@@ -359,11 +375,6 @@ class Functional(Operator):
     def __sub__(self, other):
         """Return ``self - other``."""
         return self.__add__(-1 * other)
-
-    @property
-    def grad_lipschitz(self):
-        """Lipschitz constant for the gradient of the functional"""
-        return self.__grad_lipschitz
 
 
 class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
@@ -392,15 +403,11 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
         scalar = func.range.element(scalar)
 
-        if scalar == 0:
-            Functional.__init__(self, space=func.domain, linear=True,
-                                grad_lipschitz=0)
-
-        else:
-            Functional.__init__(self, space=func.domain,
-                                linear=func.is_linear,
-                                grad_lipschitz=(
-                                    np.abs(scalar) * func.grad_lipschitz))
+        grad_lipschitz = (0 if scalar == 0
+                          else np.abs(scalar) * func.grad_lipschitz)
+        Functional.__init__(self, space=func.domain,
+                            linear=func.is_linear or scalar == 0,
+                            grad_lipschitz=grad_lipschitz)
 
         OperatorLeftScalarMult.__init__(self, operator=func, scalar=scalar)
 
@@ -424,7 +431,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the scaled functional.
+        """Proximal factory of the scaled functional.
 
         See Also
         --------
@@ -440,7 +447,17 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             return proximal_zero(self.domain)
 
         else:
-            return lambda sigma: self.functional.proximal(sigma * self.scalar)
+            def proximal_left_scalar_mult(sigma=1.0):
+                """Proximal operator for left scalar multiplication.
+
+                    Parameters
+                    ----------
+                    sigma : positive float
+                        Step size parameter. Default: 1.0
+                """
+                return self.functional.proximal(sigma * self.scalar)
+
+            return proximal_left_scalar_mult
 
 
 class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
@@ -470,14 +487,12 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
         scalar = func.range.element(scalar)
 
-        if scalar == 0:
-            Functional.__init__(self, space=func.domain, linear=True,
-                                grad_lipschitz=0)
-        else:
-            Functional.__init__(self, space=func.domain,
-                                linear=func.is_linear,
-                                grad_lipschitz=(np.abs(scalar) *
-                                                func.grad_lipschitz))
+        grad_lipschitz = (0 if scalar == 0
+                          else np.abs(scalar) * func.grad_lipschitz)
+
+        Functional.__init__(self, space=func.domain,
+                            linear=func.is_linear or scalar == 0,
+                            grad_lipschitz=grad_lipschitz)
 
         OperatorRightScalarMult.__init__(self, operator=func, scalar=scalar)
 
@@ -498,8 +513,8 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
                                          self.scalar)
 
     @property
-    def proximal(self, sigma=1.0):
-        """Return the proximal factory of the functional.
+    def proximal(self):
+        """Proximal factory of the functional.
 
         See Also
         --------
@@ -573,7 +588,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
     Given a functional ``func`` and a vector ``y`` in the domain of ``func``,
     this corresponds to the functional
 
-        ``(func * y)(x) == func(y*x)``.
+        ``(func * y)(x) == func(y * x)``.
     """
 
     def __init__(self, func, vector):
@@ -583,7 +598,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
         ----------
         func : `Functional`
             The domain of ``func`` must be a ``vector.space``.
-        vector : `LinearSpaceElement` in ``func.domain``
+        vector : `domain` element
             The vector to multiply by.
         """
         if not isinstance(func, Functional):
@@ -618,8 +633,8 @@ class FunctionalSum(Functional, OperatorSum):
         Parameters
         ----------
         func1, func2 : `Functional`
-            The summands of the functional sum. Their `Operator.domain`
-            and `Operator.range` must coincide.
+            The summands of the functional sum. Their `Functional.domain`
+            and `Functional.range` must coincide.
         """
         if not isinstance(func1, Functional):
             raise TypeError('`func1` {!r} is not a `Functional` instance.'
@@ -699,7 +714,7 @@ class FunctionalScalarSum(FunctionalSum):
         return self.left.convex_conj - self.scalar
 
 
-class TranslatedFunctional(Functional):
+class FunctionalTranslation(Functional):
 
     """Implementation of the translated functional.
 
@@ -711,28 +726,26 @@ class TranslatedFunctional(Functional):
         """Initialize a new instance.
 
         Given a functional ``f(.)`` and a vector ``translation`` in the domain
-        of ``f``, this corresponds to the functional ``f(. - y)``.
+        of ``f``, this corresponds to the functional ``f(. - translation)``.
 
         Parameters
         ----------
         func : `Functional`
             Functional which is to be translated.
-        translation : `LinearSpaceElement`
-            Element in ``func.domain``, with which the argument is translated.
+        translation : `domain` element
+            The translation.
         """
         if not isinstance(func, Functional):
             raise TypeError('`func` {!r} not a `Functional` instance'
                             ''.format(func))
 
-        if translation not in func.domain:
-            raise TypeError('`translation` {!r} not in func.domain {!r}'
-                            ''.format(translation.space, func.domain))
+        translation = func.domain.element(translation)
 
         super().__init__(space=func.domain, linear=False,
                          grad_lipschitz=func.grad_lipschitz)
 
         # TODO: Add case if we have translation -> scaling -> translation?
-        if isinstance(func, TranslatedFunctional):
+        if isinstance(func, FunctionalTranslation):
             self.__original_func = func.original_func
             self.__translation = func.translation + translation
 
@@ -762,7 +775,7 @@ class TranslatedFunctional(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the translated functional.
+        """Proximal factory of the translated functional.
 
         See Also
         --------
@@ -807,9 +820,8 @@ class ConvexConjugateTranslation(Functional):
         ----------
         cconj_f : `Functional`
             Function corresponding to F^*.
-
-        translation : `LinearSpaceElement`
-            Element in domain of ``F^*``.
+        translation : `domain` element
+            Element in domain of ``F``, corresponding to the translation.
         """
         if not isinstance(cconj_f, Functional):
             raise TypeError('`cconj_f` {} is not a `Functional` instance'
@@ -852,7 +864,7 @@ class ConvexConjugateTranslation(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the ConvexConjugateTranslation.
+        """Proximal factory of the ConvexConjugateTranslation.
 
         See Also
         --------
@@ -943,15 +955,24 @@ class ConvexConjugateFuncScaling(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the ConvexConjugateFuncScaling.
+        """Proximal factory of the ConvexConjugateFuncScaling."""
+        def proximal_cc_func_scaling(sigma=1.0):
+            """Proximal operator for ConvexConjugateFuncScaling.
 
-        See Also
-        --------
-        proximal_arg_scaling
-        """
-        return lambda sigma: proximal_arg_scaling(self.orig_cconj_f.proximal,
-                                                  scaling=(1.0 / self.scaling)
-                                                  )(self.scaling * sigma)
+                Parameters
+                ----------
+                sigma : positive float
+                    Step size parameter. Default: 1.0.
+
+                See Also
+                --------
+                proximal_arg_scaling
+                """
+            return proximal_arg_scaling(self.orig_cconj_f.proximal,
+                                        scaling=(1.0 / self.scaling)
+                                        )(self.scaling * sigma)
+
+        return proximal_cc_func_scaling
 
     @property
     def convex_conj(self):
@@ -976,17 +997,9 @@ class ConvexConjugateArgScaling(Functional):
     where ``scaling`` is the scaling parameter. Note that this does not allow
     for scaling with ``0``.
 
-    Parameters
-    ----------
-    convex_conj_f : `Functional`
-        Function corresponding to ``F^*``.
-
-    scaling : `float`, nonzero
-        The scaling parameter.
-
     Notes
     -----
-    The implementation assumes that the underlying  functional ``F`` is proper,
+    The implementation assumes that the underlying functional ``F`` is proper,
     convex, and lower semi-continuous. Otherwise the convex conjugate of the
     convex conjugate is not necessarily the functional itself.
 
@@ -1010,8 +1023,7 @@ class ConvexConjugateArgScaling(Functional):
 
         scaling = float(scaling)
         if scaling == 0:
-            raise ValueError('Scaling with 0 is not allowed. Current value:'
-                             ' {}.'.format(scaling))
+            raise ValueError('Scaling with 0 is not allowed.')
 
         super().__init__(space=cconj_f.domain,
                          linear=cconj_f.is_linear)
@@ -1041,7 +1053,7 @@ class ConvexConjugateArgScaling(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the ConvexConjugateArgScaling.
+        """Proximal factory of the ConvexConjugateArgScaling.
 
         See Also
         --------
@@ -1073,14 +1085,6 @@ class ConvexConjugateLinearPerturb(Functional):
 
     where ``y`` is the linear perturbation.
 
-    Parameters
-    ----------
-    convex_conj_f : `Functional`
-        Function corresponding to ``F^*``.
-
-    y : `LinearSpaceElement`
-        Element in domain of ``F^*``.
-
     Notes
     -----
     The implementation assumes that the underlying  functional ``F`` is proper,
@@ -1099,8 +1103,8 @@ class ConvexConjugateLinearPerturb(Functional):
         convex_conj_f : `Functional`
             Functional corresponding to ``F^*``.
 
-        y : `LinearSpaceElement`
-            Element in domain of ``F^*``.
+        y : `domain` element
+            Element corresponding to the linear functional.
         """
         if not isinstance(cconj_f, Functional):
             raise TypeError('`cconj_f` {} is not a `Functional` instance'
@@ -1142,7 +1146,7 @@ class ConvexConjugateLinearPerturb(Functional):
 
     @property
     def proximal(self):
-        """Return the proximal factory of the ConvexConjugateLinearPerturb.
+        """Proximal factory of the ConvexConjugateLinearPerturb.
 
         See Also
         --------

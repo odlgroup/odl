@@ -18,11 +18,19 @@
 """Basic example on how to use the functional class together with solvers.
 
 This file shows an example of how to set up and solve an optimization problem
-using the default functionals. The problem we will solve is to minimize
-1/2 * ||x - g||_2^2 + lam*||x||_1, for some vector g and some constant lam,
-subject to that all components in x are greater than or equal to 0. The
-theoretical optimal solution to this problem is x = (g - lam)_+, where ( )_+
-denotes the positive part of the element, i.e., (z_i)_+ = max(z_i, 0)."""
+using the default functionals. The problem we will solve is
+
+    minimize 1/2 * ||x - g||_2^2 + lam*||x||_1,
+
+for some vector g and some constant lam, subject to that all components in x
+are greater than or equal to 0. The theoretical optimal solution to this
+problem is
+
+    x_opt = (g - lam)_+,
+
+where ( )_+ denotes the positive part of the element, i.e.,
+(z_i)_+ = max(z_i, 0).
+"""
 
 import numpy as np
 import odl
@@ -32,7 +40,7 @@ n = 10
 space = odl.rn(n)
 
 # Create parameters.
-g = space.element(np.hstack((np.ones(n/2), -np.ones(n/2))))
+g = space.element([1, 1, 1, 1, 1, -1, -1, -1, -1, -1])
 lam = 0.5
 
 # Note that with the values above, the optimal solution is given by a vector
@@ -46,9 +54,9 @@ l2_func = 1.0 / 2.0 * odl.solvers.L2NormSquared(space)
 trans_l2_func = l2_func.translated(g)
 
 # The problem will be solved using the forward-backward primal-dual algorithm.
-# In this setting we let f = nonnegativity contraint, g = l1-norm, and h =
-# the squared l2-norm. Here we create necessary proximal and gradient operators
-# from the functionals.
+# In this setting we let f = nonnegativity contraint, g = l1-norm, L =
+# the indentity operator, and h = the squared l2-norm. Here we create necessary
+# proximal and gradient operators from the functionals.
 prox_f = odl.solvers.proximal_nonnegativity(space)
 prox_cc_g = lam_l1_func.convex_conj.proximal
 L = odl.IdentityOperator(space)
