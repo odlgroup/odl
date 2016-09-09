@@ -270,7 +270,7 @@ class RectPartition(object):
             else:
                 left_frac = 0.5 + (cvec[0] - bmin) / (cvec[1] - cvec[0])
                 right_frac = 0.5 + (bmax - cvec[-1]) / (cvec[-1] - cvec[-2])
-            frac_list.append((left_frac, right_frac))
+                frac_list.append((left_frac, right_frac))
 
         return tuple(frac_list)
 
