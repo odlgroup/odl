@@ -64,12 +64,15 @@ def test_L1_norm():
     cc_func = func.convex_conj
 
     # Evaluation of convex conjugate
-    # Explicit calculation: 0 if |x|_1 < 1, infty else
+    # Explicit calculation: 0 if |x|_1 <= 1, infty else
     norm_larger_than_one = 2.0 * space.one()
     assert cc_func(norm_larger_than_one) == np.inf
 
     norm_less_than_one = 0.9 * 1.0 / n * space.one()
     assert cc_func(norm_less_than_one) == 0
+
+    norm_equal_to_one = x / x.norm()
+    assert cc_func(norm_equal_to_one) == 0
 
     # The gradient of the convex conjugate (not implemeted)
     with pytest.raises(NotImplementedError):
@@ -190,10 +193,6 @@ def test_L2_norm_squared():
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
     cc_cc_func = cc_func.convex_conj
-
-    # Modulo scaling back and forth, check that it is in fact squared L2-norm
-    assert isinstance(cc_cc_func.orig_cconj_f.operator,
-                      odl.solvers.L2NormSquared)
 
     # Check that they evaluate the same
     assert almost_equal(cc_cc_func(x), func(x), places=PLACES)
