@@ -72,11 +72,12 @@ class L1Norm(Functional):
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.inf)
 
+    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the L1-norm of ``x``."""
         return x.ufunc.absolute().inner(self.domain.one())
 
-    # TODO: remove inner class when ufunc operators are in place.
+    # TODO: remove inner class when ufunc operators are in place: issue #567
     @property
     def gradient(self):
         """Gradient operator of the functional.
@@ -170,6 +171,7 @@ class IndicatorLpUnitBall(Functional):
         """Exponent corresponding to the norm."""
         return self.__exponent
 
+    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Apply the functional to the given point."""
         if self.exponent == 1:
@@ -242,6 +244,7 @@ class L2Norm(Functional):
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.inf)
 
+    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the L2-norm of ``x``."""
         return np.sqrt(x.inner(x))
@@ -309,6 +312,7 @@ class L2NormSquared(Functional):
         """
         super().__init__(space=space, linear=False, grad_lipschitz=2)
 
+    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the squared L2-norm of ``x``."""
         return x.inner(x)
@@ -378,8 +382,8 @@ class ConstantFunctional(Functional):
         """Return the proximal factory of the functional."""
         return proximal_zero(self.domain)
 
-    # TODO: Update name for proximal_zero. It is the proximal for any constant
-    # functional
+    # TODO: Update name for proximal_zero: issue #572.
+    # It is the proximal for any constant functional
 
     @property
     def convex_conj(self):

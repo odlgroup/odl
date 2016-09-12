@@ -73,7 +73,7 @@ def functional(request, space):
     return func
 
 
-def test_derivative(functional):
+def test_derivative(functional, space):
     """Test for the derivative of a functional.
 
     The test checks that the directional derivative in a point is the same as
@@ -96,14 +96,8 @@ def test_derivative(functional):
                             places=PLACES)
 
 
-def test_left_scalar_multiplication():
+def test_left_scalar_multiplication(space):
     """Test for right and left multiplication of a functional with a scalar."""
-
-    # Discretization parameters
-    n = 3
-
-    # Discretized spaces
-    space = odl.uniform_discr([0, 0], [1, 1], [n, n])
     x = noise_element(space)
 
     scal = np.random.standard_normal()
@@ -158,14 +152,8 @@ def test_left_scalar_multiplication():
     assert all_almost_equal(zero_prox(x), x_verify, places=PLACES)
 
 
-def test_right_scalar_multiplication():
+def test_right_scalar_multiplication(space):
     """Test for right and left multiplication of a functional with a scalar."""
-
-    # Discretization parameters
-    n = 3
-
-    # Discretized spaces
-    space = odl.uniform_discr([0, 0], [1, 1], [n, n])
     x = noise_element(space)
 
     scal = np.random.standard_normal()
@@ -208,13 +196,11 @@ def test_right_scalar_multiplication():
 
     # Test that for linear functionals, left multiplication is used.
     func = odl.solvers.ZeroFunctional(space)
-    assert isinstance(scal * func, odl.solvers.FunctionalLeftScalarMult)
+    assert isinstance(func * scal, odl.solvers.FunctionalLeftScalarMult)
 
 
-def test_functional_composition():
+def test_functional_composition(space):
     """Test composition from the right with an operator."""
-
-    space = odl.uniform_discr(0, 1, 10)
     func = odl.solvers.L2NormSquared(space)
 
     # Test composition with operator from the right
@@ -242,10 +228,8 @@ def test_functional_composition():
                             places=PLACES)
 
 
-def test_functional_sum():
+def test_functional_sum(space):
     """Test for the sum of two functionals."""
-    space = odl.uniform_discr(0, 1, 10)
-
     func1 = odl.solvers.L2NormSquared(space)
     func2 = odl.solvers.L2Norm(space)
 
@@ -285,10 +269,8 @@ def test_functional_sum():
         (func1 + func2).convex_conj
 
 
-def test_functional_plus_scalar():
+def test_functional_plus_scalar(space):
     """Test for sum of functioanl and scalar."""
-    space = odl.uniform_discr(0, 1, 10)
-
     func = odl.solvers.L2NormSquared(space)
     scalar = np.random.randn()
 
@@ -325,10 +307,8 @@ def test_functional_plus_scalar():
                             places=PLACES)
 
 
-def test_translation_of_functional():
+def test_translation_of_functional(space):
     """Test for the translation of a functional: (f(. - y))^*"""
-    space = odl.uniform_discr(0, 1, 10)
-
     # The translation; an element in the domain
     translation = noise_element(space)
 
@@ -388,11 +368,8 @@ def test_translation_of_functional():
                         places=PLACES)
 
 
-def test_multiplication_with_vector():
+def test_multiplication_with_vector(space):
     """Test for multiplying a functional with a vector, both left and right."""
-
-    space = odl.uniform_discr(0, 1, 10)
-
     x = noise_element(space)
     y = noise_element(space)
     func = odl.solvers.L2NormSquared(space)
@@ -442,10 +419,8 @@ def test_multiplication_with_vector():
                             places=PLACES)
 
 
-def test_functional_linear_perturb():
+def test_functional_linear_perturb(space):
     """Test for the functional f(.) + <y, .>."""
-    space = odl.uniform_discr(0, 1, 10)
-
     # The translation; an element in the domain
     linear_term = noise_element(space)
 

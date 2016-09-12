@@ -56,7 +56,8 @@ trans_l2_func = l2_func.translated(g)
 # The problem will be solved using the forward-backward primal-dual algorithm.
 # In this setting we let f = nonnegativity contraint, g = l1-norm, L =
 # the indentity operator, and h = the squared l2-norm. Here we create necessary
-# proximal and gradient operators from the functionals.
+# proximal and gradient operators from the functionals. See the documentation
+# of forward_backward_pd for more information.
 prox_f = odl.solvers.proximal_nonnegativity(space)
 prox_cc_g = lam_l1_func.convex_conj.proximal
 L = odl.IdentityOperator(space)
@@ -69,14 +70,14 @@ sigma = 0.5
 
 # Starting point, and also updated inplace in the solver
 x = space.element(np.random.randn(n))
-print('Initial guess: x = {}'.format(x.asarray()))
+print('Initial guess: x = {}'.format(x))
 
 # Optional: pass callback objects to solver
-callback = (odl.solvers.CallbackPrintIteration())
+callback = odl.solvers.CallbackPrintIteration()
 
 # Run the algorithm
 odl.solvers.forward_backward_pd(x=x, prox_f=prox_f, prox_cc_g=[prox_cc_g],
                                 L=[L], grad_h=grad_h, tau=tau, sigma=[sigma],
                                 niter=niter, callback=callback)
 
-print('Solution found: x = {}'.format(x.asarray()))
+print('Solution found: x = {}'.format(x))

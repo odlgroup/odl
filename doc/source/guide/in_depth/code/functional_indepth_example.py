@@ -88,7 +88,7 @@ class MyFunctionalConjugate(odl.solvers.Functional):
 
     def _call(self, x):
         """Evaluate the functional."""
-        return (x-self.y).norm()**2 / 4.0
+        return (x - self.y).norm()**2 / 4.0
 
 
 # Create a functional

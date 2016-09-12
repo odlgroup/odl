@@ -85,7 +85,7 @@ The properties are:
 
       S'(x)(g) = \langle \nabla S(x), g \rangle \quad \text{for all } g \in X.
 
-   See also `Functional.derivative` and `Operator.derivative`.
+   See also `Functional.derivative`.
 
 
  * ``functional.convex_conj``. This is the convex conjugate of the functional, itself again a functional, which is also known as the `Legendre transform`_ or `Fenchel conjugate`_.

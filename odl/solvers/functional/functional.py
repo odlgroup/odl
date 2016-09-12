@@ -286,7 +286,7 @@ class Functional(Operator):
 
         Parameters
         ----------
-        other : `Operator`, `LinearSpaceElement` or scalar
+        other : `Operator`, `domain` element or scalar
             `Operator`:
             The `Operator.domain` of ``other`` must match this functional's
             `Functional.range`.
@@ -330,7 +330,7 @@ class Functional(Operator):
         If ``other`` is a scalar, this corresponds to adding a scalar to the
         value of the functional:
 
-            ``(func + scalar)(x) == func(x) + scalar)``
+            ``(func + scalar)(x) == func(x) + scalar``
 
         Parameters
         ----------
@@ -352,10 +352,6 @@ class Functional(Operator):
             `FunctionalScalarSum`.
 
             If ``other`` is a `Functional`, ``sum`` is a `FunctionalSum`.
-
-        See Also
-        --------
-        Operator.__add__ : implementation of __add__ for Operators.
         """
         if other in self.domain.field:
             return FunctionalScalarSum(self, other)
@@ -369,7 +365,7 @@ class Functional(Operator):
 
     def __sub__(self, other):
         """Return ``self - other``."""
-        return self.__add__(-1 * other)
+        return self + (-1) * other
 
 
 class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
@@ -393,7 +389,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
             Number with which to scale the functional.
         """
         if not isinstance(func, Functional):
-            raise TypeError('`func` {!r} is not a `Functional` instance.'
+            raise TypeError('`func` {!r} is not a `Functional` instance'
                             ''.format(func))
 
         self.__scalar = func.range.element(scalar)
@@ -427,7 +423,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         # Otherwise it gives an error.
 
         if self.scalar <= 0:
-            raise ValueError('Scaling with nonpositive values have no convex '
+            raise ValueError('scaling with nonpositive values have no convex '
                              'conjugate. Current value: {}.'
                              ''.format(self.scalar))
 
@@ -443,7 +439,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         """
 
         if self.scalar < 0:
-            raise ValueError('Proximal operator of functional scaled with a '
+            raise ValueError('proximal operator of functional scaled with a '
                              'negative value {} is not well-defined'
                              ''.format(self.scalar))
 
@@ -486,7 +482,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         """
 
         if not isinstance(func, Functional):
-            raise TypeError('`func` {!r} is not a `Functional` instance.'
+            raise TypeError('`func` {!r} is not a `Functional` instance'
                             ''.format(func))
 
         scalar = func.range.element(scalar)
@@ -514,8 +510,8 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
     def convex_conj(self):
         """Convex conjugate functional of functional with scaled argument."""
         if self.scalar <= 0:
-            raise ValueError('Convex conjugate is not defined for nonpositive '
-                             '`scalar` {}.'.format(self.scalar))
+            raise ValueError('convex conjugate is not defined for nonpositive '
+                             '`scalar` {}'.format(self.scalar))
         else:
             return self.functional.convex_conj * (1 / self.scalar)
 
@@ -551,14 +547,9 @@ class FunctionalComp(Functional, OperatorComp):
         op : `Operator`
             The right ("inner") operator. Its range must coincide with the
             domain of ``func``.
-        tmp1 : `element` of the range of ``op``, optional
-            Used to avoid the creation of a temporary when applying ``op``
-        tmp2 : `element` of the range of ``op``, optional
-            Used to avoid the creation of a temporary when applying the
-            gradient of ``func``
         """
         if not isinstance(func, Functional):
-            raise TypeError('`fun` {!r} is not a `Functional` instance.'
+            raise TypeError('`fun` {!r} is not a `Functional` instance'
                             ''.format(func))
 
         OperatorComp.__init__(self, left=func, right=op)
@@ -609,7 +600,7 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
             The vector to multiply by.
         """
         if not isinstance(func, Functional):
-            raise TypeError('`fun` {!r} is not a `Functional` instance.'
+            raise TypeError('`fun` {!r} is not a `Functional` instance'
                             ''.format(func))
 
         OperatorRightVectorMult.__init__(self, operator=func, vector=vector)
@@ -644,10 +635,10 @@ class FunctionalSum(Functional, OperatorSum):
             and `Functional.range` must coincide.
         """
         if not isinstance(func1, Functional):
-            raise TypeError('`func1` {!r} is not a `Functional` instance.'
+            raise TypeError('`func1` {!r} is not a `Functional` instance'
                             ''.format(func1))
         if not isinstance(func2, Functional):
-            raise TypeError('`func2` {!r} is not a `Functional` instance.'
+            raise TypeError('`func2` {!r} is not a `Functional` instance'
                             ''.format(func2))
 
         OperatorSum.__init__(self, func1, func2)
@@ -695,7 +686,7 @@ class FunctionalScalarSum(FunctionalSum):
             ConstantFunctional)
 
         if not isinstance(func, Functional):
-            raise TypeError('`fun` {!r} is no a `Functional` instance'
+            raise TypeError('`fun` {!r} is not a `Functional` instance'
                             ''.format(func))
         if scalar not in func.range:
             raise TypeError('`scalar` {} is not in the range of '
@@ -801,7 +792,7 @@ class FunctionalTranslation(Functional):
 
 class FunctionalLinearPerturb(Functional):
 
-    """ The ``Functional`` representing ``f(.) + <linear_term, .>``.
+    """The ``Functional`` representing ``f(.) + <linear_term, .>``.
 
     Notes
     -----
