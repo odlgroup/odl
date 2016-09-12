@@ -255,7 +255,12 @@ class Functional(Operator):
         elif other in self.range:
             # Left multiplication is more efficient, so we can use this in the
             # case of linear functional.
-            if self.is_linear:
+            if other == 0:
+                from odl.solvers.functional.default_functionals import (
+                    ConstantFunctional)
+                return ConstantFunctional(self.domain,
+                                          self(self.domain.zero()))
+            elif self.is_linear:
                 return FunctionalLeftScalarMult(self, other)
             else:
                 return FunctionalRightScalarMult(self, other)
@@ -315,8 +320,12 @@ class Functional(Operator):
             `OperatorLeftVectorMult`.
         """
         if other in self.range:
-            # TODO: potentially optimize for when ``other == 0``?
-            return FunctionalLeftScalarMult(self, other)
+            if other == 0:
+                from odl.solvers.functional.default_functionals import (
+                    ZeroFunctional)
+                return ZeroFunctional(self.domain)
+            else:
+                return FunctionalLeftScalarMult(self, other)
         else:
             return super().__rmul__(other)
 
@@ -376,6 +385,8 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
     functional
 
         ``(scalar * f)(x) == scalar * f(x)``.
+
+    `Functional.__rmul__` takes care of the case scalar = 0.
     """
 
     def __init__(self, func, scalar):
@@ -385,7 +396,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         ----------
         func : `Functional`
             Functional to be scaled.
-        scalar : `float`
+        scalar : float, nonzero
             Number with which to scale the functional.
         """
         if not isinstance(func, Functional):
@@ -394,16 +405,15 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
         self.__scalar = func.range.element(scalar)
 
-        grad_lipschitz = (0 if scalar == 0
-                          else np.abs(scalar) * func.grad_lipschitz)
-        Functional.__init__(self, space=func.domain,
-                            linear=func.is_linear or scalar == 0,
-                            grad_lipschitz=grad_lipschitz)
+        Functional.__init__(self, space=func.domain, linear=func.is_linear,
+                            grad_lipschitz=(
+                                np.abs(scalar) * func.grad_lipschitz))
 
         OperatorLeftScalarMult.__init__(self, operator=func, scalar=scalar)
 
     @property
     def scalar(self):
+        """The scalar."""
         return self.__scalar
 
     @property
@@ -418,10 +428,9 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the scaled functional."""
-        # The helper function only allows positive scaling parameters.
-        # Otherwise it gives an error.
+        """Convex conjugate functional of the scaled functional.
 
+        `Functional.__rmul__` takes care of the case scalar = 0."""
         if self.scalar <= 0:
             raise ValueError('scaling with nonpositive values have no convex '
                              'conjugate. Current value: {}.'
@@ -432,6 +441,8 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
     @property
     def proximal(self):
         """Proximal factory of the scaled functional.
+
+        `Functional.__rmul__` takes care of the case scalar = 0
 
         See Also
         --------
@@ -444,6 +455,8 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
                              ''.format(self.scalar))
 
         elif self.scalar == 0:
+            # Should not get here. `Functional.__rmul__` takes care of the case
+            # scalar = 0
             return proximal_zero(self.domain)
 
         else:
@@ -468,6 +481,8 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
     functional
 
         ``(f * scalar)(x) == f(scalar * x)``.
+
+    `Functional.__mul__` takes care of the case scalar = 0.
     """
 
     def __init__(self, func, scalar):
@@ -477,7 +492,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
         ----------
         func : `Functional`
             The functional which will have its argument scaled.
-        scal : `Scalar`
+        scalar : float, nonzero
             The scaling parameter with which the argument is scaled.
         """
 
@@ -487,12 +502,9 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
         scalar = func.range.element(scalar)
 
-        grad_lipschitz = (0 if scalar == 0
-                          else np.abs(scalar) * func.grad_lipschitz)
-
-        Functional.__init__(self, space=func.domain,
-                            linear=func.is_linear or scalar == 0,
-                            grad_lipschitz=grad_lipschitz)
+        Functional.__init__(self, space=func.domain, linear=func.is_linear,
+                            grad_lipschitz=(
+                                np.abs(scalar) * func.grad_lipschitz))
 
         OperatorRightScalarMult.__init__(self, operator=func, scalar=scalar)
 
@@ -508,12 +520,11 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of functional with scaled argument."""
-        if self.scalar <= 0:
-            raise ValueError('convex conjugate is not defined for nonpositive '
-                             '`scalar` {}'.format(self.scalar))
-        else:
-            return self.functional.convex_conj * (1 / self.scalar)
+        """Convex conjugate functional of functional with scaled argument.
+
+        `Functional.__mul__` takes care of the case scalar = 0.
+        """
+        return self.functional.convex_conj * (1 / self.scalar)
 
     @property
     def proximal(self):
@@ -608,14 +619,21 @@ class FunctionalRightVectorMult(Functional, OperatorRightVectorMult):
         Functional.__init__(self, space=func.domain)
 
     @property
+    def functional(self):
+        return self.operator
+
+    @property
     def gradient(self):
         """Gradient operator of the functional."""
         return self.vector * self.operator.gradient * self.vector
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the functional."""
-        return self.operator.convex_conj * (1.0 / self.vector)
+        """Convex conjugate functional of the functional.
+
+        This is only defined for vectors with no zero-elements.
+        """
+        return self.functional.convex_conj * (1.0 / self.vector)
 
 
 class FunctionalSum(Functional, OperatorSum):

@@ -141,15 +141,7 @@ def test_left_scalar_multiplication(space):
                             places=PLACES)
 
     # Test left multiplication with zero
-    zero_times_f = 0 * F
-    x = noise_element(space)
-    assert all_almost_equal(zero_times_f(x), space.zero(), places=PLACES)
-
-    # Proximal of the zero functional is the identity operator
-    sigma = np.random.rand()
-    zero_prox = zero_times_f.proximal(sigma)
-    x_verify = x.copy()
-    assert all_almost_equal(zero_prox(x), x_verify, places=PLACES)
+    assert isinstance(0 * F, odl.solvers.ZeroFunctional)
 
 
 def test_right_scalar_multiplication(space):
@@ -174,16 +166,19 @@ def test_right_scalar_multiplication(space):
                             scal * (F.derivative(scal * x))(p),
                             places=PLACES)
 
-    # Test conjugate functional. This requiers positive scaling to work
+    # Test conjugate functional: positive, negative and zero scalar
     scal = np.random.rand()
-    neg_scal = -np.random.rand()
-
-    with pytest.raises(ValueError):
-        (F * neg_scal).convex_conj
-
     assert all_almost_equal((F * scal).convex_conj(x),
                             (F.convex_conj(x / scal)),
                             places=PLACES)
+
+    neg_scal = -np.random.rand()
+    assert all_almost_equal((F * neg_scal).convex_conj(x),
+                            (F.convex_conj(x / neg_scal)),
+                            places=PLACES)
+
+    assert isinstance((F * 0), odl.solvers.ConstantFunctional)
+    assert almost_equal((F * 0)(x), F(space.zero()), places=PLACES)
 
     # TODO: Add more test for convex conjugate? Old ConvexConjugateFuncScaling?
 
