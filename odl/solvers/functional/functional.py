@@ -315,7 +315,7 @@ class Functional(Operator):
             `OperatorLeftVectorMult`.
         """
         if other in self.range:
-            # TODO: potentially optimize for when other == 0
+            # TODO: potentially optimize for when ``other == 0``?
             return FunctionalLeftScalarMult(self, other)
         else:
             return super().__rmul__(other)
@@ -825,13 +825,13 @@ class FunctionalLinearPerturb(Functional):
 
         Parameters
         ----------
-        cconj_f : `Functional`
+        func : `Functional`
             Function corresponding to F^*.
         translation : `domain` element
             Element in domain of ``F``, corresponding to the translation.
         """
         if not isinstance(func, Functional):
-            raise TypeError('`cconj_f` {} is not a `Functional` instance'
+            raise TypeError('`func` {} is not a `Functional` instance'
                             ''.format(func))
 
         super().__init__(space=func.domain,

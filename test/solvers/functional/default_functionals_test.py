@@ -29,17 +29,27 @@ from odl.util.testutils import all_almost_equal, almost_equal, noise_element
 PLACES = 8
 
 
-# TODO: fixture for different spaces. On all of them
-def test_L1_norm():
-    """Test the L1-norm."""
+space_params = ['r10', 'uniform_discr']
+space_ids = [' space = {}'.format(p.ljust(10)) for p in space_params]
 
-    n = 10
-    space = odl.rn(n)
+
+@pytest.fixture(scope="module", ids=space_ids, params=space_params)
+def space(request, fn_impl):
+    name = request.param.strip()
+
+    if name == 'r10':
+        return odl.rn(10, impl=fn_impl)
+    elif name == 'uniform_discr':
+        return odl.uniform_discr(0, 1, 7, impl=fn_impl)
+
+
+def test_L1_norm(space):
+    """Test the L1-norm."""
     func = odl.solvers.L1Norm(space)
     x = noise_element(space)
 
     # Evaluation of the functional
-    expected_result = np.sum(np.abs(x))
+    expected_result = (np.abs(x)).inner(space.one())
     assert almost_equal(func(x), expected_result, places=PLACES)
 
     # The gradient is the sign-function
@@ -52,7 +62,7 @@ def test_L1_norm():
     # Explicit computation:      |  x_i - sigma, x_i > sigma
     #                      z_i = {  0,           -sigma <= x_i <= sigma
     #                            |  x_i + sigma,     x_i < -sigma
-    tmp = space.zero()
+    tmp = np.zeros(space.size)
     orig = x.asarray()
     tmp[orig > sigma] = orig[orig > sigma] - sigma
     tmp[orig < -sigma] = orig[orig < -sigma] + sigma
@@ -64,14 +74,14 @@ def test_L1_norm():
     cc_func = func.convex_conj
 
     # Evaluation of convex conjugate
-    # Explicit calculation: 0 if |x|_1 <= 1, infty else
-    norm_larger_than_one = 2.0 * space.one()
+    # Explicit calculation: 0 if |x|_inf <= 1, infty else
+    norm_larger_than_one = 1.1 * x / np.max(np.abs(x))
     assert cc_func(norm_larger_than_one) == np.inf
 
-    norm_less_than_one = 0.9 * 1.0 / n * space.one()
+    norm_less_than_one = 0.9 * x / np.max(np.abs(x))
     assert cc_func(norm_less_than_one) == 0
 
-    norm_equal_to_one = x / x.norm()
+    norm_equal_to_one = x / np.max(np.abs(x))
     assert cc_func(norm_equal_to_one) == 0
 
     # The gradient of the convex conjugate (not implemeted)
@@ -90,16 +100,57 @@ def test_L1_norm():
     assert isinstance(cc_cc_func, odl.solvers.L1Norm)
 
 
-def test_L2_norm():
-    """Test the L2-norm."""
+def test_indicator_lp_unit_ball(space):
+    """Test for indicator function on unit ball."""
+    x = noise_element(space)
+    one_elem = space.one()
 
-    n = 10
-    space = odl.rn(n)
+    # Used du to numerical errors
+    accuracy = 1 - 10**(-PLACES)
+
+    # Exponent = 1
+    exponent = 1
+    func = odl.solvers.IndicatorLpUnitBall(space, exponent)
+
+    # Evaluation of the functional
+    one_norm = np.abs(x).inner(one_elem)
+
+    norm_larger_than_one = 1.1 * x / one_norm
+    assert func(norm_larger_than_one) == np.inf
+
+    norm_less_than_one = 0.9 * x / one_norm
+    assert func(norm_less_than_one) == 0
+
+    # Slightly less than 1 due to potential numerical errors
+    norm_equal_to_one = accuracy * x / one_norm
+    assert func(norm_equal_to_one) == 0
+
+    # Negative, noninteger power
+    exponent = -1 * np.random.rand()
+    func = odl.solvers.IndicatorLpUnitBall(space, exponent)
+
+    # Evaluation of the functional
+    p_norm_x = np.power(np.power(np.abs(x), exponent).inner(one_elem),
+                        1 / exponent)
+
+    norm_larger_than_one = 1.1 * x / p_norm_x
+    assert func(norm_larger_than_one) == np.inf
+
+    norm_less_than_one = 0.9 * x / p_norm_x
+    assert func(norm_less_than_one) == 0
+
+    # Slightly less than 1 due to potential numerical errors
+    norm_equal_to_one = accuracy * x / p_norm_x
+    assert func(norm_equal_to_one) == 0
+
+
+def test_L2_norm(space):
+    """Test the L2-norm."""
     func = odl.solvers.L2Norm(space)
     x = noise_element(space)
 
     # Evaluation of the functional
-    expected_result = np.sqrt(np.sum(x**2))
+    expected_result = np.sqrt((x**2).inner(space.one()))
     assert almost_equal(func(x), expected_result, places=PLACES)
 
     # The gradient
@@ -140,7 +191,11 @@ def test_L2_norm():
         cc_func.gradient
 
     # The proximal of the convex conjugate
-    expected_result = x / x.norm()
+    # Explicit calculation: x if ||x||_2 < 1, x/||x|| else.
+    if x.norm() < 1:
+        expected_result = x
+    else:
+        expected_result = x / x.norm()
     assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result,
                             places=PLACES)
 
@@ -150,16 +205,13 @@ def test_L2_norm():
     assert isinstance(cc_cc_func, odl.solvers.L2Norm)
 
 
-def test_L2_norm_squared():
+def test_L2_norm_squared(space):
     """Test the squared L2-norm."""
-
-    n = 10
-    space = odl.rn(n)
     func = odl.solvers.L2NormSquared(space)
     x = noise_element(space)
 
     # Evaluation of the functional
-    expected_result = np.sum(x**2)
+    expected_result = (x**2).inner(space.one())
     assert almost_equal(func(x), expected_result, places=PLACES)
 
     # The gradient
@@ -202,11 +254,8 @@ def test_L2_norm_squared():
                             places=PLACES)
 
 
-def test_constant_functional():
+def test_constant_functional(space):
     """Test the constant functional."""
-
-    n = 10
-    space = odl.rn(n)
     constant = np.random.randn()
     func = odl.solvers.ConstantFunctional(space, constant=constant)
     x = noise_element(space)
@@ -251,15 +300,12 @@ def test_constant_functional():
     assert isinstance(cc_cc_func, type(expected_functional))
 
 
-def test_zero_functional():
+def test_zero_functional(space):
     """Test the zero functional."""
-
-    n = 10
-    space = odl.rn(n)
-
     assert isinstance(odl.solvers.ZeroFunctional(space),
                       odl.solvers.ConstantFunctional)
     assert odl.solvers.ZeroFunctional(space).constant == 0
+
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

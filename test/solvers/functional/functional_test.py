@@ -34,11 +34,46 @@ from odl.util.testutils import all_almost_equal, almost_equal, noise_element
 PLACES = 8
 
 
-# TODO: maybe add tests for if translations etc. belongs to the wrong space
+# TODO: maybe add tests for if translations etc. belongs to the wrong space.
+# These tests doesn't work as intended now, since casting is possible between
+# spaces with the same number of discrete points.
+
+space_params = ['r10', 'uniform_discr']
+space_ids = [' space = {}'.format(p.ljust(10)) for p in space_params]
 
 
-# TODO: fixture for all functionals
-def test_derivative():
+@pytest.fixture(scope="module", ids=space_ids, params=space_params)
+def space(request, fn_impl):
+    name = request.param.strip()
+
+    if name == 'r10':
+        return odl.rn(10, impl=fn_impl)
+    elif name == 'uniform_discr':
+        # Discretization parameters
+        return odl.uniform_discr(0, 1, 7, impl=fn_impl)
+
+
+func_params = ['l1 ', 'l2', 'l2^2', 'constant']
+func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
+
+
+@pytest.fixture(scope="module", ids=func_ids, params=func_params)
+def functional(request, space):
+    name = request.param.strip()
+
+    if name == 'l1':
+        func = odl.solvers.functional.L1Norm(space)
+    elif name == 'l2':
+        func = odl.solvers.functional.L2Norm(space)
+    elif name == 'l2^2':
+        func = odl.solvers.functional.L2NormSquared(space)
+    elif name == 'constant':
+        func = odl.solvers.functional.ConstantFunctional(space, 2)
+
+    return func
+
+
+def test_derivative(functional):
     """Test for the derivative of a functional.
 
     The test checks that the directional derivative in a point is the same as
@@ -46,26 +81,18 @@ def test_derivative():
     defined.
     """
 
-    # Discretization parameters
-    n = 3
-
-    # Discretized spaces
-    space = odl.uniform_discr([0, 0], [1, 1], [n, n])
-
-    x = noise_element(space)
-    y = noise_element(space)
+    x = noise_element(functional.domain)
+    y = noise_element(functional.domain)
     epsK = 1e-8
 
-    F = odl.solvers.functional.L2Norm(space)
-
     # Numerical test of gradient
-    assert all_almost_equal((F(x + epsK * y) - F(x)) / epsK,
-                            y.inner(F.gradient(x)),
+    assert all_almost_equal((functional(x + epsK * y) - functional(x)) / epsK,
+                            y.inner(functional.gradient(x)),
                             places=PLACES / 2)
 
     # Check that derivative and gradient is consistent
-    assert all_almost_equal(F.derivative(x)(y),
-                            y.inner(F.gradient(x)),
+    assert all_almost_equal(functional.derivative(x)(y),
+                            y.inner(functional.gradient(x)),
                             places=PLACES)
 
 
@@ -178,6 +205,10 @@ def test_right_scalar_multiplication():
                             ((1.0 / scal) *
                                 (F.proximal(sigma * scal**2)))(x * scal),
                             places=PLACES)
+
+    # Test that for linear functionals, left multiplication is used.
+    func = odl.solvers.ZeroFunctional(space)
+    assert isinstance(scal * func, odl.solvers.FunctionalLeftScalarMult)
 
 
 def test_functional_composition():
@@ -344,6 +375,17 @@ def test_translation_of_functional():
     assert all_almost_equal(translated_functional.derivative(x)(p),
                             expected_result,
                             places=PLACES)
+
+    # Test for optimized implementation, when translating a translated
+    # functional
+    second_translation = noise_element(space)
+    double_translated_functional = translated_functional.translated(
+        second_translation)
+
+    # Evaluation
+    assert almost_equal(double_translated_functional(x),
+                        test_functional(x - translation - second_translation),
+                        places=PLACES)
 
 
 def test_multiplication_with_vector():

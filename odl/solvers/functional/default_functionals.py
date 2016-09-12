@@ -35,7 +35,7 @@ from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
 
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
-           'ConstantFunctional')
+           'ConstantFunctional', 'IndicatorLpUnitBall')
 
 
 class L1Norm(Functional):
@@ -179,9 +179,9 @@ class IndicatorLpUnitBall(Functional):
         elif self.exponent == np.inf:
             x_norm = x.ufunc.absolute().ufunc.max()
         else:
-            x.ufunc.absolute()
-            x.ufunc.power(self.exponent)
-            x_norm = np.pow(x.inner(self.domain.one()), 1 / self.exponent)
+            x.ufunc.absolute(out=x)
+            x.ufunc.power(self.exponent, out=x)
+            x_norm = np.power(x.inner(self.domain.one()), 1 / self.exponent)
 
         if x_norm > 1:
             return np.inf
@@ -358,12 +358,7 @@ class ConstantFunctional(Functional):
             The constant value of the functional
         """
         super().__init__(space=space, linear=(constant == 0), grad_lipschitz=0)
-
-        if constant not in self.range:
-            raise TypeError('constant {} not in the range {}.'
-                            ''.format(constant, self.range))
-
-        self.__constant = constant
+        self.__constant = self.range.element(constant)
 
     @property
     def constant(self):
