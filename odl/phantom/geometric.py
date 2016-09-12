@@ -334,7 +334,7 @@ def _ellipse_phantom_3d(space, ellipses):
     """
 
     # Blank image
-    p = np.zeros(space.shape, dtype=space.dtype)
+    p = np.zeros(space.shape)
 
     # Create the pixel grid
     grid_in = space.grid.meshgrid
