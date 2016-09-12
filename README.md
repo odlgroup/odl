@@ -95,6 +95,7 @@ To contact the developers either write an issue on github or send an email to od
 - Kati Niinimäki ([@niinimaki](https://github.com/niinimaki))
 - Axel Ringh ([@aringh](https://github.com/aringh))
 - Julian Moosmann ([@moosmann](https://github.com/moosmann))
+- Chong Chen ([@chongchenmath](https://github.com/chongchenmath))
 - Willem Jan Palenstijn ([@wjp](https://github.com/wjp))
 
 Funding
