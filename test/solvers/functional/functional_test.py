@@ -147,8 +147,6 @@ def test_left_scalar_multiplication(space):
                             scal * (F.convex_conj(x / scal)),
                             places=PLACES)
 
-    # TODO: Add more test for convex conjugate? Old ConvexConjugateArgScaling?
-
     # Test proximal operator. This requiers scaling to be positive.
     sigma = 1.0
     with pytest.raises(ValueError):
@@ -199,14 +197,20 @@ def test_right_scalar_multiplication(space):
     assert isinstance((F * 0), odl.solvers.ConstantFunctional)
     assert almost_equal((F * 0)(x), F(space.zero()), places=PLACES)
 
-    # TODO: Add more test for convex conjugate? Old ConvexConjugateFuncScaling?
-
-    # Test proximal operator. This requiers scaling to be positive.
+    # Test proximal operator: positive, negative and zero scalar
     sigma = np.random.rand()
     assert all_almost_equal(((F * scal).proximal(sigma))(x),
-                            ((1.0 / scal) *
-                                (F.proximal(sigma * scal**2)))(x * scal),
+                            ((1.0 / scal) * F.proximal(
+                                sigma * scal**2))(x * scal),
                             places=PLACES)
+
+    assert all_almost_equal(((F * neg_scal).proximal(sigma))(x),
+                            ((1.0 / neg_scal) * F.proximal(
+                                sigma * neg_scal**2))(x * neg_scal),
+                            places=PLACES)
+
+    # The proximal operator of a constant functional is the identity operator
+    assert isinstance((F * 0).proximal(sigma), odl.IdentityOperator)
 
     # Test that for linear functionals, left multiplication is used.
     func = odl.solvers.ZeroFunctional(space)
