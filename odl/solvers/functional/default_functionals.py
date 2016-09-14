@@ -70,7 +70,7 @@ class L1Norm(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=np.inf)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
@@ -242,7 +242,7 @@ class L2Norm(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         """
-        super().__init__(space=space, linear=False, grad_lipschitz=np.inf)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):

@@ -567,7 +567,7 @@ class FunctionalComp(Functional, OperatorComp):
 
         Functional.__init__(self, space=func.domain,
                             linear=(func.is_linear and op.is_linear),
-                            grad_lipschitz=np.infty)
+                            grad_lipschitz=np.nan)
 
     @property
     def gradient(self):
@@ -643,38 +643,28 @@ class FunctionalSum(Functional, OperatorSum):
     ``FunctionalSum(func1, func2) == (x --> func1(x) + func2(x))``.
     """
 
-    def __init__(self, func1, func2):
+    def __init__(self, left, right):
         """Initialize a new instance.
 
         Parameters
         ----------
-        func1, func2 : `Functional`
+        left, right : `Functional`
             The summands of the functional sum. Their `Functional.domain`
             and `Functional.range` must coincide.
         """
-        if not isinstance(func1, Functional):
-            raise TypeError('`func1` {!r} is not a `Functional` instance'
-                            ''.format(func1))
-        if not isinstance(func2, Functional):
-            raise TypeError('`func2` {!r} is not a `Functional` instance'
-                            ''.format(func2))
+        if not isinstance(left, Functional):
+            raise TypeError('`left` {!r} is not a `Functional` instance'
+                            ''.format(left))
+        if not isinstance(right, Functional):
+            raise TypeError('`right` {!r} is not a `Functional` instance'
+                            ''.format(right))
 
-        OperatorSum.__init__(self, func1, func2)
+        OperatorSum.__init__(self, left, right)
 
-        Functional.__init__(self, space=func1.domain,
-                            linear=(func1.is_linear and func2.is_linear),
-                            grad_lipschitz=(func1.grad_lipschitz +
-                                            func2.grad_lipschitz))
-
-    @property
-    def left_func(self):
-        """The left functional in the sum."""
-        return self.left
-
-    @property
-    def right_func(self):
-        """The right functional in the sum."""
-        return self.right
+        Functional.__init__(self, space=left.domain,
+                            linear=(left.is_linear and right.is_linear),
+                            grad_lipschitz=(left.grad_lipschitz +
+                                            right.grad_lipschitz))
 
     @property
     def gradient(self):
@@ -710,19 +700,19 @@ class FunctionalScalarSum(FunctionalSum):
             raise TypeError('`scalar` {} is not in the range of '
                             '`func` {!r}'.format(scalar, func))
 
-        FunctionalSum.__init__(self, func1=func,
-                               func2=ConstantFunctional(space=func.domain,
+        FunctionalSum.__init__(self, left=func,
+                               right=ConstantFunctional(space=func.domain,
                                                         constant=scalar))
 
     @property
     def scalar(self):
         """The scalar that is added to the functional"""
-        return self.right_func.constant
+        return self.right.constant
 
     @property
     def proximal(self):
         """Proximal factory of the FunctionalScalarSum."""
-        return self.left_func.proximal
+        return self.left.proximal
 
     @property
     def convex_conj(self):
@@ -762,17 +752,17 @@ class FunctionalTranslation(Functional):
 
         # TODO: Add case if we have translation -> scaling -> translation?
         if isinstance(func, FunctionalTranslation):
-            self.__original_func = func.original_func
+            self.__functional = func.functional
             self.__translation = func.translation + translation
 
         else:
-            self.__original_func = func
+            self.__functional = func
             self.__translation = translation
 
     @property
-    def original_func(self):
+    def functional(self):
         """The original functional that has been translated."""
-        return self.__original_func
+        return self.__functional
 
     @property
     def translation(self):
@@ -781,12 +771,12 @@ class FunctionalTranslation(Functional):
 
     def _call(self, x):
         """Evaluate the functional in a point ``x``."""
-        return self.original_func(x - self.translation)
+        return self.functional(x - self.translation)
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return (self.original_func.gradient *
+        return (self.functional.gradient *
                 (IdentityOperator(self.domain) - self.translation))
 
     @property
@@ -797,37 +787,20 @@ class FunctionalTranslation(Functional):
         --------
         proximal_translation
         """
-        return proximal_translation(self.original_func.proximal,
+        return proximal_translation(self.functional.proximal,
                                     self.translation)
 
     @property
     def convex_conj(self):
         """Convex conjugate functional of the translated functional."""
         return FunctionalLinearPerturb(
-            self.original_func.convex_conj,
+            self.functional.convex_conj,
             self.translation)
 
 
 class FunctionalLinearPerturb(Functional):
 
-    """The ``Functional`` representing ``f(.) + <linear_term, .>``.
-
-    Notes
-    -----
-    Given a functional :math:`f`, the convex conjugate of a translated version
-    :math:`f(\cdot - y)` is given by a linear pertubation of the convex
-    conjugate of :math:`f`:
-
-        .. math::
-
-            (f( . - y))^* (x) = f^*(x) + <y, x>.
-
-    For reference on the identity used, see [KP2015]_.
-
-    The implementation assumes that the underlying  functional :math:`f` is
-    proper, convex, and lower semi-continuous. This in order to be able to
-    calulate the convex conjugate using the Fenchel-Moreo theorem [BC2011]_.
-    """
+    """The ``Functional`` representing ``f(.) + <linear_term, .>``."""
 
     def __init__(self, func, linear_term):
         """Initialize a new instance.
@@ -852,13 +825,13 @@ class FunctionalLinearPerturb(Functional):
             self.__grad_lipschitz = (func.grad_lipschitz +
                                      linear_term.norm())
 
-        self.__orig_func = func
+        self.__functional = func
         self.__linear_term = func.domain.element(linear_term)
 
     @property
-    def orig_func(self):
+    def functional(self):
         """The original functional."""
-        return self.__orig_func
+        return self.__functional
 
     @property
     def linear_term(self):
@@ -867,12 +840,12 @@ class FunctionalLinearPerturb(Functional):
 
     def _call(self, x):
         """Apply the functional to the given point."""
-        return self.orig_func(x) + x.inner(self.linear_term)
+        return self.functional(x) + x.inner(self.linear_term)
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
-        return self.orig_func.gradient + ConstantOperator(self.linear_term)
+        return self.functional.gradient + ConstantOperator(self.linear_term)
 
     @property
     def proximal(self):
@@ -883,7 +856,7 @@ class FunctionalLinearPerturb(Functional):
         proximal_quadratic_perturbation
         """
         return proximal_quadratic_perturbation(
-            self.orig_func.proximal, a=0, u=self.linear_term)
+            self.functional.proximal, a=0, u=self.linear_term)
 
     @property
     def convex_conj(self):
@@ -891,6 +864,23 @@ class FunctionalLinearPerturb(Functional):
 
         By the Fenchel-Moreau theorem this a translation of the original
         functional.
+
+        Notes
+        -----
+        Given a functional :math:`f`, the convex conjugate of a translated
+        version :math:`f(\cdot - y)` is given by a linear pertubation of the
+        convex conjugate of :math:`f`:
+
+            .. math::
+
+                (f( . - y))^* (x) = f^*(x) + <y, x>.
+
+        For reference on the identity used, see [KP2015]_.
+
+        The implementation assumes that the underlying  functional :math:`f` is
+        proper, convex, and lower semi-continuous. This in order to be able to
+        calulate the convex conjugate using the Fenchel-Moreo theorem
+        [BC2011]_.
         """
-        return self.orig_func.convex_conj.translated(
+        return self.functional.convex_conj.translated(
             self.linear_term)
