@@ -25,6 +25,7 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
+import scipy
 
 # Internal
 import odl
@@ -34,12 +35,13 @@ from odl.solvers.advanced.proximal_operators import (
     proximal_cconj_l1,
     proximal_l2,
     proximal_cconj_l2_squared,
-    proximal_cconj_kl)
+    proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
 from odl.util.testutils import all_almost_equal
 
 
 # Places for the accepted error when comparing results
-PLACES = 8
+HIGH_ACC = 8
+LOW_ACC = 4
 
 
 def test_proximal_zero():
@@ -182,8 +184,8 @@ def test_proximal_l2_wo_data():
     x_small_opt = x_small * 0
     x_big_opt = (1 - lam * sigma / x_big.norm()) * x_big
 
-    assert all_almost_equal(prox(x_small), x_small_opt, PLACES)
-    assert all_almost_equal(prox(x_big), x_big_opt, PLACES)
+    assert all_almost_equal(prox(x_small), x_small_opt, HIGH_ACC)
+    assert all_almost_equal(prox(x_big), x_big_opt, HIGH_ACC)
 
 
 def test_proximal_l2_with_data():
@@ -215,8 +217,8 @@ def test_proximal_l2_with_data():
     const = lam * sigma / (x_big - g).norm()
     x_big_opt = (1 - const) * x_big + const * g
 
-    assert all_almost_equal(prox(x_small), x_small_opt, PLACES)
-    assert all_almost_equal(prox(x_big), x_big_opt, PLACES)
+    assert all_almost_equal(prox(x_small), x_small_opt, HIGH_ACC)
+    assert all_almost_equal(prox(x_big), x_big_opt, HIGH_ACC)
 
 
 def test_proximal_convconj_l2_sq_wo_data():
@@ -248,7 +250,7 @@ def test_proximal_convconj_l2_sq_wo_data():
     # Explicit computation: x / (1 + sigma / (2 * lambda))
     x_verify = x / (1 + sigma / (2 * lam))
 
-    assert all_almost_equal(x_out, x_verify, PLACES)
+    assert all_almost_equal(x_out, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l2_sq_with_data():
@@ -283,7 +285,7 @@ def test_proximal_convconj_l2_sq_with_data():
     # Explicit computation: (x - sigma * g) / (1 + sigma / (2 * lambda))
     x_verify = (x - sigma * g) / (1 + sigma / (2 * lam))
 
-    assert all_almost_equal(x_out, x_verify, PLACES)
+    assert all_almost_equal(x_out, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l1_simple_space_without_data():
@@ -314,7 +316,7 @@ def test_proximal_convconj_l1_simple_space_without_data():
     denom = np.maximum(lam, np.sqrt(x_arr ** 2))
     x_verify = lam * x_arr / denom
 
-    assert all_almost_equal(x_opt, x_verify, PLACES)
+    assert all_almost_equal(x_opt, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l1_simple_space_with_data():
@@ -347,7 +349,7 @@ def test_proximal_convconj_l1_simple_space_with_data():
     denom = np.maximum(lam, np.abs(x_arr - sigma * g_arr))
     x0_verify = lam * (x_arr - sigma * g_arr) / denom
 
-    assert all_almost_equal(x_opt, x0_verify, PLACES)
+    assert all_almost_equal(x_opt, x0_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_l1_product_space():
@@ -391,7 +393,7 @@ def test_proximal_convconj_l1_product_space():
 
 
 def test_proximal_convconj_kl_simple_space():
-    """Proximal factory for the convex conjugate of KL divergence."""
+    """Test for proximal factory for the convex conjugate of KL divergence."""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
@@ -421,12 +423,11 @@ def test_proximal_convconj_kl_simple_space():
     # Explicit computation:
     x_verify = (lam + x - np.sqrt((x - lam) ** 2 + 4 * lam * sigma * g)) / 2
 
-    assert all_almost_equal(x_opt, x_verify, PLACES)
+    assert all_almost_equal(x_opt, x_verify, HIGH_ACC)
 
 
 def test_proximal_convconj_kl_product_space():
-    """Proximal factory for the convex conjugate of the KL divergence using
-    product spaces."""
+    """Test for product spaces in proximal for conjugate of KL divergence"""
 
     # Product space for matrix of operators
     op_domain = odl.ProductSpace(odl.uniform_discr(0, 1, 10), 2)
@@ -462,6 +463,43 @@ def test_proximal_convconj_kl_product_space():
 
     # Compare components
     assert all_almost_equal(x_verify, x_opt)
+
+
+def test_proximal_convconj_kl_cross_entropy():
+    """Test for proximal of convex conjugate of cross entropy KL divergence."""
+
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # Data
+    g = space.element(np.arange(10, 0, -1))
+
+    # Factory function returning the proximal operator
+    lam = 2
+    prox_factory = proximal_cconj_kl_cross_entropy(space, lam=lam, g=g)
+
+    # Initialize the proximal operator of F^*
+    sigma = 0.25
+    prox = prox_factory(sigma)
+
+    assert isinstance(prox, odl.Operator)
+
+    # Element in image space where the proximal operator is evaluated
+    x = space.element(np.arange(-5, 5))
+
+    prox_val = prox(x)
+
+    # Explicit computation:
+    x_verify = x - lam * scipy.special.lambertw(
+        sigma / lam * g * np.exp(x / lam))
+
+    assert all_almost_equal(prox_val, x_verify, HIGH_ACC)
+
+    # Test inplace evaluation
+    x_inplace = space.element()
+    prox(x, out=x_inplace)
+
+    assert all_almost_equal(x_inplace, x_verify, HIGH_ACC)
 
 
 if __name__ == '__main__':
