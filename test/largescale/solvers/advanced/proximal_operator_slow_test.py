@@ -32,7 +32,7 @@ from odl.solvers.advanced.proximal_operators import (
     proximal_l1, proximal_cconj_l1,
     proximal_l2, proximal_cconj_l2,
     proximal_l2_squared, proximal_cconj_l2_squared,
-    proximal_cconj_kl, proximal_cconj_kl_version_two)
+    proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
 from odl.util.testutils import (noise_element, all_almost_equal)
 
 from scipy.special import lambertw
@@ -76,7 +76,7 @@ def make_offset(g, stepsize, convex_conjugate):
 prox_params = ['l1 ', 'l1_dual',
                'l2', 'l2_dual',
                'l2^2', 'l2^2_dual',
-               'kl_dual', 'kl_dual_second']
+               'kl_dual', 'kl_cross_ent_dual']
 prox_ids = [' f = {}'.format(p.ljust(10)) for p in prox_params]
 
 
@@ -167,11 +167,11 @@ def proximal_and_function(request, stepsize, offset):
 
         return prox(stepsize), kl_divergence_dual
 
-    elif name == 'kl_dual_second':
+    elif name == 'kl_cross_ent_dual':
         if g is not None:
             g = np.abs(g)
 
-        def kl_divergence_second_kind_dual(x):
+        def kl_divergence_cross_entropy_dual(x):
             one_element = x.space.one()
             if g is None:
                 return stepsize * one_element.inner(np.exp(x) - one_element)
@@ -179,9 +179,9 @@ def proximal_and_function(request, stepsize, offset):
                 return stepsize * one_element.inner(
                     g * (np.exp(x) - one_element))
 
-        prox = proximal_cconj_kl_version_two(space, g=g)
+        prox = proximal_cconj_kl_cross_entropy(space, g=g)
 
-        return prox(stepsize), kl_divergence_second_kind_dual
+        return prox(stepsize), kl_divergence_cross_entropy_dual
 
     else:
         assert False
@@ -222,7 +222,7 @@ def test_proximal_defintion(proximal_and_function):
         assert f_prox_x <= f_y
 
 
-def test_proximal_convconj_kl_version_two_solving_opt_problem():
+def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
     """Test for proximal operator of conjguate of 2nd kind KL-divergecen.
 
     The test solves the problem
@@ -248,8 +248,8 @@ def test_proximal_convconj_kl_version_two_solving_opt_problem():
     id_op = odl.IdentityOperator(space)
     lin_ops = [id_op, id_op]
     lam_kl = 2.3
-    prox_cc_g = [odl.solvers.proximal_cconj_kl_version_two(space, lam=lam_kl,
-                                                           g=g),
+    prox_cc_g = [odl.solvers.proximal_cconj_kl_cross_entropy(space, lam=lam_kl,
+                                                             g=g),
                  odl.solvers.proximal_cconj_l2_squared(space, lam=1.0 / 2.0,
                                                        g=a)]
     prox_f = odl.solvers.proximal_zero(space)

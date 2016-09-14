@@ -25,6 +25,7 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
+import scipy
 
 # Internal
 import odl
@@ -34,10 +35,9 @@ from odl.solvers.advanced.proximal_operators import (
     proximal_cconj_l1,
     proximal_l2,
     proximal_cconj_l2_squared,
-    proximal_cconj_kl, proximal_cconj_kl_version_two)
+    proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
 from odl.util.testutils import all_almost_equal
 
-from scipy.special import lambertw
 
 # Places for the accepted error when comparing results
 HIGH_ACC = 8
@@ -465,21 +465,18 @@ def test_proximal_convconj_kl_product_space():
     assert all_almost_equal(x_verify, x_opt)
 
 
-def test_proximal_convconj_kl_version_two():
-    """Test for proximal of the conjugate of the "2nd" kind KL divergence."""
+def test_proximal_convconj_kl_cross_entropy():
+    """Test for proximal of convex conjugate of cross entropy KL divergence."""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
-
-    # Element in image space where the proximal operator is evaluated
-    x = space.element(np.arange(-5, 5))
 
     # Data
     g = space.element(np.arange(10, 0, -1))
 
     # Factory function returning the proximal operator
     lam = 2
-    prox_factory = proximal_cconj_kl_version_two(space, lam=lam, g=g)
+    prox_factory = proximal_cconj_kl_cross_entropy(space, lam=lam, g=g)
 
     # Initialize the proximal operator of F^*
     sigma = 0.25
@@ -487,19 +484,22 @@ def test_proximal_convconj_kl_version_two():
 
     assert isinstance(prox, odl.Operator)
 
+    # Element in image space where the proximal operator is evaluated
+    x = space.element(np.arange(-5, 5))
+
     prox_val = prox(x)
 
     # Explicit computation:
-    x_verify = x - lam * lambertw(1.0 / lam * sigma * g * np.exp(
-        1.0 / lam * x))
+    x_verify = x - lam * scipy.special.lambertw(
+        sigma / lam * g * np.exp(x / lam))
 
     assert all_almost_equal(prox_val, x_verify, HIGH_ACC)
 
     # Test inplace evaluation
-    x_opt = space.element()
-    prox(x, x_opt)
+    x_inplace = space.element()
+    prox(x, out=x_inplace)
 
-    assert all_almost_equal(x_opt, x_verify, HIGH_ACC)
+    assert all_almost_equal(x_inplace, x_verify, HIGH_ACC)
 
 
 if __name__ == '__main__':
