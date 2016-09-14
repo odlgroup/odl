@@ -31,8 +31,26 @@ import numpy as np
 
 from odl.discr import Gradient
 from odl.trafos import FourierTransform
+import odl
 
 __all__ = ('optimal_information_transport_solver',)
+
+
+def padded_ft_op(space, padded_size):
+    """Create zero-padding fft setting
+
+    Parameters
+    ----------
+    space : the space needs to do FT
+    padding_size : the percent for zero padding
+    """
+    padding_op = odl.ResizingOperator(
+        space, ran_shp=[padded_size for _ in range(space.ndim)])
+    shifts = [not s % 2 for s in space.shape]
+    ft_op = odl.trafos.FourierTransform(
+        padding_op.range, halfcomplex=False, shift=shifts)
+
+    return ft_op * padding_op
 
 
 def optimal_information_transport_solver(gradS, I, niter, eps,
@@ -86,15 +104,21 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
     Id = gradS.domain.points().T
 
     # Create the temporary elements for update
-    grad = Gradient(gradS.domain, method='central')
+    grad = Gradient(gradS.domain, method='forward', padding_method='symmetric')
     new_points = grad.range.element()
     v = grad.range.element()
 
     # Create poisson solver
-    ft = FourierTransform(gradS.domain)
-    k2_values = sum((ft.range.points() ** 2).T)
-    k2 = ft.range.element(np.maximum(np.abs(k2_values), 0.01))
-    poisson_solver = ft.inverse * (1 / k2) * ft
+    padded_size = 2 * gradS.domain.shape[0]
+    padded_ft_shape_op = padded_ft_op(gradS.domain, padded_size)
+    k2_values = sum((padded_ft_shape_op.range.points() ** 2).T)
+    k2 = padded_ft_shape_op.range.element(np.maximum(np.abs(k2_values), 0.01))
+    poisson_solver = padded_ft_shape_op.inverse * (1 / k2) * padded_ft_shape_op
+
+#    ft = FourierTransform(gradS.domain)
+#    k2_values = sum((ft.range.points() ** 2).T)
+#    k2 = ft.range.element(np.maximum(np.abs(k2_values), 0.005))
+#    poisson_solver = ft.inverse * (1 / k2) * ft
 
     # Begin iteration
     for _ in range(niter):
@@ -128,7 +152,7 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
         u = sigma * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
 
         # Check the mass
-        print(np.sum(PhiStarX))
+        # print(np.sum(PhiStarX))
 
         # Compute the minus gradient in information metric
         for i in range(u.size):
@@ -152,3 +176,6 @@ def optimal_information_transport_solver(gradS, I, niter, eps,
         # Show intermediate result
         if callback is not None:
             callback(PhiStarX)
+
+    return PhiStarX
+
