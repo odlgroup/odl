@@ -46,7 +46,7 @@ __all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
            'proximal_l1', 'proximal_cconj_l1',
            'proximal_l2', 'proximal_cconj_l2',
            'proximal_l2_squared', 'proximal_cconj_l2_squared',
-           'proximal_cconj_kl', 'proximal_cconj_kl_version_two')
+           'proximal_cconj_kl', 'proximal_cconj_kl_cross_entropy')
 
 
 # TODO: remove diagonal op once available on master
@@ -1005,7 +1005,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_cconj_kl_version_two : proximal for releated functional
+    proximal_cconj_kl_cross_entropy : proximal for releated functional
 
     Notes
     -----
@@ -1053,7 +1053,15 @@ def proximal_cconj_kl(space, lam=1, g=None):
     the converged solution will be non-negative. Non-negative intermediate
     image estimates can be enforced by adding an indicator function ind_P
     the primal objective.
+
+    This functional :math:`F`, described above, is related to the
+    Kullback-Leibler cross entropy functional. The KL cross entropy is the one
+    diescribed in `this Wikipedia article
+    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
+    the functional :math:`F` is obtained by switching place of the prior and
+    the varialbe in the KL cross entropy functional. See the See Also section.
     """
+
     lam = float(lam)
 
     if g is not None and g not in space:
@@ -1107,11 +1115,12 @@ def proximal_cconj_kl(space, lam=1, g=None):
     return ProximalCConjKL
 
 
-def proximal_cconj_kl_version_two(space, lam=1, g=None):
-    """Convex conjugate proximal factory of the "second kind" KL divergence.
+def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
+    """Proximal factory of the convex conjugate of cross entropy KL divergence.
 
-    Function returning the proximal operator of the convex conjugate of the
-    functional F where F is the entropy-type Kullback-Leibler (KL) divergence
+    Function returning the proximal facotry of the convex conjugate of the
+    functional F, where F is the corss entorpy Kullback-Leibler (KL)
+    divergence given by
 
         F(x) = sum_i (x_i ln(pos(x_i)) - x_i ln(g_i) + g_i - x_i) + ind_P(x)
 
@@ -1136,7 +1145,7 @@ def proximal_cconj_kl_version_two(space, lam=1, g=None):
 
     See Also
     --------
-    proximal_cconj_kl : proximal for releated functional
+    proximal_cconj_kl : proximal for related functional
 
     Notes
     -----
@@ -1181,24 +1190,26 @@ def proximal_cconj_kl_version_two(space, lam=1, g=None):
     :math:`\\lambda` and :math:`g` are positive, the argument of :math:`W`
     will always be positive.
 
-    Write something about similarities and differences between the two
-    KL-versions?
-
     `Wikipedia article on Kullback Leibler divergence
-    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_
+    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_.
+    For further information about the functional, see for example `this article
+    <http://ieeexplore.ieee.org/document/1056144/?arnumber=1056144>`_.
 
+    The KL cross entropy functional :math:`F`, described above, is related to
+    another functional functional also know as KL divergence. This functional
+    is often used as data discrepancy term in inverse problems, when data is
+    corrupted with Poisson noise. This functional is obtained by changing place
+    of the prior and the variable. See the See Also section.
     """
-
-    # TODO: Update Notes-section in doc above.
 
     lam = float(lam)
 
     if g is not None and g not in space:
         raise TypeError('{} is not an element of {}'.format(g, space))
 
-    class ProximalCConjKLSecondKind(Operator):
+    class ProximalCConjKLCrossEntropy(Operator):
 
-        """Proximal operator of convex conjugate of 2nd kind KL divergence."""
+        """Proximal operator of conjugate of cross entropy KL divergence."""
 
         def __init__(self, sigma):
             """Initialize a new instance.
@@ -1216,14 +1227,15 @@ def proximal_cconj_kl_version_two(space, lam=1, g=None):
             if g is None:
                 # If g is None, it is taken as the one element
                 # Different branches of lambertw is not an issue, see Notes
-                out.assign(x - lam * scipy.special.lambertw(
+                out.lincomb(1, x, -lam, scipy.special.lambertw(
                     (self.sigma / lam) * np.exp(x / lam)))
             else:
                 # Different branches of lambertw is not an issue, see Notes
-                out.assign(x - lam * scipy.special.lambertw(
-                    ((self.sigma * g) / lam) * np.exp(x / lam)))
+                out.lincomb(1, x,
+                            -lam, scipy.special.lambertw(
+                                (self.sigma / lam) * g * np.exp(x / lam)))
 
-    return ProximalCConjKLSecondKind
+    return ProximalCConjKLCrossEntropy
 
 
 if __name__ == '__main__':
