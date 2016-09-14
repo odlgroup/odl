@@ -727,6 +727,9 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             where ``None`` means all values along that dimension. For
             example, ``[None, None, 0.5]`` shows all values in the first
             two dimensions, with the third coordinate equal to 0.5.
+            If a sequence is provided, it specifies the minimum and maximum
+            point to be shown, i.e. ``[None, [0, 1]]`` shows all of the
+            first axis and values between 0 and 1 in the second.
             This option is mutually exclusive to ``indices``.
 
         indices : index expression, optional
@@ -775,19 +778,46 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             indices = []
             for axis, (xmin, xmax, n, coord) in enumerate(
                     zip(interv.min_pt, interv.max_pt, shape, coords)):
-                if coord is None:
-                    indices += [slice(None)]
-                else:
-                    if not xmin <= coord <= xmax:
+                try:
+                    coord_minp, coord_maxp = coord
+                except TypeError:
+                    coord_minp = coord_maxp = coord
+
+                # Validate input
+                if coord_minp is not None:
+                    coord_minp = float(coord_minp)
+                    if not xmin <= coord_minp <= xmax:
+                        raise ValueError('in axis {}: coordinate {} not in '
+                                         'the valid range {}'
+                                         ''.format(axis, coord, [xmin, xmax]))
+                if coord_maxp is not None:
+                    coord_maxp = float(coord_maxp)
+                    if not xmin <= coord_maxp <= xmax:
                         raise ValueError('in axis {}: coordinate {} not in '
                                          'the valid range {}'
                                          ''.format(axis, coord, [xmin, xmax]))
 
-                    if xmin == xmax:
-                        indices += [0]
+                if xmin == xmax:  # trivial cases
+                    indices += [0]
+                elif coord_minp is not None and coord_minp == coord_maxp:
+                    normalized_pos = (coord_minp - xmin) / (xmax - xmin)
+                    indices += [int(n * normalized_pos)]
+                else:
+                    if coord_minp is None:
+                        min_ind = 0
                     else:
-                        normalized_pos = (float(coord) - xmin) / (xmax - xmin)
-                        indices += [int(n * normalized_pos)]
+                        normalized_pos_minp = ((coord_minp - xmin) /
+                                               (xmax - xmin))
+                        min_ind = int(np.floor(n * normalized_pos_minp))
+
+                    if coord_maxp is None:
+                        max_ind = -1
+                    else:
+                        normalized_pos_maxp = ((coord_maxp - xmin) /
+                                               (xmax - xmin))
+                        max_ind = int(np.ceil(n * normalized_pos_maxp))
+
+                    indices += [slice(min_ind, max_ind)]
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:

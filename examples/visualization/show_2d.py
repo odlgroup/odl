@@ -36,3 +36,6 @@ phantom.show(indices=[slice(None), 50])
 
 # Or we can show by coordinate
 phantom.show(coords=[None, 0.5])
+
+# We can also show subsets
+phantom.show(coords=[[None, 0.5], None])
