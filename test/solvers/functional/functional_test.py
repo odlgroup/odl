@@ -53,7 +53,8 @@ def space(request, fn_impl):
         return odl.uniform_discr(0, 1, 7, impl=fn_impl)
 
 
-func_params = ['l1 ', 'l2', 'l2^2', 'constant']
+func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
+               'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf']
 func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
 
 
@@ -69,6 +70,18 @@ def functional(request, space):
         func = odl.solvers.functional.L2NormSquared(space)
     elif name == 'constant':
         func = odl.solvers.functional.ConstantFunctional(space, 2)
+    elif name == 'zero':
+        func = odl.solvers.functional.ZeroFunctional(space)
+    elif name == 'ind_unit_ball_1':
+        func = odl.solvers.functional.IndicatorLpUnitBall(space, 1)
+    elif name == 'ind_unit_ball_2':
+        func = odl.solvers.functional.IndicatorLpUnitBall(space, 2)
+    elif name == 'ind_unit_ball_pi':
+        func = odl.solvers.functional.IndicatorLpUnitBall(space, np.pi)
+    elif name == 'ind_unit_ball_inf':
+        func = odl.solvers.functional.IndicatorLpUnitBall(space, np.inf)
+    else:
+        assert False
 
     return func
 
@@ -80,13 +93,19 @@ def test_derivative(functional, space):
     the inner product of the gradient and the direction, if the gradient is
     defined.
     """
+    if isinstance(functional, odl.solvers.functional.IndicatorLpUnitBall):
+        # IndicatorFunction has no derivative
+        with pytest.raises(NotImplementedError):
+            functional.derivative(functional.domain.zero())
+        return
 
     x = noise_element(functional.domain)
     y = noise_element(functional.domain)
     epsK = 1e-8
 
     # Numerical test of gradient
-    assert all_almost_equal((functional(x + epsK * y) - functional(x)) / epsK,
+    assert all_almost_equal(((functional(x + epsK * y) - functional(x)) /
+                            epsK),
                             y.inner(functional.gradient(x)),
                             places=PLACES / 2)
 

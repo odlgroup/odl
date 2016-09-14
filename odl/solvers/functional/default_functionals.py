@@ -181,9 +181,9 @@ class IndicatorLpUnitBall(Functional):
         elif self.exponent == np.inf:
             x_norm = x.ufunc.absolute().ufunc.max()
         else:
-            x.ufunc.absolute(out=x)
-            x.ufunc.power(self.exponent, out=x)
-            x_norm = np.power(x.inner(self.domain.one()), 1 / self.exponent)
+            tmp = x.ufunc.absolute()
+            tmp.ufunc.power(self.exponent, out=tmp)
+            x_norm = np.power(tmp.inner(self.domain.one()), 1 / self.exponent)
 
         if x_norm > 1:
             return np.inf
