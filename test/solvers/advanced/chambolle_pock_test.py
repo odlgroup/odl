@@ -28,7 +28,7 @@ import pytest
 
 # Internal
 import odl
-from odl.solvers import chambolle_pock_solver, proximal_zero
+from odl.solvers import chambolle_pock_solver, proximal_const_func
 from odl.util.testutils import all_almost_equal
 
 # Places for the accepted error when comparing results
@@ -62,7 +62,7 @@ def test_chambolle_pock_solver_simple_space():
     discr_dual = op.range.zero()
 
     # Proximal operator, use same the factory function for F^* and G
-    prox = proximal_zero(space)
+    prox = proximal_const_func(space)
 
     # Run the algorithm
     chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
@@ -148,8 +148,8 @@ def test_chambolle_pock_solver_produce_space():
     discr_vec = discr_vec_0.copy()
 
     # Proximal operator using the same factory function for F^* and G
-    prox_primal = proximal_zero(prod_op.domain)
-    prox_dual = proximal_zero(prod_op.range)
+    prox_primal = proximal_const_func(prod_op.domain)
+    prox_dual = proximal_const_func(prod_op.range)
 
     # Run the algorithm
     chambolle_pock_solver(prod_op, discr_vec, tau=TAU, sigma=SIGMA,

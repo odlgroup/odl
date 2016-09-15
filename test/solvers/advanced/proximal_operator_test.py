@@ -30,7 +30,7 @@ import scipy.special
 # Internal
 import odl
 from odl.solvers.advanced.proximal_operators import (
-    combine_proximals, proximal_zero,
+    combine_proximals, proximal_const_func,
     proximal_box_constraint, proximal_nonnegativity,
     proximal_cconj_l1,
     proximal_l2,
@@ -44,8 +44,8 @@ HIGH_ACC = 8
 LOW_ACC = 4
 
 
-def test_proximal_zero():
-    """Proximal factory for the zero mapping G(x) = 0."""
+def test_proximal_const_func():
+    """Proximal factory for the constnat mapping G(x) = c."""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
@@ -54,7 +54,7 @@ def test_proximal_zero():
     x = space.element(np.arange(-5, 5))
 
     # Factory function returning the proximal operator
-    prox_factory = proximal_zero(space)
+    prox_factory = proximal_const_func(space)
 
     # Initialize proximal operator of G (with an unused parameter)
     prox = prox_factory(None)
@@ -70,7 +70,7 @@ def test_proximal_zero():
 
 
 def test_proximal_box_constraint():
-    """Proximal factory for indicator function for non-negativity ."""
+    """Proximal factory for indicator function for non-negativity."""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
@@ -96,7 +96,7 @@ def test_proximal_box_constraint():
 
 
 def test_proximal_nonnegativity():
-    """Proximal factory for indicator function for non-negativity ."""
+    """Proximal factory for indicator function for non-negativity."""
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
@@ -121,13 +121,14 @@ def test_combine_proximal():
     """Function to combine proximal factory functions.
 
     The combine function makes use of the separable sum property of proximal
-    operators."""
+    operators.
+    """
 
     # Image space
     space = odl.uniform_discr(0, 1, 10)
 
     # Factory function returning the proximal operator
-    prox_factory = proximal_zero(space)
+    prox_factory = proximal_const_func(space)
 
     # Combine factory function of proximal operators
     combined_prox_factory = combine_proximals(prox_factory, prox_factory)

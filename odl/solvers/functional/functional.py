@@ -29,7 +29,7 @@ from odl.operator.operator import (
 from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
                                   proximal_quadratic_perturbation,
-                                  proximal_zero)
+                                  proximal_const_func)
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
@@ -446,7 +446,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
 
         See Also
         --------
-        proximal_zero
+        proximal_const_func
         """
 
         if self.scalar < 0:
@@ -457,7 +457,7 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
         elif self.scalar == 0:
             # Should not get here. `Functional.__rmul__` takes care of the case
             # scalar = 0
-            return proximal_zero(self.domain)
+            return proximal_const_func(self.domain)
 
         else:
             def proximal_left_scalar_mult(sigma=1.0):

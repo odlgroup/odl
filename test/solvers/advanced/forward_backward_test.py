@@ -41,9 +41,9 @@ def test_forward_backward_input_handling():
     space1 = odl.uniform_discr(0, 1, 10)
 
     lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
-    prox_cc_g = [odl.solvers.proximal_zero(space1),  # Identity operator
-                 odl.solvers.proximal_zero(space1)]  # Identity operator
-    prox_f = odl.solvers.proximal_zero(space1)  # Identity operator
+    prox_cc_g = [odl.solvers.proximal_const_func(space1),  # Identity operator
+                 odl.solvers.proximal_const_func(space1)]  # Identity operator
+    prox_f = odl.solvers.proximal_const_func(space1)  # Identity operator
     grad_h = odl.ZeroOperator(space1)
 
     # Check that the algorithm runs. With the above operators, the algorithm
@@ -64,9 +64,9 @@ def test_forward_backward_input_handling():
                             sigma=[1.0], niter=niter)
 
     # Too many operators
-    prox_cc_g_too_many = [odl.solvers.proximal_zero(space1),
-                          odl.solvers.proximal_zero(space1),
-                          odl.solvers.proximal_zero(space1)]
+    prox_cc_g_too_many = [odl.solvers.proximal_const_func(space1),
+                          odl.solvers.proximal_const_func(space1),
+                          odl.solvers.proximal_const_func(space1)]
     with pytest.raises(ValueError):
         forward_backward_pd(x, prox_f, prox_cc_g_too_many, lin_ops, grad_h,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
@@ -93,8 +93,9 @@ def test_forward_backward_basic():
     space = odl.rn(10)
 
     lin_ops = [odl.ZeroOperator(space)]
-    prox_cc_g = [odl.solvers.proximal_cconj(odl.solvers.proximal_zero(space))]
-    prox_f = odl.solvers.proximal_zero(space)
+    prox_cc_g = [odl.solvers.proximal_cconj(odl.solvers.proximal_const_func(
+        space))]
+    prox_f = odl.solvers.proximal_const_func(space)
     grad_h = 2.0 * odl.IdentityOperator(space)  # Gradient of two-norm square
 
     x = noise_element(space)
@@ -125,7 +126,7 @@ def test_forward_backward_with_lin_ops():
     lin_op = alpha * odl.IdentityOperator(space)
     lin_ops = [lin_op]
     prox_cc_g = [odl.solvers.proximal_cconj_l2_squared(space)]
-    prox_f = odl.solvers.proximal_zero(space)
+    prox_f = odl.solvers.proximal_const_func(space)
 
     # Gradient of two-norm square
     grad_h = 2.0 * (odl.IdentityOperator(space) - odl.ConstantOperator(b))
@@ -163,7 +164,7 @@ def test_forward_backward_with_li():
                  odl.solvers.proximal_box_constraint(space,
                                                      lower=lower_lim,
                                                      upper=upper_lim))]
-    prox_f = odl.solvers.proximal_zero(space)
+    prox_f = odl.solvers.proximal_const_func(space)
     grad_h = odl.ZeroOperator(space)
 
     grad_cc_ls = [odl.IdentityOperator(space)]
@@ -202,7 +203,7 @@ def test_forward_backward_with_li_and_h():
                  odl.solvers.proximal_box_constraint(space,
                                                      lower=lower_lim,
                                                      upper=upper_lim))]
-    prox_f = odl.solvers.proximal_zero(space)
+    prox_f = odl.solvers.proximal_const_func(space)
     grad_h = odl.IdentityOperator(space)
 
     grad_cc_ls = [odl.IdentityOperator(space)]

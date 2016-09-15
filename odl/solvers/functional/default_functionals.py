@@ -29,7 +29,7 @@ from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
 from odl.solvers.advanced.proximal_operators import (
     proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
-    proximal_l2_squared, proximal_zero)
+    proximal_l2_squared, proximal_const_func)
 
 from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
 
@@ -380,10 +380,7 @@ class ConstantFunctional(Functional):
     @property
     def proximal(self):
         """Return the proximal factory of the functional."""
-        return proximal_zero(self.domain)
-
-    # TODO: Update name for proximal_zero: issue #572.
-    # It is the proximal for any constant functional
+        return proximal_const_func(self.domain)
 
     @property
     def convex_conj(self):

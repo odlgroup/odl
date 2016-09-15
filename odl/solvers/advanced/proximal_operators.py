@@ -41,7 +41,7 @@ from odl.set import LinearSpaceElement
 
 __all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
            'proximal_arg_scaling', 'proximal_quadratic_perturbation',
-           'proximal_composition', 'proximal_zero',
+           'proximal_composition', 'proximal_const_func',
            'proximal_box_constraint', 'proximal_nonnegativity',
            'proximal_l1', 'proximal_cconj_l1',
            'proximal_l2', 'proximal_cconj_l2',
@@ -217,7 +217,7 @@ def proximal_arg_scaling(prox_factory, scaling):
 
     scaling = float(scaling)
     if scaling == 0:
-        return proximal_zero(prox_factory(1.0).domain)
+        return proximal_const_func(prox_factory(1.0).domain)
 
     def arg_scaling_prox_factory(step_size):
         """Create proximal for the translation with a given step_size.
@@ -367,21 +367,21 @@ def proximal_composition(proximal, operator, mu):
     return proximal_composition_factory
 
 
-def proximal_zero(space):
-    """Proximal operator factory of the zero functional.
+def proximal_const_func(space):
+    """Proximal operator factory of the constant functional.
 
-    Function to initialize the proximal operator of the zero functional
+    Function to initialize the proximal operator of the constant functional
     defined on ``space``. The proximal operator of this functional is the
     identity operator
 
-        prox[tau * G](x) = x  where G=0
+        prox[tau * G](x) = x  where G=constant
 
     It is independent of tau.
 
     Parameters
     ----------
     space : `LinearSpace`
-        Domain of the functional G=0
+        Domain of the functional G=constant
 
     Returns
     -------

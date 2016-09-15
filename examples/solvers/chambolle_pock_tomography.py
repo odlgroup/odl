@@ -80,7 +80,7 @@ gradient = odl.Gradient(reco_space, method='forward')
 op = odl.BroadcastOperator(ray_trafo, gradient)
 
 # Create the proximal operator for unconstrained primal variable
-proximal_primal = odl.solvers.proximal_zero(op.domain)
+proximal_primal = odl.solvers.proximal_const_func(op.domain)
 
 # Create proximal operators for the dual variable
 

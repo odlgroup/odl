@@ -40,9 +40,9 @@ def test_primal_dual_input_handling():
     space1 = odl.uniform_discr(0, 1, 10)
 
     lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
-    prox_cc_g = [odl.solvers.proximal_zero(space1),  # Identity operator
-                 odl.solvers.proximal_zero(space1)]  # Identity operator
-    prox_f = odl.solvers.proximal_zero(space1)  # Identity operator
+    prox_cc_g = [odl.solvers.proximal_const_func(space1),  # Identity operator
+                 odl.solvers.proximal_const_func(space1)]  # Identity operator
+    prox_f = odl.solvers.proximal_const_func(space1)  # Identity operator
 
     # Check that the algorithm runs. With the above operators, the algorithm
     # returns the input.
@@ -62,9 +62,9 @@ def test_primal_dual_input_handling():
                             sigma=[1.0], niter=niter)
 
     # Too many operators
-    prox_cc_g_too_many = [odl.solvers.proximal_zero(space1),
-                          odl.solvers.proximal_zero(space1),
-                          odl.solvers.proximal_zero(space1)]
+    prox_cc_g_too_many = [odl.solvers.proximal_const_func(space1),
+                          odl.solvers.proximal_const_func(space1),
+                          odl.solvers.proximal_const_func(space1)]
     with pytest.raises(ValueError):
         douglas_rachford_pd(x, prox_f, prox_cc_g_too_many, lin_ops,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
@@ -131,7 +131,7 @@ def test_primal_dual_with_li():
                  odl.solvers.proximal_box_constraint(space,
                                                      lower=lower_lim,
                                                      upper=upper_lim))]
-    prox_f = odl.solvers.proximal_zero(space)
+    prox_f = odl.solvers.proximal_const_func(space)
 
     prox_cc_ls = [odl.solvers.proximal_cconj_l2_squared(space)]
 

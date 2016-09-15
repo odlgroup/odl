@@ -251,7 +251,7 @@ def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
                                                              g=g),
                  odl.solvers.proximal_cconj_l2_squared(space, lam=1.0 / 2.0,
                                                        g=a)]
-    prox_f = odl.solvers.proximal_zero(space)
+    prox_f = odl.solvers.proximal_const_func(space)
 
     # Staring point
     x = space.zero()
