@@ -23,11 +23,9 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-import re
-from odl.space import ProductSpace
+from odl.space import ProductSpace, fn
 from odl.operator import Operator
 from odl.util.ufuncs import UFUNCS
-
 
 __all__ = ()
 
@@ -37,8 +35,20 @@ class UfuncOperator(Operator):
     """Base class for all ufunc operators."""
 
 
+RAW_EXAMPLES_DOCSTRING = """
+Examples
+--------
+>>> space = {space}
+>>> op = {name}(r3)
+>>> op({arg})
+{result}
+"""
+
+
 def ufunc_class_factory(name, nargin, nargout, docstring):
     """Create a UfuncOperator from a given specification."""
+
+    assert 0 <= nargin <= 2
 
     def __init__(self, space):
         """Initialize an instance."""
@@ -58,17 +68,44 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
     def _call(self, x, out):
         """return ``self(x)``."""
-        return getattr(x.ufunc, name)(out=out)
+        if nargin == 1:
+            return getattr(x.ufunc, name)(out=out)
+        elif nargin == 2:
+            return getattr(x[0].ufunc, name)(*x[1:], out=out)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r})'.format(name, self.space)
 
+    # Create example
+    if 'shift' in name or 'bitwise' in name or name == 'invert':
+        dtype = int
+    else:
+        dtype = float
+
+    space = fn(3, dtype=dtype)
+    if nargin == 1:
+        vec = space.element([-1, 1, 2])
+        arg = '{}'.format(vec)
+        with np.errstate(all='ignore'):
+            result = getattr(vec.ufunc, name)()
+    else:
+        vec = space.element([-1, 1, 2])
+        vec2 = space.element([3, 4, 5])
+        arg = '[{}, {}]'.format(vec, vec2)
+        with np.errstate(all='ignore'):
+            result = getattr(vec.ufunc, name)(vec2)
+
+    examples_docstring = RAW_EXAMPLES_DOCSTRING.format(space=space, name=name,
+                                                       arg=arg, result=result)
+    full_docstring = docstring + examples_docstring
+
     newclass = type(name, (UfuncOperator,),
                     {"__init__": __init__,
                      "_call": _call,
                      "__repr__": __repr__,
-                     "__doc__": docstring})
+                     "__doc__": full_docstring})
+
     return newclass
 
 # Create an operator for each ufunc
@@ -78,8 +115,10 @@ for name, nargin, nargout, docstring in UFUNCS:
 
 if __name__ == '__main__':
     import odl
+    z3 = odl.fn(3, dtype=int)
+    ba = bitwise_and(z3)
+    print(ba([[1, 2, 3], [4, 5, 6]]))
+
     r3 = odl.rn(3)
-
     s = sin(r3)
-
-    print(s([-1, 1, 2]))
+    print(s([1, 2, 3]))
