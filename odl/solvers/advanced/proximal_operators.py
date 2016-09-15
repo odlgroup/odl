@@ -780,7 +780,6 @@ def proximal_l2_squared(space, lam=1, g=None):
     proximal_l2 : proximal without square
     proximal_cconj_l2_squared : proximal for convex conjugate
     """
-
     # TODO: optimize
     prox_cc_l2_squared = proximal_cconj_l2_squared(space, lam=lam, g=g)
     return proximal_cconj(prox_cc_l2_squared)
@@ -795,39 +794,6 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
         ``F(x) = lam ||x - g||_1``
 
     with x and g elements in ``space`` and scaling factor lam.
-
-    The convex conjugate of ``F`` is given by the indicator function
-    of the set box(lam),
-
-        ``F^*(y) = lam ind_{box(lam)}(|y / lam| + <y / lam, g>)``,
-
-    where ``box(lam)`` is a hypercube centered at the origin with width
-    ``2 * lam``.
-
-    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
-    given by
-
-        ``prox[sigma * F^*](y) = lam (y - sigma g) /
-        (max(lam, |y - sigma g|)``
-
-    An alternative formulation is available for `ProductSpace`'s, in which
-    case the ``isotropic`` parameter can be used, giving
-
-        ``F(x) = lam || ||x - g||_2 ||_1``.
-
-    In this case, the dual is
-
-        ``F^*(y) = lam ind_{box(lam)}(||y / lam||_2 + <y / lam, g>)``.
-
-    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
-    given by
-
-        ``prox[sigma * F^*](y) =
-        lam (y - sigma g) / (max(lam, ||y - sigma g||_2)``
-
-    where ``max(.,.)`` thresholds the lower bound of ``||y||_2``
-    point-wise, and 1 is an element of the space of ||y||_2 with all
-    components set to 1.
 
     Parameters
     ----------
@@ -850,6 +816,61 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     See Also
     --------
     proximal_l1 : proximal without convex conjugate conjugate
+
+    Notes
+    -----
+    The :math:`L_1`-norm :math:`F` is the functional
+
+        .. math::
+
+            F(x) = \\lambda ||x - g||_1.
+
+    The convex conjugate :math:`F^*` of :math:`F` is given by the indicator
+    function of the set :math:`box(\\lambda)`
+
+        .. math::
+
+            F^*(y) = \\lambda I_{box(\\lambda)} \left(
+            \left| \\frac{y}{\\lambda} \\right| +
+            \left\\langle \\frac{y}{\\lambda}, g \\right\\rangle
+            \\right)
+
+    where :math:`box(\\lambda)` is a hypercube centered at the origin with
+    width :math:`2 \\lambda`.
+
+    For a step size :math:`\\sigma`, the proximal operator of
+    :math:`\\sigma F^*` is given by
+
+        .. math::
+
+            prox[\\sigma F^*](y) = \\frac{\\lambda (y - \\sigma g)}{
+            \\max(\\lambda, |y - \\sigma g|)}
+
+    An alternative formulation is available for `ProductSpace`'s, in which
+    case the ``isotropic`` parameter can be used, giving
+
+        .. math::
+
+            F(x) = \\lambda || ||x - g||_2 ||_1
+
+    In this case, the dual is
+
+        .. math::
+
+            F^*(y) = \\lambda I_{box(\\lambda)} \left(
+            \left|\left| \\frac{y}{\\lambda} \\right|\\right|_2 +
+            \left\langle \\frac{y}{\\lambda}, g \\right\\rangle
+            \\right)
+
+    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
+    given by
+
+        .. math::
+            prox[\\sigma F^*](y) = \\frac{\\lambda (y - \\sigma g)}{
+            \\max(\\lambda, ||y - \\sigma g||_2)}
+
+    where :math:`\\max(.,.)` thresholds the lower bound of :math:`||y||_2`
+    point-wise.
     """
     lam = float(lam)
 
@@ -936,19 +957,6 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
 
     with x and g elements in ``space``, and scaling factor lam.
 
-    For a step size ``tau``, the proximal operator of ``tau * F`` is::
-
-                              y - tau * lam   if y > tau * lam,
-         prox[tau * F](y) = { 0               if -tau * lam <= y <= tau * lam
-                              y + tau * lam   if y < -tau * lam
-
-    An alternative formulation is available for `ProductSpace`'s, where the
-    the ``isotropic`` parameter can be used, giving::
-
-        F(x) = lam || ||x - g||_2 ||_1
-
-    The proximal can be calculated using the Moreau equality.
-
     Parameters
     ----------
     space : `LinearSpace` or `ProductSpace`
@@ -970,8 +978,41 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     See Also
     --------
     proximal_cconj_l1 : proximal for convex conjugate
-    """
 
+    Notes
+    -----
+    The :math:`L_1`-norm :math:`F` is the functional
+
+        .. math::
+
+            F(x) = \\lambda ||x - g||_1.
+
+    For a step size :math:`\\sigma`, the proximal operator of :math:`\\sigma F`
+    is
+
+        .. math::
+
+            prox[\\sigma F](y) = \\left\{ \\begin{array}{ll}
+            y - \\sigma \\lambda
+            & \\quad  \\text{if } y > g + \\sigma \\lambda, \\\\
+            0 &\\quad
+            g - \\sigma \\lambda \\leq y \\leq g +
+            \\sigma \\lambda \\\\
+            y + \\sigma \\lambda
+            & \\quad  \\text{if } y < g - \\sigma \\lambda,
+            \\end{array} \\right.
+
+
+    An alternative formulation is available for `ProductSpace`'s, where the
+    the ``isotropic`` parameter can be used, giving
+
+        .. math::
+
+            F(x) = \\lambda || ||x - g||_2 ||_1
+
+    The proximal can be calculated using the Moreau equality (also known as
+    Moreau decomposition or Moreau idnetity). See for example [BC2011]_.
+    """
     # TODO: optimize
     prox_cc_l1 = proximal_cconj_l1(space, lam=lam, g=g, isotropic=isotropic)
     return proximal_cconj(prox_cc_l1)
@@ -1061,7 +1102,6 @@ def proximal_cconj_kl(space, lam=1, g=None):
     the functional :math:`F` is obtained by switching place of the prior and
     the varialbe in the KL cross entropy functional. See the See Also section.
     """
-
     lam = float(lam)
 
     if g is not None and g not in space:
@@ -1201,7 +1241,6 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
     corrupted with Poisson noise. This functional is obtained by changing place
     of the prior and the variable. See the See Also section.
     """
-
     lam = float(lam)
 
     if g is not None and g not in space:
