@@ -23,7 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-from odl.set import LinearSpace
+from odl.set.space import LinearSpace
 from odl.space import ProductSpace, fn
 from odl.operator import Operator, MultiplyOperator
 from odl.util.utility import is_int_dtype
@@ -45,9 +45,10 @@ RAW_INIT_DOCSTRING = """
 RAW_EXAMPLES_DOCSTRING = """
 Examples
 --------
->>> space = {space}
->>> op = {name}(r3)
->>> op({arg})
+>>> import odl
+>>> space = odl.{space}
+>>> op = {name}(space)
+>>> print(op({arg}))
 {result}
 """
 
@@ -127,23 +128,29 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
         if nargout == 1:
             range = space
         else:
-            range = ProductSpace(space, nargin)
+            range = ProductSpace(space, nargout)
 
         linear = name in LINEAR_UFUNCS
         UfuncOperator.__init__(self, domain=domain, range=range, linear=linear)
 
-    def _call(self, x, out):
+    def _call(self, x, out=None):
         """return ``self(x)``."""
-        if nargin == 1:
-            return getattr(x.ufunc, name)(out=out)
-        elif nargin == 2:
-            return getattr(x[0].ufunc, name)(*x[1:], out=out)
+        if out is None:
+            if nargin == 1:
+                return getattr(x.ufunc, name)()
+            elif nargin == 2:
+                return getattr(x[0].ufunc, name)(*x[1:])
+        else:
+            if nargin == 1:
+                return getattr(x.ufunc, name)(out=out)
+            elif nargin == 2:
+                return getattr(x[0].ufunc, name)(*x[1:], out=out)
 
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r})'.format(name, self.space)
 
-    # Create example
+    # Create example (also functions as doctest)
     if 'shift' in name or 'bitwise' in name or name == 'invert':
         dtype = int
     else:
@@ -162,6 +169,9 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
         with np.errstate(all='ignore'):
             result = getattr(vec.ufunc, name)(vec2)
 
+    if nargout == 2:
+        result = '{{{}, {}}}'.format(result[0], result[1])
+
     examples_docstring = RAW_EXAMPLES_DOCSTRING.format(space=space, name=name,
                                                        arg=arg, result=result)
     full_docstring = docstring + examples_docstring
@@ -179,16 +189,8 @@ for name, nargin, nargout, docstring in UFUNCS:
     globals()[name] = ufunc_class_factory(name, nargin, nargout, docstring)
     __all__ += (name,)
 
+
 if __name__ == '__main__':
-    import odl
-    z3 = odl.fn(3, dtype=int)
-    ba = bitwise_and(z3)
-    print(ba([[1, 2, 3], [4, 5, 6]]))
-
-    r3 = odl.rn(3)
-    s = sin(r3)
-    print(s([1, 2, 3]))
-
-    # Test derivative
-    sderiv = s.derivative([1, 2, 3])
-    assert all(sderiv.multiplicand.asarray() == np.cos([1, 2, 3]))
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()
