@@ -23,16 +23,23 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
+from odl.set import LinearSpace
 from odl.space import ProductSpace, fn
-from odl.operator import Operator
+from odl.operator import Operator, MultiplyOperator
+from odl.util.utility import is_int_dtype
 from odl.util.ufuncs import UFUNCS
 
 __all__ = ()
 
 
-class UfuncOperator(Operator):
+def _is_integer_only_ufunc(name):
+    return 'shift' in name or 'bitwise' in name or name == 'invert'
 
-    """Base class for all ufunc operators."""
+LINEAR_UFUNCS = ['conj', 'negative', 'rad2deg', 'deg2rad', 'add', 'subtract']
+
+RAW_INIT_DOCSTRING = """
+
+"""
 
 
 RAW_EXAMPLES_DOCSTRING = """
@@ -45,6 +52,58 @@ Examples
 """
 
 
+class UfuncOperator(Operator):
+
+    """Base class for all ufunc operators."""
+
+
+def derivative_factory(name):
+    """Create derivative function for some ufuncs."""
+
+    if name == 'sin':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            point = self.domain.element(point)
+            return MultiplyOperator(point.ufunc.cos())
+        return derivative
+    elif name == 'cos':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            point = self.domain.element(point)
+            return MultiplyOperator(-point.ufunc.sin())
+        return derivative
+    elif name == 'tan':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            return MultiplyOperator(1 + self(point) ** 2)
+        return derivative
+    elif name == 'sqrt':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            return MultiplyOperator(0.5 / self(point))
+        return derivative
+    elif name == 'square':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            point = self.domain.element(point)
+            return MultiplyOperator(2.0 * point)
+        return derivative
+    elif name == 'log':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            point = self.domain.element(point)
+            return MultiplyOperator(1.0 / point)
+        return derivative
+    elif name == 'exp':
+        def derivative(self, point):
+            """Return the derivative operator."""
+            return MultiplyOperator(self(point))
+        return derivative
+    else:
+        # Fallback to default
+        return UfuncOperator.derivative
+
+
 def ufunc_class_factory(name, nargin, nargout, docstring):
     """Create a UfuncOperator from a given specification."""
 
@@ -52,6 +111,12 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
     def __init__(self, space):
         """Initialize an instance."""
+        if not isinstance(space, LinearSpace):
+            raise TypeError('`space` {!r} not a `LinearSpace`'.format(space))
+
+        if _is_integer_only_ufunc(name) and not is_int_dtype(space.dtype):
+            raise ValueError('`space` {!r} not a `LinearSpace`'.format(space))
+
         self.space = space
 
         if nargin == 1:
@@ -64,7 +129,8 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
         else:
             range = ProductSpace(space, nargin)
 
-        UfuncOperator.__init__(self, domain=domain, range=range, linear=False)
+        linear = name in LINEAR_UFUNCS
+        UfuncOperator.__init__(self, domain=domain, range=range, linear=linear)
 
     def _call(self, x, out):
         """return ``self(x)``."""
@@ -100,13 +166,13 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
                                                        arg=arg, result=result)
     full_docstring = docstring + examples_docstring
 
-    newclass = type(name, (UfuncOperator,),
-                    {"__init__": __init__,
-                     "_call": _call,
-                     "__repr__": __repr__,
-                     "__doc__": full_docstring})
+    attributes = {"__init__": __init__,
+                  "_call": _call,
+                  "derivative": derivative_factory(name),
+                  "__repr__": __repr__,
+                  "__doc__": full_docstring}
 
-    return newclass
+    return type(name, (UfuncOperator,), attributes)
 
 # Create an operator for each ufunc
 for name, nargin, nargout, docstring in UFUNCS:
@@ -122,3 +188,7 @@ if __name__ == '__main__':
     r3 = odl.rn(3)
     s = sin(r3)
     print(s([1, 2, 3]))
+
+    # Test derivative
+    sderiv = s.derivative([1, 2, 3])
+    assert all(sderiv.multiplicand.asarray() == np.cos([1, 2, 3]))
