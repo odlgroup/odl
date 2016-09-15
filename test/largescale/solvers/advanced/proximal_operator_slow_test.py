@@ -25,6 +25,7 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
+import scipy.special
 
 # Internal
 import odl
@@ -34,8 +35,6 @@ from odl.solvers.advanced.proximal_operators import (
     proximal_l2_squared, proximal_cconj_l2_squared,
     proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
 from odl.util.testutils import (noise_element, all_almost_equal)
-
-from scipy.special import lambertw
 
 pytestmark = odl.util.skip_if_no_largescale
 
@@ -261,7 +260,8 @@ def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
                                     tau=2.1, sigma=[0.4, 0.4], niter=100)
 
     # Explicit solution: x = W(g * exp(a)), where W is the Lambert W function.
-    x_verify = lam_kl * lambertw((1.0 / lam_kl) * g * np.exp(a / lam_kl))
+    x_verify = lam_kl * scipy.special.lambertw(
+        (g / lam_kl) * np.exp(a / lam_kl))
     assert all_almost_equal(x, x_verify, places=6)
 
 if __name__ == '__main__':
