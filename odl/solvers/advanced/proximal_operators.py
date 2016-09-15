@@ -49,7 +49,6 @@ __all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
            'proximal_cconj_kl', 'proximal_cconj_kl_cross_entropy')
 
 
-# TODO: remove diagonal op once available on master
 def combine_proximals(*factory_list):
     """Combine proximal operators into a diagonal product space operator.
 

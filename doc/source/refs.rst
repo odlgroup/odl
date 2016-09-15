@@ -7,6 +7,9 @@ References
    gradient methods*. IMA Journal of Numerical Analysis, 8 (1988),
    pp 141--148.
 
+.. [BC2011] Bauschke, H H, and Combettes, P L. *Convex analysis and
+   monotone operator theory in Hilbert spaces*. Springer, 2011.
+
 .. [BC2015] Bot, R I, and Csetnek, E R. *On the convergence rate of
    a forward-backward type primal-dual splitting algorithm for convex
    optimization problems*. Optimization, 64.1 (2015), pp 5--23.
@@ -45,8 +48,15 @@ References
 .. [Hei+2016] Heide, F et al. *ProxImaL: Efficient Image Optimization using
    Proximal Algorithms*. ACM Transactions on Graphics (TOG), 2016.
 
+.. [KP2015] Komodakis, N, and Pesquet, J-C. *Playing with Duality: An overview
+   of recent primal-dual approaches for solving large-scale optimization
+   problems*. IEEE Signal Processing Magazine, 32.6 (2015), pp 31--54.
+
 .. [Kva1991] Kvaalen, E. *A faster Broyden method*. BIT Numerical
    Mathematics 31 (1991), pp 369--372.
+
+.. [Lue1969] Luenberger, D G. *Optimization by vector space methods*. Wiley,
+   1969.
 
 .. [Okt2015] Oktem, O. *Mathematics of electron tomography*. In:
    Scherzer, O. Handbook of Mathematical Methods in Imaging.

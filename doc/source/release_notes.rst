@@ -19,6 +19,9 @@ New features
 - Add ``reset`` to ``SolverCallback`` that resets the callback to its initial state. (:issue:`552`)
 - Add ``nonuniform_partition`` utility that creates a partition with non-uniformly spaced points.
   This is useful e.g. when the angles of a tomography problem are not exactly uniform.
+- Add ``Functional`` class to the solvers package.
+  ``Functional`` is a subclass of odl ``Operator`` and intended to help in formulating and solving optimization problems.
+  It contains optimization specific features like ``proximal`` and ``convex_conj``, and built-in intelligence for handling things like translation, scaling of argument or scaling of functional. (:pull:498)
 
 Improvements
 ------------
