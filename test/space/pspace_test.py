@@ -595,9 +595,7 @@ def test_operators(arithmetic_op):
 
         # Left op
         x_arr, x = noise_elements(pspace)
-        if scalar == 0 and arithmetic_op in [operator.div,
-                                             operator.idiv,
-                                             operator.truediv,
+        if scalar == 0 and arithmetic_op in [operator.truediv,
                                              operator.itruediv]:
             # Check for correct zero division behaviour
             with pytest.raises(ZeroDivisionError):
@@ -623,7 +621,6 @@ def test_operators(arithmetic_op):
     # non-aliased left
     if arithmetic_op in [operator.iadd,
                          operator.isub,
-                         operator.idiv,
                          operator.itruediv,
                          operator.imul]:
         # Check for correct error since inplace op is not possible here
