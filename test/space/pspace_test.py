@@ -27,7 +27,7 @@ import operator
 
 import odl
 from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
-                                example_vectors)
+                                noise_elements)
 
 
 exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
@@ -575,7 +575,7 @@ def test_unary_ops():
     pspace = odl.ProductSpace(space, 2)
 
     for op in [operator.pos, operator.neg]:
-        x_arr, x = example_vectors(pspace)
+        x_arr, x = noise_elements(pspace)
 
         y_arr = op(x_arr)
         y = op(x)
@@ -594,7 +594,7 @@ def test_operators(arithmetic_op):
     for scalar in [-31.2, -1, 0, 1, 2.13]:
 
         # Left op
-        x_arr, x = example_vectors(pspace)
+        x_arr, x = noise_elements(pspace)
         if scalar == 0 and arithmetic_op in [operator.div,
                                              operator.idiv,
                                              operator.truediv,
@@ -609,16 +609,16 @@ def test_operators(arithmetic_op):
             assert all_almost_equal([x, y], [x_arr, y_arr])
 
         # Right op
-        x_arr, x = example_vectors(pspace)
+        x_arr, x = noise_elements(pspace)
 
         y_arr = arithmetic_op(scalar, x_arr)
         y = arithmetic_op(scalar, x)
 
         assert all_almost_equal([x, y], [x_arr, y_arr])
 
-    # Verify that the statement z=op(x,y) gives equivalent results to NumPy
-    x_arr, x = example_vectors(space, 1)
-    y_arr, y = example_vectors(pspace, 1)
+    # Verify that the statement z=op(x, y) gives equivalent results to NumPy
+    x_arr, x = noise_elements(space, 1)
+    y_arr, y = noise_elements(pspace, 1)
 
     # non-aliased left
     if arithmetic_op in [operator.iadd,

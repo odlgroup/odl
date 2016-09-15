@@ -457,9 +457,9 @@ class LinearSpaceElement(object):
                 # other --> other * space.one()
                 return self.space.lincomb(1, self, other, one(), out=self)
         else:
-            # We do not raise here since we don't want a fallback for inplace.
-            # Otherwise python attempts self = self / other which does not
-            # modify self.
+            # We do not `return NotImplemented` here since we don't want a
+            # fallback for inplace. Otherwise python attempts
+            # `self = self + other` which does not modify self.
             raise TypeError('cannot add {!r} and {!r} in place'
                             ''.format(self, other))
 
@@ -492,9 +492,9 @@ class LinearSpaceElement(object):
             else:
                 return self.space.lincomb(1, self, -other, one(), out=self)
         else:
-            # We do not raise here since we don't want a fallback for inplace.
-            # Otherwise python attempts self = self - other which does not
-            # modify self.
+            # We do not `return NotImplemented` here since we don't want a
+            # fallback for inplace. Otherwise python attempts
+            # `self = self - other` which does not modify self.
             raise TypeError('cannot subtract {!r} and {!r} in place'
                             ''.format(self, other))
 
@@ -538,9 +538,9 @@ class LinearSpaceElement(object):
         elif other in self.space:
             return self.space.multiply(other, self, out=self)
         else:
-            # We do not raise here since we don't want a fallback for inplace.
-            # Otherwise python attempts self = self * other which does not
-            # modify self.
+            # We do not `return NotImplemented` here since we don't want a
+            # fallback for inplace. Otherwise python attempts
+            # `self = self * other` which does not modify self.
             raise TypeError('cannot multiply {!r} and {!r} in place'
                             ''.format(self, other))
 
@@ -565,9 +565,9 @@ class LinearSpaceElement(object):
         elif other in self.space:
             return self.space.divide(self, other, out=self)
         else:
-            # We do not raise here since we don't want a fallback for inplace.
-            # Otherwise python attempts self = self / other which does not
-            # modify self.
+            # We do not `return NotImplemented` here since we don't want a
+            # fallback for inplace. Otherwise python attempts
+            # `self = self + other` which does not modify self.
             raise TypeError('cannot divide {!r} and {!r} in place'
                             ''.format(self, other))
 

@@ -375,7 +375,6 @@ def _test_scalar_operator(fn, function):
                                         operator.itruediv]:
             # Check for correct zero division behaviour
             with pytest.raises(ZeroDivisionError):
-                y_arr = function(x_arr, scalar)
                 y = function(x, scalar)
         else:
             y_arr = function(x_arr, scalar)
