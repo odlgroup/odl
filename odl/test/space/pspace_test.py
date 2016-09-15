@@ -103,6 +103,27 @@ def test_mixed_space():
         pspace.dtype
 
 
+def test_element():
+    H = odl.rn(2)
+    HxH = odl.ProductSpace(H, H)
+
+    HxH.element([[1, 2], [3, 4]])
+
+    # wrong length
+    with pytest.raises(ValueError):
+        HxH.element([[1, 2]])
+
+    with pytest.raises(ValueError):
+        HxH.element([[1, 2], [3, 4], [5, 6]])
+
+    # wrong length of subspace element
+    with pytest.raises(ValueError):
+        HxH.element([[1, 2, 3], [4, 5]])
+
+    with pytest.raises(ValueError):
+        HxH.element([[1, 2], [3, 4, 5]])
+
+
 def test_lincomb():
     H = odl.rn(2)
     HxH = odl.ProductSpace(H, H)

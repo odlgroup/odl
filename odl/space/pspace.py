@@ -411,6 +411,10 @@ class ProductSpace(LinearSpace):
         if inp in self:
             return inp
 
+        if len(inp) != len(self):
+            raise ValueError('length of `inp` {} does not match lenght of '
+                             'space {}'.format(len(inp), len(self)))
+
         if (all(isinstance(v, LinearSpaceElement) and v.space == space
                 for v, space in zip(inp, self.spaces))):
             parts = list(inp)

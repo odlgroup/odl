@@ -89,11 +89,12 @@ def test_pspace_op_project_call():
                                    [I]])
 
     x = r3.element([1, 2, 3])
-    y = r3.element([7, 8, 9])
-    z = op.domain.element([x, y])
+    z = op.domain.element([x])
 
     assert x == op(z)[0]
     assert x == op(z, out=op.range.element())[0]
+    assert x == op(z)[1]
+    assert x == op(z, out=op.range.element())[1]
 
 
 def test_pspace_op_diagonal_call():
