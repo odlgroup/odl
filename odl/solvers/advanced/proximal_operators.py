@@ -31,7 +31,7 @@ standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
-import scipy.special
+import scipy
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, ResidualOperator, DiagonalOperator)
