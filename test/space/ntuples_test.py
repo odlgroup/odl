@@ -369,9 +369,7 @@ def _test_scalar_operator(fn, function):
     for scalar in [-31.2, -1, 0, 1, 2.13]:
         x_arr, x = noise_elements(fn)
 
-        if scalar == 0 and function in [operator.div,
-                                        operator.idiv,
-                                        operator.truediv,
+        if scalar == 0 and function in [operator.truediv,
                                         operator.itruediv]:
             # Check for correct zero division behaviour
             with pytest.raises(ZeroDivisionError):

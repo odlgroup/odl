@@ -79,17 +79,15 @@ def reduction(request):
     return request.param
 
 arithmetic_op_par = [operator.add,
-                     operator.div,
                      operator.truediv,
                      operator.mul,
                      operator.sub,
                      operator.iadd,
-                     operator.idiv,
                      operator.itruediv,
                      operator.imul,
                      operator.isub]
-arithmetic_op_ids = [' + ', ' // ', ' / ', ' * ', ' - ',
-                     ' += ', ' //= ', ' /= ', ' *= ', ' -= ']
+arithmetic_op_ids = [' + ', ' / ', ' * ', ' - ',
+                     ' += ', ' /= ', ' *= ', ' -= ']
 
 
 @pytest.fixture(ids=arithmetic_op_ids, params=arithmetic_op_par)
