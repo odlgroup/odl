@@ -420,16 +420,6 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
     with x being an element in ``space``.
 
-    For a step size ``tau``, the proximal operator of ``tau * G^*`` is the
-    point-wise non-negativity thresholding of ``x``::
-
-                            { a if x < a,
-         prox[tau * G](x) = { x if a <= x <= b
-                            { b if x > b
-
-    It is independent of tau and invariant under a positive rescaling of G
-    which leaves the indicator function as it stands.
-
     Parameters
     ----------
     space : `LinearSpace`
@@ -445,6 +435,33 @@ def proximal_box_constraint(space, lower=None, upper=None):
     -------
     prox_factory : function
         Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    If :math:`P` is an interval :math:`[a,b]`, the indicator function is
+    defined as
+
+        .. math::
+
+            I_{x \\in P} = \\left\{ \\begin{array}{ll}
+            0 & \\quad \\text{if } x \\in P, \\\\
+            \\infty & \\quad \\text{if } x \\not \\in P
+            \\end{array} \\right.
+
+    For a step size :math:`\\sigma`, the proximal operator of
+    :math:`\\sigma I_{x \\in P}` is given by the projection onto the interval
+
+      .. math::
+
+             prox[\\sigma I_{x \\in P}](x) = \\left\{ \\begin{array}{ll}
+             a & \\quad \\text{if } x < a, \\\\
+             x & \\quad \\text{if } x \\in [a,b], \\\\
+             b & \\quad \\text{if } x > b,
+             \\end{array} \\right.
+
+    It is independent of :math:`\\sigma` and invariant under a positive
+    rescaling of :math:`I_{x \\in P}`, since that leaves the indicator function
+    unchanged.
 
     See Also
     --------
@@ -499,21 +516,6 @@ def proximal_nonnegativity(space):
     Function for the proximal operator of the functional G(x)=ind(x >= 0) to be
     initialized.
 
-    If P is the set of non-negative elements, the indicator function of
-    which is defined as
-
-        ind(x >= 0) = {0 if x in P, infinity if x is not in P}
-
-    with x being an element in ``space``.
-
-    For a step size ``tau``, The proximal operator of ``tau * F^*`` is the
-    point-wise non-negativity thresholding of x
-
-         prox[tau * G](x) = {x if x >= 0, 0 if < 0}
-
-    It is independent of tau and invariant under a positive rescaling of G
-    which leaves the indicator function as it stands.
-
     Parameters
     ----------
     space : `LinearSpace`
@@ -523,6 +525,33 @@ def proximal_nonnegativity(space):
     -------
     prox_factory : function
         Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    If :math:`P` is the set of non-negative elements, the indicator function is
+    defined as
+
+        .. math::
+
+            I_{x \\in P} = \\left\{ \\begin{array}{ll}
+            0 & \\quad \\text{if } x \\in P, \\\\
+            \\infty & \\quad \\text{if } x \\not \\in P
+            \\end{array} \\right.
+
+    For a step size :math:`\\sigma`, the proximal operator of
+    :math:`\\sigma I_{x \\in P}` is the point-wise non-negativity thresholding
+    of :math:`x`
+
+        .. math::
+
+             prox[\\sigma I_{x \\in P}](x) = \\left\{ \\begin{array}{ll}
+             x & \\quad \\text{if } x \\geq 0, \\\\
+             0 & \\quad \\text{if } x < 0
+             \\end{array} \\right.
+
+    It is independent of :math:`\\sigma` and invariant under a positive
+    rescaling of :math:`I_{x \\in P}`, since that leaves the indicator function
+    unchanged.
 
     See Also
     --------
@@ -542,15 +571,6 @@ def proximal_cconj_l2(space, lam=1, g=None):
 
     with x and g elements in ``space``, scaling factor lam, and given data g.
 
-    The convex conjugate F^* of F is given by
-
-        F^*(y) = {0 if ||x-g|| < lam, infty else}
-
-    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
-    given by
-
-        prox[sigma * F^*](y) = (x - g) / ||x - g||
-
     Parameters
     ----------
     space : `LinearSpace`
@@ -568,6 +588,33 @@ def proximal_cconj_l2(space, lam=1, g=None):
 
     Notes
     -----
+    The functional :math:`F` is given by
+
+        .. math::
+
+            F(x) = \\lambda ||x - g||_2
+
+    The convex conjugate :math:`F^*` of :math:`F` is given by
+
+        .. math::
+
+            F^*(y) = \\left\{ \\begin{array}{ll}
+            0 & \\quad  ||y-g||_2 \leq \\lambda, \\\\
+            \\infty & \\text{else.}
+            \\end{array} \\right.
+
+    For a step size :math:`\\sigma`, the proximal operator of
+    :math:`sigma F^*` is given by the projection onto the set
+    :math:`||y-g||_2 \leq \\lambda`, i.e., by
+
+        .. math::
+
+            prox[\\sigma F^*](y) = \\left\{ \\begin{array}{ll}
+            \\lambda \\frac{y - g}{||y - g||}
+            & \\quad  ||y-g||_2 > \\lambda, \\\\
+            y & \\quad ||y-g||_2 \leq \\lambda
+            \\end{array} \\right.
+
     Most problems are forumlated for the squared norm, in that case use the
     `proximal_cconj_l2_squared` instead.
 
