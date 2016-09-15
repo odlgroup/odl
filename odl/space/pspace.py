@@ -259,13 +259,15 @@ class ProductSpace(LinearSpace):
 
         # Assign spaces and field
         self.__spaces = tuple(spaces)
-        self.__is_power_space = all(spc == self.spaces[0]
-                                    for spc in self.spaces[1:])
         self.__size = len(spaces)
         if field is None:
             if self.size == 0:
                 raise ValueError('no spaces provided, cannot deduce field')
             field = self.spaces[0].field
+
+        # Cache for efficiency
+        self.__is_power_space = all(spc == self.spaces[0]
+                                    for spc in self.spaces[1:])
 
         super().__init__(field)
 
@@ -575,39 +577,6 @@ class ProductSpace(LinearSpace):
         return ProductSpaceElement
 
 
-def _broadcast_arithmetic(op, raises=False):
-    """Return self operator other with broadcasting
-
-    Parameters
-    ----------
-    op : string
-        Name of the operator, e.g. ``'__add__'``.
-    raises : bool
-        True if the method should raise on failure, otherwise returns
-        ``NotImplemented``.
-    """
-
-    def _broadcast_arithmetic_impl(self, other):
-        if (self.space.is_power_space and other in self.space[0]):
-            results = []
-            for xi in self:
-                res = getattr(xi, op)(other)
-                if res is NotImplemented:
-                    return NotImplemented
-                else:
-                    results.append(res)
-
-            return self.space.element(results)
-        else:
-            return getattr(ProductSpaceElement, op)(self, other)
-
-    # Set docstring
-    docstring = """Broadcasted {op}.""".format(op=op)
-    _broadcast_arithmetic_impl.__doc__ = docstring
-
-    return _broadcast_arithmetic_impl
-
-
 class ProductSpaceElement(LinearSpaceElement):
 
     """Elements of a `ProductSpace`."""
@@ -663,22 +632,6 @@ class ProductSpaceElement(LinearSpaceElement):
         except TypeError:
             for i, index in enumerate(indices):
                 self.parts[index] = values[i]
-
-    __add__ = _broadcast_arithmetic('__add__')
-    __radd__ = _broadcast_arithmetic('__radd__')
-    __iadd__ = _broadcast_arithmetic('__iadd__')
-    __sub__ = _broadcast_arithmetic('__sub__')
-    __rsub__ = _broadcast_arithmetic('__rsub__')
-    __isub__ = _broadcast_arithmetic('__isub__')
-    __mul__ = _broadcast_arithmetic('__mul__')
-    __rmul__ = _broadcast_arithmetic('__rmul__')
-    __imul__ = _broadcast_arithmetic('__imul__')
-    __div__ = _broadcast_arithmetic('__div__')
-    __rdiv__ = _broadcast_arithmetic('__rdiv__')
-    __idiv__ = _broadcast_arithmetic('__idiv__')
-    __truediv__ = _broadcast_arithmetic('__truediv__')
-    __rtruediv__ = _broadcast_arithmetic('__rtruediv__')
-    __itruediv__ = _broadcast_arithmetic('__itruediv__')
 
     @property
     def ufunc(self):
@@ -870,6 +823,60 @@ class ProductSpaceElement(LinearSpaceElement):
             figs += [fig]
 
         return figs
+
+
+# --- Add arithmetic operators that broadcast ---
+def _broadcast_arithmetic(op):
+    """Return ``op(self, other)`` with broadcasting.
+
+    Parameters
+    ----------
+    op : string
+        Name of the operator, e.g. ``'__add__'``.
+
+    Returns
+    -------
+    broadcast_arithmetic_op : function
+        Function intended to be used as a method for `ProductSpaceVector`
+        which tries to perform broadcasting if possible.
+
+    Notes
+    -----
+    Broadcasting is the operation of "applying a operator multiple times" in
+    some sense. For example:
+
+    .. math::
+        [1, 2] + 1 = [2, 3]
+
+    is a form of broadcasting. In this implementation, we only allow "single
+    layer" broadcasting. I.e., we do not support broadcasting over several
+    productspaces at once.
+    """
+    def _broadcast_arithmetic_impl(self, other):
+        if (self.space.is_power_space and other in self.space[0]):
+            results = []
+            for xi in self:
+                res = getattr(xi, op)(other)
+                if res is NotImplemented:
+                    return NotImplemented
+                else:
+                    results.append(res)
+
+            return self.space.element(results)
+        else:
+            return getattr(LinearSpaceElement, op)(self, other)
+
+    # Set docstring
+    docstring = """Broadcasted {op}.""".format(op=op)
+    _broadcast_arithmetic_impl.__doc__ = docstring
+
+    return _broadcast_arithmetic_impl
+
+
+for op in ['add', 'sub', 'mul', 'div', 'truediv']:
+    for modifier in ['', 'r', 'i']:
+        name = '__{}{}__'.format(modifier, op)
+        setattr(ProductSpaceElement, name, _broadcast_arithmetic(name))
 
 
 class ProductSpaceElementWeighting(VectorWeightingBase):
