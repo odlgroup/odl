@@ -55,7 +55,16 @@ def test_emptyproduct():
 def test_RxR():
     H = odl.rn(2)
     HxH = odl.ProductSpace(H, H)
+
+    # Check the basic properties
     assert len(HxH) == 2
+    assert HxH.shape == (2,)
+    assert HxH.size == 2
+    assert HxH.dtype == H.dtype
+    assert HxH.spaces[0] is H
+    assert HxH.spaces[1] is H
+    assert HxH.is_power_space
+    assert not HxH.is_weighted
 
     v1 = H.element([1, 2])
     v2 = H.element([3, 4])
@@ -69,10 +78,29 @@ def test_RxR():
 def test_is_power_space():
     r2 = odl.rn(2)
     r2x3 = odl.ProductSpace(r2, 3)
+    assert len(r2x3) == 3
     assert r2x3.is_power_space
+    assert r2x3.spaces[0] is r2
+    assert r2x3.spaces[1] is r2
+    assert r2x3.spaces[2] is r2
 
     r2r2r2 = odl.ProductSpace(r2, r2, r2)
     assert r2x3 == r2r2r2
+
+
+def test_mixed_space():
+    """Verify that a mixed productspace is handled properly."""
+    r2_1 = odl.rn(2, dtype='float64')
+    r2_2 = odl.rn(2, dtype='float32')
+    pspace = odl.ProductSpace(r2_1, r2_2)
+
+    assert not pspace.is_power_space
+    assert pspace.spaces[0] is r2_1
+    assert pspace.spaces[1] is r2_2
+
+    # dtype not well defined for this space
+    with pytest.raises(AttributeError):
+        pspace.dtype
 
 
 def test_lincomb():

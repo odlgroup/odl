@@ -342,6 +342,24 @@ class ProductSpace(LinearSpace):
         """Return ``True`` if weighting is not `ProductSpaceNoWeighting`."""
         return not isinstance(self.weighting, ProductSpaceNoWeighting)
 
+    @property
+    def dtype(self):
+        """The data type of this space.
+
+        This is only well defined if all subspaces have the same dtype.
+
+        Raises
+        ------
+        AttributeError : If any of the subspaces does not implement `dtype` or
+                         if the dtype of the subspaces does not match.
+        """
+        dtypes = [space.dtype for space in self.spaces]
+
+        if all(dtype == dtypes[0] for dtype in dtypes):
+            return dtypes[0]
+        else:
+            raise AttributeError('`dtype` of subspaces is not equal')
+
     def element(self, inp=None, cast=True):
         """Create an element in the product space.
 
