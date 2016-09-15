@@ -31,8 +31,7 @@ standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
-
-from scipy import special
+import scipy.special
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, ResidualOperator, DiagonalOperator)
@@ -1228,12 +1227,12 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
             if g is None:
                 # If g is None, it is taken as the one element
                 # Different branches of lambertw is not an issue, see Notes
-                out.lincomb(1, x, -lam, special.lambertw(
+                out.lincomb(1, x, -lam, scipy.special.lambertw(
                     (self.sigma / lam) * np.exp(x / lam)))
             else:
                 # Different branches of lambertw is not an issue, see Notes
                 out.lincomb(1, x,
-                            -lam, special.lambertw(
+                            -lam, scipy.special.lambertw(
                                 (self.sigma / lam) * g * np.exp(x / lam)))
 
     return ProximalCConjKLCrossEntropy

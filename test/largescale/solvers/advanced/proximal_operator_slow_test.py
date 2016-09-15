@@ -25,7 +25,7 @@ standard_library.install_aliases()
 # External
 import numpy as np
 import pytest
-import scipy
+import scipy.special
 
 # Internal
 import odl
