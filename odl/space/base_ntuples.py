@@ -143,6 +143,10 @@ class NtuplesBase(Set):
         return '{}({}, {})'.format(self.__class__.__name__, self.size,
                                    dtype_repr(self.dtype))
 
+    def __str__(self):
+        """Return ``str(self)``."""
+        return repr(self)
+
     @property
     def element_type(self):
         """Type of elements in this space."""
