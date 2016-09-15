@@ -588,14 +588,6 @@ def proximal_l2(space, lam=1, g=None):
 
         ``F(x) =  lam ||x - g||_2``
 
-    For a step size ``sigma``, the proximal operator of ``sigma * F``
-    is given by::
-
-        prox[sigma * F](y) = { (1.0 - c / ||x-g||) * x  + c * g    if c < 1
-                             { g                                   else
-
-    where ``c = sigma * lam / ||x - g||_2``.
-
     Parameters
     ----------
     space : `LinearSpace`
@@ -613,6 +605,25 @@ def proximal_l2(space, lam=1, g=None):
 
     Notes
     -----
+    The functional :math:`F` is given by
+
+        .. math::
+
+            F(x) = \\lambda ||x - g||_2
+
+    For a step size :math:`\\sigma`, the proximal operator of :math:`\\sigma F`
+    is given by
+
+        .. math::
+
+            prox[\\sigma F](y) = \\left\{ \\begin{array}{ll}
+            \\frac{1 - c}{||y-g||} \\cdot y  + c \cdot g
+            & \\quad  \\text{if } c < g, \\\\
+            g & \\text{else},
+            \\end{array} \\right.
+
+    where :math:`c = \\sigma \cdot \\frac{\\lambda}{||y - g||_2}`.
+
     Most problems are forumlated for the squared norm/distance, in that case
     use `proximal_l2_squared` instead.
 
@@ -681,15 +692,6 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
 
     with x and g elements in ``space``, scaling factor lam, and given data g.
 
-    The convex conjugate F^* of F is given by
-
-        F^*(y) = 1/lam (||y/lam||_2^2 + <y/lam,g>)
-
-    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
-    given by
-
-        prox[sigma * F^*](y) = (y - sigma * g) / (1 + sigma/(2 * lam))
-
     Parameters
     ----------
     space : `LinearSpace`
@@ -704,6 +706,30 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
     -------
     prox_factory : function
         Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    The functional :math:`F` is given by
+
+        .. math::
+
+            F(x) =  \\lambda ||x - g||_2^2.
+
+    The convex conjugate :math:`F^*` of :math:`F` is given by
+
+        .. math::
+
+            F^*(y) = \\frac{1}{\\lambda} \left( \left|\left|
+            \\frac{y}{\\lambda} \\right| \\right|_2^2 +
+            \left\langle \\frac{y}{\\lambda}, g \\right\\rangle \\right)
+
+    For a step size :math:`\\sigma`, the proximal operator of
+    :math:`\\sigma F^*` is given by
+
+        .. math::
+
+            prox[\\sigma F^*](y) = \\frac{y - \\sigma g}{1 +
+            \\sigma/(2 \\lambda)}
 
     See Also
     --------
@@ -755,11 +781,6 @@ def proximal_l2_squared(space, lam=1, g=None):
 
     with x and g elements in ``space``, scaling factor lam, and given data g.
 
-    For a step size ``tau``, the proximal operator of ``tau * F`` is
-    given by
-
-        prox[tau * F](x) = (x + 2 * tau * lam * g) / (1 + 2 * tau * lam)
-
     Parameters
     ----------
     space : `LinearSpace`
@@ -774,6 +795,22 @@ def proximal_l2_squared(space, lam=1, g=None):
     -------
     prox_factory : function
         Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    The functional :math:`F` is given by
+
+        .. math::
+
+            F(x) =  \\lambda ||x - g||_2^2.
+
+    For a step size :math:`\\sigma`, the proximal operator of :math:`\\sigma F`
+    is given by
+
+        .. math::
+
+            prox[\\sigma F](x) = \\frac{x + 2 * \\sigma * \\lambda * g}
+            {1 + 2 * \\sigma * \\lambda}.
 
     See Also
     --------
@@ -812,10 +849,6 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     -------
     prox_factory : function
         Factory for the proximal operator to be initialized
-
-    See Also
-    --------
-    proximal_l1 : proximal without convex conjugate conjugate
 
     Notes
     -----
@@ -871,6 +904,10 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
     where :math:`\\max(.,.)` thresholds the lower bound of :math:`||y||_2`
     point-wise.
+
+    See Also
+    --------
+    proximal_l1 : proximal without convex conjugate conjugate
     """
     lam = float(lam)
 
@@ -975,10 +1012,6 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     prox_factory : function
         Factory for the proximal operator to be initialized
 
-    See Also
-    --------
-    proximal_cconj_l1 : proximal for convex conjugate
-
     Notes
     -----
     The :math:`L_1`-norm :math:`F` is the functional
@@ -1012,6 +1045,10 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
 
     The proximal can be calculated using the Moreau equality (also known as
     Moreau decomposition or Moreau idnetity). See for example [BC2011]_.
+
+    See Also
+    --------
+    proximal_cconj_l1 : proximal for convex conjugate
     """
     # TODO: optimize
     prox_cc_l1 = proximal_cconj_l1(space, lam=lam, g=g, isotropic=isotropic)
