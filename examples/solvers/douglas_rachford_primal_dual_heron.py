@@ -47,23 +47,22 @@ lin_ops = [odl.IdentityOperator(space)] * len(rectangles)
 
 # The function f in the douglas rachford solver is not needed so we set it
 # to the zero function
-prox_f = odl.solvers.proximal_const_func(space)
+f = odl.solvers.ZeroFunctional(space)
 
 # g is the distance function. Here, the l2 distance
-prox_cc_g = [odl.solvers.proximal_cconj_l2(space)] * len(rectangles)
+g = [odl.solvers.L2Norm(space)] * len(rectangles)
 
 # l are the indicator functions on the rectangles.
-prox_l = [odl.solvers.proximal_box_constraint(space, minp, maxp)
-          for minp, maxp in rectangles]
-# We want the proximal of the convex conjugate, so we need to convert to that.
-prox_cc_l = [odl.solvers.proximal_cconj(prox) for prox in prox_l]
+l = [odl.solvers.IndicatorBox(space, minp, maxp) for minp, maxp in rectangles]
 
 # Select step size
 tau = 1.0 / len(rectangles)
 sigma = [1.0] * len(rectangles)
 
+
 # The lam parameter can be used to accelerate the convergence rate
-lam = lambda n: 1.0 + 1.0 / (n + 1)
+def lam(n):
+    return 1.0 + 1.0 / (n + 1)
 
 
 def print_objective(x):
@@ -76,9 +75,9 @@ def print_objective(x):
 
 # Solve
 x = space.zero()
-odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
+odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=tau, sigma=sigma, niter=20, lam=lam,
-                                callback=print_objective, prox_cc_l=prox_cc_l)
+                                callback=print_objective, l=l)
 
 # plot the result
 for minp, maxp in rectangles:

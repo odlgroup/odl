@@ -31,6 +31,7 @@ import odl
 # Parameters
 n = 256
 subsampling = 0.5  # propotion of data to use
+lam = 0.003
 
 # Create a space
 space = odl.uniform_discr([0, 0], [n, n], [n, n])
@@ -54,15 +55,15 @@ gradient = odl.Gradient(space)
 lin_ops = [mri_op, gradient]
 
 # Create proximals as needed
-prox_cc_g = [odl.solvers.proximal_cconj_l2(mri_op.range, g=noisy_data),
-             odl.solvers.proximal_cconj_l1(gradient.range, lam=0.003)]
-prox_f = odl.solvers.proximal_box_constraint(space, 0, 1)
+g = [odl.solvers.L2Norm(mri_op.range).translated(noisy_data),
+     lam * odl.solvers.L1Norm(mri_op.range)]
+f = odl.solvers.IndicatorBox(space, 0, 1)
 
 # Solve
 x = mri_op.domain.zero()
 callback = (odl.solvers.CallbackShow(display_step=20, clim=[0, 1]) &
             odl.solvers.CallbackPrintIteration())
-odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
+odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
                                 tau=1.0, sigma=[1.0, 0.2],
                                 niter=500, callback=callback)
 
