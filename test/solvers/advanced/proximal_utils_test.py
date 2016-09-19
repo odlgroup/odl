@@ -106,7 +106,7 @@ def test_proximal_arg_scaling_zero():
     x = noise_element(space)
 
     # Check that the scaling with zero returns proximal facotry for the
-    # proximal_zero, which ersults in the identity operator
+    # proximal_const_func, which results in the identity operator
     assert all_almost_equal(prox(x), x, places=PLACES)
 
 

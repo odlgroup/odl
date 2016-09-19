@@ -47,7 +47,7 @@ lin_ops = [odl.IdentityOperator(space)] * len(rectangles)
 
 # The function f in the douglas rachford solver is not needed so we set it
 # to the zero function
-prox_f = odl.solvers.proximal_zero(space)
+prox_f = odl.solvers.proximal_const_func(space)
 
 # g is the distance function. Here, the l2 distance
 prox_cc_g = [odl.solvers.proximal_cconj_l2(space)] * len(rectangles)
