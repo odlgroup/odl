@@ -495,7 +495,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
             raise TypeError('`func` {!r} is not a `Functional` instance'
                             ''.format(func))
 
-        scalar = func.range.element(scalar)
+        scalar = func.domain.field.element(scalar)
 
         Functional.__init__(self, space=func.domain, linear=func.is_linear,
                             grad_lipschitz=(
@@ -876,6 +876,7 @@ class FunctionalLinearPerturb(Functional):
             self.linear_term)
 
 
+<<<<<<< b22d58526abb88c39ba9379878e903b0db46392d
 class FunctionalProduct(Functional, OperatorPointwiseProduct):
 
     """Product ``p(x) = f(x) * g(x)`` of two functionals ``f`` and ``g``."""
