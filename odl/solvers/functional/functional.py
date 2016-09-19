@@ -876,7 +876,6 @@ class FunctionalLinearPerturb(Functional):
             self.linear_term)
 
 
-<<<<<<< b22d58526abb88c39ba9379878e903b0db46392d
 class FunctionalProduct(Functional, OperatorPointwiseProduct):
 
     """Product ``p(x) = f(x) * g(x)`` of two functionals ``f`` and ``g``."""
