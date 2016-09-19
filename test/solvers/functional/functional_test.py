@@ -30,6 +30,7 @@ import pytest
 import odl
 from odl.util.testutils import all_almost_equal, almost_equal, noise_element
 
+
 # TODO: maybe add tests for if translations etc. belongs to the wrong space.
 # These tests doesn't work as intended now, since casting is possible between
 # spaces with the same number of discrete points.
