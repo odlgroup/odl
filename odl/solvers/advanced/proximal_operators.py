@@ -371,12 +371,7 @@ def proximal_const_func(space):
     """Proximal operator factory of the constant functional.
 
     Function to initialize the proximal operator of the constant functional
-    defined on ``space``. The proximal operator of this functional is the
-    identity operator
-
-        prox[tau * G](x) = x  where G=constant
-
-    It is independent of tau.
+    defined on ``space``.
 
     Parameters
     ----------
@@ -387,6 +382,18 @@ def proximal_const_func(space):
     -------
     prox_factory : function
         Factory for the proximal operator to be initialized
+
+    Notes
+    -----
+    The constant functional :math:`G` is defeind as :math:`G(x) = constant`
+    for all values of :math:`x`. The proximal operator of this functional is
+    the identity operator
+
+        .. math::
+
+            prox[\\tau G](x) = x
+
+    Note that it is independent of :math:`\\tau`.
     """
 
     def identity_factory(tau):
@@ -448,20 +455,23 @@ def proximal_box_constraint(space, lower=None, upper=None):
             \\infty & \\quad \\text{if } x \\not \\in P
             \\end{array} \\right.
 
-    For a step size :math:`\\sigma`, the proximal operator of
-    :math:`\\sigma I_{x \\in P}` is given by the projection onto the interval
+    For a step size :math:`\\tau`, the proximal operator of
+    :math:`\\tau I_{x \\in P}` is given by the projection onto the interval
 
       .. math::
 
-             prox[\\sigma I_{x \\in P}](x) = \\left\{ \\begin{array}{ll}
+             prox[\\tau I_{x \\in P}](x) = \\left\{ \\begin{array}{ll}
              a & \\quad \\text{if } x < a, \\\\
              x & \\quad \\text{if } x \\in [a,b], \\\\
              b & \\quad \\text{if } x > b,
              \\end{array} \\right.
 
-    It is independent of :math:`\\sigma` and invariant under a positive
+    It is independent of :math:`\\tau` and invariant under a positive
     rescaling of :math:`I_{x \\in P}`, since that leaves the indicator function
     unchanged.
+
+    For spaces of the form :math:`R^n`, the definition extends naturally
+    pointwise.
 
     See Also
     --------
@@ -526,33 +536,6 @@ def proximal_nonnegativity(space):
     prox_factory : function
         Factory for the proximal operator to be initialized
 
-    Notes
-    -----
-    If :math:`P` is the set of non-negative elements, the indicator function is
-    defined as
-
-        .. math::
-
-            I_{x \\in P} = \\left\{ \\begin{array}{ll}
-            0 & \\quad \\text{if } x \\in P, \\\\
-            \\infty & \\quad \\text{if } x \\not \\in P
-            \\end{array} \\right.
-
-    For a step size :math:`\\sigma`, the proximal operator of
-    :math:`\\sigma I_{x \\in P}` is the point-wise non-negativity thresholding
-    of :math:`x`
-
-        .. math::
-
-             prox[\\sigma I_{x \\in P}](x) = \\left\{ \\begin{array}{ll}
-             x & \\quad \\text{if } x \\geq 0, \\\\
-             0 & \\quad \\text{if } x < 0
-             \\end{array} \\right.
-
-    It is independent of :math:`\\sigma` and invariant under a positive
-    rescaling of :math:`I_{x \\in P}`, since that leaves the indicator function
-    unchanged.
-
     See Also
     --------
     proximal_box_constraint
@@ -588,7 +571,7 @@ def proximal_cconj_l2(space, lam=1, g=None):
 
     Notes
     -----
-    The functional :math:`F` is given by
+    The :math:`L_2`-distance :math:`F` is given by is given by
 
         .. math::
 
@@ -604,7 +587,7 @@ def proximal_cconj_l2(space, lam=1, g=None):
             \\end{array} \\right.
 
     For a step size :math:`\\sigma`, the proximal operator of
-    :math:`sigma F^*` is given by the projection onto the set
+    :math:`\\sigma F^*` is given by the projection onto the set
     :math:`||y-g||_2 \leq \\lambda`, i.e., by
 
         .. math::
@@ -614,6 +597,8 @@ def proximal_cconj_l2(space, lam=1, g=None):
             & \\quad  ||y-g||_2 > \\lambda, \\\\
             y & \\quad ||y-g||_2 \leq \\lambda
             \\end{array} \\right.
+
+    Note that the expression is independent of :math:`\sigma`.
 
     Most problems are forumlated for the squared norm, in that case use the
     `proximal_cconj_l2_squared` instead.
@@ -652,7 +637,7 @@ def proximal_l2(space, lam=1, g=None):
 
     Notes
     -----
-    The functional :math:`F` is given by
+    The :math:`L_2`-distance :math:`F` is given by
 
         .. math::
 
@@ -666,10 +651,10 @@ def proximal_l2(space, lam=1, g=None):
             prox[\\sigma F](y) = \\left\{ \\begin{array}{ll}
             \\frac{1 - c}{||y-g||} \\cdot y  + c \cdot g
             & \\quad  \\text{if } c < g, \\\\
-            g & \\text{else},
+            g & \\quad \\text{else},
             \\end{array} \\right.
 
-    where :math:`c = \\sigma \cdot \\frac{\\lambda}{||y - g||_2}`.
+    where :math:`c = \\sigma \\frac{\\lambda}{||y - g||_2}`.
 
     Most problems are forumlated for the squared norm/distance, in that case
     use `proximal_l2_squared` instead.
@@ -756,7 +741,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
 
     Notes
     -----
-    The functional :math:`F` is given by
+    The squared :math:`L_2`-distance :math:`F` is given by
 
         .. math::
 
@@ -766,9 +751,8 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
 
         .. math::
 
-            F^*(y) = \\frac{1}{\\lambda} \left( \left|\left|
-            \\frac{y}{\\lambda} \\right| \\right|_2^2 +
-            \left\langle \\frac{y}{\\lambda}, g \\right\\rangle \\right)
+            F^*(y) = \\frac{1}{4\\lambda} \left( ||
+            y||_2^2 + \langle y, g \\rangle \\right)
 
     For a step size :math:`\\sigma`, the proximal operator of
     :math:`\\sigma F^*` is given by
@@ -845,7 +829,7 @@ def proximal_l2_squared(space, lam=1, g=None):
 
     Notes
     -----
-    The functional :math:`F` is given by
+    The squared :math:`L_2`-distance :math:`F` is given by
 
         .. math::
 
@@ -856,8 +840,8 @@ def proximal_l2_squared(space, lam=1, g=None):
 
         .. math::
 
-            prox[\\sigma F](x) = \\frac{x + 2 * \\sigma * \\lambda * g}
-            {1 + 2 * \\sigma * \\lambda}.
+            prox[\\sigma F](x) = \\frac{x + 2 \\sigma \\lambda g}
+            {1 + 2 \\sigma \\lambda}.
 
     See Also
     --------
@@ -942,8 +926,8 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
             \left\langle \\frac{y}{\\lambda}, g \\right\\rangle
             \\right)
 
-    For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
-    given by
+    For a step size :math:`\\sigma`, the proximal operator of
+    :math:`\\sigma F^*` is given by
 
         .. math::
             prox[\\sigma F^*](y) = \\frac{\\lambda (y - \\sigma g)}{
