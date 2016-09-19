@@ -29,13 +29,13 @@ from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
 from odl.solvers.advanced.proximal_operators import (
     proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
-    proximal_l2_squared, proximal_const_func)
+    proximal_l2_squared, proximal_const_func, proximal_box_constraint)
 
 from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
 
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
-           'ConstantFunctional', 'IndicatorLpUnitBall')
+           'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox')
 
 
 class L1Norm(Functional):
@@ -464,3 +464,112 @@ class ZeroFunctional(ConstantFunctional):
             Domain of the functional.
         """
         super().__init__(space=space, constant=0)
+
+
+class IndicatorBox(Functional):
+
+    """Indicator on some box shaped domain.
+
+    Notes
+    -----
+    The indicator :math:`F` with lower bound :math:`a` and upper bound
+    :math:`b` is defined as:
+
+    .. math::
+
+        F(x) = \\begin{cases}
+            0 & \\text{if } a \\leq x \\leq b \\text{ everywhere}, \\\\
+            \\infty & \\text{else}
+            \\end{cases}
+    """
+
+    def __init__(self, space, lower=None, upper=None):
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        space : `LinearSpace`
+            Domain of the functional.
+        lower : ``space.field`` element or ``space`` `element-like`, optional
+            The lower bound.
+            Default: ``None``, interpreted as -infinity
+        upper : ``space.field`` element or ``space`` `element-like`, optional
+            The upper bound.
+            Default: ``None``, interpreted as +infinity
+
+        Examples
+        --------
+        >>> import odl
+        >>> space = odl.rn(3)
+        >>> func = IndicatorBox(space, 0, 2)
+        >>> func([0, 1, 2])  # all points inside
+        0
+        >>> func([0, 1, 3])  # one point outside
+        inf
+        """
+        Functional.__init__(self, space, linear=False)
+        self.lower = lower
+        self.upper = upper
+
+    def _call(self, x):
+        """Apply the functional to the given point."""
+        # Compute the projection of x onto the box, if this is equal to x we
+        # know x is inside the box.
+        tmp = self.domain.element()
+        if self.lower is not None and self.upper is None:
+            x.ufunc.maximum(self.lower, out=tmp)
+        elif self.lower is None and self.upper is not None:
+            x.ufunc.minimum(self.upper, out=tmp)
+        elif self.lower is not None and self.upper is not None:
+            x.ufunc.maximum(self.lower, out=tmp)
+            tmp.ufunc.minimum(self.upper, out=tmp)
+        else:
+            tmp.assign(x)
+
+        return np.inf if x.dist(tmp) > 0 else 0
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional."""
+        return proximal_box_constraint(self.domain, self.lower, self.upper)
+
+
+class IndicatorNonnegativity(IndicatorBox):
+    """Indicator on the set of non-negative numbers.
+
+    Notes
+    -----
+    The nonnegativity indicator :math:`F`  is defined as:
+
+    .. math::
+
+        F(x) = \\begin{cases}
+            0 & \\text{if } 0 \\leq x \\text{ everywhere}, \\\\
+            \\infty & \\text{else}
+            \\end{cases}
+    """
+
+    def __init__(self, space):
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        space : `LinearSpace`
+            Domain of the functional.
+
+        Examples
+        --------
+        >>> import odl
+        >>> space = odl.rn(3)
+        >>> func = IndicatorNonnegativity(space)
+        >>> func([0, 1, 2])  # all points positive
+        0
+        >>> func([0, 1, -3])  # one point negative
+        inf
+        """
+        IndicatorBox.__init__(self, space, lower=0, upper=None)
+
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()
