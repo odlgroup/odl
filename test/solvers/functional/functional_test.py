@@ -121,6 +121,30 @@ def test_derivative(functional, space):
                             y.inner(functional.gradient(x)))
 
 
+def test_arithmetic():
+    """Test that all standard arithmetic works."""
+    space = odl.rn(3)
+
+    # Create elements needed for later
+    functional = odl.solvers.L2Norm(space)
+    functional2 = odl.solvers.L2NormSquared(space)
+    operator = odl.ResidualOperator(odl.IdentityOperator(space), [1, 2, 3])
+    x = noise_element(functional.domain)
+    y = noise_element(functional.domain)
+    scalar = np.pi
+
+    # Simple tests here, more in depth comes later
+    assert functional(x) == functional(x)
+    assert functional(x) != functional2(x)
+    assert (scalar * functional)(x) == scalar * functional(x)
+    assert (functional * scalar)(x) == functional(scalar * x)
+    assert (functional + functional2)(x) == functional(x) + functional2(x)
+    assert (functional - functional2)(x) == functional(x) - functional2(x)
+    assert (functional * operator)(x) == functional(operator(x))
+    assert (y * functional)(x) == y * functional(x)
+    assert (functional * y)(x) == functional(y * x)
+
+
 def test_left_scalar_multiplication(space):
     """Test for right and left multiplication of a functional with a scalar."""
     x = noise_element(space)
