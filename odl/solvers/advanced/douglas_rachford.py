@@ -28,7 +28,7 @@ from odl.operator import Operator
 __all__ = ('douglas_rachford_pd',)
 
 
-def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
+def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
                         callback=None, **kwargs):
     """Douglas-Rachford primal-dual splitting algorithm.
 
@@ -51,17 +51,17 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     ----------
     x : `LinearSpaceElement`
         Initial point, updated in-place.
-    prox_f : callable
+    f : `Functional`
         `proximal factory` for the function ``f``.
-    prox_cc_g : sequence of callable
-        Sequence of `proximal factory` for the convex conjuates of the
-        functions ``g_i``.
-    L : sequence of `Operator`'s
-        Sequence of operators with as many elements as ``prox_cc_gs``.
-    tau : `float`
-        Step size parameter for ``prox_f``.
-    sigma : sequence of floats
-        Step size parameters for the ``prox_cc_g``.
+    g : `sequence` of `Functional`'s
+        Sequence of of the functions ``g_i``. Needs to have
+        ``convex_conj.proximal``.
+    L : `sequence` of `Operator`'s
+        Sequence of `Opeartor`s` with as many elements as ``g``.
+    tau : float
+        Step size parameter for ``f``.
+    sigma : `sequence` of floats
+        Step size parameters for the ``g_i``s.
     niter : int
         Number of iterations.
     callback : callable, optional
@@ -69,9 +69,9 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
     Other Parameters
     ----------------
-    prox_cc_l : sequence of callable, optional
-        Sequence of `proximal factory` for the convex conjuates of the
-        functions ``l_i``.
+    l : `sequence` of `Functionals`'s, optional
+        Sequence of of the functions ``l_i``. Needs to have
+        ``convex_conj.proximal``.
         If omitted, the simpler problem without ``l_i``  will be considered.
     lam : float or callable, optional
         Overrelaxation step size. If callable, should take an index (zero
@@ -138,14 +138,17 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
         raise ValueError('`x` not in the domain of all operators')
     if len(sigma) != m:
         raise ValueError('len(sigma) != len(L)')
-    if len(prox_cc_g) != m:
+    if len(g) != m:
         raise ValueError('len(prox_cc_g) != len(L)')
 
+    prox_cc_g = [gi.convex_conj.proximal for gi in g]
+
     # Get parameters from kwargs
-    prox_cc_l = kwargs.pop('prox_cc_l', None)
-    if prox_cc_l is not None and len(prox_cc_l) != m:
-        raise ValueError('`prox_cc_l` does not have the same number of '
+    l = kwargs.pop('l', None)
+    if l is not None and len(l) != m:
+        raise ValueError('`l` does not have the same number of '
                          'elements as `L`')
+    prox_cc_l = [li.convex_conj.proximal for li in l]
 
     lam_in = kwargs.pop('lam', 1.0)
     if not callable(lam_in) and not (0 < lam_in < 2):
@@ -168,7 +171,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     for k in range(niter):
         tmp_1 = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
         tmp_1.lincomb(1, x, -tau / 2, tmp_1)
-        prox_f(tau)(tmp_1, out=p1)
+        f.proximal(tau)(tmp_1, out=p1)
         w1.lincomb(2.0, p1, -1, x)
 
         for i in range(m):

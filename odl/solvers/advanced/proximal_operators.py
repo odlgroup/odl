@@ -545,7 +545,6 @@ def proximal_box_constraint(space, lower=None, upper=None):
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``."""
 
-            # Point-wise non-negativity thresholding: x if x > 0, else 0
             if lower is not None and upper is None:
                 x.ufunc.maximum(lower, out=out)
             elif lower is None and upper is not None:
