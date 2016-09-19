@@ -60,7 +60,6 @@ class L1Norm(Functional):
     .. math::
 
         \| x \|_1 = \\int_{\Omega} |x| dx.
-
     """
 
     def __init__(self, space):
