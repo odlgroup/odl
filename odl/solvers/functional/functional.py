@@ -36,7 +36,7 @@ __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
            'FunctionalTranslation', 'FunctionalLinearPerturb',
-           'FunctionalProduct')
+           'FunctionalProduct', 'FunctionalQuotient')
 
 
 class Functional(Operator):
@@ -876,7 +876,148 @@ class FunctionalLinearPerturb(Functional):
             self.linear_term)
 
 
-<<<<<<< HEAD
+class FunctionalProduct(Functional, OperatorPointwiseProduct):
+
+    """Product ``p(x) = f(x) * g(x)`` of two functionals ``f`` and ``g``."""
+
+    def __init__(self, left, right):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        left, right : `Functional`
+            Functionals in the product. Need to have matching domains.
+
+        Examples
+        --------
+        Construct the functional || . ||_2^2 * 3
+
+        >>> import odl
+        >>> space = odl.rn(2)
+        >>> func1 = odl.solvers.L2NormSquared(space)
+        >>> func2 = odl.solvers.ConstantFunctional(space, 3)
+        >>> prod = odl.solvers.FunctionalProduct(func1, func2)
+        >>> prod([2, 3])  # expect (2**2 + 3**2) * 3 = 39
+        39.0
+        """
+        if not isinstance(left, Functional):
+            raise TypeError('`left` {} is not a `Functional` instance'
+                            ''.format(left))
+        if not isinstance(right, Functional):
+            raise TypeError('`right` {} is not a `Functional` instance'
+                            ''.format(right))
+
+        OperatorPointwiseProduct.__init__(self, left, right)
+        Functional.__init__(self, left.domain, linear=False,
+                            grad_lipschitz=np.nan)
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The derivative is computed using Leibniz's rule:
+
+        .. math::
+            [D(f g)](p) = g(p) [Df](p) + f(p) [Dg](p)
+        """
+        func = self
+
+        class FunctionalProductGradient(Operator):
+
+            """Functional representing the derivative of ``f(.) * g(.)``."""
+
+            def _call(self, x):
+                return (func.right(x) * func.left.gradient(x) +
+                        func.left(x) * func.right.gradient(x))
+
+        return FunctionalProductGradient(self.domain, self.domain,
+                                         linear=True)
+
+
+class FunctionalQuotient(Functional):
+
+    """Product ``p(x) = f(x) / g(x)`` of two functionals ``f`` and ``g``."""
+
+    def __init__(self, dividend, divisor):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        dividend, divisor : `Functional`
+            Functionals in the quotient. Need to have matching domains.
+
+        Examples
+        --------
+        Construct the functional || . ||_2 / 5
+
+        >>> import odl
+        >>> space = odl.rn(2)
+        >>> func1 = odl.solvers.L2Norm(space)
+        >>> func2 = odl.solvers.ConstantFunctional(space, 5)
+        >>> prod = odl.solvers.FunctionalQuotient(func1, func2)
+        >>> prod([3, 4])  # expect sqrt(3**2 + 4**2) / 5 = 1
+        1.0
+        """
+        if not isinstance(dividend, Functional):
+            raise TypeError('`dividend` {} is not a `Functional` instance'
+                            ''.format(dividend))
+        if not isinstance(divisor, Functional):
+            raise TypeError('`divisor` {} is not a `Functional` instance'
+                            ''.format(divisor))
+
+        if dividend.domain != divisor.domain:
+            raise ValueError('domains of the operators do not match')
+
+        self.__dividend = dividend
+        self.__divisor = divisor
+
+        Functional.__init__(self, dividend.domain, linear=False,
+                            grad_lipschitz=np.nan)
+
+    @property
+    def dividend(self):
+        """The dividend of the quotient."""
+        return self.__dividend
+
+    @property
+    def divisor(self):
+        """The divisor of the quotient."""
+        return self.__divisor
+
+    def _call(self, x):
+        """Apply the functional to the given point."""
+        return self.dividend(x) / self.divisor(x)
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        Notes
+        -----
+        The derivative is computed using the quotient rule:
+
+        .. math::
+            [D(f / g)](p) = (g(p) [Df](p) - f(p) [Dg](p)) / g(p)^2
+        """
+        func = self
+
+        class FunctionalQuotientGradient(Operator):
+
+            """Functional representing the derivative of ``f(.) / g(.)``."""
+
+            def _call(self, x):
+                """Apply the functional to the given point."""
+                dividendx = func.dividend(x)
+                divisorx = func.divisor(x)
+                return ((1 / divisorx) * func.dividend.gradient(x) +
+                        (- dividendx / divisorx**2) * func.divisor.gradient(x))
+
+        return FunctionalQuotientGradient(self.domain, self.domain,
+                                          linear=True)
+
+
 class FunctionalDefaultConvexConjugate(Functional):
 
     """The `Functional` representing ``F^*``, the convex conjugate of ``F``.
@@ -897,18 +1038,10 @@ class FunctionalDefaultConvexConjugate(Functional):
     """
 
     def __init__(self, func):
-=======
-class FunctionalProduct(Functional, OperatorPointwiseProduct):
-
-    """The ``Functional`` representing ``f(.) * g(.)``."""
-
-    def __init__(self, left, right):
->>>>>>> ENH: Add FunctionalProduct
         """Initialize a new instance.
 
         Parameters
         ----------
-<<<<<<< HEAD
         func : `Functional`
             Functional corresponding to F.
         """
@@ -919,47 +1052,26 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         super().__init__(space=func.domain,
                          linear=func.is_linear)
 
-        self.__functional = func
+        self.__convex_conj = func
 
     @property
     def convex_conj(self):
         """The original functional."""
-        return self.__functional
+        return self.__convex_conj
 
     @property
     def proximal(self):
         """Proximal factory using the Moreu identity.
 
-        See Also
-        --------
-        odl.solvers.advanced.proximal_operators.proximal_cconj
+        Returns
+        -------
+        proximal : proximal_cconj
+            Proximal computed using the Moreu identity
         """
         return proximal_cconj(self.convex_conj.proximal)
-=======
-        left, right : `Functional`
-            Functionals in the product.
-        """
-        if not isinstance(left, Functional):
-            raise TypeError('`func1` {} is not a `Functional` instance'
-                            ''.format(left))
-        if not isinstance(right, Functional):
-            raise TypeError('`func2` {} is not a `Functional` instance'
-                            ''.format(right))
 
-        OperatorPointwiseProduct.__init__(self, left, right)
-        Functional.__init__(self, left.domain, linear=False,
-                            grad_lipschitz=np.nan)
 
-    @property
-    def gradient(self):
-        """Gradient operator of the functional."""
-        func = self
-
-        class FunctionalProductGradient(Operator):
-            def _call(self, x):
-                return (func.right(x) * func.left.gradient(x) +
-                        func.left(x) * func.right.gradient(x))
-
-        return FunctionalProductGradient(self.domain, self.domain,
-                                         linear=False)
->>>>>>> ENH: Add FunctionalProduct
+if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests()
