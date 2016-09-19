@@ -36,7 +36,7 @@ from odl.util.testutils import all_almost_equal, almost_equal, noise_element
 # spaces with the same number of discrete points.
 
 space_params = ['r10', 'uniform_discr']
-space_ids = [' space = {}'.format(p.ljust(10)) for p in space_params]
+space_ids = [' space = {} '.format(p.ljust(13)) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
@@ -52,8 +52,8 @@ def space(request, fn_impl):
 
 func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
                'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf',
-               'product']
-func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
+               'product', 'quotient']
+func_ids = [' f = {} '.format(p.ljust(17)) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
@@ -82,6 +82,10 @@ def functional(request, space):
         left = odl.solvers.functional.L2Norm(space)
         right = odl.solvers.functional.ConstantFunctional(space, 2)
         func = odl.solvers.functional.FunctionalProduct(left, right)
+    elif name == 'quotient':
+        left = odl.solvers.functional.L2Norm(space)
+        right = odl.solvers.functional.ConstantFunctional(space, 2)
+        func = odl.solvers.functional.FunctionalQuotient(left, right)
     else:
         assert False
 
