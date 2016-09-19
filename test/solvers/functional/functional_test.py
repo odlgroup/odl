@@ -280,11 +280,13 @@ def test_functional_sum(space):
                             func2.gradient(x).inner(p)),
                         places=PLACES)
 
-    # Test that prox and convex conjugate is not known
+    # Test that prox is not known
     with pytest.raises(NotImplementedError):
         (func1 + func2).proximal
+
+    # Test that we cannot evaluate the convex conjugate
     with pytest.raises(NotImplementedError):
-        (func1 + func2).convex_conj
+        (func1 + func2).convex_conj(x)
 
 
 def test_functional_plus_scalar(space):
