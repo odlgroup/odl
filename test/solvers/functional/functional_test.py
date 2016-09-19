@@ -51,7 +51,8 @@ def space(request, fn_impl):
 
 
 func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
-               'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf']
+               'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf',
+               'product']
 func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
 
 
@@ -77,6 +78,10 @@ def functional(request, space):
         func = odl.solvers.functional.IndicatorLpUnitBall(space, np.pi)
     elif name == 'ind_unit_ball_inf':
         func = odl.solvers.functional.IndicatorLpUnitBall(space, np.inf)
+    elif name == 'product':
+        left = odl.solvers.functional.L2Norm(space)
+        right = odl.solvers.functional.ConstantFunctional(space, 2)
+        func = odl.solvers.functional.FunctionalProduct(left, right)
     else:
         assert False
 

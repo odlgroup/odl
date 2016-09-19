@@ -25,7 +25,7 @@ import numpy as np
 
 from odl.operator.operator import (
     Operator, OperatorComp, OperatorLeftScalarMult, OperatorRightScalarMult,
-    OperatorRightVectorMult, OperatorSum)
+    OperatorRightVectorMult, OperatorSum, OperatorPointwiseProduct)
 from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
                                   proximal_quadratic_perturbation,
@@ -35,7 +35,8 @@ from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
-           'FunctionalTranslation', 'FunctionalLinearPerturb')
+           'FunctionalTranslation', 'FunctionalLinearPerturb',
+           'FunctionalProduct')
 
 
 class Functional(Operator):
@@ -802,9 +803,9 @@ class FunctionalLinearPerturb(Functional):
         Parameters
         ----------
         func : `Functional`
-            Function corresponding to F^*.
+            Function corresponding to ``f``.
         translation : `domain` element
-            Element in domain of ``F``, corresponding to the translation.
+            Element in domain of ``func``, corresponding to the translation.
         """
         if not isinstance(func, Functional):
             raise TypeError('`func` {} is not a `Functional` instance'
@@ -875,6 +876,7 @@ class FunctionalLinearPerturb(Functional):
             self.linear_term)
 
 
+<<<<<<< HEAD
 class FunctionalDefaultConvexConjugate(Functional):
 
     """The `Functional` representing ``F^*``, the convex conjugate of ``F``.
@@ -895,10 +897,18 @@ class FunctionalDefaultConvexConjugate(Functional):
     """
 
     def __init__(self, func):
+=======
+class FunctionalProduct(Functional, OperatorPointwiseProduct):
+
+    """The ``Functional`` representing ``f(.) * g(.)``."""
+
+    def __init__(self, left, right):
+>>>>>>> ENH: Add FunctionalProduct
         """Initialize a new instance.
 
         Parameters
         ----------
+<<<<<<< HEAD
         func : `Functional`
             Functional corresponding to F.
         """
@@ -925,3 +935,31 @@ class FunctionalDefaultConvexConjugate(Functional):
         odl.solvers.advanced.proximal_operators.proximal_cconj
         """
         return proximal_cconj(self.convex_conj.proximal)
+=======
+        left, right : `Functional`
+            Functionals in the product.
+        """
+        if not isinstance(left, Functional):
+            raise TypeError('`func1` {} is not a `Functional` instance'
+                            ''.format(left))
+        if not isinstance(right, Functional):
+            raise TypeError('`func2` {} is not a `Functional` instance'
+                            ''.format(right))
+
+        OperatorPointwiseProduct.__init__(self, left, right)
+        Functional.__init__(self, left.domain, linear=False,
+                            grad_lipschitz=np.nan)
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional."""
+        func = self
+
+        class FunctionalProductGradient(Operator):
+            def _call(self, x):
+                return (func.right(x) * func.left.gradient(x) +
+                        func.left(x) * func.right.gradient(x))
+
+        return FunctionalProductGradient(self.domain, self.domain,
+                                         linear=False)
+>>>>>>> ENH: Add FunctionalProduct
