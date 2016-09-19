@@ -148,7 +148,8 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     if l is not None and len(l) != m:
         raise ValueError('`l` does not have the same number of '
                          'elements as `L`')
-    prox_cc_l = [li.convex_conj.proximal for li in l]
+    if l is not None:
+        prox_cc_l = [li.convex_conj.proximal for li in l]
 
     lam_in = kwargs.pop('lam', 1.0)
     if not callable(lam_in) and not (0 < lam_in < 2):
@@ -185,7 +186,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
         for i in range(m):
             tmp = w2[i] + (sigma[i] / 2.0) * L[i](2.0 * z1 - w1)
-            if prox_cc_l is not None:
+            if l is not None:
                 # In this case the infimal convolution is used.
                 prox_cc_l[i](sigma[i])(tmp, out=z2[i])
             else:
