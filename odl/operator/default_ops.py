@@ -921,7 +921,7 @@ class ResidualOperator(Operator):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name, self.operator,
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.operator,
                                        self.vector)
 
     def __str__(self):
