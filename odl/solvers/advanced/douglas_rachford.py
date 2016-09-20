@@ -61,7 +61,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     tau : `float`
         Step size parameter for ``prox_f``.
     sigma : sequence of floats
-        Step size parameters for the ``prox_cc_g``s.
+        Step size parameters for the ``prox_cc_g``.
     niter : int
         Number of iterations.
     callback : callable, optional
@@ -115,10 +115,11 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
     See Also
     --------
-    chambolle_pock_solver : Solver for similar problems.
-    forward_backward_pd : Solver for similar problems but can additionaly
-                          handle infimal convolutions, multiple forward
-                          operators and a differentiable term.
+    odl.solvers.advanced.chambolle_pock.chambolle_pock_solver :
+        Solver for similar problems.
+    odl.solvers.advanced.forward_backward.forward_backward_pd :
+        Solver for similar problems which can additionaly handle a
+        differentiable term.
 
     References
     ----------

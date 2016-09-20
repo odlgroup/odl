@@ -254,7 +254,7 @@ class MultiplyOperator(Operator):
 
         Parameters
         ----------
-        multiplicand : `LinearSpaceElement` or `Number`
+        multiplicand : `LinearSpaceElement` or scalar
             Value to multiply by.
         domain : `LinearSpace` or `Field`, optional
             Set to which the operator can be applied.

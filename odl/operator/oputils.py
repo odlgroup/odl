@@ -284,8 +284,8 @@ def as_scipy_operator(op):
     Returns
     -------
     ``scipy.sparse.linalg.LinearOperator`` : linear_op
-        The wrapped operator, has attributes ``matvec`` which calls ``op``, and
-        ``rmatvec`` which calls ``op.adjoint``.
+        The wrapped operator, has attributes ``matvec`` which calls ``op``,
+        and ``rmatvec`` which calls ``op.adjoint``.
 
     Examples
     --------
@@ -302,8 +302,8 @@ def as_scipy_operator(op):
     Notes
     -----
     If the data representation of ``op``'s domain and range is of type
-    `NumpyFn` this incurs no significant overhead. If the data type is `CudaFn`
-    or some other nonlocal type, the overhead is significant.
+    `NumpyFn` this incurs no significant overhead. If the space type is
+    ``CudaFn`` or some other nonlocal type, the overhead is significant.
     """
     if not op.is_linear:
         raise ValueError('`op` needs to be linear')
@@ -357,8 +357,8 @@ def as_proximal_lang_operator(op, norm_bound=None):
     Notes
     -----
     If the data representation of ``op``'s domain and range is of type
-    `NumpyFn` this incurs no significant overhead. If the data type is `CudaFn`
-    or some other nonlocal type, the overhead is significant.
+    `NumpyFn` this incurs no significant overhead. If the data space is
+    ``CudaFn`` or some other nonlocal type, the overhead is significant.
 
     References
     ----------

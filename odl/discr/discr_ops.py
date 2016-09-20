@@ -155,7 +155,7 @@ class Resampling(Operator):
 
 class ResizingOperatorBase(Operator):
 
-    """Base class for `ResizingOperator` and `ResizingOperatorAdjoint`.
+    """Base class for `ResizingOperator` and its adjoint.
 
     This is an abstract class used to share code between the forward and
     adjoint variants of the resizing operator.

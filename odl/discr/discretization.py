@@ -525,7 +525,7 @@ class DiscretizedSpace(DiscretizedSet, FnBase):
 
         See Also
         --------
-        FunctionSpace.examples
+        odl.space.fspace.FunctionSpace.examples
         """
         for name, elem in self.uspace.examples:
             yield (name, self.element(elem))

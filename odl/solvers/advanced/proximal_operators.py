@@ -117,7 +117,7 @@ def proximal_cconj(prox_factory):
 
     Notes
     -----
-    For reference on the Moreau identity, see [ComPes2011]_.
+    For reference on the Moreau identity, see [CP2011c]_.
     """
 
     def cconj_prox_factory(step_size):
@@ -526,7 +526,7 @@ def proximal_nonnegativity(space):
 
     See Also
     --------
-    proximal_clamp
+    proximal_box_constraint
     """
 
     return proximal_box_constraint(space, lower=0)
@@ -930,33 +930,33 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     """Proximal operator factory of the l1-norm/distance.
 
     Function for the proximal operator of the functional F where F is an
-    l1-norm (or distance to g, if given)
+    l1-norm (or distance to g, if given)::
 
         F(x) = lam ||x - g||_1
 
     with x and g elements in ``space``, and scaling factor lam.
 
-    For a step size ``tau``, the proximal operator of ``tau * F`` is
+    For a step size ``tau``, the proximal operator of ``tau * F`` is::
 
                               y - tau * lam   if y > tau * lam,
          prox[tau * F](y) = { 0               if -tau * lam <= y <= tau * lam
                               y + tau * lam   if y < -tau * lam
 
     An alternative formulation is available for `ProductSpace`'s, where the
-    the ``isotropic`` parameter can be used, giving
+    the ``isotropic`` parameter can be used, giving::
 
         F(x) = lam || ||x - g||_2 ||_1
 
-    Where the proximal can be calculated using the Moreau equality.
+    The proximal can be calculated using the Moreau equality.
 
     Parameters
     ----------
-    space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces
-        Domain of the functional F
+    space : `LinearSpace` or `ProductSpace`
+        Domain of the functional.
     g : ``space`` element
-        An element in ``space``
+        An element in ``space``.
     lam : positive float
-        Scaling factor or regularization parameter
+        Scaling factor or regularization parameter.
     isotropic : bool
         If ``True``, take the vectorial 2-norm point-wise. Otherwise,
         use the vectorial 1-norm. Only available if ``space`` is a

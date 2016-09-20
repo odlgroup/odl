@@ -44,8 +44,8 @@ def vector(array, dtype=None, impl='numpy'):
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
     impl : string
-        Implementation backend for the vector. See `NTUPLES_IMPLS` and
-        `FN_IMPLS` for more information.
+        The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` and
+        `odl.space.entry_points.FN_IMPLS` for available options.
 
     Returns
     -------
@@ -115,7 +115,8 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
 
         Only complex floating-point data types are allowed.
     impl : string
-        The backend to use. See `NTUPLES_IMPLS` for available options.
+        The backend to use. See `odl.space.entry_points.NTUPLES_IMPLS` for
+        available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
 
@@ -125,14 +126,13 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
 
     See Also
     --------
-    fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar data
-         type.
+    fn : n-tuples over a field with arbitrary scalar data type.
     """
     return NTUPLES_IMPLS[impl](size, dtype, **kwargs)
 
 
 def fn(size, dtype=None, impl='numpy', **kwargs):
-    """Return the space `F^n` for arbitrary field `F`.
+    """Return the space ``F^n`` for arbitrary field ``F``.
 
     Parameters
     ----------
@@ -147,7 +147,8 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
         Default: default of the implementation given by calling
         ``default_dtype()`` on the `FnBase` implementation.
     impl : string
-        The backend to use. See `FN_IMPLS` for available options.
+        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
+        available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
 
@@ -157,7 +158,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
     See Also
     --------
-    ntuples : n-tuples over a field `F` with arbitrary data type.
+    ntuples : n-tuples over a field with arbitrary data type.
     """
     fn_impl = FN_IMPLS[impl]
 
@@ -170,7 +171,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
 
 def cn(size, dtype=None, impl='numpy', **kwargs):
-    """Return the complex vector space `C^n`.
+    """Return the complex vector space ``C^n``.
 
     Parameters
     ----------
@@ -187,7 +188,8 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
         Default: default of the implementation given by calling
         ``default_dtype(ComplexNumbers())`` on the `FnBase` implementation.
     impl : string
-        The backend to use. See `FN_IMPLS` for available options.
+        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
+        available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
 
@@ -197,7 +199,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
 
     See Also
     --------
-    fn : n-tuples over a field `F` with arbitrary scalar data type.
+    fn : n-tuples over a field with arbitrary scalar data type.
     """
     cn_impl = FN_IMPLS[impl]
 
@@ -213,7 +215,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
 
 
 def rn(size, dtype=None, impl='numpy', **kwargs):
-    """Return the real vector space `R^n`.
+    """Return the real vector space ``R^n``.
 
     Parameters
     ----------
@@ -229,7 +231,8 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
         Default: default of the implementation given by calling
         ``default_dtype(RealNumbers())`` on the `FnBase` implementation.
     impl : string
-        The backend to use. See `FN_IMPLS` for available options.
+        The backend to use. See `odl.space.entry_points.FN_IMPLS` for
+        available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
 
@@ -239,7 +242,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
 
     See Also
     --------
-    fn : n-tuples over a field `F` with arbitrary scalar data type.
+    fn : n-tuples over a field with arbitrary scalar data type.
     """
     rn_impl = FN_IMPLS[impl]
 

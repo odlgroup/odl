@@ -260,8 +260,8 @@ def noise_array(space):
 
     Notes
     -----
-    This method is intended for internal testing purposes, for more explicit
-    example elements see `phantoms` and `LinearSpaceElement.examples`.
+    This method is intended for internal testing purposes. For more explicit
+    example elements see ``odl.phantoms`` and ``LinearSpaceElement.examples``.
 
     Parameters
     ----------
@@ -278,7 +278,8 @@ def noise_array(space):
     --------
     noise_element
     noise_elements
-    LinearSpaceElement.examples : Examples of elements typical to the space.
+    odl.set.space.LinearSpaceElement.examples : Examples of elements
+        typical to the space.
     """
     from odl.space import ProductSpace
     if isinstance(space, ProductSpace):
@@ -307,14 +308,15 @@ def noise_element(space):
 
     Notes
     -----
-    This method is intended for internal testing purposes, for more explicit
-    example elements see `phantoms` and `LinearSpaceElement.examples`.
+    This method is intended for internal testing purposes. For more explicit
+    example elements see ``odl.phantoms`` and ``LinearSpaceElement.examples``.
 
     Parameters
     ----------
     space : `LinearSpace`
-        Space in which to create an element. The `LinearSpace.element`
-        method of the space needs to accept input of `numpy.ndarray` type.
+        Space in which to create an element. The
+        `odl.set.space.LinearSpace.element` method of the space needs to
+        accept input of `numpy.ndarray` type.
 
     Returns
     -------
@@ -342,14 +344,15 @@ def noise_elements(space, n=1):
 
     Notes
     -----
-    This method is intended for internal testing purposes, for more explicit
-    example elements see `phantoms` and `LinearSpaceVector.examples`.
+    This method is intended for internal testing purposes. For more explicit
+    example elements see ``odl.phantoms`` and ``LinearSpaceElement.examples``.
 
     Parameters
     ----------
     space : `LinearSpace`
-        Space to create elements in. The `LinearSpace.element` method
-        of the space needs to accept input of `numpy.ndarray` type.
+        Space in which to create an element. The
+        `odl.set.space.LinearSpace.element` method of the space needs to
+        accept input of `numpy.ndarray` type.
     n : int
         Number of elements to create.
 

@@ -22,13 +22,14 @@ The main advantages of this approach is that
 ODL implements many abstract mathematical notions such as sets, vector spaces and operators. In the
 following, a few are shown by example.
 
+
 Set
 ===
 
 A `Set` is the fundamental building block of ODL objects. It mirrors the mathematical concept of a
 `set`_ in that it can tell if an object belongs to it or not:
 
-    >>> interv = odl.Interval(0, 1)
+    >>> interv = odl.IntervalProd(0, 1)
     >>> 0.5 in interv
     True
     >>> 2.0 in interv
@@ -36,14 +37,6 @@ A `Set` is the fundamental building block of ODL objects. It mirrors the mathema
 
 The most commonly used sets in ODL are `RealNumbers` (set of all `real numbers`_) and
 `IntervalProd` ("Interval product", `rectangular boxes`_ of arbitrary dimension).
-For the typical use cases in 1, 2 and 3 dimensions, there are convenience functions
-`Interval`,  `Rectangle` and `Cuboid`:
-
-    >>> rect = odl.Rectangle([0, -1], [1, 1])
-    >>> rect.min_pt
-    array([ 0., -1.])
-    >>> rect[0]
-    Interval(0.0, 1.0)
 
 
 LinearSpace
@@ -80,7 +73,7 @@ integrability etc. on an *abstract* level since there is no obvious way to check
 As linear spaces, function spaces support some interesting operations:
 
     >>> import numpy as np
-    >>> space = odl.FunctionSpace(odl.Interval(0, 2))
+    >>> space = odl.FunctionSpace(odl.IntervalProd(0, 2))
     >>> exp = space.element(np.exp)
     >>> exp(np.log(2))
     2.0
@@ -98,7 +91,7 @@ see the :ref:`vectorization_in_depth` guide for instructions on how to write vec
 functions.
 
     >>> import numpy as np
-    >>> space = odl.FunctionSpace(odl.Interval(0, 2))
+    >>> space = odl.FunctionSpace(odl.IntervalProd(0, 2))
     >>> exp = space.element(np.exp)
     >>> exp([0, 1, 2])
     array([ 1.        ,  2.71828183,  7.3890561 ])
@@ -122,7 +115,7 @@ default in the convenience function `uniform_discr`:
     >>> l2_discr.exponent
     2.0
     >>> l2_discr.domain
-    Interval(0.0, 1.0)
+    IntervalProd(0.0, 1.0)
 
 Discretizations have a large number of useful functionality, for example the direct and vectorized
 sampling of continuously defined functions. If we, for example, want to discretize the function

@@ -210,7 +210,7 @@ class MatrixWeightingBase(WeightingBase):
 
         Parameters
         ----------
-        matrix :  ``scipy.sparse.spmatrix`` or 2-dim. `array-like`
+        matrix :  `scipy.sparse.spmatrix` or 2-dim. `array-like`
             Square weighting matrix of the inner product
         impl : string
             Specifier for the implementation backend
@@ -262,6 +262,7 @@ class MatrixWeightingBase(WeightingBase):
 
         Depending on the matrix size, this can be rather expensive.
         """
+        # TODO: fix dead link `scipy.sparse.spmatrix`
         precomp_mat_pow = kwargs.pop('precomp_mat_pow', False)
         self._cache_mat_pow = bool(kwargs.pop('cache_mat_pow', True))
         self._cache_mat_decomp = bool(kwargs.pop('cache_mat_decomp', False))
@@ -365,6 +366,7 @@ class MatrixWeightingBase(WeightingBase):
         NotImplementedError
             if the matrix is sparse (not supported by scipy 0.17)
         """
+        # TODO: fix dead link `scipy.linalg.decomp.eigh`
         if self.matrix_issparse:
             raise NotImplementedError('sparse matrix not supported')
 

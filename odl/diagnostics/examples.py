@@ -28,7 +28,7 @@ __all__ = ('samples',)
 
 
 def samples(*sets):
-    """Generate some samples from the given sets using their `examples` method.
+    """Generate samples from the given sets using their ``examples`` method.
 
     Parameters
     ----------

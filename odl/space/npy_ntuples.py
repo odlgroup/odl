@@ -175,7 +175,7 @@ class NumpyNtuples(NtuplesBase):
 
         Notes
         -----
-        This is all dtypes available to numpy. See `numpy.sctypes`
+        This is all dtypes available to numpy. See ``numpy.sctypes``
         for more information.
 
         The available dtypes may depend on the specific system used.
@@ -588,7 +588,7 @@ class NumpyFn(FnBase, NumpyNtuples):
     This space implements n-tuples of elements from a `Field` ``F``,
     which is usually the real or complex numbers.
 
-    Its elements are represented as instances of the `FnVector` class.
+    Its elements are represented as instances of the `NumpyFnVector` class.
     """
 
     def __init__(self, size, dtype='float64', **kwargs):
@@ -618,7 +618,7 @@ class NumpyFn(FnBase, NumpyNtuples):
             array-like: Weighting by a matrix (2-dim. array) or a vector
             (1-dim. array, corresponds to a diagonal matrix). A matrix
             can also be given as a sparse matrix
-            ( ``scipy.sparse.spmatrix``).
+            ( `scipy.sparse.spmatrix`).
 
             Default: no weighting
 
@@ -641,7 +641,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         dist : `callable`, optional
             The distance function defining a metric on the space.
-            It must accept two `FnVector` arguments and
+            It must accept two `NumpyFnVector` arguments and
             fulfill the following mathematical conditions for any
             three vectors ``x, y, z``:
 
@@ -659,7 +659,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         norm : `callable`, optional
             The norm implementation. It must accept an
-            `FnVector` argument, return a float and satisfy the
+            `NumpyFnVector` argument, return a float and satisfy the
             following conditions for all vectors ``x, y`` and scalars
             ``s``:
 
@@ -675,7 +675,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         inner : `callable`, optional
             The inner product implementation. It must accept two
-            `FnVector` arguments, return a element from
+            `NumpyFnVector` arguments, return a element from
             the field of the space (real or complex number) and
             satisfy the following conditions for all vectors
             ``x, y, z`` and scalars ``s``:
@@ -719,6 +719,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         >>> space
         rn(3, weight=[1, 2, 3])
         """
+        # TODO: fix dead link `scipy.sparse.spmatrix`
         NumpyNtuples.__init__(self, size, dtype)
         FnBase.__init__(self, size, dtype)
 
@@ -801,11 +802,11 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Parameters
         ----------
-        a, b : `FnBase.field`
+        a, b : `FnBase.field` elements
             Scalars to multiply ``x1`` and ``x2`` with
-        x1, x2 : `FnVector`
+        x1, x2 : `NumpyFnVector`
             Summands in the linear combination
-        out : `FnVector`
+        out : `NumpyFnVector`
             Vector to which the result is written
 
         Returns
@@ -830,7 +831,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Parameters
         ----------
-        x1, x2 : `FnVector`
+        x1, x2 : `NumpyFnVector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -875,7 +876,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Parameters
         ----------
-        x : `FnVector`
+        x : `NumpyFnVector`
             The vector whose norm is calculated
 
         Returns
@@ -909,7 +910,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Parameters
         ----------
-        x1, x2 : `FnVector`
+        x1, x2 : `NumpyFnVector`
             The vectors whose inner product is calculated
 
         Returns
@@ -945,9 +946,9 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Parameters
         ----------
-        x1, x2 : `FnVector`
+        x1, x2 : `NumpyFnVector`
             Factors in the product
-        out : `FnVector`
+        out : `NumpyFnVector`
             Vector to which the result is written
 
         Returns
@@ -972,9 +973,9 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Parameters
         ----------
-        x1, x2 : `FnVector`
+        x1, x2 : `NumpyFnVector`
             Dividend and divisor in the quotient
-        out : `FnVector`
+        out : `NumpyFnVector`
             Vector to which the result is written
 
         Returns
@@ -1085,6 +1086,7 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         The available dtypes may depend on the specific system used.
         """
+        # TODO: fix dead link `numpy.sctypes`
         return np.sctypes['int'] + np.sctypes['float'] + np.sctypes['complex']
 
     @staticmethod
@@ -1192,7 +1194,7 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
         Returns
         -------
-        imag : `FnVector`
+        imag : `NumpyFnVector`
             The imaginary part this vector as a vector in `rn`
 
         Examples
@@ -1244,13 +1246,13 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
         Parameters
         ----------
-        out : `FnVector`, optional
+        out : `NumpyFnVector`, optional
             Vector to which the complex conjugate is written.
             Must be an element of this vector's space.
 
         Returns
         -------
-        out : `FnVector`
+        out : `NumpyFnVector`
             The complex conjugate vector. If ``out`` was provided,
             the returned object is a reference to it.
 
@@ -1302,7 +1304,7 @@ class MatVecOperator(Operator):
 
         Parameters
         ----------
-        matrix : `array-like` or  ``scipy.sparse.spmatrix``
+        matrix : `array-like` or  `scipy.sparse.spmatrix`
             Matrix representing the linear operator. Its shape must be
             ``(m, n)``, where ``n`` is the size of ``domain`` and ``m`` the
             size of ``range``. Its dtype must be castable to the range
@@ -1317,6 +1319,7 @@ class MatVecOperator(Operator):
             the domain is inferred from the matrix ``dtype`` and
             ``shape``.
         """
+        # TODO: fix dead link `scipy.sparse.spmatrix`
         if isspmatrix(matrix):
             self._matrix = matrix
         else:
@@ -1592,7 +1595,7 @@ class NumpyFnMatrixWeighting(MatrixWeightingBase):
 
         Parameters
         ----------
-        matrix :  ``scipy.sparse.spmatrix`` or `array-like`, 2-dim.
+        matrix :  `scipy.sparse.spmatrix` or `array-like`, 2-dim.
             Square weighting matrix of the inner product
         exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
@@ -1642,6 +1645,7 @@ class NumpyFnMatrixWeighting(MatrixWeightingBase):
 
         Depending on the matrix size, this can be rather expensive.
         """
+        # TODO: fix dead link `scipy.sparse.spmatrix`
         super().__init__(matrix, impl='numpy', exponent=exponent,
                          dist_using_inner=dist_using_inner, **kwargs)
 
@@ -1650,7 +1654,7 @@ class NumpyFnMatrixWeighting(MatrixWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : `FnVector`
+        x1, x2 : `NumpyFnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1674,7 +1678,7 @@ class NumpyFnMatrixWeighting(MatrixWeightingBase):
 
         Parameters
         ----------
-        x : `FnVector`
+        x : `NumpyFnVector`
             Vector whose norm is calculated
 
         Returns
@@ -1779,7 +1783,7 @@ class NumpyFnVectorWeighting(VectorWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : `FnVector`
+        x1, x2 : `NumpyFnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1803,7 +1807,7 @@ class NumpyFnVectorWeighting(VectorWeightingBase):
 
         Parameters
         ----------
-        x : `FnVector`
+        x : `NumpyFnVector`
             Vector whose norm is calculated
 
         Returns
@@ -1880,7 +1884,7 @@ class NumpyFnConstWeighting(ConstWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : `FnVector`
+        x1, x2 : `NumpyFnVector`
             Vectors whose inner product is calculated
 
         Returns
@@ -1901,7 +1905,7 @@ class NumpyFnConstWeighting(ConstWeightingBase):
 
         Parameters
         ----------
-        x1 : `FnVector`
+        x1 : `NumpyFnVector`
             Vector whose norm is calculated
 
         Returns
@@ -1922,7 +1926,7 @@ class NumpyFnConstWeighting(ConstWeightingBase):
 
         Parameters
         ----------
-        x1, x2 : `FnVector`
+        x1, x2 : `NumpyFnVector`
             Vectors whose mutual distance is calculated
 
         Returns
@@ -2016,7 +2020,7 @@ class NumpyFnCustomInnerProduct(CustomInnerProductBase):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            `FnVector` arguments, return an element from their space's
+            `NumpyFnVector` arguments, return an element from their space's
             field (real or complex number) and satisfy the following
             conditions for all vectors ``x, y, z`` and scalars ``s``:
 
@@ -2050,7 +2054,7 @@ class NumpyFnCustomNorm(CustomNormBase):
         Parameters
         ----------
         norm : `callable`
-            The norm implementation. It must accept an `FnVector`
+            The norm implementation. It must accept an `NumpyFnVector`
             argument, return a float and satisfy the following
             conditions for all vectors ``x, y`` and scalars ``s``:
 
@@ -2076,7 +2080,7 @@ class NumpyFnCustomDist(CustomDistBase):
         ----------
         dist : `callable`
             The distance function defining a metric on `NumpyFn`. It must
-            accept two `FnVector` arguments, return a float and
+            accept two `NumpyFnVector` arguments, return a float and
             fulfill the following mathematical conditions for any three
             vectors ``x, y, z``:
 

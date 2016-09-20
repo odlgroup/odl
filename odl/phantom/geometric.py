@@ -464,8 +464,8 @@ def ellipse_phantom(space, ellipses):
     It also does calculations wherever possible on the meshgrid instead of
     individual points.
 
-    Example
-    -------
+    Examples
+    --------
     Create a circle with a smaller circle inside:
 
     >>> import odl
@@ -481,8 +481,10 @@ def ellipse_phantom(space, ellipses):
 
     See Also
     --------
-    shepp_logan : Transmission tomography phantom with ellipses
-    shepp_logan_ellipses : Ellipses for the shepp_logan phantom
+    odl.phantom.transmission.shepp_logan : Classical Shepp-Logan phantom,
+        typically used for transmission imaging
+    odl.phantom.transmission.shepp_logan_ellipses : Ellipses for the
+        Shepp-Logan phantom
     """
 
     if space.ndim == 2:
