@@ -61,8 +61,8 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     prox_f : `callable`
         `Proximal factory` for the functional ``f``.
     prox_cc_g : `sequence` of `callable`'s
-        Sequence of `proximal factorie`'s for the convex conjuates of the
-        functionals ``g_i``.
+        Sequence of `proximal factory` objects for the convex conjuates of
+        the functionals ``g_i``.
     L : `sequence` of `Operator`
         Sequence of linear operators ``L_i``, with as many elements as
         ``prox_cc_gs``.
@@ -131,10 +131,12 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
     See Also
     --------
-    chambolle_pock_solver : Solver for similar problems.
-    douglas_rachford_pd : Solver for similar problems but can additionaly
-                          handle infimal convolutions and multiple forward
-                          operators.
+    odl.solvers.advanced.chambolle_pock.chambolle_pock_solver :
+        Solver for similar problems without differentiability in any
+        of the terms.
+    odl.solvers.advanced.douglas_rachford.douglas_rachford_pd :
+        Solver for similar problems without differentiability in any
+        of the terms.
 
     References
     ----------

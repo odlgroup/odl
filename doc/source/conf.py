@@ -47,6 +47,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
+    'sphinx.ext.intersphinx',
     'numpydoc'
 ]
 # Use newer 'imgmath' extension if possible
@@ -63,17 +64,15 @@ extlinks = {
 }
 
 
-# Intersphinx to get numpy and other targets
-extensions.append('sphinx.ext.intersphinx')
+# Intersphinx to get Numpy and other targets
 intersphinx_mapping = {
     'python': ('http://docs.python.org/', None),
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('http://matplotlib.org/', None)}
 
+
 # Stop autodoc from skipping __init__
-
-
 def skip(app, what, name, obj, skip, options):
     if (name.startswith('__') and name.endswith('__') and
         name not in ['__abstractmethods__',

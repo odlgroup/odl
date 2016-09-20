@@ -132,7 +132,7 @@ def shepp_logan(space, modified=False):
 
     References
     ----------
-    .. Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
+    .. _Shepp-Logan phantom: en.wikipedia.org/wiki/Shepp–Logan_phantom
     """
     ellipses = shepp_logan_ellipses(space.ndim, modified)
 

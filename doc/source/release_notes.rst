@@ -41,14 +41,15 @@ Changes
 - Removed ``Interval``, ``Rectangle`` and ``Cuboid`` since they were confusing (Capitalized name but not a Cunction) and barely ever used.
   Users should instead use ``IntervalProd`` in all cases. (:pull:`537`)
 - The following classes have been renamed:
-  * `LinearSpaceVector` -> `LinearSpaceElement`
-  * `DiscreteLpVector` -> `DiscreteLpElement`
-  * `ProductSpaceVector` -> `ProductSpaceElement`
-  * `DiscretizedSetVector` -> `DiscretizedSetElement`
-  * `DiscretizedSpaceVector` -> `DiscretizedSpaceElement`
-  * `FunctionSetVector` -> `FunctionSetElement`
-  * `FunctionSpaceVector` -> `FunctionSpaceElement`
-- Changed parameter style of differential operators from having a `pad_mode` and a separate `edge_order` argument that were mutually exclusive to a single `pad_mode` that covers all cases. Also Added several new pad modes to the differential operators. (:pull:`548`)
+  * ``LinearSpaceVector`` -> ``LinearSpaceElement``
+  * ``DiscreteLpVector`` -> ``DiscreteLpElement``
+  * ``ProductSpaceVector`` -> ``ProductSpaceElement``
+  * ``DiscretizedSetVector`` -> ``DiscretizedSetElement``
+  * ``DiscretizedSpaceVector`` -> ``DiscretizedSpaceElement``
+  * ``FunctionSetVector`` -> ``FunctionSetElement``
+  * ``FunctionSpaceVector`` -> ``FunctionSpaceElement``
+- Changed parameter style of differential operators from having a ``pad_mode`` and a separate ``edge_order`` argument that were mutually exclusive to a single ``pad_mode`` that covers all cases.
+  Also added several new pad modes to the differential operators. (:pull:`548`)
 
 Bugfixes
 --------
@@ -250,7 +251,7 @@ ODL 0.2 Release Notes (2016-03-11)
 This release features the Fourier transform as major addition, along with some minor improvements and fixes.
 
 New Features
-~~~~~~~~~~~~
+------------
 
 - Add ``FourierTransform`` and ``DiscreteFourierTransform``, where the latter is the fully discrete version not accounting for shift and scaling, and the former approximates the integral transform by taking shifted and scaled grids into account. (:pull:`120`)
 - The ``weighting`` attribute in `FnBase` is now public and can be used to initialize a new space.

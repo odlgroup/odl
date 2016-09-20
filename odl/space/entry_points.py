@@ -18,15 +18,15 @@
 """Entry points for adding more spaces to ODL using external packages.
 
 External packages can add implementations of `NtuplesBase` and `FnBase` by
-hooking into the setuptools entry point 'odl.space' and exposing the methods
-``ntuples_impls`` and ``fn_impls``.
+hooking into the setuptools entry point ``'odl.space'`` and exposing the
+methods ``ntuples_impls`` and ``fn_impls``.
 
 
 Attributes
 ----------
-NTUPLES_IMPLS : dict
+NTUPLES_IMPLS: dict
     A dictionary that maps a string to an `NtuplesBase` implementation.
-FN_IMPLS : dict
+FN_IMPLS: dict
     A dictionary that maps a string to an `FnBase` implementation.
 
 Notes
