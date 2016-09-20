@@ -29,7 +29,7 @@ from odl.operator.operator import (
 from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
 from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
                                   proximal_quadratic_perturbation,
-                                  proximal_const_func)
+                                  proximal_const_func, proximal_cconj)
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
@@ -160,7 +160,7 @@ class Functional(Operator):
 
         For literature references see, e.g., [Lue1969]_, [Roc1970]_.
         """
-        raise NotImplementedError
+        return FunctionalDefaultConvexConjugate(self)
 
     def derivative(self, point):
         """Return the derivative operator in the given point.
@@ -430,7 +430,8 @@ class FunctionalLeftScalarMult(Functional, OperatorLeftScalarMult):
     def convex_conj(self):
         """Convex conjugate functional of the scaled functional.
 
-        `Functional.__rmul__` takes care of the case scalar = 0."""
+        `Functional.__rmul__` takes care of the case scalar = 0.
+        """
         if self.scalar <= 0:
             raise ValueError('scaling with nonpositive values have no convex '
                              'conjugate. Current value: {}.'
@@ -884,3 +885,55 @@ class FunctionalLinearPerturb(Functional):
         """
         return self.functional.convex_conj.translated(
             self.linear_term)
+
+
+class FunctionalDefaultConvexConjugate(Functional):
+
+    """The `Functional` representing ``F^*``, the convex conjugate of ``F``.
+
+    This class does not provide a way to evaluate the functional, it is rather
+    intended to be used for its `proximal`.
+
+    Notes
+    -----
+    The proximal is found by using the Moreau identity
+
+    .. math::
+        \\text{prox}_{\\sigma F^*}(y) = y -
+        \\sigma \\text{prox}_{F / \\sigma}(y / \\sigma)
+
+    which allows the proximal of the convex conjugate to be calculated without
+    explicit knowledge about the convex conjugate itself.
+    """
+
+    def __init__(self, func):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        func : `Functional`
+            Functional corresponding to F.
+        """
+        if not isinstance(func, Functional):
+            raise TypeError('`func` {} is not a `Functional` instance'
+                            ''.format(func))
+
+        super().__init__(space=func.domain,
+                         linear=func.is_linear)
+
+        self.__functional = func
+
+    @property
+    def convex_conj(self):
+        """The original functional."""
+        return self.__functional
+
+    @property
+    def proximal(self):
+        """Proximal factory using the Moreu identity.
+
+        See Also
+        --------
+        proximal_cconj
+        """
+        return proximal_cconj(self.convex_conj.proximal)
