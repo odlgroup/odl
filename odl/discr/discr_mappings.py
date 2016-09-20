@@ -264,7 +264,7 @@ class PointCollocation(FunctionSetMapping):
         This operator expects its input functions to be written in
         a vectorization-conforming manner to ensure fast evaluation.
         See the `vectorization guide
-        <https://odl.readthedocs.org/guide/in_depth/\
+        <https://odlgroup.github.io/odl/guide/in_depth/\
 vectorization_guide.html>`_ for a detailed introduction.
 
         See Also

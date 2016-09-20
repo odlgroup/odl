@@ -313,7 +313,7 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     size.
 
     See `the online documentation
-    <https://odl.readthedocs.io/math/resizing_ops.html>`_
+    <https://odlgroup.github.io/odl/math/resizing_ops.html>`_
     on resizing operators for mathematical details.
 
     Parameters
@@ -558,7 +558,7 @@ def _padding_slices_outer(lhs_arr, rhs_arr, axis, offset):
     however in a different way.
 
     See `the online documentation
-    <https://odl.readthedocs.io/math/resizing_ops.html>`_
+    <https://odlgroup.github.io/odl/math/resizing_ops.html>`_
     on resizing operators for details.
     """
     istart_inner = offset[axis]
@@ -625,7 +625,7 @@ def _apply_padding(lhs_arr, rhs_arr, offset, pad_mode, direction):
     ``periodic``, ``symmetric``, ``order0``, ``order1``
 
     See `the online documentation
-    <https://odl.readthedocs.io/math/resizing_ops.html>`_
+    <https://odlgroup.github.io/odl/math/resizing_ops.html>`_
     on resizing operators for details.
     """
     if pad_mode not in ('periodic', 'symmetric', 'order0', 'order1'):

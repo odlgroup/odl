@@ -1,6 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/odl.svg)](https://badge.fury.io/py/odl)
 [![Build Status](https://travis-ci.org/odlgroup/odl.svg?branch=master)](https://travis-ci.org/odlgroup/odl?branch=master)
-[![Documentation Status](https://readthedocs.org/projects/odl/badge/?version=latest)](http://odl.readthedocs.io/?badge=latest)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](http://opensource.org/licenses/GPL-3.0)
 
 ODL
@@ -27,6 +26,12 @@ Features
 - Support for tomographic imaging with a unified geometry representation and bindings to external libraries for efficient computation of projections and back-projections.
 - Standardized tests to validate implementations against expected behavior of the corresponding mathematical object, e.g. if a user-defined norm satisfies `norm(x + y) <= norm(x) + norm(y)` for a number of input vectors `x` and `y`.
 
+Documentation
+=============
+
+Introduction, mathematical details and the API reference can be found at the [ODL documentation page](https://odlgroup.github.io/odl/).
+
+
 Installation
 ============
 For basic installation without extra dependencies, run
@@ -37,7 +42,7 @@ You can check that everything was installed properly by running
 
     python -c "import odl; odl.test()"
 
-This requires [pytest](http://pytest.org/latest/). See the [installation](http://odl.readthedocs.org/guide/introduction/installing.html) documentation for further information.
+This requires [pytest](http://pytest.org/latest/). See the [installation](http://odlgroup.github.io/odl/guide/introduction/installing.html) documentation for further information.
 
 
 Optional Dependencies
@@ -51,11 +56,11 @@ where FOO, BAR, etc are the dependencies. Others require more complicated instal
 | Package | Purpose | Dependency |
 |---------|---------|------------|
 | [odlcuda](https://github.com/odlgroup/odlcuda/)   | CUDA backend |  |
-| [ASTRA](https://github.com/astra-toolbox/astra-toolbox)    | Tomographic forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html) |  |
-| [scikit-image](http://scikit-image.org/)    | 2D parallel beam forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html) | scikit |
-| [FFTW](https://github.com/pyFFTW/pyFFTW)   | Accelerated [FourierTransform](http://odl.readthedocs.io/generated/odl.trafos.fourier.FourierTransform.html) | fftw |
-| [PyWavelets](https://github.com/PyWavelets/pywt)   | Computation of the  [WaveletTransform](http://odl.readthedocs.io/generated/odl.trafos.wavelet.WaveletTransform.html) | pywavelets |
-| [matplotlib](http://matplotlib.org/)   | Visualization through the [show](http://odl.readthedocs.io/generated/odl.discr.lp_discr.DiscreteLpElement.show.html) command | show |
+| [ASTRA](https://github.com/astra-toolbox/astra-toolbox)    | Tomographic forward/backward projectors in [RayTransform](http://odlgroup.github.io/odl/generated/odl.tomo.operators.ray_trafo.RayTransform.html) |  |
+| [scikit-image](http://scikit-image.org/)    | 2D parallel beam forward/backward projectors in [RayTransform](http://odlgroup.github.io/odl/generated/odl.tomo.operators.ray_trafo.RayTransform.html) | scikit |
+| [FFTW](https://github.com/pyFFTW/pyFFTW)   | Accelerated [FourierTransform](http://odlgroup.github.io/odl/generated/odl.trafos.fourier.FourierTransform.html) | fftw |
+| [PyWavelets](https://github.com/PyWavelets/pywt)   | Computation of the  [WaveletTransform](http://odlgroup.github.io/odl/generated/odl.trafos.wavelet.WaveletTransform.html) | pywavelets |
+| [matplotlib](http://matplotlib.org/)   | Visualization through the [show](http://odlgroup.github.io/odl/generated/odl.discr.lp_discr.DiscreteLpElement.show.html) command | show |
 | [proximal](http://github.com/comp-imaging/ProxImaL)   | Solution of some convex optimization problems | proximal |
 | [pytest](http://pytest.org/latest/)   | Unit tests | testing |
 
