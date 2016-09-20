@@ -53,8 +53,8 @@ class Functional(Operator):
     :math:`X` is a Hilbert space and that the field of scalars :math:`F` is a
     is the real numbers. It is possible to create functions that do not fulfil
     these assumptions, however some mathematical results might not be valide in
-    this case. For more information, see
-    http://odl.readthedocs.io/guide/in_depth/functional_guide.html.
+    this case. For more information, see `the ODL functional guide
+    <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_.
     """
 
     def __init__(self, space, linear=False, grad_lipschitz=np.nan):

@@ -4,7 +4,7 @@ Getting started
 
 Welcome to the ODL getting started guide.
 This guide is intended to give you a simple introduction to ODL and how to work with it.
-If you need help with a specific function you should look at the `ODL API reference <https://odl.readthedocs.io/odl.html>`_.
+If you need help with a specific function you should look at the `ODL API reference <https://odlgroup.github.io/odl/odl.html>`_.
 
 The best way to get started with ODL as a user is generally to find one (or more) examples that are relevant to whatver problem you are studying.
 These are available in the `examples folder on GitHub <https://github.com/odlgroup/odl/tree/master/examples>`_.

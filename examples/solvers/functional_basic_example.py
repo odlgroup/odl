@@ -18,8 +18,8 @@
 """Basic example on how to write a functional.
 
 This is an example of how to implement the functional ``||x||_2^2``. For more
-information on functionals, see
-http://odl.readthedocs.io/guide/in_depth/functional_guide.html
+information on functionals, see `the ODL functional guide
+<http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_
 """
 
 # Imports for common Python 2/3 codebase

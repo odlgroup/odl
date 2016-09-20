@@ -353,7 +353,7 @@ class ResizingOperator(ResizingOperatorBase):
     with constant != 0.
 
     See `the online documentation
-    <https://odl.readthedocs.io/math/resizing_ops.html>`_
+    <https://odlgroup.github.io/odl/math/resizing_ops.html>`_
     on resizing operators for mathematical details.
     """
 
@@ -394,7 +394,7 @@ class ResizingOperator(ResizingOperatorBase):
             """Adjoint of `ResizingOperator`.
 
             See `the online documentation
-            <https://odl.readthedocs.io/math/resizing_ops.html>`_
+            <https://odlgroup.github.io/odl/math/resizing_ops.html>`_
             on resizing operators for mathematical details.
             """
 

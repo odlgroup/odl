@@ -1670,7 +1670,7 @@ class FourierTransformBase(Operator):
           is defined by identifying real and imaginary parts with
           the components of a real product space element.
           See the `mathematical background documentation
-          <odl.readthedocs.io/math/trafos/fourier_transform.html#adjoint>`_
+          <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
         if not isinstance(domain, DiscreteLp):
@@ -2115,7 +2115,7 @@ class FourierTransform(FourierTransformBase):
           is defined by identifying real and imaginary parts with
           the components of a real product space element.
           See the `mathematical background documentation
-          <odl.readthedocs.io/math/trafos/fourier_transform.html#adjoint>`_
+          <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
         super().__init__(inverse=False, domain=domain, range=range,
@@ -2351,7 +2351,7 @@ class FourierTransformInverse(FourierTransformBase):
           is defined by identifying real and imaginary parts with
           the components of a real product space element.
           See the `mathematical background documentation
-          <odl.readthedocs.io/math/trafos/fourier_transform.html#adjoint>`_
+          <odlgroup.github.io/odl/math/trafos/fourier_transform.html#adjoint>`_
           for details.
         """
         # TODO: variants wrt placement of 2*pi
