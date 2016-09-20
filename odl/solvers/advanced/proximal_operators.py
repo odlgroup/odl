@@ -55,8 +55,8 @@ def combine_proximals(*factory_list):
     This assumes the functional to be separable across variables in order to
     make use of the separable sum property of proximal operators.
 
-        prox[tau * (f(x) + g(y))](x, y) =
-            (prox[tau * f](x), prox[tau * g](y))
+        prox[sigma * (f(x) + g(y))](x, y) =
+            (prox[sigma * f](x), prox[sigma * g](y))
 
     Parameters
     ----------
@@ -70,12 +70,12 @@ def combine_proximals(*factory_list):
         with the same step size parameter
     """
 
-    def make_diag(step_size):
+    def make_diag(sigma):
         """Diagonal matrix of operators
 
         Parameters
         ----------
-        step_size : positive float
+        sigma : positive float
             Step size parameter
 
         Returns
@@ -83,7 +83,7 @@ def combine_proximals(*factory_list):
         diag_op : `DiagonalOperator`
         """
         return DiagonalOperator(
-            *[factory(step_size) for factory in factory_list])
+            *[factory(sigma) for factory in factory_list])
 
     return make_diag
 
@@ -120,12 +120,12 @@ def proximal_cconj(prox_factory):
     For reference on the Moreau identity, see [CP2011c]_.
     """
 
-    def cconj_prox_factory(step_size):
-        """Create proximal for the dual with a given step_size.
+    def cconj_prox_factory(sigma):
+        """Create proximal for the dual with a given sigma.
 
         Parameters
         ----------
-        step_size : positive float
+        sigma : positive float
             Step size parameter
 
         Returns
@@ -133,8 +133,8 @@ def proximal_cconj(prox_factory):
         proximal : `Operator`
             The proximal operator of ``s * F^*`` where ``s`` is the step size
         """
-        prox_other = (step_size * prox_factory(1.0 / step_size) *
-                      (1.0 / step_size))
+        prox_other = (sigma * prox_factory(1.0 / sigma) *
+                      (1.0 / sigma))
         return IdentityOperator(prox_other.domain) - prox_other
 
     return cconj_prox_factory
@@ -142,12 +142,6 @@ def proximal_cconj(prox_factory):
 
 def proximal_translation(prox_factory, y):
     """Calculate the proximal of the translated function F(x - y).
-
-    This is calculated according to the rule
-
-        prox[s * F( . - y)](x) = y + prox[s * F](x - y)
-
-    where ``y`` is the translation, and ``s`` is the step size.
 
     Parameters
     ----------
@@ -163,15 +157,24 @@ def proximal_translation(prox_factory, y):
 
     Notes
     -----
+    Given a functional :math:`F`, this is calculated according to the rule
+
+        .. math::
+
+            \\text{prox}[\\sigma * F( . - y)](x) =
+            y + \\text{prox}[\\sigma * F](x - y)
+
+    where :math:`y` is the translation, and :math:`\\sigma` is the step size.
+
     For reference on the identity used, see [CP2011c]_.
     """
 
-    def translation_prox_factory(step_size):
-        """Create proximal for the translation with a given step_size.
+    def translation_prox_factory(sigma):
+        """Create proximal for the translation with a given sigma.
 
         Parameters
         ----------
-        step_size : positive float
+        sigma : positive float
             Step size parameter
 
         Returns
@@ -181,7 +184,7 @@ def proximal_translation(prox_factory, y):
             step size
         """
 
-        return (ConstantOperator(y) + prox_factory(step_size) *
+        return (ConstantOperator(y) + prox_factory(sigma) *
                 (IdentityOperator(y.space) - ConstantOperator(y)))
 
     return translation_prox_factory
@@ -189,13 +192,6 @@ def proximal_translation(prox_factory, y):
 
 def proximal_arg_scaling(prox_factory, scaling):
     """Calculate the proximal of function F(x * scaling).
-
-    This is calculated according to the rule
-
-        prox[s * F( . * scaling)](x) =
-        1/scaling * prox[s * scaling^2 * F ](x * scaling)
-
-    where ``scaling`` is the scaling parameter, and ``s`` is the step size.
 
     Parameters
     ----------
@@ -212,6 +208,16 @@ def proximal_arg_scaling(prox_factory, scaling):
 
     Notes
     -----
+    Given a functional :math:`F`, this is calculated according to the rule
+
+        .. math::
+
+            \\text{prox}[\\sigma F( \cdot scal)](x) =
+            \\frac{1}{scal} \\text{prox}[\\sigma \, scal^2 \, F ](x \, scal)
+
+    where ``scal`` is the scaling parameter, and :math:`\\sigma` is the step
+    size.
+
     For reference on the identity used, see [CP2011c]_.
     """
 
@@ -219,21 +225,21 @@ def proximal_arg_scaling(prox_factory, scaling):
     if scaling == 0:
         return proximal_const_func(prox_factory(1.0).domain)
 
-    def arg_scaling_prox_factory(step_size):
-        """Create proximal for the translation with a given step_size.
+    def arg_scaling_prox_factory(sigma):
+        """Create proximal for the translation with a given sigma.
 
         Parameters
         ----------
-        step_size : positive float
+        sigma : positive float
             Step size parameter
 
         Returns
         -------
         proximal : `Operator`
-            The proximal operator of ``s * F( . * a)`` where ``s`` is the
-            step size
+            The proximal operator of ``sigma * F( . * a)`` where ``sigma`` is
+            the step size
         """
-        prox = prox_factory(step_size * scaling ** 2)
+        prox = prox_factory(sigma * scaling ** 2)
         return (1 / scaling) * prox * scaling
 
     return arg_scaling_prox_factory
@@ -241,15 +247,6 @@ def proximal_arg_scaling(prox_factory, scaling):
 
 def proximal_quadratic_perturbation(prox_factory, a, u=None):
     """Calculate the proximal of function F(x) + a * ||x||^2 + <u,x>.
-
-    This is calculated according to the rule
-
-        prox[s * (F( . ) + a * || . ||^2 + <u, . >)](x) =
-        c prox[s*f( . * c)]((x - s*u)*c)
-
-    where ``c`` is the constant c = 1/sqrt(s*2*a + 1), ``a`` is the scaling
-    parameter belonging to the quadratic term, ``u`` is the space
-    element defining the linear functional, and ``s`` is the step size.
 
     Parameters
     ----------
@@ -269,6 +266,25 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
 
     Notes
     -----
+    Given a functional :math:`F`, this is calculated according to the rule
+
+        .. math::
+
+            \\text{prox}\left[\\sigma \left(F( \cdot ) + a * || \cdot ||^2 +
+            <u, \cdot >\\right) \\right](x) =
+            c \; \\text{prox}[\\sigma F( \cdot \, c)]((x - \\sigma u) c)
+
+    where :math:`c` is the constant
+
+        .. math::
+
+            c = \\frac{1}{\\sqrt{2 \\sigma a + 1}},
+
+    :math:`a` is the scaling parameter belonging to the quadratic term,
+    :math:`u` is the space element defining the linear functional, and
+    :math:`\\sigma` is the step size.
+
+
     For reference on the identity used, see [CP2011c]_. Note that this identity
     is not the exact one given in the reference, but was recalculated for
     arbitrary step lengths.
@@ -283,27 +299,26 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
                         'instance, got {!r}.'.format(u))
 
-    def quadratic_perturbation_prox_factory(step_size):
-        """Create proximal for the quadratic perturbation with a given
-        step_size.
+    def quadratic_perturbation_prox_factory(sigma):
+        """Create proximal for the quadratic perturbation with a given sigma.
 
         Parameters
         ----------
-        step_size : positive float
+        sigma : positive float
             Step size parameter
 
         Returns
         -------
         proximal : `Operator`
-            The proximal operator of ``s * (F(x) + a * ||x||^2 + <u,x>)``,
-            where ``s`` is the step size
+            The proximal operator of ``sigma * (F(x) + a * ||x||^2 + <u,x>)``,
+            where ``sigma`` is the step size
         """
-        const = 1.0 / np.sqrt(step_size * 2.0 * a + 1)
-        prox = proximal_arg_scaling(prox_factory, const)(step_size)
+        const = 1.0 / np.sqrt(sigma * 2.0 * a + 1)
+        prox = proximal_arg_scaling(prox_factory, const)(sigma)
         if u is not None:
             return (const * prox *
                     ResidualOperator(ScalingOperator(u.space, const),
-                                     step_size * const * u))
+                                     sigma * const * u))
         else:
             return const * prox * const
 
@@ -313,17 +328,8 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
 def proximal_composition(proximal, operator, mu):
     """Proximal operator factory of functional composed with unitary operator.
 
-    Given a linear `Operator` ``L`` with the property that for a scalar ``mu``
-
-        L^*(L(x)) = mu * x
-
-    and a convex function ``F``, the following identity holds
-
-        prox[F * L](x) = x + 1/mu L^*(prox[mu * F](Lx) - Lx)
-
-    This factory function implements this functionality.
-
-    There is no simple formula for more general operators.
+    For a functional ``F`` and a linear unitary `Operator` ``L`` this is the
+    factory for the proximal operator of ``F * L``.
 
     Parameters
     ----------
@@ -342,26 +348,44 @@ def proximal_composition(proximal, operator, mu):
 
     Notes
     -----
-    The function cannot verify that the identity holds, the user needs to
-    verify this.
+    Given a linear operator :math:`L` with the property that for a scalar
+    :math:`\\mu`
+
+        .. math::
+
+            L^*(L(x)) = \\mu * x
+
+    and a convex function :math:`F`, the following identity holds
+
+        .. math::
+
+            \\text{prox}[F \circ L](x) = x + \\frac{1}{\\mu}
+            L^* \left( \\text{prox}[\\mu F](Lx) - Lx \\right)
+
+    This factory function implements this functionality.
+
+    There is no simple formula for more general operators.
+
+    The function cannot verify that the operator is unitary, the user needs
+    to verify this.
     """
 
-    def proximal_composition_factory(step_size):
-        """Create proximal for the dual with a given step_size
+    def proximal_composition_factory(sigma):
+        """Create proximal for the dual with a given sigma
 
         Parameters
         ----------
-        step_size : positive float
+        sigma : positive float
             Step size parameter
 
         Returns
         -------
         proximal : `Operator`
-            The proximal operator of ``prox[step_size * F * L](x)``
+            The proximal operator of ``prox[sigma * F * L](x)``
         """
         Id = IdentityOperator(operator.domain)
         Ir = IdentityOperator(operator.range)
-        prox_muf = proximal(step_size)
+        prox_muf = proximal(sigma)
         return Id + (1.0 / mu) * operator.adjoint((prox_muf - Ir) * operator)
 
     return proximal_composition_factory
@@ -391,17 +415,17 @@ def proximal_const_func(space):
 
         .. math::
 
-            prox[\\tau G](x) = x
+            \\text{prox}[\\sigma G](x) = x
 
-    Note that it is independent of :math:`\\tau`.
+    Note that it is independent of :math:`\\sigma`.
     """
 
-    def identity_factory(tau):
+    def identity_factory(sigma):
         """Return an instance of the proximal operator.
 
         Parameters
         ----------
-        tau : positive float
+        sigma : positive float
             Unused step size parameter. Introduced to provide a unified
             interface.
 
@@ -421,7 +445,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
     """Proximal operator factory for G(x) = ind(a <= x <= b).
 
     If P is the set of elements with a <= x <= b, the indicator function of
-    which is defined as
+    which is defined as::
 
         ind(a <= x <= b) = {0 if x in P, infinity if x is not in P}
 
@@ -455,18 +479,19 @@ def proximal_box_constraint(space, lower=None, upper=None):
             \\infty & \\quad \\text{if } x \\not \\in P
             \\end{array} \\right.
 
-    For a step size :math:`\\tau`, the proximal operator of
-    :math:`\\tau I_{x \\in P}` is given by the projection onto the interval
+    For a step size :math:`\\sigma`, the proximal operator of
+    :math:`\\sigma I_{x \\in P}` is given by the projection onto the interval
 
       .. math::
 
-             prox[\\tau I_{x \\in P}](x) = \\left\{ \\begin{array}{ll}
+             \\text{prox}[\\sigma I_{x \\in P}](x) = \\left\{
+             \\begin{array}{ll}
              a & \\quad \\text{if } x < a, \\\\
              x & \\quad \\text{if } x \\in [a,b], \\\\
              b & \\quad \\text{if } x > b,
              \\end{array} \\right.
 
-    It is independent of :math:`\\tau` and invariant under a positive
+    It is independent of :math:`\\sigma` and invariant under a positive
     rescaling of :math:`I_{x \\in P}`, since that leaves the indicator function
     unchanged.
 
@@ -493,12 +518,12 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
         """Proximal operator for G(x) = ind(a <= x <= b)."""
 
-        def __init__(self, tau):
+        def __init__(self, sigma):
             """Initialize a new instance.
 
             Parameters
             ----------
-            tau : positive float
+            sigma : positive float
                 Step size parameter, not used.
             """
             super().__init__(domain=space, range=space, linear=False)
@@ -523,8 +548,8 @@ def proximal_box_constraint(space, lower=None, upper=None):
 def proximal_nonnegativity(space):
     """Function to create the proximal operator of G(x) = ind(x >= 0).
 
-    Function for the proximal operator of the functional G(x)=ind(x >= 0) to be
-    initialized.
+    Function for the proximal operator of the functional ``G(x)=ind(x >= 0)``
+    to be initialized.
 
     Parameters
     ----------
@@ -548,7 +573,7 @@ def proximal_cconj_l2(space, lam=1, g=None):
     """Proximal operator factory of the convex conj of the l2-norm/distance.
 
     Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm (or distance to g, if given)
+    functional F where F is the l2-norm (or distance to g, if given)::
 
         F(x) =  lam ||x - g||_2
 
@@ -571,7 +596,7 @@ def proximal_cconj_l2(space, lam=1, g=None):
 
     Notes
     -----
-    The :math:`L_2`-distance :math:`F` is given by is given by
+    The :math:`L_2`-norm/distance :math:`F` is given by is given by
 
         .. math::
 
@@ -592,7 +617,7 @@ def proximal_cconj_l2(space, lam=1, g=None):
 
         .. math::
 
-            prox[\\sigma F^*](y) = \\left\{ \\begin{array}{ll}
+            \\text{prox}[\\sigma F^*](y) = \\left\{ \\begin{array}{ll}
             \\lambda \\frac{y - g}{||y - g||}
             & \\quad  ||y-g||_2 > \\lambda, \\\\
             y & \\quad ||y-g||_2 \leq \\lambda
@@ -600,8 +625,8 @@ def proximal_cconj_l2(space, lam=1, g=None):
 
     Note that the expression is independent of :math:`\sigma`.
 
-    Most problems are forumlated for the squared norm, in that case use the
-    `proximal_cconj_l2_squared` instead.
+    Most problems are forumlated for the squared norm/distance, in that case
+    use the `proximal_cconj_l2_squared` instead.
 
     See Also
     --------
@@ -616,7 +641,7 @@ def proximal_l2(space, lam=1, g=None):
     """Proximal operator factory of the l2-norm/distance.
 
     Function for the proximal operator of the functional ``F`` where ``F``
-    is the l2-norm (or distance to g, if given)
+    is the l2-norm (or distance to g, if given)::
 
         ``F(x) =  lam ||x - g||_2``
 
@@ -637,7 +662,7 @@ def proximal_l2(space, lam=1, g=None):
 
     Notes
     -----
-    The :math:`L_2`-distance :math:`F` is given by
+    The :math:`L_2`-norm/distance :math:`F` is given by
 
         .. math::
 
@@ -648,7 +673,7 @@ def proximal_l2(space, lam=1, g=None):
 
         .. math::
 
-            prox[\\sigma F](y) = \\left\{ \\begin{array}{ll}
+            \\text{prox}[\\sigma F](y) = \\left\{ \\begin{array}{ll}
             \\frac{1 - c}{||y-g||} \\cdot y  + c \cdot g
             & \\quad  \\text{if } c < g, \\\\
             g & \\quad \\text{else},
@@ -718,7 +743,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
     """Proximal operator factory of the convex conj of the squared l2-norm/dist
 
     Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm (or distance to g, if given)
+    functional F where F is the l2-norm (or distance to g, if given)::
 
         F(x) =  lam ||x - g||_2^2
 
@@ -741,7 +766,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
 
     Notes
     -----
-    The squared :math:`L_2`-distance :math:`F` is given by
+    The squared :math:`L_2`-norm/distance :math:`F` is given by
 
         .. math::
 
@@ -759,7 +784,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
 
         .. math::
 
-            prox[\\sigma F^*](y) = \\frac{y - \\sigma g}{1 +
+            \\text{prox}[\\sigma F^*](y) = \\frac{y - \\sigma g}{1 +
             \\sigma/(2 \\lambda)}
 
     See Also
@@ -806,7 +831,7 @@ def proximal_l2_squared(space, lam=1, g=None):
     """Proximal operator factory of the squared l2-norm/distance.
 
     Function for the proximal operator of the convex conjugate of the
-    functional F where F is the l2-norm (or distance to g, if given)
+    functional F where F is the l2-norm (or distance to g, if given)::
 
         F(x) =  lam ||x - g||_2^2
 
@@ -829,7 +854,7 @@ def proximal_l2_squared(space, lam=1, g=None):
 
     Notes
     -----
-    The squared :math:`L_2`-distance :math:`F` is given by
+    The squared :math:`L_2`-norm/distance :math:`F` is given by
 
         .. math::
 
@@ -840,7 +865,7 @@ def proximal_l2_squared(space, lam=1, g=None):
 
         .. math::
 
-            prox[\\sigma F](x) = \\frac{x + 2 \\sigma \\lambda g}
+            \\text{prox}[\\sigma F](x) = \\frac{x + 2 \\sigma \\lambda g}
             {1 + 2 \\sigma \\lambda}.
 
     See Also
@@ -857,9 +882,9 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     """Proximal operator factory of the convex conj of the l1-norm/distance.
 
     Function for the proximal operator of the convex conjugate of the
-    functional ``F`` where ``F`` is an l1-norm (or distance to g, if given)
+    functional ``F`` where ``F`` is an l1-norm (or distance to g, if given)::
 
-        ``F(x) = lam ||x - g||_1``
+        F(x) = lam ||x - g||_1
 
     with x and g elements in ``space`` and scaling factor lam.
 
@@ -883,7 +908,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
     Notes
     -----
-    The :math:`L_1`-norm :math:`F` is the functional
+    The :math:`L_1`-norm/distance :math:`F` is the functional
 
         .. math::
 
@@ -907,7 +932,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
         .. math::
 
-            prox[\\sigma F^*](y) = \\frac{\\lambda (y - \\sigma g)}{
+            \\text{prox}[\\sigma F^*](y) = \\frac{\\lambda (y - \\sigma g)}{
             \\max(\\lambda, |y - \\sigma g|)}
 
     An alternative formulation is available for `ProductSpace`'s, in which
@@ -930,7 +955,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     :math:`\\sigma F^*` is given by
 
         .. math::
-            prox[\\sigma F^*](y) = \\frac{\\lambda (y - \\sigma g)}{
+            \\text{prox}[\\sigma F^*](y) = \\frac{\\lambda (y - \\sigma g)}{
             \\max(\\lambda, ||y - \\sigma g||_2)}
 
     where :math:`\\max(.,.)` thresholds the lower bound of :math:`||y||_2`
@@ -1045,7 +1070,7 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
 
     Notes
     -----
-    The :math:`L_1`-norm :math:`F` is the functional
+    The :math:`L_1`-norm/distance :math:`F` is the functional
 
         .. math::
 
@@ -1056,7 +1081,7 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
 
         .. math::
 
-            prox[\\sigma F](y) = \\left\{ \\begin{array}{ll}
+            \\text{prox}[\\sigma F](y) = \\left\{ \\begin{array}{ll}
             y - \\sigma \\lambda
             & \\quad  \\text{if } y > g + \\sigma \\lambda, \\\\
             0 &\\quad
@@ -1090,7 +1115,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
     """Proximal operator factory of the convex conjugate of the KL divergence.
 
     Function returning the proximal operator of the convex conjugate of the
-    functional F where F is the entropy-type Kullback-Leibler (KL) divergence
+    functional F where F is the entropy-type Kullback-Leibler (KL) divergence::
 
         F(x) = sum_i (x_i - g_i + g_i ln(g_i) - g_i ln(pos(x_i))) + ind_P(x)
 
@@ -1147,7 +1172,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
 
      .. math::
 
-        prox[\\sigma * (\\lambda*F)^*](x) =
+        \\text{prox}[\\sigma * (\\lambda*F)^*](x) =
             \\frac{\\lambda * 1_X + x - \\sqrt{(x -  \\lambda * 1_X)^2 +
             4 \\lambda \\sigma g}}{2}
 
@@ -1228,7 +1253,7 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
 
     Function returning the proximal facotry of the convex conjugate of the
     functional F, where F is the corss entorpy Kullback-Leibler (KL)
-    divergence given by
+    divergence given by::
 
         F(x) = sum_i (x_i ln(pos(x_i)) - x_i ln(g_i) + g_i - x_i) + ind_P(x)
 
@@ -1284,7 +1309,7 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
 
     .. math::
 
-        prox[\\sigma * (\\lambda*F)^*](x)_i = x_i - \\lambda
+        \\text{prox}[\\sigma * (\\lambda*F)^*](x)_i = x_i - \\lambda
         W(\\frac{\\sigma}{\\lambda} g_i e^{x_i/\\lambda})
 
     where :math:`\\sigma` is the step size-like parameter, :math:`\\lambda` is
