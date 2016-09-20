@@ -844,11 +844,7 @@ class FunctionalLinearPerturb(Functional):
 
     @property
     def proximal(self):
-<<<<<<< d3c99cc3a189f58ed427aae39e390e959695bfb8
         """Proximal factory of the linearly perturbed functional.
-=======
-        """Proximal factory of the FunctionalLinearPerturb.
->>>>>>> DOC: update doc for some proximal factories.
 
         See Also
         --------
