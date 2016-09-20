@@ -25,34 +25,7 @@ import os
 import sphinx_rtd_theme
 import sys
 
-# -- General configuration ------------------------------------------------
-
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
-# Mock modules for Read The Docs to enable autodoc
-
-
-def mock_modules(modules):
-    if sys.version_info < (3, 3):
-        from mock import Mock as MagicMock
-    else:
-        from unittest.mock import MagicMock
-
-    class Mock(MagicMock):
-
-        @classmethod
-        def __getattr__(cls, name):
-            return Mock()
-
-    sys.modules.update((mod_name, Mock()) for mod_name in modules)
-
-if on_rtd:
-    mock_modules(['future', 'future.utils', 'builtins'
-                  'past', 'past.builtins',
-                  'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.sparse.base',
-                  'scipy.interpolate', 'scipy.interpolate.interpnd',
-                  'matplotlib', 'matplotlib.pyplot',
-                  'odlpp', 'odlpp.odlpp_cuda', 'scipy.special'])
+# --- General configuration --- #
 
 try:
     # verify that we can even import odl properly
@@ -62,19 +35,6 @@ except Exception as e:
     print(e)
     sys.exit(1)
 
-
-if on_rtd:
-    # Some hacks for RTD since they do not use MakeFiles
-
-    # Remove generated files
-    import shutil
-    if os.path.exists('generated'):
-        shutil.rmtree('generated')
-
-    # Generate interface
-    sys.path.append(os.path.dirname(__file__))
-    from generate_doc import make_interface
-    make_interface()
 
 # add numpydoc folder
 sys.path.insert(0, os.path.abspath('../sphinxext'))
@@ -103,16 +63,13 @@ extlinks = {
 }
 
 
-if not on_rtd:
-    # TODO: fix this once RTD updates their intersphinx version
-    extensions.append('sphinx.ext.intersphinx')
-
-    # Intersphinx to get numpy targets
-    intersphinx_mapping = {
-        'python': ('http://python.readthedocs.io/en/latest/', None),
-        'numpy': ('http://numpy.readthedocs.io/en/latest/', None),
-        'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-        'matplotlib': ('http://matplotlib.org/', None)}
+# Intersphinx to get numpy and other targets
+extensions.append('sphinx.ext.intersphinx')
+intersphinx_mapping = {
+    'python': ('http://docs.python.org/', None),
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+    'matplotlib': ('http://matplotlib.org/', None)}
 
 # Stop autodoc from skipping __init__
 
@@ -201,7 +158,7 @@ todo_include_todos = False
 nitpicky = True
 nitpick_ignore = [('py:class', 'future.types.newobject.newobject')]
 
-# -- Options for HTML output ----------------------------------------------
+# --- Options for HTML output --- #
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -225,7 +182,7 @@ html_short_title = 'odl'
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'odldoc'
 
-# -- Options for LaTeX output ---------------------------------------------
+# --- Options for LaTeX output --- #
 
 latex_elements = {
     'preamble': '''
@@ -278,7 +235,7 @@ latex_documents = [
 # latex_domain_indices = True
 
 
-# -- Options for manual page output ---------------------------------------
+# --- Options for manual page output --- #
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
@@ -291,7 +248,7 @@ man_pages = [
 # man_show_urls = False
 
 
-# -- Options for Texinfo output -------------------------------------------
+# --- Options for Texinfo output --- #
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
