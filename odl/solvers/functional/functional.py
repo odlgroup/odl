@@ -53,8 +53,8 @@ class Functional(Operator):
     :math:`X` is a Hilbert space and that the field of scalars :math:`F` is a
     is the real numbers. It is possible to create functions that do not fulfil
     these assumptions, however some mathematical results might not be valide in
-    this case. For more information, see
-    http://odl.readthedocs.io/guide/in_depth/functional_guide.html.
+    this case. For more information, see `the ODL functional guide
+    <http://odlgroup.github.io/odl/guide/in_depth/functional_guide.html>`_.
     """
 
     def __init__(self, space, linear=False, grad_lipschitz=np.nan):
@@ -125,13 +125,6 @@ class Functional(Operator):
         given optimization problem take a `proximal factory` as input,
         i.e., a function returning a proximal operator. See for example
         `forward_backward_pd`.
-
-        See Also
-        --------
-        proximal_l2 : proximal factory for l2 norm.
-        forward_backward_pd : forward-backward primal-dual solver.
-        douglas_rachford_pd : douglas-rachford primal-dual solver.
-        chambolle_pock_solver : chambolle-pock solver.
         """
         raise NotImplementedError
 
@@ -194,7 +187,7 @@ class Functional(Operator):
 
         Returns
         -------
-        out : `TranslatedFunctional`
+        out : `FunctionalTranslation`
             The functional ``f(. - translation)``
         """
         return FunctionalTranslation(self, shift)
@@ -786,7 +779,7 @@ class FunctionalTranslation(Functional):
 
         See Also
         --------
-        proximal_translation
+        odl.solvers.advanced.proximal_operators.proximal_translation
         """
         return proximal_translation(self.functional.proximal,
                                     self.translation)
@@ -850,11 +843,11 @@ class FunctionalLinearPerturb(Functional):
 
     @property
     def proximal(self):
-        """Proximal factory of the ConvexConjugateTranslation.
+        """Proximal factory of the linearly perturbed functional.
 
         See Also
         --------
-        proximal_quadratic_perturbation
+        odl.solvers.advanced.proximal_operators.proximal_quadratic_perturbation
         """
         return proximal_quadratic_perturbation(
             self.functional.proximal, a=0, u=self.linear_term)
@@ -863,8 +856,8 @@ class FunctionalLinearPerturb(Functional):
     def convex_conj(self):
         """Convex conjugate functional of the functional.
 
-        By the Fenchel-Moreau theorem this a translation of the original
-        functional.
+        By the Fenchel-Moreau [BC2011]_ theorem this a translation of the
+        original functional.
 
         Notes
         -----
@@ -877,11 +870,6 @@ class FunctionalLinearPerturb(Functional):
                 (f( . - y))^* (x) = f^*(x) + <y, x>.
 
         For reference on the identity used, see [KP2015]_.
-
-        The implementation assumes that the underlying  functional :math:`f` is
-        proper, convex, and lower semi-continuous. This in order to be able to
-        calulate the convex conjugate using the Fenchel-Moreo theorem
-        [BC2011]_.
         """
         return self.functional.convex_conj.translated(
             self.linear_term)
@@ -934,6 +922,6 @@ class FunctionalDefaultConvexConjugate(Functional):
 
         See Also
         --------
-        proximal_cconj
+        odl.solvers.advanced.proximal_operators.proximal_cconj
         """
         return proximal_cconj(self.convex_conj.proximal)

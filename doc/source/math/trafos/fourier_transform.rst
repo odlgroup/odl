@@ -17,7 +17,7 @@ The `Fourier Transform`_ (FT) of a function :math:`f` belonging to the `Lebesgue
 .. math::
     \widehat{f}(\xi) = \mathcal{F}(f)(\xi) = (2\pi)^{-\frac{1}{2}}
     \int_{\mathbb{R}} f(x)\ e^{-i x \xi} \, \mathrm{d}x.
-    :label: def_fourier     
+    :label: def_fourier
 
 (Note that this definition differs from the one in the linked article by the placement of the
 factor :math:`2\pi`.) By unique continuation, the bounded FT operator can be
@@ -40,7 +40,7 @@ The inverse of :math:`\mathcal{F}` on its range is given by the formula
     :label: def_fourier_inverse
 
 For :math:`p = 2`, the conjugate exponent is :math:`q = 2`, and the FT is a unitary
-operator on :math:`L`2(\mathbb{R})` according to `Parseval's Identity`_
+operator on :math:`L^2(\mathbb{R})` according to `Parseval's Identity`_
 
 .. math::
     \int_{\mathbb{R}} \lvert f(x)\rvert^2\, \mathrm{d}x =
@@ -62,9 +62,9 @@ Further Properties
     \mathcal{F}\big(f(a \cdot)\big)(\xi) = a^{-1} \widehat{f}(a^{-1}\xi),
 
     \frac{\mathrm{d}}{\mathrm{d} \xi} \widehat{f}(\xi) = \mathcal{F}(-i x f)(\xi)
-    
+
     \mathcal{F}(f')(\xi) = i \xi \widehat{f}(\xi).
-    
+
 The first identity implies in particular that for real-valued :math:`f`, it is
 :math:`\overline{\mathcal{F}(\phi)}(\xi) = \mathcal{F}(\phi)(-\xi)`, i.e. the FT is
 completely known already from the its values in a half-space only. This property is later exploited
@@ -98,7 +98,7 @@ Discretization of the Fourier transform operator means evaluating the Fourier in
     :label: discr_function
 
 with coefficients :math:`\bar f = (f_0, \dots, f_{n-1}) \in \mathbb{C}^n` and functions
-:math:`\phi_0, \dots, \phi_{n-1}`. This approach follows from the way , but can be 
+:math:`\phi_0, \dots, \phi_{n-1}`. This approach follows from the way , but can be
 We consider in particular functions generated from a single
 kernel :math:`\phi` via
 
@@ -222,8 +222,8 @@ The inverse of the discretized formula :eq:`discr_fourier_final` is instead gain
 the identity
 
 .. math::
-    \sum_{j=0}^{N-1} e^{i 2\pi \frac{(l-k)j}{N}} 
-    &= \sum_{j=0}^{N-1} \Big( e^{i 2\pi \frac{(l-k)}{N}} \Big)^j = 
+    \sum_{j=0}^{N-1} e^{i 2\pi \frac{(l-k)j}{N}}
+    &= \sum_{j=0}^{N-1} \Big( e^{i 2\pi \frac{(l-k)}{N}} \Big)^j =
     \begin{cases}
       N, & \text{if } l = k, \\
       \frac{1 - e^{i 2\pi (l-k)}}{1 - e^{i 2\pi (l-k)/N}} = 0, & \text{else}
@@ -262,7 +262,7 @@ Adjoint operator
 ----------------
 
 If the FT is defined between the complex Hilbert spaces :math:`L^2(\mathbb{R}, \mathbb{C})`,
-one can easily show that the operator is unitary, and therefore its adjoint is equal to its
+one can easily show that the operator is unitary, and therefore its adjoint is equal to the
 inverse.
 
 However, if the domain is a real space, :math:`L^2(\mathbb{R}, \mathbb{C})`, one cannot even
@@ -278,8 +278,8 @@ the real and imaginary parts in the range with components of a product space ele
 .. math::
     \widetilde{\mathcal{F}}: L^2(\mathbb{R}, \mathbb{R}) \longrightarrow
     \big[L^2(\mathbb{R}, \mathbb{R})\big]^2,
-    
-    \widetilde{\mathcal{F}} = \big(\Re \big(\mathcal{F}(f)\big), \Im \big(\mathcal{F}(f)\big)\big) =
+
+    \widetilde{\mathcal{F}}(f) = \big(\Re \big(\mathcal{F}(f)\big), \Im \big(\mathcal{F}(f)\big)\big) =
     \big( \mathcal{F}_{\mathrm{c}}(f), -\mathcal{F}_{\mathrm{s}}(f) \big),
 
 where :math:`\mathcal{F}_{\mathrm{c}}` and :math:`\mathcal{F}_{\mathrm{s}}` are the
@@ -289,7 +289,7 @@ Hilbert spaces, and thus the adjoint of the above defined transform is given by
 .. math::
     \widetilde{\mathcal{F}}^*: \big[L^2(\mathbb{R}, \mathbb{R})\big]^2 \longrightarrow
     L^2(\mathbb{R}, \mathbb{R})
-    
+
     \widetilde{\mathcal{F}}^*(g_1, g_2) = \mathcal{F}_{\mathrm{c}}(g_1) -
     \mathcal{F}_{\mathrm{s}}(g_2).
 

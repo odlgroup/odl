@@ -155,7 +155,7 @@ class Resampling(Operator):
 
 class ResizingOperatorBase(Operator):
 
-    """Base class for `ResizingOperator` and `ResizingOperatorAdjoint`.
+    """Base class for `ResizingOperator` and its adjoint.
 
     This is an abstract class used to share code between the forward and
     adjoint variants of the resizing operator.
@@ -353,7 +353,7 @@ class ResizingOperator(ResizingOperatorBase):
     with constant != 0.
 
     See `the online documentation
-    <https://odl.readthedocs.io/math/resizing_ops.html>`_
+    <https://odlgroup.github.io/odl/math/resizing_ops.html>`_
     on resizing operators for mathematical details.
     """
 
@@ -394,7 +394,7 @@ class ResizingOperator(ResizingOperatorBase):
             """Adjoint of `ResizingOperator`.
 
             See `the online documentation
-            <https://odl.readthedocs.io/math/resizing_ops.html>`_
+            <https://odlgroup.github.io/odl/math/resizing_ops.html>`_
             on resizing operators for mathematical details.
             """
 

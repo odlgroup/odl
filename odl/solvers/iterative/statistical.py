@@ -56,12 +56,13 @@ def mlem(op, x, data, niter=1, noise='poisson', callback=None):
         updated in each iteration step.
     data : ``op.range`` element
         Right-hand side of the equation defining the inverse problem.
-    niter : `int`, optional
+    niter : int, optional
         Number of iterations.
     noise : {'poisson'}, optional
         Noise model determining the variant of MLEM.
-        If noise is 'poisson', the initial value of `x` should be non negative.
-    callback : `callable`, optional
+        For ``'poisson'``, the initial value of ``x`` should be
+        non-negative.
+    callback : callable, optional
         Function called with the current iterate after each iteration.
 
     Notes

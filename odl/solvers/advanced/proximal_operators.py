@@ -117,7 +117,7 @@ def proximal_cconj(prox_factory):
 
     Notes
     -----
-    For reference on the Moreau identity, see [ComPes2011]_.
+    For reference on the Moreau identity, see [CP2011c]_.
     """
 
     def cconj_prox_factory(step_size):
@@ -421,11 +421,11 @@ def proximal_box_constraint(space, lower=None, upper=None):
     with x being an element in ``space``.
 
     For a step size ``tau``, the proximal operator of ``tau * G^*`` is the
-    point-wise non-negativity thresholding of x
+    point-wise non-negativity thresholding of ``x``::
 
-                              a if x < a,
+                            { a if x < a,
          prox[tau * G](x) = { x if a <= x <= b
-                              b if x > b
+                            { b if x > b
 
     It is independent of tau and invariant under a positive rescaling of G
     which leaves the indicator function as it stands.
@@ -526,7 +526,7 @@ def proximal_nonnegativity(space):
 
     See Also
     --------
-    proximal_clamp
+    proximal_box_constraint
     """
 
     return proximal_box_constraint(space, lower=0)
@@ -586,13 +586,13 @@ def proximal_l2(space, lam=1, g=None):
     Function for the proximal operator of the functional ``F`` where ``F``
     is the l2-norm (or distance to g, if given)
 
-        F(x) =  lam ||x - g||_2
+        ``F(x) =  lam ||x - g||_2``
 
-    For a step size ``sigma``, the proximal operator of ``sigma * F``is given
-    by
+    For a step size ``sigma``, the proximal operator of ``sigma * F``
+    is given by::
 
         prox[sigma * F](y) = { (1.0 - c / ||x-g||) * x  + c * g    if c < 1
-                               g                                   else
+                             { g                                   else
 
     where ``c = sigma * lam / ||x - g||_2``.
 
@@ -602,14 +602,14 @@ def proximal_l2(space, lam=1, g=None):
         Domain of F(x). Needs to be a Hilbert space.
         That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
-        An element in ``space``
+        An element in ``space``.
     lam : positive float
-        Scaling factor or regularization parameter
+        Scaling factor or regularization parameter.
 
     Returns
     -------
-    prox_factory : function
-        Factory for the proximal operator to be initialized
+    prox_factory : callable
+        Factory for the proximal operator to be initialized.
 
     Notes
     -----
@@ -621,7 +621,6 @@ def proximal_l2(space, lam=1, g=None):
     proximal_l2_squared : proximal for squared norm/distance
     proximal_cconj_l2 : proximal for convex conjugate
     """
-
     lam = float(lam)
 
     if g is not None and g not in space:
@@ -791,42 +790,44 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
     """Proximal operator factory of the convex conj of the l1-norm/distance.
 
     Function for the proximal operator of the convex conjugate of the
-    functional F where F is an l1-norm (or distance to g, if given)
+    functional ``F`` where ``F`` is an l1-norm (or distance to g, if given)
 
-        F(x) = lam ||x - g||_1
+        ``F(x) = lam ||x - g||_1``
 
     with x and g elements in ``space`` and scaling factor lam.
 
-    The convex conjugate F^* of F is given by the indicator function of
-    the set box(lam)
+    The convex conjugate of ``F`` is given by the indicator function
+    of the set box(lam),
 
-        F^*(y) = lam ind_{box(lam)}(|y / lam| + <y / lam, g>)
+        ``F^*(y) = lam ind_{box(lam)}(|y / lam| + <y / lam, g>)``,
 
-    where box(lam) is a hypercube centered at the origin with width 2 lam.
+    where ``box(lam)`` is a hypercube centered at the origin with width
+    ``2 * lam``.
 
     For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
     given by
 
-        prox[sigma * F^*](y) = lam (y - sigma g) / (max(lam, |y - sigma g|)
+        ``prox[sigma * F^*](y) = lam (y - sigma g) /
+        (max(lam, |y - sigma g|)``
 
     An alternative formulation is available for `ProductSpace`'s, in which
     case the ``isotropic`` parameter can be used, giving
 
-        F(x) = lam || ||x - g||_2 ||_1
+        ``F(x) = lam || ||x - g||_2 ||_1``.
 
     In this case, the dual is
 
-        F^*(y) = lam ind_{box(lam)}(||y / lam||_2 + <y / lam, g>)
+        ``F^*(y) = lam ind_{box(lam)}(||y / lam||_2 + <y / lam, g>)``.
 
     For a step size ``sigma``, the proximal operator of ``sigma * F^*`` is
     given by
 
-        prox[sigma * F^*](y) =
-            lam (y - sigma g) / (max(lam, ||y - sigma g||_2)
+        ``prox[sigma * F^*](y) =
+        lam (y - sigma g) / (max(lam, ||y - sigma g||_2)``
 
-    where max(.,.) thresholds the lower bound of ||y||_2 point-wise and
-    1 is a element of the space of ||y||_2 with all components set
-    to 1.
+    where ``max(.,.)`` thresholds the lower bound of ``||y||_2``
+    point-wise, and 1 is an element of the space of ||y||_2 with all
+    components set to 1.
 
     Parameters
     ----------
@@ -929,33 +930,33 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
     """Proximal operator factory of the l1-norm/distance.
 
     Function for the proximal operator of the functional F where F is an
-    l1-norm (or distance to g, if given)
+    l1-norm (or distance to g, if given)::
 
         F(x) = lam ||x - g||_1
 
     with x and g elements in ``space``, and scaling factor lam.
 
-    For a step size ``tau``, the proximal operator of ``tau * F`` is
+    For a step size ``tau``, the proximal operator of ``tau * F`` is::
 
                               y - tau * lam   if y > tau * lam,
          prox[tau * F](y) = { 0               if -tau * lam <= y <= tau * lam
                               y + tau * lam   if y < -tau * lam
 
     An alternative formulation is available for `ProductSpace`'s, where the
-    the ``isotropic`` parameter can be used, giving
+    the ``isotropic`` parameter can be used, giving::
 
         F(x) = lam || ||x - g||_2 ||_1
 
-    Where the proximal can be calculated using the Moreau equality.
+    The proximal can be calculated using the Moreau equality.
 
     Parameters
     ----------
-    space : `LinearSpace` or `ProductSpace` of `LinearSpace` spaces
-        Domain of the functional F
+    space : `LinearSpace` or `ProductSpace`
+        Domain of the functional.
     g : ``space`` element
-        An element in ``space``
+        An element in ``space``.
     lam : positive float
-        Scaling factor or regularization parameter
+        Scaling factor or regularization parameter.
     isotropic : bool
         If ``True``, take the vectorial 2-norm point-wise. Otherwise,
         use the vectorial 1-norm. Only available if ``space`` is a

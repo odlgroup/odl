@@ -2,13 +2,18 @@ language: python
 python:
   - "2.7"
   - "3.5"
-  
+
 # Setup numpy + scipy using miniconda
 # See http://conda.pydata.org/docs/travis.html
 install:
   - sudo apt-get update
-  # We do this conditionally because it saves us some downloading if the
-  # version is the same.
+
+  # Install LaTeX to render the math formulas in the docs
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" ]]; then
+      sudo apt-get install texlive-latex-base texlive-latex-recommended texlive-latex-extra dvipng;
+    fi
+
+  # Install miniconda according to Python version of the build (saves downloading if versions match)
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
     else
@@ -22,16 +27,34 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  # Install dependencies, use python 2.7 to test our lower requirements still hold, python3 does not work with scipy 0.14
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION libgfortran numpy scipy matplotlib
+  # Install dependencies and enter test environment
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy future nomkl sphinx sphinx_rtd_theme
   - source activate test-environment
+
+  # Sphinx doc integration
+  - pip install travis-sphinx
+
+  # Install our package
   - pip install -e .
+
+
 before_script:
   - pip install -r test_requirements.txt
-  
-# command to run tests
-script: 
+
+script:
+  # Run tests, including PEP8 check, and produce a coverage report
   - py.test --doctest-modules --cov --cov-report term-missing --pep8
-  
+  # Build the Sphinx doc
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
+      cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -;
+      travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build;
+    fi
+
 after_success:
+  # Push coverage report to coveralls
   - coveralls
+  # Deploy the Sphinx doc to gh-pages (only for master branch and one Python version)
+  # See https://github.com/Syntaf/travis-sphinx
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" ]]; then
+      travis-sphinx deploy;
+    fi

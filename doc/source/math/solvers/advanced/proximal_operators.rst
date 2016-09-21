@@ -58,7 +58,7 @@ The convex conjugate of :math:`f` is defined as
 .. math:: f^*(y) = \sup_{x\in X} \langle y,x\rangle - f(x)
 
 where :math:`\langle\cdot,\cdot\rangle` denotes inner product. For more
-on convex conjugate and convex analysis see [R1970]_
+on convex conjugate and convex analysis see [Roc1970]_
 or `Wikipedia <https://en.wikipedia.org/wiki/Convex_conjugate>`_.
 
 For more details on proximal operators including how to evaluate the

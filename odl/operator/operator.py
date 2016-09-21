@@ -537,8 +537,8 @@ class Operator(object):
         out-of-place call even if you choose the respective other
         pattern.
 
-        See the `documentation
-        <https://odl.readthedocs.io/guide/in_depth/operator_guide.html>`_
+        See the `operator guide
+        <https://odlgroup.github.io/odl/guide/in_depth/operator_guide.html>`_
         for more info on in-place vs. out-of-place evaluation.
 
         Parameters

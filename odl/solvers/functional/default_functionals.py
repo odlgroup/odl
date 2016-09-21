@@ -107,7 +107,7 @@ class L1Norm(Functional):
         """Return the proximal factory of the functional.
 
         See Also
-        -----
+        --------
         proximal_l1 : proximal factory for the L1-norm.
         """
         return proximal_l1(space=self.domain)
@@ -214,7 +214,7 @@ class IndicatorLpUnitBall(Functional):
         """Return the proximal factory of the functional.
 
         See Also
-        -----
+        --------
         proximal_cconj_l1 : proximal factory for convex conjuagte of L1-norm.
         proximal_cconj_l2 : proximal factory for convex conjuagte of L2-norm.
         """
@@ -283,7 +283,7 @@ class L2Norm(Functional):
         """Return the proximal factory of the functional.
 
         See Also
-        -----
+        --------
         proximal_l2 : proximal factory for L2-norm.
         """
         return proximal_l2(space=self.domain)
@@ -327,7 +327,7 @@ class L2NormSquared(Functional):
         """Return the proximal factory of the functional.
 
         See Also
-        -----
+        --------
         proximal_l2_squared : proximal factory for squared L2-norm.
         """
         return proximal_l2_squared(space=self.domain)
@@ -358,7 +358,7 @@ class ConstantFunctional(Functional):
         ----------
         space : `LinearSpace`
             Domain of the functional.
-        constant : element in `domain.field`
+        constant : element in ``domain.field``
             The constant value of the functional
         """
         super().__init__(space=space, linear=(constant == 0), grad_lipschitz=0)
