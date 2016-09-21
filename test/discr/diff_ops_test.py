@@ -278,7 +278,7 @@ def test_part_deriv(space, method, padding):
         # Check not to use trivial data
         assert lhs != 0
         assert rhs != 0
-        assert almost_equal(lhs, rhs)
+        assert almost_equal(lhs, rhs, places=4)
 
 
 # --- Gradient --- #
@@ -325,7 +325,7 @@ def test_gradient(space, method, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs)
+    assert almost_equal(lhs, rhs, places=4)
 
     # higher dimensional arrays
     lin_size = 3
@@ -386,7 +386,7 @@ def test_divergence(space, method, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs)
+    assert almost_equal(lhs, rhs, places=4)
 
     # Higher dimensional arrays
     for ndim in range(1, 6):
@@ -443,7 +443,7 @@ def test_laplacian(space, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs)
+    assert almost_equal(lhs, rhs, places=4)
 
 
 if __name__ == '__main__':
