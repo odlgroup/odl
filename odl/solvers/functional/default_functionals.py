@@ -35,7 +35,8 @@ from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
 
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
-           'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox')
+           'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox',
+           'IndicatorNonnegativity')
 
 
 class L1Norm(Functional):
