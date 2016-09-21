@@ -40,7 +40,7 @@ n = 10
 space = odl.rn(n)
 
 # Create parameters.
-g = space.element([1, 1, 1, 1, 1, -1, -1, -1, -1, -1])
+offset = space.element([1, 1, 1, 1, 1, -1, -1, -1, -1, -1])
 lam = 0.5
 
 # Note that with the values above, the optimal solution is given by a vector
@@ -53,7 +53,7 @@ lam = 0.5
 f = odl.solvers.IndicatorNonnegativity(space)
 g = lam * odl.solvers.L1Norm(space)
 L = odl.IdentityOperator(space)
-h = 1.0 / 2.0 * odl.solvers.L2NormSquared(space).translated(g)
+h = 1.0 / 2.0 * odl.solvers.L2NormSquared(space).translated(offset)
 
 # Some solver parameters
 niter = 50
