@@ -1,0 +1,92 @@
+\RequirePackage{thmtools}
+
+% theorem styles and definitions
+
+\declaretheoremstyle[%
+ spaceabove = 3ex,%
+ spacebelow = 3ex,%
+ headfont = \normalfont\bfseries,%
+ headpunct = . ,%
+ headformat = swapnumber,%
+ notefont = \bfseries,%
+ notebraces = {(}{)},%
+ bodyfont = \itshape,%
+ postheadspace = 1em %
+]{thmstyle}
+
+\declaretheorem[style=thmstyle, parent=section, name=Theorem]{theorem}
+\declaretheorem[style=thmstyle, numbered=no, name=Theorem]{theorem*}
+\declaretheorem[style=thmstyle, sharenumber=theorem, name=Lemma]{lemma}
+\declaretheorem[style=thmstyle, sharenumber=theorem, name=Corollary]{corollary}
+
+\declaretheoremstyle[%
+ spaceabove = 3ex,%
+ spacebelow = 3ex,%
+ headfont = \normalfont\bfseries,%
+ headpunct = . ,%
+ headformat = swapnumber,%
+ notefont = \bfseries,%
+ notebraces = {(}{)},%
+ bodyfont = \itshape,%
+ postheadspace = 1em,%
+ qed = \textsquare
+]{algorithmstyle}
+
+\declaretheorem[style=algorithmstyle, sharenumber=theorem, name=Algorithm]{algorithm}
+
+\declaretheoremstyle[%
+ spaceabove = 3ex,%
+ spacebelow = 3ex,%
+ headfont = \normalfont\bfseries,%
+ headpunct = . ,%
+ headformat = swapnumber,%
+ notefont = \bfseries,%
+ notebraces = {(}{)},%
+ bodyfont = \itshape,%
+ postheadspace = 1em%
+]{definitionstyle}
+
+\declaretheorem[style=definitionstyle, sharenumber=theorem, name=Definition]{definition}
+
+\declaretheoremstyle[%
+ spaceabove = 3ex,%
+ spacebelow = 3ex,%
+ headfont = \normalfont\bfseries,%
+ headpunct = . ,%
+ notefont = \mdseries,%
+ notebraces = {(}{)},%
+ bodyfont = \upshape,%
+ postheadspace = 1em,%
+ qed = \textsquare%
+]{remarkstyle}
+
+\declaretheorem[style=remarkstyle, numbered=no, name=Remark]{remark}
+\declaretheorem[style=remarkstyle, sharenumber=theorem, name=Example]{example}
+
+\declaretheoremstyle[%
+ spaceabove = 3ex,%
+ spacebelow = 3ex,%
+ headfont = \normalfont\bfseries,%
+ headpunct = . ,%
+ notefont = \mdseries,%
+ notebraces = {(}{)},%
+ bodyfont = \upshape,%
+ postheadspace = 0em%
+]{remarksstyle}
+
+\declaretheorem[style=remarksstyle, numbered=no, name=Remarks]{remarks}
+
+\declaretheoremstyle[%
+ spaceabove = 3ex,%
+ spacebelow = 3ex,%
+ headfont = \normalfont\bfseries,%
+ headpunct = . ,%
+ notefont = \mdseries,%
+ notebraces = {(}{)},%
+ bodyfont = \upshape,%
+ postheadspace = 1em,%
+ qed = \textsquare%
+]{proofstyle}
+
+\declaretheorem[style=proofstyle, numbered=no, name=Proof]{myproof}
+
