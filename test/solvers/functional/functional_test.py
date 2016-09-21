@@ -30,12 +30,13 @@ import pytest
 import odl
 from odl.util.testutils import all_almost_equal, almost_equal, noise_element
 
+
 # TODO: maybe add tests for if translations etc. belongs to the wrong space.
 # These tests doesn't work as intended now, since casting is possible between
 # spaces with the same number of discrete points.
 
 space_params = ['r10', 'uniform_discr']
-space_ids = [' space = {}'.format(p.ljust(10)) for p in space_params]
+space_ids = [' space = {} '.format(p.ljust(13)) for p in space_params]
 
 
 @pytest.fixture(scope="module", ids=space_ids, params=space_params)
@@ -50,8 +51,9 @@ def space(request, fn_impl):
 
 
 func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
-               'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf']
-func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
+               'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf',
+               'product', 'quotient']
+func_ids = [' f = {} '.format(p.ljust(17)) for p in func_params]
 
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
@@ -76,6 +78,14 @@ def functional(request, space):
         func = odl.solvers.functional.IndicatorLpUnitBall(space, np.pi)
     elif name == 'ind_unit_ball_inf':
         func = odl.solvers.functional.IndicatorLpUnitBall(space, np.inf)
+    elif name == 'product':
+        left = odl.solvers.functional.L2Norm(space)
+        right = odl.solvers.functional.ConstantFunctional(space, 2)
+        func = odl.solvers.functional.FunctionalProduct(left, right)
+    elif name == 'quotient':
+        dividend = odl.solvers.functional.L2Norm(space)
+        divisor = odl.solvers.functional.ConstantFunctional(space, 2)
+        func = odl.solvers.functional.FunctionalQuotient(dividend, divisor)
     else:
         assert False
 
@@ -109,6 +119,30 @@ def test_derivative(functional, space):
     # Check that derivative and gradient is consistent
     assert all_almost_equal(functional.derivative(x)(y),
                             y.inner(functional.gradient(x)))
+
+
+def test_arithmetic():
+    """Test that all standard arithmetic works."""
+    space = odl.rn(3)
+
+    # Create elements needed for later
+    functional = odl.solvers.L2Norm(space).translated([1, 2, 3])
+    functional2 = odl.solvers.L2NormSquared(space)
+    operator = odl.ResidualOperator(odl.IdentityOperator(space), [4, 5, 6])
+    x = noise_element(functional.domain)
+    y = noise_element(functional.domain)
+    scalar = np.pi
+
+    # Simple tests here, more in depth comes later
+    assert functional(x) == functional(x)
+    assert functional(x) != functional2(x)
+    assert (scalar * functional)(x) == scalar * functional(x)
+    assert (functional * scalar)(x) == functional(scalar * x)
+    assert (functional + functional2)(x) == functional(x) + functional2(x)
+    assert (functional - functional2)(x) == functional(x) - functional2(x)
+    assert (functional * operator)(x) == functional(operator(x))
+    assert (y * functional)(x) == y * functional(x)
+    assert (functional * y)(x) == functional(y * x)
 
 
 def test_left_scalar_multiplication(space):

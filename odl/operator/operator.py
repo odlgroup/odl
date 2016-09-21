@@ -28,8 +28,7 @@ import inspect
 from numbers import Number, Integral
 import sys
 
-from odl.set import (LinearSpace, LinearSpaceElement, UniversalSpace,
-                     Set, UniversalSet, Field)
+from odl.set import LinearSpace, LinearSpaceElement, Set, Field
 
 
 __all__ = ('Operator', 'OperatorComp', 'OperatorSum',
@@ -1346,7 +1345,7 @@ class OperatorPointwiseProduct(Operator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{} * {}'.format(self.left, self.right)
+        return repr(self)
 
 
 class OperatorLeftScalarMult(Operator):
