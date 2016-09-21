@@ -22,6 +22,7 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
+from itertools import product
 import numpy as np
 
 try:
@@ -31,10 +32,12 @@ except ImportError:
     PYWT_AVAILABLE = False
 
 
-__all__ = ('pywt_wbasis', 'pywt_coeff_shape_list',
-           'pywt_coeff_to_array', 'array_to_pywt_coeff',
-           'PAD_MODES_ODL2PYWT', 'PAD_MODES_ODL2PYWT',
-           'PYWT_SUPPORTED_PAD_MODES', 'PYWT_AVAILABLE')
+__all__ = ('PAD_MODES_ODL2PYWT', 'PYWT_SUPPORTED_MODES', 'PYWT_AVAILABLE',
+           'pywt_wavelet', 'pywt_mode', 'pywt_coeff_shapes',
+           'pywt_flat_coeff_size',
+           'pywt_flat_array_from_coeffs', 'pywt_coeffs_from_flat_array',
+           'pywt_single_level_decomp', 'pywt_single_level_recon',
+           'pywt_multi_level_decomp', 'pywt_multi_level_recon')
 
 
 PAD_MODES_ODL2PYWT = {'constant': 'zpd',
@@ -43,188 +46,182 @@ PAD_MODES_ODL2PYWT = {'constant': 'zpd',
                       'order0': 'cpd',
                       'order1': 'sp1',
                       'pywt_periodic': 'per'}
-PAD_MODES_PYWT2ODL = {v: k for k, v in PAD_MODES_ODL2PYWT.items()}
-PYWT_SUPPORTED_PAD_MODES = PAD_MODES_ODL2PYWT.keys()
+PYWT_SUPPORTED_MODES = PAD_MODES_ODL2PYWT.values()
 
 
-def pywt_wbasis(wbasis):
-    """Convert ``wbasis`` a to `pywt.Wavelet` if it is not already one."""
-    if isinstance(wbasis, pywt.Wavelet):
-        return wbasis
+def pywt_wavelet(wavelet):
+    """Convert ``wavelet`` to a ``pywt.Wavelet`` instance."""
+    if isinstance(wavelet, pywt.Wavelet):
+        return wavelet
     else:
-        return pywt.Wavelet(wbasis)
+        return pywt.Wavelet(wavelet)
 
 
-def pywt_max_level(*args, **kwargs):
-    """Return maximum number of scaling levels."""
-    if not PYWAVELETS_AVAILABLE:
-        raise NotImplementedError('PyWavelets not available')
-    return pywt.dwt_max_level(*args, **kwargs)
+def pywt_mode(pad_mode, pad_const=0):
+    """Convert ODL-style padding mode to pywt-style mode."""
+    pad_mode = str(pad_mode).lower()
+    pad_const = float(pad_const)
+    if pad_mode in PYWT_SUPPORTED_MODES:
+        return pad_mode
+    elif pad_mode == 'constant' and pad_const != 0.0:
+        raise ValueError('constant padding with constant != 0 not supported '
+                         'for `pywt` back-end')
+    else:
+        try:
+            return PAD_MODES_ODL2PYWT[pad_mode]
+        except KeyError:
+            raise ValueError("`pad_mode` '{}' not understood".format(pad_mode))
 
 
-def pywt_coeff_shape_list(shape, wbasis, nscales, pad_mode):
+def _check_nlevels(nlevels, data_len, wavelet):
+    """Check if ``nlevels`` is valid for given data length and wavelet."""
+    max_levels = pywt.dwt_max_level(data_len, wavelet.dec_len)
+    if not 0 < nlevels <= max_levels:
+        raise ValueError('`nlevels` must lie between 1 and {}, got {}'
+                         ''.format(max_levels, nlevels))
+
+
+def pywt_coeff_shapes(shape, wavelet, nlevels, mode):
     """Return a list of coefficient shapes in the specified transform.
 
     Parameters
     ----------
-    shape : tuple
-        Number of pixels/voxels in the image. Its length must be 1, 2 or 3.
-    wbasis : string or `pywt.Wavelet`
+    shape : sequence
+        Shape of an input to the transform.
+    wavelet : string or ``pywt.Wavelet``
         Specification of the wavelet to be used in the transform.
-        If a string is given, it is converted to a `pywt.Wavelet`.
-        For more information see the `wavelets
-        <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
-        page of the PyWavelets documentation.
-
-        Possible wavelet families are:
-
-        'Haar': Haar
-
-        'db': Daubechies
-
-        'sym' : Symlets
-
-        'coif': Coiflets
-
-        'bior': Biorthogonal
-
-        'rbio': Reverse biorthogonal
-
-        'dmey': Discrete FIR approximation of the Meyer wavelet
-
-    nscales : int
-        Number of scaling levels to be used in the transform.
-        The maximum number of usable scales can be determined
-        by `pywt.dwt_max_level`.
-    pad_mode : string, optional
-        Signal extention mode. Possible extension modes are:
-
-        ``'constant'``: Fill with ``pad_const``.
-
-        ``'symmetric'``: Reflect at the boundaries, not doubling the
-        outmost values.
-
-        ``'periodic'``: Fill in values from the other side, keeping
-        the order.
-
-        ``'order0'``: Extend constantly with the outmost values
-        (ensures continuity).
-
-        ``'order1'``: Extend with constant slope (ensures continuity of
-        the first derivative). This requires at least 2 values along
-        each axis where padding is applied.
-
-        ``'pywt_periodic'``:  like ``'periodic'`` padding but gives
-        the smallest possible number of decomposition coefficients.
-        Only available with ``impl='pywt'``, See `pywt.MODES.modes`.
+        If a string is given, it is converted to a ``pywt.Wavelet``.
+        Use `pywt.wavelist
+        <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
+built-in-wavelets-wavelist>`_ to get a list of available wavelets.
+    nlevels : positive int
+        Number of scaling levels to be used in the decomposition. The
+        maximum number of levels can be calculated with
+        `pywt.dwt_max_level
+        <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
+wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
+    mode : string, optional
+        PyWavelets style signal extension mode. See `signal extension modes
+        <https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
+modes.html>`_ for available options.
 
     Returns
     -------
-    shape_list : list
-        List containing the shapes of the wavelet (approximation
-        and detail) coefficients at different scaling levels.
+    shapes : list
+        The shapes of the approximation and detail coefficients at
+        different scaling levels in the following order:
 
-        ``shape_list[0]`` = shape of approximation coefficients at
-        the coarsest level,
+            ``[shape_aN, shape_DN, ..., shape_D1]``
 
-        ``shape_list[1]`` = shape of the detailed coefficients at
-        the coarsest level,
-
-        ``shape_list[N]`` = shape of the detailed coefficients at
-        the finest level,
-
-        ``shape_list[N+1]`` = shape of the original image,
-
-        ``N`` =  number of scaling levels
+        Here, ``shape_aN`` is the shape of the N-th level approximation
+        coefficient array, and ``shape_Di`` is the shape of all
+        i-th level detail coefficients.
     """
-    if len(shape) not in (1, 2, 3):
-        raise ValueError('shape must have length 1, 2 or 3, got {}'
-                         ''.format(len(shape)))
+    shape = tuple(shape)
+    if any(int(s) != s for s in shape):
+        raise ValueError('`shape` may only contain integers, got {}'
+                         ''.format(shape))
+    wavelet = pywt_wavelet(wavelet)
 
-    wbasis = pywt_wbasis(wbasis)
-    pywt_mode = PAD_MODES_ODL2PYWT[pad_mode]
+    nlevels, nlevels_in = int(nlevels), nlevels
+    if float(nlevels_in) != nlevels:
+        raise ValueError('`nlevels` must be integer, got {}'
+                         ''.format(nlevels_in))
+    # TODO: adapt for axes
+    _check_nlevels(nlevels, min(shape), wavelet)
 
-    max_level = pywt.dwt_max_level(shape[0], filter_len=wbasis.dec_len)
-    if nscales > max_level:
-        raise ValueError('too many scaling levels, got {}, maximum useful '
-                         'level is {}'
-                         ''.format(nscales, max_level))
+    mode, mode_in = str(mode).lower(), mode
+    if mode not in PYWT_SUPPORTED_MODES:
+        raise ValueError("mode '{}' not understood".format(mode_in))
 
-    # dwt_coeff_len calculates the number of coefficients at the next
-    # scaling level given the input shape, the length of the filter and
-    # the applied mode.
-    # We use this in the following way (per dimension):
-    # - length[0] = original data length
-    # - length[n+1] = dwt_coeff_len(length[n], ...)
-    # - until n = nscales
+    # Use pywt.dwt_coeff_len to determine the coefficient lengths at each
+    # scale recursively. Start with the image shape and use the last created
+    # shape for the next step.
     shape_list = [shape]
-    for scale in range(nscales):
-        shp = tuple(pywt.dwt_coeff_len(n, filter_len=wbasis.dec_len,
-                                       mode=pywt_mode)
-                    for n in shape_list[scale])
-        shape_list.append(shp)
+    for i in range(nlevels):
+        shape = tuple(pywt.dwt_coeff_len(n, filter_len=wavelet.dec_len,
+                                         mode=mode)
+                      for n in shape_list[-1])
+        shape_list.append(shape)
 
     # Add a duplicate of the last entry for the approximation coefficients
     shape_list.append(shape_list[-1])
 
-    # We created the list in reversed order compared to what pywt expects
+    # We created the list in reversed order, reverse it. Remove also the
+    # superfluous image shape at the end.
     shape_list.reverse()
+    shape_list.pop()
     return shape_list
 
 
-def pywt_coeff_to_array(coeff, shape_list):
-    """Convert a Pywavelets coefficient list into a flat array.
+def pywt_flat_coeff_size(shape, wavelet, nlevels, mode):
+    """Return the size of a flat array containing all coefficients.
+
+    Parameters
+    ----------
+    shape : sequence
+        Shape of an input to the transform.
+    wavelet : string or ``pywt.Wavelet``
+        Specification of the wavelet to be used in the transform.
+        If a string is given, it is converted to a ``pywt.Wavelet``.
+        Use `pywt.wavelist
+        <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
+built-in-wavelets-wavelist>`_ to get a list of available wavelets.
+    nlevels : positive int
+        Number of scaling levels to be used in the decomposition. The
+        maximum number of levels can be calculated with
+        `pywt.dwt_max_level
+        <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
+wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
+    mode : string, optional
+        PyWavelets style signal extension mode. See `signal extension modes
+        <https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
+modes.html>`_ for available options.
+
+    Returns
+    -------
+    flat_size : int
+        Size of a flat array containing all approximation and detail
+        coefficients for the specified transform.
+    """
+    shapes = pywt_coeff_shapes(shape, wavelet, nlevels, mode)
+    # 1 x approx coeff and (2**n - 1) * detail coeff
+    ndim = len(shapes[0])
+    return (np.prod(shapes[0]) +
+            sum((2 ** ndim - 1) * np.prod(shape)
+                for shape in shapes[1:]))
+
+
+def pywt_flat_array_from_coeffs(coeffs):
+    """Return a flat array from a Pywavelets coefficient sequence.
 
     Related to 1D, 2D and 3D multilevel discrete wavelet transforms.
 
     Parameters
     ----------
-    coeff : ordered `sequence`
-        Sequence of coefficients organized in the following way:
+    coeffs : ordered sequence
+        Sequence of approximation and detail coefficients in the format
 
-        In 1D:
+            ``[aN, DN, ... D1]``,
 
-        ``[aN, (dN), ..., (d1)]``
-
-        In 2D:
-
-        ``[aaN, (adN, daN, ddN), ..., (ad1, da1, dd1)]``
-
-        In 3D:
-
-        ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
-
-        The abbreviations are "a" for "approximation" and "d" for "detail".
-        The letter position encodes the coefficient type in the respective
-        axis. ``N`` stands for the number of scaling levels.
-
-    shape_list : `sequence`
-        Sequence containing the shapes of the wavelet (approximation
-        and detail) coefficients at different scaling levels.
-
-        ``shape_list[0]`` = shape of approximation coefficients at
-        the coarsest level,
-
-        ``shape_list[1]`` = shape of the detailed coefficients at
-        the coarsest level,
-
-        ``shape_list[N]`` = shape of the detailed coefficients at
-        the finest level,
-
-        ``shape_list[N+1]`` = shape of original image,
-
-        ``N`` =  number of scaling levels
+        where ``aN`` is the N-th level approximation coefficient array and
+        ``Di`` the tuple of i-th level detail coefficient arrays.
 
     Returns
     -------
     arr : `numpy.ndarray`
-        Flattened and concatenated coefficient array.
-        The length of the array depends on the shape of the input image to
-        be transformed and on the chosen wavelet basis.
-      """
-    flat_sizes = [np.prod(shp) for shp in shape_list[:-1]]
-    ndim = len(shape_list[0])
+        Flat coefficient vector containing approximation and detail
+        coefficients in the same order as they appear in ``coeffs``.
+    """
+    flat_sizes = [np.size(coeffs[0])]
+    for details in coeffs[1:]:
+        if isinstance(details, tuple):
+            flat_sizes.append(np.size(details[0]))
+        else:
+            # Single detail coefficient array
+            flat_sizes.append(np.size(details))
+
+    ndim = np.ndim(coeffs[0])
     dcoeffs_per_scale = 2 ** ndim - 1
 
     flat_total_size = flat_sizes[0] + dcoeffs_per_scale * sum(flat_sizes[1:])
@@ -232,292 +229,304 @@ def pywt_coeff_to_array(coeff, shape_list):
 
     start = 0
     stop = flat_sizes[0]
-    flat_coeff[start:stop] = coeff[0].ravel()
+    flat_coeff[start:stop] = np.ravel(coeffs[0])
 
-    for fsize, detail_coeffs in zip(flat_sizes[1:], coeff[1:]):
-        if dcoeffs_per_scale == 1:
-            start, stop = stop, stop + fsize
-            flat_coeff[start:stop] = detail_coeffs.ravel()
-        else:
-            for dcoeff in detail_coeffs:
+    for fsize, details in zip(flat_sizes[1:], coeffs[1:]):
+        if isinstance(details, tuple):
+            for detail in details:
                 start, stop = stop, stop + fsize
-                flat_coeff[start:stop] = dcoeff.ravel()
+                flat_coeff[start:stop] = np.ravel(detail)
+        else:
+            # Single detail coefficient array
+            start, stop = stop, stop + fsize
+            flat_coeff[start:stop] = np.ravel(details)
 
     return flat_coeff
 
 
-def array_to_pywt_coeff(coeff, shape_list):
+def pywt_coeffs_from_flat_array(arr, shapes):
     """Convert a flat array into a ``pywt`` coefficient list.
 
     For multilevel 1D, 2D and 3D discrete wavelet transforms.
 
     Parameters
     ----------
-    coeff : `array-like`
+    arr : `array-like`
         A flat coefficient vector containing approximation and detail
-        coefficients in the following order (3D):
+        coefficients with order and sizes determined by ``shapes``.
+    shapes : sequence
+        The shapes of the approximation and detail coefficients at
+        different scaling levels in the following order:
 
-            ``[aaaN, aadN, adaN, addN, daaN, dadN, ddaN, dddN,
-            aad1, ada1, add1, daa1, dad1, dda1, ddd1]``
+            ``[shape_aN, shape_DN, ..., shape_D1]``
 
-    shape_list : `sequence`
-        Sequence containing the shapes of the wavelet (approximation
-        and detail) coefficients at different scaling levels.
-
-        ``shape_list[0]`` = shape of approximation coefficients at
-        the coarsest level,
-
-        ``shape_list[1]`` = shape of the detail coefficients at
-        the coarsest level,
-
-        ``shape_list[N]`` = shape of the detail coefficients at
-        the finest level,
-
-        ``size_list[N+1]`` = shape of the original image,
-
-        ``N`` =  number of scaling levels
+        Here, ``shape_aN`` is the shape of the N-th level approximation
+        coefficient array, and ``shape_Di`` is the shape of all
+        i-th level detail coefficients.
 
     Returns
     -------
-    coeff_list : ordered list
-        Sequence of coefficients organized in the following way:
+    coeff_list : structured list
+        List of approximation and detail coefficients in the format
 
-        In 1D:
+            ``[aN, DN, ... D1]``,
 
-        ``[aN, (dN), ..., (d1)]``
-
-        In 2D:
-
-        ``[aaN, (adN, daN, ddN), ..., (ad1, da1, dd1)]``
-
-        In 3D:
-
-        ``[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
-        (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]``
-
-        The abbreviations are "a" for "approximation" and "d" for "detail".
-        The letter position encodes the coefficient type in the respective
-        axis. ``N`` stands for the number of scaling levels.
+        where ``aN`` is the N-th level approximation coefficient array and
+        ``Di`` the tuple of i-th level detail coefficient arrays. Each of
+        the ``Di`` tuples has length ``2 ** ndim - 1``, where ``ndim`` is
+        the number of dimensions of ``arr``.
     """
-    coeff_arr = np.asarray(coeff)
-    flat_sizes = [np.prod(shp) for shp in shape_list[:-1]]
+    arr = np.asarray(arr)
+    flat_sizes = [np.prod(shp) for shp in shapes]
     start = 0
     stop = flat_sizes[0]
-    coeff_list = [coeff_arr[start:stop].reshape(shape_list[0])]
-    ndim = len(shape_list[0])
+    coeff_list = [arr[start:stop].reshape(shapes[0])]
+    ndim = len(shapes[0])
     dcoeffs_per_scale = 2 ** ndim - 1
 
-    for fsize, shape in zip(flat_sizes[1:], shape_list[1:]):
+    for fsize, shape in zip(flat_sizes[1:], shapes[1:]):
         start, stop = stop, stop + dcoeffs_per_scale * fsize
-        if dcoeffs_per_scale == 1:
-            detail_coeffs = coeff_arr[start:stop]
-        else:
-            detail_coeffs = tuple(c.reshape(shape) for c in
-                                  np.split(coeff_arr[start:stop],
-                                           dcoeffs_per_scale))
+
+        detail_coeffs = tuple(
+            c.reshape(shape)
+            for c in np.split(arr[start:stop], dcoeffs_per_scale))
+
         coeff_list.append(detail_coeffs)
 
     return coeff_list
 
 
-def pywt_wavelet_decomp(arr, wbasis, pad_mode, nscales, shape_list):
-    """Return the discrete wavelet transform of ``arr``.
+def pywt_dict_keys(length):
+    """Return a list of coefficient dictionary keys as used in ``pywt``."""
+    return list(''.join(k) for k in product('ad', repeat=length))
+
+
+def pywt_single_level_decomp(arr, wavelet, mode):
+    """Return single level wavelet decomposition coefficients from ``arr``.
 
     Parameters
     ----------
     arr : `array-like`
         Input array to the wavelet decomposition.
-    wbasis :  string or `pywt.Wavelet`
+    wavelet : string or ``pywt.Wavelet``
         Specification of the wavelet to be used in the transform.
-        If a string is given, it is converted to a `pywt.Wavelet`.
-    pad_mode: string
-        ODL style boundary condition.
-    nscales : int
-        Number of scaling levels to be used in the transform.
-        The maximum number of usable scales can be determined
-        by `pywt.dwt_max_level`.
-    shape_list : `sequence`
-        Sequence containing the shapes of the wavelet (approximation
-        and detail) coefficients at different scaling levels.
+        If a string is given, it is converted to a ``pywt.Wavelet``.
+        Use `pywt.wavelist
+        <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
+built-in-wavelets-wavelist>`_ to get a list of available wavelets.
+    mode : string, optional
+        PyWavelets style signal extension mode. See `signal extension modes
+        <https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
+modes.html>`_ for available options.
 
     Returns
     -------
-    out : `numpy.ndarray`
-        Flattened and concatenated coefficient array.
-        The length of the array depends on the shape of the input image to
-        be transformed and on the chosen wavelet basis.
+    approx : `numpy.ndarray`
+        Approximation coefficients, a single array.
+    details : tuple of `numpy.ndarray`'s
+        Detail coefficients, ``2 ** ndim - 1`` arrays, where ``ndim``
+        is the number of dimensions of ``arr``.
     """
+    # Handle input
     arr = np.asarray(arr)
-    wbasis = pywt_wbasis(wbasis)
-    pywt_mode = PAD_MODES_ODL2PYWT[pad_mode]
-    if arr.ndim == 1:
-        coeff_list = pywt.wavedec(arr, wbasis, pywt_mode, nscales)
-    elif arr.ndim == 2:
-        coeff_list = pywt.wavedec2(arr, wbasis, pywt_mode, nscales)
-    elif arr.ndim == 3:
-        coeff_list = _wavedec3(arr, wbasis, pywt_mode, nscales)
-    else:
-        raise NotImplementedError('no transform available for {} dimensions'
-                                  ''.format(arr.ndim))
-    return pywt_coeff_to_array(coeff_list, shape_list)
+    wavelet = pywt_wavelet(wavelet)
+    mode, mode_in = str(mode).lower(), mode
+    if mode not in PYWT_SUPPORTED_MODES:
+        raise ValueError("mode '{}' not understood".format(mode_in))
+
+    # Compute single level DWT using pywt.dwtn and pick the approximation
+    # and detail coefficients from the dictionary
+    coeff_dict = pywt.dwtn(arr, wavelet, mode)
+    dict_keys = pywt_dict_keys(arr.ndim)
+    approx = coeff_dict[dict_keys[0]]
+    details = tuple(coeff_dict[k] for k in dict_keys[1:])
+    return approx, details
 
 
-def pywt_wavelet_recon(coeff, wbasis, pad_mode, shape_list):
-    """Return the discrete wavelet reconstruction from ``coeff``.
+def pywt_single_level_recon(approx, details, wavelet, mode):
+    """Return single level wavelet reconstruction from given coefficients.
 
     Parameters
     ----------
-    coeff : `array-like`
-        Flat coefficient array used as input to the wavelet
-        reconstruction.
-    wbasis :  string or `pywt.Wavelet`
+    approx : `array-like`
+        Approximation coefficients.
+    details : sequence of `array-like`'s
+        Detail coefficients. The length of the sequence must be
+        ``2 ** ndim - 1``, where ``ndim`` is the number of dimensions
+        in ``approx``.
+    wavelet :  string or ``pywt.Wavelet``
         Specification of the wavelet to be used in the transform.
-        If a string is given, it is converted to a `pywt.Wavelet`.
-    pad_mode: string
-        ODL style boundary condition.
-    shape_list : `sequence`
-        Sequence containing the shapes of the wavelet (approximation
-        and detail) coefficients at different scaling levels.
+        Use `pywt.wavelist
+        <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
+built-in-wavelets-wavelist>`_ to get a list of available wavelets.
+    mode : string, optional
+        PyWavelets style signal extension mode. See `signal extension modes
+        <https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
+modes.html>`_ for available options.
 
     Returns
     -------
-    out : `numpy.ndarray`
-        Flattened and concatenated coefficient array.
-        The length of the array depends on the shape of the input image to
-        be transformed and on the chosen wavelet basis.
+    recon : `numpy.ndarray`
+        The single-level wavelet reconstruction.
     """
-    coeff = np.asarray(coeff)
-    wbasis = pywt_wbasis(wbasis)
-    coeff_list = array_to_pywt_coeff(coeff, shape_list)
-    pywt_mode = PAD_MODES_ODL2PYWT[pad_mode]
-    ndim = len(shape_list[0])
-    nscales = len(shape_list) - 1
+    # Handle input
+    approx = np.asarray(approx)
+    if len(details) != 2 ** approx.ndim - 1:
+        raise ValueError('`details` must be a sequence of length {}, got '
+                         'length {}'
+                         .format(2 ** approx.ndim - 1, len(details)))
+    details = tuple(np.asarray(detail) for detail in details)
+    wavelet = pywt_wavelet(wavelet)
+    mode, mode_in = str(mode).lower(), mode
+    if mode not in PYWT_SUPPORTED_MODES:
+        raise ValueError("mode '{}' not understood".format(mode_in))
 
-    if ndim == 1:
-        return pywt.waverec(coeff_list, wbasis, pywt_mode)
-    elif ndim == 2:
-        return pywt.waverec2(coeff_list, wbasis, pywt_mode)
-    elif ndim == 3:
-        return _waverec3(coeff_list, wbasis, pywt_mode, nscales)
-    else:
-        raise NotImplementedError('no transform available for {} dimensions'
-                                  ''.format(ndim))
+    coeff_dict = {}
+    dict_keys = pywt_dict_keys(np.ndim(approx))
+    if len(details) != len(dict_keys) - 1:
+        raise ValueError('wrong number of detail coefficients: expected {}, '
+                         'got {}'.format(len(dict_keys) - 1, len(details)))
+    coeff_dict[dict_keys[0]] = approx
+    coeff_dict.update(zip(dict_keys[1:], details))
+    return pywt.idwtn(coeff_dict, wavelet, mode)
 
 
-def _wavedec3(arr, wbasis, pywt_mode, nscales):
-    """Discrete 3D multiresolution wavelet decomposition.
-
-    Helper function for the 3D wavelet decomposition that constructs
-    the same type of ordered coefficient list as the 1D and 2D variants
-    of `pywt.wavedecn`. This is necessary since the 3D variant returns
-    a dictionary instead of an ordered list.
+def pywt_multi_level_decomp(arr, wavelet, nlevels, mode):
+    """Return multi-level wavelet decomposition coefficients from ``arr``.
 
     Parameters
     ----------
     arr : `array-like`
         Input array to the wavelet decomposition.
-    wbasis :  string or `pywt.Wavelet`
+    wavelet :  string or ``pywt.Wavelet``
         Specification of the wavelet to be used in the transform.
-        If a string is given, it is converted to a `pywt.Wavelet`.
-    pywt_mode: string
-        `pywt` style boundary condition.
-    nscales : int
-        Number of scaling levels to be used in the transform.
-        The maximum number of usable scales can be determined
-        by `pywt.dwt_max_level`.
+        Use `pywt.wavelist
+        <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
+built-in-wavelets-wavelist>`_ to get a list of available wavelets.
+    nlevels : positive int
+        Number of scaling levels to be used in the decomposition. The
+        maximum number of levels can be calculated with
+        `pywt.dwt_max_level
+        <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
+wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
+    mode : string, optional
+        PyWavelets style signal extension mode. See `signal extension modes
+        <https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
+modes.html>`_ for available options.
 
     Returns
     -------
-    coeff_list : ordered list
-        List of coefficients organized in the following way:
+    coeff_list : structured list
+        List of approximation and detail coefficients in the format
 
-            ```[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...,
-            (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]```
+            ``[aN, DN, ... D1]``,
 
-        The abbreviations are "a" for "approximation" and "d" for "detail".
-        The letter position encodes the coefficient type in the respective
-        axis. ``N`` stands for the number of scaling levels.
+        where ``aN`` is the N-th level approximation coefficient array and
+        ``Di`` the tuple of i-th level detail coefficient arrays. Each of
+        the ``Di`` tuples has length ``2 ** ndim - 1``, where ``ndim`` is
+        the number of dimensions of the input array.
+        See `the documentation for the multilevel decomposition in
+        PyWavelets
+        <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
+wavelet-transform.html#multilevel-decomposition-using-wavedec>`_ for
+        more information.
     """
-    wbasis = pywt_wbasis(wbasis)
+    # Handle input
+    arr = np.asarray(arr)
+    wavelet = pywt_wavelet(wavelet)
+
+    # TODO: adapt for axes
+    nlevels, nlevels_in = int(nlevels), nlevels
+    if float(nlevels_in) != nlevels:
+        raise ValueError('`nlevels` must be integer, got {}'
+                         ''.format(nlevels_in))
+    max_levels = pywt.dwt_max_level(min(arr.shape), wavelet.dec_len)
+    if not 0 < nlevels <= max_levels:
+        raise ValueError('`nlevels` must lie between 1 and {}, got {}'
+                         ''.format(max_levels, nlevels_in))
+
+    mode, mode_in = str(mode).lower(), mode
+    if mode not in PYWT_SUPPORTED_MODES:
+        raise ValueError("mode '{}' not understood".format(mode_in))
+
+    # Fill the list with detail coefficients from coarsest to finest level,
+    # by recursively applying the single-level transform to the approximation
+    # coefficients, starting with the input array. Append the final
+    # approximation coefficients.
     coeff_list = []
-
-    wcoeffs = pywt.dwtn(arr, wbasis, pywt_mode)
-    aaa = wcoeffs['aaa']
-    aad = wcoeffs['aad']
-    ada = wcoeffs['ada']
-    add = wcoeffs['add']
-    daa = wcoeffs['daa']
-    dad = wcoeffs['dad']
-    dda = wcoeffs['dda']
-    ddd = wcoeffs['ddd']
-
-    details = (aad, ada, add, daa, dad, dda, ddd)
+    approx, details = pywt_single_level_decomp(arr, wavelet, mode)
     coeff_list.append(details)
 
-    for _ in range(1, nscales):
-        wcoeffs = pywt.dwtn(aaa, wbasis, pywt_mode)
-        aaa = wcoeffs['aaa']
-        aad = wcoeffs['aad']
-        ada = wcoeffs['ada']
-        add = wcoeffs['add']
-        daa = wcoeffs['daa']
-        dad = wcoeffs['dad']
-        dda = wcoeffs['dda']
-        ddd = wcoeffs['ddd']
-        details = (aad, ada, add, daa, dad, dda, ddd)
+    for _ in range(1, nlevels):
+        approx, details = pywt_single_level_decomp(approx, wavelet, mode)
         coeff_list.append(details)
 
-    coeff_list.append(aaa)
+    coeff_list.append(approx)
     coeff_list.reverse()
 
     return coeff_list
 
 
-def _waverec3(coeff_list, wbasis, pywt_mode, nscales):
-    """Discrete 3D multiresolution wavelet reconstruction.
-
-    Helper function for the 3D wavelet reconstruction that uses
-    the same type of ordered coefficient list as the 1D and 2D variants
-    of `pywt.waverecn`. This is necessary since the 3D variant takes
-    a dictionary instead of an ordered list.
+def pywt_multi_level_recon(coeff_list, recon_shape, wavelet, mode):
+    """Return multi-level wavelet decomposition coefficients from ``arr``.
 
     Parameters
     ----------
-    coeff_list : ordered `sequence`
-        Sequence of coefficients organized in the following way:
+    coeff_list : structured list
+        List of approximation and detail coefficients in the format
 
-            ```[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...,
-            (aad1, ada1, add1, daa1, dad1, dda1, ddd1)]```
+            ``[aN, DN, ... D1]``,
 
-        The abbreviations are "a" for "approximation" and "d" for "detail".
-        The letter position encodes the coefficient type in the respective
-        axis. ``N`` stands for the number of scaling levels.
-
-    wbasis :  string or `pywt.Wavelet`
+        where ``aN`` is the N-th level approximation coefficient array and
+        ``Di`` the tuple of i-th level detail coefficient arrays. Each of
+        the ``Di`` tuples must have length ``2 ** ndim - 1``, where ``ndim``
+        is the number of dimensions of the input array.
+    recon_shape : sequence of ints
+        Shape of the reconstructed array. This information is required since
+        this shape is not uniquely determined by the length of the
+        coefficients and the wavelet.
+    wavelet :  string or ``pywt.Wavelet``
         Specification of the wavelet to be used in the transform.
-        If a string is given, it is converted to a `pywt.Wavelet`.
-    pywt_mode: string
-        `pywt` style boundary condition.
-    nscales : int
-        Number of scaling levels to be used in the transform.
-        The maximum number of usable scales can be determined
-        by `pywt.dwt_max_level`.
+        Use `pywt.wavelist
+        <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
+built-in-wavelets-wavelist>`_ to get a list of available wavelets.
+    mode : string, optional
+        PyWavelets style signal extension mode. See `signal extension modes
+        <https://pywavelets.readthedocs.io/en/latest/ref/signal-extension-\
+modes.html>`_ for available options.
 
     Returns
     -------
-    rec : `numpy.ndarray`
-        Wavelet reconstruction from the coefficients.
+    recon : `numpy.ndarray`
+        Wavelet reconstruction from the given coefficients.
     """
-    wbasis = pywt_wbasis(wbasis)
+    reco = coeff_list[0]
 
-    aaa = coeff_list[0]
-    (aad, ada, add, daa, dad, dda, ddd) = coeff_list[1]
-    coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
-                  'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
-    for tpl in coeff_list[2:]:
-        aaa = pywt.idwtn(coeff_dict, wbasis, pywt_mode)
-        (aad, ada, add, daa, dad, dda, ddd) = tpl
-        coeff_dict = {'aaa': aaa, 'aad': aad, 'ada': ada, 'add': add,
-                      'daa': daa, 'dad': dad, 'dda': dda, 'ddd': ddd}
+    for details in coeff_list[1:]:
+        # Adjust shape of reco to match the detail coefficients' shapes.
+        reco_slc = []
+        try:
+            details_shape = details[0].shape
+        except AttributeError:
+            # Single details array
+            details_shape = details.shape
 
-    return pywt.idwtn(coeff_dict, wbasis, pywt_mode)
+        for n_reco, n_detail in zip(reco.shape, details_shape):
+            if n_reco == n_detail + 1:
+                # Drop last element in this axis
+                reco_slc.append(slice(-1))
+            else:
+                reco_slc.append(slice(None))
+
+        reco = pywt_single_level_recon(reco[tuple(reco_slc)], details,
+                                       wavelet, mode)
+
+    reco_slc = []
+    for n_reco, n_intended in zip(reco.shape, recon_shape):
+        if n_reco == n_intended + 1:
+            # Drop last element in this axis
+            reco_slc.append(slice(-1))
+        else:
+            reco_slc.append(slice(None))
+
+    return reco[tuple(reco_slc)]
