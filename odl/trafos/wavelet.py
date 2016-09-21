@@ -28,9 +28,10 @@ import numpy as np
 from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
-    pywt_wbasis, pywt_max_level, pywt_wavelet_decomp,
-    pywt_wavelet_recon, pywt_coeff_shape_list, PYWT_SUPPORTED_PAD_MODES,
-    PYWT_AVAILABLE)
+    PYWT_AVAILABLE, PAD_MODES_ODL2PYWT,
+    pywt_mode, pywt_wavelet, pywt_flat_coeff_size, pywt_coeff_shapes,
+    pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
+    pywt_multi_level_decomp, pywt_multi_level_recon)
 
 __all__ = ('WaveletTransform', 'WaveletTransformInverse')
 
@@ -48,7 +49,7 @@ class WaveletTransformBase(Operator):
     inverse and adjoint wavelet transforms.
     """
 
-    def __init__(self, space, wbasis, nscales, variant, pad_mode='constant',
+    def __init__(self, space, wavelet, nlevels, variant, pad_mode='constant',
                  pad_const=0, impl='pywt'):
         """Initialize a new instance.
 
@@ -58,38 +59,40 @@ class WaveletTransformBase(Operator):
             Domain of the forward wavelet transform (the "image domain").
             In the case of ``variant in ('inverse', 'adjoint')``, this
             space is the range of the operator.
-        wbasis :  string or `pywt.Wavelet`
+        wavelet : string or ``pywt.Wavelet``
             Specification of the wavelet to be used in the transform.
-            If a string is given, it is converted to a `pywt.Wavelet`.
-            For more information see the `wavelets
-            <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
-            page of the PyWavelets documentation.
+            If a string is given, it is converted to a ``pywt.Wavelet``.
+            Use `pywt.wavelist
+            <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
+built-in-wavelets-wavelist>`_ to get a list of available wavelets.
 
             Possible wavelet families are:
 
-            'Haar': Haar
+            ``'haar'``: Haar
 
-            'db': Daubechies
+            ``'db'``: Daubechies
 
-            'sym' : Symlets
+            ``'sym'``: Symlets
 
-            'coif': Coiflets
+            ``'coif'``: Coiflets
 
-            'bior': Biorthogonal
+            ``'bior'``: Biorthogonal
 
-            'rbio': Reverse biorthogonal
+            ``'rbio'``: Reverse biorthogonal
 
-            'dmey': Discrete FIR approximation of the Meyer wavelet
+            ``'dmey'``: Discrete FIR approximation of the Meyer wavelet
 
-        nscales : int
-            Number of scaling levels to be used in the transform.
-            The maximum number of usable scales can be determined
-            by `pywt.dwt_max_level`.
+        nlevels : positive int
+            Number of scaling levels to be used in the decomposition. The
+            maximum number of levels can be calculated with
+            `pywt.dwt_max_level
+            <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
+wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
         variant : {'forward', 'inverse', 'adjoint'}
             Wavelet transform variant to be created.
 
         pad_mode : string, optional
-            Signal extention mode. Possible extension modes are:
+            Method to be used to extend the signal.
 
             ``'constant'``: Fill with ``pad_const``.
 
@@ -112,19 +115,11 @@ class WaveletTransformBase(Operator):
 
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored
-            otherwise.
+            otherwise. Constants other than 0 are not supported by the
+            ``pywt`` back-end.
 
         impl : {'pywt'}, optional
-            Backend for the wavelet transform.
-
-        Examples
-        --------
-        >>> import odl
-        >>> discr_domain = odl.uniform_discr([0, 0], [1, 1], (16, 16))
-        >>> op = odl.trafos.WaveletTransform(discr_domain, nscales=1,
-        ...                                  wbasis='db1')
-        >>> op.is_biorthogonal
-        True
+            Back-end for the wavelet transform.
         """
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a `DiscreteLp` instance.'
@@ -133,44 +128,29 @@ class WaveletTransformBase(Operator):
             raise ValueError('`space` can be at most 3-dimensional, got '
                              'ndim={}'.format(space.ndim))
 
-        self.pywt_wbasis = pywt_wbasis(wbasis)
-
-        max_level = pywt_max_level(min(space.shape),
-                                   filter_len=self.pywt_wbasis.dec_len)
-
-        nscales, nscales_in = int(nscales), nscales
-        if nscales > max_level:
-            raise ValueError('cannot use more than {} scaling levels, '
-                             'got {}'.format(max_level, nscales_in))
-        self.nscales = nscales
+        nlevels, nlevels_in = int(nlevels), nlevels
+        if nlevels != float(nlevels_in):
+            raise ValueError('`nlevels` must be integer, got {}'
+                             ''.format(nlevels_in))
+        self.nlevels = nlevels
 
         impl, impl_in = str(impl).lower(), impl
         if impl not in _SUPPORTED_WAVELET_IMPLS:
             raise ValueError("`impl` '{}' not supported".format(impl_in))
         self.impl = impl
 
-        pad_mode, pad_mode_in = str(pad_mode).lower(), pad_mode
-        if pad_mode not in PYWT_SUPPORTED_PAD_MODES:
-            raise ValueError("`pad_mode` '{}' not supported for `impl` "
-                             "'{}'".format(pad_mode_in, self.impl))
-        self.pad_mode = pad_mode
+        self.wavelet = getattr(wavelet, 'name', str(wavelet).lower())
+        self.pad_mode = str(pad_mode).lower()
+        self.pad_const = space.field.element(pad_const)
 
-        # TODO: move pywt specific check to the backend
-        pad_const, pad_const_in = space.field.element(pad_const), pad_const
-        if impl == 'pywt' and pad_mode == 'constant' and pad_const != 0:
-            raise ValueError("non-zero `pad_const` {} not supported for "
-                             "`impl` '{}'".format(pad_const_in, impl))
-        self.pad_const = pad_const
-
-        self.shape_list = pywt_coeff_shape_list(
-            space.shape, self.pywt_wbasis, self.nscales, self.pad_mode)
-
-        # 1 x approx coeff and (2**n - 1) * detail coeff
-        coeff_size = (np.prod(self.shape_list[0]) +
-                      sum((2 ** space.ndim - 1) * np.prod(shape)
-                          for shape in self.shape_list[1:-1]))
-
-        coeff_space = space.dspace_type(coeff_size, dtype=space.dtype)
+        if self.impl == 'pywt':
+            self.pywt_mode = pywt_mode(pad_mode, pad_const)
+            self.pywt_wavelet = pywt_wavelet(self.wavelet)
+            coeff_size = pywt_flat_coeff_size(space.shape, wavelet,
+                                              self.nlevels, self.pywt_mode)
+            coeff_space = space.dspace_type(coeff_size, dtype=space.dtype)
+        else:
+            raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
         variant, variant_in = str(variant).lower(), variant
         if variant not in ('forward', 'inverse', 'adjoint'):
@@ -185,54 +165,58 @@ class WaveletTransformBase(Operator):
     @property
     def is_orthogonal(self):
         """Whether or not the wavelet basis is orthogonal."""
-        return self.pywt_wbasis.orthogonal
+        return self.pywt_wavelet.orthogonal
 
     @property
     def is_biorthogonal(self):
         """Whether or not the wavelet basis is bi-orthogonal."""
-        return self.pywt_wbasis.biorthogonal
+        return self.pywt_wavelet.biorthogonal
 
 
 class WaveletTransform(WaveletTransformBase):
 
     """Discrete wavelet trafo between discretized Lp spaces."""
 
-    def __init__(self, domain, wbasis, nscales, pad_mode='constant',
+    def __init__(self, domain, wavelet, nlevels, pad_mode='constant',
                  pad_const=0, impl='pywt'):
         """Initialize a new instance.
+
         Parameters
         ----------
         domain : `DiscreteLp`
             Domain of the wavelet transform (the "image domain").
-        wbasis :  string or `pywt.Wavelet`
+        wavelet : string or ``pywt.Wavelet``
             Specification of the wavelet to be used in the transform.
-            If a string is given, it is converted to a `pywt.Wavelet`.
-            For more information see the `wavelets
-            <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
-            page of the PyWavelets documentation.
+            If a string is given, it is converted to a ``pywt.Wavelet``.
+            Use `pywt.wavelist
+            <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
+built-in-wavelets-wavelist>`_ to get a list of available wavelets.
 
             Possible wavelet families are:
 
-            'Haar': Haar
+            ``'haar'``: Haar
 
-            'db': Daubechies
+            ``'db'``: Daubechies
 
-            'sym' : Symlets
+            ``'sym'``: Symlets
 
-            'coif': Coiflets
+            ``'coif'``: Coiflets
 
-            'bior': Biorthogonal
+            ``'bior'``: Biorthogonal
 
-            'rbio': Reverse biorthogonal
+            ``'rbio'``: Reverse biorthogonal
 
-            'dmey': Discrete FIR approximation of the Meyer wavelet
+            ``'dmey'``: Discrete FIR approximation of the Meyer wavelet
 
-        nscales : int
-            Number of scaling levels to be used in the transform.
-            The maximum number of usable scales can be determined
-            by `pywt.dwt_max_level`.
+        nlevels : positive int
+            Number of scaling levels to be used in the decomposition. The
+            maximum number of levels can be calculated with
+            `pywt.dwt_max_level
+            <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
+wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
+
         pad_mode : string, optional
-            Signal extention mode. Possible extension modes are:
+            Method to be used to extend the signal.
 
             ``'constant'``: Fill with ``pad_const``.
 
@@ -255,7 +239,8 @@ class WaveletTransform(WaveletTransformBase):
 
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored
-            otherwise.
+            otherwise. Constants other than 0 are not supported by the
+            ``pywt`` back-end.
 
         impl : {'pywt'}, optional
             Backend for the wavelet transform.
@@ -263,13 +248,15 @@ class WaveletTransform(WaveletTransformBase):
         Examples
         --------
         >>> import odl
-        >>> discr_domain = odl.uniform_discr([0, 0], [1, 1], (16, 16))
-        >>> op = WaveletTransform(discr_domain, nscales=1, wbasis='db1')
-        >>> op.is_biorthogonal
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (16, 16))
+        >>> wavelet_trafo = odl.trafos.WaveletTransform(
+        ...     domain=space, nlevels=1, wavelet='db1')
+        >>> wavelet_trafo.is_biorthogonal
         True
         """
-        super().__init__(domain, wbasis, nscales, 'forward', pad_mode,
-                         pad_const, impl)
+        super().__init__(space=domain, wavelet=wavelet, nlevels=nlevels,
+                         variant='forward', pad_mode=pad_mode,
+                         pad_const=pad_const, impl=impl)
 
     def _call(self, x):
         """Compute the discrete wavelet transform.
@@ -286,8 +273,10 @@ class WaveletTransform(WaveletTransformBase):
             be transformed and on the chosen wavelet basis.
         """
         if self.impl == 'pywt':
-            return pywt_wavelet_decomp(x, self.pywt_wbasis, self.pad_mode,
-                                       self.nscales, self.shape_list)
+            coeff_list = pywt_multi_level_decomp(
+                x, wavelet=self.pywt_wavelet, nlevels=self.nlevels,
+                mode=self.pywt_mode)
+            return pywt_flat_array_from_coeffs(coeff_list)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
@@ -324,7 +313,7 @@ class WaveletTransform(WaveletTransformBase):
         adjoint
         """
         return WaveletTransformInverse(
-            range=self.domain, nscales=self.nscales, wbasis=self.pywt_wbasis,
+            range=self.domain, nlevels=self.nlevels, wavelet=self.pywt_wavelet,
             pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl)
 
 
@@ -337,43 +326,49 @@ class WaveletTransformInverse(WaveletTransformBase):
     WaveletTransform
     """
 
-    def __init__(self, range, nscales, wbasis, pad_mode='constant',
+    def __init__(self, range, nlevels, wavelet, pad_mode='constant',
                  pad_const=0, impl='pywt'):
         """Initialize a new instance.
 
          Parameters
         ----------
         range : `DiscreteLp`
-            Domain of the forward wavelet transform (the "image domain").
-        wbasis :  string or `pywt.Wavelet`
+            Domain of the forward wavelet transform (the "image domain"),
+            which is the range of this inverse transform.
+        wavelet : string or ``pywt.Wavelet``
             Specification of the wavelet to be used in the transform.
-            If a string is given, it is converted to a `pywt.Wavelet`.
-            For more information see the `wavelets
-            <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
-            page of the PyWavelets documentation.
+            If a string is given, it is converted to a ``pywt.Wavelet``.
+            Use `pywt.wavelist
+            <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
+built-in-wavelets-wavelist>`_ to get a list of available wavelets.
 
             Possible wavelet families are:
 
-            'Haar': Haar
+            ``'haar'``: Haar
 
-            'db': Daubechies
+            ``'db'``: Daubechies
 
-            'sym' : Symlets
+            ``'sym'``: Symlets
 
-            'coif': Coiflets
+            ``'coif'``: Coiflets
 
-            'bior': Biorthogonal
+            ``'bior'``: Biorthogonal
 
-            'rbio': Reverse biorthogonal
+            ``'rbio'``: Reverse biorthogonal
 
-            'dmey': Discrete FIR approximation of the Meyer wavelet
+            ``'dmey'``: Discrete FIR approximation of the Meyer wavelet
 
-        nscales : int
-            Number of scaling levels to be used in the transform.
-            The maximum number of usable scales can be determined
-            by `pywt.dwt_max_level`.
+        nlevels : positive int
+            Number of scaling levels to be used in the decomposition. The
+            maximum number of levels can be calculated with
+            `pywt.dwt_max_level
+            <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
+wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
+        variant : {'forward', 'inverse', 'adjoint'}
+            Wavelet transform variant to be created.
+
         pad_mode : string, optional
-            Signal extention mode. Possible extension modes are:
+            Method to be used to extend the signal.
 
             ``'constant'``: Fill with ``pad_const``.
 
@@ -396,16 +391,26 @@ class WaveletTransformInverse(WaveletTransformBase):
 
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored
-            otherwise.
+            otherwise. Constants other than 0 are not supported by the
+            ``pywt`` back-end.
 
         impl : {'pywt'}, optional
-            Backend for the wavelet transform.
+            Back-end for the wavelet transform.
+
+        Examples
+        --------
+        >>> import odl
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (16, 16))
+        >>> wavelet_trafo = odl.trafos.WaveletTransformInverse(
+        ...     range=space, nlevels=1, wavelet='db1')
+        >>> wavelet_trafo.is_biorthogonal
+        True
         """
-        super().__init__(range, wbasis, nscales, 'inverse', pad_mode,
+        super().__init__(range, wavelet, nlevels, 'inverse', pad_mode,
                          pad_const, impl)
 
-    def _call(self, coeff):
-        """Compute the discrete 1D, 2D or 3D inverse wavelet transform.
+    def _call(self, coeffs):
+        """Return the inverse wavelet transform of ``coeffs``.
 
         Parameters
         ----------
@@ -418,8 +423,12 @@ class WaveletTransformInverse(WaveletTransformBase):
             Result of the wavelet reconstruction.
         """
         if self.impl == 'pywt':
-            return pywt_wavelet_recon(coeff, self.pywt_wbasis, self.pad_mode,
-                                      self.shape_list)
+            shapes = pywt_coeff_shapes(self.range.shape, self.pywt_wavelet,
+                                       self.nlevels, self.pywt_mode)
+            coeff_list = pywt_coeffs_from_flat_array(coeffs, shapes)
+            return pywt_multi_level_recon(
+                coeff_list, recon_shape=self.range.shape,
+                wavelet=self.pywt_wavelet, mode=self.pywt_mode)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
@@ -460,7 +469,7 @@ class WaveletTransformInverse(WaveletTransformBase):
         adjoint
         """
         return WaveletTransform(
-            domain=self.range, nscales=self.nscales, wbasis=self.pywt_wbasis,
+            domain=self.range, nlevels=self.nlevels, wavelet=self.pywt_wavelet,
             pad_mode=self.pad_mode, pad_const=self.pad_const, impl=self.impl)
 
 
