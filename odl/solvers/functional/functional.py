@@ -920,7 +920,7 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         The derivative is computed using Leibniz's rule:
 
         .. math::
-            [D(f g)](p) = g(p) [Df](p) + f(p) [Dg](p)
+            [\\nabla (f g)](p) = g(p) [\\nabla f](p) + f(p) [\\nabla g](p)
         """
         func = self
 
@@ -938,7 +938,7 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
 
 class FunctionalQuotient(Functional):
 
-    """Product ``p(x) = f(x) / g(x)`` of two functionals ``f`` and ``g``."""
+    """Quotient ``p(x) = f(x) / g(x)`` of two functionals ``f`` and ``g``."""
 
     def __init__(self, dividend, divisor):
         """Initialize a new instance.
@@ -999,7 +999,8 @@ class FunctionalQuotient(Functional):
         The derivative is computed using the quotient rule:
 
         .. math::
-            [D(f / g)](p) = (g(p) [Df](p) - f(p) [Dg](p)) / g(p)^2
+            [\\nabla (f / g)](p) = (g(p) [\\nabla f](p) -
+                                    f(p) [\\nabla g](p)) / g(p)^2
         """
         func = self
 
