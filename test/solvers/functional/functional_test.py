@@ -83,9 +83,9 @@ def functional(request, space):
         right = odl.solvers.functional.ConstantFunctional(space, 2)
         func = odl.solvers.functional.FunctionalProduct(left, right)
     elif name == 'quotient':
-        left = odl.solvers.functional.L2Norm(space)
-        right = odl.solvers.functional.ConstantFunctional(space, 2)
-        func = odl.solvers.functional.FunctionalQuotient(left, right)
+        dividend = odl.solvers.functional.L2Norm(space)
+        divisor = odl.solvers.functional.ConstantFunctional(space, 2)
+        func = odl.solvers.functional.FunctionalQuotient(dividend, divisor)
     else:
         assert False
 
@@ -126,9 +126,9 @@ def test_arithmetic():
     space = odl.rn(3)
 
     # Create elements needed for later
-    functional = odl.solvers.L2Norm(space)
+    functional = odl.solvers.L2Norm(space).translated([1, 2, 3])
     functional2 = odl.solvers.L2NormSquared(space)
-    operator = odl.ResidualOperator(odl.IdentityOperator(space), [1, 2, 3])
+    operator = odl.ResidualOperator(odl.IdentityOperator(space), [4, 5, 6])
     x = noise_element(functional.domain)
     y = noise_element(functional.domain)
     scalar = np.pi
