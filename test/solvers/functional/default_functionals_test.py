@@ -25,9 +25,6 @@ import pytest
 import odl
 from odl.util.testutils import all_almost_equal, almost_equal, noise_element
 
-# Places for the accepted error when comparing results
-PLACES = 8
-
 
 space_params = ['r10', 'uniform_discr']
 space_ids = [' space = {}'.format(p.ljust(10)) for p in space_params]
@@ -50,12 +47,11 @@ def test_L1_norm(space):
 
     # Evaluation of the functional
     expected_result = (np.abs(x)).inner(space.one())
-    assert almost_equal(func(x), expected_result, places=PLACES)
+    assert almost_equal(func(x), expected_result)
 
     # The gradient is the sign-function
     expected_result = np.sign(x)
-    assert all_almost_equal(func.gradient(x), expected_result,
-                            places=PLACES)
+    assert all_almost_equal(func.gradient(x), expected_result)
 
     # The proximal operator
     sigma = np.random.rand()
@@ -67,8 +63,7 @@ def test_L1_norm(space):
     tmp[orig > sigma] = orig[orig > sigma] - sigma
     tmp[orig < -sigma] = orig[orig < -sigma] + sigma
     expected_result = space.element(tmp)
-    assert all_almost_equal(func.proximal(sigma)(x), expected_result,
-                            places=PLACES)
+    assert all_almost_equal(func.proximal(sigma)(x), expected_result)
 
     # The convex conjugate functional
     cc_func = func.convex_conj
@@ -91,8 +86,7 @@ def test_L1_norm(space):
     # The proximal of the convex conjugate
     # Explicit computation: x / max(1, |x|)
     expected_result = x / np.maximum(1, np.abs(x))
-    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result,
-                            places=PLACES)
+    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
 
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
@@ -105,8 +99,8 @@ def test_indicator_lp_unit_ball(space):
     x = noise_element(space)
     one_elem = space.one()
 
-    # Used du to numerical errors
-    accuracy = 1 - 10**(-PLACES)
+    # Used due to numerical errors
+    accuracy = 1 - 10**(-4)
 
     # Exponent = 1
     exponent = 1
@@ -151,12 +145,11 @@ def test_L2_norm(space):
 
     # Evaluation of the functional
     expected_result = np.sqrt((x**2).inner(space.one()))
-    assert almost_equal(func(x), expected_result, places=PLACES)
+    assert almost_equal(func(x), expected_result)
 
     # The gradient
     expected_result = x / x.norm()
-    assert all_almost_equal(func.gradient(x), expected_result,
-                            places=PLACES)
+    assert all_almost_equal(func.gradient(x), expected_result)
 
     # Testing gradient for zero element
     with pytest.raises(ValueError):
@@ -167,13 +160,13 @@ def test_L2_norm(space):
     # Explicit computation: x * (1 - sigma/||x||) if ||x|| > 1, 0 else
     norm_less_than_sigma = 0.9 * sigma * x / x.norm()
     assert all_almost_equal(func.proximal(sigma)(norm_less_than_sigma),
-                            space.zero(), places=PLACES)
+                            space.zero())
 
     norm_larger_than_sigma = 1.1 * sigma * x / x.norm()
     expected_result = (norm_larger_than_sigma *
                        (1.0 - sigma / norm_larger_than_sigma.norm()))
     assert all_almost_equal(func.proximal(sigma)(norm_larger_than_sigma),
-                            expected_result, places=PLACES)
+                            expected_result)
 
     # The convex conjugate functional
     cc_func = func.convex_conj
@@ -196,8 +189,7 @@ def test_L2_norm(space):
         expected_result = x
     else:
         expected_result = x / x.norm()
-    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result,
-                            places=PLACES)
+    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
 
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
@@ -212,46 +204,41 @@ def test_L2_norm_squared(space):
 
     # Evaluation of the functional
     expected_result = (x**2).inner(space.one())
-    assert almost_equal(func(x), expected_result, places=PLACES)
+    assert almost_equal(func(x), expected_result)
 
     # The gradient
     expected_result = 2.0 * x
-    assert all_almost_equal(func.gradient(x), expected_result,
-                            places=PLACES)
+    assert all_almost_equal(func.gradient(x), expected_result)
 
     # The proximal operator
     sigma = np.random.rand()
     expected_result = x / (1 + 2.0 * sigma)
-    assert all_almost_equal(func.proximal(sigma)(x), expected_result,
-                            places=PLACES)
+    assert all_almost_equal(func.proximal(sigma)(x), expected_result)
 
     # The convex conjugate functional
     cc_func = func.convex_conj
 
     # Evaluation of convex conjugate
     expected_result = x.norm()**2 / 4.0
-    assert almost_equal(cc_func(x), expected_result, places=PLACES)
+    assert almost_equal(cc_func(x), expected_result)
 
     # The gradient of the convex conjugate (not implemeted)
     expected_result = x / 2.0
-    assert all_almost_equal(cc_func.gradient(x), expected_result,
-                            places=PLACES)
+    assert all_almost_equal(cc_func.gradient(x), expected_result)
 
     # The proximal of the convex conjugate
     expected_result = x / (1 + sigma / 2.0)
-    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result,
-                            places=PLACES)
+    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
 
     # The biconjugate, which is the functional itself since it is proper,
     # convex and lower-semicontinuous
     cc_cc_func = cc_func.convex_conj
 
     # Check that they evaluate the same
-    assert almost_equal(cc_cc_func(x), func(x), places=PLACES)
+    assert almost_equal(cc_cc_func(x), func(x))
 
     # Check that they evaluate the gradient the same
-    assert all_almost_equal(cc_cc_func.gradient(x), func.gradient(x),
-                            places=PLACES)
+    assert all_almost_equal(cc_cc_func.gradient(x), func.gradient(x))
 
 
 def test_constant_functional(space):
@@ -265,7 +252,7 @@ def test_constant_functional(space):
 
     # Evaluation of the functional
     expected_result = constant
-    assert almost_equal(func(x), expected_result, places=PLACES)
+    assert almost_equal(func(x), expected_result)
 
     # The gradient
     # Given by the zero-operator
