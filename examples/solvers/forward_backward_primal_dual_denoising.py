@@ -54,14 +54,13 @@ lin_ops = [gradient]
 
 # Create proximals for the convex conjugates of the 1-norm and the bound
 # constrains.
-prox_cc_g = [odl.solvers.proximal_cconj_l1(gradient.range, lam=1e1,
-                                           isotropic=False)]
-prox_f = odl.solvers.proximal_box_constraint(space, 0, 255)
+g = [1e1 * odl.solvers.L1Norm(gradient.range)]
+f = odl.solvers.IndicatorBox(space, 0, 255)
 
 # This gradient encodes the differentiable term(s) of the goal functional,
 # which corresponds to the "forward" part of the method. In this example the
 # differentiable part is the squared 2-norm.
-grad_h = odl.ResidualOperator(odl.IdentityOperator(space), noisy_data)
+h = odl.solvers.L2NormSquared(space).translated(noisy_data)
 
 # Create initial guess for the solver.
 x = noisy_data.copy()
@@ -71,5 +70,5 @@ callback = (odl.solvers.CallbackShow(display_step=20, clim=[0, 255]) &
             odl.solvers.CallbackPrintIteration())
 
 # Call the solver. x is updated in-place with the consecutive iterates.
-odl.solvers.forward_backward_pd(x, prox_f, prox_cc_g, lin_ops, grad_h, tau=1.0,
+odl.solvers.forward_backward_pd(x, f, g, lin_ops, h, tau=1.0,
                                 sigma=[0.01], niter=1000, callback=callback)
