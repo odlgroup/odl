@@ -926,14 +926,14 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
 
         class FunctionalProductGradient(Operator):
 
-            """Functional representing the derivative of ``f(.) * g(.)``."""
+            """Functional representing the gradient of ``f(.) * g(.)``."""
 
             def _call(self, x):
                 return (func.right(x) * func.left.gradient(x) +
                         func.left(x) * func.right.gradient(x))
 
         return FunctionalProductGradient(self.domain, self.domain,
-                                         linear=True)
+                                         linear=False)
 
 
 class FunctionalQuotient(Functional):
@@ -1006,7 +1006,7 @@ class FunctionalQuotient(Functional):
 
         class FunctionalQuotientGradient(Operator):
 
-            """Functional representing the derivative of ``f(.) / g(.)``."""
+            """Functional representing the gradient of ``f(.) / g(.)``."""
 
             def _call(self, x):
                 """Apply the functional to the given point."""
@@ -1016,7 +1016,7 @@ class FunctionalQuotient(Functional):
                         (- dividendx / divisorx**2) * func.divisor.gradient(x))
 
         return FunctionalQuotientGradient(self.domain, self.domain,
-                                          linear=True)
+                                          linear=False)
 
 
 class FunctionalDefaultConvexConjugate(Functional):
