@@ -60,7 +60,7 @@ f = odl.solvers.IndicatorBox(space, 0, 255)
 # This gradient encodes the differentiable term(s) of the goal functional,
 # which corresponds to the "forward" part of the method. In this example the
 # differentiable part is the squared 2-norm.
-h = odl.solvers.L2NormSquared(space).translated(noisy_data)
+h = 0.5 * odl.solvers.L2NormSquared(space).translated(noisy_data)
 
 # Create initial guess for the solver.
 x = noisy_data.copy()
