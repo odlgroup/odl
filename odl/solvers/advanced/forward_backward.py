@@ -56,7 +56,7 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
     Parameters
     ----------
-    x : `LinearSpaceVector`
+    x : `LinearSpaceElement`
         Initial point, updated in-place.
     prox_f : `callable`
         `Proximal factory` for the functional ``f``.
@@ -68,18 +68,18 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
         ``prox_cc_gs``.
     grad_h : `Operator`
         Operator representing the gradient of  ``h``.
-    tau : `float`
+    tau : float
         Step size-like parameter for ``prox_f``.
-    sigma : `sequence` of  `float`
+    sigma : `sequence` of floats
         Sequence of step size-like parameters for the sequence ``prox_cc_g``.
-    niter : `int`
+    niter : int
         Number of iterations.
     callback : `callable`, optional
         Function called with the current iterate after each iteration.
 
     Other Parameters
     ----------------
-    grad_cc_l : `sequence` of `Operator`, optional
+    grad_cc_l : `sequence` of `Operator`'s, optional
         Sequence of operators representing the gradients of  ``l_i^*``.
         If omitted, the simpler problem without ``l_i``  will be considered.
 
@@ -91,8 +91,9 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
         \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x) + h(x),
 
-     where :math:`L_i` are linear functionals and the infimal convolution
-     :math:`g \Box l` is defined by
+    where :math:`f`, :math:`g_i`, :math:`l_i` and :math:`h` are functionals and
+    :math:`L_i` are linear operators. The infimal convolution :math:`g \Box l`
+    is defined by
 
      .. math::
 
@@ -116,8 +117,8 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     are the zero functionals, and hence the corresponding gradients are the
     zero operators.
 
-    To guarantee convergence, the parameters ``tau``, ``sigma`` and
-    ``L`` need to satisfy
+    To guarantee convergence, the parameters :math:`\\tau`, :math:`\\sigma` and
+    :math:`L_i` need to satisfy
 
     .. math::
 
@@ -128,6 +129,15 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     where, if the simpler problem is considered, all :math:`\\nu_i` can be
     considered to be :math:`\\infty`.
 
+    See Also
+    --------
+    chambolle_pock_solver : Solver for similar problems.
+    douglas_rachford_pd : Solver for similar problems but can additionaly
+                          handle infimal convolutions and multiple forward
+                          operators.
+
+    References
+    ----------
     For reference on the forward-backward primal-dual algorithm, see [BC2015]_.
 
     For more on convex analysis including convex conjugates and

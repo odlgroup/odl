@@ -21,7 +21,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import int
 
-from math import sin, cos, atan2, acos, pi
 import numpy as np
 
 
@@ -35,7 +34,7 @@ def euler_matrix(*angles):
 
     Parameters
     ----------
-    angle1,...,angleN : `float`
+    angle1,...,angleN : float
         One angle results in a (2x2) matrix representing a
         counter-clockwise rotation. Two or three angles result in a
         (3x3) matrix and are interpreted as Euler angles of a 3d
@@ -67,12 +66,12 @@ def euler_matrix(*angles):
     else:
         raise ValueError('number of angles must be between 1 and 3')
 
-    cph = cos(phi)
-    sph = sin(phi)
-    cth = cos(theta)
-    sth = sin(theta)
-    cps = cos(psi)
-    sps = sin(psi)
+    cph = np.cos(phi)
+    sph = np.sin(phi)
+    cth = np.cos(theta)
+    sth = np.sin(theta)
+    cps = np.cos(psi)
+    sps = np.sin(psi)
 
     if ndim == 2:
         mat = np.array([[cph, -sph],
@@ -99,11 +98,11 @@ def axis_rotation(axis, angle, vectors):
 
     Parameters
     ----------
-    axis : array-like, shape (3,)
+    axis : `array-like`, shape ``(3,)``
         The rotation axis, assumed to be a unit vector
-    angle : `float`
+    angle : float
         The rotation angle
-    vectors : array-like, shape ``(3,)`` or ``(N, 3)``
+    vectors : `array-like`, shape ``(3,)`` or ``(N, 3)``
         The vector(s) to be rotated
 
     Returns
@@ -130,11 +129,11 @@ def axis_rotation(axis, angle, vectors):
 
     angle = float(angle)
 
-    if np.isclose(angle / (2 * pi), int(angle / (2 * pi)), atol=1e-15):
+    if np.isclose(angle / (2 * np.pi), int(angle / (2 * np.pi)), atol=1e-15):
         return vectors.copy()
     else:
-        cos_ang = cos(angle)
-        sin_ang = sin(angle)
+        cos_ang = np.cos(angle)
+        sin_ang = np.sin(angle)
         scal = np.asarray(np.dot(vectors, axis))
         cross = np.asarray(np.cross(vectors, axis))
         cross *= sin_ang
@@ -151,9 +150,9 @@ def axis_rotation_matrix(axis, angle):
 
     Parameters
     ----------
-    axis : array-like, shape ``(3,)``
+    axis : `array-like`, shape ``(3,)``
         The rotation axis, assumed to be a unit vector
-    angle : `float`
+    angle : float
         The rotation angle
 
     Returns
@@ -177,8 +176,8 @@ def axis_rotation_matrix(axis, angle):
                            [-axis[1], axis[0], 0]])
     dy_mat = np.asmatrix(np.outer(axis, axis))
     id_mat = np.asmatrix(np.eye(3))
-    cos_ang = cos(angle)
-    sin_ang = sin(angle)
+    cos_ang = np.cos(angle)
+    sin_ang = np.sin(angle)
 
     return cos_ang * id_mat + (1. - cos_ang) * dy_mat + sin_ang * cross_mat
 
@@ -207,7 +206,7 @@ def is_rotation_matrix(mat, show_diff=False):
 
 def angles_from_matrix(rot_matrix):
     if rot_matrix.shape == (2, 2):
-        theta = atan2(rot_matrix[1, 0], rot_matrix[0, 0])
+        theta = np.atan2(rot_matrix[1, 0], rot_matrix[0, 0])
         return theta,
     elif rot_matrix.shape == (3, 3):
         if rot_matrix[2, 2] == 1.:  # cannot use last row and column
@@ -215,17 +214,17 @@ def angles_from_matrix(rot_matrix):
             # upper-left block is 2d rotation for phi + psi, so one needs
             # to be fixed
             psi = 0.
-            phi = atan2(rot_matrix[1, 0], rot_matrix[0, 0])
+            phi = np.atan2(rot_matrix[1, 0], rot_matrix[0, 0])
             if phi < 0:
-                phi += 2 * pi  # in [0, 2pi)
+                phi += 2 * np.pi  # in [0, 2pi)
         else:
-            phi = atan2(rot_matrix[0, 2], -rot_matrix[1, 2])
-            psi = atan2(rot_matrix[2, 0], rot_matrix[2, 1])
-            theta = acos(rot_matrix[2, 2])
+            phi = np.atan2(rot_matrix[0, 2], -rot_matrix[1, 2])
+            psi = np.atan2(rot_matrix[2, 0], rot_matrix[2, 1])
+            theta = np.acos(rot_matrix[2, 2])
 
             if phi < 0. or psi < 0.:
-                phi += pi
-                psi += pi
+                phi += np.pi
+                psi += np.pi
                 theta = -theta
 
         return phi, theta, psi
@@ -253,7 +252,7 @@ def perpendicular_vector(vec):
     Parameters
     ----------
     vec : `array-like`
-        Vector of arbitrary length
+        Vector of arbitrary length.
 
     Returns
     -------

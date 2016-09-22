@@ -15,40 +15,36 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example on using show with ProductSpace's."""
+"""Example on using `ProductSpaceElement.show`."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 import odl
 import numpy as np
 
 n = 100
 m = 7
-spc = odl.uniform_discr([0, 0], [1, 1], [n, n])
-pspace = odl.ProductSpace(spc, m)
+space = odl.uniform_discr([0, 0], [1, 1], [n, n])
+pspace = odl.ProductSpace(space, m)
 
 # Making a product space element where each component consists of a
 # Shepp-Logan phantom multiplied by the constant i, where i is the
 # index of the product space component.
-vec = pspace.element([odl.phantom.shepp_logan(spc, modified=True) * i
-                      for i in range(m)])
+elem = pspace.element([odl.phantom.shepp_logan(space, modified=True) * i
+                       for i in range(m)])
 
 # By default 4 uniformly spaced elements are shown. Since there are 7 in
 # total, the shown components are 0, 2, 4 and 6
-vec.show(title='Default')
+elem.show(title='Default')
 
 # One can also use indexing by a list of indices or a slice.
-vec.show(indices=[0, 1], show=True,
-         title='Show first 2 elements')
+elem.show(indices=[0, 1], show=True,
+          title='Show first 2 elements')
 
-vec.show(indices=np.s_[::3], show=True,
-         title='Show every third element')
+elem.show(indices=np.s_[::3], show=True,
+          title='Show every third element')
 
 # Slices propagate (as in numpy): the first index in the slice applies to
 # the product space components, the other dimensions are applied to each
-# component. Here we take the second vector component and slice in the
+# component. Here we take the second component and slice in the
 # middle along the second axis.
-vec.show(indices=np.s_[2, :, n // 2], show=True,
-         title='Show second element, then slice by [:, n//2]')
+elem.show(indices=np.s_[2, :, n // 2], show=True,
+          title='Show second element, then slice by [:, n//2]')

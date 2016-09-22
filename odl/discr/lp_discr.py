@@ -27,7 +27,7 @@ import numpy as np
 from numbers import Integral
 
 from odl.discr.discretization import (
-    DiscretizedSpace, DiscretizedSpaceVector, dspace_type)
+    DiscretizedSpace, DiscretizedSpaceElement, dspace_type)
 from odl.discr.discr_mappings import (
     PointCollocation, NearestInterpolation, LinearInterpolation,
     PerAxisInterpolation)
@@ -43,7 +43,7 @@ from odl.util.ufuncs import DiscreteLpUFuncs
 from odl.util.utility import (
     is_real_dtype, is_complex_floating_dtype, dtype_repr)
 
-__all__ = ('DiscreteLp', 'DiscreteLpVector',
+__all__ = ('DiscreteLp', 'DiscreteLpElement',
            'uniform_discr_frompartition', 'uniform_discr_fromspace',
            'uniform_discr_fromintv', 'uniform_discr',
            'uniform_discr_fromdiscr', 'discr_sequence_space')
@@ -69,11 +69,11 @@ class DiscreteLp(DiscretizedSpace):
         dspace : `FnBase`
             Space of elements used for data storage. It must have the
             same `FnBase.field` as ``fspace``
-        exponent : positive `float`, optional
+        exponent : positive float, optional
             The parameter :math:`p` in :math:`L^p`. If the exponent is
             not equal to the default 2.0, the space has no inner
             product.
-        interp : `str` or `sequence` of `str`, optional
+        interp : string or `sequence` of strings, optional
             The interpolation type to be used for discretization.
             A sequence is interpreted as interpolation scheme per
             axis.
@@ -165,14 +165,14 @@ class DiscreteLp(DiscretizedSpace):
         return self.__interp_by_axis
 
     @property
-    def min_corner(self):
+    def min_pt(self):
         """Vector of minimal coordinates of the function domain."""
-        return self.partition.begin
+        return self.partition.min_pt
 
     @property
-    def max_corner(self):
+    def max_pt(self):
         """Vector of maximal coordinates of the function domain."""
-        return self.partition.end
+        return self.partition.max_pt
 
     @property
     def order(self):
@@ -186,7 +186,7 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def is_uniform(self):
-        """Return `True` if ``self.partition`` is uniform."""
+        """``True`` if ``self.partition`` is uniform."""
         return self.partition.is_uniform
 
     @property
@@ -246,8 +246,8 @@ class DiscreteLp(DiscretizedSpace):
         inp : optional
             Input data to create an element from.
 
-            If `callable`, it needs to be understood by the ``uspace.element``
-            method.
+            If ``inp`` is `callable`, it needs to be understood by the
+            ``uspace.element`` method.
 
             Otherwise, it has to be understood by the ``dspace.element``
             method.
@@ -258,15 +258,15 @@ class DiscreteLp(DiscretizedSpace):
 
         Other Parameters
         ----------------
-        vectorized : `bool`
-            Can only be used if ``inp`` is `callable`, in which case it
+        vectorized : bool
+            Can only be used if ``inp`` is callable, in which case it
             indicates if ``inp`` is vectorized. If not, it will be wrapped
             with a vectorizer.
             Default: True
 
         Returns
         -------
-        element : `DiscretizedSetVector`
+        element : `DiscreteLpElement`
             The discretized element, calculated as ``sampling(inp)`` or
             ``dspace.element(inp)``, tried in this order.
 
@@ -301,7 +301,7 @@ class DiscreteLp(DiscretizedSpace):
         >>> space.element(f, c=0.5)
         uniform_discr(-1.0, 1.0, 4).element([0.5, 0.5, 0.5, 0.75])
 
-        See also
+        See Also
         --------
         sampling : create a discrete element from an undiscretized one
         """
@@ -478,11 +478,11 @@ class DiscreteLp(DiscretizedSpace):
 
     @property
     def element_type(self):
-        """`DiscreteLpVector`"""
-        return DiscreteLpVector
+        """`DiscreteLpElement`"""
+        return DiscreteLpElement
 
 
-class DiscreteLpVector(DiscretizedSpaceVector):
+class DiscreteLpElement(DiscretizedSpaceElement):
 
     """Representation of a `DiscreteLp` element."""
 
@@ -497,7 +497,7 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             shape.
         """
         if out is None:
-            return DiscretizedSpaceVector.asarray(self).reshape(
+            return DiscretizedSpaceElement.asarray(self).reshape(
                 self.shape, order=self.space.order)
         else:
             if out.shape not in (self.space.shape, (self.space.size,)):
@@ -579,14 +579,14 @@ class DiscreteLpVector(DiscretizedSpaceVector):
 
         Parameters
         ----------
-        out : `DiscreteLpVector`, optional
+        out : `DiscreteLpElement`, optional
             Element to which the complex conjugate is written.
-            Must be an element of this vector's space.
+            Must be an element of this element's space.
 
         Returns
         -------
-        out : `DiscreteLpVector`
-            The complex conjugate vector. If ``out`` is provided,
+        out : `DiscreteLpElement`
+            The complex conjugate element. If ``out`` is provided,
             the returned object is a reference to it.
 
         Examples
@@ -618,25 +618,25 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             return out
 
     def __setitem__(self, indices, values):
-        """Set values of this vector.
+        """Set values of this element.
 
         Parameters
         ----------
-        indices : `int` or `slice`
+        indices : int or `slice`
             The position(s) that should be set
         values : scalar or `array-like`
-            The value(s) that are to be assigned.
-            If ``indices`` is an `int`, ``values`` must be a single
+            Value(s) to be assigned.
+            If ``indices`` is an integer, ``values`` must be a scalar
             value.
-            If ``indices`` is a `slice`, ``values`` must be
+            If ``indices`` is a slice, ``values`` must be
             broadcastable to the size of the slice (same size,
-            shape ``(1,)`` or single value).
-            For ``indices=slice(None)``, i.e. in the call
+            shape ``(1,)`` or scalar).
+            For ``indices == slice(None)``, i.e. in the call
             ``vec[:] = values``, a multi-dimensional array of correct
             shape is allowed as ``values``.
         """
         if values in self.space:
-            # For DiscretizedSetVector of the same type, use ntuple directly
+            # For DiscretizedSetElement of the same type, use ntuple directly
             self.ntuple[indices] = values.ntuple
         else:
             # Other sequence types are piped through a Numpy array. Equivalent
@@ -702,10 +702,10 @@ class DiscreteLpVector(DiscretizedSpaceVector):
 
         Parameters
         ----------
-        title : `str`, optional
+        title : string, optional
             Set the title of the figure
 
-        method : `str`, optional
+        method : string, optional
             1d methods:
 
             'plot' : graph plot
@@ -721,13 +721,13 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             'scatter' : cloud of scattered 3d points
             (3rd axis <-> value)
 
-        coords : array-like, optional
-            Display a slice of the array instead of the full array. The values
-            are shown accordinging to the given values, `None` represent all
-            values along that dimension. For example [None, None, 0.5] shows
-            all values in the first two dimensions, with third coordinate equal
-            to 0.5.
-            This option is mutually exclusive to indices.
+        coords : `array-like`, optional
+            Display a slice of the array instead of the full array.
+            The values are shown accordinging to the given values,
+            where ``None`` means all values along that dimension. For
+            example, ``[None, None, 0.5]`` shows all values in the first
+            two dimensions, with the third coordinate equal to 0.5.
+            This option is mutually exclusive to ``indices``.
 
         indices : index expression, optional
             Display a slice of the array instead of the full array. The
@@ -737,19 +737,20 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             For data with 3 or more dimensions, the 2d slice in the first
             two axes at the "middle" along the remaining axes is shown
             (semantically ``[:, :, shape[2:] // 2]``).
-            This option is mutually exclusive to coords.
+            This option is mutually exclusive to ``coords``.
 
-        show : `bool`, optional
-            If the plot should be showed now or deferred until later.
+        show : bool, optional
+            If ``True``, show the plot now. Otherwise, display is deferred
+            deferred until later.
 
         fig : `matplotlib.figure.Figure`
             The figure to show in. Expected to be of same "style", as
             the figure given by this function. The most common use case
-            is that ``fig`` is the return value from an earlier call to
+            is that ``fig`` is the return value of an earlier call to
             this function.
 
         kwargs : {'figsize', 'saveto', 'clim', ...}
-            Extra keyword arguments passed on to display method
+            Extra keyword arguments passed on to the display method.
             See the Matplotlib functions for documentation of extra
             options.
 
@@ -772,19 +773,20 @@ class DiscreteLpVector(DiscretizedSpaceVector):
             interv = self.space.uspace.domain
             shape = self.shape
             indices = []
-            for begin, end, n, coord in zip(interv.begin, interv.end,
-                                            shape, coords):
+            for axis, (xmin, xmax, n, coord) in enumerate(
+                    zip(interv.min_pt, interv.max_pt, shape, coords)):
                 if coord is None:
                     indices += [slice(None)]
                 else:
-                    if not begin <= coord <= end:
-                        raise ValueError('coord {} not in range {}'
-                                         ''.format(coord, [begin, end]))
+                    if not xmin <= coord <= xmax:
+                        raise ValueError('in axis {}: coordinate {} not in '
+                                         'the valid range {}'
+                                         ''.format(axis, coord, [xmin, xmax]))
 
-                    if begin == end:
+                    if xmin == xmax:
                         indices += [0]
                     else:
-                        normalized_pos = (float(coord) - begin) / (end - begin)
+                        normalized_pos = (float(coord) - xmin) / (xmax - xmin)
                         indices += [int(n * normalized_pos)]
 
         # Default to showing x-y slice "in the middle"
@@ -838,10 +840,10 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     ----------
     partition : `RectPartition`
         Regular (uniform) partition to be used for discretization
-    exponent : positive `float`, optional
+    exponent : positive float, optional
         The parameter ``p`` in ``L^p``. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str` or `sequence` of `str`, optional
+    interp : string or `sequence` of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -849,7 +851,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
 
             'linear' : use linear interpolation
 
-    impl : `str`, optional
+    impl : string, optional
         Implementation of the data storage arrays
 
     Other Parameters
@@ -882,7 +884,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     >>> uniform_discr_frompartition(part)
     uniform_discr(0.0, 1.0, 10)
 
-    See also
+    See Also
     --------
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_fromspace : uniform Lp discretization from an existing
@@ -932,7 +934,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     return DiscreteLp(fspace, partition, dspace, exponent, interp, order=order)
 
 
-def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
+def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
                             impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform partition.
 
@@ -941,13 +943,12 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     fspace : `FunctionSpace`
         Continuous function space. Its domain must be an
         `IntervalProd` instance.
-    nsamples : `int` or `tuple` of `int`
-        Number of samples per axis. For dimension >= 2, a tuple is
-        required.
-    exponent : positive `float`, optional
+    shape : int or `sequence` of ints
+        Number of samples per axis.
+    exponent : positive float, optional
         The parameter ``p`` in ``L^p``. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str` or `sequence` of `str`, optional
+    interp : string or `sequence` of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -955,19 +956,25 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
             'linear' : use linear interpolation
 
-    impl : `str`, optional
+    impl : string, optional
         Implementation of the data storage arrays
 
     Other Parameters
     ----------------
-    nodes_on_bdry : `bool` or boolean `array-like`, optional
-        If `True`, place the outermost grid points at the boundary. For
-        `False`, they are shifted by half a cell size to the 'inner'.
-        If an array-like is given, it must have shape ``(ndim, 2)``,
-        where ``ndim`` is the number of dimensions. It defines per axis
-        whether the leftmost (first column) and rightmost (second column)
-        nodes node lie on the boundary.
-        Default: `False`
+    nodes_on_bdry : bool or `sequence`, optional
+        If a sequence is provided, it determines per axis whether to
+        place the last grid point on the boundary (``True``) or shift it
+        by half a cell size into the interior (``False``). In each axis,
+        an entry may consist in a single bool or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
+        the left, the second for the right boundary. The length of the
+        sequence must be ``len(shape)``.
+
+        A single boolean is interpreted as a global choice for all
+        boundaries.
+
+        Default: ``False``.
+
     order : {'C', 'F'}, optional
         Axis ordering in the data storage. Default: 'C'
     dtype : dtype, optional
@@ -976,9 +983,9 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
     weighting : {'const', 'none'}, optional
         Weighting of the discretized space functions.
 
-            'const' : weight is a constant, the cell volume (default)
+            'const' : Weight is a constant, the cell volume (default).
 
-            'none' : no weighting
+            'none' : No weighting.
 
     Returns
     -------
@@ -987,13 +994,13 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
 
     Examples
     --------
-    >>> from odl import Interval, FunctionSpace
-    >>> intv = Interval(0, 1)
+    >>> from odl import IntervalProd, FunctionSpace
+    >>> intv = IntervalProd(0, 1)
     >>> space = FunctionSpace(intv)
     >>> uniform_discr_fromspace(space, 10)
     uniform_discr(0.0, 1.0, 10)
 
-    See also
+    See Also
     --------
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_frompartition : uniform Lp discretization using a given
@@ -1034,14 +1041,14 @@ def uniform_discr_fromspace(fspace, nsamples, exponent=2.0, interp='nearest',
                          ''.format(fspace, dtype))
 
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
-    partition = uniform_partition_fromintv(fspace.domain, nsamples,
+    partition = uniform_partition_fromintv(fspace.domain, shape,
                                            nodes_on_bdry)
 
     return uniform_discr_frompartition(partition, exponent, interp, impl,
                                        dtype=dtype, **kwargs)
 
 
-def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
+def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
                            impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
@@ -1049,13 +1056,12 @@ def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
     ----------
     interval : `IntervalProd`
         The domain of the uniformly discretized space.
-    nsamples : `int` or `tuple` of `int`
-        Number of samples per axis. For dimension >= 2, a tuple is
-        required.
-    exponent : positive `float`, optional
+    shape : int or `sequence` of ints
+        Number of samples per axis.
+    exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str` or `sequence` of `str`, optional
+    interp : string or `sequence` of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -1063,20 +1069,20 @@ def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
 
             'linear' : use linear interpolation
 
-    impl : `str`, optional
+    impl : str, optional
         Implementation of the data storage arrays.
-    nodes_on_bdry : `bool` or `sequence`, optional
+    nodes_on_bdry : bool or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (True) or shift it
-        by half a cell size into the interior (False). In each axis,
-        an entry may consist in a single `bool` or a 2-tuple of
-        `bool`. In the latter case, the first tuple entry decides for
+        place the last grid point on the boundary (``True``) or shift it
+        by half a cell size into the interior (``False``). In each axis,
+        an entry may consist in a single bool or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
         sequence must be ``array.ndim``.
 
         A single boolean is interpreted as a global choice for all
         boundaries.
-        Default: `False`
+        Default: ``False``
 
     dtype : dtype, optional
         Data type for the discretized space
@@ -1104,12 +1110,12 @@ def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
 
     Examples
     --------
-    >>> from odl import Interval
-    >>> intv = Interval(0, 1)
+    >>> from odl import IntervalProd
+    >>> intv = IntervalProd(0, 1)
     >>> uniform_discr_fromintv(intv, 10)
     uniform_discr(0.0, 1.0, 10)
 
-    See also
+    See Also
     --------
     uniform_discr : implicit uniform Lp discretization
     uniform_discr_frompartition : uniform Lp discretization using a given
@@ -1122,27 +1128,24 @@ def uniform_discr_fromintv(interval, nsamples, exponent=2.0, interp='nearest',
         dtype = FN_IMPLS[impl].default_dtype()
 
     fspace = FunctionSpace(interval, out_dtype=dtype)
-    return uniform_discr_fromspace(fspace, nsamples, exponent, interp, impl,
+    return uniform_discr_fromspace(fspace, shape, exponent, interp, impl,
                                    **kwargs)
 
 
-def uniform_discr(min_corner, max_corner, nsamples,
-                  exponent=2.0, interp='nearest', impl='numpy', **kwargs):
+def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
+                  impl='numpy', **kwargs):
     """Discretize an Lp function space by uniform sampling.
 
     Parameters
     ----------
-    min_corner : `float` or `tuple` of `float`
-        Minimum corner of the result.
-    max_corner : `float` or `tuple` of `float`
-        Minimum corner of the result.
-    nsamples : `int` or `tuple` of `int`
-        Number of samples per axis. For dimension >= 2, a tuple is
-        required.
-    exponent : positive `float`, optional
+    min_pt, max_pt: float or `sequence` of floats
+        Minimum/maximum corners of the desired function domain.
+    shape : int or `sequence` of ints
+        Number of samples per axis.
+    exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : `str` or `sequence` of `str`, optional
+    interp : string or `sequence` of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -1150,20 +1153,21 @@ def uniform_discr(min_corner, max_corner, nsamples,
 
             'linear' : use linear interpolation
 
-    impl : `str`, optional
+    impl : string, optional
         Implementation of the data storage arrays
-    nodes_on_bdry : `bool` or `sequence`, optional
+    nodes_on_bdry : bool or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (True) or shift it
-        by half a cell size into the interior (False). In each axis,
-        an entry may consist in a single `bool` or a 2-tuple of
-        `bool`. In the latter case, the first tuple entry decides for
+        place the last grid point on the boundary (``True``) or shift it
+        by half a cell size into the interior (``False``). In each axis,
+        an entry may consist in a single bool or a 2-tuple of
+        bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
-        sequence must be ``array.ndim``.
+        sequence must be ``len(shape)``.
 
         A single boolean is interpreted as a global choice for all
         boundaries.
-        Default: `False`
+
+        Default: ``False``.
 
     dtype : dtype, optional
         Data type for the discretized space
@@ -1201,7 +1205,7 @@ def uniform_discr(min_corner, max_corner, nsamples,
     >>> uniform_discr([0, 0], [1, 1], [10, 10], dtype='complex')
     uniform_discr([0.0, 0.0], [1.0, 1.0], [10, 10], dtype='complex')
 
-    See also
+    See Also
     --------
     uniform_discr_frompartition : uniform Lp discretization using a given
         uniform partition of a function domain
@@ -1210,8 +1214,8 @@ def uniform_discr(min_corner, max_corner, nsamples,
     uniform_discr_fromintv : uniform discretization from an existing
         interval product
     """
-    interval = IntervalProd(min_corner, max_corner)
-    return uniform_discr_fromintv(interval, nsamples, exponent, interp, impl,
+    interval = IntervalProd(min_pt, max_pt)
+    return uniform_discr_fromintv(interval, shape, exponent, interp, impl,
                                   **kwargs)
 
 
@@ -1224,13 +1228,13 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
 
     Parameters
     ----------
-    shape : `sequence` of `int`
-        Multi-dimensional size of the elements in this space
-    exponent : positive `float`, optional
+    shape : int or `sequence` of ints
+        Number of element entries per axis.
+    exponent : positive float, optional
         The parameter ``p`` in ```L^p``. If the exponent is
         not equal to the default 2.0, the space has no inner
         product.
-    impl : `str`, optional
+    impl : string, optional
         Implementation of the data storage arrays
     dtype : dtype, optional
         Data type for the discretized space
@@ -1267,8 +1271,8 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
                          weighting='none', **kwargs)
 
 
-def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
-                            nsamples=None, cell_sides=None, exponent=2.0,
+def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
+                            shape=None, cell_sides=None, exponent=2.0,
                             interp='nearest', impl='numpy', **kwargs):
     """Return a discretization based on an existing one.
 
@@ -1280,16 +1284,14 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
     ----------
     discr : `DiscreteLp`
         Uniformly discretized space used as a template.
-    min_corner : float or sequence of float
-        Minimum corner of the resulting spatial domain.
-    max_corner : float or sequence of float
-        Maximum corner of the resulting spatial domain.
-    nsamples : int or sequence of int
+    min_pt, max_pt: float or `sequence` of floats
+        Minimum/maximum corners of the desired function domain.
+    shape : int or `sequence` of ints
         Number of samples per axis.
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : str or sequence of str, optional
+    interp : string or `sequence` of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -1297,15 +1299,15 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
 
             'linear' : use linear interpolation
 
-    impl : `str`
+    impl : string
         Implementation of the data storage arrays. See
-    nodes_on_bdry : bool or sequence, optional
+    nodes_on_bdry : bool or `sequence`, optional
         Specifies whether to put the outmost grid nodes on the
         boundary of the domain.
 
         If a sequence is provided, it determines per axis whether to
-        place the last grid point on the boundary (True) or shift it
-        by half a cell size into the interior (False). In each axis,
+        place the last grid point on the boundary (``True``) or shift it
+        by half a cell size into the interior (``False``). In each axis,
         an entry may consist in a single boolean or a 2-tuple of
         bool. In the latter case, the first tuple entry decides for
         the left, the second for the right boundary. The length of the
@@ -1313,7 +1315,8 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
 
         A single boolean is interpreted as a global choice for all
         boundaries.
-        Default: `False`
+
+        Default: ``False``.
 
     dtype : optional
         Data type for the discretized space.
@@ -1336,7 +1339,7 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
 
     Notes
     -----
-    The parameters ``min_corner``, ``max_corner``, ``nsamples`` and
+    The parameters ``min_pt``, ``max_pt``, ``shape`` and
     ``cell_sides`` can be combined in the following ways (applies in
     each axis individually):
 
@@ -1344,26 +1347,26 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
         Return a copy of ``discr``
 
     **1 argument:**
-        [min,max]_corner -> keep sampling but translate domain so it
-        starts/ends at ``[min,max]_corner``
+        [min,max]_pt -> keep sampling but translate domain so it
+        starts/ends at ``[min,max]_pt``
 
-        nsamples/cell_sides -> keep domain but change sampling.
+        shape/cell_sides -> keep domain but change sampling.
         See `uniform_partition` for restrictions.
 
     **2 arguments:**
-        min_corner + max_corner -> translate and resample with the same
+        min_pt + max_pt -> translate and resample with the same
         number of samples
 
-        [min,max]_corner + nsamples/cell_sides -> translate and resample
+        [min,max]_pt + shape/cell_sides -> translate and resample
 
-        nsamples + cell_sides -> error due to ambiguity (keep
-        ``min_corner`` or ``max_corner``?)
+        shape + cell_sides -> error due to ambiguity (keep
+        ``min_pt`` or ``max_pt``?)
 
     **3+ arguments:**
         The underlying partition is uniquely determined by the new
         parameters. See `uniform_partition`.
 
-    See also
+    See Also
     --------
     uniform_partition : underlying domain partitioning scheme
 
@@ -1381,41 +1384,41 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
     >>> uniform_discr_fromdiscr(discr) is discr
     False
 
-    Giving ``min_corner`` or ``max_corner`` results in a
+    Giving ``min_pt`` or ``max_pt`` results in a
     translation, while for the other two options, the domain
     is kept but re-partitioned:
 
-    >>> uniform_discr_fromdiscr(discr, min_corner=[1, 1])
+    >>> uniform_discr_fromdiscr(discr, min_pt=[1, 1])
     uniform_discr([1.0, 1.0], [2.0, 3.0], [10, 5])
-    >>> uniform_discr_fromdiscr(discr, max_corner=[0, 0])
+    >>> uniform_discr_fromdiscr(discr, max_pt=[0, 0])
     uniform_discr([-1.0, -2.0], [0.0, 0.0], [10, 5])
     >>> uniform_discr_fromdiscr(discr, cell_sides=[1, 1])
     uniform_discr([0.0, 0.0], [1.0, 2.0], [1, 2])
-    >>> uniform_discr_fromdiscr(discr, nsamples=[5, 5])
+    >>> uniform_discr_fromdiscr(discr, shape=[5, 5])
     uniform_discr([0.0, 0.0], [1.0, 2.0], [5, 5])
-    >>> uniform_discr_fromdiscr(discr, nsamples=[5, 5]).cell_sides
+    >>> uniform_discr_fromdiscr(discr, shape=[5, 5]).cell_sides
     array([ 0.2,  0.4])
 
     The cases with 2 or more additional arguments and the syntax
     for specifying quantities per axis is illustrated in the following:
 
-    # axis 0: translate to match max_corner = 3
-    # axis 1: recompute max_corner using the original nsamples with the
-    # new min_corner and cell_sides
-    >>> new_discr = uniform_discr_fromdiscr(discr, min_corner=[None, 1],
-    ...                                     max_corner=[3, None],
+    # axis 0: translate to match max_pt = 3
+    # axis 1: recompute max_pt using the original shape with the
+    # new min_pt and cell_sides
+    >>> new_discr = uniform_discr_fromdiscr(discr, min_pt=[None, 1],
+    ...                                     max_pt=[3, None],
     ...                                     cell_sides=[None, 0.25])
     >>> new_discr
     uniform_discr([2.0, 1.0], [3.0, 2.25], [10, 5])
     >>> new_discr.cell_sides
     array([ 0.1 ,  0.25])
 
-    # axis 0: recompute min_corner from old cell_sides and new
-    # max_corner and nsamples
-    # axis 1: use new min_corner, nsamples and cell_sides only
-    >>> new_discr = uniform_discr_fromdiscr(discr, min_corner=[None, 1],
-    ...                                     max_corner=[3, None],
-    ...                                     nsamples=[5, 5],
+    # axis 0: recompute min_pt from old cell_sides and new
+    # max_pt and shape
+    # axis 1: use new min_pt, shape and cell_sides only
+    >>> new_discr = uniform_discr_fromdiscr(discr, min_pt=[None, 1],
+    ...                                     max_pt=[3, None],
+    ...                                     shape=[5, 5],
     ...                                     cell_sides=[None, 0.25])
     >>> new_discr
     uniform_discr([2.5, 1.0], [3.0, 2.25], [5, 5])
@@ -1430,68 +1433,68 @@ def uniform_discr_fromdiscr(discr, min_corner=None, max_corner=None,
                          ''.format(discr))
 
     # Normalize partition parameters
-    min_corner = normalized_scalar_param_list(min_corner, discr.ndim,
-                                              param_conv=float, keep_none=True)
-    max_corner = normalized_scalar_param_list(max_corner, discr.ndim,
-                                              param_conv=float, keep_none=True)
-    nsamples = normalized_scalar_param_list(nsamples, discr.ndim,
-                                            param_conv=safe_int_conv,
-                                            keep_none=True)
+    min_pt = normalized_scalar_param_list(min_pt, discr.ndim,
+                                          param_conv=float, keep_none=True)
+    max_pt = normalized_scalar_param_list(max_pt, discr.ndim,
+                                          param_conv=float, keep_none=True)
+    shape = normalized_scalar_param_list(shape, discr.ndim,
+                                         param_conv=safe_int_conv,
+                                         keep_none=True)
     cell_sides = normalized_scalar_param_list(cell_sides, discr.ndim,
                                               param_conv=float, keep_none=True)
 
     nodes_on_bdry = kwargs.pop('nodes_on_bdry', False)
     nodes_on_bdry = normalized_nodes_on_bdry(nodes_on_bdry, discr.ndim)
 
-    new_beg = []
-    new_end = []
+    new_min_pt = []
+    new_max_pt = []
     new_shape = []
     new_csides = []
-    for i, (b, e, n, s, old_b, old_e, old_n, old_s) in enumerate(
-            zip(min_corner, max_corner, nsamples, cell_sides,
-                discr.min_corner, discr.max_corner, discr.shape,
+    for i, (xmin, xmax, n, s, old_xmin, old_xmax, old_n, old_s) in enumerate(
+            zip(min_pt, max_pt, shape, cell_sides,
+                discr.min_pt, discr.max_pt, discr.shape,
                 discr.cell_sides)):
-        num_params = sum(p is not None for p in (b, e, n, s))
+        num_params = sum(p is not None for p in (xmin, xmax, n, s))
 
         if num_params == 0:
-            new_params = [old_b, old_e, old_n, None]
+            new_params = [old_xmin, old_xmax, old_n, None]
 
         elif num_params == 1:
-            if b is not None:
-                new_params = [b, old_e + (b - old_b), old_n, None]
-            elif e is not None:
-                new_params = [old_b + (e - old_e), e, old_n, None]
+            if xmin is not None:
+                new_params = [xmin, old_xmax + (xmin - old_xmin), old_n, None]
+            elif xmax is not None:
+                new_params = [old_xmin + (xmax - old_xmax), xmax, old_n, None]
             elif n is not None:
-                new_params = [old_b, old_e, n, None]
+                new_params = [old_xmin, old_xmax, n, None]
             else:
-                new_params = [old_b, old_e, None, s]
+                new_params = [old_xmin, old_xmax, None, s]
 
         elif num_params == 2:
-            if b is not None and e is not None:
-                new_params = [b, e, old_n, None]
-            elif b is not None and n is not None:
-                new_params = [b, None, n, old_s]
-            elif b is not None and s is not None:
-                new_params = [b, None, old_n, s]
-            elif e is not None and n is not None:
-                new_params = [None, e, n, old_s]
-            elif e is not None and s is not None:
-                new_params = [None, e, old_n, s]
+            if xmin is not None and xmax is not None:
+                new_params = [xmin, xmax, old_n, None]
+            elif xmin is not None and n is not None:
+                new_params = [xmin, None, n, old_s]
+            elif xmin is not None and s is not None:
+                new_params = [xmin, None, old_n, s]
+            elif xmax is not None and n is not None:
+                new_params = [None, xmax, n, old_s]
+            elif xmax is not None and s is not None:
+                new_params = [None, xmax, old_n, s]
             else:
-                raise ValueError('in axis {}: cannot use `nsamples` and '
+                raise ValueError('in axis {}: cannot use `shape` and '
                                  '`cell_size` only due to ambiguous values '
-                                 'for begin and end.'.format(i))
+                                 'for `min_pt` and `max_pt`.'.format(i))
 
         else:
-            new_params = [b, e, n, s]
+            new_params = [xmin, xmax, n, s]
 
-        new_beg.append(new_params[0])
-        new_end.append(new_params[1])
+        new_min_pt.append(new_params[0])
+        new_max_pt.append(new_params[1])
         new_shape.append(new_params[2])
         new_csides.append(new_params[3])
 
-    new_part = uniform_partition(begin=new_beg, end=new_end,
-                                 num_nodes=new_shape,
+    new_part = uniform_partition(min_pt=new_min_pt, max_pt=new_max_pt,
+                                 shape=new_shape,
                                  cell_sides=new_csides,
                                  nodes_on_bdry=nodes_on_bdry)
 

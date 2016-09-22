@@ -68,7 +68,7 @@ class FunctionSetMapping(Operator):
             discretized object. Its `NtuplesBase.size` must be equal
             to the total number of grid points.
         linear : bool
-            Create a linear operator if `True`, otherwise a non-linear
+            Create a linear operator if ``True``, otherwise a non-linear
             operator.
         order : {'C', 'F'}, optional
             Ordering of the axes in the data storage. 'C' means the
@@ -125,12 +125,16 @@ class FunctionSetMapping(Operator):
             self.__order = str(order).upper()
 
     def __eq__(self, other):
-        return (isinstance(other, type(self)) and
-                isinstance(self, type(other)) and
-                self.domain == other.domain and
-                self.range == other.range and
-                self.partition == other.partition and
-                self.order == other.order)
+        """Return ``self == other``."""
+        if self is other:
+            return True
+        else:
+            return (isinstance(other, type(self)) and
+                    isinstance(self, type(other)) and
+                    self.domain == other.domain and
+                    self.range == other.range and
+                    self.partition == other.partition and
+                    self.order == other.order)
 
     @property
     def partition(self):
@@ -192,58 +196,20 @@ class PointCollocation(FunctionSetMapping):
             first axis varies slowest, the last axis fastest;
             vice versa for 'F'.
             Default: 'C'
-        """
-        linear = isinstance(ip_fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'sampling', ip_fset, partition,
-                                    dspace, linear, **kwargs)
-
-    def _call(self, func, out=None, **kwargs):
-        """Evaluate ``func`` at the grid of this operator.
-
-        Parameters
-        ----------
-        func : `FunctionSetVector`
-            The function to be evaluated
-        out : `NtuplesBaseVector`, optional
-            Array to which the values are written. Its shape must be
-            ``(N,)``, where N is the total number of grid points. The
-            data type must be the same as in the ``dspace`` of this
-            mapping.
-        kwargs :
-            Additional keyword arguments, optional
-
-        Returns
-        -------
-        out : `NtuplesBaseVector`, optional
-            The function values at the grid points. If ``out`` was
-            provided, the returned object is a reference to it.
-
-        Notes
-        -----
-        This operator expects its input functions to be written in
-        a vectorization-conforming manner to ensure fast evaluation.
-        See the `vectorization guide
-        <https://odl.readthedocs.org/guide/in_depth/\
-vectorization_guide.html>`_ for a detailed introduction.
-
-        See also
-        --------
-        odl.discr.grid.TensorGrid.meshgrid
-        numpy.meshgrid
 
         Examples
         --------
         Define a set of functions from the rectangle [1, 3] x [2, 5]
         to the real numbers:
 
-        >>> from odl import FunctionSpace, Rectangle
-        >>> rect = Rectangle([1, 3], [2, 5])
+        >>> from odl import FunctionSpace, IntervalProd
+        >>> rect = IntervalProd([1, 3], [2, 5])
         >>> funcset = FunctionSpace(rect)
 
         Partition the rectangle by a tensor grid:
 
         >>> import odl
-        >>> rect = odl.Rectangle([1, 3], [2, 5])
+        >>> rect = odl.IntervalProd([1, 3], [2, 5])
         >>> grid = odl.TensorGrid([1, 2], [3, 4, 5])
         >>> partition = odl.RectPartition(rect, grid)
         >>> rn = odl.rn(grid.size)
@@ -267,6 +233,44 @@ vectorization_guide.html>`_ for a detailed introduction.
         >>> coll_op = PointCollocation(funcset, partition, rn, order='F')
         >>> coll_op(func_elem)
         rn(6).element([-2.0, -1.0, -3.0, -2.0, -4.0, -3.0])
+        """
+        linear = isinstance(ip_fset, FunctionSpace)
+        FunctionSetMapping.__init__(self, 'sampling', ip_fset, partition,
+                                    dspace, linear, **kwargs)
+
+    def _call(self, func, out=None, **kwargs):
+        """Evaluate ``func`` at the grid of this operator.
+
+        Parameters
+        ----------
+        func : `FunctionSetElement`
+            The function to be evaluated
+        out : `NtuplesBaseVector`, optional
+            Array to which the values are written. Its shape must be
+            ``(N,)``, where N is the total number of grid points. The
+            data type must be the same as in the ``dspace`` of this
+            mapping.
+        kwargs :
+            Additional keyword arguments, optional
+
+        Returns
+        -------
+        out : `NtuplesBaseVector`, optional
+            The function values at the grid points. If ``out`` was
+            provided, the returned object is a reference to it.
+
+        Notes
+        -----
+        This operator expects its input functions to be written in
+        a vectorization-conforming manner to ensure fast evaluation.
+        See the `vectorization guide
+        <https://odl.readthedocs.org/guide/in_depth/\
+vectorization_guide.html>`_ for a detailed introduction.
+
+        See Also
+        --------
+        odl.discr.grid.TensorGrid.meshgrid
+        numpy.meshgrid
         """
         mesh = self.grid.meshgrid
         if out is None:
@@ -342,65 +346,14 @@ class NearestInterpolation(FunctionSetMapping):
             vice versa for 'F'.
             Default: 'C'
 
-        Notes
-        -----
-        The distinction between 'left' and 'right' variants is currently
-        made by changing ``<=`` to ``<`` at one place. This difference
-        may not be noticable in some situations due to rounding errors.
-        """
-        linear = isinstance(fset, FunctionSpace)
-        FunctionSetMapping.__init__(self, 'interpolation', fset, partition,
-                                    dspace, linear, **kwargs)
-
-        variant = kwargs.pop('variant', 'left')
-        self.__variant = str(variant).lower()
-        if self.variant not in ('left', 'right'):
-            raise ValueError("`variant` '{}' not understood".format(variant))
-
-    @property
-    def variant(self):
-        """The variant (left / right) of interpolation."""
-        return self.__variant
-
-    def _call(self, x, out=None):
-        """Create an interpolator from grid values ``x``.
-
-        Parameters
-        ----------
-        x : `NtuplesBaseVector`
-            The array of values to be interpolated
-        out : `FunctionSetVector`, optional
-            Vector in which to store the interpolator
-
-        Returns
-        -------
-        out : `FunctionSetVector`
-            Nearest-neighbor interpolator for the grid of this
-            operator. If ``out`` was provided, the returned object
-            is a reference to it.
-
-        See also
-        --------
-        LinearInterpolation : (bi-/tri-/...)linear interpolation
-
-        Notes
-        -----
-        **Important:** if called on a point array, the points are
-        assumed to be sorted in ascending order in each dimension
-        for efficiency reasons.
-
-        Nearest neighbor interpolation is the only scheme which works
-        with data of non-scalar type since it does not involve any
-        arithmetic operations on the values.
-
         Examples
         --------
         We test nearest neighbor interpolation with a non-scalar
         data type in 2d:
 
         >>> import numpy as np
-        >>> from odl import Rectangle, Strings, FunctionSet
-        >>> rect = Rectangle([0, 0], [1, 1])
+        >>> from odl import IntervalProd, Strings, FunctionSet
+        >>> rect = IntervalProd([0, 0], [1, 1])
         >>> strings = Strings(1)  # 1-char strings
         >>> space = FunctionSet(rect, strings)
 
@@ -428,6 +381,57 @@ class NearestInterpolation(FunctionSetMapping):
         >>> out = function(pts.T, out=out)  # returns original out
         >>> all(out == ['t', 'g'])
         True
+
+        Notes
+        -----
+        The distinction between 'left' and 'right' variants is currently
+        made by changing ``<=`` to ``<`` at one place. This difference
+        may not be noticable in some situations due to rounding errors.
+        """
+        linear = isinstance(fset, FunctionSpace)
+        FunctionSetMapping.__init__(self, 'interpolation', fset, partition,
+                                    dspace, linear, **kwargs)
+
+        variant = kwargs.pop('variant', 'left')
+        self.__variant = str(variant).lower()
+        if self.variant not in ('left', 'right'):
+            raise ValueError("`variant` '{}' not understood".format(variant))
+
+    @property
+    def variant(self):
+        """The variant (left / right) of interpolation."""
+        return self.__variant
+
+    def _call(self, x, out=None):
+        """Create an interpolator from grid values ``x``.
+
+        Parameters
+        ----------
+        x : `NtuplesBaseVector`
+            The array of values to be interpolated
+        out : `FunctionSetElement`, optional
+            Element in which to store the interpolator
+
+        Returns
+        -------
+        out : `FunctionSetElement`
+            Nearest-neighbor interpolator for the grid of this
+            operator. If ``out`` was provided, the returned object
+            is a reference to it.
+
+        See Also
+        --------
+        LinearInterpolation : (bi-/tri-/...)linear interpolation
+
+        Notes
+        -----
+        **Important:** if called on a point array, the points are
+        assumed to be sorted in ascending order in each dimension
+        for efficiency reasons.
+
+        Nearest neighbor interpolation is the only scheme which works
+        with data of non-scalar type since it does not involve any
+        arithmetic operations on the values.
         """
         # TODO: pass reasonable options on to the interpolator
         def nearest(arg, out=None):
@@ -503,12 +507,12 @@ class LinearInterpolation(FunctionSetMapping):
         ----------
         x : `FnBaseVector`
             The array of values to be interpolated
-        out : `FunctionSpaceVector`, optional
-            Vector in which to store the interpolator
+        out : `FunctionSpaceElement`, optional
+            Element in which to store the interpolator
 
         Returns
         -------
-        out : `FunctionSpaceVector`
+        out : `FunctionSpaceElement`
             Linear interpolator for the grid of this operator. If
             ``out`` was provided, the returned object is a reference
             to it.
@@ -563,11 +567,11 @@ class PerAxisInterpolation(FunctionSetMapping):
             discretized object. Its `NtuplesBase.size` must be equal
             to the total number of grid points, and its `FnBase.field`
             must be the same as that of the function space.
-        schemes : `str` or `sequence` of `str`
+        schemes : string or `sequence` of strings
             Indicates which interpolation scheme to use for which axis.
             A single string is interpreted as a global scheme for all
             axes.
-        nn_variants : `str` or `sequence` of `str`, optional
+        nn_variants : string or `sequence` of strings, optional
             Which variant ('left' or 'right') to use in nearest neighbor
             interpolation for which axis. A single string is interpreted
             as a global variant for all axes.
@@ -638,12 +642,12 @@ class PerAxisInterpolation(FunctionSetMapping):
         ----------
         x : `FnBaseVector`
             The array of values to be interpolated
-        out : `FunctionSpaceVector`, optional
-            Vector in which to store the interpolator
+        out : `FunctionSpaceElement`, optional
+            Element in which to store the interpolator
 
         Returns
         -------
-        out : `FunctionSpaceVector`
+        out : `FunctionSpaceElement`
             Per-axis interpolator for the grid of this operator. If
             ``out`` was provided, the returned object is a reference
             to it.
@@ -709,7 +713,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
-        coord_vecs : `sequence` of `numpy.ndarray`
+        coord_vecs : `sequence` of `numpy.ndarray`'s
             Coordinate vectors defining the interpolation grid
         values : `array-like`
             Grid values to use for interpolation
@@ -744,7 +748,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
 
         Parameters
         ----------
-        x : meshgrid or `numpy.ndarray`
+        x : `meshgrid` or `numpy.ndarray`
             Evaluation points of the interpolator
         out : `numpy.ndarray`, optional
             Array to which the results are written. Needs to have
@@ -827,7 +831,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     def __init__(self, coord_vecs, values, input_type, variant):
         """Initialize a new instance.
 
-        coord_vecs : `sequence` of `numpy.ndarray`
+        coord_vecs : `sequence` of `numpy.ndarray`'s
             Coordinate vectors defining the interpolation grid
         values : `array-like`
             Grid values to use for interpolation
@@ -956,15 +960,15 @@ class _PerAxisInterpolator(_Interpolator):
     def __init__(self, coord_vecs, values, input_type, schemes, nn_variants):
         """Initialize a new instance.
 
-        coord_vecs : `sequence` of `numpy.ndarray`
+        coord_vecs : `sequence` of `numpy.ndarray`'s
             Coordinate vectors defining the interpolation grid
         values : `array-like`
             Grid values to use for interpolation
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
-        schemes : `sequence` of `str`
+        schemes : `sequence` of strings
             Indicates which interpolation scheme to use for which axis
-        nn_variants : `sequence` of `str`
+        nn_variants : `sequence` of strings
             Which variant ('left' or 'right') to use in nearest neighbor
             interpolation for which axis.
             This option has no effect for schemes other than nearest
@@ -1024,7 +1028,7 @@ class _LinearInterpolator(_PerAxisInterpolator):
     def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
-        coord_vecs : `sequence` of `numpy.ndarray`
+        coord_vecs : `sequence` of `numpy.ndarray`'s
             Coordinate vectors defining the interpolation grid
         values : `array-like`
             Grid values to use for interpolation

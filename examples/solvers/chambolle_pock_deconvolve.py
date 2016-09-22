@@ -28,11 +28,6 @@ For further details and a description of the solution method used, see
 :ref:`chambolle_pock` in the ODL documentation.
 """
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
 import odl
 
@@ -59,7 +54,7 @@ convolution = ft.inverse * gaussian * ft
 # Create phantom
 phantom = odl.phantom.shepp_logan(space, modified=True)
 
-# Create vector of convolved phantom
+# Create the convolved version of the phantom
 data = convolution(phantom)
 data.show('Convolved data')
 
@@ -72,7 +67,7 @@ gradient = odl.Gradient(space, method='forward')
 op = odl.BroadcastOperator(convolution, gradient)
 
 # Create the proximal operator for unconstrained primal variable
-proximal_primal = odl.solvers.proximal_zero(op.domain)
+proximal_primal = odl.solvers.proximal_const_func(op.domain)
 
 # Create proximal operators for the dual variable
 
@@ -92,7 +87,7 @@ proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op, 6)
+op_norm = 1.1 * odl.power_method_opnorm(op)
 
 niter = 500  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable

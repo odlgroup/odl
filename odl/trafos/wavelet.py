@@ -50,10 +50,10 @@ def coeff_size_list(shape, nscales, wbasis, pad_mode):
 
     Parameters
     ----------
-    shape : `tuple`
+    shape : tuple
         Number of pixels/voxels in the image. Its length must be 1, 2 or 3.
 
-    nscales : `int`
+    nscales : int
         Number of scales in the multidimensional wavelet
         transform.  This parameter is checked against the maximum number of
         scales returned by ``pywt.dwt_max_level``. For more information
@@ -67,7 +67,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
         `PyWavelets documentation on wavelet bases
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
 
-    pad_mode : `str`
+    pad_mode : string
         Signal extention mode. Possible extension modes are
 
         'zpd': zero-padding -- signal is extended by adding zero samples
@@ -86,7 +86,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
     Returns
     -------
-    size_list : `list`
+    size_list : list
         A list containing the sizes of the wavelet (approximation
         and detail) coefficients at different scaling levels:
 
@@ -144,7 +144,7 @@ def pywt_coeff_to_array(coeff, size_list):
 
     Parameters
     ----------
-    coeff : ordered `list`
+    coeff : ordered list
         Coefficient are organized in the list in the following way:
 
         In 1D:
@@ -196,7 +196,7 @@ def pywt_coeff_to_array(coeff, size_list):
 
         ``N`` refers to the number of scaling levels
 
-    size_list : `list`
+    size_list : list
         A list containing the sizes of the wavelet (approximation
         and detail) coefficients at different scaling levels.
 
@@ -251,7 +251,7 @@ def array_to_pywt_coeff(coeff, size_list):
 
     Parameters
     ----------
-    coeff : `DiscreteLpVector`
+    coeff : `DiscreteLpElement`
         A flat coefficient vector containing the approximation,
         and detail coefficients in the following order
         [aaaN, aadN, adaN, addN, daaN, dadN, ddaN, dddN, ...
@@ -274,7 +274,7 @@ def array_to_pywt_coeff(coeff, size_list):
 
     Returns
     -------
-    coeff : ordered `list`
+    coeff : ordered list
         Coefficient are organized in the list in the following way:
 
         In 1D:
@@ -358,26 +358,26 @@ def wavelet_decomposition3d(x, wbasis, pad_mode, nscales):
 
     Parameters
     ----------
-    x : `DiscreteLpVector`
+    x : `DiscreteLpElement`
 
     wbasis : ``pywt.Wavelet``
         Selected wavelet basis. For more information see the
         `PyWavelets documentation on wavelet bases
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_.
 
-    pad_mode : `str`
+    pad_mode : string
         Signal extention mode. For possible extensions see the
         `Pywavelets documentation on signal extenstion modes
         <http://www.pybytes.com/pywavelets/ref/\
 signal-extension-modes.html>`_.
 
 
-    nscales : `int`
+    nscales : int
        Number of scales in the coefficient list.
 
     Returns
     -------
-    coeff_list : `list`
+    coeff_list : list
 
         A list of coefficient organized in the following way
          ```[aaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
@@ -448,7 +448,7 @@ def wavelet_reconstruction3d(coeff_list, wbasis, pad_mode, nscales):
 
     Parameters
     ----------
-    coeff_list : `list`
+    coeff_list : list
         A list of wavelet approximation and detail coefficients
         organized in the following way
         ```[caaaN, (aadN, adaN, addN, daaN, dadN, ddaN, dddN), ...
@@ -479,19 +479,19 @@ def wavelet_reconstruction3d(coeff_list, wbasis, pad_mode, nscales):
         For more information see PyWavelet `documentation
         <http://www.pybytes.com/pywavelets/ref/wavelets.html>`_
 
-    pad_mode : `str`
+    pad_mode : string
         Signal extention mode. For possible extensions see the
         `signal extenstion modes
         <http://www.pybytes.com/pywavelets/ref/\
 signal-extension-modes.html>`_
         of PyWavelets.
 
-    nscales : `int`
+    nscales : int
         Number of scales in the coefficient list.
 
     Returns
     -------
-    x : `numpy.ndarray`.
+    x : `numpy.ndarray`
         A wavalet reconstruction.
     """
     aaa = coeff_list[0]
@@ -522,7 +522,7 @@ class WaveletTransform(Operator):
             The exponent :math:`p` of the discrete :math:`L^p`
             space must be equal to 2.0.
 
-        nscales : `int`
+        nscales : int
             Number of scales in the coefficient list.
             The maximum number of usable scales can be determined
             by ``pywt.dwt_max_level``. For more information see
@@ -531,7 +531,7 @@ class WaveletTransform(Operator):
 dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 -dwt-max-level>`_ .
 
-        wbasis :  {`str`, ``pywt.Wavelet``}
+        wbasis :  {string, ``pywt.Wavelet``}
             If a string is given, converts to a ``pywt.Wavelet``.
             Describes properties of a selected wavelet basis.
             See PyWavelet `documentation
@@ -553,7 +553,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
             Discrete FIR approximation of Meyer wavelet (``dmey``)
 
-        pad_mode : `str`
+        pad_mode : string
              Signal extention modes as defined by ``pywt.MODES.modes``
              http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
 
@@ -644,7 +644,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
         Parameters
         ----------
-        x : `DiscreteLpVector`
+        x : `domain` element
 
         Returns
         -------
@@ -723,7 +723,7 @@ class WaveletTransformInverse(Operator):
             The exponent :math:`p` of the discrete :math:`L^p`
             space must be equal to 2.0.
 
-        nscales : `int`
+        nscales : int
             Number of scales in the coefficient list.
             The maximum number of usable scales can be determined
             by ``pywt.dwt_max_level``. For more information see
@@ -753,7 +753,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
             Discrete FIR approximation of Meyer wavelet (``dmey``)
 
-        pad_mode : `str`
+        pad_mode : string
              Signal extention modes as defined by ``pywt.MODES.modes``
              http://www.pybytes.com/pywavelets/ref/signal-extension-modes.html
 
@@ -829,12 +829,13 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
 
         Parameters
         ----------
-        coeff : `DiscreteLpVector`
+        coeff : `domain` element
+            Wavelet coefficients supplied to the wavelet reconstruction.
 
         Returns
         -------
-        arr : `DiscreteLpVector`
-
+        arr : `numpy.ndarray`
+            Result of the wavelet reconstruction.
         """
         if len(self.range.shape) == 1:
             coeff_list = array_to_pywt_coeff(coeff, self.size_list)
@@ -848,7 +849,7 @@ dwt-discrete-wavelet-transform.html#maximum-decomposition-level\
             coeff_dict = array_to_pywt_coeff(coeff, self.size_list)
             x = wavelet_reconstruction3d(coeff_dict, self.wbasis,
                                          self.pad_mode, self.nscales)
-            return self.range.element(x)
+            return x
 
     @property
     def adjoint(self):

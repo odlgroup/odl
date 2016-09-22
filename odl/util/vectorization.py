@@ -43,7 +43,7 @@ def is_valid_input_array(x, ndim=None):
 
 def is_valid_input_meshgrid(x, ndim):
     """Test if ``x`` is a `meshgrid` sequence for points in R^d."""
-    # This case is triggered in FunctionSetVector.__call__ if the
+    # This case is triggered in FunctionSetElement.__call__ if the
     # domain does not have an 'ndim' attribute. We return False and
     # continue.
     if ndim is None:
@@ -262,7 +262,7 @@ class _NumpyVectorizeWrapper(object):
 
         Parameters
         ----------
-        x : `array-like` or `sequence` of `array-like`
+        x : `array-like` or `sequence` of `array-like`'s
             Input argument(s) to the wrapped function
         out : `numpy.ndarray`, optional
             Appropriately sized array to write to

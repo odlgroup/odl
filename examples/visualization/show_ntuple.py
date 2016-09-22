@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example on the usage of the vector.show() syntax for n-tuples"""
+"""Example for using `FnBaseVector.show`.
+
+The ``show`` method is implemented for all types of n-tuples and displays
+the data as a scatter plot.
+"""
 
 import odl
 
-spc = odl.rn(5)
-vec = spc.element([1, 2, 3, 4, 5])
-
-vec.show(show=True)
+space = odl.rn(5)
+vector = space.element([1, 2, 3, 4, 5])
+vector.show(show=True)

@@ -24,9 +24,9 @@ hooking into the setuptools entry point 'odl.space' and exposing the methods
 
 Attributes
 ----------
-NTUPLES_IMPLS : `dict`
+NTUPLES_IMPLS : dict
     A dictionary that maps a string to an `NtuplesBase` implementation.
-FN_IMPLS : `dict`
+FN_IMPLS : dict
     A dictionary that maps a string to an `FnBase` implementation.
 
 Notes

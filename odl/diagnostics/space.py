@@ -34,7 +34,7 @@ __all__ = ('SpaceTest',)
 
 
 def _approx_equal(x, y, eps):
-    """Test if vectors ``x`` and ``y`` are approximately equal.
+    """Test if elements ``x`` and ``y`` are approximately equal.
 
     ``eps`` is a given absolute tolerance.
     """
@@ -57,29 +57,37 @@ class SpaceTest(object):
 
     """Automated tests for `LinearSpace` instances.
 
-    This class allows users to automatically test various
-    features of an ``LinearSpace`` such as linearity and the
-    various operators.
+    This class allows users to automatically test various features of a
+    `LinearSpace` such as linearity and vector space operations.
     """
 
-    def __init__(self, space, eps=0.00001):
+    def __init__(self, space, verbose=True, tol=1e-5):
         """Initialize a new instance.
 
         Parameters
         ----------
         space : `LinearSpace`
             Space that should be tested.
-        eps : `float`, optional
-            Precision of the tests.
+        verbose : bool, optional
+            If ``True``, print additional info text.
+        tol : float, optional
+            Tolerance parameter used as a base for the actual tolerance
+            in the tests. Depending on the expected accuracy, the actual
+            tolerance used in a test can be a factor times this number.
         """
         self.space = space
-        self.eps = eps
+        self.verbose = bool(verbose)
+        self.tol = float(tol)
 
-    def element(self):
+    def log(self, message):
+        """Print message if ``self.verbose == True``."""
+        if self.verbose:
+            print(message)
+
+    def element_method(self):
         """Verify `LinearSpace.element`."""
-        name = 'Verifying element method'
-
-        with FailCounter(name) as counter:
+        with FailCounter(test_name='Verifying element method',
+                         logger=self.log) as counter:
             try:
                 elem = self.space.element()
             except NotImplementedError:
@@ -91,9 +99,8 @@ class SpaceTest(object):
 
     def field(self):
         """Verify `LinearSpace.field`."""
-        name = 'Verifying field property'
-
-        with FailCounter(name) as counter:
+        with FailCounter(test_name='Verifying field property',
+                         logger=self.log) as counter:
             try:
                 field = self.space.field
             except NotImplementedError:
@@ -141,143 +148,167 @@ class SpaceTest(object):
                 counter.fail('field.element(-1) != -1.0')
 
     def _associativity_of_addition(self):
-        """Check addition associativity."""
-        name = 'Associativity of addition, x + (y + z) = (x + y) + z'
+        """Verify addition associativity."""
+        with FailCounter(
+                test_name='Verifying associativity of addition',
+                err_msg='error = dist(x + (y + z), (x + y) + z)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                correct = _approx_equal(x + (y + z), (x + y) + z, self.eps)
+                correct = _approx_equal(x + (y + z), (x + y) + z, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
 
     def _commutativity_of_addition(self):
-        """Check addition commutativity."""
-        name = 'Commutativity of addition, x + y = y + x'
+        """Verify addition commutativity."""
+        with FailCounter(
+                test_name='Verifying commutativity of addition',
+                err_msg='error = dist(x + y, y + x)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
-            for [n_x, x], [n_y, y] in samples(self.space,
-                                              self.space):
-                correct = _approx_equal(x + y, y + x, self.eps)
+            for [n_x, x], [n_y, y] in samples(self.space, self.space):
+                correct = _approx_equal(x + y, y + x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
 
     def _identity_of_addition(self):
-        """Check additional neutral element ('zero')."""
-        name = 'Identity element of addition, x + 0 = x'
-
+        """Verify additive neutral element ('zero')."""
         try:
             zero = self.space.zero()
         except (AttributeError, NotImplementedError):
             print('*** SPACE HAS NO ZERO VECTOR ***')
+            return
 
-        with FailCounter(name) as counter:
+        with FailCounter(
+                test_name='Verifying identity element of addition',
+                err_msg='error = dist(x + 0, x)',
+                logger=self.log) as counter:
+
             for [n_x, x] in samples(self.space):
-                correct = _approx_equal(x + zero, x, self.eps)
+                correct = _approx_equal(x + zero, x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
     def _inverse_element_of_addition(self):
-        """Check additional inverse."""
-        name = 'Inverse element of addition, x + (-x) = 0'
-        zero = self.space.zero()
+        """Verify additive inverse."""
+        try:
+            zero = self.space.zero()
+        except (AttributeError, NotImplementedError):
+            print('*** SPACE HAS NO ZERO VECTOR ***')
+            return
 
-        with FailCounter(name) as counter:
+        with FailCounter(
+                test_name='Verifying inverse element of addition',
+                err_msg='error = dist(x + (-x), 0)',
+                logger=self.log) as counter:
+
             for [n_x, x] in samples(self.space):
-                correct = _approx_equal(x + (-x), zero, self.eps)
+                correct = _approx_equal(x + (-x), zero, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
     def _commutativity_of_scalar_mult(self):
-        """Check scalar multiplication commutativity."""
-        name = ('Commutativity of scalar multiplication, '
-                'a * (b * x) = (a * b) * x')
+        """Verify scalar multiplication commutativity."""
+        with FailCounter(
+                test_name='Verifying commutativity of scalar multiplication',
+                err_msg='error = dist(a * (b * x), (a * b) * x)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x], [_, a], [_, b] in samples(self.space,
                                                     self.space.field,
                                                     self.space.field):
-                correct = _approx_equal(a * (b * x), (a * b) * x, self.eps)
+                correct = _approx_equal(a * (b * x), (a * b) * x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}, a={}, b={}'
                                  ''.format(n_x, a, b))
 
     def _identity_of_mult(self):
-        """Check multiplicative neutral element ('one')."""
-        name = 'Identity element of multiplication, 1 * x = x'
+        """Verify multiplicative neutral element ('one')."""
+        with FailCounter(
+                test_name='Verifying identity element of multiplication',
+                err_msg='error = dist(1 * x, x)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x] in samples(self.space):
-                correct = _approx_equal(1 * x, x, self.eps)
+                correct = _approx_equal(1 * x, x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
     def _distributivity_of_mult_vector(self):
-        """Check vector multiplication distributivity."""
-        name = ('Distributivity of multiplication wrt vector add, '
-                'a * (x + y) = a * x + a * y')
+        """Verify scalar multiplication distributivity wrt vector addition."""
+        with FailCounter(
+                test_name='Verifying distributivity of scalar multiplication '
+                          'under vector addition',
+                err_msg='error = dist(a * (x + y), a * x + a * y)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x], [n_y, y], [_, a] in samples(self.space,
                                                       self.space,
                                                       self.space.field):
-                correct = _approx_equal(a * (x + y), a * x + a * y, self.eps)
+                correct = _approx_equal(a * (x + y), a * x + a * y, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}, y={:25s}, a={}'
                                  ''.format(n_x, n_y, a))
 
     def _distributivity_of_mult_scalar(self):
-        """Check scalar multiplication distributivity."""
-        name = ('Distributivity of multiplication wrt scalar add, '
-                '(a + b) * x = a * x + b * x')
+        """Verify scalar multiplication distributivity wrt scalar addition."""
+        with FailCounter(
+                test_name='Verifying distributivity of scalar multiplication '
+                          'under scalar addition',
+                err_msg='error = dist((a + b) * x, a * x + b * x)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x], [_, a], [_, b] in samples(self.space,
                                                     self.space.field,
                                                     self.space.field):
-                correct = _approx_equal((a + b) * x, a * x + b * x, self.eps)
+                correct = _approx_equal((a + b) * x, a * x + b * x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}, a={}, b={}'
                                  ''.format(n_x, a, b))
 
     def _subtraction(self):
-        """Check subtraction as addition of additive inverse."""
-        name = 'Subtraction, x - y = x + (-1 * y)'
+        """Verify element subtraction as addition of additive inverse."""
+        with FailCounter(
+                test_name='Verifying element subtraction',
+                err_msg='error = dist(x - y, x + (-1 * y))',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
-            for [n_x, x], [n_y, y] in samples(self.space,
-                                              self.space):
-                correct = (_approx_equal(x - y, x + (-1 * y), self.eps) and
-                           _approx_equal(x - y, x + (-y), self.eps))
+            for [n_x, x], [n_y, y] in samples(self.space, self.space):
+                correct = (_approx_equal(x - y, x + (-1 * y), self.tol) and
+                           _approx_equal(x - y, x + (-y), self.tol))
                 if not correct:
                     counter.fail('failed with x={:25s}, y={:25s}'
                                  ''.format(n_x, n_y))
 
     def _division(self):
-        """Check scalar division as multiplication with mult. inverse."""
-        name = 'Division, x / a = x * (1/a)'
+        """Verify scalar division as multiplication with mult. inverse."""
+        with FailCounter(
+                test_name='Verifying scalar division',
+                err_msg='error = dist(x / a, x * (1/a))',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
-            for [n_x, x], [_, a] in samples(self.space,
-                                            self.space.field):
+            for [n_x, x], [_, a] in samples(self.space, self.space.field):
                 if a != 0:
-                    correct = _approx_equal(x / a, x * (1.0 / a), self.eps)
+                    correct = _approx_equal(x / a, x * (1.0 / a), self.tol)
                     if not correct:
                         counter.fail('failed with x={:25s}, a={}'
                                      ''.format(n_x, a))
 
     def _lincomb_aliased(self):
-        """Check several scenarios of aliased linear combination."""
-        name = 'Aliased input in lincomb'
+        """Verify several scenarios of aliased linear combination."""
+        with FailCounter(
+                test_name='Verifying linear combination with aliased input',
+                err_msg='error = dist(aliased, non-aliased)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x_in], [n_y, y] in samples(self.space, self.space):
                 x = x_in.copy()
                 x.lincomb(1, x, 1, y)
-                correct = _approx_equal(x, x_in + y, self.eps)
+                correct = _approx_equal(x, x_in + y, self.tol)
                 if not correct:
                     counter.fail('failed with x.lincomb(1, x, 1, y),'
                                  'x={:25s} y={:25s} '
@@ -285,16 +316,15 @@ class SpaceTest(object):
 
                 x = x_in.copy()
                 x.lincomb(1, x, 1, x)
-                correct = _approx_equal(x, x_in + x_in, self.eps)
+                correct = _approx_equal(x, x_in + x_in, self.tol)
                 if not correct:
                     counter.fail('failed with x.lincomb(1, x, 1, x),'
                                  'x={:25s} '
                                  ''.format(n_x))
 
     def _lincomb(self):
-        """Check linear combination."""
-        print('\nTesting lincomb')
-
+        """Verify linear combination."""
+        self.log('\nTesting lincomb')
         self._lincomb_aliased()
 
     def linearity(self):
@@ -302,11 +332,11 @@ class SpaceTest(object):
 
         These properties include things such as associativity
 
-        ``x + y = y + x``
+            ``x + y = y + x``
 
         and identity of the `LinearSpace.zero` element
 
-        ``x + 0 = x``
+            ``x + 0 = x``
 
         References
         ----------
@@ -314,8 +344,7 @@ class SpaceTest(object):
 
         .. _Vector space: https://en.wikipedia.org/wiki/Vector_space
         """
-        print('\n== Verifying linear space properties ==\n')
-
+        self.log('\n== Verifying linear space properties ==\n')
         self._associativity_of_addition()
         self._commutativity_of_addition()
         self._identity_of_addition()
@@ -329,78 +358,90 @@ class SpaceTest(object):
         self._lincomb()
 
     def _inner_linear_scalar(self):
-        """Check homogeneity of the inner product in the first argument."""
-        name = 'Linearity scalar, (a*x, y) = a*(x, y)'
+        """Verify homogeneity of the inner product in the first argument."""
+        with FailCounter(
+                test_name='Verifying homogeneity of the inner product in the '
+                          'first argument',
+                err_msg='error = |<a*x, y> - a*<x, y>|',
+                logger=self.log) as counter:
 
-        with FailCounter(name, 'error = |(a*x, y) - a*(x, y)|') as counter:
             for [n_x, x], [n_y, y], [_, a] in samples(self.space,
                                                       self.space,
                                                       self.space.field):
                 error = abs((a * x).inner(y) - a * x.inner(y))
-                if error > self.eps:
+                if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}, a={}: error={}'
                                  ''.format(n_x, n_y, a, error))
 
     def _inner_conjugate_symmetry(self):
-        """Check conjugate symmetry of the inner product."""
-        name = 'Conjugate symmetry, (x, y) = (y, x).conj()'
+        """Verify conjugate symmetry of the inner product."""
+        with FailCounter(
+                test_name='Verifying conjugate symmetry of the inner product',
+                err_msg='error = |<x, y> - <y, x>.conj()|',
+                logger=self.log) as counter:
 
-        with FailCounter(name, 'error = |(x, y) - (y, x).conj()|') as counter:
-            for [n_x, x], [n_y, y] in samples(self.space,
-                                              self.space):
+            for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 error = abs((x).inner(y) - y.inner(x).conjugate())
-                if error > self.eps:
+                if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}: error={}'
                                  ''.format(n_x, n_y, error))
 
     def _inner_linear_sum(self):
-        """Check additivity of the inner product in the first argument."""
-        name = 'Linearity sum, (x+y, z) = (x, z) + (y, z)'
+        """Verify distributivity of the inner product in the first argument."""
+        with FailCounter(
+                test_name='Verifying distributivity of the inner product'
+                          'in the first argument',
+                err_msg='error = |<x+y, z> - (<x, z> + <y, z>)|',
+                logger=self.log) as counter:
 
-        with FailCounter(name,
-                         'error = |(x+y, z) - ((x, z)+(y, z))|') as counter:
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
                 error = abs((x + y).inner(z) - (x.inner(z) + y.inner(z)))
-                if error > self.eps:
+                if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}, z={:25s}: error={}'
                                  ''.format(n_x, n_y, n_z, error))
 
     def _inner_positive(self):
-        """Check positive definiteness of the inner product."""
-        name = 'Positivity, (x, x) >= 0'
+        """Verify positive definiteness of the inner product."""
+        with FailCounter(
+                test_name='Verifying positive definiteness of the inner '
+                          'product',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x] in samples(self.space):
                 inner = x.inner(x)
 
-                if abs(inner.imag) > self.eps:
-                    counter.fail('(x, x).imag != 0, x={:25s}'
-                                 ''.format(n_x))
+                if abs(inner.imag) > self.tol:
+                    counter.fail('<x, x>.imag != 0, x={:25s}, <x, x>.imag = {}'
+                                 ''.format(n_x, inner.imag))
 
                 if n_x == 'Zero' and inner.real != 0:
-                    counter.fail('(0, 0) != 0.0, x={:25s}: (0, 0)={}'
+                    counter.fail('<0, 0> != 0.0, x={:25s}: <0, 0>={}'
                                  ''.format(n_x, inner))
 
                 elif n_x != 'Zero' and inner.real <= 0:
-                    counter.fail('(x, x) <= 0,   x={:25s}: (x, x)={}'
+                    counter.fail('<x, x> <= 0,   x={:25s}: <x, x>={}'
                                  ''.format(n_x, inner))
 
     def inner(self):
         """Verify `LinearSpace.inner`.
 
-        The inner product satisfies properties such as
+        The inner product is checked for the following properties:
 
-        conjugate symmetry
-        ``(x, y) = (y, x)^*`` (^* complex conjugate)
+        - conjugate symmetry:
 
-        linearity
-        ``(a * x, y) = a * (x, y)``
-        ``(x + y, z) = (x, z) + (y, z)``
+            ``<x, y> = <y, x>^*`` (^* complex conjugate)
 
-        positivity
-        ``(x, x) >= 0``
+        - linearity:
+
+            ``<a * x, y> = a * <x, y>``
+
+            ``<x + y, z> = <x, z> + <y, z>``
+
+        - positive definiteness:
+
+            ``<x, x> >= 0``
 
         References
         ----------
@@ -408,13 +449,13 @@ class SpaceTest(object):
 
         .. _inner product: https://en.wikipedia.org/wiki/Inner_product_space
         """
-        print('\n== Verifying inner product ==\n')
+        self.log('\n== Verifying inner product ==\n')
 
         try:
             zero = self.space.zero()
             zero.inner(zero)
         except NotImplementedError:
-            print('Space has no inner product')
+            self.log('Space has no inner product')
             return
 
         self._inner_conjugate_symmetry()
@@ -423,10 +464,11 @@ class SpaceTest(object):
         self._inner_positive()
 
     def _norm_positive(self):
-        """Check nonnegativity of the norm."""
-        name = 'Positivity, ||x|| >= 0'
+        """Verify positive definiteness of the norm."""
+        with FailCounter(
+                test_name='Verifying positive definiteness of the norm',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x] in samples(self.space):
                 norm = x.norm()
 
@@ -439,12 +481,13 @@ class SpaceTest(object):
                                  ''.format(n_x, norm))
 
     def _norm_subadditive(self):
-        """Check subadditivity of the norm."""
-        name = 'Sub-additivity, ||x+y|| <= ||x|| + ||y||'
+        """Verify subadditivity of the norm."""
+        with FailCounter(
+                test_name='Verifying sub-additivity of the norm',
+                err_msg='error = max(||x+y|| - (||x|| + ||y||), 0)',
+                logger=self.log) as counter:
 
-        with FailCounter(name, 'error = ||x+y|| - ||x|| + ||y||') as counter:
-            for [n_x, x], [n_y, y] in samples(self.space,
-                                              self.space):
+            for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 norm_x = x.norm()
                 norm_y = y.norm()
                 norm_xy = (x + y).norm()
@@ -456,52 +499,65 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, error))
 
     def _norm_homogeneity(self):
-        """Check positive homogeneity of the norm."""
-        name = 'Homogeneity, ||a*x|| = |a| ||x||'
+        """Verify positive homogeneity of the norm."""
+        with FailCounter(
+                test_name='Verifying positive homogeneity of the norm',
+                err_msg='error = | ||a*x|| - |a|*||x|| |',
+                logger=self.log) as counter:
 
-        with FailCounter(name, 'error = abs(||a*x|| - |a| ||x||)') as counter:
-            for [name, vec], [_, a] in samples(self.space,
-                                               self.space.field):
-                error = abs((a * vec).norm() - abs(a) * vec.norm())
-                if error > self.eps:
-                    counter.fail('x={:25s} a={}: ||x||={}'
-                                 ''.format(name, a, error))
+            for [n_x, x], [_, a] in samples(self.space, self.space.field):
+                error = abs((a * x).norm() - abs(a) * x.norm())
+                if error > self.tol:
+                    counter.fail('x={:25s} a={}: error={}'
+                                 ''.format(n_x, a, error))
 
     def _norm_inner_compatible(self):
-        """Check compatibility of norm and inner product."""
-        name = 'Inner compatibility, ||x||^2 = (x, x)'
-
+        """Verify compatibility of norm and inner product."""
         try:
             zero = self.space.zero()
             zero.inner(zero)
         except NotImplementedError:
-            print('Space is not a inner product space')
+            self.log('Space has no inner product')
             return
 
-        with FailCounter(name, 'error = | ||x||^2 = (x, x) |') as counter:
+        with FailCounter(
+                test_name='Verifying compatibility of norm and inner product',
+                err_msg='error = | ||x||^2 - <x, x> |',
+                logger=self.log) as counter:
+
             for [n_x, x] in samples(self.space):
                 error = abs(x.norm() ** 2 - x.inner(x))
 
-                if error > self.eps:
+                if error > self.tol:
                     counter.fail('x={:25s}: error={}'
                                  ''.format(n_x, error))
 
     def norm(self):
         """Verify `LinearSpace.norm`.
 
-        The norm satisfies properties
+        The norm is checked for the following properties:
 
-        linearity
-        ``||a * x|| = |a| * ||x||``
+        - linearity:
 
-        triangle inequality
-        ``||x + y|| = ||x|| + ||y||``
+            ``||a * x|| = |a| * ||x||``
 
-        separation
-        ``||x|| = 0`` iff ``x = 0``
+        - subadditivity:
 
-        positivity
-        ``||x|| >= 0``
+            ``||x + y|| <= ||x|| + ||y||``
+
+        - positive homogeneity:
+
+            ``||a * x|| = |a| * ||x||``
+
+        - positive definiteness:
+
+            ``||x|| >= 0``
+
+            ``||x|| = 0`` iff ``x = 0``
+
+        - compatibility with the inner product (if available):
+
+            ``||x||^2 = <x, x>``
 
         References
         ----------
@@ -509,12 +565,12 @@ class SpaceTest(object):
 
         .. _norm: https://en.wikipedia.org/wiki/Norm_(mathematics)
         """
-        print('\n== Verifying norm ==\n')
+        self.log('\n== Verifying norm ==\n')
 
         try:
             self.space.zero().norm()
         except NotImplementedError:
-            print('Space is not normed')
+            self.log('Space has no norm')
             return
 
         self._norm_positive()
@@ -523,12 +579,13 @@ class SpaceTest(object):
         self._norm_inner_compatible()
 
     def _dist_positivity(self):
-        """Check nonnegativity of the distance."""
-        name = 'Positivity, d(x, y) >= 0'
+        """Verify nonnegativity of the distance."""
 
-        with FailCounter(name) as counter:
-            for [n_x, x], [n_y, y] in samples(self.space,
-                                              self.space):
+        with FailCounter(
+                test_name='Verifying nonnegativity of the distance',
+                logger=self.log) as counter:
+
+            for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 dist = x.dist(y)
 
                 if n_x == n_y and dist != 0:
@@ -539,26 +596,28 @@ class SpaceTest(object):
                                  ''.format(n_x, n_y, dist))
 
     def _dist_symmetric(self):
-        """Check symmetry of the distance."""
-        name = 'Symmetry, d(x, y) = d(y, x)'
+        """Verify symmetry of the distance."""
+        with FailCounter(
+                test_name='Verifying symmetry of the distance',
+                err_msg='error = |d(x, y) - d(y, x)|',
+                logger=self.log) as counter:
 
-        with FailCounter(name, 'error = |d(x, y) - d(y, x)|') as counter:
-            for [n_x, x], [n_y, y] in samples(self.space,
-                                              self.space):
+            for [n_x, x], [n_y, y] in samples(self.space, self.space):
                 dist_1 = x.dist(y)
                 dist_2 = y.dist(x)
                 error = abs(dist_1 - dist_2)
 
-                if error > self.eps:
+                if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}: error={}'
                                  ''.format(n_x, n_y, error))
 
-    def _dist_subadditive(self):
-        """Check subadditivity of the distance."""
-        name = 'Sub-additivity, d(x, y) = d(y, x)'
+    def _dist_subtransitive(self):
+        """Verify sub-transitivity of the distance."""
+        with FailCounter(
+                test_name='Verifying sub-additivity of the distance',
+                err_msg='error = max(d(x,z) - (d(x, y) + d(y, z)), 0)',
+                logger=self.log) as counter:
 
-        with FailCounter(name,
-                         'error = d(x,z) - (d(x, y) + d(y, z))') as counter:
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
@@ -567,45 +626,53 @@ class SpaceTest(object):
                 dyz = y.dist(z)
                 error = dxz - (dxy + dyz)
 
-                if error > self.eps:
+                if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}, z={:25s}: error={}'
                                  ''.format(n_x, n_y, n_z, error))
 
     def _dist_norm_compatible(self):
-        """Check compatibility of distance and norm."""
-        name = 'Norm compatibility, d(x, y) = ||x-y||'
-
+        """Verify compatibility of distance and norm."""
         try:
             self.space.zero().norm()
         except NotImplementedError:
-            print('Space is not normed')
+            self.log('Space has no norm')
             return
 
-        with FailCounter(name, 'error = |d(x, y) - ||x-y|| |') as counter:
+        with FailCounter(
+                test_name='Verifying compatibility of distance and norm',
+                err_msg='error = |d(x, y) - ||x-y|| |',
+                logger=self.log) as counter:
+
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
                 error = abs(x.dist(y) - (x - y).norm())
 
-                if error > self.eps:
+                if error > self.tol:
                     counter.fail('x={:25s}, y={:25s}: error={}'
                                  ''.format(n_x, n_y, error))
 
     def dist(self):
         """Verify `LinearSpace.dist`.
 
-        The dist satisfies properties
+        The distance metric is checked for the following properties:
 
-        positivity
-        ``d(x, y) >= 0``
+        - positive definiteness:
 
-        coincidence
-        ``d(x, y) = 0`` iff ``x = y``
+            ``d(x, y) >= 0``
 
-        symmetry
-        ``d(x, y) = d(y, x)``
+            ``d(x, y) = 0`` iff ``x = y``
 
-        triangle inequality
-        ``d(x, z) = d(x, y) + d(y, z)``
+        - symmetry:
+
+            ``d(x, y) = d(y, x)``
+
+        - sub-transitivity:
+
+            ``d(x, z) <= d(x, y) + d(y, z)``
+
+        - compatibility with the norm (if available):
+
+            ``d(x, y) = ||x - y||``
 
         References
         ----------
@@ -613,84 +680,97 @@ class SpaceTest(object):
 
         .. _metric: https://en.wikipedia.org/wiki/Metric_(mathematics)
         """
-        print('\n== Verifying dist ==\n')
+        self.log('\n== Verifying dist ==\n')
 
         try:
             zero = self.space.zero()
             self.space.dist(zero, zero)
         except NotImplementedError:
-            print('Space is not metric')
+            self.log('Space has no distance metric')
             return
 
         self._dist_positivity()
         self._dist_symmetric()
-        self._dist_subadditive()
+        self._dist_subtransitive()
         self._dist_norm_compatible()
 
     def _multiply_zero(self):
-        """Check vector multiplication with zero is zero."""
-        name = 'Multiplication by zero, x * 0 = 0'
+        """Verify that vector multiplication with zero is zero."""
+        try:
+            zero = self.space.zero()
+        except NotImplementedError:
+            print('*** SPACE HAS NO ZERO VECTOR ***')
+            return
 
-        zero = self.space.zero()
-
-        with FailCounter(name, 'error = ||x*0||') as counter:
+        with FailCounter(
+                test_name='Verifying vector multiplication with zero',
+                err_msg='error = ||x * 0||',
+                logger=self.log) as counter:
             for [n_x, x] in samples(self.space):
                 error = (zero * x).norm()
 
-                if error > self.eps:
+                if error > self.tol:
                     counter.fail('x={:25s},: error={}'
                                  ''.format(n_x, error))
 
     def _multiply_commutative(self):
-        """Check commutativity of vector multiplication."""
-        name = 'Multiplication commutative, x * y = y * x'
+        """Verify commutativity of vector multiplication."""
+        with FailCounter(
+                test_name='Verifying commutativity of vector multiplication',
+                err_msg='error = dist(x * y, y * x)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x], [n_y, y], _ in samples(self.space,
                                                  self.space,
                                                  self.space):
-                correct = _approx_equal(x * y, y * x, self.eps)
+                correct = _approx_equal(x * y, y * x, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
 
     def _multiply_associative(self):
-        """Check associativity of vector multiplication."""
-        name = 'Multiplication associative, x * (y * z) = (x * y) * z'
+        """Verify associativity of vector multiplication."""
+        with FailCounter(
+                test_name='Verifying associativity of vector multiplication',
+                err_msg='error = dist(x * (y * z), (x * y) * z)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                correct = _approx_equal(x * (y * z), (x * y) * z, self.eps)
+                correct = _approx_equal(x * (y * z), (x * y) * z, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
 
     def _multiply_distributive_scalar(self):
-        """Check distributivity of scalar multiplication."""
-        name = ('Multiplication distributive wrt scal, a * (x + y) = '
-                'a * x + a * y')
+        """Verify distributivity of scalar multiplication."""
+        with FailCounter(
+                test_name='Verifying distributivity of vector multiplication '
+                          'under scalar multiplication',
+                err_msg='error = dist(a * (x + y), a * x + a * y)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x], [n_y, y], [_, a] in samples(self.space,
                                                       self.space,
                                                       self.space.field):
-                correct = _approx_equal(a * (x + y), a * x + a * y, self.eps)
+                correct = _approx_equal(a * (x + y), a * x + a * y, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s} a={}'
                                  ''.format(n_x, n_y, a))
 
-    def _multiply_distributive_vec(self):
-        """Check distributivity of vector multiplication."""
-        name = ('Multiplication distributive wrt vec, x * (y + z) = '
-                'x * y + x * z')
+    def _multiply_distributive_vector(self):
+        """Verify distributivity of vector multiplication."""
+        with FailCounter(
+                test_name='Verifying distributivity of vector multiplication '
+                          'under vector multiplication',
+                err_msg='error = dist(x * (y + z), x * y + x * z)',
+                logger=self.log) as counter:
 
-        with FailCounter(name) as counter:
             for [n_x, x], [n_y, y], [n_z, z] in samples(self.space,
                                                         self.space,
                                                         self.space):
-                correct = _approx_equal(x * (y + z), x * y + x * z, self.eps)
+                correct = _approx_equal(x * (y + z), x * y + x * z, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s} z={:25s}'
                                  ''.format(n_x, n_y, n_z))
@@ -698,42 +778,50 @@ class SpaceTest(object):
     def multiply(self):
         """Verify `LinearSpace.multiply`.
 
-        Multiplication satisfies
+        The vector multiplication is checked for the following properties:
 
-        Zero element
-        ``0 * x = 0``
+        - Zero element:
 
-        Commutativity
-        ``x * y = y * x``
+            ``0 * x = 0``
 
-        Associativity
-        ``x * (y * z) = (x * y) * z``
+        - Commutativity:
 
-        Distributivity
-        ``a * (x + y) = a * x + a * y``
-        ``x * (y + z) = x * y + x * z``
+            ``x * y = y * x``
 
+        - Associativity:
+
+            ``x * (y * z) = (x * y) * z``
+
+        - Distributivity:
+
+            ``a * (x + y) = a * x + a * y``
+
+            ``x * (y + z) = x * y + x * z``
         """
-
-        print('\n== Verifying multiplication ==\n')
+        self.log('\n== Verifying multiplication ==\n')
 
         try:
             zero = self.space.zero()
+        except NotImplementedError:
+            print('*** SPACE HAS NO ZERO VECTOR ***')
+            return
+
+        try:
             self.space.multiply(zero, zero)
         except NotImplementedError:
-            print('Space is not a algebra')
+            self.log('Space has no vector multiplication.')
             return
 
         self._multiply_zero()
         self._multiply_commutative()
         self._multiply_associative()
         self._multiply_distributive_scalar()
-        self._multiply_distributive_vec()
+        self._multiply_distributive_vector()
 
     def equals(self):
         """Verify `LinearSpace.__eq__`."""
 
-        print('\n== Verifying __eq__ ==\n')
+        self.log('\n== Verifying __eq__ ==\n')
 
         if not self.space == self.space:
             print('** space == space failed ***')
@@ -747,7 +835,11 @@ class SpaceTest(object):
         if self.space != deepcopy(self.space):
             print('** space == deepcopy(space) failed***')
 
-        with FailCounter('Space equal to non-space') as counter:
+        with FailCounter(
+                test_name='Verify behavior of `space == obj` when `obj` '
+                          'is not a space',
+                logger=self.log) as counter:
+
             for obj in [[1, 2], list(), tuple(), dict(), 5.0]:
                 if self.space == obj:
                     counter.fail('space == obj,  with obj={}'
@@ -759,10 +851,10 @@ class SpaceTest(object):
 
     def contains(self):
         """Verify `LinearSpace.__contains__`."""
+        with FailCounter(
+                test_name='Verify behavior of `obj in space`',
+                logger=self.log) as counter:
 
-        name = 'Verifying __contains__'
-
-        with FailCounter(name) as counter:
             for [n_x, x] in samples(self.space):
                 if x not in self.space:
                     counter.fail('x not in space,  with x={}'
@@ -781,68 +873,78 @@ class SpaceTest(object):
                     counter.fail('not obj not in space,  with obj={}'
                                  ''.format(obj))
 
-    def vector_assign(self):
-        """Verify `LinearSpaceVector.assign`."""
+    def element_assign(self):
+        """Verify `LinearSpaceElement.assign`."""
+        with FailCounter(
+                test_name='Verify behavior of `LinearSpaceElement.assign`',
+                logger=self.log) as counter:
 
-        name = 'Vector.assign()'
-
-        with FailCounter(name) as counter:
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
                 x.assign(y)
-                correct = _approx_equal(x, y, self.eps)
+                correct = _approx_equal(x, y, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s} y={:25s}'
                                  ''.format(n_x, n_y))
 
-    def vector_copy(self):
-        """Verify `LinearSpaceVector.copy`."""
+    def element_copy(self):
+        """Verify `LinearSpaceElement.copy`."""
+        with FailCounter(
+                test_name='Verify behavior of `LinearSpaceElement.copy`',
+                logger=self.log) as counter:
 
-        name = 'Vector.copy()'
-
-        with FailCounter(name) as counter:
             for [n_x, x] in samples(self.space):
                 # equal after copy
                 y = x.copy()
-                correct = _approx_equal(x, y, self.eps)
+                correct = _approx_equal(x, y, self.tol)
                 if not correct:
                     counter.fail('failed with x={:s5s}'
                                  ''.format(n_x))
 
                 # modify y, x stays the same
                 y *= 2.0
-                correct = n_x == 'Zero' or not _approx_equal(x, y, self.eps)
+                correct = n_x == 'Zero' or not _approx_equal(x, y, self.tol)
                 if not correct:
                     counter.fail('modified y, x changed with x={:25s}'
                                  ''.format(n_x))
 
-    def vector_set_zero(self):
-        """Verify `LinearSpaceVector.set_zero`."""
+    def element_set_zero(self):
+        """Verify `LinearSpaceElement.set_zero`."""
+        try:
+            zero = self.space.zero()
+        except NotImplementedError:
+            print('*** SPACE HAS NO ZERO VECTOR ***')
+            return
 
-        name = 'Vector.set_zero()'
+        with FailCounter(
+                test_name='Verify behavior of `LinearSpaceElement.set_zero`',
+                logger=self.log) as counter:
 
-        zero = self.space.zero()
-        with FailCounter(name) as counter:
             for [n_x, x] in samples(self.space):
                 x.set_zero()
-                correct = _approx_equal(x, zero, self.eps)
+                correct = _approx_equal(x, zero, self.tol)
                 if not correct:
                     counter.fail('failed with x={:25s}'
                                  ''.format(n_x))
 
-    def vector_equals(self):
-        """Verify `LinearSpaceVector.__eq__`."""
-
-        name = 'Vector.__eq__()'
-
+    def element_equals(self):
+        """Verify `LinearSpaceElement.__eq__`."""
         try:
             zero = self.space.zero()
-            zero == zero
         except NotImplementedError:
-            print('Vector has no __eq__')
+            print('*** SPACE HAS NO ZERO VECTOR ***')
             return
 
-        with FailCounter(name) as counter:
+        try:
+            zero == zero
+        except NotImplementedError:
+            self.log('Vector has no __eq__')
+            return
+
+        with FailCounter(
+                test_name='Verify behavior of `element1 == element2`',
+                logger=self.log) as counter:
+
             for [n_x, x], [n_y, y] in samples(self.space,
                                               self.space):
                 if n_x == n_y:
@@ -862,54 +964,57 @@ class SpaceTest(object):
                         counter.fail('failed x != y with x={:25s}, x={:25s}'
                                      ''.format(n_x, n_y))
 
-    def vector_space(self):
-        """Verify `LinearSpaceVector.space`."""
+    def element_space(self):
+        """Verify `LinearSpaceElement.space`."""
+        with FailCounter(
+                test_name='Verify `LinearSpaceElement.space`',
+                logger=self.log) as counter:
 
-        name = 'Vector.space'
-
-        with FailCounter(name) as counter:
             for [n_x, x] in samples(self.space):
                 if x.space != self.space:
                     counter.fail('failed with x={:25s}'.format(n_x))
 
-    def vector(self):
-        """Verify `LinearSpaceVector`."""
+    def element(self):
+        """Verify `LinearSpaceElement`."""
 
-        print('\n== Verifying Vector ==\n')
-
-        self.vector_assign()
-        self.vector_copy()
-        self.vector_set_zero()
-        self.vector_equals()
-        self.vector_space()
+        self.log('\n== Verifying element attributes ==\n')
+        self.element_assign()
+        self.element_copy()
+        self.element_set_zero()
+        self.element_equals()
+        self.element_space()
 
     def run_tests(self):
         """Run all tests on this space."""
-        print('\n== RUNNING ALL TESTS ==\n')
-        print('Space = {}'.format(self.space))
-
+        self.log('\n== RUNNING ALL TESTS ==\n')
+        self.log('Space = {}'.format(self.space))
         self.field()
-        self.element()
+        self.element_method()
         self.linearity()
-        self.element()
         self.inner()
         self.norm()
         self.dist()
         self.multiply()
         self.equals()
         self.contains()
-        self.vector()
+        self.element()
 
     def __str__(self):
         """Return ``str(self)``."""
-        return 'SpaceTest({})'.format(self.space)
+        return '{}({})'.format(self.__class__.__name__, self.space)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'SpaceTest({!r})'.format(self.space)
+        inner_str = '{!r}'.format(self.space)
+        if not self.verbose:
+            inner_str += ', verbose=False'
+        if self.tol != 1e-5:
+            inner_str += ', tol={}'.format(self.tol)
+        return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
 if __name__ == '__main__':
+    # pylint: disable=wrong-import-position
     from odl import rn, uniform_discr
-    SpaceTest(rn(10)).run_tests()
+    SpaceTest(rn(10), verbose=False).run_tests()
     SpaceTest(uniform_discr([0, 0], [1, 1], [5, 5])).run_tests()

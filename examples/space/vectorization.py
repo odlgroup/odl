@@ -15,12 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example showing how to use vectorization of FunctionSpaceVector's."""
+"""Example showing how to use vectorization of `FunctionSpaceElement`'s."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 import numpy as np
 import odl
 import timeit
@@ -28,7 +24,7 @@ import timeit
 
 def performace_example():
     # Create a space of functions on the interval [0, 1].
-    fspace = odl.FunctionSpace(odl.Interval(0, 1))
+    fspace = odl.FunctionSpace(odl.IntervalProd(0, 1))
 
     # Simple function, already supports vectorization.
     f_vec = fspace.element(lambda x: x ** 2)
@@ -89,7 +85,7 @@ def numba_example():
 
     # Create (continuous) functions in the space of function defined
     # on the rectangle [0, 1] x [0, 1].
-    fspace = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    fspace = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
     f_default = fspace.element(myfunc, vectorized=False)
     f_numba = fspace.element(myfunc_vec)
     f_native = fspace.element(myfunc_native_vec, vectorized=True)

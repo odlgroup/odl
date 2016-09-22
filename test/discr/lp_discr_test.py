@@ -30,7 +30,7 @@ import odl
 from odl.discr.lp_discr import DiscreteLp
 from odl.space.base_ntuples import FnBase
 from odl.util.testutils import (almost_equal, all_equal, all_almost_equal,
-                                example_vectors)
+                                noise_elements)
 
 # Pytest fixture
 
@@ -47,20 +47,20 @@ def exponent(request):
 
 def test_init(exponent):
     # Validate that the different init patterns work and do not crash.
-    space = odl.FunctionSpace(odl.Interval(0, 1))
+    space = odl.FunctionSpace(odl.IntervalProd(0, 1))
     part = odl.uniform_partition_fromintv(space.domain, 10)
     rn = odl.rn(10, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent, interp='linear')
 
     # Normal discretization of unit interval with complex
-    complex_space = odl.FunctionSpace(odl.Interval(0, 1),
+    complex_space = odl.FunctionSpace(odl.IntervalProd(0, 1),
                                       field=odl.ComplexNumbers())
 
     cn = odl.cn(10, exponent=exponent)
     odl.DiscreteLp(complex_space, part, cn, exponent=exponent)
 
-    space = odl.FunctionSpace(odl.Rectangle([0, 0], [1, 1]))
+    space = odl.FunctionSpace(odl.IntervalProd([0, 0], [1, 1]))
     part = odl.uniform_partition_fromintv(space.domain, (10, 10))
     rn = odl.rn(100, exponent=exponent)
     odl.DiscreteLp(space, part, rn, exponent=exponent,
@@ -154,9 +154,9 @@ def test_element_1d(exponent):
     discr = odl.uniform_discr(0, 1, 3, impl='numpy', exponent=exponent)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
     dspace = odl.rn(3, exponent=exponent, weight=weight)
-    vec = discr.element()
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert vec.ntuple in dspace
+    elem = discr.element()
+    assert isinstance(elem, odl.DiscreteLpElement)
+    assert elem.ntuple in dspace
 
 
 def test_element_2d(exponent):
@@ -164,58 +164,58 @@ def test_element_2d(exponent):
                               impl='numpy', exponent=exponent)
     weight = 1.0 if exponent == float('inf') else discr.cell_volume
     dspace = odl.rn(9, exponent=exponent, weight=weight)
-    vec = discr.element()
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert vec.ntuple in dspace
+    elem = discr.element()
+    assert isinstance(elem, odl.DiscreteLpElement)
+    assert elem.ntuple in dspace
 
 
 def test_element_from_array_1d():
     discr = odl.uniform_discr(0, 1, 3, impl='numpy')
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert isinstance(vec.ntuple, odl.NumpyFnVector)
-    assert all_equal(vec.ntuple, [1, 2, 3])
+    assert isinstance(elem, odl.DiscreteLpElement)
+    assert isinstance(elem.ntuple, odl.NumpyFnVector)
+    assert all_equal(elem.ntuple, [1, 2, 3])
 
 
 def test_element_from_array_2d():
     # assert orderings work properly with 2d
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl='numpy', order='C')
-    vec = discr.element([[1, 2],
+    elem = discr.element([[1, 2],
                          [3, 4]])
 
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert isinstance(vec.ntuple, odl.NumpyFnVector)
+    assert isinstance(elem, odl.DiscreteLpElement)
+    assert isinstance(elem.ntuple, odl.NumpyFnVector)
 
     # Check ordering
-    assert all_equal(vec.ntuple, [1, 2, 3, 4])
+    assert all_equal(elem.ntuple, [1, 2, 3, 4])
 
     # Linear creation works as well
-    linear_vec = discr.element([1, 2, 3, 4])
-    assert all_equal(vec.ntuple, [1, 2, 3, 4])
+    linear_elem = discr.element([1, 2, 3, 4])
+    assert all_equal(linear_elem.ntuple, [1, 2, 3, 4])
 
     # Fortran order
     discr = odl.uniform_discr([0, 0], [1, 1], (2, 2), impl='numpy', order='F')
-    vec = discr.element([[1, 2],
+    elem = discr.element([[1, 2],
                          [3, 4]])
 
     # Check ordering
-    assert all_equal(vec.ntuple, [1, 3, 2, 4])
+    assert all_equal(elem.ntuple, [1, 3, 2, 4])
 
     # Linear creation works aswell
-    linear_vec = discr.element([1, 2, 3, 4])
-    assert all_equal(linear_vec.ntuple, [1, 2, 3, 4])
+    linear_elem = discr.element([1, 2, 3, 4])
+    assert all_equal(linear_elem.ntuple, [1, 2, 3, 4])
 
     # Using broadcasting
-    broadcast_vec = discr.element([[1, 2]])
+    broadcast_elem = discr.element([[1, 2]])
     broadcast_expected = discr.element([[1, 2],
                                         [1, 2]])
-    assert all_equal(broadcast_vec, broadcast_expected)
+    assert all_equal(broadcast_elem, broadcast_expected)
 
-    broadcast_vec = discr.element([[1], [2]])
+    broadcast_elem = discr.element([[1], [2]])
     broadcast_expected = discr.element([[1, 1],
                                         [2, 2]])
-    assert all_equal(broadcast_vec, broadcast_expected)
+    assert all_equal(broadcast_elem, broadcast_expected)
 
 
 def test_element_from_array_2d_shape():
@@ -340,17 +340,17 @@ def test_element_from_function_2d():
 
 def test_zero():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.zero()
+    zero = discr.zero()
 
-    assert isinstance(vec, odl.DiscreteLpVector)
-    assert isinstance(vec.ntuple, odl.NumpyFnVector)
-    assert all_equal(vec, [0, 0, 0])
+    assert isinstance(zero, odl.DiscreteLpElement)
+    assert isinstance(zero.ntuple, odl.NumpyFnVector)
+    assert all_equal(zero, [0, 0, 0])
 
 
 def _test_unary_operator(discr, function):
     # Verify that the statement y=function(x) gives equivalent results
     # to NumPy
-    x_arr, x = example_vectors(discr)
+    x_arr, x = noise_elements(discr)
 
     y_arr = function(x_arr)
 
@@ -362,7 +362,7 @@ def _test_unary_operator(discr, function):
 def _test_binary_operator(discr, function):
     # Verify that the statement z=function(x,y) gives equivalent results
     # to NumPy
-    [x_arr, y_arr], [x, y] = example_vectors(discr, 2)
+    [x_arr, y_arr], [x, y] = noise_elements(discr, 2)
 
     z_arr = function(x_arr, y_arr)
     z = function(x, y)
@@ -480,138 +480,138 @@ def test_interp():
 
 def test_getitem():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    assert all_equal(vec, [1, 2, 3])
+    assert all_equal(elem, [1, 2, 3])
 
 
 def test_getslice():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    assert isinstance(vec[:], odl.NumpyFnVector)
-    assert all_equal(vec[:], [1, 2, 3])
+    assert isinstance(elem[:], odl.NumpyFnVector)
+    assert all_equal(elem[:], [1, 2, 3])
 
     discr = odl.uniform_discr(0, 1, 3, dtype='complex')
-    vec = discr.element([1 + 2j, 2 - 2j, 3])
+    elem = discr.element([1 + 2j, 2 - 2j, 3])
 
-    assert isinstance(vec[:], odl.NumpyFnVector)
-    assert all_equal(vec[:], [1 + 2j, 2 - 2j, 3])
+    assert isinstance(elem[:], odl.NumpyFnVector)
+    assert all_equal(elem[:], [1 + 2j, 2 - 2j, 3])
 
 
 def test_setitem():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
-    vec[0] = 4
-    vec[1] = 5
-    vec[2] = 6
+    elem = discr.element([1, 2, 3])
+    elem[0] = 4
+    elem[1] = 5
+    elem[2] = 6
 
-    assert all_equal(vec, [4, 5, 6])
+    assert all_equal(elem, [4, 5, 6])
 
 
 def test_setitem_nd():
 
     # 1D
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    vec[:] = [4, 5, 6]
-    assert all_equal(vec, [4, 5, 6])
+    elem[:] = [4, 5, 6]
+    assert all_equal(elem, [4, 5, 6])
 
-    vec[:] = np.array([3, 2, 1])
-    assert all_equal(vec, [3, 2, 1])
+    elem[:] = np.array([3, 2, 1])
+    assert all_equal(elem, [3, 2, 1])
 
-    vec[:] = 0
-    assert all_equal(vec, [0, 0, 0])
+    elem[:] = 0
+    assert all_equal(elem, [0, 0, 0])
 
-    vec[:] = [1]
-    assert all_equal(vec, [1, 1, 1])
-
-    with pytest.raises(ValueError):
-        vec[:] = [0, 0]  # bad shape
+    elem[:] = [1]
+    assert all_equal(elem, [1, 1, 1])
 
     with pytest.raises(ValueError):
-        vec[:] = [0, 0, 1, 2]  # bad shape
+        elem[:] = [0, 0]  # bad shape
+
+    with pytest.raises(ValueError):
+        elem[:] = [0, 0, 1, 2]  # bad shape
 
     # 2D
     discr = odl.uniform_discr([0, 0], [1, 1], [3, 2])
 
-    vec = discr.element([[1, 2],
+    elem = discr.element([[1, 2],
                          [3, 4],
                          [5, 6]])
 
-    vec[:] = [[-1, -2],
-              [-3, -4],
-              [-5, -6]]
-    assert all_equal(vec, [-1, -2, -3, -4, -5, -6])
+    elem[:] = [[-1, -2],
+               [-3, -4],
+               [-5, -6]]
+    assert all_equal(elem, [-1, -2, -3, -4, -5, -6])
 
     arr = np.arange(6, 12).reshape([3, 2])
-    vec[:] = arr
-    assert all_equal(vec, np.arange(6, 12))
+    elem[:] = arr
+    assert all_equal(elem, np.arange(6, 12))
 
-    vec[:] = 0
-    assert all_equal(vec, [0] * 6)
+    elem[:] = 0
+    assert all_equal(elem, [0] * 6)
 
-    vec[:] = [1]
-    assert all_equal(vec, [1] * 6)
-
-    with pytest.raises(ValueError):
-        vec[:] = [0, 0]  # bad shape
+    elem[:] = [1]
+    assert all_equal(elem, [1] * 6)
 
     with pytest.raises(ValueError):
-        vec[:] = [0, 0, 0]  # bad shape
+        elem[:] = [0, 0]  # bad shape
 
     with pytest.raises(ValueError):
-        vec[:] = np.arange(6)[:, np.newaxis]  # bad shape (6, 1)
+        elem[:] = [0, 0, 0]  # bad shape
+
+    with pytest.raises(ValueError):
+        elem[:] = np.arange(6)[:, np.newaxis]  # bad shape (6, 1)
 
     with pytest.raises(ValueError):
         arr = np.arange(6, 12).reshape([3, 2])
-        vec[:] = arr.T  # bad shape (2, 3)
+        elem[:] = arr.T  # bad shape (2, 3)
 
     # nD
     shape = (3,) * 3 + (4,) * 3
     discr = odl.uniform_discr([0] * 6, [1] * 6, shape)
     size = np.prod(shape)
-    vec = discr.element(np.zeros(shape))
+    elem = discr.element(np.zeros(shape))
 
     arr = np.arange(size).reshape(shape)
 
-    vec[:] = arr
-    assert all_equal(vec, np.arange(size))
+    elem[:] = arr
+    assert all_equal(elem, np.arange(size))
 
-    vec[:] = 0
-    assert all_equal(vec, np.zeros(size))
+    elem[:] = 0
+    assert all_equal(elem, np.zeros(size))
 
-    vec[:] = [1]
-    assert all_equal(vec, np.ones(size))
+    elem[:] = [1]
+    assert all_equal(elem, np.ones(size))
 
     with pytest.raises(ValueError):
         # Reversed shape -> bad
-        vec[:] = np.arange(size).reshape((4,) * 3 + (3,) * 3)
+        elem[:] = np.arange(size).reshape((4,) * 3 + (3,) * 3)
 
 
 def test_setslice():
     discr = odl.uniform_discr(0, 1, 3)
-    vec = discr.element([1, 2, 3])
+    elem = discr.element([1, 2, 3])
 
-    vec[:] = [4, 5, 6]
-    assert all_equal(vec, [4, 5, 6])
+    elem[:] = [4, 5, 6]
+    assert all_equal(elem, [4, 5, 6])
 
 
 def test_asarray_2d():
     discr_F = odl.uniform_discr([0, 0], [1, 1], [2, 2], order='F')
-    vec_F = discr_F.element([[1, 2],
+    elem_F = discr_F.element([[1, 2],
                              [3, 4]])
 
     # Verify that returned array equals input data
-    assert all_equal(vec_F.asarray(), [[1, 2],
-                                       [3, 4]])
+    assert all_equal(elem_F.asarray(), [[1, 2],
+                                        [3, 4]])
     # Check order of out array
-    assert vec_F.asarray().flags['F_CONTIGUOUS']
+    assert elem_F.asarray().flags['F_CONTIGUOUS']
 
     # test out parameter
     out_F = np.asfortranarray(np.empty([2, 2]))
-    result_F = vec_F.asarray(out=out_F)
+    result_F = elem_F.asarray(out=out_F)
     assert result_F is out_F
     assert all_equal(out_F, [[1, 2],
                              [3, 4]])
@@ -619,33 +619,33 @@ def test_asarray_2d():
     # Try discontinuous
     out_F_wrong = np.asfortranarray(np.empty([2, 2]))[::2, :]
     with pytest.raises(ValueError):
-        result_F = vec_F.asarray(out=out_F_wrong)
+        result_F = elem_F.asarray(out=out_F_wrong)
 
     # Try wrong shape
     out_F_wrong = np.asfortranarray(np.empty([2, 3]))
     with pytest.raises(ValueError):
-        result_F = vec_F.asarray(out=out_F_wrong)
+        result_F = elem_F.asarray(out=out_F_wrong)
 
     # Try wrong order
     out_F_wrong = np.empty([2, 2])
     with pytest.raises(ValueError):
-        vec_F.asarray(out=out_F_wrong)
+        elem_F.asarray(out=out_F_wrong)
 
     # Also check with C ordering
     discr_C = odl.uniform_discr([0, 0], [1, 1], (2, 2), order='C')
-    vec_C = discr_C.element([[1, 2],
+    elem_C = discr_C.element([[1, 2],
                              [3, 4]])
 
     # Verify that returned array equals input data
-    assert all_equal(vec_C.asarray(), [[1, 2],
-                                       [3, 4]])
+    assert all_equal(elem_C.asarray(), [[1, 2],
+                                        [3, 4]])
 
     # Check order of out array
-    assert vec_C.asarray().flags['C_CONTIGUOUS']
+    assert elem_C.asarray().flags['C_CONTIGUOUS']
 
     # test out parameter
     out_C = np.empty([2, 2])
-    result_C = vec_C.asarray(out=out_C)
+    result_C = elem_C.asarray(out=out_C)
     assert result_C is out_C
     assert all_equal(out_C, [[1, 2],
                              [3, 4]])
@@ -653,17 +653,17 @@ def test_asarray_2d():
     # Try discontinuous
     out_C_wrong = np.empty([4, 2])[::2, :]
     with pytest.raises(ValueError):
-        result_C = vec_C.asarray(out=out_C_wrong)
+        result_C = elem_C.asarray(out=out_C_wrong)
 
     # Try wrong shape
     out_C_wrong = np.empty([2, 3])
     with pytest.raises(ValueError):
-        result_C = vec_C.asarray(out=out_C_wrong)
+        result_C = elem_C.asarray(out=out_C_wrong)
 
     # Try wrong order
     out_C_wrong = np.asfortranarray(np.empty([2, 2]))
     with pytest.raises(ValueError):
-        vec_C.asarray(out=out_C_wrong)
+        elem_C.asarray(out=out_C_wrong)
 
 
 def test_transpose():
@@ -682,33 +682,33 @@ def test_transpose():
 def test_cell_sides():
     # Non-degenerated case, should be same as cell size
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
-    vec = discr.element()
+    elem = discr.element()
 
     assert all_equal(discr.cell_sides, [0.5] * 2)
-    assert all_equal(vec.cell_sides, [0.5] * 2)
+    assert all_equal(elem.cell_sides, [0.5] * 2)
 
     # Degenerated case, uses interval size in 1-point dimensions
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 1])
-    vec = discr.element()
+    elem = discr.element()
 
     assert all_equal(discr.cell_sides, [0.5, 1])
-    assert all_equal(vec.cell_sides, [0.5, 1])
+    assert all_equal(elem.cell_sides, [0.5, 1])
 
 
 def test_cell_volume():
     # Non-degenerated case
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 2])
-    vec = discr.element()
+    elem = discr.element()
 
     assert discr.cell_volume == 0.25
-    assert vec.cell_volume == 0.25
+    assert elem.cell_volume == 0.25
 
     # Degenerated case, uses interval size in 1-point dimensions
     discr = odl.uniform_discr([0, 0], [1, 1], [2, 1])
-    vec = discr.element()
+    elem = discr.element()
 
     assert discr.cell_volume == 0.5
-    assert vec.cell_volume == 0.5
+    assert elem.cell_volume == 0.5
 
 
 def test_astype():
@@ -752,7 +752,7 @@ def test_ufunc(fn_impl, ufunc):
     ufunc = getattr(np, name)
 
     # Create some data
-    arrays, vectors = example_vectors(space, n_args + n_out)
+    arrays, vectors = noise_elements(space, n_args + n_out)
     in_arrays = arrays[:n_args]
     out_arrays = arrays[n_args:]
     data_vector = vectors[0]
@@ -863,15 +863,56 @@ def test_reduction(fn_impl, reduction):
     ufunc = getattr(np, name)
 
     # Create some data
-    x_arr, x = example_vectors(space, 1)
+    x_arr, x = noise_elements(space, 1)
     assert almost_equal(ufunc(x_arr), getattr(x.ufunc, name)())
+
+
+powers = [1.0, 2.0, 0.5, -0.5, -1.0, -2.0]
+power_ids = [' power = {} '.format(p) for p in powers]
+
+
+@pytest.fixture(scope='module', ids=power_ids, params=powers)
+def power(request):
+    return request.param
+
+
+def test_power(fn_impl, power):
+    space = odl.uniform_discr([0, 0], [1, 1], [2, 2], impl=fn_impl)
+
+    x_arr, x = noise_elements(space, 1)
+    x_pos_arr = np.abs(x_arr)
+    x_neg_arr = -x_pos_arr
+    x_pos = np.abs(x)
+    x_neg = -x_pos
+
+    if int(power) != power:
+        # Make input positive to get real result
+        for y in [x_pos_arr, x_neg_arr, x_pos, x_neg]:
+            y += 0.1
+
+    true_pos_pow = np.power(x_pos_arr, power)
+    true_neg_pow = np.power(x_neg_arr, power)
+
+    if int(power) != power and fn_impl == 'cuda':
+        with pytest.raises(ValueError):
+            x_pos ** power
+        with pytest.raises(ValueError):
+            x_pos **= power
+    else:
+        assert all_almost_equal(x_pos ** power, true_pos_pow)
+        assert all_almost_equal(x_neg ** power, true_neg_pow)
+
+        x_pos **= power
+        x_neg **= power
+        assert all_almost_equal(x_pos, true_pos_pow)
+        assert all_almost_equal(x_neg, true_neg_pow)
 
 
 def test_norm_interval(exponent):
     # Test the function f(x) = x^2 on the interval (0, 1). Its
     # L^p-norm is (1 + 2*p)^(-1/p) for finite p and 1 for p=inf
     p = exponent
-    fspace = odl.FunctionSpace(odl.Interval(0, 1))
+    fspace = odl.FunctionSpace(odl.IntervalProd(0, 1))
     lpdiscr = odl.uniform_discr_fromspace(fspace, 10, exponent=p)
 
     testfunc = fspace.element(lambda x: x ** 2)
@@ -889,7 +930,7 @@ def test_norm_rectangle(exponent):
     # L^p-norm is ((1 + 2*p) * (1 + 3 * p) / 2)^(-1/p) for finite p
     # and 1 for p=inf
     p = exponent
-    fspace = odl.FunctionSpace(odl.Rectangle([0, -1], [1, 1]))
+    fspace = odl.FunctionSpace(odl.IntervalProd([0, -1], [1, 1]))
     lpdiscr = odl.uniform_discr_fromspace(fspace, (20, 30), exponent=p)
 
     testfunc = fspace.element(lambda x: x[0] ** 2 * x[1] ** 3)
@@ -910,7 +951,7 @@ def test_norm_rectangle_boundary(fn_impl, exponent):
         pytest.xfail('inf-norm not implemented in CUDA')
 
     dtype = 'float32'
-    rect = odl.Rectangle([-1, -2], [1, 2])
+    rect = odl.IntervalProd([-1, -2], [1, 2])
     fspace = odl.FunctionSpace(rect, out_dtype=dtype)
 
     # Standard case
@@ -975,42 +1016,42 @@ def test_uniform_discr_fromdiscr_one_attr():
     discr = odl.uniform_discr([0, -1], [1, 1], [10, 5])
     # csides = [0.1, 0.4]
 
-    # min_corner -> translate, keep cells
-    new_min_corner = [3, 7]
-    true_new_end = [4, 9]
+    # min_pt -> translate, keep cells
+    new_min_pt = [3, 7]
+    true_new_max_pt = [4, 9]
 
-    new_discr = odl.uniform_discr_fromdiscr(discr, min_corner=new_min_corner)
-    assert all_almost_equal(new_discr.min_corner, new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_end)
+    new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=new_min_pt)
+    assert all_almost_equal(new_discr.min_pt, new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, discr.cell_sides)
 
-    # max_corner -> translate, keep cells
-    new_max_corner = [3, 7]
-    true_new_begin = [2, 5]
+    # max_pt -> translate, keep cells
+    new_max_pt = [3, 7]
+    true_new_min_pt = [2, 5]
 
-    new_discr = odl.uniform_discr_fromdiscr(discr, max_corner=new_max_corner)
-    assert all_almost_equal(new_discr.min_corner, true_new_begin)
-    assert all_almost_equal(new_discr.max_corner, new_max_corner)
+    new_discr = odl.uniform_discr_fromdiscr(discr, max_pt=new_max_pt)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, discr.cell_sides)
 
-    # nsamples -> resize cells, keep corners
-    new_nsamples = (5, 20)
+    # shape -> resize cells, keep corners
+    new_shape = (5, 20)
     true_new_csides = [0.2, 0.1]
-    new_discr = odl.uniform_discr_fromdiscr(discr, nsamples=new_nsamples)
-    assert all_almost_equal(new_discr.min_corner, discr.min_corner)
-    assert all_almost_equal(new_discr.max_corner, discr.max_corner)
-    assert all_equal(new_discr.shape, new_nsamples)
+    new_discr = odl.uniform_discr_fromdiscr(discr, shape=new_shape)
+    assert all_almost_equal(new_discr.min_pt, discr.min_pt)
+    assert all_almost_equal(new_discr.max_pt, discr.max_pt)
+    assert all_equal(new_discr.shape, new_shape)
     assert all_almost_equal(new_discr.cell_sides, true_new_csides)
 
     # cell_sides -> resize cells, keep corners
     new_csides = [0.5, 0.2]
-    true_new_nsamples = (2, 10)
+    true_new_shape = (2, 10)
     new_discr = odl.uniform_discr_fromdiscr(discr, cell_sides=new_csides)
-    assert all_almost_equal(new_discr.min_corner, discr.min_corner)
-    assert all_almost_equal(new_discr.max_corner, discr.max_corner)
-    assert all_equal(new_discr.shape, true_new_nsamples)
+    assert all_almost_equal(new_discr.min_pt, discr.min_pt)
+    assert all_almost_equal(new_discr.max_pt, discr.max_pt)
+    assert all_equal(new_discr.shape, true_new_shape)
     assert all_almost_equal(new_discr.cell_sides, new_csides)
 
 
@@ -1020,53 +1061,53 @@ def test_uniform_discr_fromdiscr_two_attrs():
     discr = odl.uniform_discr([0, -1], [1, 1], [10, 5])
     # csides = [0.1, 0.4]
 
-    new_min_corner = [-2, 1]
-    new_max_corner = [4, 2]
+    new_min_pt = [-2, 1]
+    new_max_pt = [4, 2]
     true_new_csides = [0.6, 0.2]
-    new_discr = odl.uniform_discr_fromdiscr(discr, min_corner=new_min_corner,
-                                            max_corner=new_max_corner)
-    assert all_almost_equal(new_discr.min_corner, new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, new_max_corner)
+    new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=new_min_pt,
+                                            max_pt=new_max_pt)
+    assert all_almost_equal(new_discr.min_pt, new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, true_new_csides)
 
-    new_min_corner = [-2, 1]
-    new_nsamples = (5, 20)
-    true_new_max_corner = [-1.5, 9]
-    new_discr = odl.uniform_discr_fromdiscr(discr, min_corner=new_min_corner,
-                                            nsamples=new_nsamples)
-    assert all_almost_equal(new_discr.min_corner, new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_max_corner)
-    assert all_equal(new_discr.shape, new_nsamples)
+    new_min_pt = [-2, 1]
+    new_shape = (5, 20)
+    true_new_max_pt = [-1.5, 9]
+    new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=new_min_pt,
+                                            shape=new_shape)
+    assert all_almost_equal(new_discr.min_pt, new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
+    assert all_equal(new_discr.shape, new_shape)
     assert all_almost_equal(new_discr.cell_sides, discr.cell_sides)
 
-    new_min_corner = [-2, 1]
+    new_min_pt = [-2, 1]
     new_csides = [0.6, 0.2]
-    true_new_max_corner = [4, 2]
-    new_discr = odl.uniform_discr_fromdiscr(discr, min_corner=new_min_corner,
+    true_new_max_pt = [4, 2]
+    new_discr = odl.uniform_discr_fromdiscr(discr, min_pt=new_min_pt,
                                             cell_sides=new_csides)
-    assert all_almost_equal(new_discr.min_corner, new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_max_corner)
+    assert all_almost_equal(new_discr.min_pt, new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, new_csides)
 
-    new_max_corner = [4, 2]
-    new_nsamples = (5, 20)
-    true_new_min_corner = [3.5, -6]
-    new_discr = odl.uniform_discr_fromdiscr(discr, max_corner=new_max_corner,
-                                            nsamples=new_nsamples)
-    assert all_almost_equal(new_discr.min_corner, true_new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, new_max_corner)
-    assert all_equal(new_discr.shape, new_nsamples)
+    new_max_pt = [4, 2]
+    new_shape = (5, 20)
+    true_new_min_pt = [3.5, -6]
+    new_discr = odl.uniform_discr_fromdiscr(discr, max_pt=new_max_pt,
+                                            shape=new_shape)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, new_max_pt)
+    assert all_equal(new_discr.shape, new_shape)
     assert all_almost_equal(new_discr.cell_sides, discr.cell_sides)
 
-    new_max_corner = [4, 2]
+    new_max_pt = [4, 2]
     new_csides = [0.6, 0.2]
-    true_new_min_corner = [-2, 1]
-    new_discr = odl.uniform_discr_fromdiscr(discr, max_corner=new_max_corner,
+    true_new_min_pt = [-2, 1]
+    new_discr = odl.uniform_discr_fromdiscr(discr, max_pt=new_max_pt,
                                             cell_sides=new_csides)
-    assert all_almost_equal(new_discr.min_corner, true_new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, new_max_corner)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, new_max_pt)
     assert all_equal(new_discr.shape, discr.shape)
     assert all_almost_equal(new_discr.cell_sides, new_csides)
 
@@ -1076,42 +1117,42 @@ def test_uniform_discr_fromdiscr_per_axis():
     discr = odl.uniform_discr([0, -1], [1, 1], [10, 5])
     # csides = [0.1, 0.4]
 
-    new_min_corner = [-2, None]
-    new_max_corner = [4, 2]
-    new_nsamples = (None, 20)
+    new_min_pt = [-2, None]
+    new_max_pt = [4, 2]
+    new_shape = (None, 20)
     new_csides = [None, None]
 
-    true_new_min_corner = [-2, -6]
-    true_new_max_corner = [4, 2]
-    true_new_nsamples = (10, 20)
+    true_new_min_pt = [-2, -6]
+    true_new_max_pt = [4, 2]
+    true_new_shape = (10, 20)
     true_new_csides = [0.6, 0.4]
 
     new_discr = odl.uniform_discr_fromdiscr(
-        discr, min_corner=new_min_corner, max_corner=new_max_corner,
-        nsamples=new_nsamples, cell_sides=new_csides)
+        discr, min_pt=new_min_pt, max_pt=new_max_pt,
+        shape=new_shape, cell_sides=new_csides)
 
-    assert all_almost_equal(new_discr.min_corner, true_new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_max_corner)
-    assert all_equal(new_discr.shape, true_new_nsamples)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
+    assert all_equal(new_discr.shape, true_new_shape)
     assert all_almost_equal(new_discr.cell_sides, true_new_csides)
 
-    new_min_corner = None
-    new_max_corner = [None, 2]
-    new_nsamples = (5, None)
+    new_min_pt = None
+    new_max_pt = [None, 2]
+    new_shape = (5, None)
     new_csides = [None, 0.2]
 
-    true_new_min_corner = [0, 1]
-    true_new_max_corner = [1, 2]
-    true_new_nsamples = (5, 5)
+    true_new_min_pt = [0, 1]
+    true_new_max_pt = [1, 2]
+    true_new_shape = (5, 5)
     true_new_csides = [0.2, 0.2]
 
     new_discr = odl.uniform_discr_fromdiscr(
-        discr, min_corner=new_min_corner, max_corner=new_max_corner,
-        nsamples=new_nsamples, cell_sides=new_csides)
+        discr, min_pt=new_min_pt, max_pt=new_max_pt,
+        shape=new_shape, cell_sides=new_csides)
 
-    assert all_almost_equal(new_discr.min_corner, true_new_min_corner)
-    assert all_almost_equal(new_discr.max_corner, true_new_max_corner)
-    assert all_equal(new_discr.shape, true_new_nsamples)
+    assert all_almost_equal(new_discr.min_pt, true_new_min_pt)
+    assert all_almost_equal(new_discr.max_pt, true_new_max_pt)
+    assert all_equal(new_discr.shape, true_new_shape)
     assert all_almost_equal(new_discr.cell_sides, true_new_csides)
 
 

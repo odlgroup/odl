@@ -25,15 +25,9 @@ For details see :ref:`chambolle_pock`, :ref:`proximal_operators`, and
 references therein.
 """
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
 import scipy
 import odl
-
 
 # Read test image:
 # convert integer values to float, and rotate to get the image upright
@@ -46,7 +40,7 @@ image *= 100 / image.max()
 # Add noise
 noisy_image = np.random.poisson(1 + image)
 
-# Discretized spaces and vectors
+# Discretized spaces and elements
 space = odl.uniform_discr([0, 0], shape, shape)
 orig = space.element(image)
 noisy = space.element(noisy_image)
@@ -89,7 +83,7 @@ callback = (odl.solvers.CallbackPrintIteration() &
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op, 100)
+op_norm = 1.1 * odl.power_method_opnorm(op)
 tau = 10.0 / op_norm  # Step size for the primal variable
 sigma = 0.1 / op_norm  # Step size for the dual variable
 

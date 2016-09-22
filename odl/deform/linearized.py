@@ -25,10 +25,10 @@ from builtins import super
 
 import numpy as np
 
-from odl.discr import (DiscreteLp, DiscreteLpVector, Gradient, Divergence,
+from odl.discr import (DiscreteLp, DiscreteLpElement, Gradient, Divergence,
                        PointwiseInner)
 from odl.operator.operator import Operator
-from odl.space import ProductSpaceVector
+from odl.space import ProductSpaceElement
 
 
 __all__ = ('LinDeformFixedTempl', 'LinDeformFixedDisp')
@@ -42,10 +42,10 @@ def _linear_deform(template, displacement, out=None):
 
     Parameters
     ----------
-    template : `DiscreteLpVector`
+    template : `DiscreteLpElement`
         Template to be deformed by a displacement field.
-    displacement : element of power space of `DiscreteLp`
-        The vector field (displacement field) used to deform the
+    displacement : element of power space of ``template.space``
+        Vector field (displacement field) used to deform the
         template.
     out : `numpy.ndarray`, optional
         Array to which the function values of the deformed template
@@ -142,7 +142,7 @@ class LinDeformFixedTempl(Operator):
 
         Parameters
         ----------
-        template : `DiscreteLpVector`
+        template : `DiscreteLpElement`
             Fixed template that is to be deformed.
 
         Examples
@@ -172,8 +172,8 @@ class LinDeformFixedTempl(Operator):
         >>> print(op(disp_field))
         [0.0, 0.0, 1.0, 0.5, 0.0]
         """
-        if not isinstance(template, DiscreteLpVector):
-            raise TypeError('`template` must be a `DiscreteLpVector`'
+        if not isinstance(template, DiscreteLpElement):
+            raise TypeError('`template` must be a `DiscreteLpElement`'
                             'instance, got {!r}'.format(template))
 
         self.__template = template
@@ -195,7 +195,7 @@ class LinDeformFixedTempl(Operator):
 
         Parameters
         ----------
-        displacement : `domain` element-like
+        displacement : `domain` `element-like`
             Point at which the derivative is computed.
 
         Returns
@@ -301,8 +301,8 @@ class LinDeformFixedDisp(Operator):
         >>> print(op(template))
         [0.0, 0.0, 1.0, 0.5, 0.0]
         """
-        if not isinstance(displacement, ProductSpaceVector):
-            raise TypeError('`displacement must be a `ProductSpaceVector` '
+        if not isinstance(displacement, ProductSpaceElement):
+            raise TypeError('`displacement must be a `ProductSpaceElement` '
                             'instance, got {!r}'.format(displacement))
         if not displacement.space.is_power_space:
             raise TypeError('`displacement.space` must be a power space, '

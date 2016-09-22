@@ -23,9 +23,9 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-from odl.discr import DiscreteLp, DiscreteLpVector
+from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.operator.operator import Operator
-from odl.space import ProductSpaceVector, ProductSpace
+from odl.space import ProductSpaceElement, ProductSpace
 
 
 __all__ = ('geometric_deform', 'mass_presv_deform',
@@ -41,7 +41,7 @@ def geometric_deform(template, deformation, out=None):
 
     Parameters
     ----------
-    template : `DiscreteLpVector`
+    template : `DiscreteLpElement`
         Template to be deformed by a deformation field.
     deformation : element of power space of `DiscreteLp`
         The deformation field used to deform the template.
@@ -97,14 +97,14 @@ def mass_presv_deform(template, mass_presv_dfield, out=None):
 
     Parameters
     ----------
-    template : `DiscreteLpVector`
+    template : `DiscreteLpElement`
         Template to be deformed by a deformation field.
     mass_presv_dfield : element of product space of vector field space
         and `DiscreteLp`
         The mass-preserving deformation field used to deform the template.
         It contains the deformation, i.e., an element of vector field space
         or power space of `DiscreteLp`, and the Jacobian determinant of
-        the deformation, i.e., a `DiscreteLpVector`.
+        the deformation, i.e., a `DiscreteLpElement`.
     out : `numpy.ndarray`, optional
         Array to which the function values of the deformed template
         are written. It must have the same shape as ``template`` and
@@ -180,7 +180,7 @@ class GeometricDeformFixedTempl(Operator):
 
         Parameters
         ----------
-        template : `DiscreteLpVector`
+        template : `DiscreteLpElement`
             Fixed template that is to be deformed.
 
         Examples
@@ -212,8 +212,8 @@ class GeometricDeformFixedTempl(Operator):
         >>> print(op(deform))
         [0.0, 0.0, 1.0, 0.5, 0.0]
         """
-        if not isinstance(template, DiscreteLpVector):
-            raise TypeError('`template` must be a `DiscreteLpVector`'
+        if not isinstance(template, DiscreteLpElement):
+            raise TypeError('`template` must be a `DiscreteLpElement`'
                             'instance, got {!r}'.format(template))
 
         self.__template = template
@@ -302,8 +302,8 @@ class GeometricDeformFixedDeform(Operator):
         >>> print(op(template))
         [0.0, 0.0, 1.0, 0.5, 0.0]
         """
-        if not isinstance(deformation, ProductSpaceVector):
-            raise TypeError('`deformation must be a `ProductSpaceVector` '
+        if not isinstance(deformation, ProductSpaceElement):
+            raise TypeError('`deformation must be a `ProductSpaceElement` '
                             'instance, got {!r}'.format(deformation))
         if not deformation.space.is_power_space:
             raise TypeError('`deformation.space` must be a power space, '
@@ -381,7 +381,7 @@ class MassPresvDeformFixedTempl(Operator):
 
         Parameters
         ----------
-        template : `DiscreteLpVector`
+        template : `DiscreteLpElement`
             Fixed template that is to be deformed.
 
         Examples
@@ -417,8 +417,8 @@ class MassPresvDeformFixedTempl(Operator):
         >>> print(op(mass_presv_dfield))
         [0.0, 1.07761764468, 0.0, 0.0, 0.0]
         """
-        if not isinstance(template, DiscreteLpVector):
-            raise TypeError('`template` must be a `DiscreteLpVector`'
+        if not isinstance(template, DiscreteLpElement):
+            raise TypeError('`template` must be a `DiscreteLpElement`'
                             'instance, got {!r}'.format(template))
 
         self.__template = template
@@ -476,7 +476,7 @@ class MassPresvDeformFixedDeform(Operator):
 
         Parameters
         ----------
-        template : `DiscreteLpVector`
+        template : `DiscreteLpElement`
             Fixed template that is to be deformed.
 
         Examples
@@ -512,9 +512,9 @@ class MassPresvDeformFixedDeform(Operator):
         >>> print(op(template))
         [0.0, 1.07761764468, 0.0, 0.0, 0.0]
         """
-        if not isinstance(mass_presv_deform[0], ProductSpaceVector):
+        if not isinstance(mass_presv_deform[0], ProductSpaceElement):
             raise TypeError('`mass_presv_deform[0] must be '
-                            'a `ProductSpaceVector` instance, '
+                            'a `ProductSpaceElement` instance, '
                             'got {!r}'.format(mass_presv_deform[0]))
         if not mass_presv_deform.space[0].is_power_space:
             raise TypeError('`mass_presv_deform.space[0]` must be '

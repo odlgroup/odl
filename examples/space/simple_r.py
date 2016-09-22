@@ -17,11 +17,6 @@
 
 """An example of a very simple space, the real numbers."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-from builtins import super
 
 import odl
 
@@ -30,7 +25,7 @@ class Reals(odl.LinearSpace):
     """The real numbers."""
 
     def __init__(self):
-        super().__init__(odl.RealNumbers())
+        odl.LinearSpace.__init__(self, field=odl.RealNumbers())
 
     def _inner(self, x1, x2):
         return x1.__val__ * x2.__val__
@@ -45,32 +40,32 @@ class Reals(odl.LinearSpace):
         return isinstance(other, Reals)
 
     def element(self, value=0):
-        return Reals.Vector(self, value)
+        return RealNumber(self, value)
 
-    class Vector(odl.LinearSpaceVector):
-        """Real vectors are floats
-        """
 
-        __val__ = None
+class RealNumber(odl.LinearSpaceElement):
+    """Real vectors are floats."""
 
-        def __init__(self, space, v):
-            odl.LinearSpaceVector.__init__(self, space)
-            self.__val__ = v
+    __val__ = None
 
-        def __float__(self):
-            return self.__val__.__float__()
+    def __init__(self, space, v):
+        odl.LinearSpaceElement.__init__(self, space=space)
+        self.__val__ = v
 
-        def __str__(self):
-            return str(self.__val__)
+    def __float__(self):
+        return self.__val__.__float__()
 
-if __name__ == '__main__':
-    R = Reals()
-    x = R.element(5.0)
-    y = R.element(10.0)
+    def __str__(self):
+        return str(self.__val__)
 
-    print(x)
-    print(y)
-    print(x + y)
-    print(x * y)
-    print(x - y)
-    print(3.14 * x)
+
+R = Reals()
+x = R.element(5.0)
+y = R.element(10.0)
+
+print(x)
+print(y)
+print(x + y)
+print(x * y)
+print(x - y)
+print(3.14 * x)

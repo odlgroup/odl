@@ -27,11 +27,6 @@ For further details and a description of the solution method used, see
 :ref:`chambolle_pock` in the ODL documentation.
 """
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
 import scipy
 import odl
@@ -83,7 +78,7 @@ proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op, 100, noisy)
+op_norm = 1.1 * odl.power_method_opnorm(op, xstart=noisy)
 
 niter = 400  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable

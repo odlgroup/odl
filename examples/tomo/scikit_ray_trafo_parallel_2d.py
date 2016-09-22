@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Example using the ray transform with 2d parallel beam geometry."""
+"""Example using the ray transform with 2d parallel beam geometry.
+
+This example makes use of the 'scikit' backend, which requires the
+`scikit-image <http://scikit-image.org/>`_ package.
+"""
 
 import numpy as np
 import odl
@@ -23,8 +27,7 @@ import odl
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_corner=[-20, -20], max_corner=[20, 20], nsamples=[300, 300],
-    dtype='float32')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
@@ -33,7 +36,7 @@ angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
 detector_partition = odl.uniform_partition(-30, 30, 558)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
-# ray transform aka forward projection. We use 'scikit' backend.
+# Ray transform (= forward projection). We use the 'scikit' backend.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='scikit')
 
 # Create a discrete Shepp-Logan phantom (modified version)

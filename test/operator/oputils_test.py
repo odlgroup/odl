@@ -207,12 +207,12 @@ def test_power_method_opnorm_symm():
 
     op = odl.MatVecOperator(mat)
     true_opnorm = 2
-    opnorm_est = power_method_opnorm(op, niter=10)
+    opnorm_est = power_method_opnorm(op)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
     # Start at a different point
     xstart = odl.rn(2).element([0.8, 0.5])
-    opnorm_est = power_method_opnorm(op, niter=10, xstart=xstart)
+    opnorm_est = power_method_opnorm(op, xstart=xstart)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
 
@@ -226,13 +226,14 @@ def test_power_method_opnorm_nonsymm():
 
     op = odl.MatVecOperator(mat)
     true_opnorm = 6
+
     # Start vector (1, 1) is close to the wrong eigenvector
-    opnorm_est = power_method_opnorm(op, niter=50)
+    opnorm_est = power_method_opnorm(op, maxiter=50)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
     # Start close to the correct eigenvector, converges very fast
     xstart = odl.rn(2).element([-0.8, 0.5])
-    opnorm_est = power_method_opnorm(op, niter=6, xstart=xstart)
+    opnorm_est = power_method_opnorm(op, maxiter=6, xstart=xstart)
     assert almost_equal(opnorm_est, true_opnorm, places=2)
 
 
@@ -244,29 +245,29 @@ def test_power_method_opnorm_exceptions():
 
     with pytest.raises(ValueError):
         # Too small number of iterates
-        power_method_opnorm(op, niter=0)
+        power_method_opnorm(op, maxiter=0)
 
     with pytest.raises(ValueError):
         # Negative number of iterates
-        power_method_opnorm(op, niter=-5)
+        power_method_opnorm(op, maxiter=-5)
 
     with pytest.raises(ValueError):
         # Input vector is zero
-        power_method_opnorm(op, niter=2, xstart=space.zero())
+        power_method_opnorm(op, maxiter=2, xstart=space.zero())
 
     with pytest.raises(ValueError):
         # Input vector in the nullspace
         op = odl.MatVecOperator([[0., 1.],
                                  [0., 0.]])
 
-        power_method_opnorm(op, niter=2, xstart=op.domain.one())
+        power_method_opnorm(op, maxiter=2, xstart=op.domain.one())
 
     with pytest.raises(ValueError):
         # Uneven number of iterates for non square operator
         op = odl.MatVecOperator([[1., 2., 3.],
                                  [4., 5., 6.]])
 
-        power_method_opnorm(op, niter=1, xstart=op.domain.one())
+        power_method_opnorm(op, maxiter=1, xstart=op.domain.one())
 
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')

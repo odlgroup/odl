@@ -55,7 +55,7 @@ where FOO, BAR, etc are the dependencies. Others require more complicated instal
 | [scikit-image](http://scikit-image.org/)    | 2D parallel beam forward/backward projectors in [RayTransform](http://odl.readthedocs.io/generated/odl.tomo.operators.ray_trafo.RayTransform.html) | scikit |
 | [FFTW](https://github.com/pyFFTW/pyFFTW)   | Accelerated [FourierTransform](http://odl.readthedocs.io/generated/odl.trafos.fourier.FourierTransform.html) | fftw |
 | [PyWavelets](https://github.com/PyWavelets/pywt)   | Computation of the  [WaveletTransform](http://odl.readthedocs.io/generated/odl.trafos.wavelet.WaveletTransform.html) | pywavelets |
-| [matplotlib](http://matplotlib.org/)   | Visualization through the [show](http://odl.readthedocs.io/generated/odl.discr.lp_discr.DiscreteLpVector.show.html) command | show |
+| [matplotlib](http://matplotlib.org/)   | Visualization through the [show](http://odl.readthedocs.io/generated/odl.discr.lp_discr.DiscreteLpElement.show.html) command | show |
 | [proximal](http://github.com/comp-imaging/ProxImaL)   | Solution of some convex optimization problems | proximal |
 | [pytest](http://pytest.org/latest/)   | Unit tests | testing |
 
@@ -95,6 +95,7 @@ To contact the developers either write an issue on github or send an email to od
 - Kati Niinimäki ([@niinimaki](https://github.com/niinimaki))
 - Axel Ringh ([@aringh](https://github.com/aringh))
 - Julian Moosmann ([@moosmann](https://github.com/moosmann))
+- Chong Chen ([@chongchenmath](https://github.com/chongchenmath))
 - Willem Jan Palenstijn ([@wjp](https://github.com/wjp))
 
 Funding

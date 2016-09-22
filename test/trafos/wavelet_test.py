@@ -158,7 +158,7 @@ def test_dwt():
     size_list = coeff_size_list((n,), nscales, wbasis, mode)
 
     # Define a discretized domain
-    domain = odl.FunctionSpace(odl.Interval([-1], [1]))
+    domain = odl.FunctionSpace(odl.IntervalProd([-1], [1]))
     nPoints = np.array([n])
     disc_domain = odl.uniform_discr_fromspace(domain, nPoints)
     disc_phantom = disc_domain.element(x)
@@ -202,7 +202,7 @@ def test_dwt():
     size_list = coeff_size_list((n, n), nscales, wbasis, mode)
 
     # Define a discretized domain
-    domain = odl.FunctionSpace(odl.Rectangle([-1, -1], [1, 1]))
+    domain = odl.FunctionSpace(odl.IntervalProd([-1, -1], [1, 1]))
     nPoints = np.array([n, n])
     disc_domain = odl.uniform_discr_fromspace(domain, nPoints)
     disc_phantom = disc_domain.element(x)
@@ -246,7 +246,7 @@ def test_dwt():
     size_list = coeff_size_list((n, n, n), nscales, wbasis, mode)
 
     # Define a discretized domain
-    domain = odl.FunctionSpace(odl.Cuboid([-1, -1, -1], [1, 1, 1]))
+    domain = odl.FunctionSpace(odl.IntervalProd([-1, -1, -1], [1, 1, 1]))
     nPoints = np.array([n, n, n])
     disc_domain = odl.uniform_discr_fromspace(domain, nPoints)
     disc_phantom = disc_domain.element(x)

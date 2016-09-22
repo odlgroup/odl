@@ -39,12 +39,12 @@ class SolverCallback(object):
 
         Parameters
         ----------
-        result : `LinearSpaceVector`
+        result : `LinearSpaceElement`
             Partial result after n iterations
 
         Returns
         -------
-        `None`
+        None
         """
 
     def __and__(self, other):
@@ -55,7 +55,7 @@ class SolverCallback(object):
         Parameters
         ----------
         other : `callable`
-            The other callback to compose with
+            The other callback to compose with.
 
         Returns
         -------
@@ -72,6 +72,13 @@ class SolverCallback(object):
         CallbackStore() & CallbackPrintIteration()
         """
         return _CallbackAnd(self, other)
+
+    def reset(self):
+        """Reset the callback to its initial state.
+
+        Should be overridden by subclasses.
+        """
+        pass
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -100,6 +107,11 @@ class _CallbackAnd(SolverCallback):
         for p in self.callbacks:
             p(result)
 
+    def reset(self):
+        """Reset all callbacks to their initial state."""
+        for callback in self.callbacks:
+            callback.reset()
+
     def __repr__(self):
         """Return ``repr(self)``."""
         return ' & '.join('{}'.format(p) for p in self.callbacks)
@@ -120,11 +132,11 @@ class CallbackStore(SolverCallback):
 
         Parameters
         ----------
-        results : `list`, optional
+        results : list, optional
             List in which to store the iterates.
             Default: new list (``[]``)
         results : `callable`, optional
-            Function to be called on all incomming results before storage.
+            Function to be called on all incoming results before storage.
             Default: copy
 
         Examples
@@ -157,6 +169,10 @@ class CallbackStore(SolverCallback):
             self._results.append(self._function(result))
         else:
             self._results.append(result.copy())
+
+    def reset(self):
+        """Clear the `results` list."""
+        self._results = []
 
     def __iter__(self):
         """Allow iteration over the results."""
@@ -223,7 +239,7 @@ class CallbackPrintIteration(SolverCallback):
 
         Parameters
         ----------
-        text : `str`
+        text : string
             Text to display before the iteration count. Default: 'iter ='
         """
         self.text = text if text is not None else self._default_text
@@ -233,6 +249,10 @@ class CallbackPrintIteration(SolverCallback):
         """Print the current iteration."""
         print("{} {}".format(self.text, self.iter))
         self.iter += 1
+
+    def reset(self):
+        """Set `iter` to 0."""
+        self.iter = 0
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -254,6 +274,10 @@ class CallbackPrintTiming(SolverCallback):
         print("Time elapsed = {:<5.03f} s".format(t - self.time))
         self.time = t
 
+    def reset(self):
+        """Set `time` to the current time."""
+        self.time = time.time()
+
     def __repr__(self):
         """Return ``repr(self)``."""
         return 'CallbackPrintTiming()'
@@ -263,14 +287,9 @@ class CallbackPrintNorm(SolverCallback):
 
     """Print the current norm."""
 
-    def __init__(self):
-        """Initialize a new instance."""
-        self.iter = 0
-
     def __call__(self, result):
         """Print the current norm."""
         print("norm = {}".format(result.norm()))
-        self.iter += 1
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -283,19 +302,18 @@ class CallbackShow(SolverCallback):
 
     See Also
     --------
-    DiscreteLpVector.show
+    DiscreteLpElement.show
     NtuplesBaseVector.show
     """
 
     def __init__(self, *args, **kwargs):
         """Initialize a new instance.
 
-        Parameters are passed through to the vectors show method. Additional
-        parameters included.
+        Additional parameters are passed through to the ``show`` method.
 
         Parameters
         ----------
-        display_step : positive `int`, optional
+        display_step : positive int, optional
             Number of iterations between plots. Default: 1
 
         Other Parameters
@@ -315,6 +333,11 @@ class CallbackShow(SolverCallback):
             self.fig = x.show(*self.args, fig=self.fig, **self.kwargs)
 
         self.iter += 1
+
+    def reset(self):
+        """Set `iter` to 0 and create a new figure."""
+        self.iter = 0
+        self.fig = None
 
     def __repr__(self):
         """Return ``repr(self)``."""

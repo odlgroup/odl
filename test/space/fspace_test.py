@@ -34,17 +34,17 @@ from odl.util.testutils import all_almost_equal, all_equal, almost_equal
 
 
 def test_fspace_init():
-    intv = odl.Interval(0, 1)
+    intv = odl.IntervalProd(0, 1)
     FunctionSpace(intv)
     FunctionSpace(intv, field=odl.RealNumbers())
     FunctionSpace(intv, field=odl.ComplexNumbers())
 
-    rect = odl.Rectangle([0, 0], [1, 2])
+    rect = odl.IntervalProd([0, 0], [1, 2])
     FunctionSpace(rect)
     FunctionSpace(rect, field=odl.RealNumbers())
     FunctionSpace(rect, field=odl.ComplexNumbers())
 
-    cube = odl.Cuboid([0, 0, 0], [1, 2, 3])
+    cube = odl.IntervalProd([0, 0, 0], [1, 2, 3])
     FunctionSpace(cube)
     FunctionSpace(cube, field=odl.RealNumbers())
     FunctionSpace(cube, field=odl.ComplexNumbers())
@@ -62,7 +62,7 @@ def test_fset_init():
 
 
 def test_fspace_simple_attributes():
-    intv = odl.Interval(0, 1)
+    intv = odl.IntervalProd(0, 1)
     fspace = FunctionSpace(intv)
     fspace_r = FunctionSpace(intv, field=odl.RealNumbers())
     fspace_c = FunctionSpace(intv, field=odl.ComplexNumbers())
@@ -74,8 +74,8 @@ def test_fspace_simple_attributes():
 
 
 def test_fspace_equality():
-    intv = odl.Interval(0, 1)
-    intv2 = odl.Interval(-1, 1)
+    intv = odl.IntervalProd(0, 1)
+    intv2 = odl.IntervalProd(-1, 1)
     fspace = FunctionSpace(intv)
     fspace_r = FunctionSpace(intv, field=odl.RealNumbers())
     fspace_c = FunctionSpace(intv, field=odl.ComplexNumbers())
@@ -87,22 +87,22 @@ def test_fspace_equality():
 
 
 def _points(domain, num):
-    beg = domain.begin
-    end = domain.end
+    min_pt = domain.min_pt
+    max_pt = domain.max_pt
     ndim = domain.ndim
     points = np.random.uniform(low=0, high=1, size=(ndim, num))
     for i in range(ndim):
-        points[i, :] = beg[i] + (end[i] - beg[i]) * points[i]
+        points[i, :] = min_pt[i] + (max_pt[i] - min_pt[i]) * points[i]
     return points
 
 
 def _meshgrid(domain, shape):
-    beg = domain.begin
-    end = domain.end
+    min_pt = domain.min_pt
+    max_pt = domain.max_pt
     ndim = domain.ndim
     coord_vecs = []
     for i in range(ndim):
-        vec = np.random.uniform(low=beg[i], high=end[i], size=shape[i])
+        vec = np.random.uniform(low=min_pt[i], high=max_pt[i], size=shape[i])
         vec.sort()
         coord_vecs.append(vec)
     return sparse_meshgrid(*coord_vecs)
@@ -110,7 +110,7 @@ def _meshgrid(domain, shape):
 
 def test_fspace_vector_init():
     # 1d, real
-    intv = odl.Interval(0, 1)
+    intv = odl.IntervalProd(0, 1)
     fspace = FunctionSpace(intv)
     fspace.element(func_1d_oop)
     fspace.element(func_1d_oop, vectorized=False)
@@ -119,7 +119,7 @@ def test_fspace_vector_init():
     fspace.element(func_1d_dual, vectorized=True)
 
     # 2d, real
-    rect = odl.Rectangle([0, 0], [1, 2])
+    rect = odl.IntervalProd([0, 0], [1, 2])
     fspace = FunctionSpace(rect)
     fspace.element(func_2d_novec, vectorized=False)
     fspace.element(func_2d_vec_oop)
@@ -154,14 +154,14 @@ def test_fset_vector_eval():
 
 
 def _standard_setup_2d():
-    rect = odl.Rectangle([0, 0], [1, 2])
+    rect = odl.IntervalProd([0, 0], [1, 2])
     points = _points(rect, num=5)
     mg = _meshgrid(rect, shape=(2, 3))
     return rect, points, mg
 
 
 def test_fspace_out_dtype():
-    rect = odl.Rectangle([0, 0], [3, 5])
+    rect = odl.IntervalProd([0, 0], [3, 5])
     points = np.array([[0, 1], [0, 3], [3, 4], [2, 5]], dtype='int').T
     vec1 = np.array([0, 1, 3])[:, None]
     vec2 = np.array([1, 2, 4, 5])[None, :]
@@ -181,10 +181,10 @@ def test_fspace_out_dtype():
 
 def test_fspace_astype():
 
-    rspace = FunctionSpace(odl.Interval(0, 1))
-    cspace = FunctionSpace(odl.Interval(0, 1), field=odl.ComplexNumbers())
-    rspace_s = FunctionSpace(odl.Interval(0, 1), out_dtype='float32')
-    cspace_s = FunctionSpace(odl.Interval(0, 1), out_dtype='complex64')
+    rspace = FunctionSpace(odl.IntervalProd(0, 1))
+    cspace = FunctionSpace(odl.IntervalProd(0, 1), field=odl.ComplexNumbers())
+    rspace_s = FunctionSpace(odl.IntervalProd(0, 1), out_dtype='float32')
+    cspace_s = FunctionSpace(odl.IntervalProd(0, 1), out_dtype='complex64')
 
     assert rspace.astype('complex64') == cspace_s
     assert rspace.astype('complex128') == cspace
@@ -316,7 +316,7 @@ def test_fspace_vector_eval_complex():
 
 
 def test_fspace_vector_ufunc():
-    intv = odl.Interval(0, 1)
+    intv = odl.IntervalProd(0, 1)
     points = _points(intv, num=5)
     mg = _meshgrid(intv, shape=(5,))
 
@@ -329,7 +329,7 @@ def test_fspace_vector_ufunc():
 
 
 def test_fspace_vector_equality():
-    rect = odl.Rectangle([0, 0], [1, 2])
+    rect = odl.IntervalProd([0, 0], [1, 2])
     fspace = FunctionSpace(rect)
 
     f_novec = fspace.element(func_2d_novec, vectorized=False)
@@ -362,7 +362,7 @@ def test_fspace_vector_equality():
 
 
 def test_fspace_vector_assign():
-    fspace = FunctionSpace(odl.Interval(0, 1))
+    fspace = FunctionSpace(odl.IntervalProd(0, 1))
 
     f_novec = fspace.element(func_1d_oop, vectorized=False)
     f_vec_ip = fspace.element(func_1d_ip, vectorized=True)
@@ -382,7 +382,7 @@ def test_fspace_vector_assign():
 
 
 def test_fspace_vector_copy():
-    fspace = FunctionSpace(odl.Interval(0, 1))
+    fspace = FunctionSpace(odl.IntervalProd(0, 1))
 
     f_novec = fspace.element(func_1d_oop, vectorized=False)
     f_vec_ip = fspace.element(func_1d_ip, vectorized=True)

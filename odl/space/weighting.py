@@ -15,12 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""CPU implementations of ``n``-dimensional Cartesian spaces.
-
-This is a default implementation of :math:`A^n` for an arbitrary set
-:math:`A` as well as the real and complex spaces :math:`R^n` and
-:math:`C^n`. The data is represented by NumPy arrays.
-"""
+"""Weightings for finite-dimensional spaces."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -29,12 +24,10 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import super
 
-# External module imports
 import numpy as np
 import scipy.linalg as linalg
 from scipy.sparse.base import isspmatrix
 
-# ODL imports
 from odl.space.base_ntuples import FnBaseVector
 from odl.util.utility import array1d_repr, arraynd_repr
 
@@ -63,12 +56,12 @@ class WeightingBase(object):
 
         Parameters
         ----------
-        impl : `str`
+        impl : string
             Specifier for the implementation backend
-        exponent : positive `float`, optional
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -79,7 +72,7 @@ class WeightingBase(object):
 
             This option can only be used if ``exponent`` is 2.0.
 
-            Default: `False`.
+            Default: False.
         """
         self.__impl = str(impl).lower()
         self.__exponent = float(exponent)
@@ -103,7 +96,7 @@ class WeightingBase(object):
 
     @property
     def dist_using_inner(self):
-        """True if the distance should be calculated using inner."""
+        """``True`` if the distance should be calculated using inner."""
         return self.__dist_using_inner
 
     def __eq__(self, other):
@@ -111,14 +104,14 @@ class WeightingBase(object):
 
         Returns
         -------
-        equal : `bool`
-            `True` if ``other`` is a the same weighting, `False`
+        equal : bool
+            ``True`` if ``other`` is a the same weighting, ``False``
             otherwise.
 
         Notes
         -----
         This operation must be computationally cheap, i.e. no large
-        arrays may be compared element-wise. That is the task of the
+        arrays may be compared entry-wise. That is the task of the
         `equiv` method.
         """
         return (isinstance(other, WeightingBase) and
@@ -133,61 +126,61 @@ class WeightingBase(object):
 
         Returns
         -------
-        equivalent : `bool`
-            `True` if ``other`` is a `WeightingBase` instance which
+        equivalent : bool
+            ``True`` if ``other`` is a `WeightingBase` instance which
             yields the same result as this inner product for any
-            input, `False` otherwise.
+            input, ``False`` otherwise.
         """
         return self == other
 
     def inner(self, x1, x2):
-        """Calculate the inner product of two vectors.
+        """Return the inner product of two elements.
 
         Parameters
         ----------
-        x1, x2 : `LinearSpaceVector`
-            Vectors whose inner product is calculated
+        x1, x2 : `LinearSpaceElement`
+            Elements whose inner product is calculated.
 
         Returns
         -------
-        inner : `float` or `complex`
-            The inner product of the two provided vectors
+        inner : float or complex
+            The inner product of the two provided elements.
         """
         raise NotImplementedError
 
     def norm(self, x):
-        """Calculate the norm of a vector.
+        """Calculate the norm of an element.
 
         This is the standard implementation using `inner`.
         Subclasses should override it for optimization purposes.
 
         Parameters
         ----------
-        x1 : `LinearSpaceVector`
-            Vector whose norm is calculated
+        x1 : `LinearSpaceElement`
+            Element whose norm is calculated.
 
         Returns
         -------
-        norm : `float`
-            The norm of the vector
+        norm : float
+            The norm of the element.
         """
         return float(np.sqrt(self.inner(x, x).real))
 
     def dist(self, x1, x2):
-        """Calculate the distance between two vectors.
+        """Calculate the distance between two elements.
 
         This is the standard implementation using `norm`.
         Subclasses should override it for optimization purposes.
 
         Parameters
         ----------
-        x1, x2 : `LinearSpaceVector`
-            Vectors whose mutual distance is calculated
+        x1, x2 : `LinearSpaceElement`
+            Elements whose mutual distance is calculated.
 
         Returns
         -------
-        dist : `float`
-            The distance between the vectors
+        dist : float
+            The distance between the elements.
         """
         if self.dist_using_inner:
             dist_squared = (self.norm(x1) ** 2 + self.norm(x2) ** 2 -
@@ -217,16 +210,16 @@ class MatrixWeightingBase(WeightingBase):
 
         Parameters
         ----------
-        matrix :  ``scipy.sparse.spmatrix`` or `array-like`, 2-dim.
+        matrix :  ``scipy.sparse.spmatrix`` or 2-dim. `array-like`
             Square weighting matrix of the inner product
-        impl : `str`
+        impl : string
             Specifier for the implementation backend
-        exponent : positive `float`, optional
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
             If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
             are allowed.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate `dist` using the following formula::
 
                 ||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>
@@ -236,28 +229,28 @@ class MatrixWeightingBase(WeightingBase):
             exactly zero for equal (but not identical) ``x`` and ``y``.
 
             This option can only be used if ``exponent`` is 2.0.
-        precomp_mat_pow : `bool`, optional
-            If `True`, precompute the matrix power ``W ** (1/p)``
+        precomp_mat_pow : bool, optional
+            If ``True``, precompute the matrix power ``W ** (1/p)``
             during initialization. This has no effect if ``exponent``
             is 1.0, 2.0 or ``inf``.
 
-            Default: `False`
+            Default: ``False``
 
-        cache_mat_pow : `bool`, optional
-            If `True`, cache the matrix power ``W ** (1/p)``. This can
+        cache_mat_pow : bool, optional
+            If ``True``, cache the matrix power ``W ** (1/p)``. This can
             happen either during initialization or in the first call to
             ``norm`` or ``dist``, resp. This has no effect if
             ``exponent`` is 1.0, 2.0 or ``inf``.
 
-            Default: `True`
+            Default: ``True``
 
-        cache_mat_decomp : `bool`, optional
-            If `True`, cache the eigenbasis decomposition of the
+        cache_mat_decomp : bool, optional
+            If ``True``, cache the eigenbasis decomposition of the
             matrix. This can happen either during initialization or in
             the first call to ``norm`` or ``dist``, resp. This has no
             effect if ``exponent`` is 1.0, 2.0 or ``inf``.
 
-            Default: `False`
+            Default: ``False``
 
         Notes
         -----
@@ -348,8 +341,8 @@ class MatrixWeightingBase(WeightingBase):
 
         Parameters
         ----------
-        cache : `bool` or `None`, optional
-            If `True`, store the decomposition internally. For `None`,
+        cache : bool or None, optional
+            If ``True``, store the decomposition internally. For None,
             the ``cache_mat_decomp`` from class initialization is used.
 
         Returns
@@ -361,7 +354,7 @@ class MatrixWeightingBase(WeightingBase):
             Two-dimensional array of eigenvectors. It has the same shape
             as the decomposed matrix.
 
-        See also
+        See Also
         --------
         scipy.linalg.decomp.eigh :
             Implementation of the decomposition. Standard parameters
@@ -393,11 +386,11 @@ class MatrixWeightingBase(WeightingBase):
 
         Returns
         -------
-        equals : `bool`
-            `True` if other is a `MatrixWeightingBase` instance
-            with **identical** matrix, `False` otherwise.
+        equals : bool
+            ``True`` if other is a `MatrixWeightingBase` instance
+            with **identical** matrix, ``False`` otherwise.
 
-        See also
+        See Also
         --------
         equiv : test for equivalent inner products
         """
@@ -412,10 +405,10 @@ class MatrixWeightingBase(WeightingBase):
 
         Returns
         -------
-        equivalent : `bool`
-            `True` if other is a `WeightingBase` instance with the same
+        equivalent : bool
+            ``True`` if other is a `WeightingBase` instance with the same
             `WeightingBase.impl`, which yields the same result as this
-            weighting for any input, `False` otherwise. This is checked
+            weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/vectors/constants.
         """
         # Optimization for equality
@@ -533,19 +526,19 @@ class VectorWeightingBase(WeightingBase):
 
         Parameters
         ----------
-        vector : `array-like`, one-dim.
-            Weighting vector of the inner product
-        impl : `str`
-            Specifier for the implementation backend
-        exponent : positive `float`
+        vector : 1-dim. `array-like`
+            Weighting vector of the inner product.
+        impl : string
+            Specifier for the implementation backend.
+        exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
             If ``matrix`` is a sparse matrix, only 1.0, 2.0 and ``inf``
             are allowed.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -582,11 +575,11 @@ class VectorWeightingBase(WeightingBase):
 
         Returns
         -------
-        equals : `bool`
-            `True` if other is a `VectorWeightingBase` instance with
-            **identical** vector, `False` otherwise.
+        equals : bool
+            ``True`` if other is a `VectorWeightingBase` instance with
+            **identical** vector, ``False`` otherwise.
 
-        See also
+        See Also
         --------
         equiv : test for equivalent inner products
         """
@@ -601,10 +594,10 @@ class VectorWeightingBase(WeightingBase):
 
         Returns
         -------
-        equivalent : `bool`
-            `True` if other is a `WeightingBase` instance with the same
+        equivalent : bool
+            ``True`` if other is a `WeightingBase` instance with the same
             `WeightingBase.impl`, which yields the same result as this
-            weighting for any input, `False` otherwise. This is checked
+            weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/vectors/constants.
         """
         # Optimization for equality
@@ -622,7 +615,7 @@ class VectorWeightingBase(WeightingBase):
 
     @property
     def repr_part(self):
-        """Return a string usable in a space's ``__repr__`` method."""
+        """String usable in a space's ``__repr__`` method."""
         part = 'weight={}'.format(array1d_repr(self.vector, nprint=10))
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
@@ -661,17 +654,17 @@ class ConstWeightingBase(WeightingBase):
 
         Parameters
         ----------
-        constant : positive `float`
+        constant : positive float
             Weighting constant of the inner product.
-        impl : `str`
-            Specifier for the implementation backend
-        exponent : positive `float`, optional
+        impl : string
+            Specifier for the implementation backend.
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -698,9 +691,9 @@ class ConstWeightingBase(WeightingBase):
 
         Returns
         -------
-        equal : `bool`
-            `True` if other is a `ConstWeightingBase` instance with the
-            same constant, `False` otherwise.
+        equal : bool
+            ``True`` if other is a `ConstWeightingBase` instance with the
+            same constant, ``False`` otherwise.
         """
         if other is self:
             return True
@@ -713,10 +706,10 @@ class ConstWeightingBase(WeightingBase):
 
         Returns
         -------
-        equivalent : `bool`
-            `True` if other is a `WeightingBase` instance with the same
+        equivalent : bool
+            ``True`` if other is a `WeightingBase` instance with the same
             `WeightingBase.impl`, which yields the same result as this
-            weighting for any input, `False` otherwise. This is checked
+            weighting for any input, ``False`` otherwise. This is checked
             by entry-wise comparison of matrices/vectors/constants.
         """
         if isinstance(other, ConstWeightingBase):
@@ -728,7 +721,7 @@ class ConstWeightingBase(WeightingBase):
 
     @property
     def repr_part(self):
-        """Return a string usable in a space's ``__repr__`` method."""
+        """String usable in a space's ``__repr__`` method."""
         sep = ''
         if self.const != 1.0:
             part = 'weight={:.4}'.format(self.const)
@@ -772,15 +765,15 @@ class NoWeightingBase(ConstWeightingBase):
 
         Parameters
         ----------
-        exponent : positive `float`
+        exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        impl : `str`
-            Specifier for the implementation backend
-        dist_using_inner : `bool`, optional
+        impl : string
+            Specifier for the implementation backend.
+        dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -825,21 +818,21 @@ class CustomInnerProductBase(WeightingBase):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            `LinearSpaceVector` arguments, return an element from
+            `LinearSpaceElement` arguments, return an element from
             their space's field (real or complex number) and
-            satisfy the following conditions for all vectors
+            satisfy the following conditions for all space elements
             ``x, y, z`` and scalars ``s``:
 
             - ``<x, y> = conj(<y, x>)``
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
 
-        impl : `str`
-            Specifier for the implementation backend
-        dist_using_inner : `bool`, optional
+        impl : string
+            Specifier for the implementation backend.
+        dist_using_inner : bool, optional
             Calculate `dist` using the formula
 
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -865,15 +858,15 @@ class CustomInnerProductBase(WeightingBase):
 
         Returns
         -------
-        equal : `bool`
-            `True` if other is a `CustomInnerProductBase`
-            instance with the same inner product, `False` otherwise.
+        equal : bool
+            ``True`` if other is a `CustomInnerProductBase`
+            instance with the same inner product, ``False`` otherwise.
         """
         return super().__eq__(other) and self.inner == other.inner
 
     @property
     def repr_part(self):
-        """Return a string usable in a space's ``__repr__`` method."""
+        """String usable in a space's ``__repr__`` method."""
         part = 'inner={}'.format(self.inner)
         if self.exponent != 2.0:
             part += ', exponent={}'.format(self.exponent)
@@ -905,15 +898,15 @@ class CustomNormBase(WeightingBase):
         ----------
         norm : `callable`
             The norm implementation. It must accept a
-            `LinearSpaceVector` argument, return a `float` and satisfy
-            the following conditions for all vectors
+            `LinearSpaceElement` argument, return a float and satisfy
+            the following conditions for all space elements
             ``x, y`` and scalars ``s``:
 
             - ``||x|| >= 0``
             - ``||x|| = 0``  if and only if  ``x = 0``
             - ``||s * x|| = |s| * ||x||``
             - ``||x + y|| <= ||x|| + ||y||``
-        impl : `str`
+        impl : string
             Specifier for the implementation backend
         """
         super().__init__(impl=impl, exponent=1.0, dist_using_inner=False)
@@ -937,9 +930,9 @@ class CustomNormBase(WeightingBase):
 
         Returns
         -------
-        equal : `bool`
-            `True` if other is a `CustomNormBase` instance with the same
-            norm, `False` otherwise.
+        equal : bool
+            ``True`` if other is a `CustomNormBase` instance with the same
+            norm, ``False`` otherwise.
         """
         return super().__eq__(other) and self.norm == other.norm
 
@@ -974,15 +967,15 @@ class CustomDistBase(WeightingBase):
         ----------
         dist : `callable`
             The distance function defining a metric on a `LinearSpace`.
-            It must accept two `LinearSpaceVector` arguments, return a
-            `float` and and fulfill the following mathematical conditions
-            for any three vectors ``x, y, z``:
+            It must accept two `LinearSpaceElement` arguments, return a
+            float and and fulfill the following mathematical conditions
+            for any three space elements ``x, y, z``:
 
             - ``dist(x, y) >= 0``
             - ``dist(x, y) = 0``  if and only if  ``x = y``
             - ``dist(x, y) = dist(y, x)``
             - ``dist(x, y) <= dist(x, z) + dist(z, y)``
-        impl : `str`
+        impl : string
             Specifier for the implementation backend
         """
         super().__init__(impl=impl, exponent=1.0, dist_using_inner=False)
@@ -1010,9 +1003,9 @@ class CustomDistBase(WeightingBase):
 
         Returns
         -------
-        equal : `bool`
-            `True` if other is a `CustomDistBase` instance with the same
-            dist, `False` otherwise.
+        equal : bool
+            ``True`` if other is a `CustomDistBase` instance with the same
+            dist, ``False`` otherwise.
         """
         return super().__eq__(other) and self.dist == other.dist
 

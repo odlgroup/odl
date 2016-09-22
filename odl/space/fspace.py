@@ -28,7 +28,7 @@ import numpy as np
 
 from odl.operator.operator import Operator, _dispatch_call_args
 from odl.set import (RealNumbers, ComplexNumbers, Set, Field, LinearSpace,
-                     LinearSpaceVector)
+                     LinearSpaceElement)
 from odl.util.utility import (is_real_dtype, is_complex_floating_dtype,
                               preload_first_arg, dtype_repr,
                               TYPE_MAP_R2C, TYPE_MAP_C2R)
@@ -37,8 +37,8 @@ from odl.util.vectorization import (
     out_shape_from_array, out_shape_from_meshgrid, vectorize)
 
 
-__all__ = ('FunctionSet', 'FunctionSetVector',
-           'FunctionSpace', 'FunctionSpaceVector')
+__all__ = ('FunctionSet', 'FunctionSetElement',
+           'FunctionSpace', 'FunctionSpaceElement')
 
 
 def _default_in_place(func, x, out, **kwargs):
@@ -98,7 +98,7 @@ class FunctionSet(Set):
         out_dtype : optional
             Data type of the return value of a function in this space.
             Can be given in any way `numpy.dtype` understands, e.g. as
-            string ('bool') or data type (`bool`).
+            string ('bool') or data type (bool).
             If no data type is given, a "lazy" evaluation is applied,
             i.e. an adequate data type is inferred during function
             evaluation.
@@ -129,7 +129,7 @@ class FunctionSet(Set):
     def out_dtype(self):
         """Output data type of this function.
 
-        If None, dtype is not uniquely pre-defined.
+        If ``None``, the output data type is not uniquely pre-defined.
         """
         return self.__out_dtype
 
@@ -140,7 +140,7 @@ class FunctionSet(Set):
         ----------
         fcall : `callable`, optional
             The actual instruction for out-of-place evaluation.
-            It must return an `FunctionSet.range` element or a
+            It must return a `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
 
         vectorized : bool
@@ -148,16 +148,16 @@ class FunctionSet(Set):
 
         Returns
         -------
-        element : `FunctionSetVector`
+        element : `FunctionSetElement`
             The new element, always supports vectorization
 
-        See also
+        See Also
         --------
         odl.discr.grid.TensorGrid.meshgrid : efficient grids for function
             evaluation
         """
         if not callable(fcall):
-            raise TypeError('`fcall` {!r} is not `callable`'.format(fcall))
+            raise TypeError('`fcall` {!r} is not callable'.format(fcall))
         elif fcall in self:
             return fcall
         else:
@@ -171,9 +171,9 @@ class FunctionSet(Set):
 
         Returns
         -------
-        equals : `bool`
-            `True` if ``other`` is a `FunctionSet` with same
-            `FunctionSet.domain` and `FunctionSet.range`, `False` otherwise.
+        equals : bool
+            ``True`` if ``other`` is a `FunctionSet` with same
+            `FunctionSet.domain` and `FunctionSet.range`, ``False`` otherwise.
         """
         if other is self:
             return True
@@ -188,10 +188,10 @@ class FunctionSet(Set):
 
         Returns
         -------
-        equals : `bool`
-            `True` if ``other`` is a `FunctionSetVector`
-            whose `FunctionSetVector.space` attribute
-            equals this space, `False` otherwise.
+        equals : bool
+            ``True`` if ``other`` is a `FunctionSetElement`
+            whose `FunctionSetElement.space` attribute
+            equals this space, ``False`` otherwise.
         """
         return (isinstance(other, self.element_type) and
                 self == other.space)
@@ -208,11 +208,11 @@ class FunctionSet(Set):
 
     @property
     def element_type(self):
-        """`FunctionSetVector`"""
-        return FunctionSetVector
+        """`FunctionSetElement`"""
+        return FunctionSetElement
 
 
-class FunctionSetVector(Operator):
+class FunctionSetElement(Operator):
 
     """Representation of a `FunctionSet` element."""
 
@@ -225,14 +225,14 @@ class FunctionSetVector(Operator):
             Set of functions this element lives in.
         fcall : `callable`
             The actual instruction for out-of-place evaluation.
-            It must return an `FunctionSet.range` element or a
+            It must return a `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
         """
         self.__space = fset
         super().__init__(self.space.domain, self.space.range, linear=False)
 
         # Determine which type of implementation fcall is
-        if isinstance(fcall, FunctionSetVector):
+        if isinstance(fcall, FunctionSetElement):
             call_has_out, call_out_optional, _ = _dispatch_call_args(
                 bound_call=fcall._call)
 
@@ -282,7 +282,7 @@ class FunctionSetVector(Operator):
     def out_dtype(self):
         """Output data type of this function.
 
-        If None, dtype is not uniquely pre-defined.
+        If ``None``, the output data type is not uniquely pre-defined.
         """
         return self.space.out_dtype
 
@@ -298,7 +298,7 @@ class FunctionSetVector(Operator):
 
         Parameters
         ----------
-        x : domain `element-like`, `meshgrid` or `numpy.ndarray`
+        x : `domain` `element-like`, `meshgrid` or `numpy.ndarray`
             Input argument for the function evaluation. Conditions
             on ``x`` depend on its type:
 
@@ -318,11 +318,11 @@ class FunctionSetVector(Operator):
 
         Other Parameters
         ----------------
-        bounds_check : `bool`
-            If `True`, check if all input points lie in the function
+        bounds_check : bool
+            If ``True``, check if all input points lie in the function
             domain in the case of vectorized evaluation. This requires
             the domain to implement `Set.contains_all`.
-            Default: `True`
+            Default: ``True``
 
         Returns
         -------
@@ -449,15 +449,14 @@ class FunctionSetVector(Operator):
         return self.range.element(out.ravel()[0]) if scalar_out else out
 
     def assign(self, other):
-        """Assign ``other`` to this vector.
+        """Assign ``other`` to ``self``.
 
         This is implemented without `FunctionSpace.lincomb` to ensure that
-        ``vec == other`` evaluates to `True` after
-        ``vec.assign(other)``.
+        ``self == other`` evaluates to True after ``self.assign(other)``.
         """
         if other not in self.space:
             raise TypeError('`other` {!r} is not an element of the space '
-                            '{} of this vector'
+                            '{} of this function'
                             ''.format(other, self.space))
         self._call_in_place = other._call_in_place
         self._call_out_of_place = other._call_out_of_place
@@ -465,7 +464,7 @@ class FunctionSetVector(Operator):
         self._call_out_optional = other._call_out_optional
 
     def copy(self):
-        """Create an identical (deep) copy of this vector."""
+        """Create an identical (deep) copy of this element."""
         result = self.space.element()
         result.assign(self)
         return result
@@ -475,16 +474,16 @@ class FunctionSetVector(Operator):
 
         Returns
         -------
-        equals : `bool`
-            `True` if ``other`` is a `FunctionSetVector` with
-            ``other.space`` equal to this vector's space and evaluation
-            function of ``other`` and this vector is equal. `False`
+        equals : bool
+            ``True`` if ``other`` is a `FunctionSetElement` with
+            ``other.space == self.space``, and the functions for evaluation
+            evaluation of ``self`` and ``other`` are the same, ``False``
             otherwise.
         """
         if other is self:
             return True
 
-        if not isinstance(other, FunctionSetVector):
+        if not isinstance(other, FunctionSetElement):
             return False
 
         # We cannot blindly compare since functions may have been wrapped
@@ -534,13 +533,13 @@ class FunctionSpace(FunctionSet, LinearSpace):
         field : `Field`, optional
             The range of the functions, usually the `RealNumbers` or
             `ComplexNumbers`. If not given, the field is either inferred
-            from ``out_dtype``, or, if the latter is also `None`, set
+            from ``out_dtype``, or, if the latter is also ``None``, set
             to ``RealNumbers()``.
         out_dtype : optional
             Data type of the return value of a function in this space.
             Can be given in any way `numpy.dtype` understands, e.g. as
-            string ('float64') or data type (`float`).
-            By default, 'float64' is used for real and 'complex128'
+            string (``'float64'``) or data type (``float``).
+            By default, ``'float64'`` is used for real and ``'complex128'``
             for complex spaces.
         """
         if not isinstance(domain, Set):
@@ -632,18 +631,18 @@ class FunctionSpace(FunctionSet, LinearSpace):
         ----------
         fcall : `callable`, optional
             The actual instruction for out-of-place evaluation.
-            It must return an `FunctionSet.range` element or a
+            It must return a `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
 
-            If fcall is a `FunctionSetVector`, it is wrapped
-            as a new `FunctionSpaceVector`.
+            If fcall is a `FunctionSetElement`, it is wrapped
+            as a new `FunctionSpaceElement`.
 
         vectorized : bool
             Whether ``fcall`` supports vectorized evaluation.
 
         Returns
         -------
-        element : `FunctionSpaceVector`
+        element : `FunctionSpaceElement`
             The new element, always supports vectorization
 
         Notes
@@ -719,10 +718,10 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Returns
         -------
-        equals : `bool`
-            `True` if ``other`` is a `FunctionSpace` with same
+        equals : bool
+            ``True`` if ``other`` is a `FunctionSpace` with same
             `FunctionSpace.domain` and `FunctionSpace.range`,
-            `False` otherwise.
+            ``False`` otherwise.
         """
         if other is self:
             return True
@@ -742,7 +741,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         out_dtype : optional
             Output data type of the returned space. Can be given in any
             way `numpy.dtype` understands, e.g. as string ('complex64')
-            or data type (`complex`). `None` is interpreted as 'float64'.
+            or data type (complex). None is interpreted as 'float64'.
 
         Returns
         -------
@@ -1100,8 +1099,8 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
     @property
     def element_type(self):
-        """`FunctionSpaceVector`"""
-        return FunctionSpaceVector
+        """`FunctionSpaceElement`"""
+        return FunctionSpaceElement
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1150,7 +1149,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         return '{}({})'.format(self.__class__.__name__, inner_str)
 
 
-class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
+class FunctionSpaceElement(LinearSpaceElement, FunctionSetElement):
 
     """Representation of a `FunctionSpace` element."""
 
@@ -1164,24 +1163,24 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
         fcall : `callable`
             The actual instruction for out-of-place evaluation.
             It must return an `FunctionSet.range` element or a
-            `numpy.ndarray` of such (vectorized call).
+            ``numpy.ndarray`` of such (vectorized call).
         """
         if not isinstance(fspace, FunctionSpace):
             raise TypeError('`fspace` {!r} not a `FunctionSpace` '
                             'instance'.format(fspace))
 
-        LinearSpaceVector.__init__(self, fspace)
-        FunctionSetVector.__init__(self, fspace, fcall)
+        LinearSpaceElement.__init__(self, fspace)
+        FunctionSetElement.__init__(self, fspace, fcall)
 
-    # Tradeoff: either we subclass LinearSpaceVector first and override the
-    # 3 methods in FunctionSetVector (as below) which LinearSpaceVector
+    # Tradeoff: either we subclass LinearSpaceElement first and override the
+    # 3 methods in FunctionSetElement (as below) which LinearSpaceElement
     # also has, or we switch inheritance order and need to override all magic
-    # methods from LinearSpaceVector which are not in-place. This is due to
-    # the fact that FunctionSetVector inherits from Operator which defines
+    # methods from LinearSpaceElement which are not in-place. This is due to
+    # the fact that FunctionSetElement inherits from Operator which defines
     # some of those magic methods, and those do not work in this case.
-    __eq__ = FunctionSetVector.__eq__
-    assign = FunctionSetVector.assign
-    copy = FunctionSetVector.copy
+    __eq__ = FunctionSetElement.__eq__
+    assign = FunctionSetElement.assign
+    copy = FunctionSetElement.copy
 
     # Power functions are more general than the ones in LinearSpace
     def __pow__(self, p):
@@ -1210,7 +1209,7 @@ class FunctionSpaceVector(LinearSpaceVector, FunctionSetVector):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return 'FunctionSpaceVector'
+        return 'FunctionSpaceElement'
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position

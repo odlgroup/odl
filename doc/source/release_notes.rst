@@ -12,16 +12,49 @@ Next release
 New features
 ------------
 - Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
+- Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on. This is
+  intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists.
+  (:pull:`524`)
+- Allow ASTRA backend to be used with arbitrary dtypes. (:pull:`524`)
+- Add ``reset`` to ``SolverCallback`` that resets the callback to its initial state. (:issue:`552`)
+- Add ``nonuniform_partition`` utility that creates a partition with non-uniformly spaced points.
+  This is useful e.g. when the angles of a tomography problem are not exactly uniform.
+- Add ``Functional`` class to the solvers package.
+  ``Functional`` is a subclass of odl ``Operator`` and intended to help in formulating and solving optimization problems.
+  It contains optimization specific features like ``proximal`` and ``convex_conj``, and built-in intelligence for handling things like translation, scaling of argument or scaling of functional. (:pull:`498`)
+
+Improvements
+------------
+- Add intelligence to ``power_method_opnorm`` so it can terminate early by checking if consecutive iterates are close. (:pull:`527`)
+- Add ``BroadcastOperator(op, n)``, ``ReductionOperator(op, n)`` and ``DiagonalOperator(op, n)`` syntax.
+  This is equivalent to ``BroadcastOperator(*([op] * n))`` etc, i.e. create ``n`` copies of the operator. (:pull:`532`)
 
 Changes
 --------
-- Changed definition of ``LinearSpaceVector.multiply`` to match the definition used by numpy (:pull:`509`)
+- Changed definition of ``LinearSpaceVector.multiply`` to match the definition used by Numpy. (:pull:`509`)
 - The parameters ``padding_method`` in ``diff_ops.py`` and ``mode`` in ``wavelet.py`` have been renamed to ``pad_mode``.
+  The parameter ``padding_value`` is now called ``pad_const``. (:pull:`511`)
+- Expose ``ellipse_phantom`` and ``shepp_logan_ellipses`` to ``odl.phantom``. (:pull:`529`)
+- Unify the names of minimum (``min_pt``), maximum (``max_pt``) and middle (``mid_pt``) points as well as number of points (``shape``) in grids, interval products and factory functions for discretized spaces. (:pull:`541`)
+- Removed ``simple_operator`` since it was never used and did not follow the ODL style. (:pull:`543`)
   The parameter ``padding_value`` is now called ``pad_const``.
+- Removed ``Interval``, ``Rectangle`` and ``Cuboid`` since they were confusing (Capitalized name but not a Cunction) and barely ever used.
+  Users should instead use ``IntervalProd`` in all cases. (:pull:`537`)
+- The following classes have been renamed:
+  * `LinearSpaceVector` -> `LinearSpaceElement`
+  * `DiscreteLpVector` -> `DiscreteLpElement`
+  * `ProductSpaceVector` -> `ProductSpaceElement`
+  * `DiscretizedSetVector` -> `DiscretizedSetElement`
+  * `DiscretizedSpaceVector` -> `DiscretizedSpaceElement`
+  * `FunctionSetVector` -> `FunctionSetElement`
+  * `FunctionSpaceVector` -> `FunctionSpaceElement`
+- Changed parameter style of differential operators from having a `pad_mode` and a separate `edge_order` argument that were mutually exclusive to a single `pad_mode` that covers all cases. Also Added several new pad modes to the differential operators. (:pull:`548`)
 
 Bugfixes
 --------
-- Fixed ``python -c "import odl; odl.test()"`` not working on windows (:pull:`508`)
+- Fixed ``python -c "import odl; odl.test()"`` not working on Windows. (:pull:`508`)
+- Fixed a ``TypeError`` being raised in ``OperatorTest`` when running ``optest.ajoint()`` without specifying an operator norm. (:pull:`525`)
+
 
 ODL 0.4.0 Release Notes (2016-08-17)
 ====================================
@@ -33,6 +66,7 @@ New features
 ------------
 - Add ``deform`` package with linearized deformations (:pull:`488`)
 - Add option to interface with ProxImaL solvers using ODL operators. (:pull:`494`)
+
 
 ODL 0.3.1 Release Notes (2016-08-15)
 ====================================
@@ -213,47 +247,12 @@ Fix for the version number in setup.py.
 ODL 0.2 Release Notes (2016-03-11)
 ==================================
 
-This release adds the functionality of the **Fourier Transform** in arbitrary dimensions. The
-operator comes in two different flavors: the "bare", trigonometric-sum-only
-`Discrete Fourier Transform`_ and the discretization of the continuous `Fourier Transform`_.
+This release features the Fourier transform as major addition, along with some minor improvements and fixes.
 
 New Features
-------------
+~~~~~~~~~~~~
 
-Fourier Transform (FT)
-~~~~~~~~~~~~~~~~~~~~~~
-
-The FT is an :term:`operator` mapping a function to its transformed version (shown for 1d):
-
-.. math::
-    \widehat{f}(\xi) = \mathcal{F}(f)(\xi) = (2\pi)^{-\frac{1}{2}}
-    \int_{\mathbb{R}} f(x)\ e^{-i x \xi} \, \mathrm{d}x, \quad \xi\in\mathbb{R}.
-
-This implementation acts on discretized functions and accounts for scaling and shift of the
-underlying grid as well as the type of discretization used. Supported backends are `Numpy's
-FFTPACK based transform`_ and `pyFFTW`_ (Python wrapper for `FFTW`_). The implementation has full
-support for the wrapped backends, including
-
-- Forward and backward transforms,
-- Half-complex transfroms, i.e. real-to-complex transforms where roughly only half of the
-  coefficients need to be stored,
-- Partial transforms along selected axes,
-- Computation of efficient FFT plans (pyFFTW only).
-
-Discrete Fourier Transform (DFT)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This operator merely calculates the trigonometric sum
-
-.. math::
-    \hat f_j = \sum_{k=0}^{n-1} f_k\, e^{-i 2\pi jk/n},\quad j=0, \dots, n-1
-
-without accounting for shift and scaling of the underlying grid. It supports the same features of
-the wrapped backends as the FT.
-
-Further additions
-~~~~~~~~~~~~~~~~~
-
+- Add ``FourierTransform`` and ``DiscreteFourierTransform``, where the latter is the fully discrete version not accounting for shift and scaling, and the former approximates the integral transform by taking shifted and scaled grids into account. (:pull:`120`)
 - The ``weighting`` attribute in `FnBase` is now public and can be used to initialize a new space.
 - The `FnBase` classes now have a ``default_dtype`` static method.
 - A `discr_sequence_space` has been added as a simple implementation of finite sequences with
@@ -271,22 +270,7 @@ Improvements
 ------------
 
 - Handle some not-so-unlikely corner cases where vectorized functions don't behave as they should.
-  The main issue was the way Python 2 treats comparisons of tuples against scalars (Python 3 raises
-  an exception which is correctly handled by the subsequent code). In Python 2, the following
-  happens::
-
-    >>> t = ()
-    >>> t > 0
-    True
-    >>> t = (-1,)
-    >>> t > 0
-    True
-
-  This is especially unfortunate if used as ``t[t > 0]`` in 1d functions, when ``t`` is a
-  :term:`meshgrid` sequence (of 1 element). In this case, ``t > 0`` evaluates to ``True``, which
-  is treated as ``1`` in the index expression, which in turn will raise an ``IndexError`` since the
-  sequence has only length one. This situation is now properly caught.
-
+  In particular, make 1D functions work when expressions like ``t[t > 0]`` are used.
 - ``x ** 0`` evaluates to the ``one()`` space element if implemented.
 
 Changes
@@ -305,5 +289,3 @@ First official release.
 .. _Fourier Transform: https://en.wikipedia.org/wiki/Fourier_transform
 .. _Numpy's FFTPACK based transform: http://docs.scipy.org/doc/numpy/reference/routines.fft.html
 .. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
-
-.. include:: prs.inc

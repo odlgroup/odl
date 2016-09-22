@@ -16,7 +16,7 @@ General errors
         from . import diagnostics
 
         ImportError: cannot import diagnostics
-        
+
    However, I did not change anything in ``diagnostics``? Where does the error come from?
 
    **P:** Usually, this error originates from invalid code in a completely different place. You
@@ -30,47 +30,47 @@ General errors
    sometimes interfere with changes to your codebase.
 
    **S:** Here are two things you can do to find the error more quickly.
-   
+
    1. Delete the bytecode files. In a standard GNU/Linux shell, you can simply invoke (in your
       ``odl`` working directory)
 
       .. code-block:: bash
 
          find . -name *.pyc | xargs rm
-   
+
    2. Execute the modules you changed since the last working (importable) state. In most IDEs, you
       have the possibility to run a currently opened file. Alternatively, you can run on the
       command line
-      
+
       .. code-block:: bash
-      
+
          python path/to/your/module.py
-      
+
       This will yield a specific error message for an erroneous module that helps you debugging your
       changes.
 
-#. **Q:** When adding two vectors, the following error is shown::
+#. **Q:** When adding two space elements, the following error is shown::
 
-      TypeError: unsupported operand type(s) for +: 'DiscreteLpVector' and 'DiscreteLpVector'
-      
+      TypeError: unsupported operand type(s) for +: 'DiscreteLpElement' and 'DiscreteLpElement'
+
    This seems completely illogical since it works in other situations and clearly must be supported.
    Why is this error shown?
 
-   **P:** The vectors you are trying to add are not in the same space,
-   for example the following code gives the error
+   **P:** The elements you are trying to add are not in the same space.
+   For example, the following code triggers the same error:
 
       >>> x = odl.uniform_discr(0, 1, 10).one()
       >>> y = odl.uniform_discr(0, 1, 11).one()
       >>> x - y
 
-   In this case, the problem is that the vectors have a different number of elements.
+   In this case, the problem is that the elements have a different number of entries.
    Other possible issues include that they are discretizations of different sets,
-   have different data types (:term:`dtype`), or implementation (for example cuda/cpu).
+   have different data types (:term:`dtype`), or implementation (for example CUDA/CPU).
 
-   **S:** The vectors need to somehow be cast to the same space.
-   How to do this depends on the problem at hand. To find what the issue is,
-   inspect the ``space`` properties of both vectors. For example in the above
-   we see that the issue lies in the number of discretization points
+   **S:** The elements need to somehow be cast to the same space.
+   How to do this depends on the problem at hand.
+   To find what the issue is, inspect the ``space`` properties of both elements.
+   For the above example, we see that the issue lies in the number of discretization points:
 
       >>> x.space
       odl.uniform_discr(0, 1, 10)
@@ -83,7 +83,7 @@ General errors
      for example a "we identify X with Y" step has been omitted.
 
    * If the ``dtype`` or ``impl`` do not match, they need to be cast to each one of the others.
-     The most simple way to do this is by using the `DiscreteLpVector.astype` method.
+     The most simple way to do this is by using the `DiscreteLpElement.astype` method.
 
 #. **Q:** I have installed ODL with the ``pip install --editable`` option, but I still get an
    ``AttributeError`` when I try to use a function/class I just implemented. The use-without-reinstall

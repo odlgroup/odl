@@ -15,24 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Examples on using the vector.show() syntax
+"""Example for `DiscreteLpElement.show` in 2D.
 
-NOTES
+Notes
 -----
 The behaviour of blocking shows etc in matplotlib is experimental and can cause
-issues with these examples.
+issues with this example.
 """
 
 import odl
 
-spc = odl.uniform_discr([0, 0], [1, 1], [100, 100])
-vec = odl.phantom.shepp_logan(spc, modified=True)
+space = odl.uniform_discr([0, 0], [1, 1], [100, 100])
+phantom = odl.phantom.shepp_logan(space, modified=True)
 
 # Show all data
-vec.show(show=True)
+phantom.show(show=True)
 
-# We can show subsets by index:
-vec.show(indices=[slice(None), 50])
+# We can show subsets by index
+phantom.show(indices=[slice(None), 50])
 
 # Or we can show by coordinate
-vec.show(coords=[None, 0.5])
+phantom.show(coords=[None, 0.5])

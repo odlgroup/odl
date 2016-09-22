@@ -17,20 +17,14 @@
 
 """Example using the ray transform with helical cone beam geometry."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import numpy as np
 import odl
-
 
 # Discrete reconstruction space: discretized functions on the cube
 # [-20, 20]^2 x [0, 40] with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_corner=[-20, -20, 0], max_corner=[20, 20, 40],
-    nsamples=[300, 300, 300], dtype='float32')
+    min_pt=[-20, -20, 0], max_pt=[20, 20, 40], shape=[300, 300, 300],
+    dtype='float32')
 
 # Make a helical cone beam geometry with flat detector
 # Angles: uniformly spaced, n = 2000, min = 0, max = 8 * 2 * pi
@@ -42,7 +36,7 @@ geometry = odl.tomo.HelicalConeFlatGeometry(
     angle_partition, detector_partition, src_radius=1000, det_radius=100,
     pitch=5.0)
 
-# ray transform aka forward projection. We use ASTRA CUDA backend.
+# Ray transform (= forward projection). We use ASTRA CUDA backend.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl='astra_cuda')
 
 # Create a discrete Shepp-Logan phantom (modified version)

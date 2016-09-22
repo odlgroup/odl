@@ -17,18 +17,14 @@
 
 """Example on using show and updating the figure in real time in 1d."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
 import odl
 import matplotlib.pyplot as plt
 import numpy as np
 
 n = 100
 m = 20
-spc = odl.uniform_discr(0, 5, n)
-vec = spc.element(np.sin(spc.points()))
+space = odl.uniform_discr(0, 5, n)
+elem = space.element(np.sin)
 
 # Pre-create a plot and set some property, here the plot limits in the y axis.
 fig = plt.figure()
@@ -36,7 +32,7 @@ plt.ylim(-m, m)
 
 # Reuse the figure indefinitely
 for i in range(m):
-    fig = (vec * i).show(fig=fig)
+    fig = (elem * i).show(fig=fig)
     plt.pause(0.1)
 
 plt.show()

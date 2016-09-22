@@ -61,18 +61,18 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     grad : `Operator`
         Gradient mapping of the objective function, i.e. the mapping
         :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
-    x : `element` of the domain of ``grad``
+    x : ``grad.domain`` element
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length
-    niter : `int`, optional
+    niter : int, optional
         Number of iterations
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate.
 
     Returns
     -------
-    `None`
+    None
     """
 
     if x not in grad.domain:
@@ -135,18 +135,18 @@ def broydens_first_method(grad, x, line_search, niter=1, callback=None):
     grad : `Operator`
         Gradient mapping of the objective function, i.e. the mapping
         :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
-    x : `element` of the domain of ``grad``
+    x : ``grad.domain`` element
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length
-    niter : `int`, optional
+    niter : int, optional
         Number of iterations
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate.
 
     Returns
     -------
-    `None`
+    None
     """
     hess = IdentityOperator(grad.range)
     grad_x = grad(x)
@@ -207,11 +207,11 @@ def broydens_second_method(grad, x, line_search, niter=1, callback=None):
     grad : `Operator`
         Gradient mapping of the objective function, i.e. the mapping
         :math:`x \mapsto \\nabla f(x) \\in \mathcal{X}`
-    x : `element` of the domain of ``grad``
+    x : ``grad.domain`` element
         Starting point of the iteration
     line_search : `LineSearch`
         Strategy to choose the step length
-    niter : `int`, optional
+    niter : int, optional
         Number of iterations
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate

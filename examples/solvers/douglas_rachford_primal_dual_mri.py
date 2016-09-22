@@ -38,8 +38,8 @@ space = odl.uniform_discr([0, 0], [n, n], [n, n])
 # Create MRI operator. First fourier transform, then subsample
 ft = odl.trafos.FourierTransform(space)
 sampling_points = np.random.rand(*ft.range.shape) < subsampling
-sampling_vector = ft.range.element(sampling_points)
-mri_op = sampling_vector * ft
+sampling_mask = ft.range.element(sampling_points)
+mri_op = sampling_mask * ft
 
 # Create noisy MRI data
 phantom = odl.phantom.shepp_logan(space, modified=True)

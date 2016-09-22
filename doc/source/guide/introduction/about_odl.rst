@@ -40,7 +40,7 @@ For the typical use cases in 1, 2 and 3 dimensions, there are convenience functi
 `Interval`,  `Rectangle` and `Cuboid`:
 
     >>> rect = odl.Rectangle([0, -1], [1, 1])
-    >>> rect.begin
+    >>> rect.min_pt
     array([ 0., -1.])
     >>> rect[0]
     Interval(0.0, 1.0)
@@ -130,7 +130,7 @@ sampling of continuously defined functions. If we, for example, want to discreti
 
     >>> exp_discr = l2_discr.element(lambda x: np.exp(-x))
     >>> type(exp_discr)
-    odl.discr.lp_discr.DiscreteLpVector
+    odl.discr.lp_discr.DiscreteLpElement
     >>> exp_discr.shape
     (5,)
 

@@ -19,9 +19,9 @@
 
 Attributes
 ----------
-TYPE_MAP_R2C : `dict`
+TYPE_MAP_R2C : dict
     Dictionary mapping real dtypes to complex dtypes
-TYPE_MAP_C2R : `dict`
+TYPE_MAP_C2R : dict
     Dictionary mapping complex dtypes to real dtypes
 """
 
@@ -35,10 +35,11 @@ import numpy as np
 
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
-           'dtype_repr', 'conj_exponent',
+           'dtype_repr', 'conj_exponent', 'snr',
            'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype', 'TYPE_MAP_R2C', 'TYPE_MAP_C2R')
+           'is_complex_floating_dtype', 'TYPE_MAP_R2C', 'TYPE_MAP_C2R',
+           'writable_array')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
                 for dtype in np.sctypes['float']}
@@ -58,7 +59,7 @@ def array1d_repr(array, nprint=6):
 
     Parameters
     ----------
-    array : array-like
+    array : `array-like`
         The array to print
     nprint : int
         Maximum number of elements to print
@@ -77,7 +78,7 @@ def array1d_str(array, nprint=6):
 
     Parameters
     ----------
-    array : array-like
+    array : `array-like`
         The array to print
     nprint : int
         Maximum number of elements to print
@@ -98,7 +99,7 @@ def arraynd_repr(array, nprint=None):
 
     Parameters
     ----------
-    array : array-like
+    array : `array-like`
         The array to print
     nprint : int
         Maximum number of elements to print.
@@ -176,7 +177,7 @@ def arraynd_str(array, nprint=None):
 
 
 def dtype_repr(dtype):
-    """Stringification of data type with default for `int` and `float`."""
+    """Stringification of data type with default for int and float."""
     if dtype == np.dtype(int):
         return "'int'"
     elif dtype == np.dtype(float):
@@ -228,32 +229,32 @@ def with_metaclass(meta, *bases):
 
 
 def is_scalar_dtype(dtype):
-    """`True` if ``dtype`` is scalar, else `False`."""
+    """Return ``True`` if ``dtype`` is a scalar type."""
     return np.issubsctype(dtype, np.number)
 
 
 def is_int_dtype(dtype):
-    """`True` if ``dtype`` is integer, else `False`."""
+    """Return ``True`` if ``dtype`` is an integer type."""
     return np.issubsctype(dtype, np.integer)
 
 
 def is_floating_dtype(dtype):
-    """`True` if ``dtype`` is floating-point, else `False`."""
+    """Return ``True`` if ``dtype`` is a floating point type."""
     return is_real_floating_dtype(dtype) or is_complex_floating_dtype(dtype)
 
 
 def is_real_dtype(dtype):
-    """`True` if ``dtype`` is real (including integer), else `False`."""
+    """Return ``True`` if ``dtype`` is a real (including integer) type."""
     return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
 def is_real_floating_dtype(dtype):
-    """`True` if ``dtype`` is real floating-point, else `False`."""
+    """Return ``True`` if ``dtype`` is a real floating point type."""
     return np.issubsctype(dtype, np.floating)
 
 
 def is_complex_floating_dtype(dtype):
-    """`True` if ``dtype`` is complex floating-point, else `False`."""
+    """Return ``True`` if ``dtype`` is a complex floating point type."""
     return np.issubsctype(dtype, np.complexfloating)
 
 
@@ -262,13 +263,13 @@ def conj_exponent(exp):
 
     Parameters
     ----------
-    exp : positive `float` or inf
+    exp : positive float or inf
         Exponent for which to calculate the conjugate. Must be
         at least 1.0.
 
     Returns
     -------
-    conj : positive `float` or inf
+    conj : positive float or inf
         Conjugate exponent. For ``exp=1``, return ``float('inf')``,
         for ``exp=float('inf')`` return 1. In all other cases, return
         ``exp / (exp - 1)``.
@@ -357,6 +358,124 @@ def preload_first_arg(instance, mode):
             raise ValueError('bad mode {!r}'.format(mode))
 
     return decorator
+
+
+class writable_array(object):
+    """Context manager that casts obj to a `numpy.array` and saves changes."""
+
+    def __init__(self, obj, *args, **kwargs):
+        """initialize a new instance.
+
+        Parameters
+        ----------
+        obj : `array-like`
+            Object that should be cast to an array, must be usable with
+            `numpy.asarray` and be set-able with ``obj[:] = arr``.
+        args, kwargs :
+            Arguments that should be passed to `numpy.asarray`.
+
+        Examples
+        --------
+        Convert list to array and use with numpy
+
+        >>> lst = [1, 2, 3]
+        >>> with writable_array(lst) as arr:
+        ...    arr *= 2
+        >>> lst
+        [2, 4, 6]
+
+        Also usable with ODL vectors
+
+        >>> import odl
+        >>> space = odl.uniform_discr(0, 1, 3)
+        >>> x = space.element([1, 2, 3])
+        >>> with writable_array(x) as arr:
+        ...    arr += [1, 1, 1]
+        >>> x
+        uniform_discr(0.0, 1.0, 3).element([2.0, 3.0, 4.0])
+
+        Can also be called with arguments to `numpy.asarray`
+
+        >>> lst = [1, 2, 3]
+        >>> with writable_array(lst, dtype='complex') as arr:
+        ...    arr  # print array
+        array([ 1.+0.j,  2.+0.j,  3.+0.j])
+
+        Note that the changes are only saved once the context manger exits,
+        before, the input vector is in general unchanged
+
+        >>> lst = [1, 2, 3]
+        >>> with writable_array(lst) as arr:
+        ...    arr *= 2
+        ...    lst  # print content of lst before exiting
+        [1, 2, 3]
+        >>> lst  # print content of lst after exit
+        [2, 4, 6]
+        """
+        self.obj = obj
+        self.args = args
+        self.kwargs = kwargs
+        self.arr = None
+
+    def __enter__(self):
+        """called by ``with writable_array(obj):``.
+
+        Returns
+        -------
+        arr : `numpy.ndarray`
+            Array representing ``self.obj``, created by calling
+            ``numpy.asarray``. Any changes to ``arr`` will be passed through
+            to ``self.obj`` after the context manager exits.
+        """
+        self.arr = np.asarray(self.obj, *self.args, **self.kwargs)
+        return self.arr
+
+    def __exit__(self, type, value, traceback):
+        """called when ``with writable_array(obj):`` ends.
+
+        Saves any changes to ``self.arr`` to ``self.obj``, also "frees"
+        self.arr in case the manager is used multiple times.
+
+        Extra arguments are ignored, any exceptions are passed through.
+        """
+        self.obj[:] = self.arr
+        self.arr = None
+
+
+def snr(signal, noise, impl):
+    """Compute the signal-to-noise ratio.
+
+    Parameters
+    ----------
+    signal : `array-like`
+        Noiseless data.
+    noise : `array-like`
+        Noise.
+    impl : {'general', 'dB'}
+        Implementation method.
+        'general' means SNR = variance(signal) / variance(noise),
+        'dB' means SNR = 10 * log10 (variance(signal) / variance(noise)).
+
+    Returns
+    -------
+    snr : `float`
+        Value of signal-to-noise ratio.
+        If the power of noise is zero, then the return is 'inf',
+        otherwise, the computed value.
+    """
+    if np.abs(np.asarray(noise)).sum() != 0:
+        ave1 = np.sum(signal) / signal.size
+        ave2 = np.sum(noise) / noise.size
+        s_power = np.sqrt(np.sum((signal - ave1) * (signal - ave1)))
+        n_power = np.sqrt(np.sum((noise - ave2) * (noise - ave2)))
+        if impl == 'general':
+            return s_power / n_power
+        elif impl == 'dB':
+            return 10.0 * np.log10(s_power / n_power)
+        else:
+            raise ValueError('unknown `impl` {}'.format(impl))
+    else:
+        return float('inf')
 
 
 if __name__ == '__main__':

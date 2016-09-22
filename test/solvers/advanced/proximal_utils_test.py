@@ -31,7 +31,7 @@ import pytest
 import odl
 import odl.solvers as odls
 
-from odl.util.testutils import all_almost_equal, example_element
+from odl.util.testutils import all_almost_equal, noise_element
 
 # Places for the accepted error when comparing results
 PLACES = 8
@@ -44,7 +44,7 @@ def test_proximal_translation():
     space = odl.uniform_discr(0, 1, 10)
 
     # Element in the image space where the proximal operator is evaluated
-    translation = example_element(space)
+    translation = noise_element(space)
 
     # Factory function returning the proximal operators
     lam = float(np.random.randn(1))
@@ -55,7 +55,7 @@ def test_proximal_translation():
     prox = odls.proximal_translation(prox_factory, translation)(step_size)
 
     # Create an element in the space, in which to evaluate the proximals
-    x = example_element(space)
+    x = noise_element(space)
 
     # Explicit computation:
     expected_result = ((x + 2 * step_size * lam * translation) /
@@ -80,7 +80,7 @@ def test_proximal_arg_scaling():
     prox = odls.proximal_arg_scaling(prox_factory, scaling_param)(step_size)
 
     # Create an element in the space, in which to evaluate the proximals
-    x = example_element(space)
+    x = noise_element(space)
 
     # Explicit computation:
     expected_result = x / (2 * step_size * lam * scaling_param ** 2 + 1)
@@ -103,10 +103,10 @@ def test_proximal_arg_scaling_zero():
     prox = odls.proximal_arg_scaling(prox_factory, scaling_param)(step_size)
 
     # Create an element in the space, in which to evaluate the proximals
-    x = example_element(space)
+    x = noise_element(space)
 
     # Check that the scaling with zero returns proximal facotry for the
-    # proximal_zero, which ersults in the identity operator
+    # proximal_const_func, which results in the identity operator
     assert all_almost_equal(prox(x), x, places=PLACES)
 
 
@@ -132,7 +132,7 @@ def test_proximal_quadratic_perturbation_quadratic():
     prox = odls.proximal_quadratic_perturbation(prox_factory, a)(step_size)
 
     # Create an element in the space, in which to evaluate the proximals
-    x = example_element(space)
+    x = noise_element(space)
 
     # Explicit computation:
     expected_result = x / (2 * step_size * (lam + a) + 1)
@@ -148,7 +148,7 @@ def test_proximal_quadratic_perturbation_linear_and_quadratic():
 
     # The parameter for the quadratic perturbation
     a = float(np.random.rand(1))  # This needs to be non-negative
-    u = example_element(space)
+    u = noise_element(space)
     lam = float(np.random.randn(1))
 
     # Factory function returning the proximal operators
@@ -160,7 +160,7 @@ def test_proximal_quadratic_perturbation_linear_and_quadratic():
                                                 a, u)(step_size)
 
     # Create an element in the space, in which to evaluate the proximals
-    x = example_element(space)
+    x = noise_element(space)
 
     # Explicit computation:
     expected_result = (x - step_size * u) / (2 * step_size * (lam + a) + 1)

@@ -20,6 +20,9 @@ from __future__ import absolute_import
 
 __all__ = ()
 
+from .functional import *
+__all__ += functional.__all__
+
 from .advanced import *
 __all__ += advanced.__all__
 

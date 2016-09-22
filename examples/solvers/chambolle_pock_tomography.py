@@ -38,8 +38,7 @@ import odl
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_corner=[-20, -20], max_corner=[20, 20], nsamples=[300, 300],
-    dtype='float32')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
@@ -54,7 +53,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 # 'astra_cpu', 'astra_cuda'   Require astra tomography to be installed.
 #                             Astra is much faster than scikit. Webpage:
 #                             https://github.com/astra-toolbox/astra-toolbox
-impl = 'scikit'
+impl = 'astra_cuda'
 
 # Ray transform aka forward projection.
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
@@ -81,7 +80,7 @@ gradient = odl.Gradient(reco_space, method='forward')
 op = odl.BroadcastOperator(ray_trafo, gradient)
 
 # Create the proximal operator for unconstrained primal variable
-proximal_primal = odl.solvers.proximal_zero(op.domain)
+proximal_primal = odl.solvers.proximal_const_func(op.domain)
 
 # Create proximal operators for the dual variable
 
@@ -90,7 +89,7 @@ prox_convconj_l2 = odl.solvers.proximal_cconj_l2_squared(ray_trafo.range,
                                                          g=data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.005,
+prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.03,
                                                  isotropic=True)
 
 # Combine proximal operators, order must correspond to the operator K
@@ -102,11 +101,12 @@ proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
 
 
 # Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op, 6)
+op_norm = 1.1 * odl.power_method_opnorm(op)
 
-niter = 400  # Number of iterations
+niter = 100  # Number of iterations
 tau = 1.0 / op_norm  # Step size for the primal variable
 sigma = 1.0 / op_norm  # Step size for the dual variable
+gamma = 0.2
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
@@ -118,7 +118,8 @@ x = op.domain.zero()
 # Run the algorithm
 odl.solvers.chambolle_pock_solver(
     op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
-    proximal_dual=proximal_dual, niter=niter, callback=callback)
+    proximal_dual=proximal_dual, niter=niter, callback=callback,
+    gamma=gamma)
 
 # Display images
 discr_phantom.show(title='original image')

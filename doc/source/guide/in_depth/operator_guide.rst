@@ -28,15 +28,12 @@ operator
 
 for a matrix :math:`A\in \mathbb{R}^{n\times m}` as follows::
 
-    from builtins import super
-    import numpy as np
-
     class MatVecOperator(odl.Operator):
         def __init__(self, matrix):
             self.matrix = matrix
             dom = odl.rn(matrix.shape[1])
             ran = odl.rn(matrix.shape[0])
-            super().__init__(dom, ran)
+            odl.Operator.__init__(self, dom, ran)
 
 In addition, an `Operator` needs at least one way of
 evaluation, *in-place* or *out-of-place*.
@@ -67,7 +64,7 @@ behavior, use the following signature for `Operator._call` (again given for the 
   class MatVecOperator(odl.Operator):
       ...
       def _call(self, x):
-          return self.range.element(self.matrix.dot(x))
+          return self.matrix.dot(x)
 
 Out-of-place evaluation is usually less efficient since it requires
 allocation of an array and a full copy and should be *generally

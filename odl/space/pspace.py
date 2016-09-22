@@ -23,12 +23,11 @@ from builtins import range, str, super, zip
 from future import standard_library
 standard_library.install_aliases()
 
-from math import sqrt
 from numbers import Integral
 from itertools import product
 import numpy as np
 
-from odl.set import LinearSpace, LinearSpaceVector
+from odl.set import LinearSpace, LinearSpaceElement
 from odl.space.weighting import (
     WeightingBase, VectorWeightingBase, ConstWeightingBase, NoWeightingBase,
     CustomInnerProductBase, CustomNormBase, CustomDistBase)
@@ -36,7 +35,7 @@ from odl.util.ufuncs import ProductSpaceUFuncs
 from odl.util.utility import is_real_dtype
 
 
-__all__ = ('ProductSpace', 'ProductSpaceVector')
+__all__ = ('ProductSpace', 'ProductSpaceElement')
 
 
 class ProductSpace(LinearSpace):
@@ -55,11 +54,11 @@ class ProductSpace(LinearSpace):
 
         Parameters
         ----------
-        space1,...,spaceN : `LinearSpace` or `int`
+        space1,...,spaceN : `LinearSpace` or int
             The individual spaces ("factors / parts") in the product
             space. Can also be given as ``space, n`` with ``n`` integer,
             in which case the power space ``space ** n`` is created.
-        exponent : non-zero `float` or ``float('inf')``, optional
+        exponent : non-zero float or ``float('inf')``, optional
             Order of the product distance/norm, i.e.
 
             ``dist(x, y) = np.linalg.norm(x-y, ord=exponent)``
@@ -80,13 +79,13 @@ class ProductSpace(LinearSpace):
             Use weighted inner product, norm, and dist. The following
             types are supported as ``weight``:
 
-            `None` : no weighting (default)
+            ``None`` : no weighting (default)
 
             `WeightingBase` : weighting class, used directly. Such a
             class instance can be retrieved from the space by the
             `ProductSpace.weighting` property.
 
-            array-like : weigh each component with one entry from the
+            `array-like` : weigh each component with one entry from the
             array. The array must be one-dimensional and have the same
             length as the number of spaces.
 
@@ -96,9 +95,9 @@ class ProductSpace(LinearSpace):
         ----------------
         dist : `callable`, optional
             The distance function defining a metric on the space.
-            It must accept two `ProductSpaceVector` arguments and
+            It must accept two `ProductSpaceElement` arguments and
             fulfill the following mathematical conditions for any
-            three vectors ``x, y, z``:
+            three space elements ``x, y, z``:
 
             - ``dist(x, y) >= 0``
             - ``dist(x, y) = 0``  if and only if  ``x = y``
@@ -113,8 +112,8 @@ class ProductSpace(LinearSpace):
 
         norm : `callable`, optional
             The norm implementation. It must accept an
-            `ProductSpaceVector` argument, return a `float` and satisfy the
-            following conditions for all vectors ``x, y`` and scalars
+            `ProductSpaceElement` argument, return a float and satisfy the
+            following conditions for all space elements ``x, y`` and scalars
             ``s``:
 
             - ``||x|| >= 0``
@@ -128,9 +127,9 @@ class ProductSpace(LinearSpace):
 
         inner : `callable`, optional
             The inner product implementation. It must accept two
-            `ProductSpaceVector` arguments, return a element from
+            `ProductSpaceElement` arguments, return a element from
             the field of the space (real or complex number) and
-            satisfy the following conditions for all vectors
+            satisfy the following conditions for all space elements
             ``x, y, z`` and scalars ``s``:
 
             - ``<x, y> = conj(<y, x>)``
@@ -139,7 +138,7 @@ class ProductSpace(LinearSpace):
 
             Cannot be combined with: ``weight, dist, norm``
 
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -150,7 +149,7 @@ class ProductSpace(LinearSpace):
 
             This option can only be used if ``exponent`` is 2.0.
 
-            Default: `False`.
+            Default: ``False``.
 
             Cannot be combined with: ``dist``
 
@@ -158,9 +157,9 @@ class ProductSpace(LinearSpace):
         -------
         prodspace : `ProductSpace`
 
-        See also
+        See Also
         --------
-        ProductSpaceVectorWeighting
+        ProductSpaceElementWeighting
         ProductSpaceConstWeighting
 
         Examples
@@ -171,8 +170,8 @@ class ProductSpace(LinearSpace):
         Notes
         -----
         Inner product, norm and distance are evaluated by collecting
-        the result of the corresponding operation in the vector
-        components and then reducing the vector to a single number.
+        the result of the corresponding operation in the individual
+        components and reducing the resulting vector to a single number.
         The ``exponent`` parameter influences only this last part,
         not the computations in the individual components. We give the
         exact definitions in the following:
@@ -218,7 +217,7 @@ class ProductSpace(LinearSpace):
         for inner products and distances)::
 
             norms = np.fromiter(
-                (xp.norm() for xp in x.parts),
+                (xi.norm() for xi in x),
                 dtype=np.float64, count=len(x))
 
         """
@@ -278,13 +277,13 @@ class ProductSpace(LinearSpace):
             elif weight is None:
                 # Need to wait until dist, norm and inner are handled
                 pass
-            else:  # last possibility: make a vector
+            else:  # last possibility: make a product space element
                 arr = np.asarray(weight)
                 if arr.dtype == object:
                     raise ValueError('invalid weight argument {}'
                                      ''.format(weight))
                 if arr.ndim == 1:
-                    self.__weighting = ProductSpaceVectorWeighting(
+                    self.__weighting = ProductSpaceElementWeighting(
                         arr, exponent, dist_using_inner=dist_using_inner)
                 else:
                     raise ValueError('weighting array has {} dimensions, '
@@ -322,12 +321,12 @@ class ProductSpace(LinearSpace):
 
     @property
     def is_power_space(self):
-        """`True` if all member spaces are equal."""
+        """``True`` if all member spaces are equal."""
         return all(spc == self.spaces[0] for spc in self.spaces[1:])
 
     @property
     def exponent(self):
-        """Exponent of the product space norm/dist, `None` for custom."""
+        """Exponent of the product space norm/dist, ``None`` for custom."""
         return self.weighting.exponent
 
     @property
@@ -337,7 +336,7 @@ class ProductSpace(LinearSpace):
 
     @property
     def is_weighted(self):
-        """Return `True` if the weighting is not `ProductSpaceNoWeighting`."""
+        """Return ``True`` if weighting is not `ProductSpaceNoWeighting`."""
         return not isinstance(self.weighting, ProductSpaceNoWeighting)
 
     def element(self, inp=None, cast=True):
@@ -346,18 +345,20 @@ class ProductSpace(LinearSpace):
         Parameters
         ----------
         inp : optional
-            If ``inp`` is `None`, a new element is created from
+            If ``inp`` is ``None``, a new element is created from
             scratch by allocation in the spaces. If ``inp`` is
             already an element of this space, it is re-wrapped.
             Otherwise, a new element is created from the
             components by calling the ``element()`` methods
             in the component spaces.
-        cast : `bool`
-            True if casting should be allowed
+        cast : bool
+            If ``True``, casting is allowed. Otherwise, a ``TypeError``
+            is raised for input that is not a sequence of elements of
+            the spaces that make up this product space.
 
         Returns
         -------
-        element : `ProductSpaceVector`
+        element : `ProductSpaceElement`
             The new element
 
         Examples
@@ -390,7 +391,7 @@ class ProductSpace(LinearSpace):
         if inp in self:
             return inp
 
-        if (all(isinstance(v, LinearSpaceVector) and v.space == space
+        if (all(isinstance(v, LinearSpaceElement) and v.space == space
                 for v, space in zip(inp, self.spaces))):
             parts = list(inp)
         elif cast:
@@ -408,14 +409,14 @@ class ProductSpace(LinearSpace):
         """Return examples from all sub-spaces."""
         for examples in product(*[spc.examples for spc in self.spaces]):
             name = ', '.join(name for name, _ in examples)
-            vector = self.element([vec for _, vec in examples])
-            yield (name, vector)
+            element = self.element([elem for _, elem in examples])
+            yield (name, element)
 
     def zero(self):
-        """Create the zero vector of the product space.
+        """Create the zero element of the product space.
 
-        The i:th component of the product space zero vector is the
-        zero vector of the i:th space in the product.
+        The i-th component of the product space zero element is the
+        zero element of the i-th space in the product.
 
         Parameters
         ----------
@@ -423,8 +424,8 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        zero : ProductSpaceVector
-            The zero vector in the product space
+        zero : ProductSpaceElement
+            The zero element in the product space.
 
         Examples
         --------
@@ -441,10 +442,10 @@ class ProductSpace(LinearSpace):
         return self.element([space.zero() for space in self.spaces])
 
     def one(self):
-        """Create the one vector of the product space.
+        """Create the one element of the product space.
 
-        The i:th component of the product space one vector is the
-        one vector of the i:th space in the product.
+        The i-th component of the product space one element is the
+        one element of the i-th space in the product.
 
         Parameters
         ----------
@@ -452,8 +453,8 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        one : ProductSpaceVector
-            The one vector in the product space
+        one : ProductSpaceElement
+            The one element in the product space.
 
         Examples
         --------
@@ -476,15 +477,15 @@ class ProductSpace(LinearSpace):
             space._lincomb(a, xp, b, yp, outp)
 
     def _dist(self, x1, x2):
-        """Distance between two vectors."""
+        """Distance between two elements."""
         return self.weighting.dist(x1, x2)
 
     def _norm(self, x):
-        """Norm of a vector."""
+        """Norm of an element."""
         return self.weighting.norm(x)
 
     def _inner(self, x1, x2):
-        """Inner product of two vectors."""
+        """Inner product of two elements."""
         return self.weighting.inner(x1, x2)
 
     def _multiply(self, x1, x2, out):
@@ -504,9 +505,9 @@ class ProductSpace(LinearSpace):
 
         Returns
         -------
-        equals : `bool`
-            `True` if ``other`` is a `ProductSpace` instance, has
-            the same length and the same factors. `False` otherwise.
+        equals : bool
+            ``True`` if ``other`` is a `ProductSpace` instance, has
+            the same length and the same factors. ``False`` otherwise.
 
         Examples
         --------
@@ -537,7 +538,6 @@ class ProductSpace(LinearSpace):
 
     def __getitem__(self, indices):
         """Return ``self[indices]``."""
-
         if isinstance(indices, Integral):
             return self.spaces[indices]
         elif isinstance(indices, slice):
@@ -559,21 +559,21 @@ class ProductSpace(LinearSpace):
     def __repr__(self):
         """Return ``repr(self)``."""
         if self.size == 0:
-            return 'ProductSpace(field={})'.format(self.field)
-        elif all(self.spaces[0] == space for space in self.spaces):
-            return 'ProductSpace({!r}, {})'.format(self.spaces[0],
-                                                   self.size)
+            return '{}(field={})'.format(self.__class__.__name__, self.field)
+        elif self.is_power_space:
+            return '{}({!r}, {})'.format(self.__class__.__name__,
+                                         self.spaces[0], self.size)
         else:
             inner_str = ', '.join(repr(space) for space in self.spaces)
-            return 'ProductSpace({})'.format(inner_str)
+            return '{}({})'.format(self.__class__.__name__, inner_str)
 
     @property
     def element_type(self):
-        """`ProductSpaceVector`"""
-        return ProductSpaceVector
+        """`ProductSpaceElement`"""
+        return ProductSpaceElement
 
 
-class ProductSpaceVector(LinearSpaceVector):
+class ProductSpaceElement(LinearSpaceElement):
 
     """Elements of a `ProductSpace`."""
 
@@ -584,12 +584,12 @@ class ProductSpaceVector(LinearSpaceVector):
 
     @property
     def parts(self):
-        """Parts of this vector."""
+        """Parts of this product space element."""
         return self._parts
 
     @property
     def size(self):
-        """Number of factors of this vector's space."""
+        """Number of factors of this element's space."""
         return self.space.size
 
     def __len__(self):
@@ -604,10 +604,10 @@ class ProductSpaceVector(LinearSpaceVector):
         numerical errors. This function checks equality per
         component.
         """
-        if other not in self.space:
-            return False
-        elif other is self:
+        if other is self:
             return True
+        elif other not in self.space:
+            return False
         else:
             return all(sp == op for sp, op in zip(self.parts, other.parts))
 
@@ -639,7 +639,7 @@ class ProductSpaceVector(LinearSpaceVector):
         Examples
         --------
         >>> import odl
-        >>> r22 = ProductSpace(odl.rn(2), 2)
+        >>> r22 = odl.ProductSpace(odl.rn(2), 2)
         >>> x = r22.element([[1, -2], [-3, 4]])
         >>> x.ufunc.absolute()
         ProductSpace(rn(2), 2).element([
@@ -648,28 +648,25 @@ class ProductSpaceVector(LinearSpaceVector):
         ])
 
         These functions can also be used with non-vector arguments and
-        support broadcasting, both by element
+        support broadcasting, per component and even recursively:
 
-        >>> x.ufunc.add([1, 1])
+        >>> x.ufunc.add([1, 2])
         ProductSpace(rn(2), 2).element([
-            [2.0, -1.0],
-            [-2.0, 5.0]
+            [2.0, 0.0],
+            [-2.0, 6.0]
         ])
-
-        and also recursively
-
         >>> x.ufunc.subtract(1)
         ProductSpace(rn(2), 2).element([
             [0.0, -3.0],
             [-4.0, 3.0]
         ])
 
-        There is also support for various reductions (sum, prod, min, max)
+        There is also support for various reductions (sum, prod, min, max):
 
         >>> x.ufunc.sum()
         0.0
 
-        Also supports out parameter
+        Writing to ``out`` is also supported:
 
         >>> y = r22.element()
         >>> result = x.ufunc.absolute(out=y)
@@ -681,10 +678,10 @@ class ProductSpaceVector(LinearSpaceVector):
         >>> result is y
         True
 
-        See also
+        See Also
         --------
         odl.util.ufuncs.NtuplesBaseUFuncs
-            Base class for ufuncs in `NtuplesBase` spaces, sub spaces may
+            Base class for ufuncs in `NtuplesBase` spaces, subspaces may
             override this for greater efficiency.
         odl.util.ufuncs.ProductSpaceUFuncs
             For a list of available ufuncs.
@@ -751,32 +748,33 @@ class ProductSpaceVector(LinearSpaceVector):
         return '{!r}.element({})'.format(self.space, inner_str)
 
     def show(self, title=None, indices=None, **kwargs):
-        """Display the parts of this vector graphically
+        """Display the parts of this product space element graphically.
 
         Parameters
         ----------
-        title : `str`
+        title : string
             Title of the figures
 
         indices : index expression, optional
-            Indices can refer to parts of a `ProductSpaceVector` and slices
+            Indices can refer to parts of a `ProductSpaceElement` and slices
             in the parts in the following way:
 
             Single index (``indices=0``)
             => display that part
 
-            Single `slice` (``indices=slice(None)``), or
-            index `list` (``indices=[0, 1, 3]``)
+            Single slice (``indices=slice(None)``), or
+            index list (``indices=[0, 1, 3]``)
             => display those parts
 
-            Any `tuple`, for example:
+            Any tuple, for example:
             Created by `numpy.s_` ``indices=np.s_[0, :, :]`` or
-            Using a raw `tuple` ``indices=([0, 3], slice(None))``
+            Using a raw tuple ``indices=([0, 3], slice(None))``
             => take the first elements to select the parts and
             pass the rest on to the underlying show methods.
 
         kwargs
-            Additional arguments passed on to the underlying vectors
+            Additional arguments passed on to the ``show`` methods of
+            the parts.
 
         Returns
         -------
@@ -785,7 +783,7 @@ class ProductSpaceVector(LinearSpaceVector):
 
         See Also
         --------
-        odl.discr.lp_discr.DiscreteLpVector.show :
+        odl.discr.lp_discr.DiscreteLpElement.show :
             Display of a discretized function
         odl.space.base_ntuples.NtuplesBaseVector.show :
             Display of sequence type data
@@ -793,7 +791,7 @@ class ProductSpaceVector(LinearSpaceVector):
             Underlying implementation
         """
         if title is None:
-            title = 'ProductSpaceVector'
+            title = 'ProductSpaceElement'
 
         if indices is None:
             if len(self) < 5:
@@ -823,7 +821,7 @@ class ProductSpaceVector(LinearSpaceVector):
         return figs
 
 
-class ProductSpaceVectorWeighting(VectorWeightingBase):
+class ProductSpaceElementWeighting(VectorWeightingBase):
 
     """Vector weighting for `ProductSpace`.
 
@@ -832,7 +830,7 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
 
         <x, y>_w = <w * x, y>
 
-    with element-wise multiplication ``w * x``. For other exponents,
+    with component-wise multiplication ``w * x``. For other exponents,
     only ``norm`` and ```dist`` are defined. In the case of exponent
     ``inf``, the weighted norm is::
 
@@ -860,14 +858,14 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
         Parameters
         ----------
         vector : 1-dim. `array-like`
-            Weighting vector of the inner product
-        exponent : positive `float`, optional
+            Weighting vector of the inner product.
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
-                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
+                ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``.
 
             This avoids the creation of new arrays and is thus faster
             for large arrays. On the downside, it will not evaluate to
@@ -879,17 +877,17 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
                          dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
-        """Calculate the vector weighted inner product of two vectors.
+        """Calculate the vector weighted inner product of two elements.
 
         Parameters
         ----------
-        x1, x2 : `ProductSpaceVector`
-            Vectors whose inner product is calculated
+        x1, x2 : `ProductSpaceElement`
+            Elements whose inner product is calculated.
 
         Returns
         -------
-        inner : `float` or `complex`
-            The inner product of the two provided vectors
+        inner : float or complex
+            The inner product of the two provided elements.
         """
         if self.exponent != 2.0:
             raise NotImplementedError('no inner product defined for '
@@ -897,7 +895,7 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
                                       ''.format(self.exponent))
 
         inners = np.fromiter(
-            (x1p.inner(x2p) for x1p, x2p in zip(x1.parts, x2.parts)),
+            (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
             dtype=x1[0].space.dtype, count=len(x1))
 
         inner = np.dot(inners, self.vector)
@@ -907,24 +905,24 @@ class ProductSpaceVectorWeighting(VectorWeightingBase):
             return complex(inner)
 
     def norm(self, x):
-        """Calculate the vector-weighted norm of a vector.
+        """Calculate the vector-weighted norm of an element.
 
         Parameters
         ----------
-        x : `ProductSpaceVector`
-            Vector whose norm is calculated
+        x : `ProductSpaceElement`
+            Element whose norm is calculated.
 
         Returns
         -------
-        norm : `float`
-            The norm of the provided vector
+        norm : float
+            The norm of the provided element.
         """
         if self.exponent == 2.0:
             norm_squared = self.inner(x, x).real  # TODO: optimize?!
-            return sqrt(norm_squared)
+            return np.sqrt(norm_squared)
         else:
             norms = np.fromiter(
-                (xp.norm() for xp in x.parts), dtype=np.float64, count=len(x))
+                (xi.norm() for xi in x), dtype=np.float64, count=len(x))
             if self.exponent in (1.0, float('inf')):
                 norms *= self.vector
             else:
@@ -967,12 +965,12 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
 
         Parameters
         ----------
-        constant : positive `float`
+        constant : positive float
             Weighting constant of the inner product
-        exponent : positive `float`, optional
+        exponent : positive float, optional
             Exponent of the norm. For values other than 2.0, no inner
             product is defined.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -987,17 +985,17 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
                          dist_using_inner=dist_using_inner)
 
     def inner(self, x1, x2):
-        """Calculate the constant-weighted inner product of two vectors.
+        """Calculate the constant-weighted inner product of two elements.
 
         Parameters
         ----------
-        x1, x2 : `ProductSpaceVector`
-            Vectors whose inner product is calculated
+        x1, x2 : `ProductSpaceElement`
+            Elements whose inner product is calculated.
 
         Returns
         -------
-        inner : `float` or `complex`
-            The inner product of the two provided vectors
+        inner : float or complex
+            The inner product of the two provided elements.
         """
         if self.exponent != 2.0:
             raise NotImplementedError('no inner product defined for '
@@ -1005,7 +1003,7 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
                                       ''.format(self.exponent))
 
         inners = np.fromiter(
-            (x1p.inner(x2p) for x1p, x2p in zip(x1.parts, x2.parts)),
+            (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
             dtype=x1[0].space.dtype, count=len(x1))
 
         inner = self.const * np.sum(inners)
@@ -1015,24 +1013,24 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
             return complex(inner)
 
     def norm(self, x):
-        """Calculate the constant-weighted norm of a vector.
+        """Calculate the constant-weighted norm of an element.
 
         Parameters
         ----------
-        x1 : `ProductSpaceVector`
-            Vector whose norm is calculated
+        x1 : `ProductSpaceElement`
+            Element whose norm is calculated.
 
         Returns
         -------
-        norm : `float`
-            The norm of the vector
+        norm : float
+            The norm of the element.
         """
         if self.exponent == 2.0:
             norm_squared = self.inner(x, x).real  # TODO: optimize?!
-            return sqrt(norm_squared)
+            return np.sqrt(norm_squared)
         else:
             norms = np.fromiter(
-                (xp.norm() for xp in x.parts), dtype=np.float64, count=len(x))
+                (xi.norm() for xi in x), dtype=np.float64, count=len(x))
 
             if self.exponent in (1.0, float('inf')):
                 return (self.const *
@@ -1042,41 +1040,41 @@ class ProductSpaceConstWeighting(ConstWeightingBase):
                         float(np.linalg.norm(norms, ord=self.exponent)))
 
     def dist(self, x1, x2):
-        """Calculate the constant-weighted distance between two vectors.
+        """Calculate the constant-weighted distance between two elements.
 
         Parameters
         ----------
-        x1, x2 : `ProductSpaceVector`
-            Vectors whose mutual distance is calculated
+        x1, x2 : `ProductSpaceElement`
+            Elements whose mutual distance is calculated.
 
         Returns
         -------
-        dist : `float`
-            The distance between the vectors
+        dist : float
+            The distance between the elements.
         """
         if self.dist_using_inner:
             norms1 = np.fromiter(
-                (x1p.norm() for x1p in x1.parts),
+                (x1i.norm() for x1i in x1),
                 dtype=np.float64, count=len(x1))
             norm1 = np.linalg.norm(norms1)
 
             norms2 = np.fromiter(
-                (x2p.norm() for x2p in x2.parts),
+                (x2i.norm() for x2i in x2),
                 dtype=np.float64, count=len(x2))
             norm2 = np.linalg.norm(norms2)
 
             inners = np.fromiter(
-                (x1p.inner(x2p) for x1p, x2p in zip(x1.parts, x2.parts)),
+                (x1i.inner(x2i) for x1i, x2i in zip(x1, x2)),
                 dtype=x1[0].space.dtype, count=len(x1))
             inner_re = np.sum(inners.real)
 
             dist_squared = norm1 ** 2 + norm2 ** 2 - 2 * inner_re
             if dist_squared < 0.0:  # Compensate for numerical error
                 dist_squared = 0.0
-            return sqrt(self.const) * float(sqrt(dist_squared))
+            return np.sqrt(self.const) * float(np.sqrt(dist_squared))
         else:
             dnorms = np.fromiter(
-                ((x1p - x2p).norm() for x1p, x2p in zip(x1.parts, x2.parts)),
+                ((x1i - x2i).norm() for x1i, x2i in zip(x1, x2)),
                 dtype=np.float64, count=len(x1))
 
             if self.exponent == float('inf'):
@@ -1119,10 +1117,10 @@ class ProductSpaceNoWeighting(NoWeightingBase, ProductSpaceConstWeighting):
 
         Parameters
         ----------
-        exponent : positive `float`
+        exponent : positive float
             Exponent of the norm. For values other than 2.0, the inner
             product is not defined.
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -1148,16 +1146,16 @@ class ProductSpaceCustomInnerProduct(CustomInnerProductBase):
         ----------
         inner : `callable`
             The inner product implementation. It must accept two
-            `ProductSpaceVector` arguments, return a element from
+            `ProductSpaceElement` arguments, return a element from
             the field of the space (real or complex number) and
-            satisfy the following conditions for all vectors
+            satisfy the following conditions for all space elements
             ``x, y, z`` and scalars ``s``:
 
             - ``<x, y> = conj(<y, x>)``
             - ``<s*x + y, z> = s * <x, z> + <y, z>``
             - ``<x, x> = 0``  if and only if  ``x = 0``
 
-        dist_using_inner : `bool`, optional
+        dist_using_inner : bool, optional
             Calculate ``dist`` using the formula
 
                 ``||x - y||^2 = ||x||^2 + ||y||^2 - 2 * Re <x, y>``
@@ -1186,8 +1184,8 @@ class ProductSpaceCustomNorm(CustomNormBase):
         ----------
         norm : `callable`
             The norm implementation. It must accept a
-            `ProductSpaceVector` argument, return a `float` and satisfy
-            the following conditions for all vectors
+            `ProductSpaceElement` argument, return a float and satisfy
+            the following conditions for all space elements
             ``x, y`` and scalars ``s``:
 
             - ``||x|| >= 0``
@@ -1212,9 +1210,9 @@ class ProductSpaceCustomDist(CustomDistBase):
         ----------
         dist : `callable`
             The distance function defining a metric on
-            `ProductSpace`. It must accept two `ProductSpaceVector`
+            `ProductSpace`. It must accept two `ProductSpaceElement`
             arguments and fulfill the following mathematical conditions
-            for any three vectors ``x, y, z``:
+            for any three space elements ``x, y, z``:
 
             - ``dist(x, y) >= 0``
             - ``dist(x, y) = 0``  if and only if  ``x = y``

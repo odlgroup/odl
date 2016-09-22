@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Total variation tomography using the `conjugate_gradient_normal` solver.
+"""Tomography using the `conjugate_gradient_normal` solver.
 
 Solves the inverse problem
 
@@ -35,15 +35,14 @@ import odl
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_corner=[-20, -20], max_corner=[20, 20], nsamples=[300, 300],
-    dtype='float32')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
 angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
 
-# Detector: uniformly sampled, n = 558, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 558)
+# Detector: uniformly sampled, n = 300, min = -30, max = 30
+detector_partition = odl.uniform_partition(-30, 30, 300)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # The implementation of the ray transform to use, options:
@@ -81,5 +80,5 @@ odl.solvers.conjugate_gradient_normal(
 
 # Display images
 discr_phantom.show(title='original image')
-data.show(title='convolved image')
-x.show(title='deconvolved image', show=True)
+data.show(title='sinogram')
+x.show(title='reconstructed image', show=True)

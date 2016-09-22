@@ -29,9 +29,9 @@ Norms
 -----
 Norms in ODL are scaled according to the underlying function space. Hence a sequence of statements converging discretizations give rise to a converging norm::
 
-   >>> for n in range(2, 10000):
-   ...     X = odl.uniform_discr(0, 1, n)
-   ...     print(X.element(lambda x: x).norm())
+   >>> for n in [2, 10, 100, 10000]:
+   ...     space = odl.uniform_discr(0, 1, n)
+   ...     print(space.element(lambda x: x).norm())
    0.559016994375
    0.576628129734
    0.577343052266

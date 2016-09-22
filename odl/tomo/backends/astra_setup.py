@@ -46,7 +46,7 @@ except ImportError:
     ASTRA_AVAILABLE = False
 import numpy as np
 
-from odl.discr import DiscreteLp, DiscreteLpVector
+from odl.discr import DiscreteLp, DiscreteLpElement
 from odl.tomo.geometry import (
     Geometry, Parallel2dGeometry, DivergentBeamGeometry, ParallelGeometry,
     FlatDetector)
@@ -81,7 +81,7 @@ def astra_volume_geometry(discr_reco):
 
     Returns
     -------
-    astra_geom : `dict`
+    astra_geom : dict
         The ASTRA volume geometry
 
     Raises
@@ -98,8 +98,8 @@ def astra_volume_geometry(discr_reco):
         raise ValueError('`discr_reco` {} is not uniformly discretized')
 
     vol_shp = discr_reco.partition.shape
-    vol_min = discr_reco.partition.begin
-    vol_max = discr_reco.partition.end
+    vol_min = discr_reco.partition.min_pt
+    vol_max = discr_reco.partition.max_pt
 
     if discr_reco.ndim == 2:
         # ASTRA does in principle support custom minimum and maximum
@@ -187,8 +187,8 @@ def astra_conebeam_3d_geom_to_vec(geometry):
         vectors[ang_idx, 0:3] = geometry.src_position(angle)
 
         # center of detector
-        midp = geometry.det_params.midpoint
-        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
+        mid_pt = geometry.det_params.mid_pt
+        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, mid_pt)
 
         # vector from detector pixel (0,0) to (0,1)
         unit_vecs = geometry.detector.axes
@@ -242,8 +242,8 @@ def astra_conebeam_2d_geom_to_vec(geometry):
         vectors[ang_idx, 0:2] = geometry.src_position(angle)
 
         # center of detector
-        midp = geometry.det_params.midpoint
-        vectors[ang_idx, 2:4] = geometry.det_point_position(angle, midp)
+        mid_pt = geometry.det_params.mid_pt
+        vectors[ang_idx, 2:4] = geometry.det_point_position(angle, mid_pt)
 
         # vector from detector pixel (0) to (1)
         unit_vec = geometry.detector.axis
@@ -293,13 +293,13 @@ def astra_parallel_3d_geom_to_vec(geometry):
     for ang_idx, angle in enumerate(angles):
         rot_matrix = geometry.rotation_matrix(angle)
 
-        midp = geometry.det_params.midpoint
+        mid_pt = geometry.det_params.mid_pt
 
         # source position
-        vectors[ang_idx, 0:3] = geometry.det_to_src(angle, midp)
+        vectors[ang_idx, 0:3] = geometry.det_to_src(angle, mid_pt)
 
         # center of detector
-        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, midp)
+        vectors[ang_idx, 3:6] = geometry.det_point_position(angle, mid_pt)
 
         # vector from detector pixel (0,0) to (0,1)
         unit_vecs = geometry.detector.axes
@@ -331,7 +331,7 @@ def astra_projection_geometry(geometry):
 
     Returns
     -------
-    proj_geom : `dict`
+    proj_geom : dict
         Dictionary defining the ASTRA projection geometry.
     """
     if not isinstance(geometry, Geometry):
@@ -393,36 +393,40 @@ def astra_projection_geometry(geometry):
     return proj_geom
 
 
-def astra_data(astra_geom, datatype, data=None, ndim=2):
+def astra_data(astra_geom, datatype, data=None, ndim=2, allow_copy=False):
     """Create an ASTRA data structure.
 
     Parameters
     ----------
-    astra_geom : `dict`
+    astra_geom : dict
         ASTRA geometry object for the data creator, must correspond to the
         given data type
     datatype : {'volume', 'projection'}
         Type of the data container
-    data : `DiscreteLpVector`, optional
-        Data for the initialization of the data structure. If `None` creates
-        an ASTRA data object filled with zeros
+    data : `DiscreteLpElement`, optional
+        Data for the initialization of the data structure. If ``None``,
+        an ASTRA data object filled with zeros is created.
     ndim : {2, 3}, optional
-        Dimension of the data. If ``data`` is not `None`, this parameter
+        Dimension of the data. If ``data`` is not ``None``, this parameter
         has no effect.
+    allow_copy : `bool`, optional
+        True if copying ``data`` should be allowed. This means that anything
+        written by ASTRA to the returned structure will not be written to
+        ``data``.
 
     Returns
     -------
-    id : `int`
+    id : int
         ASTRA internal ID for the new data structure
     """
     if data is not None:
-        if isinstance(data, DiscreteLpVector):
+        if isinstance(data, DiscreteLpElement):
             ndim = data.space.ndim
         elif isinstance(data, np.ndarray):
             ndim = data.ndim
         else:
-            raise TypeError('`data` {!r} is neither DiscreteLp.Vector '
-                            'instance or a numpy.ndarray'.format(data))
+            raise TypeError('`data` {!r} is neither DiscreteLpElement '
+                            'instance nor a `numpy.ndarray`'.format(data))
     else:
         ndim = int(ndim)
 
@@ -446,15 +450,19 @@ def astra_data(astra_geom, datatype, data=None, ndim=2):
 
     # ASTRA checks if data is c-contiguous and aligned
     if data is not None:
-        if isinstance(data, np.ndarray):
-            return link(astra_dtype_str, astra_geom, data)
-        elif data.ntuple.impl == 'numpy':
-            return link(astra_dtype_str, astra_geom, data.asarray())
+        if allow_copy:
+            data_array = np.asarray(data, dtype='float32', order='C')
+            return link(astra_dtype_str, astra_geom, data_array)
         else:
-            # Something else than NumPy data representation
-            raise NotImplementedError('ASTRA supports data wrapping only for '
-                                      'numpy.ndarray instances, got {!r}'
-                                      ''.format(data))
+            if isinstance(data, np.ndarray):
+                return link(astra_dtype_str, astra_geom, data)
+            elif data.ntuple.impl == 'numpy':
+                return link(astra_dtype_str, astra_geom, data.asarray())
+            else:
+                # Something else than NumPy data representation
+                raise NotImplementedError('ASTRA supports data wrapping only '
+                                          'for `numpy.ndarray` instances, got '
+                                          '{!r}'.format(data))
     else:
         return create(astra_dtype_str, astra_geom)
 
@@ -466,9 +474,9 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
     ----------
     vol_interp : {'nearest', 'linear'}
         Interpolation type of the volume discretization
-    astra_vol_geom : `dict`
+    astra_vol_geom : dict
         ASTRA volume geometry dictionary
-    astra_proj_geom : `dict`
+    astra_proj_geom : dict
         ASTRA projection geometry dictionary
     ndim : {2, 3}
         Number of dimensions of the projector
@@ -477,7 +485,7 @@ def astra_projector(vol_interp, astra_vol_geom, astra_proj_geom, ndim, impl):
 
     Returns
     -------
-    proj_id : `int`
+    proj_id : int
         ASTRA reference ID to the ASTRA dict with initialized 'type' key
     """
     if vol_interp not in ('nearest', 'linear'):
@@ -551,18 +559,18 @@ def astra_algorithm(direction, ndim, vol_id, sino_id, proj_id, impl):
         projection
     ndim : {2, 3}
         Number of dimensions of the projector
-    vol_id : `int`
+    vol_id : int
         ASTRA ID of the volume data object
-    sino_id : `int`
+    sino_id : int
         ASTRA ID of the projection data object
-    proj_id : `int`
+    proj_id : int
         ASTRA ID of the projector
     impl : {'cpu', 'cuda'}
         Implementation of the projector
 
     Returns
     -------
-    id : `int`
+    id : int
         ASTRA internal ID for the new algorithm structure
     """
     if direction not in ('forward', 'backward'):

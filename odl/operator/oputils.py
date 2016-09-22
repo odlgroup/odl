@@ -49,7 +49,6 @@ def matrix_representation(op):
     ----------
     The algorithm works by letting the operator act on all unit vectors, and
     stacking the output as a matrix.
-
     """
 
     if not op.is_linear:
@@ -87,6 +86,12 @@ def matrix_representation(op):
         num_dom = 1
         m = [op.domain.size]
 
+    def as_flat_array(x):
+        if hasattr(x, 'order'):
+            return x.asarray().ravel(x.order)
+        else:
+            return x.asarray().ravel()
+
     # Generate the matrix
     matrix = np.zeros([np.sum(n), np.sum(m)])
     tmp_ran = op.range.element()  # Store for reuse in loop
@@ -110,7 +115,7 @@ def matrix_representation(op):
                         tmp_ran[k])
                     tmp_idx += op.range[k].size
             else:
-                matrix[:, index] = tmp_ran.asarray()
+                matrix[:, index] = as_flat_array(tmp_ran)
             index += 1
             last_j = j
             last_i = i
@@ -118,15 +123,9 @@ def matrix_representation(op):
     return matrix
 
 
-def power_method_opnorm(op, niter, xstart=None):
+def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
+                        callback=None):
     """Estimate the operator norm with the power method.
-
-    The operator norm ``||op(x)||`` is defined by as the smallest number such
-    that::
-
-        ||op(x)|| <= ||op|| ||x||
-
-    for all ``x``.
 
     Parameters
     ----------
@@ -135,76 +134,141 @@ def power_method_opnorm(op, niter, xstart=None):
         range does not coincide with its `Operator.domain`, an
         `Operator.adjoint` must be defined (which implies that the
         operator must be linear).
-    niter : positive `int`
-        Number of iterations to perform. If the domain and range of ``op``
-        do not match, it needs to be an even number.
-    xstart : `Operator.domain` `element`, optional
+    xstart : ``op.domain`` `element-like`, optional
         Starting point of the iteration. By default, the ``one``
         element of the `Operator.domain` is used.
+    maxiter : positive int, optional
+        Number of iterations to perform. If the domain and range of ``op``
+        do not match, it needs to be an even number. If ``None`` is given,
+        iterate until convergence.
+    rtol : float, optional
+        Relative tolerance parameter (see Notes).
+    atol : float, optional
+        Absolute tolerance parameter (see Notes).
+    callback : `callable`, optional
+        Function called with the current iterate in each iteration.
 
     Returns
     -------
-    est_opnorm : `float`
-        The estimated operator norm
+    est_opnorm : float
+        The estimated operator norm of ``op``.
+
+    Examples
+    --------
+    Verify that the identity operator has norm 1:
+
+    >>> import odl
+    >>> space = odl.uniform_discr(0, 1, 5)
+    >>> id = odl.IdentityOperator(space)
+    >>> power_method_opnorm(id)
+    1.0
+
+    The operator norm scales as expected:
+
+    >>> power_method_opnorm(3 * id)
+    3.0
+
+    Notes
+    -----
+    The operator norm :math:`||A||` is defined by as the smallest number
+    such that
+
+    .. math::
+
+        ||A(x)|| \leq ||A|| ||x||
+
+    for all :math:`x` in the domain of :math:`A`.
+
+    The operator is evaluated until ``maxiter`` operator calls or until the
+    relative error is small enough. The error measure is given by
+
+        ``abs(a - b) <= (atol + rtol * abs(b))``,
+
+    where ``a`` and ``b`` are consecutive iterates.
     """
+    if maxiter is None:
+        maxiter = np.iinfo(int).max
+
+    maxiter, maxiter_in = int(maxiter), maxiter
+    if maxiter <= 0:
+        raise ValueError('`maxiter` must be positive, got {}'
+                         ''.format(maxiter_in))
+
     if op.domain == op.range:
         use_normal = False
+        ncalls = maxiter
     else:
+        # Do the power iteration for A*A; the norm of A*A(x_N) is then
+        # an estimate of the square of the operator norm
+        # We do only half the number of iterations compared to the usual
+        # case to have the same number of operator evaluations.
         use_normal = True
+        ncalls = maxiter // 2
+        if ncalls * 2 != maxiter:
+            raise ValueError('``niter`` must be an even number, got {}'
+                             ''.format(maxiter_in))
 
+    # Make sure starting point is ok or select initial guess
     if xstart is None:
         try:
             x = op.domain.one()  # TODO: random? better choice?
         except AttributeError as exc:
             raise_from(
-                ValueError('a starting element must be defined in case the '
+                ValueError('`xstart` must be defined in case the '
                            'operator domain has no `one()`'), exc)
     else:
         # copy to ensure xstart is not modified
         x = op.domain.element(xstart).copy()
 
+    # Take first iteration step to normalize input
     x_norm = x.norm()
     if x_norm == 0:
         raise ValueError('``xstart`` must be nonzero')
     x /= x_norm
 
-    niter, niter_in = int(niter), niter
-    if niter <= 0:
-        raise ValueError('`niter` must be positive, got {}'.format(niter_in))
+    # utility to calculate opnorm from xnorm
+    def calc_opnorm(x_norm):
+        if use_normal:
+            return np.sqrt(x_norm)
+        else:
+            return x_norm
 
+    # initial guess of opnorm
+    opnorm = calc_opnorm(x_norm)
+
+    # temporary to improve performance
     tmp = op.range.element()
-    if use_normal:
-        # Do the power iteration for A*A; the norm of A*A(x_N) is then
-        # an estimate of the square of the operator norm
-        # We do only half the number of iterations compared to the usual
-        # case to have the same number of operator evaluations.
-        half_niter = niter // 2
-        if half_niter * 2 != niter:
-            raise ValueError('``niter`` must be an even number, got {}'
-                             ''.format(niter))
 
-        for _ in range(half_niter):
+    # Use the power method to estimate opnorm
+    for i in range(ncalls):
+        if use_normal:
             op(x, out=tmp)
             op.adjoint(tmp, out=x)
-
-            x_norm = x.norm()
-            if x_norm == 0:
-                raise ValueError('reached ``x=0``')
-            x /= x_norm
-
-        return np.sqrt(x_norm)
-
-    else:
-        for _ in range(niter):
+        else:
             op(x, out=tmp)
             x, tmp = tmp, x
 
-            x_norm = x.norm()
-            if x_norm == 0:
-                raise ValueError('reached ``x=0``')
+        # Calculate x norm and verify it is valid
+        x_norm = x.norm()
+        if x_norm == 0:
+            raise ValueError('reached ``x=0`` after {} iterations'.format(i))
+        if not np.isfinite(x_norm):
+            raise ValueError('reached nonfinite ``x={}`` after {} iterations'
+                             ''.format(x, i))
+
+        # Calculate opnorm
+        opnorm, opnorm_old = calc_opnorm(x_norm), opnorm
+
+        # Check if the breaking condition holds, stop. Else rescale and go on.
+        if np.isclose(opnorm, opnorm_old, rtol, atol):
+            break
+        else:
             x /= x_norm
 
-        return x_norm
+        if callback is not None:
+            callback(x)
+
+    return opnorm
 
 
 def as_scipy_operator(op):

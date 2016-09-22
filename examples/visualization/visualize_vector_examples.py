@@ -17,19 +17,14 @@
 
 """Visualization of the test functions in the diagnostics module."""
 
-# Imports for common Python 2/3 codebase
-from __future__ import print_function, division, absolute_import
-from future import standard_library
-standard_library.install_aliases()
-
 import odl
 
-disc = odl.uniform_discr(0, 1, 100)
+space_1d = odl.uniform_discr(0, 1, 100)
 
-for name, vec in disc.examples:
-    vec.show(name)
+for name, elem in space_1d.examples:
+    elem.show(name)
 
-disc = odl.uniform_discr([0, 0], [1, 1], [100, 100])
+space_2d = odl.uniform_discr([0, 0], [1, 1], [100, 100])
 
-for name, vec in disc.examples:
-    vec.show(name)
+for name, elem in space_2d.examples:
+    elem.show(name)

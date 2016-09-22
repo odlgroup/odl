@@ -17,13 +17,13 @@ Casting vectors to and from arrays
 ==================================
 ODL vectors are stored in an abstract way, enabling storage on the CPU, GPU, or perhaps on a cluster on the other side of the world. This allows algorithms to be written in a generalized and storage-agnostic manner. Still, it is often convenient to be able to access the data and look at it, perhaps to initialize a vector, or to call an external function.
 
-To cast a NumPy array to an ODL vector, you simply need to call the `LinearSpace.element` method in an appropriate space::
+To cast a NumPy array to an element of an ODL vector space, you simply need to call the `LinearSpace.element` method in an appropriate space::
 
    >>> r3 = odl.rn(3)
    >>> arr = np.array([1, 2, 3])
    >>> x = r3.element(arr)
 
-If the data type and storage methods allow it, the vector simply wraps the underlying array using a `view
+If the data type and storage methods allow it, the element simply wraps the underlying array using a `view
 <http://docs.scipy.org/doc/numpy/glossary.html#term-view>`_::
 
    >>> float_arr = np.array([1.0, 2.0, 3.0])
@@ -31,20 +31,20 @@ If the data type and storage methods allow it, the vector simply wraps the under
    >>> x.data is float_arr
    True
 
-Casting ODL vectors to NumPy arrays can be done in two ways, either through the member function `NtuplesBaseVector.asarray`, or using `numpy.asarray`. These are both optimized and if possible return a view::
+Casting ODL vector space elements to NumPy arrays can be done in two ways, either through the member function `NtuplesBaseVector.asarray`, or using `numpy.asarray`. These are both optimized and if possible return a view::
 
    >>> x.asarray()
    array([1.0, 2.0, 3.0])
    >>> np.asarray(x)
    array([1.0, 2.0, 3.0])
 
-These methods work with any ODL vector represented by an array. For example, in discretizations, a two-dimensional array can be used::
+These methods work with any ODL object represented by an array. For example, in discretizations, a two-dimensional array can be used::
 
-   >>> X = odl.uniform_discr([0, 0], [1, 1], [3, 3])
+   >>> space = odl.uniform_discr([0, 0], [1, 1], [3, 3])
    >>> arr = np.array([[1, 2, 3],
    ...                 [4, 5, 6],
    ...                 [7, 8, 9]])
-   >>> x = X.element(arr)
+   >>> x = space.element(arr)
    >>> x.asarray()
    array([[1.0, 2.0, 3.0],
           [4.0, 5.0, 6.0],
@@ -53,19 +53,19 @@ These methods work with any ODL vector represented by an array. For example, in 
 Using ODL vectors with NumPy functions
 ======================================
 A very convenient feature of ODL is its seamless interaction with NumPy functions. For universal functions (`ufuncs
-<http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_) this is supported both via method of the ODL vector and by direct application of the NumPy functions. For example, using NumPy::
+<http://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_) this is supported both via method of the ODL object and by direct application of the NumPy functions. For example, using NumPy::
 
    >>> r3 = odl.rn(3)
    >>> x = r3.element([1, 2, 3])
    >>> np.negative(x)
    rn(3).element([-1.0, -2.0, -3.0])
 
-This method of using NumPy always uses the NumPy implementation, which can involve overhead in case the data is not stored in a CPU space. To always enable optimized code, users can call the member `NtuplesBaseVector.ufunc`::
+This method always uses the NumPy implementation, which can involve overhead in case the data is not stored in a CPU space. To always enable optimized code, users can call the member `NtuplesBaseVector.ufunc`::
 
    >>> x.ufunc.negative()
    rn(3).element([-1.0, -2.0, -3.0])
 
-For other arbitrary functions, ODL vectors are generally accepted as input, but the output is often of `numpy.ndarray` type::
+For other arbitrary functions, ODL vector space elements are generally accepted as input, but the output is often of `numpy.ndarray` type::
 
    >>> np.convolve(x, x, mode='same')
    array([  4.,  10.,  12.])
@@ -80,7 +80,7 @@ NumPy functions as Operators
 To solve the above issue, it is often useful to write an `Operator` wrapping NumPy functions, thus allowing full access to the ODL ecosystem. To wrap the convolution operation, you could write a new class::
 
    class MyConvolution(odl.Operator):
-       """Operator for convolving with given vector."""
+       """Operator for convolving with a given vector."""
 
        def __init__(self, vector):
            """Initialize the convolution."""

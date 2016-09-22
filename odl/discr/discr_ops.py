@@ -70,6 +70,19 @@ class Resampling(Operator):
         uniform_discr(0.0, 1.0, 3)
         >>> resampling.range
         uniform_discr(0.0, 1.0, 6)
+
+        Apply the  corresponding resampling operator to an element:
+
+        >>> print(resampling([0, 1, 0]))
+        [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+
+        The result depends on the interpolation chosen for the underlying
+        spaces:
+
+        >>> coarse_discr = odl.uniform_discr(0, 1, 3, interp='linear')
+        >>> linear_resampling = odl.Resampling(coarse_discr, fine_discr)
+        >>> print(linear_resampling([0, 1, 0]))
+        [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
         """
         if domain.uspace != range.uspace:
             raise ValueError('`domain.uspace` ({}) does not match '
@@ -81,28 +94,8 @@ class Resampling(Operator):
     def _call(self, x, out=None):
         """Apply resampling operator.
 
-        The vector ``x`` is resampled using the sampling and interpolation
+        The element ``x`` is resampled using the sampling and interpolation
         operators of the underlying spaces.
-
-        Examples
-        --------
-        Create two spaces with different number of points and apply the
-        corresponding resampling operator to an element:
-
-        >>> import odl
-        >>> coarse_discr = odl.uniform_discr(0, 1, 3)
-        >>> fine_discr = odl.uniform_discr(0, 1, 6)
-        >>> resampling = odl.Resampling(coarse_discr, fine_discr)
-        >>> print(resampling([0, 1, 0]))
-        [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
-
-        The result depends on the interpolation chosen for the underlying
-        spaces:
-
-        >>> coarse_discr = odl.uniform_discr(0, 1, 3, interp='linear')
-        >>> linear_resampling = odl.Resampling(coarse_discr, fine_discr)
-        >>> print(linear_resampling([0, 1, 0]))
-        [0.0, 0.25, 0.75, 0.75, 0.25, 0.0]
         """
         if out is None:
             return x.interpolation
@@ -182,17 +175,17 @@ class ResizingOperatorBase(Operator):
             For the default ``None``, a space with the same attributes
             as ``domain`` is used, except for its shape, which is set
             to ``ran_shp``.
-        ran_shp : sequence of int, optional
+        ran_shp : `sequence` of ints, optional
             Shape of the range of this operator. This can be provided
             instead of ``range`` and is mandatory if ``range`` is
             ``None``.
-        offset : int or sequence of int, optional
+        offset : int or `sequence` of ints, optional
             Number of cells to add to/remove from the left of
             ``domain.partition``. By default, the difference is
             distributed evenly, with preference for left in case of
             ambiguity.
             This option is can only be used together with ``ran_shp``.
-        pad_mode : str, optional
+        pad_mode : string, optional
             Method to be used to fill in missing values in an enlarged array.
 
             ``'constant'``: Fill with ``pad_const``.

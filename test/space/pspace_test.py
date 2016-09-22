@@ -450,7 +450,7 @@ def test_getitem_fancy():
     assert H[[0, 2]][1] is r3
 
 
-def test_vector_equals():
+def test_element_equals():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
     x = H.element([[0], [1, 2]])
 
@@ -467,7 +467,7 @@ def test_vector_equals():
     assert x != x_4
 
 
-def test_vector_getitem_single():
+def test_element_getitem_single():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
 
     x1 = H[0].element([0])
@@ -483,7 +483,7 @@ def test_vector_getitem_single():
         x[2]
 
 
-def test_vector_getitem_slice():
+def test_element_getitem_slice():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
     x1 = H[0].element([0])
@@ -496,7 +496,7 @@ def test_vector_getitem_slice():
     assert x[:2][1] is x2
 
 
-def test_vector_getitem_fancy():
+def test_element_getitem_fancy():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
     x1 = H[0].element([0])
@@ -509,7 +509,7 @@ def test_vector_getitem_fancy():
     assert x[[0, 2]][1] is x3
 
 
-def test_vector_setitem_single():
+def test_element_setitem_single():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
 
     x1 = H[0].element([0])
@@ -536,7 +536,7 @@ def test_vector_setitem_single():
         x[2] = x1
 
 
-def test_vector_setitem_slice():
+def test_element_setitem_slice():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
     x1 = H[0].element([0])
@@ -551,7 +551,7 @@ def test_vector_setitem_slice():
     assert x[:2][1] is x2_new
 
 
-def test_vector_setitem_fancy():
+def test_element_setitem_fancy():
     H = odl.ProductSpace(odl.rn(1), odl.rn(2), odl.rn(3))
 
     x1 = H[0].element([0])

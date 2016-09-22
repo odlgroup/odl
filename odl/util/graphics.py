@@ -62,20 +62,20 @@ def _colorbar_format(minval, maxval):
 def _axes_info(grid, npoints=5):
     result = []
 
-    min_corner = grid.min()
-    max_corner = grid.max()
+    min_pt = grid.min()
+    max_pt = grid.max()
     for axis in range(grid.ndim):
-        minv = min_corner[axis]
-        maxv = max_corner[axis]
+        xmin = min_pt[axis]
+        xmax = max_pt[axis]
 
-        points = np.linspace(minv, maxv, npoints)
+        points = np.linspace(xmin, xmax, npoints)
         indices = np.linspace(0, grid.shape[axis] - 1, npoints, dtype=int)
         tick_values = grid.coord_vectors[axis][indices]
 
         # Do not use corner point in case of a partition, use outer corner
-        tick_values[[0, -1]] = minv, maxv
+        tick_values[[0, -1]] = xmin, xmax
 
-        format_str = '{:.' + str(_digits(minv, maxv)) + 'f}'
+        format_str = '{:.' + str(_digits(xmin, xmax)) + 'f}'
         tick_labels = [format_str.format(f) for f in tick_values]
 
         result += [(points, tick_labels)]
@@ -94,10 +94,10 @@ def show_discrete_data(values, grid, title=None, method='',
     grid : `TensorGrid` or `RectPartition`
         Grid of the values
 
-    title : `str`, optional
+    title : string, optional
         Set the title of the figure
 
-    method : `str`, optional
+    method : string, optional
         1d methods:
 
         'plot' : graph plot
@@ -116,7 +116,7 @@ def show_discrete_data(values, grid, title=None, method='',
         'wireframe', 'plot_wireframe' : surface plot
 
 
-    show : `bool`, optional
+    show : bool, optional
         If the plot should be showed now or deferred until later
 
     fig : `matplotlib.figure.Figure`
@@ -127,7 +127,7 @@ def show_discrete_data(values, grid, title=None, method='',
     interp : {'nearest', 'linear'}
         Interpolation method to use.
 
-    axis_labels : `str`
+    axis_labels : string
         Axis labels, default: ['x', 'y']
 
     kwargs : {'figsize', 'saveto', ...}

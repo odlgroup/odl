@@ -93,7 +93,7 @@ def template_grad_factory(n):
     """Gradient of the gaussian."""
     def template_grad_i(i):
         # Indirection for lambda capture
-        return lambda x: -2 * x[i] / SIGMA**2 * template_function(x)
+        return lambda x: -2 * x[i] / SIGMA ** 2 * template_function(x)
     return [template_grad_i(i) for i in range(n)]
 
 
@@ -186,7 +186,7 @@ def test_fixed_templ_init():
 
     # Invalid input
     with pytest.raises(TypeError):
-        # template not a DiscreteLpVector
+        # template not a DiscreteLpElement
         LinDeformFixedTempl(template_function)
 
 
@@ -244,7 +244,7 @@ def test_fixed_disp_init():
     print(LinDeformFixedDisp(disp_field, templ_space=space))
 
     # Non-valid input
-    with pytest.raises(TypeError):  # displacement not ProductSpaceVector
+    with pytest.raises(TypeError):  # displacement not ProductSpaceElement
         LinDeformFixedDisp(space.one())
     with pytest.raises(TypeError):  # templ_space not DiscreteLp
         LinDeformFixedDisp(disp_field, space.vector_field_space)

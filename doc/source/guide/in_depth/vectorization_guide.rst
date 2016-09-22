@@ -6,7 +6,7 @@ Vectorized functions
 
 
 This section is intended as a small guideline on how to write functions which work with the
-vectorization machinery by Numpy which is used internally in ODL. 
+vectorization machinery by Numpy which is used internally in ODL.
 
 
 What is vectorization?
@@ -50,7 +50,7 @@ want to discretize a two-dimensional Gaussian function::
 
     def gaussian2(x):
         return np.exp(-(x[0] ** 2 + x[1] ** 2) / 2)
-    
+
 on the rectangle [-5, 5] x [-5, 5] with 100 pixels in each
 dimension. The code for this is simply::
 
@@ -70,7 +70,7 @@ To make this process fast, ``element`` assumes that the function is written in a
 supports vectorization, but also guarantees that the output has the correct shape. The function
 receives a :term:`meshgrid` tuple as input, in the above case consisting of two vectors::
 
-    >>> mesh = discr.meshgrid()
+    >>> mesh = discr.meshgrid
     >>> mesh[0].shape
     (100, 1)
     >>> mesh[1].shape
@@ -81,26 +81,16 @@ When inserted into the function, the final shape of the output is determined by 
 be ``(100, 100)`` since the arrays in ``mesh`` are added after squaring. This size is the same
 as expected by the discretization.
 
-If, however, the function does not use all components of its input, the shape will be different::
+If a function does not use all components of the input, ODL tries to broadcast the result to the shape of the discretized space::
 
-    >>> def gaussian_const_x0_bad(x):
-    ...     return np.exp(-x[1] ** 2 / 2)  # no x[0] -> no broadcasting
+    >>> def gaussian_const_x0(x):
+    ...     return np.exp(-x[1] ** 2 / 2)  # no x[0] -> broadcasting
 
-    >>> gaussian_const_x0_bad(mesh).shape
+    >>> gaussian_const_x0(mesh).shape
     (1, 100)
 
-This array is too small for the discretization, and an exception will be raised, stating that this
-function cannot be discretized.
-
-The solution to this issue is rather simple: just make sure that all components are used such that
-the broadcasting rules are triggered::
-
-    >>> def gaussian_const_x0_good(x):
-    ...     return np.exp(-x[1] ** 2 / 2) + 0 * x[0]  # broadcasting
-
-    >>> gaussian_const_x0_good(mesh).shape
+    >>> discr.element(gaussian_const_x0).shape
     (100, 100)
-
 
 
 Further reading

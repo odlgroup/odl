@@ -31,24 +31,24 @@ standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
+import scipy.special
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, ResidualOperator, DiagonalOperator)
 from odl.space import ProductSpace
-from odl.set import LinearSpaceVector
+from odl.set import LinearSpaceElement
 
 
 __all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
            'proximal_arg_scaling', 'proximal_quadratic_perturbation',
-           'proximal_composition', 'proximal_zero',
+           'proximal_composition', 'proximal_const_func',
            'proximal_box_constraint', 'proximal_nonnegativity',
            'proximal_l1', 'proximal_cconj_l1',
            'proximal_l2', 'proximal_cconj_l2',
            'proximal_l2_squared', 'proximal_cconj_l2_squared',
-           'proximal_cconj_kl')
+           'proximal_cconj_kl', 'proximal_cconj_kl_cross_entropy')
 
 
-# TODO: remove diagonal op once available on master
 def combine_proximals(*factory_list):
     """Combine proximal operators into a diagonal product space operator.
 
@@ -60,12 +60,12 @@ def combine_proximals(*factory_list):
 
     Parameters
     ----------
-    factory_list : list of `callable`
-        A list containing proximal operator factories
+    factory_list : `sequence` of `callable`'s
+        Proximal operator factories to be combined.
 
     Returns
     -------
-    diag_op : `callable`
+    diag_op : function
         Returns a diagonal product space operator factory to be initialized
         with the same step size parameter
     """
@@ -75,12 +75,12 @@ def combine_proximals(*factory_list):
 
         Parameters
         ----------
-        step_size : positive `float`
+        step_size : positive float
             Step size parameter
 
         Returns
         -------
-        diag_op : `Operator`
+        diag_op : `DiagonalOperator`
         """
         return DiagonalOperator(
             *[factory(step_size) for factory in factory_list])
@@ -112,7 +112,7 @@ def proximal_cconj(prox_factory):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     Notes
@@ -125,7 +125,7 @@ def proximal_cconj(prox_factory):
 
         Parameters
         ----------
-        step_size : positive `float`
+        step_size : positive float
             Step size parameter
 
         Returns
@@ -158,7 +158,7 @@ def proximal_translation(prox_factory, y):
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     Notes
@@ -171,7 +171,7 @@ def proximal_translation(prox_factory, y):
 
         Parameters
         ----------
-        step_size : positive `float`
+        step_size : positive float
             Step size parameter
 
         Returns
@@ -202,12 +202,12 @@ def proximal_arg_scaling(prox_factory, scaling):
     prox_factory : `callable`
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``
-    scaling : `float`
+    scaling : float
         Scaling parameter
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     Notes
@@ -217,14 +217,14 @@ def proximal_arg_scaling(prox_factory, scaling):
 
     scaling = float(scaling)
     if scaling == 0:
-        return proximal_zero(prox_factory(1.0).domain)
+        return proximal_const_func(prox_factory(1.0).domain)
 
     def arg_scaling_prox_factory(step_size):
         """Create proximal for the translation with a given step_size.
 
         Parameters
         ----------
-        step_size : positive `float`
+        step_size : positive float
             Step size parameter
 
         Returns
@@ -248,23 +248,23 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         c prox[s*f( . * c)]((x - s*u)*c)
 
     where ``c`` is the constant c = 1/sqrt(s*2*a + 1), ``a`` is the scaling
-    parameter belonging to the quadratic term, ``u`` is the vector defining the
-    linear functional, and ``s`` is the step size.
+    parameter belonging to the quadratic term, ``u`` is the space
+    element defining the linear functional, and ``s`` is the step size.
 
     Parameters
     ----------
     prox_factory : `callable`
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``
-    a : non-negative `float`
+    a : non-negative float
         Scaling of the quadratic term
     u : Element in domain of F, optional
-        Defines the linear functional
-        Default: Treated as zero vector
+        Defines the linear functional. For ``None``, the zero element
+        is taken.
 
     Returns
     -------
-    prox : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     Notes
@@ -279,9 +279,9 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         raise ValueError('scaling parameter muts be non-negative, got {}'
                          ''.format(a))
 
-    if u is not None and not isinstance(u, LinearSpaceVector):
-        raise TypeError('vector {!r} not None or a LinearSpaceVector instance.'
-                        ''.format(u))
+    if u is not None and not isinstance(u, LinearSpaceElement):
+        raise TypeError('`u` must be `None` or a `LinearSpaceElement` '
+                        'instance, got {!r}.'.format(u))
 
     def quadratic_perturbation_prox_factory(step_size):
         """Create proximal for the quadratic perturbation with a given
@@ -289,7 +289,7 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
 
         Parameters
         ----------
-        step_size : positive `float`
+        step_size : positive float
             Step size parameter
 
         Returns
@@ -332,12 +332,12 @@ def proximal_composition(proximal, operator, mu):
         proximal operator of ``F``
     operator : `Operator`
         The operator to compose the functional with
-    mu : `Operator.field` element
+    mu : ``operator.field`` element
         Scalar such that ``(operator.adjoint * operator)(x) = mu * x``
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     Notes
@@ -351,7 +351,7 @@ def proximal_composition(proximal, operator, mu):
 
         Parameters
         ----------
-        step_size : positive `float`
+        step_size : positive float
             Step size parameter
 
         Returns
@@ -367,25 +367,25 @@ def proximal_composition(proximal, operator, mu):
     return proximal_composition_factory
 
 
-def proximal_zero(space):
-    """Proximal operator factory of the zero functional.
+def proximal_const_func(space):
+    """Proximal operator factory of the constant functional.
 
-    Function to initialize the proximal operator of the zero functional
+    Function to initialize the proximal operator of the constant functional
     defined on ``space``. The proximal operator of this functional is the
     identity operator
 
-        prox[tau * G](x) = x  where G=0
+        prox[tau * G](x) = x  where G=constant
 
     It is independent of tau.
 
     Parameters
     ----------
     space : `LinearSpace`
-        Domain of the functional G=0
+        Domain of the functional G=constant
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
     """
 
@@ -394,7 +394,7 @@ def proximal_zero(space):
 
         Parameters
         ----------
-        tau : positive `float`
+        tau : positive float
             Unused step size parameter. Introduced to provide a unified
             interface.
 
@@ -434,14 +434,16 @@ def proximal_box_constraint(space, lower=None, upper=None):
     ----------
     space : `LinearSpace`
         Domain of the functional G(x)
-    lower : ``space.field`` element or ``space`` element-like, optional
-        The lower bound. Default: `None`, interpreted as -infinity
-    upper : ``space.field`` element or ``space`` element-like, optional
-        The upper bound. Default: `None`, interpreted as +infinity
+    lower : ``space.field`` element or ``space`` `element-like`, optional
+        The lower bound.
+        Default: ``None``, interpreted as -infinity
+    upper : ``space.field`` element or ``space`` `element-like`, optional
+        The upper bound.
+        Default: ``None``, interpreted as +infinity
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     See Also
@@ -469,7 +471,7 @@ def proximal_box_constraint(space, lower=None, upper=None):
 
             Parameters
             ----------
-            tau : positive `float`
+            tau : positive float
                 Step size parameter, not used.
             """
             super().__init__(domain=space, range=space, linear=False)
@@ -519,7 +521,7 @@ def proximal_nonnegativity(space):
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     See Also
@@ -556,12 +558,12 @@ def proximal_cconj_l2(space, lam=1, g=None):
         That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     Notes
@@ -601,12 +603,12 @@ def proximal_l2(space, lam=1, g=None):
         That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     Notes
@@ -634,7 +636,7 @@ def proximal_l2(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive `float`
+            sigma : positive float
                 Step size parameter
             """
             self.sigma = float(sigma)
@@ -696,12 +698,12 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
         That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     See Also
@@ -723,7 +725,7 @@ def proximal_cconj_l2_squared(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive `float`
+            sigma : positive float
                 Step size parameter
             """
             self.sigma = float(sigma)
@@ -766,12 +768,12 @@ def proximal_l2_squared(space, lam=1, g=None):
         That is, have an inner product (`LinearSpace.inner`).
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     See Also
@@ -807,8 +809,8 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
         prox[sigma * F^*](y) = lam (y - sigma g) / (max(lam, |y - sigma g|)
 
-    An alternative formulation is available for `ProductSpace`'s, in that case
-    the ``isotropic`` parameter can be used, giving
+    An alternative formulation is available for `ProductSpace`'s, in which
+    case the ``isotropic`` parameter can be used, giving
 
         F(x) = lam || ||x - g||_2 ||_1
 
@@ -823,7 +825,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
             lam (y - sigma g) / (max(lam, ||y - sigma g||_2)
 
     where max(.,.) thresholds the lower bound of ||y||_2 point-wise and
-    1 is a vector in the space of ||y||_2 with all components set
+    1 is a element of the space of ||y||_2 with all components set
     to 1.
 
     Parameters
@@ -832,15 +834,16 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
         Domain of the functional F
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
-    isotropic : `bool`
-        True if the norm should first be taken pointwise. Only available if
-        ``space`` is a `ProductSpace`.
+    isotropic : bool
+        If ``True``, take the vectorial 2-norm point-wise. Otherwise,
+        use the vectorial 1-norm. Only available if ``space`` is a
+        `ProductSpace`.
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     See Also
@@ -869,7 +872,7 @@ def proximal_cconj_l1(space, lam=1, g=None, isotropic=False):
 
             Parameters
             ----------
-            sigma : positive `float`
+            sigma : positive float
                 Step size parameter
             """
             # sigma is not used
@@ -951,15 +954,16 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
         Domain of the functional F
     g : ``space`` element
         An element in ``space``
-    lam : positive `float`
+    lam : positive float
         Scaling factor or regularization parameter
-    isotropic : `bool`
-        True if the norm should first be taken pointwise. Only available if
-        ``space`` is a `ProductSpace`.
+    isotropic : bool
+        If ``True``, take the vectorial 2-norm point-wise. Otherwise,
+        use the vectorial 1-norm. Only available if ``space`` is a
+        `ProductSpace`.
 
     Returns
     -------
-    prox_factory : `callable`
+    prox_factory : function
         Factory for the proximal operator to be initialized
 
     See Also
@@ -978,44 +982,68 @@ def proximal_cconj_kl(space, lam=1, g=None):
     Function returning the proximal operator of the convex conjugate of the
     functional F where F is the entropy-type Kullback-Leibler (KL) divergence
 
-        F(x) = sum_i (x - g + g ln(g) - g ln(pos(x)))_i + ind_P(x)
+        F(x) = sum_i (x_i - g_i + g_i ln(g_i) - g_i ln(pos(x_i))) + ind_P(x)
 
-    with x and g in X and g non-negative. The indicator function ind_P(x)
-    for the positive elements of x is used to restrict the domain of F such
-    that F is defined over whole X. The non-negativity thresholding pos is
-    used to define F in the real numbers.
-
-    The proximal operator of the convex conjugate F^* of F is
-
-        F^*(p) = sum_i (-g ln(pos(1_X - p))_i + ind_P(1_X - p)
-
-    where p is the variable dual to x, and 1_X is a vector in the space X with
-    all components set to 1.
-
-    The proximal operator of the convex conjugate of F is
-
-        prox[sigma * F^*](x) =
-            1/2 (lam + x - sqrt((x - lam)^2 + 4 lam sigma g)
-
-    with the step size parameter sigma and lam_X is a vector in the space X
-    with all components set to lam.
+    with ``x`` and ``g`` elements in the linear space ``X``, and ``g``
+    non-negative. Here, ``pos`` denotes the nonnegative part, and ``ind_P`` is
+    the indicator function for nonnegativity.
 
     Parameters
     ----------
-    space : `DiscreteLp` or `ProductSpace` of `DiscreteLp` spaces
+    space : `FnBase`
         Space X which is the domain of the functional F
-    g : ``space`` element
-        Data term
-    lam : positive `float`
-        Scaling factor
+    g : ``space`` element, optional
+        Data term, positive. If None it is take as the one-element.
+    lam : positive float
+        Scaling factor.
 
     Returns
     -------
-    prox_factory : `callable`
-        Factory for the proximal operator to be initialized
+    prox_factory : function
+        Factory for the proximal operator to be initialized.
+
+    See Also
+    --------
+    proximal_cconj_kl_cross_entropy : proximal for releated functional
 
     Notes
     -----
+    The functional is given by the expression
+
+     .. math::
+
+        F(x) = \\sum_i (x_i - g_i + g_i \\ln(g_i) - g_i \\ln(pos(x_i))) +
+        I_{x \\geq 0}(x)
+
+    The indicator function :math:`I_{x \geq 0}(x)` is used to restrict the
+    domain of :math:`F` such that :math:`F` is defined over whole space
+    :math:`X`. The non-negativity thresholding :math:`pos` is used to define
+    :math:`F` in the real numbers.
+
+    Note that the functional is not well-defined without a prior g. Hence, if g
+    is omitted this will be interpreted as if g is equal to the one-element.
+
+    The convex conjugate :math:`F^*` of :math:`F` is
+
+     .. math::
+
+        F^*(p) = \\sum_i (-g_i \\ln(pos({1_X}_i - p_i))) +
+        I_{1_X - p \geq 0}(p)
+
+    where :math:`p` is the variable dual to :math:`x`, and :math:`1_X` is an
+    element of the space :math:`X` with all components set to 1.
+
+    The proximal operator of the convex conjugate of F is
+
+     .. math::
+
+        prox[\\sigma * (\\lambda*F)^*](x) =
+            \\frac{\\lambda * 1_X + x - \\sqrt{(x -  \\lambda * 1_X)^2 +
+            4 \\lambda \\sigma g}}{2}
+
+    where :math:`\\sigma` is the step size-like parameter, and :math:`\\lambda`
+    is the weighting in front of the function :math:`F`.
+
     KL based objectives are common in MLEM optimization problems and are often
     used when data noise governed by a multivariate Poisson probability
     distribution is significant.
@@ -1024,7 +1052,15 @@ def proximal_cconj_kl(space, lam=1, g=None):
     the converged solution will be non-negative. Non-negative intermediate
     image estimates can be enforced by adding an indicator function ind_P
     the primal objective.
+
+    This functional :math:`F`, described above, is related to the
+    Kullback-Leibler cross entropy functional. The KL cross entropy is the one
+    diescribed in `this Wikipedia article
+    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
+    the functional :math:`F` is obtained by switching place of the prior and
+    the varialbe in the KL cross entropy functional. See the See Also section.
     """
+
     lam = float(lam)
 
     if g is not None and g not in space:
@@ -1039,7 +1075,7 @@ def proximal_cconj_kl(space, lam=1, g=None):
 
             Parameters
             ----------
-            sigma : positive `float`
+            sigma : positive float
             """
             self.sigma = float(sigma)
             super().__init__(domain=space, range=space, linear=False)
@@ -1057,7 +1093,10 @@ def proximal_cconj_kl(space, lam=1, g=None):
             out.ufunc.square(out=out)
 
             # out = out + 4 lam sigma g
-            if g is not None:
+            # If g is None, it is taken as the one element
+            if g is None:
+                out += 4.0 * lam * self.sigma
+            else:
                 out.lincomb(1, out, 4.0 * lam * self.sigma, g)
 
             # out = sqrt(out)
@@ -1073,6 +1112,129 @@ def proximal_cconj_kl(space, lam=1, g=None):
             out /= 2
 
     return ProximalCConjKL
+
+
+def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
+    """Proximal factory of the convex conjugate of cross entropy KL divergence.
+
+    Function returning the proximal facotry of the convex conjugate of the
+    functional F, where F is the corss entorpy Kullback-Leibler (KL)
+    divergence given by
+
+        F(x) = sum_i (x_i ln(pos(x_i)) - x_i ln(g_i) + g_i - x_i) + ind_P(x)
+
+    with ``x`` and ``g`` in the linear space ``X``, and ``g`` non-negative.
+    Here, ``pos`` denotes the nonnegative part, and ``ind_P`` is the indicator
+    function for nonnegativity.
+
+    Parameters
+    ----------
+    space : `FnBase`
+        Space X which is the domain of the functional F
+    g : ``space`` element, optional
+        Data term, positive. If None it is take as the one-element.
+    lam : positive float
+        Scaling factor.
+
+    Returns
+    -------
+    prox_factory : function
+        Factory for the proximal operator to be initialized.
+
+
+    See Also
+    --------
+    proximal_cconj_kl : proximal for related functional
+
+    Notes
+    -----
+    The functional is given by the expression
+
+     .. math::
+
+        F(x) = \\sum_i (x_i \\ln(pos(x_i)) - x_i \\ln(g_i) + g_i - x_i) +
+        I_{x \\geq 0}(x)
+
+    The indicator function :math:`I_{x \geq 0}(x)` is used to restrict the
+    domain of :math:`F` such that :math:`F` is defined over whole space
+    :math:`X`. The non-negativity thresholding :math:`pos` is used to define
+    :math:`F` in the real numbers.
+
+    Note that the functional is not well-defined without a prior g. Hence, if g
+    is omitted this will be interpreted as if g is equal to the one-element.
+
+    The convex conjugate :math:`F^*` of :math:`F` is
+
+    .. math::
+
+        F^*(p) = \\sum_i g_i (exp(p_i) - 1)
+
+    where :math:`p` is the variable dual to :math:`x`.
+
+    The proximal operator of the convex conjugate of :math:`F` is
+
+    .. math::
+
+        prox[\\sigma * (\\lambda*F)^*](x)_i = x_i - \\lambda
+        W(\\frac{\\sigma}{\\lambda} g_i e^{x_i/\\lambda})
+
+    where :math:`\\sigma` is the step size-like parameter, :math:`\\lambda` is
+    the weighting in front of the function :math:`F`, and :math:`W` is the
+    Lambert W function (see, for example, the
+    `Wikipedia article <https://en.wikipedia.org/wiki/Lambert_W_function>`_).
+
+    For real-valued input x, the Lambert :math:`W` function is defined only for
+    :math:`x \\geq -1/e`, and it has two branches for values
+    :math:`-1/e \\leq x < 0`. However, for inteneded use-cases, where
+    :math:`\\lambda` and :math:`g` are positive, the argument of :math:`W`
+    will always be positive.
+
+    `Wikipedia article on Kullback Leibler divergence
+    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_.
+    For further information about the functional, see for example `this article
+    <http://ieeexplore.ieee.org/document/1056144/?arnumber=1056144>`_.
+
+    The KL cross entropy functional :math:`F`, described above, is related to
+    another functional functional also know as KL divergence. This functional
+    is often used as data discrepancy term in inverse problems, when data is
+    corrupted with Poisson noise. This functional is obtained by changing place
+    of the prior and the variable. See the See Also section.
+    """
+
+    lam = float(lam)
+
+    if g is not None and g not in space:
+        raise TypeError('{} is not an element of {}'.format(g, space))
+
+    class ProximalCConjKLCrossEntropy(Operator):
+
+        """Proximal operator of conjugate of cross entropy KL divergence."""
+
+        def __init__(self, sigma):
+            """Initialize a new instance.
+
+            Parameters
+            ----------
+            sigma : positive float
+            """
+            self.sigma = float(sigma)
+            super().__init__(domain=space, range=space, linear=False)
+
+        def _call(self, x, out):
+            """Apply the operator to ``x`` and stores the result in ``out``."""
+
+            if g is None:
+                # If g is None, it is taken as the one element
+                # Different branches of lambertw is not an issue, see Notes
+                out.lincomb(1, x, -lam, scipy.special.lambertw(
+                    (self.sigma / lam) * np.exp(x / lam)))
+            else:
+                # Different branches of lambertw is not an issue, see Notes
+                out.lincomb(1, x,
+                            -lam, scipy.special.lambertw(
+                                (self.sigma / lam) * g * np.exp(x / lam)))
+
+    return ProximalCConjKLCrossEntropy
 
 
 if __name__ == '__main__':

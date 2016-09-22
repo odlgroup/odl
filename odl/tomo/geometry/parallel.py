@@ -84,7 +84,7 @@ class ParallelGeometry(Geometry):
 
         Parameters
         ----------
-        angles : `float`
+        angles : float
             Parameters describing the detector rotation, must be
             contained in `motion_params`.
 
@@ -112,11 +112,11 @@ class ParallelGeometry(Geometry):
         angles : `array-like`
             Euler angles given in radians, must be contained
             in this geometry's `motion_params`
-        dpar : `float`
+        dpar : float
             Detector parameters, must be contained in this
             geometry's `det_params`
-        normalized : `bool`, optional
-            If `True`, return the normalized version of the vector.
+        normalized : bool, optional
+            If ``True``, return the normalized version of the vector.
             For parallel geometry, this is the only sensible option.
 
         Returns
@@ -217,7 +217,7 @@ class Parallel2dGeometry(ParallelGeometry):
 
         Parameters
         ----------
-        angle : `float`
+        angle : float
             Rotation angle given in radians, must be contained in
             this geometry's `motion_params`
 
@@ -279,7 +279,7 @@ class Parallel3dEulerGeometry(ParallelGeometry):
             vector is only allowed if ``det_init_axes`` is explicitly
             given.
             Default: ``(1, 0, 0)``
-        det_init_axes : 2-tuple of `array-like` (shape ``(3,)``), optional
+        det_init_axes : 2-tuple of `array-like`'s (shape ``(3,)``), optional
             Initial axes defining the detector orientation.
             By default, a normalized `perpendicular_vector` to
             ``det_init_pos`` is taken as first axis, and the normalized
@@ -371,7 +371,7 @@ class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
             vector is only allowed if ``det_init_axes`` is explicitly
             given.
             By default, a `perpendicular_vector` to ``axis`` is used.
-        det_init_axes : 2-tuple of `array-like` (shape ``(3,)``), optional
+        det_init_axes : 2-tuple of `array-like`'s (shape ``(3,)``), optional
             Initial axes defining the detector orientation.
             By default, the normalized cross product of ``axis`` and
             ``det_init_pos`` is used as first axis and ``axis`` as second.

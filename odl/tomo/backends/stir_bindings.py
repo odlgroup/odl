@@ -270,11 +270,11 @@ def stir_projector_from_file(volume_file, projection_file):
 
     Parameters
     ----------
-    volume_file : `str`
+    volume_file : string
         Full file path to the STIR input file containing information on the
         volume. This is usually a '.hv' file. For STIR reasons,
         a '.v' file is also needed.
-    projection_file : `str`
+    projection_file : string
         Full file path to the STIR input file with information on the
         projection data. This is usually a '.hs' file. For STIR reasons,
         a '.s' file is also needed.
@@ -295,14 +295,14 @@ def stir_projector_from_file(volume_file, projection_file):
     grid_shape = [volume.get_z_size(),
                   volume.get_y_size(),
                   volume.get_x_size()]
-    min_corner = [origin[1], origin[2], origin[3]]
-    max_corner = [origin[1] + grid_spacing[1] * grid_shape[0],
-                  origin[2] + grid_spacing[2] * grid_shape[1],
-                  origin[3] + grid_spacing[3] * grid_shape[2]]
+    min_pt = [origin[1], origin[2], origin[3]]
+    max_pt = [origin[1] + grid_spacing[1] * grid_shape[0],
+              origin[2] + grid_spacing[2] * grid_shape[1],
+              origin[3] + grid_spacing[3] * grid_shape[2]]
 
     # reverse to handle STIR bug? See:
     # https://github.com/UCL/STIR/issues/7
-    recon_sp = uniform_discr(min_corner, max_corner, grid_shape,
+    recon_sp = uniform_discr(min_pt, max_pt, grid_shape,
                              dtype='float32')
 
     # TODO: set correct projection space. Currently, a default grid with

@@ -66,6 +66,17 @@ class RayTransform(Operator):
             Interpolation type for the discretization of the operator
             range.
             Default: 'nearest'
+
+        Other Parameters
+        ----------------
+        discr_range : `DiscreteLp`
+            Discretized space, the range of the forward projector.
+            Default: Infered from parameters.
+
+        Notes
+        -----
+        The ASTRA backend is faster if data is given with ``dtype`` 'float32'
+        and storage order 'C'. Otherwise copies will be needed.
         """
         if not isinstance(discr_domain, DiscreteLp):
             raise TypeError('`discr_domain` {!r} is not a `DiscreteLp`'
@@ -87,9 +98,6 @@ class RayTransform(Operator):
                 raise ValueError("'astra' back-end not available")
             if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
                 raise ValueError("'astra_cuda' back-end not available")
-            if discr_domain.dspace.dtype not in (np.float32, np.complex64):
-                raise ValueError('ASTRA support is limited to `float32` for '
-                                 'real and `complex64` for complex data')
             if not np.allclose(discr_domain.partition.cell_sides[1:],
                                discr_domain.partition.cell_sides[:-1]):
                 raise ValueError('ASTRA does not support different voxel '
@@ -103,10 +111,10 @@ class RayTransform(Operator):
                 raise TypeError("'scikit' backend only supports 2d parallel "
                                 'geometries')
 
-            midp = discr_domain.domain.midpoint
-            if not all(midp == [0, 0]):
+            mid_pt = discr_domain.domain.mid_pt
+            if not all(mid_pt == [0, 0]):
                 raise ValueError('`discr_domain.domain` needs to be '
-                                 'centered on [0, 0], got {}'.format(midp))
+                                 'centered on [0, 0], got {}'.format(mid_pt))
 
             shape = discr_domain.shape
             if shape[0] != shape[1]:
@@ -123,30 +131,33 @@ class RayTransform(Operator):
         self.__impl = impl
         self.kwargs = kwargs
 
-        dtype = discr_domain.dspace.dtype
+        discr_range = kwargs.pop('discr_range', None)
+        if discr_range is None:
+            dtype = discr_domain.dspace.dtype
 
-        # Create a discretized space (operator range) with the same data-space
-        # type as the domain.
-        # TODO: use a ProductSpace structure or find a way to treat different
-        # dimensions differently in DiscreteLp (i.e. in partitions).
-        range_uspace = FunctionSpace(geometry.params,
-                                     out_dtype=dtype)
+            # Create a discretized space (operator range) with the same
+            # data-space type as the domain.
+            # TODO: use a ProductSpace structure or find a way to treat
+            # different dimensions differently in DiscreteLp
+            # (i.e. in partitions).
+            range_uspace = FunctionSpace(geometry.params,
+                                         out_dtype=dtype)
 
-        # Approximate cell volume
-        # TODO: angles and detector must be handled separately. While the
-        # detector should be uniformly discretized, the angles do not have
-        # to and often are not.
-        extent = float(geometry.partition.extent().prod())
-        size = float(geometry.partition.size)
-        weight = extent / size
+            # Approximate cell volume
+            # TODO: angles and detector must be handled separately. While the
+            # detector should be uniformly discretized, the angles do not have
+            # to and often are not.
+            extent = float(geometry.partition.extent().prod())
+            size = float(geometry.partition.size)
+            weight = extent / size
 
-        range_dspace = discr_domain.dspace_type(geometry.partition.size,
-                                                weight=weight, dtype=dtype)
+            range_dspace = discr_domain.dspace_type(geometry.partition.size,
+                                                    weight=weight, dtype=dtype)
 
-        range_interp = kwargs.get('interp', 'nearest')
-        discr_range = DiscreteLp(
-            range_uspace, geometry.partition, range_dspace,
-            interp=range_interp, order=discr_domain.order)
+            range_interp = kwargs.get('interp', 'nearest')
+            discr_range = DiscreteLp(
+                range_uspace, geometry.partition, range_dspace,
+                interp=range_interp, order=discr_domain.order)
 
         super().__init__(discr_domain, discr_range, linear=True)
 
@@ -161,21 +172,7 @@ class RayTransform(Operator):
         return self.__geometry
 
     def _call(self, x, out=None):
-        """Apply the operator to ``x`` and store the result in ``out``.
-
-        Parameters
-        ----------
-        x : `DiscreteLpVector`
-           Element in the domain of the operator to be forward projected
-        out : `DiscreteLpVector`, optional
-            Vector in the projection space to which the result is written.
-            If `None` creates an element in the range of the operator.
-
-        Returns
-        -------
-        out : `DiscreteLpVector`
-            Returns an element in the projection space
-        """
+        """Forward project ``x`` and store the result in ``out`` if given."""
         if self.impl.startswith('astra'):
             backend, data_impl = self.impl.split('_')
             if data_impl == 'cpu':
@@ -200,8 +197,10 @@ class RayTransform(Operator):
         -------
         adjoint : `RayBackProjection`
         """
+        kwargs = self.kwargs.copy()
+        kwargs['discr_domain'] = self.range
         return RayBackProjection(self.domain, self.geometry, self.impl,
-                                 **self.kwargs)
+                                 **kwargs)
 
 
 class RayBackProjection(Operator):
@@ -225,6 +224,12 @@ class RayBackProjection(Operator):
         interp : {'nearest', 'linear'}
             Interpolation type for the discretization of the operator range.
             Default: 'nearest'
+
+        Other Parameters
+        ----------------
+        discr_domain : `DiscreteLp`
+            Discretized space, the range of the forward projector.
+            Default: Infered from parameters.
         """
         if not isinstance(discr_range, DiscreteLp):
             raise TypeError('`discr_range` {!r} is not a `DiscreteLp`'
@@ -244,9 +249,6 @@ class RayBackProjection(Operator):
                 raise ValueError("'astra' backend not available")
             if impl == 'astra_cuda' and not ASTRA_CUDA_AVAILABLE:
                 raise ValueError("'astra_cuda' backend not available")
-            if discr_range.dspace.dtype not in (np.float32, np.complex64):
-                raise ValueError('ASTRA support is limited to `float32` for '
-                                 'real and `complex64` for complex data')
             if not np.allclose(discr_range.partition.cell_sides[1:],
                                discr_range.partition.cell_sides[:-1]):
                 raise ValueError('ASTRA does not support different voxel '
@@ -257,25 +259,27 @@ class RayBackProjection(Operator):
         self.__impl = impl
         self.kwargs = kwargs
 
-        dtype = discr_range.dspace.dtype
+        discr_domain = kwargs.pop('discr_domain', None)
+        if discr_domain is None:
+            dtype = discr_range.dspace.dtype
 
-        # Create a discretized space (operator domain) with the same data-space
-        # type as the range.
-        domain_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
+            # Create a discretized space (operator domain) with the same
+            # data-space type as the range.
+            domain_uspace = FunctionSpace(geometry.params, out_dtype=dtype)
 
-        # Approximate cell volume
-        extent = float(geometry.partition.extent().prod())
-        size = float(geometry.partition.size)
-        weight = extent / size
+            # Approximate cell volume
+            extent = float(geometry.partition.extent().prod())
+            size = float(geometry.partition.size)
+            weight = extent / size
 
-        domain_dspace = discr_range.dspace_type(geometry.partition.size,
-                                                weight=weight, dtype=dtype)
+            domain_dspace = discr_range.dspace_type(geometry.partition.size,
+                                                    weight=weight, dtype=dtype)
 
-        domain_interp = kwargs.get('interp', 'nearest')
-        disc_domain = DiscreteLp(
-            domain_uspace, geometry.partition, domain_dspace,
-            interp=domain_interp, order=discr_range.order)
-        super().__init__(disc_domain, discr_range, linear=True)
+            domain_interp = kwargs.get('interp', 'nearest')
+            discr_domain = DiscreteLp(
+                domain_uspace, geometry.partition, domain_dspace,
+                interp=domain_interp, order=discr_range.order)
+        super().__init__(discr_domain, discr_range, linear=True)
 
     @property
     def impl(self):
@@ -288,22 +292,7 @@ class RayBackProjection(Operator):
         return self.__geometry
 
     def _call(self, x, out=None):
-        """Apply the operator to ``x`` and store the result in ``out``.
-
-        Parameters
-        ----------
-        x : `DiscreteLpVector`
-           Element in the domain of the operator which is back-projected
-        out : `DiscreteLpVector`, optional
-            Element in the reconstruction space to which the result is
-            written. If `None` an element in the range of the operator is
-            created.
-
-        Returns
-        -------
-        out : `DiscreteLpVector`
-            Returns an element in the projection space
-        """
+        """Back-project ``x`` and store the result in ``out`` if given."""
 
         if self.impl.startswith('astra'):
             backend, data_impl = self.impl.split('_')
@@ -330,8 +319,10 @@ class RayBackProjection(Operator):
         -------
         adjoint : `RayTransform`
         """
+        kwargs = self.kwargs.copy()
+        kwargs['discr_domain'] = self.domain
         return RayTransform(self.range, self.geometry, impl=self.impl,
-                            **self.kwargs)
+                            **kwargs)
 
 
 if __name__ == '__main__':

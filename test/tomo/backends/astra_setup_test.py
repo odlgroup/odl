@@ -54,9 +54,9 @@ def _discrete_domain(ndim, interp):
     """
     max_pt = np.arange(1, ndim + 1)
     min_pt = - max_pt
-    nsamples = np.arange(1, ndim + 1) * 10
+    shape = np.arange(1, ndim + 1) * 10
 
-    return odl.uniform_discr(min_pt, max_pt, nsamples=nsamples, interp=interp,
+    return odl.uniform_discr(min_pt, max_pt, shape=shape, interp=interp,
                              dtype='float32')
 
 
@@ -77,9 +77,9 @@ def _discrete_domain_anisotropic(ndim, interp):
     """
     min_pt = [-1] * ndim
     max_pt = [1] * ndim
-    nsamples = np.arange(1, ndim + 1) * 10
+    shape = np.arange(1, ndim + 1) * 10
 
-    return odl.uniform_discr(min_pt, max_pt, nsamples=nsamples, interp=interp,
+    return odl.uniform_discr(min_pt, max_pt, shape=shape, interp=interp,
                              dtype='float32')
 
 
@@ -169,7 +169,7 @@ def test_astra_projection_geometry():
     dpart = odl.uniform_partition(-40, 40, 10)
 
     # motion sampling grid, detector sampling grid but not RegularGrid
-    dpart_0 = odl.RectPartition(odl.Interval(0, 0), odl.TensorGrid([0]))
+    dpart_0 = odl.RectPartition(odl.IntervalProd(0, 0), odl.TensorGrid([0]))
     geom_p2d = odl.tomo.Parallel2dGeometry(apart, dpart=dpart_0)
     with pytest.raises(ValueError):
         odl.tomo.astra_projection_geometry(geom_p2d)
@@ -358,7 +358,7 @@ def test_astra_algorithm():
 
 
 def test_geom_to_vec():
-    """Create ASTRA projection geometries vectors using ODL geometries."""
+    """Create ASTRA projection geometry vectors using ODL geometries."""
 
     apart = odl.uniform_partition(0, 2 * np.pi, 5)
     dpart = odl.uniform_partition(-40, 40, 10)

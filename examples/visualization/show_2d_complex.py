@@ -15,18 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Examples on using the vector.show() syntax
+"""Example for `DiscreteLpElement.show` in 2D with complex data.
 
-NOTES
+Notes
 -----
 The behaviour of blocking shows etc in matplotlib is experimental and can cause
-issues with these examples.
+issues with this example.
 """
 
 import odl
 
-spc = odl.uniform_discr([0, 0], [1, 1], [100, 100], dtype='complex')
-vec = odl.phantom.shepp_logan(spc, modified=True) * (1 + 0.5j)
-
-# Can also force "instant" plotting
-vec.show(show=True)
+space = odl.uniform_discr([0, 0], [1, 1], [100, 100], dtype='complex')
+phantom = odl.phantom.shepp_logan(space, modified=True) * (1 + 0.5j)
+phantom.show(show=True)

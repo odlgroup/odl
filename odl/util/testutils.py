@@ -75,7 +75,7 @@ def dtype_places(dtype, default=None):
 
 
 def almost_equal(a, b, places=None):
-    """`True` if scalars a and b are almost equal."""
+    """Return ``True`` if the scalars ``a`` and ``b`` are almost equal."""
     if a is None and b is None:
         return True
 
@@ -103,7 +103,7 @@ def almost_equal(a, b, places=None):
 
 
 def all_equal(iter1, iter2):
-    """`True` if all elements in ``a`` and ``b`` are equal."""
+    """Return ``True`` if all elements in ``a`` and ``b`` are equal."""
     # Direct comparison for scalars, tuples or lists
     try:
         if iter1 == iter2:
@@ -143,7 +143,7 @@ def all_equal(iter1, iter2):
 
 
 def all_almost_equal_array(v1, v2, places):
-    # Ravel if has order, only DiscreteLpVector has an order
+    # Ravel if has order, only DiscreteLpElement has an order
     if hasattr(v1, 'order'):
         v1 = v1.__array__().ravel(v1.order)
     else:
@@ -160,7 +160,7 @@ def all_almost_equal_array(v1, v2, places):
 
 
 def all_almost_equal(iter1, iter2, places=None):
-    """`True` if all elements in ``a`` and ``b`` are almost equal."""
+    """Return ``True`` if all elements in ``a`` and ``b`` are almost equal."""
     try:
         if iter1 is iter2 or iter1 == iter2:
             return True
@@ -197,7 +197,7 @@ def all_almost_equal(iter1, iter2, places=None):
 
 
 def is_subdict(subdict, dictionary):
-    """`True` if all items of ``subdict`` are in ``dictionary``."""
+    """Return ``True`` if all items of ``subdict`` are in ``dictionary``."""
     return all(item in dictionary.items() for item in subdict.items())
 
 
@@ -249,44 +249,138 @@ except ImportError:
 
 
 # Helpers to generate data
-def example_array(space):
-    """Generate an example array that is compatible with ``space``."""
-    # Generate numpy vectors, real or complex or int
-    if np.issubdtype(space.dtype, np.floating):
-        arr = np.random.randn(space.size)
-    elif np.issubdtype(space.dtype, np.integer):
-        arr = np.random.randint(-10, 10, space.size)
-    else:
-        arr = np.random.randn(space.size) + 1j * np.random.randn(space.size)
+def noise_array(space):
+    """Generate a white noise array that is compatible with ``space``.
 
-    return arr.astype(space.dtype, copy=False)
+    The array contains white noise with standard deviation 1 in the case of
+    floating point dtypes and uniformly spaced values between -10 and 10 in
+    the case of integer dtypes.
 
+    For product spaces the method is called recursively for all sub-spaces.
 
-def example_element(space):
-    return space.element(example_array(space))
+    Notes
+    -----
+    This method is intended for internal testing purposes, for more explicit
+    example elements see `phantoms` and `LinearSpaceElement.examples`.
 
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Space from which to derive the array data type and size.
 
-def example_vectors(space, n=1):
-    """Create a list of ``n`` arrays and vectors in ``space``.
+    Returns
+    -------
+    noise_array : `numpy.ndarray` element
+        Array with white noise such that ``space.element``'s can be created
+        from it.
 
-    First arrays, then vectors.
+    See Also
+    --------
+    noise_element
+    noise_elements
+    LinearSpaceElement.examples : Examples of elements typical to the space.
     """
-    arrs = [example_array(space) for _ in range(n)]
+    from odl.space import ProductSpace
+    if isinstance(space, ProductSpace):
+        return np.array([noise_array(si) for si in space])
+    else:
+        # Generate numpy space elements, real or complex or int
+        if np.issubdtype(space.dtype, np.floating):
+            arr = np.random.randn(space.size)
+        elif np.issubdtype(space.dtype, np.integer):
+            arr = np.random.randint(-10, 10, space.size)
+        else:
+            arr = (np.random.randn(space.size) +
+                   1j * np.random.randn(space.size)) / np.sqrt(2.0)
 
-    # Make Fn vectors
-    vecs = [space.element(arr) for arr in arrs]
+        return arr.astype(space.dtype, copy=False)
+
+
+def noise_element(space):
+    """Create a white noise element in ``space``.
+
+    The element contains white noise with standard deviation 1 in the case of
+    floating point dtypes and uniformly spaced values between -10 and 10 in
+    the case of integer dtypes.
+
+    For product spaces the method is called recursively for all sub-spaces.
+
+    Notes
+    -----
+    This method is intended for internal testing purposes, for more explicit
+    example elements see `phantoms` and `LinearSpaceElement.examples`.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Space in which to create an element. The `LinearSpace.element`
+        method of the space needs to accept input of `numpy.ndarray` type.
+
+    Returns
+    -------
+    noise_element : ``space`` element
+
+    See Also
+    --------
+    noise_array
+    noise_elements
+    LinearSpaceElement.examples : Examples of elements typical to the space.
+    """
+    return space.element(noise_array(space))
+
+
+def noise_elements(space, n=1):
+    """Create a list of ``n`` noise arrays and elements in ``space``.
+
+    The arrays contain white noise with standard deviation 1 in the case of
+    floating point dtypes and uniformly spaced values between -10 and 10 in
+    the case of integer dtypes.
+
+    The returned elements wrap the arrays.
+
+    For product spaces the method is called recursively for all sub-spaces.
+
+    Notes
+    -----
+    This method is intended for internal testing purposes, for more explicit
+    example elements see `phantoms` and `LinearSpaceVector.examples`.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Space to create elements in. The `LinearSpace.element` method
+        of the space needs to accept input of `numpy.ndarray` type.
+    n : int
+        Number of elements to create.
+
+    Returns
+    -------
+    arrays : `numpy.ndarray`(s)
+        A single array if ``n == 1``, otherwise a tuple of arrays.
+    elements : ``space`` element(s)
+        A single element if ``n == 1``, otherwise a tuple of elements.
+
+    See Also
+    --------
+    noise_array
+    noise_element
+    """
+    arrs = tuple(noise_array(space) for _ in range(n))
+
+    # Make space elements from arrays
+    elems = tuple(space.element(arr.copy()) for arr in arrs)
 
     if n == 1:
-        return arrs + vecs
+        return tuple(arrs + elems)
     else:
-        return (arrs, vecs)
+        return arrs, elems
 
 
 class FailCounter(object):
 
     """Used to count the number of failures of something
 
-    Useage::
+    Usage::
 
         with FailCounter() as counter:
             # Do stuff
@@ -298,11 +392,12 @@ class FailCounter(object):
     ``*** FAILED 1 TEST CASE(S) ***``
     """
 
-    def __init__(self, test_name, err_msg=None):
+    def __init__(self, test_name, err_msg=None, logger=print):
         self.num_failed = 0
         self.test_name = test_name
         self.err_msg = err_msg
         self.fail_strings = []
+        self.log = logger
 
     def __enter__(self):
         return self
@@ -317,7 +412,8 @@ class FailCounter(object):
 
     def __exit__(self, type, value, traceback):
         if self.num_failed == 0:
-            print('{:<70}: Completed all test cases.'.format(self.test_name))
+            self.log('{:<70}: Completed all test cases.'
+                     ''.format(self.test_name))
         else:
             print(self.test_name)
 

@@ -40,10 +40,10 @@ def vector(array, dtype=None, impl='numpy'):
     array : `array-like`
         Array from which to create the vector. Scalars become
         one-dimensional vectors.
-    dtype : `object`, optional
+    dtype : optional
         Set the data type of the vector manually with this option.
         By default, the space type is inferred from the input data.
-    impl : `str`
+    impl : string
         Implementation backend for the vector. See `NTUPLES_IMPLS` and
         `FN_IMPLS` for more information.
 
@@ -105,7 +105,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
 
     Parameters
     ----------
-    size : positive `int`
+    size : positive int
         The number of dimensions of the space
     dtype : `object`
         The data type of the storage array. Can be provided in any
@@ -114,7 +114,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
         objects or as string.
 
         Only complex floating-point data types are allowed.
-    impl : `str`
+    impl : string
         The backend to use. See `NTUPLES_IMPLS` for available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
@@ -123,7 +123,7 @@ def ntuples(size, dtype, impl='numpy', **kwargs):
     -------
     ntuple : `NtuplesBase`
 
-    See also
+    See Also
     --------
     fn : n-tuples over a field :math:`\mathbb{F}` with arbitrary scalar data
          type.
@@ -136,7 +136,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
     Parameters
     ----------
-    size : positive `int`
+    size : positive int
         The number of dimensions of the space
     dtype : `object`
         The data type of the storage array. Can be provided in any
@@ -146,7 +146,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
 
         Default: default of the implementation given by calling
         ``default_dtype()`` on the `FnBase` implementation.
-    impl : `str`
+    impl : string
         The backend to use. See `FN_IMPLS` for available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
@@ -155,7 +155,7 @@ def fn(size, dtype=None, impl='numpy', **kwargs):
     -------
     fn : `FnBase`
 
-    See also
+    See Also
     --------
     ntuples : n-tuples over a field `F` with arbitrary data type.
     """
@@ -174,7 +174,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
 
     Parameters
     ----------
-    size : positive `int`
+    size : positive int
         The number of dimensions of the space
     dtype : `object`
         The data type of the storage array. Can be provided in any
@@ -186,7 +186,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
 
         Default: default of the implementation given by calling
         ``default_dtype(ComplexNumbers())`` on the `FnBase` implementation.
-    impl : `str`
+    impl : string
         The backend to use. See `FN_IMPLS` for available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
@@ -195,7 +195,7 @@ def cn(size, dtype=None, impl='numpy', **kwargs):
     -------
     cn : `FnBase`
 
-    See also
+    See Also
     --------
     fn : n-tuples over a field `F` with arbitrary scalar data type.
     """
@@ -217,7 +217,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
 
     Parameters
     ----------
-    size : positive `int`
+    size : positive int
         The number of dimensions of the space
     dtype : `object`
         The data type of the storage array. Can be provided in any
@@ -228,7 +228,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
         Only real floating-point data types are allowed.
         Default: default of the implementation given by calling
         ``default_dtype(RealNumbers())`` on the `FnBase` implementation.
-    impl : `str`
+    impl : string
         The backend to use. See `FN_IMPLS` for available options.
     kwargs :
         Extra keyword arguments to pass to the implmentation.
@@ -237,7 +237,7 @@ def rn(size, dtype=None, impl='numpy', **kwargs):
     -------
     rn : `FnBase`
 
-    See also
+    See Also
     --------
     fn : n-tuples over a field `F` with arbitrary scalar data type.
     """
