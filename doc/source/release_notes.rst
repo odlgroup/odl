@@ -25,6 +25,7 @@ New features
 - Add ``FunctionalProduct`` and ``FunctionalQuotient`` which allow evaluation of the product/quotient of functions and also provides a gradient through the Leibniz/quotient rules. (:pull:`586`)
 - Add ``FunctionalDefaultConvexConjugate`` which acts as a default for ``Functional.convex_conj``, providing it with a proximal property. (:pull:`588`)
 - Add ``IndicatorBox`` and ``IndicatorNonnegativity``which are indicator functions on a box shaped set and the set of nonnegative numbers, respectively. They return 0 if all points in a vector are inside the box, and infinity otherwise. (:pull:`589`)
+- Add proximal operator for the convex conjugate of cross entropy Kullback-Leibler divergence, called ``proximal_cconj_kl_cross_entropy`` (:pull:`561`)
 
 Improvements
 ------------
@@ -55,6 +56,7 @@ Changes
   * ``FunctionSpaceVector`` -> ``FunctionSpaceElement``
 - Changed parameter style of differential operators from having a ``pad_mode`` and a separate ``edge_order`` argument that were mutually exclusive to a single ``pad_mode`` that covers all cases.
   Also added several new pad modes to the differential operators. (:pull:`548`)
+- Update name of ``proximal_zero`` to ``proximal_const_func``. (:pull:`582`)
 
 Bugfixes
 --------
