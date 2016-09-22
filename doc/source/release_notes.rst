@@ -18,12 +18,13 @@ New features
 - Allow ASTRA backend to be used with arbitrary dtypes. (:pull:`524`)
 - Add ``reset`` to ``SolverCallback`` that resets the callback to its initial state. (:issue:`552`)
 - Add ``nonuniform_partition`` utility that creates a partition with non-uniformly spaced points.
-  This is useful e.g. when the angles of a tomography problem are not exactly uniform.
+  This is useful e.g. when the angles of a tomography problem are not exactly uniform. (:pull:`558`)
 - Add ``Functional`` class to the solvers package.
   ``Functional`` is a subclass of odl ``Operator`` and intended to help in formulating and solving optimization problems.
   It contains optimization specific features like ``proximal`` and ``convex_conj``, and built-in intelligence for handling things like translation, scaling of argument or scaling of functional. (:pull:`498`)
 - Add ``FunctionalProduct`` and ``FunctionalQuotient`` which allow evaluation of the product/quotient of functions and also provides a gradient through the Leibniz/quotient rules. (:pull:`586`)
 - Add ``FunctionalDefaultConvexConjugate`` which acts as a default for ``Functional.convex_conj``, providing it with a proximal property. (:pull:`588`)
+- Add ``IndicatorBox`` and ``IndicatorNonnegativity``which are indicator functions on a box shaped set and the set of nonnegative numbers, respectively. They return 0 if all points in a vector are inside the box, and infinity otherwise. (:pull:`589`)
 
 Improvements
 ------------
@@ -31,6 +32,7 @@ Improvements
 - Add ``BroadcastOperator(op, n)``, ``ReductionOperator(op, n)`` and ``DiagonalOperator(op, n)`` syntax.
   This is equivalent to ``BroadcastOperator(*([op] * n))`` etc, i.e. create ``n`` copies of the operator. (:pull:`532`)
 - Allow showing subsets of the whole volume in ``DiscreteLpElement.show``. Previously this allowed slices to be shown, but the new version allows subsets such as ``0 < x < 3`` to be shown as well. (:pull:`574`)
+- Add ``Solvercallback.reset()`` which allows users to reset a callback to its initial state. Applicable if users want to reuse a callback in another solver. (:pull:`553`)
 
 Changes
 --------
