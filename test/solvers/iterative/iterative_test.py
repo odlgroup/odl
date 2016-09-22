@@ -111,5 +111,25 @@ def test_solver(optimization_problem, iterative_solver):
     assert all_almost_equal(op(x), rhs, places)
 
 
+def test_steepst_descent():
+    """Test steepest descent on the rosenbrock function in 3d."""
+
+    space = odl.rn(3)
+    scale = 1  # only mildly ill-behaved
+    rosenbrock = odl.solvers.example_funcs.RosenbrockFunctional(space, scale)
+
+    # Create line search object
+    line_search = odl.solvers.BacktrackingLineSearch(
+        rosenbrock, 0.1, 0.01)
+
+    # Initial guess
+    x = rosenbrock.domain.zero()
+
+    # Solving the problem
+    odl.solvers.steepest_descent(rosenbrock.gradient, x, niter=40,
+                                 line_search=line_search)
+
+    assert all_almost_equal(x, [1, 1, 1], places=2)
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
