@@ -147,8 +147,7 @@ def proximal_cconj(prox_factory):
         proximal : `Operator`
             The proximal operator of ``s * F^*`` where ``s`` is the step size
         """
-        prox_other = (sigma * prox_factory(1.0 / sigma) *
-                      (1.0 / sigma))
+        prox_other = (sigma * prox_factory(1.0 / sigma) * (1.0 / sigma))
         return IdentityOperator(prox_other.domain) - prox_other
 
     return cconj_prox_factory
@@ -373,8 +372,8 @@ def proximal_composition(proximal, operator, mu):
 
         .. math::
 
-            \mathrm{prox}_{F \circ L}(x) = x + \\frac{1}{\\mu}
-            L^* \left( \mathrm{prox}_{\\mu F}(Lx) - Lx \\right)
+            \mathrm{prox}_{\\sigma F \circ L}(x) = x + \\frac{1}{\\mu}
+            L^* \left( \mathrm{prox}_{\\mu \\sigma F}(Lx) - Lx \\right)
 
     This factory function implements this functionality.
 
@@ -382,6 +381,8 @@ def proximal_composition(proximal, operator, mu):
 
     The function cannot verify that the operator is unitary, the user needs
     to verify this.
+
+    For reference on the identity used, see [CP2011c]_.
     """
 
     def proximal_composition_factory(sigma):
@@ -399,8 +400,9 @@ def proximal_composition(proximal, operator, mu):
         """
         Id = IdentityOperator(operator.domain)
         Ir = IdentityOperator(operator.range)
-        prox_muf = proximal(sigma)
-        return Id + (1.0 / mu) * operator.adjoint((prox_muf - Ir) * operator)
+        prox_muf = proximal(mu * sigma)
+        return (Id +
+                (1.0 / mu) * operator.adjoint * ((prox_muf - Ir) * operator))
 
     return proximal_composition_factory
 
@@ -423,7 +425,7 @@ def proximal_const_func(space):
 
     Notes
     -----
-    The constant functional :math:`G` is defeind as :math:`G(x) = constant`
+    The constant functional :math:`G` is defind as :math:`G(x) = constant`
     for all values of :math:`x`. The proximal operator of this functional is
     the identity operator
 
@@ -609,6 +611,9 @@ def proximal_cconj_l2(space, lam=1, g=None):
 
     Notes
     -----
+    Most problems are forumlated for the squared norm/distance, in that case
+    use the `proximal_cconj_l2_squared` instead.
+
     The :math:`L_2`-norm/distance :math:`F` is given by is given by
 
         .. math::
@@ -637,9 +642,6 @@ def proximal_cconj_l2(space, lam=1, g=None):
             \\end{cases}
 
     Note that the expression is independent of :math:`\sigma`.
-
-    Most problems are forumlated for the squared norm/distance, in that case
-    use the `proximal_cconj_l2_squared` instead.
 
     See Also
     --------
@@ -675,6 +677,9 @@ def proximal_l2(space, lam=1, g=None):
 
     Notes
     -----
+    Most problems are forumlated for the squared norm/distance, in that case
+    use `proximal_l2_squared` instead.
+
     The :math:`L_2`-norm/distance :math:`F` is given by
 
         .. math::
@@ -693,9 +698,6 @@ def proximal_l2(space, lam=1, g=None):
             \\end{cases}
 
     where :math:`c = \\sigma \\frac{\\lambda}{\|y - g\|_2}`.
-
-    Most problems are forumlated for the squared norm/distance, in that case
-    use `proximal_l2_squared` instead.
 
     See Also
     --------
@@ -1104,7 +1106,6 @@ def proximal_l1(space, lam=1, g=None, isotropic=False):
             & \\text{if } y < g - \\sigma \\lambda,
             \\end{cases}
 
-
     An alternative formulation is available for `ProductSpace`'s, where the
     the ``isotropic`` parameter can be used, giving
 
@@ -1322,8 +1323,8 @@ def proximal_cconj_kl_cross_entropy(space, lam=1, g=None):
 
     .. math::
 
-        \mathrm{prox}_{\\sigma (\\lambda F)^*}(x)_i = x_i - \\lambda
-        W(\\frac{\\sigma}{\\lambda} g_i e^{x_i/\\lambda})
+        \mathrm{prox}_{\\sigma (\\lambda F)^*}(x) = x - \\lambda
+        W(\\frac{\\sigma}{\\lambda} g e^{x/\\lambda})
 
     where :math:`\\sigma` is the step size-like parameter, :math:`\\lambda` is
     the weighting in front of the function :math:`F`, and :math:`W` is the
