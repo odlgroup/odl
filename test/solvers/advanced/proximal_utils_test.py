@@ -168,7 +168,7 @@ def test_proximal_quadratic_perturbation_linear_and_quadratic():
     assert all_almost_equal(prox(x), expected_result, places=PLACES)
 
 
-def test_proximal_compositio():
+def test_proximal_composition():
     """Test for proximal of composition with semi-orthogonal linear operator.
 
     This test is for ``prox[f * L](x)``, where ``L`` is a linear operator such
@@ -183,7 +183,7 @@ def test_proximal_compositio():
     prox_factory = odls.proximal_l2_squared(space)
 
     # The semi-orthogonal linear operator
-    scal = np.random.rand()
+    scal = 1.43
     L = odl.ScalingOperator(space, scal)
     mu = scal**2  # L = scal * I => L * L.adjoint = scal**2 * I
 
