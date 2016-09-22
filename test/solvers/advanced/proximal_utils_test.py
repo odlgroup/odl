@@ -168,5 +168,44 @@ def test_proximal_quadratic_perturbation_linear_and_quadratic():
     assert all_almost_equal(prox(x), expected_result, places=PLACES)
 
 
+def test_proximal_composition():
+    """Test for proximal of composition with semi-orthogonal linear operator.
+
+    This test is for ``prox[f * L](x)``, where ``L`` is a linear operator such
+    that ``L * L.adjoint = mu * IdentityOperator``. Specifically, ``L`` is
+    taken to be ``scal * IdentityOperator``, since this is equivalent to
+    scaling of the argument.
+    """
+    # Image space
+    space = odl.uniform_discr(0, 1, 10)
+
+    # Factory function returning the proximal operator
+    prox_factory = odls.proximal_l2_squared(space)
+
+    # The semi-orthogonal linear operator
+    scal = 1.43
+    L = odl.ScalingOperator(space, scal)
+    mu = scal**2  # L = scal * I => L * L.adjoint = scal**2 * I
+
+    # Initialize the proximal factory and operator for for F*L
+    prox_factory_composition = odls.proximal_composition(prox_factory, L, mu)
+
+    sigma = 0.25
+    prox = prox_factory_composition(sigma)
+
+    assert isinstance(prox, odl.Operator)
+
+    # Element in image space where the proximal operator is evaluated
+    x = space.element(np.arange(-5, 5))
+
+    prox_val = prox(x)
+
+    # Explicit computation:
+    prox_verify = odls.proximal_arg_scaling(prox_factory, scal)(sigma)
+    expected_result = prox_verify(x)
+
+    assert all_almost_equal(prox_val, expected_result, places=PLACES)
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
