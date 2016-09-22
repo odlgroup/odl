@@ -560,7 +560,7 @@ class FunctionalComp(Functional, OperatorComp):
 
         OperatorComp.__init__(self, left=func, right=op)
 
-        Functional.__init__(self, space=func.domain,
+        Functional.__init__(self, space=op.domain,
                             linear=(func.is_linear and op.is_linear),
                             grad_lipschitz=np.nan)
 
@@ -576,7 +576,7 @@ class FunctionalComp(Functional, OperatorComp):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(func.domain, func.domain, linear=False)
+                super().__init__(op.domain, op.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
