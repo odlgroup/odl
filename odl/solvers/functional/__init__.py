@@ -24,3 +24,6 @@ __all__ += functional.__all__
 
 from .default_functionals import *
 __all__ += default_functionals.__all__
+
+from . import example_funcs
+__all__ += ('example_funcs',)
