@@ -315,5 +315,40 @@ def test_vectorize_2d_lazy():
     assert simple_func(val_2) == 1
 
 
+def test_vectorize_callable_class():
+
+    # Test vectorization in 1d without data type --> lazy vectorization
+    arr = [[-2, -1, 0, 1, 2]]
+    mg = [[-3, -2, -1, 0, 1]]
+    val_1 = -1
+    val_2 = 2
+
+    # Class with __call__ method
+    class CallableClass(object):
+        def __call__(self, x):
+            return 0 if x < 0 else 1
+
+    vectorized_call = vectorize(CallableClass())
+
+    true_result_arr = [0, 0, 1, 1, 1]
+    true_result_mg = [0, 0, 0, 1, 1]
+
+    # Out-of-place
+    out = vectorized_call(arr)
+    assert isinstance(out, np.ndarray)
+    assert is_int_dtype(out.dtype)
+    assert out.shape == (5,)
+    assert all_equal(out, true_result_arr)
+
+    out = vectorized_call(mg)
+    assert isinstance(out, np.ndarray)
+    assert out.shape == (5,)
+    assert is_int_dtype(out.dtype)
+    assert all_equal(out, true_result_mg)
+
+    assert vectorized_call(val_1) == 0
+    assert vectorized_call(val_2) == 1
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
