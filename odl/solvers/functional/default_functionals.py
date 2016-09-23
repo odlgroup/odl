@@ -26,7 +26,7 @@ from builtins import super
 import numpy as np
 
 from odl.solvers.functional.functional import Functional
-from odl.operator.operator import Operator
+from odl.operator import Operator, ConstantOperator
 from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
@@ -39,7 +39,8 @@ from odl.space import ProductSpace
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
            'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox',
            'IndicatorNonnegativity', 'KullbackLeibler',
-           'KullbackLeiblerCrossEntropy', 'SeparableSum')
+           'KullbackLeiblerCrossEntropy', 'SeparableSum',
+           'QuadraticForm')
 
 
 class L1Norm(Functional):
@@ -1134,6 +1135,139 @@ class SeparableSum(Functional):
         """
         convex_conjs = [func.convex_conj for func in self.functionals]
         return SeparableSum(*convex_conjs)
+
+
+class QuadraticForm(Functional):
+
+    """The functional for a general quadratic form ``x^T A x + b^T x + c``."""
+
+    def __init__(self, operator=None, offset=None, constant=0):
+        """Initialize a new instance.
+
+        All parameters are optional, but at least one of ``op`` and ``offset``
+        have to be provided in turn to infer the space.
+
+        The computed value is::
+
+            x.inner(operator(x)) + offset.inner(x) + constant
+
+        Parameters
+        ----------
+        operator : `Operator`, optional
+            Linear Operator for the quadratic part of the functional.
+            ``None`` means this is ignored.
+        offset : `Operator`, optional
+            Vector for the linear part of the functional.
+            ``None`` means this is ignored.
+        constant : `Operator`, optional
+            Constant offset of the functional.
+        """
+        if operator is None and offset is None:
+            raise ValueError('need to provide at least one of ``op`` and '
+                             '``offset``')
+        if operator is not None:
+            domain = operator.domain
+        elif offset is not None:
+            domain = offset.space
+
+        if (operator is not None and offset is not None and
+                offset not in operator.domain):
+            raise ValueError('domain of `operator` and space of `offset` need '
+                             'to match')
+
+        self.__operator = operator
+        self.__offset = offset
+        self.__constant = constant
+
+        super().__init__(space=domain,
+                         linear=(operator is None and constant == 0))
+
+        if self.constant not in self.range:
+            raise ValueError('`constant` must be an element in the range of '
+                             'the functional')
+
+    @property
+    def operator(self):
+        """Operator for the quadratic part of the functional."""
+        return self.__operator
+
+    @property
+    def offset(self):
+        """Vector for the linear part of the functional."""
+        return self.__offset
+
+    @property
+    def constant(self):
+        """Constant offset of the functional."""
+        return self.__constant
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        if self.operator is None:
+            return self.offset.inner(x) + self.constant
+        elif self.offset is None:
+            return x.inner(self.operator(x)) + self.constant
+        else:
+            tmp = self.operator(x)
+            tmp += self.offset
+            return x.inner(tmp) + self.constant
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional."""
+        if self.operator is None:
+            return ConstantOperator(self.domain, self.offset)
+        else:
+            if not self.operator.is_linear:
+                # TODO: Acutally works otherwise, but needs more work
+                raise NotImplementedError('`operator` must be linear')
+
+            # Figure out if operator is symmetric
+            opadjoint = self.operator.adjoint
+            if opadjoint == self.operator:
+                opgradient = 2 * self.operator
+            else:
+                opgradient = self.operator + self.operator.adjoint
+
+            # Return gradient
+            if self.offset is None:
+                return opgradient
+            else:
+                return opgradient + self.offset
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional of the quadratic form.
+
+        Notes
+        -----
+        The convex conjugate of the quadratic form :math:`<x, Ax> + <b, x> + c`
+        is given by
+
+        .. math::
+            (<x, Ax> + <b, x> + c)^* (x) =
+            <(x - b), A^-1 (x - b)> - c =
+            <x , A^-1 x> - <x, A^-* b> - <x, A^-1 b> + <b, A^-1 b> - c
+
+        """
+        if self.operator is None:
+            # Everywhere infinite in this case
+            raise ValueError('convex conjugate not defined without operator')
+
+        if self.offset is None:
+            # Handle trivial case separately
+            return QuadraticForm(operator=self.operator.inverse,
+                                 constant=-self.constant)
+        else:
+            # Compute the needed variables
+            opinv = self.operator.inverse
+            offset = -opinv.adjoint(self.offset) - opinv(self.offset)
+            constant = self.offset.inner(opinv(self.offset)) - self.constant
+
+            # Create new quadratic form
+            return QuadraticForm(operator=opinv,
+                                 offset=offset,
+                                 constant=constant)
 
 
 if __name__ == '__main__':

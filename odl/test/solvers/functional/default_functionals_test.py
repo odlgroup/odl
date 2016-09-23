@@ -424,5 +424,41 @@ def test_kullback_leibler_cross_entorpy(space):
     assert almost_equal(cc_cc_func(x), func(x))
 
 
+def test_quadratic_form(space):
+    """Test the quadratic form functional."""
+    operator = odl.IdentityOperator(space)
+    offset = space.one()
+    constant = 0.363
+    func = odl.solvers.QuadraticForm(operator, offset, constant)
+
+    x = noise_element(space)
+
+    # Checking that values is stored correctly
+    assert func.operator == operator
+    assert func.offset == offset
+    assert func.constant == constant
+
+    # Evaluation of the functional
+    expected_result = x.inner(operator(x)) + offset.inner(x) + constant
+    assert almost_equal(func(x), expected_result)
+
+    # Also test with some values as none
+    func_no_offset = odl.solvers.QuadraticForm(operator, constant=constant)
+    expected_result = x.inner(operator(x)) + constant
+    assert almost_equal(func_no_offset(x), expected_result)
+
+    func_no_operator = odl.solvers.QuadraticForm(offset=offset,
+                                                 constant=constant)
+    expected_result = offset.inner(x) + constant
+    assert almost_equal(func_no_operator(x), expected_result)
+
+    # The gradient
+    expected_gradient = 2 * operator(x) + offset
+    assert all_almost_equal(func.gradient(x), expected_gradient)
+
+    # The convex conjugate
+    assert isinstance(func.convex_conj, odl.solvers.QuadraticForm)
+
+
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')), ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])
