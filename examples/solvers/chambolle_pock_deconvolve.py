@@ -67,20 +67,16 @@ gradient = odl.Gradient(space, method='forward')
 op = odl.BroadcastOperator(convolution, gradient)
 
 # Create the proximal operator for unconstrained primal variable
-proximal_primal = odl.solvers.proximal_const_func(op.domain)
-
-# Create proximal operators for the dual variable
+g = odl.solvers.ZeroFunctional(op.domain)
 
 # l2-data matching
-prox_convconj_l2 = odl.solvers.proximal_cconj_l2_squared(space, g=data)
+l2_norm = odl.solvers.L2NormSquared(space).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
-prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.0003,
-                                                 isotropic=True)
+l1_norm = 0.0003 * odl.solvers.L1Norm(gradient.range)
 
-# Combine proximal operators, order must correspond to the operator K
-proximal_dual = odl.solvers.combine_proximals(prox_convconj_l2,
-                                              prox_convconj_l1)
+# Combine functionals, order must correspond to the operator K
+f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 
 # --- Select solver parameters and solve using Chambolle-Pock --- #
@@ -103,8 +99,7 @@ x = op.domain.zero()
 
 # Run the algorithm
 odl.solvers.chambolle_pock_solver(
-    op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
-    proximal_dual=proximal_dual, niter=niter, callback=callback)
+    x, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
 
 # Display images
 phantom.show(title='original image')
