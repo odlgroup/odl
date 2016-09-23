@@ -61,12 +61,12 @@ def test_chambolle_pock_solver_simple_space():
     # Dual variable required to resume iteration
     discr_dual = op.range.zero()
 
-    # Proximal operator, use same the factory function for F^* and G
-    prox = proximal_const_func(space)
+    # Functional, use same the factory function for F^* and G
+    g = odl.solvers.ZeroFunctional(space)
+    f = g.convex_conj
 
     # Run the algorithm
-    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
-                          proximal_primal=prox, proximal_dual=prox,
+    chambolle_pock_solver(discr_vec, f, g, op, tau=TAU, sigma=SIGMA,
                           theta=THETA, niter=1, callback=None,
                           x_relax=discr_vec_relax, y=discr_dual)
 
@@ -81,8 +81,7 @@ def test_chambolle_pock_solver_simple_space():
     assert all_almost_equal(discr_vec_relax, vec_relax_expl, PLACES)
 
     # Resume iteration with previous x but without previous relaxation
-    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
-                          proximal_primal=prox, proximal_dual=prox,
+    chambolle_pock_solver(discr_vec, f, g, op, tau=TAU, sigma=SIGMA,
                           theta=THETA, niter=1)
 
     vec_expl *= (1 - SIGMA * TAU)
@@ -90,8 +89,7 @@ def test_chambolle_pock_solver_simple_space():
 
     # Resume iteration with x1 as above and with relaxation parameter
     discr_vec[:] = vec_expl
-    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
-                          proximal_primal=prox, proximal_dual=prox,
+    chambolle_pock_solver(discr_vec, f, g, op, tau=TAU, sigma=SIGMA,
                           theta=THETA, niter=1, x_relax=discr_vec_relax,
                           y=discr_dual)
 
@@ -107,16 +105,14 @@ def test_chambolle_pock_solver_simple_space():
     # Relaxation parameter 1 and no acceleration
     discr_vec = op.domain.element(DATA)
     discr_vec_relax_no_gamma = op.domain.element(DATA)
-    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
-                          proximal_primal=prox, proximal_dual=prox,
+    chambolle_pock_solver(discr_vec, f, g, op, tau=TAU, sigma=SIGMA,
                           theta=1, gamma=None, niter=1,
                           x_relax=discr_vec_relax_no_gamma)
 
     # Acceleration parameter 0, overwrites relaxation parameter
     discr_vec = op.domain.element(DATA)
     discr_vec_relax_g0 = op.domain.element(DATA)
-    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
-                          proximal_primal=prox, proximal_dual=prox,
+    chambolle_pock_solver(discr_vec, f, g, op, tau=TAU, sigma=SIGMA,
                           theta=0, gamma=0, niter=1,
                           x_relax=discr_vec_relax_g0)
 
@@ -124,8 +120,7 @@ def test_chambolle_pock_solver_simple_space():
     assert all_almost_equal(discr_vec_relax_no_gamma, discr_vec_relax_g0)
 
     # Test callback execution
-    chambolle_pock_solver(op, discr_vec, tau=TAU, sigma=SIGMA,
-                          proximal_primal=prox, proximal_dual=prox,
+    chambolle_pock_solver(discr_vec, f, g, op, tau=TAU, sigma=SIGMA,
                           theta=THETA, niter=1,
                           callback=odl.solvers.CallbackPrintIteration())
 
@@ -144,17 +139,17 @@ def test_chambolle_pock_solver_produce_space():
 
     # Starting point for explicit computation
     discr_vec_0 = prod_op.domain.element(DATA)
+
     # Copy to be overwritten by the algorithm
     discr_vec = discr_vec_0.copy()
 
     # Proximal operator using the same factory function for F^* and G
-    prox_primal = proximal_const_func(prod_op.domain)
-    prox_dual = proximal_const_func(prod_op.range)
+    g = odl.solvers.ZeroFunctional(prod_op.domain)
+    f = odl.solvers.ZeroFunctional(prod_op.range).convex_conj
 
     # Run the algorithm
-    chambolle_pock_solver(prod_op, discr_vec, tau=TAU, sigma=SIGMA,
-                          proximal_primal=prox_primal,
-                          proximal_dual=prox_dual, theta=THETA, niter=1)
+    chambolle_pock_solver(discr_vec, f, g, prod_op, tau=TAU, sigma=SIGMA,
+                          theta=THETA, niter=1)
 
     vec_expl = discr_vec_0 - TAU * SIGMA * prod_op.adjoint(
         prod_op(discr_vec_0))
