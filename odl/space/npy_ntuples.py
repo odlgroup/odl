@@ -1297,7 +1297,13 @@ class NumpyFnVector(FnBaseVector, NumpyNtuplesVector):
 
 class MatVecOperator(Operator):
 
-    """Matrix multiply operator :math:`\mathbb{F}^n -> \mathbb{F}^m`."""
+    """Matrix multiply operator :math:`\mathbb{F}^n -> \mathbb{F}^m`.
+
+    This operator uses a matrix to represent an operator, and get its adjoint
+    and inverse by doing computations on the matrix. This is in general a
+    rather slow approach, and users are recommended to use other alternatives
+    if available.
+    """
 
     def __init__(self, matrix, domain=None, range=None):
         """Initialize a new instance.
@@ -1321,9 +1327,9 @@ class MatVecOperator(Operator):
         """
         # TODO: fix dead link `scipy.sparse.spmatrix`
         if isspmatrix(matrix):
-            self._matrix = matrix
+            self.__matrix = matrix
         else:
-            self._matrix = np.asarray(matrix)
+            self.__matrix = np.asarray(matrix)
 
         if self.matrix.ndim != 2:
             raise ValueError('matrix {} has {} axes instead of 2'
@@ -1364,7 +1370,7 @@ class MatVecOperator(Operator):
     @property
     def matrix(self):
         """Matrix representing this operator."""
-        return self._matrix
+        return self.__matrix
 
     @property
     def matrix_issparse(self):
@@ -1385,6 +1391,27 @@ class MatVecOperator(Operator):
                                       ''.format(self.domain.field,
                                                 self.range.field))
         return MatVecOperator(self.matrix.conj().T,
+                              domain=self.range, range=self.domain)
+
+    @property
+    def inverse(self):
+        """Inverse operator represented by the inverse matrix.
+
+        Taking the inverse causes sparse matrices to become dense and is
+        generally very heavy computationally since the matrix is inverted
+        numerically (an O(n^3) operation). It is recommended to instead
+        use one of the solvers available in the ``odl.solvers`` package.
+
+        Returns
+        -------
+        inverse : `MatVecOperator`
+        """
+        if self.matrix_issparse:
+            dense_matrix = self.matrix.toarray()
+        else:
+            dense_matrix = self.matrix
+
+        return MatVecOperator(np.linalg.inv(dense_matrix),
                               domain=self.range, range=self.domain)
 
     def _call(self, x, out=None):
