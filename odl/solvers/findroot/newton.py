@@ -75,17 +75,16 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
 
     Parameters
     ----------
-    op : `Functional`
+    f : `Functional`
         Goal functional. Needs to have ``f.gradient`` and
         ``f.gradient.derivative``.
     x : ``op.domain`` element
         Starting point of the iteration
-   line_search : float or `LineSearch`, optional
+    line_search : float or `LineSearch`, optional
         Strategy to choose the step length. If a float is given, uses it as a
         fixed step length.
     maxiter : int, optional
         Maximum number of iterations.
-        ``tol``.
     tol : float, optional
         Tolerance that should be used for terminating the iteration.
     cg_iter : int, optional

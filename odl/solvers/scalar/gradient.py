@@ -23,14 +23,18 @@ from future import standard_library
 standard_library.install_aliases()
 
 
+import numpy as np
+from odl.solvers.scalar.steplen import ConstantLineSearch
+
+
 __all__ = ('steepest_descent',)
 
 
 # TODO: update all docs
 
 
-def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
-                     callback=None):
+def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
+                     projection=None, callback=None):
     """Steepest descent method to minimize an objective function.
 
     General implementation of steepest decent (also known as gradient
@@ -54,16 +58,17 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
 
     Parameters
     ----------
-    grad : `Operator`
-        Gradient of the objective function,
-        :math:`x \mapsto \\nabla f(x)`
-    x : ``grad.range`` element
+    f : `Functional`
+        Goal functional. Needs to have ``f.gradient``.
+    x : ``f.domain`` element
         Starting point of the iteration
-    niter : int, optional
-        Number of iterations
     line_search : float or `LineSearch`, optional
         Strategy to choose the step length. If a float is given, uses it as a
         fixed step length.
+    maxiter : int, optional
+        Maximum number of iterations.
+    tol : float, optional
+        Tolerance that should be used for terminating the iteration.
     projection : `callable`, optional
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
@@ -78,24 +83,22 @@ def steepest_descent(grad, x, niter=1, line_search=1, projection=None,
     odl.solvers.iterative.iterative.conjugate_gradient :
         Optimized solver for the case ``f(x) = x^T Ax - 2 x^T b``
     """
-
+    grad = f.gradient
     if x not in grad.domain:
         raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
                         ''.format(x, grad.domain))
 
     if not callable(line_search):
-        step = float(line_search)
-        smart_line_search = False
-    else:
-        smart_line_search = True
+        line_search = ConstantLineSearch(line_search)
 
     grad_x = grad.range.element()
-    for _ in range(niter):
+    for _ in range(maxiter):
         grad(x, out=grad_x)
 
-        if smart_line_search:
-            dir_derivative = -grad_x.norm() ** 2
-            step = line_search(x, -grad_x, dir_derivative)
+        dir_derivative = -grad_x.norm() ** 2
+        if np.abs(dir_derivative) < tol:
+            return  # we have converged
+        step = line_search(x, -grad_x, dir_derivative)
 
         x.lincomb(1, x, -step, grad_x)
 
