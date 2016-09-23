@@ -30,22 +30,7 @@ import scipy
 import odl
 
 
-# TODO: fix hack with issue #612 or #
-class TmpFunctional(odl.solvers.Functional):
-    def __init__(self, space, cc_prox):
-        odl.solvers.Functional.__init__(self, space)
-        self.cc_prox = cc_prox
 
-    @property
-    def convex_conj(self):
-        func = self
-
-        class TmpCConjFunctional(odl.solvers.Functional):
-            @property
-            def proximal(self):
-                return func.cc_prox
-
-        return TmpCConjFunctional(self.domain)
 
 # Read test image:
 # convert integer values to float, and rotate to get the image upright
@@ -83,7 +68,10 @@ g = odl.solvers.IndicatorNonnegativity(op.domain)
 
 # l2-data matching
 prox_convconj_kl = odl.solvers.proximal_cconj_kl(space, lam=1.0, g=noisy)
-kl_data_matching = TmpFunctional(space, prox_convconj_kl)
+
+# TODO: fix hack with issue #612
+kl_data_matching = odl.solvers.simple_functional(space,
+                                                 cconj_prox=prox_convconj_kl)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
 l1_norm = 0.1 * odl.solvers.L1Norm(gradient.range)
