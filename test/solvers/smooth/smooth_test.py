@@ -107,5 +107,16 @@ def test_broydens_method(functional_and_linesearch, broyden_impl):
     assert functional(x) < 1e-3
 
 
+def test_steepest_descent(functional):
+    """Test the steepest descent solver."""
+    line_search = odl.solvers.BacktrackingLineSearch(functional)
+
+    x = noise_element(functional.domain)
+    odl.solvers.steepest_descent(functional, x, maxiter=50, tol=1e-4,
+                                 line_search=line_search, callback=print)
+
+    assert functional(x) < 1e-3
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/') + ' -v'))
