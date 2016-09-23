@@ -51,7 +51,7 @@ def _random_array(shape, dtype):
 
 
 impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
-impl_ids = ['impl={}'.format(impl.args[1]) for impl in impl_params]
+impl_ids = [' impl = {} '.format(impl.args[1]) for impl in impl_params]
 
 
 @pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
