@@ -29,7 +29,8 @@ from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
 from odl.solvers.advanced.proximal_operators import (
     proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
-    proximal_l2_squared, proximal_const_func, proximal_box_constraint)
+    proximal_l2_squared, proximal_const_func, proximal_box_constraint,
+    proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
 
 from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
 
@@ -568,6 +569,201 @@ class IndicatorNonnegativity(IndicatorBox):
         inf
         """
         IndicatorBox.__init__(self, space, lower=0, upper=None)
+
+
+class KullbackLeibler(Functional):
+    """The Kullback-Leibler divergence functional.
+
+    Notes
+    -----
+    The functional is given by
+
+    .. math::
+
+        ...
+
+    Mention something about the use of this, and compare to
+    KullbackLeiblerCrossEntropy.
+
+    See Also
+    --------
+    KullbackLeiblerConvexConj : the convex conjugate functional
+    KullbackLeiblerCrossEntropy : related functional
+    """
+
+    # TODO: update doc above
+
+    def __init__(self, space, offset=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp` or `FnBase`
+            Domain of the functional.
+        offset : ``space`` element, optional
+            Data term, positive. If None it is take as the one-element.
+        """
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+
+        if offset is not None and offset not in self.domain:
+            raise ValueError('`offset` not in `domain`'
+                             ''.format(offset, self.domain))
+
+        self.__offset = offset
+
+    @property
+    def offset(self):
+        """The offset in the Kullback-Leibler functional."""
+        return self.__offset
+
+    # TODO: update when integration operator is in place: issue #440
+    def _call(self, x):
+        """Return the KL-diveregnce in the point ``x``.
+
+        If any point in x is zero or smaller, the value is infinite.
+        """
+        if self.offset is None:
+            tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
+        else:
+            tmp = ((x - self.offset + self.offset * np.log(self.offset / x))
+                   .inner(self.domain.one()))
+        if np.isnan(tmp):
+            # In this case, some element was less than or equal to zero
+            return self.range(np.inf)
+        else:
+            return tmp
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The gradient is not defined in points where one or more components
+        are 0.
+        """
+        functional = self
+
+        class KLGradient(Operator):
+
+            """The gradient operator of this functional."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super().__init__(functional.domain, functional.domain,
+                                 linear=False)
+
+            def _call(self, x):
+                """Apply the gradient operator to the given point.
+
+                The gradient is not defined in 0.
+                """
+                if 0 in x:
+                    # The derivative is not defined.
+                    raise ValueError('The gradient of the Kullback-Leibler '
+                                     'functional is not defined ´x´ with one '
+                                     'or more components zero.'.format(x))
+                else:
+                    if functional.offset is None:
+                        return (-1.0) / x + 1
+                    else:
+                        return (-functional.offset) / x + 1
+
+        return KLGradient()
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        See Also
+        --------
+        proximal_cconj_kl : proximal factory for convex conjugate of KL.
+        proximal_cconj : proximal of the convex conjugate of a functional
+        """
+        return proximal_cconj(proximal_cconj_kl(space=self.domain,
+                                                g=self.offset))
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional of the KL-functional."""
+        return KullbackLeiblerConvexConj(self.domain, g=self.offset)
+
+
+class KullbackLeiblerConvexConj(Functional):
+    """The convex conjugate of Kullback-Leibler divergence functional.
+
+    Notes
+    -----
+    The functional is given by
+
+    .. math::
+
+        ...
+
+    Mention something about the use of this, and compare to
+    KullbackLeiblerCrossEntropy.
+
+    See Also
+    --------
+    KullbackLeibler : convex conjugate functional
+    """
+
+    # TODO: update doc above
+
+    def __init__(self, space, g=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp` or `FnBase`
+            Domain of the functional.
+        g : ``space`` element, optional
+            Data term, positive. If None it is take as the one-element.
+        """
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+
+        if g is not None and g not in self.domain:
+            raise ValueError('`g` not in `domain`'
+                             ''.format(g, self.domain))
+
+        self.__g = g
+
+    @property
+    def g(self):
+        """The parameter in convex conjugate Kullback-Leibler functional."""
+        return self.__g
+
+    # TODO: update when integration operator is in place: issue #440
+    def _call(self, x):
+        """Return the value in the point ``x``.
+
+        This is only finite if all components of ``x`` are less than 1.
+        """
+        if self.offset is None:
+            tmp = (np.log(1 - x)).inner(self.domain.one())
+        else:
+            tmp = (self.g * np.log(1 - x)).inner(self.domain.one())
+        if np.isnan(tmp):
+            # In this case, some element was larger than or equal to one
+            return self.range(np.inf)
+        else:
+            return tmp
+
+    # TODO: implement the gradient.
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        See Also
+        --------
+        proximal_cconj_kl : proximal factory for convex conjugate of KL.
+        proximal_cconj : proximal of the convex conjugate of a functional
+        """
+        return proximal_cconj_kl(space=self.domain, g=self.g)
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional of the conjugate KL-functional."""
+        return KullbackLeibler(self.domain, self.g)
 
 
 if __name__ == '__main__':
