@@ -38,17 +38,16 @@ __all__ = ('chambolle_pock_solver',)
 # TODO: add dual gap as convergence measure
 # TODO: diagonal preconditioning
 
-def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
-                          niter=1, **kwargs):
+def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
     """Chambolle-Pock algorithm for non-smooth convex optimization problems.
 
     First order primal-dual hybrid-gradient method for non-smooth convex
     optimization problems with known saddle-point structure. The
     primal formulation of the general problem is::
 
-        min_{x in X} F(K x) + G(x)
+        min_{x in X} f(L x) + g(x)
 
-    where ``K`` is an operator and ``F`` and ``G`` are functionals.
+    where ``L`` is an operator and ``F`` and ``G`` are functionals.
 
     The Chambolle-Pock algorithm is a primal-dual algorithm, and basically
     consists of alternating a gradient ascent in the dual variable and a
@@ -59,22 +58,23 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     Parameters
     ----------
-    op : `Operator`
-        Forward operator, the operator ``K`` in the problem formulation.
     x : ``op.domain`` element
         Starting point of the iteration, updated in-place.
+    f : `Functional`
+        The function ``f`` in the problem definition. Needs to have
+        ``f.convex_conj.proximal``.
+    g : `Functional`
+        The function ``f`` in the problem definition. Needs to have
+        ``g.proximal``.
+    L : linear `Operator`
+        The linear operator that should be applied before ``f``. Its range must
+        match the domain of ``f``.
     tau : positive float
-        Step size parameter for the update of the primal variable.
-        Controls the extent to which ``proximal_primal`` maps points
-        towards the minimum of G.
+        Step size parameter for the update of the primal (``g``) variable.
+        Controls the speed of convergence towards the minimum of G.
     sigma : positive float
-        Step size parameter for the update of the dual variable. Controls
-        the extent to which ``proximal_dual`` maps points towards the
-        minimum of ``F^*``.
-    proximal_primal : `callable`
-        `proximal factory` for the functional ``G``.
-    proximal_dual : `callable`
-        `proximal factory` for the functional ``F^*``.
+        Step size parameter for the update of the dual (``f``) variable.
+        Controls the speed of convergence towards the minimum of ``F^*``.
     niter : non-negative int, optional
         Number of iterations.
 
@@ -156,14 +156,14 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     The non-linear case is analyzed in [Val2014]_.
     """
     # Forward operator
-    if not isinstance(op, Operator):
+    if not isinstance(L, Operator):
         raise TypeError('`op` {!r} is not an `Operator` instance'
-                        ''.format(op))
+                        ''.format(L))
 
     # Starting point
-    if x not in op.domain:
+    if x not in L.domain:
         raise TypeError('`x` {!r} is not in the domain of `op` {!r}'
-                        ''.format(x, op.domain))
+                        ''.format(x, L.domain))
 
     # Step size parameter
     tau, tau_in = float(tau), tau
@@ -205,17 +205,21 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
     x_relax = kwargs.pop('x_relax', None)
     if x_relax is None:
         x_relax = x.copy()
-    elif x_relax not in op.domain:
+    elif x_relax not in L.domain:
         raise TypeError('`x_relax` {} is not in the domain of '
-                        '`op` {}'.format(x_relax.space, op.domain))
+                        '`L` {}'.format(x_relax.space, L.domain))
 
     # Initialize the dual variable
     y = kwargs.pop('y', None)
     if y is None:
-        y = op.range.zero()
-    elif y not in op.range:
-        raise TypeError('`y` {} is not in the range of `op` '
-                        '{}'.format(y.space, op.range))
+        y = L.range.zero()
+    elif y not in L.range:
+        raise TypeError('`y` {} is not in the range of `L` '
+                        '{}'.format(y.space, L.range))
+
+    # Get the proximals
+    proximal_dual = f.convex_conj.proximal
+    proximal_primal = g.proximal
 
     # Temporary copy to store previous iterate
     x_old = x.space.element()
@@ -225,11 +229,11 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
         x_old.assign(x)
 
         # Gradient ascent in the dual variable y
-        dual_tmp = y + sigma * op(x_relax)
+        dual_tmp = y + sigma * L(x_relax)
         proximal_dual(sigma)(dual_tmp, out=y)
 
         # Gradient descent in the primal variable x
-        primal_tmp = x + (- tau) * op.derivative(x).adjoint(y)
+        primal_tmp = x + (- tau) * L.derivative(x).adjoint(y)
         proximal_primal(tau)(primal_tmp, out=x)
 
         # Acceleration
