@@ -24,7 +24,7 @@ standard_library.install_aliases()
 
 import numpy as np
 from odl.operator import IdentityOperator
-from odl.solvers.scalar.steplen import ConstantLineSearch
+from odl.solvers.util import ConstantLineSearch
 from odl.solvers.iterative.iterative import conjugate_gradient
 
 

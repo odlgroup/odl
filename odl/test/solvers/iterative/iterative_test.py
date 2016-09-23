@@ -42,11 +42,9 @@ def iterative_solver(request):
     if solver_name == 'steepest_descent':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
+            func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
 
-            # Define gradient as ``Ax - b``
-            gradient_op = op.adjoint * odl.ResidualOperator(op, rhs)
-            odl.solvers.steepest_descent(gradient_op, x, niter=10,
-                                         line_search=0.5 / norm2)
+            odl.solvers.steepest_descent(func, x, line_search=0.5 / norm2)
     elif solver_name == 'landweber':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
