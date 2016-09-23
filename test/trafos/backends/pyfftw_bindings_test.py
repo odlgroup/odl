@@ -33,7 +33,7 @@ from odl.util import (all_almost_equal, all_equal, never_skip,
 
 
 pytestmark = pytest.mark.skipif(not PYFFTW_AVAILABLE,
-                                reason='pyFFTW backend not available')
+                                reason='`pyfftw` backend not available')
 
 
 def _random_array(shape, dtype):
