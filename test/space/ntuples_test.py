@@ -923,6 +923,39 @@ def test_matvec_adjoint(fn):
         op_noadj.adjoint
 
 
+def test_matvec_inverse(fn):
+    # Sparse case
+    sparse_mat = _sparse_matrix(fn)
+    op_sparse = MatVecOperator(sparse_mat, fn, fn)
+
+    op_sparse_inv = op_sparse.inverse
+    assert op_sparse_inv.domain == op_sparse.range
+    assert op_sparse_inv.range == op_sparse.domain
+    assert all_almost_equal(op_sparse_inv.matrix,
+                            np.linalg.inv(op_sparse.matrix.todense()))
+    assert all_almost_equal(op_sparse_inv.inverse.matrix,
+                            op_sparse.matrix.todense())
+
+    # Test application
+    x = noise_element(fn)
+    assert all_almost_equal(x, op_sparse.inverse(op_sparse(x)))
+
+    # Dense case
+    dense_mat = _dense_matrix(fn)
+    op_dense = MatVecOperator(dense_mat, fn, fn)
+    op_dense_inv = op_dense.inverse
+    assert op_dense_inv.domain == op_dense.range
+    assert op_dense_inv.range == op_dense.domain
+    assert all_almost_equal(op_dense_inv.matrix,
+                            np.linalg.inv(op_dense.matrix))
+    assert all_almost_equal(op_dense_inv.inverse.matrix,
+                            op_dense.matrix)
+
+    # Test application
+    x = noise_element(fn)
+    assert all_almost_equal(x, op_dense.inverse(op_dense(x)))
+
+
 def test_matvec_call(fn):
     # Square cases
     sparse_mat = _sparse_matrix(fn)
