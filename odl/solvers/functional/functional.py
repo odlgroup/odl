@@ -787,7 +787,19 @@ class FunctionalTranslation(Functional):
 
     @property
     def convex_conj(self):
-        """Convex conjugate functional of the translated functional."""
+        """Convex conjugate functional of the translated functional.
+
+        Notes
+        -----
+        Given a functional :math:`f`, the convex conjugate of a translated
+        version :math:`f(\cdot - y)` is given by a linear pertubation of the
+        convex conjugate of :math:`f`:
+
+        .. math::
+            (f( . - y))^* (x) = f^*(x) + <y, x>.
+
+        For reference on the identity used, see [KP2015]_.
+        """
         return FunctionalLinearPerturb(
             self.functional.convex_conj,
             self.translation)
@@ -858,18 +870,14 @@ proximal_quadratic_perturbation
     def convex_conj(self):
         """Convex conjugate functional of the functional.
 
-        By the Fenchel-Moreau [BC2011]_ theorem this a translation of the
-        original functional.
-
         Notes
         -----
-        Given a functional :math:`f`, the convex conjugate of a translated
-        version :math:`f(\cdot - y)` is given by a linear pertubation of the
-        convex conjugate of :math:`f`:
+        Given a functional :math:`f`, the convex conjugate of a linearly
+        perturbed version :math:`f(x) + <y, x>` is given by a translation of
+        the convex conjugate of :math:`f`:
 
-            .. math::
-
-                (f( . - y))^* (x) = f^*(x) + <y, x>.
+        .. math::
+            (f(x) + <y, x>)^* (x) = f^*(x - y).
 
         For reference on the identity used, see [KP2015]_.
         """
