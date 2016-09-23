@@ -131,10 +131,10 @@ def chambolle_pock_solver(op, x, tau, sigma, proximal_primal, proximal_dual,
 
     See Also
     --------
-    odl.solvers.advanced.douglas_rachford.douglas_rachford_pd :
+    odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd :
         Solver for similar problems which can additionaly handle infimal
         convolutions and multiple forward operators.
-    odl.solvers.advanced.forward_backward.forward_backward_pd :
+    odl.solvers.nonsmooth.forward_backward.forward_backward_pd :
         Solver for similar problems which can additionaly handle infimal
         convolutions, multiple forward operators and a differentiable term.
 

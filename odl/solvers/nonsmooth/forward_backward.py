@@ -130,10 +130,10 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
 
     See Also
     --------
-    odl.solvers.advanced.chambolle_pock.chambolle_pock_solver :
+    odl.solvers.nonsmooth.chambolle_pock.chambolle_pock_solver :
         Solver for similar problems without differentiability in any
         of the terms.
-    odl.solvers.advanced.douglas_rachford.douglas_rachford_pd :
+    odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd :
         Solver for similar problems without differentiability in any
         of the terms.
 

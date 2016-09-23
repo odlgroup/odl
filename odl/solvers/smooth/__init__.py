@@ -15,18 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Gradient-based optimization schemes."""
+
 from __future__ import absolute_import
 
 __all__ = ()
 
-from .proximal_operators import *
-__all__ += proximal_operators.__all__
+from .gradient import *
+__all__ += gradient.__all__
 
-from .chambolle_pock import *
-__all__ += chambolle_pock.__all__
-
-from .douglas_rachford import *
-__all__ += douglas_rachford.__all__
-
-from .forward_backward import *
-__all__ += forward_backward.__all__
+from .newton import *
+__all__ += newton.__all__
