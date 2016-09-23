@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""(Quasi-)Newton schemes to find zeros of functions (gradients)."""
+"""(Quasi-)Newton schemes to find zeros of functions."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -25,17 +25,123 @@ standard_library.install_aliases()
 import numpy as np
 from odl.operator import IdentityOperator
 from odl.solvers.scalar.steplen import ConstantLineSearch
-from odl.operator.oputils import matrix_representation
+from odl.solvers.iterative.iterative import conjugate_gradient
 
-__all__ = ('bfgs_method', 'broydens_method')
+
+__all__ = ('newtons_method', 'bfgs_method', 'broydens_method')
 
 
 # TODO: update all docs
 
 
+def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
+                   cg_iter=None, callback=None):
+    """Newton's method for minimizing a functional.
+
+    Notes
+    -----
+    This is a general and optimized implementation of Newton's method
+    for solving the problem:
+
+        :math:`\min f(x)`
+
+    for a differentiable function
+    :math:`f: \mathcal{X}\\to \mathbb{R}` on a Hilbert space
+    :math:`\mathcal{X}`. It does so by finding a zero of the gradient
+
+        :math:`\\nabla f: \mathcal{X} \\to \mathcal{X}`.
+
+    of finding a root of a function.
+
+    The algorithm is well-known and there is a vast literature about it.
+    Among others, the method is described in [BV2004]_, Sections 9.5
+    and 10.2 (`book available online
+    <http://stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf>`_),
+    [GNS2009]_,  Section 2.7 for solving nonlinear equations and Section
+    11.3 for its use in minimization, and wikipedia on `Newton's_method
+    <https://en.wikipedia.org/wiki/Newton's_method>`_.
+
+    The algorithm works by iteratively solving
+
+        :math:`\partial f(x_k)p_k = -f(x_k)`
+
+    and then updating as
+
+        :math:`x_{k+1} = x_k + \\alpha x_k`,
+
+    where :math:`\\alpha` is a suitable step length (see the
+    references). In this implementation the system of equations are
+    solved using the conjugate gradient method.
+
+    Parameters
+    ----------
+    op : `Functional`
+        Goal functional. Needs to have ``f.gradient`` and
+        ``f.gradient.derivative``.
+    x : ``op.domain`` element
+        Starting point of the iteration
+   line_search : float or `LineSearch`, optional
+        Strategy to choose the step length. If a float is given, uses it as a
+        fixed step length.
+    maxiter : int, optional
+        Maximum number of iterations.
+        ``tol``.
+    tol : float, optional
+        Tolerance that should be used for terminating the iteration.
+    cg_iter : int, optional
+        Number of iterations in the the conjugate gradient solver,
+        for computing the search direction.
+    callback : `callable`, optional
+        Object executing code per iteration, e.g. plotting each iterate
+    """
+    # TODO: update doc
+    grad = f.gradient
+    if x not in grad.domain:
+        raise TypeError('`x` {!r} is not in the domain of `f` {!r}'
+                        ''.format(x, grad.domain))
+
+    if not callable(line_search):
+        line_search = ConstantLineSearch(line_search)
+
+    if cg_iter is None:
+        # Motivated by that if it is Ax = b, x and b in Rn, it takes at most n
+        # iterations to solve with cg
+        cg_iter = grad.domain.size
+
+    # TODO: optimize by using lincomb and avoiding to create copies
+    for _ in range(maxiter):
+
+        # Initialize the search direction to 0
+        search_direction = x.space.zero()
+
+        # Compute hessian (as operator) and gradient in the current point
+        hessian = grad.derivative(x)
+        deriv_in_point = grad(x)
+
+        # Solving A*x = b for x, in this case f''(x)*p = -f'(x)
+        # TODO: Let the user provide/choose method for how to solve this?
+        conjugate_gradient(hessian, search_direction,
+                           -deriv_in_point, cg_iter)
+
+        # Computing step length
+        dir_deriv = search_direction.inner(deriv_in_point)
+        if np.abs(dir_deriv) <= tol:
+            return
+
+        step_length = line_search(x, search_direction, dir_deriv)
+
+        # Updating
+        x += step_length * search_direction
+
+        if callback is not None:
+            callback(x)
+
+
 def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16, callback=None):
     """Quasi-Newton BFGS method to minimize a differentiable function.
 
+    Notes
+    -----
     This is a general and optimized implementation of a quasi-Newton
     method with BFGS update for solving a general unconstrained
     optimization problem
@@ -75,17 +181,15 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate.
     """
-
-    if x not in f.domain:
+    grad = f.gradient
+    if x not in grad.domain:
         raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, f.domain))
+                        ''.format(x, grad.domain))
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
-    grad = f.gradient
-
-    hess = ident = IdentityOperator(f.domain)
+    hess = ident = IdentityOperator(grad.domain)
     grad_x = grad(x)
     for _ in range(maxiter):
         # Determine a stepsize using line search
@@ -122,6 +226,8 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
                     tol=1e-16, callback=None):
     """Broyden's first method, a quasi-Newton scheme.
 
+    Notes
+    -----
     This is a general and optimized implementation of Broyden's  method,
     a quasi-Newton method for solving a general unconstrained optimization
     problem
@@ -160,16 +266,15 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate.
     """
-    if x not in f.domain:
-        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
-                        ''.format(x, f.domain))
     grad = f.gradient
+    if x not in grad.domain:
+        raise TypeError('`x` {!r} is not in the domain of `grad` {!r}'
+                        ''.format(x, grad.domain))
 
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
-    ident = IdentityOperator(f.domain)
-    hess = IdentityOperator(f.domain)
+    hess = ident = IdentityOperator(grad.domain)
     grad_x = grad(x)
 
     for _ in range(maxiter):
