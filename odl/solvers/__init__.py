@@ -38,8 +38,5 @@ __all__ += linear.__all__
 from .scalar import *
 __all__ += scalar.__all__
 
-from .vector import *
-__all__ += vector.__all__
-
 from .util import *
 __all__ += util.__all__

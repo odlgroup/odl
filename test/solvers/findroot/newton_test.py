@@ -27,7 +27,8 @@ import pytest
 
 # Internal
 import odl
-from odl.util.testutils import all_almost_equal, noise_element
+from odl.operator import OpNotImplementedError
+from odl.util.testutils import noise_element
 
 
 @pytest.fixture(scope="module", params=['l2_squared', 'l2_squared_scaled'])
@@ -35,12 +36,12 @@ def functional(request):
     """Return a functional whose optimal value is at 0."""
     name = request.param
 
+    # TODO: Add rosenbrock (#600) and quadratic (#606) functionals
+
     if name == 'l2_squared':
         space = odl.rn(3)
         return odl.solvers.L2NormSquared(space)
     elif name == 'l2_squared_scaled':
-        # Use ||grad f||, where constant boundary condition causes the solution
-        # to be f = 0
         space = odl.uniform_discr(0, 1, 5)
         scaling = odl.MultiplyOperator(space.element([1, 2, 3, 5, 5]),
                                        domain=space)
@@ -63,6 +64,25 @@ def functional_and_linesearch(request, functional):
 @pytest.fixture(scope="module", params=['first', 'second'])
 def broyden_impl(request):
     return request.param
+
+
+def test_newton_solver(functional_and_linesearch):
+    """Test the newton solver."""
+    functional, line_search = functional_and_linesearch
+
+    try:
+        # Test if derivative exists
+        functional.gradient.derivative(functional.domain.zero())
+    except OpNotImplementedError:
+        return
+
+    # Solving the problem
+    x = functional.domain.zero()
+    odl.solvers.newtons_method(functional, x, maxiter=50, tol=1e-4,
+                               line_search=line_search)
+
+    # Assert x is close to the optimum at [1, 1]
+    assert functional(x) < 1e-3
 
 
 def test_bfgs_solver(functional_and_linesearch):
