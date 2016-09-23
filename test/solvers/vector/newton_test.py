@@ -20,7 +20,6 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import super
 
 # External module imports
 import numpy as np
@@ -29,32 +28,6 @@ import pytest
 # Internal module imports
 import odl
 from odl.util.testutils import all_almost_equal
-
-
-# Example problem of the form min f(x) = 0, for f(x) the non-convex
-# Rosenbrock function often used in optimization (see e.g.
-# https://en.wikipedia.org/wiki/Rosenbrock_function). In this case a = 1 and
-# b = 100, giving a globally optimal solution (a, a ** 2) = (1,1). """
-
-
-def rosenbrock_function(x):
-    return 100 * (x[1] - x[0] ** 2) ** 2 + (1 - x[0]) ** 2
-
-
-class RosenbrockDerivOp(odl.Operator):
-
-    def __init__(self):
-        dom = ran = odl.rn(2)
-        super().__init__(domain=dom, range=ran)
-
-    def _call(self, x, out):
-        out[:] = [-400 * (x[1] - x[0] ** 2) * x[0] - 2 * (1 - x[0]),
-                  200 * (x[1] - x[0] ** 2)]
-
-    def derivative(self, x):
-        matrix = np.array([[2 - 400 * x[1] + 1200 * x[0] ** 2, -400 * x[0]],
-                           [-400 * x[0], 200]])
-        return odl.MatVecOperator(matrix, self.domain, self.range)
 
 
 def test_newton_solver_quadratic():
@@ -91,17 +64,19 @@ def test_newton_solver_quadratic():
 def test_newton_solver_rosenbrock():
     # Test of Newton's method by minimizing Rosenbrock function in two
     # dimensions
+    space = odl.rn(2)
+    rosenbrock = odl.solvers.example_funcs.RosenbrockFunctional(space)
 
-    # Create derivative operator and line search object
-    ros_deriv_op = RosenbrockDerivOp()
+    # Create line search object
     line_search = odl.solvers.BacktrackingLineSearch(
-        rosenbrock_function, 0.5, 0.05, 10)
+        rosenbrock, 0.5, 0.05, 10)
 
     # Initial guess
-    x = ros_deriv_op.domain.zero()
+    x = rosenbrock.domain.zero()
 
     # Solving the problem
-    odl.solvers.newtons_method(ros_deriv_op, x, line_search, num_iter=20)
+    odl.solvers.newtons_method(rosenbrock.gradient, x, line_search,
+                               num_iter=20)
 
     # Assert x is close to the optimum at [1, 1]
     assert all_almost_equal(x, [1, 1], places=6)
