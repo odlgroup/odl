@@ -30,15 +30,16 @@ from odl.operator.operator import Operator
 from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
-    proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
-
-from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
+    proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy,
+    combine_proximals)
+from odl.operator import (ZeroOperator, ScalingOperator, DiagonalOperator)
+from odl.space import ProductSpace
 
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
            'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox',
            'IndicatorNonnegativity', 'KullbackLeibler',
-           'KullbackLeiblerCrossEntropy')
+           'KullbackLeiblerCrossEntropy', 'SeparableSum')
 
 
 class L1Norm(Functional):
@@ -576,29 +577,23 @@ class IndicatorNonnegativity(IndicatorBox):
 class KullbackLeibler(Functional):
 
     """The Kullback-Leibler divergence functional.
-
     Notes
     -----
     The functional :math:`F` is given by
-
     .. math::
         \\sum_{i} \left( x_i - g_i + g_i \log \left( \\frac{g_i}{ pos(x_i) }
         \\right) \\right) + I_{x \\geq 0}(x)
-
     where :math:`g` is the prior, and :math:`I_{x \\geq 0}(x)` is the indicator
     function on nonnegative elements.
-
     KL based objectives are common in MLEM optimization problems and are often
     used as data-matching term when data noise governed by a multivariate
     Poisson probability distribution is significant.
-
     The functional is related to the Kullback-Leibler cross entropy functional
     `KullbackLeiblerCrossEntropy`. The KL cross entropy is the one
     diescribed in `this Wikipedia article
     <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
     the functional :math:`F` is obtained by switching place of the prior and
     the varialbe in the KL cross entropy functional. See the See Also section.
-
     See Also
     --------
     KullbackLeiblerConvexConj : the convex conjugate functional
@@ -607,7 +602,6 @@ class KullbackLeibler(Functional):
 
     def __init__(self, space, prior=None):
         """Initialize a new instance.
-
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
@@ -632,7 +626,6 @@ class KullbackLeibler(Functional):
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the KL-diveregnce in the point ``x``.
-
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
@@ -650,7 +643,6 @@ class KullbackLeibler(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional.
-
         The gradient is not defined in points where one or more components
         are non-positive.
         """
@@ -667,7 +659,6 @@ class KullbackLeibler(Functional):
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
-
                 The gradient is not defined in points where one or more
                 components are non-positive.
                 """
@@ -681,7 +672,6 @@ class KullbackLeibler(Functional):
     @property
     def proximal(self):
         """Return the proximal factory of the functional.
-
         See Also
         --------
         proximal_cconj_kl : proximal factory for convex conjugate of KL.
@@ -699,18 +689,14 @@ class KullbackLeibler(Functional):
 class KullbackLeiblerConvexConj(Functional):
 
     """The convex conjugate of Kullback-Leibler divergence functional.
-
     Notes
     -----
     The functional is given by
-
     .. math::
         \\sum_i \left(-g_i \ln(pos({1_X}_i - x_i)) \\right) +
         I_{1_X - x \geq 0}(x)
-
     where :math:`g` is the prior, and :math:`I_{1_X - x \geq 0}(x)` is the
     indicator function on :math:`x \leq 1`.
-
     See Also
     --------
     KullbackLeibler : convex conjugate functional
@@ -718,7 +704,6 @@ class KullbackLeiblerConvexConj(Functional):
 
     def __init__(self, space, prior=None):
         """Initialize a new instance.
-
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
@@ -743,7 +728,6 @@ class KullbackLeiblerConvexConj(Functional):
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the value in the point ``x``.
-
         If any components of ``x`` is larger than or equal to 1, the value is
         positive infinity.
         """
@@ -760,7 +744,6 @@ class KullbackLeiblerConvexConj(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional.
-
         The gradient is not defined in points where one or more components
         are larger than or equal to one.
         """
@@ -777,7 +760,6 @@ class KullbackLeiblerConvexConj(Functional):
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
-
                 The gradient is not defined in points where one or more
                 components are larger than or equal to one.
                 """
@@ -791,7 +773,6 @@ class KullbackLeiblerConvexConj(Functional):
     @property
     def proximal(self):
         """Return the proximal factory of the functional.
-
         See Also
         --------
         proximal_cconj_kl : proximal factory for convex conjugate of KL.
@@ -808,29 +789,23 @@ class KullbackLeiblerConvexConj(Functional):
 class KullbackLeiblerCrossEntropy(Functional):
 
     """The Kullback-Leibler Cross Entropy divergence functional.
-
     Notes
     -----
     The functional :math:`F` is given by
-
     .. math::
         \\sum_{i} \left( g_i - x_i + x_i \log \left( \\frac{x_i}{ pos(g_i) }
         \\right) \\right) + I_{x \\geq 0}(x)
-
     where :math:`g` is the prior, and :math:`I_{x \\geq 0}(x)` is the indicator
     function on nonnegative elements.
-
     `Wikipedia article on Kullback Leibler divergence
     <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_.
     For further information about the functional, see for example `this article
     <http://ieeexplore.ieee.org/document/1056144/?arnumber=1056144>`_.
-
     The KL cross entropy functional :math:`F`, described above, is related to
     another functional which is also know as KL divergence. This functional
     is often used as data discrepancy term in inverse problems, when data is
     corrupted with Poisson noise. This functional is obtained by changing place
     of the prior and the variable. See the See Also section.
-
     See Also
     --------
     KullbackLeibler : related functional
@@ -839,7 +814,6 @@ class KullbackLeiblerCrossEntropy(Functional):
 
     def __init__(self, space, prior=None):
         """Initialize a new instance.
-
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
@@ -864,7 +838,6 @@ class KullbackLeiblerCrossEntropy(Functional):
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the KL-diveregnce in the point ``x``.
-
         If any components of ``x`` is non-positive, the value is positive
         infinity.
         """
@@ -882,7 +855,6 @@ class KullbackLeiblerCrossEntropy(Functional):
     @property
     def gradient(self):
         """Gradient operator of the functional.
-
         The gradient is not defined in points where one or more components
         are less than or equal to 0.
         """
@@ -899,7 +871,6 @@ class KullbackLeiblerCrossEntropy(Functional):
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
-
                 The gradient is not defined in for points with components less
                 than or equal to zero.
                 """
@@ -922,7 +893,6 @@ class KullbackLeiblerCrossEntropy(Functional):
     @property
     def proximal(self):
         """Return the proximal factory of the functional.
-
         See Also
         --------
         proximal_cconj_kl_cross_entropy : proximal factory for convex conjugate
@@ -940,16 +910,12 @@ class KullbackLeiblerCrossEntropy(Functional):
 
 class KullbackLeiblerCrossEntropyConvexConj(Functional):
     """The convex conjugate of Kullback-Leibler Cross Entorpy functional.
-
     Notes
     -----
     The functional is given by
-
     .. math::
         \\sum_i g_i (exp(x_i) - 1)
-
     where :math:`g` is the prior.
-
     See Also
     --------
     KullbackLeiblerCrossEntropy : convex conjugate functional
@@ -957,7 +923,6 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
     def __init__(self, space, prior=None):
         """Initialize a new instance.
-
         Parameters
         ----------
         space : `DiscreteLp` or `FnBase`
@@ -1015,7 +980,6 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     @property
     def proximal(self):
         """Return the proximal factory of the functional.
-
         See Also
         --------
         proximal_cconj_kl_cross_entropy : proximal factory for convex conjugate
@@ -1027,6 +991,68 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     def convex_conj(self):
         """The convex conjugate functional of the conjugate KL-functional."""
         return KullbackLeiblerCrossEntropy(self.domain, self.prior)
+
+
+class SeparableSum(Functional):
+
+    """The functional corresponding to separable sum of functionals.
+
+    The separable sum of functionals ``f_1, f_2, ..., f_n`` is given by::
+
+        h(x_1, x_2, ..., x_n) = sum_i^n f_i(x_i)
+
+    The separable sum is thus defined for any collection of functionals with
+    the same range.
+    """
+
+    def __init__(self, *functionals):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        functionals1, ..., functionalsN : `Functional`
+            The functionals in the sum.
+        """
+        domains = [func.domain for func in functionals]
+        domain = ProductSpace(*domains)
+        linear = all(func.is_linear for func in functionals)
+
+        self.functionals = functionals
+
+        super().__init__(space=domain, linear=linear)
+
+    def _call(self, x):
+        """Return the squared L2-norm of ``x``."""
+        return sum(fi(xi) for xi, fi in zip(x, self.functionals))
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional."""
+        gradients = [func.gradient for func in self.functionals]
+        return DiagonalOperator(*gradients)
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        The proximal operator separates over separable sums.
+
+        Returns
+        -------
+        proximal : combine_proximals
+        """
+        proximals = [func.proximal for func in self.functionals]
+        return combine_proximals(*proximals)
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional.
+
+        Convex conjugate distributes over separable sums, so the result is
+        simply the separable sum of the convex conjugates.
+        """
+        convex_conjs = [func.convex_conj for func in self.functionals]
+        return SeparableSum(*convex_conjs)
 
 
 if __name__ == '__main__':
