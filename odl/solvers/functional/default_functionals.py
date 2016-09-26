@@ -27,19 +27,22 @@ import numpy as np
 import scipy
 
 from odl.solvers.functional.functional import Functional
-from odl.operator import Operator, ConstantOperator
+from odl.discr import PointwiseNorm
+from odl.space import ProductSpace
+from odl.operator import (Operator, ConstantOperator, ZeroOperator,
+                          ScalingOperator, DiagonalOperator)
+from odl.solvers.functional.functional import (
+    Functional, FunctionalDefaultConvexConjugate)
 from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
     proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy,
     combine_proximals)
-from odl.operator import (ZeroOperator, ScalingOperator, DiagonalOperator)
-from odl.space import ProductSpace
 
 
-__all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
-           'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox',
-           'IndicatorNonnegativity', 'KullbackLeibler',
+__all__ = ('L1Norm', 'GroupL1Norm', 'L2Norm', 'L2NormSquared',
+           'ZeroFunctional', 'ConstantFunctional', 'IndicatorLpUnitBall',
+           'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
            'QuadraticForm')
 
@@ -122,6 +125,114 @@ class L1Norm(Functional):
     def convex_conj(self):
         """The convex conjugate functional of the L1-norm."""
         return IndicatorLpUnitBall(self.domain, exponent=np.inf)
+
+
+class GroupL1Norm(Functional):
+
+    """The functional corresponding to group L1-norm on `ProductSpace`s.
+
+    The L1-norm, ``|| ||x||_p ||_1``,  is defined as the integral/sum of
+    ``||x||_p``, where  ``||x||_p`` is the pointwise 2-norm.
+
+    This is also known as the cross norm.
+
+    Notes
+    -----
+    If the functional is defined on an :math:`\mathbb{R}^{n \\times m}`-like
+    space, the group :math:`L_1`-norm, denoted :math:`\| . \|_{\\times, p}` is
+    defined as
+
+    .. math::
+
+        \| x \|_{\\times, p} =
+        \\sum_{i = 1}^n \\left( \\sum_{j = 1}^m x_{i,j}^p \\right)^{1/p}.
+
+    If the functional is defined on an :math:`L_p^m`-like space, the group
+    :math:`L_1`-norm is defined as
+
+    .. math::
+
+        \| x \|_{\\times, p} =
+        \\int_{\Omega} \\left(\\sum_{j = 1}^m x_{j}^p\\right)^{1/p} dx.
+    """
+
+    def __init__(self, vfspace, exponent=None, weight=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        vfspace : `ProductSpace`
+            Space of vector fields on which the operator acts.
+            It has to be a product space of identical spaces, i.e. a
+            power space.
+        exponent : non-zero float, optional
+            Exponent of the norm in each point. Values between
+            0 and 1 are currently not supported due to numerical
+            instability.
+            Default: ``vfspace.exponent``, usually 2.
+        weight : `array-like` or float, optional
+            Weighting array or constant for the pointwise norm. If an array is
+            given, its length must be equal to ``domain.size``, and
+            all entries must be positive. A provided constant must be
+            positive.
+            By default, the weights are is taken from
+            ``domain.weighting``. Note that this excludes unusual
+            weightings with custom inner product, norm or dist.
+        """
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('`space` must be a `ProductSpace`')
+        if vfspace.is_power_space:
+            raise TypeError('`space.is_power_space` must be `True`')
+        self.pointwise_norm = PointwiseNorm(vfspace, exponent, weight)
+        super().__init__(space=vfspace, linear=False, grad_lipschitz=np.nan)
+
+    def _call(self, x):
+        """Return the L1-norm of ``x``."""
+        # TODO: update when integration operator is in place: issue #440
+        pointwise_norm = self.pointwise_norm(x)
+        return pointwise_norm.inner(self.domain.one())
+
+    # TODO: remove inner class when ufunc operators are in place: issue #567
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The functional is not differentiable in ``x=0``. However, when
+        evaluating the gradient operator in this point it will return 0.
+        """
+        functional = self
+
+        class GroupL1Gradient(Operator):
+
+            """The gradient operator of the `GroupL1Norm` functional."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super().__init__(functional.domain, functional.domain,
+                                 linear=False)
+
+            def _call(self, x):
+                """Apply the gradient operator to the given point."""
+                pointwise_norm = functional.pointwise_norm(x)
+                return x / pointwise_norm
+
+        return GroupL1Gradient()
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        See Also
+        --------
+        proximal_l1 : proximal factory for the L1-norm.
+        """
+        return proximal_l1(space=self.domain, isotropic=True)
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional of the group L1-norm."""
+        # TODO: implement actual conjugate
+        return FunctionalDefaultConvexConjugate(self)
 
 
 class IndicatorLpUnitBall(Functional):
