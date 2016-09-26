@@ -458,7 +458,7 @@ class LinearSpaceElement(object):
                 return self.space.lincomb(1, self, other, one(), out=self)
         else:
             # We do not `return NotImplemented` here since we don't want a
-            # fallback for inplace. Otherwise python attempts
+            # fallback for in-place. Otherwise python attempts
             # `self = self + other` which does not modify self.
             raise TypeError('cannot add {!r} and {!r} in place'
                             ''.format(self, other))
@@ -493,7 +493,7 @@ class LinearSpaceElement(object):
                 return self.space.lincomb(1, self, -other, one(), out=self)
         else:
             # We do not `return NotImplemented` here since we don't want a
-            # fallback for inplace. Otherwise python attempts
+            # fallback for in-place. Otherwise python attempts
             # `self = self - other` which does not modify self.
             raise TypeError('cannot subtract {!r} and {!r} in place'
                             ''.format(self, other))
@@ -539,7 +539,7 @@ class LinearSpaceElement(object):
             return self.space.multiply(other, self, out=self)
         else:
             # We do not `return NotImplemented` here since we don't want a
-            # fallback for inplace. Otherwise python attempts
+            # fallback for in-place. Otherwise python attempts
             # `self = self * other` which does not modify self.
             raise TypeError('cannot multiply {!r} and {!r} in place'
                             ''.format(self, other))
@@ -566,8 +566,8 @@ class LinearSpaceElement(object):
             return self.space.divide(self, other, out=self)
         else:
             # We do not `return NotImplemented` here since we don't want a
-            # fallback for inplace. Otherwise python attempts
-            # `self = self + other` which does not modify self.
+            # fallback for in-place. Otherwise python attempts
+            # `self = self / other` which does not modify self.
             raise TypeError('cannot divide {!r} and {!r} in place'
                             ''.format(self, other))
 

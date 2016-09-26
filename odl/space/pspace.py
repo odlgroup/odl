@@ -838,19 +838,19 @@ def _broadcast_arithmetic(op):
     -------
     broadcast_arithmetic_op : function
         Function intended to be used as a method for `ProductSpaceVector`
-        which tries to perform broadcasting if possible.
+        which performs broadcasting if possible.
 
     Notes
     -----
-    Broadcasting is the operation of "applying a operator multiple times" in
+    Broadcasting is the operation of "applying an operator multiple times" in
     some sense. For example:
 
     .. math::
-        [1, 2] + 1 = [2, 3]
+        (1, 2) + 1 = (2, 3)
 
     is a form of broadcasting. In this implementation, we only allow "single
-    layer" broadcasting. I.e., we do not support broadcasting over several
-    productspaces at once.
+    layer" broadcasting, i.e., we do not support broadcasting over several
+    product spaces at once.
     """
     def _broadcast_arithmetic_impl(self, other):
         if (self.space.is_power_space and other in self.space[0]):

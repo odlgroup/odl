@@ -623,7 +623,7 @@ def test_operators(arithmetic_op):
                          operator.isub,
                          operator.itruediv,
                          operator.imul]:
-        # Check for correct error since inplace op is not possible here
+        # Check for correct error since in-place op is not possible here
         with pytest.raises(TypeError):
             z = arithmetic_op(x, y)
     else:

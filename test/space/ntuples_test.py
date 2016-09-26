@@ -347,11 +347,8 @@ def test_power(fn):
     assert all_almost_equal(y_pos, y_pos_arr)
 
 
-def _test_unary_operator(fn, function):
-    # Verify that the statement y=function(x) gives equivalent results
-    # to NumPy
-    x_arr, x = noise_elements(fn)
-
+def test_unary_ops(fn):
+    """Verify that the unary operators (`+x` and `-x`) work as expected."""
     for op in [operator.pos, operator.neg]:
         x_arr, x = noise_elements(fn)
 
@@ -361,65 +358,61 @@ def _test_unary_operator(fn, function):
         assert all_almost_equal([x, y], [x_arr, y_arr])
 
 
-def _test_scalar_operator(fn, function):
-    # Verify that the statement y=op(x, scalar) gives equivalent results
-    # to NumPy
-    [x_arr, y_arr], [x, y] = noise_elements(fn, 2)
+def test_scalar_operator(fn, arithmetic_op):
+    """Verify binary operations with scalars.
+
+    Verifies that the statement y=op(x, scalar) gives equivalent results
+    to NumPy.
+    """
 
     for scalar in [-31.2, -1, 0, 1, 2.13]:
         x_arr, x = noise_elements(fn)
 
-        if scalar == 0 and function in [operator.truediv,
-                                        operator.itruediv]:
+        # Left op
+        if scalar == 0 and arithmetic_op in [operator.truediv,
+                                             operator.itruediv]:
             # Check for correct zero division behaviour
             with pytest.raises(ZeroDivisionError):
-                y = function(x, scalar)
+                y = arithmetic_op(x, scalar)
         else:
-            y_arr = function(x_arr, scalar)
-            y = function(x, scalar)
+            y_arr = arithmetic_op(x_arr, scalar)
+            y = arithmetic_op(x, scalar)
 
             assert all_almost_equal([x, y], [x_arr, y_arr])
 
         # right op
         x_arr, x = noise_elements(fn)
 
-        y_arr = function(scalar, x_arr)
-        y = function(scalar, x)
+        y_arr = arithmetic_op(scalar, x_arr)
+        y = arithmetic_op(scalar, x)
 
         assert all_almost_equal([x, y], [x_arr, y_arr])
 
 
-def _test_binary_operator(fn, op):
-    # Verify that the statement z=op(x,y) gives equivalent results to NumPy
+def test_binary_operator(fn, arithmetic_op):
+    """Verify binary operations with vectors.
+
+    Verifies that the statement z=op(x, y) gives equivalent results to NumPy.
+    """
     [x_arr, y_arr], [x, y] = noise_elements(fn, 2)
 
     # non-aliased left
-    z_arr = op(x_arr, y_arr)
-    z = op(x, y)
+    z_arr = arithmetic_op(x_arr, y_arr)
+    z = arithmetic_op(x, y)
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # non-aliased right
-    z_arr = op(y_arr, x_arr)
-    z = op(y, x)
+    z_arr = arithmetic_op(y_arr, x_arr)
+    z = arithmetic_op(y, x)
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
     # aliased operation
-    z_arr = op(x_arr, x_arr)
-    z = op(x, x)
+    z_arr = arithmetic_op(x_arr, x_arr)
+    z = arithmetic_op(x, x)
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
-
-
-def test_operators(fn, arithmetic_op):
-    # Test of the operators `+`, `-`, etc work as expected
-
-    # Interactions with scalars
-    _test_scalar_operator(fn, arithmetic_op)
-
-    # Interactions with vectors
-    _test_binary_operator(fn, arithmetic_op)
 
 
 def test_assign(fn):
