@@ -15,7 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Bindings to the ``pyFFTW`` backend for Fourier transforms."""
+"""Bindings to the ``pyFFTW`` back-end for Fourier transforms.
+
+The `pyFFTW <https://hgomersall.github.io/pyFFTW/>`_  package is a Python
+wrapper around the well-known `FFTW <http://fftw.org/>`_ library for fast
+Fourier transforms.
+"""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -62,13 +67,13 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     array_in : `numpy.ndarray`
         Array to be transformed
     array_out : `numpy.ndarray`
-        Output array storing the transformed values, may be aligned
+        Output array storing the transformed values, may be aliased
         with ``array_in``.
     direction : {'forward', 'backward'}
         Direction of the transform
     axes : int or `sequence` of ints, optional
         Dimensions along which to take the transform. ``None`` means
-        using all axis and is equivalent to ``np.arange(ndim)``.
+        using all axes and is equivalent to ``np.arange(ndim)``.
     halfcomplex : bool, optional
         If ``True``, calculate only the negative frequency part along the
         last axis. If ``False``, calculate the full complex FFT.
@@ -91,9 +96,9 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     threads : int, optional
         Number of threads to use.
         Default: Number of CPUs if the number of data points is larger
-        than 1000, else 1.
+        than 4096, else 1.
     normalise_idft : bool, optional
-        If ``True``, the backward transform is normalized by
+        If ``True``, the result of the backward transform is divided by
         ``1 / N``, where ``N`` is the total number of points in
         ``array_in[axes]``. This ensures that the IDFT is the true
         inverse of the forward DFT.
@@ -194,7 +199,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     if fftw_plan_in is None:
         if threads is None:
-            if plan_arr_in.size < 1000:  # Somewhat arbitrary
+            if plan_arr_in.size <= 4096:  # Trade-off wrt threading overhead
                 threads = 1
             else:
                 threads = cpu_count()

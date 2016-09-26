@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utility functions for transformations."""
+"""Function transformations like Fourier or wavelet transforms."""
 
 from __future__ import absolute_import
 
