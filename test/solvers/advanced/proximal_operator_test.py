@@ -496,7 +496,7 @@ def test_proximal_convconj_kl_cross_entropy():
 
     assert all_almost_equal(prox_val, x_verify, HIGH_ACC)
 
-    # Test inplace evaluation
+    # Test in-place evaluation
     x_inplace = space.element()
     prox(x, out=x_inplace)
 

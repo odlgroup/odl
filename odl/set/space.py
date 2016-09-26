@@ -457,7 +457,11 @@ class LinearSpaceElement(object):
                 # other --> other * space.one()
                 return self.space.lincomb(1, self, other, one(), out=self)
         else:
-            return NotImplemented
+            # We do not `return NotImplemented` here since we don't want a
+            # fallback for in-place. Otherwise python attempts
+            # `self = self + other` which does not modify self.
+            raise TypeError('cannot add {!r} and {!r} in place'
+                            ''.format(self, other))
 
     def __add__(self, other):
         """Return ``self + other``."""
@@ -488,7 +492,11 @@ class LinearSpaceElement(object):
             else:
                 return self.space.lincomb(1, self, -other, one(), out=self)
         else:
-            return NotImplemented
+            # We do not `return NotImplemented` here since we don't want a
+            # fallback for in-place. Otherwise python attempts
+            # `self = self - other` which does not modify self.
+            raise TypeError('cannot subtract {!r} and {!r} in place'
+                            ''.format(self, other))
 
     def __sub__(self, other):
         """Return ``self - other``."""
@@ -508,6 +516,9 @@ class LinearSpaceElement(object):
 
     def __rsub__(self, other):
         """Return ``other - self``."""
+        if other in self.space:
+            tmp = self.space.element()
+            return self.space.lincomb(1, other, -1, self, out=tmp)
         if other in self.space.field:
             one = getattr(self.space, 'one', None)
             if one is None:
@@ -518,7 +529,6 @@ class LinearSpaceElement(object):
                 self.space.lincomb(other, tmp, out=tmp)
                 return self.space.lincomb(1, tmp, -1, self, out=tmp)
         else:
-            # Case `other in self.space` handled by `other`
             return NotImplemented
 
     def __imul__(self, other):
@@ -528,7 +538,11 @@ class LinearSpaceElement(object):
         elif other in self.space:
             return self.space.multiply(other, self, out=self)
         else:
-            return NotImplemented
+            # We do not `return NotImplemented` here since we don't want a
+            # fallback for in-place. Otherwise python attempts
+            # `self = self * other` which does not modify self.
+            raise TypeError('cannot multiply {!r} and {!r} in place'
+                            ''.format(self, other))
 
     def __mul__(self, other):
         """Return ``self * other``."""
@@ -542,9 +556,7 @@ class LinearSpaceElement(object):
         else:
             return NotImplemented
 
-    def __rmul__(self, other):
-        """Return ``other * self``."""
-        return self.__mul__(other)
+    __rmul__ = __mul__
 
     def __itruediv__(self, other):
         """Implement ``self /= other``."""
@@ -553,7 +565,11 @@ class LinearSpaceElement(object):
         elif other in self.space:
             return self.space.divide(self, other, out=self)
         else:
-            return NotImplemented
+            # We do not `return NotImplemented` here since we don't want a
+            # fallback for in-place. Otherwise python attempts
+            # `self = self / other` which does not modify self.
+            raise TypeError('cannot divide {!r} and {!r} in place'
+                            ''.format(self, other))
 
     __idiv__ = __itruediv__
 
@@ -581,8 +597,10 @@ class LinearSpaceElement(object):
                 tmp = one()
                 self.space.lincomb(other, tmp, out=tmp)
                 return self.space.divide(tmp, self, out=tmp)
+        elif other in self.space:
+            tmp = self.space.element()
+            return self.space.divide(other, self, out=tmp)
         else:
-            # Case `other in self.space` handled by `other`
             return NotImplemented
 
     __rdiv__ = __rtruediv__

@@ -25,6 +25,7 @@ from builtins import range
 # External module imports
 import numpy as np
 import pytest
+import operator
 import scipy as sp
 
 # ODL imports
@@ -346,112 +347,72 @@ def test_power(fn):
     assert all_almost_equal(y_pos, y_pos_arr)
 
 
-def _test_unary_operator(fn, function):
-    # Verify that the statement y=function(x) gives equivalent results
-    # to NumPy
-    x_arr, x = noise_elements(fn)
+def test_unary_ops(fn):
+    """Verify that the unary operators (`+x` and `-x`) work as expected."""
+    for op in [operator.pos, operator.neg]:
+        x_arr, x = noise_elements(fn)
 
-    y_arr = function(x_arr)
+        y_arr = op(x_arr)
+        y = op(x)
 
-    y = function(x)
-
-    assert all_almost_equal([x, y], [x_arr, y_arr])
+        assert all_almost_equal([x, y], [x_arr, y_arr])
 
 
-def _test_binary_operator(fn, function):
-    # Verify that the statement z=function(x,y) gives equivalent results
-    # to NumPy
+def test_scalar_operator(fn, arithmetic_op):
+    """Verify binary operations with scalars.
+
+    Verifies that the statement y=op(x, scalar) gives equivalent results
+    to NumPy.
+    """
+
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
+        x_arr, x = noise_elements(fn)
+
+        # Left op
+        if scalar == 0 and arithmetic_op in [operator.truediv,
+                                             operator.itruediv]:
+            # Check for correct zero division behaviour
+            with pytest.raises(ZeroDivisionError):
+                y = arithmetic_op(x, scalar)
+        else:
+            y_arr = arithmetic_op(x_arr, scalar)
+            y = arithmetic_op(x, scalar)
+
+            assert all_almost_equal([x, y], [x_arr, y_arr])
+
+        # right op
+        x_arr, x = noise_elements(fn)
+
+        y_arr = arithmetic_op(scalar, x_arr)
+        y = arithmetic_op(scalar, x)
+
+        assert all_almost_equal([x, y], [x_arr, y_arr])
+
+
+def test_binary_operator(fn, arithmetic_op):
+    """Verify binary operations with vectors.
+
+    Verifies that the statement z=op(x, y) gives equivalent results to NumPy.
+    """
     [x_arr, y_arr], [x, y] = noise_elements(fn, 2)
 
-    z_arr = function(x_arr, y_arr)
-    z = function(x, y)
+    # non-aliased left
+    z_arr = arithmetic_op(x_arr, y_arr)
+    z = arithmetic_op(x, y)
 
     assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
+    # non-aliased right
+    z_arr = arithmetic_op(y_arr, x_arr)
+    z = arithmetic_op(y, x)
 
-def test_operators(fn):
-    # Test of all operator overloads against the corresponding NumPy
-    # implementation
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
-    # Unary operators
-    _test_unary_operator(fn, lambda x: +x)
-    _test_unary_operator(fn, lambda x: -x)
+    # aliased operation
+    z_arr = arithmetic_op(x_arr, x_arr)
+    z = arithmetic_op(x, x)
 
-    # Scalar addition
-    for scalar in [-31.2, -1, 0, 1, 2.13]:
-        def iadd(x):
-            x += scalar
-        _test_unary_operator(fn, iadd)
-        _test_unary_operator(fn, lambda x: x + scalar)
-
-    # Scalar subtraction
-    for scalar in [-31.2, -1, 0, 1, 2.13]:
-        def isub(x):
-            x -= scalar
-        _test_unary_operator(fn, isub)
-        _test_unary_operator(fn, lambda x: x - scalar)
-
-    # Scalar multiplication
-    for scalar in [-31.2, -1, 0, 1, 2.13]:
-        def imul(x):
-            x *= scalar
-        _test_unary_operator(fn, imul)
-        _test_unary_operator(fn, lambda x: x * scalar)
-
-    # Scalar division
-    for scalar in [-31.2, -1, 1, 2.13]:
-        def idiv(x):
-            x /= scalar
-        _test_unary_operator(fn, idiv)
-        _test_unary_operator(fn, lambda x: x / scalar)
-
-    # Incremental operations
-    def iadd(x, y):
-        x += y
-
-    def isub(x, y):
-        x -= y
-
-    def imul(x, y):
-        x *= y
-
-    def idiv(x, y):
-        x /= y
-
-    _test_binary_operator(fn, iadd)
-    _test_binary_operator(fn, isub)
-    _test_binary_operator(fn, imul)
-    _test_binary_operator(fn, idiv)
-
-    # Incremental operators with aliased inputs
-    def iadd_aliased(x):
-        x += x
-
-    def isub_aliased(x):
-        x -= x
-
-    def imul_aliased(x):
-        x *= x
-
-    def idiv_aliased(x):
-        x /= x
-
-    _test_unary_operator(fn, iadd_aliased)
-    _test_unary_operator(fn, isub_aliased)
-    _test_unary_operator(fn, imul_aliased)
-    _test_unary_operator(fn, idiv_aliased)
-
-    # Binary operators
-    _test_binary_operator(fn, lambda x, y: x + y)
-    _test_binary_operator(fn, lambda x, y: x - y)
-    _test_binary_operator(fn, lambda x, y: x * y)
-    _test_binary_operator(fn, lambda x, y: x / y)
-
-    # Binary with aliased inputs
-    _test_unary_operator(fn, lambda x: x + x)
-    _test_unary_operator(fn, lambda x: x - x)
-    _test_unary_operator(fn, lambda x: x * x)
-    _test_unary_operator(fn, lambda x: x / x)
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
 
 
 def test_assign(fn):

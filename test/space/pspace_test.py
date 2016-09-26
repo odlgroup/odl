@@ -23,9 +23,11 @@ standard_library.install_aliases()
 
 import numpy as np
 import pytest
+import operator
 
 import odl
-from odl.util.testutils import all_equal, all_almost_equal, almost_equal
+from odl.util.testutils import (all_equal, all_almost_equal, almost_equal,
+                                noise_elements)
 
 
 exp_params = [2.0, 1.0, float('inf'), 0.5, 1.5]
@@ -566,6 +568,83 @@ def test_element_setitem_fancy():
     assert x[[0, 2]][1] is x3_new
 
 
+def test_unary_ops():
+    # Verify that the unary operators (`+x` and `-x`) work as expected
+
+    space = odl.rn(3)
+    pspace = odl.ProductSpace(space, 2)
+
+    for op in [operator.pos, operator.neg]:
+        x_arr, x = noise_elements(pspace)
+
+        y_arr = op(x_arr)
+        y = op(x)
+
+        assert all_almost_equal([x, y], [x_arr, y_arr])
+
+
+def test_operators(arithmetic_op):
+    # Test of the operators `+`, `-`, etc work as expected by numpy
+
+    space = odl.rn(3)
+    pspace = odl.ProductSpace(space, 2)
+
+    # Interactions with scalars
+
+    for scalar in [-31.2, -1, 0, 1, 2.13]:
+
+        # Left op
+        x_arr, x = noise_elements(pspace)
+        if scalar == 0 and arithmetic_op in [operator.truediv,
+                                             operator.itruediv]:
+            # Check for correct zero division behaviour
+            with pytest.raises(ZeroDivisionError):
+                y = arithmetic_op(x, scalar)
+        else:
+            y_arr = arithmetic_op(x_arr, scalar)
+            y = arithmetic_op(x, scalar)
+
+            assert all_almost_equal([x, y], [x_arr, y_arr])
+
+        # Right op
+        x_arr, x = noise_elements(pspace)
+
+        y_arr = arithmetic_op(scalar, x_arr)
+        y = arithmetic_op(scalar, x)
+
+        assert all_almost_equal([x, y], [x_arr, y_arr])
+
+    # Verify that the statement z=op(x, y) gives equivalent results to NumPy
+    x_arr, x = noise_elements(space, 1)
+    y_arr, y = noise_elements(pspace, 1)
+
+    # non-aliased left
+    if arithmetic_op in [operator.iadd,
+                         operator.isub,
+                         operator.itruediv,
+                         operator.imul]:
+        # Check for correct error since in-place op is not possible here
+        with pytest.raises(TypeError):
+            z = arithmetic_op(x, y)
+    else:
+        z_arr = arithmetic_op(x_arr, y_arr)
+        z = arithmetic_op(x, y)
+
+        assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+
+    # non-aliased right
+    z_arr = arithmetic_op(y_arr, x_arr)
+    z = arithmetic_op(y, x)
+
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+
+    # aliased operation
+    z_arr = arithmetic_op(y_arr, y_arr)
+    z = arithmetic_op(y, y)
+
+    assert all_almost_equal([x, y, z], [x_arr, y_arr, z_arr])
+
+
 def test_ufuncs():
     # Cannot use fixture due to bug in pytest
     H = odl.ProductSpace(odl.rn(1), odl.rn(2))
@@ -612,4 +691,4 @@ def test_reductions():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])
