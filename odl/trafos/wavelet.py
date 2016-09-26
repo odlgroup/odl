@@ -29,7 +29,7 @@ from odl.discr import DiscreteLp
 from odl.operator import Operator
 from odl.trafos.backends.pywt_bindings import (
     PYWT_AVAILABLE, PAD_MODES_ODL2PYWT,
-    pywt_mode, pywt_wavelet, pywt_flat_coeff_size, pywt_coeff_shapes,
+    pywt_pad_mode, pywt_wavelet, pywt_flat_coeff_size, pywt_coeff_shapes,
     pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
     pywt_multi_level_decomp, pywt_multi_level_recon)
 
@@ -144,10 +144,10 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
         self.pad_const = space.field.element(pad_const)
 
         if self.impl == 'pywt':
-            self.pywt_mode = pywt_mode(pad_mode, pad_const)
+            self.pywt_pad_mode = pywt_pad_mode(pad_mode, pad_const)
             self.pywt_wavelet = pywt_wavelet(self.wavelet)
             coeff_size = pywt_flat_coeff_size(space.shape, wavelet,
-                                              self.nlevels, self.pywt_mode)
+                                              self.nlevels, self.pywt_pad_mode)
             coeff_space = space.dspace_type(coeff_size, dtype=space.dtype)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
@@ -275,7 +275,7 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
         if self.impl == 'pywt':
             coeff_list = pywt_multi_level_decomp(
                 x, wavelet=self.pywt_wavelet, nlevels=self.nlevels,
-                mode=self.pywt_mode)
+                mode=self.pywt_pad_mode)
             return pywt_flat_array_from_coeffs(coeff_list)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
@@ -424,11 +424,11 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
         """
         if self.impl == 'pywt':
             shapes = pywt_coeff_shapes(self.range.shape, self.pywt_wavelet,
-                                       self.nlevels, self.pywt_mode)
+                                       self.nlevels, self.pywt_pad_mode)
             coeff_list = pywt_coeffs_from_flat_array(coeffs, shapes)
             return pywt_multi_level_recon(
                 coeff_list, recon_shape=self.range.shape,
-                wavelet=self.pywt_wavelet, mode=self.pywt_mode)
+                wavelet=self.pywt_wavelet, mode=self.pywt_pad_mode)
         else:
             raise RuntimeError("bad `impl` '{}'".format(self.impl))
 
