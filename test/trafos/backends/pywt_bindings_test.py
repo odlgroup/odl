@@ -190,8 +190,8 @@ def test_multilevel_decomp_and_recon(shape_setup, dtype):
     # Test invertibility the decomposition
     image = np.random.uniform(size=image_shape).astype(dtype)
     wave_decomp = pywt_multi_level_decomp(image, wavelet, nlevels, mode)
-    wave_recon = pywt_multi_level_recon(wave_decomp, image_shape, wavelet,
-                                        mode)
+    wave_recon = pywt_multi_level_recon(wave_decomp, wavelet, mode,
+                                        image_shape)
     assert wave_recon.shape == image.shape
     assert all_almost_equal(wave_recon, image)
 
