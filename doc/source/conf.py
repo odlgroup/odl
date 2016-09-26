@@ -66,10 +66,12 @@ extlinks = {
 
 # Intersphinx to get Numpy and other targets
 intersphinx_mapping = {
-    'python': ('http://docs.python.org/', None),
+    'python': ('https://docs.python.org/3/', None),
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-    'matplotlib': ('http://matplotlib.org/', None)}
+    'matplotlib': ('http://matplotlib.org/', None),
+    'pywt': ('http://www.pybytes.com/pywavelets/', None),
+    'pyfftw': ('https://hgomersall.github.io/pyFFTW/', None)}
 
 
 # Stop autodoc from skipping __init__
