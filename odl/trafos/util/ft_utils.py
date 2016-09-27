@@ -33,7 +33,7 @@ from odl.util import (
     is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
     is_complex_floating_dtype, dtype_repr, conj_exponent,
     TYPE_MAP_R2C,
-    normalized_scalar_param_list)
+    normalized_scalar_param_list, normalized_axes_tuple)
 
 
 __all__ = ('reciprocal_grid', 'realspace_grid',
@@ -605,12 +605,9 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
         raise ValueError('`space` is not uniformly discretized')
 
     if axes is None:
-        axes = list(range(space.ndim))
-    else:
-        try:
-            axes = [int(axes)]
-        except TypeError:
-            axes = list(axes)
+        axes = tuple(range(space.ndim))
+
+    axes = normalized_axes_tuple(axes, space.ndim)
 
     if halfcomplex and space.field != RealNumbers():
         raise ValueError('`halfcomplex` option can only be used with real '

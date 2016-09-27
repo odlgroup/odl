@@ -25,7 +25,11 @@ import numpy as np
 import pytest
 
 # Internal
-from odl.util.normalize import normalized_scalar_param_list
+from odl.util.normalize import (
+    normalized_scalar_param_list, normalized_axes_tuple)
+
+
+# --- pytest fixtures --- #
 
 
 length_params = [1, 2]
@@ -57,20 +61,6 @@ def single_conv(request):
     return request.param
 
 
-def test_normalized_scalar_param_list_single_val(length, single_conv):
-
-    value, conversion = single_conv
-
-    expected_noconv = [value] * length
-    norm_param_noconv = normalized_scalar_param_list(value, length)
-    assert expected_noconv == norm_param_noconv
-
-    expected_conv = [conversion(value)] * length
-    norm_param_conv = normalized_scalar_param_list(
-        value, length, param_conv=conversion)
-    assert expected_conv == norm_param_conv
-
-
 lengts = [1, 2, 5]
 
 seq_conv_params = [([-1.0], float),
@@ -92,6 +82,41 @@ seq_conv_ids = [' input = {0[0]}, conv = {0[1]} '.format(p)
 @pytest.fixture(scope="module", ids=seq_conv_ids, params=seq_conv_params)
 def seq_conv(request):
     return request.param
+
+
+# For ndim = 3
+axes_conv_params = [(0, (0,)),
+                    (-1, (2,)),
+                    ((1,), (1,)),
+                    ([-1], (2,)),
+                    ((1, 2, 0), (1, 2, 0)),
+                    ((2, 1, -3), (2, 1, 0)),
+                    ([0, 1], (0, 1)),
+                    (np.arange(2), (0, 1))]
+axes_conv_ids = [' axes={0[0]}, conv={0[1]} '.format(axis)
+                 for axis in axes_conv_params]
+
+
+@pytest.fixture(scope="module", ids=axes_conv_ids, params=axes_conv_params)
+def axes_conv(request):
+    return request.param
+
+
+# --- normalized_scalar_param_list --- #
+
+
+def test_normalized_scalar_param_list_single_val(length, single_conv):
+
+    value, conversion = single_conv
+
+    expected_noconv = [value] * length
+    norm_param_noconv = normalized_scalar_param_list(value, length)
+    assert expected_noconv == norm_param_noconv
+
+    expected_conv = [conversion(value)] * length
+    norm_param_conv = normalized_scalar_param_list(
+        value, length, param_conv=conversion)
+    assert expected_conv == norm_param_conv
 
 
 def test_normalized_scalar_param_list_sequence(length, seq_conv):
@@ -149,5 +174,43 @@ def test_normalized_scalar_param_list_error():
         normalized_scalar_param_list([1, 2], length=3)
 
 
+# --- normalized_axes_tuple
+
+def test_normalized_axes_tuple(axes_conv):
+    """Test if all valid sequences are converted correctly."""
+    axes, conversion = axes_conv
+    assert normalized_axes_tuple(axes, ndim=3) == conversion
+
+
+def test_normalized_axes_tuple_raise():
+    """Test if errors are raised for invalid input."""
+
+    with pytest.raises(TypeError):
+        normalized_axes_tuple(1.5, ndim=3)  # float
+
+    with pytest.raises(TypeError):
+        normalized_axes_tuple(None, ndim=3)  # garbage
+
+    with pytest.raises(ValueError):
+        normalized_axes_tuple((0, 1.5), ndim=3)  # sequence containing float
+
+    with pytest.raises(TypeError):
+        normalized_axes_tuple((0, None), ndim=3)  # sequence containing garbge
+
+    with pytest.raises(ValueError):
+        normalized_axes_tuple((0, 0, 1), ndim=3)  # duplicate
+
+    with pytest.raises(ValueError):
+        normalized_axes_tuple((0,), ndim=0)  # nonpositive ndim
+
+    with pytest.raises(ValueError):
+        normalized_axes_tuple((0, 1), ndim=1)  # axis out of range
+
+    with pytest.raises(ValueError):
+        normalized_axes_tuple(-3, ndim=2)  # axis out of range
+
+    with pytest.raises(ValueError):
+        normalized_axes_tuple((0, 2), ndim=2)  # axis out of range
+
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main(str(__file__.replace('\\', '/')), ' -v')

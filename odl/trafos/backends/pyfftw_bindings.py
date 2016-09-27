@@ -37,7 +37,8 @@ try:
 except ImportError:
     PYFFTW_AVAILABLE = False
 
-from odl.util import is_real_dtype, dtype_repr, TYPE_MAP_R2C
+from odl.util import (
+    is_real_dtype, dtype_repr, TYPE_MAP_R2C, normalized_axes_tuple)
 
 
 __all__ = ('pyfftw_call', 'PYFFTW_AVAILABLE')
@@ -145,11 +146,8 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
 
     if axes is None:
         axes = tuple(range(array_in.ndim))
-    else:
-        try:
-            axes = tuple(int(axes))
-        except TypeError:
-            axes = tuple(axes)
+
+    axes = normalized_axes_tuple(axes, array_in.ndim)
 
     direction = _pyfftw_to_local(direction)
     fftw_plan_in = kwargs.pop('fftw_plan', None)
