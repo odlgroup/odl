@@ -35,7 +35,7 @@ from odl.trafos.util import (
     reciprocal_grid, reciprocal_space,
     dft_preprocess_data, dft_postprocess_data)
 from odl.util import (is_real_dtype, is_complex_floating_dtype,
-                      dtype_repr, conj_exponent, TYPE_MAP_R2C,
+                      dtype_repr, conj_exponent, complex_dtype,
                       normalized_scalar_param_list, normalized_axes_tuple)
 
 
@@ -109,11 +109,11 @@ class DiscreteFourierTransformBase(Operator):
 
         # Half-complex
         if domain.field == ComplexNumbers():
-            self._halfcomplex = False
-            ran_dtype = domain.dtype
+            self.__halfcomplex = False
         else:
-            self._halfcomplex = bool(halfcomplex)
-            ran_dtype = TYPE_MAP_R2C[domain.dtype]
+            self.__halfcomplex = bool(halfcomplex)
+
+        ran_dtype = complex_dtype(domain.dtype)
 
         # Sign of the transform
         if sign not in ('+', '-'):
@@ -193,7 +193,7 @@ class DiscreteFourierTransformBase(Operator):
     @property
     def halfcomplex(self):
         """Return ``True`` if the last transform axis is halved."""
-        return self._halfcomplex
+        return self.__halfcomplex
 
     @property
     def adjoint(self):

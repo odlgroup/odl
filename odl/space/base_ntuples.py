@@ -32,7 +32,7 @@ from odl.util.ufuncs import NtuplesBaseUFuncs
 from odl.util.utility import (
     array1d_repr, array1d_str, dtype_repr, with_metaclass,
     is_scalar_dtype, is_real_dtype, is_floating_dtype,
-    TYPE_MAP_R2C, TYPE_MAP_C2R)
+    complex_dtype, real_dtype)
 
 
 __all__ = ('NtuplesBase', 'NtuplesBaseVector', 'FnBase', 'FnBaseVector')
@@ -493,12 +493,14 @@ class FnBase(NtuplesBase, LinearSpace):
             self.__is_real = True
             self.__real_dtype = self.dtype
             self.__real_space = self
-            self.__complex_dtype = TYPE_MAP_R2C.get(self.dtype, None)
+            self.__complex_dtype = complex_dtype(self.dtype, use_default=True,
+                                                 default=None)
             self.__complex_space = None  # Set in first call of astype
         else:
             field = ComplexNumbers()
             self.__is_real = False
-            self.__real_dtype = TYPE_MAP_C2R[self.dtype]
+            self.__real_dtype = real_dtype(self.dtype, use_default=True,
+                                           default=None)
             self.__real_space = None  # Set in first call of astype
             self.__complex_dtype = self.dtype
             self.__complex_space = self

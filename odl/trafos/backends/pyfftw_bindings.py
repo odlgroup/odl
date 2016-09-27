@@ -38,7 +38,7 @@ except ImportError:
     PYFFTW_AVAILABLE = False
 
 from odl.util import (
-    is_real_dtype, dtype_repr, TYPE_MAP_R2C, normalized_axes_tuple)
+    is_real_dtype, dtype_repr, complex_dtype, normalized_axes_tuple)
 
 
 __all__ = ('pyfftw_call', 'PYFFTW_AVAILABLE')
@@ -163,7 +163,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
     array_in_copied = False
     if is_real_dtype(array_in.dtype) and not halfcomplex:
         # Need to cast array_in to complex dtype
-        array_in = array_in.astype(TYPE_MAP_R2C[array_in.dtype])
+        array_in = array_in.astype(complex_dtype(array_in.dtype))
         array_in_copied = True
 
     # Do consistency checks on the arguments
@@ -263,7 +263,7 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
                              ''.format(tuple(out_shape), arr_out.shape))
 
         if is_real_dtype(arr_in.dtype):
-            out_dtype = TYPE_MAP_R2C[arr_in.dtype]
+            out_dtype = complex_dtype(arr_in.dtype)
         elif halfcomplex:
             raise ValueError('cannot combine halfcomplex forward transform '
                              'with complex input')
@@ -291,7 +291,7 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
                              ''.format(tuple(in_shape), arr_in.shape))
 
         if is_real_dtype(arr_out.dtype):
-            in_dtype = TYPE_MAP_R2C[arr_out.dtype]
+            in_dtype = complex_dtype(arr_out.dtype)
         elif halfcomplex:
             raise ValueError('cannot combine halfcomplex backward transform '
                              'with complex output')
