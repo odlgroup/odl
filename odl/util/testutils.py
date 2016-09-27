@@ -34,6 +34,7 @@ from time import time
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
            'skip_if_no_stir', 'skip_if_no_pywavelets',
            'skip_if_no_pyfftw', 'skip_if_no_largescale',
+           'noise_array', 'noise_element', 'noise_elements',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
            'test', 'run_doctests')
 

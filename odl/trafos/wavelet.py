@@ -124,9 +124,6 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
         if not isinstance(space, DiscreteLp):
             raise TypeError('`space` {!r} is not a `DiscreteLp` instance.'
                             ''.format(space))
-        if space.ndim > 3:
-            raise ValueError('`space` can be at most 3-dimensional, got '
-                             'ndim={}'.format(space.ndim))
 
         nlevels, nlevels_in = int(nlevels), nlevels
         if nlevels != float(nlevels_in):
@@ -175,7 +172,7 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
 
 class WaveletTransform(WaveletTransformBase):
 
-    """Discrete wavelet trafo between discretized Lp spaces."""
+    """Discrete wavelet transform between discretized Lp spaces."""
 
     def __init__(self, domain, wavelet, nlevels, pad_mode='constant',
                  pad_const=0, impl='pywt'):
@@ -247,31 +244,30 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
 
         Examples
         --------
+        Compute a very simple wavelet transform in a discrete 2D space with
+        4 sampling points per axis:
+
         >>> import odl
-        >>> space = odl.uniform_discr([0, 0], [1, 1], (16, 16))
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (4, 4))
         >>> wavelet_trafo = odl.trafos.WaveletTransform(
-        ...     domain=space, nlevels=1, wavelet='db1')
+        ...     domain=space, nlevels=1, wavelet='haar')
         >>> wavelet_trafo.is_biorthogonal
         True
+        >>> decomp = wavelet_trafo([[1, 1, 1, 1],
+        ...                         [0, 0, 0, 0],
+        ...                         [0, 0, 1, 1],
+        ...                         [1, 0, 1, 0]])
+        >>> print(decomp)
+        [1.0, 1.0, 0.5, ..., 0.0, -0.5, -0.5]
+        >>> decomp.shape
+        (16,)
         """
         super().__init__(space=domain, wavelet=wavelet, nlevels=nlevels,
                          variant='forward', pad_mode=pad_mode,
                          pad_const=pad_const, impl=impl)
 
     def _call(self, x):
-        """Compute the discrete wavelet transform.
-
-        Parameters
-        ----------
-        x : `domain` element
-
-        Returns
-        -------
-        arr : `numpy.ndarray`
-            Flattened and concatenated coefficient array
-            The length of the array depends on the size of input image to
-            be transformed and on the chosen wavelet basis.
-        """
+        """Return wavelet transform of ``x``."""
         if self.impl == 'pywt':
             coeff_list = pywt_multi_level_decomp(
                 x, wavelet=self.pywt_wavelet, nlevels=self.nlevels,
@@ -292,7 +288,7 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
         Raises
         ------
         OpNotImplementedError
-            if `is_orthogonal` is not ``True``
+            if `is_orthogonal` is ``False``
         """
         if self.is_orthogonal:
             return self.inverse
@@ -399,29 +395,27 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
 
         Examples
         --------
+        Check that the inverse is the actual inverse on a simple example on
+        a discrete 2D space with 4 sampling points per axis:
+
         >>> import odl
-        >>> space = odl.uniform_discr([0, 0], [1, 1], (16, 16))
-        >>> wavelet_trafo = odl.trafos.WaveletTransformInverse(
-        ...     range=space, nlevels=1, wavelet='db1')
-        >>> wavelet_trafo.is_biorthogonal
+        >>> space = odl.uniform_discr([0, 0], [1, 1], (4, 4))
+        >>> wavelet_trafo = odl.trafos.WaveletTransform(
+        ...     domain=space, nlevels=1, wavelet='haar')
+        >>> orig_array = np.array([[1, 1, 1, 1],
+        ...                        [0, 0, 0, 0],
+        ...                        [0, 0, 1, 1],
+        ...                        [1, 0, 1, 0]])
+        >>> decomp = wavelet_trafo(orig_array)
+        >>> recon = wavelet_trafo.inverse(decomp)
+        >>> np.allclose(recon, orig_array)
         True
         """
         super().__init__(range, wavelet, nlevels, 'inverse', pad_mode,
                          pad_const, impl)
 
     def _call(self, coeffs):
-        """Return the inverse wavelet transform of ``coeffs``.
-
-        Parameters
-        ----------
-        coeff : `domain` element
-            Wavelet coefficients supplied to the wavelet reconstruction.
-
-        Returns
-        -------
-        arr : `numpy.ndarray`
-            Result of the wavelet reconstruction.
-        """
+        """Return the inverse wavelet transform of ``coeffs``."""
         if self.impl == 'pywt':
             shapes = pywt_coeff_shapes(self.range.shape, self.pywt_wavelet,
                                        self.nlevels, self.pywt_pad_mode)
@@ -444,7 +438,7 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
         Raises
         ------
         OpNotImplementedError
-            if `is_orthogonal` is not ``True``
+            if `is_orthogonal` is ``False``
 
         See Also
         --------

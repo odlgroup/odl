@@ -34,8 +34,8 @@ from odl.trafos.util.ft_utils import (
 from odl.trafos.fourier import (
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
     FourierTransform)
-from odl.util import (all_almost_equal,
-                      never_skip, skip_if_no_pyfftw,
+from odl.util import (all_almost_equal, never_skip, skip_if_no_pyfftw,
+                      noise_element,
                       is_real_dtype, conj_exponent, complex_dtype,
                       dtype_repr)
 
@@ -47,6 +47,7 @@ impl_ids = [' impl = {} '.format(impl.args[1]) for impl in impl_params]
 
 @pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
 def impl(request):
+    """Fixture for FFT implementations."""
     return request.param
 
 
@@ -56,6 +57,7 @@ exp_ids = [' p = {} '.format(p) for p in exp_params]
 
 @pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
 def exponent(request):
+    """Fixture for space exponents."""
     return request.param
 
 
@@ -65,6 +67,7 @@ dtype_ids = [' dtype = {} '.format(dtype_repr(dt)) for dt in dtype_params]
 
 @pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
 def dtype(request):
+    """Fixture for data types."""
     return request.param
 
 
@@ -74,18 +77,11 @@ sign_ids = [" sign='{}' ".format(p) for p in sign_params]
 
 @pytest.fixture(scope='module', ids=sign_ids, params=sign_params)
 def sign(request):
+    """Fixture for the sign of the Fourier transform."""
     return request.param
 
 
 # --- helper functions --- #
-
-def _random_array(shape, dtype):
-    if is_real_dtype(dtype):
-        return np.random.rand(*shape).astype(dtype)
-    else:
-        return (np.random.rand(*shape).astype(dtype) +
-                1j * np.random.rand(*shape).astype(dtype))
-
 
 def _params_from_dtype(dt):
     if is_real_dtype(dt):
@@ -270,7 +266,7 @@ def test_dft_call(impl):
     assert np.allclose(one_idft2, one)
     assert np.allclose(one_idft3, one)
 
-    rand_arr = _random_array(shape, 'complex128')
+    rand_arr = noise_element(dft_dom)
     rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
     rand_arr_idft = idft(rand_arr_dft, flags=('FFTW_ESTIMATE',))
     assert (rand_arr_idft - rand_arr).norm() < 1e-6
@@ -299,7 +295,7 @@ def test_dft_call(impl):
     assert np.allclose(one_idft1, one)
     assert np.allclose(one_idft2, one)
 
-    rand_arr = _random_array(shape, 'complex128')
+    rand_arr = noise_element(dft_dom)
     rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
     rand_arr_idft = idft(rand_arr_dft, flags=('FFTW_ESTIMATE',))
     assert (rand_arr_idft - rand_arr).norm() < 1e-6

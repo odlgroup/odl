@@ -308,5 +308,8 @@ def _pyfftw_check_args(arr_in, arr_out, axes, halfcomplex, direction):
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+    from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
+    optionflags = NORMALIZE_WHITESPACE
+    if not PYFFTW_AVAILABLE:
+        optionflags |= SKIP
+    testmod(optionflags=optionflags)

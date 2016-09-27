@@ -778,7 +778,7 @@ modes.html
 
     recon = np.asarray(coeff_list[0])
 
-    for cur_details, next_details in zip(coeff_list[:-1], coeff_list[1:]):
+    for cur_details, next_details in zip(coeff_list[1:-1], coeff_list[2:]):
         if isinstance(next_details, tuple):
             next_shape = np.shape(next_details[0])
         else:
@@ -791,3 +791,11 @@ modes.html
     # Last reco step uses `recon_shape` for shape correction
     return pywt_single_level_recon(recon, coeff_list[-1], wavelet, mode,
                                    recon_shape=recon_shape)
+
+
+if __name__ == '__main__':
+    from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
+    optionflags = NORMALIZE_WHITESPACE
+    if not PYWT_AVAILABLE:
+        optionflags |= SKIP
+    testmod(optionflags=optionflags)

@@ -156,14 +156,13 @@ def test_pyfftw_call_bad_input(direction):
     # Complex
 
     # Bad dtype
-    dtype_in = 'complex128'
+    dtype_in = np.dtype('complex128')
     arr_in = np.empty(3, dtype=dtype_in)
     bad_dtypes_out = np.sctypes['float'] + np.sctypes['complex']
-    try:
+    if dtype_in in bad_dtypes_out:
         # This one is correct, so we remove it
-        bad_dtypes_out.remove(np.dtype('complex128'))
-    except ValueError:
-        pass
+        bad_dtypes_out.remove(dtype_in)
+
     for bad_dtype in bad_dtypes_out:
         arr_out = np.empty(3, dtype=bad_dtype)
         with pytest.raises(ValueError):
@@ -311,11 +310,6 @@ def test_pyfftw_call_plan_preserve_input(planning):
                     planning=planning)
 
         assert all_almost_equal(arr, arr_cpy)  # Input perserved
-        assert all_almost_equal(idft_arr, true_idft)
-
-        pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False,
-                    planning=planning)
-
         assert all_almost_equal(idft_arr, true_idft)
 
 
