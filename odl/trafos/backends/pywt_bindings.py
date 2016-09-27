@@ -574,17 +574,23 @@ modes.html
 
     if recon_shape is not None:
         recon_slc = []
-        for n_recon, n_intended in zip(recon.shape, recon_shape):
+        for i, (n_recon, n_intended) in enumerate(zip(recon.shape,
+                                                      recon_shape)):
             if n_recon == n_intended + 1:
                 # Upsampling added one entry too much in this axis, drop
                 # last one
                 recon_slc.append(slice(-1))
-            else:
+            elif n_recon == n_intended:
                 recon_slc.append(slice(None))
+            else:
+                raise ValueError('in axis {}: expected size {} or {} in '
+                                 '`recon_shape`, got {}'
+                                 ''.format(i, n_recon - 1, n_recon,
+                                           n_intended))
 
-        return recon[tuple(recon_slc)]
-    else:
-        return recon
+        recon = recon[tuple(recon_slc)]
+
+    return recon
 
 
 def pywt_multi_level_decomp(arr, wavelet, nlevels, mode):
@@ -772,36 +778,16 @@ modes.html
 
     recon = np.asarray(coeff_list[0])
 
-    for details in coeff_list[1:]:
-        # Adjust shape of reco to match the detail coefficients' shapes.
-        recon_slc = []
-        if isinstance(details, tuple):
-            details_shape = np.shape(details[0])
+    for cur_details, next_details in zip(coeff_list[:-1], coeff_list[1:]):
+        if isinstance(next_details, tuple):
+            next_shape = np.shape(next_details[0])
         else:
             # Single details array
-            details_shape = np.shape(details)
+            next_shape = np.shape(next_details)
 
-        for n_recon, n_detail in zip(recon.shape, details_shape):
-            if n_recon == n_detail + 1:
-                # Upsampling added one entry too much in this axis, drop
-                # last one
-                recon_slc.append(slice(-1))
-            else:
-                recon_slc.append(slice(None))
+        recon = pywt_single_level_recon(recon, cur_details, wavelet, mode,
+                                        recon_shape=next_shape)
 
-        recon = pywt_single_level_recon(recon[tuple(recon_slc)], details,
-                                        wavelet, mode)
-
-    if recon_shape is not None:
-        recon_slc = []
-        for n_recon, n_intended in zip(recon.shape, recon_shape):
-            if n_recon == n_intended + 1:
-                # Upsampling added one entry too much in this axis, drop
-                # last one
-                recon_slc.append(slice(-1))
-            else:
-                recon_slc.append(slice(None))
-
-        return recon[tuple(recon_slc)]
-    else:
-        return recon
+    # Last reco step uses `recon_shape` for shape correction
+    return pywt_single_level_recon(recon, coeff_list[-1], wavelet, mode,
+                                   recon_shape=recon_shape)
