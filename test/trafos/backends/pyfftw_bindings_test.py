@@ -29,7 +29,8 @@ import pytest
 
 from odl.trafos.backends import pyfftw_call, PYFFTW_AVAILABLE
 from odl.util import (all_almost_equal, all_equal, never_skip,
-                      is_real_dtype, conj_exponent, TYPE_MAP_R2C)
+                      is_real_dtype, dtype_repr, complex_dtype,
+                      conj_exponent)
 
 
 pytestmark = pytest.mark.skipif(not PYFFTW_AVAILABLE,
@@ -50,11 +51,9 @@ def _random_array(shape, dtype):
 def _params_from_dtype(dt):
     if is_real_dtype(dt):
         halfcomplex = True
-        dtype = TYPE_MAP_R2C[np.dtype(dt)]
     else:
         halfcomplex = False
-        dtype = dt
-    return halfcomplex, dtype
+    return halfcomplex, complex_dtype(dt)
 
 
 def _halfcomplex_shape(shape, axes=None):
@@ -71,10 +70,8 @@ def _halfcomplex_shape(shape, axes=None):
     return shape
 
 
-dtype_params = [str(dtype) for dtype in TYPE_MAP_R2C.keys()]
-dtype_params += [str(dtype) for dtype in TYPE_MAP_R2C.values()]
-dtype_params = list(set(dtype_params))
-dtype_ids = [' dtype = {} '.format(dt) for dt in dtype_params]
+dtype_params = np.sctypes['float'] + np.sctypes['complex']
+dtype_ids = [' dtype = {} '.format(dtype_repr(dt)) for dt in dtype_params]
 
 
 @pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
@@ -197,7 +194,7 @@ def test_pyfftw_call_bad_input(direction):
     arr_out = np.empty_like(arr_in)
     bad_axes_list = [(0, 3), (-4,)]
     for bad_axes in bad_axes_list:
-        with pytest.raises(IndexError):
+        with pytest.raises(ValueError):
             pyfftw_call(arr_in, arr_out, axes=bad_axes,
                         direction=direction)
 

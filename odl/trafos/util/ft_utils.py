@@ -31,8 +31,8 @@ from odl.set import RealNumbers
 from odl.util import (
     fast_1d_tensor_mult,
     is_real_dtype, is_scalar_dtype, is_real_floating_dtype,
-    is_complex_floating_dtype, dtype_repr, conj_exponent,
-    TYPE_MAP_R2C,
+    is_complex_floating_dtype, complex_dtype, dtype_repr,
+    conj_exponent,
     normalized_scalar_param_list, normalized_axes_tuple)
 
 
@@ -333,7 +333,7 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     # Make a copy of arr with correct data type if necessary, or copy values.
     if out is None:
         if is_real_dtype(arr.dtype) and not all(shift_list):
-            out = np.array(arr, dtype=TYPE_MAP_R2C[arr.dtype], copy=True)
+            out = np.array(arr, dtype=complex_dtype(arr.dtype), copy=True)
         else:
             out = arr.copy()
     elif out is arr:
@@ -468,10 +468,10 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
     """
     arr = np.asarray(arr)
     if is_real_floating_dtype(arr.dtype):
-        arr = arr.astype(TYPE_MAP_R2C[arr.dtype])
+        arr = arr.astype(complex_dtype(arr.dtype))
     elif not is_complex_floating_dtype(arr.dtype):
-        raise ValueError('array data type {} is not a floating point data '
-                         'type'.format(dtype_repr(arr.dtype)))
+        raise ValueError('array data type {} is not a complex floating point '
+                         'data type'.format(dtype_repr(arr.dtype)))
 
     if out is None:
         out = arr.copy()
@@ -588,7 +588,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
         exponent ``q = p / (p - 1)`` of the exponent of ``space`` is
         used, where ``q = inf`` for ``p = 1`` and vice versa.
     dtype : optional
-        Complex data type of the reciprocal space. By default, the
+        Complex data type of the created space. By default, the
         complex counterpart of ``space.dtype`` is used.
 
     Returns
@@ -619,10 +619,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
 
     dtype = kwargs.pop('dtype', None)
     if dtype is None:
-        if is_real_dtype(space.dtype):
-            dtype = TYPE_MAP_R2C[space.dtype]
-        else:
-            dtype = space.dtype
+        dtype = complex_dtype(space.dtype)
     else:
         if not is_complex_floating_dtype(dtype):
             raise ValueError('{} is not a complex data type'

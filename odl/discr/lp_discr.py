@@ -1184,7 +1184,7 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
             'linear' : use linear interpolation
 
     impl : string, optional
-        Implementation of the data storage arrays
+        Implementation of the data storage arrays.
     nodes_on_bdry : bool or `sequence`, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
