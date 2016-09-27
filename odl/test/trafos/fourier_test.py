@@ -36,8 +36,48 @@ from odl.trafos.fourier import (
     FourierTransform)
 from odl.util import (all_almost_equal,
                       never_skip, skip_if_no_pyfftw,
-                      is_real_dtype, conj_exponent, TYPE_MAP_R2C)
+                      is_real_dtype, conj_exponent, complex_dtype,
+                      dtype_repr)
 
+# --- pytest fixtures --- #
+
+impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
+impl_ids = [' impl = {} '.format(impl.args[1]) for impl in impl_params]
+
+
+@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
+def impl(request):
+    return request.param
+
+
+exp_params = [2.0, 1.0, float('inf'), 1.5]
+exp_ids = [' p = {} '.format(p) for p in exp_params]
+
+
+@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
+def exponent(request):
+    return request.param
+
+
+dtype_params = np.sctypes['float'] + np.sctypes['complex']
+dtype_ids = [' dtype = {} '.format(dtype_repr(dt)) for dt in dtype_params]
+
+
+@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
+def dtype(request):
+    return request.param
+
+
+sign_params = ['-', '+']
+sign_ids = [" sign='{}' ".format(p) for p in sign_params]
+
+
+@pytest.fixture(scope='module', ids=sign_ids, params=sign_params)
+def sign(request):
+    return request.param
+
+
+# --- helper functions --- #
 
 def _random_array(shape, dtype):
     if is_real_dtype(dtype):
@@ -47,16 +87,20 @@ def _random_array(shape, dtype):
                 1j * np.random.rand(*shape).astype(dtype))
 
 
+def _params_from_dtype(dt):
+    if is_real_dtype(dt):
+        halfcomplex = True
+    else:
+        halfcomplex = False
+    return halfcomplex, complex_dtype(dt)
+
+
+def sinc(x):
+    # numpy.sinc scales by pi, we don't want that
+    return np.sinc(x / np.pi)
+
+
 # ---- DiscreteFourierTransform ---- #
-
-
-impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
-impl_ids = [' impl = {} '.format(impl.args[1]) for impl in impl_params]
-
-
-@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
-def impl(request):
-    return request.param
 
 
 def test_dft_init(impl):
@@ -335,36 +379,6 @@ def test_dft_init_plan(impl):
 # ---- FourierTransform ---- #
 
 
-exp_params = [2.0, 1.0, float('inf'), 1.5]
-exp_ids = [' p = {} '.format(p) for p in exp_params]
-
-
-@pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
-def exponent(request):
-    return request.param
-
-
-def _params_from_dtype(dt):
-    if is_real_dtype(dt):
-        halfcomplex = True
-        dtype = TYPE_MAP_R2C[np.dtype(dt)]
-    else:
-        halfcomplex = False
-        dtype = dt
-    return halfcomplex, dtype
-
-
-dtype_params = [str(dtype) for dtype in TYPE_MAP_R2C.keys()]
-dtype_params += [str(dtype) for dtype in TYPE_MAP_R2C.values()]
-dtype_params = list(set(dtype_params))
-dtype_ids = [' dtype = {} '.format(dt) for dt in dtype_params]
-
-
-@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
-def dtype(request):
-    return request.param
-
-
 def test_fourier_trafo_range(exponent, dtype):
     # Check if the range is initialized correctly. Encompasses the init test
 
@@ -510,11 +524,6 @@ def test_fourier_trafo_call(impl, dtype):
     assert np.allclose(ift(ft(one)), one)
 
 
-def sinc(x):
-    # numpy.sinc scales by pi, we don't want that
-    return np.sinc(x / np.pi)
-
-
 def test_fourier_trafo_charfun_1d():
     # Characteristic function of [0, 1], its Fourier transform is
     # given by exp(-1j * y / 2) * sinc(y/2)
@@ -539,7 +548,7 @@ def test_fourier_trafo_charfun_1d():
     for dft in [dft_base, dft_complex, dft_complex_shift]:
         func_true_ft = dft.range.element(char_interval_ft)
         func_dft = dft(char_interval)
-        assert (func_dft - func_true_ft).norm() < 1e-6
+        assert (func_dft - func_true_ft).norm() < 5e-6
 
 
 def test_fourier_trafo_scaling():
@@ -589,15 +598,6 @@ def test_fourier_trafo_sign(impl):
         FourierTransform(discr, sign='+', impl=impl, halfcomplex=True)
     with pytest.raises(ValueError):
         FourierTransform(discr, sign=-1, impl=impl)
-
-
-sign_params = ['-', '+']
-sign_ids = [" sign='{}' ".format(p) for p in sign_params]
-
-
-@pytest.fixture(scope='module', ids=sign_ids, params=sign_params)
-def sign(request):
-    return request.param
 
 
 def test_fourier_trafo_inverse(impl, sign):

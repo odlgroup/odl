@@ -21,8 +21,7 @@
 from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from builtins import range, super
-range_seq = range  # avoid duplicate names
+from builtins import super
 
 import numpy as np
 
@@ -41,6 +40,11 @@ from odl.util import (is_real_dtype, is_complex_floating_dtype,
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
            'FourierTransform', 'FourierTransformInverse')
+
+
+_SUPPORTED_FOURIER_IMPLS = ('numpy',)
+if PYFFTW_AVAILABLE:
+    _SUPPORTED_FOURIER_IMPLS += ('pyfftw',)
 
 
 class DiscreteFourierTransformBase(Operator):
@@ -94,17 +98,14 @@ class DiscreteFourierTransformBase(Operator):
                             ''.format(range))
 
         # Implementation
-        self._impl = str(impl).lower()
-        if self.impl not in ('numpy', 'pyfftw'):
-            raise ValueError("`impl` '{}' not understood"
-                             "".format(impl))
-        if self.impl == 'pyfftw' and not PYFFTW_AVAILABLE:
-            raise ValueError("'pyfftw' backend not available")
+        impl, impl_in = str(impl).lower(), impl
+        if impl not in _SUPPORTED_FOURIER_IMPLS:
+            raise ValueError("`impl` '{}' not supported".format(impl_in))
+        self.__impl = impl
 
         # Axes
         if axes is None:
             axes = tuple(np.arange(domain.ndim))
-
         self.__axes = normalized_axes_tuple(axes, domain.ndim)
 
         # Half-complex
@@ -122,7 +123,7 @@ class DiscreteFourierTransformBase(Operator):
         if fwd_sign == '+' and self.halfcomplex:
             raise ValueError("cannot combine sign '+' with a half-complex "
                              "transform")
-        self._sign = sign
+        self.__sign = sign
 
         # Calculate the range
         ran_shape = reciprocal_grid(
@@ -178,7 +179,7 @@ class DiscreteFourierTransformBase(Operator):
     @property
     def impl(self):
         """Backend for the FFT implementation."""
-        return self._impl
+        return self.__impl
 
     @property
     def axes(self):
@@ -188,7 +189,7 @@ class DiscreteFourierTransformBase(Operator):
     @property
     def sign(self):
         """Sign of the complex exponent in the transform."""
-        return self._sign
+        return self.__sign
 
     @property
     def halfcomplex(self):
@@ -798,29 +799,23 @@ class FourierTransformBase(Operator):
                 ''.format(domain.dspace))
 
         # axes
-        axes = kwargs.pop('axes', range_seq(domain.ndim))
-        axes = np.atleast_1d(axes)
-        axes[axes < 0] += domain.ndim
-        if not all(0 <= ax < domain.ndim for ax in axes):
-            raise ValueError('invalid entries in axes.')
-        self._axes = list(axes)
+        axes = kwargs.pop('axes', np.arange(domain.ndim))
+        self.__axes = normalized_axes_tuple(axes, domain.ndim)
 
-        # impl
-        self._impl = str(impl).lower()
-        if self.impl not in ('numpy', 'pyfftw'):
-            raise ValueError("`impl` '{}' not understood"
-                             "".format(impl))
-        if self.impl == 'pyfftw' and not PYFFTW_AVAILABLE:
-            raise ValueError('pyfftw backend not available')
+        # Implementation
+        impl, impl_in = str(impl).lower(), impl
+        if impl not in _SUPPORTED_FOURIER_IMPLS:
+            raise ValueError("`impl` '{}' not supported".format(impl_in))
+        self.__impl = impl
 
         # Handle half-complex yes/no and shifts
         if isinstance(domain.grid, RegularGrid):
             if domain.field == ComplexNumbers():
-                self._halfcomplex = False
+                self.__halfcomplex = False
             else:
-                self._halfcomplex = bool(kwargs.pop('halfcomplex', True))
+                self.__halfcomplex = bool(kwargs.pop('halfcomplex', True))
 
-            self._shifts = normalized_scalar_param_list(
+            self.__shifts = normalized_scalar_param_list(
                 kwargs.pop('shift', True), length=len(self.axes),
                 param_conv=bool)
         else:
@@ -833,7 +828,7 @@ class FourierTransformBase(Operator):
         if fwd_sign == '+' and self.halfcomplex:
             raise ValueError("cannot combine sign '+' with a half-complex "
                              "transform")
-        self._sign = sign
+        self.__sign = sign
 
         # Need to filter out this situation since the pre-processing step
         # casts to complex otherwise, and then no half-complex transform
@@ -938,27 +933,27 @@ class FourierTransformBase(Operator):
     @property
     def impl(self):
         """Backend for the FFT implementation."""
-        return self._impl
+        return self.__impl
 
     @property
     def axes(self):
         """Axes along the FT is calculated by this operator."""
-        return self._axes
+        return self.__axes
 
     @property
     def sign(self):
         """Sign of the complex exponent in the transform."""
-        return self._sign
+        return self.__sign
 
     @property
     def halfcomplex(self):
         """Return ``True`` if the last transform axis is halved."""
-        return self._halfcomplex
+        return self.__halfcomplex
 
     @property
     def shifts(self):
         """Return the boolean list indicating shifting per axis."""
-        return self._shifts
+        return self.__shifts
 
     @property
     def adjoint(self):
@@ -1538,7 +1533,7 @@ class FourierTransformInverse(FourierTransformBase):
         # one of the "i" functions is used. For sign='-' we need to do it
         # ourselves.
         if self.halfcomplex:
-            s = np.asarray(self.range.shape)[self.axes]
+            s = np.asarray(self.range.shape)[list(self.axes)]
             out = np.fft.irfftn(preproc, axes=self.axes, s=s)
         else:
             if self.sign == '-':

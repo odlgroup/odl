@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utility functions for regular Fourier transforms."""
+"""Utility functions for Fourier transforms on regularly sampled data."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -144,23 +144,19 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
     if halfcomplex:
         rshape[axes[-1]] = shape[axes[-1]] // 2 + 1
 
-        # - Odd and not shifted or even and shifted -> 0
-        # - Odd and shifted -> - stride / 2
-        # - Even and not shifted -> + stride / 2
+        # - Odd and shifted: - stride / 2
+        # - Even and not shifted: + stride / 2
+        # - Otherwise: 0
         last_odd = shape[axes[-1]] % 2 == 1
         last_shifted = shift_list[-1]
         half_rstride = np.pi / (shape[axes[-1]] * stride[axes[-1]])
 
-        if last_odd:
-            if last_shifted:
-                rmax[axes[-1]] = -half_rstride
-            else:
-                rmax[axes[-1]] = 0
+        if last_odd and last_shifted:
+            rmax[axes[-1]] = -half_rstride
+        elif not last_odd and not last_shifted:
+            rmax[axes[-1]] = half_rstride
         else:
-            if last_shifted:
-                rmax[axes[-1]] = 0
-            else:
-                rmax[axes[-1]] = half_rstride
+            rmax[axes[-1]] = 0
 
     return RegularGrid(rmin, rmax, rshape)
 
@@ -336,8 +332,6 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
             out = np.array(arr, dtype=complex_dtype(arr.dtype), copy=True)
         else:
             out = arr.copy()
-    elif out is arr:
-        pass
     else:
         out[:] = arr
 
@@ -355,11 +349,11 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     def _onedim_arr(length, shift):
         if shift:
             # (-1)^indices
-            indices = np.arange(length)
-            arr = -2 * np.mod(indices, 2) + 1.0
+            arr = np.ones(length, dtype=out.dtype)
+            arr[1::2] = -1
         else:
-            indices = np.arange(length)
-            arr = np.exp(-imag * np.pi * indices * (1 - 1.0 / length))
+            arr = np.arange(length, dtype=out.dtype)
+            np.exp((-imag * np.pi * (1 - 1.0 / length)) * arr, out=arr)
         return arr.astype(out.dtype, copy=False)
 
     onedim_arrs = []
@@ -502,9 +496,12 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
 
     # Make a list from interp if that's not the case already
     try:
-        interp = [str(interp + '').lower()] * arr.ndim
+        # Duck-typed string check
+        interp + ''
     except TypeError:
         pass
+    else:
+        interp = [str(interp).lower()] * arr.ndim
 
     onedim_arrs = []
     for ax, shift, intp in zip(axes, shift_list, interp):
@@ -512,7 +509,7 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         xi = recip_grid.coord_vectors[ax]
 
         # First part: exponential array
-        onedim_arr = (np.exp(imag * x * xi))
+        onedim_arr = np.exp(imag * x * xi)
 
         # Second part: interpolation kernel
         len_dft = recip_grid.shape[ax]
@@ -520,28 +517,23 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         halfcomplex = (len_dft < len_orig)
         odd = len_orig % 2
 
-        if shift:
-            # f_k = -0.5 + k / N
-            fmin = -0.5
-            if halfcomplex:
-                if odd:
-                    fmax = - 1.0 / (2 * len_orig)
-                else:
-                    fmax = 0.0
+        fmin = -0.5 if shift else -0.5 + 1.0 / (2 * len_orig)
+        if halfcomplex:
+            # maximum lies around 0, possibly half a cell left or right of it
+            if shift and odd:
+                fmax = - 1.0 / (2 * len_orig)
+            elif not shift and not odd:
+                fmax = 1.0 / (2 * len_orig)
             else:
-                # Always -0.5 + (N-1)/N = 0.5 - 1/N
-                fmax = 0.5 - 1.0 / len_orig
+                fmax = 0.0
 
-        else:
-            # f_k = -0.5 + 1/(2*N) + k / N
-            fmin = -0.5 + 1.0 / (2 * len_orig)
-            if halfcomplex:
-                if odd:
-                    fmax = 0.0
-                else:
-                    fmax = 1.0 / (2 * len_orig)
+        else:  # not halfcomplex
+            # maximum lies close to 0.5, half or full cell left of it
+            if shift:
+                # -0.5 + (N-1)/N = 0.5 - 1/N
+                fmax = 0.5 - 1.0 / len_orig
             else:
-                # Always -0.5 + 1/(2*N) + (N-1)/N = 0.5 - 1/(2*N)
+                # -0.5 + 1/(2*N) + (N-1)/N = 0.5 - 1/(2*N)
                 fmax = 0.5 - 1.0 / (2 * len_orig)
 
         freqs = np.linspace(fmin, fmax, num=len_dft)
@@ -583,6 +575,9 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
         ``axes`` if supplied. Note that this must be set to ``True``
         in the halved axis in half-complex transforms.
         Default: ``True``
+    impl : string, optional
+        Implementation back-end for the created space.
+        Default: ``'numpy'``
     exponent : float, optional
         Create a space with this exponent. By default, the conjugate
         exponent ``q = p / (p - 1)`` of the exponent of ``space`` is
@@ -625,6 +620,8 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
             raise ValueError('{} is not a complex data type'
                              ''.format(dtype_repr(dtype)))
 
+    impl = kwargs.pop('impl', 'numpy')
+
     # Calculate range
     recip_grid = reciprocal_grid(space.grid, shift=shift,
                                  halfcomplex=halfcomplex, axes=axes)
@@ -638,7 +635,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
         part = uniform_partition_fromgrid(recip_grid)
 
     recip_spc = uniform_discr_frompartition(part, exponent=exponent,
-                                            dtype=dtype, impl='numpy')
+                                            dtype=dtype, impl=impl)
 
     return recip_spc
 
