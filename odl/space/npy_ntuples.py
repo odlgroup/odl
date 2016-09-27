@@ -512,6 +512,9 @@ def _lincomb(a, x1, b, x2, out, dtype):
         out.data[:] = a * x1.data + b * x2.data
         return
 
+    a = dtype.type(a)
+    b = dtype.type(b)
+
     # Use blas for larger problems
     def fallback_axpy(x1, x2, n, a):
         """Fallback axpy implementation avoiding copy."""

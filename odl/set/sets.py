@@ -33,7 +33,8 @@ from odl.util.utility import (
 
 
 __all__ = ('Set', 'EmptySet', 'UniversalSet', 'Field', 'Integers',
-           'RealNumbers', 'ComplexNumbers', 'Strings', 'CartesianProduct')
+           'RealNumbersSet', 'ComplexNumbersSet', 'Strings',
+           'CartesianProduct')
 
 
 class Set(with_metaclass(ABCMeta, object)):
@@ -307,7 +308,7 @@ class Field(Set):
         return self
 
 
-class ComplexNumbers(Field):
+class ComplexNumbersSet(Field):
 
     """Set of complex numbers."""
 
@@ -326,15 +327,15 @@ class ComplexNumbers(Field):
 
         Examples
         --------
-        >>> complex_numbers = ComplexNumbers()
-        >>> complex_numbers.contains_set(RealNumbers())
+        >>> complex_numbers = ComplexNumbersSet()
+        >>> complex_numbers.contains_set(RealNumbersSet())
         True
         """
         if other is self:
             return True
 
-        return (isinstance(other, ComplexNumbers) or
-                isinstance(other, RealNumbers) or
+        return (isinstance(other, ComplexNumbersSet) or
+                isinstance(other, RealNumbersSet) or
                 isinstance(other, Integers))
 
     def contains_all(self, other):
@@ -349,7 +350,7 @@ class ComplexNumbers(Field):
         if other is self:
             return True
 
-        return isinstance(other, ComplexNumbers)
+        return isinstance(other, ComplexNumbersSet)
 
     def element(self, inp=None):
         """Return a complex number from ``inp`` or from scratch."""
@@ -365,7 +366,7 @@ class ComplexNumbers(Field):
         return [(str(x), x) for x in numbers]
 
 
-class RealNumbers(Field):
+class RealNumbersSet(Field):
 
     """Set of real numbers."""
 
@@ -384,14 +385,14 @@ class RealNumbers(Field):
 
         Examples
         --------
-        >>> real_numbers = RealNumbers()
-        >>> real_numbers.contains_set(RealNumbers())
+        >>> real_numbers = RealNumbersSet()
+        >>> real_numbers.contains_set(RealNumbersSet())
         True
         """
         if other is self:
             return True
 
-        return (isinstance(other, RealNumbers) or
+        return (isinstance(other, RealNumbersSet) or
                 isinstance(other, Integers))
 
     def contains_all(self, array):
@@ -406,7 +407,7 @@ class RealNumbers(Field):
         if other is self:
             return True
 
-        return isinstance(other, RealNumbers)
+        return isinstance(other, RealNumbersSet)
 
     def element(self, inp=None):
         """Return a real number from ``inp`` or from scratch."""
@@ -449,7 +450,7 @@ class Integers(Set):
         Examples
         --------
         >>> integers = Integers()
-        >>> integers.contains_set(RealNumbers())
+        >>> integers.contains_set(RealNumbersSet())
         False
         """
         if other is self:
