@@ -29,12 +29,138 @@ from odl.operator.operator import Operator
 from odl.space.base_ntuples import FnBase
 
 
-__all__ = ('NumericalGradient',)
+__all__ = ('NumericalDerivative', 'NumericalGradient',)
+
+
+class NumericalDerivative(Operator):
+
+    """The derivative of a operator by forward differences.
+
+    See Also
+    --------
+    NumericalGradient : Compute gradient of a functional
+    """
+
+    def __init__(self, operator, point, method='forward', step=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        functional : `Operator`
+            The operator whose derivative should be computed. Its domain and
+            range must be `FnBase` spaces.
+        point : ``functional.domain`` `element-like`
+            The point to compute the derivative in.
+        method : {'backward', 'forward', 'central'}
+            The method to use to compute the derivative.
+        step : `None` or float
+            The step length used in the derivative computation.
+            `None` is interpreted as selecting the step according to the dtype
+            of the space. ``step = 1e-8`` for ``float64`` spaces and
+            ``step = 1e-4`` for ``float32`` spaces.
+
+        Examples
+        --------
+        Compute a numerical estimate of the derivative of the L2^2 norm:
+
+        >>> import odl
+        >>> space = odl.rn(3)
+        >>> func = odl.solvers.L2NormSquared(space)
+        >>> hess = NumericalDerivative(func.gradient, [1, 1, 1])
+        >>> hess([0, 0, 1])
+        rn(3).element([0.0, 0.0, 2.0])
+
+        Find the hessian matrix:
+
+        >>> odl.matrix_representation(hess)
+        array([[ 2.,  0.,  0.],
+               [ 0.,  2.,  0.],
+               [ 0.,  0.,  2.]])
+
+        Notes
+        -----
+        If the operator is :math:`A(x)` and stepsize :math:`h` is used, the
+        gradient is computed as follows.
+
+        If ``method='backward'`` is used:
+
+        .. math::
+            \\frac{A(x) - A(x - h)}{h}
+
+        if ``method='forward'`` is used:
+
+        .. math::
+            \\frac{A(x + h) - A(x)}{h}
+
+        if ``method='central'`` is used:
+
+        .. math::
+            \\frac{A(x + h/2) - A(x - h/2)}{h}
+
+        The number of function evaluations is ``functional.domain.size + 1`` if
+        ``'backward'`` or ``'forward'`` is used and
+        ``2 * functional.domain.size`` if ``'central'`` is used.
+        """
+        if not isinstance(operator, Operator):
+            raise TypeError('`operator` has to be a `Operator` instance')
+
+        if not isinstance(operator.domain, FnBase):
+            raise TypeError('`operator.domain` has to be a `FnBase` '
+                            'instance')
+        if not isinstance(operator.range, FnBase):
+            raise TypeError('`operator.range` has to be a `FnBase` '
+                            'instance')
+
+        self.operator = operator
+        self.point = operator.domain.element(point)
+
+        if step is None:
+            # Use half of the number of digits as machine epsilon, this
+            # "usually" gives a good balance between precision and numerical
+            # stability.
+            self.step = np.finfo(operator.domain.dtype).eps ** (1 / 2)
+        else:
+            self.step = float(step)
+
+        self.method = str(method).lower()
+        if method not in ('backward', 'forward', 'central'):
+            raise ValueError('`method` not understood')
+
+        # TODO: should we really set linear to True here?
+        Operator.__init__(self, operator.domain, operator.range,
+                          linear=True)
+
+    def _call(self, dx):
+        """Return ``self(x)``."""
+        x = self.point
+
+        dx_norm = dx.norm()
+        if dx_norm == 0:
+            return 0
+
+        scaled_dx = dx * (self.step / dx_norm)
+
+        if self.method == 'backward':
+            dAdx = self.operator(x) - self.operator(x - scaled_dx)
+        elif self.method == 'forward':
+            dAdx = self.operator(x + scaled_dx) - self.operator(x)
+        elif self.method == 'central':
+            dAdx = (self.operator(x + scaled_dx / 2) -
+                    self.operator(x - scaled_dx / 2))
+        else:
+            raise RuntimeError('unknown method')
+
+        return dAdx * (dx_norm / self.step)
 
 
 class NumericalGradient(Operator):
 
-    """The gradient of a `Functional` computed by finite differences."""
+    """The gradient of a `Functional` computed by finite differences.
+
+    See Also
+    --------
+    NumericalDerivative : Compute directional derivative
+    """
 
     def __init__(self, functional, method='forward', step=None):
         """Initialize a new instance.
@@ -111,7 +237,10 @@ class NumericalGradient(Operator):
 
         self.functional = functional
         if step is None:
-            self.step = np.sqrt(np.finfo(functional.domain.dtype).eps)
+            # Use half of the number of digits as machine epsilon, this
+            # "usually" gives a good balance between precision and numerical
+            # stability.
+            self.step = np.finfo(functional.domain.dtype).eps ** (1 / 2)
         else:
             self.step = float(step)
 
@@ -124,26 +253,26 @@ class NumericalGradient(Operator):
 
     def _call(self, x):
         """Return ``self(x)``."""
+        # The algorithm takes finite differences in one dimension at a time
+        # reusing the dx vector to improve efficiency.
         dfdx = self.domain.zero()
+        dx = self.domain.zero()
 
         if self.method == 'backward':
             fx = self.functional(x)
-            dx = self.domain.zero()
             for i in range(self.domain.size):
-                dx[i-1] = 0  # reset step from last iteration
+                dx[i - 1] = 0
                 dx[i] = self.step
                 dfdx[i] = fx - self.functional(x - dx)
         elif self.method == 'forward':
             fx = self.functional(x)
-            dx = self.domain.zero()
             for i in range(self.domain.size):
-                dx[i-1] = 0  # reset step from last iteration
+                dx[i - 1] = 0  # reset step from last iteration
                 dx[i] = self.step
                 dfdx[i] = self.functional(x + dx) - fx
         elif self.method == 'central':
-            dx = self.domain.zero()
             for i in range(self.domain.size):
-                dx[i-1] = 0  # reset step from last iteration
+                dx[i - 1] = 0  # reset step from last iteration
                 dx[i] = self.step / 2
                 dfdx[i] = self.functional(x + dx) - self.functional(x - dx)
         else:
@@ -152,6 +281,44 @@ class NumericalGradient(Operator):
         dfdx /= self.step
         return dfdx
 
+    def derivative(self, point):
+        """Return the derivative in point.
+
+        The derivative of the gradient is often called the hessian.
+
+        Parameters
+        ----------
+        point : `domain` `element-like`
+            The point that the derivative should be taken in.
+
+        Returns
+        -------
+        derivative : `NumericalDerivative`
+            Numerical estimate of the derivative. Uses the same method as this
+            operator does, but with half the number of significant digits in
+            the step size in order to preserve numerical stability.
+
+        Examples
+        --------
+        Compute a numerical estimate of the derivative of the L2^2 norm:
+
+        >>> import odl
+        >>> space = odl.rn(3)
+        >>> func = odl.solvers.L2NormSquared(space)
+        >>> grad = NumericalGradient(func)
+        >>> hess = grad.derivative([1, 1, 1])
+        >>> hess([1, 0, 0])
+        rn(3).element([2.0, 0.0, 0.0])
+
+        Find the hessian matrix:
+
+        >>> odl.matrix_representation(hess)
+        array([[ 2.,  0.,  0.],
+               [ 0.,  2.,  0.],
+               [ 0.,  0.,  2.]])
+        """
+        return NumericalDerivative(self, point,
+                                   method=self.method, step=np.sqrt(self.step))
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
