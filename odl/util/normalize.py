@@ -25,7 +25,8 @@ standard_library.install_aliases()
 import numpy as np
 
 
-__all__ = ('normalized_index_expression', 'normalized_scalar_param_list')
+__all__ = ('normalized_scalar_param_list', 'normalized_index_expression',
+           'normalized_nodes_on_bdry', 'normalized_axes_tuple')
 
 
 def normalized_scalar_param_list(param, length, param_conv=None,
@@ -332,6 +333,54 @@ def normalized_nodes_on_bdry(nodes_on_bdry, length):
                          ''.format(shape, length))
 
     return out_list
+
+
+def normalized_axes_tuple(axes, ndim):
+    """Return a tuple of ``axes`` converted to integers <= ``ndim``.
+
+    Negative entries are treated in the usual way of indexing
+    "from the right", i.e. by adding ``ndim`` to them.
+
+    Parameters
+    ----------
+    axes : int or sequence of ints
+        Single integer or integer sequence of arbitrary length.
+        Duplicate entries are not allowed. All entries must fulfill
+        ``-ndim <= axis < ndim``.
+    ndim : positive int
+        Number of available axes determining the valid axis range.
+
+    Returns
+    -------
+    axes_list : tuple of ints
+        The converted tuple of axes.
+    """
+    try:
+        axes, axes_in = (int(axes),), axes
+    except TypeError:
+        axes, axes_in = tuple(int(axis) for axis in axes), axes
+        if any(axis != axis_in for axis, axis_in in zip(axes, axes_in)):
+            raise ValueError('`axes` may only contain integers, got {}'
+                             ''.format(axes_in))
+    else:
+        if axes[0] != axes_in:
+            raise TypeError('`axes` must be integer or sequence, got {}'
+                            ''.format(axes_in))
+
+    if len(set(axes)) != len(axes):
+        raise ValueError('`axes` may not contain duplicate entries')
+
+    ndim, ndim_in = int(ndim), ndim
+    if ndim <= 0:
+        raise ValueError('`ndim` must be positive, got {}'.format(ndim_in))
+
+    axes_arr = np.array(axes)
+    axes_arr[axes_arr < 0] += ndim
+    if np.any((axes_arr < 0) | (axes_arr >= ndim)):
+        raise ValueError('all `axes` entries must satisfy 0 <= axis < {}, '
+                         'got {}'.format(ndim, axes_in))
+
+    return tuple(axes_arr)
 
 
 def safe_int_conv(number):

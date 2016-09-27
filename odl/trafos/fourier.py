@@ -36,7 +36,7 @@ from odl.trafos.util import (
     dft_preprocess_data, dft_postprocess_data)
 from odl.util import (is_real_dtype, is_complex_floating_dtype,
                       dtype_repr, conj_exponent, TYPE_MAP_R2C,
-                      normalized_scalar_param_list)
+                      normalized_scalar_param_list, normalized_axes_tuple)
 
 
 __all__ = ('DiscreteFourierTransform', 'DiscreteFourierTransformInverse',
@@ -103,13 +103,9 @@ class DiscreteFourierTransformBase(Operator):
 
         # Axes
         if axes is None:
-            axes_ = np.arange(domain.ndim)
-        else:
-            axes_ = np.atleast_1d(axes)
-            axes_[axes_ < 0] += domain.ndim
-            if not all(0 <= ax < domain.ndim for ax in axes_):
-                raise ValueError('invalid entries in axes')
-        self._axes = list(axes_)
+            axes = tuple(np.arange(domain.ndim))
+
+        self.__axes = normalized_axes_tuple(axes, domain.ndim)
 
         # Half-complex
         if domain.field == ComplexNumbers():
@@ -187,7 +183,7 @@ class DiscreteFourierTransformBase(Operator):
     @property
     def axes(self):
         """Axes along the FT is calculated by this operator."""
-        return self._axes
+        return self.__axes
 
     @property
     def sign(self):
