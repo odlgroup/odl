@@ -77,8 +77,8 @@ def combine_proximals(*factory_list):
         (\mathrm{prox}_{\\sigma F}(x), \mathrm{prox}_{\\sigma G}(y)).
     """
 
-    def make_diag(sigma):
-        """Diagonal matrix of operators
+    def diag_op_factory(sigma):
+        """Diagonal matrix of operators.
 
         Parameters
         ----------
@@ -92,7 +92,7 @@ def combine_proximals(*factory_list):
         return DiagonalOperator(
             *[factory(sigma) for factory in factory_list])
 
-    return make_diag
+    return diag_op_factory
 
 
 def proximal_cconj(prox_factory):
@@ -146,6 +146,7 @@ def proximal_cconj(prox_factory):
         proximal : `Operator`
             The proximal operator of ``s * F^*`` where ``s`` is the step size
         """
+        sigma = float(sigma)
         prox_other = (sigma * prox_factory(1.0 / sigma) * (1.0 / sigma))
         return IdentityOperator(prox_other.domain) - prox_other
 

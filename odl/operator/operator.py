@@ -1062,21 +1062,22 @@ class OperatorSum(Operator):
         rn(3).element([2.0, 4.0, 6.0])
         """
         if left.range != right.range:
-            raise TypeError('operator ranges {!r} and {!r} do not match'
-                            ''.format(left.range, right.range))
+            raise OpTypeError('operator ranges {!r} and {!r} do not match'
+                              ''.format(left.range, right.range))
         if not isinstance(left.range, (LinearSpace, Field)):
-            raise TypeError('`left.range` {!r} not a `LinearSpace` or `Field` '
-                            'instance'.format(left.range))
+            raise OpTypeError('`left.range` {!r} not a `LinearSpace` or '
+                              '`Field` instance'.format(left.range))
         if left.domain != right.domain:
-            raise TypeError('operator domains {!r} and {!r} do not match'
-                            ''.format(left.domain, right.domain))
+            raise OpTypeError('operator domains {!r} and {!r} do not match'
+                              ''.format(left.domain, right.domain))
 
         if tmp_ran is not None and tmp_ran not in left.range:
-            raise TypeError('`tmp_ran` {!r} not an element of the operator '
-                            'range {!r}'.format(tmp_ran, left.range))
+            raise OpRangeError('`tmp_ran` {!r} not an element of the operator '
+                               'range {!r}'.format(tmp_ran, left.range))
         if tmp_dom is not None and tmp_dom not in left.domain:
-            raise TypeError('`tmp_dom` {!r} not an element of the operator '
-                            'domain {!r}'.format(tmp_dom, left.domain))
+            raise OpDomainError('`tmp_dom` {!r} not an element of the '
+                                'operator domain {!r}'
+                                ''.format(tmp_dom, left.domain))
 
         super().__init__(left.domain, left.range,
                          linear=left.is_linear and right.is_linear)
@@ -1270,14 +1271,16 @@ class OperatorComp(Operator):
             operator.
         """
         if right.range != left.domain:
-            raise TypeError('`range` {!r} of the right operator {!r} not equal'
-                            ' to the domain {!r} of the left operator {!r}'
-                            ''.format(right.range, right,
-                                      left.domain, left))
+            raise OpTypeError('`range` {!r} of the right operator {!r} not '
+                              'equal to the domain {!r} of the left '
+                              'operator {!r}'
+                              ''.format(right.range, right,
+                                        left.domain, left))
 
         if tmp is not None and tmp not in left.domain:
-            raise TypeError('`tmp` {!r} not an element of the left '
-                            'operator domain {!r}'.format(tmp, left.domain))
+            raise OpDomainError('`tmp` {!r} not an element of the left '
+                                'operator domain {!r}'
+                                ''.format(tmp, left.domain))
 
         super().__init__(right.domain, left.range,
                          linear=left.is_linear and right.is_linear)
@@ -1393,14 +1396,14 @@ class OperatorPointwiseProduct(Operator):
             ``left``.
         """
         if left.range != right.range:
-            raise TypeError('operator ranges {!r} and {!r} do not match'
-                            ''.format(left.range, right.range))
+            raise OpTypeError('operator ranges {!r} and {!r} do not match'
+                              ''.format(left.range, right.range))
         if not isinstance(left.range, (LinearSpace, Field)):
-            raise TypeError('range {!r} not a `LinearSpace` or `Field` '
-                            'instance'.format(left.range))
+            raise OpTypeError('range {!r} not a `LinearSpace` or `Field` '
+                              'instance'.format(left.range))
         if left.domain != right.domain:
-            raise TypeError('operator domains {!r} and {!r} do not match'
-                            ''.format(left.domain, right.domain))
+            raise OpTypeError('operator domains {!r} and {!r} do not match'
+                              ''.format(left.domain, right.domain))
 
         super().__init__(left.domain, left.range, linear=False)
         self.__left = left
@@ -1468,8 +1471,8 @@ class OperatorLeftScalarMult(Operator):
         rn(3).element([3.0, 6.0, 9.0])
         """
         if not isinstance(operator.range, (LinearSpace, Field)):
-            raise TypeError('range {!r} not a `LinearSpace` or `Field` '
-                            'instance'.format(operator.range))
+            raise OpTypeError('range {!r} not a `LinearSpace` or `Field` '
+                              'instance'.format(operator.range))
 
         if scalar not in operator.range.field:
             raise TypeError('`scalar` {!r} not in the field {!r} of the '
@@ -1644,8 +1647,8 @@ class OperatorRightScalarMult(Operator):
         rn(3).element([3.0, 6.0, 9.0])
         """
         if not isinstance(operator.domain, (LinearSpace, Field)):
-            raise TypeError('domain {!r} not a `LinearSpace` or `Field` '
-                            'instance'.format(operator.domain))
+            raise OpTypeError('domain {!r} not a `LinearSpace` or `Field` '
+                              'instance'.format(operator.domain))
 
         if scalar not in operator.domain.field:
             raise TypeError('`scalar` {!r} not in the field {!r} of the '
@@ -1654,9 +1657,9 @@ class OperatorRightScalarMult(Operator):
                                       operator.domain))
 
         if tmp is not None and tmp not in operator.domain:
-            raise TypeError('`tmp` {!r} not an element of the '
-                            'operator domain {!r}'
-                            ''.format(tmp, operator.domain))
+            raise OpDomainError('`tmp` {!r} not an element of the '
+                                'operator domain {!r}'
+                                ''.format(tmp, operator.domain))
 
         super().__init__(operator.domain, operator.range, operator.is_linear)
         self.__operator = operator
@@ -1829,8 +1832,8 @@ class FunctionalLeftVectorMult(Operator):
                             ''.format(vector))
 
         if functional.range != vector.space.field:
-            raise TypeError('range {!r} not is not vector.space.field {!r}'
-                            ''.format(functional.range, vector.space.field))
+            raise OpTypeError('range {!r} not is not vector.space.field {!r}'
+                              ''.format(functional.range, vector.space.field))
 
         super().__init__(functional.domain, vector.space,
                          linear=functional.is_linear)
@@ -1920,8 +1923,8 @@ class OperatorLeftVectorMult(Operator):
             The vector to multiply by
         """
         if vector not in operator.range:
-            raise TypeError('`vector` {!r} not in operator.range {!r}'
-                            ''.format(vector, operator.range))
+            raise OpRangeError('`vector` {!r} not in operator.range {!r}'
+                               ''.format(vector, operator.range))
 
         super().__init__(operator.domain, operator.range,
                          linear=operator.is_linear)
@@ -2033,8 +2036,8 @@ class OperatorRightVectorMult(Operator):
                             ''.format(operator))
 
         if vector not in operator.domain:
-            raise TypeError('`vector` {!r} not in operator.domain {!r}'
-                            ''.format(vector.space, operator.domain))
+            raise OpDomainError('`vector` {!r} not in operator.domain {!r}'
+                                ''.format(vector.space, operator.domain))
 
         super().__init__(operator.domain, operator.range,
                          linear=operator.is_linear)

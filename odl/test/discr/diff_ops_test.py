@@ -287,6 +287,8 @@ def test_part_deriv(space, method, padding):
 def test_gradient(space, method, padding):
     """Discretized spatial gradient operator."""
 
+    places = 2 if space.dtype == np.float32 else 4
+
     with pytest.raises(TypeError):
         Gradient(odl.rn(1), method=method)
 
@@ -325,7 +327,7 @@ def test_gradient(space, method, padding):
     # Check not to use trivial data
     assert lhs != 0
     assert rhs != 0
-    assert almost_equal(lhs, rhs, places=4)
+    assert almost_equal(lhs, rhs, places=places)
 
     # higher dimensional arrays
     lin_size = 3
