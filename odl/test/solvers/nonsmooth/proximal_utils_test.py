@@ -29,146 +29,123 @@ import pytest
 
 # Internal
 import odl
-import odl.solvers as odls
-
+from odl.solvers.nonsmooth.proximal_operators import (
+    proximal_arg_scaling, proximal_composition,
+    proximal_quadratic_perturbation, proximal_translation,
+    proximal_l2_squared)
 from odl.util.testutils import all_almost_equal, noise_element
 
 # Places for the accepted error when comparing results
 PLACES = 8
 
 
-def test_proximal_translation():
-    """Test for the proximal of a translation: prox[F(. - g)]"""
+# --- pytest fixtures --- #
 
-    # Image space
+
+scalar_params = [0.01, 2.7, np.array(5.0), 10, -2, -0.2, -np.array(7.1), 0]
+scalar_ids = [' scalar={} '.format(s) for s in scalar_params]
+
+
+@pytest.fixture(scope='module', params=scalar_params, ids=scalar_ids)
+def scalar(request):
+    return request.param
+
+
+nonneg_scalar_params = [s for s in scalar_params if s >= 0]
+nonneg_scalar_ids = [' nonneg_scalar={} '.format(s)
+                     for s in nonneg_scalar_params]
+
+
+@pytest.fixture(scope='module', params=nonneg_scalar_params,
+                ids=nonneg_scalar_ids)
+def nonneg_scalar(request):
+    return request.param
+
+
+pos_scalar_params = [s for s in scalar_params if s > 0]
+pos_scalar_ids = [' pos_scalar={} '.format(s) for s in pos_scalar_params]
+
+
+@pytest.fixture(scope='module', params=pos_scalar_params, ids=pos_scalar_ids)
+def pos_scalar(request):
+    return request.param
+
+
+sigma_params = [0.001, 2.7, np.array(0.5), 10]
+sigma_ids = [' sigma={} '.format(s) for s in sigma_params]
+
+
+@pytest.fixture(scope='module', params=sigma_params, ids=sigma_ids)
+def sigma(request):
+    return request.param
+
+
+# --- proximal utils tests --- #
+
+
+def test_proximal_arg_scaling(scalar, sigma):
+    """Test for the proximal of scaling: ``prox[F(. * a)]``."""
+    sigma = float(sigma)
     space = odl.uniform_discr(0, 1, 10)
+    lam = 1.2
+    prox_factory = proximal_l2_squared(space, lam=lam)
 
-    # Element in the image space where the proximal operator is evaluated
+    scaling_param = scalar
+    prox = proximal_arg_scaling(prox_factory, scaling_param)(sigma)
+
+    x = noise_element(space)
+    # works for scaling_param == 0, too
+    expected_result = x / (2 * sigma * lam * scaling_param ** 2 + 1)
+
+    assert all_almost_equal(prox(x), expected_result, places=PLACES)
+
+
+def test_proximal_translation(sigma):
+    """Test for the proximal of a translation: ``prox[F(. - g)]``."""
+    sigma = float(sigma)
+    space = odl.uniform_discr(0, 1, 10)
+    lam = 1.2
+    prox_factory = proximal_l2_squared(space, lam=lam)
+
     translation = noise_element(space)
+    prox = proximal_translation(prox_factory, translation)(sigma)
 
-    # Factory function returning the proximal operators
-    lam = float(np.random.randn(1))
-    prox_factory = odls.proximal_l2_squared(space, lam=lam)
-
-    # Initialize proximal operators
-    step_size = float(np.random.rand(1))  # Non-negative step size
-    prox = odls.proximal_translation(prox_factory, translation)(step_size)
-
-    # Create an element in the space, in which to evaluate the proximals
     x = noise_element(space)
-
-    # Explicit computation:
-    expected_result = ((x + 2 * step_size * lam * translation) /
-                       (1 + 2 * step_size * lam))
+    expected_result = ((x + 2 * sigma * lam * translation) /
+                       (1 + 2 * sigma * lam))
 
     assert all_almost_equal(prox(x), expected_result, places=PLACES)
 
 
-def test_proximal_arg_scaling():
-    """Test for the proximal of scaling: prox[F(. * a)]"""
-
-    # Image space
+def test_proximal_quadratic_perturbation(nonneg_scalar, sigma):
+    """Test for the proximal of quadratic perturbation."""
+    sigma = float(sigma)
     space = odl.uniform_discr(0, 1, 10)
+    lam = 1.2
+    prox_factory = proximal_l2_squared(space, lam=lam)
 
-    # Factory function returning the proximal operators
-    lam = float(np.random.randn(1))
-    prox_factory = odls.proximal_l2_squared(space, lam=lam)
+    # parameter for the quadratic perturbation, needs to be non-negative
+    a = nonneg_scalar
 
-    # Initialize proximal operators
-    step_size = float(np.random.rand(1))   # Non-negative step size
-    scaling_param = float(np.random.randn(1))
-    prox = odls.proximal_arg_scaling(prox_factory, scaling_param)(step_size)
+    # Test without linear term
+    if a != 0:
+        with pytest.raises(ValueError):
+            # negative values not allowed
+            proximal_quadratic_perturbation(prox_factory, -a)
 
-    # Create an element in the space, in which to evaluate the proximals
+    prox = proximal_quadratic_perturbation(prox_factory, a)(sigma)
     x = noise_element(space)
-
-    # Explicit computation:
-    expected_result = x / (2 * step_size * lam * scaling_param ** 2 + 1)
-
+    expected_result = x / (2 * sigma * (lam + a) + 1)
     assert all_almost_equal(prox(x), expected_result, places=PLACES)
 
-
-def test_proximal_arg_scaling_zero():
-    """Test for the proximal of scaling: prox[F(. * a)] when a = 0"""
-
-    # Image space
-    space = odl.uniform_discr(0, 1, 10)
-
-    # Factory function returning the proximal operators
-    prox_factory = odls.proximal_l1(space, lam=1)
-
-    # Initialize proximal operators
-    scaling_param = 0.0
-    step_size = float(np.random.rand(1))   # Non-negative step size
-    prox = odls.proximal_arg_scaling(prox_factory, scaling_param)(step_size)
-
-    # Create an element in the space, in which to evaluate the proximals
-    x = noise_element(space)
-
-    # Check that the scaling with zero returns proximal facotry for the
-    # proximal_const_func, which results in the identity operator
-    assert all_almost_equal(prox(x), x, places=PLACES)
-
-
-def test_proximal_quadratic_perturbation_quadratic():
-    """Test for the proximal of quadratic perturbation with quadratic term"""
-
-    # Image space
-    space = odl.uniform_discr(0, 1, 10)
-
-    # The parameter for the quadratic perturbation
-    a = float(np.random.rand(1))  # This needs to be non-negative
-    lam = float(np.random.randn(1))
-
-    # Factory function returning the proximal operators
-    prox_factory = odls.proximal_l2_squared(space, lam=lam)
-
-    # Verify fail with negative a
-    with pytest.raises(ValueError):
-        odls.proximal_quadratic_perturbation(prox_factory, -a)
-
-    # Initialize proximal operators
-    step_size = float(np.random.rand(1))  # Non-negative step size
-    prox = odls.proximal_quadratic_perturbation(prox_factory, a)(step_size)
-
-    # Create an element in the space, in which to evaluate the proximals
-    x = noise_element(space)
-
-    # Explicit computation:
-    expected_result = x / (2 * step_size * (lam + a) + 1)
-
-    assert all_almost_equal(prox(x), expected_result, places=PLACES)
-
-
-def test_proximal_quadratic_perturbation_linear_and_quadratic():
-    """Test for the proximal of quadratic perturbation with both terms"""
-
-    # Image space
-    space = odl.uniform_discr(0, 1, 10)
-
-    # The parameter for the quadratic perturbation
-    a = float(np.random.rand(1))  # This needs to be non-negative
+    # Test with linear term
     u = noise_element(space)
-    lam = float(np.random.randn(1))
-
-    # Factory function returning the proximal operators
-    prox_factory = odls.proximal_l2_squared(space, lam=lam)
-
-    # Initialize proximal operators
-    step_size = float(np.random.rand(1))  # Non-negative step size
-    prox = odls.proximal_quadratic_perturbation(prox_factory,
-                                                a, u)(step_size)
-
-    # Create an element in the space, in which to evaluate the proximals
-    x = noise_element(space)
-
-    # Explicit computation:
-    expected_result = (x - step_size * u) / (2 * step_size * (lam + a) + 1)
-
+    prox = proximal_quadratic_perturbation(prox_factory, a, u)(sigma)
+    expected_result = (x - sigma * u) / (2 * sigma * (lam + a) + 1)
     assert all_almost_equal(prox(x), expected_result, places=PLACES)
 
 
-def test_proximal_composition():
+def test_proximal_composition(pos_scalar, sigma):
     """Test for proximal of composition with semi-orthogonal linear operator.
 
     This test is for ``prox[f * L](x)``, where ``L`` is a linear operator such
@@ -176,36 +153,25 @@ def test_proximal_composition():
     taken to be ``scal * IdentityOperator``, since this is equivalent to
     scaling of the argument.
     """
-    # Image space
+    sigma = float(sigma)
     space = odl.uniform_discr(0, 1, 10)
-
-    # Factory function returning the proximal operator
-    prox_factory = odls.proximal_l2_squared(space)
+    prox_factory = proximal_l2_squared(space)
 
     # The semi-orthogonal linear operator
-    scal = 1.43
+    scal = pos_scalar
     L = odl.ScalingOperator(space, scal)
-    mu = scal**2  # L = scal * I => L * L.adjoint = scal**2 * I
-
-    # Initialize the proximal factory and operator for for F*L
-    prox_factory_composition = odls.proximal_composition(prox_factory, L, mu)
-
-    sigma = 0.25
+    mu = scal ** 2  # L = scal * I => L * L.adjoint = scal ** 2 * I
+    prox_factory_composition = proximal_composition(prox_factory, L, mu)
     prox = prox_factory_composition(sigma)
 
     assert isinstance(prox, odl.Operator)
 
-    # Element in image space where the proximal operator is evaluated
     x = space.element(np.arange(-5, 5))
-
-    prox_val = prox(x)
-
-    # Explicit computation:
-    prox_verify = odls.proximal_arg_scaling(prox_factory, scal)(sigma)
-    expected_result = prox_verify(x)
-
-    assert all_almost_equal(prox_val, expected_result, places=PLACES)
+    prox_x = prox(x)
+    equiv_prox = proximal_arg_scaling(prox_factory, scal)(sigma)
+    expected_result = equiv_prox(x)
+    assert all_almost_equal(prox_x, expected_result, places=PLACES)
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/'), ' -v'))

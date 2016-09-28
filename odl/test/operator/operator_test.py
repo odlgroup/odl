@@ -33,7 +33,7 @@ from odl import (Operator, OperatorSum, OperatorComp,
                  OperatorLeftScalarMult, OperatorRightScalarMult,
                  FunctionalLeftVectorMult, OperatorRightVectorMult,
                  MatVecOperator, OperatorLeftVectorMult,
-                 OpDomainError, OpRangeError)
+                 OpTypeError, OpDomainError, OpRangeError)
 from odl.operator.operator import _signature_from_spec, _dispatch_call_args
 from odl.util.testutils import almost_equal, all_almost_equal
 
@@ -111,7 +111,7 @@ def test_nonlinear_addition():
     C = np.random.rand(4, 4)
     Cop = MultiplyAndSquareOp(C)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(OpTypeError):
         C = OperatorSum(Aop, Cop)
 
 
@@ -196,7 +196,7 @@ def test_nonlinear_composition():
     evaluate(C, xvec, mult_sq_np(A, mult_sq_np(B, x)))
 
     # Verify that incorrect order fails
-    with pytest.raises(TypeError):
+    with pytest.raises(OpTypeError):
         C = OperatorComp(Bop, Aop)
 
 
@@ -377,7 +377,7 @@ def test_type_errors():
     Aop(r3Vec1, r3Vec2)
     Aop.adjoint(r3Vec1, r3Vec2)
 
-    # Test that erroneous usage raises TypeError
+    # Test that erroneous usage raises
     with pytest.raises(OpDomainError):
         Aop(r4Vec1)
 
@@ -836,4 +836,4 @@ def test_dispatch_call_args_class():
         _dispatch_call_args(cls=WithClassMethod)
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main(str(__file__.replace('\\', '/')), ' -v')
