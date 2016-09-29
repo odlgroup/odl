@@ -34,6 +34,47 @@ __all__ = ('newtons_method', 'bfgs_method', 'broydens_method')
 # TODO: update all docs
 
 
+def _bfgs_multiply(s, y, x):
+    """Computes ``Hn^-1(x)`` for the L-BFGS method.
+
+    Parameters
+    ----------
+    s : `sequence` of `LinearSpaceElement`
+        The ``s`` coefficients in the BFGS update, see Notes.
+    y : `sequence` of `LinearSpaceElement`
+        The ``y`` coefficients in the BFGS update, see Notes.
+    x : `LinearSpaceElement`
+        Point in which to evaluate the product.
+
+    Notes
+    -----
+    :math:`H_n^{-1}` is defined recursively as
+
+    .. math::
+        H_{n+1}^{-1} =
+        \\left(I - \\frac{ s_n y_n^T}{y_n^T s_n} \\right)
+        H_{n}^{-1}
+        \\left(I - \\frac{ y_n s_n^T}{y_n^T s_n} \\right) +
+        \\frac{s_n s_n^T}{y_n^T \, s_n}
+    """
+    assert len(s) == len(y)
+
+    r = x.copy()
+    alphas = np.zeros(len(s))
+    rhos = np.zeros(len(s))
+
+    for i in reversed(range(len(s))):
+        rhos[i] = 1.0 / y[i].inner(s[i])
+        alphas[i] = rhos[i] * (s[i].inner(r))
+        r.lincomb(1, r, -alphas[i], y[i])
+
+    for i in range(len(s)):
+        beta = rhos[i] * (y[i].inner(r))
+        r.lincomb(1, r, alphas[i] - beta, s[i])
+
+    return r
+
+
 def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
                    cg_iter=None, callback=None):
     """Newton's method for minimizing a functional.
@@ -136,8 +177,11 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
             callback(x)
 
 
-def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16, callback=None):
+def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16, maxcor=None,
+                callback=None):
     """Quasi-Newton BFGS method to minimize a differentiable function.
+
+    Can use either the regular BFGS method, or the limited memory BFGS method.
 
     Notes
     -----
@@ -177,6 +221,10 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         ``tol``.
     tol : float, optional
         Tolerance that should be used for terminating the iteration.
+    maxcor : int, optional
+        Maximum number of correction factors to store. If ``None``, the method
+        is the regular BFGS method. If an integer, the method becomes the
+        Limited Memory BFGS method.
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate.
     """
@@ -188,11 +236,13 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
-    hess = ident = IdentityOperator(grad.domain)
+    ys = []
+    ss = []
+
     grad_x = grad(x)
     for _ in range(maxiter):
         # Determine a stepsize using line search
-        search_dir = -hess(grad_x)
+        search_dir = -_bfgs_multiply(ys, ss, grad_x)
         dir_deriv = search_dir.inner(grad_x)
         if np.abs(dir_deriv) < tol:
             return  # we found an optimum
@@ -205,17 +255,19 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
 
         grad_x, grad_diff = grad(x), grad_x
         # grad_diff = grad(x) - grad(x_old)
-        grad_diff.space.lincomb(-1, grad_diff, 1, grad_x, out=grad_diff)
+        grad_diff.lincomb(-1, grad_diff, 1, grad_x)
 
         y_inner_s = grad_diff.inner(x_update)
         if np.abs(y_inner_s) < tol:
             return
 
         # Update Hessian
-        hess = ((ident - x_update * grad_diff.T / y_inner_s) *
-                hess *
-                (ident - grad_diff * x_update.T / y_inner_s) +
-                x_update * x_update.T / y_inner_s)
+        ss += [grad_diff]
+        ys += [x_update]
+        if maxcor is not None:
+            # Throw away factors if they are too many.
+            ss = ss[-maxcor:]
+            ys = ys[-maxcor:]
 
         if callback is not None:
             callback(x)
