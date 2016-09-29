@@ -668,7 +668,7 @@ class KullbackLeibler(Functional):
                 if 0 in x:
                     # The derivative is not defined.
                     raise ValueError('The gradient of the Kullback-Leibler '
-                                     'functional is not defined for ´x´ with '
+                                     'functional is not defined for `x` with '
                                      'one or more components zero.'.format(x))
                 else:
                     if functional.prior is None:
@@ -788,7 +788,7 @@ class KullbackLeiblerConvexConj(Functional):
                 if 1.0 in x:
                     # The derivative is not defined.
                     raise ValueError('The gradient of the Kullback-Leibler '
-                                     'functional is not defined for ´x´ with '
+                                     'functional is not defined for `x` with '
                                      'one or more components one.'.format(x))
                 else:
                     if functional.prior is None:
@@ -881,9 +881,6 @@ class KullbackLeiblerCrossEntropy(Functional):
         else:
             return tmp
 
-    # TODO: note that the gradient should only be deinfed for x > 0 (since
-    # otherwise the functional is considered to be infinite). However, is there
-    # an efficient way to test this?
     @property
     def gradient(self):
         """Gradient operator of the functional.
@@ -917,7 +914,7 @@ class KullbackLeiblerCrossEntropy(Functional):
                     # The derivative is not defined.
                     raise ValueError('The gradient of the Kullback-Leibler '
                                      'Cross Entropy functional is not defined '
-                                     'for ´x´ with one or more components '
+                                     'for `x` with one or more components '
                                      'less than or equal to zero.'.format(x))
                 else:
                     return tmp
