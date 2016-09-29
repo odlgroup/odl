@@ -86,12 +86,23 @@ def test_newton_solver(functional_and_linesearch):
 
 
 def test_bfgs_solver(functional_and_linesearch):
-    """Test a quasi-newton solver."""
+    """Test the BFGS quasi-newton solver."""
     functional, line_search = functional_and_linesearch
 
     x = noise_element(functional.domain)
     odl.solvers.bfgs_method(functional, x, maxiter=50, tol=1e-4,
                             line_search=line_search)
+
+    assert functional(x) < 1e-3
+
+
+def test_lbfgs_solver(functional_and_linesearch):
+    """Test limited memory BFGS quasi-newton solver."""
+    functional, line_search = functional_and_linesearch
+
+    x = noise_element(functional.domain)
+    odl.solvers.bfgs_method(functional, x, maxiter=50, tol=1e-4,
+                            line_search=line_search, maxcor=5)
 
     assert functional(x) < 1e-3
 
