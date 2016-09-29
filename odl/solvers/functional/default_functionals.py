@@ -37,7 +37,8 @@ from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
            'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox',
-           'IndicatorNonnegativity')
+           'IndicatorNonnegativity', 'KullbackLeibler',
+           'KullbackLeiblerConvexConj')
 
 
 class L1Norm(Functional):
@@ -629,10 +630,13 @@ class KullbackLeibler(Functional):
                    .inner(self.domain.one()))
         if np.isnan(tmp):
             # In this case, some element was less than or equal to zero
-            return self.range(np.inf)
+            return np.inf
         else:
             return tmp
 
+    # TODO: note that the gradient should only be deinfed for x > 0 (since
+    # otherwise the functional is considered to be infinite). However, is there
+    # an efficient way to test this?
     @property
     def gradient(self):
         """Gradient operator of the functional.
@@ -737,17 +741,54 @@ class KullbackLeiblerConvexConj(Functional):
 
         This is only finite if all components of ``x`` are less than 1.
         """
-        if self.offset is None:
-            tmp = (np.log(1 - x)).inner(self.domain.one())
+        if self.g is None:
+            tmp = -1.0 * (np.log(1 - x)).inner(self.domain.one())
         else:
-            tmp = (self.g * np.log(1 - x)).inner(self.domain.one())
+            tmp = (-self.g * np.log(1 - x)).inner(self.domain.one())
         if np.isnan(tmp):
             # In this case, some element was larger than or equal to one
-            return self.range(np.inf)
+            return np.inf
         else:
             return tmp
 
-    # TODO: implement the gradient.
+    # TODO: note that the gradient should only be deinfed for x < 1 (since
+    # otherwise the functional is considered to be infinite). However, is there
+    # an efficient way to test this?
+    @property
+    def gradient(self):
+        """Gradient operator of the functional.
+
+        The gradient is not defined in points where one or more components
+        are 1.
+        """
+        functional = self
+
+        class KLCCGradient(Operator):
+
+            """The gradient operator of this functional."""
+
+            def __init__(self):
+                """Initialize a new instance."""
+                super().__init__(functional.domain, functional.domain,
+                                 linear=False)
+
+            def _call(self, x):
+                """Apply the gradient operator to the given point.
+
+                The gradient is not defined if any component is 1.
+                """
+                if 1.0 in x:
+                    # The derivative is not defined.
+                    raise ValueError('The gradient of the Kullback-Leibler '
+                                     'functional is not defined ´x´ with one '
+                                     'or more components one.'.format(x))
+                else:
+                    if functional.g is None:
+                        return 1.0 / (1 - x)
+                    else:
+                        return functional.g / (1 - x)
+
+        return KLCCGradient()
 
     @property
     def proximal(self):
