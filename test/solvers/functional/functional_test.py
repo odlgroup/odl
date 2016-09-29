@@ -52,7 +52,8 @@ def space(request, fn_impl):
 
 func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
                'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf',
-               'product', 'quotient', 'kl', 'kl_cc']
+               'product', 'quotient', 'kl', 'kl_cc', 'kl_cross_ent',
+               'kl_cc_cross_ent']
 func_ids = [' f = {} '.format(p.ljust(17)) for p in func_params]
 
 
@@ -90,6 +91,10 @@ def functional(request, space):
         func = odl.solvers.functional.KullbackLeibler(space)
     elif name == 'kl_cc':
         func = odl.solvers.functional.KullbackLeiblerConvexConj(space)
+    elif name == 'kl_cross_ent':
+        func = odl.solvers.functional.KullbackLeiblerCrossEntropy(space)
+    elif name == 'kl_cc_cross_ent':
+        func = odl.solvers.KullbackLeiblerCrossEntropyConvexConj(space)
     else:
         assert False
 
@@ -112,7 +117,8 @@ def test_derivative(functional, space):
     x = noise_element(functional.domain)
     y = noise_element(functional.domain)
 
-    if isinstance(functional, odl.solvers.KullbackLeibler):
+    if (isinstance(functional, odl.solvers.KullbackLeibler) or
+            isinstance(functional, odl.solvers.KullbackLeiblerCrossEntropy)):
         # The functional is not defined for values <= 0
         x = x.ufunc.absolute()
         y = y.ufunc.absolute()
