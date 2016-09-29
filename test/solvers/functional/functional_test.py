@@ -52,7 +52,7 @@ def space(request, fn_impl):
 
 func_params = ['l1 ', 'l2', 'l2^2', 'constant', 'zero', 'ind_unit_ball_1',
                'ind_unit_ball_2', 'ind_unit_ball_pi', 'ind_unit_ball_inf',
-               'product', 'quotient']
+               'product', 'quotient', 'kl', 'kl_cc']
 func_ids = [' f = {} '.format(p.ljust(17)) for p in func_params]
 
 
@@ -86,6 +86,10 @@ def functional(request, space):
         dividend = odl.solvers.functional.L2Norm(space)
         divisor = odl.solvers.functional.ConstantFunctional(space, 2)
         func = odl.solvers.functional.FunctionalQuotient(dividend, divisor)
+    elif name == 'kl':
+        func = odl.solvers.functional.KullbackLeibler(space)
+    elif name == 'kl_cc':
+        func = odl.solvers.functional.KullbackLeiblerConvexConj(space)
     else:
         assert False
 
@@ -107,6 +111,16 @@ def test_derivative(functional, space):
 
     x = noise_element(functional.domain)
     y = noise_element(functional.domain)
+
+    if isinstance(functional, odl.solvers.KullbackLeibler):
+        # The functional is not defined for values <= 0
+        x = x.ufunc.absolute()
+        y = y.ufunc.absolute()
+
+    if isinstance(functional, odl.solvers.KullbackLeiblerConvexConj):
+        # The functional is not defined for values >= 1
+        x = x - x.ufunc.max() + 0.99
+        y = y - y.ufunc.max() + 0.99
 
     # Compute step size according to dtype of space
     step = float(np.sqrt(np.finfo(space.dtype).eps))

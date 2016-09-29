@@ -294,5 +294,72 @@ def test_zero_functional(space):
     assert odl.solvers.ZeroFunctional(space).constant == 0
 
 
+def test_kullback_leibler(space):
+    """Test the kullback leibler functional and its convex conjugate."""
+    # The offset needs to be positive
+    offset = noise_element(space)
+    offset = offset.ufunc.absolute()
+
+    func = odl.solvers.KullbackLeibler(space, offset)
+
+    # The fucntional is only defined for positive elements
+    x = noise_element(space)
+    x = x.ufunc.absolute()
+    one_elem = space.one()
+
+    # Evaluation of the functional
+    expected_result = ((x - offset + offset * np.log(offset / x))
+                       .inner(one_elem))
+    assert almost_equal(func(x), expected_result)
+
+    # For elements with (a) negative components it should return inf
+    x_neg = noise_element(space)
+    x_neg = x_neg - x_neg.ufunc.max()
+    assert func(x_neg) == np.inf
+
+    # The gradient
+    expected_result = 1 - offset / x
+    assert all_almost_equal(func.gradient(x), expected_result)
+
+    # The proximal operator
+    sigma = np.random.rand()
+    expected_result = odl.solvers.proximal_cconj(
+        odl.solvers.proximal_cconj_kl(space, g=offset))(sigma)(x)
+    assert all_almost_equal(func.proximal(sigma)(x), expected_result)
+
+    # The convex conjugate functional
+    cc_func = func.convex_conj
+
+    assert isinstance(cc_func, odl.solvers.KullbackLeiblerConvexConj)
+
+    # The convex conjugate functional is only finite for elements with all
+    # components smaller than 1.
+    x = noise_element(space)
+    x = x - x.ufunc.max() + 0.99
+
+    # Evaluation of convex conjugate
+    expected_result = - (offset * np.log(1 - x)).inner(one_elem)
+    assert almost_equal(cc_func(x), expected_result)
+
+    x_wrong = noise_element(space)
+    x_wrong = x_wrong - x_wrong.ufunc.max() + 1.01
+    assert cc_func(x_wrong) == np.inf
+
+    # The gradient of the convex conjugate
+    expected_result = offset / (1 - x)
+    assert all_almost_equal(cc_func.gradient(x), expected_result)
+
+    # The proximal of the convex conjugate
+    expected_result = 0.5 * (1 + x - np.sqrt((x - 1)**2 + 4 * sigma * offset))
+    assert all_almost_equal(cc_func.proximal(sigma)(x), expected_result)
+
+    # The biconjugate, which is the functional itself since it is proper,
+    # convex and lower-semicontinuous
+    cc_cc_func = cc_func.convex_conj
+
+    # Check that they evaluate the same
+    assert almost_equal(cc_cc_func(x), func(x))
+
+
 if __name__ == '__main__':
     pytest.main(str(__file__.replace('\\', '/')) + ' -v')
