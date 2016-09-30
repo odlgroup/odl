@@ -23,11 +23,13 @@ standard_library.install_aliases()
 
 import pytest
 import numpy as np
+from scipy.signal import convolve
 
 from odl.trafos.backends.pywt_bindings import (
     PYWT_AVAILABLE,
     pywt_coeff_shapes,
     pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
+    pywt_single_level_decomp,
     pywt_multi_level_decomp, pywt_multi_level_recon)
 from odl.util.testutils import all_almost_equal, all_equal
 
@@ -216,6 +218,44 @@ def test_multilevel_decomp_inverts_recon(shape_setup):
                                         recon_shape=image_shape)
     wave_decomp = pywt_multi_level_decomp(wave_recon, wavelet, nlevels, mode)
     assert all_almost_equal(coeffs, wave_decomp)
+
+
+def test_explicit_example():
+    """Exhaustive test of a hand-calculated 2D example."""
+
+    x = np.array([[1, 1, 0],
+                  [1, 0, 1],
+                  [0, 1, 1]])
+
+    # Explicit Haar wavelet filters
+    tau = 1.0 / np.sqrt(2)
+    filter_l = np.array([tau, tau])
+    filter_h = np.array([-tau, tau])
+
+    # Build the 2D filters
+    filter_ll = filter_l[:, None] * filter_l[None, :]
+    filter_lh = filter_l[:, None] * filter_h[None, :]
+    filter_hl = filter_h[:, None] * filter_l[None, :]
+    filter_hh = filter_h[:, None] * filter_h[None, :]
+
+    # Convolve x with 2D filters (implicitly uses zero-padding)
+    conv_ll = convolve(x, filter_ll)
+    conv_lh = convolve(x, filter_lh)
+    conv_hl = convolve(x, filter_hl)
+    conv_hh = convolve(x, filter_hh)
+
+    # Downsampling gives the wavelet coefficients (starting with index 1)
+    coeff_aa = conv_ll[1::2, 1::2]
+    coeff_ad = conv_lh[1::2, 1::2]
+    coeff_da = conv_hl[1::2, 1::2]
+    coeff_dd = conv_hh[1::2, 1::2]
+
+    # Compare with single level wavelet trafo (zero padding)
+    coeffs = pywt_single_level_decomp(x, wavelet='haar', mode='zpd')
+    approx, details = coeffs
+
+    assert all_almost_equal(approx, coeff_aa)
+    assert all_almost_equal(details, [coeff_ad, coeff_da, coeff_dd])
 
 
 if __name__ == '__main__':
