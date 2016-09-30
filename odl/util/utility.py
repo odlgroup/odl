@@ -171,6 +171,7 @@ def arraynd_str(array, nprint=None):
 
 def dtype_repr(dtype):
     """Stringification of data type with default for int and float."""
+    dtype = np.dtype(dtype)
     if dtype == np.dtype(int):
         return "'int'"
     elif dtype == np.dtype(float):
