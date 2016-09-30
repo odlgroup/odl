@@ -377,8 +377,8 @@ def normalized_axes_tuple(axes, ndim):
     axes_arr = np.array(axes)
     axes_arr[axes_arr < 0] += ndim
     if np.any((axes_arr < 0) | (axes_arr >= ndim)):
-        raise ValueError('all `axes` entries must satisfy 0 <= axis < {}, '
-                         'got {}'.format(ndim, axes_in))
+        raise ValueError('all `axes` entries must satisfy -{0} <= axis < {0}, '
+                         'got {1}'.format(ndim, axes_in))
 
     return tuple(axes_arr)
 

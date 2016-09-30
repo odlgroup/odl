@@ -166,7 +166,7 @@ modes.html
     # scale recursively. Start with the image shape and use the last created
     # shape for the next step.
     shape_list = [shape]
-    for i in range(nlevels):
+    for _ in range(nlevels):
         shape = tuple(pywt.dwt_coeff_len(n, filter_len=wavelet.dec_len,
                                          mode=mode)
                       for n in shape_list[-1])
@@ -794,8 +794,6 @@ modes.html
 
 
 if __name__ == '__main__':
-    from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
-    optionflags = NORMALIZE_WHITESPACE
-    if not PYWT_AVAILABLE:
-        optionflags |= SKIP
-    testmod(optionflags=optionflags)
+    # pylint: disable=wrong-import-position
+    from odl.util.testutils import run_doctests
+    run_doctests(skip_if=not PYWT_AVAILABLE)

@@ -30,7 +30,7 @@ from odl.util.testutils import (all_almost_equal, noise_element,
 
 
 wavelet_params = ['db1', 'sym2']
-wavelet_ids = [" wavelet = '{}' ".format(w) for w in wavelet_params]
+wavelet_ids = [" wavelet='{}' ".format(w) for w in wavelet_params]
 
 
 @pytest.fixture(scope='module', params=wavelet_params, ids=wavelet_ids)
@@ -39,7 +39,7 @@ def wavelet(request):
 
 
 pad_mode_params = ['constant', 'pywt_periodic']
-pad_mode_ids = [" pad_mode = '{}' ".format(m) for m in pad_mode_params]
+pad_mode_ids = [" pad_mode='{}' ".format(m) for m in pad_mode_params]
 
 
 @pytest.fixture(scope='module', params=pad_mode_params, ids=pad_mode_ids)
@@ -48,7 +48,7 @@ def pad_mode(request):
 
 
 ndim_params = [1, 2, 3]
-ndim_ids = [' ndim = {} '.format(ndim) for ndim in ndim_params]
+ndim_ids = [' ndim={} '.format(ndim) for ndim in ndim_params]
 
 
 @pytest.fixture(scope='module', params=ndim_params, ids=ndim_ids)
@@ -57,7 +57,7 @@ def ndim(request):
 
 
 nlevels_params = [1, 3]
-nlevels_ids = [' nlevels = {} '.format(nlevels) for nlevels in nlevels_params]
+nlevels_ids = [' nlevels={} '.format(nlevels) for nlevels in nlevels_params]
 
 
 @pytest.fixture(scope='module', params=nlevels_params, ids=nlevels_ids)
@@ -114,17 +114,8 @@ def shape_setup(ndim, wavelet, pad_mode):
     return wavelet, pad_mode, nlevels, image_shape, coeff_shapes
 
 
-dtype_params = ['float32', 'float64']
-dtype_ids = [' dtype = {} '.format(dt) for dt in dtype_params]
-
-
-@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
-def dtype(request):
-    return request.param
-
-
 wave_impl_params = [skip_if_no_pywavelets('pywt')]
-wave_impl_ids = [" wave_impl = '{}' ".format(impl.args[1])
+wave_impl_ids = [" wave_impl='{}' ".format(impl.args[1])
                  for impl in wave_impl_params]
 
 
@@ -133,12 +124,13 @@ def wave_impl(request):
     return request.param
 
 
-def test_wavelet_transform(wave_impl, shape_setup, dtype):
+def test_wavelet_transform(wave_impl, shape_setup, floating_dtype):
     # Verify that the operator works as expected
     wavelet, pad_mode, nlevels, shape, _ = shape_setup
     ndim = len(shape)
 
-    space = odl.uniform_discr([-1] * ndim, [1] * ndim, shape, dtype=dtype)
+    space = odl.uniform_discr([-1] * ndim, [1] * ndim, shape,
+                              dtype=floating_dtype)
     image = noise_element(space)
 
     # TODO: check more error scenarios
@@ -150,8 +142,21 @@ def test_wavelet_transform(wave_impl, shape_setup, dtype):
     wave_trafo = odl.trafos.WaveletTransform(
         space, wavelet, nlevels, pad_mode, impl=wave_impl)
 
+    assert wave_trafo.domain.dtype == floating_dtype
+    assert wave_trafo.range.dtype == floating_dtype
+
+    wave_trafo_inv = wave_trafo.inverse
+    assert wave_trafo_inv.domain.dtype == floating_dtype
+    assert wave_trafo_inv.range.dtype == floating_dtype
+    assert wave_trafo_inv.nlevels == wave_trafo.nlevels
+    assert wave_trafo_inv.wavelet == wave_trafo.wavelet
+    assert wave_trafo_inv.pad_mode == wave_trafo.pad_mode
+    assert wave_trafo_inv.pad_const == wave_trafo.pad_const
+    assert wave_trafo_inv.pywt_pad_mode == wave_trafo.pywt_pad_mode
+
     coeffs = wave_trafo(image)
     reco_image = wave_trafo.inverse(coeffs)
+    assert all_almost_equal(image.real, reco_image.real)
     assert all_almost_equal(image, reco_image)
 
 
