@@ -31,7 +31,7 @@ import sys
 from odl.set import LinearSpace, LinearSpaceElement, Set, Field
 
 
-__all__ = ('Operator', 'OperatorComp', 'OperatorSum',
+__all__ = ('Operator', 'OperatorComp', 'OperatorSum', 'OperatorVectorSum',
            'OperatorLeftScalarMult', 'OperatorRightScalarMult',
            'FunctionalLeftVectorMult',
            'OperatorLeftVectorMult', 'OperatorRightVectorMult',
@@ -719,14 +719,11 @@ class Operator(object):
 
             ``self + other <==> (x --> self(x) + other(x))``
         """
-        from odl.operator.default_ops import ConstantOperator
-
         if other in self.range:
-            return self + ConstantOperator(other, self.domain, self.range)
+            return OperatorVectorSum(self, other)
         elif other in self.range.field:
             constant_vector = other * self.range.one()
-            return self + ConstantOperator(constant_vector,
-                                           self.domain, self.range)
+            return OperatorVectorSum(self, constant_vector)
         elif isinstance(other, Operator):
             return OperatorSum(self, other)
         else:
@@ -1158,6 +1155,97 @@ class OperatorSum(Operator):
         return '({} + {})'.format(self.left, self.right)
 
 
+class OperatorVectorSum(Operator):
+
+    """Operator that computes ``op(x) + y``.
+
+        ``OperatorVectorSum(op, y)(x) == op(x) + y``
+    """
+
+    def __init__(self, operator, vector):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        operator : `Operator`
+            Operator to be used in the sum. Its
+            `Operator.range` must be a `LinearSpace`.
+        vector : ``operator.range`` `element-like`
+            Vector to be subtracted from the operator result.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> y = r3.element([1, 2, 3])
+        >>> ident_op = odl.IdentityOperator(r3)
+        >>> sum_op = odl.OperatorVectorSum(ident_op, y)
+        >>> x = r3.element([4, 5, 6])
+        >>> sum_op(x)
+        rn(3).element([5.0, 7.0, 9.0])
+        """
+        if not isinstance(operator, Operator):
+            raise TypeError('`op` {!r} not a Operator instance'
+                            ''.format(operator))
+
+        if not isinstance(operator.range, LinearSpace):
+            raise TypeError('`op.range` {!r} not a LinearSpace instance'
+                            ''.format(operator.range))
+
+        self.__operator = operator
+        self.__vector = operator.range.element(vector)
+        super().__init__(operator.domain, operator.range)
+
+    @property
+    def operator(self):
+        """The operator to apply."""
+        return self.__operator
+
+    @property
+    def vector(self):
+        """The constant operator range element to subtract."""
+        return self.__vector
+
+    def _call(self, x, out=None):
+        """Evaluate the residual at ``x`` and write to ``out`` if given."""
+        if out is None:
+            out = self.operator(x)
+        else:
+            self.operator(x, out=out)
+
+        out += self.vector
+        return out
+
+    def derivative(self, point):
+        """Derivative the operator vector sum.
+
+        It is equal to the derivative of the "inner" operator:
+
+            ``OperatorVectorSum(op, y).derivative(z) == op.derivative(z)``
+
+        Parameters
+        ----------
+        point : `domain` element
+            Any element in the domain where the derivative should be taken
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> op = odl.IdentityOperator(r3)
+        >>> res = odl.OperatorVectorSum(op, r3.element([1, 2, 3]))
+        >>> x = r3.element([4, 5, 6])
+        >>> res.derivative(x)(x)
+        rn(3).element([4.0, 5.0, 6.0])
+        """
+        return self.operator.derivative(point)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.operator,
+                                       self.vector)
+
+
 class OperatorComp(Operator):
 
     """Expression type for the composition of operators.
@@ -1470,8 +1558,7 @@ class OperatorLeftScalarMult(Operator):
         --------
         >>> import odl
         >>> space = odl.rn(3)
-        >>> operator = odl.ResidualOperator(odl.IdentityOperator(space),
-        ...                                 [1, 1, 1])
+        >>> operator = odl.IdentityOperator(space) - space.element([1, 1, 1])
         >>> left_mul_op = OperatorLeftScalarMult(operator, 3)
         >>> derivative = left_mul_op.derivative([0, 0, 0])
         >>> derivative([1, 1, 1])
@@ -1653,8 +1740,7 @@ class OperatorRightScalarMult(Operator):
         --------
         >>> import odl
         >>> space = odl.rn(3)
-        >>> operator = odl.ResidualOperator(odl.IdentityOperator(space),
-        ...                                 [1, 1, 1])
+        >>> operator = odl.IdentityOperator(space) - space.element([1, 1, 1])
         >>> left_mul_op = OperatorRightScalarMult(operator, 3)
         >>> derivative = left_mul_op.derivative([0, 0, 0])
         >>> derivative([1, 1, 1])

@@ -34,7 +34,7 @@ import numpy as np
 import scipy.special
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
-                          ConstantOperator, ResidualOperator, DiagonalOperator)
+                          ConstantOperator, DiagonalOperator)
 from odl.space import ProductSpace
 from odl.set import LinearSpaceElement
 
@@ -329,8 +329,7 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
         if u is not None:
             return (const * prox *
-                    ResidualOperator(ScalingOperator(u.space, const),
-                                     sigma * const * u))
+                    (ScalingOperator(u.space, const) - sigma * const * u))
         else:
             return const * prox * const
 
