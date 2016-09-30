@@ -286,7 +286,7 @@ class ProductSpaceOperator(Operator):
 
         Example with affine operator
 
-        >>> residual_op = odl.ResidualOperator(I, r3.element([1, 1, 1]))
+        >>> residual_op = I - r3.element([1, 1, 1])
         >>> op = ProductSpaceOperator([[0, residual_op], [0, 0]],
         ...                           domain=X, range=X)
 
@@ -635,7 +635,7 @@ class BroadcastOperator(Operator):
 
         >>> import odl
         >>> I = odl.IdentityOperator(odl.rn(3))
-        >>> residual_op = odl.ResidualOperator(I, I.domain.element([1, 1, 1]))
+        >>> residual_op = I - I.domain.element([1, 1, 1])
         >>> op = BroadcastOperator(residual_op, 2 * residual_op)
 
         Calling operator offsets by ``[1, 1, 1]``:
@@ -787,7 +787,7 @@ class ReductionOperator(Operator):
 
         Example with affine operator
 
-        >>> residual_op = odl.ResidualOperator(I, r3.element([1, 1, 1]))
+        >>> residual_op = I - r3.element([1, 1, 1])
         >>> op = ReductionOperator(residual_op, 2 * residual_op)
 
         Calling operator gives offset by [3, 3, 3]

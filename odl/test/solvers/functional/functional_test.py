@@ -150,7 +150,7 @@ def test_arithmetic():
     # Create elements needed for later
     functional = odl.solvers.L2Norm(space).translated([1, 2, 3])
     functional2 = odl.solvers.L2NormSquared(space)
-    operator = odl.ResidualOperator(odl.IdentityOperator(space), [4, 5, 6])
+    operator = odl.IdentityOperator(space) - space.element([4, 5, 6])
     x = noise_element(functional.domain)
     y = noise_element(functional.domain)
     scalar = np.pi
