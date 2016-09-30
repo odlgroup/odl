@@ -25,15 +25,60 @@ standard_library.install_aliases()
 import numpy as np
 
 
-__all__ = ('white_noise',)
+__all__ = ('white_noise', 'poisson_noise')
 
 
 def white_noise(space):
     """Standard gaussian noise in space, pointwise N(0, 1).
 
+    Parameters
+    ----------
+    space : `FnBase`
+        The space that the noise should be created in
+
+    Returns
+    -------
+    white_noise : ``space`` element
+
+    See Also
+    --------
+    poisson_noise
+    numpy.random.randn
     """
     values = np.random.randn(*space.shape)
     return space.element(values)
+
+
+def poisson_noise(intensity):
+    """Poisson distributed noise with given intensity.
+
+    Parameters
+    ----------
+    intensity : `FnBase`
+        The intensity (usually called lambda) parameter of the noise.
+
+    Returns
+    -------
+    poisson_noise : ``intensity.space`` element
+        Poisson distributed random variable.
+
+    Notes
+    -----
+    The probability density function for value :math:`k` and intensity
+    :math:`\\lambda` is given by:
+
+    .. math::
+        \\frac{\\lambda^k e^{-\\lambda}}{k!}
+
+    Note that the function only takes integer values.
+
+    See Also
+    --------
+    white_noise
+    numpy.random.poisson
+    """
+    values = np.random.poisson(intensity.asarray())
+    return intensity.space.element(values)
 
 
 if __name__ == '__main__':
