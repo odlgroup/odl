@@ -65,7 +65,6 @@ def pywt_wavelet(wavelet):
 def pywt_pad_mode(pad_mode, pad_const=0):
     """Convert ODL-style padding mode to pywt-style padding mode."""
     pad_mode = str(pad_mode).lower()
-    pad_const = float(pad_const)
     if pad_mode in PYWT_SUPPORTED_MODES:
         return pad_mode
     elif pad_mode == 'constant' and pad_const != 0.0:
@@ -275,35 +274,39 @@ def pywt_flat_array_from_coeffs(coeffs):
     >>> approx = [[1, 1]]  # shape (1, 2)
     >>> details = ([[2, 2]], [[3, 3]], [[4, 4]])  # 3 * shape (1, 2)
     >>> pywt_flat_array_from_coeffs([approx, details])
-    array([ 1.,  1.,  2.,  2.,  3.,  3.,  4.,  4.])
+    array([1, 1, 2, 2, 3, 3, 4, 4])
     """
-    flat_sizes = [np.size(coeffs[0])]
+    # We convert to numpy array since we need the sizes anyway, and np.size
+    # is as expensive as np.asarray().size.
+    approx = np.asarray(coeffs[0])
+    details_list = []
+    flat_sizes = [approx.size]
+
     for details in coeffs[1:]:
         if isinstance(details, tuple):
-            flat_sizes.append(np.size(details[0]))
+            detail_arrs = tuple(np.asarray(detail) for detail in details)
         else:
             # Single detail coefficient array
-            flat_sizes.append(np.size(details))
+            detail_arrs = (np.asarray(details),)
 
-    ndim = np.ndim(coeffs[0])
+        flat_sizes.append(detail_arrs[0].size)
+        details_list.append(detail_arrs)
+
+    ndim = approx.ndim
+    dtype = approx.dtype
     dcoeffs_per_scale = 2 ** ndim - 1
 
     flat_total_size = flat_sizes[0] + dcoeffs_per_scale * sum(flat_sizes[1:])
-    flat_coeff = np.empty(flat_total_size)
+    flat_coeff = np.empty(flat_total_size, dtype=dtype)
 
     start = 0
     stop = flat_sizes[0]
-    flat_coeff[start:stop] = np.ravel(coeffs[0])
+    flat_coeff[start:stop] = approx.ravel()
 
-    for fsize, details in zip(flat_sizes[1:], coeffs[1:]):
-        if isinstance(details, tuple):
-            for detail in details:
-                start, stop = stop, stop + fsize
-                flat_coeff[start:stop] = np.ravel(detail)
-        else:
-            # Single detail coefficient array
+    for fsize, details in zip(flat_sizes[1:], details_list):
+        for detail in details:
             start, stop = stop, stop + fsize
-            flat_coeff[start:stop] = np.ravel(details)
+            flat_coeff[start:stop] = detail.ravel()
 
     return flat_coeff
 
@@ -678,10 +681,7 @@ wavelet-transform.html#multilevel-decomposition-using-wavedec
     if nlevels_in != nlevels:
         raise ValueError('`nlevels` must be integer, got {}'
                          ''.format(nlevels_in))
-    max_levels = pywt.dwt_max_level(min(arr.shape), wavelet.dec_len)
-    if not 0 < nlevels <= max_levels:
-        raise ValueError('`nlevels` must lie between 1 and {}, got {}'
-                         ''.format(max_levels, nlevels_in))
+    _check_nlevels(nlevels, min(arr.shape), wavelet)
 
     mode, mode_in = str(mode).lower(), mode
     if mode not in PYWT_SUPPORTED_MODES:
