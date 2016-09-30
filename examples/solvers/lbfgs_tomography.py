@@ -35,7 +35,7 @@ import odl
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 300 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200], dtype='float32')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200], dtype='float64')
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
@@ -64,20 +64,27 @@ discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 
 # Create sinogram of forward projected phantom with noise
 data = ray_trafo(discr_phantom)
-# data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
+data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
+
+# --- Set up optimization problem and solve --- #
 
 # Create objective functional
 obj_fun = odl.solvers.L2NormSquared(ray_trafo.range) * (ray_trafo - data)
 
 # Create line search
-line_search = odl.solvers.BacktrackingLineSearch(obj_fun)
+line_search = 1.0
+# line_search = odl.solvers.BacktrackingLineSearch(obj_fun)
+
+# Create initial estimate of the inverse hessian by a diagonal estimate
+opnorm = odl.power_method_opnorm(ray_trafo)
+hessinv_estimate = odl.ScalingOperator(reco_space, 1 / opnorm**2)
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
             odl.solvers.CallbackShow())
 
 # Pick parameters
-maxiter = 30
+maxiter = 20
 maxcor = 5  # only save some vectors (Limited memory)
 
 # Choose a starting point
@@ -86,7 +93,7 @@ x = ray_trafo.domain.zero()
 # Run the algorithm
 odl.solvers.bfgs_method(
     obj_fun, x, line_search=line_search, maxiter=maxiter, maxcor=maxcor,
-    callback=callback)
+    hessinv_estimate=hessinv_estimate, callback=callback)
 
 # Display images
 discr_phantom.show(title='original image')
