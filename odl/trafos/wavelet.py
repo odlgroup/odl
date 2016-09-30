@@ -126,7 +126,7 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
                             ''.format(space))
 
         nlevels, nlevels_in = int(nlevels), nlevels
-        if nlevels != float(nlevels_in):
+        if nlevels != nlevels_in:
             raise ValueError('`nlevels` must be integer, got {}'
                              ''.format(nlevels_in))
         self.nlevels = nlevels
@@ -411,8 +411,9 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
         >>> np.allclose(recon, orig_array)
         True
         """
-        super().__init__(range, wavelet, nlevels, 'inverse', pad_mode,
-                         pad_const, impl)
+        super().__init__(space=range, wavelet=wavelet, nlevels=nlevels,
+                         variant='inverse', pad_mode=pad_mode,
+                         pad_const=pad_const, impl=impl)
 
     def _call(self, coeffs):
         """Return the inverse wavelet transform of ``coeffs``."""
