@@ -27,11 +27,32 @@ import pytest
 
 from odl.trafos.backends import pyfftw_call, PYFFTW_AVAILABLE
 from odl.util import (
-    all_almost_equal, is_real_dtype, dtype_repr, complex_dtype)
+    all_almost_equal, is_real_dtype, complex_dtype)
 
 
 pytestmark = pytest.mark.skipif(not PYFFTW_AVAILABLE,
                                 reason='`pyfftw` backend not available')
+
+
+# --- pytest fixtures --- #
+
+
+plan_params = ['estimate', 'measure', 'patient', 'exhaustive']
+plan_ids = [" planning = '{}' ".format(p) for p in plan_params]
+
+
+@pytest.fixture(scope="module", ids=plan_ids, params=plan_params)
+def planning(request):
+    return request.param
+
+
+@pytest.fixture(scope='module', ids=[' forward ', ' backward '],
+                params=['forward', 'backward'])
+def direction(request):
+    return request.param
+
+
+# --- helper functions --- #
 
 
 def _random_array(shape, dtype):
@@ -40,9 +61,6 @@ def _random_array(shape, dtype):
     else:
         return (np.random.rand(*shape).astype(dtype) +
                 1j * np.random.rand(*shape).astype(dtype))
-
-
-# ---- pyfftw_call ---- #
 
 
 def _params_from_dtype(dtype):
@@ -67,24 +85,18 @@ def _halfcomplex_shape(shape, axes=None):
     return shape
 
 
-dtype_params = np.sctypes['float'] + np.sctypes['complex']
-dtype_ids = [' dtype = {} '.format(dtype_repr(dt)) for dt in dtype_params]
+# ---- pyfftw_call ---- #
 
 
-@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
-def dtype(request):
-    return request.param
-
-
-def test_pyfftw_call_forward(dtype):
+def test_pyfftw_call_forward(floating_dtype):
     # Test against Numpy's FFT
-    if dtype == np.dtype('float16'):  # not supported, skipping
+    if floating_dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, out_dtype = _params_from_dtype(dtype)
+    halfcomplex, out_dtype = _params_from_dtype(floating_dtype)
 
     for shape in [(10,), (3, 4, 5)]:
-        arr = _random_array(shape, dtype)
+        arr = _random_array(shape, floating_dtype)
 
         if halfcomplex:
             true_dft = np.fft.rfftn(arr)
@@ -117,12 +129,12 @@ def test_pyfftw_call_threads():
     assert all_almost_equal(dft_arr, true_dft)
 
 
-def test_pyfftw_call_backward(dtype):
+def test_pyfftw_call_backward(floating_dtype):
     # Test against Numpy's IFFT, no normalization
-    if dtype == np.dtype('float16'):  # not supported, skipping
+    if floating_dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, in_dtype = _params_from_dtype(dtype)
+    halfcomplex, in_dtype = _params_from_dtype(floating_dtype)
 
     for shape in [(10,), (3, 4, 5)]:
         # Scaling happens wrt output (large) shape
@@ -135,17 +147,11 @@ def test_pyfftw_call_backward(dtype):
             arr = _random_array(shape, in_dtype)
             true_idft = np.fft.ifftn(arr) * idft_scaling
 
-        idft_arr = np.empty(shape, dtype=dtype)
+        idft_arr = np.empty(shape, dtype=floating_dtype)
         pyfftw_call(arr, idft_arr, direction='backward',
                     halfcomplex=halfcomplex)
 
         assert all_almost_equal(idft_arr, true_idft)
-
-
-@pytest.fixture(scope='module', ids=[' forward ', ' backward '],
-                params=['forward', 'backward'])
-def direction(request):
-    return request.param
 
 
 def test_pyfftw_call_bad_input(direction):
@@ -285,15 +291,6 @@ def test_pyfftw_call_backward_real_not_halfcomplex():
         assert all_almost_equal(idft_arr, true_idft)
 
 
-plan_params = ['estimate', 'measure', 'patient', 'exhaustive']
-plan_ids = [" planning = '{}' ".format(p) for p in plan_params]
-
-
-@pytest.fixture(scope="module", ids=plan_ids, params=plan_params)
-def planning(request):
-    return request.param
-
-
 def test_pyfftw_call_plan_preserve_input(planning):
 
     for shape in [(10,), (3, 4)]:
@@ -310,16 +307,16 @@ def test_pyfftw_call_plan_preserve_input(planning):
         assert all_almost_equal(idft_arr, true_idft)
 
 
-def test_pyfftw_call_forward_with_axes(dtype):
-    if dtype == np.dtype('float16'):  # not supported, skipping
+def test_pyfftw_call_forward_with_axes(floating_dtype):
+    if floating_dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, out_dtype = _params_from_dtype(dtype)
+    halfcomplex, out_dtype = _params_from_dtype(floating_dtype)
     shape = (3, 4, 5)
 
     test_axes = [(0, 1), [1], (-1,), (1, 0), (-1, -2, -3)]
     for axes in test_axes:
-        arr = _random_array(shape, dtype)
+        arr = _random_array(shape, floating_dtype)
         if halfcomplex:
             true_dft = np.fft.rfftn(arr, axes=axes)
             dft_arr = np.empty(_halfcomplex_shape(shape, axes),
@@ -334,11 +331,11 @@ def test_pyfftw_call_forward_with_axes(dtype):
         assert all_almost_equal(dft_arr, true_dft)
 
 
-def test_pyfftw_call_backward_with_axes(dtype):
-    if dtype == np.dtype('float16'):  # not supported, skipping
+def test_pyfftw_call_backward_with_axes(floating_dtype):
+    if floating_dtype == np.dtype('float16'):  # not supported, skipping
         return
 
-    halfcomplex, in_dtype = _params_from_dtype(dtype)
+    halfcomplex, in_dtype = _params_from_dtype(floating_dtype)
     shape = (3, 4, 5)
 
     test_axes = [(0, 1), [1], (-1,), (1, 0), (-1, -2, -3)]
@@ -356,7 +353,7 @@ def test_pyfftw_call_backward_with_axes(dtype):
             true_idft = (np.fft.ifftn(arr, s=active_shape, axes=axes) *
                          idft_scaling)
 
-        idft_arr = np.empty(shape, dtype=dtype)
+        idft_arr = np.empty(shape, dtype=floating_dtype)
         pyfftw_call(arr, idft_arr, direction='backward', axes=axes,
                     halfcomplex=halfcomplex)
 
@@ -407,4 +404,4 @@ def test_pyfftw_call_backward_with_plan():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/'), ' -v'))

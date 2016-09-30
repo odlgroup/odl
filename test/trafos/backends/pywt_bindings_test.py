@@ -22,19 +22,28 @@ from future import standard_library
 standard_library.install_aliases()
 
 import pytest
+try:
+    import pywt
+except ImportError:
+    pass
 import numpy as np
 from scipy.signal import convolve
 
+import odl
 from odl.trafos.backends.pywt_bindings import (
     PYWT_AVAILABLE,
     pywt_coeff_shapes,
     pywt_flat_array_from_coeffs, pywt_coeffs_from_flat_array,
     pywt_single_level_decomp,
     pywt_multi_level_decomp, pywt_multi_level_recon)
-from odl.util.testutils import all_almost_equal, all_equal
+from odl.util.testutils import all_almost_equal, all_equal, noise_array
+
 
 pytestmark = pytest.mark.skipif(not PYWT_AVAILABLE,
                                 reason='`pywt` backend not available')
+
+
+# --- pytest fixtures --- #
 
 
 wavelet_params = ['db1', 'sym2']
@@ -122,21 +131,6 @@ def shape_setup(ndim, wavelet, mode):
     return wavelet, mode, nlevels, image_shape, coeff_shapes
 
 
-dtype_params = np.sctypes['float'] + np.sctypes['complex']
-dtype_ids = [' dtype = {} '.format(dt) for dt in dtype_params]
-
-
-@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
-def dtype(request):
-    return request.param
-
-
-def test_pywt_coeff_shapes(shape_setup):
-    wavelet, mode, nlevels, image_shape, coeff_shapes = shape_setup
-    shapes = pywt_coeff_shapes(image_shape, wavelet, nlevels, mode)
-    assert all_equal(shapes, coeff_shapes)
-
-
 @pytest.fixture(scope='module')
 def small_shapes(ndim):
     if ndim == 1:
@@ -151,6 +145,9 @@ def small_shapes(ndim):
     return ndim, shapes
 
 
+# --- helper functions --- #
+
+
 def _grouped_and_flat_arrays(shapes, dtype):
     """Return a grouped and flat list of arrays with specified shapes.
 
@@ -158,13 +155,15 @@ def _grouped_and_flat_arrays(shapes, dtype):
     i.e. the array with shape ``shapes[0]`` appears once, while the
     others appear ``2 ** ndim - 1`` times each.
     """
-    array = np.random.uniform(size=shapes[0]).astype(dtype)
+    space = odl.discr_sequence_space(shape=shapes[0], dtype=dtype)
+    array = noise_array(space).reshape(space.shape)
     grouped_list = [array]
     flat_list = [array.ravel()]
-    ndim = len(shapes[0])
+    ndim = space.ndim
 
     for shape in shapes[1:]:
-        arrays = [np.random.uniform(size=shape).astype(dtype)
+        space = odl.discr_sequence_space(shape=shape, dtype=dtype)
+        arrays = [noise_array(space).reshape(shape)
                   for _ in range(2 ** ndim - 1)]
         grouped_list.append(tuple(arrays))
         flat_list.extend([arr.ravel() for arr in arrays])
@@ -172,7 +171,16 @@ def _grouped_and_flat_arrays(shapes, dtype):
     return grouped_list, flat_list
 
 
-def test_pywt_coeff_list_conversion(small_shapes):
+# --- unit tests --- #
+
+
+def test_pywt_coeff_shapes(shape_setup):
+    wavelet, mode, nlevels, image_shape, coeff_shapes = shape_setup
+    shapes = pywt_coeff_shapes(image_shape, wavelet, nlevels, mode)
+    assert all_equal(shapes, coeff_shapes)
+
+
+def test_pywt_coeff_list_conversion(small_shapes, floating_dtype):
     """Test if converstion flat array <-> coefficient list works."""
     ndim, shapes = small_shapes
 
@@ -220,19 +228,16 @@ def test_multilevel_decomp_inverts_recon(shape_setup):
     assert all_almost_equal(coeffs, wave_decomp)
 
 
-def test_explicit_example():
-    """Exhaustive test of a hand-calculated 2D example."""
+def test_explicit_example(floating_dtype):
+    """Comparison with hand-calculated wavelet transform."""
 
-    x = np.array([[1, 1, 0, 1],
-                  [1, 0, 1, 0],
-                  [0, 1, 1, 1],
-                  [0, 0, 1, 0],
-                  [1, 1, 0, 0]])
+    space = odl.uniform_discr([0, 0], [1, 1], (16, 15), dtype=floating_dtype)
+    x = noise_array(space).reshape(space.shape)
 
-    # Explicit Haar wavelet filters
-    tau = 1.0 / np.sqrt(2)
-    filter_l = np.array([tau, tau])
-    filter_h = np.array([-tau, tau])
+    # We use a Daubechies-2 wavelet
+    wavelet = pywt.Wavelet('db2')
+    filter_l = np.array(wavelet.dec_lo)
+    filter_h = np.array(wavelet.dec_hi)
 
     # Build the 2D filters
     filter_ll = filter_l[:, None] * filter_l[None, :]
@@ -254,7 +259,7 @@ def test_explicit_example():
     coeff_dd = conv_hh[1::2, 1::2]
 
     # Compare with single-level wavelet trafo (zero padding)
-    coeffs = pywt_single_level_decomp(x, wavelet='haar', mode='zpd')
+    coeffs = pywt_single_level_decomp(x, wavelet='db2', mode='zpd')
     approx, details = coeffs
 
     assert all_almost_equal(approx, coeff_aa)
@@ -267,7 +272,7 @@ def test_explicit_example():
     coeff_2_dd = convolve(coeff_aa, filter_hh)[1::2, 1::2]
 
     # Compare with multi-level wavelet trafo (zero padding)
-    coeffs = pywt_multi_level_decomp(x, wavelet='haar', mode='zpd', nlevels=2)
+    coeffs = pywt_multi_level_decomp(x, wavelet='db2', mode='zpd', nlevels=2)
     approx_2, details_2, details_1 = coeffs
 
     assert all_almost_equal(approx_2, coeff_2_aa)

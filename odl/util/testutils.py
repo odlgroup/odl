@@ -594,10 +594,16 @@ def test(arguments=None):
     pytest.main(args)
 
 
-def run_doctests():
-    """Avoid all the copy and paste in the last 3 module lines."""
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+def run_doctests(skip_if=False):
+    """Run all doctests in the current module.
+
+    For ``skip_if=True``, the tests in the module are skipped.
+    """
+    from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
+    optionflags = NORMALIZE_WHITESPACE
+    if skip_if:
+        optionflags |= SKIP
+    testmod(optionflags=optionflags)
 
 
 if __name__ == '__main__':
