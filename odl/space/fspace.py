@@ -591,7 +591,6 @@ class FunctionSpace(FunctionSet, LinearSpace):
             self.__real_out_dtype = self.out_dtype
             self.__real_space = self
             self.__complex_out_dtype = complex_dtype(self.out_dtype,
-                                                     use_default=True,
                                                      default=np.dtype(object))
             self.__complex_space = None
         elif self.field == ComplexNumbers():
@@ -957,7 +956,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if is_real_dtype(self.out_dtype):
             return x
         else:
-            rdtype = real_dtype(self.out_dtype, use_default=True, default=None)
+            rdtype = real_dtype(self.out_dtype)
             rspace = self.astype(rdtype)
             return rspace.element(realpart_oop)
 
@@ -971,7 +970,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if is_real_dtype(self.out_dtype):
             return self.zero()
         else:
-            rdtype = real_dtype(self.out_dtype, use_default=True, default=None)
+            rdtype = real_dtype(self.out_dtype)
             rspace = self.astype(rdtype)
             return rspace.element(imagpart_oop)
 
