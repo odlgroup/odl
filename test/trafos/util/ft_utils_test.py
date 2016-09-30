@@ -23,7 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 from itertools import product
-from math import pi
 import numpy as np
 import pytest
 
@@ -33,12 +32,10 @@ from odl.trafos.util.ft_utils import (
 from odl.util import all_almost_equal, all_equal
 
 
+# --- pytest fixtures --- #
+
+
 true_or_false = [True, False]
-
-
-# ---- reciprocal_grid ---- #
-
-
 halfcx_ids = [' halfcomplex={} '.format(p) for p in true_or_false]
 
 
@@ -64,6 +61,18 @@ def parity(request):
     return request.param
 
 
+sign_params = ['-', '+']
+sign_ids = [" sign='{}' ".format(p) for p in sign_params]
+
+
+@pytest.fixture(scope='module', ids=sign_ids, params=sign_params)
+def sign(request):
+    return request.param
+
+
+# --- reciprocal_grid --- #
+
+
 def test_reciprocal_grid_1d(halfcomplex, shift, parity):
 
     shape = 10 if parity == 'even' else 11
@@ -74,7 +83,7 @@ def test_reciprocal_grid_1d(halfcomplex, shift, parity):
     rgrid = reciprocal_grid(grid, shift=shift, halfcomplex=halfcomplex)
 
     # Independent of halfcomplex, shift and parity
-    true_recip_stride = 2 * pi / (s * n)
+    true_recip_stride = 2 * np.pi / (s * n)
     assert all_almost_equal(rgrid.stride, true_recip_stride)
 
     if halfcomplex:
@@ -123,7 +132,7 @@ def test_reciprocal_grid_nd():
     s = grid.stride
     n = np.array(grid.shape)
 
-    true_recip_stride = 2 * pi / (s * n)
+    true_recip_stride = 2 * np.pi / (s * n)
 
     # Without shift altogether
     rgrid = reciprocal_grid(grid, shift=False, halfcomplex=False)
@@ -144,7 +153,7 @@ def test_reciprocal_grid_nd_shift_list():
     n = np.array(grid.shape)
     shift = [False, True, False]
 
-    true_recip_stride = 2 * pi / (s * n)
+    true_recip_stride = 2 * np.pi / (s * n)
 
     # Shift only the even dimension, then zero must be contained
     rgrid = reciprocal_grid(grid, shift=shift, halfcomplex=False)
@@ -197,7 +206,7 @@ def test_reciprocal_grid_nd_halfcomplex():
     grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
     s = grid.stride
     n = np.array(grid.shape)
-    stride_last = 2 * pi / (s[-1] * n[-1])
+    stride_last = 2 * np.pi / (s[-1] * n[-1])
     n[-1] = n[-1] // 2 + 1
 
     # Without shift
@@ -220,16 +229,7 @@ def test_reciprocal_grid_nd_halfcomplex():
                        halfcx_parity='+')
 
 
-# ---- dft_preprocess_data ---- #
-
-
-sign_params = ['-', '+']
-sign_ids = [" sign='{}' ".format(p) for p in sign_params]
-
-
-@pytest.fixture(scope='module', ids=sign_ids, params=sign_params)
-def sign(request):
-    return request.param
+# --- dft_preprocess_data --- #
 
 
 def test_dft_preprocess_data(sign):
