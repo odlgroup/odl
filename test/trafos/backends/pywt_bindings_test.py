@@ -120,7 +120,7 @@ def shape_setup(ndim, wavelet, mode):
     return wavelet, mode, nlevels, image_shape, coeff_shapes
 
 
-dtype_params = ['float32', 'float64']
+dtype_params = np.sctypes['float'] + np.sctypes['complex']
 dtype_ids = [' dtype = {} '.format(dt) for dt in dtype_params]
 
 
@@ -138,7 +138,7 @@ def test_pywt_coeff_shapes(shape_setup):
 @pytest.fixture(scope='module')
 def small_shapes(ndim):
     if ndim == 1:
-        shapes = [(2,), (2,), (3,)]
+        shapes = [(2,), 2, (3,)]  # contains integer shape
     elif ndim == 2:
         shapes = [(2, 2), (2, 2), (3, 4)]
     elif ndim == 3:
@@ -149,20 +149,20 @@ def small_shapes(ndim):
     return ndim, shapes
 
 
-def _grouped_and_flat_arrays(shapes):
+def _grouped_and_flat_arrays(shapes, dtype):
     """Return a grouped and flat list of arrays with specified shapes.
 
     The lists are constructed as if they were used in a wavelet transform,
     i.e. the array with shape ``shapes[0]`` appears once, while the
     others appear ``2 ** ndim - 1`` times each.
     """
-    array = np.random.uniform(size=shapes[0])
+    array = np.random.uniform(size=shapes[0]).astype(dtype)
     grouped_list = [array]
     flat_list = [array.ravel()]
     ndim = len(shapes[0])
 
     for shape in shapes[1:]:
-        arrays = [np.random.uniform(size=shape)
+        arrays = [np.random.uniform(size=shape).astype(dtype)
                   for _ in range(2 ** ndim - 1)]
         grouped_list.append(tuple(arrays))
         flat_list.extend([arr.ravel() for arr in arrays])
@@ -171,9 +171,10 @@ def _grouped_and_flat_arrays(shapes):
 
 
 def test_pywt_coeff_list_conversion(small_shapes):
+    """Test if converstion flat array <-> coefficient list works."""
     ndim, shapes = small_shapes
 
-    grouped_list, flat_list = _grouped_and_flat_arrays(shapes)
+    grouped_list, flat_list = _grouped_and_flat_arrays(shapes, dtype=float)
 
     true_flat_array = np.hstack(flat_list)
     flat_array = pywt_flat_array_from_coeffs(grouped_list)
@@ -184,10 +185,10 @@ def test_pywt_coeff_list_conversion(small_shapes):
     assert all_equal(coeff_list, true_coeff_list)
 
 
-def test_multilevel_decomp_and_recon(shape_setup, dtype):
+def test_multilevel_recon_inverts_decomp(shape_setup, dtype):
+    """Test that reco is the inverse of decomp."""
     wavelet, mode, nlevels, image_shape, coeff_shapes = shape_setup
 
-    # Test invertibility the decomposition
     image = np.random.uniform(size=image_shape).astype(dtype)
     wave_decomp = pywt_multi_level_decomp(image, wavelet, nlevels, mode)
     wave_recon = pywt_multi_level_recon(wave_decomp, wavelet, mode,
@@ -196,5 +197,26 @@ def test_multilevel_decomp_and_recon(shape_setup, dtype):
     assert all_almost_equal(wave_recon, image)
 
 
+def test_multilevel_decomp_inverts_recon(shape_setup):
+    """Test that decomp is the inverse of recon."""
+    dtype = 'float64'  # when fixed, use dtype fixture instead
+    wavelet, mode, nlevels, image_shape, coeff_shapes = shape_setup
+
+    if not ((ndim == 1 and wavelet == 'sym2' and mode == 'per') or
+            (ndim == 1 and wavelet == 'db1' and mode in ('zpd', 'per'))):
+
+        # The reverse invertibility is not given since the wavelet
+        # decomposition as implemented in PyWavelets, is not left-invertible.
+        # Only some setups work by miracle.
+        # TODO: investigate further
+        pytest.xfail('not left-invertible')
+
+    coeffs, _ = _grouped_and_flat_arrays(coeff_shapes, dtype)
+    wave_recon = pywt_multi_level_recon(coeffs, wavelet, mode,
+                                        recon_shape=image_shape)
+    wave_decomp = pywt_multi_level_decomp(wave_recon, wavelet, nlevels, mode)
+    assert all_almost_equal(coeffs, wave_decomp)
+
+
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/'), ' -v'))
