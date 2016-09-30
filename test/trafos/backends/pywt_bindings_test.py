@@ -223,9 +223,11 @@ def test_multilevel_decomp_inverts_recon(shape_setup):
 def test_explicit_example():
     """Exhaustive test of a hand-calculated 2D example."""
 
-    x = np.array([[1, 1, 0],
-                  [1, 0, 1],
-                  [0, 1, 1]])
+    x = np.array([[1, 1, 0, 1],
+                  [1, 0, 1, 0],
+                  [0, 1, 1, 1],
+                  [0, 0, 1, 0],
+                  [1, 1, 0, 0]])
 
     # Explicit Haar wavelet filters
     tau = 1.0 / np.sqrt(2)
@@ -244,18 +246,33 @@ def test_explicit_example():
     conv_hl = convolve(x, filter_hl)
     conv_hh = convolve(x, filter_hh)
 
-    # Downsampling gives the wavelet coefficients (starting with index 1)
+    # Downsampling by factor 2, taking the odd indices, gives the wavelet
+    # coefficients
     coeff_aa = conv_ll[1::2, 1::2]
     coeff_ad = conv_lh[1::2, 1::2]
     coeff_da = conv_hl[1::2, 1::2]
     coeff_dd = conv_hh[1::2, 1::2]
 
-    # Compare with single level wavelet trafo (zero padding)
+    # Compare with single-level wavelet trafo (zero padding)
     coeffs = pywt_single_level_decomp(x, wavelet='haar', mode='zpd')
     approx, details = coeffs
 
     assert all_almost_equal(approx, coeff_aa)
     assert all_almost_equal(details, [coeff_ad, coeff_da, coeff_dd])
+
+    # Second level, continuing with the level 1 approximation coefficient
+    coeff_2_aa = convolve(coeff_aa, filter_ll)[1::2, 1::2]
+    coeff_2_ad = convolve(coeff_aa, filter_lh)[1::2, 1::2]
+    coeff_2_da = convolve(coeff_aa, filter_hl)[1::2, 1::2]
+    coeff_2_dd = convolve(coeff_aa, filter_hh)[1::2, 1::2]
+
+    # Compare with multi-level wavelet trafo (zero padding)
+    coeffs = pywt_multi_level_decomp(x, wavelet='haar', mode='zpd', nlevels=2)
+    approx_2, details_2, details_1 = coeffs
+
+    assert all_almost_equal(approx_2, coeff_2_aa)
+    assert all_almost_equal(details_1, [coeff_ad, coeff_da, coeff_dd])
+    assert all_almost_equal(details_2, [coeff_2_ad, coeff_2_da, coeff_2_dd])
 
 
 if __name__ == '__main__':
