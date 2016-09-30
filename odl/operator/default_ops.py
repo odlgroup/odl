@@ -839,6 +839,12 @@ class ZeroOperator(Operator):
         >>> op = odl.ZeroOperator(odl.rn(3))
         >>> op([1, 2, 3])
         rn(3).element([0.0, 0.0, 0.0])
+
+        Also works with domain != range
+
+        >>> op = odl.ZeroOperator(odl.rn(3), odl.cn(4))
+        >>> op([1, 2, 3])
+        cn(4).element([0j, 0j, 0j, 0j])
         """
         if range is None:
             range = domain
@@ -847,10 +853,17 @@ class ZeroOperator(Operator):
 
     def _call(self, x, out=None):
         """Return the constant vector or assign it to ``out``."""
-        if out is None:
-            out = 0 * x
+        if self.domain == self.range:
+            if out is None:
+                out = 0 * x
+            else:
+                out.lincomb(0, x)
         else:
-            out.lincomb(0, x)
+            result = self.range.zero()
+            if out is None:
+                out = result
+            else:
+                out.assign(result)
         return out
 
     @property
