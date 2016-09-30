@@ -251,7 +251,7 @@ def is_complex_floating_dtype(dtype):
     return np.issubsctype(dtype, np.complexfloating)
 
 
-def real_dtype(dtype, use_default=False, default=None):
+def real_dtype(dtype, default=None):
     """Return the real counterpart of ``dtype`` if existing.
 
     Parameters
@@ -259,12 +259,9 @@ def real_dtype(dtype, use_default=False, default=None):
     dtype :
         Real or complex floating point data type. It can be given in any
         way the `numpy.dtype` constructor understands.
-    use_default : bool, optional
-        If ``True``, return ``default`` if no complex data type exists
-        for ``dtype``. For ``False``, an error is raised instead.
     default :
-        Object to be returned if no complex counterpart is found for
-        ``dtype``.
+        Object to be returned if no real counterpart is found for
+        ``dtype``, except for ``None``, in which case an error is raised.
 
     Returns
     -------
@@ -275,7 +272,7 @@ def real_dtype(dtype, use_default=False, default=None):
     ------
     ValueError
         if there is no real counterpart to the given data type and
-        ``use_default == False``.
+        ``default == None``.
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -285,7 +282,7 @@ def real_dtype(dtype, use_default=False, default=None):
     try:
         real_dtype = TYPE_MAP_C2R[dtype]
     except KeyError:
-        if use_default:
+        if default is not None:
             return default
         else:
             raise ValueError('no real counterpart exists for `dtype` {}'
@@ -294,20 +291,17 @@ def real_dtype(dtype, use_default=False, default=None):
         return real_dtype
 
 
-def complex_dtype(dtype, use_default=False, default=None):
-    """Return the complex counterpart of ``dtype`` if existing.
+def complex_dtype(dtype, default=None):
+    """Return complex counterpart of ``dtype`` if existing, else ``default``.
 
     Parameters
     ----------
     dtype :
         Real or complex floating point data type. It can be given in any
         way the `numpy.dtype` constructor understands.
-    use_default : bool, optional
-        If ``True``, return ``default`` if no real data type exists
-        for ``dtype``. For ``False``, an error is raised instead.
     default :
-        Object to be returned if no real counterpart is found for
-        ``dtype``.
+        Object to be returned if no complex counterpart is found for
+        ``dtype``, except for ``None``, in which case an error is raised.
 
     Returns
     -------
@@ -317,8 +311,8 @@ def complex_dtype(dtype, use_default=False, default=None):
     Raises
     ------
     ValueError
-        if there is no real counterpart to the given data type and
-        ``use_default == False``.
+        if there is no complex counterpart to the given data type and
+        ``default == None``.
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -328,7 +322,7 @@ def complex_dtype(dtype, use_default=False, default=None):
     try:
         complex_dtype = TYPE_MAP_R2C[dtype]
     except KeyError:
-        if use_default:
+        if default is not None:
             return default
         else:
             raise ValueError('no complex counterpart exists for `dtype` {}'
@@ -338,7 +332,7 @@ def complex_dtype(dtype, use_default=False, default=None):
 
 
 def conj_exponent(exp):
-    """Conjugate exponent p / (p-1).
+    """Conjugate exponent ``exp / (exp - 1)``.
 
     Parameters
     ----------

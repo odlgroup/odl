@@ -182,7 +182,7 @@ def test_reciprocal_grid_nd_axes():
         inactive = np.logical_not(active)
 
         true_recip_stride = np.empty(grid.ndim)
-        true_recip_stride[active] = 2 * pi / (s[active] * n[active])
+        true_recip_stride[active] = 2 * np.pi / (s[active] * n[active])
         true_recip_stride[inactive] = s[inactive]
 
         # Without shift altogether

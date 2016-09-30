@@ -27,7 +27,7 @@ import pytest
 
 from odl.trafos.backends import pyfftw_call, PYFFTW_AVAILABLE
 from odl.util import (
-    all_almost_equal,  is_real_dtype, dtype_repr, complex_dtype)
+    all_almost_equal, is_real_dtype, dtype_repr, complex_dtype)
 
 
 pytestmark = pytest.mark.skipif(not PYFFTW_AVAILABLE,
