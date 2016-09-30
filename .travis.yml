@@ -51,8 +51,8 @@ before_script:
 script:
   # Run tests, including PEP8 check, and produce a coverage report
   - py.test --doctest-modules --cov --cov-report term-missing --pep8
-  # Build the Sphinx doc
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
+  # Build the Sphinx doc (only for Python 3.5 and the master branch)
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" ]]; then
       cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -;
       travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build;
     fi
@@ -60,7 +60,7 @@ script:
 after_success:
   # Push coverage report to coveralls
   - coveralls
-  # Deploy the Sphinx doc to gh-pages (only for master branch and one Python version)
+  # Deploy the Sphinx doc to gh-pages (only for Python 3.5 and the master branch)
   # See https://github.com/Syntaf/travis-sphinx
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" ]]; then
       travis-sphinx deploy;
