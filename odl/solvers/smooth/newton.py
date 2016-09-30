@@ -34,7 +34,7 @@ __all__ = ('newtons_method', 'bfgs_method', 'broydens_method')
 # TODO: update all docs
 
 
-def _bfgs_multiply(s, y, x):
+def _bfgs_multiply(s, y, x, hessinv_estimate=None):
     """Computes ``Hn^-1(x)`` for the L-BFGS method.
 
     Parameters
@@ -45,6 +45,8 @@ def _bfgs_multiply(s, y, x):
         The ``y`` coefficients in the BFGS update, see Notes.
     x : `LinearSpaceElement`
         Point in which to evaluate the product.
+    hessinv_estimate : `Operator`, optional
+        Initial estimate of the hessian ``H0^-1``.
 
     Notes
     -----
@@ -56,6 +58,8 @@ def _bfgs_multiply(s, y, x):
         H_{n}^{-1}
         \\left(I - \\frac{ y_n s_n^T}{y_n^T s_n} \\right) +
         \\frac{s_n s_n^T}{y_n^T \, s_n}
+
+    With :math:`H_0^{-1}` given by ``hess_estimate``.
     """
     assert len(s) == len(y)
 
@@ -67,6 +71,9 @@ def _bfgs_multiply(s, y, x):
         rhos[i] = 1.0 / y[i].inner(s[i])
         alphas[i] = rhos[i] * (s[i].inner(r))
         r.lincomb(1, r, -alphas[i], y[i])
+
+    if hessinv_estimate is not None:
+        r = hessinv_estimate(r)
 
     for i in range(len(s)):
         beta = rhos[i] * (y[i].inner(r))
@@ -178,7 +185,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
 
 
 def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16, maxcor=None,
-                callback=None):
+                hessinv_estimate=None, callback=None):
     """Quasi-Newton BFGS method to minimize a differentiable function.
 
     Can use either the regular BFGS method, or the limited memory BFGS method.
@@ -225,6 +232,10 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         Maximum number of correction factors to store. If ``None``, the method
         is the regular BFGS method. If an integer, the method becomes the
         Limited Memory BFGS method.
+    hessinv_estimate : `Operator`, optional
+        Initial estimate of the inverse of the Hessian operator. Needs to be an
+        operator from ``f.domain`` to ``f.domain``.
+        Default: Identity on ``f.domain``
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate.
     """
@@ -242,7 +253,7 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     grad_x = grad(x)
     for _ in range(maxiter):
         # Determine a stepsize using line search
-        search_dir = -_bfgs_multiply(ys, ss, grad_x)
+        search_dir = -_bfgs_multiply(ys, ss, grad_x, hessinv_estimate)
         dir_deriv = search_dir.inner(grad_x)
         if np.abs(dir_deriv) < tol:
             return  # we found an optimum
