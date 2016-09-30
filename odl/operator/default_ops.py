@@ -132,32 +132,6 @@ class ScalingOperator(Operator):
         return '{} * I'.format(self.scalar)
 
 
-class ZeroOperator(ScalingOperator):
-
-    """Operator mapping each element to the zero element.
-
-        ``ZeroOperator()(x) == 0``
-    """
-
-    def __init__(self, space):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        space : `LinearSpace`
-            Space of elements which the operator is acting on.
-        """
-        super().__init__(space, 0)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return '0'
-
-
 class IdentityOperator(ScalingOperator):
 
     """Operator mapping each element to itself.
@@ -823,7 +797,7 @@ class ConstantOperator(Operator):
         >>> deriv([2, 2, 2])
         rn(3).element([0.0, 0.0, 0.0])
         """
-        return ZeroOperator(self.domain)
+        return ZeroOperator(domain=self.domain, range=self.range)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -832,6 +806,37 @@ class ConstantOperator(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return "{}".format(self.constant)
+
+
+class ZeroOperator(ConstantOperator):
+
+    """Operator mapping each element to the zero element::
+
+        ZeroOperator(space)(x) == space.zero()
+    """
+
+    def __init__(self, domain, range=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        domain : `LinearSpace`
+            Domain of the operator.
+        range : `LinearSpace`, optional
+            Range of the operator. Default: ``domain``
+        """
+        if range is None:
+            range = domain
+
+        super().__init__(constant=range.zero(), domain=domain, range=range)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return '0'
 
 
 class ResidualOperator(Operator):
