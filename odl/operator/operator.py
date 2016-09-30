@@ -725,8 +725,8 @@ class Operator(object):
             return self + ConstantOperator(other, self.domain, self.range)
         elif other in self.range.field:
             constant_vector = other * self.range.one()
-            return self + ConstantOperator(constant_vector, self.domain,
-                                           self.range)
+            return self + ConstantOperator(constant_vector,
+                                           self.domain, self.range)
         elif isinstance(other, Operator):
             return OperatorSum(self, other)
         else:
