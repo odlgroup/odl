@@ -23,7 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 from itertools import product
-from math import pi
 import numpy as np
 import pytest
 

@@ -22,15 +22,12 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from itertools import product
-from math import pi
 import numpy as np
 import pytest
 
 from odl.trafos.backends import pyfftw_call, PYFFTW_AVAILABLE
-from odl.util import (all_almost_equal, all_equal, never_skip,
-                      is_real_dtype, dtype_repr, complex_dtype,
-                      conj_exponent)
+from odl.util import (
+    all_almost_equal,  is_real_dtype, dtype_repr, complex_dtype)
 
 
 pytestmark = pytest.mark.skipif(not PYFFTW_AVAILABLE,
@@ -48,12 +45,12 @@ def _random_array(shape, dtype):
 # ---- pyfftw_call ---- #
 
 
-def _params_from_dtype(dt):
-    if is_real_dtype(dt):
+def _params_from_dtype(dtype):
+    if is_real_dtype(dtype):
         halfcomplex = True
     else:
         halfcomplex = False
-    return halfcomplex, complex_dtype(dt)
+    return halfcomplex, complex_dtype(dtype)
 
 
 def _halfcomplex_shape(shape, axes=None):
