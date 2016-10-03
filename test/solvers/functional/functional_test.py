@@ -29,6 +29,8 @@ import pytest
 # Internal
 import odl
 from odl.util.testutils import all_almost_equal, almost_equal, noise_element
+from odl.solvers.functional.default_functionals import (
+    KullbackLeiblerConvexConj)
 
 
 # TODO: maybe add tests for if translations etc. belongs to the wrong space.
@@ -90,11 +92,11 @@ def functional(request, space):
     elif name == 'kl':
         func = odl.solvers.functional.KullbackLeibler(space)
     elif name == 'kl_cc':
-        func = odl.solvers.functional.KullbackLeiblerConvexConj(space)
+        func = odl.solvers.KullbackLeibler(space).convex_conj
     elif name == 'kl_cross_ent':
         func = odl.solvers.functional.KullbackLeiblerCrossEntropy(space)
     elif name == 'kl_cc_cross_ent':
-        func = odl.solvers.KullbackLeiblerCrossEntropyConvexConj(space)
+        func = odl.solvers.KullbackLeiblerCrossEntropy(space).convex_conj
     else:
         assert False
 
@@ -123,7 +125,7 @@ def test_derivative(functional, space):
         x = x.ufunc.absolute()
         y = y.ufunc.absolute()
 
-    if isinstance(functional, odl.solvers.KullbackLeiblerConvexConj):
+    if isinstance(functional, KullbackLeiblerConvexConj):
         # The functional is not defined for values >= 1
         x = x - x.ufunc.max() + 0.99
         y = y - y.ufunc.max() + 0.99

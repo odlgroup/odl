@@ -38,8 +38,7 @@ from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
            'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox',
            'IndicatorNonnegativity', 'KullbackLeibler',
-           'KullbackLeiblerConvexConj', 'KullbackLeiblerCrossEntropy',
-           'KullbackLeiblerCrossEntropyConvexConj')
+           'KullbackLeiblerCrossEntropy')
 
 
 class L1Norm(Functional):
@@ -538,6 +537,7 @@ class IndicatorBox(Functional):
 
 
 class IndicatorNonnegativity(IndicatorBox):
+
     """Indicator on the set of non-negative numbers.
 
     Notes
@@ -574,30 +574,36 @@ class IndicatorNonnegativity(IndicatorBox):
 
 
 class KullbackLeibler(Functional):
+
     """The Kullback-Leibler divergence functional.
 
     Notes
     -----
-    The functional is given by
+    The functional :math:`F` is given by
 
     .. math::
-
         \\sum_{i} \left( x_i - g_i + g_i \log \left( \\frac{g_i}{ pos(x_i) }
         \\right) \\right) + I_{x \\geq 0}(x)
 
     where :math:`g` is the prior, and :math:`I_{x \\geq 0}(x)` is the indicator
     function on nonnegative elements.
 
-    Mention something about the use of this, and compare to
-    KullbackLeiblerCrossEntropy.
+    KL based objectives are common in MLEM optimization problems and are often
+    used as data-matching term when data noise governed by a multivariate
+    Poisson probability distribution is significant.
+
+    The functional is related to the Kullback-Leibler cross entropy functional
+    `KullbackLeiblerCrossEntropy`. The KL cross entropy is the one
+    diescribed in `this Wikipedia article
+    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_, and
+    the functional :math:`F` is obtained by switching place of the prior and
+    the varialbe in the KL cross entropy functional. See the See Also section.
 
     See Also
     --------
     KullbackLeiblerConvexConj : the convex conjugate functional
     KullbackLeiblerCrossEntropy : related functional
     """
-
-    # TODO: update doc above
 
     def __init__(self, space, prior=None):
         """Initialize a new instance.
@@ -607,7 +613,8 @@ class KullbackLeibler(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         prior : ``space`` element, optional
-            Data term, positive. If None it is take as the one-element.
+            Data term, positive.
+            Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
@@ -626,7 +633,8 @@ class KullbackLeibler(Functional):
     def _call(self, x):
         """Return the KL-diveregnce in the point ``x``.
 
-        If any point in x is zero or smaller, the value is infinite.
+        If any components of ``x`` is non-positive, the value is positive
+        infinity.
         """
         if self.prior is None:
             tmp = ((x - 1 - np.log(x)).inner(self.domain.one()))
@@ -639,15 +647,12 @@ class KullbackLeibler(Functional):
         else:
             return tmp
 
-    # TODO: note that the gradient should only be deinfed for x > 0 (since
-    # otherwise the functional is considered to be infinite). However, is there
-    # an efficient way to test this?
     @property
     def gradient(self):
         """Gradient operator of the functional.
 
         The gradient is not defined in points where one or more components
-        are 0.
+        are non-positive.
         """
         functional = self
 
@@ -663,18 +668,13 @@ class KullbackLeibler(Functional):
             def _call(self, x):
                 """Apply the gradient operator to the given point.
 
-                The gradient is not defined in 0.
+                The gradient is not defined in points where one or more
+                components are non-positive.
                 """
-                if 0 in x:
-                    # The derivative is not defined.
-                    raise ValueError('The gradient of the Kullback-Leibler '
-                                     'functional is not defined for `x` with '
-                                     'one or more components zero.'.format(x))
+                if functional.prior is None:
+                    return (-1.0) / x + 1
                 else:
-                    if functional.prior is None:
-                        return (-1.0) / x + 1
-                    else:
-                        return (-functional.prior) / x + 1
+                    return (-functional.prior) / x + 1
 
         return KLGradient()
 
@@ -697,6 +697,7 @@ class KullbackLeibler(Functional):
 
 
 class KullbackLeiblerConvexConj(Functional):
+
     """The convex conjugate of Kullback-Leibler divergence functional.
 
     Notes
@@ -710,15 +711,12 @@ class KullbackLeiblerConvexConj(Functional):
     where :math:`g` is the prior, and :math:`I_{1_X - x \geq 0}(x)` is the
     indicator function on :math:`x \leq 1`.
 
-    Mention something about the use of this, and compare to
-    KullbackLeiblerCrossEntropy.
+    This is the convex conjugate functional of `KullbackLeibler`.
 
     See Also
     --------
     KullbackLeibler : convex conjugate functional
     """
-
-    # TODO: update doc above
 
     def __init__(self, space, prior=None):
         """Initialize a new instance.
@@ -728,7 +726,8 @@ class KullbackLeiblerConvexConj(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         g : ``space`` element, optional
-            Data term, positive. If None it is take as the one-element.
+            Data term, positive.
+            Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
@@ -747,7 +746,8 @@ class KullbackLeiblerConvexConj(Functional):
     def _call(self, x):
         """Return the value in the point ``x``.
 
-        This is only finite if all components of ``x`` are less than 1.
+        If any components of ``x`` is larger than or equal to 1, the value is
+        positive infinity.
         """
         if self.prior is None:
             tmp = -1.0 * (np.log(1 - x)).inner(self.domain.one())
@@ -759,15 +759,12 @@ class KullbackLeiblerConvexConj(Functional):
         else:
             return tmp
 
-    # TODO: note that the gradient should only be deinfed for x < 1 (since
-    # otherwise the functional is considered to be infinite). However, is there
-    # an efficient way to test this?
     @property
     def gradient(self):
         """Gradient operator of the functional.
 
         The gradient is not defined in points where one or more components
-        are 1.
+        are larger than or equal to one.
         """
         functional = self
 
@@ -783,18 +780,13 @@ class KullbackLeiblerConvexConj(Functional):
             def _call(self, x):
                 """Apply the gradient operator to the given point.
 
-                The gradient is not defined if any component is 1.
+                The gradient is not defined in points where one or more
+                components are larger than or equal to one.
                 """
-                if 1.0 in x:
-                    # The derivative is not defined.
-                    raise ValueError('The gradient of the Kullback-Leibler '
-                                     'functional is not defined for `x` with '
-                                     'one or more components one.'.format(x))
+                if functional.prior is None:
+                    return 1.0 / (1 - x)
                 else:
-                    if functional.prior is None:
-                        return 1.0 / (1 - x)
-                    else:
-                        return functional.prior / (1 - x)
+                    return functional.prior / (1 - x)
 
         return KLCCGradient()
 
@@ -816,30 +808,36 @@ class KullbackLeiblerConvexConj(Functional):
 
 
 class KullbackLeiblerCrossEntropy(Functional):
-    """The Kullback-Leibler divergence functional.
+
+    """The Kullback-Leibler Cross Entropy divergence functional.
 
     Notes
     -----
-    The functional is given by
+    The functional :math:`F` is given by
 
     .. math::
-
         \\sum_{i} \left( g_i - x_i + x_i \log \left( \\frac{x_i}{ pos(g_i) }
         \\right) \\right) + I_{x \\geq 0}(x)
 
     where :math:`g` is the prior, and :math:`I_{x \\geq 0}(x)` is the indicator
     function on nonnegative elements.
 
-    Mention something about the use of this, and compare to
-    KullbackLeibler.
+    `Wikipedia article on Kullback Leibler divergence
+    <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence>`_.
+    For further information about the functional, see for example `this article
+    <http://ieeexplore.ieee.org/document/1056144/?arnumber=1056144>`_.
+
+    The KL cross entropy functional :math:`F`, described above, is related to
+    another functional which is also know as KL divergence. This functional
+    is often used as data discrepancy term in inverse problems, when data is
+    corrupted with Poisson noise. This functional is obtained by changing place
+    of the prior and the variable. See the See Also section.
 
     See Also
     --------
-    KullbackLeiblerCrossEntropyConvexConj : the convex conjugate functional
     KullbackLeibler : related functional
+    KullbackLeiblerCrossEntropyConvexConj : the convex conjugate functional
     """
-
-    # TODO: update doc above
 
     def __init__(self, space, prior=None):
         """Initialize a new instance.
@@ -849,7 +847,8 @@ class KullbackLeiblerCrossEntropy(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         prior : ``space`` element, optional
-            Data term, positive. If None it is take as the one-element.
+            Data term, positive.
+            Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
@@ -868,7 +867,8 @@ class KullbackLeiblerCrossEntropy(Functional):
     def _call(self, x):
         """Return the KL-diveregnce in the point ``x``.
 
-        If any point in x is zero or smaller, the value is infinite.
+        If any components of ``x`` is non-positive, the value is positive
+        infinity.
         """
         if self.prior is None:
             tmp = ((1 - x + x * np.log(x)).inner(self.domain.one()))
@@ -910,14 +910,14 @@ class KullbackLeiblerCrossEntropy(Functional):
                 else:
                     tmp = np.log(x / functional.prior)
 
-                if any(np.isnan(tmp)) or -np.inf in tmp:
+                if np.all(np.isfinite(tmp)):
+                    return tmp
+                else:
                     # The derivative is not defined.
                     raise ValueError('The gradient of the Kullback-Leibler '
                                      'Cross Entropy functional is not defined '
                                      'for `x` with one or more components '
                                      'less than or equal to zero.'.format(x))
-                else:
-                    return tmp
 
         return KLCrossEntropyGradient()
 
@@ -952,15 +952,12 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
     where :math:`g` is the prior.
 
-    Mention something about the use of this, and compare to
-    KullbackLeibler.
+    This is the convex conjugate functional of `KullbackLeiblerCrossEntropy`.
 
     See Also
     --------
     KullbackLeiblerCrossEntropy : convex conjugate functional
     """
-
-    # TODO: update doc above
 
     def __init__(self, space, prior=None):
         """Initialize a new instance.
@@ -970,7 +967,8 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
         g : ``space`` element, optional
-            Data term, positive. If None it is take as the one-element.
+            Data term, positive.
+            Default: if None it is take as the one-element.
         """
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
 
