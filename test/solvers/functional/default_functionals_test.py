@@ -25,7 +25,8 @@ import pytest
 # Internal
 import odl
 from odl.util.testutils import all_almost_equal, almost_equal, noise_element
-
+from odl.solvers.functional.default_functionals import (
+    KullbackLeiblerConvexConj, KullbackLeiblerCrossEntropyConvexConj)
 
 space_params = ['r10', 'uniform_discr']
 space_ids = [' space = {}'.format(p.ljust(10)) for p in space_params]
@@ -299,13 +300,13 @@ def test_kullback_leibler(space):
     """Test the kullback leibler functional and its convex conjugate."""
     # The prior needs to be positive
     prior = noise_element(space)
-    prior = prior.ufunc.absolute()
+    prior = np.abs(prior)
 
     func = odl.solvers.KullbackLeibler(space, prior)
 
     # The fucntional is only defined for positive elements
     x = noise_element(space)
-    x = x.ufunc.absolute()
+    x = np.abs(x)
     one_elem = space.one()
 
     # Evaluation of the functional
@@ -334,7 +335,7 @@ def test_kullback_leibler(space):
     # The convex conjugate functional
     cc_func = func.convex_conj
 
-    assert isinstance(cc_func, odl.solvers.KullbackLeiblerConvexConj)
+    assert isinstance(cc_func, KullbackLeiblerConvexConj)
 
     # The convex conjugate functional is only finite for elements with all
     # components smaller than 1.
@@ -369,13 +370,13 @@ def test_kullback_leibler_cross_entorpy(space):
     """Test the kullback leibler cross entropy and its convex conjugate."""
     # The prior needs to be positive
     prior = noise_element(space)
-    prior = prior.ufunc.absolute()
+    prior = np.abs(prior)
 
     func = odl.solvers.KullbackLeiblerCrossEntropy(space, prior)
 
     # The fucntional is only defined for positive elements
     x = noise_element(space)
-    x = x.ufunc.absolute()
+    x = np.abs(x)
     one_elem = space.one()
 
     # Evaluation of the functional
@@ -404,8 +405,7 @@ def test_kullback_leibler_cross_entorpy(space):
     # The convex conjugate functional
     cc_func = func.convex_conj
 
-    assert isinstance(cc_func,
-                      odl.solvers.KullbackLeiblerCrossEntropyConvexConj)
+    assert isinstance(cc_func, KullbackLeiblerCrossEntropyConvexConj)
 
     # The convex conjugate functional is defined for all values of x.
     x = noise_element(space)
