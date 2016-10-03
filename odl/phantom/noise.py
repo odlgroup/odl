@@ -28,13 +28,19 @@ import numpy as np
 __all__ = ('white_noise', 'poisson_noise')
 
 
-def white_noise(space):
-    """Standard gaussian noise in space, pointwise N(0, 1).
+def white_noise(space, mean=0, stddev=1):
+    """Standard gaussian noise in space, pointwise ``N(mean, stddev**2)``.
 
     Parameters
     ----------
     space : `FnBase`
-        The space that the noise should be created in
+        The space in which the noise is created.
+    mean : `float` or ``space`` `element-like`
+        The mean of the white noise. If a scalar, it is interpreted as
+        ``mean * space.one()``.
+    stddev : `float` or ``space`` `element-like`
+        The standard deviation of the white noise. If a scalar, it is
+        interpreted as ``stddev * space.one()``.
 
     Returns
     -------
@@ -43,9 +49,9 @@ def white_noise(space):
     See Also
     --------
     poisson_noise
-    numpy.random.randn
+    numpy.random.normal
     """
-    values = np.random.randn(*space.shape)
+    values = np.random.normal(loc=mean, scale=stddev, size=space.shape)
     return space.element(values)
 
 
@@ -64,8 +70,9 @@ def poisson_noise(intensity):
 
     Notes
     -----
-    The probability density function for value :math:`k` and intensity
-    :math:`\\lambda` is given by:
+    For a Poisson distributed random variable :math:`X` with intensity
+    :math:`\\lambda`, the probability of it taking the value
+    :math:`k \\in \mathbb{N}_0` is given by
 
     .. math::
         \\frac{\\lambda^k e^{-\\lambda}}{k!}
@@ -85,8 +92,12 @@ if __name__ == '__main__':
     # Show the phantoms
     import odl
 
+    r100 = odl.rn(100)
+    white_noise(r100).show('white_noise')
+    white_noise(r100, mean=5).show('white_noise with mean')
+
     discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    white_noise(discr).show('white_noise')
+    white_noise(discr).show('white_noise 2d')
 
     # Run also the doctests
     # pylint: disable=wrong-import-position
