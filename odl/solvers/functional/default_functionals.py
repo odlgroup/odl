@@ -612,7 +612,7 @@ class KullbackLeibler(Functional):
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        prior : ``space`` element, optional
+        prior : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
@@ -711,8 +711,6 @@ class KullbackLeiblerConvexConj(Functional):
     where :math:`g` is the prior, and :math:`I_{1_X - x \geq 0}(x)` is the
     indicator function on :math:`x \leq 1`.
 
-    This is the convex conjugate functional of `KullbackLeibler`.
-
     See Also
     --------
     KullbackLeibler : convex conjugate functional
@@ -725,7 +723,7 @@ class KullbackLeiblerConvexConj(Functional):
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        g : ``space`` element, optional
+        g : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
@@ -846,7 +844,7 @@ class KullbackLeiblerCrossEntropy(Functional):
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        prior : ``space`` element, optional
+        prior : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
@@ -952,8 +950,6 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
 
     where :math:`g` is the prior.
 
-    This is the convex conjugate functional of `KullbackLeiblerCrossEntropy`.
-
     See Also
     --------
     KullbackLeiblerCrossEntropy : convex conjugate functional
@@ -966,7 +962,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         ----------
         space : `DiscreteLp` or `FnBase`
             Domain of the functional.
-        g : ``space`` element, optional
+        g : ``space`` `element-like`, optional
             Data term, positive.
             Default: if None it is take as the one-element.
         """
@@ -992,6 +988,7 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
             tmp = (self.prior * (np.exp(x) - 1)).inner(self.domain.one())
         return tmp
 
+    # TODO: replace this when UFuncOperators is in place: PL #576
     @property
     def gradient(self):
         """Gradient operator of the functional."""
