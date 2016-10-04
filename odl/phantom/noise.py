@@ -25,23 +25,79 @@ standard_library.install_aliases()
 import numpy as np
 
 
-__all__ = ('white_noise',)
+__all__ = ('white_noise', 'poisson_noise')
 
 
-def white_noise(space):
-    """Standard gaussian noise in space, pointwise N(0, 1).
+def white_noise(space, mean=0, stddev=1):
+    """Standard gaussian noise in space, pointwise ``N(mean, stddev**2)``.
 
+    Parameters
+    ----------
+    space : `FnBase`
+        The space in which the noise is created.
+    mean : `float` or ``space`` `element-like`
+        The mean of the white noise. If a scalar, it is interpreted as
+        ``mean * space.one()``.
+    stddev : `float` or ``space`` `element-like`
+        The standard deviation of the white noise. If a scalar, it is
+        interpreted as ``stddev * space.one()``.
+
+    Returns
+    -------
+    white_noise : ``space`` element
+
+    See Also
+    --------
+    poisson_noise
+    numpy.random.normal
     """
-    values = np.random.randn(*space.shape)
+    values = np.random.normal(loc=mean, scale=stddev, size=space.shape)
     return space.element(values)
+
+
+def poisson_noise(intensity):
+    """Poisson distributed noise with given intensity.
+
+    Parameters
+    ----------
+    intensity : `FnBase`
+        The intensity (usually called lambda) parameter of the noise.
+
+    Returns
+    -------
+    poisson_noise : ``intensity.space`` element
+        Poisson distributed random variable.
+
+    Notes
+    -----
+    For a Poisson distributed random variable :math:`X` with intensity
+    :math:`\\lambda`, the probability of it taking the value
+    :math:`k \\in \mathbb{N}_0` is given by
+
+    .. math::
+        \\frac{\\lambda^k e^{-\\lambda}}{k!}
+
+    Note that the function only takes integer values.
+
+    See Also
+    --------
+    white_noise
+    numpy.random.poisson
+    """
+    values = np.random.poisson(intensity.asarray())
+    return intensity.space.element(values)
 
 
 if __name__ == '__main__':
     # Show the phantoms
     import odl
 
+    r100 = odl.rn(100)
+    white_noise(r100).show('white_noise')
+    white_noise(r100, mean=5).show('white_noise with mean')
+
     discr = odl.uniform_discr([-1, -1], [1, 1], [300, 300])
-    white_noise(discr).show('white_noise')
+    white_noise(discr).show('white_noise 2d')
 
     # Run also the doctests
     # pylint: disable=wrong-import-position
