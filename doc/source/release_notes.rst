@@ -26,6 +26,7 @@ New features
 - Add ``FunctionalDefaultConvexConjugate`` which acts as a default for ``Functional.convex_conj``, providing it with a proximal property. (:pull:`588`)
 - Add ``IndicatorBox`` and ``IndicatorNonnegativity``which are indicator functions on a box shaped set and the set of nonnegative numbers, respectively. They return 0 if all points in a vector are inside the box, and infinity otherwise. (:pull:`589`)
 - Add proximal operator for the convex conjugate of cross entropy Kullback-Leibler divergence, called ``proximal_cconj_kl_cross_entropy`` (:pull:`561`)
+- Add ``Functional``s for ``KullbackLeibler`` and ``KullbackLeiblerCrossEntropy``, together with corresponding convex conjugates (:pull:`627`)
 
 Improvements
 ------------
