@@ -1,7 +1,21 @@
 include CONTRIBUTING.md
 include LICENSE
+include pytest.ini
 include README.md
 include requirements.txt
 include setup.cfg
 include setup.py
 include test_requirements.txt
+
+exclude .coveragerc
+exclude .pylintrc
+exclude .travis.yml
+exclude .landscape.yml
+exclude appveyor.yml
+
+recursive-include test *.py
+recursive-include doc Makefile *.rst *.py *.bat
+
+prune .github
+prune .travis
+prune doc/_build
