@@ -25,7 +25,7 @@ standard_library.install_aliases()
 import numpy as np
 
 from odl.solvers.functional.functional import Functional
-from odl.operator.operator import Operator
+from odl.operator import Operator
 from odl.space.base_ntuples import FnBase
 
 
@@ -34,7 +34,7 @@ __all__ = ('NumericalDerivative', 'NumericalGradient',)
 
 class NumericalDerivative(Operator):
 
-    """The derivative of a operator by forward differences.
+    """The derivative of an operator by finite differences.
 
     See Also
     --------
@@ -46,22 +46,21 @@ class NumericalDerivative(Operator):
 
         Parameters
         ----------
-        functional : `Operator`
-            The operator whose derivative should be computed. Its domain and
-            range must be `FnBase` spaces.
-        point : ``functional.domain`` `element-like`
+        operator : `Operator`
+            The operator whose derivative should be computed numerically. Its
+            domain and range must be `FnBase` spaces.
+        point : ``operator.domain`` `element-like`
             The point to compute the derivative in.
         method : {'backward', 'forward', 'central'}
             The method to use to compute the derivative.
-        step : `None` or float
+        step : float
             The step length used in the derivative computation.
-            `None` is interpreted as selecting the step according to the dtype
-            of the space. ``step = 1e-8`` for ``float64`` spaces and
-            ``step = 1e-4`` for ``float32`` spaces.
+            Default: selects the step according to the dtype of the space.
 
         Examples
         --------
-        Compute a numerical estimate of the derivative of the L2^2 norm:
+        Compute a numerical estimate of the derivative (Hessian) of the squared
+        L2 norm:
 
         >>> import odl
         >>> space = odl.rn(3)
@@ -70,7 +69,7 @@ class NumericalDerivative(Operator):
         >>> hess([0, 0, 1])
         rn(3).element([0.0, 0.0, 2.0])
 
-        Find the hessian matrix:
+        Find the Hessian matrix:
 
         >>> odl.matrix_representation(hess)
         array([[ 2.,  0.,  0.],
@@ -79,36 +78,43 @@ class NumericalDerivative(Operator):
 
         Notes
         -----
-        If the operator is :math:`A(x)` and stepsize :math:`h` is used, the
-        gradient is computed as follows.
+        If the operator is :math:`A` and step size :math:`h` is used, the
+        derivative in the point :math:`x` and direction :math:`dx` is computed
+        as follows.
 
-        If ``method='backward'`` is used:
-
-        .. math::
-            \\frac{A(x) - A(x - h)}{h}
-
-        if ``method='forward'`` is used:
+        ``method='backward'``:
 
         .. math::
-            \\frac{A(x + h) - A(x)}{h}
+            \\partial A(x)(dx) =
+            (A(x) - A(x - dx \\cdot h / \| dx \|))
+            \\cdot \\frac{\| dx \|}{h}
 
-        if ``method='central'`` is used:
+        ``method='forward'``:
 
         .. math::
-            \\frac{A(x + h/2) - A(x - h/2)}{h}
 
-        The number of function evaluations is ``functional.domain.size + 1`` if
-        ``'backward'`` or ``'forward'`` is used and
-        ``2 * functional.domain.size`` if ``'central'`` is used.
+            \\partial A(x)(dx) =
+            (A(x + dx \\cdot h / \| dx \|) - A(x))
+            \\cdot \\frac{\| dx \|}{h}
+
+        ``method='central'``:
+
+        .. math::
+            \\partial A(x)(dx) =
+            (A(x + dx \\cdot h / (2 \| dx \|)) -
+             A(x - dx \\cdot h / (2 \| dx \|))
+            \\cdot \\frac{\| dx \|}{h}
+
+        The number of operator evaluations is ``2``, regardless of parameters.
         """
         if not isinstance(operator, Operator):
-            raise TypeError('`operator` has to be a `Operator` instance')
+            raise TypeError('`operator` has to be an `Operator` instance')
 
         if not isinstance(operator.domain, FnBase):
-            raise TypeError('`operator.domain` has to be a `FnBase` '
+            raise TypeError('`operator.domain` has to be an `FnBase` '
                             'instance')
         if not isinstance(operator.range, FnBase):
-            raise TypeError('`operator.range` has to be a `FnBase` '
+            raise TypeError('`operator.range` has to be an `FnBase` '
                             'instance')
 
         self.operator = operator
@@ -118,15 +124,14 @@ class NumericalDerivative(Operator):
             # Use half of the number of digits as machine epsilon, this
             # "usually" gives a good balance between precision and numerical
             # stability.
-            self.step = np.finfo(operator.domain.dtype).eps ** (1 / 2)
+            self.step = np.sqrt(np.finfo(operator.domain.dtype).eps)
         else:
             self.step = float(step)
 
-        self.method = str(method).lower()
-        if method not in ('backward', 'forward', 'central'):
-            raise ValueError('`method` not understood')
+        self.method, method_in = str(method).lower(), method
+        if self.method not in ('backward', 'forward', 'central'):
+            raise ValueError("`method` '{}' not understood").format(method_in)
 
-        # TODO: should we really set linear to True here?
         Operator.__init__(self, operator.domain, operator.range,
                           linear=True)
 
@@ -169,14 +174,12 @@ class NumericalGradient(Operator):
         ----------
         functional : `Functional`
             The functional whose gradient should be computed. Its domain must
-            be a `FnBase` space.
+            be an `FnBase` space.
         method : {'backward', 'forward', 'central'}
             The method to use to compute the gradient.
-        step : `None` or float
-            The step length used in the gradient computation.
-            `None` is interpreted as selecting the step according to the dtype
-            of the space. ``step = 1e-8`` for ``float64`` spaces and
-            ``step = 1e-4`` for ``float32`` spaces.
+        step : float
+            The step length used in the derivative computation.
+            Default: selects the step according to the dtype of the space.
 
         Examples
         --------
@@ -206,33 +209,34 @@ class NumericalGradient(Operator):
 
         Notes
         -----
-        If the function is :math:`f(x)` and stepsize :math:`h` is used, the
+        If the functional is :math:`f` and step size :math:`h` is used, the
         gradient is computed as follows.
 
-        If ``method='backward'`` is used:
+        ``method='backward'``:
 
         .. math::
-            \\frac{f(x) - f(x - h)}{h}
+            (\\nabla f(x))_i = \\frac{f(x) - f(x - h e_i)}{h}
 
-        if ``method='forward'`` is used:
-
-        .. math::
-            \\frac{f(x + h) - f(x)}{h}
-
-        if ``method='central'`` is used:
+        ``method='forward'``:
 
         .. math::
-            \\frac{f(x + h/2) - f(x - h/2)}{h}
+            (\\nabla f(x))_i = \\frac{f(x + h e_i) - f(x)}{h}
+
+        ``method='central'``:
+
+        .. math::
+            (\\nabla f(x))_i = \\frac{f(x + (h/2) e_i) - f(x - (h/2) e_i)}{h}
 
         The number of function evaluations is ``functional.domain.size + 1`` if
         ``'backward'`` or ``'forward'`` is used and
         ``2 * functional.domain.size`` if ``'central'`` is used.
+        On large domains this will be computationally infeasible.
         """
         if not isinstance(functional, Functional):
             raise TypeError('`functional` has to be a `Functional` instance')
 
         if not isinstance(functional.domain, FnBase):
-            raise TypeError('`functional.domain` has to be a `FnBase` '
+            raise TypeError('`functional.domain` has to be an `FnBase` '
                             'instance')
 
         self.functional = functional
@@ -240,13 +244,13 @@ class NumericalGradient(Operator):
             # Use half of the number of digits as machine epsilon, this
             # "usually" gives a good balance between precision and numerical
             # stability.
-            self.step = np.finfo(functional.domain.dtype).eps ** (1 / 2)
+            self.step = np.sqrt(np.finfo(functional.domain.dtype).eps)
         else:
             self.step = float(step)
 
-        self.method = str(method).lower()
-        if method not in ('backward', 'forward', 'central'):
-            raise ValueError('`method` not understood')
+        self.method, method_in = str(method).lower(), method
+        if self.method not in ('backward', 'forward', 'central'):
+            raise ValueError("`method` '{}' not understood").format(method_in)
 
         Operator.__init__(self, functional.domain, functional.domain,
                           linear=functional.is_linear)
@@ -261,7 +265,7 @@ class NumericalGradient(Operator):
         if self.method == 'backward':
             fx = self.functional(x)
             for i in range(self.domain.size):
-                dx[i - 1] = 0
+                dx[i - 1] = 0  # reset step from last iteration
                 dx[i] = self.step
                 dfdx[i] = fx - self.functional(x - dx)
         elif self.method == 'forward':
@@ -282,9 +286,9 @@ class NumericalGradient(Operator):
         return dfdx
 
     def derivative(self, point):
-        """Return the derivative in point.
+        """Return the derivative in ``point``.
 
-        The derivative of the gradient is often called the hessian.
+        The derivative of the gradient is often called the Hessian.
 
         Parameters
         ----------
@@ -300,7 +304,7 @@ class NumericalGradient(Operator):
 
         Examples
         --------
-        Compute a numerical estimate of the derivative of the L2^2 norm:
+        Compute a numerical estimate of the derivative of the squared L2 norm:
 
         >>> import odl
         >>> space = odl.rn(3)
@@ -310,7 +314,7 @@ class NumericalGradient(Operator):
         >>> hess([1, 0, 0])
         rn(3).element([2.0, 0.0, 0.0])
 
-        Find the hessian matrix:
+        Find the Hessian matrix:
 
         >>> odl.matrix_representation(hess)
         array([[ 2.,  0.,  0.],
