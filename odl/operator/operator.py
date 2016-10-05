@@ -1203,7 +1203,7 @@ class OperatorVectorSum(Operator):
 
     @property
     def vector(self):
-        """The constant operator range element to subtract."""
+        """The constant operator range element to add."""
         return self.__vector
 
     def _call(self, x, out=None):
@@ -1233,9 +1233,9 @@ class OperatorVectorSum(Operator):
         >>> import odl
         >>> r3 = odl.rn(3)
         >>> op = odl.IdentityOperator(r3)
-        >>> res = odl.OperatorVectorSum(op, r3.element([1, 2, 3]))
+        >>> sum = odl.OperatorVectorSum(op, r3.element([1, 2, 3]))
         >>> x = r3.element([4, 5, 6])
-        >>> res.derivative(x)(x)
+        >>> sum.derivative(x)(x)
         rn(3).element([4.0, 5.0, 6.0])
         """
         return self.operator.derivative(point)

@@ -33,15 +33,15 @@ import odl
 
 
 # Discrete reconstruction space: discretized functions on the rectangle
-# [-20, 20]^2 with 300 samples per dimension.
+# [-20, 20]^2 with 200 samples per dimension.
 reco_space = odl.uniform_discr(
     min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200], dtype='float64')
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
+# Angles: uniformly spaced, n = 400, min = 0, max = 2 * pi
 angle_partition = odl.uniform_partition(0, 2 * np.pi, 400)
 
-# Detector: uniformly sampled, n = 300, min = -30, max = 30
+# Detector: uniformly sampled, n = 400, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 400)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
