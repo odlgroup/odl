@@ -852,7 +852,7 @@ class ZeroOperator(Operator):
         super().__init__(domain, range, linear=True)
 
     def _call(self, x, out=None):
-        """Return the constant vector or assign it to ``out``."""
+        """Return the zero vector or assign it to ``out``."""
         if self.domain == self.range:
             if out is None:
                 out = 0 * x
