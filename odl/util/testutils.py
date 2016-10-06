@@ -579,13 +579,18 @@ class ProgressRange(object):
             raise StopIteration()
 
 
-def test(arguments=''):
+def test(arguments=None):
     """Run ODL tests given by arguments."""
     import pytest
     this_dir = os.path.dirname(__file__)
     odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
-    base_args = '-x {root}/odl {root}/test '.format(root=repr(odl_root))
-    pytest.main(base_args + arguments)
+    base_args = ['-x', '{root}/odl'.format(root=odl_root)]
+    if arguments is None:
+        args = base_args
+    else:
+        args = base_args + list(arguments)
+
+    pytest.main(args)
 
 
 def run_doctests():
