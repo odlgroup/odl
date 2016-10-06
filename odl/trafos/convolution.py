@@ -494,25 +494,6 @@ class RealSpaceConvolution(Convolution):
 
         Other parameters
         ----------------
-        resample : string or sequence of strings
-            If ``kernel`` and ``domain`` have different cell sizes,
-            this option defines the behavior of the evaluation. The
-            following values can be given (per axis in the case of a
-            sequence):
-
-            'domain' : Resample the kernel to match the sampling of
-            ``domain``. This needs to be done only once and is generally
-            recommended as global choice.
-
-            'kernel' : Resample input functions to match the kernel
-            sampling.
-
-            'down' : Use the larger one of the two cell sizes.
-            This can lead to loss of resolution.
-
-            'up' : Use the smaller one of the two cell sizes.
-            This can be computationally expensive.
-
         kernel_scaled : bool, optional
             If True, the kernel is interpreted as already scaled
             as described under the ``scale`` argument.
@@ -600,48 +581,21 @@ class RealSpaceConvolution(Convolution):
             raise ValueError('irregular sampling not supported')
 
         kernel_kwargs = kwargs.pop('kernel_kwargs', {})
-        self._kernel, range = self._compute_kernel_and_range(
+        self.__kernel, range = self._compute_kernel_and_range(
             kernel, domain, kernel_kwargs)
 
         super().__init__(domain, range, linear=True)
 
         # Hard-coding impl for now until we add more
-        self._impl = 'scipy_convolve'
-
-        # Handle the `resample` input parameter
-        # TODO: handle 'domain' and 'kernel'
-        resample = kwargs.pop('resample', 'down')
-        resample, resample_in = normalized_scalar_param_list(
-            resample, length=self.domain.ndim,
-            param_conv=lambda s: str(s).lower()), resample
-        for i, (r, r_in) in enumerate(zip(resample, resample_in)):
-            if r not in ('up', 'down'):
-                raise ValueError("in axis {}: `resample` '{}' not understood"
-                                 ''.format(i, r_in))
-        self._resample = resample
-
-        # Initialize resampling operators
-        new_kernel_csides, new_domain_csides = self._get_resamp_csides(
-            self.resample, self._kernel.space.cell_sides,
-            self.domain.cell_sides)
-
-        domain_resamp_space = uniform_discr_fromdiscr(
-            self.domain, cell_sides=new_domain_csides)
-        self._domain_resampling_op = Resampling(self.domain,
-                                                domain_resamp_space)
-
-        kernel_resamp_space = uniform_discr_fromdiscr(
-            self._kernel.space, cell_sides=new_kernel_csides)
-        self._kernel_resampling_op = Resampling(self._kernel.space,
-                                                kernel_resamp_space)
+        self.__impl = 'scipy_convolve'
 
         # Scale the kernel if desired
         kernel_scaled = kwargs.pop('kernel_scaled', False)
-        self._kernel_scaling = np.prod(new_kernel_csides)
-        self._scale = bool(kwargs.pop('scale', True))
-        if self._scale and not kernel_scaled:
+        self.__kernel_scaling = np.prod(self.__kernel.space.cell_sides)
+        self.__scale = bool(kwargs.pop('scale', True))
+        if self.__scale and not kernel_scaled:
             # Don't modify the input
-            self._kernel = self._kernel * self._kernel_scaling
+            self.__kernel = self.__kernel * self.__kernel_scaling
 
     @staticmethod
     def _compute_kernel_and_range(kernel, domain, kernel_kwargs):
@@ -702,38 +656,10 @@ class RealSpaceConvolution(Convolution):
                 range = domain
                 return kernel, range
 
-    @staticmethod
-    def _get_resamp_csides(resample, ker_csides, dom_csides):
-        """Return cell sides for kernel and domain resampling."""
-        new_ker_csides = []
-        new_dom_csides = []
-        for resamp, ks, ds in zip(resample, ker_csides, dom_csides):
-
-            if np.isclose(ks, ds):
-                # Keep old if both csides are the same
-                new_ker_csides.append(ks)
-                new_dom_csides.append(ds)
-            else:
-                # Pick the coarser one if 'down' or the finer one if 'up'
-                if ((ks < ds and resamp == 'up') or
-                        (ks > ds and resamp == 'down')):
-                    new_ker_csides.append(ks)
-                    new_dom_csides.append(ks)
-                else:
-                    new_ker_csides.append(ds)
-                    new_dom_csides.append(ds)
-
-        return new_ker_csides, new_dom_csides
-
     @property
     def impl(self):
         """Implementation of this operator."""
-        return self._impl
-
-    @property
-    def resample(self):
-        """Resampling used during evaluation."""
-        return self._resample
+        return self.__impl
 
     def kernel(self):
         """Return the real-space kernel of this convolution operator.
@@ -744,27 +670,14 @@ class RealSpaceConvolution(Convolution):
         Otherwise, the original unscaled kernel is returned.
         """
         if self._scale:
-            return self._kernel / self._kernel_scaling
+            return self.__kernel / self.__kernel_scaling
         else:
-            return self._kernel
+            return self.__kernel
 
     def _call(self, x):
-        """Implement ``self(x)``."""
-        if np.allclose(self._kernel.space.cell_sides, self.domain.cell_sides):
-            # No resampling needed
-            return signal.convolve(x, self._kernel, mode='same')
-        else:
-            if self.domain != self._domain_resampling_op.range:
-                # Only resample if necessary
-                x = self._domain_resampling_op(x)
-
-            if self._kernel.space != self._kernel_resampling_op.range:
-                kernel = self._kernel_resampling_op(self._kernel)
-            else:
-                kernel = self._kernel
-
-            conv = signal.convolve(x, kernel, mode='same')
-            return self._domain_resampling_op.inverse(conv)
+        """Return ``self(x)``."""
+        # No resampling needed
+        return signal.convolve(x, self.__kernel, mode='same')
 
     @property
     def adjoint(self):
@@ -783,15 +696,17 @@ class RealSpaceConvolution(Convolution):
             self._kernel.asarray()[reverse_slice])
 
         return RealSpaceConvolution(self.range, adj_kernel, impl=self.impl,
-                                    resample=self.resample, scale=True,
-                                    kernel_scaled=True)
+                                    scale=True, kernel_scaled=True)
 
 
-def zero_centered_discr_fromdiscr(discr, shape=None):
-    """Return a discretization centered around zero.
+def zero_centered_discr_fromdiscr(discr, shape=None, shift=None):
+    """Return a space centered around zero using ``discr`` as template.
 
-    The cell sizes will be kept in any case, but the total size can
-    be changed with the ``shape`` option.
+    The domain of ``discr`` is translated such that it is symmetric
+    around 0, and optionally resized to ``shape`` if given.
+    Additionally, a ``shift`` can be applied afterwards if given.
+
+    The cell sizes and further properties like ``dtype`` are preserved.
 
     Parameters
     ----------
@@ -799,6 +714,8 @@ def zero_centered_discr_fromdiscr(discr, shape=None):
         Uniformly discretized space to be used as template.
     shape : int or sequence of int, optional
         If specified, resize the space to this shape.
+    shift : `array-like`, optional
+        Center the space around this point instead of the origin.
 
     Returns
     -------
@@ -817,8 +734,116 @@ def zero_centered_discr_fromdiscr(discr, shape=None):
                                              param_conv=safe_int_conv)
     else:
         shape = discr.shape
-    new_min_pt = -(discr.cell_sides * shape) / 2
+
+    if shift is not None:
+        shift = np.asarray(shift, dtype=float)
+    else:
+        shift = np.zeros(discr.ndim)
+
+    new_min_pt = -(discr.cell_sides * shape) / 2 + shift
     return uniform_discr_fromdiscr(discr, min_pt=new_min_pt, shape=shape)
+
+
+def conv_resampling_spaces(space, kernel_space, up_or_down):
+    """Return spaces for resampling of input and convolution kernel.
+
+    This function returns spaces usable for resampling of input functions
+    of a convolution (by composition with `odl.ResamplingOperator`) and
+    the convolution kernel based on the decision to sample up or down.
+
+    Parameters
+    ----------
+    space, kernel_space : `DiscreteLp`
+        Uniformly discretized spaces in which input functions to a
+        convolution and the convolution kernel lie, respectively.
+    up_or_down : string or sequence of strings
+        If ``space`` and ``kernel_space`` have different cell sizes,
+        this parameter defines which one is used as common cell size
+        via resampling (per axis in case of a sequence):
+
+        'down' : Use the larger one of the two cell sizes.
+        This can lead to loss of resolution.
+
+        'up' : Use the smaller one of the two cell sizes.
+        This can be computationally expensive.
+
+    Returns
+    -------
+    space_resamp : `DiscreteLp`
+        Resampling space for input functions to the convolution.
+    kernel_space_resamp : `DiscreteLp`
+        Resampling space for the convolution kernel.
+
+    Examples
+    --------
+    Compute spaces for upscaling in 2D:
+
+    >>> import odl
+    >>> space = odl.uniform_discr([0, 0], [1, 1], (5, 10))
+    >>> space.cell_sides
+    array([ 0.2,  0.1])
+    >>> kernel_space = odl.uniform_discr([0, 0], [1, 1], (10, 5))
+    >>> kernel_space.cell_sides
+    array([ 0.1,  0.2])
+    >>> space_r, kernel_space_r = conv_resampling_spaces(
+    ...     space, kernel_space, up_or_down='up')
+    >>> space_r.cell_sides
+    array([ 0.1,  0.1])
+    >>> kernel_space_r.cell_sides
+    array([ 0.1,  0.1])
+
+    This can be done per axis:
+
+    >>> space_r, kernel_space_r = conv_resampling_spaces(
+    ...     space, kernel_space, up_or_down=['up', 'down'])
+    >>> space_r.cell_sides
+    array([ 0.1,  0.2])
+    >>> kernel_space_r.cell_sides
+    array([ 0.1,  0.2])
+    """
+
+    up_or_down, up_or_down_in = normalized_scalar_param_list(
+        up_or_down, length=space.ndim,
+        param_conv=lambda s: str(s).lower()), up_or_down
+    for i, (ud, ud_in) in enumerate(zip(up_or_down, up_or_down_in)):
+        if ud not in ('up', 'down'):
+            raise ValueError("in axis {}: `up_or_down` '{}' not understood"
+                             ''.format(i, ud_in))
+
+    # Compute cell sides according to the decisions on up- or downsampling
+    new_space_csides, new_kernel_csides = _get_resamp_csides(
+        space.cell_sides, kernel_space.cell_sides, up_or_down)
+
+    space_resamp = uniform_discr_fromdiscr(
+        space, cell_sides=new_space_csides)
+
+    kernel_space_resamp = uniform_discr_fromdiscr(
+        kernel_space, cell_sides=new_kernel_csides)
+
+    return space_resamp, kernel_space_resamp
+
+
+def _get_resamp_csides(dom_csides, ker_csides, up_or_down):
+    """Return cell sides for domain and kernel resampling."""
+    new_dom_csides = []
+    new_ker_csides = []
+    for resamp, ks, ds in zip(up_or_down, dom_csides, ker_csides):
+
+        if np.isclose(ds, ks):
+            # Keep old if both csides are the same
+            new_dom_csides.append(ds)
+            new_ker_csides.append(ks)
+        else:
+            # Pick the coarser one if 'down' or the finer one if 'up'
+            if ((ds > ks and resamp == 'up') or
+                    (ds < ks and resamp == 'down')):
+                new_dom_csides.append(ks)
+                new_ker_csides.append(ks)
+            else:
+                new_dom_csides.append(ds)
+                new_ker_csides.append(ds)
+
+    return new_dom_csides, new_ker_csides
 
 
 if __name__ == '__main__':
