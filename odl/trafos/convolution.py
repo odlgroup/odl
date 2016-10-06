@@ -28,7 +28,7 @@ import scipy.signal as signal
 
 from odl.discr.discr_ops import Resampling
 from odl.discr.lp_discr import (
-    DiscreteLp, DiscreteLpVector, uniform_discr, uniform_discr_fromdiscr)
+    DiscreteLp, DiscreteLpElement, uniform_discr, uniform_discr_fromdiscr)
 from odl.operator.operator import Operator
 from odl.set.sets import ComplexNumbers
 from odl.trafos.fourier import FourierTransform
@@ -74,7 +74,7 @@ class FourierSpaceConvolution(Convolution):
         domain : `DiscreteLp`
             Uniformly discretized space of functions on which the
             operator can act.
-        kernel : `DiscreteLpVector`, callable or array-like
+        kernel : `DiscreteLpElement`, callable or array-like
             Fixed kernel of the convolution operator. It can be
             given in real or Fourier space (see ``kernel_mode``), and
             specified in several ways, resulting in varying
@@ -82,7 +82,7 @@ class FourierSpaceConvolution(Convolution):
             the same number of dimensions as ``domain``, but the shapes
             can be different.
 
-            `DiscreteLpVector` : If ``kernel_mode == 'real'``, the range
+            `DiscreteLpElement` : If ``kernel_mode == 'real'``, the range
             is shifted by the midpoint of the kernel domain. The extents
             of ``domain`` and the kernel domain need to match.
             If ``kernel_mode == 'fourier'``, the cell sizes in Fourier
@@ -469,14 +469,14 @@ class RealSpaceConvolution(Convolution):
         domain : `DiscreteLp`
             Uniformly discretized space of functions on which the
             operator can act.
-        kernel : `DiscreteLpVector`, callable or array-like
+        kernel : `DiscreteLpElement`, callable or array-like
             Fixed kernel of the convolution operator. It can be
             specified in several ways, resulting in varying
             `Operator.range`. In all cases, the kernel must have
             the same number of dimensions as ``domain``, but the shapes
             can be different.
 
-            `DiscreteLpVector` : The range is shifted by the midpoint
+            `DiscreteLpElement` : The range is shifted by the midpoint
             of the kernel domain.
 
             callable or `array-like` : The kernel is interpreted as a
@@ -649,12 +649,12 @@ class RealSpaceConvolution(Convolution):
 
         This helper function computes an adequate zero-centered domain
         for the kernel if necessary (i.e. if the kernel is not a
-        `DiscreteLpVector`) and calculates the operator range based
+        `DiscreteLpElement`) and calculates the operator range based
         on the operator domain and the kernel space.
 
         Parameters
         ----------
-        kernel : `DiscreteLpVector` or array-like
+        kernel : `DiscreteLpElement` or array-like
             Kernel of the convolution.
         domain : `DiscreteLp`
             Domain of the convolution operator.
@@ -664,7 +664,7 @@ class RealSpaceConvolution(Convolution):
 
         Returns
         -------
-        kernel : `DiscreteLpVector`
+        kernel : `DiscreteLpElement`
             Element in an adequate space.
         range : `DiscreteLp`
             Range of the convolution operator.
