@@ -336,17 +336,17 @@ def normalized_nodes_on_bdry(nodes_on_bdry, length):
 
 
 def normalized_axes_tuple(axes, ndim):
-    """Return a tuple of ``axes`` converted to integers <= ``ndim``.
+    """Return a tuple of ``axes`` converted to positive integers.
 
-    Negative entries are treated in the usual way of indexing
-    "from the right", i.e. by adding ``ndim`` to them.
+    This function turns negative entries into equivalent positive
+    ones according to standard Python indexing "from the right".
 
     Parameters
     ----------
     axes : int or sequence of ints
         Single integer or integer sequence of arbitrary length.
         Duplicate entries are not allowed. All entries must fulfill
-        ``-ndim <= axis < ndim``.
+        ``-ndim <= axis <= ndim - 1``.
     ndim : positive int
         Number of available axes determining the valid axis range.
 
@@ -354,6 +354,19 @@ def normalized_axes_tuple(axes, ndim):
     -------
     axes_list : tuple of ints
         The converted tuple of axes.
+
+    Examples
+    --------
+    Normalizing a sequence of axes:
+
+    >>> import odl
+    >>> odl.util.normalized_axes_tuple([0, -1, 2], ndim=3)
+    (0, 2, 2)
+
+    Single integer works, too:
+
+    >>> odl.util.normalized_axes_tuple(-3, ndim=3)
+    (0,)
     """
     try:
         axes, axes_in = (int(axes),), axes
