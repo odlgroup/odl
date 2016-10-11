@@ -77,17 +77,6 @@ def pywt_pad_mode(pad_mode, pad_const=0):
             raise ValueError("`pad_mode` '{}' not understood".format(pad_mode))
 
 
-def _check_nlevels(nlevels, data_len, wavelet):
-    """Check if ``nlevels`` is valid for given data length and wavelet."""
-    max_levels = pywt.dwt_max_level(data_len, wavelet.dec_len)
-    if max_levels == 0:
-        raise ValueError('data size {} too small for transform, results '
-                         'in maximal `nlevels` of 0'.format(data_len))
-    if not 0 < nlevels <= max_levels:
-        raise ValueError('`nlevels` must satisfy 0 < nlevels <= {}, got {}'
-                         ''.format(max_levels, nlevels))
-
-
 def pywt_coeff_shapes(shape, wavelet, nlevels, mode):
     """Return a list of coefficient shapes in the specified transform.
 
@@ -156,7 +145,16 @@ modes.html
         raise ValueError('`nlevels` must be integer, got {}'
                          ''.format(nlevels_in))
     # TODO: adapt for axes
-    _check_nlevels(nlevels, min(shape), wavelet)
+    for i, n in enumerate(shape):
+        max_levels = pywt.dwt_max_level(n, wavelet.dec_len)
+        if max_levels == 0:
+            raise ValueError('in axis {}: data size {} too small for '
+                             'transform, results in maximal `nlevels` of 0'
+                             ''.format(i, n))
+        if not 0 < nlevels <= max_levels:
+            raise ValueError('in axis {}: `nlevels` must satisfy 0 < nlevels '
+                             '<= {}, got {}'
+                             ''.format(i, max_levels, nlevels))
 
     mode, mode_in = str(mode).lower(), mode
     if mode not in PYWT_SUPPORTED_MODES:
@@ -681,7 +679,16 @@ wavelet-transform.html#multilevel-decomposition-using-wavedec
     if nlevels_in != nlevels:
         raise ValueError('`nlevels` must be integer, got {}'
                          ''.format(nlevels_in))
-    _check_nlevels(nlevels, min(arr.shape), wavelet)
+    for i, n in enumerate(arr.shape):
+        max_levels = pywt.dwt_max_level(n, wavelet.dec_len)
+        if max_levels == 0:
+            raise ValueError('in axis {}: data size {} too small for '
+                             'transform, results in maximal `nlevels` of 0'
+                             ''.format(i, n))
+        if not 0 < nlevels <= max_levels:
+            raise ValueError('in axis {}: `nlevels` must satisfy 0 < nlevels '
+                             '<= {}, got {}'
+                             ''.format(i, max_levels, nlevels))
 
     mode, mode_in = str(mode).lower(), mode
     if mode not in PYWT_SUPPORTED_MODES:
