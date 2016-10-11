@@ -115,4 +115,4 @@ tau = 1.0
 x = space.zero()
 odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
                                 tau=tau, sigma=sigma, niter=100)
-x.show('TV Douglas-Rachford')
+x.show('TV Douglas-Rachford', show=True)
