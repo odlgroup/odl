@@ -59,12 +59,10 @@ class WaveletTransformBase(Operator):
             Domain of the forward wavelet transform (the "image domain").
             In the case of ``variant in ('inverse', 'adjoint')``, this
             space is the range of the operator.
-        wavelet : string or ``pywt.Wavelet``
+        wavelet : string or `pywt.Wavelet`
             Specification of the wavelet to be used in the transform.
-            If a string is given, it is converted to a ``pywt.Wavelet``.
-            Use `pywt.wavelist
-            <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
-built-in-wavelets-wavelist>`_ to get a list of available wavelets.
+            If a string is given, it is converted to a `pywt.Wavelet`.
+            Use `pywt.wavelist` to get a list of available wavelets.
 
             Possible wavelet families are:
 
@@ -85,12 +83,9 @@ built-in-wavelets-wavelist>`_ to get a list of available wavelets.
         nlevels : positive int
             Number of scaling levels to be used in the decomposition. The
             maximum number of levels can be calculated with
-            `pywt.dwt_max_level
-            <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
-wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
+            `pywt.dwt_max_level`.
         variant : {'forward', 'inverse', 'adjoint'}
             Wavelet transform variant to be created.
-
         pad_mode : string, optional
             Method to be used to extend the signal.
 
@@ -117,7 +112,6 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
             Constant value to use if ``pad_mode == 'constant'``. Ignored
             otherwise. Constants other than 0 are not supported by the
             ``pywt`` back-end.
-
         impl : {'pywt'}, optional
             Back-end for the wavelet transform.
         """
@@ -125,20 +119,18 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
             raise TypeError('`space` {!r} is not a `DiscreteLp` instance.'
                             ''.format(space))
 
-        nlevels, nlevels_in = int(nlevels), nlevels
-        if nlevels != nlevels_in:
+        self.__nlevels, nlevels_in = int(nlevels), nlevels
+        if self.nlevels != nlevels_in:
             raise ValueError('`nlevels` must be integer, got {}'
                              ''.format(nlevels_in))
-        self.nlevels = nlevels
 
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _SUPPORTED_WAVELET_IMPLS:
+        self.__impl, impl_in = str(impl).lower(), impl
+        if self.impl not in _SUPPORTED_WAVELET_IMPLS:
             raise ValueError("`impl` '{}' not supported".format(impl_in))
-        self.impl = impl
 
-        self.wavelet = getattr(wavelet, 'name', str(wavelet).lower())
-        self.pad_mode = str(pad_mode).lower()
-        self.pad_const = space.field.element(pad_const)
+        self.__wavelet = getattr(wavelet, 'name', str(wavelet).lower())
+        self.__pad_mode = str(pad_mode).lower()
+        self.__pad_const = space.field.element(pad_const)
 
         if self.impl == 'pywt':
             self.pywt_pad_mode = pywt_pad_mode(pad_mode, pad_const)
@@ -158,6 +150,31 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
             super().__init__(domain=space, range=coeff_space, linear=True)
         else:
             super().__init__(domain=coeff_space, range=space, linear=True)
+
+    @property
+    def impl(self):
+        """Implementation back-end of this wavelet transform."""
+        return self.__impl
+
+    @property
+    def nlevels(self):
+        """Number of scaling levels in this wavelet transform."""
+        return self.__nlevels
+
+    @property
+    def wavelet(self):
+        """Name of the wavelet used in this wavelet transform."""
+        return self.__wavelet
+
+    @property
+    def pad_mode(self):
+        """Padding mode used for extending input beyond its boundary."""
+        return self.__pad_mode
+
+    @property
+    def pad_const(self):
+        """Value for extension used in ``'constant'`` padding mode."""
+        return self.__pad_const
 
     @property
     def is_orthogonal(self):
@@ -182,12 +199,10 @@ class WaveletTransform(WaveletTransformBase):
         ----------
         domain : `DiscreteLp`
             Domain of the wavelet transform (the "image domain").
-        wavelet : string or ``pywt.Wavelet``
+        wavelet : string or `pywt.Wavelet`
             Specification of the wavelet to be used in the transform.
-            If a string is given, it is converted to a ``pywt.Wavelet``.
-            Use `pywt.wavelist
-            <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
-built-in-wavelets-wavelist>`_ to get a list of available wavelets.
+            If a string is given, it is converted to a `pywt.Wavelet`.
+            Use `pywt.wavelist` to get a list of available wavelets.
 
             Possible wavelet families are:
 
@@ -208,10 +223,7 @@ built-in-wavelets-wavelist>`_ to get a list of available wavelets.
         nlevels : positive int
             Number of scaling levels to be used in the decomposition. The
             maximum number of levels can be calculated with
-            `pywt.dwt_max_level
-            <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
-wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
-
+            `pywt.dwt_max_level`.
         pad_mode : string, optional
             Method to be used to extend the signal.
 
@@ -230,15 +242,14 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
             the first derivative). This requires at least 2 values along
             each axis where padding is applied.
 
-            ``'pywt_per'``:  like ``'periodic'``-padding but gives the smallest
-            possible number of decomposition coefficients.
-            Only available with ``impl='pywt'``, See `pywt.MODES.modes`.
+            ``'pywt_per'``:  like ``'periodic'`` padding, but gives the
+            smallest possible number of decomposition coefficients.
+            Only available with ``impl='pywt'``, See `pywt.Modes.modes`.
 
         pad_const : float, optional
             Constant value to use if ``pad_mode == 'constant'``. Ignored
             otherwise. Constants other than 0 are not supported by the
             ``pywt`` back-end.
-
         impl : {'pywt'}, optional
             Backend for the wavelet transform.
 
@@ -331,12 +342,10 @@ class WaveletTransformInverse(WaveletTransformBase):
         range : `DiscreteLp`
             Domain of the forward wavelet transform (the "image domain"),
             which is the range of this inverse transform.
-        wavelet : string or ``pywt.Wavelet``
+        wavelet : string or `pywt.Wavelet`
             Specification of the wavelet to be used in the transform.
-            If a string is given, it is converted to a ``pywt.Wavelet``.
-            Use `pywt.wavelist
-            <https://pywavelets.readthedocs.io/en/latest/ref/wavelets.html#\
-built-in-wavelets-wavelist>`_ to get a list of available wavelets.
+            If a string is given, it is converted to a `pywt.Wavelet`.
+            Use `pywt.wavelist` to get a list of available wavelets.
 
             Possible wavelet families are:
 
@@ -357,12 +366,9 @@ built-in-wavelets-wavelist>`_ to get a list of available wavelets.
         nlevels : positive int
             Number of scaling levels to be used in the decomposition. The
             maximum number of levels can be calculated with
-            `pywt.dwt_max_level
-            <https://pywavelets.readthedocs.io/en/latest/ref/dwt-discrete-\
-wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
+            `pywt.dwt_max_level`.
         variant : {'forward', 'inverse', 'adjoint'}
             Wavelet transform variant to be created.
-
         pad_mode : string, optional
             Method to be used to extend the signal.
 
@@ -389,7 +395,6 @@ wavelet-transform.html#maximum-decomposition-level-dwt-max-level>`_.
             Constant value to use if ``pad_mode == 'constant'``. Ignored
             otherwise. Constants other than 0 are not supported by the
             ``pywt`` back-end.
-
         impl : {'pywt'}, optional
             Back-end for the wavelet transform.
 
