@@ -102,7 +102,7 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
 
     Returns
     -------
-    recip : `RegularGrid`
+    reciprocal_grid : `RegularGrid`
         The reciprocal grid.
     """
     if axes is None:
@@ -349,12 +349,13 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     def _onedim_arr(length, shift):
         if shift:
             # (-1)^indices
-            arr = np.ones(length, dtype=out.dtype)
-            arr[1::2] = -1
+            factor = np.ones(length, dtype=out.dtype)
+            factor[1::2] = -1
         else:
-            arr = np.arange(length, dtype=out.dtype)
-            np.exp((-imag * np.pi * (1 - 1.0 / length)) * arr, out=arr)
-        return arr.astype(out.dtype, copy=False)
+            factor = np.arange(length, dtype=out.dtype)
+            factor *= -imag * np.pi * (1 - 1.0 / length)
+            np.exp(factor, out=factor)
+        return factor.astype(out.dtype, copy=False)
 
     onedim_arrs = []
     for axis, shift in zip(axes, shift_list):
@@ -388,13 +389,17 @@ def _interp_kernel_ft(norm_freqs, interp):
         Values of the kernel FT at the given frequencies
     """
     # Numpy's sinc(x) is equal to the 'math' sinc(pi * x)
+    ker_ft = np.sinc(norm_freqs)
     interp_ = str(interp).lower()
     if interp_ == 'nearest':
-        return np.sinc(norm_freqs) / np.sqrt(2 * np.pi)
+        pass
     elif interp_ == 'linear':
-        return np.sinc(norm_freqs) ** 2 / np.sqrt(2 * np.pi)
+        ker_ft **= 2
     else:
         raise ValueError("`interp` '{}' not understood".format(interp))
+
+    ker_ft /= np.sqrt(2 * np.pi)
+    return ker_ft
 
 
 def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
