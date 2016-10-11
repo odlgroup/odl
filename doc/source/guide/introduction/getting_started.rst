@@ -58,7 +58,7 @@ and create a wrapping `Operator` for it in ODL.
 
        def _call(self, x):
            """Implement calling the operator by calling scipy."""
-           return scipy.signal.convolve(self.kernel, x, mode='same')
+           return scipy.signal.fftconvolve(self.kernel, x, mode='same')
 
 We can verify that our operator works by calling it on some data.
 This can either come from an outside source, or from simulations.
