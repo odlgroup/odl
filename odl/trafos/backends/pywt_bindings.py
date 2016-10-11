@@ -65,16 +65,13 @@ def pywt_wavelet(wavelet):
 def pywt_pad_mode(pad_mode, pad_const=0):
     """Convert ODL-style padding mode to pywt-style padding mode."""
     pad_mode = str(pad_mode).lower()
-    if pad_mode in PYWT_SUPPORTED_MODES:
-        return pad_mode
-    elif pad_mode == 'constant' and pad_const != 0.0:
+    if pad_mode == 'constant' and pad_const != 0.0:
         raise ValueError('constant padding with constant != 0 not supported '
                          'for `pywt` back-end')
-    else:
-        try:
-            return PAD_MODES_ODL2PYWT[pad_mode]
-        except KeyError:
-            raise ValueError("`pad_mode` '{}' not understood".format(pad_mode))
+    try:
+        return PAD_MODES_ODL2PYWT[pad_mode]
+    except KeyError:
+        raise ValueError("`pad_mode` '{}' not understood".format(pad_mode))
 
 
 def pywt_coeff_shapes(shape, wavelet, nlevels, mode):
