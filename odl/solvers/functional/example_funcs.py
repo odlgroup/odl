@@ -101,8 +101,9 @@ class RosenbrockFunctional(Functional):
         """Return ``self(x)``."""
         result = 0
         for i in range(0, self.domain.size - 1):
-            result += self.scale * ((x[i + 1] - x[i] ** 2) ** 2 +
-                                    (x[i] - 1) ** 2)
+            result += (self.scale * (x[i + 1] - x[i] ** 2) ** 2 +
+                       (x[i] - 1) ** 2)
+
         return result
 
     @property
