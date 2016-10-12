@@ -55,12 +55,12 @@ def wavelet(request):
     return request.param
 
 
-mode_params = ['zpd', 'per']
-mode_ids = [" mode = '{}' ".format(m) for m in mode_params]
+pywt_mode_params = ['zero', 'periodization']
+pywt_mode_ids = [" mode = '{}' ".format(m) for m in pywt_mode_params]
 
 
-@pytest.fixture(scope='module', params=mode_params, ids=mode_ids)
-def mode(request):
+@pytest.fixture(scope='module', params=pywt_mode_params, ids=pywt_mode_ids)
+def pywt_mode(request):
     return request.param
 
 
@@ -83,7 +83,7 @@ def nlevels(request):
 
 
 @pytest.fixture(scope='module')
-def shape_setup(ndim, wavelet, mode):
+def shape_setup(ndim, wavelet, pywt_mode):
     nlevels = 2
 
     if ndim == 1:
@@ -91,9 +91,9 @@ def shape_setup(ndim, wavelet, mode):
         if wavelet == 'db1':
             coeff_shapes = [(4,), (4,), (8,)]
         elif wavelet == 'sym2':
-            if mode == 'zpd':
+            if pywt_mode == 'zero':
                 coeff_shapes = [(6,), (6,), (9,)]
-            elif mode == 'per':
+            elif pywt_mode == 'periodization':
                 coeff_shapes = [(4,), (4,), (8,)]
             else:
                 raise RuntimeError
@@ -105,9 +105,9 @@ def shape_setup(ndim, wavelet, mode):
         if wavelet == 'db1':
             coeff_shapes = [(4, 5), (4, 5), (8, 9)]
         elif wavelet == 'sym2':
-            if mode == 'zpd':
+            if pywt_mode == 'zero':
                 coeff_shapes = [(6, 6), (6, 6), (9, 10)]
-            elif mode == 'per':
+            elif pywt_mode == 'periodization':
                 coeff_shapes = [(4, 5), (4, 5), (8, 9)]
             else:
                 raise RuntimeError
@@ -119,16 +119,16 @@ def shape_setup(ndim, wavelet, mode):
         if wavelet == 'db1':
             coeff_shapes = [(4, 5, 5), (4, 5, 5), (8, 9, 9)]
         elif wavelet == 'sym2':
-            if mode == 'zpd':
+            if pywt_mode == 'zero':
                 coeff_shapes = [(6, 6, 6), (6, 6, 6), (9, 10, 10)]
-            elif mode == 'per':
+            elif pywt_mode == 'periodization':
                 coeff_shapes = [(4, 5, 5), (4, 5, 5), (8, 9, 9)]
             else:
                 raise RuntimeError
     else:
         raise RuntimeError
 
-    return wavelet, mode, nlevels, image_shape, coeff_shapes
+    return wavelet, pywt_mode, nlevels, image_shape, coeff_shapes
 
 
 @pytest.fixture(scope='module')
@@ -175,8 +175,8 @@ def _grouped_and_flat_arrays(shapes, dtype):
 
 
 def test_pywt_coeff_shapes(shape_setup):
-    wavelet, mode, nlevels, image_shape, coeff_shapes = shape_setup
-    shapes = pywt_coeff_shapes(image_shape, wavelet, nlevels, mode)
+    wavelet, pywt_mode, nlevels, image_shape, coeff_shapes = shape_setup
+    shapes = pywt_coeff_shapes(image_shape, wavelet, nlevels, pywt_mode)
     assert all_equal(shapes, coeff_shapes)
 
 
@@ -197,11 +197,11 @@ def test_pywt_coeff_list_conversion(small_shapes, floating_dtype):
 
 def test_multilevel_recon_inverts_decomp(shape_setup, dtype):
     """Test that reco is the inverse of decomp."""
-    wavelet, mode, nlevels, image_shape, coeff_shapes = shape_setup
+    wavelet, pywt_mode, nlevels, image_shape, coeff_shapes = shape_setup
 
     image = np.random.uniform(size=image_shape).astype(dtype)
-    wave_decomp = pywt_multi_level_decomp(image, wavelet, nlevels, mode)
-    wave_recon = pywt_multi_level_recon(wave_decomp, wavelet, mode,
+    wave_decomp = pywt_multi_level_decomp(image, wavelet, nlevels, pywt_mode)
+    wave_recon = pywt_multi_level_recon(wave_decomp, wavelet, pywt_mode,
                                         image_shape)
     assert wave_recon.shape == image.shape
     assert all_almost_equal(wave_recon, image)
@@ -210,11 +210,14 @@ def test_multilevel_recon_inverts_decomp(shape_setup, dtype):
 def test_multilevel_decomp_inverts_recon(shape_setup):
     """Test that decomp is the inverse of recon."""
     dtype = 'float64'  # when fixed, use dtype fixture instead
-    wavelet, mode, nlevels, image_shape, coeff_shapes = shape_setup
+    wavelet, pywt_mode, nlevels, image_shape, coeff_shapes = shape_setup
 
-    if not ((ndim == 1 and wavelet == 'sym2' and mode == 'per') or
-            (ndim == 1 and wavelet == 'db1' and mode in ('zpd', 'per'))):
-
+    if not ((ndim == 1 and
+             wavelet == 'sym2' and
+             pywt_mode == 'periodization') or
+            (ndim == 1 and
+             wavelet == 'db1' and
+             pywt_mode in ('zero', 'periodization'))):
         # The reverse invertibility is not given since the wavelet
         # decomposition as implemented in PyWavelets, is not left-invertible.
         # Only some setups work by miracle.
@@ -222,9 +225,10 @@ def test_multilevel_decomp_inverts_recon(shape_setup):
         pytest.xfail('not left-invertible')
 
     coeffs, _ = _grouped_and_flat_arrays(coeff_shapes, dtype)
-    wave_recon = pywt_multi_level_recon(coeffs, wavelet, mode,
+    wave_recon = pywt_multi_level_recon(coeffs, wavelet, pywt_mode,
                                         recon_shape=image_shape)
-    wave_decomp = pywt_multi_level_decomp(wave_recon, wavelet, nlevels, mode)
+    wave_decomp = pywt_multi_level_decomp(wave_recon, wavelet, nlevels,
+                                          pywt_mode)
     assert all_almost_equal(coeffs, wave_decomp)
 
 
@@ -259,7 +263,7 @@ def test_explicit_example(floating_dtype):
     coeff_dd = conv_hh[1::2, 1::2]
 
     # Compare with single-level wavelet trafo (zero padding)
-    coeffs = pywt_single_level_decomp(x, wavelet='db2', mode='zpd')
+    coeffs = pywt_single_level_decomp(x, wavelet='db2', mode='zero')
     approx, details = coeffs
 
     assert all_almost_equal(approx, coeff_aa)
@@ -272,7 +276,7 @@ def test_explicit_example(floating_dtype):
     coeff_2_dd = convolve(coeff_aa, filter_hh)[1::2, 1::2]
 
     # Compare with multi-level wavelet trafo (zero padding)
-    coeffs = pywt_multi_level_decomp(x, wavelet='db2', mode='zpd', nlevels=2)
+    coeffs = pywt_multi_level_decomp(x, wavelet='db2', mode='zero', nlevels=2)
     approx_2, details_2, details_1 = coeffs
 
     assert all_almost_equal(approx_2, coeff_2_aa)
