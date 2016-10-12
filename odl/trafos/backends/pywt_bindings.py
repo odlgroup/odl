@@ -45,12 +45,15 @@ __all__ = ('PAD_MODES_ODL2PYWT', 'PYWT_SUPPORTED_MODES', 'PYWT_AVAILABLE',
            'pywt_multi_level_decomp', 'pywt_multi_level_recon')
 
 
-PAD_MODES_ODL2PYWT = {'constant': 'zpd',
-                      'periodic': 'ppd',
-                      'symmetric': 'sym',
-                      'order0': 'cpd',
-                      'order1': 'sp1',
-                      'pywt_periodic': 'per'}
+PAD_MODES_ODL2PYWT = {'constant': 'zero',
+                      'periodic': 'periodic',
+                      'symmetric': 'symmetric',
+                      'order0': 'constant',
+                      'order1': 'smooth',
+                      'pywt_periodic': 'periodization',
+                      # Upcoming version of Pywavelets adds this
+                      # 'reflect': 'reflect'
+                      }
 PYWT_SUPPORTED_MODES = PAD_MODES_ODL2PYWT.values()
 
 
@@ -122,7 +125,7 @@ def pywt_coeff_shapes(shape, wavelet, nlevels, mode):
     the level-2 detail coefficient and last the level-1 detail coefficient:
 
     >>> pywt_coeff_shapes(shape=(16, 17, 18), wavelet='db2', nlevels=2,
-    ...                   mode='zpd')
+    ...                   mode='zero')
     [(6, 6, 6), (6, 6, 6), (9, 10, 10)]
 
     References
@@ -218,7 +221,7 @@ def pywt_flat_coeff_size(shape, wavelet, nlevels, mode):
     levels in 3 with zero-padding:
 
     >>> pywt_flat_coeff_size(shape=(16, 17, 18), wavelet='db2', nlevels=2,
-    ...                      mode='zpd')
+    ...                      mode='zero')
     8028
     >>> 16 * 17 * 18  # original size, smaller -> redundancy in transform
     4896
@@ -435,7 +438,7 @@ def pywt_single_level_decomp(arr, wavelet, mode):
     >>> arr = [[1, 1, 1],
     ...        [1, 0, 0],
     ...        [0, 1, 1]]
-    >>> coeffs = pywt_single_level_decomp(arr, wavelet='haar', mode='zpd')
+    >>> coeffs = pywt_single_level_decomp(arr, wavelet='haar', mode='zero')
     >>> approx, details = coeffs
     >>> print(approx)
     [[ 1.5  0.5]
@@ -522,7 +525,7 @@ def pywt_single_level_recon(approx, details, wavelet, mode, recon_shape=None):
     ...             [-0.5, 0.5]])
     >>>
     >>> # Gives even shape by default
-    >>> pywt_single_level_recon(approx, details, wavelet='haar', mode='zpd')
+    >>> pywt_single_level_recon(approx, details, wavelet='haar', mode='zero')
     array([[ 1.,  1.,  1.,  0.],
            [ 1.,  0.,  0.,  0.],
            [ 0.,  1.,  1.,  0.],
@@ -530,7 +533,7 @@ def pywt_single_level_recon(approx, details, wavelet, mode, recon_shape=None):
     >>>
     >>> # Original shape can only be recovered if given explicitly
     >>> # in this case
-    >>> pywt_single_level_recon(approx, details, wavelet='haar', mode='zpd',
+    >>> pywt_single_level_recon(approx, details, wavelet='haar', mode='zero',
     ...                         recon_shape=(3, 3))
     array([[ 1.,  1.,  1.],
            [ 1.,  0.,  0.],
@@ -638,7 +641,7 @@ def pywt_multi_level_decomp(arr, wavelet, nlevels, mode):
     ...        [0, 0, 0, 1],
     ...        [1, 1, 1, 1],
     ...        [0, 1, 1, 0]]
-    >>> coeffs = pywt_multi_level_decomp(arr, 'haar', 2, 'zpd')
+    >>> coeffs = pywt_multi_level_decomp(arr, 'haar', 2, 'zero')
     >>> # "2" -> scaling level 2, "1" -> scaling level 1
     >>> approx2, details2, details1 = coeffs
     >>> print(approx2)
@@ -764,7 +767,7 @@ def pywt_multi_level_recon(coeff_list, wavelet, mode, recon_shape=None):
     ...             [[0, 0.5],
     ...              [0.5, -0.5]])
     >>> coeffs = [approx2, details2, details1]
-    >>> recon = pywt_multi_level_recon(coeffs, wavelet='haar', mode='zpd')
+    >>> recon = pywt_multi_level_recon(coeffs, wavelet='haar', mode='zero')
     >>> np.allclose(recon, orig_arr)
     True
 
