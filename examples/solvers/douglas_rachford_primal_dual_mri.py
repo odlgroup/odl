@@ -54,7 +54,7 @@ gradient = odl.Gradient(space)
 # Assemble all operators
 lin_ops = [mri_op, gradient]
 
-# Create proximals as needed
+# Create functionals as needed
 g = [odl.solvers.L2Norm(mri_op.range).translated(noisy_data),
      lam * odl.solvers.L1Norm(mri_op.range)]
 f = odl.solvers.IndicatorBox(space, 0, 1)

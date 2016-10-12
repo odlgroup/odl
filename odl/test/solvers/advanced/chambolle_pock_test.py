@@ -61,7 +61,7 @@ def test_chambolle_pock_solver_simple_space():
     # Dual variable required to resume iteration
     discr_dual = op.range.zero()
 
-    # Functional, use same the factory function for F^* and G
+    # Functional, use the same functional for F^* and G
     g = odl.solvers.ZeroFunctional(space)
     f = g.convex_conj
 

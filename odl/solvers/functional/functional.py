@@ -1085,24 +1085,71 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
         Space that the functional should act on.
     fcall : `callable`, optional
         Function to evaluate when calling the functional.
-    grad : `Operator`, optional
-        Gradient operator of the functional
+    grad : `callable` or `Operator`, optional
+        Gradient operator of the functional.
     prox : `proximal factory`, optional
         Proximal factory for the functional.
     grad_lip : float, optional
         lipschitz constant of the functional.
     cconj_fcall : `callable`, optional
         Function to evaluate when calling the convex conjugate functional.
-    cconj_grad : `Operator`, optional
+    cconj_grad : `callable` or `Operator`, optional
         Gradient operator of the convex conjugate functional
     cconj_prox : `proximal factory`, optional
         Proximal factory for the convex conjugate functional.
     cconj_grad_lip : float, optional
         lipschitz constant of the convex conjugate functional.
     linear : bool, optional
-        True if the operator is linear
+        True if the operator is linear.
+
+    Examples
+    --------
+    Create squared sum functional on rn:
+
+    >>> import odl
+    >>> def f(x):
+    ...     return sum(xi**2 for xi in x)
+    >>> def dfdx(x):
+    ...     return 2 * x
+    >>> space = odl.rn(3)
+    >>> func = simple_functional(space, f, grad=dfdx)
+    >>> func.domain
+    rn(3)
+    >>> func.range
+    RealNumbers()
+    >>> func([1, 2, 3])
+    14.0
+    >>> func.gradient([1, 2, 3])
+    rn(3).element([2.0, 4.0, 6.0])
     """
+    if grad is not None and not isinstance(grad, Operator):
+        grad_in = grad
+
+        class SimpleFunctionalGradient(Operator):
+
+            """Gradient of a `SimpleFunctional`."""
+
+            def _call(self, x):
+                """Return ``self(x)``."""
+                return grad_in(x)
+
+        grad = SimpleFunctionalGradient(space, space, linear=False)
+
+    if cconj_grad is not None and not isinstance(grad, Operator):
+        grad_in = grad
+
+        class SimpleFunctionalGradient(Operator):
+
+            """Gradient of a `SimpleFunctional`."""
+
+            def _call(self, x):
+                """Return ``self(x)``."""
+                return grad_in(x)
+
+        grad = SimpleFunctionalGradient(space, space, linear=False)
+
     class SimpleFunctional(Functional):
+
         """A simplified functional for examples."""
 
         def __init__(self):

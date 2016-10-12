@@ -35,11 +35,11 @@ import odl
 # Discrete reconstruction space: discretized functions on the rectangle
 # [-20, 20]^2 with 200 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200], dtype='float64')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200])
 
 # Make a parallel beam geometry with flat detector
 # Angles: uniformly spaced, n = 400, min = 0, max = 2 * pi
-angle_partition = odl.uniform_partition(0, 2 * np.pi, 400)
+angle_partition = odl.uniform_partition(0, np.pi, 400)
 
 # Detector: uniformly sampled, n = 400, min = -30, max = 30
 detector_partition = odl.uniform_partition(-30, 30, 400)
@@ -53,7 +53,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 #                             https://github.com/astra-toolbox/astra-toolbox
 impl = 'astra_cuda'
 
-# Ray transform aka forward projection.
+# Create the forward operator
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 
 # --- Generate artificial data --- #
@@ -68,16 +68,17 @@ data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
 # --- Set up optimization problem and solve --- #
 
-# Create objective functional
+# Create objective functional ||Ax - b||_2^2 as composition of l2 norm squared
+# and the residual operator.
 obj_fun = odl.solvers.L2NormSquared(ray_trafo.range) * (ray_trafo - data)
 
 # Create line search
 line_search = 1.0
 # line_search = odl.solvers.BacktrackingLineSearch(obj_fun)
 
-# Create initial estimate of the inverse hessian by a diagonal estimate
+# Create initial estimate of the inverse Hessian by a diagonal estimate
 opnorm = odl.power_method_opnorm(ray_trafo)
-hessinv_estimate = odl.ScalingOperator(reco_space, 1 / opnorm**2)
+hessinv_estimate = odl.ScalingOperator(reco_space, 1 / opnorm ** 2)
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
@@ -85,15 +86,17 @@ callback = (odl.solvers.CallbackPrintIteration() &
 
 # Pick parameters
 maxiter = 20
-maxcor = 5  # only save some vectors (Limited memory)
+num_store = 5  # only save some vectors (Limited memory)
 
 # Choose a starting point
 x = ray_trafo.domain.zero()
 
 # Run the algorithm
 odl.solvers.bfgs_method(
-    obj_fun, x, line_search=line_search, maxiter=maxiter, maxcor=maxcor,
+    obj_fun, x, line_search=line_search, maxiter=maxiter, num_store=num_store,
     hessinv_estimate=hessinv_estimate, callback=callback)
+
+odl.solvers.douglas_rachford_pd
 
 # Display images
 discr_phantom.show(title='original image')

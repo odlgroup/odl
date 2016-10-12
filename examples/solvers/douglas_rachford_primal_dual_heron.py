@@ -49,7 +49,7 @@ lin_ops = [odl.IdentityOperator(space)] * len(rectangles)
 # to the zero function
 f = odl.solvers.ZeroFunctional(space)
 
-# g is the distance function. Here, the l2 distance
+# g is the distance function `d(x, Omega_i)`. Here, the l2 distance.
 g = [odl.solvers.L2Norm(space)] * len(rectangles)
 
 # l are the indicator functions on the rectangles.

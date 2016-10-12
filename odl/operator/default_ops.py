@@ -756,9 +756,9 @@ class ConstantOperator(Operator):
 
         if ((domain is None or range is None) and
                 not isinstance(constant, LinearSpaceElement)):
-                raise TypeError('If either domain or range is unspecified '
-                                '`constant` must be LinearSpaceVector, got '
-                                '{!r}.'.format(constant))
+            raise TypeError('If either domain or range is unspecified '
+                            '`constant` must be LinearSpaceVector, got '
+                            '{!r}.'.format(constant))
 
         if domain is None:
             domain = constant.space
@@ -840,7 +840,7 @@ class ZeroOperator(Operator):
         >>> op([1, 2, 3])
         rn(3).element([0.0, 0.0, 0.0])
 
-        Also works with domain != range
+        Also works with domain != range:
 
         >>> op = odl.ZeroOperator(odl.rn(3), odl.cn(4))
         >>> op([1, 2, 3])
@@ -870,9 +870,10 @@ class ZeroOperator(Operator):
     def adjoint(self):
         """Adjoint of the operator.
 
-        The zero operator is self adjoint.
+        If ``self.domain == self.range`` the zero operator is self-adjoint,
+        otherwise it is the `ZeroOperator` from `range` to `domain`.
         """
-        return self
+        return ZeroOperator(domain=self.range, range=self.domain)
 
     def __repr__(self):
         """Return ``repr(self)``."""

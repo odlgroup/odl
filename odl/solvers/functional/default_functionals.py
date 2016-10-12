@@ -1038,6 +1038,35 @@ class SeparableSum(Functional):
 
     The separable sum is thus defined for any collection of functionals with
     the same range.
+
+    Notes
+    -----
+    The separable sum of functionals :math:`f_1, f_2, ..., f_n` is given by
+
+    .. math::
+        h(x_1, x_2, ..., x_n) = \sum_i^n f_i(x_i)
+
+    It has several useful features that also distribute. For example, the
+    gradient is a `DiagonalOperator`:
+
+    .. math::
+        [\\nabla h](x_1, x_2, ..., x_n) =
+        [\\nabla f_1(x_i), \\nabla f_2(x_i), ..., \\nabla f_n(x_i)]
+
+    The convex conjugate distributes:
+
+    .. math::
+        [h^*](y_1, y_2, ..., y_n) = \sum_i^n f_i^*(y_i)
+
+    And the proximal distributes:
+
+    .. math::
+        \mathrm{prox}_{\\sigma h}(x_1, x_2, ..., x_n) =
+        [\mathrm{prox}_{\\sigma f_1}(x_1),
+         \mathrm{prox}_{\\sigma f_2}(x_2),
+         ...,
+         \mathrm{prox}_{\\sigma f_n}(x_n)]
+
     """
 
     def __init__(self, *functionals):
@@ -1045,20 +1074,25 @@ class SeparableSum(Functional):
 
         Parameters
         ----------
-        functionals1, ..., functionalsN : `Functional`
+        functional1, ..., functionalN : `Functional`
             The functionals in the sum.
         """
         domains = [func.domain for func in functionals]
         domain = ProductSpace(*domains)
         linear = all(func.is_linear for func in functionals)
 
-        self.functionals = functionals
+        self.__functionals = functionals
 
         super().__init__(space=domain, linear=linear)
 
     def _call(self, x):
-        """Return the squared L2-norm of ``x``."""
+        """Return the separable sum evaluated in ``x``."""
         return sum(fi(xi) for xi, fi in zip(x, self.functionals))
+
+    @property
+    def functionals(self):
+        """The summands of the functional."""
+        return self.__functionals
 
     @property
     def gradient(self):

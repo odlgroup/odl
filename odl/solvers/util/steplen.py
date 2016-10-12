@@ -89,7 +89,7 @@ class BacktrackingLineSearch(LineSearch):
         max_num_iter : int, optional
             Maximum number of iterations allowed each time the line
             search method is called. If not set, this number is calculated
-            to allow a shortest step length of 0.0001.
+            to allow a shortest step length of 10 times machine epsilon.
         estimate_step : float
             If the last step should be used as a estimate for the next step.
         """
@@ -103,7 +103,9 @@ class BacktrackingLineSearch(LineSearch):
         # Use a default value that allows the shortest step to be < 0.0001
         # times the original step length
         if max_num_iter is None:
-            self.max_num_iter = int(np.ceil(np.log(0.0001) / np.log(self.tau)))
+            # TODO: make space dependent
+            eps = 10 * np.finfo(float).resolution
+            self.max_num_iter = int(np.ceil(np.log(eps) / np.log(self.tau)))
         else:
             self.max_num_iter = int(max_num_iter)
 
@@ -128,16 +130,15 @@ class BacktrackingLineSearch(LineSearch):
         dir_derivative = float(dir_derivative)
 
         if dir_derivative == 0:
-            # TODO: raise instead?
-            raise ValueError('dir_derivative == 0, no decent can be found')
+            raise ValueError('dir_derivative == 0, no descent can be found')
         if not self.estimate_step:
             alpha = 1.0
         else:
             alpha = self.alpha
 
         if dir_derivative > 0:
-            # We need to move backwards if the direction is a
-            # increase direction
+            # We need to move backwards if the direction is an increase
+            # direction
             alpha *= -1
 
         if np.isnan(fx) or np.isinf(fx):

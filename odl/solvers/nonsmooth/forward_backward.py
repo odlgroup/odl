@@ -34,21 +34,21 @@ def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
     """The forward-backward primal-dual splitting algorithm.
 
     The algorithm minimizes the sum of several convex functionals composed with
-    linear operators,
+    linear operators,::
 
-        ``min_x f(x) + sum_i g_i(L_i x) + h(x)``,
+        min_x f(x) + sum_i g_i(L_i x) + h(x)
 
     where ``f``, ``g_i`` are convex functionals, ``L_i`` are linear
     operator's, and ``h`` is a convex and differentiable functional.
 
-    The method can also be used to solve the more general problem
+    The method can also be used to solve the more general problem::
 
-        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x) + h(x)``,
+        min_x f(x) + sum_i (g_i @ l_i)(L_i x) + h(x)
 
     where ``l_i`` are strongly convex functionals and @ is the infimal
-    convolution:
+    convolution::
 
-        ``(g @ l)(x) = inf_y { g(y) + l(x-y) }``.
+        (g @ l)(x) = inf_y { g(y) + l(x-y) }
 
     Note that the strong convexity of ``l_i`` makes the convex conjugate
     ``l_i^*`` differentialbe; see the Notes section for more information on

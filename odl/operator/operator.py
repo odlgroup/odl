@@ -1171,7 +1171,7 @@ class OperatorVectorSum(Operator):
             Operator to be used in the sum. Its
             `Operator.range` must be a `LinearSpace`.
         vector : ``operator.range`` `element-like`
-            Vector to be subtracted from the operator result.
+            Vector to be added to the operator result.
 
         Examples
         --------

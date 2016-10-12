@@ -66,16 +66,16 @@ gradient = odl.Gradient(space, method='forward')
 # Column vector of two operators
 op = odl.BroadcastOperator(convolution, gradient)
 
-# Create the proximal operator for unconstrained primal variable
+# Create the functional for unconstrained primal variable
 g = odl.solvers.ZeroFunctional(op.domain)
 
-# l2-data matching
+# l2-squared data matching
 l2_norm = odl.solvers.L2NormSquared(space).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
 l1_norm = 0.0003 * odl.solvers.L1Norm(gradient.range)
 
-# Combine functionals, order must correspond to the operator K
+# Make separable sum of functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 

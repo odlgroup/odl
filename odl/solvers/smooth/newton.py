@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""(Quasi-)Newton schemes to find zeros of functions."""
+"""(Quasi-)Newton schemes to find zeros of functionals."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -23,7 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-from odl.operator import IdentityOperator
 from odl.solvers.util import ConstantLineSearch
 from odl.solvers.iterative.iterative import conjugate_gradient
 
@@ -31,11 +30,8 @@ from odl.solvers.iterative.iterative import conjugate_gradient
 __all__ = ('newtons_method', 'bfgs_method', 'broydens_method')
 
 
-# TODO: update all docs
-
-
-def _bfgs_multiply(s, y, x, hessinv_estimate=None):
-    """Computes ``Hn^-1(x)`` for the L-BFGS method.
+def _bfgs_direction(s, y, x, hessinv_estimate=None):
+    """Compute ``Hn^-1(x)`` for the L-BFGS method.
 
     Parameters
     ----------
@@ -47,6 +43,11 @@ def _bfgs_multiply(s, y, x, hessinv_estimate=None):
         Point in which to evaluate the product.
     hessinv_estimate : `Operator`, optional
         Initial estimate of the hessian ``H0^-1``.
+
+    Returns
+    -------
+    r : ``x.space`` element
+        The result of ``Hn^-1(x)``.
 
     Notes
     -----
@@ -78,6 +79,59 @@ def _bfgs_multiply(s, y, x, hessinv_estimate=None):
     for i in range(len(s)):
         beta = rhos[i] * (y[i].inner(r))
         r.lincomb(1, r, alphas[i] - beta, s[i])
+
+    return r
+
+
+def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
+    """Compute ``Hn^-1(x)`` for Broydens method.
+
+    Parameters
+    ----------
+    s : `sequence` of `LinearSpaceElement`
+        The ``s`` coefficients in the Broydens update, see Notes.
+    y : `sequence` of `LinearSpaceElement`
+        The ``y`` coefficients in the Broydens update, see Notes.
+    x : `LinearSpaceElement`
+        Point in which to evaluate the product.
+    hessinv_estimate : `Operator`, optional
+        Initial estimate of the hessian ``H0^-1``.
+    impl : {'first', 'second'}
+        The type of Broydens method to use.
+
+    Returns
+    -------
+    r : ``x.space`` element
+        The result of ``Hn^-1(x)``.
+
+    Notes
+    -----
+    For ``impl = 'first'``, :math:`H_n^{-1}` is defined recursively as
+
+    .. math::
+        H_{n+1}^{-1} = \\left(I + s_n y_n^T \\right) H_{n}^{-1}
+
+    and for ``impl = 'second'``:
+
+    .. math::
+        H_{n+1}^{-1} = H_{n}^{-1} + s_n y_n^T
+
+    With :math:`H_0^{-1}` given by ``hess_estimate``.
+    """
+    assert len(s) == len(y)
+
+    if hessinv_estimate is not None:
+        r = hessinv_estimate(x)
+    else:
+        r = x.copy()
+
+    for i in range(len(s)):
+        if impl == 'first':
+            r.lincomb(1, r, y[i].inner(r), s[i])
+        elif impl == 'second':
+            r.lincomb(1, r, y[i].inner(x), s[i])
+        else:
+            raise RuntimeError('unknown `impl`')
 
     return r
 
@@ -184,7 +238,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
             callback(x)
 
 
-def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16, maxcor=None,
+def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16, num_store=None,
                 hessinv_estimate=None, callback=None):
     """Quasi-Newton BFGS method to minimize a differentiable function.
 
@@ -228,9 +282,9 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         ``tol``.
     tol : float, optional
         Tolerance that should be used for terminating the iteration.
-    maxcor : int, optional
-        Maximum number of correction factors to store. If ``None``, the method
-        is the regular BFGS method. If an integer, the method becomes the
+    num_store : int, optional
+        Maximum number of correction factors to store. For ``None``, the method
+        is the regular BFGS method. For an integer, the method becomes the
         Limited Memory BFGS method.
     hessinv_estimate : `Operator`, optional
         Initial estimate of the inverse of the Hessian operator. Needs to be an
@@ -253,7 +307,7 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     grad_x = grad(x)
     for _ in range(maxiter):
         # Determine a stepsize using line search
-        search_dir = -_bfgs_multiply(ys, ss, grad_x, hessinv_estimate)
+        search_dir = -_bfgs_direction(ss, ys, grad_x, hessinv_estimate)
         dir_deriv = search_dir.inner(grad_x)
         if np.abs(dir_deriv) < tol:
             return  # we found an optimum
@@ -273,19 +327,20 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
             return
 
         # Update Hessian
-        ss += [grad_diff]
-        ys += [x_update]
-        if maxcor is not None:
+        ys += [grad_diff]
+        ss += [x_update]
+        if num_store is not None:
             # Throw away factors if they are too many.
-            ss = ss[-maxcor:]
-            ys = ys[-maxcor:]
+            ss = ss[-num_store:]
+            ys = ys[-num_store:]
 
         if callback is not None:
             callback(x)
 
 
 def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
-                    tol=1e-16, callback=None):
+                    tol=1e-16, hessinv_estimate=None,
+                    callback=None):
     """Broyden's first method, a quasi-Newton scheme.
 
     Notes
@@ -325,6 +380,10 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
         ``tol``.
     tol : float, optional
         Tolerance that should be used for terminating the iteration.
+    hessinv_estimate : `Operator`, optional
+        Initial estimate of the inverse of the Hessian operator. Needs to be an
+        operator from ``f.domain`` to ``f.domain``.
+        Default: Identity on ``f.domain``
     callback : `callable`, optional
         Object executing code per iteration, e.g. plotting each iterate.
     """
@@ -336,16 +395,19 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     if not callable(line_search):
         line_search = ConstantLineSearch(line_search)
 
-    hess = ident = IdentityOperator(grad.domain)
-    grad_x = grad(x)
+    ss = []
+    ys = []
 
+    grad_x = grad(x)
     for _ in range(maxiter):
         # find step size
-        search_dir = -hess(grad_x)
+        search_dir = -_broydens_direction(ss, ys, grad_x,
+                                          hessinv_estimate, impl)
         dir_deriv = search_dir.inner(grad_x)
         if np.abs(dir_deriv) < tol:
             return  # we found an optimum
         step = line_search(x, search_dir, dir_deriv)
+        print(x, search_dir, f(x), step)
 
         # update x
         delta_x = step * search_dir
@@ -355,20 +417,23 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
         grad_x, grad_x_old = grad(x), grad_x
         delta_grad = grad_x - grad_x_old
 
-        # update hessian
-        v = hess(delta_grad)
+        # update hessian.
+        # TODO: reuse from above
+        v = _broydens_direction(ss, ys, delta_grad, hessinv_estimate, impl)
         if impl == 'first':
             divisor = delta_x.inner(v)
             if np.abs(divisor) < tol:
                 return
-            u = (search_dir - v) * (1 / divisor)
-            hess = (ident + u * delta_x.T) * hess
+            u = (delta_x - v) / divisor
+            ss += [u]
+            ys += [delta_x]
         elif impl == 'second':
             divisor = delta_grad.inner(delta_grad)
             if np.abs(divisor) < tol:
                 return
-            u = (search_dir - v) * (1 / divisor)
-            hess = hess + u * delta_grad.T
+            u = (delta_x - v) / divisor
+            ss += [u]
+            ys += [delta_grad]
 
         if callback is not None:
             callback(x)

@@ -53,7 +53,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 #                             https://github.com/astra-toolbox/astra-toolbox
 impl = 'scikit'
 
-# Ray transform aka forward projection.
+# Create the forward operator
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 
 
