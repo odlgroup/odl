@@ -33,19 +33,19 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     """Douglas-Rachford primal-dual splitting algorithm.
 
     Minimizes the sum of several convex functions composed with linear
-    operators
+    operators::
 
-        ``min_x f(x) + sum_i g_i(L_i x)``,
+        min_x f(x) + sum_i g_i(L_i x)
 
-    where f, g_i are convex functions, L_i are linear `Operator`'s.
+    where ``f``, ``g_i`` are convex functions, ``L_i`` are linear `Operator`'s.
 
-    Can also be used to solve the more general problem
+    Can also be used to solve the more general problem::
 
-        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x)``,
+        min_x f(x) + sum_i (g_i @ l_i)(L_i x)
 
-    where l_i are convex functions and @ is the infimal convolution:
+    where ``l_i`` are convex functions and ``@`` is the infimal convolution::
 
-        ``(g @ l)(x) = inf_y g(y) + l(x - y)``.
+        (g @ l)(x) = inf_y g(y) + l(x - y)
 
     Parameters
     ----------
@@ -55,7 +55,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
         `proximal factory` for the function ``f``.
     g : `sequence` of `Functional`'s
         Sequence of of the functions ``g_i``. Needs to have
-        ``convex_conj.proximal``.
+        ``g[i].convex_conj.proximal``.
     L : `sequence` of `Operator`'s
         Sequence of `Opeartor`s` with as many elements as ``g``.
     tau : float
@@ -71,7 +71,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     ----------------
     l : `sequence` of `Functionals`'s, optional
         Sequence of of the functions ``l_i``. Needs to have
-        ``convex_conj.proximal``.
+        ``l[i].convex_conj.proximal``.
         If omitted, the simpler problem without ``l_i``  will be considered.
     lam : float or callable, optional
         Overrelaxation step size. If callable, should take an index (zero

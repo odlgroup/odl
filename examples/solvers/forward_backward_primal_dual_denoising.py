@@ -52,8 +52,7 @@ gradient = odl.Gradient(space)
 # solver `forward_backward_pd` for the general form of the problem.
 lin_ops = [gradient]
 
-# Create proximals for the convex conjugates of the 1-norm and the bound
-# constrains.
+# Create functionals for the 1-norm and the bound constrains.
 g = [1e1 * odl.solvers.L1Norm(gradient.range)]
 f = odl.solvers.IndicatorBox(space, 0, 255)
 

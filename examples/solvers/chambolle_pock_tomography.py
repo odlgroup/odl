@@ -55,7 +55,7 @@ geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 #                             https://github.com/astra-toolbox/astra-toolbox
 impl = 'astra_cuda'
 
-# Ray transform aka forward projection.
+# Create the forward operator
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 
 
@@ -84,13 +84,13 @@ g = odl.solvers.ZeroFunctional(op.domain)
 
 # Create functionals for the dual variable
 
-# l2-data matching
+# l2-squared data matching
 l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
 l1_norm = 0.03 * odl.solvers.L1Norm(gradient.range)
 
-# Combine proximal operators, order must correspond to the operator K
+# Combine functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 

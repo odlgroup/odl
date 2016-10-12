@@ -73,7 +73,6 @@ def combine_proximals(*factory_list):
     this case the proximal operator of the sum is given by
 
     .. math::
-
         \mathrm{prox}_{\\sigma (F(x) + G(y))}(x, y) =
         (\mathrm{prox}_{\\sigma F}(x), \mathrm{prox}_{\\sigma G}(y)).
     """

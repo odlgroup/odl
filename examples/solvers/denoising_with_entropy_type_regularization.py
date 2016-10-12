@@ -30,8 +30,6 @@ import scipy
 import odl
 
 
-
-
 # Read test image:
 # convert integer values to float, and rotate to get the image upright
 image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
@@ -66,7 +64,7 @@ g = odl.solvers.IndicatorNonnegativity(op.domain)
 
 # Functionals related to the dual variable
 
-# l2-data matching
+# Kulback-Leibler data matching
 prox_convconj_kl = odl.solvers.proximal_cconj_kl(space, lam=1.0, g=noisy)
 
 # TODO: fix hack with issue #612
@@ -76,7 +74,7 @@ kl_data_matching = odl.solvers.simple_functional(space,
 # Isotropic TV-regularization: l1-norm of grad(x)
 l1_norm = 0.1 * odl.solvers.L1Norm(gradient.range)
 
-# Combine functionals: the order must match the order of operators in K
+# Make separable sum of functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(kl_data_matching, l1_norm)
 
 # Optional: pass callback objects to solver
@@ -95,10 +93,9 @@ sigma = 0.1 / op_norm  # Step size for the dual variable
 # Starting point
 x = op.domain.zero()
 
-# Run algorithms (and display intermediates)
+# Run algorithm (and display intermediates)
 odl.solvers.chambolle_pock_solver(
     x, f, g, op, tau=tau, sigma=sigma, niter=100, callback=callback)
-
 
 # Display images
 orig.show(title='original image')

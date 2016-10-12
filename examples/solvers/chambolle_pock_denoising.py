@@ -59,13 +59,13 @@ op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 
 # Set up the functionals
 
-# l2-data matching
+# l2-squared data matching
 l2_norm = odl.solvers.L2NormSquared(space).translated(noisy)
 
 # Isotropic TV-regularization: l1-norm of grad(x)
 l1_norm = 0.2 * odl.solvers.L1Norm(gradient.range)
 
-# Combine functionals: the order must match the order of operators in K
+# Make separable sum of functionals, order must correspond to the operator K
 f = odl.solvers.SeparableSum(l2_norm, l1_norm)
 
 # Non-negativity constraint
@@ -89,7 +89,7 @@ callback = (odl.solvers.CallbackPrintIteration() &
 # Starting point
 x = op.domain.zero()
 
-# Run algorithms (and display intermediates)
+# Run algorithm (and display intermediates)
 odl.solvers.chambolle_pock_solver(
     x, f, g, op, tau=tau, sigma=sigma, niter=niter, callback=callback)
 
