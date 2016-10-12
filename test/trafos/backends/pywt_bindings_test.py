@@ -195,11 +195,11 @@ def test_pywt_coeff_list_conversion(small_shapes, floating_dtype):
     assert all_equal(coeff_list, true_coeff_list)
 
 
-def test_multilevel_recon_inverts_decomp(shape_setup, dtype):
+def test_multilevel_recon_inverts_decomp(shape_setup, floating_dtype):
     """Test that reco is the inverse of decomp."""
     wavelet, pywt_mode, nlevels, image_shape, coeff_shapes = shape_setup
 
-    image = np.random.uniform(size=image_shape).astype(dtype)
+    image = np.random.uniform(size=image_shape).astype(floating_dtype)
     wave_decomp = pywt_multi_level_decomp(image, wavelet, nlevels, pywt_mode)
     wave_recon = pywt_multi_level_recon(wave_decomp, wavelet, pywt_mode,
                                         image_shape)

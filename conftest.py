@@ -84,12 +84,16 @@ def floating_dtype(request):
     return request.param
 
 
-dtype_params = floating_dtype_params + np.sctypes['int'] + np.sctypes['uint']
-dtype_ids = [' dtype={} '.format(dtype_repr(dt)) for dt in dtype_params]
+scalar_dtype_params = (floating_dtype_params +
+                       np.sctypes['int'] +
+                       np.sctypes['uint'])
+scalar_dtype_ids = [' dtype={} '.format(dtype_repr(dt))
+                    for dt in scalar_dtype_params]
 
 
-@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
-def dtype(request):
+@pytest.fixture(scope="module", ids=scalar_dtype_ids,
+                params=scalar_dtype_params)
+def scalar_dtype(request):
     return request.param
 
 
