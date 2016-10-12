@@ -523,14 +523,12 @@ def pywt_single_level_recon(approx, details, wavelet, mode, recon_shape=None):
     ...             [ 0.5, 0.5]],
     ...            [[-0.5, 0.5],
     ...             [-0.5, 0.5]])
-    >>>
     >>> # Gives even shape by default
     >>> pywt_single_level_recon(approx, details, wavelet='haar', mode='zero')
     array([[ 1.,  1.,  1.,  0.],
            [ 1.,  0.,  0.,  0.],
            [ 0.,  1.,  1.,  0.],
            [ 0.,  0.,  0.,  0.]])
-    >>>
     >>> # Original shape can only be recovered if given explicitly
     >>> # in this case
     >>> pywt_single_level_recon(approx, details, wavelet='haar', mode='zero',
