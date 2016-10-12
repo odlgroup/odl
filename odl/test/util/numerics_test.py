@@ -338,14 +338,14 @@ def test_fast_1d_tensor_mult_error():
 # --- resize_array --- #
 
 
-def test_resize_array_fwd(resize_setup, dtype):
+def test_resize_array_fwd(resize_setup, scalar_dtype):
     pad_mode, pad_const, newshp, offset, array_in, true_out = resize_setup
-    array_in = np.array(array_in, dtype=dtype)
-    true_out = np.array(true_out, dtype=dtype)
+    array_in = np.array(array_in, dtype=scalar_dtype)
+    true_out = np.array(true_out, dtype=scalar_dtype)
 
     resized = resize_array(array_in, newshp, offset, pad_mode, pad_const,
                            direction='forward')
-    out = np.empty(newshp, dtype=dtype)
+    out = np.empty(newshp, dtype=scalar_dtype)
     resize_array(array_in, newshp, offset, pad_mode, pad_const,
                  direction='forward', out=out)
 
@@ -376,14 +376,14 @@ def test_resize_array_adj(resize_setup, floating_dtype):
                         np.vdot(array.ravel(), resized_adj.ravel()))
 
 
-def test_resize_array_corner_cases(dtype, padding):
+def test_resize_array_corner_cases(scalar_dtype, padding):
     # Test extreme cases of resizing that are still valid for several
     # `pad_mode`s
 
     pad_mode, pad_const = padding
 
     # Test array
-    arr = np.arange(12, dtype=dtype).reshape((3, 4))
+    arr = np.arange(12, dtype=scalar_dtype).reshape((3, 4))
 
     # Resize to and from 0 total size
     squashed_arr = resize_array(arr, (3, 0), pad_mode=pad_mode)
@@ -397,18 +397,18 @@ def test_resize_array_corner_cases(dtype, padding):
         true_blownup_arr = np.empty_like(arr)
         true_blownup_arr.fill(pad_const)
 
-        blownup_arr = resize_array(np.ones((3, 0), dtype=dtype), (3, 4),
+        blownup_arr = resize_array(np.ones((3, 0), dtype=scalar_dtype), (3, 4),
                                    pad_mode=pad_mode, pad_const=pad_const)
         assert np.array_equal(blownup_arr, true_blownup_arr)
 
-        blownup_arr = resize_array(np.ones((0, 0), dtype=dtype), (3, 4),
+        blownup_arr = resize_array(np.ones((0, 0), dtype=scalar_dtype), (3, 4),
                                    pad_mode=pad_mode, pad_const=pad_const)
         assert np.array_equal(blownup_arr, true_blownup_arr)
 
     # Resize from 0 axes to 0 axes
-    zero_axes_arr = resize_array(np.array(0, dtype=dtype), (),
+    zero_axes_arr = resize_array(np.array(0, dtype=scalar_dtype), (),
                                  pad_mode=pad_mode)
-    assert zero_axes_arr == np.array(0, dtype=dtype)
+    assert zero_axes_arr == np.array(0, dtype=scalar_dtype)
 
     if pad_mode == 'periodic':
         # Resize with periodic padding, using all values from the original
