@@ -24,10 +24,20 @@ import doctest
 from doctest import IGNORE_EXCEPTION_DETAIL, ELLIPSIS, NORMALIZE_WHITESPACE
 import os
 
+# Modules to be added to testing globals
+import numpy
+import scipy
 import odl
+try:
+    import proximal
+except ImportError:
+    proximal = None
+
+doctest_extraglobs = {'odl': odl, 'np': numpy, 'scipy': scipy,
+                      'proximal': proximal}
 
 root_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'source')
-test_dirs = ['guide']
+test_dirs = ['guide', 'getting_started']
 exclude_files = ['faq.rst']
 
 doc_src_files = []
@@ -42,5 +52,5 @@ for test_dir in test_dirs:
 
 for doc_src_file in doc_src_files:
     doctest.testfile(doc_src_file, module_relative=False, report=True,
-                     extraglobs={'odl': odl},
+                     extraglobs=doctest_extraglobs,
                      optionflags=doctest_optionflags)
