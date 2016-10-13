@@ -1,6 +1,8 @@
-##########
-Installing
-##########
+.. _installing_odl:
+
+##############
+Installing ODL
+##############
 
 Installing ODL is intended to be straightforward, and this guide is meant for new users. For a minimal installation you should do the following steps:
 
@@ -21,7 +23,7 @@ If you are a Python novice using Windows, we recommend that you install a full p
 .. code-block:: bash
 
    user$ conda update --all
-		
+
 to make sure you have the latest versions of all packages.
 
 What Python version to use
@@ -162,11 +164,11 @@ Now you can check that everything was installed properly by running
 .. code-block:: bash
 
    user$ python -c "import odl; odl.test()"
-   
+
 If you have installed ODL from source, you can also use pytest directly
 
 .. code-block:: bash
-    
+
    user$ pytest
 
 .. _pytest: https://pypi.python.org/pypi/pytest

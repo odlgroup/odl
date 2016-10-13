@@ -8,6 +8,15 @@ The main intent of ODL is to enable mathematicians and applied scientists to use
 
 
 .. toctree::
+    :maxdepth: 1
+    :caption: Getting Started
+
+    getting_started/about_odl.rst
+    getting_started/installing
+    getting_started/first_steps
+
+
+.. toctree::
     :maxdepth: 2
     :caption: Working with ODL
 
