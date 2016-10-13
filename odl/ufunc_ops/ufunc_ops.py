@@ -23,11 +23,14 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-from odl.set.space import LinearSpace
+from odl.set import LinearSpace, RealNumbers, Field
 from odl.space import ProductSpace, fn
+from odl.space.base_ntuples import FnBase
 from odl.operator import Operator, MultiplyOperator
 from odl.util.utility import is_int_dtype
 from odl.util.ufuncs import UFUNCS
+from odl.solvers import (Functional, ScalingFunctional, FunctionalQuotient,
+                         ConstantFunctional, IdentityFunctional)
 
 __all__ = ()
 
@@ -36,10 +39,6 @@ def _is_integer_only_ufunc(name):
     return 'shift' in name or 'bitwise' in name or name == 'invert'
 
 LINEAR_UFUNCS = ['negative', 'rad2deg', 'deg2rad', 'add', 'subtract']
-
-RAW_INIT_DOCSTRING = """
-
-"""
 
 
 RAW_EXAMPLES_DOCSTRING = """
@@ -53,68 +52,106 @@ Examples
 """
 
 
+def gradient_factory(name):
+    """Create gradient `Functional` for some ufuncs."""
+
+    if name == 'sin':
+        def gradient(self):
+            """Return the gradient operator."""
+            return cos(self.domain)
+    elif name == 'cos':
+        def gradient(self):
+            """Return the gradient operator."""
+            return -sin(self.domain)
+    elif name == 'tan':
+        def gradient(self):
+            """Return the gradient operator."""
+            return 1 + square(self.domain) * self
+    elif name == 'sqrt':
+        def gradient(self):
+            """Return the gradient operator."""
+            return FunctionalQuotient(ConstantFunctional(self.domain, 0.5),
+                                      self)
+    elif name == 'square':
+        def gradient(self):
+            """Return the gradient operator."""
+            return ScalingFunctional(self.domain, 2.0)
+    elif name == 'log':
+        def gradient(self):
+            """Return the gradient operator."""
+            return FunctionalQuotient(ConstantFunctional(self.domain, 1.0),
+                                      IdentityFunctional(self.domain))
+    elif name == 'exp':
+        def gradient(self):
+            """Return the gradient operator."""
+            return self
+    else:
+        # Fallback to default
+        gradient = Functional.gradient
+
+    return gradient
+
+
 def derivative_factory(name):
     """Create derivative function for some ufuncs."""
 
     if name == 'sin':
         def derivative(self, point):
             """Return the derivative operator."""
-            point = self.domain.element(point)
-            return MultiplyOperator(point.ufunc.cos())
-        return derivative
+            return MultiplyOperator(cos(self.domain)(point))
     elif name == 'cos':
         def derivative(self, point):
             """Return the derivative operator."""
             point = self.domain.element(point)
-            return MultiplyOperator(-point.ufunc.sin())
-        return derivative
+            return MultiplyOperator(-sin(self.domain)(point))
     elif name == 'tan':
         def derivative(self, point):
             """Return the derivative operator."""
             return MultiplyOperator(1 + self(point) ** 2)
-        return derivative
     elif name == 'sqrt':
         def derivative(self, point):
             """Return the derivative operator."""
             return MultiplyOperator(0.5 / self(point))
-        return derivative
     elif name == 'square':
         def derivative(self, point):
             """Return the derivative operator."""
             point = self.domain.element(point)
             return MultiplyOperator(2.0 * point)
-        return derivative
     elif name == 'log':
         def derivative(self, point):
             """Return the derivative operator."""
             point = self.domain.element(point)
             return MultiplyOperator(1.0 / point)
-        return derivative
     elif name == 'exp':
         def derivative(self, point):
             """Return the derivative operator."""
             return MultiplyOperator(self(point))
-        return derivative
     else:
         # Fallback to default
-        return Operator.derivative
+        derivative = Operator.derivative
+
+    return derivative
 
 
 def ufunc_class_factory(name, nargin, nargout, docstring):
-    """Create a UfuncOperator from a given specification."""
+    """Create a Ufunc `Operator` from a given specification."""
 
     assert 0 <= nargin <= 2
 
     def __init__(self, space):
-        """Initialize an instance."""
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        space : `FnBase`
+            The domain of the operator.
+        """
         if not isinstance(space, LinearSpace):
             raise TypeError('`space` {!r} not a `LinearSpace`'.format(space))
 
         if _is_integer_only_ufunc(name) and not is_int_dtype(space.dtype):
             raise ValueError("UFunc '{}' only defined with integral dtype"
                              "".format(name))
-
-        self.space = space
 
         if nargin == 1:
             domain = space
@@ -144,7 +181,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r})'.format(name, self.space)
+        return '{}({!r})'.format(name, self.domain)
 
     # Create example (also functions as doctest)
     if 'shift' in name or 'bitwise' in name or name == 'invert':
@@ -178,12 +215,95 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
                   "__repr__": __repr__,
                   "__doc__": full_docstring}
 
-    return type(name, (Operator,), attributes)
+    full_name = name + '_op'
+
+    return type(full_name, (Operator,), attributes)
+
+
+def ufunc_functional_factory(name, nargin, nargout, docstring):
+    """Create a UFunc `Functional` from a given specification."""
+
+    assert 0 <= nargin <= 2
+
+    def __init__(self, field):
+        """Initialize an instance.
+
+        Parameters
+        ----------
+        field : `Field`
+            The domain of the functional.
+        """
+        if not isinstance(field, Field):
+            raise TypeError('`field` {!r} not a `Field`'.format(space))
+
+        if _is_integer_only_ufunc(name):
+            raise ValueError("UFunc '{}' only defined with integral dtype"
+                             "".format(name))
+
+        linear = name in LINEAR_UFUNCS
+        Functional.__init__(self, space=field, linear=linear)
+
+    def _call(self, x):
+        """return ``self(x)``."""
+        if nargin == 1:
+            return getattr(np, name)(x)
+        else:
+            return getattr(np, name)(*x)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(name, self.domain)
+
+    # Create example (also functions as doctest)
+
+    space = RealNumbers()
+    if nargin == 1:
+        val = 1.0
+        arg = '{}'.format(val)
+        with np.errstate(all='ignore'):
+            result = getattr(np, name)(val)
+    else:
+        val1 = 1.0
+        val2 = 2.0
+        arg = '[{}, {}]'.format(val1, val2)
+        with np.errstate(all='ignore'):
+            result = getattr(np, name)(val1, val2)
+
+    if nargout == 2:
+        result = '{{{}, {}}}'.format(result[0], result[1])
+
+    examples_docstring = RAW_EXAMPLES_DOCSTRING.format(space=space, name=name,
+                                                       arg=arg, result=result)
+    full_docstring = docstring + examples_docstring
+
+    attributes = {"__init__": __init__,
+                  "_call": _call,
+                  "gradient": property(gradient_factory(name)),
+                  "__repr__": __repr__,
+                  "__doc__": full_docstring}
+
+    full_name = name + '_op'
+
+    return type(full_name, (Functional,), attributes)
+
 
 # Create an operator for each ufunc
 for name, nargin, nargout, docstring in UFUNCS:
-    globals()[name] = ufunc_class_factory(name, nargin, nargout, docstring)
-    __all__ += (name,)
+    def indirection(name):
+        def ufunc_factory(domain=RealNumbers()):
+            if isinstance(domain, Field):
+                return globals()[name + '_func'](domain)
+            elif isinstance(domain, FnBase):
+                return globals()[name + '_op'](domain)
+            else:
+                raise ValueError('UFunc not available for {}'.format(domain))
+        return ufunc_factory
+
+    if not _is_integer_only_ufunc(name):
+        globals()[name + '_op'] = ufunc_class_factory(name, nargin, nargout, docstring)
+        globals()[name + '_func'] = ufunc_functional_factory(name, nargin, nargout, docstring)
+        globals()[name] = indirection(name)
+        __all__ += (name,)
 
 
 if __name__ == '__main__':
