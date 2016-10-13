@@ -1,6 +1,8 @@
-###############
-Getting started
-###############
+.. _first_steps:
+
+##################
+First steps in ODL
+##################
 
 Welcome to the ODL getting started guide.
 This guide is intended to give you a simple introduction to ODL and how to work with it.
