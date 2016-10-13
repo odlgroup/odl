@@ -27,3 +27,6 @@ __all__ += default_functionals.__all__
 
 from .example_funcs import *
 __all__ += example_funcs.__all__
+
+from .derivatives import *
+__all__ += derivatives.__all__
