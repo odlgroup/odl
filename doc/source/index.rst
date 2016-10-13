@@ -1,3 +1,5 @@
+.. _main_page:
+
 #############################################
 Operator Discretization Library Documentation
 #############################################
