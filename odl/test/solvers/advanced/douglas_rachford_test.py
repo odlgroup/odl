@@ -40,9 +40,9 @@ def test_primal_dual_input_handling():
     space1 = odl.uniform_discr(0, 1, 10)
 
     lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
-    g = [odl.solvers.ZeroFunctional(space1),  # Identity operator
-         odl.solvers.ZeroFunctional(space1)]  # Identity operator
-    f = odl.solvers.ZeroFunctional(space1)  # Identity operator
+    g = [odl.solvers.ZeroFunctional(space1),
+         odl.solvers.ZeroFunctional(space1)]
+    f = odl.solvers.ZeroFunctional(space1)
 
     # Check that the algorithm runs. With the above operators, the algorithm
     # returns the input.

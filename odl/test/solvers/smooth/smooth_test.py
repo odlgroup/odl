@@ -72,7 +72,7 @@ def broyden_impl(request):
 
 
 def test_newton_solver(functional_and_linesearch):
-    """Test the newton solver."""
+    """Test the Newton solver."""
     functional, line_search = functional_and_linesearch
 
     try:
@@ -91,7 +91,7 @@ def test_newton_solver(functional_and_linesearch):
 
 
 def test_bfgs_solver(functional_and_linesearch):
-    """Test the BFGS quasi-newton solver."""
+    """Test the BFGS quasi-Newton solver."""
     functional, line_search = functional_and_linesearch
 
     x = functional.domain.one()
@@ -102,7 +102,7 @@ def test_bfgs_solver(functional_and_linesearch):
 
 
 def test_lbfgs_solver(functional_and_linesearch):
-    """Test limited memory BFGS quasi-newton solver."""
+    """Test limited memory BFGS quasi-Newton solver."""
     functional, line_search = functional_and_linesearch
 
     x = functional.domain.one()
@@ -113,7 +113,7 @@ def test_lbfgs_solver(functional_and_linesearch):
 
 
 def test_broydens_method(broyden_impl, functional_and_linesearch):
-    """Test the ``broydens_method`` solver."""
+    """Test the ``broydens_method`` quasi-Newton solver."""
     functional, line_search = functional_and_linesearch
 
     x = functional.domain.one()
@@ -124,7 +124,7 @@ def test_broydens_method(broyden_impl, functional_and_linesearch):
 
 
 def test_steepest_descent(functional):
-    """Test the ``steepest_descent``solver."""
+    """Test the ``steepest_descent`` solver."""
     line_search = odl.solvers.BacktrackingLineSearch(functional)
 
     x = functional.domain.one()
@@ -135,4 +135,4 @@ def test_steepest_descent(functional):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])
