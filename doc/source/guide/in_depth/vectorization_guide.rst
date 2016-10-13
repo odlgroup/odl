@@ -46,20 +46,20 @@ Usage in ODL
 ============
 
 Python functions are in most cases used as input to a discretization process. For example, we may
-want to discretize a two-dimensional Gaussian function::
+want to discretize a two-dimensional Gaussian function:
 
-    def gaussian2(x):
-        return np.exp(-(x[0] ** 2 + x[1] ** 2) / 2)
+    >>> def gaussian2(x):
+    ...     return np.exp(-(x[0] ** 2 + x[1] ** 2) / 2)
 
 on the rectangle [-5, 5] x [-5, 5] with 100 pixels in each
-dimension. The code for this is simply::
+dimension. The code for this is simply
 
-    # Note that the minimum and maxiumum coordinates are given as
-    # vectors, not one interval at a time.
-    discr = odl.uniform_discr([-5, -5], [5, 5], (100, 100))
+    >>> # Note that the minimum and maxiumum coordinates are given as
+    >>> # vectors, not one interval at a time.
+    >>> discr = odl.uniform_discr([-5, -5], [5, 5], (100, 100))
 
-    # This creates an element in the discretized space ``discr``
-    gaussian_discr = discr.element(gaussian2)
+    >>> # This creates an element in the discretized space ``discr``
+    >>> gaussian_discr = discr.element(gaussian2)
 
 What happens behind the scenes is that ``discr`` creates a :term:`discretization` object which
 has a built-in method ``element`` to turn continuous functions into discrete arrays by evaluating
@@ -88,7 +88,6 @@ If a function does not use all components of the input, ODL tries to broadcast t
 
     >>> gaussian_const_x0(mesh).shape
     (1, 100)
-
     >>> discr.element(gaussian_const_x0).shape
     (100, 100)
 

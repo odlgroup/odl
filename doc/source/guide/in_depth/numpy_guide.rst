@@ -34,9 +34,9 @@ If the data type and storage methods allow it, the element simply wraps the unde
 Casting ODL vector space elements to NumPy arrays can be done in two ways, either through the member function `NtuplesBaseVector.asarray`, or using `numpy.asarray`. These are both optimized and if possible return a view::
 
    >>> x.asarray()
-   array([1.0, 2.0, 3.0])
+   array([ 1.,  2.,  3.])
    >>> np.asarray(x)
-   array([1.0, 2.0, 3.0])
+   array([ 1.,  2.,  3.])
 
 These methods work with any ODL object represented by an array. For example, in discretizations, a two-dimensional array can be used::
 
@@ -46,9 +46,9 @@ These methods work with any ODL object represented by an array. For example, in 
    ...                 [7, 8, 9]])
    >>> x = space.element(arr)
    >>> x.asarray()
-   array([[1.0, 2.0, 3.0],
-          [4.0, 5.0, 6.0],
-          [7.0, 8.0, 9.0]])
+   array([[ 1.,  2.,  3.],
+          [ 4.,  5.,  6.],
+          [ 7.,  8.,  9.]])
 
 Using ODL vectors with NumPy functions
 ======================================
@@ -77,35 +77,35 @@ The fact that the ``x.ufunc.negative()`` interface is needed is a known issue wi
 
 NumPy functions as Operators
 ============================
-To solve the above issue, it is often useful to write an `Operator` wrapping NumPy functions, thus allowing full access to the ODL ecosystem. To wrap the convolution operation, you could write a new class::
+To solve the above issue, it is often useful to write an `Operator` wrapping NumPy functions, thus allowing full access to the ODL ecosystem. To wrap the convolution operation, you could write a new class:
 
-   class MyConvolution(odl.Operator):
-       """Operator for convolving with a given vector."""
-
-       def __init__(self, vector):
-           """Initialize the convolution."""
-           self.vector = vector
-
-           # Initialize operator base class.
-           # This operator maps from the space of vector to the same space and is linear
-           odl.Operator.__init__(self, domain=vector.space, range=vector.space,
-                                 linear=True)
-
-       def _call(self, x):
-           # The output of an Operator is automatically cast to an ODL vector
-           return np.convolve(x, self.vector, mode='same')
+   >>> class MyConvolution(odl.Operator):
+   ...     """Operator for convolving with a given vector."""
+   ...
+   ...     def __init__(self, vector):
+   ...         """Initialize the convolution."""
+   ...         self.vector = vector
+   ...
+   ...         # Initialize operator base class.
+   ...         # This operator maps from the space of vector to the same space and is linear
+   ...         odl.Operator.__init__(self, domain=vector.space, range=vector.space,
+   ...                               linear=True)
+   ...
+   ...     def _call(self, x):
+   ...         # The output of an Operator is automatically cast to an ODL vector
+   ...         return np.convolve(x, self.vector, mode='same')
 
 This could then be called as an ODL Operator::
 
    >>> op = MyConvolution(x)
    >>> op(x)
-   rn(3).element([4.0, 10.0, 12.])
+   rn(3).element([4.0, 10.0, 12.0])
 
 Since this is an ODL Operator, it can be used with any of the ODL functionalities such as multiplication with scalar, composition, etc::
 
    >>> scaled_op = 2 * op  # scale by scalar
    >>> scaled_op(x)
-   rn(3).element([8.0, 20.0, 24.])
+   rn(3).element([8.0, 20.0, 24.0])
    >>> y = r3.element([1, 1, 1])
    >>> inner_product_op = odl.InnerProductOperator(y)
    >>> composed_op = inner_product_op * op  # create composition with inner product with vector [1, 1, 1]
