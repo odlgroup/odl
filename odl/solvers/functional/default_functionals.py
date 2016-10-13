@@ -1044,7 +1044,7 @@ class SeparableSum(Functional):
     The separable sum of functionals :math:`f_1, f_2, ..., f_n` is given by
 
     .. math::
-        h(x_1, x_2, ..., x_n) = \sum_i^n f_i(x_i)
+        h(x_1, x_2, ..., x_n) = \sum_{i=1}^n f_i(x_i)
 
     It has several useful features that also distribute. For example, the
     gradient is a `DiagonalOperator`:
@@ -1053,10 +1053,10 @@ class SeparableSum(Functional):
         [\\nabla h](x_1, x_2, ..., x_n) =
         [\\nabla f_1(x_i), \\nabla f_2(x_i), ..., \\nabla f_n(x_i)]
 
-    The convex conjugate distributes:
+    The convex conjugate is also a separable sum:
 
     .. math::
-        [h^*](y_1, y_2, ..., y_n) = \sum_i^n f_i^*(y_i)
+        [h^*](y_1, y_2, ..., y_n) = \sum_{i=1}^n f_i^*(y_i)
 
     And the proximal distributes:
 

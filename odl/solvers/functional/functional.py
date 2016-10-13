@@ -1135,18 +1135,18 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
 
         grad = SimpleFunctionalGradient(space, space, linear=False)
 
-    if cconj_grad is not None and not isinstance(grad, Operator):
-        grad_in = grad
+    if cconj_grad is not None and not isinstance(cconj_grad, Operator):
+        cconj_grad_in = cconj_grad
 
-        class SimpleFunctionalGradient(Operator):
+        class SimpleFunctionalCConjGradient(Operator):
 
-            """Gradient of a `SimpleFunctional`."""
+            """Gradient of the convex conj of a  `SimpleFunctional`."""
 
             def _call(self, x):
                 """Return ``self(x)``."""
-                return grad_in(x)
+                return cconj_grad_in(x)
 
-        grad = SimpleFunctionalGradient(space, space, linear=False)
+        cconj_grad = SimpleFunctionalCConjGradient(space, space, linear=False)
 
     class SimpleFunctional(Functional):
 

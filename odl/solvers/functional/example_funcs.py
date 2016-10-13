@@ -75,7 +75,7 @@ class RosenbrockFunctional(Functional):
 
         Examples
         --------
-        Initialize and call functional
+        Initialize and call the functional:
 
         >>> import odl
         >>> r2 = odl.rn(2)
@@ -85,14 +85,14 @@ class RosenbrockFunctional(Functional):
         >>> functional([0, 1])
         101.0
 
-        The functional can also be used in higher dimensions
+        The functional can also be used in higher dimensions:
 
         >>> r5 = odl.rn(5)
         >>> functional = RosenbrockFunctional(r5)
         >>> functional([1, 1, 1, 1, 1])
         0.0
 
-        We can change how much the function is ill behaved via ``scale``
+        We can change how much the function is ill behaved via ``scale``:
 
         >>> import odl
         >>> r2 = odl.rn(2)

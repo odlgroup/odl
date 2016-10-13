@@ -23,7 +23,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-from odl.operator import MultiplyOperator
 from odl.solvers.util import ConstantLineSearch
 from odl.solvers.iterative.iterative import conjugate_gradient
 
@@ -335,19 +334,13 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
                 ss = []
                 continue
 
-        if i == 0 and hessinv_estimate is None and False:
-            # Estimate scale
-            scale = x_update.inner(x_update) / grad_diff.inner(x_update)
-            hessinv_estimate = MultiplyOperator(scale,
-                                                grad.domain, grad.domain)
-        else:
-            # Update Hessian
-            ys += [grad_diff]
-            ss += [x_update]
-            if num_store is not None:
-                # Throw away factors if they are too many.
-                ss = ss[-num_store:]
-                ys = ys[-num_store:]
+        # Update Hessian
+        ys.append(grad_diff)
+        ss.append(x_update)
+        if num_store is not None:
+            # Throw away factors if they are too many.
+            ss = ss[-num_store:]
+            ys = ys[-num_store:]
 
         if callback is not None:
             callback(x)
@@ -449,8 +442,8 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
                     ss = []
                     continue
             u = (x_update - v) / divisor
-            ss += [u]
-            ys += [x_update]
+            ss.append(u)
+            ys.append(x_update)
         elif impl == 'second':
             divisor = delta_grad.inner(delta_grad)
 
@@ -464,8 +457,8 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
                     ss = []
                     continue
             u = (x_update - v) / divisor
-            ss += [u]
-            ys += [delta_grad]
+            ss.append(u)
+            ys.append(delta_grad)
 
         if callback is not None:
             callback(x)

@@ -30,9 +30,7 @@ from odl.operator import OpNotImplementedError
 @pytest.fixture(scope="module", params=['l2_squared', 'l2_squared_scaled',
                                         'rosenbrock'])
 def functional(request):
-    """Return a functional whose optimal value,
-    which is in the point 0, is 0.
-    """
+    """functional with optimum 0 at 0."""
     name = request.param
 
     # TODO: quadratic (#606) functionals
@@ -57,7 +55,7 @@ def functional(request):
 
 @pytest.fixture(scope="module", params=['constant', 'backtracking'])
 def functional_and_linesearch(request, functional):
-    """Return a functional whose optimal value is at 0."""
+    """Return functional with optimum 0 at 0 and a line search."""
     name = request.param
 
     if name == 'constant':
