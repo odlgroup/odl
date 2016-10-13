@@ -25,6 +25,8 @@ where ``A`` is a simplified MRI imaging operator, ``grad`` is the spatial
 gradient and ``g`` the given noisy data.
 """
 
+# --- THIS EXAMPLE IS CURRENTLY BROKEN UNTILL ISSUE #590 IS FIXED ---
+
 import numpy as np
 import odl
 
