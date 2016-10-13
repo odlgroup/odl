@@ -35,7 +35,7 @@ __all__ = ()
 def _is_integer_only_ufunc(name):
     return 'shift' in name or 'bitwise' in name or name == 'invert'
 
-LINEAR_UFUNCS = ['conj', 'negative', 'rad2deg', 'deg2rad', 'add', 'subtract']
+LINEAR_UFUNCS = ['negative', 'rad2deg', 'deg2rad', 'add', 'subtract']
 
 RAW_INIT_DOCSTRING = """
 
@@ -51,11 +51,6 @@ Examples
 >>> print(op({arg}))
 {result}
 """
-
-
-class UfuncOperator(Operator):
-
-    """Base class for all ufunc operators."""
 
 
 def derivative_factory(name):
@@ -102,7 +97,7 @@ def derivative_factory(name):
         return derivative
     else:
         # Fallback to default
-        return UfuncOperator.derivative
+        return Operator.derivative
 
 
 def ufunc_class_factory(name, nargin, nargout, docstring):
@@ -116,7 +111,8 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
             raise TypeError('`space` {!r} not a `LinearSpace`'.format(space))
 
         if _is_integer_only_ufunc(name) and not is_int_dtype(space.dtype):
-            raise ValueError('`space` {!r} not a `LinearSpace`'.format(space))
+            raise ValueError("UFunc '{}' only defined with integral dtype"
+                             "".format(name))
 
         self.space = space
 
@@ -131,19 +127,19 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
             range = ProductSpace(space, nargout)
 
         linear = name in LINEAR_UFUNCS
-        UfuncOperator.__init__(self, domain=domain, range=range, linear=linear)
+        Operator.__init__(self, domain=domain, range=range, linear=linear)
 
     def _call(self, x, out=None):
         """return ``self(x)``."""
         if out is None:
             if nargin == 1:
                 return getattr(x.ufunc, name)()
-            elif nargin == 2:
+            else:
                 return getattr(x[0].ufunc, name)(*x[1:])
         else:
             if nargin == 1:
                 return getattr(x.ufunc, name)(out=out)
-            elif nargin == 2:
+            else:
                 return getattr(x[0].ufunc, name)(*x[1:], out=out)
 
     def __repr__(self):
@@ -182,7 +178,7 @@ def ufunc_class_factory(name, nargin, nargout, docstring):
                   "__repr__": __repr__,
                   "__doc__": full_docstring}
 
-    return type(name, (UfuncOperator,), attributes)
+    return type(name, (Operator,), attributes)
 
 # Create an operator for each ufunc
 for name, nargin, nargout, docstring in UFUNCS:
