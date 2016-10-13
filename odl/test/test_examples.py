@@ -44,9 +44,11 @@ except ImportError:
 
 # Make a fixture for all examples
 this_file_path = os.path.dirname(os.path.abspath(__file__))
+examples_path = os.path.join(this_file_path,
+                             os.path.pardir, os.path.pardir, 'examples')
 example_ids = []
 example_params = []
-for dirpath, dirnames, filenames in os.walk(this_file_path + "/../examples/"):
+for dirpath, dirnames, filenames in os.walk(examples_path):
     for filename in [f for f in filenames if f.endswith(".py") and
                      not f.startswith('__init__')]:
         example_params.append(os.path.join(dirpath, filename))
