@@ -42,11 +42,9 @@ def iterative_solver(request):
     if solver_name == 'steepest_descent':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
+            func = odl.solvers.L2NormSquared(op.domain) * (op - rhs)
 
-            # Define gradient as ``Ax - b``
-            gradient_op = op.adjoint * odl.ResidualOperator(op, rhs)
-            odl.solvers.steepest_descent(gradient_op, x, niter=10,
-                                         line_search=0.5 / norm2)
+            odl.solvers.steepest_descent(func, x, line_search=0.5 / norm2)
     elif solver_name == 'landweber':
         def solver(op, x, rhs):
             norm2 = op.adjoint(op(x)).norm() / x.norm()
@@ -116,7 +114,7 @@ def test_steepst_descent():
 
     space = odl.rn(3)
     scale = 1  # only mildly ill-behaved
-    rosenbrock = odl.solvers.example_funcs.RosenbrockFunctional(space, scale)
+    rosenbrock = odl.solvers.RosenbrockFunctional(space, scale)
 
     # Create line search object
     line_search = odl.solvers.BacktrackingLineSearch(
@@ -126,7 +124,7 @@ def test_steepst_descent():
     x = rosenbrock.domain.zero()
 
     # Solving the problem
-    odl.solvers.steepest_descent(rosenbrock.gradient, x, niter=40,
+    odl.solvers.steepest_descent(rosenbrock, x, maxiter=40,
                                  line_search=line_search)
 
     assert all_almost_equal(x, [1, 1, 1], places=2)

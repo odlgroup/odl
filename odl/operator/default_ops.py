@@ -33,7 +33,7 @@ from odl.set import LinearSpace, LinearSpaceElement, Field, RealNumbers
 __all__ = ('ScalingOperator', 'ZeroOperator', 'IdentityOperator',
            'LinCombOperator', 'MultiplyOperator', 'PowerOperator',
            'InnerProductOperator', 'NormOperator', 'DistOperator',
-           'ConstantOperator', 'ResidualOperator')
+           'ConstantOperator')
 
 
 class ScalingOperator(Operator):
@@ -130,32 +130,6 @@ class ScalingOperator(Operator):
     def __str__(self):
         """Return ``str(self)``."""
         return '{} * I'.format(self.scalar)
-
-
-class ZeroOperator(ScalingOperator):
-
-    """Operator mapping each element to the zero element.
-
-        ``ZeroOperator()(x) == 0``
-    """
-
-    def __init__(self, space):
-        """Initialize a new instance.
-
-        Parameters
-        ----------
-        space : `LinearSpace`
-            Space of elements which the operator is acting on.
-        """
-        super().__init__(space, 0)
-
-    def __repr__(self):
-        """Return ``repr(self)``."""
-        return '{}({!r})'.format(self.__class__.__name__, self.domain)
-
-    def __str__(self):
-        """Return ``str(self)``."""
-        return '0'
 
 
 class IdentityOperator(ScalingOperator):
@@ -782,17 +756,18 @@ class ConstantOperator(Operator):
 
         if ((domain is None or range is None) and
                 not isinstance(constant, LinearSpaceElement)):
-                raise TypeError('If either domain or range is unspecified '
-                                '`constant` must be LinearSpaceVector, got '
-                                '{!r}.'.format(constant))
+            raise TypeError('If either domain or range is unspecified '
+                            '`constant` must be LinearSpaceVector, got '
+                            '{!r}.'.format(constant))
 
         if domain is None:
             domain = constant.space
         if range is None:
             range = constant.space
 
-        super().__init__(domain, range)
-        self.__constant = self.range.element(constant)
+        self.__constant = range.element(constant)
+        linear = self.constant.norm() == 0
+        super().__init__(domain, range, linear=linear)
 
     @property
     def constant(self):
@@ -805,6 +780,13 @@ class ConstantOperator(Operator):
             return self.range.element(copy(self.constant))
         else:
             out.assign(self.constant)
+
+    @property
+    def adjoint(self):
+        """Adjoint of the operator.
+
+        Only defined if the operator is the constant operator.
+        """
 
     def derivative(self, point):
         """Derivative of this operator, always zero.
@@ -823,7 +805,7 @@ class ConstantOperator(Operator):
         >>> deriv([2, 2, 2])
         rn(3).element([0.0, 0.0, 0.0])
         """
-        return ZeroOperator(self.domain)
+        return ZeroOperator(domain=self.domain, range=self.range)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -834,99 +816,72 @@ class ConstantOperator(Operator):
         return "{}".format(self.constant)
 
 
-class ResidualOperator(Operator):
+class ZeroOperator(Operator):
 
-    """Operator that calculates the residual ``op(x) - y``.
+    """Operator mapping each element to the zero element::
 
-        ``ResidualOperator(op, y)(x) == op(x) - y``
+        ZeroOperator(space)(x) == space.zero()
     """
 
-    def __init__(self, operator, vector):
+    def __init__(self, domain, range=None):
         """Initialize a new instance.
 
         Parameters
         ----------
-        operator : `Operator`
-            Operator to be used in the residual expression. Its
-            `Operator.range` must be a `LinearSpace`.
-        vector : ``operator.range`` `element-like`
-            Vector to be subtracted from the operator result.
+        domain : `LinearSpace`
+            Domain of the operator.
+        range : `LinearSpace`, optional
+            Range of the operator. Default: ``domain``
 
         Examples
         --------
         >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> y = r3.element([1, 2, 3])
-        >>> ident_op = odl.IdentityOperator(r3)
-        >>> res_op = odl.ResidualOperator(ident_op, y)
-        >>> x = r3.element([4, 5, 6])
-        >>> res_op(x)
-        rn(3).element([3.0, 3.0, 3.0])
+        >>> op = odl.ZeroOperator(odl.rn(3))
+        >>> op([1, 2, 3])
+        rn(3).element([0.0, 0.0, 0.0])
+
+        Also works with domain != range:
+
+        >>> op = odl.ZeroOperator(odl.rn(3), odl.cn(4))
+        >>> op([1, 2, 3])
+        cn(4).element([0j, 0j, 0j, 0j])
         """
-        if not isinstance(operator, Operator):
-            raise TypeError('`op` {!r} not a Operator instance'
-                            ''.format(operator))
+        if range is None:
+            range = domain
 
-        if not isinstance(operator.range, LinearSpace):
-            raise TypeError('`op.range` {!r} not a LinearSpace instance'
-                            ''.format(operator.range))
-
-        self.__operator = operator
-        self.__vector = operator.range.element(vector)
-        super().__init__(operator.domain, operator.range)
-
-    @property
-    def operator(self):
-        """The operator to apply."""
-        return self.__operator
-
-    @property
-    def vector(self):
-        """The constant operator range element to subtract."""
-        return self.__vector
+        super().__init__(domain, range, linear=True)
 
     def _call(self, x, out=None):
-        """Evaluate the residual at ``x`` and write to ``out`` if given."""
-        if out is None:
-            out = self.operator(x)
+        """Return the zero vector or assign it to ``out``."""
+        if self.domain == self.range:
+            if out is None:
+                out = 0 * x
+            else:
+                out.lincomb(0, x)
         else:
-            self.operator(x, out=out)
-
-        out -= self.vector
+            result = self.range.zero()
+            if out is None:
+                out = result
+            else:
+                out.assign(result)
         return out
 
-    def derivative(self, point):
-        """Derivative the residual operator.
+    @property
+    def adjoint(self):
+        """Adjoint of the operator.
 
-        It is equal to the derivative of the "inner" operator:
-
-            ``ResidualOperator(op, y).derivative(z) == op.derivative(z)``
-
-        Parameters
-        ----------
-        point : `domain` element
-            Any element in the domain where the derivative should be taken
-
-        Examples
-        --------
-        >>> import odl
-        >>> r3 = odl.rn(3)
-        >>> op = IdentityOperator(r3)
-        >>> res = ResidualOperator(op, r3.element([1, 2, 3]))
-        >>> x = r3.element([4, 5, 6])
-        >>> res.derivative(x)(x)
-        rn(3).element([4.0, 5.0, 6.0])
+        If ``self.domain == self.range`` the zero operator is self-adjoint,
+        otherwise it is the `ZeroOperator` from `range` to `domain`.
         """
-        return self.operator.derivative(point)
+        return ZeroOperator(domain=self.range, range=self.domain)
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.operator,
-                                       self.vector)
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
     def __str__(self):
         """Return ``str(self)``."""
-        return "{} - {}".format(self.op, self.vector)
+        return '0'
 
 
 if __name__ == '__main__':

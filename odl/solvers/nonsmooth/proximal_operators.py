@@ -34,7 +34,7 @@ import numpy as np
 import scipy.special
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
-                          ConstantOperator, ResidualOperator, DiagonalOperator)
+                          ConstantOperator, DiagonalOperator)
 from odl.space import ProductSpace
 from odl.set import LinearSpaceElement
 
@@ -73,7 +73,6 @@ def combine_proximals(*factory_list):
     this case the proximal operator of the sum is given by
 
     .. math::
-
         \mathrm{prox}_{\\sigma (F(x) + G(y))}(x, y) =
         (\mathrm{prox}_{\\sigma F}(x), \mathrm{prox}_{\\sigma G}(y)).
     """
@@ -329,8 +328,7 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
         prox = proximal_arg_scaling(prox_factory, const)(sigma)
         if u is not None:
             return (const * prox *
-                    ResidualOperator(ScalingOperator(u.space, const),
-                                     sigma * const * u))
+                    (ScalingOperator(u.space, const) - sigma * const * u))
         else:
             return const * prox * const
 
@@ -545,7 +543,6 @@ def proximal_box_constraint(space, lower=None, upper=None):
         def _call(self, x, out):
             """Apply the operator to ``x`` and store the result in ``out``."""
 
-            # Point-wise non-negativity thresholding: x if x > 0, else 0
             if lower is not None and upper is None:
                 x.ufunc.maximum(lower, out=out)
             elif lower is None and upper is not None:

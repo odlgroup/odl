@@ -27,16 +27,16 @@ from odl.operator.operator import (
     Operator, OperatorComp, OperatorLeftScalarMult, OperatorRightScalarMult,
     OperatorRightVectorMult, OperatorSum, OperatorPointwiseProduct)
 from odl.operator.default_ops import (IdentityOperator, ConstantOperator)
-from odl.solvers.advanced import (proximal_arg_scaling, proximal_translation,
-                                  proximal_quadratic_perturbation,
-                                  proximal_const_func, proximal_cconj)
+from odl.solvers.nonsmooth import (proximal_arg_scaling, proximal_translation,
+                                   proximal_quadratic_perturbation,
+                                   proximal_const_func, proximal_cconj)
 
 
 __all__ = ('Functional', 'FunctionalLeftScalarMult',
            'FunctionalRightScalarMult', 'FunctionalComp',
            'FunctionalRightVectorMult', 'FunctionalSum', 'FunctionalScalarSum',
            'FunctionalTranslation', 'FunctionalLinearPerturb',
-           'FunctionalProduct', 'FunctionalQuotient')
+           'FunctionalProduct', 'FunctionalQuotient', 'simple_functional')
 
 
 class Functional(Operator):
@@ -495,7 +495,7 @@ class FunctionalRightScalarMult(Functional, OperatorRightScalarMult):
             raise TypeError('`func` {!r} is not a `Functional` instance'
                             ''.format(func))
 
-        scalar = func.range.element(scalar)
+        scalar = func.domain.field.element(scalar)
 
         Functional.__init__(self, space=func.domain, linear=func.is_linear,
                             grad_lipschitz=(
@@ -560,7 +560,7 @@ class FunctionalComp(Functional, OperatorComp):
 
         OperatorComp.__init__(self, left=func, right=op)
 
-        Functional.__init__(self, space=func.domain,
+        Functional.__init__(self, space=op.domain,
                             linear=(func.is_linear and op.is_linear),
                             grad_lipschitz=np.nan)
 
@@ -576,7 +576,7 @@ class FunctionalComp(Functional, OperatorComp):
 
             def __init__(self):
                 """Initialize a new instance."""
-                super().__init__(func.domain, func.domain, linear=False)
+                super().__init__(op.domain, op.domain, linear=False)
 
             def _call(self, x):
                 """Apply the gradient operator to the given point."""
@@ -1070,6 +1070,124 @@ class FunctionalDefaultConvexConjugate(Functional):
             Proximal computed using the Moreu identity
         """
         return proximal_cconj(self.convex_conj.proximal)
+
+
+def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
+                      cconj_fcall=None, cconj_grad=None, cconj_prox=None,
+                      cconj_grad_lip=np.nan, linear=False):
+    """Simplified interface to create a functional with specific properties.
+
+    Users may specify as many properties as is needed by the application.
+
+    Parameters
+    ----------
+    space : `LinearSpace`
+        Space that the functional should act on.
+    fcall : `callable`, optional
+        Function to evaluate when calling the functional.
+    grad : `callable` or `Operator`, optional
+        Gradient operator of the functional.
+    prox : `proximal factory`, optional
+        Proximal factory for the functional.
+    grad_lip : float, optional
+        lipschitz constant of the functional.
+    cconj_fcall : `callable`, optional
+        Function to evaluate when calling the convex conjugate functional.
+    cconj_grad : `callable` or `Operator`, optional
+        Gradient operator of the convex conjugate functional
+    cconj_prox : `proximal factory`, optional
+        Proximal factory for the convex conjugate functional.
+    cconj_grad_lip : float, optional
+        lipschitz constant of the convex conjugate functional.
+    linear : bool, optional
+        True if the operator is linear.
+
+    Examples
+    --------
+    Create squared sum functional on rn:
+
+    >>> import odl
+    >>> def f(x):
+    ...     return sum(xi**2 for xi in x)
+    >>> def dfdx(x):
+    ...     return 2 * x
+    >>> space = odl.rn(3)
+    >>> func = simple_functional(space, f, grad=dfdx)
+    >>> func.domain
+    rn(3)
+    >>> func.range
+    RealNumbers()
+    >>> func([1, 2, 3])
+    14.0
+    >>> func.gradient([1, 2, 3])
+    rn(3).element([2.0, 4.0, 6.0])
+    """
+    if grad is not None and not isinstance(grad, Operator):
+        grad_in = grad
+
+        class SimpleFunctionalGradient(Operator):
+
+            """Gradient of a `SimpleFunctional`."""
+
+            def _call(self, x):
+                """Return ``self(x)``."""
+                return grad_in(x)
+
+        grad = SimpleFunctionalGradient(space, space, linear=False)
+
+    if cconj_grad is not None and not isinstance(cconj_grad, Operator):
+        cconj_grad_in = cconj_grad
+
+        class SimpleFunctionalCConjGradient(Operator):
+
+            """Gradient of the convex conj of a  `SimpleFunctional`."""
+
+            def _call(self, x):
+                """Return ``self(x)``."""
+                return cconj_grad_in(x)
+
+        cconj_grad = SimpleFunctionalCConjGradient(space, space, linear=False)
+
+    class SimpleFunctional(Functional):
+
+        """A simplified functional for examples."""
+
+        def __init__(self):
+            """Initialize an instance."""
+            super().__init__(space, linear=linear, grad_lipschitz=grad_lip)
+
+        def _call(self, x):
+            """Return ``self(x)``."""
+            if fcall is None:
+                raise NotImplementedError('call not implemented')
+            else:
+                return fcall(x)
+
+        @property
+        def proximal(self):
+            """Return the proximal of the operator."""
+            if prox is None:
+                raise NotImplementedError('proximal not implemented')
+            else:
+                return prox
+
+        @property
+        def gradient(self):
+            """Return the gradient of the operator."""
+            if grad is None:
+                raise NotImplementedError('gradient not implemented')
+            else:
+                return grad
+
+        @property
+        def convex_conj(self):
+            return simple_functional(space, fcall=cconj_fcall, grad=cconj_grad,
+                                     prox=cconj_prox, grad_lip=cconj_grad_lip,
+                                     cconj_fcall=fcall, cconj_grad=grad,
+                                     cconj_prox=prox, cconj_grad_lip=grad_lip,
+                                     linear=linear)
+
+    return SimpleFunctional()
 
 
 if __name__ == '__main__':

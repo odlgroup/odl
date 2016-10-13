@@ -27,18 +27,19 @@ import numpy as np
 
 from odl.solvers.functional.functional import Functional
 from odl.operator.operator import Operator
-from odl.solvers.advanced.proximal_operators import (
+from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l1, proximal_cconj_l1, proximal_l2, proximal_cconj_l2,
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
-    proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
-
-from odl.operator.default_ops import (ZeroOperator, ScalingOperator)
+    proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy,
+    combine_proximals)
+from odl.operator import (ZeroOperator, ScalingOperator, DiagonalOperator)
+from odl.space import ProductSpace
 
 
 __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared', 'ZeroFunctional',
            'ConstantFunctional', 'IndicatorLpUnitBall', 'IndicatorBox',
            'IndicatorNonnegativity', 'KullbackLeibler',
-           'KullbackLeiblerCrossEntropy')
+           'KullbackLeiblerCrossEntropy', 'SeparableSum')
 
 
 class L1Norm(Functional):
@@ -667,7 +668,6 @@ class KullbackLeibler(Functional):
 
             def _call(self, x):
                 """Apply the gradient operator to the given point.
-
                 The gradient is not defined in points where one or more
                 components are non-positive.
                 """
@@ -949,7 +949,6 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
         \\sum_i g_i (exp(x_i) - 1)
 
     where :math:`g` is the prior.
-
     See Also
     --------
     KullbackLeiblerCrossEntropy : convex conjugate functional
@@ -1027,6 +1026,102 @@ class KullbackLeiblerCrossEntropyConvexConj(Functional):
     def convex_conj(self):
         """The convex conjugate functional of the conjugate KL-functional."""
         return KullbackLeiblerCrossEntropy(self.domain, self.prior)
+
+
+class SeparableSum(Functional):
+
+    """The functional corresponding to separable sum of functionals.
+
+    The separable sum of functionals ``f_1, f_2, ..., f_n`` is given by::
+
+        h(x_1, x_2, ..., x_n) = sum_i^n f_i(x_i)
+
+    The separable sum is thus defined for any collection of functionals with
+    the same range.
+
+    Notes
+    -----
+    The separable sum of functionals :math:`f_1, f_2, ..., f_n` is given by
+
+    .. math::
+        h(x_1, x_2, ..., x_n) = \sum_{i=1}^n f_i(x_i)
+
+    It has several useful features that also distribute. For example, the
+    gradient is a `DiagonalOperator`:
+
+    .. math::
+        [\\nabla h](x_1, x_2, ..., x_n) =
+        [\\nabla f_1(x_i), \\nabla f_2(x_i), ..., \\nabla f_n(x_i)]
+
+    The convex conjugate is also a separable sum:
+
+    .. math::
+        [h^*](y_1, y_2, ..., y_n) = \sum_{i=1}^n f_i^*(y_i)
+
+    And the proximal distributes:
+
+    .. math::
+        \mathrm{prox}_{\\sigma h}(x_1, x_2, ..., x_n) =
+        [\mathrm{prox}_{\\sigma f_1}(x_1),
+         \mathrm{prox}_{\\sigma f_2}(x_2),
+         ...,
+         \mathrm{prox}_{\\sigma f_n}(x_n)]
+
+    """
+
+    def __init__(self, *functionals):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        functional1, ..., functionalN : `Functional`
+            The functionals in the sum.
+        """
+        domains = [func.domain for func in functionals]
+        domain = ProductSpace(*domains)
+        linear = all(func.is_linear for func in functionals)
+
+        self.__functionals = functionals
+
+        super().__init__(space=domain, linear=linear)
+
+    def _call(self, x):
+        """Return the separable sum evaluated in ``x``."""
+        return sum(fi(xi) for xi, fi in zip(x, self.functionals))
+
+    @property
+    def functionals(self):
+        """The summands of the functional."""
+        return self.__functionals
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional."""
+        gradients = [func.gradient for func in self.functionals]
+        return DiagonalOperator(*gradients)
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        The proximal operator separates over separable sums.
+
+        Returns
+        -------
+        proximal : combine_proximals
+        """
+        proximals = [func.proximal for func in self.functionals]
+        return combine_proximals(*proximals)
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional.
+
+        Convex conjugate distributes over separable sums, so the result is
+        simply the separable sum of the convex conjugates.
+        """
+        convex_conjs = [func.convex_conj for func in self.functionals]
+        return SeparableSum(*convex_conjs)
 
 
 if __name__ == '__main__':

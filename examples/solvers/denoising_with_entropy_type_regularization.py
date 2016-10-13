@@ -29,6 +29,7 @@ import numpy as np
 import scipy
 import odl
 
+
 # Read test image:
 # convert integer values to float, and rotate to get the image upright
 image = np.rot90(scipy.misc.ascent()[::2, ::2], 3).astype('float')
@@ -59,20 +60,22 @@ op = odl.BroadcastOperator(odl.IdentityOperator(space), gradient)
 # Proximal operator related to the primal variable
 
 # Non-negativity constraint
-proximal_primal = odl.solvers.proximal_nonnegativity(op.domain)
+g = odl.solvers.IndicatorNonnegativity(op.domain)
 
-# Proximal operators related to the dual variable
+# Functionals related to the dual variable
 
-# l2-data matching
+# Kulback-Leibler data matching
 prox_convconj_kl = odl.solvers.proximal_cconj_kl(space, lam=1.0, g=noisy)
 
-# Isotropic TV-regularization: l1-norm of grad(x)
-prox_convconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=0.1,
-                                                 isotropic=True)
+# TODO: fix hack with issue #612
+kl_data_matching = odl.solvers.simple_functional(space,
+                                                 cconj_prox=prox_convconj_kl)
 
-# Combine proximal operators: the order must match the order of operators in K
-proximal_dual = odl.solvers.combine_proximals(prox_convconj_kl,
-                                              prox_convconj_l1)
+# Isotropic TV-regularization: l1-norm of grad(x)
+l1_norm = 0.1 * odl.solvers.L1Norm(gradient.range)
+
+# Make separable sum of functionals, order must correspond to the operator K
+f = odl.solvers.SeparableSum(kl_data_matching, l1_norm)
 
 # Optional: pass callback objects to solver
 callback = (odl.solvers.CallbackPrintIteration() &
@@ -90,10 +93,9 @@ sigma = 0.1 / op_norm  # Step size for the dual variable
 # Starting point
 x = op.domain.zero()
 
-# Run algorithms (and display intermediates)
+# Run algorithm (and display intermediates)
 odl.solvers.chambolle_pock_solver(
-    op, x, tau=tau, sigma=sigma, proximal_primal=proximal_primal,
-    proximal_dual=proximal_dual, niter=100, callback=callback)
+    x, f, g, op, tau=tau, sigma=sigma, niter=100, callback=callback)
 
 # Display images
 orig.show(title='original image')

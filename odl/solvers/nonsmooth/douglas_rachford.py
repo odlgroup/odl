@@ -28,40 +28,40 @@ from odl.operator import Operator
 __all__ = ('douglas_rachford_pd',)
 
 
-def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
+def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
                         callback=None, **kwargs):
     """Douglas-Rachford primal-dual splitting algorithm.
 
     Minimizes the sum of several convex functions composed with linear
-    operators
+    operators::
 
-        ``min_x f(x) + sum_i g_i(L_i x)``,
+        min_x f(x) + sum_i g_i(L_i x)
 
-    where f, g_i are convex functions, L_i are linear `Operator`'s.
+    where ``f``, ``g_i`` are convex functions, ``L_i`` are linear `Operator`'s.
 
-    Can also be used to solve the more general problem
+    Can also be used to solve the more general problem::
 
-        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x)``,
+        min_x f(x) + sum_i (g_i @ l_i)(L_i x)
 
-    where l_i are convex functions and @ is the infimal convolution:
+    where ``l_i`` are convex functions and ``@`` is the infimal convolution::
 
-        ``(g @ l)(x) = inf_y g(y) + l(x - y)``.
+        (g @ l)(x) = inf_y g(y) + l(x - y)
 
     Parameters
     ----------
     x : `LinearSpaceElement`
         Initial point, updated in-place.
-    prox_f : callable
+    f : `Functional`
         `proximal factory` for the function ``f``.
-    prox_cc_g : sequence of callable
-        Sequence of `proximal factory` for the convex conjuates of the
-        functions ``g_i``.
-    L : sequence of `Operator`'s
-        Sequence of operators with as many elements as ``prox_cc_gs``.
-    tau : `float`
-        Step size parameter for ``prox_f``.
-    sigma : sequence of floats
-        Step size parameters for the ``prox_cc_g``.
+    g : `sequence` of `Functional`'s
+        Sequence of of the functions ``g_i``. Needs to have
+        ``g[i].convex_conj.proximal``.
+    L : `sequence` of `Operator`'s
+        Sequence of `Opeartor`s` with as many elements as ``g``.
+    tau : float
+        Step size parameter for ``f``.
+    sigma : `sequence` of floats
+        Step size parameters for the ``g_i``s.
     niter : int
         Number of iterations.
     callback : callable, optional
@@ -69,9 +69,9 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
     Other Parameters
     ----------------
-    prox_cc_l : sequence of callable, optional
-        Sequence of `proximal factory` for the convex conjuates of the
-        functions ``l_i``.
+    l : `sequence` of `Functionals`'s, optional
+        Sequence of of the functions ``l_i``. Needs to have
+        ``l[i].convex_conj.proximal``.
         If omitted, the simpler problem without ``l_i``  will be considered.
     lam : float or callable, optional
         Overrelaxation step size. If callable, should take an index (zero
@@ -115,9 +115,9 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
     See Also
     --------
-    odl.solvers.advanced.chambolle_pock.chambolle_pock_solver :
+    odl.solvers.nonsmooth.chambolle_pock.chambolle_pock_solver :
         Solver for similar problems.
-    odl.solvers.advanced.forward_backward.forward_backward_pd :
+    odl.solvers.nonsmooth.forward_backward.forward_backward_pd :
         Solver for similar problems which can additionaly handle a
         differentiable term.
 
@@ -138,14 +138,18 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
         raise ValueError('`x` not in the domain of all operators')
     if len(sigma) != m:
         raise ValueError('len(sigma) != len(L)')
-    if len(prox_cc_g) != m:
+    if len(g) != m:
         raise ValueError('len(prox_cc_g) != len(L)')
 
+    prox_cc_g = [gi.convex_conj.proximal for gi in g]
+
     # Get parameters from kwargs
-    prox_cc_l = kwargs.pop('prox_cc_l', None)
-    if prox_cc_l is not None and len(prox_cc_l) != m:
-        raise ValueError('`prox_cc_l` does not have the same number of '
+    l = kwargs.pop('l', None)
+    if l is not None and len(l) != m:
+        raise ValueError('`l` does not have the same number of '
                          'elements as `L`')
+    if l is not None:
+        prox_cc_l = [li.convex_conj.proximal for li in l]
 
     lam_in = kwargs.pop('lam', 1.0)
     if not callable(lam_in) and not (0 < lam_in < 2):
@@ -168,7 +172,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
     for k in range(niter):
         tmp_1 = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
         tmp_1.lincomb(1, x, -tau / 2, tmp_1)
-        prox_f(tau)(tmp_1, out=p1)
+        f.proximal(tau)(tmp_1, out=p1)
         w1.lincomb(2.0, p1, -1, x)
 
         for i in range(m):
@@ -182,7 +186,7 @@ def douglas_rachford_pd(x, prox_f, prox_cc_g, L, tau, sigma, niter,
 
         for i in range(m):
             tmp = w2[i] + (sigma[i] / 2.0) * L[i](2.0 * z1 - w1)
-            if prox_cc_l is not None:
+            if l is not None:
                 # In this case the infimal convolution is used.
                 prox_cc_l[i](sigma[i])(tmp, out=z2[i])
             else:

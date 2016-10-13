@@ -29,26 +29,26 @@ from odl.operator import Operator
 __all__ = ('forward_backward_pd',)
 
 
-def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
+def forward_backward_pd(x, f, g, L, h, tau, sigma, niter,
                         callback=None, **kwargs):
     """The forward-backward primal-dual splitting algorithm.
 
     The algorithm minimizes the sum of several convex functionals composed with
-    linear operators,
+    linear operators,::
 
-        ``min_x f(x) + sum_i g_i(L_i x) + h(x)``,
+        min_x f(x) + sum_i g_i(L_i x) + h(x)
 
     where ``f``, ``g_i`` are convex functionals, ``L_i`` are linear
     operator's, and ``h`` is a convex and differentiable functional.
 
-    The method can also be used to solve the more general problem
+    The method can also be used to solve the more general problem::
 
-        ``min_x f(x) + sum_i (g_i @ l_i)(L_i x) + h(x)``,
+        min_x f(x) + sum_i (g_i @ l_i)(L_i x) + h(x)
 
     where ``l_i`` are strongly convex functionals and @ is the infimal
-    convolution:
+    convolution::
 
-        ``(g @ l)(x) = inf_y { g(y) + l(x-y) }``.
+        (g @ l)(x) = inf_y { g(y) + l(x-y) }
 
     Note that the strong convexity of ``l_i`` makes the convex conjugate
     ``l_i^*`` differentialbe; see the Notes section for more information on
@@ -58,16 +58,15 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
     ----------
     x : `LinearSpaceElement`
         Initial point, updated in-place.
-    prox_f : `callable`
-        `Proximal factory` for the functional ``f``.
-    prox_cc_g : `sequence` of `callable`'s
-        Sequence of `proximal factory` objects for the convex conjuates of
-        the functionals ``g_i``.
+    f : `Functional`
+        The functional ``f``. Needs to have ``f.proximal``.
+    g : `sequence` of `Functional`'s
+        The functionals ``g_i``. Needs to have ``g_i.convex_conj.proximal``.
     L : `sequence` of `Operator`
         Sequence of linear operators ``L_i``, with as many elements as
         ``prox_cc_gs``.
-    grad_h : `Operator`
-        Operator representing the gradient of  ``h``.
+    h : `Functional`
+        The functional ``h``. Needs to have ``h.gradient``.
     tau : float
         Step size-like parameter for ``prox_f``.
     sigma : `sequence` of floats
@@ -79,8 +78,8 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
     Other Parameters
     ----------------
-    grad_cc_l : `sequence` of `Operator`'s, optional
-        Sequence of operators representing the gradients of  ``l_i^*``.
+    l : `sequence` of `Functional`'s, optional
+        The functionals ``l_i``. Needs to have ``g_i.convex_conj.gradient``.
         If omitted, the simpler problem without ``l_i``  will be considered.
 
     Notes
@@ -131,10 +130,10 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
 
     See Also
     --------
-    odl.solvers.advanced.chambolle_pock.chambolle_pock_solver :
+    odl.solvers.nonsmooth.chambolle_pock.chambolle_pock_solver :
         Solver for similar problems without differentiability in any
         of the terms.
-    odl.solvers.advanced.douglas_rachford.douglas_rachford_pd :
+    odl.solvers.nonsmooth.douglas_rachford.douglas_rachford_pd :
         Solver for similar problems without differentiability in any
         of the terms.
 
@@ -160,12 +159,19 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
         raise ValueError('`x` not in the domain of all operators in `L`')
     if len(sigma) != m:
         raise ValueError('len(sigma) != len(L)')
-    if len(prox_cc_g) != m:
+    if len(g) != m:
         raise ValueError('len(prox_cc_g) != len(L)')
 
-    grad_cc_l = kwargs.pop('grad_cc_l', None)
-    if grad_cc_l is not None and len(grad_cc_l) != m:
-        raise ValueError('`grad_cc_l` not same length as `L`')
+    # Extract operators
+    prox_cc_g = [gi.convex_conj.proximal for gi in g]
+    grad_h = h.gradient
+    prox_f = f.proximal
+
+    l = kwargs.pop('l', None)
+    if l is not None:
+        if len(l) != m:
+            raise ValueError('`grad_cc_l` not same length as `L`')
+        grad_cc_l = [li.convex_conj.gradient for li in l]
 
     if kwargs:
         raise TypeError('unexpected keyword argument: {}'.format(kwargs))
@@ -182,7 +188,7 @@ def forward_backward_pd(x, prox_f, prox_cc_g, L, grad_h, tau, sigma, niter,
         y.lincomb(2.0, x, -1, x_old)
 
         for i in range(m):
-            if grad_cc_l is not None:
+            if l is not None:
                 # In this case gradients were given.
                 tmp_2 = sigma[i] * (L[i](y) - grad_cc_l[i](v[i]))
             else:

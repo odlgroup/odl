@@ -23,23 +23,14 @@ __all__ = ()
 from .functional import *
 __all__ += functional.__all__
 
-from .advanced import *
-__all__ += advanced.__all__
+from .nonsmooth import *
+__all__ += nonsmooth.__all__
 
-from .findroot import *
-__all__ += findroot.__all__
+from .smooth import *
+__all__ += smooth.__all__
 
 from .iterative import *
 __all__ += iterative.__all__
-
-from .linear import *
-__all__ += linear.__all__
-
-from .scalar import *
-__all__ += scalar.__all__
-
-from .vector import *
-__all__ += vector.__all__
 
 from .util import *
 __all__ += util.__all__

@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Iterative solvers for equation systems ``Ax = b``."""
+
 from __future__ import absolute_import
 
 __all__ = ()

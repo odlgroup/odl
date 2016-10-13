@@ -40,9 +40,9 @@ def test_primal_dual_input_handling():
     space1 = odl.uniform_discr(0, 1, 10)
 
     lin_ops = [odl.ZeroOperator(space1), odl.ZeroOperator(space1)]
-    prox_cc_g = [odl.solvers.proximal_const_func(space1),  # Identity operator
-                 odl.solvers.proximal_const_func(space1)]  # Identity operator
-    prox_f = odl.solvers.proximal_const_func(space1)  # Identity operator
+    g = [odl.solvers.ZeroFunctional(space1),
+         odl.solvers.ZeroFunctional(space1)]
+    f = odl.solvers.ZeroFunctional(space1)
 
     # Check that the algorithm runs. With the above operators, the algorithm
     # returns the input.
@@ -50,7 +50,7 @@ def test_primal_dual_input_handling():
     x = x0.copy()
     niter = 3
 
-    douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops, tau=1.0,
+    douglas_rachford_pd(x, f, g, lin_ops, tau=1.0,
                         sigma=[1.0, 1.0], niter=niter)
 
     assert x == x0
@@ -58,22 +58,22 @@ def test_primal_dual_input_handling():
     # Testing that sizes needs to agree:
     # Too few sigma_i:s
     with pytest.raises(ValueError):
-        douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops, tau=1.0,
+        douglas_rachford_pd(x, f, g, lin_ops, tau=1.0,
                             sigma=[1.0], niter=niter)
 
     # Too many operators
-    prox_cc_g_too_many = [odl.solvers.proximal_const_func(space1),
-                          odl.solvers.proximal_const_func(space1),
-                          odl.solvers.proximal_const_func(space1)]
+    g_too_many = [odl.solvers.ZeroFunctional(space1),
+                  odl.solvers.ZeroFunctional(space1),
+                  odl.solvers.ZeroFunctional(space1)]
     with pytest.raises(ValueError):
-        douglas_rachford_pd(x, prox_f, prox_cc_g_too_many, lin_ops,
+        douglas_rachford_pd(x, f, g_too_many, lin_ops,
                             tau=1.0, sigma=[1.0, 1.0], niter=niter)
 
     # Test for correct space
     space2 = odl.uniform_discr(1, 2, 10)
     x = noise_element(space2)
     with pytest.raises(ValueError):
-        douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops, tau=1.0,
+        douglas_rachford_pd(x, f, g, lin_ops, tau=1.0,
                             sigma=[1.0, 1.0], niter=niter)
 
 
@@ -98,13 +98,12 @@ def test_primal_dual_l1():
     data_2 = odl.util.testutils.noise_element(space)
 
     # Proximals
-    prox_f = odl.solvers.proximal_l1(space, g=data_1)
-    prox_cc_g = [odl.solvers.proximal_cconj_l1(space, g=data_2, lam=0.5)]
+    f = odl.solvers.L1Norm(space).translated(data_1)
+    g = [0.5 * odl.solvers.L1Norm(space).translated(data_2)]
 
     # Solve with f term dominating
     x = space.zero()
-    douglas_rachford_pd(x, prox_f, prox_cc_g, L,
-                        tau=3.0, sigma=[1.0], niter=10)
+    douglas_rachford_pd(x, f, g, L, tau=3.0, sigma=[1.0], niter=10)
 
     assert all_almost_equal(x, data_1, places=2)
 
@@ -125,21 +124,15 @@ def test_primal_dual_with_li():
 
     space = odl.rn(1)
 
-    lin_op = odl.IdentityOperator(space)
-    lin_ops = [lin_op]
-    prox_cc_g = [odl.solvers.proximal_cconj(
-                 odl.solvers.proximal_box_constraint(space,
-                                                     lower=lower_lim,
-                                                     upper=upper_lim))]
-    prox_f = odl.solvers.proximal_const_func(space)
-
-    prox_cc_ls = [odl.solvers.proximal_cconj_l2_squared(space)]
+    lin_ops = [odl.IdentityOperator(space)]
+    g = [odl.solvers.IndicatorBox(space, lower=lower_lim, upper=upper_lim)]
+    f = odl.solvers.ZeroFunctional(space)
+    l = [odl.solvers.L2NormSquared(space)]
 
     # Centering around a point further away from [-3,-1].
     x = space.element(10)
 
-    douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops, tau=0.5,
-                        sigma=[1.0], niter=20, prox_cc_l=prox_cc_ls)
+    douglas_rachford_pd(x, f, g, lin_ops, tau=0.5, sigma=[1.0], niter=20, l=l)
 
     assert lower_lim - 10 ** -LOW_ACCURACY <= float(x)
     assert float(x) <= upper_lim + 10 ** -LOW_ACCURACY

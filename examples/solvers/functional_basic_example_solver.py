@@ -40,28 +40,20 @@ n = 10
 space = odl.rn(n)
 
 # Create parameters.
-g = space.element([1, 1, 1, 1, 1, -1, -1, -1, -1, -1])
+offset = space.element([1, 1, 1, 1, 1, -1, -1, -1, -1, -1])
 lam = 0.5
 
 # Note that with the values above, the optimal solution is given by a vector
 # with first half of the elements equal to 0.5, the second half equal to 0.
 
-# Create the L1-norm functional and multiplyit with the constant lam.
-lam_l1_func = lam * odl.solvers.L1Norm(space)
-
-# Create the squared L2-norm and translate it with g.
-l2_func = 1.0 / 2.0 * odl.solvers.L2NormSquared(space)
-trans_l2_func = l2_func.translated(g)
 
 # The problem will be solved using the forward-backward primal-dual algorithm.
 # In this setting we let f = nonnegativity contraint, g = l1-norm, L =
-# the indentity operator, and h = the squared l2-norm. Here we create necessary
-# proximal and gradient operators from the functionals. See the documentation
-# of forward_backward_pd for more information.
-prox_f = odl.solvers.proximal_nonnegativity(space)
-prox_cc_g = lam_l1_func.convex_conj.proximal
+# the indentity operator, and h = the squared l2-norm.
+f = odl.solvers.IndicatorNonnegativity(space)
+g = lam * odl.solvers.L1Norm(space)
 L = odl.IdentityOperator(space)
-grad_h = trans_l2_func.gradient
+h = 1.0 / 2.0 * odl.solvers.L2NormSquared(space).translated(offset)
 
 # Some solver parameters
 niter = 50
@@ -76,8 +68,8 @@ print('Initial guess: x = {}'.format(x))
 callback = odl.solvers.CallbackPrintIteration()
 
 # Run the algorithm
-odl.solvers.forward_backward_pd(x=x, prox_f=prox_f, prox_cc_g=[prox_cc_g],
-                                L=[L], grad_h=grad_h, tau=tau, sigma=[sigma],
+odl.solvers.forward_backward_pd(x=x, f=f, g=[g],
+                                L=[L], h=h, tau=tau, sigma=[sigma],
                                 niter=niter, callback=callback)
 
 print('Solution found: x = {}'.format(x))

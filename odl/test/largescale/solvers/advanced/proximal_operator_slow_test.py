@@ -29,7 +29,7 @@ import scipy.special
 
 # Internal
 import odl
-from odl.solvers.advanced.proximal_operators import (
+from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l1, proximal_cconj_l1,
     proximal_l2, proximal_cconj_l2,
     proximal_l2_squared, proximal_cconj_l2_squared,

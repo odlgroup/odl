@@ -15,17 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Total variation tomography using the Chambolle-Pock solver.
+"""Tomography using the `bfgs_method` solver.
 
 Solves the optimization problem
 
-    min_x  1/2 ||A(x) - g||_2^2 + lam || |grad(x)| ||_1
+    min_x ||A(x) - g||_2^2
 
-Where ``A`` is a parallel beam forward projector, ``grad`` the spatial
-gradient and ``g`` is given noisy data.
-
-For further details and a description of the solution method used, see
-:ref:`chambolle_pock` in the ODL documentation.
+Where ``A`` is a parallel beam forward projector, ``x`` the result and
+ ``g`` is given noisy data.
 """
 
 import numpy as np
@@ -36,15 +33,16 @@ import odl
 
 
 # Discrete reconstruction space: discretized functions on the rectangle
-# [-20, 20]^2 with 300 samples per dimension.
+# [-20, 20]^2 with 200 samples per dimension.
 reco_space = odl.uniform_discr(
-    min_pt=[-20, -20], max_pt=[20, 20], shape=[300, 300], dtype='float32')
+    min_pt=[-20, -20], max_pt=[20, 20], shape=[200, 200])
 
 # Make a parallel beam geometry with flat detector
-# Angles: uniformly spaced, n = 360, min = 0, max = 2 * pi
-angle_partition = odl.uniform_partition(0, 2 * np.pi, 360)
-# Detector: uniformly sampled, n = 558, min = -30, max = 30
-detector_partition = odl.uniform_partition(-30, 30, 558)
+# Angles: uniformly spaced, n = 400, min = 0, max = 2 * pi
+angle_partition = odl.uniform_partition(0, np.pi, 400)
+
+# Detector: uniformly sampled, n = 400, min = -30, max = 30
+detector_partition = odl.uniform_partition(-30, 30, 400)
 geometry = odl.tomo.Parallel2dGeometry(angle_partition, detector_partition)
 
 # The implementation of the ray transform to use, options:
@@ -58,7 +56,6 @@ impl = 'astra_cuda'
 # Create the forward operator
 ray_trafo = odl.tomo.RayTransform(reco_space, geometry, impl=impl)
 
-
 # --- Generate artificial data --- #
 
 
@@ -69,55 +66,39 @@ discr_phantom = odl.phantom.shepp_logan(reco_space, modified=True)
 data = ray_trafo(discr_phantom)
 data += odl.phantom.white_noise(ray_trafo.range) * np.mean(data) * 0.1
 
+# --- Set up optimization problem and solve --- #
 
-# --- Set up the inverse problem --- #
+# Create objective functional ||Ax - b||_2^2 as composition of l2 norm squared
+# and the residual operator.
+obj_fun = odl.solvers.L2NormSquared(ray_trafo.range) * (ray_trafo - data)
 
+# Create line search
+line_search = 1.0
+# line_search = odl.solvers.BacktrackingLineSearch(obj_fun)
 
-# Initialize gradient operator
-gradient = odl.Gradient(reco_space, method='forward')
-
-# Column vector of two operators
-op = odl.BroadcastOperator(ray_trafo, gradient)
-
-# Do not use the g functional, set it to zero.
-g = odl.solvers.ZeroFunctional(op.domain)
-
-# Create functionals for the dual variable
-
-# l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(ray_trafo.range).translated(data)
-
-# Isotropic TV-regularization i.e. the l1-norm
-l1_norm = 0.03 * odl.solvers.L1Norm(gradient.range)
-
-# Combine functionals, order must correspond to the operator K
-f = odl.solvers.SeparableSum(l2_norm, l1_norm)
-
-
-# --- Select solver parameters and solve using Chambolle-Pock --- #
-
-
-# Estimated operator norm, add 10 percent to ensure ||K||_2^2 * sigma * tau < 1
-op_norm = 1.1 * odl.power_method_opnorm(op)
-
-niter = 100  # Number of iterations
-tau = 1.0 / op_norm  # Step size for the primal variable
-sigma = 1.0 / op_norm  # Step size for the dual variable
-gamma = 0.2
+# Create initial estimate of the inverse Hessian by a diagonal estimate
+opnorm = odl.power_method_opnorm(ray_trafo)
+hessinv_estimate = odl.ScalingOperator(reco_space, 1 / opnorm ** 2)
 
 # Optionally pass callback to the solver to display intermediate results
 callback = (odl.solvers.CallbackPrintIteration() &
             odl.solvers.CallbackShow())
 
+# Pick parameters
+maxiter = 20
+num_store = 5  # only save some vectors (Limited memory)
+
 # Choose a starting point
-x = op.domain.zero()
+x = ray_trafo.domain.zero()
 
 # Run the algorithm
-odl.solvers.chambolle_pock_solver(
-    x, f, g, op, tau=tau, sigma=sigma, niter=niter, gamma=gamma,
-    callback=callback)
+odl.solvers.bfgs_method(
+    obj_fun, x, line_search=line_search, maxiter=maxiter, num_store=num_store,
+    hessinv_estimate=hessinv_estimate, callback=callback)
+
+odl.solvers.douglas_rachford_pd
 
 # Display images
 discr_phantom.show(title='original image')
-data.show(title='convolved image')
-x.show(title='deconvolved image', show=True)
+data.show(title='sinogram')
+x.show(title='reconstructed image', show=True)

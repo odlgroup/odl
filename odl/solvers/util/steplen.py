@@ -28,35 +28,7 @@ import numpy as np
 from odl.util.utility import with_metaclass
 
 
-__all__ = ('StepLength', 'LineSearch',
-           'BacktrackingLineSearch', 'ConstantLineSearch')
-
-
-# TODO: find a good name
-class StepLength(with_metaclass(ABCMeta, object)):
-
-    """Abstract base class for step length methods."""
-
-    # TODO: change signature so it reflects the requirements for e.g.
-    # Barzilai-Borwein
-    @abstractmethod
-    def __call__(self, x, direction, dir_derivative):
-        """Calculate the step length at a point.
-
-        Parameters
-        ----------
-        x : `LinearSpaceElement`
-            The current point
-        direction : `LinearSpaceElement`
-            Search direction in which the line search should be computed
-        dir_derivative : float
-            Directional derivative along the ``direction``
-
-        Returns
-        -------
-        step : float
-            The step length
-        """
+__all__ = ('LineSearch', 'BacktrackingLineSearch', 'ConstantLineSearch')
 
 
 class LineSearch(with_metaclass(ABCMeta, object)):
@@ -98,7 +70,8 @@ class BacktrackingLineSearch(LineSearch):
     <https://en.wikipedia.org/wiki/Backtracking_line_search>`_.
     """
 
-    def __init__(self, function, tau=0.5, c=0.01, max_num_iter=None):
+    def __init__(self, function, tau=0.5, discount=0.01, max_num_iter=None,
+                 estimate_step=False):
         """Initialize a new instance.
 
         Parameters
@@ -109,25 +82,32 @@ class BacktrackingLineSearch(LineSearch):
             The amount the step length is decreased in each iteration,
             as long as it does not fulfill the decrease condition.
             The step length is updated as ``step_length *= tau``.
-        c : float, optional
+        discount : float, optional
             The "discount factor" on ``step length * direction derivative``,
             yielding the threshold under which the function value must lie to
             be accepted (see the references).
         max_num_iter : int, optional
             Maximum number of iterations allowed each time the line
             search method is called. If not set, this number is calculated
-            to allow a shortest step length of 0.0001.
+            to allow a shortest step length of 10 times machine epsilon.
+        estimate_step : float
+            If the last step should be used as a estimate for the next step.
         """
         self.function = function
-        self.tau = tau
-        self.discount = c
+        self.tau = float(tau)
+        self.discount = float(discount)
+        self.estimate_step = bool(estimate_step)
+
+        self.alpha = 1.0
         self.total_num_iter = 0
         # Use a default value that allows the shortest step to be < 0.0001
         # times the original step length
         if max_num_iter is None:
-            self.max_num_iter = np.ceil(np.log(0.0001) / np.log(self.tau))
+            # TODO: make space dependent
+            eps = 10 * np.finfo(float).resolution
+            self.max_num_iter = int(np.ceil(np.log(eps) / np.log(self.tau)))
         else:
-            self.max_num_iter = max_num_iter
+            self.max_num_iter = int(max_num_iter)
 
     def __call__(self, x, direction, dir_derivative):
         """Calculate the optimal step length along a line.
@@ -146,8 +126,20 @@ class BacktrackingLineSearch(LineSearch):
         step : float
             The computed step length
         """
-        alpha = 1.0
         fx = self.function(x)
+        dir_derivative = float(dir_derivative)
+
+        if dir_derivative == 0:
+            raise ValueError('dir_derivative == 0, no descent can be found')
+        if not self.estimate_step:
+            alpha = 1.0
+        else:
+            alpha = self.alpha
+
+        if dir_derivative > 0:
+            # We need to move backwards if the direction is an increase
+            # direction
+            alpha *= -1
 
         if np.isnan(fx) or np.isinf(fx):
             raise ValueError('function returned invalid value {} in starting '
@@ -156,27 +148,33 @@ class BacktrackingLineSearch(LineSearch):
         num_iter = 0
         while True:
             if num_iter > self.max_num_iter:
-                raise ValueError('number of iterations exceeded maximum: {} '
-                                 'without finding a sufficient decrease'
-                                 ''.format(self.max_num_iter))
+                raise ValueError('number of iterations exceeded maximum: {}, '
+                                 'step length: {}, without finding a '
+                                 'sufficient decrease'
+                                 ''.format(self.max_num_iter, alpha))
 
-            fval = self.function(x + alpha * direction)
+            point = x + alpha * direction
+            fval = self.function(point)
 
             if np.isnan(fval):
                 # We do not want to compare against NaN below, and NaN should
                 # indicate a user error.
                 raise ValueError('function returned NaN in point '
-                                 'point ({})'.format(x + alpha * direction))
+                                 'point ({})'.format(point))
 
+            expected_decrease = np.abs(alpha * dir_derivative * self.discount)
             if (not np.isinf(fval) and  # short circuit if fval is infite
-                    fval <= fx + alpha * dir_derivative * self.discount):
+                    fval <= fx - expected_decrease):
                 # Stop iterating if the value decreases sufficiently.
                 break
 
             num_iter += 1
             alpha *= self.tau
 
+        assert fval < fx
+
         self.total_num_iter += num_iter
+        self.alpha = np.abs(alpha)  # Store magnitude
         return alpha
 
 
@@ -192,7 +190,7 @@ class ConstantLineSearch(LineSearch):
         constant : float
             The constant step length
         """
-        self.constant = constant
+        self.constant = float(constant)
 
     def __call__(self, x, direction, dir_derivative):
         """Calculate the step length at a point.
