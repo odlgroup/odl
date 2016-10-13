@@ -47,7 +47,7 @@ Large parts of basic functionality, e.g. arithmetic or inner products, rest on a
 Typically, these vector spaces are of the type :math:`\mathbb{F}^n`, where :math:`\mathbb{F}` is a `field`_ (usually :math:`\mathbb{R}` or :math:`\mathbb{C}`), and :math:`n` a positive integer.
 Example:
 
-    >>> c3 = odl.Cn(3)
+    >>> c3 = odl.cn(3)
     >>> u = c3.element([1 + 1j, 2 - 2j, 3])
     >>> v = c3.one()  # vector of all ones
     >>> u.inner(v)  # sum of the elements
@@ -96,7 +96,7 @@ It is the default in the convenience function `uniform_discr`:
 
     >>> l2_discr = odl.uniform_discr(0, 1, 5)  # Omega = [0, 1], 5 subintervals
     >>> type(l2_discr)
-    odl.discr.lp_discr.DiscreteLp
+    <class 'odl.discr.lp_discr.DiscreteLp'>
     >>> l2_discr.exponent
     2.0
     >>> l2_discr.domain
@@ -107,7 +107,7 @@ If we, for example, want to discretize the function ``f(x) = exp(-x)``, we can s
 
     >>> exp_discr = l2_discr.element(lambda x: np.exp(-x))
     >>> type(exp_discr)
-    odl.discr.lp_discr.DiscreteLpElement
+    <class 'odl.discr.lp_discr.DiscreteLpElement'>
     >>> exp_discr.shape
     (5,)
 
@@ -126,7 +126,7 @@ We use `Landweber's method`_ to get a least-squares solution and plot the interm
 The method needs a relaxation :math:`\lambda < 2 / \lVert A\rvert^2` to converge - in our case, the right-hand side is 0.14, so we choose 0.1.
 
     >>> matrix = np.array([[1.0, 3.0, 2.0],
-                           [2.0, -1.0, 1.0]])
+    ...                    [2.0, -1.0, 1.0]])
     >>> matrix_op = odl.MatVecOperator(matrix)  # operator defined by the matrix
     >>> matrix_op.domain
     rn(3)
