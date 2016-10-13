@@ -114,7 +114,7 @@ def test_steepst_descent():
 
     space = odl.rn(3)
     scale = 1  # only mildly ill-behaved
-    rosenbrock = odl.solvers.example_funcs.RosenbrockFunctional(space, scale)
+    rosenbrock = odl.solvers.RosenbrockFunctional(space, scale)
 
     # Create line search object
     line_search = odl.solvers.BacktrackingLineSearch(
@@ -124,7 +124,7 @@ def test_steepst_descent():
     x = rosenbrock.domain.zero()
 
     # Solving the problem
-    odl.solvers.steepest_descent(rosenbrock.gradient, x, niter=40,
+    odl.solvers.steepest_descent(rosenbrock, x, maxiter=40,
                                  line_search=line_search)
 
     assert all_almost_equal(x, [1, 1, 1], places=2)
