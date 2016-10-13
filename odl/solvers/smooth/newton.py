@@ -23,6 +23,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
+from odl.operator import MultiplyOperator
 from odl.solvers.util import ConstantLineSearch
 from odl.solvers.iterative.iterative import conjugate_gradient
 
@@ -238,7 +239,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
             callback(x)
 
 
-def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16, num_store=None,
+def bfgs_method(f, x, line_search=1.0, maxiter=1000, tol=1e-15, num_store=None,
                 hessinv_estimate=None, callback=None):
     """Quasi-Newton BFGS method to minimize a differentiable function.
 
@@ -305,11 +306,11 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
     ss = []
 
     grad_x = grad(x)
-    for _ in range(maxiter):
+    for i in range(maxiter):
         # Determine a stepsize using line search
         search_dir = -_bfgs_direction(ss, ys, grad_x, hessinv_estimate)
         dir_deriv = search_dir.inner(grad_x)
-        if np.abs(dir_deriv) < tol:
+        if np.abs(dir_deriv) == 0:
             return  # we found an optimum
         step = line_search(x, direction=search_dir, dir_derivative=dir_deriv)
 
@@ -323,23 +324,37 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         grad_diff.lincomb(-1, grad_diff, 1, grad_x)
 
         y_inner_s = grad_diff.inner(x_update)
-        if np.abs(y_inner_s) < tol:
-            return
 
-        # Update Hessian
-        ys += [grad_diff]
-        ss += [x_update]
-        if num_store is not None:
-            # Throw away factors if they are too many.
-            ss = ss[-num_store:]
-            ys = ys[-num_store:]
+        # Test for convergence
+        if np.abs(y_inner_s) < tol:
+            if grad_x.norm() < tol:
+                return
+            else:
+                # Reset if needed
+                ys = []
+                ss = []
+                continue
+
+        if i == 0 and hessinv_estimate is None and False:
+            # Estimate scale
+            scale = x_update.inner(x_update) / grad_diff.inner(x_update)
+            hessinv_estimate = MultiplyOperator(scale,
+                                                grad.domain, grad.domain)
+        else:
+            # Update Hessian
+            ys += [grad_diff]
+            ss += [x_update]
+            if num_store is not None:
+                # Throw away factors if they are too many.
+                ss = ss[-num_store:]
+                ys = ys[-num_store:]
 
         if callback is not None:
             callback(x)
 
 
 def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
-                    tol=1e-16, hessinv_estimate=None,
+                    tol=1e-15, hessinv_estimate=None,
                     callback=None):
     """Broyden's first method, a quasi-Newton scheme.
 
@@ -399,19 +414,19 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
     ys = []
 
     grad_x = grad(x)
-    for _ in range(maxiter):
+    for i in range(maxiter):
         # find step size
         search_dir = -_broydens_direction(ss, ys, grad_x,
                                           hessinv_estimate, impl)
         dir_deriv = search_dir.inner(grad_x)
-        if np.abs(dir_deriv) < tol:
+        if np.abs(dir_deriv) == 0:
             return  # we found an optimum
+
         step = line_search(x, search_dir, dir_deriv)
-        print(x, search_dir, f(x), step)
 
         # update x
-        delta_x = step * search_dir
-        x += delta_x
+        x_update = step * search_dir
+        x += x_update
 
         # compute new gradient
         grad_x, grad_x_old = grad(x), grad_x
@@ -419,19 +434,36 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
 
         # update hessian.
         # TODO: reuse from above
-        v = _broydens_direction(ss, ys, delta_grad, hessinv_estimate, impl)
+        v = _broydens_direction(ss, ys, delta_grad, hessinv_estimate,
+                                impl)
         if impl == 'first':
-            divisor = delta_x.inner(v)
+            divisor = x_update.inner(v)
+
+            # Test for convergence
             if np.abs(divisor) < tol:
-                return
-            u = (delta_x - v) / divisor
+                if grad_x.norm() < tol:
+                    return
+                else:
+                    # Reset if needed
+                    ys = []
+                    ss = []
+                    continue
+            u = (x_update - v) / divisor
             ss += [u]
-            ys += [delta_x]
+            ys += [x_update]
         elif impl == 'second':
             divisor = delta_grad.inner(delta_grad)
+
+            # Test for convergence
             if np.abs(divisor) < tol:
-                return
-            u = (delta_x - v) / divisor
+                if grad_x.norm() < tol:
+                    return
+                else:
+                    # Reset if needed
+                    ys = []
+                    ss = []
+                    continue
+            u = (x_update - v) / divisor
             ss += [u]
             ys += [delta_grad]
 

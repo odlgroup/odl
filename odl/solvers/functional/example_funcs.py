@@ -75,13 +75,15 @@ class RosenbrockFunctional(Functional):
 
         Examples
         --------
+        Initialize and call functional
+
         >>> import odl
         >>> r2 = odl.rn(2)
         >>> functional = RosenbrockFunctional(r2)
         >>> functional([1, 1])  # optimum is 0 at [1, 1]
         0.0
         >>> functional([0, 1])
-        200.0
+        101.0
 
         The functional can also be used in higher dimensions
 
@@ -89,6 +91,16 @@ class RosenbrockFunctional(Functional):
         >>> functional = RosenbrockFunctional(r5)
         >>> functional([1, 1, 1, 1, 1])
         0.0
+
+        We can change how much the function is ill behaved via ``scale``
+
+        >>> import odl
+        >>> r2 = odl.rn(2)
+        >>> functional = RosenbrockFunctional(r2, scale=2)
+        >>> functional([1, 1])  # optimum is still 0 at [1, 1]
+        0.0
+        >>> functional([0, 1])  # much lower variation
+        3.0
         """
         self.scale = float(scale)
         if not isinstance(space, FnBase):

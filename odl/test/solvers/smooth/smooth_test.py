@@ -25,16 +25,17 @@ standard_library.install_aliases()
 import pytest
 import odl
 from odl.operator import OpNotImplementedError
-from odl.util.testutils import noise_element
 
 
 @pytest.fixture(scope="module", params=['l2_squared', 'l2_squared_scaled',
                                         'rosenbrock'])
 def functional(request):
-    """Return a functional whose optimal value is 0."""
+    """Return a functional whose optimal value,
+    which is in the point 0, is 0.
+    """
     name = request.param
 
-    # TODO: Add rosenbrock (#600) and quadratic (#606) functionals
+    # TODO: quadratic (#606) functionals
 
     if name == 'l2_squared':
         space = odl.rn(3)
@@ -46,8 +47,10 @@ def functional(request):
         return odl.solvers.L2NormSquared(space) * scaling
     elif name == 'rosenbrock':
         # Moderately ill-behaved rosenbrock functional.
-        space = odl.rn(2)
-        return odl.solvers.RosenbrockFunctional(space, scale=2)
+        rosenbrock = odl.solvers.RosenbrockFunctional(odl.rn(2), scale=2)
+
+        # Center at zero
+        return rosenbrock.translated([-1, -1])
     else:
         assert False
 
@@ -79,7 +82,7 @@ def test_newton_solver(functional_and_linesearch):
         return
 
     # Solving the problem
-    x = functional.domain.zero()
+    x = functional.domain.one()
     odl.solvers.newtons_method(functional, x, tol=1e-6,
                                line_search=line_search)
 
@@ -91,7 +94,7 @@ def test_bfgs_solver(functional_and_linesearch):
     """Test the BFGS quasi-newton solver."""
     functional, line_search = functional_and_linesearch
 
-    x = noise_element(functional.domain)
+    x = functional.domain.one()
     odl.solvers.bfgs_method(functional, x, tol=1e-6,
                             line_search=line_search)
 
@@ -102,18 +105,18 @@ def test_lbfgs_solver(functional_and_linesearch):
     """Test limited memory BFGS quasi-newton solver."""
     functional, line_search = functional_and_linesearch
 
-    x = noise_element(functional.domain)
+    x = functional.domain.one()
     odl.solvers.bfgs_method(functional, x, tol=1e-6,
-                            line_search=line_search, num_store=10)
+                            line_search=line_search, num_store=5)
 
     assert functional(x) < 1e-3
 
 
-def test_broydens_method(broyden_impl, functional):
+def test_broydens_method(broyden_impl, functional_and_linesearch):
     """Test the ``broydens_method`` solver."""
-    line_search = odl.solvers.BacktrackingLineSearch(functional)
+    functional, line_search = functional_and_linesearch
 
-    x = noise_element(functional.domain)
+    x = functional.domain.one()
     odl.solvers.broydens_method(functional, x, tol=1e-6,
                                 line_search=line_search, impl=broyden_impl)
 
@@ -124,7 +127,7 @@ def test_steepest_descent(functional):
     """Test the ``steepest_descent``solver."""
     line_search = odl.solvers.BacktrackingLineSearch(functional)
 
-    x = noise_element(functional.domain)
+    x = functional.domain.one()
     odl.solvers.steepest_descent(functional, x, tol=1e-6,
                                  line_search=line_search)
 

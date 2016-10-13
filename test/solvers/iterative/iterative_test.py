@@ -116,7 +116,7 @@ def test_steepst_descent():
 
     space = odl.rn(3)
     scale = 1  # only mildly ill-behaved
-    rosenbrock = odl.solvers.example_funcs.RosenbrockFunctional(space, scale)
+    rosenbrock = odl.solvers.RosenbrockFunctional(space, scale)
 
     # Create line search object
     line_search = odl.solvers.BacktrackingLineSearch(
