@@ -1,4 +1,4 @@
-.. _first_steps:
+.. _first_steps_in_odl:
 
 ##################
 First steps in ODL
