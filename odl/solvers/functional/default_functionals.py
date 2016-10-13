@@ -48,7 +48,8 @@ __all__ = ('LpNorm', 'L1Norm', 'L2Norm', 'L2NormSquared',
            'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
            'QuadraticForm',
-           'NuclearNorm', 'IndicatorNuclearNormUnitBall')
+           'NuclearNorm', 'IndicatorNuclearNormUnitBall',
+           'ScalingFunctional')
 
 
 class LpNorm(Functional):
@@ -770,6 +771,71 @@ class ZeroFunctional(ConstantFunctional):
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r})'.format(self.__class__.__name__, self.domain)
+
+
+class ScalingFunctional(Functional):
+
+    """Functional that scales the input argument by a value.
+
+    See Also
+    --------
+    ScalingOperator
+    """
+
+    def __init__(self, field, constant):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `Field`
+            Domain of the functional.
+        scale : element in ``domain``
+            The constant value to scale by.
+
+        Examples
+        --------
+        >>> import odl
+        >>> field = odl.RealNumbers()
+        >>> func = ScalingFunctional(field, 3)
+        >>> func(5)
+        15.0
+        """
+        super().__init__(space=field, linear=True, grad_lipschitz=0)
+        self.__scalar = self.range.element(constant)
+
+    @property
+    def scalar(self):
+        """The constant value to scale by."""
+        return self.__scalar
+
+    def _call(self, x):
+        """Return a constant value."""
+        return self.scalar * x
+
+    @property
+    def gradient(self):
+        """Gradient operator of the functional."""
+        return ConstantFunctional(self.domain, self.scalar)
+
+
+class IdentityFunctional(ScalingFunctional):
+
+    """Functional that maps a scalar to itself.
+
+    See Also
+    --------
+    IdentityOperator
+    """
+
+    def __init__(self, field):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        field : `Field`
+            Domain of the functional.
+        """
+        ScalingFunctional.__init__(self, field, 1.0)
 
 
 class IndicatorBox(Functional):
