@@ -780,7 +780,7 @@ class FunctionalTranslation(Functional):
 
         See Also
         --------
-        odl.solvers.advanced.proximal_operators.proximal_translation
+        odl.solvers.nonsmooth.proximal_operators.proximal_translation
         """
         return proximal_translation(self.functional.proximal,
                                     self.translation)
@@ -848,7 +848,8 @@ class FunctionalLinearPerturb(Functional):
 
         See Also
         --------
-        odl.solvers.advanced.proximal_operators.proximal_quadratic_perturbation
+        odl.solvers.nonsmooth.proximal_operators.\
+proximal_quadratic_perturbation
         """
         return proximal_quadratic_perturbation(
             self.functional.proximal, a=0, u=self.linear_term)

@@ -81,6 +81,7 @@ target/
 .spyproject/
 .spyderproject
 .spyderworkspace
+.spyproject/
 
 # PyCharm project files
 .idea
