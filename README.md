@@ -89,7 +89,7 @@ If you would like to get the code under a different license, please contact the 
 
 ODL development group
 ---------------------
-To contact the developers either write an issue on github or send an email to odl@math.kth.se
+To contact the developers either [write an issue on github](https://github.com/odlgroup/odl/issues/new) or send an email to odl@math.kth.se
 
 ##### Main developers
 - Jonas Adler ([@adler-j](https://github.com/adler-j))
