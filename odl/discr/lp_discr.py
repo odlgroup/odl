@@ -1398,7 +1398,8 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
     See Also
     --------
-    uniform_partition : underlying domain partitioning scheme
+    odl.discr.partition.uniform_partition :
+        underlying domain partitioning scheme
 
     Examples
     --------

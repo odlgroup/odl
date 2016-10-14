@@ -93,7 +93,8 @@ def shepp_logan_ellipses(ndim, modified=False):
 
     See Also
     --------
-    ellipse_phantom : Function for creating arbitrary ellipse phantoms
+    odl.phantom.geometric.ellipse_phantom :
+        Function for creating arbitrary ellipse phantoms
     shepp_logan : Create a phantom with these ellipses
 
     References
@@ -128,7 +129,8 @@ def shepp_logan(space, modified=False):
     See Also
     --------
     shepp_logan_ellipses : Get the parameters that define this phantom
-    ellipse_phantom : Function for creating arbitrary ellipse phantoms
+    odl.phantom.geometric.ellipse_phantom :
+        Function for creating arbitrary ellipse phantoms
 
     References
     ----------
