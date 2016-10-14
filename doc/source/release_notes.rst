@@ -79,7 +79,9 @@ Changes
   * ``FunctionSpaceVector`` -> ``FunctionSpaceElement``
 - Changed parameter style of differential operators from having a ``pad_mode`` and a separate ``edge_order`` argument that were mutually exclusive to a single ``pad_mode`` that covers all cases.
   Also added several new pad modes to the differential operators. (:pull:`548`)
+- Switch from RTD documentation hosting to gh-pages and let Travis CI build and deploy the documentation. (:pull:`536`)
 - Update name of ``proximal_zero`` to ``proximal_const_func``. (:pull:`582`)
+- Move unit tests from top level ``test/`` to ``odl/test/`` folder and distribute them with the source. (:pull:`638`)
 
 Bugfixes
 --------
