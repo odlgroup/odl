@@ -31,6 +31,7 @@ Documentation
 
 Introduction, mathematical details and the API reference can be found at the [ODL documentation page](https://odlgroup.github.io/odl/).
 
+There is also a large number of examples available in the [examples](examples) folder.
 
 Installation
 ============
