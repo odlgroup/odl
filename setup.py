@@ -136,7 +136,7 @@ setup(
         'testing': test_requires,
         'show': 'matplotlib',
         'fftw': 'pyfftw',
-        'pywavelets': 'Pywavelets',
+        'pywavelets': 'Pywavelets>=0.4',
         'scikit' : 'scikit-image',
         'proximal' : 'proximal',
         'all': test_requires + ['matplotlib', 'pyfftw', 'Pywavelets', 'scikit-image', 'proximal']
