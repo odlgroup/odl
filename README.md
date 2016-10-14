@@ -83,7 +83,7 @@ Currently (2016-06-10) known working combinations are:
 
 License
 -------
-GPL Version 3 or later. See LICENSE file.
+GPL Version 3 or later. See [LICENSE](LICENSE) file.
 
 If you would like to get the code under a different license, please contact the developers.
 
