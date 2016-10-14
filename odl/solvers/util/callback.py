@@ -302,8 +302,8 @@ class CallbackShow(SolverCallback):
 
     See Also
     --------
-    DiscreteLpElement.show
-    NtuplesBaseVector.show
+    odl.discr.lp_discr.DiscreteLpElement.show
+    odl.space.base_ntuples.NtuplesBaseVector.show
     """
 
     def __init__(self, *args, **kwargs):

@@ -279,7 +279,7 @@ def noise_array(space):
     --------
     noise_element
     noise_elements
-    odl.set.space.LinearSpaceElement.examples : Examples of elements
+    odl.set.space.LinearSpace.examples : Examples of elements
         typical to the space.
     """
     from odl.space import ProductSpace
@@ -327,7 +327,8 @@ def noise_element(space):
     --------
     noise_array
     noise_elements
-    LinearSpaceElement.examples : Examples of elements typical to the space.
+    odl.set.space.LinearSpace.examples : Examples of elements typical
+        to the space.
     """
     return space.element(noise_array(space))
 
@@ -359,9 +360,9 @@ def noise_elements(space, n=1):
 
     Returns
     -------
-    arrays : `numpy.ndarray`(s)
+    arrays : `numpy.ndarray` or tuple of `numpy.ndarray`
         A single array if ``n == 1``, otherwise a tuple of arrays.
-    elements : ``space`` element(s)
+    elements : ``space`` element or tuple of ``space`` elements
         A single element if ``n == 1``, otherwise a tuple of elements.
 
     See Also
