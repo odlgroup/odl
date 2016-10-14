@@ -9,6 +9,19 @@ Release Notes
 Next release
 ============
 
+
+ODL 0.5.0 Release Notes (2016-10-14)
+====================================
+
+This release features a new important top level class ``Functional`` that is intended to be used in optimization methods.
+Beyond its parent ``Operator``, it provides special methods and properties like ``gradient`` or ``proximal`` which are useful in advanced smooth or non-smooth optimization schemes.
+The interfaces of all solvers in ``odl.solvers`` have been updated to make use of functionals instead of their proximals, gradients etc. directly.
+
+Further notable changes are the implementation of an ``as_writable_array`` context manager that exposes arbitrary array storage as writable Numpy arrays, and the generalization of the wavelet transform to arbitrary dimensions.
+
+See below for a complete list of changes.
+
+
 New features
 ------------
 - Add ``Functional`` class to the solvers package. (:pull:`498`)
@@ -42,7 +55,7 @@ New features
 - Add the ``Rosenbrock`` standard test functional. (:pull:`602`)
 - Add broadcasting of vector arithmetic involving ``ProductSpace`` vectors. (:pull:`555`)
 - Add ``phantoms.poisson_noise``. (:pull:`630`)
-- Add ``NumericalGradient`` and ``NumericalDerivative`` that numerically computes the gradient and derivatives of ``Operator``s and ``Functional``s. (:pull:`624`)
+- Add ``NumericalGradient`` and ``NumericalDerivative`` that numerically compute gradient and derivative of ``Operator``'s and ``Functional``'s. (:pull:`624`)
 
 Improvements
 ------------
