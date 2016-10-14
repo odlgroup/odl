@@ -164,7 +164,6 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> import odl
         >>> r2x3 = ProductSpace(odl.rn(2), odl.rn(3))
 
         Notes
@@ -367,7 +366,6 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> import odl
         >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> vec_2, vec_3 = r2.element(), r3.element()
         >>> r2x3 = ProductSpace(r2, r3)
@@ -433,7 +431,6 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> import odl
         >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> zero_2, zero_3 = r2.zero(), r3.zero()
         >>> r2x3 = ProductSpace(r2, r3)
@@ -462,7 +459,6 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> import odl
         >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> one_2, one_3 = r2.one(), r3.one()
         >>> r2x3 = ProductSpace(r2, r3)
@@ -515,7 +511,6 @@ class ProductSpace(LinearSpace):
 
         Examples
         --------
-        >>> import odl
         >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> rn, rm = odl.rn(2), odl.rn(3)
         >>> r2x3, rnxm = ProductSpace(r2, r3), ProductSpace(rn, rm)
@@ -642,7 +637,6 @@ class ProductSpaceElement(LinearSpaceElement):
 
         Examples
         --------
-        >>> import odl
         >>> r22 = odl.ProductSpace(odl.rn(2), 2)
         >>> x = r22.element([[1, -2], [-3, 4]])
         >>> x.ufunc.absolute()
@@ -702,7 +696,6 @@ class ProductSpaceElement(LinearSpaceElement):
 
         Examples
         --------
-        >>> import odl
         >>> from odl import rn  # need to import rn into namespace
         >>> r2, r3 = odl.rn(2), odl.rn(3)
         >>> r2x3 = ProductSpace(r2, r3)

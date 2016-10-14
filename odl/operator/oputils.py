@@ -157,7 +157,6 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
     --------
     Verify that the identity operator has norm 1:
 
-    >>> import odl
     >>> space = odl.uniform_discr(0, 1, 5)
     >>> id = odl.IdentityOperator(space)
     >>> power_method_opnorm(id)
@@ -291,7 +290,6 @@ def as_scipy_operator(op):
     --------
     Wrap operator and solve simple problem (here toy problem ``Ix = b``)
 
-    >>> import odl
     >>> op = odl.IdentityOperator(odl.rn(3))
     >>> scipy_op = as_scipy_operator(op)
     >>> import scipy.sparse.linalg as sl

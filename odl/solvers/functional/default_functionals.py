@@ -507,7 +507,6 @@ class IndicatorBox(Functional):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> func = IndicatorBox(space, 0, 2)
         >>> func([0, 1, 2])  # all points inside
@@ -568,7 +567,6 @@ class IndicatorNonnegativity(IndicatorBox):
 
         Examples
         --------
-        >>> import odl
         >>> space = odl.rn(3)
         >>> func = IndicatorNonnegativity(space)
         >>> func([0, 1, 2])  # all points positive

@@ -57,7 +57,6 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> import odl
         >>> min_pt, max_pt = [-1, 2.5, 70, 80], [-0.5, 10, 75, 90]
         >>> rbox = odl.IntervalProd(min_pt, max_pt)
         >>> rbox
@@ -338,7 +337,6 @@ class IntervalProd(Set):
 
         Examples
         --------
-        >>> import odl
         >>> min_pt, max_pt = [-1, 0, 2], [-0.5, 0, 3]
         >>> rbox = IntervalProd(min_pt, max_pt)
 

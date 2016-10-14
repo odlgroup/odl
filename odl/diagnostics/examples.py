@@ -41,7 +41,6 @@ def samples(*sets):
 
     Examples
     --------
-    >>> import odl
     >>> R, C = odl.RealNumbers(), odl.ComplexNumbers()
     >>> for [name_x, x], [name_y, y] in samples(R, C): pass  # use examples
     """

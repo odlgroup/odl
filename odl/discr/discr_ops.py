@@ -62,7 +62,6 @@ class Resampling(Operator):
         Create two spaces with different number of points and a resampling
         operator.
 
-        >>> import odl
         >>> coarse_discr = odl.uniform_discr(0, 1, 3)
         >>> fine_discr = odl.uniform_discr(0, 1, 6)
         >>> resampling = odl.Resampling(coarse_discr, fine_discr)
@@ -131,7 +130,6 @@ class Resampling(Operator):
         --------
         Create resampling operator and inverse:
 
-        >>> import odl
         >>> coarse_discr = odl.uniform_discr(0, 1, 3)
         >>> fine_discr = odl.uniform_discr(0, 1, 6)
         >>> resampling = odl.Resampling(coarse_discr, fine_discr)
@@ -219,7 +217,6 @@ class ResizingOperatorBase(Operator):
         the supplied parameters. If no ``offset`` is given, the difference
         in size is evenly distributed to both sides:
 
-        >>> import odl
         >>> space = odl.uniform_discr([0, 0], [1, 1], (2, 4))
         >>> resize_op = odl.ResizingOperator(space, ran_shp=(4, 4))
         >>> resize_op.range

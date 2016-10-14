@@ -893,7 +893,6 @@ class FunctionalProduct(Functional, OperatorPointwiseProduct):
         --------
         Construct the functional || . ||_2^2 * 3
 
-        >>> import odl
         >>> space = odl.rn(2)
         >>> func1 = odl.solvers.L2NormSquared(space)
         >>> func2 = odl.solvers.ConstantFunctional(space, 3)
@@ -953,7 +952,6 @@ class FunctionalQuotient(Functional):
         --------
         Construct the functional || . ||_2 / 5
 
-        >>> import odl
         >>> space = odl.rn(2)
         >>> func1 = odl.solvers.L2Norm(space)
         >>> func2 = odl.solvers.ConstantFunctional(space, 5)
@@ -1107,7 +1105,6 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
     --------
     Create squared sum functional on rn:
 
-    >>> import odl
     >>> def f(x):
     ...     return sum(xi**2 for xi in x)
     >>> def dfdx(x):

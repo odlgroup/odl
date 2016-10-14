@@ -920,7 +920,6 @@ class NumpyFn(FnBase, NumpyNtuples):
 
         Examples
         --------
-        >>> import numpy as np
         >>> c3 = NumpyFn(2, dtype=complex, inner=lambda x, y: np.vdot(y, x))
         >>> x = c3.element([5+1j, -2j])
         >>> y = c3.element([1, 1+1j])

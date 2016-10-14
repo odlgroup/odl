@@ -460,7 +460,6 @@ class writable_array(object):
 
         Also usable with ODL vectors
 
-        >>> import odl
         >>> space = odl.uniform_discr(0, 1, 3)
         >>> x = space.element([1, 2, 3])
         >>> with writable_array(x) as arr:
