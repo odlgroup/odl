@@ -35,6 +35,7 @@ Improvements
   This is equivalent to ``BroadcastOperator(*([op] * n))`` etc, i.e. create ``n`` copies of the operator. (:pull:`532`)
 - Allow showing subsets of the whole volume in ``DiscreteLpElement.show``. Previously this allowed slices to be shown, but the new version allows subsets such as ``0 < x < 3`` to be shown as well. (:pull:`574`)
 - Add ``Solvercallback.reset()`` which allows users to reset a callback to its initial state. Applicable if users want to reuse a callback in another solver. (:pull:`553`)
+- ``WaveletTransform`` and related operators now work in arbitrary dimensions. (:pull:`547`)
 
 Changes
 --------
