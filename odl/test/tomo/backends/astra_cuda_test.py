@@ -195,4 +195,4 @@ def test_astra_cuda_projector_helical_conebeam():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

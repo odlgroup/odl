@@ -425,4 +425,4 @@ def test_kullback_leibler_cross_entorpy(space):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')), ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

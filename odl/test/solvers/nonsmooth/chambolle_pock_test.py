@@ -157,4 +157,4 @@ def test_chambolle_pock_solver_produce_space():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

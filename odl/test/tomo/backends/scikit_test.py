@@ -62,4 +62,4 @@ def test_scikit_radon_projector_parallel2d():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])
