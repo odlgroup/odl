@@ -11,6 +11,15 @@ Next release
 
 New features
 ------------
+- Add ``Functional`` class to the solvers package. (:pull:`498`)
+  ``Functional`` is a subclass of odl ``Operator`` and intended to help in formulating and solving optimization problems.
+  It contains optimization specific features like ``proximal`` and ``convex_conj``, and built-in intelligence for handling things like translation, scaling of argument or scaling of functional.
+  * Migrated all solvers to work with ``Functional``s instead of raw proximals etc. (:pull:`587`)
+  * ``FunctionalProduct`` and ``FunctionalQuotient`` which allow evaluation of the product/quotient of functions and also provides a gradient through the Leibniz/quotient rules. (:pull:`586`)
+  * ``FunctionalDefaultConvexConjugate`` which acts as a default for ``Functional.convex_conj``, providing it with a proximal property. (:pull:`588`)
+  * ``IndicatorBox`` and ``IndicatorNonnegativity``which are indicator functions on a box shaped set and the set of nonnegative numbers, respectively. They return 0 if all points in a vector are inside the box, and infinity otherwise. (:pull:`589`)
+  * Add ``Functional``s for ``KullbackLeibler`` and ``KullbackLeiblerCrossEntropy``, together with corresponding convex conjugates (:pull:`627`).
+    Also adds proximal operator for the convex conjugate of cross entropy Kullback-Leibler divergence, called ``proximal_cconj_kl_cross_entropy`` (:pull:`561`)
 - Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
 - Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on. This is
   intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists.
@@ -26,7 +35,14 @@ New features
 - Add ``FunctionalDefaultConvexConjugate`` which acts as a default for ``Functional.convex_conj``, providing it with a proximal property. (:pull:`588`)
 - Add ``IndicatorBox`` and ``IndicatorNonnegativity`` which are indicator functions on a box shaped set and the set of nonnegative numbers, respectively. They return 0 if all points in a vector are inside the box, and infinity otherwise. (:pull:`589`)
 - Add proximal operator for the convex conjugate of cross entropy Kullback-Leibler divergence, called ``proximal_cconj_kl_cross_entropy`` (:pull:`561`)
-- Add ``Functional``s for ``KullbackLeibler`` and ``KullbackLeiblerCrossEntropy``, together with corresponding convex conjugates (:pull:`627`)
+- Add ``Functional``'s for ``KullbackLeibler`` and ``KullbackLeiblerCrossEntropy``, together with corresponding convex conjugates (:pull:`627`)
+- Add tutorial style example. (:pull:`521`)
+- Add MLEM solver. (:pull:`497`)
+- Add ``MatVecOperator.inverse``. (:pull:`608`)
+- Add the ``Rosenbrock`` standard test functional. (:pull:`602`)
+- Add broadcasting of vector arithmetic involving ``ProductSpace`` vectors. (:pull:`555`)
+- Add ``phantoms.poisson_noise``. (:pull:`630`)
+- Add ``NumericalGradient`` and ``NumericalDerivative`` that numerically computes the gradient and derivatives of ``Operator``s and ``Functional``s. (:pull:`624`)
 
 Improvements
 ------------
@@ -36,6 +52,11 @@ Improvements
 - Allow showing subsets of the whole volume in ``DiscreteLpElement.show``. Previously this allowed slices to be shown, but the new version allows subsets such as ``0 < x < 3`` to be shown as well. (:pull:`574`)
 - Add ``Solvercallback.reset()`` which allows users to reset a callback to its initial state. Applicable if users want to reuse a callback in another solver. (:pull:`553`)
 - ``WaveletTransform`` and related operators now work in arbitrary dimensions. (:pull:`547`)
+- Several documentation improvements. Including:
+  * Move documentation from ``_call`` to ``__init__``. (:pull:`549`)
+  * Major review of minor style issues. (:pull:`534`)
+  * Typeset math in proximals. (:pull:`580`)
+- Improved installation docs and update of Chambolle-Pock documentation. (:pull:`121`)
 
 Changes
 --------
@@ -48,7 +69,7 @@ Changes
   The parameter ``padding_value`` is now called ``pad_const``.
 - Removed ``Interval``, ``Rectangle`` and ``Cuboid`` since they were confusing (Capitalized name but not a Cunction) and barely ever used.
   Users should instead use ``IntervalProd`` in all cases. (:pull:`537`)
-- The following classes have been renamed:
+- The following classes have been renamed (:pull:`560`):
   * ``LinearSpaceVector`` -> ``LinearSpaceElement``
   * ``DiscreteLpVector`` -> ``DiscreteLpElement``
   * ``ProductSpaceVector`` -> ``ProductSpaceElement``
@@ -64,7 +85,8 @@ Bugfixes
 --------
 - Fixed ``python -c "import odl; odl.test()"`` not working on Windows. (:pull:`508`)
 - Fixed a ``TypeError`` being raised in ``OperatorTest`` when running ``optest.ajoint()`` without specifying an operator norm. (:pull:`525`)
-
+- Fixed scaling of scikit ray transform for non full scan. (:pull:`523`)
+- Fixed bug causing classes to not be vectorizable. (:pull:`604`)
 
 ODL 0.4.0 Release Notes (2016-08-17)
 ====================================
