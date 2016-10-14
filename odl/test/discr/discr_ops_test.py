@@ -253,4 +253,4 @@ def test_resizing_op_adjoint(padding, fn_impl):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

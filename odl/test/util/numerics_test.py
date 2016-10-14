@@ -498,4 +498,4 @@ def test_resize_array_raise():
         resize_array(small_arr, (3, 4), offset=(0, 1), pad_mode='periodic')
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')), ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

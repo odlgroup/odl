@@ -139,4 +139,4 @@ def test_primal_dual_with_li():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

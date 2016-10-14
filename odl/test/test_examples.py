@@ -68,4 +68,4 @@ def test_example(example):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v --examples')
+    pytest.main([str(__file__.replace('\\', '/')), '-v', '--examples'])
