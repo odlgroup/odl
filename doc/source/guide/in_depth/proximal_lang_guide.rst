@@ -15,10 +15,12 @@ Here is a minimal example of solving Poisson's equation equation on an interval 
    >>> rhs = space.element(lambda x: (x>0.4) & (x<0.6))  # indicator function on [0.4, 0.6]
    >>> x = proximal.Variable(space.shape)
    >>> prob = proximal.Problem([10 * proximal.sum_squares(x - rhs.asarray()),
-   >>>                          proximal.norm1(proximal.grad(x))])
+   ...                          proximal.norm1(proximal.grad(x))])
    >>> prob.solve()
    >>> x.value
    array([ 0.02352054,  0.02647946,  0.9       ,  0.02647946,  0.02352054])
+
+Note that this requires the latest version of ProxImaL (version>0.1.4).
 
 Notable differences between ODL and ProxImaL
 ============================================
@@ -45,8 +47,8 @@ This also has the added effect of changing the definition of derived features, l
 
 Spaces
 ------
-ODL can represent some complicated spaces, like :math:`\mathbb{R}^3 \times \mathbb{C}^2` through the `ProductSpace` class::
+ODL can represent some complicated spaces, like :math:`\mathbb{R}^3 \times \mathcal{L}^2(0, 1)` through the `ProductSpace` class::
 
-   >>> space = odl.ProductSpace(odl.rn(3), odl.cn(2))
+   >>> space = odl.ProductSpace(odl.rn(3), odl.uniform_discr(0, 1, 5))
 
 This can then be used in solvers and other structures. ProxImaL currently lacks an equivalent structure.
