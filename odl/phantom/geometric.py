@@ -51,7 +51,6 @@ def cuboid(space, min_pt=None, max_pt=None):
     If both ``min_pt`` and ``max_pt`` are omitted, the cuboid lies in the
     middle of the space domain and extends halfway towards all sides:
 
-    >>> import odl
     >>> space = odl.uniform_discr([0, 0], [1, 1], [4, 6])
     >>> print(odl.phantom.cuboid(space))
     [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -117,7 +116,6 @@ def indicate_proj_axis(space, scale_structures=0.5):
 
     Examples
     --------
-    >>> import odl
     >>> space = odl.uniform_discr([0] * 3, [1] * 3, [8, 8, 8])
     >>> phan = indicate_proj_axis(space).asarray()
     >>> print(np.sum(phan, 0))
@@ -468,7 +466,6 @@ def ellipse_phantom(space, ellipses):
     --------
     Create a circle with a smaller circle inside:
 
-    >>> import odl
     >>> space = odl.uniform_discr([-1, -1], [1, 1], [5, 5])
     >>> ellipses = [[1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
     ...             [1.0, 0.6, 0.6, 0.0, 0.0, 0.0]]

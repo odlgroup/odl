@@ -359,13 +359,12 @@ def normalized_axes_tuple(axes, ndim):
     --------
     Normalizing a sequence of axes:
 
-    >>> import odl
-    >>> odl.util.normalized_axes_tuple([0, -1, 2], ndim=3)
+    >>> normalized_axes_tuple([0, -1, 2], ndim=3)
     (0, 2, 2)
 
     Single integer works, too:
 
-    >>> odl.util.normalized_axes_tuple(-3, ndim=3)
+    >>> normalized_axes_tuple(-3, ndim=3)
     (0,)
     """
     try:
