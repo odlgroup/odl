@@ -34,6 +34,7 @@ from time import time
 __all__ = ('almost_equal', 'all_equal', 'all_almost_equal', 'never_skip',
            'skip_if_no_stir', 'skip_if_no_pywavelets',
            'skip_if_no_pyfftw', 'skip_if_no_largescale',
+           'noise_array', 'noise_element', 'noise_elements',
            'Timer', 'timeit', 'ProgressBar', 'ProgressRange',
            'test', 'run_doctests')
 
@@ -217,13 +218,13 @@ try:
     )
 
     skip_if_no_pywavelets = pytest.mark.skipif(
-        "not odl.trafos.wavelet.PYWAVELETS_AVAILABLE",
-        reason='Wavelet not available'
+        "not odl.trafos.PYWT_AVAILABLE",
+        reason='PyWavelets not available'
     )
 
     skip_if_no_pyfftw = pytest.mark.skipif(
         "not odl.trafos.PYFFTW_AVAILABLE",
-        reason='pyfftw not available')
+        reason='pyFFTW not available')
 
     skip_if_no_largescale = pytest.mark.skipif(
         "not pytest.config.getoption('--largescale')",
@@ -593,10 +594,16 @@ def test(arguments=None):
     pytest.main(args)
 
 
-def run_doctests():
-    """Avoid all the copy and paste in the last 3 module lines."""
-    from doctest import testmod, NORMALIZE_WHITESPACE
-    testmod(optionflags=NORMALIZE_WHITESPACE)
+def run_doctests(skip_if=False):
+    """Run all doctests in the current module.
+
+    For ``skip_if=True``, the tests in the module are skipped.
+    """
+    from doctest import testmod, NORMALIZE_WHITESPACE, SKIP
+    optionflags = NORMALIZE_WHITESPACE
+    if skip_if:
+        optionflags |= SKIP
+    testmod(optionflags=optionflags)
 
 
 if __name__ == '__main__':

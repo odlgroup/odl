@@ -22,22 +22,30 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-# External module imports
-from itertools import product
-from math import pi
 import numpy as np
 import pytest
 
-# ODL imports
 import odl
+from odl.trafos.util.ft_utils import (
+    reciprocal_grid, dft_preprocess_data, dft_postprocess_data,
+    _interp_kernel_ft)
 from odl.trafos.fourier import (
-    reciprocal, inverse_reciprocal, dft_preprocess_data, dft_postprocess_data,
-    pyfftw_call, _interp_kernel_ft,
     DiscreteFourierTransform, DiscreteFourierTransformInverse,
     FourierTransform)
-from odl.util import (all_almost_equal, all_equal,
-                      never_skip, skip_if_no_pyfftw,
-                      is_real_dtype, conj_exponent, TYPE_MAP_R2C)
+from odl.util import (all_almost_equal, never_skip, skip_if_no_pyfftw,
+                      noise_element,
+                      is_real_dtype, conj_exponent, complex_dtype)
+
+# --- pytest fixtures --- #
+
+impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
+impl_ids = [' impl = {} '.format(impl.args[1]) for impl in impl_params]
+
+
+@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
+def impl(request):
+    """Fixture for FFT implementations."""
+    return request.param
 
 
 exp_params = [2.0, 1.0, float('inf'), 1.5]
@@ -46,761 +54,33 @@ exp_ids = [' p = {} '.format(p) for p in exp_params]
 
 @pytest.fixture(scope="module", ids=exp_ids, params=exp_params)
 def exponent(request):
+    """Fixture for space exponents."""
     return request.param
 
 
-dtype_params = [str(dtype) for dtype in TYPE_MAP_R2C.keys()]
-dtype_params += [str(dtype) for dtype in TYPE_MAP_R2C.values()]
-dtype_params = list(set(dtype_params))
-dtype_ids = [' dtype = {} '.format(dt) for dt in dtype_params]
+sign_params = ['-', '+']
+sign_ids = [" sign='{}' ".format(p) for p in sign_params]
 
 
-@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
-def dtype(request):
-    return request.param
-
-
-plan_params = ['estimate', 'measure', 'patient', 'exhaustive']
-plan_ids = [" planning = '{}' ".format(p) for p in plan_params]
-
-
-@pytest.fixture(scope="module", ids=plan_ids, params=plan_params)
-def planning(request):
-    return request.param
-
-
-impl_params = [never_skip('numpy'), skip_if_no_pyfftw('pyfftw')]
-impl_ids = ['impl={}'.format(impl.args[1]) for impl in impl_params]
-
-
-@pytest.fixture(scope="module", ids=impl_ids, params=impl_params)
-def impl(request):
-    return request.param
-
-
-@pytest.fixture(scope='module', ids=[' - ', ' + '], params=['-', '+'])
+@pytest.fixture(scope='module', ids=sign_ids, params=sign_params)
 def sign(request):
+    """Fixture for the sign of the Fourier transform."""
     return request.param
 
 
-def _random_array(shape, dtype):
+# --- helper functions --- #
+
+def _params_from_dtype(dtype):
     if is_real_dtype(dtype):
-        return np.random.rand(*shape).astype(dtype)
-    else:
-        return (np.random.rand(*shape).astype(dtype) +
-                1j * np.random.rand(*shape).astype(dtype))
-
-
-@pytest.fixture(scope='module', ids=[' forward ', ' backward '],
-                params=['forward', 'backward'])
-def direction(request):
-    return request.param
-
-
-# ---- reciprocal ---- #
-
-
-def test_reciprocal_1d_odd():
-
-    grid = odl.uniform_sampling(0, 1, shape=11)
-    s = grid.stride
-    n = np.array(grid.shape)
-
-    true_recip_stride = 2 * pi / (s * n)
-
-    # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=False)
-
-    # Independent of shift and halfcomplex, check anyway
-    assert all_equal(rgrid.shape, n)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Should be symmetric
-    assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
-    assert all_almost_equal(rgrid.mid_pt, 0)
-    # Zero should be at index n // 2
-    assert all_almost_equal(rgrid[n // 2], 0)
-
-    # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=False)
-
-    # Independent of shift and halfcomplex, check anyway
-    assert all_equal(rgrid.shape, n)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # No point should be closer to 0 than half a recip stride
-    atol = 0.999 * true_recip_stride / 2
-    assert not rgrid.approx_contains(0, atol=atol)
-
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
-    assert irgrid.approx_equals(grid, atol=1e-6)
-
-
-def test_reciprocal_1d_odd_halfcomplex():
-
-    grid = odl.uniform_sampling(0, 1, shape=11)
-    s = grid.stride
-    n = np.array(grid.shape)
-
-    true_recip_stride = 2 * pi / (s * n)
-
-    # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=True)
-
-    # Independent of shift and halfcomplex, check anyway
-    assert all_equal(rgrid.shape, (n + 1) / 2)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Max should be zero
-    assert all_almost_equal(rgrid.max_pt, 0)
-
-    # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=True)
-
-    # Independent of shift and halfcomplex, check anyway
-    assert all_equal(rgrid.shape, (n + 1) / 2)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Max point should be half a positive recip stride
-    assert all_almost_equal(rgrid.max_pt, -true_recip_stride / 2)
-
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
-                                halfcx_parity='odd')
-    assert irgrid.approx_equals(grid, atol=1e-6)
-
-
-def test_reciprocal_1d_even():
-
-    grid = odl.uniform_sampling(0, 1, shape=10)
-    s = grid.stride
-    n = np.array(grid.shape)
-
-    true_recip_stride = 2 * pi / (s * n)
-
-    # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=False)
-
-    # Independent of shift and halfcomplex, check anyway
-    assert all_equal(rgrid.shape, n)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Should be symmetric
-    assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
-    assert all_almost_equal(rgrid.mid_pt, 0)
-    # No point should be closer to 0 than half a recip stride
-    atol = 0.999 * true_recip_stride / 2
-    assert not rgrid.approx_contains(0, atol=atol)
-
-    # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=False)
-
-    # Independent of shift and halfcomplex, check anyway
-    assert all_equal(rgrid.shape, n)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Zero should be at index n // 2
-    assert all_almost_equal(rgrid[n // 2], 0)
-
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
-    assert irgrid.approx_equals(grid, atol=1e-6)
-
-
-def test_reciprocal_1d_even_halfcomplex():
-
-    grid = odl.uniform_sampling(0, 1, shape=10)
-    s = grid.stride
-    n = np.array(grid.shape)
-
-    true_recip_stride = 2 * pi / (s * n)
-
-    # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=True)
-
-    # Independent of shift and halfcomplex, check anyway
-    assert all_equal(rgrid.shape, n / 2 + 1)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Max point should be half a positive recip stride
-    assert all_almost_equal(rgrid.max_pt, true_recip_stride / 2)
-
-    # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=True)
-
-    # Independent of shift and halfcomplex, check anyway
-    assert all_equal(rgrid.shape, n / 2 + 1)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    # Max should be zero
-    assert all_almost_equal(rgrid.max_pt, 0)
-
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
-                                halfcx_parity='even')
-    assert irgrid.approx_equals(grid, atol=1e-6)
-
-
-def test_reciprocal_nd():
-
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
-    s = grid.stride
-    n = np.array(grid.shape)
-
-    true_recip_stride = 2 * pi / (s * n)
-
-    # Without shift altogether
-    rgrid = reciprocal(grid, shift=False, halfcomplex=False)
-
-    assert all_equal(rgrid.shape, n)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    assert all_almost_equal(rgrid.min_pt, -rgrid.max_pt)
-
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
-    assert irgrid.approx_equals(grid, atol=1e-6)
-
-
-def test_reciprocal_nd_shift_list():
-
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
-    s = grid.stride
-    n = np.array(grid.shape)
-    shift = [False, True, False]
-
-    true_recip_stride = 2 * pi / (s * n)
-
-    # Shift only the even dimension, then zero must be contained
-    rgrid = reciprocal(grid, shift=shift, halfcomplex=False)
-    noshift = np.where(np.logical_not(shift))
-
-    assert all_equal(rgrid.shape, n)
-    assert all_almost_equal(rgrid.stride, true_recip_stride)
-    assert all_almost_equal(rgrid.min_pt[noshift], -rgrid.max_pt[noshift])
-    assert all_almost_equal(rgrid[n // 2], [0] * 3)
-
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=False)
-    assert irgrid.approx_equals(grid, atol=1e-6)
-
-
-def test_reciprocal_nd_axes():
-
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
-    s = grid.stride
-    n = np.array(grid.shape)
-    axes_list = [[1, -1], [0], 0, [0, 2, 1], [2, 0]]
-
-    for axes in axes_list:
-        active = np.zeros(grid.ndim, dtype=bool)
-        active[axes] = True
-        inactive = np.logical_not(active)
-
-        true_recip_stride = np.empty(grid.ndim)
-        true_recip_stride[active] = 2 * pi / (s[active] * n[active])
-        true_recip_stride[inactive] = s[inactive]
-
-        # Without shift altogether
-        rgrid = reciprocal(grid, shift=False, axes=axes, halfcomplex=False)
-
-        assert all_equal(rgrid.shape, n)
-        assert all_almost_equal(rgrid.stride, true_recip_stride)
-        assert all_almost_equal(rgrid.min_pt[active], -rgrid.max_pt[active])
-        assert all_equal(rgrid.min_pt[inactive], grid.min_pt[inactive])
-        assert all_equal(rgrid.max_pt[inactive], grid.max_pt[inactive])
-
-        # Inverting the reciprocal should give back the original
-        irgrid = inverse_reciprocal(rgrid, grid.min_pt, axes=axes,
-                                    halfcomplex=False)
-        assert irgrid.approx_equals(grid, atol=1e-6)
-
-
-def test_reciprocal_nd_halfcomplex():
-
-    grid = odl.uniform_sampling([0] * 3, [1] * 3, shape=(3, 4, 5))
-    s = grid.stride
-    n = np.array(grid.shape)
-    stride_last = 2 * pi / (s[-1] * n[-1])
-    n[-1] = n[-1] // 2 + 1
-
-    # Without shift
-    rgrid = reciprocal(grid, shift=False, halfcomplex=True)
-    assert all_equal(rgrid.shape, n)
-    assert rgrid.max_pt[-1] == 0  # last dim is odd
-
-    # With shift
-    rgrid = reciprocal(grid, shift=True, halfcomplex=True)
-    assert all_equal(rgrid.shape, n)
-    assert rgrid.max_pt[-1] == -stride_last / 2
-
-    # Inverting the reciprocal should give back the original
-    irgrid = inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
-                                halfcx_parity='odd')
-    assert irgrid.approx_equals(grid, atol=1e-6)
-
-    with pytest.raises(ValueError):
-        inverse_reciprocal(rgrid, grid.min_pt, halfcomplex=True,
-                           halfcx_parity='+')
-
-# ---- dft_preprocess_data ---- #
-
-
-def test_dft_preprocess_data(sign):
-
-    shape = (2, 3, 4)
-
-    # With shift
-    correct_arr = []
-    for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
-        correct_arr.append((1 + 1j) * (1 - 2 * ((i + j + k) % 2)))
-
-    arr = np.ones(shape, dtype='complex64') * (1 + 1j)
-    preproc = dft_preprocess_data(arr, shift=True, sign=sign)  # out-of-place
-    dft_preprocess_data(arr, shift=True, out=arr, sign=sign)  # in-place
-
-    assert all_almost_equal(preproc.ravel(), correct_arr)
-    assert all_almost_equal(arr.ravel(), correct_arr)
-
-    # Without shift
-    imag = 1j if sign == '-' else -1j
-    correct_arr = []
-    for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
-        argsum = sum((idx * (1 - 1 / shp))
-                     for idx, shp in zip((i, j, k), shape))
-
-        correct_arr.append((1 + 1j) * np.exp(imag * np.pi * argsum))
-
-    arr = np.ones(shape, dtype='complex64') * (1 + 1j)
-    dft_preprocess_data(arr, shift=False, out=arr, sign=sign)
-
-    assert all_almost_equal(arr.ravel(), correct_arr)
-
-    # Bad input
-    with pytest.raises(ValueError):
-        dft_preprocess_data(arr, out=arr, sign=1)
-
-    arr = np.zeros(shape, dtype='S2')
-    with pytest.raises(ValueError):
-        dft_preprocess_data(arr)
-
-
-def test_dft_preprocess_data_halfcomplex(sign):
-
-    shape = (2, 3, 4)
-
-    # With shift
-    correct_arr = []
-    for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
-        correct_arr.append(1 - 2 * ((i + j + k) % 2))
-
-    arr = np.ones(shape, dtype='float64')
-    preproc = dft_preprocess_data(arr, shift=True, sign=sign)  # out-of-place
-    out = np.empty_like(arr)
-    dft_preprocess_data(arr, shift=True, out=out, sign=sign)  # in-place
-    dft_preprocess_data(arr, shift=True, out=arr, sign=sign)  # in-place
-    assert all_almost_equal(preproc.ravel(), correct_arr)
-    assert all_almost_equal(arr.ravel(), correct_arr)
-    assert all_almost_equal(out.ravel(), correct_arr)
-
-    # Without shift
-    imag = 1j if sign == '-' else -1j
-    correct_arr = []
-    for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
-        argsum = sum((idx * (1 - 1 / shp))
-                     for idx, shp in zip((i, j, k), shape))
-
-        correct_arr.append(np.exp(imag * np.pi * argsum))
-
-    arr = np.ones(shape, dtype='float64')
-    preproc = dft_preprocess_data(arr, shift=False, sign=sign)
-    assert all_almost_equal(preproc.ravel(), correct_arr)
-
-    # Non-float input works, too
-    arr = np.ones(shape, dtype='int')
-    preproc = dft_preprocess_data(arr, shift=False, sign=sign)
-    assert all_almost_equal(preproc.ravel(), correct_arr)
-
-    # In-place modification not possible for float array and no shift
-    arr = np.ones(shape, dtype='float64')
-    with pytest.raises(ValueError):
-        dft_preprocess_data(arr, shift=False, out=arr, sign=sign)
-
-
-def test_dft_preprocess_data_with_axes(sign):
-
-    shape = (2, 3, 4)
-
-    axes = 1  # Only middle index counts
-    correct_arr = []
-    for _, j, __ in product(range(shape[0]), range(shape[1]), range(shape[2])):
-        correct_arr.append(1 - 2 * (j % 2))
-
-    arr = np.ones(shape, dtype='complex64')
-    dft_preprocess_data(arr, shift=True, axes=axes, out=arr, sign=sign)
-
-    assert all_almost_equal(arr.ravel(), correct_arr)
-
-    axes = [0, -1]  # First and last
-    correct_arr = []
-    for i, _, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
-        correct_arr.append(1 - 2 * ((i + k) % 2))
-
-    arr = np.ones(shape, dtype='complex64')
-    dft_preprocess_data(arr, shift=True, axes=axes, out=arr, sign=sign)
-
-    assert all_almost_equal(arr.ravel(), correct_arr)
-
-
-# ---- pyfftw_call ---- #
-
-
-def _params_from_dtype(dt):
-    if is_real_dtype(dt):
         halfcomplex = True
-        dtype = TYPE_MAP_R2C[np.dtype(dt)]
     else:
         halfcomplex = False
-        dtype = dt
-    return halfcomplex, dtype
+    return halfcomplex, complex_dtype(dtype)
 
 
-def _halfcomplex_shape(shape, axes=None):
-    if axes is None:
-        axes = tuple(range(len(shape)))
-
-    try:
-        axes = (int(axes),)
-    except TypeError:
-        pass
-
-    shape = list(shape)
-    shape[axes[-1]] = shape[axes[-1]] // 2 + 1
-    return shape
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_forward(dtype):
-    # Test against Numpy's FFT
-    if dtype == np.dtype('float16'):  # not supported, skipping
-        return
-
-    halfcomplex, out_dtype = _params_from_dtype(dtype)
-
-    for shape in [(10,), (3, 4, 5)]:
-        arr = _random_array(shape, dtype)
-
-        if halfcomplex:
-            true_dft = np.fft.rfftn(arr)
-            dft_arr = np.empty(_halfcomplex_shape(shape), dtype=out_dtype)
-        else:
-            true_dft = np.fft.fftn(arr)
-            dft_arr = np.empty(shape, dtype=out_dtype)
-
-        pyfftw_call(arr, dft_arr, direction='forward',
-                    halfcomplex=halfcomplex, preserve_input=False)
-
-        assert all_almost_equal(dft_arr, true_dft)
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_threads():
-    shape = (3, 4, 5)
-    arr = _random_array(shape, dtype='complex64')
-    true_dft = np.fft.fftn(arr)
-    dft_arr = np.empty(shape, dtype='complex64')
-    pyfftw_call(arr, dft_arr, direction='forward', preserve_input=False,
-                threads=4)
-    assert all_almost_equal(dft_arr, true_dft)
-
-    shape = (1000,)  # Trigger cpu_count() as number of threads
-    arr = _random_array(shape, dtype='complex64')
-    true_dft = np.fft.fftn(arr)
-    dft_arr = np.empty(shape, dtype='complex64')
-    pyfftw_call(arr, dft_arr, direction='forward', preserve_input=False)
-
-    assert all_almost_equal(dft_arr, true_dft)
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_backward(dtype):
-    # Test against Numpy's IFFT, no normalization
-    if dtype == np.dtype('float16'):  # not supported, skipping
-        return
-
-    halfcomplex, in_dtype = _params_from_dtype(dtype)
-
-    for shape in [(10,), (3, 4, 5)]:
-        # Scaling happens wrt output (large) shape
-        idft_scaling = np.prod(shape)
-
-        if halfcomplex:
-            arr = _random_array(_halfcomplex_shape(shape), in_dtype)
-            true_idft = np.fft.irfftn(arr, shape) * idft_scaling
-        else:
-            arr = _random_array(shape, in_dtype)
-            true_idft = np.fft.ifftn(arr) * idft_scaling
-
-        idft_arr = np.empty(shape, dtype=dtype)
-        pyfftw_call(arr, idft_arr, direction='backward',
-                    halfcomplex=halfcomplex)
-
-        assert all_almost_equal(idft_arr, true_idft)
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_bad_input(direction):
-
-    # Complex
-
-    # Bad dtype
-    dtype_in = 'complex128'
-    arr_in = np.empty(3, dtype=dtype_in)
-    bad_dtypes_out = np.sctypes['float'] + np.sctypes['complex']
-    try:
-        # This one is correct, so we remove it
-        bad_dtypes_out.remove(np.dtype('complex128'))
-    except ValueError:
-        pass
-    for bad_dtype in bad_dtypes_out:
-        arr_out = np.empty(3, dtype=bad_dtype)
-        with pytest.raises(ValueError):
-            pyfftw_call(arr_in, arr_out, halfcomplex=False,
-                        direction=direction)
-
-    # Bad shape
-    shape = (3, 4)
-    arr_in = np.empty(shape, dtype='complex128')
-    bad_shapes_out = [(3, 3), (3,), (4,), (3, 4, 5), ()]
-    for bad_shape in bad_shapes_out:
-        arr_out = np.empty(bad_shape, dtype='complex128')
-        with pytest.raises(ValueError):
-            pyfftw_call(arr_in, arr_out, halfcomplex=False,
-                        direction=direction)
-
-    # Duplicate axes
-    arr_in = np.empty((3, 4, 5), dtype='complex128')
-    arr_out = np.empty_like(arr_in)
-    bad_axes_list = [(0, 0, 1), (1, 1, 1), (-1, -1)]
-    for bad_axes in bad_axes_list:
-        with pytest.raises(ValueError):
-            pyfftw_call(arr_in, arr_out, axes=bad_axes,
-                        direction=direction)
-
-    # Axis entry out of range
-    arr_in = np.empty((3, 4, 5), dtype='complex128')
-    arr_out = np.empty_like(arr_in)
-    bad_axes_list = [(0, 3), (-4,)]
-    for bad_axes in bad_axes_list:
-        with pytest.raises(IndexError):
-            pyfftw_call(arr_in, arr_out, axes=bad_axes,
-                        direction=direction)
-
-    # Halfcomplex not possible for complex data
-    arr_in = np.empty((3, 4, 5), dtype='complex128')
-    arr_out = np.empty_like(arr_in)
-    with pytest.raises(ValueError):
-        pyfftw_call(arr_in, arr_out, halfcomplex=True,
-                    direction=direction)
-
-    # Data type mismatch
-    arr_in = np.empty((3, 4, 5), dtype='complex128')
-    arr_out = np.empty_like(arr_in, dtype='complex64')
-    with pytest.raises(ValueError):
-        pyfftw_call(arr_in, arr_out, direction=direction)
-
-    # Halfcomplex
-
-    # Bad dtype
-    dtype_in = 'float64'
-    arr_in = np.empty(10, dtype=dtype_in)
-    bad_dtypes_out = np.sctypes['float'] + np.sctypes['complex']
-    try:
-        # This one is correct, so we remove it
-        bad_dtypes_out.remove(np.dtype('complex128'))
-    except ValueError:
-        pass
-    for bad_dtype in bad_dtypes_out:
-        arr_out = np.empty(6, dtype=bad_dtype)
-        with pytest.raises(ValueError):
-            if direction == 'forward':
-                pyfftw_call(arr_in, arr_out, halfcomplex=True,
-                            direction='forward')
-            else:
-                pyfftw_call(arr_out, arr_in, halfcomplex=True,
-                            direction='backward')
-
-    # Bad shape
-    shape = (3, 4, 5)
-    axes_list = [None, (0, 1), (1,), (1, 2), (2, 1), (-1, -2, -3)]
-    arr_in = np.empty(shape, dtype='float64')
-    # Correct shapes:
-    # [(3, 4, 3), (3, 3, 5), (3, 3, 5), (3, 4, 3), (3, 3, 5), (2, 4, 5)]
-    bad_shapes_out = [(3, 4, 2), (3, 4, 3), (2, 3, 5), (3, 2, 3),
-                      (3, 4, 3), (3, 4, 3)]
-    always_bad_shapes = [(3, 4), (3, 4, 5)]
-    for bad_shape, axes in zip(bad_shapes_out, axes_list):
-
-        for always_bad_shape in always_bad_shapes:
-            arr_out = np.empty(always_bad_shape, dtype='complex128')
-            with pytest.raises(ValueError):
-                if direction == 'forward':
-                    pyfftw_call(arr_in, arr_out, axes=axes, halfcomplex=True,
-                                direction='forward')
-                else:
-                    pyfftw_call(arr_out, arr_in, axes=axes, halfcomplex=True,
-                                direction='backward')
-
-        arr_out = np.empty(bad_shape, dtype='complex128')
-        with pytest.raises(ValueError):
-            if direction == 'forward':
-                pyfftw_call(arr_in, arr_out, axes=axes, halfcomplex=True,
-                            direction='forward')
-            else:
-                pyfftw_call(arr_out, arr_in, axes=axes, halfcomplex=True,
-                            direction='backward')
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_forward_real_not_halfcomplex():
-    # Test against Numpy's FFT
-    for shape in [(10,), (3, 4, 5)]:
-        arr = _random_array(shape, dtype='float64')
-
-        true_dft = np.fft.fftn(arr)
-        dft_arr = np.empty(shape, dtype='complex128')
-        pyfftw_call(arr, dft_arr, direction='forward', halfcomplex=False)
-
-        assert all_almost_equal(dft_arr, true_dft)
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_backward_real_not_halfcomplex():
-    # Test against Numpy's IFFT, no normalization
-    for shape in [(10,), (3, 4, 5)]:
-        # Scaling happens wrt output (large) shape
-        idft_scaling = np.prod(shape)
-
-        arr = _random_array(shape, dtype='float64')
-        true_idft = np.fft.ifftn(arr) * idft_scaling
-        idft_arr = np.empty(shape, dtype='complex128')
-        pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False)
-
-        assert all_almost_equal(idft_arr, true_idft)
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_plan_preserve_input(planning):
-
-    for shape in [(10,), (3, 4)]:
-        arr = _random_array(shape, dtype='complex128')
-        arr_cpy = arr.copy()
-
-        idft_scaling = np.prod(shape)
-        true_idft = np.fft.ifftn(arr) * idft_scaling
-        idft_arr = np.empty(shape, dtype='complex128')
-        pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False,
-                    planning=planning)
-
-        assert all_almost_equal(arr, arr_cpy)  # Input perserved
-        assert all_almost_equal(idft_arr, true_idft)
-
-        pyfftw_call(arr, idft_arr, direction='backward', halfcomplex=False,
-                    planning=planning)
-
-        assert all_almost_equal(idft_arr, true_idft)
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_forward_with_axes(dtype):
-    if dtype == np.dtype('float16'):  # not supported, skipping
-        return
-
-    halfcomplex, out_dtype = _params_from_dtype(dtype)
-    shape = (3, 4, 5)
-
-    test_axes = [(0, 1), [1], (-1,), (1, 0), (-1, -2, -3)]
-    for axes in test_axes:
-        arr = _random_array(shape, dtype)
-        if halfcomplex:
-            true_dft = np.fft.rfftn(arr, axes=axes)
-            dft_arr = np.empty(_halfcomplex_shape(shape, axes),
-                               dtype=out_dtype)
-        else:
-            true_dft = np.fft.fftn(arr, axes=axes)
-            dft_arr = np.empty(shape, dtype=out_dtype)
-
-        pyfftw_call(arr, dft_arr, direction='forward', axes=axes,
-                    halfcomplex=halfcomplex)
-
-        assert all_almost_equal(dft_arr, true_dft)
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_backward_with_axes(dtype):
-    if dtype == np.dtype('float16'):  # not supported, skipping
-        return
-
-    halfcomplex, in_dtype = _params_from_dtype(dtype)
-    shape = (3, 4, 5)
-
-    test_axes = [(0, 1), [1], (-1,), (1, 0), (-1, -2, -3)]
-    for axes in test_axes:
-        # Only the shape indexed by axes count for the scaling
-        active_shape = np.take(shape, axes)
-        idft_scaling = np.prod(active_shape)
-
-        if halfcomplex:
-            arr = _random_array(_halfcomplex_shape(shape, axes), in_dtype)
-            true_idft = (np.fft.irfftn(arr, s=active_shape, axes=axes) *
-                         idft_scaling)
-        else:
-            arr = _random_array(shape, in_dtype)
-            true_idft = (np.fft.ifftn(arr, s=active_shape, axes=axes) *
-                         idft_scaling)
-
-        idft_arr = np.empty(shape, dtype=dtype)
-        pyfftw_call(arr, idft_arr, direction='backward', axes=axes,
-                    halfcomplex=halfcomplex)
-
-        assert all_almost_equal(idft_arr, true_idft)
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_forward_with_plan():
-
-    for shape in [(10,), (3, 4, 5)]:
-        arr = _random_array(shape, dtype='complex128')
-        arr_cpy = arr.copy()
-        true_dft = np.fft.fftn(arr)
-
-        # First run, create plan
-        dft_arr = np.empty(shape, dtype='complex128')
-        plan = pyfftw_call(arr, dft_arr, direction='forward',
-                           halfcomplex=False, planning_effort='measure')
-
-        # Second run, reuse with fresh output array
-        dft_arr = np.empty(shape, dtype='complex128')
-        pyfftw_call(arr, dft_arr, direction='forward', fftw_plan=plan,
-                    halfcomplex=False)
-
-        assert all_almost_equal(arr, arr_cpy)  # Input perserved
-        assert all_almost_equal(dft_arr, true_dft)
-
-
-@skip_if_no_pyfftw
-def test_pyfftw_call_backward_with_plan():
-
-    for shape in [(10,), (3, 4, 5)]:
-        arr = _random_array(shape, dtype='complex128')
-        arr_cpy = arr.copy()
-        idft_scaling = np.prod(shape)
-        true_idft = np.fft.ifftn(arr) * idft_scaling
-
-        # First run, create plan
-        idft_arr = np.empty(shape, dtype='complex128')
-        plan = pyfftw_call(arr, idft_arr, direction='backward',
-                           halfcomplex=False, planning_effort='measure')
-
-        # Second run, reuse with fresh output array
-        idft_arr = np.empty(shape, dtype='complex128')
-        pyfftw_call(arr, idft_arr, direction='backward', fftw_plan=plan,
-                    halfcomplex=False)
-
-        assert all_almost_equal(arr, arr_cpy)  # Input perserved
-        assert all_almost_equal(idft_arr, true_idft)
+def sinc(x):
+    # numpy.sinc scales by pi, we don't want that
+    return np.sinc(x / np.pi)
 
 
 # ---- DiscreteFourierTransform ---- #
@@ -973,7 +253,7 @@ def test_dft_call(impl):
     assert np.allclose(one_idft2, one)
     assert np.allclose(one_idft3, one)
 
-    rand_arr = _random_array(shape, 'complex128')
+    rand_arr = noise_element(dft_dom)
     rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
     rand_arr_idft = idft(rand_arr_dft, flags=('FFTW_ESTIMATE',))
     assert (rand_arr_idft - rand_arr).norm() < 1e-6
@@ -1002,7 +282,7 @@ def test_dft_call(impl):
     assert np.allclose(one_idft1, one)
     assert np.allclose(one_idft2, one)
 
-    rand_arr = _random_array(shape, 'complex128')
+    rand_arr = noise_element(dft_dom)
     rand_arr_dft = dft(rand_arr, flags=('FFTW_ESTIMATE',))
     rand_arr_idft = idft(rand_arr_dft, flags=('FFTW_ESTIMATE',))
     assert (rand_arr_idft - rand_arr).norm() < 1e-6
@@ -1082,7 +362,7 @@ def test_dft_init_plan(impl):
 # ---- FourierTransform ---- #
 
 
-def test_fourier_trafo_range(exponent, dtype):
+def test_fourier_trafo_range(exponent, floating_dtype):
     # Check if the range is initialized correctly. Encompasses the init test
 
     # Testing R2C for real dtype, else C2C
@@ -1090,27 +370,27 @@ def test_fourier_trafo_range(exponent, dtype):
     # 1D
     shape = 10
     space_discr = odl.uniform_discr(0, 1, shape, exponent=exponent,
-                                    impl='numpy', dtype=dtype)
+                                    impl='numpy', dtype=floating_dtype)
 
     dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
-    halfcomplex = True if is_real_dtype(dtype) else False
-    assert dft.range.grid == reciprocal(dft.domain.grid,
-                                        halfcomplex=halfcomplex,
-                                        shift=True)
+    halfcomplex = True if is_real_dtype(floating_dtype) else False
+    assert dft.range.grid == reciprocal_grid(dft.domain.grid,
+                                             halfcomplex=halfcomplex,
+                                             shift=True)
     assert dft.range.exponent == conj_exponent(exponent)
 
     # 3D
     shape = (3, 4, 5)
     space_discr = odl.uniform_discr([0] * 3, [1] * 3, shape, exponent=exponent,
-                                    impl='numpy', dtype=dtype)
+                                    impl='numpy', dtype=floating_dtype)
 
     dft = FourierTransform(space_discr, halfcomplex=True, shift=True)
     assert dft.range.field == odl.ComplexNumbers()
-    halfcomplex = True if is_real_dtype(dtype) else False
-    assert dft.range.grid == reciprocal(dft.domain.grid,
-                                        halfcomplex=halfcomplex,
-                                        shift=True)
+    halfcomplex = True if is_real_dtype(floating_dtype) else False
+    assert dft.range.grid == reciprocal_grid(dft.domain.grid,
+                                             halfcomplex=halfcomplex,
+                                             shift=True)
     assert dft.range.exponent == conj_exponent(exponent)
 
     # shift must be True in the last axis
@@ -1126,16 +406,16 @@ def test_fourier_trafo_range(exponent, dtype):
         FourierTransform(dft.domain.partition)
 
 
-def test_fourier_trafo_init_plan(impl, dtype):
+def test_fourier_trafo_init_plan(impl, floating_dtype):
 
     # Not supported, skip
-    if dtype == np.dtype('float16') and impl == 'pyfftw':
+    if floating_dtype == np.dtype('float16') and impl == 'pyfftw':
         return
 
     shape = 10
-    halfcomplex, _ = _params_from_dtype(dtype)
+    halfcomplex, _ = _params_from_dtype(floating_dtype)
 
-    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype)
+    space_discr = odl.uniform_discr(0, 1, shape, dtype=floating_dtype)
 
     ft = FourierTransform(space_discr, impl=impl, halfcomplex=halfcomplex)
     if impl != 'pyfftw':
@@ -1203,16 +483,16 @@ def test_fourier_trafo_create_temp():
     assert ft._tmp_f is None
 
 
-def test_fourier_trafo_call(impl, dtype):
+def test_fourier_trafo_call(impl, floating_dtype):
     # Test if all variants can be called without error
 
     # Not supported, skip
-    if dtype == np.dtype('float16') and impl == 'pyfftw':
+    if floating_dtype == np.dtype('float16') and impl == 'pyfftw':
         return
 
     shape = 10
-    halfcomplex, _ = _params_from_dtype(dtype)
-    space_discr = odl.uniform_discr(0, 1, shape, dtype=dtype)
+    halfcomplex, _ = _params_from_dtype(floating_dtype)
+    space_discr = odl.uniform_discr(0, 1, shape, dtype=floating_dtype)
 
     ft = FourierTransform(space_discr, impl=impl, halfcomplex=halfcomplex)
     ift = ft.inverse
@@ -1225,11 +505,6 @@ def test_fourier_trafo_call(impl, dtype):
     ift = ft.inverse  # shares temporaries
     one = space_discr.one()
     assert np.allclose(ift(ft(one)), one)
-
-
-def sinc(x):
-    # numpy.sinc scales by pi, we don't want that
-    return np.sinc(x / np.pi)
 
 
 def test_fourier_trafo_charfun_1d():
@@ -1256,7 +531,7 @@ def test_fourier_trafo_charfun_1d():
     for dft in [dft_base, dft_complex, dft_complex_shift]:
         func_true_ft = dft.range.element(char_interval_ft)
         func_dft = dft(char_interval)
-        assert (func_dft - func_true_ft).norm() < 1e-6
+        assert (func_dft - func_true_ft).norm() < 5e-6
 
 
 def test_fourier_trafo_scaling():
@@ -1491,8 +766,8 @@ def test_fourier_trafo_completely():
     # "s" = shifted, "n" = not shifted
 
     # Reciprocal grids
-    recip_s = reciprocal(discr.grid, shift=True)
-    recip_n = reciprocal(discr.grid, shift=False)
+    recip_s = reciprocal_grid(discr.grid, shift=True)
+    recip_n = reciprocal_grid(discr.grid, shift=False)
     assert np.allclose(recip_s.coord_vectors[0],
                        np.linspace(-np.pi, np.pi / 2, 4))
     assert np.allclose(recip_n.coord_vectors[0],
@@ -1606,4 +881,4 @@ def test_fourier_trafo_completely():
     assert np.allclose(ft_f_n, fhat(recip_n.coord_vectors[0]))
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main(str(__file__.replace('\\', '/'), ' -v'))

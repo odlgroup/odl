@@ -78,6 +78,7 @@ target/
 *~
 
 # Spyder project files
+.spyproject/
 .spyderproject
 .spyderworkspace
 

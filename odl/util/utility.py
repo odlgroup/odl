@@ -15,15 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Utilities for internal use.
-
-Attributes
-----------
-TYPE_MAP_R2C : dict
-    Dictionary mapping real dtypes to complex dtypes
-TYPE_MAP_C2R : dict
-    Dictionary mapping complex dtypes to real dtypes
-"""
+"""Utilities for internal use."""
 
 # Imports for common Python 2/3 codebase
 from __future__ import print_function, division, absolute_import
@@ -38,7 +30,8 @@ __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr', 'conj_exponent',
            'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
-           'is_complex_floating_dtype', 'TYPE_MAP_R2C', 'TYPE_MAP_C2R',
+           'is_complex_floating_dtype',
+           'real_dtype', 'complex_dtype',
            'writable_array')
 
 TYPE_MAP_R2C = {np.dtype(dtype): np.result_type(dtype, 1j)
@@ -178,6 +171,7 @@ def arraynd_str(array, nprint=None):
 
 def dtype_repr(dtype):
     """Stringification of data type with default for int and float."""
+    dtype = np.dtype(dtype)
     if dtype == np.dtype(int):
         return "'int'"
     elif dtype == np.dtype(float):
@@ -258,8 +252,88 @@ def is_complex_floating_dtype(dtype):
     return np.issubsctype(dtype, np.complexfloating)
 
 
+def real_dtype(dtype, default=None):
+    """Return the real counterpart of ``dtype`` if existing.
+
+    Parameters
+    ----------
+    dtype :
+        Real or complex floating point data type. It can be given in any
+        way the `numpy.dtype` constructor understands.
+    default :
+        Object to be returned if no real counterpart is found for
+        ``dtype``, except for ``None``, in which case an error is raised.
+
+    Returns
+    -------
+    real_dtype : `numpy.dtype`
+        The real counterpart of ``dtype``.
+
+    Raises
+    ------
+    ValueError
+        if there is no real counterpart to the given data type and
+        ``default == None``.
+    """
+    dtype, dtype_in = np.dtype(dtype), dtype
+
+    if is_real_floating_dtype(dtype):
+        return dtype
+
+    try:
+        real_dtype = TYPE_MAP_C2R[dtype]
+    except KeyError:
+        if default is not None:
+            return default
+        else:
+            raise ValueError('no real counterpart exists for `dtype` {}'
+                             ''.format(dtype_repr(dtype_in)))
+    else:
+        return real_dtype
+
+
+def complex_dtype(dtype, default=None):
+    """Return complex counterpart of ``dtype`` if existing, else ``default``.
+
+    Parameters
+    ----------
+    dtype :
+        Real or complex floating point data type. It can be given in any
+        way the `numpy.dtype` constructor understands.
+    default :
+        Object to be returned if no complex counterpart is found for
+        ``dtype``, except for ``None``, in which case an error is raised.
+
+    Returns
+    -------
+    complex_dtype : `numpy.dtype`
+        The complex counterpart of ``dtype``.
+
+    Raises
+    ------
+    ValueError
+        if there is no complex counterpart to the given data type and
+        ``default == None``.
+    """
+    dtype, dtype_in = np.dtype(dtype), dtype
+
+    if is_complex_floating_dtype(dtype):
+        return dtype
+
+    try:
+        complex_dtype = TYPE_MAP_R2C[dtype]
+    except KeyError:
+        if default is not None:
+            return default
+        else:
+            raise ValueError('no complex counterpart exists for `dtype` {}'
+                             ''.format(dtype_repr(dtype_in)))
+    else:
+        return complex_dtype
+
+
 def conj_exponent(exp):
-    """Conjugate exponent p / (p-1).
+    """Conjugate exponent ``exp / (exp - 1)``.
 
     Parameters
     ----------

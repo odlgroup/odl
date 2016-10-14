@@ -31,7 +31,7 @@ from odl.set import (RealNumbers, ComplexNumbers, Set, Field, LinearSpace,
                      LinearSpaceElement)
 from odl.util.utility import (is_real_dtype, is_complex_floating_dtype,
                               preload_first_arg, dtype_repr,
-                              TYPE_MAP_R2C, TYPE_MAP_C2R)
+                              complex_dtype, real_dtype)
 from odl.util.vectorization import (
     is_valid_input_array, is_valid_input_meshgrid,
     out_shape_from_array, out_shape_from_meshgrid, vectorize)
@@ -590,11 +590,11 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if self.field == RealNumbers():
             self.__real_out_dtype = self.out_dtype
             self.__real_space = self
-            self.__complex_out_dtype = TYPE_MAP_R2C.get(self.out_dtype,
-                                                        np.dtype(object))
+            self.__complex_out_dtype = complex_dtype(self.out_dtype,
+                                                     default=np.dtype(object))
             self.__complex_space = None
         elif self.field == ComplexNumbers():
-            self.__real_out_dtype = TYPE_MAP_C2R[self.out_dtype]
+            self.__real_out_dtype = real_dtype(self.out_dtype)
             self.__real_space = None
             self.__complex_out_dtype = self.out_dtype
             self.__complex_space = self
@@ -956,7 +956,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if is_real_dtype(self.out_dtype):
             return x
         else:
-            rdtype = TYPE_MAP_C2R.get(self.out_dtype, None)
+            rdtype = real_dtype(self.out_dtype)
             rspace = self.astype(rdtype)
             return rspace.element(realpart_oop)
 
@@ -970,7 +970,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
         if is_real_dtype(self.out_dtype):
             return self.zero()
         else:
-            rdtype = TYPE_MAP_C2R.get(self.out_dtype, None)
+            rdtype = real_dtype(self.out_dtype)
             rspace = self.astype(rdtype)
             return rspace.element(imagpart_oop)
 

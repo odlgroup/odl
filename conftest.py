@@ -21,14 +21,22 @@ from __future__ import print_function, division, absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-import pytest
+import numpy as np
 import operator
+import pytest
+
 import odl
-from odl.trafos.wavelet import PYWAVELETS_AVAILABLE
+from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
+from odl.util import dtype_repr
+
 
 collect_ignore = ['setup.py', 'run_tests.py']
 
-if not PYWAVELETS_AVAILABLE:
+if not PYFFTW_AVAILABLE:
+    collect_ignore.append('odl/trafos/backends/pyfftw_bindings.py')
+if not PYWT_AVAILABLE:
+    collect_ignore.append('odl/trafos/backends/pywt_bindings.py')
+    # Currently `pywt` is the only implementation
     collect_ignore.append('odl/trafos/wavelet.py')
 
 
@@ -63,6 +71,30 @@ def ntuples_impl(request):
 
 ufunc_params = [ufunc for ufunc in odl.util.ufuncs.UFUNCS]
 ufunc_ids = [' ufunc={} '.format(p[0]) for p in ufunc_params]
+
+
+floating_dtype_params = np.sctypes['float'] + np.sctypes['complex']
+floating_dtype_ids = [' dtype={} '.format(dtype_repr(dt))
+                      for dt in floating_dtype_params]
+
+
+@pytest.fixture(scope="module", ids=floating_dtype_ids,
+                params=floating_dtype_params)
+def floating_dtype(request):
+    return request.param
+
+
+scalar_dtype_params = (floating_dtype_params +
+                       np.sctypes['int'] +
+                       np.sctypes['uint'])
+scalar_dtype_ids = [' dtype={} '.format(dtype_repr(dt))
+                    for dt in scalar_dtype_params]
+
+
+@pytest.fixture(scope="module", ids=scalar_dtype_ids,
+                params=scalar_dtype_params)
+def scalar_dtype(request):
+    return request.param
 
 
 @pytest.fixture(scope="module", ids=ufunc_ids, params=ufunc_params)

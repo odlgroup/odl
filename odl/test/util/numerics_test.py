@@ -24,9 +24,123 @@ standard_library.install_aliases()
 import numpy as np
 import pytest
 
-from odl.util import apply_on_boundary, fast_1d_tensor_mult, resize_array
+from odl.util import (
+    apply_on_boundary, fast_1d_tensor_mult, resize_array, is_real_dtype)
 from odl.util.numerics import _SUPPORTED_RESIZE_PAD_MODES
 from odl.util.testutils import all_equal, almost_equal
+
+
+# --- pytest fixtures --- #
+
+
+paddings = list(_SUPPORTED_RESIZE_PAD_MODES)
+paddings.remove('constant')
+paddings.extend([('constant', 0), ('constant', 1)])
+padding_ids = [" pad_mode = '{}' {} ".format(*p)
+               if isinstance(p, tuple)
+               else " pad_mode = '{}' ".format(p)
+               for p in paddings]
+
+
+@pytest.fixture(scope="module", ids=padding_ids, params=paddings)
+def padding(request):
+    if isinstance(request.param, tuple):
+        pad_mode, pad_const = request.param
+    else:
+        pad_mode = request.param
+        pad_const = 0
+
+    return pad_mode, pad_const
+
+
+variants = ['extend', 'restrict', 'mixed']
+variant_ids = [" variant = '{}' ".format(v) for v in variants]
+
+
+@pytest.fixture(scope="module", ids=variant_ids, params=variants)
+def variant(request):
+    return request.param
+
+
+@pytest.fixture(scope="module")
+def resize_setup(padding, variant):
+    array_in = [[1, 2, 3, 4],
+                [5, 6, 7, 8],
+                [9, 10, 11, 12]]
+
+    pad_mode, pad_const = padding
+
+    if variant == 'extend':
+        newshp = (4, 7)
+        offset = (1, 2)
+
+        if pad_mode == 'constant' and pad_const == 0:
+            true_out = [[0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 1, 2, 3, 4, 0],
+                        [0, 0, 5, 6, 7, 8, 0],
+                        [0, 0, 9, 10, 11, 12, 0]]
+        elif pad_mode == 'constant' and pad_const == 1:
+            true_out = [[1, 1, 1, 1, 1, 1, 1],
+                        [1, 1, 1, 2, 3, 4, 1],
+                        [1, 1, 5, 6, 7, 8, 1],
+                        [1, 1, 9, 10, 11, 12, 1]]
+        elif pad_mode == 'periodic':
+            true_out = [[11, 12, 9, 10, 11, 12, 9],
+                        [3, 4, 1, 2, 3, 4, 1],
+                        [7, 8, 5, 6, 7, 8, 5],
+                        [11, 12, 9, 10, 11, 12, 9]]
+        elif pad_mode == 'symmetric':
+            true_out = [[7, 6, 5, 6, 7, 8, 7],
+                        [3, 2, 1, 2, 3, 4, 3],
+                        [7, 6, 5, 6, 7, 8, 7],
+                        [11, 10, 9, 10, 11, 12, 11]]
+        elif pad_mode == 'order0':
+            true_out = [[1, 1, 1, 2, 3, 4, 4],
+                        [1, 1, 1, 2, 3, 4, 4],
+                        [5, 5, 5, 6, 7, 8, 8],
+                        [9, 9, 9, 10, 11, 12, 12]]
+        elif pad_mode == 'order1':
+            true_out = [[-5, -4, -3, -2, -1, 0, 1],
+                        [-1, 0, 1, 2, 3, 4, 5],
+                        [3, 4, 5, 6, 7, 8, 9],
+                        [7, 8, 9, 10, 11, 12, 13]]
+
+    elif variant == 'restrict':
+        newshp = (2, 1)
+        offset = (1, 2)
+
+        true_out = [[7],
+                    [11]]
+
+    elif variant == 'mixed':
+        newshp = (2, 7)
+        offset = (1, 2)
+
+        if pad_mode == 'constant' and pad_const == 0:
+            true_out = [[0, 0, 5, 6, 7, 8, 0],
+                        [0, 0, 9, 10, 11, 12, 0]]
+        elif pad_mode == 'constant' and pad_const == 1:
+            true_out = [[1, 1, 5, 6, 7, 8, 1],
+                        [1, 1, 9, 10, 11, 12, 1]]
+        elif pad_mode == 'periodic':
+            true_out = [[7, 8, 5, 6, 7, 8, 5],
+                        [11, 12, 9, 10, 11, 12, 9]]
+        elif pad_mode == 'symmetric':
+            true_out = [[7, 6, 5, 6, 7, 8, 7],
+                        [11, 10, 9, 10, 11, 12, 11]]
+        elif pad_mode == 'order0':
+            true_out = [[5, 5, 5, 6, 7, 8, 8],
+                        [9, 9, 9, 10, 11, 12, 12]]
+        elif pad_mode == 'order1':
+            true_out = [[3, 4, 5, 6, 7, 8, 9],
+                        [7, 8, 9, 10, 11, 12, 13]]
+        else:
+            raise ValueError('unknown param')
+
+    else:
+        raise ValueError('unknown variant')
+
+    return pad_mode, pad_const, newshp, offset, array_in, true_out
 
 
 # --- apply_on_boundary --- #
@@ -224,133 +338,14 @@ def test_fast_1d_tensor_mult_error():
 # --- resize_array --- #
 
 
-dtype_params = ['float64', 'complex64', 'int64']
-dtype_ids = [' dtype = {} '.format(p) for p in dtype_params]
-
-
-@pytest.fixture(scope="module", ids=dtype_ids, params=dtype_params)
-def dtype(request):
-    return request.param
-
-
-paddings = list(_SUPPORTED_RESIZE_PAD_MODES)
-paddings.remove('constant')
-paddings.extend([('constant', 0), ('constant', 1)])
-padding_ids = [" pad_mode = '{}' {} ".format(*p)
-               if isinstance(p, tuple)
-               else " pad_mode = '{}' ".format(p)
-               for p in paddings]
-
-
-@pytest.fixture(scope="module", ids=padding_ids, params=paddings)
-def padding(request):
-    if isinstance(request.param, tuple):
-        pad_mode, pad_const = request.param
-    else:
-        pad_mode = request.param
-        pad_const = 0
-
-    return pad_mode, pad_const
-
-
-variants = ['extend', 'restrict', 'mixed']
-variant_ids = [" variant = '{}' ".format(v) for v in variants]
-
-
-@pytest.fixture(scope="module", ids=variant_ids, params=variants)
-def variant(request):
-    return request.param
-
-
-@pytest.fixture(scope="module")
-def resize_setup(padding, variant):
-    array_in = [[1, 2, 3, 4],
-                [5, 6, 7, 8],
-                [9, 10, 11, 12]]
-
-    pad_mode, pad_const = padding
-
-    if variant == 'extend':
-        newshp = (4, 7)
-        offset = (1, 2)
-
-        if pad_mode == 'constant' and pad_const == 0:
-            true_out = [[0, 0, 0, 0, 0, 0, 0],
-                        [0, 0, 1, 2, 3, 4, 0],
-                        [0, 0, 5, 6, 7, 8, 0],
-                        [0, 0, 9, 10, 11, 12, 0]]
-        elif pad_mode == 'constant' and pad_const == 1:
-            true_out = [[1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 2, 3, 4, 1],
-                        [1, 1, 5, 6, 7, 8, 1],
-                        [1, 1, 9, 10, 11, 12, 1]]
-        elif pad_mode == 'periodic':
-            true_out = [[11, 12, 9, 10, 11, 12, 9],
-                        [3, 4, 1, 2, 3, 4, 1],
-                        [7, 8, 5, 6, 7, 8, 5],
-                        [11, 12, 9, 10, 11, 12, 9]]
-        elif pad_mode == 'symmetric':
-            true_out = [[7, 6, 5, 6, 7, 8, 7],
-                        [3, 2, 1, 2, 3, 4, 3],
-                        [7, 6, 5, 6, 7, 8, 7],
-                        [11, 10, 9, 10, 11, 12, 11]]
-        elif pad_mode == 'order0':
-            true_out = [[1, 1, 1, 2, 3, 4, 4],
-                        [1, 1, 1, 2, 3, 4, 4],
-                        [5, 5, 5, 6, 7, 8, 8],
-                        [9, 9, 9, 10, 11, 12, 12]]
-        elif pad_mode == 'order1':
-            true_out = [[-5, -4, -3, -2, -1, 0, 1],
-                        [-1, 0, 1, 2, 3, 4, 5],
-                        [3, 4, 5, 6, 7, 8, 9],
-                        [7, 8, 9, 10, 11, 12, 13]]
-
-    elif variant == 'restrict':
-        newshp = (2, 1)
-        offset = (1, 2)
-
-        true_out = [[7],
-                    [11]]
-
-    elif variant == 'mixed':
-        newshp = (2, 7)
-        offset = (1, 2)
-
-        if pad_mode == 'constant' and pad_const == 0:
-            true_out = [[0, 0, 5, 6, 7, 8, 0],
-                        [0, 0, 9, 10, 11, 12, 0]]
-        elif pad_mode == 'constant' and pad_const == 1:
-            true_out = [[1, 1, 5, 6, 7, 8, 1],
-                        [1, 1, 9, 10, 11, 12, 1]]
-        elif pad_mode == 'periodic':
-            true_out = [[7, 8, 5, 6, 7, 8, 5],
-                        [11, 12, 9, 10, 11, 12, 9]]
-        elif pad_mode == 'symmetric':
-            true_out = [[7, 6, 5, 6, 7, 8, 7],
-                        [11, 10, 9, 10, 11, 12, 11]]
-        elif pad_mode == 'order0':
-            true_out = [[5, 5, 5, 6, 7, 8, 8],
-                        [9, 9, 9, 10, 11, 12, 12]]
-        elif pad_mode == 'order1':
-            true_out = [[3, 4, 5, 6, 7, 8, 9],
-                        [7, 8, 9, 10, 11, 12, 13]]
-        else:
-            raise ValueError('unknown param')
-
-    else:
-        raise ValueError('unknown variant')
-
-    return pad_mode, pad_const, newshp, offset, array_in, true_out
-
-
-def test_resize_array_fwd(resize_setup, dtype):
+def test_resize_array_fwd(resize_setup, scalar_dtype):
     pad_mode, pad_const, newshp, offset, array_in, true_out = resize_setup
-    array_in = np.array(array_in, dtype=dtype)
-    true_out = np.array(true_out, dtype=dtype)
+    array_in = np.array(array_in, dtype=scalar_dtype)
+    true_out = np.array(true_out, dtype=scalar_dtype)
 
     resized = resize_array(array_in, newshp, offset, pad_mode, pad_const,
                            direction='forward')
-    out = np.empty(newshp, dtype=dtype)
+    out = np.empty(newshp, dtype=scalar_dtype)
     resize_array(array_in, newshp, offset, pad_mode, pad_const,
                  direction='forward', out=out)
 
@@ -358,17 +353,15 @@ def test_resize_array_fwd(resize_setup, dtype):
     assert np.array_equal(out, true_out)
 
 
-def test_resize_array_adj(resize_setup, dtype):
+def test_resize_array_adj(resize_setup, floating_dtype):
     pad_mode, pad_const, newshp, offset, array, _ = resize_setup
 
     if pad_const != 0:
         # Not well-defined
         return
 
-    array = np.array(array, dtype=dtype)
-    if dtype == 'int64':
-        other_arr = np.random.randint(-10, 10, size=newshp)
-    elif dtype == 'float64':
+    array = np.array(array, dtype=floating_dtype)
+    if is_real_dtype(floating_dtype):
         other_arr = np.random.uniform(-10, 10, size=newshp)
     else:
         other_arr = (np.random.uniform(-10, 10, size=newshp) +
@@ -383,14 +376,14 @@ def test_resize_array_adj(resize_setup, dtype):
                         np.vdot(array.ravel(), resized_adj.ravel()))
 
 
-def test_resize_array_corner_cases(dtype, padding):
+def test_resize_array_corner_cases(scalar_dtype, padding):
     # Test extreme cases of resizing that are still valid for several
     # `pad_mode`s
 
     pad_mode, pad_const = padding
 
     # Test array
-    arr = np.arange(12, dtype=dtype).reshape((3, 4))
+    arr = np.arange(12, dtype=scalar_dtype).reshape((3, 4))
 
     # Resize to and from 0 total size
     squashed_arr = resize_array(arr, (3, 0), pad_mode=pad_mode)
@@ -404,18 +397,18 @@ def test_resize_array_corner_cases(dtype, padding):
         true_blownup_arr = np.empty_like(arr)
         true_blownup_arr.fill(pad_const)
 
-        blownup_arr = resize_array(np.ones((3, 0), dtype=dtype), (3, 4),
+        blownup_arr = resize_array(np.ones((3, 0), dtype=scalar_dtype), (3, 4),
                                    pad_mode=pad_mode, pad_const=pad_const)
         assert np.array_equal(blownup_arr, true_blownup_arr)
 
-        blownup_arr = resize_array(np.ones((0, 0), dtype=dtype), (3, 4),
+        blownup_arr = resize_array(np.ones((0, 0), dtype=scalar_dtype), (3, 4),
                                    pad_mode=pad_mode, pad_const=pad_const)
         assert np.array_equal(blownup_arr, true_blownup_arr)
 
     # Resize from 0 axes to 0 axes
-    zero_axes_arr = resize_array(np.array(0, dtype=dtype), (),
+    zero_axes_arr = resize_array(np.array(0, dtype=scalar_dtype), (),
                                  pad_mode=pad_mode)
-    assert zero_axes_arr == np.array(0, dtype=dtype)
+    assert zero_axes_arr == np.array(0, dtype=scalar_dtype)
 
     if pad_mode == 'periodic':
         # Resize with periodic padding, using all values from the original
@@ -505,4 +498,4 @@ def test_resize_array_raise():
         resize_array(small_arr, (3, 4), offset=(0, 1), pad_mode='periodic')
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main(str(__file__.replace('\\', '/')), ' -v')
