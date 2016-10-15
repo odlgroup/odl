@@ -25,7 +25,6 @@ from builtins import int, object
 
 from itertools import zip_longest
 import numpy as np
-from numpy import ravel_multi_index, prod
 import sys
 import os
 from time import time
@@ -534,13 +533,13 @@ class ProgressBar(object):
         if indices:
             if len(indices) != len(self.njobs):
                 raise ValueError('number of indices not correct')
-            self.index = ravel_multi_index(indices, self.njobs) + 1
+            self.index = np.ravel_multi_index(indices, self.njobs) + 1
         else:
             self.index += 1
 
         # Find progress as ratio between 0 and 1
         # offset by 1 for zero indexing
-        progress = self.index / prod(self.njobs)
+        progress = self.index / np.prod(self.njobs)
 
         # Write a progressbar and percent
         if progress < 1.0:
@@ -583,7 +582,13 @@ class ProgressRange(object):
 
 def test(arguments=None):
     """Run ODL tests given by arguments."""
-    import pytest
+    try:
+        import pytest
+    except ImportError:
+        raise ImportError('ODL tests cannot be run without `pytest` installed.'
+                          '\nRun `$ pip install [--user] odl[testing]` in '
+                          'order to install `pytest`.')
+
     this_dir = os.path.dirname(__file__)
     odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
     base_args = ['-x', '{root}/odl'.format(root=odl_root)]
