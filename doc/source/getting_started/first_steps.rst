@@ -1,10 +1,9 @@
-.. _first_steps_in_odl:
+.. _first_steps:
 
 ##################
-First steps in ODL
+First steps
 ##################
 
-Welcome to the ODL getting started guide.
 This guide is intended to give you a simple introduction to ODL and how to work with it.
 If you need help with a specific function you should look at the `ODL API reference <https://odlgroup.github.io/odl/odl.html>`_.
 
