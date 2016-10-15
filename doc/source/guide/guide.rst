@@ -1,12 +1,20 @@
 .. _users_guide:
 
-###################
-User's guide to ODL
-###################
+###############################
+User's guide -- selected topics
+###############################
 
-Welcome to the ODL users guide, this guide is intended to give you a simple introduction to ODL and how to work with it. If you need help on a specific function you should look at its documentation.
+Welcome to the ODL user's guide.
+This section contains in-depth explanations of selected topics in ODL.
+It is intended to familiarize you with important concepts that can be hard to infer from the API documentation and the overall introduction only.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
-    in_depth/index
+    operator_guide
+    linearspace_guide
+    functional_guide
+    vectorization_guide
+    numpy_guide
+    proximal_lang_guide
+    chambolle_pock_guide
