@@ -804,6 +804,16 @@ class FunctionalTranslation(Functional):
             self.functional.convex_conj,
             self.translation)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{!r}.translated({!r})'.format(self.functional,
+                                              self.translation)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return '{}.translated({})'.format(self.functional,
+                                          self.translation)
+
 
 class FunctionalLinearPerturb(Functional):
 
@@ -883,6 +893,16 @@ proximal_quadratic_perturbation
         """
         return self.functional.convex_conj.translated(
             self.linear_term)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.functional, self.linear_term)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return '{}({}, {})'.format(self.__class__.__name__,
+                                   self.functional, self.linear_term)
 
 
 class FunctionalProduct(Functional, OperatorPointwiseProduct):
@@ -1025,6 +1045,16 @@ class FunctionalQuotient(Functional):
         return FunctionalQuotientGradient(self.domain, self.domain,
                                           linear=False)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.dividend, self.divisor)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return '{}({}, {})'.format(self.__class__.__name__,
+                                   self.dividend, self.divisor)
+
 
 class FunctionalDefaultConvexConjugate(Functional):
 
@@ -1077,6 +1107,14 @@ class FunctionalDefaultConvexConjugate(Functional):
             Proximal computed using the Moreu identity
         """
         return proximal_cconj(self.convex_conj.proximal)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{!r}.convex_conj'.format(self.convex_conj)
+
+    def __str__(self):
+        """Return ``str(self)``."""
+        return '{}.convex_conj'.format(self.convex_conj)
 
 
 def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
