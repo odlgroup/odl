@@ -236,7 +236,7 @@ class IndicatorLpUnitBall(Functional):
     def __repr__(self):
         """Return ``repr(self)``."""
         return '{}({!r},{!r})'.format(self.__class__.__name__,
-                                      self.space, self.exponent)
+                                      self.domain, self.exponent)
 
 
 class L2Norm(Functional):
