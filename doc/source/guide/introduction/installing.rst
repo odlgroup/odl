@@ -22,7 +22,7 @@ If you are a Python novice using Windows, we recommend that you install a full p
 
    user$ conda update --all
 		
-to make sure you have the latest versions of all packages
+to make sure you have the latest versions of all packages.
 
 What Python version to use
 --------------------------
@@ -30,11 +30,12 @@ Any modern Python distribution should do for the core library, but some extensio
 
 ODL fully supports both Python 2 and Python 3, so if you already have a Python distribution (as is the case on most linux distributions) it may be a good idea to keep using it. If you are making a new installation we recommend using Python 3, since Python 2 support will be discontinued in 2020.
 
-Development enviroment
+Development environment
 ----------------------
 Since ODL is object oriented, using an Integrated Development Environment (IDE) is recommended, but not required. The most popular ones are `Spyder
 <https://pythonhosted.org/spyder/>`_ which works on all major platforms and can be installed through ``pip``, and `PyCharm
-<https://www.jetbrains.com/pycharm/>`_ which can be integrated with any text editor of your choice, such as EMACS or Vim.
+<https://www.jetbrains.com/pycharm/>`_ which can be integrated with any text editor of your choice, such as EMACS or Vim. On windows, `Python Tools for Visual Studio
+<https://www.visualstudio.com/vs/python/>`_ is also a valid option, especially for users who are used to Visual Studio.
 
 Install ODL
 ===========
@@ -90,6 +91,8 @@ Possible choices:
   Note also that even without this dependency, FFTs can be computed with Numpy's FFT library.
 - ``wavelets`` : Install PyWavelets_ for wavelet transforms.
 
+These dependencies are optional and may not be easy to install on your system. In general, a clean ODL installation is enough for most users initial needs.
+
 .. _matplotlib: http://matplotlib.org/
 .. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
 .. _FFTW: http://fftw.org/
@@ -109,7 +112,7 @@ No GitHub account is required for this step. For installation in a local user fo
 
 .. code-block:: bash
 
-   user$ pip install --user --editable .
+   user$ pip install [--user] [--editable] .
 
 **Don't forget the "." (dot) at the end** - it refers to the current directory, the location from where ``pip`` is supposed to install ODL.
 
@@ -152,16 +155,23 @@ Unit tests in ODL are based on pytest_, and coverage reports are created by the 
 
 .. code-block:: bash
 
-   user$ pip install --user -e .[testing]
+   user$ pip install [--user] odl[testing]
 
 Now you can check that everything was installed properly by running
 
 .. code-block:: bash
 
-   user$ py.test
+   user$ python -c "import odl; odl.test()"
+   
+If you have installed ODL from source, you can also use pytest directly
+
+.. code-block:: bash
+    
+   user$ pytest
 
 .. _pytest: https://pypi.python.org/pypi/pytest
 .. _coverage: https://pypi.python.org/pypi/coverage/
+
 
 Compiled extensions
 ===================
@@ -169,16 +179,15 @@ There are several extensions to ODL that require you to compile external code, t
 
 CUDA backend for linear arrays
 ------------------------------
-If you also wish to use the (optional) CUDA extensions you need to run
+If you also wish to use the (optional) CUDA extensions you need to run (in a directory of your choice)
 
 .. code-block:: bash
 
-    user$ git submodule update --init --recursive
-    user$ cd odlpp
+    user$ git clone https://github.com/odlgroup/odlcuda
 
-From here follow the instructions in odlpp_ to build and install it.
+From here follow the instructions in odlcuda_ to build and install it.
 
-.. _odlpp: https://github.com/odlgroup/odlpp
+.. _odlcuda: https://github.com/odlgroup/odlcuda
 
 ASTRA for X-ray tomography
 --------------------------
@@ -198,4 +207,6 @@ for STIR is currently very limited.
 
 Issues
 ======
-If you have any problems during installation, consult the help in the :ref:`FAQ <FAQ>`. If that does not help, make an issue on GitHub and we'll try to assist you promptly.
+If you have any problems during installation, consult the help in the :ref:`FAQ <FAQ>`. If that does not help, `make an issue on GitHub`_ or send us an email (odl@math.kth.se) and we'll try to assist you promptly.
+
+.. _make an issue on GitHub: https://github.com/odlgroup/odl/issues/new
