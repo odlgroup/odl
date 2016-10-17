@@ -1139,44 +1139,44 @@ class SeparableSum(Functional):
 
 class QuadraticForm(Functional):
 
-    """The functional for a general quadratic form ``x^T A x + b^T x + c``."""
+    """Functional for a general quadratic form ``x^T A x + b^T x + c``."""
 
-    def __init__(self, operator=None, offset=None, constant=0):
+    def __init__(self, operator=None, vector=None, constant=0):
         """Initialize a new instance.
 
-        All parameters are optional, but at least one of ``op`` and ``offset``
-        have to be provided in turn to infer the space.
+        All parameters are optional, but at least one of ``op`` and ``vector``
+        have to be provided in order to infer the space.
 
         The computed value is::
 
-            x.inner(operator(x)) + offset.inner(x) + constant
+            x.inner(operator(x)) + vector.inner(x) + constant
 
         Parameters
         ----------
         operator : `Operator`, optional
-            Linear Operator for the quadratic part of the functional.
-            ``None`` means this is ignored.
-        offset : `Operator`, optional
+            Operator for the quadratic part of the functional.
+            ``None`` means that this part is ignored.
+        vector : `Operator`, optional
             Vector for the linear part of the functional.
-            ``None`` means this is ignored.
+            ``None`` means that this part is ignored.
         constant : `Operator`, optional
             Constant offset of the functional.
         """
-        if operator is None and offset is None:
-            raise ValueError('need to provide at least one of ``op`` and '
-                             '``offset``')
+        if operator is None and vector is None:
+            raise ValueError('need to provide at least one of `operator` and '
+                             '`vector`')
         if operator is not None:
             domain = operator.domain
-        elif offset is not None:
-            domain = offset.space
+        elif vector is not None:
+            domain = vector.space
 
-        if (operator is not None and offset is not None and
-                offset not in operator.domain):
-            raise ValueError('domain of `operator` and space of `offset` need '
+        if (operator is not None and vector is not None and
+                vector not in operator.domain):
+            raise ValueError('domain of `operator` and space of `vector` need '
                              'to match')
 
         self.__operator = operator
-        self.__offset = offset
+        self.__vector = vector
         self.__constant = constant
 
         super().__init__(space=domain,
@@ -1192,9 +1192,9 @@ class QuadraticForm(Functional):
         return self.__operator
 
     @property
-    def offset(self):
+    def vector(self):
         """Vector for the linear part of the functional."""
-        return self.__offset
+        return self.__vector
 
     @property
     def constant(self):
@@ -1204,19 +1204,19 @@ class QuadraticForm(Functional):
     def _call(self, x):
         """Return ``self(x)``."""
         if self.operator is None:
-            return self.offset.inner(x) + self.constant
-        elif self.offset is None:
+            return self.vector.inner(x) + self.constant
+        elif self.vector is None:
             return x.inner(self.operator(x)) + self.constant
         else:
             tmp = self.operator(x)
-            tmp += self.offset
+            tmp += self.vector
             return x.inner(tmp) + self.constant
 
     @property
     def gradient(self):
         """Gradient operator of the functional."""
         if self.operator is None:
-            return ConstantOperator(self.domain, self.offset)
+            return ConstantOperator(self.domain, self.vector)
         else:
             if not self.operator.is_linear:
                 # TODO: Acutally works otherwise, but needs more work
@@ -1225,15 +1225,15 @@ class QuadraticForm(Functional):
             # Figure out if operator is symmetric
             opadjoint = self.operator.adjoint
             if opadjoint == self.operator:
-                opgradient = 2 * self.operator
+                gradient = 2 * self.operator
             else:
-                opgradient = self.operator + self.operator.adjoint
+                gradient = self.operator + opadjoint
 
             # Return gradient
-            if self.offset is None:
-                return opgradient
+            if self.vector is None:
+                return gradient
             else:
-                return opgradient + self.offset
+                return gradient + self.vector
 
     @property
     def convex_conj(self):
@@ -1254,19 +1254,19 @@ class QuadraticForm(Functional):
             # Everywhere infinite in this case
             raise ValueError('convex conjugate not defined without operator')
 
-        if self.offset is None:
+        if self.vector is None:
             # Handle trivial case separately
             return QuadraticForm(operator=self.operator.inverse,
                                  constant=-self.constant)
         else:
             # Compute the needed variables
             opinv = self.operator.inverse
-            offset = -opinv.adjoint(self.offset) - opinv(self.offset)
-            constant = self.offset.inner(opinv(self.offset)) - self.constant
+            vector = -opinv.adjoint(self.vector) - opinv(self.vector)
+            constant = self.vector.inner(opinv(self.vector)) - self.constant
 
             # Create new quadratic form
             return QuadraticForm(operator=opinv,
-                                 offset=offset,
+                                 vector=vector,
                                  constant=constant)
 
 
