@@ -82,7 +82,6 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     The mathematical problem to solve is
 
     .. math::
-
        \min_x f(x) + \sum_{i=0}^n (g_i \Box l_i)(L_i x),
 
     where :math:`f`, :math:`g_i`, :math:`l_i` are proper, convex and lower
@@ -90,27 +89,28 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
     convolution :math:`g \Box l` is defined by
 
     .. math::
-
        (g \Box l)(x) = \inf_y g(y) + l(x - y).
 
-    The simplified problem can be obtained by setting
+    The simplified problem,
 
     .. math::
+        \min_x f(x) + \sum_{i=0}^n g_i(L_i x),
 
+    can be obtained by setting
+
+    .. math::
         l(x) = 0 \\text{ if } x = 0, \infty \\text{ else.}
 
     To guarantee convergence, the parameters :math:`\\tau`, :math:`\\sigma_i`
     and :math:`L_i` need to satisfy
 
     .. math::
-
        \\tau \\sum_{i=1}^n \\sigma_i ||L_i||^2 < 4
 
     The parameter :math:`\\lambda` needs to satisfy :math:`0 < \\lambda < 2`
     and if it is given as a function it needs to satisfy
 
     .. math::
-
         \\sum_{n=1}^\infty \\lambda_n (2 - \\lambda_n) = +\infty.
 
     See Also
