@@ -427,19 +427,19 @@ def test_kullback_leibler_cross_entorpy(space):
 def test_quadratic_form(space):
     """Test the quadratic form functional."""
     operator = odl.IdentityOperator(space)
-    offset = space.one()
+    vector = space.one()
     constant = 0.363
-    func = odl.solvers.QuadraticForm(operator, offset, constant)
+    func = odl.solvers.QuadraticForm(operator, vector, constant)
 
     x = noise_element(space)
 
     # Checking that values is stored correctly
     assert func.operator == operator
-    assert func.offset == offset
+    assert func.vector == vector
     assert func.constant == constant
 
     # Evaluation of the functional
-    expected_result = x.inner(operator(x)) + offset.inner(x) + constant
+    expected_result = x.inner(operator(x)) + vector.inner(x) + constant
     assert almost_equal(func(x), expected_result)
 
     # Also test with some values as none
@@ -447,13 +447,13 @@ def test_quadratic_form(space):
     expected_result = x.inner(operator(x)) + constant
     assert almost_equal(func_no_offset(x), expected_result)
 
-    func_no_operator = odl.solvers.QuadraticForm(offset=offset,
+    func_no_operator = odl.solvers.QuadraticForm(vector=vector,
                                                  constant=constant)
-    expected_result = offset.inner(x) + constant
+    expected_result = vector.inner(x) + constant
     assert almost_equal(func_no_operator(x), expected_result)
 
     # The gradient
-    expected_gradient = 2 * operator(x) + offset
+    expected_gradient = 2 * operator(x) + vector
     assert all_almost_equal(func.gradient(x), expected_gradient)
 
     # The convex conjugate
