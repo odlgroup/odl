@@ -1772,7 +1772,7 @@ class OperatorRightScalarMult(Operator):
 
     def __str__(self):
         """Return ``str(self)``."""
-        return '{} * {}'.format(self.operator, self._scalar)
+        return '{} * {}'.format(self.operator, self.scalar)
 
 
 class FunctionalLeftVectorMult(Operator):
