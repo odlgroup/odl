@@ -57,133 +57,53 @@ def offset(request):
     return request.param
 
 
-def make_offset(g, stepsize, convex_conjugate):
-    """Decorator that adds an optional offset with stepsize."""
-    def offset_function(function):
-        if g is None and not convex_conjugate:
-            return lambda x: stepsize * function(x)
-        elif g is None and convex_conjugate:
-            return lambda x: stepsize * function(x)
-        elif g is not None and not convex_conjugate:
-            return lambda x: stepsize * function(x - g)
-        elif g is not None and convex_conjugate:
-            return lambda x: stepsize * (function(x) + x.inner(g))
-        else:
-            assert False
-    return offset_function
-
-prox_params = ['l1 ', 'l1_dual',
-               'l2', 'l2_dual',
-               'l2^2', 'l2^2_dual',
-               'kl_dual', 'kl_cross_ent_dual']
-prox_ids = [' f = {}'.format(p.ljust(10)) for p in prox_params]
+dual_params = [False, True]
+dual_ids = [' offset = {} '.format(str(p).ljust(5)) for p in offset_params]
 
 
-@pytest.fixture(scope="module", ids=prox_ids, params=prox_params)
-def proximal_and_function(request, stepsize, offset):
+@pytest.fixture(scope="module", ids=dual_ids, params=dual_params)
+def dual(request):
+    return request.param
+
+
+func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent']
+func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
+
+
+@pytest.fixture(scope="module", ids=func_ids, params=func_params)
+def functional(request, offset, dual, stepsize):
     """Return a proximal factory and the corresponding function."""
     name = request.param.strip()
 
     space = odl.uniform_discr(0, 1, 2)
 
-    if offset:
-        g = noise_element(space)
-    else:
-        g = None
-
     if name == 'l1':
-        @make_offset(g, stepsize=stepsize, convex_conjugate=False)
-        def l1_norm(x):
-            return np.abs(x).inner(x.space.one())
-
-        prox = proximal_l1(space, g=g)
-
-        return prox(stepsize), l1_norm
-
-    if name == 'l1_dual':
-        @make_offset(g, stepsize=stepsize, convex_conjugate=True)
-        def l1_norm_dual(x):
-            return 0.0 if np.max(np.abs(x)) <= 1.0 else np.Infinity
-
-        prox = proximal_cconj_l1(space, g=g)
-
-        return prox(stepsize), l1_norm_dual
-
+        func = odl.solvers.L1Norm(space)
     elif name == 'l2':
-        @make_offset(g, stepsize=stepsize, convex_conjugate=False)
-        def l2_norm(x):
-            return x.norm()
-
-        prox = proximal_l2(space, g=g)
-
-        return prox(stepsize), l2_norm
-
-    elif name == 'l2_dual':
-        @make_offset(g, stepsize=stepsize, convex_conjugate=True)
-        def l2_norm_dual(x):
-            # numerical margin
-            return 0.0 if x.norm() < 1.00001 else np.Infinity
-
-        prox = proximal_cconj_l2(space, g=g)
-
-        return prox(stepsize), l2_norm_dual
-
+        func = odl.solvers.L2Norm(space)
     elif name == 'l2^2':
-        @make_offset(g, stepsize=stepsize, convex_conjugate=False)
-        def l2_norm_squared(x):
-            return x.norm() ** 2
-
-        prox = proximal_l2_squared(space, g=g)
-
-        return prox(stepsize), l2_norm_squared
-
-    elif name == 'l2^2_dual':
-        @make_offset(g, stepsize=stepsize, convex_conjugate=True)
-        def l2_norm_squared_dual(x):
-            return (1.0 / 4.0) * x.norm() ** 2
-
-        prox = proximal_cconj_l2_squared(space, g=g)
-
-        return prox(stepsize), l2_norm_squared_dual
-
-    elif name == 'kl_dual':
-        if g is not None:
-            g = np.abs(g)
-
-        def kl_divergence_dual(x):
-            if np.greater_equal(x, 1):
-                return np.Infinity
-            else:
-                one_element = x.space.one()
-                if g is None:
-                    return stepsize * one_element.inner(
-                        np.log(one_element - x))
-                else:
-                    return stepsize * one_element.inner(
-                        g * np.log(one_element - x))
-
-        prox = proximal_cconj_kl(space, g=g)
-
-        return prox(stepsize), kl_divergence_dual
-
-    elif name == 'kl_cross_ent_dual':
-        if g is not None:
-            g = np.abs(g)
-
-        def kl_divergence_cross_entropy_dual(x):
-            one_element = x.space.one()
-            if g is None:
-                return stepsize * one_element.inner(np.exp(x) - one_element)
-            else:
-                return stepsize * one_element.inner(
-                    g * (np.exp(x) - one_element))
-
-        prox = proximal_cconj_kl_cross_entropy(space, g=g)
-
-        return prox(stepsize), kl_divergence_cross_entropy_dual
-
+        func = odl.solvers.L2NormSquared(space)
+    elif name == 'kl':
+        func = odl.solvers.KullbackLeibler(space)
+    elif name == 'kl_cross_ent':
+        func = odl.solvers.KullbackLeiblerCrossEntropy(space)
     else:
         assert False
+
+    if offset:
+        g = noise_element(space)
+        if name.startswith('kl'):
+            g = np.abs(g)
+        func = func.translated(g)
+
+    if dual:
+        func = func.convex_conj
+
+    return func
+
+
+# Margin of error
+EPS = 1e-6
 
 
 def proximal_objective(function, x, y):
@@ -191,7 +111,7 @@ def proximal_objective(function, x, y):
     return function(y) + (1.0 / 2.0) * (x - y).norm() ** 2
 
 
-def test_proximal_defintion(proximal_and_function):
+def test_proximal_defintion(functional, stepsize):
     """Test the defintion of the proximal:
 
         prox[f](x) = argmin_y {f(y) + 1/2 ||x-y||^2}
@@ -202,23 +122,25 @@ def test_proximal_defintion(proximal_and_function):
 
         f(x*) + 1/2 ||x-x*||^2 < f(y) + 1/2 ||x-y||^2
     """
-
-    proximal, function = proximal_and_function
+    proximal = functional.proximal(stepsize)
 
     assert proximal.domain == proximal.range
 
     x = noise_element(proximal.domain) * 10
-    f_x = proximal_objective(function, x, x)
+    f_x = proximal_objective(stepsize * functional, x, x)
     prox_x = proximal(x)
-    f_prox_x = proximal_objective(function, x, prox_x)
+    f_prox_x = proximal_objective(stepsize * functional, x, prox_x)
 
-    assert f_prox_x <= f_x
+    assert f_prox_x <= f_x + EPS
 
     for i in range(100):
         y = noise_element(proximal.domain)
-        f_y = proximal_objective(function, x, y)
+        f_y = proximal_objective(stepsize * functional, x, y)
 
-        assert f_prox_x <= f_y
+        if not f_prox_x <= f_y + EPS:
+            print(functional, x, y, f_prox_x, f_y)
+
+        assert f_prox_x <= f_y + EPS
 
 
 def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
@@ -247,16 +169,15 @@ def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
     id_op = odl.IdentityOperator(space)
     lin_ops = [id_op, id_op]
     lam_kl = 2.3
-    prox_cc_g = [odl.solvers.proximal_cconj_kl_cross_entropy(space, lam=lam_kl,
-                                                             g=g),
-                 odl.solvers.proximal_cconj_l2_squared(space, lam=1.0 / 2.0,
-                                                       g=a)]
-    prox_f = odl.solvers.proximal_const_func(space)
+    kl_ce = odl.solvers.KullbackLeiblerCrossEntropy(space, prior=g)
+    g_funcs = [lam_kl * kl_ce,
+               0.5 * odl.solvers.L2NormSquared(space).translated(a)]
+    f = odl.solvers.ZeroFunctional(space)
 
     # Staring point
     x = space.zero()
 
-    odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
+    odl.solvers.douglas_rachford_pd(x, f, g_funcs, lin_ops,
                                     tau=2.1, sigma=[0.4, 0.4], niter=100)
 
     # Explicit solution: x = W(g * exp(a)), where W is the Lambert W function.
