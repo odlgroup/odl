@@ -724,7 +724,8 @@ def proximal_l2(space, lam=1, g=None):
         def _call(self, x, out):
             """Apply the operator to ``x`` and stores the result in ``out``."""
 
-            eps = np.finfo(float).resolution * 10
+            dtype = getattr(self.domain, 'dtype', float)
+            eps = np.finfo(dtype).resolution * 10
 
             if g is None:
                 x_norm = x.norm() * (1 + eps)

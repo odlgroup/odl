@@ -608,7 +608,7 @@ class IndicatorNonnegativity(IndicatorBox):
 
     def __repr__(self):
         """Return ``repr(self)``."""
-        return '{}()'.format(self.__class__.__name__)
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 class KullbackLeibler(Functional):

@@ -72,7 +72,7 @@ func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
 
 @pytest.fixture(scope="module", ids=func_ids, params=func_params)
 def functional(request, offset, dual, stepsize):
-    """Return a proximal factory and the corresponding function."""
+    """Return functional whose proximal should be tested."""
     name = request.param.strip()
 
     space = odl.uniform_discr(0, 1, 2)
@@ -120,7 +120,7 @@ def test_proximal_defintion(functional, stepsize):
 
         x* = prox[f](x)
 
-        f(x*) + 1/2 ||x-x*||^2 < f(y) + 1/2 ||x-y||^2
+        f(x*) + 1/2 ||x-x*||^2 <= f(y) + 1/2 ||x-y||^2
     """
     proximal = functional.proximal(stepsize)
 
@@ -144,7 +144,7 @@ def test_proximal_defintion(functional, stepsize):
 
 
 def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
-    """Test for proximal operator of conjguate of 2nd kind KL-divergecen.
+    """Test for proximal operator of conjguate of 2nd kind KL-divergence.
 
     The test solves the problem
 
