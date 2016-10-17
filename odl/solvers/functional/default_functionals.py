@@ -24,6 +24,7 @@ standard_library.install_aliases()
 from builtins import super
 
 import numpy as np
+import scipy
 
 from odl.solvers.functional.functional import Functional
 from odl.operator import Operator, ConstantOperator
@@ -919,9 +920,9 @@ class KullbackLeiblerCrossEntropy(Functional):
         infinity.
         """
         if self.prior is None:
-            tmp = ((1 - x + x * np.log(x)).inner(self.domain.one()))
+            tmp = (1 - x + scipy.special.xlogy(x, x)).inner(self.domain.one())
         else:
-            tmp = ((self.prior - x + x * np.log(x / self.prior))
+            tmp = ((self.prior - x + scipy.special.xlogy(x, x / self.prior))
                    .inner(self.domain.one()))
         if np.isnan(tmp):
             # In this case, some element was less than or equal to zero
