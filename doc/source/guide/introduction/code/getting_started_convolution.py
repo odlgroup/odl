@@ -96,13 +96,12 @@ grad = odl.Gradient(space)
 lin_ops = [A, grad]
 a = 0.001
 
-# Create proximals operators corresponding to the convex conjugate (cconj)
-# of the l2 and l1 norms.
-prox_cc_g = [odl.solvers.proximal_cconj_l2_squared(space, g=g),
-             odl.solvers.proximal_cconj_l1(grad.range, lam=a)]
+# Create functionals for the l2 distance and l1 norm.
+g_funcs = [odl.solvers.L2NormSquared(space).translated(g),
+           a * odl.solvers.L1Norm(grad.range)]
 
-# Proximal of the bound constraint 0 <= f <= 1
-prox_f = odl.solvers.proximal_box_constraint(space, 0, 1)
+# Functional of the bound constraint 0 <= f <= 1
+f = odl.solvers.IndicatorBox(space, 0, 1)
 
 # Find scaling constants so that the solver converges.
 # See the douglas_rachford_pd documentation for more information.
@@ -113,6 +112,6 @@ tau = 1.0
 
 # Solve using the Douglas-Rachford Primal-Dual method
 x = space.zero()
-odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
+odl.solvers.douglas_rachford_pd(x, f, g_funcs, lin_ops,
                                 tau=tau, sigma=sigma, niter=100)
 x.show('TV Douglas-Rachford', show=True)
