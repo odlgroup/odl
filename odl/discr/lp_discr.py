@@ -275,7 +275,6 @@ class DiscreteLp(DiscretizedSpace):
         Elements can be created from array-like objects that represent
         an already discretized function:
 
-        >>> import odl
         >>> space = odl.uniform_discr(-1, 1, 4)
         >>> space.element([1, 2, 3, 4])
         uniform_discr(-1.0, 1.0, 4).element([1.0, 2.0, 3.0, 4.0])
@@ -909,8 +908,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
 
     Examples
     --------
-    >>> from odl import uniform_partition
-    >>> part = uniform_partition(0, 1, 10)
+    >>> part = odl.uniform_partition(0, 1, 10)
     >>> uniform_discr_frompartition(part)
     uniform_discr(0.0, 1.0, 10)
 
@@ -1024,9 +1022,8 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
 
     Examples
     --------
-    >>> from odl import IntervalProd, FunctionSpace
-    >>> intv = IntervalProd(0, 1)
-    >>> space = FunctionSpace(intv)
+    >>> intv = odl.IntervalProd(0, 1)
+    >>> space = odl.FunctionSpace(intv)
     >>> uniform_discr_fromspace(space, 10)
     uniform_discr(0.0, 1.0, 10)
 
@@ -1140,7 +1137,6 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
 
     Examples
     --------
-    >>> from odl import IntervalProd
     >>> intv = IntervalProd(0, 1)
     >>> uniform_discr_fromintv(intv, 10)
     uniform_discr(0.0, 1.0, 10)

@@ -349,8 +349,6 @@ class DiscretizedSetElement(NtuplesBaseVector):
 
         Examples
         --------
-        >>> import odl
-        >>> import numpy as np
         >>> X = odl.uniform_discr(0, 1, 5)
         >>> x = X.element()
 
@@ -378,9 +376,6 @@ class DiscretizedSetElement(NtuplesBaseVector):
 
         Examples
         --------
-        >>> import odl
-        >>> import numpy as np
-
         Create continuous version of a discrete 1d function with nearest
         neighbour interpolation:
 

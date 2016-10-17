@@ -77,7 +77,6 @@ class RosenbrockFunctional(Functional):
         --------
         Initialize and call the functional:
 
-        >>> import odl
         >>> r2 = odl.rn(2)
         >>> functional = RosenbrockFunctional(r2)
         >>> functional([1, 1])  # optimum is 0 at [1, 1]
@@ -94,7 +93,6 @@ class RosenbrockFunctional(Functional):
 
         We can change how much the function is ill behaved via ``scale``:
 
-        >>> import odl
         >>> r2 = odl.rn(2)
         >>> functional = RosenbrockFunctional(r2, scale=2)
         >>> functional([1, 1])  # optimum is still 0 at [1, 1]

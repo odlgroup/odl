@@ -55,7 +55,6 @@ class ScalingOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> out = r3.element()
@@ -93,7 +92,6 @@ class ScalingOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> vec = r3.element([1, 2, 3])
         >>> op = ScalingOperator(r3, 2.0)
@@ -177,7 +175,6 @@ class LinCombOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> r3xr3 = odl.ProductSpace(r3, r3)
         >>> xy = r3xr3.element([[1, 2, 3], [1, 2, 3]])
@@ -238,7 +235,6 @@ class MultiplyOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
 
@@ -301,7 +297,6 @@ class MultiplyOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
 
@@ -358,7 +353,6 @@ class PowerOperator(Operator):
         --------
         Use with vectors
 
-        >>> import odl
         >>> op = PowerOperator(odl.rn(3), exponent=2)
         >>> op([1, 2, 3])
         rn(3).element([1.0, 4.0, 9.0])
@@ -406,8 +400,6 @@ class PowerOperator(Operator):
 
         Examples
         --------
-        >>> import odl
-
         Use on vector spaces:
 
         >>> op = PowerOperator(odl.rn(3), exponent=2)
@@ -459,7 +451,6 @@ class InnerProductOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> op = InnerProductOperator(x)
@@ -489,7 +480,6 @@ class InnerProductOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> op = InnerProductOperator(x)
@@ -509,7 +499,6 @@ class InnerProductOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> x.T
@@ -552,7 +541,6 @@ class NormOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r2 = odl.rn(2)
         >>> op = NormOperator(r2)
         >>> op([3, 4])
@@ -597,7 +585,6 @@ class NormOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> op = NormOperator(r3)
         >>> derivative = op.derivative([1, 0, 0])
@@ -644,7 +631,6 @@ class DistOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r2 = odl.rn(2)
         >>> x = r2.element([1, 1])
         >>> op = DistOperator(x)
@@ -697,7 +683,6 @@ class DistOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r2 = odl.rn(2)
         >>> x = r2.element([1, 1])
         >>> op = DistOperator(x)
@@ -746,7 +731,6 @@ class ConstantOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> op = ConstantOperator(x)
@@ -797,7 +781,6 @@ class ConstantOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> r3 = odl.rn(3)
         >>> x = r3.element([1, 2, 3])
         >>> op = ConstantOperator(x)
@@ -835,7 +818,6 @@ class ZeroOperator(Operator):
 
         Examples
         --------
-        >>> import odl
         >>> op = odl.ZeroOperator(odl.rn(3))
         >>> op([1, 2, 3])
         rn(3).element([0.0, 0.0, 0.0])

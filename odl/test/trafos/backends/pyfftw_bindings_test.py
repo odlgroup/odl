@@ -404,4 +404,4 @@ def test_pyfftw_call_backward_with_plan():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/'), ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

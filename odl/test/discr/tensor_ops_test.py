@@ -430,4 +430,4 @@ def test_pointwise_inner_adjoint_weighted():
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')) + ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

@@ -213,4 +213,4 @@ def test_normalized_axes_tuple_raise():
         normalized_axes_tuple((0, 2), ndim=2)  # axis out of range
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/')), ' -v')
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

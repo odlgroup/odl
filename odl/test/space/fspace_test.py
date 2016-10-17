@@ -815,4 +815,4 @@ def other_cfunc_2d_vec_dual(x, out=None):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

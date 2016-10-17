@@ -78,7 +78,6 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
 
     Examples
     --------
-    >>> import numpy as np
     >>> arr = np.ones((3, 3))
     >>> apply_on_boundary(arr, lambda x: x / 2)
     array([[ 0.5,  0.5,  0.5],

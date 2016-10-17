@@ -195,4 +195,4 @@ def test_reconstruction(projector):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v --largescale'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])

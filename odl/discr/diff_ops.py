@@ -105,7 +105,6 @@ class PartialDerivative(PointwiseTensorFieldOperator):
 
         Examples
         --------
-        >>> import odl
         >>> f = np.array([[ 0.,  1.,  2.,  3.,  4.],
         ...               [ 0.,  2.,  4.,  6.,  8.]])
         >>> discr = odl.uniform_discr([0, 0], [2, 1], f.shape)
@@ -242,7 +241,6 @@ class Gradient(PointwiseTensorFieldOperator):
         --------
         Creating a Gradient operator:
 
-        >>> import odl
         >>> dom = odl.uniform_discr([0, 0], [1, 1], (10, 20))
         >>> ran = odl.ProductSpace(dom, dom.ndim)  # 2-dimensional
         >>> grad_op = Gradient(dom)
@@ -430,7 +428,6 @@ class Divergence(PointwiseTensorFieldOperator):
         --------
         Initialize a Divergence opeator:
 
-        >>> import odl
         >>> ran = odl.uniform_discr([0, 0], [3, 5], (3, 5))
         >>> dom = odl.ProductSpace(ran, ran.ndim)  # 2-dimensional
         >>> div = Divergence(dom)
@@ -600,11 +597,10 @@ class Laplacian(PointwiseTensorFieldOperator):
 
         Examples
         --------
-        >>> from odl import uniform_discr
         >>> data = np.array([[ 0., 0., 0.],
         ...                  [ 0., 1., 0.],
         ...                  [ 0., 0., 0.]])
-        >>> space = uniform_discr([0, 0], [3, 3], [3, 3])
+        >>> space = odl.uniform_discr([0, 0], [3, 3], [3, 3])
         >>> f = space.element(data)
         >>> lap = Laplacian(space)
         >>> print(lap(f))

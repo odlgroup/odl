@@ -43,4 +43,4 @@ def test_all_imports():
         odl.array1d_repr
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v'])

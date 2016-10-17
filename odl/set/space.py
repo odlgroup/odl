@@ -673,8 +673,6 @@ class LinearSpaceElement(object):
 
         Examples
         --------
-        >>> import odl
-        >>> import numpy as np
         >>> rn = odl.rn(1, norm=np.linalg.norm)
         >>> x = rn.element([0.1])
         >>> x == x
@@ -801,8 +799,6 @@ class LinearSpaceElement(object):
 
         Examples
         --------
-        >>> import odl
-        >>> import numpy as np
         >>> rn = odl.rn(3)
         >>> x = rn.element([1, 2, 3])
         >>> y = rn.element([2, 1, 3])

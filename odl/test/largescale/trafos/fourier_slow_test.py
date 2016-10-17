@@ -106,4 +106,4 @@ def test_fourier_trafo_forward_complex(domain, impl):
 
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v --largescale'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])

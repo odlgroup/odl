@@ -258,7 +258,6 @@ class WaveletTransform(WaveletTransformBase):
         Compute a very simple wavelet transform in a discrete 2D space with
         4 sampling points per axis:
 
-        >>> import odl
         >>> space = odl.uniform_discr([0, 0], [1, 1], (4, 4))
         >>> wavelet_trafo = odl.trafos.WaveletTransform(
         ...     domain=space, nlevels=1, wavelet='haar')
@@ -403,7 +402,6 @@ class WaveletTransformInverse(WaveletTransformBase):
         Check that the inverse is the actual inverse on a simple example on
         a discrete 2D space with 4 sampling points per axis:
 
-        >>> import odl
         >>> space = odl.uniform_discr([0, 0], [1, 1], (4, 4))
         >>> wavelet_trafo = odl.trafos.WaveletTransform(
         ...     domain=space, nlevels=1, wavelet='haar')

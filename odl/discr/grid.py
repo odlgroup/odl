@@ -287,8 +287,7 @@ class TensorGrid(Set):
 
         Also works with numpy
 
-        >>> import numpy
-        >>> numpy.min(g)
+        >>> np.min(g)
         array([ 1., -2.])
         """
         out = kwargs.get('out', None)
@@ -319,8 +318,7 @@ class TensorGrid(Set):
 
         Also works with numpy
 
-        >>> import numpy
-        >>> numpy.max(g)
+        >>> np.max(g)
         array([ 5.,  2.])
         """
         out = kwargs.get('out', None)
@@ -839,7 +837,6 @@ class RegularGrid(TensorGrid):
 
         Examples
         --------
-        >>> import odl
         >>> rg = odl.RegularGrid([-1.5, -1], [-0.5, 3], (2, 3))
         >>> rg
         RegularGrid([-1.5, -1.0], [-0.5, 3.0], (2, 3))
@@ -1189,8 +1186,7 @@ def uniform_sampling_fromintv(intv_prod, shape, nodes_on_bdry=True):
 
     Examples
     --------
-    >>> from odl import IntervalProd
-    >>> rbox = IntervalProd([-1.5, 2], [-0.5, 3])
+    >>> rbox = odl.IntervalProd([-1.5, 2], [-0.5, 3])
     >>> grid = uniform_sampling_fromintv(rbox, (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))
@@ -1304,7 +1300,6 @@ def uniform_sampling(min_pt, max_pt, shape, nodes_on_bdry=True):
 
     Examples
     --------
-    >>> import odl
     >>> grid = odl.uniform_sampling([-1.5, 2], [-0.5, 3], (3, 3))
     >>> grid.coord_vectors
     (array([-1.5, -1. , -0.5]), array([ 2. ,  2.5,  3. ]))

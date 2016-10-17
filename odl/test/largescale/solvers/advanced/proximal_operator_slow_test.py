@@ -265,4 +265,4 @@ def test_proximal_cconj_kl_cross_entropy_solving_opt_problem():
     assert all_almost_equal(x, x_verify, places=6)
 
 if __name__ == '__main__':
-    pytest.main(str(__file__.replace('\\', '/') + ' -v --largescale'))
+    pytest.main([str(__file__.replace('\\', '/')), '-v', '--largescale'])
