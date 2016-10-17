@@ -70,6 +70,7 @@ fn_impl_ids = [" impl='{}' ".format(p) for p in fn_impl_params]
 
 @pytest.fixture(scope="module", ids=fn_impl_ids, params=fn_impl_params)
 def fn_impl(request):
+    """String with an available `FnBase` implementation name."""
     return request.param
 
 ntuples_impl_params = odl.NTUPLES_IMPLS.keys()
@@ -79,7 +80,7 @@ ntuples_impl_ids = [" impl='{}' ".format(p) for p in ntuples_impl_params]
 @pytest.fixture(scope="module", ids=ntuples_impl_ids,
                 params=ntuples_impl_params)
 def ntuples_impl(request):
-    """String with a available `NtuplesBase` implementation name."""
+    """String with an available `NtuplesBase` implementation name."""
     return request.param
 
 
@@ -119,13 +120,13 @@ def ufunc(request):
 
     Returns
     -------
-    name : `str`
+    name : str
         Name of the ufunc.
-    n_in : `int`
+    n_in : int
         Number of input values of the ufunc.
-    n_out : `int`
+    n_out : int
         Number of output values of the ufunc.
-    doc : `str`
+    doc : str
         Docstring for the ufunc.
     """
     return request.param
@@ -141,9 +142,9 @@ def reduction(request):
 
     Returns
     -------
-    name : `str`
+    name : str
         Name of the reduction.
-    doc : `str`
+    doc : str
         Docstring for the reduction.
     """
     return request.param
