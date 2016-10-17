@@ -232,6 +232,11 @@ class IndicatorLpUnitBall(Functional):
         else:
             raise NotImplementedError('currently not implemented')
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r},{!r})'.format(self.__class__.__name__,
+                                      self.space, self.exponent)
+
 
 class L2Norm(Functional):
 
@@ -301,6 +306,10 @@ class L2Norm(Functional):
         """The convex conjugate functional of the L2-norm."""
         return IndicatorLpUnitBall(self.domain, exponent=2)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+
 
 class L2NormSquared(Functional):
 
@@ -351,6 +360,10 @@ class L2NormSquared(Functional):
         :math:`\\frac{1}{4}\| \\cdot \|_2^2`
         """
         return (1.0 / 4) * L2NormSquared(self.domain)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 class ConstantFunctional(Functional):
@@ -459,6 +472,11 @@ class ConstantFunctional(Functional):
 
         return ConstantFunctionalConvexConj()
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__,
+                                 self.domain, self.constant)
+
 
 class ZeroFunctional(ConstantFunctional):
 
@@ -473,6 +491,10 @@ class ZeroFunctional(ConstantFunctional):
             Domain of the functional.
         """
         super().__init__(space=space, constant=0)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
 
 
 class IndicatorBox(Functional):
@@ -541,6 +563,12 @@ class IndicatorBox(Functional):
         """Return the proximal factory of the functional."""
         return proximal_box_constraint(self.domain, self.lower, self.upper)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r}, {!r})'.format(self.__class__.__name__,
+                                             self.domain,
+                                             self.lower, self.upper)
+
 
 class IndicatorNonnegativity(IndicatorBox):
 
@@ -576,6 +604,10 @@ class IndicatorNonnegativity(IndicatorBox):
         inf
         """
         IndicatorBox.__init__(self, space, lower=0, upper=None)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}()'.format(self.__class__.__name__)
 
 
 class KullbackLeibler(Functional):
@@ -701,6 +733,11 @@ class KullbackLeibler(Functional):
         """The convex conjugate functional of the KL-functional."""
         return KullbackLeiblerConvexConj(self.domain, self.prior)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.prior)
+
 
 class KullbackLeiblerConvexConj(Functional):
 
@@ -811,6 +848,11 @@ class KullbackLeiblerConvexConj(Functional):
     def convex_conj(self):
         """The convex conjugate functional of the conjugate KL-functional."""
         return KullbackLeibler(self.domain, self.prior)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.prior)
 
 
 class KullbackLeiblerCrossEntropy(Functional):
@@ -947,6 +989,11 @@ proximal_cconj_kl_cross_entropy :
         """The convex conjugate functional of the KL-functional."""
         return KullbackLeiblerCrossEntropyConvexConj(self.domain, self.prior)
 
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.prior)
+
 
 class KullbackLeiblerCrossEntropyConvexConj(Functional):
     """The convex conjugate of Kullback-Leibler Cross Entorpy functional.
@@ -1037,6 +1084,11 @@ proximal_cconj_kl_cross_entropy :
     def convex_conj(self):
         """The convex conjugate functional of the conjugate KL-functional."""
         return KullbackLeiblerCrossEntropy(self.domain, self.prior)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, {!r})'.format(self.__class__.__name__,
+                                       self.domain, self.prior)
 
 
 class SeparableSum(Functional):
@@ -1133,6 +1185,11 @@ class SeparableSum(Functional):
         """
         convex_conjs = [func.convex_conj for func in self.functionals]
         return SeparableSum(*convex_conjs)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        func_repr = ', '.join(repr(func) for func in self.functionals)
+        return '{}()'.format(self.__class__.__name__, func_repr)
 
 
 class QuadraticForm(Functional):
