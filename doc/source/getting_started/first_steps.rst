@@ -207,13 +207,23 @@ Perhaps a bit better, but far from excellent.
 Let's try more modern methods, like `TV regularization <https://en.wikipedia.org/wiki/Total_variation_denoising>`_.
 Here we want to solve the problem
 
-
 .. math::
-
    \min_{0 \leq f \leq 1} \|Af - g\|_2^2 + a \|\nabla f\|_1
 
 Since this is a non-differentiable problem we need more advanced solvers to solve it.
-One of the stronger solvers in ODL is the Douglas-Rachford Primal-Dual method (`douglas_rachford_pd`) which uses :ref:`proximal_operators` to solve the optimization problem.
+One of the stronger solvers in ODL is the Douglas-Rachford Primal-Dual method (`douglas_rachford_pd`) which uses :ref:`proximal_operators` to solve the optimization problem, but as a new user you do not need to consider the specifics, instead you only need to assemble the problem to fit the solver.
+
+Consulting the `douglas_rachford_pd` documentation we see that it solves problems of the form
+
+.. math::
+    \min_x f(x) + \sum_{i=1}^n g_i(L_i x),
+
+where :math:`f`, :math:`g_i` are convex functions, :math:`L_i` are linear `Operator`'s.
+By identification, we see that the above problem can be written in this form if we let `f` be the indicator function on :math:`[0, 1]`,
+:math:`g_1` be the squared l2 distance :math:`\| \cdot - g\|_2^2`,
+:math:`g_2` be the norm :math:`\| \cdot \|_1`,
+:math:`L_1` be the convolution operator and :math:`L_2` be the gradient operator.
+
 There are several examples available using this solver as well as similar optimization methods,
 e.g. `forward_backward_pd`, `chambolle_pock_solver`, etc in the ODL `examples/solvers <https://github.com/odlgroup/odl/tree/master/examples/solvers>`_ folder.
 
