@@ -138,12 +138,12 @@ The method needs a relaxation :math:`\lambda < 2 / \lVert A\rvert^2` to converge
     >>> for i in range(niter):
     ...     residual = matrix_op(reco) - data
     ...     reco -= 0.1 * matrix_op.adjoint(residual)
-    ...     print(residual.norm())
-    1.41421356237
-    0.583095189485
-    0.240416305603
-    0.0991261822124
-    0.0408707719526
+    ...     print('{:.3}'.format(residual.norm()))
+    1.41
+    0.583
+    0.24
+    0.0991
+    0.0409
 
 If we now exchange ``matrix_op`` and ``data`` with a tomographic projector and line integral data, not a single line of code in the reconstruction method changes since the operator interface is exactly the same.
 

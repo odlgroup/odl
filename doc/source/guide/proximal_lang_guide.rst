@@ -16,7 +16,9 @@ Here is a minimal example of solving Poisson's equation equation on an interval 
    >>> x = proximal.Variable(space.shape)
    >>> prob = proximal.Problem([10 * proximal.sum_squares(x - rhs.asarray()),
    ...                          proximal.norm1(proximal.grad(x))])
-   >>> prob.solve()
+   >>> opt_val = prob.solve()
+   >>> print(opt_val)
+   36.082836566
    >>> x.value
    array([ 0.02352054,  0.02647946,  0.9       ,  0.02647946,  0.02352054])
 
@@ -33,13 +35,13 @@ Norms in ODL are scaled according to the underlying function space. Hence a sequ
 
    >>> for n in [2, 10, 100, 10000]:
    ...     space = odl.uniform_discr(0, 1, n)
-   ...     print(space.element(lambda x: x).norm())
-   0.559016994375
-   0.576628129734
-   0.577343052266
-   0.577350268468
+   ...     print('{:.10}'.format(space.element(lambda x: x).norm()))
+    0.5590169944
+    0.5766281297
+    0.5773430523
+    0.5773502685
    >>> 1 / np.sqrt(3)  # exact result
-   0.577350269189
+   0.57735026918962584
 
 this is not the case in ProxImaL, where the norm depends on the number of discretization points. Hence a scaling that is correct for a problem in ODL needs not be correct in proximal. This also changes the definition of things like the operator norm.
 
