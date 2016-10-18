@@ -48,7 +48,7 @@ To define your own functional, start by writing::
     class MyFunctional(odl.solvers.Functional):
 
         """Docstring goes here."""
-    
+
         def __init__(self, space):
             # Sets `Operator.domain` to `space` and `Operator.range` to `space.field`
             odl.solvers.Functional.__init__(self, space)
@@ -103,7 +103,7 @@ The properties are:
 
    .. math::
 
-      \text{prox}_{\sigma S}(x) = \text{arg min}_{y \in X} \{ S(y) + \frac{1}{2\sigma} \|y - x\|_2^2 \}. 
+      \text{prox}_{\sigma S}(x) = \text{arg min}_{y \in X} \{ S(y) + \frac{1}{2\sigma} \|y - x\|_2^2 \}.
 
 The default behavior of these is to raise a ``NotImplemetedError``.
 
@@ -114,11 +114,11 @@ The `Functional` class also contains default implementations of two helper funct
 
    .. math::
 
-      x \to \langle x, \nabla S(point) \rangle,
+      x \to \langle x, \nabla S(p) \rangle,
 
-   where :math:`\nabla S(point)` is the gradient of the functional in the point :math:`point`.
+   where :math:`\nabla S(p)` is the gradient of the functional in the point :math:`p`.
 
- * ``translated(shift)``. Given a functional :math:`S(.)`, this method creates the functional :math:`S(. - shift)`
+ * ``translated(shift)``. Given a functional :math:`S` and a shift :math:`y`, this method creates the functional :math:`S(\cdot - y)`.
 
 
 .. _dual space: https://en.wikipedia.org/wiki/Dual_space
@@ -147,7 +147,7 @@ Another example is translating a functional with a vector :math:`y`:
 or given an `Operator` :math:`A` whose range is the same as the domain of the functional we also have composition:
 
 .. math::
-    [S * A](x) = S(A(x)). 
+    [S * A](x) = S(A(x)).
 
 In some of these cases, properties and methods such as ``gradient``, ``convex_conjugate`` and ``proximal`` can be calculated automatically given a default implementation of the corresponding property in :math:`S` and :math:`T`.
 
