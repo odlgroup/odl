@@ -95,6 +95,7 @@ Changes
 - Switch from RTD documentation hosting to gh-pages and let Travis CI build and deploy the documentation. (:pull:`536`)
 - Update name of ``proximal_zero`` to ``proximal_const_func``. (:pull:`582`)
 - Move unit tests from top level ``test/`` to ``odl/test/`` folder and distribute them with the source. (:pull:`638`)
+- Update pytest dependency to [>3.0] and use new featuers. (:pull:`653`)
 
 Bugfixes
 --------
@@ -102,6 +103,7 @@ Bugfixes
 - Fix a ``TypeError`` being raised in ``OperatorTest`` when running ``optest.ajoint()`` without specifying an operator norm. (:pull:`525`)
 - Fix scaling of scikit ray transform for non full scan. (:pull:`523`)
 - Fix bug causing classes to not be vectorizable. (:pull:`604`)
+- Fix rounding problem in some proximals (:pull:`661`)
 
 ODL 0.4.0 Release Notes (2016-08-17)
 ====================================
