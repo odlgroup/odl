@@ -4,8 +4,9 @@
 Installing ODL
 ##############
 
+************
 Introduction
-============
+************
 
 Installing ODL is intended to be straightforward, and this guide is meant for new users.
 For a minimal installation you should perform the following steps:
@@ -15,7 +16,7 @@ For a minimal installation you should perform the following steps:
 3. (optional) Run the tests
 
 Consider using Anaconda
------------------------
+=======================
 We currently recomment to use `Anaconda`_ on all platforms since it offers the best out-of-the-box installation and run-time experience.
 Anaconda also has other benefits, for example the possibility to work in completely isolated Python environments with own installed packages, thereby avoiding conflicts with system-wide installed packages.
 Furthermore, Anaconda cooperates with ``pip`` (see below), i.e. packages can be installed with both Anaconda's internal mechanism and ``pip`` without conflicts.
@@ -24,10 +25,10 @@ Alternatively, packages can be installed with `pip`_ in a user's location, which
 We will provide instructions for this alternative.
 
 Another possibility is to use `virtualenv`_, which can be seen as a predecessor to Anaconda.
-Following the ``pip`` installation instructions in a ``virtualenv`` without the ``--user`` option should work, but we do not provide explicit instructions for this variant.
+Following the ``pip`` installation instructions in a ``virtualenv`` without the ``--user`` option works very well in our experience, but we do not provide explicit instructions for this variant.
 
 Which Python version to use?
-----------------------------
+============================
 Any modern Python distribution supporting `NumPy`_ and `SciPy`_ should work for the core library, but some extensions require CPython (the standard Python distribution).
 
 ODL fully supports both Python 2 and Python 3.
@@ -35,16 +36,21 @@ If you choose to use your system Python interpreter (the "pip install as user" v
 Otherwise, we recommend using Python 3, since Python 2 support will be discontinued in 2020.
 
 Development enviroment
-----------------------
+======================
 Since ODL is object-oriented, using an Integrated Development Environment (IDE) is recommended, but not required.
 The most popular ones are `Spyder`_ which works on all major platforms and can be installed through both ``conda`` and ``pip``, and `PyCharm`_ which can be integrated with any text editor of your choice, such as Emacs or Vim.
 
 
+------
+
+.. _alternative_1:
+
+***************************************************************************
 Alternative 1: Installing a release using ``conda`` (recommended for users)
-===========================================================================
+***************************************************************************
 
 TL;DR
------
+=====
 - Download and install `Miniconda`_
 - Create conda environment:
 
@@ -52,8 +58,8 @@ TL;DR
 
     $ conda create -c odlgroup -n odl-py35 python=3.5 odl odlcuda matplotlib pytest scikit-image spyder
 
-Install Anaconda
-----------------
+Installing Anaconda
+===================
 Even though a Python interpreter is included by default in virtually all Linux distributions, it is advisable to use Anaconda's Python  ecosystem since it gives you full flexibility in the Python version you use and which packages you install.
 
 Download Anaconda from the Continuum Analytics home page.
@@ -92,23 +98,26 @@ Otherwise, Spyder is not able to use the packages in the conda environment:
     $ conda install spyder
 
 
-Install ODL and its dependencies
---------------------------------
+Installing ODL and its dependencies
+===================================
 Install ODL and all its (minimal) dependencies by running
 
 .. code-block:: bash
 
     $ conda install -c odlgroup odl
 
-To skip the ``-c odlgroup`` option in the future, you can permanently add the ``odlgroup`` conda channel (see `Managing conda channels`_):
+.. note::
+    To skip the ``-c odlgroup`` option in the future, you can permanently add the ``odlgroup`` conda channel (see `Managing conda channels`_):
 
-.. code-block:: bash
+    .. code-block:: bash
 
-    $ conda config --append channels odlgroup
+        $ conda config --append channels odlgroup
 
-After that, ``conda install odl`` and ``conda update odl`` work without the ``-c`` option.
+    After that, ``conda install odl`` and ``conda update odl`` work without the ``-c`` option.
 
-**Extra dependencies**
+Extra dependencies
+------------------
+The following packages are optional and extend the functionality of ODL.
 
 - Image and plot displaying capabilities:
 
@@ -139,6 +148,12 @@ After that, ``conda install odl`` and ``conda update odl`` work without the ``-c
 
     $ conda install scikit-image
 
+- Bindings to the `ProxImaL`_ convex optimization package, an extension of `CVXPY`_:
+
+  .. code-block:: bash
+
+    $ pip install proximal
+
 - To run unit tests:
 
   .. code-block:: bash
@@ -146,45 +161,53 @@ After that, ``conda install odl`` and ``conda update odl`` work without the ``-c
     $ conda install pytest
 
 
+--------
 
+.. _alternative_2:
 
+*************************************************
 Alternative 2: Installing a release using ``pip``
-=================================================
+*************************************************
 
 TL;DR
------
+=====
 - Install `pip`_
 - Install `FFTW`_
 - Install ODL and dependencies:
 
   .. code-block:: bash
 
-    $ pip install odl[show,fftw,pywavelets,scikit,testing]
+    $ pip install odl[all]
 
-Install a Python interpreter
-----------------------------
+Installing a Python interpreter
+===============================
 Open a terminal and type ``python`` + Enter.
-If a Python prompt appears, you already have an interpreter installed and can skip this step.
+If a Python prompt appears, you already have an interpreter installed and can skip this step (exit by pressing Ctrl+D).
 Otherwise, you need to install it.
 
-**On Linux:**
-
+On Linux:
+---------
 In the unlikely event that Python is not installed, consult your distro package manager.
 
-**On MacOS:**
-
+On MacOS:
+---------
 Get the latest release (2 or 3) for MacOS `here <https://www.python.org/downloads/mac-osx/>`_ and install it.
 
-**On Windows:**
+On Windows:
+-----------
+Python installers can be downloaded from `this link <https://www.python.org/downloads/windows/>`_.
+Pick the latest release for your favorite version (2 or 3).
 
-Installers can be downloaded from `this link <https://www.python.org/downloads/windows/>`_.
-You should pick the latest release for your favorite version (2 or 3).
+.. warning::
+
+    Correctly installing ODL's dependencies on Windows, especially Numpy and Scipy, can be quite a hassle, and we therefore discourage this variant.
+    You should really consider using Anaconda instead, see :ref:`alternative_1`.
 
 
-Install ODL and its dependencies
---------------------------------
-You need to `install pip`_ to be able to install ODL and its dependencies from the `Python Package Index`_ (PyPI).
-Check if running ``pip`` (alternatively: ``pip3``) shows a help message or an error.
+Installing ODL and its dependencies
+===================================
+You may need to `install pip`_ to be able to install ODL and its dependencies from the `Python Package Index`_ (PyPI).
+If running ``pip`` (alternatively: ``pip3``) an shows a help message, it is installed -- otherwise you need to install it first.
 
 For basic installation without extra dependencies, run
 
@@ -192,10 +215,15 @@ For basic installation without extra dependencies, run
 
    $ pip install --user odl
 
+.. warning::
+    This will probably not work on Windows, since compiled dependencies (e.g. Numpy) will fail to build.
+    Detailed instuctions for these steps is beyond the scope of this document.
 
-**Extra dependencies**
 
-Additional dependencies can be specified in square brackets, separated by commas (no spaces!):
+Extra dependencies
+------------------
+The following optional packages extend the functionality of ODL.
+They can be specified as keywords in square brackets, separated by commas (no spaces!):
 
 .. code-block:: bash
 
@@ -210,21 +238,25 @@ Possible choices:
 - ``pywavelets`` : Install `PyWavelets`_ for wavelet transforms.
 - ``scikit`` : Install `scikit-image`_ as a simple backend for ray transforms.
 - ``proximal``: Install the `ProxImaL`_ convex optimization package.
-  This package currently only works with Python 2 since it depends on OpenCV whose Python bindings have not been ported to version 3 yet.
 
 
 These dependencies are optional and may not be easy to install on your system (especially on Windows).
 In general, a clean ODL installation is enough for most users' initial needs.
 
 
+------
+
+
+********************************************************************
 Alternative 3: Installation from source (recommended for developers)
-====================================================================
+********************************************************************
 This installation method is intended for developers who want to make changes to the code.
 It assumes that the `Git`_ version control system is available on your system; for up-to-date instructions, consult the `Git installation instructions <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_.
 You also need `pip`_ to perform the installation.
 
-You should also consider performing all described steps in a `conda environment <http://conda.pydata.org/docs/using/envs.html>`_ -- it gives you the same encapsulation benefits as developer that you would enjoy also as a user (no conflicting packages, free to choose Python version, ...).
-See the `Install Anaconda`_ section for setup instructions.
+.. note::
+    You should consider performing all described steps in a `conda environment <http://conda.pydata.org/docs/using/envs.html>`_ -- it gives you the same encapsulation benefits as developer that you would enjoy also as a user (no conflicting packages, free to choose Python version, ...).
+    See the `Installing Anaconda`_ section for setup instructions.
 
 To get ODL, clone the repository with the command
 
@@ -235,8 +267,8 @@ To get ODL, clone the repository with the command
 No GitHub account is required for this step.
 
 
-**In a conda environment:**
-
+In a conda environment
+======================
 You can choose to install dependencies first (optional ones in square brackets):
 
 .. code-block:: bash
@@ -249,8 +281,8 @@ After that, enter the top-level directory of the cloned repository and run
 
    $ pip install --editable .
 
-**If you use pip only:**
-
+Using only ``pip``
+==================
 Enter the top-level directory of the cloned repository and run
 
 .. code-block:: bash
@@ -258,33 +290,46 @@ Enter the top-level directory of the cloned repository and run
    $ pip install --user --editable .
 
 
-**Don't forget the "." (dot) at the end** - it refers to the current directory, the location from where ``pip`` is supposed to install ODL.
+.. warning::
+    **Don't forget the "." (dot) at the end** - it refers to the current directory, the location from where ``pip`` is supposed to install ODL.
 
-We recommend the ``--editable`` option (can be shortened to ``-e``) since it installs a link instead of copying the files to your Python packages location.
-This way, local changes to the code (e.g. after a ``git pull``) take immediate effect without reinstallation.
+.. note::
+    We recommend the ``--editable`` option (can be shortened to ``-e``) since it installs a link instead of copying the files to your Python packages location.
+    This way, local changes to the code (e.g. after a ``git pull``) take immediate effect without reinstallation.
 
 
 Further developer information
------------------------------
+=============================
 See :ref:`Contributing to ODL <contributing>` for more information.
 
 
+------
+
+
+****************
 Runing the tests
-================
+****************
 Unit tests in ODL are based on `pytest`_, and coverage reports are created by the `coverage`_ module.
 
-**Using conda:**
+Installing testing dependencies
+===============================
 
+Using ``conda``:
+----------------
 .. code-block:: bash
 
     $ conda install pytest pytest-cov pytest-pep8
 
-**Using pip:**
+Using ``pip``:
+--------------
 
 .. code-block:: bash
 
     $ pip install --user pytest pytest-cov pytest-pep8
 
+
+Testing the code
+================
 Now you can check that everything was installed properly by running
 
 .. code-block:: bash
@@ -299,21 +344,25 @@ If you have installed ODL from source, you can also use ``pytest`` directly:
    $ pytest
 
 
+------
 
+
+*******************
 Compiled extensions
-===================
+*******************
 There are several compiled extensions to ODL.
-Some of them can be installed using conda, others require manual compilation.
+Some of them can be installed using ``conda``, others require manual compilation.
 
 
 CUDA backend for linear arrays
-------------------------------
+==============================
 The `odlcuda`_ backend for fast array calculations on CUDA requires the `CUDA toolkit`_ (on Linux: use your distro package manager) and a CUDA capable graphics card with compute capability of at least 5.0.
 Search `this table <https://en.wikipedia.org/wiki/CUDA#GPUs_supported>`_ for your model.
 
-**Using conda:**
-
-The custom CUDA backend `odlcuda`_ is available for Python 3.5 in the "odlgroup" conda channel.
+Installation using ``conda``
+----------------------------
+.. note::
+    ``odlcuda`` is currently only available for Linux and Python 3.5.
 
 If you have installed an ODL release, simply run (in a directory of your choice)
 
@@ -335,8 +384,8 @@ Finally, install ``odlcuda`` without dependencies:
 
     $ conda install --no-deps odlcuda
 
-**Build from source:**
-
+Building from source
+--------------------
 Clone the ``odlcuda`` GitHub repository:
 
 .. code-block:: bash
@@ -347,7 +396,7 @@ After that, follow the `build instructions there <https://github.com/odlgroup/od
 
 
 ASTRA for X-ray tomography
---------------------------
+==========================
 To calculate fast forward and backward projections for image reconstruction in X-ray tomography, install the `ASTRA tomography toolbox`_.
 ASTRA projectors are fully supported in ODL.
 
@@ -359,15 +408,16 @@ You can try using the conda package, but we can give no guarantee that it works 
 
 
 STIR for emission tomography
-----------------------------
+============================
 For applications in emission tomography, i.e. PET or SPECT, install STIR_.
 Support for STIR is currently very limited.
 
 
+******
 Issues
-======
+******
 If you have any problems during installation, consult the help in the :ref:`FAQ <FAQ>`.
-If that does not help, `make an issue on GitHub`_ or send us an email (odl@math.kth.se) and we'll try to assist you promptly.
+If that does not help, `make an issue on GitHub <https://github.com/odlgroup/odl/issues>`_ or send us an email (odl@math.kth.se) and we'll try to assist you promptly.
 
 
 .. _Anaconda: https://anaconda.org/
@@ -401,6 +451,7 @@ If that does not help, `make an issue on GitHub`_ or send us an email (odl@math.
 .. _PyWavelets: https://pypi.python.org/pypi/PyWavelets
 .. _scikit-image: http://scikit-image.org/
 .. _ProxImaL: http://www.proximal-lang.org/en/latest/
+.. _CVXPY: http://www.cvxpy.org/en/latest/
 .. _odlcuda: https://github.com/odlgroup/odlcuda
 .. _CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
 .. _ASTRA tomography toolbox: https://github.com/astra-toolbox/astra-toolbox
