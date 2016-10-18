@@ -38,6 +38,7 @@ doctest_extraglobs = {'odl': odl, 'np': numpy, 'scipy': scipy,
 
 root_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'source')
 test_dirs = ['guide', 'getting_started']
+test_suffixes = ['.rst', '.py']
 exclude_files = ['faq.rst']
 
 doc_src_files = []
@@ -46,7 +47,7 @@ doctest_optionflags = NORMALIZE_WHITESPACE | ELLIPSIS | IGNORE_EXCEPTION_DETAIL
 for test_dir in test_dirs:
     for path, _, filenames in os.walk(os.path.join(root_dir, test_dir)):
         for filename in filenames:
-            if ((filename.endswith('.rst') or filename.endswith('.py')) and
+            if (any(filename.endswith(suffix) for suffix in test_suffixes) and
                     filename not in exclude_files):
                 doc_src_files.append(path + '/' + filename)
 
