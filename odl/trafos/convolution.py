@@ -26,23 +26,23 @@ from builtins import super
 import numpy as np
 import scipy.signal as signal
 
-from odl.discr.discr_ops import Resampling
-from odl.discr.lp_discr import (
-    DiscreteLp, DiscreteLpElement, uniform_discr, uniform_discr_fromdiscr)
-from odl.operator.operator import Operator
-from odl.set.sets import ComplexNumbers
-from odl.trafos.fourier import FourierTransform
+from odl.discr import (
+    DiscreteLp, uniform_discr, uniform_discr_fromdiscr)
+from odl.operator import Operator, OpDomainError, OpRangeError
+from odl.set import ComplexNumbers
+from odl.trafos import FourierTransform, DiscreteFourierTransform
 from odl.util.normalize import normalized_scalar_param_list, safe_int_conv
 
 
-__all__ = ('Convolution', 'FourierSpaceConvolution', 'RealSpaceConvolution')
+__all__ = ('FourierSpaceConvolution', 'RealSpaceConvolution')
 
 
 _REAL_CONV_SUPPORTED_IMPL = ('scipy_convolve',)
-_FOURIER_CONV_SUPPORTED_IMPL = ('default', 'pyfftw')
+# TODO: get from fourier.py
+_FOURIER_CONV_SUPPORTED_IMPL = ('numpy', 'pyfftw')
 
 
-class Convolution(Operator):
+class ConvolutionBase(Operator):
 
     """Discretization of the convolution integral as an operator.
 
@@ -55,7 +55,71 @@ class Convolution(Operator):
         raise NotImplementedError('abstract method')
 
 
-class FourierSpaceConvolution(Convolution):
+def _scaled_kernel_ft(kernel, ft_op, ker_mode, ker_kwargs, ker_is_scaled):
+    """Return the scaled kernel FT for the given FT operator.
+
+    This helper function calculates the FT of the kernel, discretized in
+    an appropriate space.
+    """
+    # FIXME: the result is wrong if the kernel is given in Fourier space.
+    # That case needs to be treated separately.
+    ndim = ft_op.domain.ndim
+    axes = getattr(ft_op, 'axes', None)
+    conv_ndim = ndim if axes is None else len(axes)
+
+    # TODO: adapt for broadcasting. This code enforces that the kernel
+    # has the same dimension as the input of the convolution
+    if isinstance(kernel,
+                  (ft_op.domain.element_type, ft_op.range.element_type)):
+        if kernel.ndim != ndim:
+            raise ValueError('`kernel` has dimension {}, expected {}'
+                             ''.format(kernel.ndim, ndim))
+        kernel_space = kernel.space
+
+    else:
+        # This encompasses callable and array-like kernels. Those two cases
+        # need to be split when broadcasting.
+
+        # Zero-centered version of ft_op.domain
+        kernel_space = zero_centered_discr_fromdiscr(ft_op.domain)
+
+    # Initialize the kernel FT operator and compute the kernel scaling
+    if isinstance(ft_op, DiscreteFourierTransform):
+        ft_op_type = DiscreteFourierTransform
+        scaling_factor = 1
+    else:
+        # Use FourierTransform as default also for other Operator types
+        ft_op_type = FourierTransform
+        scaling_factor = (2 * np.pi) ** (conv_ndim / 2)
+
+    # Attributes can be undefined for custom FT operators
+    ft_kwargs = {}
+    impl = getattr(ft_op, 'impl', 'numpy')
+    halfcomplex = getattr(ft_op, 'halfcomplex', True)
+    shift = getattr(ft_op, 'shift', None)
+    if shift is not None:
+        ft_kwargs['shift'] = shift
+
+    ker_ft_op = ft_op_type(
+        kernel_space, impl=impl, axes=axes, halfcomplex=halfcomplex,
+        **ft_kwargs)
+
+    if ker_mode == 'real':
+        scaled_kernel = ker_ft_op(kernel)
+        scaled_kernel *= scaling_factor
+
+    elif ker_mode == 'fourier':
+        scaled_kernel = ft_op.range.element(kernel)
+        if not ker_is_scaled:
+            scaled_kernel *= scaling_factor
+
+    else:
+        raise RuntimeError('bad `ker_mode`')
+
+    return scaled_kernel, scaling_factor, ker_ft_op
+
+
+class FourierSpaceConvolution(ConvolutionBase):
 
     """Convolution implemented in Fourier space.
 
@@ -65,8 +129,8 @@ class FourierSpaceConvolution(Convolution):
     except for small kernels.
     """
 
-    def __init__(self, domain, kernel, kernel_mode='real', ft_impl='default',
-                 **kwargs):
+    def __init__(self, domain, kernel, kernel_mode='real', range=None,
+                 ft_impl='numpy', integral=True, **kwargs):
         """Initialize a new instance.
 
         Parameters
@@ -74,7 +138,7 @@ class FourierSpaceConvolution(Convolution):
         domain : `DiscreteLp`
             Uniformly discretized space of functions on which the
             operator can act.
-        kernel : `DiscreteLpElement`, callable or array-like
+        kernel : `DiscreteLpElement`, callable or `array-like`
             Fixed kernel of the convolution operator. It can be
             given in real or Fourier space (see ``kernel_mode``), and
             specified in several ways, resulting in varying
@@ -106,70 +170,52 @@ class FourierSpaceConvolution(Convolution):
 
             'fourier' : Fourier-space kernel
 
-        ft_impl : `str`, optional
-            Implementation of the Fourier transform. Available options
-            are:
+        range : `DiscreteLp`, optional
+            Space to which the convolution maps. By default, it is inferred
+            from ``domain`` and ``kernel``. See ``Notes``.
 
-            'default' : Fourier transform using the default FFT
-            implementation
+        ft_impl : {'numpy', 'pyfftw'}, optional
+            Implementation of the Fourier transform. Has no effect for
+            custom ``ft_op``.
+
+            'numpy' : Default FFT implementation based on Numpy.
 
             'pyfftw' : Fourier transform using pyFFTW (faster than
-            the default FT)
+            the default FT).
+
+        integral : bool, optional
+            If ``True``, approximate the continuous convolution integral
+            by using `FourierTransform` internally. Otherwise, the
+            unscaled and unshifted `DiscreteFourierTransform` is used.
+            Has no effect for a custom ``ft_op``.
+            Default: ``True``
 
         Other parameters
         ----------------
-        axes : sequence of `int`, optional
+        axes : sequence of ints, optional
             Dimensions in which to convolve. Default: all axes
-
-        resample : str or sequence of str, optional
-            If the kernel represents a function sampled differently
-            from functions in ``domain``, this option defines the behavior
-            of the evaluation. The following values can be given (per axis
-            in the case of a sequence):
-
-            'domain' : Restrict / extend the kernel FT to the Fourier
-            domain of input functions.
-            This needs to be done only once and is generally
-            recommended as global choice.
-
-            'kernel' : Restrict / extend the FT of input functions to
-            match the Fourier domain of the kernel.
-
-            'down' : Restrict the FTs of both function and kernel to the
-            minimum of the Fourier domains.
-            Note that this can lead to loss of resolution.
-
-            'up' : Extend the FTs of both function and kernel to the
-            maximum of the Fourier domains.
-            Note that this can be computationally expensive.
-
-            Default: 'domain'
-
-        scale : `bool`, optional
-            If `True`, scale the discrete convolution with
-            ``(2*pi)**(ndim/2)``, such that it approximates a
-            continuous convolution.
-            Default: `True`
-
-        kernel_scaled : bool, optional
-            If True, the kernel is interpreted as already scaled
-            as described under the ``scale`` argument.
-            Default: False
 
         kernel_kwargs : dict, optional
             Keyword arguments passed to the call of the kernel function
             if given as a callable.
 
+        kernel_is_scaled : bool, optional
+            If ``True``, the kernel is interpreted as already scaled
+            as described under the ``scale`` argument.
+            Default: False
+
         ft_kwargs : dict, optional
             Keyword arguments passed to the initializer of the internally
-            used `FourierTransform`. This will have no effect if a
-            ``fourier_trafo`` parameter is supplied.
+            used Fourier transform. This will have no effect if a
+            ``ft_op`` parameter is supplied.
 
-        fourier_trafo : `FourierTransform` or callable, optional
-            Use this object to compute Fourier transforms instead of
-            the default one. Resizing operations in Fourier space
-            (see ``resample``) only work for a `FourierTransform`
-            operator.
+        ft_op : `Operator`, optional
+            Use this operator to compute Fourier transforms instead of
+            the default `FourierTransform` or `DiscreteFourierTransform`.
+
+        ft_range_tmp : ``ft_op.range`` element, optional
+            Temporary for the range of ``ft_op``. It is used to store
+            the FT of an input function.
 
         See also
         --------
@@ -197,262 +243,214 @@ class FourierSpaceConvolution(Convolution):
 
               :math:`\\big[\mathcal{C}_k(f)\\big](x) = [k \\ast f](x)`.
 
-        - If a 1D function defined on an interval of length :math:`L`
-          is sampled at a regular grid with step size :math:`s`, the
-          corresponding Fourier space grid has step size
-          :math:`\hat s = 2\pi / L` and the Fourier domain has extent
-          :math:`\hat L = 2\pi / s`. This means that resampling in real
-          space on the same interval corresponds to resizing the
-          Fourier domain (larger for smaller step size).
+        - If the convolution kernel :math:`k` is defined in real space on
+          a rectangular domain :math:`\Omega_0` with midpoint :math:`m_0`,
+          then the convolution :math:`k \\ast f` of a function
+          :math:`f:\Omega \\to \mathbb{R}` with :math:`k` has a support
+          that is a superset of :math:`\Omega + m_0`. Therefore, we
+          choose to keep the size of the domain and take
+          :math:`\Omega + m_0` as the domain of definition of functions
+          in the range of the convolution operator.
 
-          In higher dimensions, the same argument can be applied per
-          axis.
+          In fact, the support of the convolution is contained in the
+          `Minkowski sum
+          <https://en.wikipedia.org/wiki/Minkowski_addition>`_
+          :math:`\Omega + \Omega_0`.
 
-        - Since resampling in Fourier space is known to produce
-          artefacts, it is not allowed in this implementation. This means
-          that the domains of definition of kernel and input functions
-          must have the same extent (shift is allowed).
+          For example, if :math:`\Omega = [0, 5]` and
+          :math:`\Omega_0 = [1, 3]`, i.e. :math:`m_0 = 2`, then
+          :math:`\Omega + \Omega_0 = [1, 8]`. However, we choose the
+          shifted interval :math:`\Omega + m_0 = [2, 7]` for the range
+          of the convolution since it contains the "main mass" of the
+          result.
         """
         # Basic checks
         if not isinstance(domain, DiscreteLp):
             raise TypeError('`domain` {!r} is not a `DiscreteLp` instance.'
                             ''.format(domain))
 
-        # TODO: calculate range
-
-
-        super().__init__(dom, ran, linear=True)
-
-        # Handle kernel mode and impl
-        impl = kwargs.pop('impl', 'default_ft')
-        impl, impl_in = str(impl).lower(), impl
-        if impl not in _FOURIER_CONV_SUPPORTED_IMPL:
-            raise ValueError("`impl` '{}' not understood."
-                             ''.format(impl_in))
-        self._impl = impl
-
-        kernel_mode = kwargs.pop('kernel_mode', 'real')
         kernel_mode, kernel_mode_in = str(kernel_mode).lower(), kernel_mode
         if kernel_mode not in ('real', 'fourier'):
             raise ValueError("`kernel_mode` '{}' not understood."
                              ''.format(kernel_mode_in))
 
-        self._kernel_mode = kernel_mode
-
-        # TODO: continue here
-
-        fourier_trafo = kwargs.pop('fourier_trafo', None)
-        if fourier_trafo is None:
-            self._fourier_trafo = FourierTransform(domain, impl=ft_impl)
-        if (fourier_trafo is not None and
-                not isinstance(fourier_trafo, Operator)):
-            ft_has_range = False
-            self._fourier_trafo = fourier_trafo
-
-
-
-        self._axes = list(kwargs.pop('axes', (range(self.domain.ndim))))
-        if ker_mode == 'real':
-            halfcomplex = True  # efficient
+        # Shift range by midpoint if the kernel is a real space element
+        if (isinstance(kernel, domain.element_type) and
+                kernel_mode == 'real'):
+            shift = kernel.space.mid_pt
         else:
-            halfcomplex = ker_mode.endswith('hc')
+            shift = 0
 
-        if use_own_ft:
-            fft_impl = self.impl.split('_')[0]
-            self._transform = FourierTransform(
-                self.domain, axes=self.axes, halfcomplex=halfcomplex,
-                impl=fft_impl)
+        calc_range = uniform_discr_fromdiscr(domain,
+                                             min_pt=domain.min_pt + shift)
+
+        if range is None:
+            range = calc_range
         else:
-            self._transform = None
+            if range != calc_range:
+                raise ValueError('`range` {} inconsistent with range {} '
+                                 'calculated from `kernel` and `domain`'
+                                 ''.format(range, calc_range))
 
-        scale = kwargs.pop('scale', True)
+        super().__init__(domain, range, linear=True)
 
-        # TODO: handle case if axes are given, but the kernel is the same
-        # for each point along the other axes
-        if ker_mode == 'real':
-            # Kernel given as real space element
-            if use_own_ft:
-                self._kernel = None
-                self._kernel_transform = self.transform(kernel, **kwargs)
-                if scale:
-                    self._kernel_transform *= (np.sqrt(2 * np.pi) **
-                                               self.domain.ndim)
+        # Initialize Fourier transform if not given as argument
+        self.__integral = bool(integral)
+        ft_op = kwargs.pop('ft_op', None)
+        axes = kwargs.pop('axes', None)
+        self.__ft_kwargs = kwargs.pop('ft_kwargs', {})
+        if axes is not None and 'axes' in self.__ft_kwargs:
+            raise ValueError('`axes` cannot be given both directly and in '
+                             '`ft_kwargs`')
+
+        if ft_op is None:
+            if self.integral:
+                ft_op_type = FourierTransform
             else:
-                if not self.domain.partition.is_regular:
-                    raise NotImplementedError(
-                        'real-space convolution not implemented for '
-                        'irregular sampling.')
-                try:
-                    # Function or other element-like as input. All axes
-                    # must be used, otherwise we get an error.
-                    # TODO: make a zero-centered space by default and
-                    # adapt the range otherwise
-                    self._kernel = self._kernel_elem(
-                        self.domain.element(kernel).asarray(), self.axes)
-                except (TypeError, ValueError):
-                    # Got an array-like, axes can be used
-                    self._kernel = self._kernel_elem(kernel, self.axes)
-                finally:
-                    self._kernel_transform = None
-                    if scale:
-                        self._kernel *= self.domain.cell_volume
+                ft_op_type = DiscreteFourierTransform
+
+            self.__ft_op = ft_op_type(
+                self.domain, impl=ft_impl, axes=axes, **self.__ft_kwargs)
+
         else:
-            # Kernel given as Fourier space element
-            self._kernel = None
-            self._kernel_transform = self.transform.range.element(kernel)
-            if scale:
-                self._kernel_transform *= (np.sqrt(2 * np.pi) **
-                                           self.domain.ndim)
+            if not isinstance(ft_op, Operator):
+                raise TypeError('`ft_op` must be an `Operator` instance, got '
+                                '{!r}'.format(ft_op))
+            if ft_op.domain != domain:
+                raise OpDomainError(
+                    '`ft_op` must have `domain` {} as its domain, got {}'
+                    ''.format(domain, ft_op.domain))
+            self.__ft_op = ft_op
 
-    def _kernel_elem(self, kernel, axes):
-        """Return kernel with adapted shape for real space convolution."""
-        kernel = np.asarray(kernel)
-        extra_dims = self.domain.ndim - kernel.ndim
+        # Calculate scaled kernel FT
+        kernel_kwargs = kwargs.pop('kernel_kwargs', {})
+        kernel_is_scaled = kwargs.pop('kernel_is_scaled', False)
+        scaled_ker_ft, scaling, ker_ft_op = _scaled_kernel_ft(
+            kernel, self.ft_op, kernel_mode, kernel_kwargs, kernel_is_scaled)
 
-        if extra_dims == 0:
-            return self.domain.element(kernel)
-        else:
-            if len(axes) != extra_dims:
-                raise ValueError('kernel dim {} + number of axes {} '
-                                 '!= space dimension {}.'
-                                 ''.format(kernel.ndim, len(axes),
-                                           self.domain.ndim))
+        self.__scaled_kernel_ft = scaled_ker_ft
+        self.__kernel_scaling = scaling
+        self.__kernel_ft_op = ker_ft_op
 
-            # Sparse kernel (less dimensions), blow up
-            slc = [None] * self.domain.ndim
-            for ax in axes:
-                slc[ax] = slice(None)
+        # FT range temporary
+        ft_range_tmp = kwargs.pop('ft_range_tmp', None)
+        if ft_range_tmp is not None and ft_range_tmp not in self.ft_op.range:
+            raise OpRangeError('`ft_range_tmp` not in `ft_op.range`')
+        self.__ft_range_tmp = ft_range_tmp
 
-            kernel = kernel[slc]
-            # Assuming uniform discretization
-            min_pt = -self.domain.cell_sides * self.domain.shape / 2
-            max_pt = self.domain.cell_sides * self.domain.shape / 2
-            space = uniform_discr(min_pt, max_pt, kernel.shape,
-                                  self.domain.exponent, self.domain.interp,
-                                  impl=self.domain.impl,
-                                  dtype=self.domain.dspace.dtype,
-                                  order=self.domain.order,
-                                  weighting=self.domain.weighting)
-            return space.element(kernel)
+        # Cache adjoint operator
+        self.__adjoint = FourierSpaceConvolution(
+            domain=self.range, range=self.domain,
+            kernel=self.__scaled_kernel_ft.conj(), kernel_mode='fourier',
+            kernel_is_scaled=True, axes=axes, ft_impl=self.ft_impl,
+            integral=self.integral, ft_kwargs=self.__ft_kwargs,
+            ft_range_tmp=self.__ft_range_tmp)
 
     @property
-    def impl(self):
-        """Implementation of this operator."""
-        return self._impl
+    def integral(self):
+        """``True`` if the conv. integral is approximated, else ``False``"""
+        return self.__integral
 
     @property
-    def kernel_mode(self):
-        """The way in which the kernel is specified."""
-        return self._kernel_mode
+    def ft_op(self):
+        """Fourier transform operator used in this convolution."""
+        return self.__ft_op
 
     @property
-    def transform(self):
-        """Fourier transform operator back-end if used, else `None`."""
-        return self._transform
+    def ft_impl(self):
+        """Implementation of the Fourier transform in this convolution."""
+        return self.ft_op.impl
 
     @property
     def axes(self):
         """Axes along which the convolution is taken."""
-        return self._axes
+        return self.ft_op.axes
 
     @property
-    def kernel(self):
-        """Real-space kernel if used, else `None`.
+    def kernel_ft_op(self):
+        """The Fourier transform operator for the kernel.
 
-        Note that this is the scaled version ``kernel * cell_volume``
-        if ``scale=True`` was specified. Scaling here is more efficient
-        than scaling the result.
+        Its domain may differ from that of `ft_op`, but the ranges of both
+        transforms are the same.
         """
-        return self._kernel
+        # TODO: Update docstring when broadcasting convolution is there
+        return self.__kernel_ft_op
 
-    @property
-    def kernel_space(self):
-        """Space of the convolution kernel."""
-        return getattr(self.kernel, 'space', None)
+    def kernel_ft(self, out=None):
+        """Return a the FT of this convolution operator's kernel.
 
-    @property
-    def kernel_transform(self):
-        """Fourier-space kernel if used, else `None`.
+        Parameters
+        ----------
+        out : element of ``kernel_ft_op.range``, optional
+            Write the output to this data storage.
 
-        Note that this is the scaled version
-        ``kernel_ft * (2*pi) ** (ndim/2)`` of the FT of the input
-        kernel if ``scale=True`` was specified. Scaling here is more
-        efficient than scaling the result.
+        Returns
+        -------
+        kernel_ft : element of ``kernel_ft_op.range``
+            FT of the convolution kernel. If ``out`` was given, this
+            object is a reference to it.
         """
-        return self._kernel_transform
+        if out is None:
+            out = self.kernel_ft_op.range.element()
+
+        out.lincomb(1 / self.__kernel_scaling, self.__scaled_kernel_ft)
+        return out
+
+    def kernel(self, out=None):
+        """Return the real-space kernel of this convolution operator.
+
+        Parameters
+        ----------
+        out : element of ``kernel_ft_op.domain``, optional
+            Write the output to this data storage.
+
+        Returns
+        -------
+        kernel : element of ``kernel_ft_op.domain``
+            The Convolution kernel. If ``out`` was given, this
+            object is a reference to it.
+        """
+        if out is None:
+            out = self.kernel_ft_op.domain.element()
+
+        self.kernel_ft_op.inverse(self.__scaled_kernel_ft, out=out)
+        out /= self.__kernel_scaling
+        return out
 
     def _call(self, x, out, **kwargs):
         """Implement ``self(x, out[, **kwargs])``.
 
         Keyword arguments are passed on to the transform.
         """
-        if self.kernel is not None:
-            # Scipy based convolution
-            out[:] = signal.convolve(x, self.kernel, mode='same')
-        elif self.kernel_transform is not None:
-            # Convolution based on our own transforms
-            if self.domain.field == ComplexNumbers():
-                # Use out as a temporary, has the same size
-                # TODO: won't work for CUDA
-                tmp = self.transform.range.element(out.asarray())
-            else:
-                # No temporary since out has reduced size (halfcomplex)
-                tmp = None
-
-            x_trafo = self.transform(x, out=tmp, **kwargs)
-            x_trafo *= self.kernel_transform
-
-            self.transform.inverse(x_trafo, out=out, **kwargs)
-        else:
-            raise RuntimeError('both kernel and kernel_transform are None.')
-
-    def _adj_kernel(self, kernel, axes):
-        """Return adjoint kernel with adapted shape."""
-        kernel = np.asarray(kernel).conj()
-        extra_dims = self.domain.ndim - kernel.ndim
-
-        if extra_dims == 0:
-            slc = [slice(None, None, -1)] * self.domain.ndim
-            return kernel[slc]
-        else:
-            if len(axes) != extra_dims:
-                raise ValueError('kernel dim ({}) + number of axes ({}) '
-                                 'does not add up to the space dimension '
-                                 '({}).'.format(kernel.ndim, len(axes),
-                                                self.domain.ndim))
-
-            # Sparse kernel (less dimensions), blow up
-            slc = [None] * self.domain.ndim
-            for ax in axes:
-                slc[ax] = slice(None, None, -1)
-            return kernel[slc]
+        x_trafo = self.ft_op(x, out=self.__ft_range_tmp, **kwargs)
+        # TODO: use broadcasting
+        x_trafo *= self.__scaled_kernel_ft
+        self.ft_op.inverse(x_trafo, out=out, **kwargs)
 
     @property
     def adjoint(self):
-        """Adjoint operator."""
-        if self.kernel is not None:
-            # TODO: this could be expensive. Move to init?
-            adj_kernel = self._adj_kernel(self.kernel, self.axes)
-            return Convolution(dom=self.domain,
-                               kernel=adj_kernel, kernel_mode='real',
-                               impl=self.impl, axes=self.axes)
+        """Adjoint operator given by the reversed kernel.
 
-        elif self.kernel_transform is not None:
-            # TODO: this could be expensive. Move to init?
-            adj_kernel_ft = self.kernel_transform.conj()
+        This can be expressed as multiplication with the complex
+        conjugate kernel in Fourier space, which is used in this
+        implementation.
+        """
+        return self.__adjoint
 
-            if self.transform.halfcomplex:
-                kernel_mode = 'ft_hc'
-            else:
-                kernel_mode = 'ft'
-            return Convolution(dom=self.domain,
-                               kernel=adj_kernel_ft, kernel_mode=kernel_mode,
-                               impl=self.impl, axes=self.axes)
-        else:
-            raise RuntimeError('both kernel and kernel_transform are None.')
+    @property
+    def inverse(self):
+        """Poor man's deconvolution using the reciprocal kernel FT."""
+        denom_eps = 1e-5
+        inv_ker_ft = self.kernel_ft()
+        inv_ker_ft[np.abs(inv_ker_ft) < denom_eps] = denom_eps
+        return FourierSpaceConvolution(
+            domain=self.range, range=self.domain,
+            kernel=inv_ker_ft, kernel_mode='fourier', kernel_is_scaled=False,
+            axes=self.axes, ft_impl=self.ft_impl, integral=self.integral,
+            ft_kwargs=self.__ft_kwargs, ft_range_tmp=self.__ft_range_tmp)
 
 
-class RealSpaceConvolution(Convolution):
+class RealSpaceConvolution(ConvolutionBase):
 
     """Convolution implemented in real space.
 
@@ -469,7 +467,7 @@ class RealSpaceConvolution(Convolution):
         domain : `DiscreteLp`
             Uniformly discretized space of functions on which the
             operator can act.
-        kernel : `DiscreteLpElement`, callable or array-like
+        kernel : `DiscreteLpElement`, callable or `array-like`
             Fixed kernel of the convolution operator. It can be
             specified in several ways, resulting in varying
             `Operator.range`. In all cases, the kernel must have
@@ -479,18 +477,18 @@ class RealSpaceConvolution(Convolution):
             `DiscreteLpElement` : The range is shifted by the midpoint
             of the kernel domain.
 
-            callable or `array-like` : The kernel is interpreted as a
+            callable or array-like : The kernel is interpreted as a
             continuous/discretized function with support centered around
             zero, which leads to the range of this operator being equal
             to its domain.
 
             See ``Notes`` for further explanation.
 
-        scale : `bool`, optional
-            If `True`, scale the discrete convolution with
+        scale : bool, optional
+            If ``True``, scale the discrete convolution with
             `DiscreteLp.cell_volume`, such that it approximates a
             continuous convolution.
-            Default: `True`
+            Default: ``True``
 
         Other parameters
         ----------------
@@ -632,29 +630,28 @@ class RealSpaceConvolution(Convolution):
             kernel_shift = kernel.space.partition.mid_pt
             range = uniform_discr_fromdiscr(
                 domain, min_pt=domain.min_pt + kernel_shift)
-            return kernel, range
+
+        elif callable(kernel):
+            # Use "natural" kernel space, which is the zero-centered
+            # version of the domain.
+            extent = domain.partition.extent()
+            std_kernel_space = uniform_discr_fromdiscr(
+                domain, min_pt=-extent / 2)
+            kernel = std_kernel_space.element(kernel, **kernel_kwargs)
+            range = domain
 
         else:
-            if callable(kernel):
-                # Use "natural" kernel space, which is the zero-centered
-                # version of the domain.
-                extent = domain.partition.extent()
-                std_kernel_space = uniform_discr_fromdiscr(
-                    domain, min_pt=-extent / 2)
-                kernel = std_kernel_space.element(kernel, **kernel_kwargs)
-                range = domain
-                return kernel, range
-            else:
-                # Make a zero-centered space with the same cell sides as
-                # domain, but shape according to the kernel.
-                kernel = np.asarray(kernel, dtype=domain.dtype)
-                shape = kernel.shape
-                extent = domain.cell_sides * shape
-                kernel_space = uniform_discr_fromdiscr(
-                    domain, min_pt=-extent / 2, shape=shape)
-                kernel = kernel_space.element(kernel)
-                range = domain
-                return kernel, range
+            # Make a zero-centered space with the same cell sides as
+            # domain, but shape according to the kernel.
+            kernel = np.asarray(kernel, dtype=domain.dtype)
+            shape = kernel.shape
+            extent = domain.cell_sides * shape
+            kernel_space = uniform_discr_fromdiscr(
+                domain, min_pt=-extent / 2, shape=shape)
+            kernel = kernel_space.element(kernel)
+            range = domain
+
+        return kernel, range
 
     @property
     def impl(self):
