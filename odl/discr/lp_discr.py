@@ -192,6 +192,11 @@ class DiscreteLp(DiscretizedSpace):
         return self.partition.max_pt
 
     @property
+    def mid_pt(self):
+        """Midpoint of the function domain."""
+        return self.partition.mid_pt
+
+    @property
     def order(self):
         """Axis ordering for array flattening."""
         return self.__order
