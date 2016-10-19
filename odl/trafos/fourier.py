@@ -87,8 +87,13 @@ class DiscreteFourierTransformBase(Operator):
             Otherwise, calculate the full complex FFT. If ``dom_dtype``
             is a complex type, this option has no effect.
         impl : {'numpy', 'pyfftw'}
-            Backend for the FFT implementation. The 'pyfftw' backend
-            is faster but requires the ``pyfftw`` package.
+            Backend for the FFT implementation.
+
+            ``'numpy'`` : Use Numpy/Scipy FFT.
+
+            ``'pyfftw'`` : Use the `pyFFTW
+            <https://hgomersall.github.io/pyFFTW/>`_ backend based on FFTW.
+            It is much faster but requires the ``pyfftw`` package.
         """
         if not isinstance(domain, DiscreteLp):
             raise TypeError('`domain` {!r} is not a `DiscreteLp` instance'
@@ -170,7 +175,6 @@ class DiscreteFourierTransformBase(Operator):
         --------
         pyfftw_call : Call pyfftw backend directly
         """
-        # TODO: Implement zero padding
         if self.impl == 'numpy':
             out[:] = self._call_numpy(x.asarray())
         else:
@@ -220,7 +224,7 @@ class DiscreteFourierTransformBase(Operator):
         raise NotImplementedError('abstract method')
 
     def _call_numpy(self, x):
-        """Return ``self(x)`` using numpy.
+        """Return ``self(x)`` using the default Numpy/Scipy backend.
 
         Parameters
         ----------
@@ -413,8 +417,13 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
             Otherwise, calculate the full complex FFT. If ``dom_dtype``
             is a complex type, this option has no effect.
         impl : {'numpy', 'pyfftw'}
-            Backend for the FFT implementation. The ``'pyfftw'`` backend
-            is faster but requires the ``pyfftw`` package.
+            Backend for the FFT implementation.
+
+            ``'numpy'`` : Use Numpy/Scipy FFT.
+
+            ``'pyfftw'`` : Use the `pyFFTW
+            <https://hgomersall.github.io/pyFFTW/>`_ backend based on FFTW.
+            It is much faster but requires the ``pyfftw`` package.
 
         Examples
         --------
@@ -444,7 +453,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
                          sign=sign, halfcomplex=halfcomplex, impl=impl)
 
     def _call_numpy(self, x):
-        """Return ``self(x)`` using numpy.
+        """Return ``self(x)`` using the default Numpy/Scipy backend.
 
         See Also
         --------
@@ -467,7 +476,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
 
         See Also
         --------
-        DiscreteFourierTransformBase._call_numpy
+        DiscreteFourierTransformBase._call_pyfftw
         """
         assert isinstance(x, np.ndarray)
         assert isinstance(out, np.ndarray)
@@ -562,8 +571,13 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             Otherwise, domain and range have the same shape. If
             ``range`` is a complex space, this option has no effect.
         impl : {'numpy', 'pyfftw'}
-            Backend for the FFT implementation. The 'pyfftw' backend
-            is faster but requires the ``pyfftw`` package.
+            Backend for the FFT implementation.
+
+            ``'numpy'`` : Use Numpy/Scipy FFT.
+
+            ``'pyfftw'`` : Use the `pyFFTW
+            <https://hgomersall.github.io/pyFFTW/>`_ backend based on FFTW.
+            It is much faster but requires the ``pyfftw`` package.
 
         Examples
         --------
@@ -593,7 +607,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
                          sign=sign, halfcomplex=halfcomplex, impl=impl)
 
     def _call_numpy(self, x):
-        """Return ``self(x)`` using numpy.
+        """Return ``self(x)`` using the default Numpy/Scipy backend.
 
         Parameters
         ----------
@@ -730,9 +744,15 @@ class FourierTransformBase(Operator):
             exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
         impl : {'numpy', 'pyfftw'}
-            Backend for the FFT implementation. The 'pyfftw' backend
-            is faster but requires the ``pyfftw`` package.
-        axes : int or sequence of ints, optional
+            Backend for the FFT implementation.
+
+            ``'numpy'`` : Use Numpy/Scipy FFT.
+
+            ``'pyfftw'`` : Use the `pyFFTW
+            <https://hgomersall.github.io/pyFFTW/>`_ backend based on FFTW.
+            It is much faster but requires the ``pyfftw`` package.
+
+        axes : int or `sequence` of ints, optional
             Dimensions along which to take the transform.
             Default: all axes
         sign : {'-', '+'}, optional
@@ -799,7 +819,9 @@ class FourierTransformBase(Operator):
                 ''.format(domain.dspace))
 
         # axes
-        axes = kwargs.pop('axes', np.arange(domain.ndim))
+        axes = kwargs.pop('axes', None)
+        if axes is None:
+            axes = np.arange(domain.ndim)
         self.__axes = normalized_axes_tuple(axes, domain.ndim)
 
         # Implementation
@@ -881,7 +903,6 @@ class FourierTransformBase(Operator):
         --------
         pyfftw_call : Call pyfftw backend directly
         """
-        # TODO: Implement zero padding
         if self.impl == 'numpy':
             out[:] = self._call_numpy(x.asarray())
         else:
@@ -889,7 +910,7 @@ class FourierTransformBase(Operator):
             out[:] = self._call_pyfftw(x.asarray(), out.asarray(), **kwargs)
 
     def _call_numpy(self, x):
-        """Return ``self(x)`` for numpy back-end.
+        """Return ``self(x)`` using the default Numpy/Scipy backend.
 
         Parameters
         ----------
@@ -1169,9 +1190,15 @@ class FourierTransform(FourierTransformBase):
             exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
         impl : {'numpy', 'pyfftw'}
-            Backend for the FFT implementation. The 'pyfftw' backend
-            is faster but requires the ``pyfftw`` package.
-        axes : int or sequence of ints, optional
+            Backend for the FFT implementation.
+
+            ``'numpy'`` : Use Numpy/Scipy FFT.
+
+            ``'pyfftw'`` : Use the `pyFFTW
+            <https://hgomersall.github.io/pyFFTW/>`_ backend based on FFTW.
+            It is much faster but requires the ``pyfftw`` package.
+
+        axes : int or `sequence` of ints, optional
             Dimensions along which to take the transform.
             Default: all axes
         sign : {'-', '+'}, optional
@@ -1404,9 +1431,15 @@ class FourierTransformInverse(FourierTransformBase):
             The exponent is chosen to be the conjugate ``p / (p - 1)``,
             which reads as 'inf' for p=1 and 1 for p='inf'.
         impl : {'numpy', 'pyfftw'}
-            Backend for the FFT implementation. The 'pyfftw' backend
-            is faster but requires the ``pyfftw`` package.
-        axes : int or sequence of ints, optional
+            Backend for the FFT implementation.
+
+            ``'numpy'`` : Use Numpy/Scipy FFT.
+
+            ``'pyfftw'`` : Use the `pyFFTW
+            <https://hgomersall.github.io/pyFFTW/>`_ backend based on FFTW.
+            It is much faster but requires the ``pyfftw`` package.
+
+        axes : int or `sequence` of ints, optional
             Dimensions along which to take the transform.
             Default: all axes
         sign : {'-', '+'}, optional
@@ -1513,7 +1546,7 @@ class FourierTransformInverse(FourierTransformBase):
             x, shift=self.shifts, axes=self.axes, sign=self.sign, out=out)
 
     def _call_numpy(self, x):
-        """Return ``self(x)`` for numpy back-end.
+        """Return ``self(x)`` using the default Numpy/Scipy backend.
 
         Parameters
         ----------
