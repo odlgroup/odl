@@ -3,30 +3,31 @@ package:
     version: "0.4.0"
 
 source:
-    fn: odl-0.4.0.tar.gz
-    url: https://pypi.python.org/packages/4d/f4/f7e0dbc1162d7286a306cd5a985a4d1f705a3bc1d892c5991b86037c2cb6/odl-0.4.0.tar.gz
-    md5: aba2e6b826aae1ff8f95bf495b67034b
-    # git_url: https://github.com/odlgroup/odl
-    # git_rev: v0.4.0
+    # fn: odl-0.4.0.tar.gz
+    # url: https://pypi.python.org/packages/4d/f4/f7e0dbc1162d7286a306cd5a985a4d1f705a3bc1d892c5991b86037c2cb6/odl-0.4.0.tar.gz
+    # md5: aba2e6b826aae1ff8f95bf495b67034b
+    git_url: https://github.com/odlgroup/odl
+    git_rev: master  # for testing
 
-# This currently crashes conda-build, would make sense though.
-# build:
-#     noarch_python: True
+build:
+    noarch_python: True
 
 requirements:
     build:
-        - python 2.7|>=3.4
+        - python
         - nomkl
         - setuptools
         - future >=0.14
         - numpy >=1.9
         - scipy >=0.14
     run:
+        - python
         - nomkl
-        - python 2.7|>=3.4
         - future >=0.14
         - numpy >=1.9
         - scipy >=0.14
+        - matplotlib
+        - pytest >=3.0
 
 test:
     imports:
