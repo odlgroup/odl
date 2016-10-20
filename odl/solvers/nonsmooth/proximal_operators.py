@@ -57,7 +57,7 @@ def combine_proximals(*factory_list):
 
     Parameters
     ----------
-    factory_list : `sequence` of `callable`'s
+    factory_list : sequence of callables
         Proximal operator factories to be combined.
 
     Returns
@@ -100,7 +100,7 @@ def proximal_cconj(prox_factory):
 
     Parameters
     ----------
-    prox_factory : `callable`
+    prox_factory : callable
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``
 
@@ -158,7 +158,7 @@ def proximal_translation(prox_factory, y):
 
     Parameters
     ----------
-    prox_factory : `callable`
+    prox_factory : callable
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``.
     y : Element in domain of ``F``.
@@ -208,7 +208,7 @@ def proximal_arg_scaling(prox_factory, scaling):
 
     Parameters
     ----------
-    prox_factory : `callable`
+    prox_factory : callable
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``
     scaling : float
@@ -263,7 +263,7 @@ def proximal_quadratic_perturbation(prox_factory, a, u=None):
 
     Parameters
     ----------
-    prox_factory : `callable`
+    prox_factory : callable
         A factory function that, when called with a step size, returns the
         proximal operator of ``F``
     a : non-negative float
@@ -344,7 +344,7 @@ def proximal_composition(proximal, operator, mu):
 
     Parameters
     ----------
-    prox_factory : `callable`
+    prox_factory : callable
         A factory function that, when called with a step size returns the
         proximal operator of ``F``
     operator : `Operator`

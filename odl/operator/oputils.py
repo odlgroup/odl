@@ -145,7 +145,7 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         Relative tolerance parameter (see Notes).
     atol : float, optional
         Absolute tolerance parameter (see Notes).
-    callback : `callable`, optional
+    callback : callable, optional
         Function called with the current iterate in each iteration.
 
     Returns

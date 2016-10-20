@@ -86,11 +86,11 @@ def reciprocal_grid(grid, shift=True, axes=None, halfcomplex=False):
     ----------
     grid : `RegularGrid`
         Original sampling grid
-    shift : bool or `sequence` of bools, optional
+    shift : bool or sequence of bools, optional
         If ``True``, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
         each axis.
-    axes : int or `sequence` of ints, optional
+    axes : int or sequence of ints, optional
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
         as a sequence. ``None`` means all axes in ``grid``.
@@ -199,7 +199,7 @@ def realspace_grid(recip_grid, x0, axes=None, halfcomplex=False,
         Sampling grid in reciprocal space.
     x0 : `array-like`
         Desired minimum point of the real space grid.
-    axes : int or `sequence` of ints, optional
+    axes : int or sequence of ints, optional
         Dimensions in which to calculate the real space grid. The sequence
         must have the same length as ``shift`` if the latter is given
         as a sequence. ``None`` means "all axes".
@@ -277,11 +277,11 @@ def dft_preprocess_data(arr, shift=True, axes=None, sign='-', out=None):
     arr : `array-like`
         Array to be pre-processed. If its data type is a real
         non-floating type, it is converted to 'float64'.
-    shift : bool or or `sequence` of bools, optional
+    shift : bool or or sequence of bools, optional
         If ``True``, the grid is shifted by half a stride in the negative
         direction. With a sequence, this option is applied separately on
         each axis.
-    axes : int or `sequence` of ints, optional
+    axes : int or sequence of ints, optional
         Dimensions in which to calculate the reciprocal. The sequence
         must have the same length as ``shift`` if the latter is given
         as a sequence.
@@ -441,14 +441,14 @@ def dft_postprocess_data(arr, real_grid, recip_grid, shift, axes,
         Real space grid in the transform
     recip_grid : `RegularGrid`
         Reciprocal grid in the transform
-    shift : bool or `sequence` of bools
+    shift : bool or sequence of bools
         If ``True``, the grid is shifted by half a stride in the negative
         direction in the corresponding axes. The sequence must have the
         same length as ``axes``.
-    axes : int or `sequence` of ints
+    axes : int or sequence of ints
         Dimensions along which to take the transform. The sequence must
         have the same length as ``shifts``.
-    interp : string or `sequence` of strings
+    interp : string or sequence of strings
         Interpolation scheme used in the real-space.
     sign : {'-', '+'}, optional
         Sign of the complex exponent.
@@ -564,7 +564,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
     space : `DiscreteLp`
         Real space whose reciprocal is calculated. It must be
         uniformly discretized.
-    axes : `sequence` of ints, optional
+    axes : sequence of ints, optional
         Dimensions along which the Fourier transform is taken.
         Default: all axes
     halfcomplex : bool, optional
@@ -572,7 +572,7 @@ def reciprocal_space(space, axes=None, halfcomplex=False, shift=True,
         axis for. For ``False``, use the full frequency space.
         This option can only be used if ``space`` is a space of
         real-valued functions.
-    shift : bool or `sequence` of bools, optional
+    shift : bool or sequence of bools, optional
         If ``True``, the reciprocal grid is shifted by half a stride in
         the negative direction. With a boolean sequence, this option
         is applied separately to each axis.

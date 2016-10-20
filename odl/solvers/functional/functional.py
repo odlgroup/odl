@@ -1128,17 +1128,17 @@ def simple_functional(space, fcall=None, grad=None, prox=None, grad_lip=np.nan,
     ----------
     space : `LinearSpace`
         Space that the functional should act on.
-    fcall : `callable`, optional
+    fcall : callable, optional
         Function to evaluate when calling the functional.
-    grad : `callable` or `Operator`, optional
+    grad : callable or `Operator`, optional
         Gradient operator of the functional.
     prox : `proximal factory`, optional
         Proximal factory for the functional.
     grad_lip : float, optional
         lipschitz constant of the functional.
-    cconj_fcall : `callable`, optional
+    cconj_fcall : callable, optional
         Function to evaluate when calling the convex conjugate functional.
-    cconj_grad : `callable` or `Operator`, optional
+    cconj_grad : callable or `Operator`, optional
         Gradient operator of the convex conjugate functional
     cconj_prox : `proximal factory`, optional
         Proximal factory for the convex conjugate functional.

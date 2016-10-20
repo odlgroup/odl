@@ -93,7 +93,7 @@ class ProductSpace(LinearSpace):
 
         Other Parameters
         ----------------
-        dist : `callable`, optional
+        dist : callable, optional
             The distance function defining a metric on the space.
             It must accept two `ProductSpaceElement` arguments and
             fulfill the following mathematical conditions for any
@@ -110,7 +110,7 @@ class ProductSpace(LinearSpace):
 
             Cannot be combined with: ``weight, norm, inner``
 
-        norm : `callable`, optional
+        norm : callable, optional
             The norm implementation. It must accept an
             `ProductSpaceElement` argument, return a float and satisfy the
             following conditions for all space elements ``x, y`` and scalars
@@ -125,7 +125,7 @@ class ProductSpace(LinearSpace):
 
             Cannot be combined with: ``weight, dist, inner``
 
-        inner : `callable`, optional
+        inner : callable, optional
             The inner product implementation. It must accept two
             `ProductSpaceElement` arguments, return a element from
             the field of the space (real or complex number) and
@@ -1195,7 +1195,7 @@ class ProductSpaceCustomInnerProduct(CustomInnerProductBase):
 
         Parameters
         ----------
-        inner : `callable`
+        inner : callable
             The inner product implementation. It must accept two
             `ProductSpaceElement` arguments, return a element from
             the field of the space (real or complex number) and
@@ -1233,7 +1233,7 @@ class ProductSpaceCustomNorm(CustomNormBase):
 
         Parameters
         ----------
-        norm : `callable`
+        norm : callable
             The norm implementation. It must accept a
             `ProductSpaceElement` argument, return a float and satisfy
             the following conditions for all space elements
@@ -1259,7 +1259,7 @@ class ProductSpaceCustomDist(CustomDistBase):
 
         Parameters
         ----------
-        dist : `callable`
+        dist : callable
             The distance function defining a metric on
             `ProductSpace`. It must accept two `ProductSpaceElement`
             arguments and fulfill the following mathematical conditions

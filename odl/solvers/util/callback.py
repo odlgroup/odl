@@ -54,7 +54,7 @@ class SolverCallback(object):
 
         Parameters
         ----------
-        other : `callable`
+        other : callable
             The other callback to compose with.
 
         Returns
@@ -94,7 +94,7 @@ class _CallbackAnd(SolverCallback):
 
         Parameters
         ----------
-        callback1, ..., callbackN : `callable`
+        callback1, ..., callbackN : callable
             Callables to be called in sequence as listed.
         """
         callbacks = [c if isinstance(c, SolverCallback) else CallbackApply(c)
@@ -135,7 +135,7 @@ class CallbackStore(SolverCallback):
         results : list, optional
             List in which to store the iterates.
             Default: new list (``[]``)
-        results : `callable`, optional
+        results : callable, optional
             Function to be called on all incoming results before storage.
             Default: copy
 
@@ -209,7 +209,7 @@ class CallbackApply(SolverCallback):
 
         Parameters
         ----------
-        function : `callable`
+        function : callable
             Function to call for each iteration
         """
         assert callable(function)

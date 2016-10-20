@@ -69,11 +69,11 @@ def steepest_descent(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
         Maximum number of iterations.
     tol : float, optional
         Tolerance that should be used for terminating the iteration.
-    projection : `callable`, optional
+    projection : callable, optional
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
         argument and modify it in-place.
-    callback : `callable`, optional
+    callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     See Also

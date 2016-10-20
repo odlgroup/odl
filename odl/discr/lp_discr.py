@@ -73,7 +73,7 @@ class DiscreteLp(DiscretizedSpace):
             The parameter :math:`p` in :math:`L^p`. If the exponent is
             not equal to the default 2.0, the space has no inner
             product.
-        interp : string or `sequence` of strings, optional
+        interp : string or sequence of strings, optional
             The interpolation type to be used for discretization.
             A sequence is interpreted as interpolation scheme per
             axis.
@@ -246,7 +246,7 @@ class DiscreteLp(DiscretizedSpace):
         inp : optional
             Input data to create an element from.
 
-            If ``inp`` is `callable`, it needs to be understood by the
+            If ``inp`` is callable, it needs to be understood by the
             ``uspace.element`` method.
 
             Otherwise, it has to be understood by the ``dspace.element``
@@ -872,7 +872,7 @@ def uniform_discr_frompartition(partition, exponent=2.0, interp='nearest',
     exponent : positive float, optional
         The parameter ``p`` in ``L^p``. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : string or `sequence` of strings, optional
+    interp : string or sequence of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -971,12 +971,12 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
     fspace : `FunctionSpace`
         Continuous function space. Its domain must be an
         `IntervalProd` instance.
-    shape : int or `sequence` of ints
+    shape : int or sequence of ints
         Number of samples per axis.
     exponent : positive float, optional
         The parameter ``p`` in ``L^p``. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : string or `sequence` of strings, optional
+    interp : string or sequence of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -989,7 +989,7 @@ def uniform_discr_fromspace(fspace, shape, exponent=2.0, interp='nearest',
 
     Other Parameters
     ----------------
-    nodes_on_bdry : bool or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
         by half a cell size into the interior (``False``). In each axis,
@@ -1083,12 +1083,12 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
     ----------
     interval : `IntervalProd`
         The domain of the uniformly discretized space.
-    shape : int or `sequence` of ints
+    shape : int or sequence of ints
         Number of samples per axis.
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : string or `sequence` of strings, optional
+    interp : string or sequence of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -1098,7 +1098,7 @@ def uniform_discr_fromintv(interval, shape, exponent=2.0, interp='nearest',
 
     impl : str, optional
         Implementation of the data storage arrays.
-    nodes_on_bdry : bool or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
         by half a cell size into the interior (``False``). In each axis,
@@ -1164,14 +1164,14 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
 
     Parameters
     ----------
-    min_pt, max_pt: float or `sequence` of floats
+    min_pt, max_pt: float or sequence of floats
         Minimum/maximum corners of the desired function domain.
-    shape : int or `sequence` of ints
+    shape : int or sequence of ints
         Number of samples per axis.
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : string or `sequence` of strings, optional
+    interp : string or sequence of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -1181,7 +1181,7 @@ def uniform_discr(min_pt, max_pt, shape, exponent=2.0, interp='nearest',
 
     impl : string, optional
         Implementation of the data storage arrays.
-    nodes_on_bdry : bool or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
         by half a cell size into the interior (``False``). In each axis,
@@ -1254,7 +1254,7 @@ def discr_sequence_space(shape, exponent=2.0, impl='numpy', **kwargs):
 
     Parameters
     ----------
-    shape : int or `sequence` of ints
+    shape : int or sequence of ints
         Number of element entries per axis.
     exponent : positive float, optional
         The parameter ``p`` in ```L^p``. If the exponent is
@@ -1310,14 +1310,14 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
     ----------
     discr : `DiscreteLp`
         Uniformly discretized space used as a template.
-    min_pt, max_pt: float or `sequence` of floats
+    min_pt, max_pt: float or sequence of floats
         Minimum/maximum corners of the desired function domain.
-    shape : int or `sequence` of ints
+    shape : int or sequence of ints
         Number of samples per axis.
     exponent : positive float, optional
         The parameter :math:`p` in :math:`L^p`. If the exponent is not
         equal to the default 2.0, the space has no inner product.
-    interp : string or `sequence` of strings, optional
+    interp : string or sequence of strings, optional
         Interpolation type to be used for discretization.
         A sequence is interpreted as interpolation scheme per axis.
 
@@ -1327,7 +1327,7 @@ def uniform_discr_fromdiscr(discr, min_pt=None, max_pt=None,
 
     impl : string
         Implementation of the data storage arrays. See
-    nodes_on_bdry : bool or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         Specifies whether to put the outmost grid nodes on the
         boundary of the domain.
 

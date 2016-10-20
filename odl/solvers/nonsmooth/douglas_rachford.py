@@ -53,14 +53,14 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
         Initial point, updated in-place.
     f : `Functional`
         `proximal factory` for the function ``f``.
-    g : `sequence` of `Functional`'s
+    g : sequence of `Functional`'s
         Sequence of of the functions ``g_i``. Needs to have
         ``g[i].convex_conj.proximal``.
-    L : `sequence` of `Operator`'s
+    L : sequence of `Operator`'s
         Sequence of `Opeartor`s` with as many elements as ``g``.
     tau : float
         Step size parameter for ``f``.
-    sigma : `sequence` of floats
+    sigma : sequence of floats
         Step size parameters for the ``g_i``s.
     niter : int
         Number of iterations.
@@ -69,7 +69,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
 
     Other Parameters
     ----------------
-    l : `sequence` of `Functionals`'s, optional
+    l : sequence of `Functionals`'s, optional
         Sequence of of the functions ``l_i``. Needs to have
         ``l[i].convex_conj.proximal``.
         If omitted, the simpler problem without ``l_i``  will be considered.

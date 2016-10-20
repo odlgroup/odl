@@ -154,7 +154,7 @@ class NtuplesBase(Set):
 
         Returns
         -------
-        available_dtypes : `sequence`
+        available_dtypes : sequence
         """
         raise NotImplementedError('abstract method')
 

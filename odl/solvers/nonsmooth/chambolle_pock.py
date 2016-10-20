@@ -80,7 +80,7 @@ def chambolle_pock_solver(x, f, g, L, tau, sigma, niter=1, **kwargs):
 
     Other Parameters
     ----------------
-    callback : `callable`, optional
+    callback : callable, optional
         Function called with the current iterate after each iteration.
     theta : float, optional
         Relaxation parameter, required to fulfill ``0 <= theta <= 1``.

@@ -492,7 +492,7 @@ class IntervalProd(Set):
 
         Parameters
         ----------
-        indices : int or `sequence` of ints
+        indices : int or sequence of ints
             The indices of the dimensions along which to collapse.
         values : `array-like` or float
             The values to which to collapse. Must have the same

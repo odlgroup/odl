@@ -830,9 +830,9 @@ class RegularGrid(TensorGrid):
 
         Parameters
         ----------
-        min_pt, max_pt : float or `sequence` of floats
+        min_pt, max_pt : float or sequence of floats
             Points defining the minimum/maximum grid coordinates.
-        shape : int or `sequence` of ints
+        shape : int or sequence of ints
             Number of grid points per axis.
 
         Examples
@@ -1157,10 +1157,10 @@ def uniform_sampling_fromintv(intv_prod, shape, nodes_on_bdry=True):
     ----------
     intv_prod : `IntervalProd`
         Set to be sampled
-    shape : int or `sequence` of ints
+    shape : int or sequence of ints
         Number of nodes per axis. Entries corresponding to degenerate axes
         must be equal to 1.
-    nodes_on_bdry : bool or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
         by half a cell size into the interior (``False``). In each axis,
@@ -1273,12 +1273,12 @@ def uniform_sampling(min_pt, max_pt, shape, nodes_on_bdry=True):
 
     Parameters
     ----------
-    min_pt, max_pt : float or `sequence` of float
+    min_pt, max_pt : float or sequence of float
         Vectors of lower/upper ends of the intervals in the product.
-    shape : int or `sequence` of ints
+    shape : int or sequence of ints
         Number of nodes per axis. Entries corresponding to degenerate axes
         must be equal to 1.
-    nodes_on_bdry : bool or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
         by half a cell size into the interior (``False``). In each axis,

@@ -639,7 +639,7 @@ class NumpyFn(FnBase, NumpyNtuples):
         Other Parameters
         ----------------
 
-        dist : `callable`, optional
+        dist : callable, optional
             The distance function defining a metric on the space.
             It must accept two `NumpyFnVector` arguments and
             fulfill the following mathematical conditions for any
@@ -657,7 +657,7 @@ class NumpyFn(FnBase, NumpyNtuples):
             This option cannot be combined with ``weight``,
             ``norm`` or ``inner``.
 
-        norm : `callable`, optional
+        norm : callable, optional
             The norm implementation. It must accept an
             `NumpyFnVector` argument, return a float and satisfy the
             following conditions for all vectors ``x, y`` and scalars
@@ -673,7 +673,7 @@ class NumpyFn(FnBase, NumpyNtuples):
             This option cannot be combined with ``weight``,
             ``dist`` or ``inner``.
 
-        inner : `callable`, optional
+        inner : callable, optional
             The inner product implementation. It must accept two
             `NumpyFnVector` arguments, return a element from
             the field of the space (real or complex number) and
@@ -1465,7 +1465,7 @@ def npy_weighted_inner(weight):
 
     Returns
     -------
-    inner : `callable`
+    inner : callable
         Inner product function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1492,7 +1492,7 @@ def npy_weighted_norm(weight, exponent=2.0):
 
     Returns
     -------
-    norm : `callable`
+    norm : callable
         Norm function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -1529,7 +1529,7 @@ def npy_weighted_dist(weight, exponent=2.0, use_inner=False):
 
     Returns
     -------
-    dist : `callable`
+    dist : callable
         Distance function with given weight. Constant weightings
         are applicable to spaces of any size, for arrays the sizes
         of the weighting and the space must match.
@@ -2044,7 +2044,7 @@ class NumpyFnCustomInnerProduct(CustomInnerProductBase):
 
         Parameters
         ----------
-        inner : `callable`
+        inner : callable
             The inner product implementation. It must accept two
             `NumpyFnVector` arguments, return an element from their space's
             field (real or complex number) and satisfy the following
@@ -2079,7 +2079,7 @@ class NumpyFnCustomNorm(CustomNormBase):
 
         Parameters
         ----------
-        norm : `callable`
+        norm : callable
             The norm implementation. It must accept an `NumpyFnVector`
             argument, return a float and satisfy the following
             conditions for all vectors ``x, y`` and scalars ``s``:
@@ -2104,7 +2104,7 @@ class NumpyFnCustomDist(CustomDistBase):
 
         Parameters
         ----------
-        dist : `callable`
+        dist : callable
             The distance function defining a metric on `NumpyFn`. It must
             accept two `NumpyFnVector` arguments, return a float and
             fulfill the following mathematical conditions for any three

@@ -168,9 +168,9 @@ def _dispatch_call_args(cls=None, bound_call=None, unbound_call=None,
     cls : `class`, optional
         The ``_call()`` method of this class is checked. If omitted,
         provide ``unbound_call`` instead to check directly.
-    bound_call: `callable`, optional
+    bound_call: callable, optional
         Check this bound method instead of ``cls``
-    unbound_call: `callable`, optional
+    unbound_call: callable, optional
         Check this unbound function instead of ``cls``
     attr : string, optional
         Check this attribute instead of ``_call``, e.g. ``__call__``
