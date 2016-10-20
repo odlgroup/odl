@@ -90,7 +90,7 @@ This is a very convenient way to have several "ecosystems" of Python packages in
 
     $ conda create --name odl-py35 python=3.5
 
-Follow the displayed instructions to enter/exit the newly created conda environment with name ``odl-py35``.
+Run ``source activate odl-py35`` to enter/exit the newly created conda environment with name ``odl-py35``.
 See the `Managing conda environments`_ documentation for further information.
 
 If you use `Spyder`_ as integrated development environment (IDE, see `Development enviroment`_), you should also install it in the new conda environment and run it from there.
@@ -268,6 +268,8 @@ No GitHub account is required for this step.
 
 In a conda environment
 ======================
+This part assumes that you have run ``source activate <your_conda_env>`` before.
+
 You can choose to install dependencies first (optional ones in square brackets):
 
 .. code-block:: bash
