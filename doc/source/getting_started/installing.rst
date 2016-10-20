@@ -4,16 +4,19 @@
 Installing ODL
 ##############
 
+This guide will go through all steps necessary for a full ODL installation, starting from nothing more than a working operating system (Linux, MacOS or Windows).
+
 ************
 Introduction
 ************
 
 Installing ODL is intended to be straightforward, and this guide is meant for new users.
-For a minimal installation you should perform the following steps:
+For a working installation you should perform the following steps:
 
 1. Install a Python interpreter
 2. Install ODL and its dependencies
-3. (optional) Run the tests
+3. (optional) Install extensions for more functionality
+4. (optional) Run the tests
 
 Consider using Anaconda
 =======================
@@ -100,7 +103,7 @@ Otherwise, Spyder is not able to use the packages in the conda environment:
 
 Installing ODL and its dependencies
 ===================================
-Install ODL and all its (minimal) dependencies by running
+Install ODL and all its (minimal) dependencies in a ``conda`` environment of your choice by running
 
 .. code-block:: bash
 
@@ -172,12 +175,11 @@ Alternative 2: Installing a release using ``pip``
 TL;DR
 =====
 - Install `pip`_
-- Install `FFTW`_
 - Install ODL and dependencies:
 
   .. code-block:: bash
 
-    $ pip install odl[all]
+    $ pip install odl[show,pywavelets,scikit,proximal,testing]
 
 Installing a Python interpreter
 ===============================
@@ -207,17 +209,13 @@ Pick the latest release for your favorite version (2 or 3).
 Installing ODL and its dependencies
 ===================================
 You may need to `install pip`_ to be able to install ODL and its dependencies from the `Python Package Index`_ (PyPI).
-If running ``pip`` (alternatively: ``pip3``) an shows a help message, it is installed -- otherwise you need to install it first.
+If running ``pip`` (alternatively: ``pip2`` or ``pip3``) an shows a help message, it is installed -- otherwise you need to install it first.
 
 For basic installation without extra dependencies, run
 
 .. code-block:: bash
 
    $ pip install --user odl
-
-.. warning::
-    This will probably not work on Windows, since compiled dependencies (e.g. Numpy) will fail to build.
-    Detailed instuctions for these steps is beyond the scope of this document.
 
 
 Extra dependencies
@@ -231,13 +229,13 @@ They can be specified as keywords in square brackets, separated by commas (no sp
 
 Possible choices:
 
-- ``all`` : Install with all extra dependencies.
 - ``show`` : Install matplotlib_ to enable displaying capabilities.
 - ``fft`` : Install `pyFFTW`_ for fast Fourier transforms. Note that this requires the `FFTW`_ C library to be available on your system.
   Note also that even without this dependency, FFTs can be computed with Numpy's FFT library.
 - ``pywavelets`` : Install `PyWavelets`_ for wavelet transforms.
 - ``scikit`` : Install `scikit-image`_ as a simple backend for ray transforms.
 - ``proximal``: Install the `ProxImaL`_ convex optimization package.
+- ``testing``: Pull in the dependencies for unit tests (see :ref:`running_the_tests`)
 
 
 These dependencies are optional and may not be easy to install on your system (especially on Windows).
@@ -246,6 +244,7 @@ In general, a clean ODL installation is enough for most users' initial needs.
 
 ------
 
+.. _alternative_3:
 
 ********************************************************************
 Alternative 3: Installation from source (recommended for developers)
@@ -305,27 +304,26 @@ See :ref:`Contributing to ODL <contributing>` for more information.
 
 ------
 
+.. _running_the_tests:
 
 ****************
 Runing the tests
 ****************
-Unit tests in ODL are based on `pytest`_, and coverage reports are created by the `coverage`_ module.
+Unit tests in ODL are based on `pytest`_.
+They can be run either from within ``odl`` or by invoking ``pytest`` directly.
 
 Installing testing dependencies
 ===============================
 
 Using ``conda``:
 ----------------
-.. code-block:: bash
-
-    $ conda install pytest pytest-cov pytest-pep8
+``pytest`` is already a dependency, nothing to do.
 
 Using ``pip``:
 --------------
-
 .. code-block:: bash
 
-    $ pip install --user pytest pytest-cov pytest-pep8
+    $ pip install --user odl[testing]
 
 
 Testing the code
@@ -336,13 +334,14 @@ Now you can check that everything was installed properly by running
 
    $ python -c "import odl; odl.test()"
 
-**anywhere but** in the top-level directory of an ODL clone.
+.. note::
+    Don't run this command in the top-level directory of an ODL clone, since in that case, the tests in the repository are run, not the ones in the installed package.
+
 If you have installed ODL from source, you can also use ``pytest`` directly:
 
 .. code-block:: bash
 
    $ pytest
-
 
 ------
 
@@ -362,7 +361,7 @@ Search `this table <https://en.wikipedia.org/wiki/CUDA#GPUs_supported>`_ for you
 Installation using ``conda``
 ----------------------------
 .. note::
-    ``odlcuda`` is currently only available for Linux and Python 3.5.
+    In ``conda``, the ``odlcuda`` package is currently only available for Linux 64-bit and Python 3.5.
 
 If you have installed an ODL release, simply run (in a directory of your choice)
 
@@ -406,10 +405,12 @@ You can try using the conda package, but we can give no guarantee that it works 
 
     $ conda install -c astra-toolbox astra-toolbox
 
+For further instructions, check `the ASTRA GitHub page <ASTRA tomography toolbox>`_.
+
 
 STIR for emission tomography
 ============================
-For applications in emission tomography, i.e. PET or SPECT, install STIR_.
+For applications in emission tomography, i.e. PET or SPECT, install `STIR`_ with Python bindings.
 Support for STIR is currently very limited.
 
 
