@@ -89,11 +89,11 @@ def landweber(op, x, rhs, niter=1, omega=1, projection=None, callback=None):
         Maximum number of iterations
     omega : positive float, optional
         Relaxation parameter in the iteration
-    projection : `callable`, optional
+    projection : callable, optional
         Function that can be used to modify the iterates in each iteration,
         for example enforcing positivity. The function should take one
         argument and modify it in-place.
-    callback : `callable`, optional
+    callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -153,7 +153,7 @@ def conjugate_gradient(op, x, rhs, niter=1, callback=None):
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    callback : `callable`, optional
+    callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -244,7 +244,7 @@ Conjugate_gradient_on_the_normal_equations>`_.
         Right-hand side of the equation defining the inverse problem
     niter : int, optional
         Maximum number of iterations
-    callback : `callable`, optional
+    callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns
@@ -356,7 +356,7 @@ def gauss_newton(op, x, rhs, niter=1, zero_seq=exp_zero_seq(2.0),
     zero_seq : iterable, optional
         Zero sequence whose values are used for the regularization of
         the linearized problem in each Newton step
-    callback : `callable`, optional
+    callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate
 
     Returns

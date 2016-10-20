@@ -429,7 +429,7 @@ def ellipse_phantom(space, ellipses):
     ----------
     space : `DiscreteLp`
         Space in which the phantom is created, must be 2- or 3-dimensional.
-    ellipses : `sequence` of `sequence`'s
+    ellipses : sequence of sequences
         If ``space`` is 2-dimensional each row should contain:
 
         'value', 'axis_1', 'axis_2', 'center_x', 'center_y', 'rotation'

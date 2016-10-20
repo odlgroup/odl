@@ -138,7 +138,7 @@ class FunctionSet(Set):
 
         Parameters
         ----------
-        fcall : `callable`, optional
+        fcall : callable, optional
             The actual instruction for out-of-place evaluation.
             It must return a `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
@@ -223,7 +223,7 @@ class FunctionSetElement(Operator):
         ----------
         fset : `FunctionSet`
             Set of functions this element lives in.
-        fcall : `callable`
+        fcall : callable
             The actual instruction for out-of-place evaluation.
             It must return a `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
@@ -629,7 +629,7 @@ class FunctionSpace(FunctionSet, LinearSpace):
 
         Parameters
         ----------
-        fcall : `callable`, optional
+        fcall : callable, optional
             The actual instruction for out-of-place evaluation.
             It must return a `FunctionSet.range` element or a
             `numpy.ndarray` of such (vectorized call).
@@ -1160,7 +1160,7 @@ class FunctionSpaceElement(LinearSpaceElement, FunctionSetElement):
         ----------
         fspace : `FunctionSpace`
             Set of functions this element lives in.
-        fcall : `callable`
+        fcall : callable
             The actual instruction for out-of-place evaluation.
             It must return an `FunctionSet.range` element or a
             ``numpy.ndarray`` of such (vectorized call).

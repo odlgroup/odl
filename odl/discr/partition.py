@@ -575,10 +575,10 @@ def uniform_partition_fromintv(intv_prod, shape, nodes_on_bdry=False):
     ----------
     intv_prod : `IntervalProd`
         Interval product to be partitioned
-    shape : int or `sequence` of ints
+    shape : int or sequence of ints
         Number of nodes per axis. For 1d intervals, a single integer
         can be specified.
-    nodes_on_bdry : bool or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
         by half a cell size into the interior (``False``). In each axis,
@@ -647,7 +647,7 @@ def uniform_partition_fromgrid(grid, min_pt=None, max_pt=None):
     ----------
     grid : `TensorGrid`
         Grid on which the partition is based
-    min_pt, max_pt : float, `sequence` of float, or dict
+    min_pt, max_pt : float, sequence of floats, or dict
         Spatial points defining the lower/upper limits of the intervals
         to be partitioned. The points can be specified in two ways:
 
@@ -752,17 +752,17 @@ def uniform_partition(min_pt=None, max_pt=None, shape=None, cell_sides=None,
 
     Parameters
     ----------
-    min_pt, max_pt : float or `sequence` of float, optional
+    min_pt, max_pt : float or sequence of float, optional
         Vectors defining the lower/upper limits of the intervals in an
         `IntervalProd` (a rectangular box). ``None`` entries mean
         "compute the value".
-    shape : int or `sequence` of ints, optional
+    shape : int or sequence of ints, optional
         Number of nodes per axis. ``None`` entries mean
         "compute the value".
-    cell_sides : float or `sequence` of float, optional
+    cell_sides : float or sequence of floats, optional
         Side length of the partition cells per axis. ``None`` entries mean
         "compute the value".
-    nodes_on_bdry : bool or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
         by half a cell size into the interior (``False``). In each axis,
@@ -918,11 +918,11 @@ def nonuniform_partition(*coord_vecs, **kwargs):
     ----------
     coord_vecs1, ... coord_vecsN : `array-like`
         Arrays of coordinates of the mid-points of the partition cells.
-    min_pt, max_pt : float or `sequence` of float, optional
+    min_pt, max_pt : float or sequence of floats, optional
         Vectors defining the lower/upper limits of the intervals in an
         `IntervalProd` (a rectangular box). ``None`` entries mean
         "compute the value".
-    nodes_on_bdry : bool or `sequence`, optional
+    nodes_on_bdry : bool or sequence, optional
         If a sequence is provided, it determines per axis whether to
         place the last grid point on the boundary (``True``) or shift it
         by half a cell size into the interior (``False``). In each axis,

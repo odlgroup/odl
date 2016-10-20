@@ -562,11 +562,11 @@ class PerAxisInterpolation(FunctionSetMapping):
             discretized object. Its `NtuplesBase.size` must be equal
             to the total number of grid points, and its `FnBase.field`
             must be the same as that of the function space.
-        schemes : string or `sequence` of strings
+        schemes : string or sequence of strings
             Indicates which interpolation scheme to use for which axis.
             A single string is interpreted as a global scheme for all
             axes.
-        nn_variants : string or `sequence` of strings, optional
+        nn_variants : string or sequence of strings, optional
             Which variant ('left' or 'right') to use in nearest neighbor
             interpolation for which axis. A single string is interpreted
             as a global variant for all axes.
@@ -708,7 +708,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
-        coord_vecs : `sequence` of `numpy.ndarray`'s
+        coord_vecs : sequence of `numpy.ndarray`'s
             Coordinate vectors defining the interpolation grid
         values : `array-like`
             Grid values to use for interpolation
@@ -826,7 +826,7 @@ scipy.interpolate.RegularGridInterpolator.html>`_ class.
     def __init__(self, coord_vecs, values, input_type, variant):
         """Initialize a new instance.
 
-        coord_vecs : `sequence` of `numpy.ndarray`'s
+        coord_vecs : sequence of `numpy.ndarray`'s
             Coordinate vectors defining the interpolation grid
         values : `array-like`
             Grid values to use for interpolation
@@ -955,15 +955,15 @@ class _PerAxisInterpolator(_Interpolator):
     def __init__(self, coord_vecs, values, input_type, schemes, nn_variants):
         """Initialize a new instance.
 
-        coord_vecs : `sequence` of `numpy.ndarray`'s
+        coord_vecs : sequence of `numpy.ndarray`'s
             Coordinate vectors defining the interpolation grid
         values : `array-like`
             Grid values to use for interpolation
         input_type : {'array', 'meshgrid'}
             Type of expected input values in ``__call__``
-        schemes : `sequence` of strings
+        schemes : sequence of strings
             Indicates which interpolation scheme to use for which axis
-        nn_variants : `sequence` of strings
+        nn_variants : sequence of strings
             Which variant ('left' or 'right') to use in nearest neighbor
             interpolation for which axis.
             This option has no effect for schemes other than nearest
@@ -1023,7 +1023,7 @@ class _LinearInterpolator(_PerAxisInterpolator):
     def __init__(self, coord_vecs, values, input_type):
         """Initialize a new instance.
 
-        coord_vecs : `sequence` of `numpy.ndarray`'s
+        coord_vecs : sequence of `numpy.ndarray`'s
             Coordinate vectors defining the interpolation grid
         values : `array-like`
             Grid values to use for interpolation

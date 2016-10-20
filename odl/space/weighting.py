@@ -818,7 +818,7 @@ class CustomInnerProductBase(WeightingBase):
 
         Parameters
         ----------
-        inner : `callable`
+        inner : callable
             The inner product implementation. It must accept two
             `LinearSpaceElement` arguments, return an element from
             their space's field (real or complex number) and
@@ -898,7 +898,7 @@ class CustomNormBase(WeightingBase):
 
         Parameters
         ----------
-        norm : `callable`
+        norm : callable
             The norm implementation. It must accept a
             `LinearSpaceElement` argument, return a float and satisfy
             the following conditions for all space elements
@@ -967,7 +967,7 @@ class CustomDistBase(WeightingBase):
 
         Parameters
         ----------
-        dist : `callable`
+        dist : callable
             The distance function defining a metric on a `LinearSpace`.
             It must accept two `LinearSpaceElement` arguments, return a
             float and and fulfill the following mathematical conditions

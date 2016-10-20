@@ -35,9 +35,9 @@ def _bfgs_direction(s, y, x, hessinv_estimate=None):
 
     Parameters
     ----------
-    s : `sequence` of `LinearSpaceElement`
+    s : sequence of `LinearSpaceElement`
         The ``s`` coefficients in the BFGS update, see Notes.
-    y : `sequence` of `LinearSpaceElement`
+    y : sequence of `LinearSpaceElement`
         The ``y`` coefficients in the BFGS update, see Notes.
     x : `LinearSpaceElement`
         Point in which to evaluate the product.
@@ -88,9 +88,9 @@ def _broydens_direction(s, y, x, hessinv_estimate=None, impl='first'):
 
     Parameters
     ----------
-    s : `sequence` of `LinearSpaceElement`
+    s : sequence of `LinearSpaceElement`'s'
         The ``s`` coefficients in the Broydens update, see Notes.
-    y : `sequence` of `LinearSpaceElement`
+    y : sequence of `LinearSpaceElement`'s'
         The ``y`` coefficients in the Broydens update, see Notes.
     x : `LinearSpaceElement`
         Point in which to evaluate the product.
@@ -192,7 +192,7 @@ def newtons_method(f, x, line_search=1.0, maxiter=1000, tol=1e-16,
     cg_iter : int, optional
         Number of iterations in the the conjugate gradient solver,
         for computing the search direction.
-    callback : `callable`, optional
+    callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate
     """
     # TODO: update doc
@@ -290,7 +290,7 @@ Goldfarb%E2%80%93Shanno_algorithm>`_
         Initial estimate of the inverse of the Hessian operator. Needs to be an
         operator from ``f.domain`` to ``f.domain``.
         Default: Identity on ``f.domain``
-    callback : `callable`, optional
+    callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
     """
     grad = f.gradient
@@ -392,7 +392,7 @@ def broydens_method(f, x, line_search=1.0, impl='first', maxiter=1000,
         Initial estimate of the inverse of the Hessian operator. Needs to be an
         operator from ``f.domain`` to ``f.domain``.
         Default: Identity on ``f.domain``
-    callback : `callable`, optional
+    callback : callable, optional
         Object executing code per iteration, e.g. plotting each iterate.
     """
     grad = f.gradient

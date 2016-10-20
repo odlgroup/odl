@@ -72,7 +72,7 @@ def pyfftw_call(array_in, array_out, direction='forward', axes=None,
         with ``array_in``.
     direction : {'forward', 'backward'}
         Direction of the transform
-    axes : int or `sequence` of ints, optional
+    axes : int or sequence of ints, optional
         Dimensions along which to take the transform. ``None`` means
         using all axes and is equivalent to ``np.arange(ndim)``.
     halfcomplex : bool, optional

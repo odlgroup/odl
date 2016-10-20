@@ -44,11 +44,11 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
     ----------
     array : `array-like`
         Modify the boundary of this array
-    func : `callable` or `sequence` of `callable`'s
+    func : callable or sequence of callables
         If a single function is given, assign
         ``array[slice] = func(array[slice])`` on the boundary slices,
         e.g. use ``lamda x: x / 2`` to divide values by 2.
-        A `sequence` of functions is applied per axis separately. It
+        A sequence of functions is applied per axis separately. It
         must have length ``array.ndim`` and may consist of one function
         or a 2-tuple of functions per axis.
         ``None`` entries in a sequence cause the axis (side) to be
@@ -59,7 +59,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         ``axis_order`` determines which functions are applied to nodes
         which appear in multiple slices, according to the principle
         "first-come, first-served".
-    which_boundaries : `sequence`, optional
+    which_boundaries : sequence, optional
         If provided, this sequence determines per axis whether to
         apply the function at the boundaries in each axis. The entry
         in each axis may consist in a single bool or a 2-tuple of
@@ -67,7 +67,7 @@ def apply_on_boundary(array, func, only_once=True, which_boundaries=None,
         the left, the second for the right boundary. The length of the
         sequence must be ``array.ndim``. ``None`` is interpreted as
         "all boundaries".
-    axis_order : `sequence` of ints, optional
+    axis_order : sequence of ints, optional
         Permutation of ``range(array.ndim)`` defining the order in which
         to process the axes. If combined with ``only_once`` and a
         function list, this determines which function is evaluated in
@@ -218,10 +218,10 @@ def fast_1d_tensor_mult(ndarr, onedim_arrs, axes=None, out=None):
     ----------
     ndarr : `array-like`
         Array to multiply to
-    onedim_arrs : `sequence` of `array-like`'s
+    onedim_arrs : sequence of `array-like`'s
         One-dimensional arrays to be multiplied with ``ndarr``. The
         sequence may not be longer than ``ndarr.ndim``.
-    axes : `sequence` of ints, optional
+    axes : sequence of ints, optional
         Take the 1d transform along these axes. ``None`` corresponds to
         the last ``len(onedim_arrs)`` axes, in ascending order.
     out : `numpy.ndarray`, optional
@@ -319,9 +319,9 @@ def resize_array(arr, newshp, offset=None, pad_mode='constant', pad_const=0,
     ----------
     arr : `array-like`
         Array to be resized.
-    newshp : `sequence` of ints
+    newshp : sequence of ints
         Desired shape of the output array.
-    offset: `sequence` of ints, optional
+    offset: sequence of ints, optional
         Specifies how many entries are added to/removed from the "left"
         side (corresponding to low indices) of ``arr``.
     pad_mode : string, optional

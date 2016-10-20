@@ -76,7 +76,7 @@ class BacktrackingLineSearch(LineSearch):
 
         Parameters
         ----------
-        function : `callable`
+        function : callable
             The cost function of the optimization problem to be solved.
         tau : float, optional
             The amount the step length is decreased in each iteration,

@@ -173,11 +173,11 @@ class ResizingOperatorBase(Operator):
             For the default ``None``, a space with the same attributes
             as ``domain`` is used, except for its shape, which is set
             to ``ran_shp``.
-        ran_shp : `sequence` of ints, optional
+        ran_shp : sequence of ints, optional
             Shape of the range of this operator. This can be provided
             instead of ``range`` and is mandatory if ``range`` is
             ``None``.
-        offset : int or `sequence` of ints, optional
+        offset : int or sequence of ints, optional
             Number of cells to add to/remove from the left of
             ``domain.partition``. By default, the difference is
             distributed evenly, with preference for left in case of

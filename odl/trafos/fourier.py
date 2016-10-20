@@ -73,7 +73,7 @@ class DiscreteFourierTransformBase(Operator):
             is determined from ``domain`` and the other parameters as
             a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
-        axes : int or `sequence` of ints, optional
+        axes : int or sequence of ints, optional
             Dimensions in which a transform is to be calculated. ``None``
             means all axes.
         sign : {'-', '+'}, optional
@@ -243,7 +243,7 @@ class DiscreteFourierTransformBase(Operator):
             Input array to be transformed
         out : `numpy.ndarray`
             Output array storing the result
-        flags : `sequence` of strings, optional
+        flags : sequence of strings, optional
             Flags for the transform. ``'FFTW_UNALIGNED'`` is not
             supported, and ``'FFTW_DESTROY_INPUT'`` is enabled by
             default. See the `pyfftw API documentation`_
@@ -399,7 +399,7 @@ class DiscreteFourierTransform(DiscreteFourierTransformBase):
             is determined from ``domain`` and the other parameters as
             a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
-        axes : int or `sequence` of ints, optional
+        axes : int or sequence of ints, optional
             Dimensions in which a transform is to be calculated. ``None``
             means all axes.
         sign : {'-', '+'}, optional
@@ -548,7 +548,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             domain is determined from ``range`` and the other parameters
             as a `discr_sequence_space` with exponent ``p / (p - 1)``
             (read as 'inf' for p=1 and 1 for p='inf').
-        axes : `sequence` of ints, optional
+        axes : sequence of ints, optional
             Dimensions in which a transform is to be calculated. `None`
             means all axes.
         sign : {'-', '+'}, optional
@@ -623,7 +623,7 @@ class DiscreteFourierTransformInverse(DiscreteFourierTransformBase):
             Input element to be transformed.
         out : `range` element
             Output element storing the result.
-        flags : `sequence` of strings, optional
+        flags : sequence of strings, optional
             Flags for the transform. ``'FFTW_UNALIGNED'`` is not
             supported, and ``'FFTW_DESTROY_INPUT'`` is enabled by
             default. See the `pyfftw API documentation`_
@@ -732,7 +732,7 @@ class FourierTransformBase(Operator):
         impl : {'numpy', 'pyfftw'}
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
-        axes : int or `sequence` of ints, optional
+        axes : int or sequence of ints, optional
             Dimensions along which to take the transform.
             Default: all axes
         sign : {'-', '+'}, optional
@@ -743,7 +743,7 @@ class FourierTransformBase(Operator):
             calculate the full complex FFT.
             For complex ``domain``, it has no effect.
             Default: ``True``
-        shift : bool or `sequence` of bools, optional
+        shift : bool or sequence of bools, optional
             If ``True``, the reciprocal grid is shifted by half a stride in
             the negative direction. With a boolean sequence, this option
             is applied separately to each axis.
@@ -1171,7 +1171,7 @@ class FourierTransform(FourierTransformBase):
         impl : {'numpy', 'pyfftw'}
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
-        axes : int or `sequence` of ints, optional
+        axes : int or sequence of ints, optional
             Dimensions along which to take the transform.
             Default: all axes
         sign : {'-', '+'}, optional
@@ -1182,7 +1182,7 @@ class FourierTransform(FourierTransformBase):
             calculate the full complex FFT.
             For complex ``domain``, it has no effect.
             Default: ``True``
-        shift : bool or `sequence` of bools, optional
+        shift : bool or sequence of bools, optional
             If ``True``, the reciprocal grid is shifted by half a stride in
             the negative direction. With a boolean sequence, this option
             is applied separately to each axis.
@@ -1406,7 +1406,7 @@ class FourierTransformInverse(FourierTransformBase):
         impl : {'numpy', 'pyfftw'}
             Backend for the FFT implementation. The 'pyfftw' backend
             is faster but requires the ``pyfftw`` package.
-        axes : int or `sequence` of ints, optional
+        axes : int or sequence of ints, optional
             Dimensions along which to take the transform.
             Default: all axes
         sign : {'-', '+'}, optional
@@ -1417,7 +1417,7 @@ class FourierTransformInverse(FourierTransformBase):
             calculate the full complex FFT.
             For complex ``domain``, it has no effect.
             Default: ``True``
-        shift : bool or `sequence` of bools, optional
+        shift : bool or sequence of bools, optional
             If ``True``, the reciprocal grid is shifted by half a stride in
             the negative direction. With a boolean sequence, this option
             is applied separately to each axis.
