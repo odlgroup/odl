@@ -1,124 +1,176 @@
-.. _chambolle_pock_in_depth:
+.. _chambolle_pock_guide:
 
 #####################
 Chambolle-Pock solver
 #####################
 
-The `chambolle_pock_solver`, was introduced in 2011 by Chambolle and Pock in the paper `A first-order primal-dual algorithm for convex problems with applications to imaging
+The `chambolle_pock_solver` was introduced in 2011 by Chambolle and Pock in the paper `A first-order primal-dual algorithm for convex problems with applications to imaging
 <https://hal.archives-ouvertes.fr/hal-00490826/document>`_.
-It is a method for solving convex, yet non smooth problems of the form
+It is a method for solving convex non-smooth problems of the form
 
 .. math::
-   
-   min_{x \in X} F(K x) + G(x)
 
-where :math:`K` is a linear `Operator` :math:`K : X -> Y` where :math:`X` and :math:`Y` are `LinearSpace`'s and :math:`G : X \mapsto [0, +\infty]` and :math:`F : Y \mapsto [0, +\infty]` are proper, convex, lower-semicontinuous functionals. For more information on the mathematics, please see :ref:`chambolle_pock`.
+   \min_{x \in X} f(L x) + g(x),
+
+where :math:`L` is a linear `Operator` :math:`L : X -> Y`, :math:`X` and :math:`Y` are (discretized) function spaces and :math:`g : X \mapsto [0, +\infty]` and :math:`f : Y \mapsto [0, +\infty]` are proper, convex, lower semi-continuous functionals.
+For more information on the mathematics, please see :ref:`the mathematical background article on this method <chambolle_pock_math>`.
+
 
 Using the Chambolle-Pock solver
 ===============================
 
-There are several examples in the examples folder of ODL, these include denoising, deblurring and tomography. There is also an example of using a diagonal pre-conditioner.
+There are several examples in `the examples folder of ODL <https://github.com/odlgroup/odl/tree/master/examples>`_, including denoising, deblurring and tomography.
+Here, we will walk through the solution of a typical problem using the Chambolle-Pock solver.
 
-We will walk through the solution of a typical problem using the Chambolle-Pock solver. The problem we'll be looking at is the TV regularized denoising problem with a l2 data discrepancy term.
+Mathematical problem setup
+--------------------------
+The problem we'll be looking at is the TV regularized denoising problem
+
+.. math::
+    \min_{x \in X} \left[ d(x) + r(x) + \iota_{[0, \infty]}(x) \right]
+
+with :math:`L^2` data discrepancy term for given data :math:`y \in X`,
+
+.. math::
+    d(x) = \frac{1}{2} \|x - y\|_2^2,
+
+TV regularization term
+
+.. math::
+    r(x) = \lambda \|\nabla x\|_1
+
+and positivity constraint enforced by the indicator function
 
 .. math::
 
-   f(x) = \frac{1}{2} ||x - g||_2^2 + \lambda || |\nabla x| ||_1
+   \iota_{[0, \infty]}(x) =
+   \begin{cases}
+     0,         & \text{ if } x \geq 0 \text{ everywhere}, \\
+     \infty,    & \text{ else }.
+   \end{cases}
 
-With a positivity condition, enforced by
+Here, :math:`\|\cdot\|_q` is the :math:`L^q` norm (:math:`q = 1,2`), :math:`\nabla` the spatial gradient, and :math:`\lambda` a regularization parameter.
 
-.. math::
-
-   G(x) = {0 \text{ if } x \geq 0, \infty \text{ if } x < 0} ,
-
-Here, :math:`g` denotes the image to denoise, :math:`||.||_2` the l2-norm, :math:`||.||_1` the l1-semi-norm, :math:`\nabla`  the spatial gradient, :math:`\lambda` the regularization
-parameter, :math:`|.|` the point-wise magnitude across the vector components of :math:`\nabla x`.
-
-To fit this into the Chambolle-Pock framework, we need to write :math:`f(x)` on the form :math:`F(Kx)` where :math:`F` is a convex functional and :math:`K` is a linear operator. The standard way of doing this is to let :math:`K` be a vector of operators :math:`K = (I, \nabla)` with identity mapping :math:`I`. Thus
+The standard way of fitting this problem into the Chambolle-Pock framework is to summarize both data fit and regularization terms into the composition part :math:`f \circ L` of the solver, and to set :math:`g` to the positivity constraint :math:`\iota_{[0, \infty]}`.
+By setting :math:`L = (I, \nabla): X \to X \times X^d`, where :math:`I` is the identity mapping on :math:`X`, we can write
 
 .. math::
+    d(x) + r(x)
+    = \left \|
+    \begin{pmatrix}
+      d(x) \\
+      p(x)
+    \end{pmatrix}
+    \right \|_1
+    = \left \|
+    \begin{pmatrix}
+      \|x - y\|_2^2 / 2 \\
+      \lambda \|\nabla x\|_1
+    \end{pmatrix}
+    \right \|_1
+    = \big[ f \circ L \big](x)
 
-   K(x) = [x, \nabla(x)]
-
-With this choice, we can let 
+with the functional :math:`f: X \times X^d \to \mathbb{R}` defined by
 
 .. math::
- 
-   F(\vec{x}) = F([x_1, x_2]) = ||x_1 - g||_2^2 + \lambda || \ | x_2 | \ ||_1
+    f(x, u) = \left \|
+    \begin{pmatrix}
+      \|x - y\|_2^2 / 2 \\
+      \lambda \|u\|_1
+    \end{pmatrix}
+    \right \|_1
+    = \frac{1}{2} \|x - y\|_2^2 + \lambda \|u\|_1.
 
-To implement this in ODL, we first need to decide on what spaces to solve the problem in. In this case, we want a L2 space on the square :math:`[0, 100] \times [0, 100]`. We chose 256 discretization points per axis:
+Note that the arguments :math:`x, u` of :math:`f` are independent, i.e. the sum of the two functionals is a `SeparableSum`.
 
-.. code-block:: python
+.. note::
+    The operator :math:`L` maps :math:`X` to the `ProductSpace` :math:`X \times X^d`.
+    Such a "one-to-many" type of mapping is also called `BroadcastOperator`.
 
-   space = odl.uniform_discr([0, 0], [100, 100], [256, 256])
+Numerical solution using ODL
+----------------------------
 
-We also need to generate some test data since this is part of the objective functional. We pick the modified Shepp-Logan phantom with 10% additive Gaussian noise.
+Now we implement a numerical solution to the above defined problem using the Chambolle-Pock solver in ODL.
 
-.. code-block:: python
-
-   orig = odl.util.shepp_logan(space, modified=True)
-   noisy = orig + odl.util.white_noise(space) * 0.1
-
-We now need to define the forward operator :math:`K`. We begin by its constituents:
-
-.. code-block:: python
-
-   I = odl.IdentityOperator(space)
-   gradient = odl.Gradient(space)
-
-To create :math:`K`, we note that :math:`K` is a special case of a `BroadcastOperator`, an operator that broadcasts its argument to several sub-operators. Hence we may create :math:`K` by
-
-.. code-block:: python
-
-   K = odl.BroadcastOperator(I, gradient)
-
-We can now proceed to the problem specification. The Chambolle-Pock solver does not take the functionals themselves as arguments, instead it needs the proximal operators associated with them. ODL implements most common functionals such as L1, L2 and Kulback-Leibler distance. If you are interested in writing original proximal operators, see :ref:`proximal_operators` for a mathematical discussion.
-
-In this case, we first create the l2 and l1 discreptancy terms
-
-.. code-block:: python
-   
-   prox_cconj_l2 = odl.solvers.proximal_cconj_l2_squared(space, g=noisy)
-   prox_cconj_l1 = odl.solvers.proximal_cconj_l1(gradient.range, lam=1/15.0, 
-                                                 isotropic=True)
-
-Note that :math:`\lambda` is actually part of the proximal operator. Finally, we need to combine these, similarly to how we combined operators to form :math:`K`
+Problem setup
+^^^^^^^^^^^^^
+The first step in the problem setup is the definition of the spaces in which we want to solve the problem.
+In this case, we use an :math:`L^2` space on the square :math:`[0, 100] \times [0, 100]`.
+We choose 256 discretization points per axis:
 
 .. code-block:: python
 
-   proximal_F = odl.solvers.combine_proximals(prox_cconj_l2, prox_cconj_l1)
+    >>> space = odl.uniform_discr(min_pt=[0, 0], max_pt=[100, 100], shape=[256, 256])
 
-We also select the proximal operator corresponding the positivity constraint
-
-.. code-block:: python
-
-   proximal_G = odl.solvers.proximal_nonnegativity(space)
-
-Now that the problem is set up, we need to select some solver parameters. For Chambolle-Pock, there is one main rule that we can use: The product of the primal step :math:`\tau`, the dual step :math:`\sigma` and the squared operator norm :math:`||K||^2` has to be smaller than 1: :math:`\tau \sigma ||K||^2 < 1`. Except for this selecting :math:`\tau` and :math:`\sigma` is down to trial and error. Here we pick them equal:
-
-.. code-block:: python
-   
-   op_norm = odl.power_method_opnorm(K, 5, xstart=noisy)
-   tau = sigma = 1.0 / op_norm
-
-Finally, we pick a starting point and run the algorithm:
+In real problems, the data :math:`y` would be given by some measurement, but for the purpose of testing the solver, we generate data by creating a modified `Shepp-Logan phantom <https://en.wikipedia.org/wiki/Shepp%E2%80%93Logan_phantom>`_ and adding 10% Gaussian noise:
 
 .. code-block:: python
 
-   x = K.domain.zero()   
+    >>> phantom = odl.phantom.shepp_logan(space, modified=True)
+    >>> data = phantom + odl.phantom.white_noise(space) * 0.1
 
-   odl.solvers.chambolle_pock_solver(
-       K, x, tau=tau, sigma=sigma, proximal_primal=proximal_G,
-       proximal_dual=proximal_F, niter=100)
+We now need to define the forward operator :math:`L`, which we do one constituent at a time:
 
-   orig.show('original')
-   noisy.show('noisy')
-   x.show('result')
+.. code-block:: python
 
-Yielding the following figures:
+    >>> ident = odl.IdentityOperator(space)
+    >>> grad = odl.Gradient(space)
 
-.. image:: figures/chambolle_pock_original.png
+To create :math:`L`, we use the `BroadcastOperator` class as mentioned above:
 
-.. image:: figures/chambolle_pock_noisy.png
+.. code-block:: python
+
+    >>> L = odl.BroadcastOperator(ident, grad)
+
+We can now proceed to the problem specification.
+This step requires us to specify the functionals :math:`f` and :math:`g`, where the former is the `SeparableSum` of the squared :math:`L^2` distance to :math:`y` and the (vectorial) :math:`L^1` norm.
+These functionals are available in ODL as `L2NormSquared` and `L1Norm`, respectively:
+
+.. code-block:: python
+
+    >>> l2_norm_squared = odl.solvers.L2NormSquared(space).translated(data)
+    >>> l1_norm = 0.0003 * odl.solvers.L1Norm(grad.range)
+    >>> f = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
+
+.. note::
+    We don't need to take extra care of the :math:`L^1` norm being a vectorial norm since `L1Norm` also works on product spaces.
+
+Finally, we define the functional for the nonnegativity constraint, available as the functional `IndicatorNonnegativity`:
+
+    >>> g = odl.solvers.functional.IndicatorNonnegativity(space)
+
+Calling the solver
+^^^^^^^^^^^^^^^^^^
+Now that the problem is set up, we need to select some optimization parameters.
+For the Chambolle-Pock method, there is one main rule that we can use:
+The product of the primal step :math:`\tau`, the dual step :math:`\sigma` and the squared operator norm :math:`\|L\|^2` has to be smaller than 1, :math:`\tau \sigma \|L\|^2 < 1`.
+Apart from this, there are no clear rules on how to select :math:`\tau` and :math:`\sigma` -- basically we're left with trial and error.
+We decide to pick them both equal to :math:`1 / \|L\|^2`.
+To calculate an estimate of the operator norm, we have the tool `power_method_opnorm` which performs the simple `power iteration <https://en.wikipedia.org/wiki/Power_iteration>`_ to approximate the largest singular value of :math:`L`:
+
+.. code-block:: python
+
+   >>> op_norm = 1.1 * odl.power_method_opnorm(L, maxiter=4, xstart=phantom)
+   >>> tau = sigma = 1.0 / op_norm
+
+Finally, we pick a starting point (zero) and run the algorithm:
+
+.. code-block:: python
+
+   >>> x = space.zero()
+   >>> odl.solvers.chambolle_pock_solver(
+   ...     x, f, g, L, tau=tau, sigma=sigma, niter=100)
+
+Now we check the result after 100 iterations and compare it to the original:
+
+   >>> fig1 = phantom.show('phantom')
+   >>> fig2 = data.show('noisy data')
+   >>> fig3 = x.show('TV denoised result')
+
+This yields the following images:
+
+.. image:: figures/chambolle_pock_phantom.png
+
+.. image:: figures/chambolle_pock_data.png
 
 .. image:: figures/chambolle_pock_result.png

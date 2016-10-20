@@ -44,7 +44,7 @@ space = odl.uniform_discr([0, 0], [n, n], [n, n])
 # 1 / filter_width
 filter_width = 2.0  # standard deviation of the Gaussian filter
 ft = odl.trafos.FourierTransform(space)
-c = filter_width**2 / 4.0**2
+c = filter_width ** 2 / 4.0 ** 2
 gaussian = ft.range.element(lambda x: np.exp(-(x[0] ** 2 + x[1] ** 2) * c))
 convolution = ft.inverse * gaussian * ft
 
@@ -70,13 +70,13 @@ op = odl.BroadcastOperator(convolution, gradient)
 g = odl.solvers.ZeroFunctional(op.domain)
 
 # l2-squared data matching
-l2_norm = odl.solvers.L2NormSquared(space).translated(data)
+l2_norm_squared = odl.solvers.L2NormSquared(space).translated(data)
 
 # Isotropic TV-regularization i.e. the l1-norm
 l1_norm = 0.0003 * odl.solvers.L1Norm(gradient.range)
 
-# Make separable sum of functionals, order must correspond to the operator K
-f = odl.solvers.SeparableSum(l2_norm, l1_norm)
+# Make separable sum of functionals, order must be the same as in `op`
+f = odl.solvers.SeparableSum(l2_norm_squared, l1_norm)
 
 
 # --- Select solver parameters and solve using Chambolle-Pock --- #
