@@ -1,4 +1,4 @@
-.. _functional_in_depth:
+.. _functional_guide:
 
 #####################
 Functional

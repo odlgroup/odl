@@ -13,11 +13,16 @@ Glossary
         Any data structure which can be converted into a `numpy.ndarray` by the
         `numpy.array` constructor. Includes all `NtuplesBaseVector` based classes.
 
+    convex conjugate
+        The convex conjugate (also called Fenchel conjugate) is an important tool in convex optimization.
+        For a functional :math:`f`, the convex conjugate :math:`f^*` is the functional
+
+        .. math::
+            f^*(x^*) = \sup_x \big( \langle x, x^* \rangle - f(x) \big).
+
     discretization
-        Structure to handle the mapping between abstract objects (e.g. functions) and
-        concrete, finite realization. It encompasses an abstract `Set`, a finite data
-        container (`NtuplesBaseVector` in general) and the mappings between them,
-        :term:`sampling` and :term:`interpolation`.
+        Structure to handle the mapping between abstract objects (e.g. functions) and concrete, finite realizations.
+        It encompasses an abstract `Set`, a finite data container (`NtuplesBaseVector` in general) and the mappings between them,         :term:`sampling` and :term:`interpolation`.
 
     domain
         Set of elements to which an operator can be applied.
