@@ -204,7 +204,8 @@ def power_method_opnorm(op, xstart=None, maxiter=100, rtol=1e-05, atol=1e-08,
         use_normal = True
         ncalls = maxiter // 2
         if ncalls * 2 != maxiter:
-            raise ValueError('``niter`` must be an even number, got {}'
+            raise ValueError('``maxiter`` must be an even number for '
+                             'non-self-adjoint operator, got {}'
                              ''.format(maxiter_in))
 
     # Make sure starting point is ok or select initial guess
