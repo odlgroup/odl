@@ -57,14 +57,14 @@ class L1Norm(Functional):
 
     .. math::
 
-        \| x \|_1 = \\sum_{i = 1}^n |x_i|.
+        \| x \|_1 = \\sum_{i=1}^n |x_i|.
 
     If the functional is defined on an :math:`L_2`-like space, the
     :math:`L_1`-norm is defined as
 
     .. math::
 
-        \| x \|_1 = \\int_{\Omega} |x| dx.
+        \| x \|_1 = \\int_\Omega |x(t)| dt.
     """
 
     def __init__(self, space):
