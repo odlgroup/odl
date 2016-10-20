@@ -25,6 +25,8 @@ Set
 
 A `Set` is the fundamental building block of ODL objects. It mirrors the mathematical concept of a `set`_ in that it can tell if an object belongs to it or not:
 
+.. code-block:: python
+
     >>> interv = odl.IntervalProd(0, 1)
     >>> 0.5 in interv
     True
@@ -47,6 +49,8 @@ Large parts of basic functionality, e.g. arithmetic or inner products, rest on a
 Typically, these vector spaces are of the type :math:`\mathbb{F}^n`, where :math:`\mathbb{F}` is a `field`_ (usually :math:`\mathbb{R}` or :math:`\mathbb{C}`), and :math:`n` a positive integer.
 Example:
 
+.. code-block:: python
+
     >>> c3 = odl.cn(3)
     >>> u = c3.element([1 + 1j, 2 - 2j, 3])
     >>> v = c3.one()  # vector of all ones
@@ -62,6 +66,8 @@ Note that we do not make a distinction between different types of function space
 
 As linear spaces, function spaces support some interesting operations:
 
+.. code-block:: python
+
     >>> import numpy as np
     >>> space = odl.FunctionSpace(odl.IntervalProd(0, 2))
     >>> exp = space.element(np.exp)
@@ -70,12 +76,14 @@ As linear spaces, function spaces support some interesting operations:
     >>> exp_plus_one = exp + space.one()
     >>> exp_plus_one(np.log(2))
     3.0
-    >>> ratio_func = exp_plus_one / exp  # x -> exp(x) / (exp(x) + 1)
+    >>> ratio_func = exp_plus_one / exp  # x -> (exp(x) + 1) / exp(x)
     >>> ratio_func(np.log(2))  # 3 / 2
     1.5
 
 A big advantage of the function space implementation in ODL is that the evaluation of functions is `vectorized`_, i.e. that the values of a function can be computed from an array of input data "at once", without looping in Python (which is slow, in general).
 What follows is a simple example, see the :ref:`vectorization_in_depth` guide for instructions on how to write vectorization-compatible functions.
+
+.. code-block:: python
 
     >>> import numpy as np
     >>> space = odl.FunctionSpace(odl.IntervalProd(0, 2))
@@ -94,6 +102,8 @@ In ODL, a `Discretization` instance encompasses both continuous and discrete spa
 The canonical example is the space :math:`L^2(\Omega)` of real-valued square-integrable functions on a rectangular domain (we take an interval for simplicity).
 It is the default in the convenience function `uniform_discr`:
 
+.. code-block:: python
+
     >>> l2_discr = odl.uniform_discr(0, 1, 5)  # Omega = [0, 1], 5 subintervals
     >>> type(l2_discr)
     <class 'odl.discr.lp_discr.DiscreteLp'>
@@ -105,12 +115,15 @@ It is the default in the convenience function `uniform_discr`:
 Discretizations have a large number of useful functionality, for example the direct and vectorized sampling of continuously defined functions.
 If we, for example, want to discretize the function ``f(x) = exp(-x)``, we can simply pass it to the ``element()`` method:
 
+.. code-block:: python
+
     >>> exp_discr = l2_discr.element(lambda x: np.exp(-x))
     >>> type(exp_discr)
     <class 'odl.discr.lp_discr.DiscreteLpElement'>
+    >>> print(exp_discr)
+    [0.904837418036, 0.740818220682, 0.606530659713, 0.496585303791, 0.406569659741]
     >>> exp_discr.shape
     (5,)
-
 
 Operators
 =========
@@ -124,6 +137,8 @@ The large benefit of this approach is that once an operator is fully implemented
 As a small example, we study the problem of solving a linear system with 2 equations and 3 unknowns.
 We use `Landweber's method`_ to get a least-squares solution and plot the intermediate residual norm.
 The method needs a relaxation :math:`\lambda < 2 / \lVert A\rvert^2` to converge - in our case, the right-hand side is 0.14, so we choose 0.1.
+
+.. code-block:: python
 
     >>> matrix = np.array([[1.0, 3.0, 2.0],
     ...                    [2.0, -1.0, 1.0]])
@@ -150,13 +165,12 @@ If we now exchange ``matrix_op`` and ``data`` with a tomographic projector and l
 
 Further features
 ================
-
-* A unified structure for representing tomographic acquisition geometries
-* Interfaces to fast external libraries, e.g. ASTRA for X-ray tomography, STIR for emission tomography (preliminary), pyFFTW for fast Fourier transforms, ...
+* A unified structure `Geometry` for representing tomographic acquisition geometries
+* Interfaces to fast external libraries, e.g. `ASTRA`_ for X-ray tomography, `STIR`_ for emission tomography (preliminary), `pyFFTW`_ for fast Fourier transforms, ...
 * A growing number of "must-have" operators like `Gradient`, `FourierTransform`, `WaveletTransform`
-* Several solvers for variational inverse problems, ranging from simple gradient methods to the Chambolle-Pock method (more to come...)
+* Several solvers for variational inverse problems, ranging from simple `gradient methods <steepest_descent>` to state-of-the-art non-smooth primal-dual splitting methods like `Douglas-Rachford <douglas_rachford_pd>`
 * Standardized tests for the correctness of implementations of operators and spaces, e.g. does the adjoint operator fulfill its defining relation?
-* `CUDA`_-accelerated data containers as a replacement for `Numpy`_
+* `CUDA-accelerated data containers`_ as a replacement for `Numpy`_
 
 
 Further reading
@@ -165,16 +179,19 @@ Further reading
 - :ref:`operators_in_depth`
 - :ref:`discretizations`
 
+.. _ASTRA: https://github.com/astra-toolbox/astra-toolbox
 .. _codomain: https://en.wikipedia.org/wiki/Codomain
-.. _CUDA: https://en.wikipedia.org/wiki/CUDA
 .. _field: https://en.wikipedia.org/wiki/Field_%28mathematics%29
 .. _function space: https://en.wikipedia.org/wiki/Function_space
 .. _KTH, Royal Institute of Technology: https://www.kth.se/en/sci/institutioner/math
 .. _Landweber's method: https://en.wikipedia.org/wiki/Landweber_iteration
 .. _Numpy: http://www.numpy.org/
+.. _CUDA-accelerated data containers: https://github.com/odlgroup/odlcuda
 .. _operators: https://en.wikipedia.org/wiki/Operator_%28mathematics%29
+.. _pyFFTW: https://pypi.python.org/pypi/pyFFTW
 .. _real numbers: https://en.wikipedia.org/wiki/Real_number
 .. _rectangular boxes: https://en.wikipedia.org/wiki/Hypercube
 .. _set: https://en.wikipedia.org/wiki/Set_%28mathematics%29
+.. _STIR: http://stir.sourceforge.net/
 .. _vector space: https://en.wikipedia.org/wiki/Vector_space
 .. _vectorized: https://en.wikipedia.org/wiki/Array_programming

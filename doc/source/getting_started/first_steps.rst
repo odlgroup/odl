@@ -7,7 +7,7 @@ First steps
 This guide is intended to give you a simple introduction to ODL and how to work with it.
 If you need help with a specific function you should look at the `ODL API reference <https://odlgroup.github.io/odl/odl.html>`_.
 
-The best way to get started with ODL as a user is generally to find one (or more) examples that are relevant to whatver problem you are studying.
+The best way to get started with ODL as a user is generally to find one (or more) examples that are relevant to whichever problem you are studying.
 These are available in the `examples folder on GitHub <https://github.com/odlgroup/odl/tree/master/examples>`_.
 They are mostly written to be copy-paste friendly and show how to use the respective operators, solvers and spaces in a correct manner.
 
@@ -211,7 +211,8 @@ Here we want to solve the problem
    \min_{0 \leq f \leq 1} \|Af - g\|_2^2 + a \|\nabla f\|_1
 
 Since this is a non-differentiable problem we need more advanced solvers to solve it.
-One of the stronger solvers in ODL is the Douglas-Rachford Primal-Dual method (`douglas_rachford_pd`) which uses :ref:`proximal_operators` to solve the optimization problem, but as a new user you do not need to consider the specifics, instead you only need to assemble the problem to fit the solver.
+One of the stronger solvers in ODL is the Douglas-Rachford Primal-Dual method (`douglas_rachford_pd`) which uses :ref:`proximal_operators` to solve the optimization problem.
+However, as a new user you do not need to consider the specifics, instead you only need to assemble the functionals involved in the problem you wish to solve.
 
 Consulting the `douglas_rachford_pd` documentation we see that it solves problems of the form
 
@@ -219,7 +220,7 @@ Consulting the `douglas_rachford_pd` documentation we see that it solves problem
     \min_x f(x) + \sum_{i=1}^n g_i(L_i x),
 
 where :math:`f`, :math:`g_i` are convex functions, :math:`L_i` are linear `Operator`'s.
-By identification, we see that the above problem can be written in this form if we let `f` be the indicator function on :math:`[0, 1]`,
+By identification, we see that the above problem can be written in this form if we let math:`f` be the indicator function on :math:`[0, 1]`,
 :math:`g_1` be the squared l2 distance :math:`\| \cdot - g\|_2^2`,
 :math:`g_2` be the norm :math:`\| \cdot \|_1`,
 :math:`L_1` be the convolution operator and :math:`L_2` be the gradient operator.
@@ -229,31 +230,30 @@ e.g. `forward_backward_pd`, `chambolle_pock_solver`, etc in the ODL `examples/so
 
 .. code-block:: python
 
-   # Assemble all operators into a list.
-   grad = odl.Gradient(space)
-   lin_ops = [A, grad]
-   a = 0.001
+    # Assemble all operators into a list.
+    grad = odl.Gradient(space)
+    lin_ops = [A, grad]
+    a = 0.001
 
-   # Create proximals operators corresponding to the convex conjugate (cconj)
-   # of the l2 squared and l1 norms.
-   prox_cc_g = [odl.solvers.proximal_cconj_l2_squared(space, g=g),
-                odl.solvers.proximal_cconj_l1(grad.range, lam=a)]
+    # Create functionals for the l2 distance and l1 norm.
+    g_funcs = [odl.solvers.L2NormSquared(space).translated(g),
+               a * odl.solvers.L1Norm(grad.range)]
 
-   # Proximal of the bound constraint 0 <= f <= 1
-   prox_f = odl.solvers.proximal_box_constraint(space, 0, 1)
+    # Functional of the bound constraint 0 <= x <= 1
+    f = odl.solvers.IndicatorBox(space, 0, 1)
 
-   # Find scaling constants so that the solver converges.
-   # See the douglas_rachford_pd documentation for more information.
-   opnorm_A = odl.power_method_opnorm(A, xstart=g)
-   opnorm_grad = odl.power_method_opnorm(grad, xstart=g)
-   sigma = [1 / opnorm_A**2, 1 / opnorm_grad**2]
-   tau = 1.0
+    # Find scaling constants so that the solver converges.
+    # See the douglas_rachford_pd documentation for more information.
+    opnorm_A = odl.power_method_opnorm(A, xstart=g)
+    opnorm_grad = odl.power_method_opnorm(grad, xstart=g)
+    sigma = [1 / opnorm_A ** 2, 1 / opnorm_grad ** 2]
+    tau = 1.0
 
-   # Solve using the Douglas-Rachford Primal-Dual method
-   x = space.zero()
-   odl.solvers.douglas_rachford_pd(x, prox_f, prox_cc_g, lin_ops,
-                                   tau=tau, sigma=sigma, niter=100)
-   x.show('TV Douglas-Rachford')
+    # Solve using the Douglas-Rachford Primal-Dual method
+    x = space.zero()
+    odl.solvers.douglas_rachford_pd(x, f, g_funcs, lin_ops,
+                                    tau=tau, sigma=sigma, niter=100)
+    x.show('TV Douglas-Rachford', show=True)
 
 .. image:: figures/getting_started_TV_douglas_rachford.png
 
