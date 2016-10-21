@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Tests that all examples run at all.
+"""Test that all examples run.
 
 Running this file causes all examples to be run, and any exception will give
 a FAILED result. All other results are considered PASSED.
