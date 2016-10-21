@@ -10,7 +10,7 @@ Next release
 ============
 
 
-ODL 0.5.0 Release Notes (2016-10-14)
+ODL 0.5.0 Release Notes (2016-10-21)
 ====================================
 
 This release features a new important top level class ``Functional`` that is intended to be used in optimization methods.

@@ -89,7 +89,7 @@ Features
 setup(
     name='odl',
 
-    version='0.4.0',
+    version='0.5.0',
 
     description='Operator Discretization Library',
     long_description=long_description,
@@ -119,10 +119,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
 
-        'Operating System :: POSIX :: Linux',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: MacOS :: MacOS X',
-
+        'Operating System :: OS Independent'
     ],
 
     keywords='research development mathematics prototyping imaging tomography',
