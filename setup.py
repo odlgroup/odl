@@ -89,7 +89,7 @@ Features
 setup(
     name='odl',
 
-    version='0.4.0',
+    version='0.5.0',
 
     description='Operator Discretization Library',
     long_description=long_description,
@@ -119,10 +119,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
 
-        'Operating System :: POSIX :: Linux',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: MacOS :: MacOS X',
-
+        'Operating System :: OS Independent'
     ],
 
     keywords='research development mathematics prototyping imaging tomography',
@@ -137,9 +134,8 @@ setup(
         'show': 'matplotlib',
         'fftw': 'pyfftw',
         'pywavelets': 'Pywavelets>=0.4',
-        'scikit' : 'scikit-image',
-        'proximal' : 'proximal',
-        'all': test_requires + ['matplotlib', 'pyfftw', 'Pywavelets', 'scikit-image', 'proximal']
+        'scikit': 'scikit-image',
+        'proximal': 'proximal',
     },
 
     cmdclass={'test': PyTest},

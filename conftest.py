@@ -62,6 +62,9 @@ def pytest_addoption(parser):
     parser.addoption('--examples', action='store_true',
                      help='Run examples')
 
+    parser.addoption('--documentation', action='store_true',
+                     help='Run doctests in the documentation')
+
 
 # reusable fixtures
 fn_impl_params = odl.FN_IMPLS.keys()

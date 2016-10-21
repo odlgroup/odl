@@ -9,8 +9,30 @@ Release Notes
 Next release
 ============
 
+
+ODL 0.5.0 Release Notes (2016-10-21)
+====================================
+
+This release features a new important top level class ``Functional`` that is intended to be used in optimization methods.
+Beyond its parent ``Operator``, it provides special methods and properties like ``gradient`` or ``proximal`` which are useful in advanced smooth or non-smooth optimization schemes.
+The interfaces of all solvers in ``odl.solvers`` have been updated to make use of functionals instead of their proximals, gradients etc. directly.
+
+Further notable changes are the implementation of an ``as_writable_array`` context manager that exposes arbitrary array storage as writable Numpy arrays, and the generalization of the wavelet transform to arbitrary dimensions.
+
+See below for a complete list of changes.
+
+
 New features
 ------------
+- Add ``Functional`` class to the solvers package. (:pull:`498`)
+  ``Functional`` is a subclass of odl ``Operator`` and intended to help in formulating and solving optimization problems.
+  It contains optimization specific features like ``proximal`` and ``convex_conj``, and built-in intelligence for handling things like translation, scaling of argument or scaling of functional.
+  * Migrate all solvers to work with ``Functional``'s instead of raw proximals etc. (:pull:`587`)
+  * ``FunctionalProduct`` and ``FunctionalQuotient`` which allow evaluation of the product/quotient of functions and also provides a gradient through the Leibniz/quotient rules. (:pull:`586`)
+  * ``FunctionalDefaultConvexConjugate`` which acts as a default for ``Functional.convex_conj``, providing it with a proximal property. (:pull:`588`)
+  * ``IndicatorBox`` and ``IndicatorNonnegativity`` which are indicator functions on a box shaped set and the set of nonnegative numbers, respectively. They return 0 if all points in a vector are inside the box, and infinity otherwise. (:pull:`589`)
+  * Add ``Functional``s for ``KullbackLeibler`` and ``KullbackLeiblerCrossEntropy``, together with corresponding convex conjugates (:pull:`627`).
+  Also add proximal operator for the convex conjugate of cross entropy Kullback-Leibler divergence, called ``proximal_cconj_kl_cross_entropy`` (:pull:`561`)
 - Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
 - Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on. This is
   intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists.
@@ -26,7 +48,14 @@ New features
 - Add ``FunctionalDefaultConvexConjugate`` which acts as a default for ``Functional.convex_conj``, providing it with a proximal property. (:pull:`588`)
 - Add ``IndicatorBox`` and ``IndicatorNonnegativity`` which are indicator functions on a box shaped set and the set of nonnegative numbers, respectively. They return 0 if all points in a vector are inside the box, and infinity otherwise. (:pull:`589`)
 - Add proximal operator for the convex conjugate of cross entropy Kullback-Leibler divergence, called ``proximal_cconj_kl_cross_entropy`` (:pull:`561`)
-- Add ``Functional``s for ``KullbackLeibler`` and ``KullbackLeiblerCrossEntropy``, together with corresponding convex conjugates (:pull:`627`)
+- Add ``Functional``'s for ``KullbackLeibler`` and ``KullbackLeiblerCrossEntropy``, together with corresponding convex conjugates (:pull:`627`)
+- Add tutorial style example. (:pull:`521`)
+- Add MLEM solver. (:pull:`497`)
+- Add ``MatVecOperator.inverse``. (:pull:`608`)
+- Add the ``Rosenbrock`` standard test functional. (:pull:`602`)
+- Add broadcasting of vector arithmetic involving ``ProductSpace`` vectors. (:pull:`555`)
+- Add ``phantoms.poisson_noise``. (:pull:`630`)
+- Add ``NumericalGradient`` and ``NumericalDerivative`` that numerically compute gradient and derivative of ``Operator``'s and ``Functional``'s. (:pull:`624`)
 
 Improvements
 ------------
@@ -36,19 +65,27 @@ Improvements
 - Allow showing subsets of the whole volume in ``DiscreteLpElement.show``. Previously this allowed slices to be shown, but the new version allows subsets such as ``0 < x < 3`` to be shown as well. (:pull:`574`)
 - Add ``Solvercallback.reset()`` which allows users to reset a callback to its initial state. Applicable if users want to reuse a callback in another solver. (:pull:`553`)
 - ``WaveletTransform`` and related operators now work in arbitrary dimensions. (:pull:`547`)
+- Several documentation improvements. Including:
+
+  * Move documentation from ``_call`` to ``__init__``. (:pull:`549`)
+  * Major review of minor style issues. (:pull:`534`)
+  * Typeset math in proximals. (:pull:`580`)
+
+- Improved installation docs and update of Chambolle-Pock documentation. (:pull:`121`)
 
 Changes
 --------
-- Changed definition of ``LinearSpaceVector.multiply`` to match the definition used by Numpy. (:pull:`509`)
-- The parameters ``padding_method`` in ``diff_ops.py`` and ``mode`` in ``wavelet.py`` have been renamed to ``pad_mode``.
+- Change definition of ``LinearSpaceVector.multiply`` to match the definition used by Numpy. (:pull:`509`)
+- Rename the parameters ``padding_method`` in ``diff_ops.py`` and ``mode`` in ``wavelet.py`` to ``pad_mode``.
   The parameter ``padding_value`` is now called ``pad_const``. (:pull:`511`)
 - Expose ``ellipse_phantom`` and ``shepp_logan_ellipses`` to ``odl.phantom``. (:pull:`529`)
 - Unify the names of minimum (``min_pt``), maximum (``max_pt``) and middle (``mid_pt``) points as well as number of points (``shape``) in grids, interval products and factory functions for discretized spaces. (:pull:`541`)
-- Removed ``simple_operator`` since it was never used and did not follow the ODL style. (:pull:`543`)
+- Remove ``simple_operator`` since it was never used and did not follow the ODL style. (:pull:`543`)
   The parameter ``padding_value`` is now called ``pad_const``.
-- Removed ``Interval``, ``Rectangle`` and ``Cuboid`` since they were confusing (Capitalized name but not a Cunction) and barely ever used.
+- Remove ``Interval``, ``Rectangle`` and ``Cuboid`` since they were confusing (Capitalized name but not a class) and barely ever used.
   Users should instead use ``IntervalProd`` in all cases. (:pull:`537`)
-- The following classes have been renamed:
+- The following classes have been renamed (:pull:`560`):
+
   * ``LinearSpaceVector`` -> ``LinearSpaceElement``
   * ``DiscreteLpVector`` -> ``DiscreteLpElement``
   * ``ProductSpaceVector`` -> ``ProductSpaceElement``
@@ -56,15 +93,24 @@ Changes
   * ``DiscretizedSpaceVector`` -> ``DiscretizedSpaceElement``
   * ``FunctionSetVector`` -> ``FunctionSetElement``
   * ``FunctionSpaceVector`` -> ``FunctionSpaceElement``
-- Changed parameter style of differential operators from having a ``pad_mode`` and a separate ``edge_order`` argument that were mutually exclusive to a single ``pad_mode`` that covers all cases.
+
+- Change parameter style of differential operators from having a ``pad_mode`` and a separate ``edge_order`` argument that were mutually exclusive to a single ``pad_mode`` that covers all cases.
   Also added several new pad modes to the differential operators. (:pull:`548`)
+- Switch from RTD documentation hosting to gh-pages and let Travis CI build and deploy the documentation. (:pull:`536`)
 - Update name of ``proximal_zero`` to ``proximal_const_func``. (:pull:`582`)
+- Move unit tests from top level ``test/`` to ``odl/test/`` folder and distribute them with the source. (:pull:`638`)
+- Update pytest dependency to [>3.0] and use new featuers. (:pull:`653`)
+- Add pytest option ``--documentation`` to test all doctest examples in the online documentation.
+- Remove the ``pip install odl[all]`` option since it fails by default.
+
 
 Bugfixes
 --------
-- Fixed ``python -c "import odl; odl.test()"`` not working on Windows. (:pull:`508`)
-- Fixed a ``TypeError`` being raised in ``OperatorTest`` when running ``optest.ajoint()`` without specifying an operator norm. (:pull:`525`)
-
+- Fix ``python -c "import odl; odl.test()"`` not working on Windows. (:pull:`508`)
+- Fix a ``TypeError`` being raised in ``OperatorTest`` when running ``optest.ajoint()`` without specifying an operator norm. (:pull:`525`)
+- Fix scaling of scikit ray transform for non full scan. (:pull:`523`)
+- Fix bug causing classes to not be vectorizable. (:pull:`604`)
+- Fix rounding problem in some proximals (:pull:`661`)
 
 ODL 0.4.0 Release Notes (2016-08-17)
 ====================================
