@@ -33,6 +33,12 @@ import doctest
 from doctest import IGNORE_EXCEPTION_DETAIL, ELLIPSIS, NORMALIZE_WHITESPACE
 import os
 import pytest
+try:
+    import matplotlib
+    matplotlib.use('Agg')  # To avoid the backend freezing
+    import matplotlib.pyplot as plt
+except ImportError:
+    pass
 
 # Modules to be added to testing globals
 import numpy
@@ -75,6 +81,7 @@ def test_file(doc_src_file):
     doctest.testfile(doc_src_file, module_relative=False, report=True,
                      extraglobs=doctest_extraglobs, verbose=True,
                      optionflags=doctest_optionflags)
+    plt.close('all')
 
 
 if __name__ == '__main__':

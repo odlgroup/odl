@@ -64,7 +64,7 @@ def example(request):
                     reason='Need --examples option to run')
 def test_example(example):
     imp.load_source('tmp', example)
-    plt.close("all")
+    plt.close('all')
 
 
 if __name__ == '__main__':

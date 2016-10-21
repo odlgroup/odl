@@ -4,7 +4,7 @@ package:
 
 source:
     git_url: https://github.com/odlgroup/odl
-    git_rev: master  # for testing, put any branch here
+    git_rev: distribute_tests  # for testing, put any branch here
     # git_rev: v0.5.0  # release
 
 build:

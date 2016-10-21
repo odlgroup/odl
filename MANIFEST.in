@@ -5,3 +5,4 @@ include requirements.txt
 include setup.cfg
 include setup.py
 include test_requirements.txt
+recursive-include odl/test test*.py *test.py
