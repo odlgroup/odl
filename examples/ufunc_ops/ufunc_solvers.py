@@ -27,7 +27,7 @@ import odl
 
 # Create space and functionals
 r2 = odl.rn(2)
-rosenbrock = odl.solvers.example_funcs.RosenbrockFunctional(r2, scale=2.0)
+rosenbrock = odl.solvers.RosenbrockFunctional(r2, scale=2.0)
 log = odl.ufunc_ops.log()
 
 # Create optimization function by composing log with rosenbrock, add 0.1 to

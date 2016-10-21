@@ -25,7 +25,6 @@ standard_library.install_aliases()
 import numpy as np
 from odl.set import LinearSpace, RealNumbers, Field
 from odl.space import ProductSpace, fn
-from odl.space.base_ntuples import FnBase
 from odl.operator import Operator, MultiplyOperator
 from odl.util.utility import is_int_dtype
 from odl.util.ufuncs import UFUNCS
@@ -45,8 +44,8 @@ RAW_EXAMPLES_DOCSTRING = """
 Examples
 --------
 >>> import odl
->>> space = odl.{space}
->>> op = {name}(space)
+>>> space = odl.{space!r}
+>>> op = odl.ufunc_ops.{name}(space)
 >>> print(op({arg}))
 {result}
 """
@@ -256,21 +255,17 @@ def ufunc_functional_factory(name, nargin, nargout, docstring):
 
     # Create example (also functions as doctest)
 
-    space = RealNumbers()
-    if nargin == 1:
-        val = 1.0
-        arg = '{}'.format(val)
-        with np.errstate(all='ignore'):
-            result = getattr(np, name)(val)
-    else:
-        val1 = 1.0
-        val2 = 2.0
-        arg = '[{}, {}]'.format(val1, val2)
-        with np.errstate(all='ignore'):
-            result = getattr(np, name)(val1, val2)
+    if nargin != 1:
+        raise NotImplementedError('Currently not suppored')
 
-    if nargout == 2:
-        result = '{{{}, {}}}'.format(result[0], result[1])
+    if nargout != 1:
+        raise NotImplementedError('Currently not suppored')
+
+    space = RealNumbers()
+    val = 1.0
+    arg = '{}'.format(val)
+    with np.errstate(all='ignore'):
+        result = str(float(getattr(np, name)(val)))
 
     examples_docstring = RAW_EXAMPLES_DOCSTRING.format(space=space, name=name,
                                                        arg=arg, result=result)
@@ -287,23 +282,75 @@ def ufunc_functional_factory(name, nargin, nargout, docstring):
     return type(full_name, (Functional,), attributes)
 
 
+RAW_UFUNC_FACTORY_DOCSTRING = """{docstring}
+Notes
+-----
+This creates a `Operator`/`Functional` that applies a ufunc pointwise.
+
+Examples
+--------
+{operator_example}
+{functional_example}
+"""
+
+RAW_UFUNC_FACTORY_FUNCTIONAL_DOCSTRING = """
+Create functional with domain/range as real numbers:
+
+>>> import odl
+>>> func = odl.ufunc_ops.{name}()
+"""
+
+RAW_UFUNC_FACTORY_OPERATOR_DOCSTRING = """
+Create operator that acts pointwise on a `FnBase`
+
+>>> import odl
+>>> space = odl.rn(3)
+>>> op = odl.ufunc_ops.{name}(space)
+"""
+
+
 # Create an operator for each ufunc
 for name, nargin, nargout, docstring in UFUNCS:
-    def indirection(name):
+    def indirection(name, docstring):
+        # Indirection is needed since name should be saved but is changed
+        # in the loop.
+
         def ufunc_factory(domain=RealNumbers()):
-            if isinstance(domain, Field):
-                return globals()[name + '_func'](domain)
-            elif isinstance(domain, FnBase):
-                return globals()[name + '_op'](domain)
-            else:
+            # Create a `Operator` or `Functional` depending on arguments
+            try:
+                if isinstance(domain, Field):
+                    return globals()[name + '_func'](domain)
+                else:
+                    return globals()[name + '_op'](domain)
+            except KeyError:
                 raise ValueError('UFunc not available for {}'.format(domain))
         return ufunc_factory
 
+    globals()[name + '_op'] = ufunc_class_factory(name, nargin,
+                                                  nargout, docstring)
     if not _is_integer_only_ufunc(name):
-        globals()[name + '_op'] = ufunc_class_factory(name, nargin, nargout, docstring)
-        globals()[name + '_func'] = ufunc_functional_factory(name, nargin, nargout, docstring)
-        globals()[name] = indirection(name)
-        __all__ += (name,)
+        operator_example = RAW_UFUNC_FACTORY_OPERATOR_DOCSTRING.format(
+            name=name)
+    else:
+        operator_example = ""
+
+    if not _is_integer_only_ufunc(name) and nargin == 1 and nargout == 1:
+        globals()[name + '_func'] = ufunc_functional_factory(
+            name, nargin, nargout, docstring)
+        functional_example = RAW_UFUNC_FACTORY_FUNCTIONAL_DOCSTRING.format(
+            name=name)
+    else:
+        functional_example = ""
+
+    ufunc_factory = indirection(name, docstring)
+
+    ufunc_factory.__doc__ = RAW_UFUNC_FACTORY_DOCSTRING.format(
+        docstring=docstring, name=name,
+        functional_example=functional_example,
+        operator_example=operator_example)
+
+    globals()[name] = ufunc_factory
+    __all__ += (name,)
 
 
 if __name__ == '__main__':

@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with ODL.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Universal functions as `Operator`s and `Functional`s."""
+"""Universal functions as `Operator` and `Functional`."""
 
 from __future__ import absolute_import
 
 from .ufunc_ops import *
+__all__ = ufunc_ops.__all__
