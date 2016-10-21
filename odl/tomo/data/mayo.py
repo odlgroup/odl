@@ -163,13 +163,13 @@ if __name__ == '__main__':
 
     folder = 'E:/Data/MayoClinic data/Training Cases/L067/full_DICOM-CT-PD'
     nr_start = 14000
-    nr_end = 18000
+    nr_end = nr_start + 4000
 
     # Discrete reconstruction space: discretized functions on the cube
     # [-20, 20]^3 with 300 samples per dimension.
     reco_space = odl.uniform_discr(
-        min_corner=[-170, -170, 200], max_corner=[170, 170, 242.5],
-        nsamples=[512, 512, 64], dtype='float32')
+        min_pt=[-170, -170, 200], max_pt=[170, 170, 242.5],
+        shape=[512, 512, 64], dtype='float32')
 
     ray_trafo, proj_data = mayo_projector_from_folder(reco_space, folder,
                                                       nr_start, nr_end)
@@ -186,7 +186,7 @@ if __name__ == '__main__':
 
         # Create ramp in the detector direction
         ramp_function = fourier.range.element(
-            lambda x: 0*x[0] + fft_filter(x[1]) + 0*x[2])
+            lambda x: fft_filter(x[1]))
 
         # Create ramp filter via the
         # convolution formula with fourier transforms

@@ -131,7 +131,7 @@ class HelicalConeGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
         self._source_offsets = kwargs.pop('source_offsets', None)
 
-        DivergentBeamGeometry.__init__(ndim=3, motion_part=apart,
+        DivergentBeamGeometry.__init__(self, ndim=3, motion_part=apart,
                                        detector=detector)
 
     @property
@@ -330,29 +330,23 @@ class HelicalConeFlatGeometry(HelicalConeGeometry):
         """
         AxisOrientedGeometry.__init__(self, axis)
 
-        det_init_axes = kwargs.pop('det_init_axes', None)
-        if det_init_axes is None:
-            det_init_axis_0 = np.cross(self.axis, self._src_to_det_init)
-            det_init_axes = (det_init_axis_0, axis)
-
-        src_to_det_init = kwargs.pop('src_to_det_init',
+        src_to_det_init = kwargs.get('src_to_det_init',
                                      perpendicular_vector(self.axis))
-
         if np.linalg.norm(src_to_det_init) <= 1e-10:
             raise ValueError('initial source to detector vector {} is too '
                              'close to zero.'.format(src_to_det_init))
-        self._src_to_det_init = (np.array(src_to_det_init) /
-                                 np.linalg.norm(src_to_det_init))
+        src_to_det_init = (np.array(src_to_det_init) /
+                           np.linalg.norm(src_to_det_init))
 
-        det_init_axes = kwargs.pop('det_init_axes', None)
+        det_init_axes = kwargs.get('det_init_axes', None)
         if det_init_axes is None:
-            det_init_axis_0 = np.cross(self.axis, self._src_to_det_init)
+            det_init_axis_0 = np.cross(self.axis, src_to_det_init)
             det_init_axes = (det_init_axis_0, axis)
 
         detector = Flat2dDetector(dpart, det_init_axes)
 
         super().__init__(apart, dpart, src_radius, det_radius, pitch, detector,
-                         axis=[0, 0, 1], **kwargs)
+                         axis=axis, **kwargs)
 
     def __repr__(self):
         """Return ``repr(self)``."""
