@@ -97,6 +97,7 @@ Changes
 - Move unit tests from top level ``test/`` to ``odl/test/`` folder and distribute them with the source. (:pull:`638`)
 - Update pytest dependency to [>3.0] and use new featuers. (:pull:`653`)
 - Add pytest option ``--documentation`` to test all doctest examples in the online documentation.
+- Remove the ``pip install odl[all]`` option since it fails by default.
 
 
 Bugfixes
