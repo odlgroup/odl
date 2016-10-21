@@ -61,9 +61,11 @@ TL;DR
 
     $ conda create -c odlgroup -n odl-py35 python=3.5 odl odlcuda matplotlib pytest scikit-image spyder
 
+- Activate the conda enviroment and start working!
+
 Installing Anaconda
 ===================
-Even though a Python interpreter is included by default in virtually all Linux distributions, it is advisable to use Anaconda's Python  ecosystem since it gives you full flexibility in the Python version you use and which packages you install.
+Even though a Python interpreter is included by default in virtually all Linux distributions, it is advisable to use Anaconda's Python ecosystem since it gives you full flexibility in the Python version you use and which packages you install.
 
 Download Anaconda from the Continuum Analytics home page.
 You may choose to download the `full Anaconda <https://www.continuum.io/downloads>`_ variant, but we recommend the slim `Miniconda`_ distribution since many of the packages included in full Anaconda are out of date anyway and need to be updated.
@@ -75,7 +77,7 @@ Make sure that during installation, your ``PATH`` variable is adapted such that 
     to PATH in your /home/user/.bashrc ? [yes|no]
     [no] >>> yes
 
-After opening a new terminal (for the changed ``PATH`` variable to take effect), you can run
+After restarting the terminal (for the changed ``PATH`` variable to take effect), you can run
 
 .. code-block:: bash
 
@@ -150,6 +152,14 @@ The following packages are optional and extend the functionality of ODL.
   .. code-block:: bash
 
     $ conda install scikit-image
+
+- Fast `ASTRA`_ ray transform backend:
+
+  .. code-block:: bash
+
+    $ conda install -c astra-toolbox astra-toolbox
+
+  If this doesn't work, or if you want a more recent version, check out the `ASTRA for X-ray tomography`_ section below.
 
 - Bindings to the `ProxImaL`_ convex optimization package, an extension of `CVXPY`_:
 
