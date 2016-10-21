@@ -52,7 +52,7 @@ fi
 ### PyPI upload
 
 PYPI_DIST_DIR=$(cd dist && echo "$PWD")  # Absolute path
-PYPI_DIST_FILES="$(ls -1ad $PYPI_DIST_DIR/* | grep ${PACKAGE_NAME}-${VERSION})"
+PYPI_DIST_FILES="$(find $PYPI_DIST_DIR/ -name ${PACKAGE_NAME}-${VERSION}*)"
 
 if [[ -z $PYPI_DIST_FILES ]]; then
     echo 'No distribution files found in the `dist` directory.'
@@ -63,6 +63,7 @@ fi
 if [ $DRY_RUN -eq 1 ]; then
     echo ""
     echo "The following files would be uploaded to PyPI:"
+    echo ""
     echo -e "$PYPI_DIST_FILES"
 else
     PYPI_USER=odlgroup
@@ -74,34 +75,41 @@ else
         $TWINE upload -u $PYPI_USER $PYPI_DIST_FILES || exit 1
     fi
 fi
-
-
 ### Conda upload
 CONDA_USER="odlgroup"
 ANACONDA=$(which anaconda)
 
 # Find conda build directory
-if [ -n $CONDA_ENV_PATH ]; then
-    CONDA_BUILD_DIR="$CONDA_ENV_PATH/../../conda-bld"
+if [ -z $CONDA_PREFIX ]; then
+    # Not in a conda env
+    CONDA=$(which conda)
+    CONDA_DIR=$(dirname $CONDA)
+    CONDA_BUILD_DIR="$CONDA_DIR/../conda-bld"
 else
-    CONDA_BUILD_DIR="$(which conda)/../../conda-bld"
+    CONDA_BUILD_DIR="$CONDA_PREFIX/../../conda-bld"
 fi
+
+# Prettify path
+cd $CONDA_BUILD_DIR || exit 1
+CONDA_BUILD_DIR=$(pwd)
+cd --
 
 # Compile all files in the build folders corresponding to package and version
 CONDA_DIST_FILES=""
-CONDA_DIST_DIRS="linux-32 linux-64 osx-64 win-32 win-64"
+CONDA_DIST_DIRS="linux-32 linux-64 osx-64 win-32 win-64 noarch"
 for DIR in $CONDA_DIST_DIRS; do
     if [ -d $CONDA_BUILD_DIR/$DIR ]; then
-        if [ -z $CONDA_DIST_FILES ]; then
-            CONDA_DIST_FILES="$(ls -1 $CONDA_BUILD_DIR/$DIR/$PACKAGE_NAME-$VERSION*)\n"
-        else
-            CONDA_DIST_FILES="$CONDA_DIST_FILES$(ls -1 $CONDA_BUILD_DIR/$DIR/$PACKAGE_NAME-$VERSION*)\n"
+        FOUND_FILES="$(find $CONDA_BUILD_DIR/$DIR -name $PACKAGE_NAME-$VERSION*)"
+
+        if [[ $FOUND_FILES != "\n" ]]; then
+            CONDA_DIST_FILES+="$FOUND_FILES\n"
         fi
     fi
 done
 
 # Do the upload (or pretend to)
 if [ $DRY_RUN -eq 1 ]; then
+    echo ""
     echo ""
     echo "The following files would be uploaded to Anaconda Cloud:"
     echo -e $CONDA_DIST_FILES
