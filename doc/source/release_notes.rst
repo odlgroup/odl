@@ -32,7 +32,7 @@ New features
   * ``FunctionalDefaultConvexConjugate`` which acts as a default for ``Functional.convex_conj``, providing it with a proximal property. (:pull:`588`)
   * ``IndicatorBox`` and ``IndicatorNonnegativity`` which are indicator functions on a box shaped set and the set of nonnegative numbers, respectively. They return 0 if all points in a vector are inside the box, and infinity otherwise. (:pull:`589`)
   * Add ``Functional``s for ``KullbackLeibler`` and ``KullbackLeiblerCrossEntropy``, together with corresponding convex conjugates (:pull:`627`).
-    Also add proximal operator for the convex conjugate of cross entropy Kullback-Leibler divergence, called ``proximal_cconj_kl_cross_entropy`` (:pull:`561`)
+  Also add proximal operator for the convex conjugate of cross entropy Kullback-Leibler divergence, called ``proximal_cconj_kl_cross_entropy`` (:pull:`561`)
 - Add ``ResizingOperator`` for shrinking and extending (padding) of discretized functions, including a variety of padding methods. (:pull:`499`)
 - Add ``as_writable_array`` that allows casting arbitrary array-likes to a numpy array and then storing the results later on. This is
   intended to be used with odl vectors that may not be stored in numpy format (like cuda vectors), but can be used with other types like lists.
@@ -66,9 +66,11 @@ Improvements
 - Add ``Solvercallback.reset()`` which allows users to reset a callback to its initial state. Applicable if users want to reuse a callback in another solver. (:pull:`553`)
 - ``WaveletTransform`` and related operators now work in arbitrary dimensions. (:pull:`547`)
 - Several documentation improvements. Including:
+
   * Move documentation from ``_call`` to ``__init__``. (:pull:`549`)
   * Major review of minor style issues. (:pull:`534`)
   * Typeset math in proximals. (:pull:`580`)
+
 - Improved installation docs and update of Chambolle-Pock documentation. (:pull:`121`)
 
 Changes
@@ -83,6 +85,7 @@ Changes
 - Remove ``Interval``, ``Rectangle`` and ``Cuboid`` since they were confusing (Capitalized name but not a class) and barely ever used.
   Users should instead use ``IntervalProd`` in all cases. (:pull:`537`)
 - The following classes have been renamed (:pull:`560`):
+
   * ``LinearSpaceVector`` -> ``LinearSpaceElement``
   * ``DiscreteLpVector`` -> ``DiscreteLpElement``
   * ``ProductSpaceVector`` -> ``ProductSpaceElement``
@@ -90,6 +93,7 @@ Changes
   * ``DiscretizedSpaceVector`` -> ``DiscretizedSpaceElement``
   * ``FunctionSetVector`` -> ``FunctionSetElement``
   * ``FunctionSpaceVector`` -> ``FunctionSpaceElement``
+
 - Change parameter style of differential operators from having a ``pad_mode`` and a separate ``edge_order`` argument that were mutually exclusive to a single ``pad_mode`` that covers all cases.
   Also added several new pad modes to the differential operators. (:pull:`548`)
 - Switch from RTD documentation hosting to gh-pages and let Travis CI build and deploy the documentation. (:pull:`536`)
