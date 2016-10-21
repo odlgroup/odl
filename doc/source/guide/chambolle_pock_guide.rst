@@ -137,7 +137,9 @@ These functionals are available in ODL as `L2NormSquared` and `L1Norm`, respecti
 
 Finally, we define the functional for the nonnegativity constraint, available as the functional `IndicatorNonnegativity`:
 
-    >>> g = odl.solvers.functional.IndicatorNonnegativity(space)
+.. code-block:: python
+
+    >>> g = odl.solvers.IndicatorNonnegativity(space)
 
 Calling the solver
 ^^^^^^^^^^^^^^^^^^
@@ -145,7 +147,7 @@ Now that the problem is set up, we need to select some optimization parameters.
 For the Chambolle-Pock method, there is one main rule that we can use:
 The product of the primal step :math:`\tau`, the dual step :math:`\sigma` and the squared operator norm :math:`\|L\|^2` has to be smaller than 1, :math:`\tau \sigma \|L\|^2 < 1`.
 Apart from this, there are no clear rules on how to select :math:`\tau` and :math:`\sigma` -- basically we're left with trial and error.
-We decide to pick them both equal to :math:`1 / \|L\|^2`.
+We decide to pick them both equal to :math:`1 / \|L\|`.
 To calculate an estimate of the operator norm, we have the tool `power_method_opnorm` which performs the simple `power iteration <https://en.wikipedia.org/wiki/Power_iteration>`_ to approximate the largest singular value of :math:`L`:
 
 .. code-block:: python
