@@ -57,7 +57,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-test_path = os.path.join(root_path, 'odl/test')
+test_path = os.path.join(root_path, 'odl', 'test')
 
 
 def find_tests():
@@ -66,8 +66,8 @@ def find_tests():
         for filename in filenames:
             basename, suffix = os.path.splitext(filename)
             if (suffix == '.py' and
-                    (basename.startswith('test') or
-                     basename.endswith('test'))):
+                    (basename.startswith('test_') or
+                     basename.endswith('_test'))):
                 tests.append(os.path.join(path, filename))
 
     return tests
