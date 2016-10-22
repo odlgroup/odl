@@ -50,7 +50,7 @@ before_script:
 
 script:
   # Run tests, including PEP8 check, and produce a coverage report
-  - py.test --doctest-modules --cov --cov-report term-missing --pep8
+  - py.test --doctest-modules --cov --cov-report term-missing --pep8 $TRAVIS_BUILD_DIR/odl
   # Build the Sphinx doc (only for Python 3.5 and the master branch)
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" ]]; then
       cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -;

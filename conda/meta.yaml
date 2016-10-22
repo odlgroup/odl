@@ -1,11 +1,11 @@
 package:
     name: odl
-    version: "0.5.0"
+    version: "0.5.1"
 
 source:
     git_url: https://github.com/odlgroup/odl
-    git_rev: distribute_tests  # for testing, put any branch here
-    # git_rev: v0.5.0  # release
+    # git_rev: master  # for testing, put any branch here
+    git_rev: v0.5.1  # release
 
 build:
     noarch_python: True
