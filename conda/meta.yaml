@@ -30,6 +30,8 @@ requirements:
 test:
     imports:
         - odl
+    commands:
+        - python -c "import odl; odl.test()"
 
 about:
     home: https://github.com/odlgroup/odl
