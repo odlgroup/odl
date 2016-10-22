@@ -23,6 +23,7 @@ standard_library.install_aliases()
 
 import numpy as np
 import operator
+import os
 
 import odl
 from odl.trafos.backends import PYFFTW_AVAILABLE, PYWT_AVAILABLE
@@ -50,14 +51,19 @@ def add_doctest_np_odl(doctest_namespace):
 # --- Files to be ignored by the tests ---
 
 
-collect_ignore = ['setup.py']
+this_dir = os.path.dirname(__file__)
+odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
+collect_ignore = [os.path.join(odl_root, 'setup.py')]
 
 if not PYFFTW_AVAILABLE:
-    collect_ignore.append('odl/trafos/backends/pyfftw_bindings.py')
+    collect_ignore.append(
+        os.path.join(odl_root, 'odl/trafos/backends/pyfftw_bindings.py'))
 if not PYWT_AVAILABLE:
-    collect_ignore.append('odl/trafos/backends/pywt_bindings.py')
+    collect_ignore.append(
+        os.path.join(odl_root, 'odl/trafos/backends/pywt_bindings.py'))
     # Currently `pywt` is the only implementation
-    collect_ignore.append('odl/trafos/wavelet.py')
+    collect_ignore.append(
+        os.path.join(odl_root, 'odl/trafos/wavelet.py'))
 
 
 def pytest_addoption(parser):
