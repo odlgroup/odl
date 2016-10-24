@@ -33,7 +33,7 @@ import dicom
 from tqdm import tqdm
 import os
 
-from odl.discr import uniform_partition
+from odl.discr import uniform_partition, nonuniform_partition
 from odl.tomo.operators import RayTransform
 from odl.tomo.geometry import HelicalConeFlatGeometry
 
@@ -84,7 +84,6 @@ def mayo_projector_from_folder(reco_space, folder, nr_start=1, nr_end=-1):
         data_array[i] = proj[::-1, ::-1]
 
     # Get the angles
-    # TODO: handle not uniformly spaced
     angles = [d.DetectorFocalCenterAngularPosition for d in datasets]
     angles = -np.unwrap(angles) - np.pi / 2  # different defintion of angles
 
@@ -157,6 +156,42 @@ def mayo_projector_from_folder(reco_space, folder, nr_start=1, nr_end=-1):
     return ray_trafo, proj_data
 
 
+def fbp_op(ray_trafo):
+    """Create Filtered BackProjection from a ray transform.
+    
+    Parameters
+    ----------
+    ray_trafo : `RayTransform` with `HelicalConeFlatGeometry`
+
+    Returns
+    fbp : `Operator`
+        Approximate inverse operator of ``ray_trafo``.
+    """
+    fourier = odl.trafos.FourierTransform(ray_trafo.range, axes=[1, 2])
+
+    # Find the direction that the filter should be taken in
+    src_to_det = ray_trafo.geometry.src_to_det_init
+    axis = ray_trafo.geometry.axis
+    rot_dir = np.cross(axis, src_to_det)
+    c1 = np.vdot(rot_dir, ray_trafo.geometry.det_init_axes[0])
+    c2 = np.vdot(rot_dir, ray_trafo.geometry.det_init_axes[1])
+
+    # Define ramp filter
+    def fft_filter(x):
+        return np.sqrt(c1 * x[1] ** 2 + c2 * x[2] ** 2)
+
+    # Create ramp in the detector direction
+    ramp_function = fourier.range.element(fft_filter)
+
+    # Create ramp filter via the
+    # convolution formula with fourier transforms
+    ramp_filter = fourier.inverse * ramp_function * fourier
+
+    # Create filtered backprojection by composing the backprojection
+    # (adjoint) with the ramp filter. Also apply a scaling.
+    return ray_trafo.adjoint * ramp_filter / (2 * np.pi ** 2)
+    
+    
 if __name__ == '__main__':
     import odl
     import matplotlib.pyplot as plt
@@ -174,27 +209,11 @@ if __name__ == '__main__':
     ray_trafo, proj_data = mayo_projector_from_folder(reco_space, folder,
                                                       nr_start, nr_end)
 
-    if True:
+    tp = 'dr'
+    if tp == 'fbp':
         # Test FBP reconstruction
-        print('Performing FBP')
-
-        # Fourier transform in detector direction
-        fourier = odl.trafos.FourierTransform(ray_trafo.range, axes=[1])
-
-        def fft_filter(x):
-            return np.maximum(np.abs(x) * np.cos(x / 2.0), 0.0)
-
-        # Create ramp in the detector direction
-        ramp_function = fourier.range.element(
-            lambda x: fft_filter(x[1]))
-
-        # Create ramp filter via the
-        # convolution formula with fourier transforms
-        ramp_filter = fourier.inverse * ramp_function * fourier
-
-        # Create filtered backprojection by composing the backprojection
-        # (adjoint) with the ramp filter. Also apply a scaling.
-        fbp = ray_trafo.adjoint * ramp_filter / (2 * np.pi ** 2)
+        fbp = fbp_op(ray_trafo)
+        
         # calculate fbp
         fbp_result = fbp(proj_data)
         fbp_result.show('FBP', coords=[None, None, 227], clim=[0.010, 0.025])
@@ -218,19 +237,66 @@ if __name__ == '__main__':
         arr = np.tile(np.roll(np.rot90(data_array, -1), -17, 0)[:, :, None], (1, 1, 64))
         y = reco_space.element(arr)
 
-        (y * 0.00002 - fbp_result).show('reference',
+        (y * 0.00002).show('reference',
+               coords=[None, None, 227.5],
+               clim=[0.010, 0.025])
+        
+        (y * 0.00002 - fbp_result).show('difference',
                coords=[None, None, 227.5],
                clim=[-0.003, 0.003])
-    else:
+    elif tp == 'cg':
         # Conjugate gradient
         print('Performing CG')
 
-        partial = odl.solvers.ShowPartial('Conjugate gradient',
-                                          coords=[None, None, 227],
-                                          clim=[0.015, 0.025])
-
+        callback = odl.solvers.CallbackShow('Conjugate gradient',
+                                            coords=[None, None, 227],
+                                            clim=[0.015, 0.025])
+        callback &= odl.solvers.CallbackPrintIteration()
+        callback &= odl.solvers.CallbackPrintTiming()
 
         x = ray_trafo.domain.zero()
         odl.solvers.conjugate_gradient_normal(ray_trafo, x,
-                                              proj_data, niter=20,
-                                              partial=partial)
+                                              proj_data, niter=50,
+                                              callback=callback)
+    elif tp == 'dr':
+        # Gradient for TV regularization
+        gradient = odl.Gradient(ray_trafo.domain)
+        
+        # Assemble all operators
+        lin_ops = [ray_trafo, gradient]
+        
+        # Regularization parameter
+        lam = 0.000005
+
+        # Create functionals as needed
+        g = [odl.solvers.L2Norm(ray_trafo.range).translated(proj_data),
+             lam * odl.solvers.L1Norm(gradient.range)]
+        f = odl.solvers.IndicatorNonnegativity(ray_trafo.domain)
+
+        # norms, precomputed
+        ray_trafo_norm = 60.0
+        grad_norm = 5.0
+        sigma = [1/ray_trafo_norm**2, 1/grad_norm**2]
+        
+        # callback
+        callback = odl.solvers.CallbackShow('douglas rachford',
+                                            coords=[None, None, 227])
+        callback &= odl.solvers.CallbackPrintIteration()
+        callback &= odl.solvers.CallbackPrintTiming()
+        
+        # Get initial from ray trafo
+        if True:
+            # Test FBP reconstruction
+            fbp = fbp_op(ray_trafo)
+            
+            # calculate fbp
+            x = fbp(proj_data)
+        else:
+            # Solve
+            x = ray_trafo.domain.zero()
+            
+        odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
+                                        tau=1.0, sigma=sigma,
+                                        niter=20, callback=callback)
+    else:
+        raise Exception

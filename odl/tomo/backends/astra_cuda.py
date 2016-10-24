@@ -173,7 +173,7 @@ def astra_cuda_back_projector(proj_data, geometry, reco_space, out=None):
         Reconstruction data resulting from the application of the backward
         projector. If ``out`` was provided, the returned object is a
         reference to it.
-        """
+    """
     if not isinstance(proj_data, DiscreteLpElement):
         raise TypeError('projection data {!r} is not a DiscreteLpElement '
                         'instance'.format(proj_data))
