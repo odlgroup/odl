@@ -36,4 +36,7 @@ __all__ += graphics.__all__
 from .numerics import *
 __all__ += numerics.__all__
 
+from .vectorization import *
+__all__ += vectorization.__all__
+
 from . import ufuncs

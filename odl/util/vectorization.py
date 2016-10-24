@@ -28,7 +28,8 @@ import numpy as np
 
 
 __all__ = ('is_valid_input_array', 'is_valid_input_meshgrid',
-           'out_shape_from_meshgrid', 'out_shape_from_array', 'vectorize')
+           'out_shape_from_meshgrid', 'out_shape_from_array',
+           'OptionalArgDecorator', 'vectorize')
 
 
 def is_valid_input_array(x, ndim=None):

@@ -30,17 +30,12 @@ import os
 import sys
 
 
-if os.environ.get('READTHEDOCS', None) == 'True':
-    # Mock requires in conf.py
-    requires = ''
-    test_requires = []
-else:
-    requires = open(
-        os.path.join(os.path.dirname(__file__),
-                     'requirements.txt')).readlines()
-    test_requires = open(
-        os.path.join(os.path.dirname(__file__),
-                     'test_requirements.txt')).readlines()
+root_path = os.path.dirname(__file__)
+
+
+requires = open(os.path.join(root_path, 'requirements.txt')).readlines()
+test_requires = open(
+    os.path.join(root_path, 'test_requirements.txt')).readlines()
 
 
 class PyTest(TestCommand):
@@ -60,6 +55,23 @@ class PyTest(TestCommand):
         import pytest
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
+
+
+test_path = os.path.join(root_path, 'odl', 'test')
+
+
+def find_tests():
+    tests = []
+    for path, _, filenames in os.walk(os.path.join(root_path, test_path)):
+        for filename in filenames:
+            basename, suffix = os.path.splitext(filename)
+            if (suffix == '.py' and
+                    (basename.startswith('test_') or
+                     basename.endswith('_test'))):
+                tests.append(os.path.join(path, filename))
+
+    return tests
+
 
 long_description = """
 Operator Discretization Library (ODL) is a Python library for fast prototyping focusing on (but not restricted to) inverse problems. ODL is being developed at `KTH Royal Institute of Technology <https://www.kth.se/en/sci/institutioner/math>`_.
@@ -89,7 +101,7 @@ Features
 setup(
     name='odl',
 
-    version='0.5.0',
+    version='0.5.1',
 
     description='Operator Discretization Library',
     long_description=long_description,
@@ -124,8 +136,11 @@ setup(
 
     keywords='research development mathematics prototyping imaging tomography',
 
-    packages=find_packages(exclude=['*test*']),
+    packages=find_packages(),
     package_dir={'odl': 'odl'},
+    package_data={'odl': find_tests() + ['odl/pytest.ini']},
+    include_package_data=True,
+    entry_points={'pytest11': ['odl_plugins = odl.util.pytest_plugins']},
 
     install_requires=[requires],
     tests_require=['pytest'],

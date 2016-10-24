@@ -408,7 +408,7 @@ After that, follow the `build instructions there <https://github.com/odlgroup/od
 
 ASTRA for X-ray tomography
 ==========================
-To calculate fast forward and backward projections for image reconstruction in X-ray tomography, install the `ASTRA tomography toolbox`_.
+To calculate fast forward and backward projections for image reconstruction in X-ray tomography, install the `ASTRA tomography toolbox <https://github.com/astra-toolbox/astra-toolbox>`_.
 ASTRA projectors are fully supported in ODL.
 
 You can try using the conda package, but we can give no guarantee that it works out of the box:
@@ -417,7 +417,7 @@ You can try using the conda package, but we can give no guarantee that it works 
 
     $ conda install -c astra-toolbox astra-toolbox
 
-For further instructions, check `the ASTRA GitHub page <ASTRA tomography toolbox>`_.
+For further instructions, check `the ASTRA GitHub page <https://github.com/astra-toolbox/astra-toolbox>`_.
 
 
 STIR for emission tomography
@@ -467,5 +467,5 @@ If that does not help, `make an issue on GitHub <https://github.com/odlgroup/odl
 .. _CVXPY: http://www.cvxpy.org/en/latest/
 .. _odlcuda: https://github.com/odlgroup/odlcuda
 .. _CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
-.. _ASTRA tomography toolbox: https://github.com/astra-toolbox/astra-toolbox
+.. _ASTRA: https://github.com/astra-toolbox/astra-toolbox
 .. _STIR: https://github.com/UCL/STIR

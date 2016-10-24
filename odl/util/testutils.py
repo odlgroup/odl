@@ -589,13 +589,18 @@ def test(arguments=None):
                           '\nRun `$ pip install [--user] odl[testing]` in '
                           'order to install `pytest`.')
 
+    from .pytest_plugins import collect_ignore
+
     this_dir = os.path.dirname(__file__)
     odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
-    base_args = ['-x', '{root}/odl'.format(root=odl_root)]
-    if arguments is None:
-        args = base_args
-    else:
-        args = base_args + list(arguments)
+
+    args = ['-x', '{root}/odl'.format(root=odl_root)]
+
+    ignores = ['--ignore={}'.format(file) for file in collect_ignore]
+    args.extend(ignores)
+
+    if arguments is not None:
+        args.extend(arguments)
 
     pytest.main(args)
 

@@ -33,6 +33,12 @@ import doctest
 from doctest import IGNORE_EXCEPTION_DETAIL, ELLIPSIS, NORMALIZE_WHITESPACE
 import os
 import pytest
+try:
+    import matplotlib
+    matplotlib.use('Agg')  # To avoid the backend freezing
+    import matplotlib.pyplot as plt
+except ImportError:
+    pass
 
 # Modules to be added to testing globals
 import numpy
@@ -69,13 +75,14 @@ def doc_src_file(request):
     return request.param
 
 
-@pytest.mark.skipif("not pytest.config.getoption('--documentation')",
-                    reason='Need --documentation option to run')
+@pytest.mark.skipif("not pytest.config.getoption('--doctest-doc')",
+                    reason='Need --doctest-doc option to run')
 def test_file(doc_src_file):
     doctest.testfile(doc_src_file, module_relative=False, report=True,
                      extraglobs=doctest_extraglobs, verbose=True,
                      optionflags=doctest_optionflags)
+    plt.close('all')
 
 
 if __name__ == '__main__':
-    pytest.main([str(__file__.replace('\\', '/')), '-v', '--documentation'])
+    pytest.main([str(__file__.replace('\\', '/')), '-v', '--doctest-doc'])
