@@ -9,7 +9,7 @@ Release Notes
 Next release
 ============
 
-ODL 0.5.1 Release Notes (2016-10-22)
+ODL 0.5.1 Release Notes (2016-10-24)
 ====================================
 
 This is a maintenance release since the test suite was not bundled with PyPI and Conda packages as intended already in 0.5.0.
