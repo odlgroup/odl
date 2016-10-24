@@ -31,12 +31,12 @@ from odl.tomo.geometry.geometry import (
 from odl.tomo.util.utility import perpendicular_vector
 
 
-__all__ = ('CircularConeFlatGeometry', 'HelicalConeFlatGeometry',)
+__all__ = ('HelicalConeFlatGeometry', 'CircularConeFlatGeometry')
 
 
-class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
+class HelicalConeGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
 
-    """Cone beam geometry with helical source curve and flat detector.
+    """Abstract cone beam geometry with helical source curve.
 
     The source moves along a spiral oriented along a fixed ``axis``, with
     radius ``src_radius`` in the azimuthal plane and a given ``pitch``.
@@ -56,14 +56,14 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     CircularConeFlatGeometry : Case with zero pitch
     """
 
-    def __init__(self, apart, dpart, src_radius, det_radius, pitch,
+    def __init__(self, apart, dpart, src_radius, det_radius, pitch, detector,
                  axis=[0, 0, 1], **kwargs):
         """Initialize a new instance.
 
         Parameters
         ----------
         apart : 1-dim. `RectPartition`
-            Partition of the angle interval
+            Partition of the angle interval.
         dpart : 2-dim. `RectPartition`
             Partition of the detector parameter rectangle
         src_radius : nonnegative float
@@ -73,8 +73,10 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         pitch : float
             Constant vertical distance that a point on the helix
             traverses when increasing the angle parameter by ``2 * pi``
+        detector : `Detector`
+            The detector to use.
         axis : `array-like`, shape ``(3,)``, optional
-            Fixed rotation axis, the symmetry axis of the helix
+            Fixed rotation axis, the symmetry axis of the helix.
 
         Other Parameters
         ----------------
@@ -89,6 +91,8 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             second.
         pitch_offset : float, optional
             Offset along the ``axis`` at ``angle=0``
+        source_offsets : ...
+            Offsets ...
         """
         AxisOrientedGeometry.__init__(self, axis)
 
@@ -125,6 +129,11 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
             raise ValueError('source and detector circle radii cannot both be '
                              '0')
 
+        self._source_offsets = kwargs.pop('source_offsets', None)
+
+        DivergentBeamGeometry.__init__(self, ndim=3, motion_part=apart,
+                                       detector=detector)
+
     @property
     def src_radius(self):
         """Source circle radius of this geometry."""
@@ -155,6 +164,11 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
     def pitch_offset(self):
         """Vertical offset at ``angle=0``."""
         return self._pitch_offset
+
+    @property
+    def source_offsets(self):
+        """THE SOURCE OFFSETS."""
+        return self._source_offsets
 
     @property
     def angles(self):
@@ -245,7 +259,94 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         pitch_component = self.axis * (self.pitch_offset +
                                        self.pitch * angle / (np.pi * 2))
 
-        return circle_component + pitch_component
+        if self.source_offsets is None:
+            return circle_component + pitch_component
+        else:
+            closest_angle_id = np.abs(self.angles - angle).argmin()
+            offset_component = self.source_offsets[closest_angle_id]
+            return circle_component + pitch_component + offset_component
+
+    # Fix for bug in ABC thinking this is abstract
+    rotation_matrix = AxisOrientedGeometry.rotation_matrix
+
+
+class HelicalConeFlatGeometry(HelicalConeGeometry):
+
+    """Cone beam geometry with helical source curve and flat detector.
+
+    The source moves along a spiral oriented along a fixed ``axis``, with
+    radius ``src_radius`` in the azimuthal plane and a given ``pitch``.
+    The detector reference point is opposite to the source, i.e. in
+    the point at distance ``src_rad + det_rad`` on the line in the
+    azimuthal plane through the source point and ``axis``.
+
+    The motion parameter is the 1d rotation angle parameterizing source
+    and detector positions simultaneously.
+
+    In the standard configuration, the rotation axis is ``(0, 0, 1)``,
+    the initial source-to-detector vector is ``(1, 0, 0)``, and the
+    initial detector axes are ``[(0, 1, 0), (0, 0, 1)]``.
+
+    See Also
+    --------
+    CircularConeFlatGeometry : Case with zero pitch
+    """
+
+    def __init__(self, apart, dpart, src_radius, det_radius, pitch,
+                 axis=[0, 0, 1], **kwargs):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        apart : 1-dim. `RectPartition`
+            Partition of the angle interval
+        dpart : 2-dim. `RectPartition`
+            Partition of the detector parameter rectangle
+        src_radius : nonnegative `float`
+            Radius of the source circle
+        det_radius : nonnegative `float`
+            Radius of the detector circle
+        pitch : `float`
+            Constant vertical distance that a point on the helix
+            traverses when increasing the angle parameter by ``2 * pi``
+        axis : `array-like`, shape ``(3,)``, optional
+            Fixed rotation axis, the symmetry axis of the helix
+
+        Other Parameters
+        ----------------
+        src_to_det_init : `array-like`, shape ``(2,)``, optional
+            Initial state of the vector pointing from source to  detector
+            reference point. The zero vector is not allowed.
+            By default, a `perpendicular_vector` to ``axis`` is used.
+        det_init_axes : 2-tuple of `array-like` (shape ``(2,)``), optional
+            Initial axes defining the detector orientation.
+            By default, the normalized cross product of ``axis`` and
+            ``src_to_det_init`` is used as first axis and ``axis`` as
+            second.
+        pitch_offset : `float`, optional
+            Offset along the ``axis`` at ``angle=0``
+        source_offsets : ...
+            Offsets ...
+        """
+        AxisOrientedGeometry.__init__(self, axis)
+
+        src_to_det_init = kwargs.get('src_to_det_init',
+                                     perpendicular_vector(self.axis))
+        if np.linalg.norm(src_to_det_init) <= 1e-10:
+            raise ValueError('initial source to detector vector {} is too '
+                             'close to zero.'.format(src_to_det_init))
+        src_to_det_init = (np.array(src_to_det_init) /
+                           np.linalg.norm(src_to_det_init))
+
+        det_init_axes = kwargs.get('det_init_axes', None)
+        if det_init_axes is None:
+            det_init_axis_0 = np.cross(self.axis, src_to_det_init)
+            det_init_axes = (det_init_axis_0, axis)
+
+        detector = Flat2dDetector(dpart, det_init_axes)
+
+        super().__init__(apart, dpart, src_radius, det_radius, pitch, detector,
+                         axis=axis, **kwargs)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -276,7 +377,7 @@ class HelicalConeFlatGeometry(DivergentBeamGeometry, AxisOrientedGeometry):
         return '{}({})'.format(self.__class__.__name__, arg_str)
 
     # Fix for bug in ABC thinking this is abstract
-    rotation_matrix = AxisOrientedGeometry.rotation_matrix
+    # rotation_matrix = AxisOrientedGeometry.rotation_matrix
 
 
 class CircularConeFlatGeometry(HelicalConeFlatGeometry):
