@@ -772,51 +772,42 @@ class DiscreteLpElement(DiscretizedSpaceElement):
             if indices is not None:
                 raise ValueError('cannot provide both coords and indices')
 
-            interv = self.space.uspace.domain
+            partition = self.space.partition
             shape = self.shape
             indices = []
-            for axis, (xmin, xmax, n, coord) in enumerate(
-                    zip(interv.min_pt, interv.max_pt, shape, coords)):
+            for axis, (n, coord) in enumerate(
+                    zip(shape, coords)):
                 try:
                     coord_minp, coord_maxp = coord
                 except TypeError:
                     coord_minp = coord_maxp = coord
 
+                subpart = partition.bydimension[axis]
+
                 # Validate input
                 if coord_minp is not None:
-                    coord_minp = float(coord_minp)
-                    if not xmin <= coord_minp <= xmax:
-                        raise ValueError('in axis {}: coordinate {} not in '
-                                         'the valid range {}'
-                                         ''.format(axis, coord, [xmin, xmax]))
+                    coord_minp = subpart.set.element(coord_minp)
                 if coord_maxp is not None:
-                    coord_maxp = float(coord_maxp)
-                    if not xmin <= coord_maxp <= xmax:
-                        raise ValueError('in axis {}: coordinate {} not in '
-                                         'the valid range {}'
-                                         ''.format(axis, coord, [xmin, xmax]))
+                    coord_maxp = subpart.set.element(coord_maxp)
 
-                if xmin == xmax:  # trivial cases
+                if len(subpart) == 0:  # trivial cases
                     indices += [0]
                 elif coord_minp is not None and coord_minp == coord_maxp:
-                    normalized_pos = (coord_minp - xmin) / (xmax - xmin)
-                    indices += [int(n * normalized_pos)]
+                    indices += [subpart.index(coord_minp)]
                 else:
                     if coord_minp is None:
                         min_ind = 0
                     else:
-                        normalized_pos_minp = ((coord_minp - xmin) /
-                                               (xmax - xmin))
-                        min_ind = int(np.floor(n * normalized_pos_minp))
+                        min_ind = np.floor(subpart.index(coord_minp,
+                                                         floating=True))
 
                     if coord_maxp is None:
-                        max_ind = -1
+                        max_ind = len(subpart)
                     else:
-                        normalized_pos_maxp = ((coord_maxp - xmin) /
-                                               (xmax - xmin))
-                        max_ind = int(np.ceil(n * normalized_pos_maxp))
+                        min_ind = np.ceil(subpart.index(coord_maxp,
+                                                        floating=True))
 
-                    indices += [slice(min_ind, max_ind)]
+                    indices += [slice(int(min_ind), int(max_ind))]
 
         # Default to showing x-y slice "in the middle"
         if indices is None and self.ndim >= 3:

@@ -434,6 +434,15 @@ class RectPartition(object):
         RectPartition(
             IntervalProd([-0.5, 1.0, 4.0, 2.0], [1.5, 6.0, 5.0, 7.0]),
             TensorGrid([0.0], [2.0, 4.0], [5.0], [2.0, 4.0, 7.0]))
+
+        Colons etc work as expected:
+
+        >>> part[:] == part
+        True
+        >>> part[:, :, :] == part
+        True
+        >>> part[...] == part
+        True
         """
         # Special case of index list: slice along first axis
         if isinstance(indices, list):
