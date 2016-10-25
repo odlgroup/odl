@@ -546,9 +546,9 @@ class RectPartition(object):
         newset = self.set[self.grid.inondeg]
         return RectPartition(newset, self.grid.squeeze())
 
-    def index_of(self, value, floating=False):
+    def index(self, value, floating=False):
         """Return the index of a value in the domain.
-        
+
         Parameters
         ----------
         value : ``self.set`` element
@@ -557,46 +557,46 @@ class RectPartition(object):
             True if the index should also give the position inside the voxel.
             This is given by returning the integer valued index of the voxel
             plus the partial distance from the left to the right boundary.
-            
+
         Returns
         -------
         index : float
             Index of the value, as counted from the left.
-            
+
         Examples
         --------
         Get the indices of start and end:
-        
+
         >>> p = uniform_partition(0, 2, 5)
-        >>> p.index_of(0)
+        >>> p.index(0)
         (0,)
-        >>> p.index_of(2)
+        >>> p.index(2)
         (4,)
-        
+
         Also supports points inside voxels, in that case returning the index
         of the voxel:
-        
-        >>> p.index_of(0.2)
+
+        >>> p.index(0.2)
         (0,)
-        
+
         By using the ``floating`` argument, partial positions inside the voxels
         can instead be determined:
-        
-        >>> p.index_of(0.2, floating=True)
+
+        >>> p.index(0.2, floating=True)
         (0.5,)
-            
-        These indexes work with indexing, extracting the voxel the point lies 
+
+        These indexes work with indexing, extracting the voxel the point lies
         in:
-        
-        >>> p[p.index_of(0.1)]
+
+        >>> p[p.index(0.1)]
         uniform_partition(0.0, 0.4, 1)
-        
+
         Index also works in higher dimensions:
-        
-        >>> p = uniform_partition([0, -1], [1, 2], (4, 1))      
-        >>> p.index_of([0.5, 2])
+
+        >>> p = uniform_partition([0, -1], [1, 2], (4, 1))
+        >>> p.index([0.5, 2])
         (2, 0)
-        >>> p[p.index_of([0.5, 2])]
+        >>> p[p.index([0.5, 2])]
         uniform_partition([0.5, -1.0], [0.75, 2.0], [1, 1])
         """
         value = np.atleast_1d(self.set.element(value))
@@ -617,10 +617,10 @@ class RectPartition(object):
                     result += (ind,)
                 else:
                     result += (ind - 1,)
-          
+
         return result
-                
-        
+
+
     def __str__(self):
         """Return ``str(self)``."""
         return 'partition of {} using {}'.format(self.set, self.grid)
