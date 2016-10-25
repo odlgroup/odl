@@ -560,8 +560,10 @@ class RectPartition(object):
 
         Returns
         -------
-        index : float
+        index : int/float or tuple of int/float
             Index of the value, as counted from the left.
+            If ``self.ndim>1`` the result is a tuple, else a scalar.
+            If ``floating=True`` the scalar is a float, else an int.
 
         Examples
         --------
@@ -569,21 +571,21 @@ class RectPartition(object):
 
         >>> p = uniform_partition(0, 2, 5)
         >>> p.index(0)
-        (0,)
+        0
         >>> p.index(2)
-        (4,)
+        4
 
         Also supports points inside voxels, in that case returning the index
         of the voxel:
 
         >>> p.index(0.2)
-        (0,)
+        0
 
         By using the ``floating`` argument, partial positions inside the voxels
         can instead be determined:
 
         >>> p.index(0.2, floating=True)
-        (0.5,)
+        0.5
 
         These indexes work with indexing, extracting the voxel the point lies
         in:
@@ -606,10 +608,10 @@ class RectPartition(object):
             if floating:
                 if cell_bdry_vec[ind] == val:
                     # Value is on top of edge
-                    result += (ind,)
+                    result += (float(ind),)
                 else:
                     # interpolate between
-                    csize = (cell_bdry_vec[ind] - cell_bdry_vec[ind - 1])
+                    csize = float(cell_bdry_vec[ind] - cell_bdry_vec[ind - 1])
                     result += (ind - (cell_bdry_vec[ind] - val) / csize,)
             else:
                 if cell_bdry_vec[ind] == val and ind != len(cell_bdry_vec) - 1:
@@ -618,8 +620,10 @@ class RectPartition(object):
                 else:
                     result += (ind - 1,)
 
-        return result
+        if self.ndim == 1:
+            result = result[0]
 
+        return result
 
     def __str__(self):
         """Return ``str(self)``."""
