@@ -20,7 +20,7 @@ For a working installation you should perform the following steps:
 
 Consider using Anaconda
 =======================
-We currently recomment to use `Anaconda`_ on all platforms since it offers the best out-of-the-box installation and run-time experience.
+We currently recommend to use `Anaconda`_ on all platforms since it offers the best out-of-the-box installation and run-time experience.
 Anaconda also has other benefits, for example the possibility to work in completely isolated Python environments with own installed packages, thereby avoiding conflicts with system-wide installed packages.
 Furthermore, Anaconda cooperates with ``pip`` (see below), i.e. packages can be installed with both Anaconda's internal mechanism and ``pip`` without conflicts.
 
