@@ -52,7 +52,7 @@ def add_doctest_np_odl(doctest_namespace):
 
 
 this_dir = os.path.dirname(__file__)
-odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
+odl_root = os.path.abspath(this_dir)
 collect_ignore = [os.path.join(odl_root, 'setup.py')]
 
 if not PYFFTW_AVAILABLE:
