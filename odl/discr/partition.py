@@ -625,6 +625,60 @@ class RectPartition(object):
 
         return result
 
+    @property
+    def bydimension(self):
+        """Return the subpartition defined along one or several dimensions.
+
+        Examples
+        --------
+        Can get each dimension independently:
+
+        >>> p = uniform_partition([0, 1, 2], [1, 3, 5], [3, 5, 6])
+        >>> p.bydimension[0]
+        uniform_partition(0.0, 1.0, 3)
+        >>> p.bydimension[1]
+        uniform_partition(1.0, 3.0, 5)
+        >>> p.bydimension[2]
+        uniform_partition(2.0, 5.0, 6)
+
+        Usual numpy style advanced indexing works:
+
+        >>> p.bydimension[:] == p
+        True
+        >>> p.bydimension[1:]
+        uniform_partition([1.0, 2.0], [3.0, 5.0], [5, 6])
+        >>> p.bydimension[[0, 2]]
+        uniform_partition([0.0, 2.0], [1.0, 5.0], [3, 6])
+        """
+        partition = self
+
+        class RectPartitionByDimension(object):
+            """Helper class for accessing `RectPartition` by dimension.
+
+            See Also
+            --------
+            RectPartition.bydimension
+            """
+
+            def __getitem__(self, dim):
+                """Return ``self[dim]``."""
+                slc = np.zeros(partition.ndim, dtype=object)
+                slc[dim] = np.s_[:]
+                return partition[tuple(slc)].squeeze()
+
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> p = uniform_partition(0, 1, 5)
+                >>> p.bydimension
+                uniform_partition(0, 1, 5).bydimension
+                """
+                return '{!r}.bydimension'.format(partition)
+
+        return RectPartitionByDimension()
+
     def __str__(self):
         """Return ``str(self)``."""
         return 'partition of {} using {}'.format(self.set, self.grid)
