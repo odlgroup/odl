@@ -25,6 +25,7 @@ from builtins import super
 
 import numpy as np
 import scipy
+from numbers import Integral
 
 from odl.solvers.functional.functional import Functional
 from odl.operator import Operator, ConstantOperator
@@ -1140,7 +1141,27 @@ class SeparableSum(Functional):
         ----------
         functional1, ..., functionalN : `Functional`
             The functionals in the sum.
+            Can also be given as ``space, n`` with ``n`` integer,
+            in which case the functional is repeated ``n`` times.
+
+        Examples
+        --------
+        Create functional ``f([x1, x2]) = ||x1||_1 + ||x2||_2``
+
+        >>> space = odl.rn(3)
+        >>> l1 = odl.solvers.L1Norm(space)
+        >>> l2 = odl.solvers.L2Norm(space)
+        >>> f_sum = odl.solvers.SeparableSum(l1, l2)
+
+        Create functional ``f([x1, ... ,xn]) = \sum_i ||xi||_1``
+
+        >>> f_sum = odl.solvers.SeparableSum(l1, 5)
         """
+        # Make a power space if the second argument is an integer
+        if (len(functionals) == 2 and
+                isinstance(functionals[1], Integral)):
+            functionals = [functionals[0]] * functionals[1]
+
         domains = [func.domain for func in functionals]
         domain = ProductSpace(*domains)
         linear = all(func.is_linear for func in functionals)
