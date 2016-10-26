@@ -173,7 +173,7 @@ def douglas_rachford_pd(x, f, g, L, tau, sigma, niter,
         tmp_1 = sum(Li.adjoint(vi) for Li, vi in zip(L, v))
         tmp_1.lincomb(1, x, -tau / 2, tmp_1)
         f.proximal(tau)(tmp_1, out=p1)
-        w1.lincomb(2.0, p1, -1, x)
+        w1.lincomb(2, p1, -1, x)
 
         for i in range(m):
             prox_cc_g[i](sigma[i])(v[i] + (sigma[i] / 2.0) * L[i](w1),

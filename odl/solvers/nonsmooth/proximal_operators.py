@@ -1249,7 +1249,6 @@ def proximal_cconj_kl(space, lam=1, g=None):
                 out.lincomb(1, out, 4.0 * lam * self.sigma, g)
 
             # out = sqrt(out)
-            out.ufunc.maximum(1, out=out)
             out.ufunc.sqrt(out=out)
 
             # out = x - out
