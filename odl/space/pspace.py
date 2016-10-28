@@ -609,6 +609,11 @@ class ProductSpaceElement(LinearSpaceElement):
         """Number of factors of this element's space."""
         return self.space.size
 
+    @property
+    def dtype(self):
+        """The data type of the space of this element."""
+        return self.space.dtype
+
     def __len__(self):
         """Return ``len(self)``."""
         return len(self.space)
