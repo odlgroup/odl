@@ -27,6 +27,7 @@ import numpy as np
 import scipy
 from numbers import Integral
 
+from odl.discr import PointwiseNorm
 from odl.solvers.functional.functional import Functional
 from odl.discr import PointwiseNorm
 from odl.space import ProductSpace
@@ -47,7 +48,7 @@ __all__ = ('L1Norm', 'L2Norm', 'L2NormSquared',
            'GroupL1Norm', 'IndicatorGroupL1UnitBall', 'IndicatorZero',
            'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
-           'QuadraticForm')
+           'QuadraticForm', 'NuclearNorm')
 
 
 class L1Norm(Functional):
@@ -1630,6 +1631,116 @@ class QuadraticForm(Functional):
                                  vector=vector,
                                  constant=constant)
 
+
+class NuclearNorm(Functional):
+
+    """The nuclear norm.
+
+    See article:
+    Collaborative Total Variation: A General Framework for Vectorial TV Models
+    """
+
+    def __init__(self, space, outer_exp=1, singular_vector_exp=2):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `ProductSpace` of `ProductSpace` of `FnBase`
+            Domain of the functional.
+        outer_exp : {1, 2, inf}
+            Exponent for the outer norm.
+        singular_vector_exp : {1, 2, inf}
+            Exponent for the norm for the singular vectors.
+
+        Examples
+        --------
+        >>> import odl
+        >>> r3 = odl.rn(3)
+        >>> space = odl.ProductSpace(odl.ProductSpace(r3, 2), 2)
+        >>> norm = NuclearNorm(space)
+        >>> norm(space.one())
+        6.0
+        """
+        assert space.is_power_space
+        assert space.is_power_space
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+        self.fnbase = self.domain[0][0]
+        self.outer_exp = 1
+        self.singular_vector_exp = 2
+        if self.outer_exp == 1:
+            pass
+        elif self.outer_exp == 2:
+            pass
+        else:
+            assert 0
+        self.pwisenorm = PointwiseNorm(self.domain[0],
+                                       exponent=self.singular_vector_exp)
+        self.pshape = (self.domain.size, self.domain[0].size)
+
+    def __asarray(self, arr):
+        """Convert ``x`` to an array.
+
+        Here the indices are changed such that the "outer" indices come last,
+        this is in order to have the access order as `numpy.linalg.svd` needs
+        them.
+        """
+        shape = self.fnbase.shape + self.pshape
+        arr = np.zeros(shape, dtype=self.fnbase.dtype)
+        for i, xi in enumerate(arr):
+            for j, xii in enumerate(xi):
+                arr[..., i, j] = xii.asarray()
+
+        return arr
+
+    def __asvector(self, vec):
+        """Convert ``vec`` to an `domain` element."""
+        result = np.moveaxis(vec, [-2, -1], [0, 1])
+        return self.domain.element(result)
+
+    # TODO: update when integration operator is in place: issue #440
+    def _call(self, x):
+        """Return the L1-norm of ``x``."""
+        arr = self._asarray(x)
+        svd_diag = np.linalg.svd(arr, compute_uv=False)
+        l1norm = L1Norm(self.fnbase)
+        return l1norm(self.pwisenorm(svd_diag.T))
+
+    @property
+    def proximal(self):
+
+        def nddot(a, b):
+            """Compute pointwise matrix product in the last indices."""
+            return np.einsum('...ij,...jk->...ik', a, b)
+
+        func = self
+
+        class ProximalOperator(Operator):
+            """Proximal operator of `NuclearNorm`."""
+            def __init__(self, sigma):
+                self.sigma = sigma
+                Operator.__init__(self, func.domain, func.domain)
+
+            def _call(self, x):
+                arr = func.__asarray(x)
+
+                U, s, Vt = np.linalg.svd(arr, full_matrices=False)
+                s[np.abs(s) < 1e-10] = 1e-10
+
+                V = Vt.swapaxes(-1, -2)
+                sinv = 1 / s
+
+                #snorm = func.pwisenorm(s.T)
+                #snorm = np.maximum(self.sigma, snorm)
+                #sprox = (1 - self.sigma / snorm.asarray())[..., None] * s
+
+                snorm = np.abs(s)
+                snorm = np.maximum(self.sigma, snorm)
+                sprox = (1 - self.sigma / snorm) * s
+
+                result = nddot(nddot(arr, V), (sprox * sinv)[..., None, :] * Vt)
+                return func.__asvector(result)
+
+        return ProximalOperator
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
