@@ -43,7 +43,7 @@ from odl.solvers.nonsmooth.proximal_operators import (
 from odl.util import conj_exponent
 
 
-__all__ = ('L1Norm', 'L2Norm', 'L2NormSquared',
+__all__ = ('L1Norm', 'L2Norm', 'LpNorm', 'L2NormSquared',
            'ZeroFunctional', 'ConstantFunctional', 'IndicatorLpUnitBall',
            'GroupL1Norm', 'IndicatorGroupL1UnitBall', 'IndicatorZero',
            'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
@@ -561,6 +561,55 @@ class L2Norm(Functional):
     def convex_conj(self):
         """The convex conjugate functional of the L2-norm."""
         return IndicatorLpUnitBall(self.domain, exponent=2)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r})'.format(self.__class__.__name__, self.domain)
+
+
+# TODO make l1 and l2 norms inherit from this.
+class LpNorm(Functional):
+
+    """The functional corresponding to the Lp-norm.
+
+    The Lp-norm, ``||x||_p``,  is defined as:
+
+    .. math::
+       \\left(\\int |x|^p \\right)^{1/p}
+    """
+
+    def __init__(self, space, exponent):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        space : `DiscreteLp` or `FnBase`
+            Domain of the functional.
+        exponent : float
+            Exponent for the norm (``p``).
+        """
+        self.exponent = float(exponent)
+        super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
+
+    # TODO: update when integration operator is in place: issue #440
+    def _call(self, x):
+        """Return the Lp-norm of ``x``."""
+        if np.isfinite(self.exponent):
+            xpow = x.ufunc.pow(self.exponent)
+            return np.pow(self.domain.one().inner(xpow), 1 / self.exponent)
+        elif self.exponent == np.inf:
+            xabs = x.ufunc.absolute()
+            return np.max(xabs)
+        elif self.exponent == -np.inf:
+            xabs = x.ufunc.absolute()
+            return np.min(xabs)
+        else:
+            raise RuntimeError('unknown exponent')
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate functional of the Lp-norm."""
+        return IndicatorLpUnitBall(self.domain, exponent=1 / self.exponent)
 
     def __repr__(self):
         """Return ``repr(self)``."""
@@ -1668,9 +1717,9 @@ class NuclearNorm(Functional):
         self.outer_exp = 1
         self.singular_vector_exp = 2
         if self.outer_exp == 1:
-            pass
+            self.outernorm = L1Norm(self.domain)
         elif self.outer_exp == 2:
-            pass
+            self.outernorm = L2Norm(self.domain)
         else:
             assert 0
         self.pwisenorm = PointwiseNorm(self.domain[0],
@@ -1700,10 +1749,9 @@ class NuclearNorm(Functional):
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
         """Return the L1-norm of ``x``."""
-        arr = self._asarray(x)
+        arr = self.__asarray(x)
         svd_diag = np.linalg.svd(arr, compute_uv=False)
-        l1norm = L1Norm(self.fnbase)
-        return l1norm(self.pwisenorm(svd_diag.T))
+        return self.outernorm(self.pwisenorm(svd_diag.T))
 
     @property
     def proximal(self):
@@ -1726,16 +1774,23 @@ class NuclearNorm(Functional):
                 U, s, Vt = np.linalg.svd(arr, full_matrices=False)
                 s[np.abs(s) < 1e-10] = 1e-10
 
+                # transpose pointwise
                 V = Vt.swapaxes(-1, -2)
                 sinv = 1 / s
 
-                #snorm = func.pwisenorm(s.T)
-                #snorm = np.maximum(self.sigma, snorm)
-                #sprox = (1 - self.sigma / snorm.asarray())[..., None] * s
-
-                snorm = np.abs(s)
-                snorm = np.maximum(self.sigma, snorm)
-                sprox = (1 - self.sigma / snorm) * s
+                if func.singular_vector_exp == 1:
+                    snorm = np.abs(s)
+                    snorm = np.maximum(self.sigma, snorm)
+                    sprox = (1 - self.sigma / snorm) * s
+                elif func.singular_vector_exp == 2:
+                    snorm = func.pwisenorm(s.T)
+                    snorm = np.maximum(self.sigma, snorm)
+                    sprox = (1 - self.sigma / snorm.asarray())[..., None] * s
+                elif func.singular_vector_exp == np.inf:
+                    snorm = np.sum(np.absolute(s), axis=-1)
+                    sprox = (1 - self.sigma / snorm.asarray())[..., None] * s
+                else:
+                    assert 0
 
                 result = nddot(nddot(arr, V), (sprox * sinv)[..., None, :] * Vt)
                 return func.__asvector(result)
