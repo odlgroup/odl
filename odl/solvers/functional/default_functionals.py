@@ -595,8 +595,8 @@ class LpNorm(Functional):
     def _call(self, x):
         """Return the Lp-norm of ``x``."""
         if np.isfinite(self.exponent):
-            xpow = x.ufunc.pow(self.exponent)
-            return np.pow(self.domain.one().inner(xpow), 1 / self.exponent)
+            xpow = x.ufunc.power(self.exponent)
+            return np.power(self.domain.one().inner(xpow), 1 / self.exponent)
         elif self.exponent == np.inf:
             xabs = x.ufunc.absolute()
             return np.max(xabs)
@@ -1689,7 +1689,8 @@ class NuclearNorm(Functional):
     Collaborative Total Variation: A General Framework for Vectorial TV Models
     """
 
-    def __init__(self, space, outer_exp=1, singular_vector_exp=2):
+    def __init__(self, space, outer_exp=1, singular_vector_exp=2,
+                 weighting=None):
         """Initialize a new instance.
 
         Parameters
@@ -1700,6 +1701,8 @@ class NuclearNorm(Functional):
             Exponent for the outer norm.
         singular_vector_exp : {1, 2, inf}
             Exponent for the norm for the singular vectors.
+        weighting : float
+            Weighting for the singular vectors.
 
         Examples
         --------
@@ -1714,19 +1717,18 @@ class NuclearNorm(Functional):
         assert space.is_power_space
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
         self.fnbase = self.domain[0][0]
-        self.outer_exp = 1
-        self.singular_vector_exp = 2
-        if self.outer_exp == 1:
-            self.outernorm = L1Norm(self.domain)
-        elif self.outer_exp == 2:
-            self.outernorm = L2Norm(self.domain)
+        outer_exp = float(outer_exp)
+        singular_vector_exp = float(singular_vector_exp)
+        if weighting is not None:
+            self.weighting = np.atleast_1d(weighting)
         else:
-            assert 0
+            self.weighting = None
+        self.outernorm = LpNorm(self.domain[0][0], exponent=outer_exp)
         self.pwisenorm = PointwiseNorm(self.domain[0],
-                                       exponent=self.singular_vector_exp)
+                                       exponent=singular_vector_exp)
         self.pshape = (self.domain.size, self.domain[0].size)
 
-    def __asarray(self, arr):
+    def _asarray(self, vec):
         """Convert ``x`` to an array.
 
         Here the indices are changed such that the "outer" indices come last,
@@ -1735,26 +1737,45 @@ class NuclearNorm(Functional):
         """
         shape = self.fnbase.shape + self.pshape
         arr = np.zeros(shape, dtype=self.fnbase.dtype)
-        for i, xi in enumerate(arr):
+        for i, xi in enumerate(vec):
             for j, xii in enumerate(xi):
                 arr[..., i, j] = xii.asarray()
 
+        if self.weighting is not None:
+            for i in range(self.domain.size):
+                arr[..., i, :] *= self.weighting[i]
+
         return arr
 
-    def __asvector(self, vec):
+    def _asvector(self, arr):
         """Convert ``vec`` to an `domain` element."""
-        result = np.moveaxis(vec, [-2, -1], [0, 1])
+
+        result = np.moveaxis(arr, [-2, -1], [0, 1])
+
+        if self.weighting is not None:
+            for i in range(self.domain.size):
+                result[i] /= self.weighting[i]
+
         return self.domain.element(result)
 
     # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
-        """Return the L1-norm of ``x``."""
-        arr = self.__asarray(x)
+        """Return the Nuclear-norm of ``x``."""
+
+        # Convert to array with most
+        arr = self._asarray(x)
         svd_diag = np.linalg.svd(arr, compute_uv=False)
-        return self.outernorm(self.pwisenorm(svd_diag.T))
+
+        # Rotate the axes so the svd-direction is first
+        s_reordered = np.moveaxis(svd_diag, -1, 0)
+
+        # Return nuclear norm
+        return self.outernorm(self.pwisenorm(s_reordered))
 
     @property
     def proximal(self):
+
+        assert self.outernorm.exponent == 1
 
         def nddot(a, b):
             """Compute pointwise matrix product in the last indices."""
@@ -1769,31 +1790,47 @@ class NuclearNorm(Functional):
                 Operator.__init__(self, func.domain, func.domain)
 
             def _call(self, x):
-                arr = func.__asarray(x)
+                """Return ``self(x)``."""
+                arr = func._asarray(x)
 
+                # Compute SVD
                 U, s, Vt = np.linalg.svd(arr, full_matrices=False)
-                s[np.abs(s) < 1e-10] = 1e-10
 
                 # transpose pointwise
                 V = Vt.swapaxes(-1, -2)
-                sinv = 1 / s
 
-                if func.singular_vector_exp == 1:
-                    snorm = np.abs(s)
+                # Take pseudoinverse of s
+                sinv = s.copy()
+                sinv[sinv != 0] = 1 / sinv[sinv != 0]
+
+                # Take pointwise proximal operator of s w.r.t. the norm
+                # on the singular vectors
+                if func.pwisenorm.exponent == 1:
+                    # snorm = np.abs(s)
+                    # snorm = np.maximum(self.sigma, snorm)
+                    sprox = np.sign(s) * np.maximum(np.abs(s) - self.sigma, 0.0)
+                    # sprox = (1 - self.sigma / snorm) * s
+                elif func.pwisenorm.exponent == 2:
+                    s_reordered = np.moveaxis(s, -1, 0)
+                    snorm = func.pwisenorm(s_reordered).asarray()
                     snorm = np.maximum(self.sigma, snorm)
-                    sprox = (1 - self.sigma / snorm) * s
-                elif func.singular_vector_exp == 2:
-                    snorm = func.pwisenorm(s.T)
+                    sprox = (1 - self.sigma / snorm)[..., None] * s
+                elif func.pwisenorm.exponent == np.inf:
+                    snorm = np.sum(np.abs(s), axis=-1)
                     snorm = np.maximum(self.sigma, snorm)
-                    sprox = (1 - self.sigma / snorm.asarray())[..., None] * s
-                elif func.singular_vector_exp == np.inf:
-                    snorm = np.sum(np.absolute(s), axis=-1)
-                    sprox = (1 - self.sigma / snorm.asarray())[..., None] * s
+                    sprox = (1 - self.sigma / snorm)[..., None] * s
                 else:
                     assert 0
 
-                result = nddot(nddot(arr, V), (sprox * sinv)[..., None, :] * Vt)
-                return func.__asvector(result)
+                # Compute s matrix
+                sproxsinv = (sprox * sinv)[..., None, :]
+
+                # Compute the final result
+                result = nddot(nddot(arr, Vt), sproxsinv * V)
+
+                # Cast to vector and return. Note array and vector have
+                # different shapes.
+                return func._asvector(result)
 
         return ProximalOperator
 

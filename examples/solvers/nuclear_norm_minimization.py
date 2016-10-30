@@ -19,41 +19,42 @@
 
 Solves the optimization problem
 
-    min_{0 <= x <= 1} ||Ax - g||_2^2 + lam || |grad(x)| ||_1
+    min ||x - g||_2^2 + lam || grad(x) ||_*
 
-where ``A`` is a simplified MRI imaging operator, ``grad`` is the spatial
-gradient and ``g`` the given noisy data.
+where ``grad`` is the spatial gradient, ``g`` the given noisy data and
+``|| . ||_*`` is the nuclear-norm.
 """
-
-# --- THIS EXAMPLE IS CURRENTLY BROKEN UNTILL ISSUE #590 IS FIXED ---
 
 import numpy as np
 import odl
 
-# Parameters
-n = 256
-subsampling = 0.5  # propotion of data to use
-lam = 0.003
+n=100
+d=2
 
-space = odl.uniform_discr(0, 10, 10)
+space = odl.uniform_discr([0]*d, [n]*d, [n]*d)
 pspace = odl.ProductSpace(space, 2)
 
 identity = odl.IdentityOperator(pspace)
-l2err = odl.solvers.L1Norm(pspace)
+l2err = odl.solvers.L2Norm(pspace)
 
 gradient = odl.Gradient(space, pad_mode='order1')
 pgradient = odl.DiagonalOperator(gradient, 2)
-nuc_norm = odl.solvers.NuclearNorm(pgradient.range)
+nuc_norm = odl.solvers.NuclearNorm(pgradient.range,
+                                   outer_exp=1,
+                                   singular_vector_exp=1)
 
-rhs = pspace.element([lambda x: x>3, lambda x: x>6])
+rhs = pspace.element([lambda x: x[0] / n, lambda x: x[0] > 0.6 * n])
 rhs.show()
-# rhs += odl.phantom.white_noise(pspace) * 0.1
+
+# Add noise (if wanted)
+rhs += pspace.element([odl.phantom.white_noise(space),
+                       odl.phantom.white_noise(space)]) * 0.0
 
 # Assemble all operators
-lin_ops = [identity, 0.1 * pgradient]
+lin_ops = [identity, pgradient]
 
 # Create functionals as needed
-const = 0.001
+const = 1.0
 
 g = [l2err.translated(rhs),
      const * nuc_norm]
@@ -64,8 +65,8 @@ def printval(x):
     print(l2err(x-rhs) + const * nuc_norm(pgradient(x)))
 
 # Solve
-x = pspace.zero()
-callback = (odl.solvers.CallbackShow(display_step=1) &
+x = rhs.copy()
+callback = (odl.solvers.CallbackShow(display_step=1000) &
             odl.solvers.CallbackPrintIteration() &
             printval)
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
