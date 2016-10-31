@@ -434,6 +434,15 @@ class RectPartition(object):
         RectPartition(
             IntervalProd([-0.5, 1.0, 4.0, 2.0], [1.5, 6.0, 5.0, 7.0]),
             TensorGrid([0.0], [2.0, 4.0], [5.0], [2.0, 4.0, 7.0]))
+
+        Colons etc work as expected:
+
+        >>> part[:] == part
+        True
+        >>> part[:, :, :] == part
+        True
+        >>> part[...] == part
+        True
         """
         # Special case of index list: slice along first axis
         if isinstance(indices, list):
@@ -545,6 +554,141 @@ class RectPartition(object):
         """
         newset = self.set[self.grid.inondeg]
         return RectPartition(newset, self.grid.squeeze())
+
+    def index(self, value, floating=False):
+        """Return the index of a value in the domain.
+
+        Parameters
+        ----------
+        value : ``self.set`` element
+            Point whose index to find.
+        floating : bool
+            If True, then the index should also give the position inside the
+            voxel. This is given by returning the integer valued index of the
+            voxel plus the distance from the left cell boundary as a fraction
+            of the full cell size.
+
+        Returns
+        -------
+        index : int, float, tuple of int or tuple of float
+            Index of the value, as counted from the left.
+            If ``self.ndim > 1`` the result is a tuple, else a scalar.
+            If ``floating=True`` the scalar is a float, else an int.
+
+        Examples
+        --------
+        Get the indices of start and end:
+
+        >>> p = uniform_partition(0, 2, 5)
+        >>> p.index(0)
+        0
+        >>> p.index(2)
+        4
+
+        For points inside voxels, the index of the containing cell is returned:
+
+        >>> p.index(0.2)
+        0
+
+        By using the ``floating`` argument, partial positions inside the voxels
+        can instead be determined:
+
+        >>> p.index(0.2, floating=True)
+        0.5
+
+        These indices work with indexing, extracting the voxel in which the
+        point lies:
+
+        >>> p[p.index(0.1)]
+        uniform_partition(0.0, 0.4, 1)
+
+        The same principle also works in higher dimensions:
+
+        >>> p = uniform_partition([0, -1], [1, 2], (4, 1))
+        >>> p.index([0.5, 2])
+        (2, 0)
+        >>> p[p.index([0.5, 2])]
+        uniform_partition([0.5, -1.0], [0.75, 2.0], [1, 1])
+        """
+        value = np.atleast_1d(self.set.element(value))
+        result = []
+        for val, cell_bdry_vec in zip(value, self.cell_boundary_vecs):
+            ind = np.searchsorted(cell_bdry_vec, val)
+            if floating:
+                if cell_bdry_vec[ind] == val:
+                    # Value is on top of edge
+                    result.append(float(ind))
+                else:
+                    # interpolate between
+                    csize = float(cell_bdry_vec[ind] - cell_bdry_vec[ind - 1])
+                    result.append(ind - (cell_bdry_vec[ind] - val) / csize)
+            else:
+                if cell_bdry_vec[ind] == val and ind != len(cell_bdry_vec) - 1:
+                    # Value is on top of edge, but not last edge
+                    result.append(ind)
+                else:
+                    result.append(ind - 1)
+
+        if self.ndim == 1:
+            result = result[0]
+        else:
+            result = tuple(result)
+
+        return result
+
+    @property
+    def byaxis(self):
+        """Return the subpartition defined along one or several dimensions.
+
+        Examples
+        --------
+        Access the subpartition along each axis:
+
+        >>> p = uniform_partition([0, 1, 2], [1, 3, 5], [3, 5, 6])
+        >>> p.byaxis[0]
+        uniform_partition(0.0, 1.0, 3)
+        >>> p.byaxis[1]
+        uniform_partition(1.0, 3.0, 5)
+        >>> p.byaxis[2]
+        uniform_partition(2.0, 5.0, 6)
+
+        Usual numpy style advanced indexing works:
+
+        >>> p.byaxis[:] == p
+        True
+        >>> p.byaxis[1:]
+        uniform_partition([1.0, 2.0], [3.0, 5.0], [5, 6])
+        >>> p.byaxis[[0, 2]]
+        uniform_partition([0.0, 2.0], [1.0, 5.0], [3, 6])
+        """
+        partition = self
+
+        class RectPartitionByAxis(object):
+            """Helper class for accessing `RectPartition` by dimension.
+
+            See Also
+            --------
+            RectPartition.byaxis
+            """
+
+            def __getitem__(self, dim):
+                """Return ``self[dim]``."""
+                slc = np.zeros(partition.ndim, dtype=object)
+                slc[dim] = slice(None)
+                return partition[tuple(slc)].squeeze()
+
+            def __repr__(self):
+                """Return ``repr(self)``.
+
+                Examples
+                --------
+                >>> p = uniform_partition(0, 1, 5)
+                >>> p.byaxis
+                uniform_partition(0, 1, 5).byaxis
+                """
+                return '{!r}.byaxis'.format(partition)
+
+        return RectPartitionByAxis()
 
     def __str__(self):
         """Return ``str(self)``."""
