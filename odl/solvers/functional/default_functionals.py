@@ -1728,6 +1728,30 @@ class NuclearNorm(Functional):
                                        exponent=singular_vector_exp)
         self.pshape = (self.domain.size, self.domain[0].size)
 
+    def _moveaxis(self, arr, source, dest):
+        """Implementation of `numpy.moveaxis`.
+
+        Needed since `numpy.moveaxis` requires numpy 1.11, which ODL doesnt.
+        """
+        try:
+            source = list(source)
+        except TypeError:
+            source = [source]
+        try:
+            dest = list(dest)
+        except TypeError:
+            dest = [dest]
+
+        source = [a + arr.ndim if a < 0 else a for a in source]
+        dest = [a + arr.ndim if a < 0 else a for a in dest]
+
+        order = [n for n in range(arr.ndim) if n not in source]
+
+        for dest, src in sorted(zip(dest, source)):
+            order.insert(dest, src)
+
+        return arr.transpose(order)
+
     def _asarray(self, vec):
         """Convert ``x`` to an array.
 
@@ -1750,7 +1774,7 @@ class NuclearNorm(Functional):
     def _asvector(self, arr):
         """Convert ``vec`` to an `domain` element."""
 
-        result = np.moveaxis(arr, [-2, -1], [0, 1])
+        result = self._moveaxis(arr, [-2, -1], [0, 1])
 
         if self.weighting is not None:
             for i in range(self.domain.size):
@@ -1767,7 +1791,7 @@ class NuclearNorm(Functional):
         svd_diag = np.linalg.svd(arr, compute_uv=False)
 
         # Rotate the axes so the svd-direction is first
-        s_reordered = np.moveaxis(svd_diag, -1, 0)
+        s_reordered = self._moveaxis(svd_diag, -1, 0)
 
         # Return nuclear norm
         return self.outernorm(self.pwisenorm(s_reordered))
@@ -1806,12 +1830,11 @@ class NuclearNorm(Functional):
                 # Take pointwise proximal operator of s w.r.t. the norm
                 # on the singular vectors
                 if func.pwisenorm.exponent == 1:
-                    # snorm = np.abs(s)
-                    # snorm = np.maximum(self.sigma, snorm)
-                    sprox = np.sign(s) * np.maximum(np.abs(s) - self.sigma, 0.0)
-                    # sprox = (1 - self.sigma / snorm) * s
+                    snorm = np.abs(s)
+                    snorm = np.maximum(self.sigma, snorm)
+                    sprox = (1 - self.sigma / snorm) * s
                 elif func.pwisenorm.exponent == 2:
-                    s_reordered = np.moveaxis(s, -1, 0)
+                    s_reordered = func._moveaxis(s, -1, 0)
                     snorm = func.pwisenorm(s_reordered).asarray()
                     snorm = np.maximum(self.sigma, snorm)
                     sprox = (1 - self.sigma / snorm)[..., None] * s
@@ -1823,7 +1846,7 @@ class NuclearNorm(Functional):
                     assert 0
 
                 # Compute s matrix
-                sproxsinv = (sprox * sinv)[..., None, :]
+                sproxsinv = (sprox * sinv)[..., :, None]
 
                 # Compute the final result
                 result = nddot(nddot(arr, Vt), sproxsinv * V)
