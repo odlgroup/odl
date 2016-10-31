@@ -782,7 +782,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                 except TypeError:
                     coord_minp = coord_maxp = coord
 
-                subpart = partition.bydimension[axis]
+                subpart = partition.byaxis[axis]
 
                 # Validate input
                 if coord_minp is not None:
