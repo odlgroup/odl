@@ -33,7 +33,7 @@ def white_noise(space, mean=0, stddev=1):
 
     Parameters
     ----------
-    space : `FnBase`
+    space : `FnBase` or `ProductSpace`
         The space in which the noise is created.
     mean : `float` or ``space`` `element-like`
         The mean of the white noise. If a scalar, it is interpreted as
@@ -51,7 +51,11 @@ def white_noise(space, mean=0, stddev=1):
     poisson_noise
     numpy.random.normal
     """
-    values = np.random.normal(loc=mean, scale=stddev, size=space.shape)
+    from odl.space import ProductSpace
+    if isinstance(space, ProductSpace):
+        values = [white_noise(subspace, mean, stddev) for subspace in space]
+    else:
+        values = np.random.normal(loc=mean, scale=stddev, size=space.shape)
     return space.element(values)
 
 
@@ -60,7 +64,7 @@ def poisson_noise(intensity):
 
     Parameters
     ----------
-    intensity : `FnBase`
+    intensity : `FnBase` or `ProductSpace`
         The intensity (usually called lambda) parameter of the noise.
 
     Returns
@@ -84,7 +88,11 @@ def poisson_noise(intensity):
     white_noise
     numpy.random.poisson
     """
-    values = np.random.poisson(intensity.asarray())
+    from odl.space import ProductSpace
+    if isinstance(intensity.space, ProductSpace):
+        values = [poisson_noise(subintensity) for subintensity in intensity]
+    else:
+        values = np.random.poisson(intensity.asarray())
     return intensity.space.element(values)
 
 
