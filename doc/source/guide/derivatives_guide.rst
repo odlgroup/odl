@@ -8,13 +8,13 @@ The concept of a derivative is one of the core concepts of mathematical analysis
 
 In short, different notions of derivatives that will be discussed here are:
 
-* **Derivative**. When we write derivative in ODL code and documentation, we intend the derivative of a `Operator` :math:`A : \mathcal{X} \rightarrow \mathcal{Y}` w.r.t to a disturbance in :math:`x`, i.e a linear approximation of :math:`A(x + h)` for small :math:`h`. The derivative in a point :math:`x` is an operator :math:`A'(x) : \mathcal{X} \rightarrow \mathcal{Y}`.
+* **Derivative**. When we write derivative in ODL code and documentation, we intend the derivative of an `Operator` :math:`A : \mathcal{X} \rightarrow \mathcal{Y}` w.r.t to a disturbance in :math:`x`, i.e a linear approximation of :math:`A(x + h)` for small :math:`h`. The derivative in a point :math:`x` is an `Operator` :math:`A'(x) : \mathcal{X} \rightarrow \mathcal{Y}`.
 
-* **Gradient**. If the operator :math:`A` is a `functional`, i.e. :math:`A : \mathcal{X} \rightarrow \mathbb{R}`, then the gradient is a measure of how much the output would change w.r.t. a small change in the input. The gradient in a point :math:`x` is a vector :math:`[\nabla A](x)` in :math:`\mathcal{X}` such that :math:`A'(x)(y) = \langle [\nabla A](x), y \rangle`. The gradient operator is the operator :math:`x \rightarrow [\nabla A](x)`.
+* **Gradient**. If the operator :math:`A` is a `functional`, i.e. :math:`A : \mathcal{X} \rightarrow \mathbb{R}`, then the gradient is the direction in which :math:`A` increases the most. The gradient in a point :math:`x` is a vector :math:`[\nabla A](x)` in :math:`\mathcal{X}` such that :math:`A'(x)(y) = \langle [\nabla A](x), y \rangle`. The gradient operator is the operator :math:`x \rightarrow [\nabla A](x)`.
 
 * **Hessian**. The hessian in a point :math:`x` is the derivative operator of the gradient operator, i.e. :math:`H(x) = [\nabla A]'(x)`.
 
-* **Spatial Gradient**. The spatial gradient is only defined for spaces :math:`\mathcal{F}(\Omega, \mathbb{F})` whose elements are functions over some domain :math:`\Omega \subset \mathbb{R}^n` with range in :math:`\mathbb{R}` or :math:`\mathbb{C}` . It can be seen as a vectorized version of the usual gradient, taken in each point in :math:`\Omega`.
+* **Spatial Gradient**. The spatial gradient is only defined for spaces :math:`\mathcal{F}(\Omega, \mathbb{F})` whose elements are functions over some domain :math:`\Omega \subset \mathbb{R}^d` taking values in :math:`\mathbb{R}` or :math:`\mathbb{C}`. It can be seen as a vectorized version of the usual gradient, taken in each point in :math:`\Omega`.
 
 Derivative
 ##########
@@ -22,31 +22,33 @@ Derivative
 The derivative is usually introduced for functions :math:`f: \mathbb{R} \rightarrow \mathbb{R}` via the limit
 
 .. math::
-    f'(x) = \lim_{h \rightarrow 0} \frac{f(x + h) - f(x)}{h}
+    f'(x) = \lim_{h \rightarrow 0} \frac{f(x + h) - f(x)}{h}.
 
 Here we say that the derivative of :math:`f` in :math:`x` is :math:`f'(x)`.
 
 This limit makes sense in one dimension, but once we start considering functions in higher dimension we get into trouble.
-Consider :math:`f: \mathbb{R}^n \rightarrow \mathbb{R}^m`, what would :math:`h` mean in this case?
-A extension is the concept of a directional derivative. The derivative of :math:`f` in :math:`x` in *direction* :math:`d` is :math:`f'(x)(d)`.
+Consider :math:`f: \mathbb{R}^n \rightarrow \mathbb{R}^m` -- what would :math:`h` mean in this case?
+An extension is the concept of a directional derivative.
+The derivative of :math:`f` in :math:`x` in *direction* :math:`d` is :math:`f'(x)(d)`:
 
 .. math::
-    f'(x)(d) = \lim_{h \rightarrow 0} \frac{f(x + dh) - f(x)}{h}
+    f'(x)(d) = \lim_{h \rightarrow 0} \frac{f(x + dh) - f(x)}{h}.
 
 Here we see (as implied by the notation) that :math:`f'(x)` is actually an operator
 
 .. math::
-    f'(x) : \mathbb{R}^n \rightarrow \mathbb{R}^m
+    f'(x) : \mathbb{R}^n \rightarrow \mathbb{R}^m.
 
-We can rewrite this as explicitly requiring that :math:`f'(x)` is a linear approximation of :math:`f` at :math:`x`. I.e.
+We can rewrite this using the explicit requirement that :math:`f'(x)` is a linear approximation of :math:`f` at :math:`x`, i.e.
 
 .. math::
    \lim_{\| d \| \rightarrow 0} \frac{\| f(x + d) - f(x) - f'(x)(d) \|}{\| d \|} = 0
 
-This notion naturally extends to a operator :math:`f : \mathcal{X} \rightarrow \mathcal{Y}` between banach spaces :math:`\mathcal{X}` and :math:`\mathcal{Y}` with norms :math:`\| \cdot \|_\mathcal{X}` and :math:`\| \cdot \|_\mathcal{Y}`, respectively. Here :math:`f'(x)` is defined as the linear operator, if it exists, that satisfies
+This notion naturally extends to an `Operator` :math:`f : \mathcal{X} \rightarrow \mathcal{Y}` between Banach spaces :math:`\mathcal{X}` and :math:`\mathcal{Y}` with norms :math:`\| \cdot \|_\mathcal{X}` and :math:`\| \cdot \|_\mathcal{Y}`, respectively.
+Here :math:`f'(x)` is defined as the linear operator (if it exists) that satisfies
 
 .. math::
-   \lim_{\| h \| \rightarrow 0} \frac{\| f(x + h) - f(x) - f'(x)(h) \|_\mathcal{Y}}{\| h \|_\mathcal{X}} = 0
+   \lim_{\| d \| \rightarrow 0} \frac{\| f(x + d) - f(x) - f'(x)(d) \|_\mathcal{Y}}{\| d \|_\mathcal{X}} = 0
 
 This definition of the derivative is called the *Fréchet derivative*.
 
@@ -65,7 +67,7 @@ Many of the usual rules for derivatives also hold for the Fréchet derivative, i
 .. math::
     (g \circ f)'(x)(y) = g'(f(x))(f'(x)(y))
 
-* Linear operators are their own derivatives. Assume :math:`f` linear, then:
+* Linear operators are their own derivatives. If :math:`f` linear, then
 
 .. math::
    f'(x)(y) = f(y)
@@ -90,10 +92,10 @@ In the classical setting of functionals :math:`f : \mathbb{R}^n \rightarrow \mat
     \end{bmatrix}
 
 This can be generalized to the setting of functionals :math:`f : \mathcal{X} \rightarrow \mathbb{R}` mapping elements in some Hilbert space :math:`\mathcal{X}` to the real numbers by noting that the derivative has a special form by the `Riesz representation theorem
-<https://en.wikipedia.org/wiki/Riesz_representation_theorem>`_, namely that the linear operator :math:`f'(x)` can be represented by a vector :math:`[\nabla f](x) \in \mathcal{X}` such that
+<https://en.wikipedia.org/wiki/Riesz_representation_theorem>`_, namely that the linear operator :math:`f'(x)` can be represented by a vector :math:`[\nabla f](x) \in \mathcal{X}` such that for all :math:`y \in \mathcal{X}`:
 
 .. math::
-    f'(x)(y) = \langle y, [\nabla f](x) \rangle
+    f'(x)(y) = \langle y, [\nabla f](x) \rangle.
 
 We call the (possibly nonlinear) operator :math:`x \rightarrow [\nabla f](x)` the *Gradient operator* of :math:`f`.
 
@@ -105,7 +107,7 @@ Implementations in ODL
 
 Hessian
 #######
-In the classical setting of functionals :math:`f : \mathbb{R}^n \rightarrow \mathbb{R}`, the hessian in a point :math:`x` is the matrix :math:`H` such that
+In the classical setting of functionals :math:`f : \mathbb{R}^n \rightarrow \mathbb{R}`, the Hessian in a point :math:`x` is the matrix :math:`H(x)` such that
 
 .. math::
     H(x) =
@@ -116,22 +118,24 @@ In the classical setting of functionals :math:`f : \mathbb{R}^n \rightarrow \mat
     \dfrac{\partial^2 f}{\partial x_n\,\partial x_1} & \dfrac{\partial^2 f}{\partial x_n\,\partial x_2} & \cdots & \dfrac{\partial^2 f}{\partial x_n^2}
     \end{bmatrix}
 
-Where the derivatives are evaluated in the point :math:`x`. It has the property that that the quadratic variation of :math:`f` is
+with the derivatives are evaluated in the point :math:`x`. It has the property that that the quadratic variation of :math:`f` is
 
 .. math::
-    f(x + \Delta x) \approx f(x) + \langle \Delta x, [\nabla f](x)\rangle + \langle \Delta x, [H(x)](\Delta x)\rangle
+    f(x + d) = f(x) + \langle d, [\nabla f](x)\rangle + \langle d, [H(x)](d)\rangle + o(\|d\|^2)
 
 but also that the derivative of the gradient operator is
 
 .. math::
-    \nabla f(x + \Delta x) \approx [\nabla f](x) + [H(x)](\Delta x)
+    \nabla f(x + d) = [\nabla f](x) + [H(x)](d) + o(\|d\|)
 
 If we take this second property as the *definition* of the Hessian, it can easily be generalized to the setting of functionals :math:`f : \mathcal{X} \rightarrow \mathbb{R}` mapping elements in some Hilbert space :math:`\mathcal{X}` to the real numbers.
 
 Implementations in ODL
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The hessian is not explicitly implemented anywhere in ODL, instead it is taken as the derivative of the gradient operator. This is however not implemented for all functionals.
+The hessian is not explicitly implemented anywhere in ODL.
+Instead it is taken as the derivative of the gradient operator.
+This is however not implemented for all functionals.
 
 * For an example of a functional whose gradient has a derivative, see `RosenbrockFunctional`.
 * It can be computed by taking the `NumericalDerivative` of the gradient, which can in turn be computed using the `NumericalGradient`.
