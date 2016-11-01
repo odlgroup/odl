@@ -6,8 +6,14 @@
 Release Notes
 #############
 
-Next release
-============
+Upcoming release
+================
+
+ODL 0.5.2 Release Notes (2016-11-02)
+====================================
+
+Another maintenance release that fixes a number of issues with installation and testing, see :issue:`674`, :issue:`679`, and :pull:`692` and :pull:`696`.
+
 
 ODL 0.5.1 Release Notes (2016-10-24)
 ====================================
