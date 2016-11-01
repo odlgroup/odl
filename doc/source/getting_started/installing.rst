@@ -54,14 +54,19 @@ Alternative 1: Installing a release using ``conda`` (recommended for users)
 
 TL;DR
 =====
+Instructions for the impatient:
+
 - Download and install `Miniconda`_
 - Create conda environment:
 
   .. code-block:: bash
 
-    $ conda create -c odlgroup -n odl-py35 python=3.5 odl odlcuda matplotlib pytest scikit-image spyder
+    $ conda create -c odlgroup -n odl-py35 python=3.5 odl matplotlib pytest scikit-image spyder
 
 - Activate the conda enviroment and start working!
+
+
+.. _installing_anaconda:
 
 Installing Anaconda
 ===================
@@ -92,15 +97,24 @@ This is a very convenient way to have several "ecosystems" of Python packages in
 
     $ conda create --name odl-py35 python=3.5
 
-Run ``source activate odl-py35`` to enter/exit the newly created conda environment with name ``odl-py35``.
+Enter the newly created conda environment by running ``source activate odl-py35`` (Linux/MacOS) or ``activate odl-py35`` (Windows).
+If you want to exit later on, run ``source deactivate`` (Linux/MacOS) or ``deactivate`` (Windows), respectively.
 See the `Managing conda environments`_ documentation for further information.
 
-If you use `Spyder`_ as integrated development environment (IDE, see `Development enviroment`_), you should also install it in the new conda environment and run it from there.
-Otherwise, Spyder is not able to use the packages in the conda environment:
+.. note::
+    If you want to use `Spyder`_ as integrated development environment (IDE, see `Development enviroment`_) on Linux or MacOS, you should also install it in the new conda environment and run it from there.
+    Otherwise, Spyder may not able to use the packages in the conda environment:
 
-.. code-block:: bash
+    .. code-block:: bash
 
-    $ conda install spyder
+        $ conda install spyder
+
+    On Windows, you can install Spyder in the root conda environment (run ``deactivate`` to get there), but you need to change its default Python interpreter.
+    To do this, open Spyder and use the navigation bar to open "Tools -> Preferences".
+    Click on "Python interpreter" and change the first setting "Select the Python interpreter for all Spyder consoles" from the default setting to "Use the following Python interpreter:".
+    In the text field, fill in the path to the Python executable in your newly created conda environment.
+    For example, if you installed Miniconda (or Anaconda) in ``C:\Programs\Miniconda3``, then the environment's Python interpreter is ``C:\Programs\Miniconda3\envs\odl-py35\bin\python.exe``.
+    You can use the file system browser (symbol to the right of the text field) to find the interpreter on your system.
 
 
 Installing ODL and its dependencies
@@ -184,6 +198,8 @@ Alternative 2: Installing a release using ``pip``
 
 TL;DR
 =====
+Instructions for the impatient:
+
 - Install `pip`_
 - Install ODL and dependencies:
 
@@ -194,7 +210,7 @@ TL;DR
 Installing a Python interpreter
 ===============================
 Open a terminal and type ``python`` + Enter.
-If a Python prompt appears, you already have an interpreter installed and can skip this step (exit by pressing Ctrl+D).
+If a Python prompt appears, you already have an interpreter installed and can skip this step (exit by running ``exit()``).
 Otherwise, you need to install it.
 
 On Linux:
@@ -219,7 +235,7 @@ Pick the latest release for your favorite version (2 or 3).
 Installing ODL and its dependencies
 ===================================
 You may need to `install pip`_ to be able to install ODL and its dependencies from the `Python Package Index`_ (PyPI).
-If running ``pip`` (alternatively: ``pip2`` or ``pip3``) an shows a help message, it is installed -- otherwise you need to install it first.
+If running ``pip`` (alternatively: ``pip2`` or ``pip3``) shows a help message, it is installed -- otherwise you need to install it first.
 
 For basic installation without extra dependencies, run
 
@@ -278,13 +294,21 @@ No GitHub account is required for this step.
 
 In a conda environment
 ======================
-This part assumes that you have run ``source activate <your_conda_env>`` before.
+This part assumes that you have activated a conda environment before (see :ref:`installing_anaconda`).
 
 You can choose to install dependencies first (optional ones in square brackets):
+
+**On Linux/MacOS:**
 
 .. code-block:: bash
 
     $ conda install nomkl numpy scipy future [matplotlib]
+
+**On Windows:**
+
+.. code-block:: bash
+
+    $ conda install numpy scipy future [matplotlib]
 
 After that, enter the top-level directory of the cloned repository and run
 
@@ -306,7 +330,7 @@ Enter the top-level directory of the cloned repository and run
 
 .. note::
     We recommend the ``--editable`` option (can be shortened to ``-e``) since it installs a link instead of copying the files to your Python packages location.
-    This way, local changes to the code (e.g. after a ``git pull``) take immediate effect without reinstallation.
+    This way, local changes to the code (e.g. after a ``git pull``) take immediate effect after reloading the package, without requiring reinstallation.
 
 
 Further developer information
@@ -326,10 +350,17 @@ They can be run either from within ``odl`` or by invoking ``pytest`` directly.
 
 Installing testing dependencies
 ===============================
+If you installed an ODL release using ``conda`` or ``pip``, respectively, you should install ``pytest`` using the same method.
+For source installations, you can choose your favorite method below.
 
 Using ``conda``:
 ----------------
-``pytest`` is already a dependency, nothing to do.
+If you installed ODL using conda, ``pytest`` is already installed as dependency, so there should not be anything left to do.
+Otherwise, you can install it by running
+
+.. code-block:: bash
+
+    $ conda install pytest
 
 Using ``pip``:
 --------------
@@ -347,9 +378,9 @@ Now you can check that everything was installed properly by running
    $ python -c "import odl; odl.test()"
 
 .. note::
-    Don't run this command in the top-level directory of an ODL clone, since in that case, the tests in the repository are run, not the ones in the installed package.
+    Don't run this command in the top-level directory of an ODL clone, since in that case, the tests in the repository may be run, not the ones in the installed package.
 
-If you have installed ODL from source, you can also use ``pytest`` directly:
+If you have installed ODL from source, you can also use ``pytest`` directly in the root of your ODL clone:
 
 .. code-block:: bash
 
@@ -367,13 +398,14 @@ Some of them can be installed using ``conda``, others require manual compilation
 
 CUDA backend for linear arrays
 ==============================
-The `odlcuda`_ backend for fast array calculations on CUDA requires the `CUDA toolkit`_ (on Linux: use your distro package manager) and a CUDA capable graphics card with compute capability of at least 5.0.
+The `odlcuda`_ backend for fast array calculations on CUDA requires the `CUDA toolkit`_ (on Linux: use your distro package manager) and a CUDA capable graphics card with compute capability of at least 3.0.
 Search `this table <https://en.wikipedia.org/wiki/CUDA#GPUs_supported>`_ for your model.
 
 Installation using ``conda``
 ----------------------------
 .. note::
-    In ``conda``, the ``odlcuda`` package is currently only available for Linux 64-bit and Python 3.5.
+    In conda, the ``odlcuda`` package is currently available only for Linux 64-bit and Python 3.5.
+    Furthermore, you may experience failures due to "invalid device function" -- this is a known issue, and we're trying to fix it.
 
 If you have installed an ODL release, simply run (in a directory of your choice)
 
@@ -397,13 +429,71 @@ Finally, install ``odlcuda`` without dependencies:
 
 Building from source
 --------------------
-Clone the ``odlcuda`` GitHub repository:
+You have two options of building ``odlcuda`` from source.
+For both, first clone the ``odlcuda`` GitHub repository and enter the new directory:
 
 .. code-block:: bash
 
     $ git clone https://github.com/odlgroup/odlcuda.git
+    $ cd odlcuda
 
-After that, follow the `build instructions there <https://github.com/odlgroup/odlcuda.git>`_.
+1. **Using conda build**
+
+   This is the simpler option and should work on any Linux or MacOS system (we currently have no Windows build recipe, sorry).
+
+   To build the conda recipe, you should be **in the root conda environment** (see :ref:`installing_anaconda` for details) and in the top-level directory of your ``odlcuda`` clone.
+   You also need the ``conda-build`` package, which is installed by
+
+   .. code-block:: bash
+
+       $ conda install conda-build
+
+   Next, switch to the ``conda-build`` branch:
+
+   .. code-block:: bash
+
+       $ git checkout conda-build
+
+   Finally, build the package using ``conda build``.
+   Currently, this requires you to manually provide the location of the CUDA toolkit and the compute capability of your graphics card using the environment variables ``CUDA_ROOT`` and ``CUDA_COMPUTE``.
+   (If you forget them, the build recipe will only issue a warning in the beginning but fail later on.)
+   The ``CUDA_ROOT`` is given as path, e.g. ``/usr/local/cuda``, and ``CUDA_COMPUTE`` as 2-digit number without dot, e.g. ``30``.
+
+   .. note::
+       You can consult `this table <https://en.wikipedia.org/wiki/CUDA#GPUs_supported>`_ for the compute capability of your device.
+       The minimum required is ``30``, which corresponds to the "Kepler" generation.
+
+   Assuming the example configuration above, the build command to run is
+
+   .. code-block:: bash
+
+       $ CUDA_ROOT=/usr/local/cuda CUDA_COMPUTE=30 conda build ./conda
+
+   This command builds ``odlcuda`` in a separate build conda environment and tries to import it and run some tests after the build has finished.
+   If all goes well, you will get a message at the end that shows the path to the conda package.
+
+   Finally, install this package file **in your working conda environment** (e.g. ``source activate odl-py35``) by invoking e.g.
+
+   .. code-block:: bash
+
+       $ conda install /path/to/your/miniconda/conda-bld/linux-64/odlcuda-0.3.0-py35_0.tar.bz2
+
+
+2. **Manually with CMake**
+
+   This option requires more manual work but is known to work on all platforms.
+
+   See `here <https://github.com/odlgroup/odlcuda.git>`_ for build instructions.
+   You may want to use include and library paths (GCC, boost, ...) of a conda enviroment and install the package in it.
+
+A simple test if this build of ``odlcuda`` works, you can run
+
+.. code-block:: bash
+
+    $ python -c "import odl; odl.rn(3, impl='cuda').element()"
+
+If you get a ``KeyError: 'cuda'``, then something went wrong with the package installation since it cannot be imported.
+If the above command instead raises a ``MemoryError`` or similar, your graphics card is not properly configured, and you should solve that issue first.
 
 
 ASTRA for X-ray tomography
