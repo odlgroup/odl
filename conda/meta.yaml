@@ -13,19 +13,19 @@ build:
 requirements:
     build:
         - python
-        - nomkl
+        - nomkl         # [not win]
         - setuptools
         - future >=0.14
         - numpy >=1.9
         - scipy >=0.14
     run:
         - python
-        - nomkl
+        - nomkl         # [not win]
         - future >=0.14
         - numpy >=1.9
         - scipy >=0.14
         - matplotlib
-        - pytest >=3.0
+        - pytest >=3.0.3
 
 test:
     imports:
