@@ -614,7 +614,12 @@ def run_doctests(skip_if=False):
     optionflags = NORMALIZE_WHITESPACE
     if skip_if:
         optionflags |= SKIP
-    testmod(optionflags=optionflags)
+
+    import odl
+    import numpy as np
+
+    testmod(optionflags=optionflags,
+            extraglobs={'odl': odl, 'np': np})
 
 
 if __name__ == '__main__':

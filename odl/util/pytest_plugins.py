@@ -48,8 +48,21 @@ def add_doctest_np_odl(doctest_namespace):
     doctest_namespace['odl'] = odl
 
 
-# --- Files to be ignored by the tests ---
+def pytest_addoption(parser):
+    parser.addoption('--largescale', action='store_true',
+                     help='Run large and slow tests')
 
+    parser.addoption('--benchmark', action='store_true',
+                     help='Run benchmarks')
+
+    parser.addoption('--examples', action='store_true',
+                     help='Run examples')
+
+    parser.addoption('--doctest-doc', action='store_true',
+                     help='Run doctests in the documentation')
+
+
+# --- Ignored tests due to missing modules ---
 
 this_dir = os.path.dirname(__file__)
 odl_root = os.path.abspath(os.path.join(this_dir, os.pardir, os.pardir))
@@ -66,21 +79,12 @@ if not PYWT_AVAILABLE:
         os.path.join(odl_root, 'odl/trafos/wavelet.py'))
 
 
-def pytest_addoption(parser):
-    parser.addoption('--largescale', action='store_true',
-                     help='Run large and slow tests')
-
-    parser.addoption('--benchmark', action='store_true',
-                     help='Run benchmarks')
-
-    parser.addoption('--examples', action='store_true',
-                     help='Run examples')
-
-    parser.addoption('--doctest-doc', action='store_true',
-                     help='Run doctests in the documentation')
+def pytest_ignore_collect(path, config):
+    return str(path) in collect_ignore
 
 
-# reusable fixtures
+# --- Reusable fixtures ---
+
 fn_impl_params = odl.FN_IMPLS.keys()
 fn_impl_ids = [" impl='{}' ".format(p) for p in fn_impl_params]
 
