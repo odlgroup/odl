@@ -54,7 +54,7 @@ script:
   # Invoke also the alternative way of running the unit tests
   - python -c "import odl; odl.test()"
   # Build the Sphinx doc (only for Python 3.5 and the master branch)
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" ]]; then
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       cd $TRAVIS_BUILD_DIR/doc/source && python generate_doc.py && cd -;
       travis-sphinx -n -s $TRAVIS_BUILD_DIR/doc/source build;
     fi
@@ -64,6 +64,6 @@ after_success:
   - coveralls
   # Deploy the Sphinx doc to gh-pages (only for Python 3.5 and the master branch)
   # See https://github.com/Syntaf/travis-sphinx
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" ]]; then
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       travis-sphinx deploy;
     fi

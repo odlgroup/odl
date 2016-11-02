@@ -25,7 +25,7 @@ to be used to write general code and faciliate code reuse.
 
 from __future__ import absolute_import
 
-__version__ = '0.5.1'
+__version__ = '0.5.2'
 __all__ = ('diagnostics', 'discr', 'operator', 'set', 'space', 'solvers',
            'tomo', 'trafos', 'util', 'phantom', 'deform')
 
