@@ -38,10 +38,12 @@ from odl.solvers.nonsmooth.proximal_operators import (
     proximal_l2_squared, proximal_const_func, proximal_box_constraint,
     proximal_cconj, proximal_cconj_kl, proximal_cconj_kl_cross_entropy,
     combine_proximals)
+from odl.util import conj_exponent
 
 
-__all__ = ('L1Norm', 'GroupL1Norm', 'L2Norm', 'L2NormSquared',
+__all__ = ('L1Norm', 'L2Norm', 'L2NormSquared',
            'ZeroFunctional', 'ConstantFunctional', 'IndicatorLpUnitBall',
+           'GroupL1Norm', 'IndicatorGroupL1UnitBall',
            'IndicatorBox', 'IndicatorNonnegativity', 'KullbackLeibler',
            'KullbackLeiblerCrossEntropy', 'SeparableSum',
            'QuadraticForm')
@@ -129,34 +131,35 @@ class L1Norm(Functional):
 
 class GroupL1Norm(Functional):
 
-    """The functional corresponding to group L1-norm on `ProductSpace`s.
+    """The functional corresponding to the mixed L1--Lp norm on `ProductSpace`.
 
     The L1-norm, ``|| ||x||_p ||_1``,  is defined as the integral/sum of
-    ``||x||_p``, where  ``||x||_p`` is the pointwise 2-norm.
+    ``||x||_p``, where  ``||x||_p`` is the pointwise p-norm.
 
     This is also known as the cross norm.
 
     Notes
     -----
     If the functional is defined on an :math:`\mathbb{R}^{n \\times m}`-like
-    space, the group :math:`L_1`-norm, denoted :math:`\| . \|_{\\times, p}` is
-    defined as
+    space, the group :math:`L_1`-norm, denoted
+    :math:`\| \\cdot \|_{\\times, p}` is defined as
 
     .. math::
 
-        \| x \|_{\\times, p} =
-        \\sum_{i = 1}^n \\left( \\sum_{j = 1}^m x_{i,j}^p \\right)^{1/p}.
+        \|F\|_{\\times, p} =
+        \\sum_{i = 1}^n \\left(\\sum_{j=1}^m |F_{i,j}|^p\\right)^{1/p}
 
-    If the functional is defined on an :math:`L_p^m`-like space, the group
-    :math:`L_1`-norm is defined as
+    If the functional is defined on an :math:`(\\mathcal{L}^p)^m`-like space,
+    the group :math:`L_1`-norm is defined as
 
     .. math::
 
-        \| x \|_{\\times, p} =
-        \\int_{\Omega} \\left(\\sum_{j = 1}^m x_{j}^p\\right)^{1/p} dx.
+        \| F \|_{\\times, p} =
+        \\int_{\Omega} \\left(\\sum_{j = 1}^m |F_j(x)|^p\\right)^{1/p}
+        \mathrm{d}x.
     """
 
-    def __init__(self, vfspace, exponent=None, weight=None):
+    def __init__(self, vfspace, exponent=None):
         """Initialize a new instance.
 
         Parameters
@@ -170,35 +173,58 @@ class GroupL1Norm(Functional):
             0 and 1 are currently not supported due to numerical
             instability.
             Default: ``vfspace.exponent``, usually 2.
-        weight : `array-like` or float, optional
-            Weighting array or constant for the pointwise norm. If an array is
-            given, its length must be equal to ``domain.size``, and
-            all entries must be positive. A provided constant must be
-            positive.
-            By default, the weights are is taken from
-            ``domain.weighting``. Note that this excludes unusual
-            weightings with custom inner product, norm or dist.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> pspace = odl.ProductSpace(space, 2)
+        >>> op = GroupL1Norm(pspace)
+        >>> op([[3, 3], [4, 4]])
+        10.0
+
+        Can also change exponent of inner  (p) norm:
+
+        >>> op2 = GroupL1Norm(pspace, exponent=1)
+        >>> op2([[3, 3], [4, 4]])
+        14.0
         """
         if not isinstance(vfspace, ProductSpace):
             raise TypeError('`space` must be a `ProductSpace`')
-        if vfspace.is_power_space:
+        if not vfspace.is_power_space:
             raise TypeError('`space.is_power_space` must be `True`')
-        self.pointwise_norm = PointwiseNorm(vfspace, exponent, weight)
+        self.pointwise_norm = PointwiseNorm(vfspace, exponent)
         super().__init__(space=vfspace, linear=False, grad_lipschitz=np.nan)
 
     def _call(self, x):
-        """Return the L1-norm of ``x``."""
+        """Return the group L1-norm of ``x``."""
         # TODO: update when integration operator is in place: issue #440
         pointwise_norm = self.pointwise_norm(x)
-        return pointwise_norm.inner(self.domain.one())
+        return pointwise_norm.inner(self.domain[0].one())
 
-    # TODO: remove inner class when ufunc operators are in place: issue #567
     @property
     def gradient(self):
         """Gradient operator of the functional.
 
         The functional is not differentiable in ``x=0``. However, when
         evaluating the gradient operator in this point it will return 0.
+
+         Notes
+        -----
+        The gradient is given by
+
+        .. math::
+            \\left[ \\nabla \| \|f\|_1 \|_1 \\right]_i =
+            \\frac{f_i}{|f_i|}
+
+        .. math::
+            \\left[ \\nabla \| \|f\|_2 \|_1 \\right]_i =
+            \\frac{f_i}{\|f\|_2}
+
+        else:
+
+        .. math::
+            \\left[ \\nabla || ||f||_p ||_1 \\right]_i =
+            \\frac{| f_i |^{p-2} f_i}{||f||_p^{p-1}}
         """
         functional = self
 
@@ -212,9 +238,24 @@ class GroupL1Norm(Functional):
                                  linear=False)
 
             def _call(self, x):
-                """Apply the gradient operator to the given point."""
-                pointwise_norm = functional.pointwise_norm(x)
-                return x / pointwise_norm
+                """Return ``self(x)``."""
+
+                p = functional.pointwise_norm.exponent
+
+                if functional.pointwise_norm.exponent == 1:
+                    result = np.abs(x)
+                    np.divide(x, result, out=result, where=result != 0)
+                    return result
+                elif functional.pointwise_norm.exponent == 2:
+                    result = functional.pointwise_norm(x)
+                    np.divide(x, result, out=result, where=result != 0)
+                    return result
+                else:
+                    dividend = np.power(np.abs(x), p - 2) * x
+                    divisor = np.power(functional.pointwise_norm(x), p - 1)
+                    np.divide(dividend, divisor, out=divisor,
+                              where=divisor != 0)
+                    return divisor
 
         return GroupL1Gradient()
 
@@ -226,13 +267,108 @@ class GroupL1Norm(Functional):
         --------
         proximal_l1 : proximal factory for the L1-norm.
         """
-        return proximal_l1(space=self.domain, isotropic=True)
+        if self.pointwise_norm.exponent == 1:
+            return proximal_l1(space=self.domain)
+        elif self.pointwise_norm.exponent == 2:
+            return proximal_l1(space=self.domain, isotropic=True)
+        else:
+            raise NotImplementedError('`proximal` only implemented for p = 1 '
+                                      'or 2')
 
     @property
     def convex_conj(self):
         """The convex conjugate functional of the group L1-norm."""
-        # TODO: implement actual conjugate
-        return FunctionalDefaultConvexConjugate(self)
+        conj_exp = conj_exponent(self.pointwise_norm.exponent)
+        return IndicatorGroupL1UnitBall(self.domain, exponent=conj_exp)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
+                                              self.domain,
+                                              self.pointwise_norm.exponent)
+
+
+class IndicatorGroupL1UnitBall(Functional):
+
+    """The convex conjugate to the mixed L1--Lp norm on `ProductSpace`.
+
+    See Also
+    --------
+    GroupL1Norm
+    """
+
+    def __init__(self, vfspace, exponent=None):
+        """Initialize a new instance.
+
+        Parameters
+        ----------
+        vfspace : `ProductSpace`
+            Space of vector fields on which the operator acts.
+            It has to be a product space of identical spaces, i.e. a
+            power space.
+        exponent : non-zero float, optional
+            Exponent of the norm in each point. Values between
+            0 and 1 are currently not supported due to numerical
+            instability.
+            Default: ``vfspace.exponent``, usually 2.
+
+        Examples
+        --------
+        >>> space = odl.rn(2)
+        >>> pspace = odl.ProductSpace(space, 2)
+        >>> op = IndicatorGroupL1UnitBall(pspace)
+        >>> op([[0.1, 0.5], [0.2, 0.3]])
+        0
+        >>> op([[3, 3], [4, 4]])
+        inf
+
+        Can also change exponent of inner  (p) norm:
+
+        >>> op2 = IndicatorGroupL1UnitBall(pspace, exponent=1)
+        """
+        if not isinstance(vfspace, ProductSpace):
+            raise TypeError('`space` must be a `ProductSpace`')
+        if not vfspace.is_power_space:
+            raise TypeError('`space.is_power_space` must be `True`')
+        self.pointwise_norm = PointwiseNorm(vfspace, exponent)
+        super().__init__(space=vfspace, linear=False, grad_lipschitz=np.nan)
+
+    def _call(self, x):
+        """Return ``self(x)``."""
+        x_norm = self.pointwise_norm(x).ufunc.max()
+
+        if x_norm > 1:
+            return np.inf
+        else:
+            return 0
+
+    @property
+    def proximal(self):
+        """Return the proximal factory of the functional.
+
+        See Also
+        --------
+        proximal_l1 : proximal factory for the L1-norm.
+        """
+        if self.pointwise_norm.exponent == 1:
+            return proximal_cconj_l1(space=self.domain)
+        elif self.pointwise_norm.exponent == 2:
+            return proximal_cconj_l1(space=self.domain, isotropic=True)
+        else:
+            raise NotImplementedError('`proximal` only implemented for p = 1 '
+                                      'or 2')
+
+    @property
+    def convex_conj(self):
+        """The convex conjugate is the the group L1-norm."""
+        conj_exp = conj_exponent(self.pointwise_norm.exponent)
+        return GroupL1Norm(self.domain, exponent=conj_exp)
+
+    def __repr__(self):
+        """Return ``repr(self)``."""
+        return '{}({!r}, exponent={})'.format(self.__class__.__name__,
+                                              self.domain,
+                                              self.pointwise_norm.exponent)
 
 
 class IndicatorLpUnitBall(Functional):

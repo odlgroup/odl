@@ -29,11 +29,6 @@ import scipy.special
 
 # Internal
 import odl
-from odl.solvers.nonsmooth.proximal_operators import (
-    proximal_l1, proximal_cconj_l1,
-    proximal_l2, proximal_cconj_l2,
-    proximal_l2_squared, proximal_cconj_l2_squared,
-    proximal_cconj_kl, proximal_cconj_kl_cross_entropy)
 from odl.util.testutils import (noise_element, all_almost_equal)
 
 pytestmark = odl.util.skip_if_no_largescale
@@ -58,7 +53,7 @@ def offset(request):
 
 
 dual_params = [False, True]
-dual_ids = [' offset = {} '.format(str(p).ljust(5)) for p in offset_params]
+dual_ids = [' dual = {} '.format(str(p).ljust(5)) for p in offset_params]
 
 
 @pytest.fixture(scope="module", ids=dual_ids, params=dual_params)
@@ -66,7 +61,8 @@ def dual(request):
     return request.param
 
 
-func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent']
+func_params = ['l1', 'l2', 'l2^2', 'kl', 'kl_cross_ent',
+               'groupl11', 'groupl12']
 func_ids = [' f = {}'.format(p.ljust(10)) for p in func_params]
 
 
@@ -87,6 +83,12 @@ def functional(request, offset, dual, stepsize):
         func = odl.solvers.KullbackLeibler(space)
     elif name == 'kl_cross_ent':
         func = odl.solvers.KullbackLeiblerCrossEntropy(space)
+    elif name == 'groupl11':
+        space = odl.ProductSpace(space, 2)
+        func = odl.solvers.GroupL1Norm(space, exponent=1)
+    elif name == 'groupl12':
+        space = odl.ProductSpace(space, 2)
+        func = odl.solvers.GroupL1Norm(space, exponent=2)
     else:
         assert False
 
@@ -97,6 +99,9 @@ def functional(request, offset, dual, stepsize):
         func = func.translated(g)
 
     if dual:
+        if name == 'groupl11':
+            pytest.xfail('group l1-1 norm has no proximal')
+
         func = func.convex_conj
 
     return func
@@ -138,7 +143,7 @@ def test_proximal_defintion(functional, stepsize):
         f_y = proximal_objective(stepsize * functional, x, y)
 
         if not f_prox_x <= f_y + EPS:
-            print(functional, x, y, f_prox_x, f_y)
+            print(repr(functional), x, y, prox_x, f_prox_x, f_y)
 
         assert f_prox_x <= f_y + EPS
 
