@@ -25,50 +25,37 @@ where ``grad`` is the spatial gradient, ``g`` the given noisy data and
 ``|| . ||_*`` is the nuclear-norm.
 """
 
-import numpy as np
 import odl
 
-n=100
-d=2
-
-space = odl.uniform_discr([0]*d, [n]*d, [n]*d)
+space = odl.uniform_discr(0, 1, 100)
 pspace = odl.ProductSpace(space, 2)
 
 identity = odl.IdentityOperator(pspace)
-l2err = odl.solvers.L2Norm(pspace)
 
 gradient = odl.Gradient(space, pad_mode='order1')
 pgradient = odl.DiagonalOperator(gradient, 2)
-nuc_norm = odl.solvers.NuclearNorm(pgradient.range,
-                                   outer_exp=1,
-                                   singular_vector_exp=1)
 
-rhs = pspace.element([lambda x: x[0] / n, lambda x: x[0] > 0.6 * n])
+rhs = pspace.element([lambda x: x[0], lambda x: x[0] > 0.6])
 rhs.show()
-
-# Add noise (if wanted)
-rhs += pspace.element([odl.phantom.white_noise(space),
-                       odl.phantom.white_noise(space)]) * 0.0
 
 # Assemble all operators
 lin_ops = [identity, pgradient]
 
 # Create functionals as needed
-const = 1.0
+l2err = odl.solvers.L2NormSquared(pspace)
+nuc_norm = odl.solvers.NuclearNorm(pgradient.range)
+
+const = 0.02
 
 g = [l2err.translated(rhs),
      const * nuc_norm]
 f = odl.solvers.ZeroFunctional(pspace)
-
-
-def printval(x):
-    print(l2err(x-rhs) + const * nuc_norm(pgradient(x)))
+func = f + l2err + const * nuc_norm * pgradient
 
 # Solve
 x = rhs.copy()
-callback = (odl.solvers.CallbackShow(display_step=1000) &
-            odl.solvers.CallbackPrintIteration() &
-            printval)
+callback = (odl.solvers.CallbackShow(display_step=20) &
+            odl.solvers.CallbackPrint(func))
 odl.solvers.douglas_rachford_pd(x, f, g, lin_ops,
-                                tau=0.2, sigma=[1.0, 1.0],
-                                niter=500, callback=callback)
+                                tau=1e-2, sigma=[1.0, 1e-3],
+                                niter=200, callback=callback)

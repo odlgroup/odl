@@ -1689,8 +1689,7 @@ class NuclearNorm(Functional):
     Collaborative Total Variation: A General Framework for Vectorial TV Models
     """
 
-    def __init__(self, space, outer_exp=1, singular_vector_exp=2,
-                 weighting=None):
+    def __init__(self, space, outer_exp=1, singular_vector_exp=2):
         """Initialize a new instance.
 
         Parameters
@@ -1701,8 +1700,6 @@ class NuclearNorm(Functional):
             Exponent for the outer norm.
         singular_vector_exp : {1, 2, inf}
             Exponent for the norm for the singular vectors.
-        weighting : float
-            Weighting for the singular vectors.
 
         Examples
         --------
@@ -1713,16 +1710,15 @@ class NuclearNorm(Functional):
         >>> norm(space.one())
         6.0
         """
-        assert space.is_power_space
-        assert space.is_power_space
+        if (not isinstance(space, ProductSpace) or
+                not isinstance(space[0], ProductSpace)):
+            raise TypeError('`space` must be a `ProductSpace` of '
+                            '`ProductSpace`s')
+        if (not space.is_power_space or not space[0].is_power_space):
+            raise TypeError('`space` must be of the form `FnBase^nxm`')
+
         super().__init__(space=space, linear=False, grad_lipschitz=np.nan)
-        self.fnbase = self.domain[0][0]
-        outer_exp = float(outer_exp)
-        singular_vector_exp = float(singular_vector_exp)
-        if weighting is not None:
-            self.weighting = np.atleast_1d(weighting)
-        else:
-            self.weighting = None
+
         self.outernorm = LpNorm(self.domain[0][0], exponent=outer_exp)
         self.pwisenorm = PointwiseNorm(self.domain[0],
                                        exponent=singular_vector_exp)
@@ -1758,33 +1754,29 @@ class NuclearNorm(Functional):
         Here the indices are changed such that the "outer" indices come last,
         this is in order to have the access order as `numpy.linalg.svd` needs
         them.
+
+        This is the inverse of `_asvector`.
         """
-        shape = self.fnbase.shape + self.pshape
-        arr = np.zeros(shape, dtype=self.fnbase.dtype)
+        shape = self.domain[0][0].shape + self.pshape
+        arr = np.zeros(shape, dtype=self.domain.dtype)
         for i, xi in enumerate(vec):
             for j, xii in enumerate(xi):
                 arr[..., i, j] = xii.asarray()
 
-        if self.weighting is not None:
-            for i in range(self.domain.size):
-                arr[..., i, :] *= self.weighting[i]
-
         return arr
 
     def _asvector(self, arr):
-        """Convert ``vec`` to an `domain` element."""
+        """Convert ``vec`` to an `domain` element.
+
+        This is the inverse of `_asarray`.
+        """
 
         result = self._moveaxis(arr, [-2, -1], [0, 1])
 
-        if self.weighting is not None:
-            for i in range(self.domain.size):
-                result[i] /= self.weighting[i]
-
         return self.domain.element(result)
 
-    # TODO: update when integration operator is in place: issue #440
     def _call(self, x):
-        """Return the Nuclear-norm of ``x``."""
+        """Return ``self(x)``."""
 
         # Convert to array with most
         arr = self._asarray(x)
@@ -1798,8 +1790,21 @@ class NuclearNorm(Functional):
 
     @property
     def proximal(self):
+        """Return the proximal operator.
 
-        assert self.outernorm.exponent == 1
+        Raises
+        ------
+        NotImplementedError
+            if ``outer_exp`` is not 1 or ``singular_vector_exp`` is not 1, 2 or
+            infinity
+        """
+
+        if self.outernorm.exponent != 1:
+            raise NotImplementedError('`proximal` only implemented for '
+                                      '`outer_exp==1`')
+        if self.pwisenorm.exponent not in [1, 2, np.inf]:
+            raise NotImplementedError('`proximal` only implemented for '
+                                      '`singular_vector_exp` in [1, 2, inf]')
 
         def nddot(a, b):
             """Compute pointwise matrix product in the last indices."""
@@ -1807,7 +1812,7 @@ class NuclearNorm(Functional):
 
         func = self
 
-        class ProximalOperator(Operator):
+        class NuclearNormProximalOperator(Operator):
             """Proximal operator of `NuclearNorm`."""
             def __init__(self, sigma):
                 self.sigma = sigma
@@ -1830,9 +1835,7 @@ class NuclearNorm(Functional):
                 # Take pointwise proximal operator of s w.r.t. the norm
                 # on the singular vectors
                 if func.pwisenorm.exponent == 1:
-                    snorm = np.abs(s)
-                    snorm = np.maximum(self.sigma, snorm)
-                    sprox = (1 - self.sigma / snorm) * s
+                    sprox = np.sign(s) * np.maximum(np.abs(s) - self.sigma, 0)
                 elif func.pwisenorm.exponent == 2:
                     s_reordered = func._moveaxis(s, -1, 0)
                     snorm = func.pwisenorm(s_reordered).asarray()
@@ -1843,19 +1846,19 @@ class NuclearNorm(Functional):
                     snorm = np.maximum(self.sigma, snorm)
                     sprox = (1 - self.sigma / snorm)[..., None] * s
                 else:
-                    assert 0
+                    raise RuntimeError
 
                 # Compute s matrix
                 sproxsinv = (sprox * sinv)[..., :, None]
 
                 # Compute the final result
-                result = nddot(nddot(arr, Vt), sproxsinv * V)
+                result = nddot(nddot(arr, V), sproxsinv * Vt)
 
                 # Cast to vector and return. Note array and vector have
                 # different shapes.
                 return func._asvector(result)
 
-        return ProximalOperator
+        return NuclearNormProximalOperator
 
 if __name__ == '__main__':
     # pylint: disable=wrong-import-position
