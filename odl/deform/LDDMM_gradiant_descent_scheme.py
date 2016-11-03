@@ -157,6 +157,9 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
     # Give the number of time intervals
     N = time_pts
 
+    # Give the inverse of time intervals
+    inv_N = 1.0 / N
+
     # Create the domain of image
     image_domain = gradS.domain
 
@@ -169,7 +172,7 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
     # Create the space for series deformations and series Jacobian determinant
     pspace = image_domain.vector_field_space
     series_pspace = ProductSpace(pspace, N+1)
-    series_detDphi = ProductSpace(image_domain, N+1)
+    series_image_space = ProductSpace(image_domain, N+1)
 
     mass_presv_space = ProductSpace(pspace, image_domain)
 
@@ -177,12 +180,12 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
     vector_fields = series_pspace.zero()
 
     # Give the initial two series deformations and series Jacobian determinant
-    phi_N0 = series_pspace.element()
+    image_N0 = series_image_space.element()
     phi_N1 = series_pspace.element()
-    detDphi_N1 = series_detDphi.element()
+    detDphi_N1 = series_image_space.element()
     grad_object_func = series_pspace.element()
     for i in range(N+1):
-        phi_N0[i] = pspace.element(Id)
+        image_N0[i] = image_domain.element(I)
         phi_N1[i] = pspace.element(Id)
         detDphi_N1[i] = image_domain.one()
 
@@ -199,20 +202,19 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
         # Update phi_N0, phi_N1 and detDphi_N1
         for i in range(N):
             for j in range(dim):
-                phi_N0[i+1][j] = image_domain.element(
-                    _linear_deform(phi_N0[i][j], -1.0 / N * vector_fields[i]))
                 phi_N1[N-i-1][j] = image_domain.element(
                     _linear_deform(phi_N1[N-i][j],
-                                   1.0 / N * vector_fields[N-i]))
-
+                                   inv_N * vector_fields[N-i]))
+            image_N0[i+1] = image_domain.element(
+                    _linear_deform(image_N0[i], -inv_N * vector_fields[i]))                          
             jacobian_det = image_domain.element(
-                np.exp(1.0 / N * div_op(vector_fields[N-i])))
+                np.exp(inv_N * div_op(vector_fields[N-i])))
             detDphi_N1[N-i-1] = image_domain.element(
                 jacobian_det * image_domain.element(_linear_deform(
-                    detDphi_N1[N-i], 1.0 / N * vector_fields[N-i])))
-
-        # Update the gradient of the data matching term
-        PhiStarI = image_domain.element(geometric_deform(I, phi_N0[N]))
+                    detDphi_N1[N-i], inv_N * vector_fields[N-i])))
+        
+        # Update deformed template
+        PhiStarI = image_N0[N]
         # Show intermediate result
         if callback is not None:
             callback(PhiStarI)
@@ -224,19 +226,18 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
                                                           detDphi_N1[i]])
 
             tmp1 = image_domain.element(mass_presv_deform(grad_data_matching,
-                                                          mass_presv_dfield))
-            tmp2 = image_domain.element(geometric_deform(I, phi_N0[i]))
-            tmp = grad_op(tmp2)
+                                                          mass_presv_dfield)) 
+            tmp = grad_op(image_N0[i])
             for j in range(dim):
                 tmp[j] *= tmp1
-            tmp3 = vectorial_ft_fit_op.inverse(
+            tmp3 = (2 * np.pi) * vectorial_ft_fit_op.inverse(
                 vectorial_ft_fit_op(tmp) * ft_kernel_fitting)
-
+            # Update the gradient of the data matching term
             grad_object_func[i] = lamb * vector_fields[i] - tmp3
 
             vector_fields[i] = vector_fields[i] - eps * grad_object_func[i]
 
-    return phi_N0
+    return image_N0
 
 
 class LDDMMOperator(Operator):
@@ -377,6 +378,8 @@ I0name = './pictures/hand5.png'
 I1name = './pictures/hand3.png'
 I0name = './pictures/handnew1.png'
 I1name = './pictures/handnew2.png'
+#I0name = './pictures/ImageHalf058.png'
+#I1name = './pictures/ImageHalf059.png'
 
 # Get digital images
 #I0 = np.rot90(plt.imread(I0name).astype('float'), -1)[::2, ::2]
@@ -430,40 +433,18 @@ template = space.element(I1)
 #template = space.element(geometric_deform(shepp_logan(space, modified=True),
 #                                          deform_field))
 
-# Create projection data by calling the ray transform on the phantom
-proj_data = ray_trafo(ground_truth)
-
-# Add white Gaussion noise onto the noiseless data
-noise = 0.1 * white_noise(ray_trafo.range)
-
-# Add white Gaussion noise from file
-# noise = ray_trafo.range.element(np.load('noise_20angles.npy'))
-
-# Create the noisy projection data
-noise_proj_data = proj_data + noise
-
-# Create the noisy data from file
-#noise_proj_data = ray_trafo.range.element(
-#    np.load('noise_proj_data_20angles_snr_4_98.npy'))
-
-# Compute the signal-to-noise ratio in dB
-#snr = snr(proj_data, noise, impl='dB')
-#
-## Output the signal-to-noise ratio
-#print('snr = {!r}'.format(snr))
-
 # FFT setting for data matching term, 1 means 100% padding
 padded_size = 2 * space.shape[0]
 padded_ft_fit_op = padded_ft_op(space, padded_size)
 vectorial_ft_fit_op = DiagonalOperator(*([padded_ft_fit_op] * space.ndim))
 
 # Fix the sigma parameter in the kernel
-sigma = 1.5
+sigma = 3.0
 
 ft_kernel_fitting = fitting_kernel_ft(kernel)
 
 # Maximum iteration number
-niter = 800
+niter = 200
 
 callback = CallbackShow('iterates', display_step=5) & CallbackPrintIteration()
 
@@ -476,7 +457,7 @@ impl1 = 'nmp'
 # impl chooses 'matching' or 'reconstruction', 'matching' means image matching,
 # 'reconstruction' means image reconstruction
 # impl2 = 'matching'
-impl2 = 'reconstruction'
+impl2 = 'matching'
 
 # Normalize the template's density as the same as the ground truth if consider
 # mass preserving method
@@ -492,10 +473,32 @@ if impl2 == 'reconstruction':
     eps = 0.1
 
     # Give regularization parameter
-    lamb = 0.00001
+    lamb = 0.000001
 
     # Create the forward operator for image reconstruction
     op = ray_trafo
+
+    # Create projection data by calling the op on the phantom
+    proj_data = op(ground_truth)
+
+    # Add white Gaussion noise onto the noiseless data
+    noise = 0.1 * white_noise(op.range)
+
+    # Add white Gaussion noise from file
+    # noise = op.range.element(np.load('noise_20angles.npy'))
+
+    # Create the noisy projection data
+    noise_proj_data = proj_data + noise
+
+    # Create the noisy data from file
+    #noise_proj_data = op.range.element(
+    #    np.load('noise_proj_data_20angles_snr_4_98.npy'))
+
+    # Compute the signal-to-noise ratio in dB
+    snr = snr(proj_data, noise, impl='dB')
+
+    # Output the signal-to-noise ratio
+    print('snr = {!r}'.format(snr))
 
     # Create the gradient operator for the L2 functional
     gradS = op.adjoint * ResidualOperator(op, noise_proj_data)
@@ -504,13 +507,13 @@ if impl2 == 'reconstruction':
     time_itvs = 20
 
     # Compute by LDDMM solver
-    phi_N0 = LDDMM_gradient_descent_scheme_solver(
+    image_N0 = LDDMM_gradient_descent_scheme_solver(
         gradS, template, time_itvs, niter, eps, lamb, callback)
     
-    rec_result_1 = space.element(geometric_deform(template, phi_N0[5]))
-    rec_result_2 = space.element(geometric_deform(template, phi_N0[10]))
-    rec_result_3 = space.element(geometric_deform(template, phi_N0[15]))
-    rec_result = space.element(geometric_deform(template, phi_N0[time_itvs]))
+    rec_result_1 = space.element(image_N0[5])
+    rec_result_2 = space.element(image_N0[10])
+    rec_result_3 = space.element(image_N0[15])
+    rec_result = space.element(image_N0[time_itvs])
 
     # Compute the projections of the reconstructed image
     rec_proj_data = op(rec_result)
@@ -591,7 +594,7 @@ if impl2 == 'reconstruction':
 # For image matching
 if impl2 == 'matching':
     # Give step size for solver
-    eps = 0.5
+    eps = 0.05
 
     # Give regularization parameter
     lamb = 0.000001
@@ -599,57 +602,76 @@ if impl2 == 'matching':
     # Create the forward operator for image matching
     op = IdentityOperator(space)
 
+    # Create data by calling the op on the phantom
+    data = op(ground_truth)
+
+    # Add white Gaussion noise onto the noiseless data
+    noise = 0.0 * white_noise(op.range)
+
+    # Add white Gaussion noise from file
+    # noise = op.range.element(np.load('noise_20angles.npy'))
+
+    # Create the noisy projection data
+    noise_data = data + noise
+
+    # Create the noisy data from file
+    #noise_proj_data = op.range.element(
+    #    np.load('noise_proj_data_20angles_snr_4_98.npy'))
+
+    # Compute the signal-to-noise ratio in dB
+    snr = snr(data, noise, impl='dB')
+
+    # Output the signal-to-noise ratio
+    print('snr = {!r}'.format(snr))
+
     # Create the gradient operator for the L2 functional
-    gradS = op.adjoint * ResidualOperator(op, ground_truth)
+    gradS = op.adjoint * ResidualOperator(op, noise_data)
 
     # Give the number of time intervals
-    time_itvs = 20
+    time_itvs = 10
 
     # Compute by LDDMM solver
-    phi_N0 = LDDMM_gradient_descent_scheme_solver(
+    image_N0 = LDDMM_gradient_descent_scheme_solver(
         gradS, template, time_itvs, niter, eps, lamb, callback)
     
-    rec_result_1 = space.element(geometric_deform(template, phi_N0[5]))
-    rec_result_2 = space.element(geometric_deform(template, phi_N0[10]))
-    rec_result_3 = space.element(geometric_deform(template, phi_N0[15]))
-    rec_result = space.element(geometric_deform(template, phi_N0[time_itvs]))
-
-    # Compute the projections of the reconstructed image
-    rec_proj_data = op(rec_result)
+    rec_result_1 = space.element(image_N0[2])
+    rec_result_2 = space.element(image_N0[5])
+    rec_result_3 = space.element(image_N0[8])
+    rec_result = space.element(image_N0[time_itvs])
 
     # Plot the results of interest
-    plt.figure(1, figsize=(21, 21))
+    plt.figure(1, figsize=(21, 10))
     plt.clf()
 
-    plt.subplot(3, 3, 1)
+    plt.subplot(2, 3, 1)
     plt.imshow(np.rot90(template), cmap='bone',
                vmin=np.asarray(template).min(),
                vmax=np.asarray(template).max())
     plt.colorbar()
     plt.title('Template')
     
-    plt.subplot(3, 3, 2)
+    plt.subplot(2, 3, 2)
     plt.imshow(np.rot90(rec_result_1), cmap='bone',
                vmin=np.asarray(rec_result_1).min(),
                vmax=np.asarray(rec_result_1).max()) 
     plt.colorbar()
     plt.title('time_pts = {!r}'.format(5))
 
-    plt.subplot(3, 3, 3)
+    plt.subplot(2, 3, 3)
     plt.imshow(np.rot90(rec_result_2), cmap='bone',
                vmin=np.asarray(rec_result_2).min(),
                vmax=np.asarray(rec_result_2).max()) 
     plt.colorbar()
     plt.title('time_pts = {!r}'.format(10))
 
-    plt.subplot(3, 3, 4)
+    plt.subplot(2, 3, 4)
     plt.imshow(np.rot90(rec_result_3), cmap='bone',
                vmin=np.asarray(rec_result_3).min(),
                vmax=np.asarray(rec_result_3).max()) 
     plt.colorbar()
     plt.title('time_pts = {!r}'.format(15))
 
-    plt.subplot(3, 3, 5)
+    plt.subplot(2, 3, 5)
     plt.imshow(np.rot90(rec_result), cmap='bone',
                vmin=np.asarray(rec_result).min(),
                vmax=np.asarray(rec_result).max()) 
@@ -657,31 +679,9 @@ if impl2 == 'matching':
     plt.title('Reconstructed image by {!r} iters, '
         '{!r} projs'.format(niter, num_angles))
 
-    plt.subplot(3, 3, 6)
+    plt.subplot(2, 3, 6)
     plt.imshow(np.rot90(ground_truth), cmap='bone',
                vmin=np.asarray(ground_truth).min(),
                vmax=np.asarray(ground_truth).max())
     plt.colorbar()
     plt.title('Ground truth')
-    
-    plt.subplot(3, 3, 7)
-    plt.plot(np.asarray(proj_data)[0], 'b', np.asarray(noise_proj_data)[0],
-             'r', np.asarray(rec_proj_data)[0], 'g')
-    plt.title('$\Theta=0^\circ$, b: truth, r: noisy, '
-        'g: rec_proj, SNR = {:.3}dB'.format(snr))
-    plt.gca().axes.yaxis.set_ticklabels([])
-    plt.axis([0, 191, -20, 40])
-
-    plt.subplot(3, 3, 8)
-    plt.plot(np.asarray(proj_data)[2], 'b', np.asarray(noise_proj_data)[2],
-             'r', np.asarray(rec_proj_data)[2], 'g')
-    plt.title('$\Theta=60^\circ$')
-    plt.gca().axes.yaxis.set_ticklabels([])
-    plt.axis([0, 191, -20, 40])
-
-    plt.subplot(3, 3, 9)
-    plt.plot(np.asarray(proj_data)[4], 'b', np.asarray(noise_proj_data)[4],
-             'r', np.asarray(rec_proj_data)[4], 'g')
-    plt.title('$\Theta=120^\circ$')
-    plt.gca().axes.yaxis.set_ticklabels([])
-    plt.axis([0, 191, -20, 40])
