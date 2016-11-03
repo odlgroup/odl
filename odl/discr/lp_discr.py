@@ -808,7 +808,7 @@ class DiscreteLpElement(DiscretizedSpaceElement):
                     if coord_maxp is None:
                         max_ind = len(subpart)
                     else:
-                        min_ind = np.ceil(subpart.index(coord_maxp,
+                        max_ind = np.ceil(subpart.index(coord_maxp,
                                                         floating=True))
 
                     indices += [slice(int(min_ind), int(max_ind))]
