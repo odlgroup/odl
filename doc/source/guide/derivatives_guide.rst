@@ -4,7 +4,7 @@
 A guide to the different notions of derivative
 ##############################################
 
-The concept of a derivative is one of the core concepts of mathematical analysis and is used where we want a linear approximation of an arbitrary function. Since the derivative is used in different contexts to mean slightly different things, this guide has been written to clarify and introduce what the different concepts mean.
+The concept of a derivative is one of the core concepts of mathematical analysis and is used where we want a linear approximation of a function in some point. Since the derivative is used in different contexts to mean slightly different things, this guide has been written to clarify and introduce what the different concepts mean when used in ODL.
 
 In short, different notions of derivatives that will be discussed here are:
 
@@ -143,7 +143,7 @@ This is however not implemented for all functionals.
 Spatial Gradient
 ################
 
-Thus the spatial gradient of the function :math:`f`, which is an element in some function space :math:`f \in \mathcal{F}(\Omega, \mathbb{R})`, is a element in the function space :math:`\mathcal{F}(\Omega, \mathbb{R}^n)` such that for any :math:`x, d \in \Omega`.
+The spatial gradient of afunction :math:`f` which is an element in some function space :math:`f \in \mathcal{F}(\Omega, \mathbb{R})`, is a element in the function space :math:`\mathcal{F}(\Omega, \mathbb{R}^n)` such that for any :math:`x, d \in \Omega`.
 
 .. math::
     \lim_{h \rightarrow 0} \frac{\| f(x + h d) - f(x) - \langle h d, grad f \rangle \|}{h} = 0
