@@ -21,44 +21,76 @@ from future import standard_library
 standard_library.install_aliases()
 
 import numpy as np
-from odl.trafos import FourierTransform
+from odl.discr import ResizingOperator
+from odl.trafos import FourierTransform, PYFFTW_AVAILABLE
 
 
 __all__ = ('fbp_op',)
 
 
-def fbp_op(ray_trafo):
+def fbp_op(ray_trafo, padding=True):
     """Create Filtered BackProjection from a ray transform.
 
     Parameters
     ----------
     ray_trafo : `RayTransform`
 
+    padding : bool
+        If the data space should be zero padded.
+
     Returns
     -------
     fbp : `Operator`
         Approximate inverse operator of ``ray_trafo``.
     """
-    if ray_trafo.domain.ndim == 2:
-        fourier = FourierTransform(ray_trafo.range, axes=1)
+    impl = 'pyfftw' if PYFFTW_AVAILABLE else 'numpy'
+    alen = ray_trafo.geometry.motion_params.length
 
+    if ray_trafo.domain.ndim == 2:
         # Define ramp filter
         def fft_filter(x):
-            return np.abs(x[1]) / (4 * np.pi)
+            return np.sqrt(x[1]**2) / (2 * alen)
+
+        # Define (padded) fourier transform
+        if padding:
+            # Define padding operator
+            ran_shp = (ray_trafo.range.shape[0],
+                       ray_trafo.range.shape[1] * 2 - 1)
+            resizing = ResizingOperator(ray_trafo.range, ran_shp=ran_shp)
+
+            fourier = FourierTransform(resizing.range, axes=1, impl=impl)
+            fourier = fourier * resizing
+        else:
+            fourier = FourierTransform(ray_trafo.range, axes=1, impl=impl)
 
     elif ray_trafo.domain.ndim == 3:
-        fourier = FourierTransform(ray_trafo.range, axes=[1, 2])
-
         # Find the direction that the filter should be taken in
-        src_to_det = ray_trafo.geometry.src_to_det_init
+        du = ray_trafo.geometry.det_init_axes[0]
+        dv = ray_trafo.geometry.det_init_axes[1]
         axis = ray_trafo.geometry.axis
-        rot_dir = np.cross(axis, src_to_det)
-        c1 = np.vdot(rot_dir, ray_trafo.geometry.det_init_axes[0])
-        c2 = np.vdot(rot_dir, ray_trafo.geometry.det_init_axes[1])
+        det_normal = np.cross(du, dv)
+        rot_dir = np.cross(axis, det_normal)
+        c = np.array([np.vdot(rot_dir, du), np.vdot(rot_dir, dv)])
+        cnorm = np.linalg.norm(c)
+        assert cnorm != 0
+        c /= cnorm
 
         # Define ramp filter
         def fft_filter(x):
-            return np.sqrt(c1 * x[1] ** 2 + c2 * x[2] ** 2) / (2 * np.pi ** 2)
+            return np.abs(c[0] * x[1] + c[1] * x[2]) / (2 * alen)
+
+        # Define (padded) fourier transform
+        if padding:
+            # Define padding operator
+            ran_shp = (ray_trafo.range.shape[0],
+                       ray_trafo.range.shape[1] * 2 - 1,
+                       ray_trafo.range.shape[2] * 2 - 1)
+            resizing = ResizingOperator(ray_trafo.range, ran_shp=ran_shp)
+
+            fourier = FourierTransform(resizing.range, axes=[1, 2], impl=impl)
+            fourier = fourier * resizing
+        else:
+            fourier = FourierTransform(ray_trafo.range, axes=[1, 2], impl=impl)
     else:
         raise NotImplementedError('FBP only implemented in 2d and 3d')
 

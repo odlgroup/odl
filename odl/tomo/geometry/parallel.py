@@ -391,6 +391,8 @@ class Parallel3dAxisGeometry(ParallelGeometry, AxisOrientedGeometry):
             det_init_axis_0 /= np.linalg.norm(det_init_axis_0)
             det_init_axes = (det_init_axis_0, axis)
 
+        self.det_init_axes = det_init_axes
+
         detector = Flat2dDetector(part=dpart, axes=det_init_axes)
         super().__init__(ndim=3, apart=apart, detector=detector,
                          det_init_pos=det_init_pos)
