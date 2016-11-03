@@ -67,7 +67,7 @@ def _linear_deform(template, displacement, out=None):
     left, i.e. 1.0.
 
     >>> space = odl.uniform_discr(0, 1, 5)
-    >>> disp_field_space = space.vector_field_space
+    >>> disp_field_space = space.tangent_bundle
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.2, 0]])
     >>> _linear_deform(template, displacement_field)
@@ -78,7 +78,7 @@ def _linear_deform(template, displacement, out=None):
     points, 0.1, one gets the mean of the values.
 
     >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
-    >>> disp_field_space = space.vector_field_space
+    >>> disp_field_space = space.tangent_bundle
     >>> template = space.element([0, 0, 1, 0, 0])
     >>> displacement_field = disp_field_space.element([[0, 0, 0, -0.1, 0]])
     >>> _linear_deform(template, displacement_field)
@@ -175,7 +175,7 @@ class LinDeformFixedTempl(Operator):
                             'instance, got {!r}'.format(template))
 
         self.__template = template
-        super().__init__(domain=self.template.space.vector_field_space,
+        super().__init__(domain=self.template.space.real_space.tangent_bundle,
                          range=self.template.space,
                          linear=False)
 
@@ -268,7 +268,7 @@ class LinDeformFixedDisp(Operator):
         templ_space : `DiscreteLp`, optional
             Template space on which this operator is applied, i.e. the
             operator domain and range. It must fulfill
-            ``domain.vector_field_space == displacement.space``, so this
+            ``domain.real_space.tangent_bundle == displacement.space``, so this
             option is useful mainly for support of complex spaces.
             Default: ``displacement.space[0]``
 
@@ -281,7 +281,7 @@ class LinDeformFixedDisp(Operator):
         left, i.e. 1.0.
 
         >>> space = odl.uniform_discr(0, 1, 5)
-        >>> disp_field = space.vector_field_space.element([[0, 0, 0, -0.2, 0]])
+        >>> disp_field = space.tangent_bundle.element([[0, 0, 0, -0.2, 0]])
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op([0, 0, 1, 0, 0]))
@@ -292,7 +292,7 @@ class LinDeformFixedDisp(Operator):
         points, 0.1, one gets the mean of the values.
 
         >>> space = odl.uniform_discr(0, 1, 5, interp='linear')
-        >>> disp_field = space.vector_field_space.element([[0, 0, 0, -0.1, 0]])
+        >>> disp_field = space.tangent_bundle.element([[0, 0, 0, -0.1, 0]])
         >>> op = LinDeformFixedDisp(disp_field)
         >>> template = [0, 0, 1, 0, 0]
         >>> print(op(template))
@@ -314,11 +314,12 @@ class LinDeformFixedDisp(Operator):
             if not isinstance(templ_space, DiscreteLp):
                 raise TypeError('`templ_space` must be a `DiscreteLp` '
                                 'instance, got {!r}'.format(templ_space))
-            if templ_space.vector_field_space != displacement.space:
-                raise ValueError('`templ_space.vector_field_space` not equal '
-                                 'to `displacement.space` ({} != {})'
-                                 ''.format(templ_space.vector_field_space,
-                                           displacement.space))
+            if templ_space.real_space.tangent_bundle != displacement.space:
+                raise ValueError('`templ_space.real_space.tangent_bundle` not '
+                                 'equal to `displacement.space` ({} != {})'
+                                 ''.format(
+                                     templ_space.real_space.tangent_bundle,
+                                     displacement.space))
 
         self.__displacement = displacement
         super().__init__(domain=templ_space, range=templ_space, linear=True)

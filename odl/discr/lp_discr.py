@@ -234,9 +234,13 @@ class DiscreteLp(DiscretizedSpace):
         return self.__exponent
 
     @property
-    def vector_field_space(self):
-        """Space of vector fields based on ``self``."""
-        return ProductSpace(self.real_space, self.ndim)
+    def tangent_bundle(self):
+        """The tangent bundle associated with `domain` using `partition`.
+
+        The tangent bundle of a n-dimensional space can be seen as the set of
+        n-vectors on the same domain.
+        """
+        return ProductSpace(self, self.ndim)
 
     def element(self, inp=None, **kwargs):
         """Create an element from ``inp`` or from scratch.
