@@ -593,7 +593,7 @@ if impl2 == 'matching':
     eps = 0.2
 
     # Give regularization parameter
-    lamb = 0.000001
+    lamb = 0.0001
 
     # Create the forward operator for image matching
     op = IdentityOperator(space)
@@ -672,8 +672,7 @@ if impl2 == 'matching':
                vmin=np.asarray(rec_result).min(),
                vmax=np.asarray(rec_result).max()) 
     plt.colorbar()
-    plt.title('Reconstructed image by {!r} iters, '
-        '{!r} projs'.format(niter, num_angles))
+    plt.title('Imatched image by {!r} iters'.format(niter))
 
     plt.subplot(2, 3, 6)
     plt.imshow(np.rot90(ground_truth), cmap='bone',
