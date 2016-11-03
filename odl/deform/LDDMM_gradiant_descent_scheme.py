@@ -232,7 +232,6 @@ def LDDMM_gradient_descent_scheme_solver(gradS, I, time_pts, niter, eps,
                 _linear_deform(grad_data_matching_N1[N-i],
                                inv_N * vector_fields[N-i]))
 
-
     return image_N0
 
 
@@ -440,7 +439,7 @@ sigma = 2.5
 ft_kernel_fitting = fitting_kernel_ft(kernel)
 
 # Maximum iteration number
-niter = 600
+niter = 800
 
 callback = CallbackShow('iterates', display_step=5) & CallbackPrintIteration()
 
@@ -593,7 +592,7 @@ if impl2 == 'matching':
     eps = 0.2
 
     # Give regularization parameter
-    lamb = 0.0001
+    lamb = 0.1
 
     # Create the forward operator for image matching
     op = IdentityOperator(space)

@@ -70,15 +70,17 @@ def optimal_information_transport_solver(gradS, I, niter, eps, lamb,
     callback : 'Class'
         Show the iterates.
     """
+    # Create space of image
+    image_space = gradS.domain
+
     # Initialize the determinant of Jacobian of inverse deformation
-    DPhiJacobian = gradS.domain.one()
+    DPhiJacobian = image_space.one()
+
+    # Initialize the non-mass-preserving deformed template
+    non_mp_deform_I = I
 
     # Create the space for inverse deformation
-    pspace = gradS.domain.vector_field_space
-
-    # Initialize the inverse deformation
-    invphi = pspace.element(gradS.domain.points().T)
-
+    pspace = image_space.vector_field_space
 
     # Create the temporary elements for update
     grad = Gradient(gradS.domain, method='forward', pad_mode='symmetric')
@@ -95,35 +97,31 @@ def optimal_information_transport_solver(gradS, I, niter, eps, lamb,
 
         E[k+kE] = np.asarray(lamb * (np.sqrt(DPhiJacobian) - 1) ** 2).sum()
 
-        # Convert the invphi into an array for efficient interpolation
-        invphi_pts = np.empty([invphi.size, invphi[0].size])
-        for i in range(invphi.size):
-            invphi_pts[i] = invphi[i].ntuple.asarray()
-
         # Implementation for mass-preserving case
         if impl == 'mp':
-            non_mp_def = I.space.element(
-                I.interpolation(invphi_pts, bounds_check=False))
-            PhiStarX = DPhiJacobian * non_mp_def
-
-            grads = gradS(PhiStarX)
+            PhiStarI = DPhiJacobian * non_mp_deform_I
+            grads = gradS(PhiStarI)
             E[k+kE] += np.asarray(grads**2).sum()
             tmp = grad(grads)
             for i in range(tmp.size):
-                tmp[i] *= PhiStarX
+                tmp[i] *= PhiStarI
+            # Show intermediate result
+            if callback is not None:
+                callback(PhiStarI)
 
         # Implementation for non-mass-preserving case
         if impl == 'nmp':
-            PhiStarX = I.space.element(
-                I.interpolation(invphi_pts, bounds_check=False))
-
-            grads = gradS(PhiStarX)
-            tmp = -grad(PhiStarX)
+            PhiStarI = non_mp_deform_I
+            grads = gradS(PhiStarI)
+            E[k+kE] += np.asarray(grads**2).sum()
+            tmp = - grad(PhiStarI)
             for i in range(tmp.size):
                 tmp[i] *= grads
+            # Show intermediate result
+            if callback is not None:
+                callback(PhiStarI)
 
         # Compute the minus L2 gradient
-#        u = lamb * grad(1 - np.sqrt(DPhiJacobian)) - 2 * tmp
         u = - lamb * grad(np.sqrt(DPhiJacobian)) - tmp
         
         v = inverse_inertia_op(u)
@@ -131,26 +129,18 @@ def optimal_information_transport_solver(gradS, I, niter, eps, lamb,
         # Check the mass
         # print(np.sum(PhiStarX))
 
-        # Update the inverse deformation
-        deform_op = odl.deform.LinDeformFixedDisp(- eps * v)
-        for i in range(invphi.size):
-            invphi[i] = deform_op(invphi[i])
-            #invphi[i].space.element(
-            #    _linear_deform(invphi[i], - eps * v))
+        # Update the non-mass-preserving deformation of template
+        non_mp_deform_I = image_space.element(
+            _linear_deform(non_mp_deform_I, - eps * v))
 
         # Update the determinant of Jacobian of inverse deformation
-        DPhiJacobian = np.exp(- eps * div(v)) * deform_op(DPhiJacobian)
-        #gradS.domain.element(
-        #    _linear_deform(DPhiJacobian, - eps * v))
+        DPhiJacobian = np.exp(- eps * div(v)) * image_space.element(
+            _linear_deform(DPhiJacobian, - eps * v))
 
-        # Show intermediate result
-        if callback is not None:
-            callback(PhiStarX)
-
-    return PhiStarX, E
+    return PhiStarI, E
 
 
-# Implement the Fisher-Rao distance case
+# Implement OIT solver based on Fisher-Rao distance case, need mass-preserving
 def optimal_information_transport_solver2(I0, I1, niter, eps, lamb,
                                           inverse_inertia_op, callback=None):
     """
@@ -181,6 +171,9 @@ def optimal_information_transport_solver2(I0, I1, niter, eps, lamb,
     callback : 'Class'
         Show the iterates.
     """
+    # Nomalize the mass of I0 and I1
+    I0 *= np.linalg.norm(I1, 'fro')/np.linalg.norm(I0, 'fro')
+
     # Get the space of I0
     domain = I0.space
     
@@ -190,20 +183,13 @@ def optimal_information_transport_solver2(I0, I1, niter, eps, lamb,
     # Create the space for inverse deformation
     pspace = domain.vector_field_space
 
-    # Initialize the inverse deformation
-    invphi = pspace.element(domain.points().T)
-
     # Create the temporary elements for update
     grad_op = Gradient(domain, method='forward', pad_mode='symmetric')
     div_op = Divergence(pspace, method='forward', pad_mode='symmetric')
     v = grad_op.range.element()
 
-#    # Create poisson solver
-#    k2_values = sum((padded_ft_op.range.points() ** 2).T)
-#    k2 = padded_ft_op.range.element(np.maximum(np.abs(k2_values), 0.0000001))
-#    inv_k2 = 1 / k2
-#    inv_k2 = padded_ft_op.range.element(np.minimum(np.abs(inv_k2), 200))
-#    poisson_solver = padded_ft_op.inverse * (inv_k2) * padded_ft_op
+    # Initialize the non-mass-preserving deformed template
+    non_mp_deform_I0 = I0
 
     # Store energy
     E = []
@@ -216,14 +202,12 @@ def optimal_information_transport_solver2(I0, I1, niter, eps, lamb,
         # Compute the energy of the regularization term
         E[k+kE] = np.asarray(lamb * (np.sqrt(DPhiJacobian) - 1) ** 2).sum()
 
-        # Convert the invphi into an array for efficient interpolation
-        invphi_pts = np.empty([invphi.size, invphi[0].size])
-        for i in range(invphi.size):
-            invphi_pts[i] = invphi[i].ntuple.asarray()
-
         # Implementation for mass-preserving case
-        PhiStarI0 = DPhiJacobian * domain.element(
-            I0.interpolation(invphi_pts, bounds_check=False))
+        PhiStarI0 = DPhiJacobian * non_mp_deform_I0
+
+        # Show intermediate result
+        if callback is not None:
+            callback(PhiStarI0)
 
         # For Fisher-Rao distance
         sqrt_mp_I0 = np.sqrt(PhiStarI0)
@@ -238,7 +222,7 @@ def optimal_information_transport_solver2(I0, I1, niter, eps, lamb,
         grad_fitting = grad_op.range.zero()
         for i in range(grad_op.range.size):
             grad_fitting[i] = sqrt_I1 * grad_sqrt_mp_I0[i] - \
-                sqrt_mp_I0 * grad_sqrt_I1[i]\
+                sqrt_mp_I0 * grad_sqrt_I1[i]
                 
         # Compute the minus L2 gradient
         u = - lamb * grad_op(np.sqrt(DPhiJacobian)) - grad_fitting
@@ -246,26 +230,14 @@ def optimal_information_transport_solver2(I0, I1, niter, eps, lamb,
         # Check the mass
         # print(np.sum(PhiStarX))
 
-#        # Compute the minus gradient in information metric
-#        for i in range(u.size):
-#            v[i] = poisson_solver(u[i])
-#            v[i] -= v[i][0]
-
         v = inverse_inertia_op(u)
-#        v.show()
 
-        # Update the inverse deformation
-        for i in range(invphi.size):
-            invphi[i] = domain.element(
-                _linear_deform(invphi[i], - eps * v))
+        non_mp_deform_I0 = domain.element(
+            _linear_deform(non_mp_deform_I0, - eps * v))
 
         # Update the determinant of Jacobian of inverse deformation
         DPhiJacobian = np.exp(- eps * div_op(v)) * domain.element(
             _linear_deform(DPhiJacobian, - eps * v))
-
-        # Show intermediate result
-        if callback is not None:
-            callback(PhiStarI0)
 
     return PhiStarI0, E
 
@@ -324,11 +296,12 @@ def inverse_inertia_op(impl3):
     impl3 : `string`
         implementation method, solving poisson equation or using RKHS
     """
+    temp = 2 * np.pi
     if impl3 == 'poisson':
-        return vectorial_ft_op.inverse * poisson_kernel_ft * vectorial_ft_op
+        return temp * vectorial_ft_op.inverse * poisson_kernel_ft * vectorial_ft_op
     
     elif impl3 == 'rkhs':
-        return vectorial_ft_op.inverse * ft_kernel_fitting * vectorial_ft_op
+        return temp * vectorial_ft_op.inverse * ft_kernel_fitting * vectorial_ft_op
 
 
 def snr(signal, noise, impl):
@@ -372,12 +345,12 @@ def kernel(x):
 
 
 # Give input images
-#I0name = './pictures/c_highres.png'
-#I1name = './pictures/i_highres.png'
+I0name = './pictures/c_highres.png'
+I1name = './pictures/i_highres.png'
 # I0name = './pictures/handnew1.png'
 # I1name = './pictures/DS0002AxialSlice80.png'
-I0name = './pictures/handnew1.png'
-I1name = './pictures/handnew2.png'
+#I0name = './pictures/handnew1.png'
+#I1name = './pictures/handnew2.png'
 #I0name = './pictures/v.png'
 #I1name = './pictures/j.png'
 
@@ -393,7 +366,7 @@ space = odl.uniform_discr(
     dtype='float32', interp='linear')
 
 # Give the number of directions
-num_angles = 10
+num_angles = 60
 
 # Create the uniformly distributed directions
 angle_partition = odl.uniform_partition(0, np.pi, num_angles,
@@ -465,17 +438,17 @@ template = space.element(I1)
 # Implementation method for mass preserving or not,
 # impl chooses 'mp' or 'nmp', 'mp' means mass-preserving method,
 # 'nmp' means non-mass-preserving method
-impl1 = 'nmp'
+impl1 = 'mp'
 
 # Implementation method for image matching or image reconstruction,
 # impl chooses 'matching' or 'reconstruction', 'matching' means image matching,
 # 'reconstruction' means image reconstruction
-impl2 = 'matching'
+impl2 = 'reconstruction'
 
 # Implementation method with Klas Modin or rkhs
 # impl chooses 'poisson' or 'rkhs', 'poisson' means using poisson solver,
 # 'rkhs' means using V-gradient
-impl3 = 'poisson'
+impl3 = 'rkhs'
 
 # Normalize the template's density as the same as the ground truth if consider
 # mass preserving method
@@ -491,10 +464,10 @@ template.show('Template')
 # For image reconstruction
 if impl2 == 'reconstruction':
     # Give step size for solver
-    eps = 0.02
+    eps = 0.005
 
     # Give regularization parameter
-    lamb = 1.0
+    lamb = 0.05
 
     # Fix the sigma parameter in the kernel
     sigma = 2.0
@@ -519,7 +492,7 @@ if impl2 == 'reconstruction':
     inv_inertia_op = inverse_inertia_op(impl3)
 
     # Compute by optimal information transport solver
-    rec_result = rec_result, E = optimal_information_transport_solver(
+    rec_result, E = optimal_information_transport_solver(
         gradS, template, niter, eps, lamb, inv_inertia_op, impl1, callback)
 
     # Show result
@@ -555,10 +528,10 @@ if impl2 == 'reconstruction':
 # For image matching
 if impl2 == 'matching':
     # Give step size for solver
-    eps = 0.03
+    eps = 0.0025
 
     # Give regularization parameter
-    lamb = 0.01
+    lamb = 0.05
 
     # Fix the sigma parameter in the kernel
     sigma = 5.0
@@ -582,28 +555,27 @@ if impl2 == 'matching':
     # Implement different gradient (poisson or RKHS)
     inv_inertia_op = inverse_inertia_op(impl3)
 
-#    # Compute by optimal information transport solver
-#    rec_result, E = optimal_information_transport_solver(
-#        gradS, template, niter, eps, lamb, inv_inertia_op, impl1, callback)
+    # Compute by OIT solver based on L2 norm distance
+    rec_result, E = optimal_information_transport_solver(
+        gradS, template, niter, eps, lamb, inv_inertia_op, impl1, callback)
 
-    # Compute by optimal information transport solver
-    # based on Fisher-Rao distance
-    rec_result, E = optimal_information_transport_solver2(
-        template, ground_truth, niter, eps, lamb, inv_inertia_op, callback)
+#    # Compute by OIT solver based on Fisher-Rao distance
+#    rec_result, E = optimal_information_transport_solver2(
+#        template, ground_truth, niter, eps, lamb, inv_inertia_op, callback)
 
     plt.figure(1, figsize=(20, 10))
     plt.clf()
     
     plt.subplot(1, 3, 1)
-    plt.imshow(np.rot90(template), cmap='bone', vmin=I0.min(), vmax=I0.max()), plt.axis('off')
+    plt.imshow(np.rot90(template), cmap='bone', vmin=I1.min(), vmax=I1.max()), plt.axis('off')
     plt.title('template')
 
     plt.subplot(1, 3, 2)
-    plt.imshow(np.rot90(rec_result), cmap='bone', vmin=I0.min(), vmax=I0.max()), plt.axis('off')
+    plt.imshow(np.rot90(rec_result), cmap='bone', vmin=I1.min(), vmax=I1.max()), plt.axis('off')
     plt.title('match_result')
     
     plt.subplot(1, 3, 3)
-    plt.imshow(np.rot90(ground_truth), cmap='bone', vmin=I0.min(), vmax=I0.max()), plt.axis('off')
+    plt.imshow(np.rot90(ground_truth), cmap='bone', vmin=I1.min(), vmax=I1.max()), plt.axis('off')
     plt.title('Ground truth')
 
     plt.figure(2, figsize=(8, 1.5))
