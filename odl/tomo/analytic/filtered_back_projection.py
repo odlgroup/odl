@@ -29,14 +29,28 @@ __all__ = ('fbp_op',)
 
 
 def fbp_op(ray_trafo, padding=True):
-    """Create Filtered BackProjection from a ray transform.
+    """Create filtered back-projection from a `RayTransform`.
+
+    The filtered back-projection is an approximate inverse to the ray
+    transform.
 
     Parameters
     ----------
     ray_trafo : `RayTransform`
+        The ray transform (forward operator) whose approximate inverse should
+        be computed. Its geometry has to be any of the following
+        Parallel2DGeometry : Exact reconstruction
+        Parallel3dAxisGeometry : Exact reconstruction
+        FanFlatGeometry : Approximate reconstruction, correct in limit of fan
+                          angle = 0.
+        CircularConeFlatGeometry : Approximate reconstruction, correct in limit
+                                   of fan angle = 0.
+        HelicalConeFlatGeometry : Very approximate.
 
-    padding : bool
-        If the data space should be zero padded.
+    padding : bool, optional
+        If the data space should be zero padded. Without padding, the data may
+        be corrupted due to the circular convolution used. Using padding makes
+        the algorithm slower.
 
     Returns
     -------
@@ -75,6 +89,14 @@ def fbp_op(ray_trafo, padding=True):
         assert cnorm != 0
         c /= cnorm
 
+        used_axes = c != 0
+        if used_axes[0] and not used_axes[1]:
+            axes = [1]
+        elif not used_axes[0] and used_axes[1]:
+            axes = [2]
+        else:
+            axes = [1, 2]
+
         # Define ramp filter
         def fft_filter(x):
             return np.abs(c[0] * x[1] + c[1] * x[2]) / (2 * alen)
@@ -83,26 +105,27 @@ def fbp_op(ray_trafo, padding=True):
         if padding:
             # Define padding operator
             ran_shp = (ray_trafo.range.shape[0],
-                       ray_trafo.range.shape[1] * 2 - 1,
-                       ray_trafo.range.shape[2] * 2 - 1)
+                       ray_trafo.range.shape[1] * 2 - 1 if used_axes[0]
+                       else ray_trafo.range.shape[1],
+                       ray_trafo.range.shape[2] * 2 - 1 if used_axes[1]
+                       else ray_trafo.range.shape[2])
             resizing = ResizingOperator(ray_trafo.range, ran_shp=ran_shp)
 
-            fourier = FourierTransform(resizing.range, axes=[1, 2], impl=impl)
+            fourier = FourierTransform(resizing.range, axes=axes, impl=impl)
             fourier = fourier * resizing
         else:
-            fourier = FourierTransform(ray_trafo.range, axes=[1, 2], impl=impl)
+            fourier = FourierTransform(ray_trafo.range, axes=axes, impl=impl)
     else:
         raise NotImplementedError('FBP only implemented in 2d and 3d')
 
     # Create ramp in the detector direction
     ramp_function = fourier.range.element(fft_filter)
 
-    # Create ramp filter via the
-    # convolution formula with fourier transforms
+    # Create ramp filter via the convolution formula with fourier transforms
     ramp_filter = fourier.inverse * ramp_function * fourier
 
     # Create filtered backprojection by composing the backprojection
-    # (adjoint) with the ramp filter. Also apply a scaling.
+    # (adjoint) with the ramp filter.
     return ray_trafo.adjoint * ramp_filter
 
 
